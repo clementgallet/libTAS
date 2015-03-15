@@ -1,0 +1,10 @@
+Installation:
+
+- Edit makeinclude and change what is needed. You can also look at
+src/zfeatures.h to change very specific details (only useful to tune
+TinySDGL to your needs). You can link the examples with either OpenGL,
+Mesa or TinySDGL.
+
+- Type 'make'. The library 'libTinySDGL.a' is copied into './lib'. The
+examples are build in './examples'. Only the directories './lib' and
+'./include' are needed to use TinySDGL from another program.

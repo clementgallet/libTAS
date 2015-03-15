@@ -1,0 +1,5 @@
+project(TinySDGL)
+cmake_minimum_required(VERSION 2.8)
+include_directories("${TinySDGL_SOURCE_DIR}/include/")
+add_subdirectory(src)
+add_subdirectory(examples)
