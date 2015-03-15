@@ -7,18 +7,18 @@ OBJS= api.o list.o vertex.o init.o matrix.o texture.o \
       arrays.o specbuf.o memory.o
 
 INCLUDES = -I../include
-LIB = libTinySDGL.a
+LIB = libTinySDGL.so
 
-all: $(LIB) libTinyGLU.a
+all: $(LIB) libTinyGLU.so
 
 $(LIB): $(OBJS)
 	rm -f $(LIB)
-	ar rcs $(LIB) $(OBJS)
+	$(CC) -shared -o $(LIB) $(OBJS)
 	mv $(LIB) ../lib
 
-libTinyGLU.a: glu.o
+libTinyGLU.so: glu.o
 	rm -f $@
-	ar rcs $@ $<
+	$(CC) -shared -o $@ $<
 	mv $@ ../lib
 
 clean:

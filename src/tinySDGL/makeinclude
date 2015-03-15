@@ -3,7 +3,7 @@
 
 # linux / Windows MinGW
 CC= gcc
-CFLAGS= -g -Wall -O2 -w
+CFLAGS= -g -Wall -O2 -w -fPIC
 LFLAGS=
 
 #####################################################################
