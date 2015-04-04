@@ -807,23 +807,31 @@ void glTexCoordPointer(GLint size, GLenum type, GLsizei stride,
 void glPolygonOffset(GLfloat factor, GLfloat units);
 
 /* not implemented, just added to compile  */
-  /*
-inline void glPointSize(float) {}
-inline void glLineWidth(float) {}
-inline void glDeleteLists(int, int) {}
-inline void glDepthFunc(int) {}
-inline void glBlendFunc(int, int) {}
-inline void glTexEnvf(int, int, int) {}
-inline void glOrtho(float,float,float,float,float,float){}
-inline void glVertex2i(int,int) {}
-inline void glDepthMask(int) {}
-inline void glFogi(int, int) {}
-inline void glFogfv(int, const float*) {}
-inline void glFogf(int, float) {}
-inline void glRasterPos2f(float, float) {}
-inline void glPolygonStipple(void*) {}
-inline void glTexParameterf(int, int, int) {};
-  */
+
+void glPointSize(float f);
+void glLineWidth(float f);
+void glDeleteLists(int i, int j);
+void glDepthFunc(int i);
+void glBlendFunc(int i, int j);
+void glTexEnvf(int i, int j, int k);
+void glOrtho(float f,float g,float h,float i,float j,float k);
+void glVertex2i(int i,int j);
+void glDepthMask(int i);
+void glFogi(int i, int j);
+void glFogfv(int i, const float* f);
+void glFogf(int i, float f);
+void glRasterPos2f(float f, float g);
+void glPolygonStipple(void* v);
+void glTexParameterf(int i, int j, int k);
+
+const GLubyte* glGetString(GLenum name);
+void glPushAttrib(unsigned long mask); // Type is GLbitfield 
+void glPopAttrib(void);
+void glPushClientAttrib(unsigned long mask); // Type is GLbitfield
+void glPopClientAttrib(void);
+void glTexSubImage2D(GLenum  target,  GLint  level,  GLint  xoffset,  GLint  yoffset,  GLsizei  width,  GLsizei  height,  GLenum  format,  GLenum  type,  const GLvoid *  data);
+void glColor4ub(GLubyte red,  GLubyte green,  GLubyte blue,  GLubyte alpha);
+
 /* non compatible functions */
 
 void glDebug(int mode);

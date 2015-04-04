@@ -411,3 +411,69 @@ void glXWaitGL( void )
 void glXWaitX( void )
 {
 }
+
+int glXGetConfig( Display *dpy, XVisualInfo *visual,
+                         int attrib, int *value )
+{
+ // Trying to write a dummy function that returns plausible values.
+  switch(attrib) {
+  case GLX_USE_GL:
+    *value = 1;
+    return 0;
+  case GLX_BUFFER_SIZE:
+    *value = 32;
+    return 0;
+  case GLX_LEVEL:
+    *value = 0; // FIXME: should be incorrect, I guess
+    return 0;
+  case GLX_RGBA:
+    *value = 1;
+    return 0;
+  case GLX_DOUBLEBUFFER:
+    *value = 1; // Not sure
+    return 0;
+  case GLX_STEREO:
+    *value = 0; // Really not sure
+    return 0;
+  case GLX_AUX_BUFFERS:
+    *value = 0; // Not sure either
+    return 0;
+  case GLX_RED_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_GREEN_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_BLUE_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_ALPHA_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_DEPTH_SIZE:
+    *value = 32; // ?
+    return 0;
+  case GLX_STENCIL_SIZE:
+    *value = 32; // ???
+    return 0;
+  case GLX_ACCUM_RED_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_ACCUM_GREEN_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_ACCUM_BLUE_SIZE:
+    *value = 8;
+    return 0;
+  case GLX_ACCUM_ALPHA_SIZE:
+    *value = 8;
+    return 0;
+  }
+  return 0;
+}
+
+const char *glXQueryExtensionsString( Display *dpy, int screen )
+{
+  return "\0";
+}
+

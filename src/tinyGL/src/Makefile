@@ -19,7 +19,7 @@ all: $(LIB)
 
 $(LIB): $(OBJS)
 	rm -f $(LIB)
-	$(CC) -shared -o $(LIB) $(OBJS)
+	$(CC) -shared $(OBJS) $(LFLAGS) -o $(LIB) 
 	cp $(LIB) ../lib
 
 clean:

@@ -4,7 +4,7 @@
 # linux
 CC= gcc
 CFLAGS= -g -Wall -O2 -fPIC
-LFLAGS=
+LFLAGS= -L/usr/lib/x86_64-linux-gnu -lX11 -lXext
 
 # for BeOS PPC
 #CC= mwcc
