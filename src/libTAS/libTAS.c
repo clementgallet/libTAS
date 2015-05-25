@@ -14,7 +14,8 @@ unsigned long max_inputs;
 int replay_inputs_file;
 unsigned long max_inputs_to_replay;
 
-Uint8 key_states[SDLK_LAST] = { 0 };
+Uint8 key_states[6] = { 0 };
+Uint8 key_states_old[6] = { 0 };
 int socket_fd = 0;
 
 void __attribute__((constructor)) init(void)
@@ -123,8 +124,7 @@ void SDL_GL_SwapWindow(void)
     ++frame_counter;
 
     if (replaying)
-    {
-        replay_inputs();
+    {replay_inputs();
         return;
     }
 
@@ -134,13 +134,34 @@ void SDL_GL_SwapWindow(void)
     proceed_commands();
 }
 
-Uint8* SDL_GetKeyState(int* keynums)
+const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
-    return key_states;
+    printf("GetKeyboardState\n");
+    int i;
+    for (i=0; i<6; i++) {
+        keyboard_state[used_scankeys[i]] = key_states[i];
+    }
+    return keyboard_state;
 }
 
-int SDL_PollEvent(void* event)
+int SDL_PollEvent(SDL_Event *event)
 {
+    printf("PollEvent\n");
+    int i;
+    for (i=0; i<6; i++) {
+        if (key_states[i] != key_states_old[i]) {
+            if (key_states[i])
+                event->type = SDL_KEYDOWN;
+            else
+                event->type = SDL_KEYUP;
+            SDL_Keysym keysym;
+            keysym.sym = used_symkeys[i];
+            keysym.scancode = used_scankeys[i];
+            event->key.keysym = keysym;
+            key_states_old[i] = key_states[i];
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -162,27 +183,27 @@ void proceed_commands(void)
                 break;
 
             case 1:
-                key_states[SDLK_UP] = !key_states[SDLK_UP];
+                key_states[0] = !key_states[0];
                 break;
 
             case 2:
-                key_states[SDLK_DOWN] = !key_states[SDLK_DOWN];
+                key_states[1] = !key_states[1];
                 break;
 
             case 3:
-                key_states[SDLK_LEFT] = !key_states[SDLK_LEFT];
+                key_states[2] = !key_states[2];
                 break;
 
             case 4:
-                key_states[SDLK_RIGHT] = !key_states[SDLK_RIGHT];
+                key_states[3] = !key_states[3];
                 break;
 
             case 5:
-                key_states[SDLK_SPACE] = !key_states[SDLK_SPACE];
+                key_states[4] = !key_states[4];
                 break;
 
             case 6:
-                key_states[SDLK_LSHIFT] = !key_states[SDLK_LSHIFT];
+                key_states[5] = !key_states[5];
                 break;
 
             case 7:
@@ -262,12 +283,12 @@ void record_inputs(void)
     }
 
     recorded_inputs[frame_counter] =
-        key_states[SDLK_UP] |
-        key_states[SDLK_LEFT] << 1 |
-        key_states[SDLK_DOWN] << 2 |
-        key_states[SDLK_RIGHT] << 3 |
-        key_states[SDLK_SPACE] << 4 |
-        key_states[SDLK_LSHIFT] << 5;
+        key_states[0] |
+        key_states[1] << 1 |
+        key_states[2] << 2 |
+        key_states[3] << 3 |
+        key_states[4] << 4 |
+        key_states[5] << 5;
 }
 
 void replay_inputs(void)
@@ -280,12 +301,12 @@ void replay_inputs(void)
         exit(-1);
     }
 
-    key_states[SDLK_UP] = inputs & 0x1;
-    key_states[SDLK_LEFT] = (inputs >> 1) & 0x1;
-    key_states[SDLK_DOWN] = (inputs >> 2) & 0x1;
-    key_states[SDLK_RIGHT] = (inputs >> 3) & 0x1;
-    key_states[SDLK_SPACE] = (inputs >> 4) & 0x1;
-    key_states[SDLK_LSHIFT] = (inputs >> 5) & 0x1;
+    key_states[0] = inputs & 0x1;
+    key_states[1] = (inputs >> 1) & 0x1;
+    key_states[2] = (inputs >> 2) & 0x1;
+    key_states[3] = (inputs >> 3) & 0x1;
+    key_states[4] = (inputs >> 4) & 0x1;
+    key_states[5] = (inputs >> 5) & 0x1;
 
     if (!--max_inputs_to_replay)
     {
