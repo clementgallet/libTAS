@@ -39,6 +39,8 @@ void __attribute__((destructor)) term(void);
 time_t time(time_t* t);
 int gettimeofday(struct timeval* tv, void* tz);
 void SDL_GL_SwapWindow(void);
+void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
+//Uint32 SDL_GetWindowId(void* window);
 const Uint8* SDL_GetKeyboardState(int* numkeys);
 int SDL_PollEvent(SDL_Event* event);
 void proceed_commands(void);

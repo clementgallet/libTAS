@@ -2,6 +2,8 @@
 
 void* SDL_handle;
 void(* SDL_GL_SwapWindow_real)(void);
+void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
+Uint32(* SDL_GetWindowID_real)(void*);
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
@@ -17,6 +19,8 @@ unsigned long max_inputs_to_replay;
 Uint8 key_states[6] = { 0 };
 Uint8 key_states_old[6] = { 0 };
 int socket_fd = 0;
+void * gameWindow;
+
 
 void __attribute__((constructor)) init(void)
 {
@@ -33,6 +37,20 @@ void __attribute__((constructor)) init(void)
     if (!SDL_GL_SwapWindow_real)
     {
         log_err("Could not import symbol SDL_GL_SwapWindow.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_CreateWindow_real = dlsym(SDL_handle, "SDL_CreateWindow");
+    if (!SDL_CreateWindow_real)
+    {
+        log_err("Could not import symbol SDL_CreateWindow.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_GetWindowID_real = dlsym(SDL_handle, "SDL_GetWindowID");
+    if (!SDL_GetWindowID_real)
+    {
+        log_err("Could not import symbol SDL_GetWindowID.");
         exit(-1);
     }
 
@@ -134,9 +152,15 @@ void SDL_GL_SwapWindow(void)
     proceed_commands();
 }
 
+void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
+    gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
+    return gameWindow;
+}
+
+
 const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
-    printf("GetKeyboardState\n");
+    //printf("GetKeyboardState\n");
     int i;
     for (i=0; i<6; i++) {
         keyboard_state[used_scankeys[i]] = key_states[i];
@@ -146,14 +170,19 @@ const Uint8* SDL_GetKeyboardState(int* numkeys)
 
 int SDL_PollEvent(SDL_Event *event)
 {
-    printf("PollEvent\n");
+    //printf("PollEvent\n");
     int i;
     for (i=0; i<6; i++) {
         if (key_states[i] != key_states_old[i]) {
-            if (key_states[i])
+            if (key_states[i]) {
                 event->type = SDL_KEYDOWN;
-            else
+                event->key.state = SDL_PRESSED;
+            }
+            else {
                 event->type = SDL_KEYUP;
+                event->key.state = SDL_RELEASED;
+            }
+            event->key.windowID = SDL_GetWindowID_real(gameWindow);
             SDL_Keysym keysym;
             keysym.sym = used_symkeys[i];
             keysym.scancode = used_scankeys[i];

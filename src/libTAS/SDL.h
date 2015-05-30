@@ -4,11 +4,14 @@
 typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned long Uint32;
+typedef long Sint32;
 
 
 #define SDL_KEYDOWN 0x300 /**< Key pressed */
 #define SDL_KEYUP   0x301 /**< Key released */
 
+#define SDL_RELEASED	0
+#define SDL_PRESSED	1
 
 typedef enum
 {
