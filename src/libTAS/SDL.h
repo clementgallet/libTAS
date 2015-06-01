@@ -1,10 +1,12 @@
 #ifndef _SDL_h
 #define _SDL_h
 
-typedef unsigned char Uint8;
-typedef unsigned short Uint16;
-typedef unsigned long Uint32;
-typedef long Sint32;
+#include <inttypes.h> 
+
+typedef uint8_t Uint8;
+typedef uint16_t Uint16;
+typedef uint32_t Uint32;
+typedef int32_t Sint32;
 
 
 #define SDL_KEYDOWN 0x300 /**< Key pressed */

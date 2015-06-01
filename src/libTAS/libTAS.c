@@ -4,6 +4,8 @@ void* SDL_handle;
 void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32(* SDL_GetWindowID_real)(void*);
+int (*SDL_PollEvent_real)(SDL_Event*);
+Uint32 (*SDL_GetTicks_real)(void);
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
@@ -51,6 +53,20 @@ void __attribute__((constructor)) init(void)
     if (!SDL_GetWindowID_real)
     {
         log_err("Could not import symbol SDL_GetWindowID.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_PollEvent_real = dlsym(SDL_handle, "SDL_PollEvent");
+    if (!SDL_PollEvent_real)
+    {
+        log_err("Could not import symbol SDL_PollEvent.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_GetTicks_real = dlsym(SDL_handle, "SDL_GetTicks");
+    if (!SDL_GetTicks_real)
+    {
+        log_err("Could not import symbol SDL_GetTicks.");
         exit(-1);
     }
 
@@ -170,10 +186,28 @@ const Uint8* SDL_GetKeyboardState(int* numkeys)
 
 int SDL_PollEvent(SDL_Event *event)
 {
-    //printf("PollEvent\n");
+
+    SDL_Event myEvent;
+    int isone = SDL_PollEvent_real(&myEvent);
+    while (isone == 1){
+        if ((myEvent.type == SDL_KEYDOWN) || (myEvent.type == SDL_KEYUP)){
+            if (myEvent.type == SDL_KEYDOWN)
+                printf("KEYDOWN\n");
+            if (myEvent.type == SDL_KEYUP)
+                printf("KEYUP\n");
+            printf("windowID: %d\n", myEvent.key.windowID);
+            printf("timestamp: %d\n", myEvent.key.timestamp);
+            printf("sym key: %d\n", myEvent.key.keysym.sym);
+            printf("scan key: %d\n", myEvent.key.keysym.scancode);
+        }
+        isone = SDL_PollEvent_real(&myEvent);
+    }
+
+//    printf("PollEvent\n");
     int i;
     for (i=0; i<6; i++) {
         if (key_states[i] != key_states_old[i]) {
+            printf("Pressed key n %d\n",i);
             if (key_states[i]) {
                 event->type = SDL_KEYDOWN;
                 event->key.state = SDL_PRESSED;
@@ -183,9 +217,13 @@ int SDL_PollEvent(SDL_Event *event)
                 event->key.state = SDL_RELEASED;
             }
             event->key.windowID = SDL_GetWindowID_real(gameWindow);
+            event->key.timestamp = SDL_GetTicks_real() - 1;
+            printf("myWindowID: %d\n", event->key.windowID);
             SDL_Keysym keysym;
             keysym.sym = used_symkeys[i];
+            printf("mySym: %d\n", used_symkeys[i]);
             keysym.scancode = used_scankeys[i];
+            printf("myScan: %d\n", used_scankeys[i]);
             event->key.keysym = keysym;
             key_states_old[i] = key_states[i];
             return 1;
