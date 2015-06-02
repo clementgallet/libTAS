@@ -6,6 +6,9 @@ void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32(* SDL_GetWindowID_real)(void*);
 int (*SDL_PollEvent_real)(SDL_Event*);
 Uint32 (*SDL_GetTicks_real)(void);
+Uint32 (*SDL_GetWindowFlags_real)(void*);
+
+
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
@@ -53,6 +56,13 @@ void __attribute__((constructor)) init(void)
     if (!SDL_GetWindowID_real)
     {
         log_err("Could not import symbol SDL_GetWindowID.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_GetWindowFlags_real = dlsym(SDL_handle, "SDL_GetWindowFlags");
+    if (!SDL_GetWindowFlags_real)
+    {
+        log_err("Could not import symbol SDL_GetWindowFlags.");
         exit(-1);
     }
 
@@ -173,10 +183,15 @@ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 fla
     return gameWindow;
 }
 
+Uint32 SDL_GetWindowFlags(void* window){
+    printf("GetWindowFlags\n");
+    return SDL_GetWindowFlags_real(window);
+}
+
 
 const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
-    //printf("GetKeyboardState\n");
+    printf("GetKeyboardState\n");
     int i;
     for (i=0; i<6; i++) {
         keyboard_state[used_scankeys[i]] = key_states[i];
@@ -186,7 +201,7 @@ const Uint8* SDL_GetKeyboardState(int* numkeys)
 
 int SDL_PollEvent(SDL_Event *event)
 {
-
+    //return SDL_PollEvent_real(event);
     SDL_Event myEvent;
     int isone = SDL_PollEvent_real(&myEvent);
     while (isone == 1){

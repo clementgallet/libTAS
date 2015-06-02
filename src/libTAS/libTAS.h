@@ -41,6 +41,7 @@ int gettimeofday(struct timeval* tv, void* tz);
 void SDL_GL_SwapWindow(void);
 void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
 //Uint32 SDL_GetWindowId(void* window);
+Uint32 SDL_GetWindowFlags(void* window);
 const Uint8* SDL_GetKeyboardState(int* numkeys);
 int SDL_PollEvent(SDL_Event* event);
 void proceed_commands(void);
