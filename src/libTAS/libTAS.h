@@ -44,6 +44,7 @@ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 fla
 Uint32 SDL_GetWindowFlags(void* window);
 const Uint8* SDL_GetKeyboardState(int* numkeys);
 int SDL_PollEvent(SDL_Event* event);
+int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
 void proceed_commands(void);
 void record_inputs(void);
 void replay_inputs(void);

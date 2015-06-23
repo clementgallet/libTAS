@@ -5,6 +5,7 @@ void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32(* SDL_GetWindowID_real)(void*);
 int (*SDL_PollEvent_real)(SDL_Event*);
+int (*SDL_PeepEvents_real)(SDL_Event*, int, SDL_eventaction, Uint32, Uint32);
 Uint32 (*SDL_GetTicks_real)(void);
 Uint32 (*SDL_GetWindowFlags_real)(void*);
 
@@ -70,6 +71,13 @@ void __attribute__((constructor)) init(void)
     if (!SDL_PollEvent_real)
     {
         log_err("Could not import symbol SDL_PollEvent.");
+        exit(-1);
+    }
+
+    *(void**)&SDL_PeepEvents_real = dlsym(SDL_handle, "SDL_PeepEvents");
+    if (!SDL_PeepEvents_real)
+    {
+        log_err("Could not import symbol SDL_PeepEvents.");
         exit(-1);
     }
 
@@ -199,6 +207,16 @@ const Uint8* SDL_GetKeyboardState(int* numkeys)
     return keyboard_state;
 }
 
+int SDL_PeepEvents(SDL_Event*      events,
+                   int             numevents,
+                   SDL_eventaction action,
+                   Uint32          minType,
+                   Uint32          maxType)
+{
+    printf("PeepEvents\n");
+    return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
+}
+
 int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
@@ -215,6 +233,9 @@ int SDL_PollEvent(SDL_Event *event)
             printf("sym key: %d\n", myEvent.key.keysym.sym);
             printf("scan key: %d\n", myEvent.key.keysym.scancode);
         }
+	else {
+            printf("other event: %d\n", myEvent.type);
+	}
         isone = SDL_PollEvent_real(&myEvent);
     }
 

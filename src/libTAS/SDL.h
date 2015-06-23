@@ -697,4 +697,12 @@ typedef union SDL_Event
     Uint8 padding[56];
 } SDL_Event;
 
+typedef enum
+{
+    SDL_ADDEVENT,
+    SDL_PEEKEVENT,
+    SDL_GETEVENT
+} SDL_eventaction;
+
+
 #endif /* _SDL_h */
