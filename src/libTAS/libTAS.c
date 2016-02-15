@@ -27,6 +27,7 @@ Uint8 key_states_old[6] = { 0 };
 int socket_fd = 0;
 void * gameWindow;
 
+char keyboard[32];
 
 void __attribute__((constructor)) init(void)
 {
@@ -121,7 +122,7 @@ void __attribute__((constructor)) init(void)
     recorded_inputs = malloc(sizeof(unsigned char) * 8192);
     max_inputs = 8192;
 
-    proceed_commands();
+    //proceed_commands();
 }
 
 void __attribute__((destructor)) term(void)
@@ -220,6 +221,7 @@ int SDL_PeepEvents(SDL_Event*      events,
 int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
+/*
     SDL_Event myEvent;
     int isone = SDL_PollEvent_real(&myEvent);
     while (isone == 1){
@@ -238,7 +240,7 @@ int SDL_PollEvent(SDL_Event *event)
 	}
         isone = SDL_PollEvent_real(&myEvent);
     }
-
+*/
 //    printf("PollEvent\n");
     int i;
     for (i=0; i<6; i++) {
@@ -274,15 +276,12 @@ void proceed_commands(void)
     {
         unsigned int command;
 
-        if (recv(socket_fd, &command, sizeof(unsigned int), MSG_DONTWAIT * running) < 0)
-            return;
-        else
-        {
+        //if (recv(socket_fd, &command, sizeof(unsigned int), MSG_DONTWAIT * running) < 0)
+        recv(socket_fd, &command, sizeof(unsigned int), 0);
             char filename_buffer[1024];
             switch (command)
             {
             case 0:
-                send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
                 break;
 
             case 1:
@@ -314,6 +313,8 @@ void proceed_commands(void)
                 break;
 
             case 8:
+                recv(socket_fd, keyboard, 32 * sizeof(char), 0);
+                send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
                 return;
 
             case 9:
@@ -373,7 +374,6 @@ void proceed_commands(void)
             default:
                 log_err("Unknown command recieved.");
             }
-        }
     }
 }
 

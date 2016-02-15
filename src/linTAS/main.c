@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <string.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -25,10 +28,46 @@ unsigned int speed_divisor = 1;
 unsigned char running = 0;
 unsigned long int frame_counter = 0;
 
+char keyboard_state[32];
+
+static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
+{
+    (void) fprintf(stderr,
+		   "Ignoring Xlib error: error code %d request code %d\n",
+		   theEvent->error_code,
+		   theEvent->request_code);
+
+    return 0;
+}
+
+//old_handler = XSetErrorHandler(ApplicationErrorHandler) ;
+
 int main(void)
 {
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    Display *display;
+    Window window;
+    XEvent event;
+    char *s;
+    unsigned int kc;
+    int quit = 0;
+
+
+    XSetErrorHandler(MyErrorHandler);
+
+    /* open connection with the server */
+    display = XOpenDisplay(NULL);
+    if (display == NULL)
+    {
+        fprintf(stderr, "Cannot open display\n");
+        exit(1);
+    }
+
+        // Find the window which has the current keyboard focus
+        Window win_focus;
+        int    revert;
+
 
     printf("Connecting to libTAS...\n");
 
@@ -40,18 +79,55 @@ int main(void)
 
     printf("Connected.\n");
 
+    usleep(1000000);
+
+    XGetInputFocus(display, &win_focus, &revert);
+    XSelectInput(display, win_focus, KeyPressMask);
+
+    unsigned int command = 0;
+
     while (1)
     {
-        unsigned int command;
 
-        draw_cli();
+        XGetInputFocus(display, &win_focus, &revert);
+        XSelectInput(display, win_focus, KeyPressMask);
+        /*draw_cli();
 
         do
             printf("(SuperMeatBoyTaser) ");
-        while (!scanf("%u", &command));
+        while (!scanf("%u", &command));*/
+
+        while( XPending( display ) > 0 ) {
+
+        XNextEvent(display, &event);
+
+        if (event.type == KeyPress)
+        {
+        kc = ((XKeyPressedEvent*)&event)->keycode;
+            s = XKeysymToString(XKeycodeToKeysym(display, kc, 0));
+            /* s is NULL or a static no-touchy return string. */
+            if (s) printf("KEY:%s\n", s);
+
+            if (XKeycodeToKeysym(display, kc, 0) == XK_space){
+                XQueryKeymap(display, keyboard_state);
+                command = 8;
+            }
+        }
+
+
+
+        }
+
+        if (running)
+            XQueryKeymap(display, keyboard_state);
 
         if (proceed_command(command, socket_fd))
             break;
+
+        if (running)
+            command = 8;
+        else
+            command = 0;
     }
 
     close(socket_fd);
@@ -84,7 +160,7 @@ void draw_cli(void)
 int proceed_command(unsigned int command, int socket_fd)
 {
     if (!command)
-        return 1;
+        return 0;
 
     if (command > 11)
     {
@@ -124,6 +200,11 @@ int proceed_command(unsigned int command, int socket_fd)
 
     case 7:
         running = !running;
+        break;
+
+    case 8:
+        send(socket_fd, keyboard_state, 32 * sizeof(char), 0);
+        recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
         break;
 
     case 9:
@@ -176,9 +257,9 @@ int proceed_command(unsigned int command, int socket_fd)
     default:;
     }
 
-    command = 0;
-    send(socket_fd, &command, sizeof(unsigned int), 0);
-    recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
+    //command = 0;
+
+    //send(socket_fd, &command, sizeof(unsigned int), 0);
 
     return 0;
 }
