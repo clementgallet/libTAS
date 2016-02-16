@@ -1,4 +1,5 @@
 #include "libTAS.h"
+#include "keyboard.h"
 
 void* SDL_handle;
 void(* SDL_GL_SwapWindow_real)(void);
@@ -27,7 +28,10 @@ Uint8 key_states_old[6] = { 0 };
 int socket_fd = 0;
 void * gameWindow;
 
-char keyboard[32];
+char xkeyboard[32] = {0};
+char old_xkeyboard[32] = {0};
+
+Display *display;
 
 void __attribute__((constructor)) init(void)
 {
@@ -122,6 +126,9 @@ void __attribute__((constructor)) init(void)
     recorded_inputs = malloc(sizeof(unsigned char) * 8192);
     max_inputs = 8192;
 
+    display = XOpenDisplay(NULL);
+    X11_InitKeymap();
+
     //proceed_commands();
 }
 
@@ -200,11 +207,8 @@ Uint32 SDL_GetWindowFlags(void* window){
 
 const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
-    printf("GetKeyboardState\n");
-    int i;
-    for (i=0; i<6; i++) {
-        keyboard_state[used_scankeys[i]] = key_states[i];
-    }
+    //printf("GetKeyboardState\n");
+    xkeyboardToSDLkeyboard(display, xkeyboard, keyboard_state);
     return keyboard_state;
 }
 
@@ -221,50 +225,66 @@ int SDL_PeepEvents(SDL_Event*      events,
 int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
-/*
+
     SDL_Event myEvent;
     int isone = SDL_PollEvent_real(&myEvent);
     while (isone == 1){
         if ((myEvent.type == SDL_KEYDOWN) || (myEvent.type == SDL_KEYUP)){
+/*
             if (myEvent.type == SDL_KEYDOWN)
-                printf("KEYDOWN\n");
+                printf("KEYDOWN ");
             if (myEvent.type == SDL_KEYUP)
-                printf("KEYUP\n");
-            printf("windowID: %d\n", myEvent.key.windowID);
-            printf("timestamp: %d\n", myEvent.key.timestamp);
-            printf("sym key: %d\n", myEvent.key.keysym.sym);
+                printf("KEYUP ");
+            //printf("windowID: %d\n", myEvent.key.windowID);
+            //printf("timestamp: %d\n", myEvent.key.timestamp);
+            printf("sym key: %d ", myEvent.key.keysym.sym);
             printf("scan key: %d\n", myEvent.key.keysym.scancode);
+*/
         }
 	else {
-            printf("other event: %d\n", myEvent.type);
+//            printf("other event: %d\n", myEvent.type);
 	}
         isone = SDL_PollEvent_real(&myEvent);
     }
-*/
-//    printf("PollEvent\n");
+
+    //printf("PollEvent\n");
+
     int i;
-    for (i=0; i<6; i++) {
-        if (key_states[i] != key_states_old[i]) {
-            printf("Pressed key n %d\n",i);
-            if (key_states[i]) {
-                event->type = SDL_KEYDOWN;
-                event->key.state = SDL_PRESSED;
+    for (i=0; i<32; i++) {
+        if (xkeyboard[i] == old_xkeyboard[i])
+            continue;
+
+        int j;
+        for (j=0; j<8; j++) {
+            char old_key = (old_xkeyboard[i] >> j) & 0x1;
+            char new_key = (xkeyboard[i] >> j) & 0x1;
+
+            if (old_key != new_key) {
+                char keycode = (i << 3) | j;
+
+                if (new_key) {
+                    event->type = SDL_KEYDOWN;
+                    event->key.state = SDL_PRESSED;
+                    //printf("Pressed ");
+                }
+                else {
+                    event->type = SDL_KEYUP;
+                    event->key.state = SDL_RELEASED;
+                    //printf("Release ");
+                }
+                event->key.windowID = SDL_GetWindowID_real(gameWindow);
+                event->key.timestamp = SDL_GetTicks_real() - 1;
+                //printf("myWindowID: %d\n", event->key.windowID);
+                SDL_Keysym keysym;
+                xkeycodeToSDL(display, &keysym, keycode);
+
+                //printf("mySym: %d ", keysym.sym);
+                //keysym.scancode = 40;
+                //printf("myScan: %d ", keysym.scancode);
+                event->key.keysym = keysym;
+                old_xkeyboard[i] ^= (1 << j);
+                return 1;
             }
-            else {
-                event->type = SDL_KEYUP;
-                event->key.state = SDL_RELEASED;
-            }
-            event->key.windowID = SDL_GetWindowID_real(gameWindow);
-            event->key.timestamp = SDL_GetTicks_real() - 1;
-            printf("myWindowID: %d\n", event->key.windowID);
-            SDL_Keysym keysym;
-            keysym.sym = used_symkeys[i];
-            printf("mySym: %d\n", used_symkeys[i]);
-            keysym.scancode = used_scankeys[i];
-            printf("myScan: %d\n", used_scankeys[i]);
-            event->key.keysym = keysym;
-            key_states_old[i] = key_states[i];
-            return 1;
         }
     }
     return 0;
@@ -313,7 +333,7 @@ void proceed_commands(void)
                 break;
 
             case 8:
-                recv(socket_fd, keyboard, 32 * sizeof(char), 0);
+                recv(socket_fd, xkeyboard, 32 * sizeof(char), 0);
                 send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
                 return;
 

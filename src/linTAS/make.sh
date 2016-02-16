@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SOURCE_FILES="main.c"
-C_WARNINGS="-std=c99 -pedantic -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow -Wno-unused-parameter"
+C_WARNINGS="-std=c99 -pedantic -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow"
 C_OPTIMISATIONS="-g -O1 -lX11"
 
 [ -d ../../bin ] || mkdir ../../bin

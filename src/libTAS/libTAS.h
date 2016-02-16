@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
 
 #include "SDL.h"
 

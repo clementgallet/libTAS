@@ -88,6 +88,7 @@ int main(void)
 
     while (1)
     {
+        usleep(1000);
 
         XGetInputFocus(display, &win_focus, &revert);
         XSelectInput(display, win_focus, KeyPressMask);
@@ -111,6 +112,9 @@ int main(void)
             if (XKeycodeToKeysym(display, kc, 0) == XK_space){
                 XQueryKeymap(display, keyboard_state);
                 command = 8;
+            }
+            if (XKeycodeToKeysym(display, kc, 0) == XK_Pause){
+                running = !running;
             }
         }
 
