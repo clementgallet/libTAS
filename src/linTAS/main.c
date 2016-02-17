@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
+#include "../shared/tasflags.h"
+#include "keymapping.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -13,22 +17,13 @@
 void draw_cli(void);
 int proceed_command(unsigned int command, int socket_fd);
 
-enum key_codes
-{
-    UP,
-    LEFT,
-    DOWN,
-    RIGHT,
-    SPACE,
-    SHIFT,
-    KEYS_NUMBER // Number of keys.
-};
-unsigned char keys[KEYS_NUMBER] = {0};
-unsigned int speed_divisor = 1;
-unsigned char running = 0;
+struct TasFlags tasflags;
+
 unsigned long int frame_counter = 0;
 
 char keyboard_state[32];
+KeySym hotkeys[HOTKEY_LEN];
+
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -40,19 +35,16 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
     return 0;
 }
 
-//old_handler = XSetErrorHandler(ApplicationErrorHandler) ;
-
 int main(void)
 {
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     Display *display;
-    Window window;
     XEvent event;
-    char *s;
-    unsigned int kc;
-    int quit = 0;
-
+    // Find the window which has the current keyboard focus
+    Window win_focus;
+    int revert;
+    struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
 
@@ -63,10 +55,6 @@ int main(void)
         fprintf(stderr, "Cannot open display\n");
         exit(1);
     }
-
-        // Find the window which has the current keyboard focus
-        Window win_focus;
-        int    revert;
 
 
     printf("Connecting to libTAS...\n");
@@ -79,56 +67,55 @@ int main(void)
 
     printf("Connected.\n");
 
-    usleep(1000000);
+    tim.tv_sec  = 1;
+    tim.tv_nsec = 0L;
+
+    nanosleep(&tim, NULL);
 
     XGetInputFocus(display, &win_focus, &revert);
     XSelectInput(display, win_focus, KeyPressMask);
 
     unsigned int command = 0;
+    tasflags = DEFAULTFLAGS;
+    default_hotkeys(hotkeys);
 
     while (1)
     {
-        usleep(1000);
+        tim.tv_sec  = 0;
+        tim.tv_nsec = 10000000L;
+
+        nanosleep(&tim, NULL);
 
         XGetInputFocus(display, &win_focus, &revert);
         XSelectInput(display, win_focus, KeyPressMask);
-        /*draw_cli();
-
-        do
-            printf("(SuperMeatBoyTaser) ");
-        while (!scanf("%u", &command));*/
 
         while( XPending( display ) > 0 ) {
 
-        XNextEvent(display, &event);
+            XNextEvent(display, &event);
 
-        if (event.type == KeyPress)
-        {
-        kc = ((XKeyPressedEvent*)&event)->keycode;
-            s = XKeysymToString(XKeycodeToKeysym(display, kc, 0));
-            /* s is NULL or a static no-touchy return string. */
-            if (s) printf("KEY:%s\n", s);
+            if (event.type == KeyPress)
+            {
+                KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
+                KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                //s = XKeysymToString(ks);
 
-            if (XKeycodeToKeysym(display, kc, 0) == XK_space){
-                XQueryKeymap(display, keyboard_state);
-                command = 8;
-            }
-            if (XKeycodeToKeysym(display, kc, 0) == XK_Pause){
-                running = !running;
+                if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
+                    XQueryKeymap(display, keyboard_state);
+                    command = 8;
+                }
+                if (ks == hotkeys[HOTKEY_PLAYPAUSE]){
+                    tasflags.running = !tasflags.running;
+                }
             }
         }
 
-
-
-        }
-
-        if (running)
+        if (tasflags.running)
             XQueryKeymap(display, keyboard_state);
 
         if (proceed_command(command, socket_fd))
             break;
 
-        if (running)
+        if (tasflags.running)
             command = 8;
         else
             command = 0;
@@ -140,12 +127,8 @@ int main(void)
 
 void draw_cli(void)
 {
-    printf("\n        \033[%cm[ UP ]\033[0m                 \033[%cm[SPACE]\033[0m\n\n",
-           keys[UP] ? '7' : '0', keys[SPACE] ? '7' : '0');
-    printf("\033[%cm[LEFT]\033[0m  \033[%cm[DOWN]\033[0m  \033[%cm[RIGHT]\033[0m        \033[%cm[SHIFT]\033[0m\n\n",
-           keys[LEFT] ? '7' : '0', keys[DOWN] ? '7' : '0', keys[RIGHT] ? '7' : '0', keys[SHIFT] ? '7' : '0');
     printf("%s      Speed divisor: %u     Frame counter: %lu\n\n",
-           running ? "\033[7m[RUNNING ]\033[0m" : "[ PAUSED ]", speed_divisor, frame_counter);
+           tasflags.running ? "\033[7m[RUNNING ]\033[0m" : "[ PAUSED ]", tasflags.speed_divisor, frame_counter);
     printf("Available commands:\n\n");
     printf("1 - Toggle UP.\n");
     printf("2 - Toggle DOWN.\n");
@@ -178,32 +161,8 @@ int proceed_command(unsigned int command, int socket_fd)
 
     switch (command)
     {
-    case 1:
-        keys[UP] = !keys[UP];
-        break;
-
-    case 2:
-        keys[DOWN] = !keys[DOWN];
-        break;
-
-    case 3:
-        keys[LEFT] = !keys[LEFT];
-        break;
-
-    case 4:
-        keys[RIGHT] = !keys[RIGHT];
-        break;
-
-    case 5:
-        keys[SPACE] = !keys[SPACE];
-        break;
-
-    case 6:
-        keys[SHIFT] = !keys[SHIFT];
-        break;
-
     case 7:
-        running = !running;
+        tasflags.running = !tasflags.running;
         break;
 
     case 8:
@@ -212,15 +171,15 @@ int proceed_command(unsigned int command, int socket_fd)
         break;
 
     case 9:
-        speed_divisor = 0;
+        tasflags.speed_divisor = 0;
         do
         {
             printf("Enter non-null speed divisor factor: ");
-            scanf("%u", &speed_divisor);
+            scanf("%d", &(tasflags.speed_divisor));
         }
-        while (!speed_divisor);
+        while (!tasflags.speed_divisor);
 
-        send(socket_fd, &speed_divisor, sizeof(unsigned int), 0);
+        send(socket_fd, &(tasflags.speed_divisor), sizeof(unsigned int), 0);
         break;
 
     case 10:
@@ -251,12 +210,12 @@ int proceed_command(unsigned int command, int socket_fd)
         }
 
         /* Update inputs. */
-        recv(socket_fd, &answer, sizeof(unsigned char), 0);
+        /*recv(socket_fd, &answer, sizeof(unsigned char), 0);
         for (unsigned int i = 0; i < KEYS_NUMBER; ++i)
         {
             keys[i] = answer & 0x1;
             answer >>= 1;
-        }
+        }*/
 
     default:;
     }

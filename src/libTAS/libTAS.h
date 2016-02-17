@@ -31,9 +31,6 @@ struct timeval
 };
 int usleep(useconds_t usec);
 
-SDL_Scancode used_scankeys[6] = {SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT, SDL_SCANCODE_SPACE, SDL_SCANCODE_LSHIFT};
-Sint32 used_symkeys[6] = {SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT, SDLK_SPACE, SDLK_LSHIFT};
-
 Uint8 keyboard_state[SDL_NUM_SCANCODES] = {0};
 
 void __attribute__((constructor)) init(void);

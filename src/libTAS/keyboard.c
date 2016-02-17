@@ -144,7 +144,7 @@ SDL_Keycode X11_TranslateKeycode(Display *display, KeyCode kc)
 	KeySym xsym;
 	SDL_Keycode key;
 
-	xsym = XKeycodeToKeysym(display, kc, 0);
+	xsym = XkbKeycodeToKeysym(display, kc, 0, 0);
 #ifdef DEBUG_KEYS
 	fprintf(stderr, "Translating key code %d -> 0x%.4x\n", kc, xsym);
 #endif

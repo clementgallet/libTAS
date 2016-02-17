@@ -1,16 +1,8 @@
 #include "libTAS.h"
 #include "keyboard.h"
+#include "hook_SDL.h"
 
 void* SDL_handle;
-void(* SDL_GL_SwapWindow_real)(void);
-void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
-Uint32(* SDL_GetWindowID_real)(void*);
-int (*SDL_PollEvent_real)(SDL_Event*);
-int (*SDL_PeepEvents_real)(SDL_Event*, int, SDL_eventaction, Uint32, Uint32);
-Uint32 (*SDL_GetTicks_real)(void);
-Uint32 (*SDL_GetWindowFlags_real)(void*);
-
-
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
@@ -23,8 +15,6 @@ unsigned long max_inputs;
 int replay_inputs_file;
 unsigned long max_inputs_to_replay;
 
-Uint8 key_states[6] = { 0 };
-Uint8 key_states_old[6] = { 0 };
 int socket_fd = 0;
 void * gameWindow;
 
@@ -44,54 +34,8 @@ void __attribute__((constructor)) init(void)
         exit(-1);
     }
 
-    *(void**)&SDL_GL_SwapWindow_real = dlsym(SDL_handle, "SDL_GL_SwapWindow");
-    if (!SDL_GL_SwapWindow_real)
-    {
-        log_err("Could not import symbol SDL_GL_SwapWindow.");
+    if (!hook_SDL(SDL_handle))
         exit(-1);
-    }
-
-    *(void**)&SDL_CreateWindow_real = dlsym(SDL_handle, "SDL_CreateWindow");
-    if (!SDL_CreateWindow_real)
-    {
-        log_err("Could not import symbol SDL_CreateWindow.");
-        exit(-1);
-    }
-
-    *(void**)&SDL_GetWindowID_real = dlsym(SDL_handle, "SDL_GetWindowID");
-    if (!SDL_GetWindowID_real)
-    {
-        log_err("Could not import symbol SDL_GetWindowID.");
-        exit(-1);
-    }
-
-    *(void**)&SDL_GetWindowFlags_real = dlsym(SDL_handle, "SDL_GetWindowFlags");
-    if (!SDL_GetWindowFlags_real)
-    {
-        log_err("Could not import symbol SDL_GetWindowFlags.");
-        exit(-1);
-    }
-
-    *(void**)&SDL_PollEvent_real = dlsym(SDL_handle, "SDL_PollEvent");
-    if (!SDL_PollEvent_real)
-    {
-        log_err("Could not import symbol SDL_PollEvent.");
-        exit(-1);
-    }
-
-    *(void**)&SDL_PeepEvents_real = dlsym(SDL_handle, "SDL_PeepEvents");
-    if (!SDL_PeepEvents_real)
-    {
-        log_err("Could not import symbol SDL_PeepEvents.");
-        exit(-1);
-    }
-
-    *(void**)&SDL_GetTicks_real = dlsym(SDL_handle, "SDL_GetTicks");
-    if (!SDL_GetTicks_real)
-    {
-        log_err("Could not import symbol SDL_GetTicks.");
-        exit(-1);
-    }
 
     if (!unlink(SOCKET_FILENAME))
         log_err("Removed stall socket.");
@@ -209,6 +153,7 @@ const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
     //printf("GetKeyboardState\n");
     xkeyboardToSDLkeyboard(display, xkeyboard, keyboard_state);
+    //*numkeys = 512;
     return keyboard_state;
 }
 
@@ -304,30 +249,6 @@ void proceed_commands(void)
             case 0:
                 break;
 
-            case 1:
-                key_states[0] = !key_states[0];
-                break;
-
-            case 2:
-                key_states[1] = !key_states[1];
-                break;
-
-            case 3:
-                key_states[2] = !key_states[2];
-                break;
-
-            case 4:
-                key_states[3] = !key_states[3];
-                break;
-
-            case 5:
-                key_states[4] = !key_states[4];
-                break;
-
-            case 6:
-                key_states[5] = !key_states[5];
-                break;
-
             case 7:
                 running = !running;
                 break;
@@ -404,14 +325,14 @@ void record_inputs(void)
         max_inputs *= 2;
         recorded_inputs = realloc(recorded_inputs, sizeof(unsigned char) * max_inputs);
     }
-
+/*
     recorded_inputs[frame_counter] =
         key_states[0] |
         key_states[1] << 1 |
         key_states[2] << 2 |
         key_states[3] << 3 |
         key_states[4] << 4 |
-        key_states[5] << 5;
+        key_states[5] << 5; */
 }
 
 void replay_inputs(void)
@@ -423,14 +344,14 @@ void replay_inputs(void)
         log_err("Error reading inputs.");
         exit(-1);
     }
-
+/*
     key_states[0] = inputs & 0x1;
     key_states[1] = (inputs >> 1) & 0x1;
     key_states[2] = (inputs >> 2) & 0x1;
     key_states[3] = (inputs >> 3) & 0x1;
     key_states[4] = (inputs >> 4) & 0x1;
     key_states[5] = (inputs >> 5) & 0x1;
-
+*/
     if (!--max_inputs_to_replay)
     {
         close(replay_inputs_file);

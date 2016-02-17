@@ -4,6 +4,7 @@
 #include "SDL.h"
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 void X11_InitKeymap(void);
 void xkeyboardToSDLkeyboard(Display *display, char Xkeyboard[], Uint8* SDLkeyboard);
