@@ -46,6 +46,7 @@ int SDL_PollEvent(SDL_Event* event);
 int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
 void SDL_Delay(Uint32 sleep);
 int SDL_GL_SetSwapInterval(int interval);
+Uint32 SDL_GetTicks(void);
 void proceed_commands(void);
 void record_inputs(void);
 void replay_inputs(void);

@@ -112,6 +112,13 @@ int usleep(useconds_t usec)
     return usleep_real(usec);
 }
 
+Uint32 SDL_GetTicks(void)
+{
+    printf("GetTicks\n");
+    return (current_time.tv_sec*1000 + current_time.tv_usec/1000);
+    //return SDL_GetTicks_real();
+}
+
 void SDL_GL_SwapWindow(void)
 {
     SDL_GL_SwapWindow_real();
