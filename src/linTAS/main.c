@@ -44,7 +44,7 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 
 int main(int argc, char **argv)
 {
-    tasflags = DEFAULTFLAGS;
+    tasflags = (struct TasFlags){0, 1, 0, 0, LCF_ERROR, LCF_NONE};
 
     /* Parsing arguments */
     int c;

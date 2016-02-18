@@ -3,7 +3,10 @@
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <stdio.h>
 #include "SDL.h"
+//#include "../shared/tasflags.h"
+#include "logging.h"
 
 void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
@@ -16,6 +19,6 @@ int (*SDL_GL_SetSwapInterval_real)(int interval);
 
 int (*usleep_real)(unsigned long);
 
-int hook_SDL(void* SDL_handle);
+int hook_SDL(void* SDL_handle, struct TasFlags tasflags);
 
 #endif // HOOKSDL_H_INCLUDED

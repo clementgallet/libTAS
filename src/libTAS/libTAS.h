@@ -15,6 +15,9 @@
 #include <X11/keysym.h>
 
 #include "SDL.h"
+#include "keyboard.h"
+#include "hook_SDL.h"
+#include "../shared/messages.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
