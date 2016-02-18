@@ -124,7 +124,7 @@ int main(int argc, char **argv)
         do {
 
             XGetInputFocus(display, &win_focus, &revert);
-            XSelectInput(display, win_focus, KeyPressMask);
+            XSelectInput(display, win_focus, KeyPressMask | KeyReleaseMask);
 
             XQueryKeymap(display, keyboard_state);
 
@@ -147,6 +147,19 @@ int main(int argc, char **argv)
                         tasflags.running = !tasflags.running;
                         tasflagsmod = 1;
                         isidle = !tasflags.running;
+                    }
+                    if (ks == hotkeys[HOTKEY_FASTFORWARD]){
+                        tasflags.fastforward = 1;
+                        tasflagsmod = 1;
+                    }
+                }
+                if (event.type == KeyRelease)
+                {
+                    KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
+                    KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                    if (ks == hotkeys[HOTKEY_FASTFORWARD]){
+                        tasflags.fastforward = 0;
+                        tasflagsmod = 1;
                     }
                 }
             }

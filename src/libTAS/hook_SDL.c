@@ -1,4 +1,5 @@
 #include "hook_SDL.h"
+#include <stdio.h>
 
 int hook_SDL(void* SDL_handle) {
 
@@ -48,6 +49,21 @@ int hook_SDL(void* SDL_handle) {
     if (!SDL_GetTicks_real)
     {
         //log_err("Could not import symbol SDL_GetTicks.");
+        return 0;
+    }
+
+    *(void**)&SDL_GL_SetSwapInterval_real = dlsym(SDL_handle, "SDL_GL_SetSwapInterval");
+    if (!SDL_GL_SetSwapInterval_real)
+    {
+        printf("Cound not load SDL_GL_SetSwapInterval\n");
+        //log_err("Could not import symbol SDL_GetTicks.");
+        return 0;
+    }
+
+    *(void**)&usleep_real = dlsym(RTLD_NEXT, "usleep");
+    if (!usleep_real)
+    {
+        printf("Cound not load usleep\n");
         return 0;
     }
 

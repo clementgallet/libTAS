@@ -9,6 +9,7 @@ enum
 {
     HOTKEY_PLAYPAUSE, // Switch from play to pause of the game
     HOTKEY_FRAMEADVANCE, // Advance one frame, also pause the game if playing
+    HOTKEY_FASTFORWARD, // Enable fastforward when pressed
     HOTKEY_LEN
 };
 

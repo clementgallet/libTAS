@@ -100,6 +100,18 @@ int gettimeofday(struct timeval* tv, void* tz)
     return 0;
 }
 
+void SDL_Delay(Uint32 sleep)
+{
+    //printf("Sleep for %d ms\n", sleep);
+    usleep_real(sleep*1000);
+}
+
+int usleep(useconds_t usec)
+{
+    //printf("Usleep for %u us\n", (unsigned int)(usec));
+    return usleep_real(usec);
+}
+
 void SDL_GL_SwapWindow(void)
 {
     SDL_GL_SwapWindow_real();
@@ -140,11 +152,25 @@ void SDL_GL_SwapWindow(void)
     send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
 
     if (tasflags.running && tasflags.speed_divisor > 1)
-        usleep(1000000 * (tasflags.speed_divisor - 1) / 60);
+        usleep_real(1000000 * (tasflags.speed_divisor - 1) / 60);
 
+    struct TasFlags oldflags = tasflags;
     proceed_commands();
+
+    /* Do the rest of the stuff before finishing the frame */
+    if (oldflags.fastforward != tasflags.fastforward)
+        SDL_GL_SetSwapInterval_real(!tasflags.fastforward);
+
+
     ++frame_counter;
 }
+
+int SDL_GL_SetSwapInterval(int interval)
+{
+    printf("SwapInterval: %d\n", interval);
+    return SDL_GL_SetSwapInterval_real(interval);
+}
+    
 
 void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
