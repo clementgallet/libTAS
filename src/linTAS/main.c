@@ -9,6 +9,7 @@
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
 #include "../shared/tasflags.h"
+#include "../shared/messages.h"
 #include "keymapping.h"
 
 #define MAGIC_NUMBER 42
@@ -24,6 +25,12 @@ unsigned long int frame_counter = 0;
 char keyboard_state[32];
 KeySym hotkeys[HOTKEY_LEN];
 
+char *moviefile = NULL;
+
+/* Temp place */
+const int ISIDLE = 0;
+const int ISRUNNING = 1;
+
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -35,8 +42,27 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
     return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    tasflags = DEFAULTFLAGS;
+
+    /* Parsing arguments */
+    int c;
+    while ((c = getopt (argc, argv, "wf:")) != -1)
+        switch (c) {
+            case 'w':
+                tasflags.recording = 1;
+                break;
+            case 'f':
+                moviefile = optarg;
+                break;
+            case '?':
+                fprintf (stderr, "Unknown option character");
+                break;
+            default:
+                return 1;
+        }
+
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     Display *display;
@@ -75,50 +101,86 @@ int main(void)
     XGetInputFocus(display, &win_focus, &revert);
     XSelectInput(display, win_focus, KeyPressMask);
 
-    unsigned int command = 0;
-    tasflags = DEFAULTFLAGS;
     default_hotkeys(hotkeys);
 
     while (1)
     {
-        tim.tv_sec  = 0;
-        tim.tv_nsec = 10000000L;
-
-        nanosleep(&tim, NULL);
-
-        XGetInputFocus(display, &win_focus, &revert);
-        XSelectInput(display, win_focus, KeyPressMask);
-
-        while( XPending( display ) > 0 ) {
-
-            XNextEvent(display, &event);
-
-            if (event.type == KeyPress)
-            {
-                KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
-                KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-                //s = XKeysymToString(ks);
-
-                if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
-                    XQueryKeymap(display, keyboard_state);
-                    command = 8;
-                }
-                if (ks == hotkeys[HOTKEY_PLAYPAUSE]){
-                    tasflags.running = !tasflags.running;
-                }
-            }
+        
+        /* Wait for frame boundary */
+        int message;
+        recv(socket_fd, &message, sizeof(int), 0);
+        if (message != MSGB_START_FRAMEBOUNDARY) {
+            printf("Error in msg socket, waiting for frame boundary");
+            exit(1);
         }
+                   
+        recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
 
-        if (tasflags.running)
+
+        int isidle = !tasflags.running;
+        int tasflagsmod = 0; // register if tasflags have been modified on this frame
+            
+        /* We are at a frame boundary */
+        do {
+
+            XGetInputFocus(display, &win_focus, &revert);
+            XSelectInput(display, win_focus, KeyPressMask);
+
             XQueryKeymap(display, keyboard_state);
 
-        if (proceed_command(command, socket_fd))
-            break;
+            while( XPending( display ) > 0 ) {
 
-        if (tasflags.running)
-            command = 8;
-        else
-            command = 0;
+                XNextEvent(display, &event);
+
+                if (event.type == KeyPress)
+                {
+                    KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
+                    KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                    //s = XKeysymToString(ks);
+
+                    if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
+                        isidle = 0;
+                        tasflags.running = 0;
+                        tasflagsmod = 1;
+                    }
+                    if (ks == hotkeys[HOTKEY_PLAYPAUSE]){
+                        tasflags.running = !tasflags.running;
+                        tasflagsmod = 1;
+                        isidle = !tasflags.running;
+                    }
+                }
+            }
+
+            /* Sleep a bit to not surcharge the processor */
+            if (isidle) {
+                tim.tv_sec  = 0;
+                tim.tv_nsec = 10000000L;
+                nanosleep(&tim, NULL);
+            }
+
+        } while (isidle);
+
+        /* Grab keyboard inputs */
+        XQueryKeymap(display, keyboard_state);
+
+        /* Remove hotkeys from the keyboard state array */
+        remove_hotkeys(display, keyboard_state, hotkeys);
+
+        /* Send tasflags if modified */
+        if (tasflagsmod) {
+            message = MSGN_TASFLAGS;
+            send(socket_fd, &message, sizeof(int), 0);
+            send(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+        }
+
+        /* Send inputs and end of frame */
+        message = MSGN_KEYBOARD_INPUT;
+        send(socket_fd, &message, sizeof(int), 0);
+        send(socket_fd, keyboard_state, 32 * sizeof(char), 0);
+
+        message = MSGN_END_FRAMEBOUNDARY; 
+        send(socket_fd, &message, sizeof(int), 0);
+
     }
 
     close(socket_fd);

@@ -3,6 +3,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 enum 
 {
@@ -12,5 +13,6 @@ enum
 };
 
 void default_hotkeys(KeySym *hotkeys);
+void remove_hotkeys(Display *display, char keyboard_state[], KeySym hotkeys[]);
 
 #endif // KEYMAPPING_H_INCLUDED

@@ -1,14 +1,15 @@
 #include "libTAS.h"
 #include "keyboard.h"
 #include "hook_SDL.h"
+#include "../shared/messages.h"
+#include "../shared/tasflags.h"
 
 void* SDL_handle;
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
-unsigned int speed_divisor_factor = 1;
-unsigned char running = 0;
 unsigned char replaying = 0;
+struct TasFlags tasflags;
 
 unsigned char* recorded_inputs;
 unsigned long max_inputs;
@@ -73,6 +74,8 @@ void __attribute__((constructor)) init(void)
     display = XOpenDisplay(NULL);
     X11_InitKeymap();
 
+    tasflags = DEFAULTFLAGS;
+
     //proceed_commands();
 }
 
@@ -124,18 +127,23 @@ void SDL_GL_SwapWindow(void)
         current_time.tv_usec = 0;
     }
 
-    record_inputs();
-    ++frame_counter;
+    //record_inputs();
 
+    /*
     if (replaying)
     {replay_inputs();
         return;
-    }
+    }*/
 
-    if (running && speed_divisor_factor > 1)
-        usleep(1000000 * (speed_divisor_factor - 1) / 60);
+    int message = MSGB_START_FRAMEBOUNDARY;
+    send(socket_fd, &message, sizeof(int), 0);
+    send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
+
+    if (tasflags.running && tasflags.speed_divisor > 1)
+        usleep(1000000 * (tasflags.speed_divisor - 1) / 60);
 
     proceed_commands();
+    ++frame_counter;
 }
 
 void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
@@ -239,29 +247,24 @@ void proceed_commands(void)
 {
     while (1)
     {
-        unsigned int command;
+        int message;
 
-        //if (recv(socket_fd, &command, sizeof(unsigned int), MSG_DONTWAIT * running) < 0)
-        recv(socket_fd, &command, sizeof(unsigned int), 0);
-            char filename_buffer[1024];
-            switch (command)
+        recv(socket_fd, &message, sizeof(int), 0);
+            //char filename_buffer[1024];
+            switch (message)
             {
-            case 0:
+            case MSGN_TASFLAGS:
+                recv(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
                 break;
 
-            case 7:
-                running = !running;
-                break;
-
-            case 8:
-                recv(socket_fd, xkeyboard, 32 * sizeof(char), 0);
-                send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
+            case MSGN_END_FRAMEBOUNDARY:
                 return;
 
-            case 9:
-                recv(socket_fd, &speed_divisor_factor, sizeof(unsigned int), 0);
+            case MSGN_KEYBOARD_INPUT:
+                recv(socket_fd, xkeyboard, 32 * sizeof(char), 0);
                 break;
 
+                /*
             case 10:
                 recv(socket_fd, filename_buffer, 1024, 0);
                 unsigned long first_frame;
@@ -311,7 +314,7 @@ void proceed_commands(void)
                 replaying = 1;
                 replay_inputs();
                 return;
-
+*/
             default:
                 log_err("Unknown command recieved.");
             }
