@@ -9,7 +9,7 @@ FILE* openRecording(const char* filename, int recording)
         writeHeader(fp);
     }
     else {
-        fp = fopen(filename, "rb");
+        fp = fopen(filename, "r+b");
         readHeader(fp);
     }
 
@@ -54,12 +54,33 @@ void readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
     if (start_position == current_position) {
         size_t size = fread(inputs->keyboard, sizeof(char), 32, fp);
         if (size != (32*sizeof(char))) {
-            printf("Did not read all, end of fil?\n");
-        }
+            printf("Did not read all, end of file?\n");
+            }
     }
     else {
         printf("Did not read, bad position\n");
     }
+}
+
+void truncateRecording(FILE* fp)
+{
+    long current_pos = ftell(fp);
+    fseek(fp, 0, SEEK_END);
+    if (ftell(fp) != current_pos) {
+        /* We have to truncate the file */
+
+        fseek(fp, current_pos, SEEK_SET);
+
+        /* We are mixing ANSI C functions (fseek, ftell) with POSIX functions (ftruncate)
+         * that do not work on the same layer. So it is safer to flush any operations
+         * before truncate the file.
+         */
+        fflush(fp);
+
+        if (ftruncate(fileno(fp), current_pos) != 0)
+            fprintf(stderr, "Cound not truncate recording file\n");
+    }
+
 }
 
 void closeRecording(FILE* fp)

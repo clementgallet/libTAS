@@ -1,7 +1,5 @@
-## ToDo list:
+## ToDo list
 
-- Record inputs and support playback
-- Switch from read-only to write
 - Support game controller
 - Dump video
 - Dump audio
@@ -12,15 +10,16 @@
 - Deal with keyboard mapping and stuff
 - Write a better compile script
 - Process and filter SDL events
-- Write inputs and other stuff directly on the game screen
 
 ## Partially done
 
-- Inject inputs to the game
+- Inject inputs to the game (only keyboard for now)
 - Standardize communication between game and program
+- Support fast-forward (some desyncs if done at the very beginning of the game)
+- Switch from read-only to write (incomplete without savestates)
 
 ## Done
 
-- Support fast-forward
 - Don't send keys that correspond to hotkeys
+- Record inputs and support playback
 

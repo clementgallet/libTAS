@@ -166,6 +166,14 @@ int main(int argc, char **argv)
                         tasflags.fastforward = 1;
                         tasflagsmod = 1;
                     }
+                    if (ks == hotkeys[HOTKEY_READWRITE]){
+                        /* TODO: Use enum instead of values */
+                        if (tasflags.recording >= 0)
+                            tasflags.recording = !tasflags.recording;
+                        if (tasflags.recording == 1)
+                            truncateRecording(fp);
+                        tasflagsmod = 1;
+                    }
                 }
                 if (event.type == KeyRelease)
                 {
