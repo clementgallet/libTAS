@@ -11,6 +11,7 @@
 #include "../shared/tasflags.h"
 #include "../shared/messages.h"
 #include "keymapping.h"
+#include "recording.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -26,6 +27,7 @@ char keyboard_state[32];
 KeySym hotkeys[HOTKEY_LEN];
 
 char *moviefile = NULL;
+FILE* fp;
 
 /* Temp place */
 const int ISIDLE = 0;
@@ -44,16 +46,18 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 
 int main(int argc, char **argv)
 {
-    tasflags = (struct TasFlags){0, 1, 0, 0, LCF_ERROR, LCF_NONE};
+    tasflags = (struct TasFlags){0, 1, -1, 0, LCF_ERROR, LCF_NONE};
 
     /* Parsing arguments */
     int c;
-    while ((c = getopt (argc, argv, "wf:")) != -1)
+    while ((c = getopt (argc, argv, "r:w:")) != -1)
         switch (c) {
+            case 'r':
+                tasflags.recording = 0;
+                moviefile = optarg;
+                break;
             case 'w':
                 tasflags.recording = 1;
-                break;
-            case 'f':
                 moviefile = optarg;
                 break;
             case '?':
@@ -102,6 +106,10 @@ int main(int argc, char **argv)
     XSelectInput(display, win_focus, KeyPressMask);
 
     default_hotkeys(hotkeys);
+
+    if (tasflags.recording >= 0){
+        fp = openRecording(moviefile, tasflags.recording);
+    }
 
     while (1)
     {
@@ -179,11 +187,37 @@ int main(int argc, char **argv)
 
         } while (isidle);
 
-        /* Grab keyboard inputs */
-        XQueryKeymap(display, keyboard_state);
+        struct AllInputs ai;
 
-        /* Remove hotkeys from the keyboard state array */
-        remove_hotkeys(display, keyboard_state, hotkeys);
+        if (tasflags.recording == -1) {
+            /* Grab keyboard inputs */
+            XQueryKeymap(display, keyboard_state);
+
+            /* Remove hotkeys from the keyboard state array */
+            remove_hotkeys(display, keyboard_state, hotkeys);
+
+            /* Build input struct */
+            memmove(ai.keyboard, keyboard_state, 32*sizeof(char));
+        }
+
+        if (tasflags.recording == 1) {
+            /* Grab keyboard inputs */
+            XQueryKeymap(display, keyboard_state);
+
+            /* Remove hotkeys from the keyboard state array */
+            remove_hotkeys(display, keyboard_state, hotkeys);
+
+            /* Build input struct */
+            memmove(ai.keyboard, keyboard_state, 32*sizeof(char));
+
+            /* Save inputs to file */
+            writeFrame(fp, frame_counter, ai);
+        }
+
+        if (tasflags.recording == 0) {
+            /* Save inputs to file */
+            readFrame(fp, frame_counter, &ai);
+        }
 
         /* Send tasflags if modified */
         if (tasflagsmod) {
@@ -195,34 +229,16 @@ int main(int argc, char **argv)
         /* Send inputs and end of frame */
         message = MSGN_KEYBOARD_INPUT;
         send(socket_fd, &message, sizeof(int), 0);
-        send(socket_fd, keyboard_state, 32 * sizeof(char), 0);
+        send(socket_fd, ai.keyboard, 32 * sizeof(char), 0);
 
         message = MSGN_END_FRAMEBOUNDARY; 
         send(socket_fd, &message, sizeof(int), 0);
 
     }
 
+    closeRecording(fp);
     close(socket_fd);
     return 0;
-}
-
-void draw_cli(void)
-{
-    printf("%s      Speed divisor: %u     Frame counter: %lu\n\n",
-           tasflags.running ? "\033[7m[RUNNING ]\033[0m" : "[ PAUSED ]", tasflags.speed_divisor, frame_counter);
-    printf("Available commands:\n\n");
-    printf("1 - Toggle UP.\n");
-    printf("2 - Toggle DOWN.\n");
-    printf("3 - Toggle LEFT.\n");
-    printf("4 - Toggle RIGHT.\n\n");
-    printf("5 - Toggle SPACE.\n");
-    printf("6 - Toggle SHIFT.\n\n");
-    printf("7 - Toggle PAUSE/RUNNING.\n");
-    printf("8 - Advance 1 frame.\n");
-    printf("9 - Set speed divisor.\n\n");
-    printf("10 - Save inputs.\n");
-    printf("11 - Load inputs.\n\n");
-    printf("0 - Exit.\n\n");
 }
 
 int proceed_command(unsigned int command, int socket_fd)
