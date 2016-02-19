@@ -27,7 +27,11 @@ enum {
      */
     MSGN_END_FRAMEBOUNDARY,
 
-
+    /*
+     * The game tells the program that he has quit
+     * Argument: none
+     */
+    MSGB_QUIT,
 };
 
 #endif // MESSAGES_H_INCLUDED

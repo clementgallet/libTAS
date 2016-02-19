@@ -50,6 +50,8 @@ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uin
 void SDL_Delay(Uint32 sleep);
 int SDL_GL_SetSwapInterval(int interval);
 Uint32 SDL_GetTicks(void);
+void SDL_DestroyWindow(void* window);
+void SDL_Quit(void);
 void proceed_commands(void);
 void record_inputs(void);
 void replay_inputs(void);

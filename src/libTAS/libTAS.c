@@ -187,11 +187,21 @@ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 fla
     return gameWindow;
 }
 
+void SDL_DestroyWindow(void* window){
+    debuglog(LCF_SDL, tasflags, "%s call.", __func__);
+    SDL_DestroyWindow_real(window);
+}
+
 Uint32 SDL_GetWindowFlags(void* window){
     debuglog(LCF_SDL, tasflags, "%s call.", __func__);
     return SDL_GetWindowFlags_real(window);
 }
 
+void SDL_Quit(){
+    debuglog(LCF_SDL, tasflags, "%s call.", __func__);
+    int message = MSGB_QUIT;
+    send(socket_fd, &message, sizeof(int), 0);
+}
 
 const Uint8* SDL_GetKeyboardState(int* numkeys)
 {
@@ -216,25 +226,40 @@ int SDL_PollEvent(SDL_Event *event)
     //return SDL_PollEvent_real(event);
     debuglog(LCF_SDL | LCF_EVENTS, tasflags, "%s call.", __func__);
 
-    SDL_Event myEvent;
-    int isone = SDL_PollEvent_real(&myEvent);
+    int isone = SDL_PollEvent_real(event);
     while (isone == 1){
-        if ((myEvent.type == SDL_KEYDOWN) || (myEvent.type == SDL_KEYUP)){
-/*
-            if (myEvent.type == SDL_KEYDOWN)
-                printf("KEYDOWN ");
-            if (myEvent.type == SDL_KEYUP)
-                printf("KEYUP ");
-            //printf("windowID: %d\n", myEvent.key.windowID);
-            //printf("timestamp: %d\n", myEvent.key.timestamp);
-            printf("sym key: %d ", myEvent.key.keysym.sym);
-            printf("scan key: %d\n", myEvent.key.keysym.scancode);
-*/
+        if ((event->type == SDL_KEYDOWN) || (event->type == SDL_KEYUP)){
+            /*
+               if (event.type == SDL_KEYDOWN)
+               printf("KEYDOWN ");
+               if (event.type == SDL_KEYUP)
+               printf("KEYUP ");
+            //printf("windowID: %d\n", event.key.windowID);
+            //printf("timestamp: %d\n", event.key.timestamp);
+            printf("sym key: %d ", event.key.keysym.sym);
+            printf("scan key: %d\n", event.key.keysym.scancode);
+            */
         }
-	else {
-//            printf("other event: %d\n", myEvent.type);
-	}
-        isone = SDL_PollEvent_real(&myEvent);
+        else if (event->type == SDL_WINDOWEVENT){
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d gained keyboard focus.", event->window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_FOCUS_LOST:
+                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d lost keyboard focus.", event->window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_CLOSE:
+                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d closed.", event->window.windowID);
+                    break;
+                default:
+                    break;
+            }
+            return 1;
+        }
+        else {
+            return 1;
+        }
+        isone = SDL_PollEvent_real(event);
     }
 
     //printf("PollEvent\n");

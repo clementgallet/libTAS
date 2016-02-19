@@ -65,6 +65,13 @@ int hook_SDL(void* SDL_handle, const struct TasFlags tasflags) {
         return 0;
     }
 
+    *(void**)&SDL_DestroyWindow_real = dlsym(SDL_handle, "SDL_DestroyWindow");
+    if (!SDL_DestroyWindow_real)
+    {
+        debuglog(LCF_ERROR | LCF_HOOK, tasflags, "Could not import symbol SDL_DestroyWindow.");
+        return 0;
+    }
+
     return 1;
 }
 

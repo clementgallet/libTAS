@@ -109,8 +109,14 @@ int main(int argc, char **argv)
         /* Wait for frame boundary */
         int message;
         recv(socket_fd, &message, sizeof(int), 0);
+
+        if (message == MSGB_QUIT) {
+            printf("Game has quit. Exiting\n");
+            break;
+        }
+
         if (message != MSGB_START_FRAMEBOUNDARY) {
-            printf("Error in msg socket, waiting for frame boundary");
+            printf("Error in msg socket, waiting for frame boundary\n");
             exit(1);
         }
                    

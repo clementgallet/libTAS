@@ -5,20 +5,22 @@
 - Support game controller
 - Dump video
 - Dump audio
-- Standardize communication between game and program
 - Add inputs into the game screen
 - Support savestates (good luck)
-- Support fast-forward
 - Add key remapping
 - Add config file for hotkeys and key remapping (libconfig?)
 - Deal with keyboard mapping and stuff
 - Write a better compile script
-- Don't send keys that correspond to hotkeys
+- Process and filter SDL events
+- Write inputs and other stuff directly on the game screen
 
 ## Partially done
 
 - Inject inputs to the game
+- Standardize communication between game and program
 
 ## Done
 
+- Support fast-forward
+- Don't send keys that correspond to hotkeys
 

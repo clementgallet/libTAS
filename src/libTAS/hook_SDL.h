@@ -16,6 +16,7 @@ int (*SDL_PeepEvents_real)(SDL_Event*, int, SDL_eventaction, Uint32, Uint32);
 Uint32 (*SDL_GetTicks_real)(void);
 Uint32 (*SDL_GetWindowFlags_real)(void*);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
+void (*SDL_DestroyWindow_real)(void*);
 
 int (*usleep_real)(unsigned long);
 
