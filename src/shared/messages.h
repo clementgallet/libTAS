@@ -32,6 +32,11 @@ enum {
      * Argument: none
      */
     MSGB_QUIT,
+
+    /*
+     * Send the game pid so that the program can attach to it
+     */
+    MSGB_PID,
 };
 
 #endif // MESSAGES_H_INCLUDED

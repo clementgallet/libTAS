@@ -66,6 +66,12 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
+    /* Send game process pid */
+    int message = MSGB_PID;
+    send(socket_fd, &message, sizeof(int), 0);
+    pid_t mypid = getpid();
+    send(socket_fd, &mypid, sizeof(pid_t), 0);
+
     recorded_inputs = malloc(sizeof(unsigned char) * 8192);
     max_inputs = 8192;
 

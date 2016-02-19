@@ -12,6 +12,7 @@
 #include "../shared/messages.h"
 #include "keymapping.h"
 #include "recording.h"
+#include "savestates.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -28,6 +29,8 @@ KeySym hotkeys[HOTKEY_LEN];
 
 char *moviefile = NULL;
 FILE* fp;
+
+pid_t game_pid;
 
 /* Temp place */
 const int ISIDLE = 0;
@@ -46,6 +49,7 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 
 int main(int argc, char **argv)
 {
+    int message;
     tasflags = (struct TasFlags){0, 1, -1, 0, LCF_ERROR, LCF_NONE};
 
     /* Parsing arguments */
@@ -69,6 +73,7 @@ int main(int argc, char **argv)
 
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+
     Display *display;
     XEvent event;
     // Find the window which has the current keyboard focus
@@ -97,6 +102,19 @@ int main(int argc, char **argv)
 
     printf("Connected.\n");
 
+    /* Share informations */
+
+    /* Get the game process pid */
+    recv(socket_fd, &message, sizeof(int), 0);
+    if (message == MSGB_PID) {
+        recv(socket_fd, &game_pid, sizeof(pid_t), 0);
+    }
+    else {
+        fprintf(stderr, "Error in msg socket, waiting for game pid\n");
+        exit(1);
+    }
+    printf("Got pid: %d\n", game_pid);
+
     tim.tv_sec  = 1;
     tim.tv_nsec = 0L;
 
@@ -115,7 +133,6 @@ int main(int argc, char **argv)
     {
         
         /* Wait for frame boundary */
-        int message;
         recv(socket_fd, &message, sizeof(int), 0);
 
         if (message == MSGB_QUIT) {
@@ -165,6 +182,9 @@ int main(int argc, char **argv)
                     if (ks == hotkeys[HOTKEY_FASTFORWARD]){
                         tasflags.fastforward = 1;
                         tasflagsmod = 1;
+                    }
+                    if (ks == hotkeys[HOTKEY_SAVESTATE]){
+                        saveState(game_pid);
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */

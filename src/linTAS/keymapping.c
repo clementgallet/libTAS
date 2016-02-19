@@ -6,6 +6,7 @@ void default_hotkeys(KeySym *hotkeys){
     hotkeys[HOTKEY_FRAMEADVANCE] = XK_v;
     hotkeys[HOTKEY_FASTFORWARD] = XK_Tab;
     hotkeys[HOTKEY_READWRITE] = XK_o;
+    hotkeys[HOTKEY_SAVESTATE] = XK_s;
 }
 
 /* 
