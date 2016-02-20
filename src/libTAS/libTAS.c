@@ -383,8 +383,8 @@ void proceed_commands(void)
                 replay_inputs();
                 return;
 */
-            default:
-                log_err("Unknown command recieved.");
+            //default:
+                //log_err("Unknown command recieved.");
             }
     }
 }

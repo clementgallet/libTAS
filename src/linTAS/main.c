@@ -21,6 +21,8 @@ void draw_cli(void);
 int proceed_command(unsigned int command, int socket_fd);
 
 struct TasFlags tasflags;
+struct State savestate;
+int didSave = 0;
 
 unsigned long int frame_counter = 0;
 
@@ -184,7 +186,8 @@ int main(int argc, char **argv)
                         tasflagsmod = 1;
                     }
                     if (ks == hotkeys[HOTKEY_SAVESTATE]){
-                        saveState(game_pid);
+                        saveState(game_pid, &savestate);
+                        didSave = 1;
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
@@ -264,6 +267,8 @@ int main(int argc, char **argv)
 
     }
 
+    if (didSave)
+        deallocState(&savestate);
     closeRecording(fp);
     close(socket_fd);
     return 0;
