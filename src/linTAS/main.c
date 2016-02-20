@@ -115,7 +115,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error in msg socket, waiting for game pid\n");
         exit(1);
     }
-    printf("Got pid: %d\n", game_pid);
 
     tim.tv_sec  = 1;
     tim.tv_nsec = 0L;
@@ -189,6 +188,10 @@ int main(int argc, char **argv)
                         saveState(game_pid, &savestate);
                         didSave = 1;
                     }
+                    if (ks == hotkeys[HOTKEY_LOADSTATE]){
+                        loadState(game_pid, &savestate);
+                        didSave = 1;
+                    }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
                         if (tasflags.recording >= 0)
@@ -242,12 +245,14 @@ int main(int argc, char **argv)
             memmove(ai.keyboard, keyboard_state, 32*sizeof(char));
 
             /* Save inputs to file */
-            writeFrame(fp, frame_counter, ai);
+            if (!writeFrame(fp, frame_counter, ai))
+                tasflags.recording = -1;
         }
 
         if (tasflags.recording == 0) {
             /* Save inputs to file */
-            readFrame(fp, frame_counter, &ai);
+            if (!readFrame(fp, frame_counter, &ai))
+                tasflags.recording = -1;
         }
 
         /* Send tasflags if modified */

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -8,6 +9,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <sys/uio.h>
 
 /* Store a section of the game memory */
 struct StateSection {
@@ -50,4 +52,6 @@ read_mapping (FILE *mapfile,
           char *filename);
 
 void saveState(pid_t game_pid, struct State* state);
+void loadState(pid_t game_pid, struct State* state);
 void deallocState(struct State* state);
+

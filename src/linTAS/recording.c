@@ -33,20 +33,21 @@ void readHeader(FILE* fp)
 }
 
 
-void writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
+int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
 {
     int start_position = HEADER_SIZE + frame * sizeof(struct AllInputs);
     long int current_position = ftell(fp);
 
-    if (start_position == current_position) {
-        fwrite(inputs.keyboard, sizeof(char), 32, fp);
-    }
-    else {
+    if (start_position != current_position) {
         printf("Did not write, bad position\n");
+        return 0;
     }
+
+    fwrite(inputs.keyboard, sizeof(char), 32, fp);
+    return 1;
 }
 
-void readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
+int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
 {
     int start_position = HEADER_SIZE + frame * sizeof(struct AllInputs);
     long int current_position = ftell(fp);
@@ -55,11 +56,14 @@ void readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
         size_t size = fread(inputs->keyboard, sizeof(char), 32, fp);
         if (size != (32*sizeof(char))) {
             printf("Did not read all, end of file?\n");
-            }
+            return 0;
+        }
+        return 1;
     }
     else {
         printf("Did not read, bad position\n");
     }
+    return 0;
 }
 
 void truncateRecording(FILE* fp)

@@ -113,24 +113,30 @@ read_mapping (FILE *mapfile,
 
 void saveState(pid_t game_pid, struct State* state)
 {
-    char memfilename[2048];
+    //char memfilename[2048];
     char mapsfilename[2048];
-    int memfd;
+    //int memfd;
     FILE *mapsfile;
     unsigned long long int addr, endaddr, size, offset, inode;
     char permissions[8], device[8], filename[2048];
     int readflag, writeflag, execflag;
 
     /* Attach to the game process */
+    /* 
+     * Actually, we don't need this, just the signal to freeze the game, I guess.
+     * TODO: leaving it for now.
+     */
     attachToGame(game_pid);
 
     /* Open the process memory */
+    /*
     sprintf(memfilename, "/proc/%d/mem", game_pid);
     memfd = open(memfilename, O_RDONLY);
     if (memfd == -1) {
         fprintf(stderr, "Cound not open file %s, error %d\n", memfilename, errno);
         return;
     }
+    */
 
     /* Compose the filename for the /proc memory map, and open it. */
     sprintf (mapsfilename, "/proc/%d/maps", game_pid);
@@ -147,8 +153,11 @@ void saveState(pid_t game_pid, struct State* state)
     rewind(mapsfile);
 
     /* Allocate the state */
-    //fprintf(stderr, "Section size: %d.\n", sizeof(struct StateSection));
     state->sections = malloc(n_sections * sizeof(struct StateSection));
+
+    /* Allocate the structures to prepare the memory read */
+    struct iovec* local = malloc(n_sections * sizeof(struct iovec));
+    struct iovec* remote = malloc(n_sections * sizeof(struct iovec));
 
     /* Now iterate until end-of-file. */
     int section_i = 0;
@@ -175,6 +184,12 @@ void saveState(pid_t game_pid, struct State* state)
         */
 
         /* Filter based on permissions */
+
+        /* We must at least be able to read the section */
+        if (!readflag)
+            continue;
+
+        /* There is no point saving if we cannot write it later */
         if (!writeflag)
             continue;
 
@@ -198,33 +213,52 @@ void saveState(pid_t game_pid, struct State* state)
         memcpy(state->sections[section_i].filename, filename, filename_size);
         state->sections[section_i].filename[filename_size] = '\0';
 
-        /* Copy the actual memory section */
+        /* Allocate actual memory section */
         state->sections[section_i].mem = malloc(size * sizeof(char));
         if (state->sections[section_i].mem == NULL) {
             fprintf(stderr, "Cound not alloc memory of size %lld", size);
             return;
         }
 
-        /* Move pointer to offset. */
-        lseek(memfd, (off_t)addr, SEEK_SET);
-
-        /* Copy. TODO: should we split this in chunks? */
-
-        /* Test if we must save more byte than can be stored in a 32-bit integer */
-        if (size > (1L << 31)) {
-            fprintf(stderr, "The size (%lld) of section does not hold in a 32-bit integer.\n", size);
-            return;
-        }
-
-        size_t bytesread = read(memfd, state->sections[section_i].mem, (size_t)size);
-        if (bytesread != (size_t)size) {
-            fprintf(stderr, "Only read %zu bytes of memory of size %lld", bytesread, size);
-            return;
-        }
+        /* Prepare the structures for the read call */
+        local[section_i].iov_base = state->sections[section_i].mem;
+        local[section_i].iov_len = size;
+        remote[section_i].iov_base = (void *) addr;
+        remote[section_i].iov_len = size;
 
         total_size += size;
 
         section_i++;
+    }
+
+    /* Now, making all the reads in one call */
+    fprintf(stderr, "Saving the actual memory, %lld bytes\n", total_size);
+    ssize_t nread = process_vm_readv(game_pid, local, section_i, remote, section_i, 0);
+
+    /* Checking for errors */
+    if (nread != (ssize_t)total_size) {
+        fprintf(stderr, "Not all memory was read!\n");
+        return;
+    }
+
+    if (nread == -1) {
+        switch (errno) {
+            case EINVAL:
+                fprintf(stderr, "The amount of bytes read is too big!\n");
+                return;
+            case EFAULT:
+                fprintf(stderr, "Bad address space of the game process or own process!\n");
+                return;
+            case ENOMEM:
+                fprintf(stderr, "Could not allocate memory for internal copies of the iovec structures.\n");
+                return;
+            case EPERM:
+                fprintf(stderr, "Do not have permission to read the game process memory.\n");
+                return;
+            case ESRCH:
+                fprintf(stderr, "The game PID does not exist.\n");
+                return;
+        }
     }
 
     /*
@@ -250,13 +284,170 @@ void saveState(pid_t game_pid, struct State* state)
         state->n_sections = section_i;
     }
 
-    fprintf(stderr, "Wow, we actually did not raise any error. Saving %lld bytes\n", total_size);
+    fprintf(stderr, "Wow, we actually did not raise any error. Saved %lld bytes\n", total_size);
 
+    free(local);
+    free(remote);
     fclose(mapsfile);
-    close(memfd);
+    //close(memfd);
 
     /* Detach from the game process */
     detachToGame(game_pid);
+}
+
+void loadState(pid_t game_pid, struct State* state)
+{
+    /* Some duplicate code of saveState, factorize it? */
+
+    //char memfilename[2048];
+    char mapsfilename[2048];
+    //int memfd;
+    FILE *mapsfile;
+    unsigned long long int addr, endaddr, size, offset, inode;
+    char permissions[8], device[8], filename[2048];
+    int writeflag;
+
+    /* Attach to the game process */
+    attachToGame(game_pid);
+
+    /* Open the process memory */
+    /*
+    sprintf(memfilename, "/proc/%d/mem", game_pid);
+    memfd = open(memfilename, O_RDONLY);
+    if (memfd == -1) {
+        fprintf(stderr, "Cound not open file %s, error %d\n", memfilename, errno);
+        return;
+    }
+    */
+
+    /* Compose the filename for the /proc memory map, and open it. */
+    sprintf (mapsfilename, "/proc/%d/maps", game_pid);
+    if ((mapsfile = fopen (mapsfilename, "r")) == NULL) {
+        fprintf(stderr, "Could not open %s\n", mapsfilename);
+        detachToGame(game_pid);
+        return;
+    }
+
+    /* Count how many lines in maps file to allocate the state */
+    int n_sections = 0;
+    for (int c = fgetc(mapsfile); c != EOF; c = fgetc(mapsfile)) {
+        if (c == '\n') n_sections++;
+    }
+    rewind(mapsfile);
+
+    /* Allocate the structures to prepare the memory read */
+    struct iovec* local = malloc(n_sections * sizeof(struct iovec));
+    struct iovec* remote = malloc(n_sections * sizeof(struct iovec));
+
+    /* Now iterate until end-of-file. */
+    int section_i = 0;
+    unsigned long long int total_size = 0;
+
+    while (read_mapping (mapsfile, &addr, &endaddr, &permissions[0], 
+                &offset, &device[0], &inode, &filename[0]))
+    {
+        /* Get the segment's permissions.  */
+        writeflag = (strchr (permissions, 'w') != 0);
+
+        /*
+        fprintf(stderr, 
+                "Save segment, %lld bytes at 0x%llx (%c%c%c)", 
+                size, addr, 
+                readflag  ? 'r' : '-', 
+                writeflag ? 'w' : '-',
+                execflag  ? 'x' : '-');
+        if (filename[0])
+            fprintf(stderr, " for %s", filename);
+        fprintf(stderr, "\n");
+        */
+
+        /* If we cannot write to the section, skip it */
+        if (!writeflag)
+            continue;
+
+        /* Find a match section in the savestate */
+        int si;
+        for (si = 0; si<state->n_sections; si++) {
+            if (state->sections[si].addr == addr)
+                break;
+        }
+        if (si == state->n_sections) {
+            fprintf(stderr, "Did not find a match section to write to.\n");
+            continue;
+        }
+
+        /* We may have found a match */
+        if (state->sections[si].endaddr != endaddr) {
+            fprintf(stderr, "Matching section has a different size.\n");
+            continue;
+        }
+
+        /* Match found, preparing the write */
+        size = endaddr - addr;
+
+        local[section_i].iov_base = state->sections[section_i].mem;
+        local[section_i].iov_len = size;
+        remote[section_i].iov_base = (void *) addr;
+        remote[section_i].iov_len = size;
+
+        total_size += size;
+
+        section_i++;
+    }
+
+    /* Test the number of sections */
+    if (section_i != state->n_sections) {
+        //fprintf(stderr, "The number of rw sections was changed from %d to %d! Not load the savestate.\n", state->n_sections, section_i);
+        fprintf(stderr, "The number of rw sections was changed from %d to %d! Still trying to load...\n", state->n_sections, section_i);
+        /*
+        free(local);
+        free(remote);
+        fclose(mapsfile);
+        detachToGame(game_pid);
+        return;
+        */
+    }
+
+    /* Now, making all the reads in one call */
+    fprintf(stderr, "Loading the actual memory, %lld bytes\n", total_size);
+    ssize_t nread = process_vm_writev(game_pid, local, section_i, remote, section_i, 0);
+
+    /* Checking for errors */
+    if (nread != (ssize_t)total_size) {
+        fprintf(stderr, "Not all memory was written!\n");
+    }
+
+    if (nread == -1) {
+        switch (errno) {
+            case EINVAL:
+                fprintf(stderr, "The amount of bytes read is too big!\n");
+                break;
+            case EFAULT:
+                fprintf(stderr, "Bad address space of the game process or own process!\n");
+                break;
+            case ENOMEM:
+                fprintf(stderr, "Could not allocate memory for internal copies of the iovec structures.\n");
+                break;
+            case EPERM:
+                fprintf(stderr, "Do not have permission to write the game process memory.\n");
+                break;
+            case ESRCH:
+                fprintf(stderr, "The game PID does not exist.\n");
+                break;
+        }
+    }
+
+
+    fprintf(stderr, "Wow, we actually did not raise any error. Loaded %lld bytes\n", total_size);
+
+    free(local);
+    free(remote);
+    fclose(mapsfile);
+    //close(memfd);
+
+    /* Detach from the game process */
+    detachToGame(game_pid);
+
 }
 
 void deallocState(struct State* state)
