@@ -20,6 +20,9 @@ void (*SDL_DestroyWindow_real)(void*);
 
 int (*usleep_real)(unsigned long);
 
-int hook_SDL(void* SDL_handle, struct TasFlags tasflags);
+char* (*alcGetString_real)(void* device, int params);
+void* (*alcOpenDevice_real)(const char* devicename);
+    
+int hook_SDL(void* SDL_handle);
 
 #endif // HOOKSDL_H_INCLUDED

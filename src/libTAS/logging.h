@@ -8,6 +8,6 @@
 #include "../shared/tasflags.h"
 #include "../shared/lcf.h"
 
-void debuglog(LogCategoryFlag lcf, struct TasFlags tasflags, const char* msg, ...);
+void debuglog(LogCategoryFlag lcf, const char* msg, ...);
 
 #endif // LOGCATEGORY_H_INCL

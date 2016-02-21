@@ -1,6 +1,6 @@
 #!/bin/sh
 
-LIB_SOURCE_FILES="libTAS.c keyboard.c hook_SDL.c logging.c"
+LIB_SOURCE_FILES="libTAS.c keyboard.c hook_SDL.c logging.c openal.c ../shared/tasflags.c"
 C_WARNINGS="-std=c99 -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow  -shared -fpic"
 C_OPTIMISATIONS="-g -O1 -lX11"
 

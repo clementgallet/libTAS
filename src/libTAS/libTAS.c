@@ -5,7 +5,6 @@ void* SDL_handle;
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
 unsigned char replaying = 0;
-struct TasFlags tasflags;
 
 unsigned char* recorded_inputs;
 unsigned long max_inputs;
@@ -22,46 +21,45 @@ Display *display;
 
 void __attribute__((constructor)) init(void)
 {
-    tasflags = (struct TasFlags){0, 1, 0, 0, LCF_ERROR, LCF_NONE};
     
     // SMB uses its own version of SDL.
     SDL_handle = dlopen("/home/clement/supermeatboy/amd64/libSDL2-2.0.so.0",
                         RTLD_LAZY);
     if (!SDL_handle)
     {
-        debuglog(LCF_ERROR | LCF_HOOK, tasflags, "Could not load SDL.");
+        debuglog(LCF_ERROR | LCF_HOOK, "Could not load SDL.");
         exit(-1);
     }
 
-    if (!hook_SDL(SDL_handle, tasflags))
+    if (!hook_SDL(SDL_handle))
         exit(-1);
 
     if (!unlink(SOCKET_FILENAME))
-        debuglog(LCF_SOCKET, tasflags, "Removed stall socket.");
+        debuglog(LCF_SOCKET, "Removed stall socket.");
 
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, tasflags, "Couldn’t bind client socket.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t bind client socket.");
         exit(-1);
     }
 
     if (listen(tmp_fd, 1))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, tasflags, "Couldn’t listen on client socket.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t listen on client socket.");
         exit(1);
     }
 
-    debuglog(LCF_SOCKET, tasflags, "Loading complete, awaiting client connection...");
+    debuglog(LCF_SOCKET, "Loading complete, awaiting client connection...");
 
     if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, tasflags, "Couldn’t accept client connection.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t accept client connection.");
         exit(1);
     }
 
-    debuglog(LCF_SOCKET, tasflags, "Client connected.");
+    debuglog(LCF_SOCKET, "Client connected.");
 
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
@@ -86,40 +84,40 @@ void __attribute__((destructor)) term(void)
     dlclose(SDL_handle);
     close(socket_fd);
 
-    debuglog(LCF_SOCKET, tasflags, "Exiting.");
+    debuglog(LCF_SOCKET, "Exiting.");
 }
 
 time_t time(time_t* t)
 {
-    debuglog(LCF_TIMEGET, tasflags, "%s call - returning %d.", __func__, (long)current_time.tv_sec);
+    debuglog(LCF_TIMEGET, "%s call - returning %d.", __func__, (long)current_time.tv_sec);
     if (t)
         *t = current_time.tv_sec;
     return current_time.tv_sec;
 }
 
-int gettimeofday(struct timeval* tv, void* tz)
+int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET, tasflags, "%s call - returning (%d,%d).", __func__, (long)current_time.tv_sec, (long)current_time.tv_usec);
+    debuglog(LCF_TIMEGET, "%s call - returning (%d,%d).", __func__, (long)current_time.tv_sec, (long)current_time.tv_usec);
     *tv = current_time;
     return 0;
 }
 
 void SDL_Delay(Uint32 sleep)
 {
-    debuglog(LCF_SDL | LCF_SLEEP, tasflags, "%s call - sleep for %u ms.", __func__, sleep);
+    debuglog(LCF_SDL | LCF_SLEEP, "%s call - sleep for %u ms.", __func__, sleep);
     usleep_real(sleep*1000);
 }
 
 int usleep(useconds_t usec)
 {
-    debuglog(LCF_SLEEP, tasflags, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
+    debuglog(LCF_SLEEP, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
     return usleep_real(usec);
 }
 
 Uint32 SDL_GetTicks(void)
 {
     Uint32 msec = current_time.tv_sec*1000 + current_time.tv_usec/1000;
-    debuglog(LCF_SDL | LCF_TIMEGET, tasflags, "%s call - returning %d.", __func__, msec);
+    debuglog(LCF_SDL | LCF_TIMEGET, "%s call - returning %d.", __func__, msec);
     //return SDL_GetTicks_real();
     return msec;
 }
@@ -129,7 +127,7 @@ void SDL_GL_SwapWindow(void)
     /* Apparently, we must not put any code here before the SwapWindow call */
     SDL_GL_SwapWindow_real();
 
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
 
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
        second. This does not give an integer number of microseconds though, so
@@ -182,36 +180,36 @@ void SDL_GL_SwapWindow(void)
 
 int SDL_GL_SetSwapInterval(int interval)
 {
-    debuglog(LCF_SDL | LCF_OGL, tasflags, "%s call - setting to %d.", __func__, interval);
+    debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
     return SDL_GL_SetSwapInterval_real(interval);
 }
     
 
 void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL, tasflags, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
+    debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     return gameWindow;
 }
 
 void SDL_DestroyWindow(void* window){
-    debuglog(LCF_SDL, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL, "%s call.", __func__);
     SDL_DestroyWindow_real(window);
 }
 
 Uint32 SDL_GetWindowFlags(void* window){
-    debuglog(LCF_SDL, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL, "%s call.", __func__);
     return SDL_GetWindowFlags_real(window);
 }
 
 void SDL_Quit(){
-    debuglog(LCF_SDL, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL, "%s call.", __func__);
     int message = MSGB_QUIT;
     send(socket_fd, &message, sizeof(int), 0);
 }
 
-const Uint8* SDL_GetKeyboardState(int* numkeys)
+const Uint8* SDL_GetKeyboardState(__attribute__ ((unused)) int* numkeys)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_KEYBOARD, "%s call.", __func__);
     xkeyboardToSDLkeyboard(display, xkeyboard, keyboard_state);
     //*numkeys = 512;
     return keyboard_state;
@@ -223,14 +221,14 @@ int SDL_PeepEvents(SDL_Event*      events,
                    Uint32          minType,
                    Uint32          maxType)
 {
-    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
     return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
 }
 
 int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
-    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
 
     int isone = SDL_PollEvent_real(event);
     while (isone == 1){
@@ -249,13 +247,13 @@ int SDL_PollEvent(SDL_Event *event)
         else if (event->type == SDL_WINDOWEVENT){
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_FOCUS_GAINED:
-                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d gained keyboard focus.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
                     break;
                 case SDL_WINDOWEVENT_FOCUS_LOST:
-                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d lost keyboard focus.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
                     break;
                 case SDL_WINDOWEVENT_CLOSE:
-                    debuglog(LCF_SDL | LCF_EVENTS, tasflags, "Window %d closed.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
                     break;
                 default:
                     break;

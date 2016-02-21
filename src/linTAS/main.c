@@ -17,10 +17,6 @@
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
-void draw_cli(void);
-int proceed_command(unsigned int command, int socket_fd);
-
-struct TasFlags tasflags;
 struct State savestate;
 int didSave = 0;
 
@@ -33,11 +29,6 @@ char *moviefile = NULL;
 FILE* fp;
 
 pid_t game_pid;
-
-/* Temp place */
-const int ISIDLE = 0;
-const int ISRUNNING = 1;
-
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -52,7 +43,6 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 int main(int argc, char **argv)
 {
     int message;
-    tasflags = (struct TasFlags){0, 1, -1, 0, LCF_ERROR, LCF_NONE};
 
     /* Parsing arguments */
     int c;
@@ -189,8 +179,8 @@ int main(int argc, char **argv)
                         didSave = 1;
                     }
                     if (ks == hotkeys[HOTKEY_LOADSTATE]){
-                        loadState(game_pid, &savestate);
-                        didSave = 1;
+                        if (didSave)
+                            loadState(game_pid, &savestate);
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
@@ -274,90 +264,10 @@ int main(int argc, char **argv)
 
     if (didSave)
         deallocState(&savestate);
-    closeRecording(fp);
+    if (tasflags.recording >= 0){
+        closeRecording(fp);
+    }
     close(socket_fd);
     return 0;
 }
 
-int proceed_command(unsigned int command, int socket_fd)
-{
-    if (!command)
-        return 0;
-
-    if (command > 11)
-    {
-        printf("This command does not exist.\n");
-        return 0;
-    }
-
-    send(socket_fd, &command, sizeof(unsigned int), 0);
-
-    char filename_buffer[1024];
-
-    switch (command)
-    {
-    case 7:
-        tasflags.running = !tasflags.running;
-        break;
-
-    case 8:
-        send(socket_fd, keyboard_state, 32 * sizeof(char), 0);
-        recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
-        break;
-
-    case 9:
-        tasflags.speed_divisor = 0;
-        do
-        {
-            printf("Enter non-null speed divisor factor: ");
-            scanf("%d", &(tasflags.speed_divisor));
-        }
-        while (!tasflags.speed_divisor);
-
-        send(socket_fd, &(tasflags.speed_divisor), sizeof(unsigned int), 0);
-        break;
-
-    case 10:
-        printf("Enter filename to save inputs in: ");
-        scanf("%s", filename_buffer);
-        send(socket_fd, filename_buffer, 1024, 0);
-
-        unsigned long first_frame = 0;
-        do
-            printf("Enter first frame to record: ");
-        while (!scanf("%lu", &first_frame));
-
-        send(socket_fd, &first_frame, sizeof(unsigned long), 0);
-        break;
-
-    case 11:
-        printf("Enter filename from which to load inputs: ");
-        scanf("%s", filename_buffer);
-        send(socket_fd, filename_buffer, 1024, 0);
-
-        /* Check if loading can be done. */
-        unsigned char answer;
-        recv(socket_fd, &answer, sizeof(unsigned char), 0);
-        if (!answer)
-        {
-            printf("libTAS couldn’t load inputs.\n");
-            break;
-        }
-
-        /* Update inputs. */
-        /*recv(socket_fd, &answer, sizeof(unsigned char), 0);
-        for (unsigned int i = 0; i < KEYS_NUMBER; ++i)
-        {
-            keys[i] = answer & 0x1;
-            answer >>= 1;
-        }*/
-
-    default:;
-    }
-
-    //command = 0;
-
-    //send(socket_fd, &command, sizeof(unsigned int), 0);
-
-    return 0;
-}

@@ -414,7 +414,7 @@ void loadState(pid_t game_pid, struct State* state)
 
     /* Checking for errors */
     if (nread != (ssize_t)total_size) {
-        fprintf(stderr, "Not all memory was written!\n");
+        fprintf(stderr, "Not all memory was written! Only %zd\n", nread);
     }
 
     if (nread == -1) {

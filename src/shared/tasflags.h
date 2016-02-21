@@ -12,6 +12,6 @@ struct TasFlags {
     LogCategoryFlag excludeFlags; // which flags prevent triggering a debug message
 };
 
-//const struct TasFlags DEFAULTFLAGS = {0, 1, 0, 0, LCF_ERROR, LCF_NONE};
+extern struct TasFlags tasflags;
 
 #endif // TAS_FLAGS_H_INCLUDED

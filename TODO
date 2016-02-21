@@ -4,7 +4,6 @@
 - Dump video
 - Dump audio
 - Add inputs into the game screen
-- Support savestates (good luck)
 - Add key remapping
 - Add config file for hotkeys and key remapping (libconfig?)
 - Deal with keyboard mapping and stuff
@@ -17,6 +16,10 @@
 - Standardize communication between game and program
 - Support fast-forward (some desyncs if done at the very beginning of the game)
 - Switch from read-only to write (incomplete without savestates)
+- Support savestates (good luck)
+  Got this error while loading: 
+    Assertion 'e->pollfd->fd == e->fd' failed at pulse/mainloop.c:655, function dispatch_pollfds(). Aborting.
+    Assertion 'pa_atomic_load(&(b)->_ref) > 0' failed at pulsecore/memblock.c:597, function pa_memblock_unref(). Aborting.
 
 ## Done
 

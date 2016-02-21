@@ -1,7 +1,8 @@
 #include "logging.h"
 
-void debuglog(LogCategoryFlag lcf, struct TasFlags tasflags, const char* fmt, ...)
+void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
 {
+    /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
         char str[4096];
         memset(str, '\0', sizeof(str));
