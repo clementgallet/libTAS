@@ -35,6 +35,7 @@ struct State {
 
     /* Memory sections */
     int n_sections;
+    unsigned long long total_size;
     struct StateSection* sections;
 };
 

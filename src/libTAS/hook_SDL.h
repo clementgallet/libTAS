@@ -8,6 +8,14 @@
 //#include "../shared/tasflags.h"
 #include "logging.h"
 
+#define HOOK_FUNC(FUNC,SOURCE) *(void**)&FUNC##_real = dlsym(SOURCE, #FUNC);\
+    if (!FUNC##_real)\
+    {\
+        debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol #FUNC.");\
+        return 0;\
+    }
+
+
 void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (* SDL_GetWindowID_real)(void*);
