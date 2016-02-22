@@ -31,7 +31,7 @@ void __attribute__((constructor)) init(void)
         exit(-1);
     }
 
-    if (!hook_SDL(SDL_handle))
+    if (!hook_functions(SDL_handle))
         exit(-1);
 
     if (!unlink(SOCKET_FILENAME))

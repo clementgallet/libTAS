@@ -28,7 +28,7 @@ typedef int LogCategoryFlag; enum
 	LCF_KEYBOARD = 1 << 19,
 	LCF_MOUSE    = 1 << 20,
 	LCF_JOYPAD   = 1 << 21,
-	LCF_DSOUND   = 1 << 22,
+	LCF_OPENAL   = 1 << 22,
 	LCF_WSOUND   = 1 << 23, // non-directsound sound output, like wavout
 	LCF_PROCESS  = 1 << 24,
 	LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.

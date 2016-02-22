@@ -16,7 +16,7 @@
 
 #include "SDL.h"
 #include "keyboard.h"
-#include "hook_SDL.h"
+#include "hook.h"
 #include "../shared/messages.h"
 
 #define MAGIC_NUMBER 42

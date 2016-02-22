@@ -175,6 +175,8 @@ int main(int argc, char **argv)
                         tasflagsmod = 1;
                     }
                     if (ks == hotkeys[HOTKEY_SAVESTATE]){
+                        if (didSave)
+                            deallocState(&savestate);
                         saveState(game_pid, &savestate);
                         didSave = 1;
                     }

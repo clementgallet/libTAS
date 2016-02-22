@@ -3,6 +3,8 @@
 
 void* alcOpenDevice(const char* devicename)
 {
+
+    debuglog(LCF_OPENAL, "Function %s called.\n", __func__);
     /*
     const char *devices; 
     const char *ptr; 

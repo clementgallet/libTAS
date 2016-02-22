@@ -1,4 +1,4 @@
-#include "hook_SDL.h"
+#include "hook.h"
 
 #define ALC_DEVICE_SPECIFIER                     0x1005
 
