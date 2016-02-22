@@ -3,8 +3,6 @@
 /* The translation tables from an X11 keysym to a SDL keysym */
 static SDL_Keycode ODD_keymap[256];
 static SDL_Keycode MISC_keymap[256];
-SDL_Keycode X11_TranslateKeycode(Display *display, KeyCode kc);
-SDL_Scancode GetScanFromKey(SDL_Keycode);
 
 void X11_InitKeymap(void)
 {
@@ -38,13 +36,6 @@ void X11_InitKeymap(void)
  	ODD_keymap[XK_dead_horn&0xFF] = SDLK_COMPOSE;
 #endif
 */
-#ifdef XK_dead_circumflex
-	/* These X keysyms have 0xFE as the high byte */
-	ODD_keymap[XK_dead_circumflex&0xFF] = SDLK_CARET;
-#endif
-#ifdef XK_ISO_Level3_Shift
-	ODD_keymap[XK_ISO_Level3_Shift&0xFF] = SDLK_MODE; /* "Alt Gr" key */
-#endif
 
 	/* Map the miscellaneous keys */
 	for ( i=0; i<256; ++i )
@@ -139,15 +130,10 @@ void X11_InitKeymap(void)
 }
 
 /* Get the translated SDL virtual keysym */
-SDL_Keycode X11_TranslateKeycode(Display *display, KeyCode kc)
+SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 {
-	KeySym xsym;
 	SDL_Keycode key;
 
-	xsym = XkbKeycodeToKeysym(display, kc, 0, 0);
-#ifdef DEBUG_KEYS
-	fprintf(stderr, "Translating key code %d -> 0x%.4x\n", kc, xsym);
-#endif
 	key = SDLK_UNKNOWN;
 	if ( xsym ) {
 		switch (xsym>>8) {
@@ -191,28 +177,6 @@ SDL_Keycode X11_TranslateKeycode(Display *display, KeyCode kc)
 			*/
 			break;
 		}
-	} else {
-		/* X11 doesn't know how to translate the key! */
-		switch (kc) {
-		    /* Caution:
-		       These keycodes are from the Microsoft Keyboard
-		     */
-		    case 115:
-			key = SDLK_LGUI;
-			break;
-		    case 116:
-			key = SDLK_RGUI;
-			break;
-		    case 117:
-			key = SDLK_MENU;
-			break;
-		    default:
-			/*
-			 * no point in an error message; happens for
-			 * several keys when we get a keymap notify
-			 */
-			break;
-		}
 	}
 	return key;
 }
@@ -225,15 +189,18 @@ SDL_Scancode GetScanFromKey(SDL_Keycode keycode){
 }
 
 
-void xkeyboardToSDLkeyboard(Display *display, char Xkeyboard[], Uint8* SDLkeyboard) {
-    for (int i=0; i<256; i++) {
-        SDL_Scancode sc = GetScanFromKey(X11_TranslateKeycode(display, i));
-        SDLkeyboard[sc] = (Xkeyboard[i/8] >> (i%8)) & 0x1;
+void xkeyboardToSDLkeyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard) {
+    memset(SDLkeyboard, 0, SDL_NUM_SCANCODES);
+    for (int i=0; i<16; i++) {
+        if (Xkeyboard[i] != XK_VoidSymbol) {
+            SDL_Scancode sc = GetScanFromKey(X11_TranslateKeysym(Xkeyboard[i]));
+            SDLkeyboard[sc] = 1;
+        }
     }
 }
 
-void xkeycodeToSDL(Display *display, SDL_Keysym *keysym, char xkeycode) {
-    keysym->sym = X11_TranslateKeycode(display, xkeycode);
+void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym) {
+    keysym->sym = X11_TranslateKeysym(xkeysym);
     keysym->scancode = GetScanFromKey(keysym->sym);
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unused = 0;

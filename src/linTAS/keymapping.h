@@ -1,9 +1,11 @@
 #ifndef KEYMAPPING_H_INCLUDED
 #define KEYMAPPING_H_INCLUDED
 
+#include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
+#include "../shared/inputs.h"
 
 enum 
 {
@@ -17,6 +19,6 @@ enum
 };
 
 void default_hotkeys(KeySym *hotkeys);
-void remove_hotkeys(Display *display, char keyboard_state[], KeySym hotkeys[]);
+void format_keyboard(struct AllInputs* ai, Display *display, char keyboard_state[], KeySym hotkeys[]);
 
 #endif // KEYMAPPING_H_INCLUDED

@@ -14,10 +14,8 @@ unsigned long max_inputs_to_replay;
 int socket_fd = 0;
 void * gameWindow;
 
-char xkeyboard[32] = {0};
-char old_xkeyboard[32] = {0};
-
-Display *display;
+KeySym xkeyboard[16] = {0}; // TODO: Remove this magic number
+KeySym old_xkeyboard[16] = {0};
 
 void __attribute__((constructor)) init(void)
 {
@@ -41,13 +39,13 @@ void __attribute__((constructor)) init(void)
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t bind client socket.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't bind client socket.");
         exit(-1);
     }
 
     if (listen(tmp_fd, 1))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t listen on client socket.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't listen on client socket.");
         exit(1);
     }
 
@@ -55,7 +53,7 @@ void __attribute__((constructor)) init(void)
 
     if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn’t accept client connection.");
+        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't accept client connection.");
         exit(1);
     }
 
@@ -73,7 +71,10 @@ void __attribute__((constructor)) init(void)
     recorded_inputs = malloc(sizeof(unsigned char) * 8192);
     max_inputs = 8192;
 
-    display = XOpenDisplay(NULL);
+    int i;
+    for (i=0; i<16; i++)
+        old_xkeyboard[i] = XK_VoidSymbol;
+
     X11_InitKeymap();
 
     //proceed_commands();
@@ -210,7 +211,7 @@ void SDL_Quit(){
 const Uint8* SDL_GetKeyboardState(__attribute__ ((unused)) int* numkeys)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD, "%s call.", __func__);
-    xkeyboardToSDLkeyboard(display, xkeyboard, keyboard_state);
+    xkeyboardToSDLkeyboard(xkeyboard, keyboard_state);
     //*numkeys = 512;
     return keyboard_state;
 }
@@ -232,6 +233,7 @@ int SDL_PollEvent(SDL_Event *event)
 
     int isone = SDL_PollEvent_real(event);
     while (isone == 1){
+        /* TODO: Make a proper event filtering! */
         if ((event->type == SDL_KEYDOWN) || (event->type == SDL_KEYUP)){
             /*
                if (event.type == SDL_KEYDOWN)
@@ -266,44 +268,74 @@ int SDL_PollEvent(SDL_Event *event)
         isone = SDL_PollEvent_real(event);
     }
 
-    //printf("PollEvent\n");
 
-    int i;
-    for (i=0; i<32; i++) {
-        if (xkeyboard[i] == old_xkeyboard[i])
+    /* Generate released keyboard input events */
+
+    int i, j;
+    for (i=0; i<16; i++) { // TODO: Another magic number
+        if (old_xkeyboard[i] == XK_VoidSymbol) {
             continue;
-
-        int j;
-        for (j=0; j<8; j++) {
-            char old_key = (old_xkeyboard[i] >> j) & 0x1;
-            char new_key = (xkeyboard[i] >> j) & 0x1;
-
-            if (old_key != new_key) {
-                char keycode = (i << 3) | j;
-
-                if (new_key) {
-                    event->type = SDL_KEYDOWN;
-                    event->key.state = SDL_PRESSED;
-                    //printf("Pressed ");
-                }
-                else {
-                    event->type = SDL_KEYUP;
-                    event->key.state = SDL_RELEASED;
-                    //printf("Release ");
-                }
-                event->key.windowID = SDL_GetWindowID_real(gameWindow);
-                event->key.timestamp = SDL_GetTicks_real() - 1;
-                //printf("myWindowID: %d\n", event->key.windowID);
-                SDL_Keysym keysym;
-                xkeycodeToSDL(display, &keysym, keycode);
-
-                //printf("mySym: %d ", keysym.sym);
-                //keysym.scancode = 40;
-                //printf("myScan: %d ", keysym.scancode);
-                event->key.keysym = keysym;
-                old_xkeyboard[i] ^= (1 << j);
-                return 1;
+        }
+        for (j=0; j<16; j++) {
+            if (old_xkeyboard[i] == xkeyboard[j]) {
+                /* Key was not released */
+                break;
             }
+        }
+        if (j == 16) {
+            /* Key was released. Generate event */
+            event->type = SDL_KEYUP;
+            event->key.state = SDL_RELEASED;
+            event->key.windowID = SDL_GetWindowID_real(gameWindow);
+            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+
+            SDL_Keysym keysym;
+            xkeysymToSDL(&keysym, old_xkeyboard[i]);
+            event->key.keysym = keysym;
+
+            /* Update old keyboard state so that this event won't trigger inifinitely */
+            old_xkeyboard[i] = XK_VoidSymbol;
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", event->key.keysym.sym);
+            return 1;
+
+        }
+    }
+
+    /* Generate pressed keyboard input events */
+
+    int k;
+    for (i=0; i<16; i++) { // TODO: Another magic number
+        if (xkeyboard[i] == XK_VoidSymbol) {
+            continue;
+        }
+        for (j=0; j<16; j++) {
+            if (xkeyboard[i] == old_xkeyboard[j]) {
+                /* Key was not pressed */
+                break;
+            }
+        }
+        if (j == 16) {
+            /* Key was pressed. Generate event */
+            event->type = SDL_KEYDOWN;
+            event->key.state = SDL_PRESSED;
+            event->key.windowID = SDL_GetWindowID_real(gameWindow);
+            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+
+            SDL_Keysym keysym;
+            xkeysymToSDL(&keysym, xkeyboard[i]);
+            event->key.keysym = keysym;
+
+            /* Update old keyboard state so that this event won't trigger inifinitely */
+            for (k=0; k<16; k++)
+                if (old_xkeyboard[k] == XK_VoidSymbol) {
+                    /* We found an empty space to put our key*/
+                    old_xkeyboard[k] = xkeyboard[i];
+                    break;
+                }
+
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", event->key.keysym.sym);
+            return 1;
+
         }
     }
     return 0;
@@ -316,9 +348,8 @@ void proceed_commands(void)
         int message;
 
         recv(socket_fd, &message, sizeof(int), 0);
-            //char filename_buffer[1024];
-            switch (message)
-            {
+        switch (message)
+        {
             case MSGN_TASFLAGS:
                 recv(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
                 break;
@@ -330,102 +361,7 @@ void proceed_commands(void)
                 recv(socket_fd, xkeyboard, 32 * sizeof(char), 0);
                 break;
 
-                /*
-            case 10:
-                recv(socket_fd, filename_buffer, 1024, 0);
-                unsigned long first_frame;
-                recv(socket_fd, &first_frame, sizeof(unsigned long), 0);
-                int save_inputs_file = open(filename_buffer, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                if (save_inputs_file < 0)
-                {
-                    log_err("Couldn’t open inputs file.");
-                    break;
-                }
-                if (first_frame >= frame_counter)
-                {
-                    log_err("Selected first frame deosn’t exist yet.");
-                    close(save_inputs_file);
-                    break;
-                }
-                log_err("Saving inputs...");
-                if (write(save_inputs_file, recorded_inputs + first_frame, frame_counter - first_frame) < 0)
-                {
-                    log_err("Couldn’t save inputs.");
-                    close(save_inputs_file);
-                    break;
-                }
-                log_err("Inputs saved.");
-                close(save_inputs_file);
-
-                break;
-
-            case 11:
-                recv(socket_fd, filename_buffer, 1024, 0);
-                replay_inputs_file = open(filename_buffer, O_RDONLY);
-                unsigned char answer = replay_inputs_file >= 0;
-                send(socket_fd, &answer, sizeof(unsigned char), 0);
-                if (!answer)
-                    break;
-
-                log_err("Input file opened, replaying...");
-
-                max_inputs_to_replay = lseek(replay_inputs_file, 0, SEEK_END);
-                if (!max_inputs_to_replay)
-                {
-                    log_err("File is empty, no input to replay.");
-                    close(replay_inputs_file);
-                    break;
-                }
-                lseek(replay_inputs_file, 0, SEEK_SET);
-                replaying = 1;
-                replay_inputs();
-                return;
-*/
-            //default:
-                //log_err("Unknown command recieved.");
-            }
+        }
     }
 }
 
-void record_inputs(void)
-{
-    if (max_inputs == frame_counter)
-    {
-        max_inputs *= 2;
-        recorded_inputs = realloc(recorded_inputs, sizeof(unsigned char) * max_inputs);
-    }
-/*
-    recorded_inputs[frame_counter] =
-        key_states[0] |
-        key_states[1] << 1 |
-        key_states[2] << 2 |
-        key_states[3] << 3 |
-        key_states[4] << 4 |
-        key_states[5] << 5; */
-}
-
-void replay_inputs(void)
-{
-    unsigned char inputs;
-
-    if (read(replay_inputs_file, &inputs, 1) <= 0)
-    {
-        log_err("Error reading inputs.");
-        exit(-1);
-    }
-/*
-    key_states[0] = inputs & 0x1;
-    key_states[1] = (inputs >> 1) & 0x1;
-    key_states[2] = (inputs >> 2) & 0x1;
-    key_states[3] = (inputs >> 3) & 0x1;
-    key_states[4] = (inputs >> 4) & 0x1;
-    key_states[5] = (inputs >> 5) & 0x1;
-*/
-    if (!--max_inputs_to_replay)
-    {
-        close(replay_inputs_file);
-        replaying = 0;
-        log_err("Replaying complete.");
-        send(socket_fd, &inputs, 1, 0);
-    }
-}

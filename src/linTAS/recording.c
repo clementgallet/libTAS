@@ -43,7 +43,7 @@ int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
         return 0;
     }
 
-    fwrite(inputs.keyboard, sizeof(char), 32, fp);
+    fwrite(inputs.keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
     return 1;
 }
 
@@ -53,9 +53,9 @@ int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
     long int current_position = ftell(fp);
 
     if (start_position == current_position) {
-        size_t size = fread(inputs->keyboard, sizeof(char), 32, fp);
-        if (size != (32*sizeof(char))) {
-            printf("Did not read all, end of file?\n");
+        size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+        if (size != ALLINPUTS_MAXKEY) {
+            printf("Did not read all (%zu elements), end of file?\n", size);
             return 0;
         }
         return 1;

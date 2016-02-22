@@ -145,6 +145,7 @@ int main(int argc, char **argv)
         /* We are at a frame boundary */
         do {
 
+            /* TODO: Remove this and get the game window cleanly */
             XGetInputFocus(display, &win_focus, &revert);
             XSelectInput(display, win_focus, KeyPressMask | KeyReleaseMask);
 
@@ -219,32 +220,30 @@ int main(int argc, char **argv)
             /* Grab keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
-            /* Remove hotkeys from the keyboard state array */
-            remove_hotkeys(display, keyboard_state, hotkeys);
-
-            /* Build input struct */
-            memmove(ai.keyboard, keyboard_state, 32*sizeof(char));
+            /* Format the keyboard state and save it in the AllInputs struct */
+            format_keyboard(&ai, display, keyboard_state, hotkeys);
         }
 
         if (tasflags.recording == 1) {
             /* Grab keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
-            /* Remove hotkeys from the keyboard state array */
-            remove_hotkeys(display, keyboard_state, hotkeys);
-
-            /* Build input struct */
-            memmove(ai.keyboard, keyboard_state, 32*sizeof(char));
+            /* Format the keyboard state and save it in the AllInputs struct */
+            format_keyboard(&ai, display, keyboard_state, hotkeys);
 
             /* Save inputs to file */
-            if (!writeFrame(fp, frame_counter, ai))
+            if (!writeFrame(fp, frame_counter, ai)) {
+                /* Writing failed, returning to no recording mode */
                 tasflags.recording = -1;
+            }
         }
 
         if (tasflags.recording == 0) {
             /* Save inputs to file */
-            if (!readFrame(fp, frame_counter, &ai))
+            if (!readFrame(fp, frame_counter, &ai)) {
+                /* Writing failed, returning to no recording mode */
                 tasflags.recording = -1;
+            }
         }
 
         /* Send tasflags if modified */
@@ -257,7 +256,8 @@ int main(int argc, char **argv)
         /* Send inputs and end of frame */
         message = MSGN_KEYBOARD_INPUT;
         send(socket_fd, &message, sizeof(int), 0);
-        send(socket_fd, ai.keyboard, 32 * sizeof(char), 0);
+        /* TODO: Save the whole struct instead */
+        send(socket_fd, ai.keyboard, ALLINPUTS_MAXKEY * sizeof(KeySym), 0);
 
         message = MSGN_END_FRAMEBOUNDARY; 
         send(socket_fd, &message, sizeof(int), 0);
