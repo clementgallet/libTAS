@@ -18,6 +18,7 @@
 #include "keyboard.h"
 #include "hook.h"
 #include "../shared/messages.h"
+#include "dumpvideo.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"

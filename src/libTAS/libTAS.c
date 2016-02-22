@@ -128,7 +128,21 @@ void SDL_GL_SwapWindow(void)
     /* Apparently, we must not put any code here before the SwapWindow call */
     SDL_GL_SwapWindow_real();
 
+
+
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+
+    /* Dumping audio and video if needed */
+    static int dump_inited = 0;
+    if (tasflags.av_dumping) {
+        if (! dump_inited) {
+            /* Initializing the video dump */
+            openVideoDump(gameWindow);
+            dump_inited = 1;
+        }
+        /* Write the current frame */
+        encodeOneFrame(frame_counter);
+    }
 
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
        second. This does not give an integer number of microseconds though, so
@@ -206,6 +220,8 @@ void SDL_Quit(){
     debuglog(LCF_SDL, "%s call.", __func__);
     int message = MSGB_QUIT;
     send(socket_fd, &message, sizeof(int), 0);
+    if (tasflags.av_dumping)
+        closeVideoDump();
 }
 
 const Uint8* SDL_GetKeyboardState(__attribute__ ((unused)) int* numkeys)

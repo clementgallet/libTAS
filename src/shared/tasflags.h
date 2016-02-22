@@ -10,6 +10,7 @@ struct TasFlags {
     int fastforward; // is fastforward enabled
     LogCategoryFlag includeFlags; // which flags trigger a debug message
     LogCategoryFlag excludeFlags; // which flags prevent triggering a debug message
+    int av_dumping; // Are we dumping audio and video?
 };
 
 extern struct TasFlags tasflags;

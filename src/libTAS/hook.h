@@ -47,6 +47,9 @@ int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len)
 int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval);
 int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime);
 
+void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
+
+void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
 
 int hook_functions(void* SDL_handle);
 
