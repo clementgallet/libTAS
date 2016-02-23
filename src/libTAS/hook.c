@@ -28,6 +28,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_GetWindowSurface, SDL_handle)
     HOOK_FUNC(SDL_LockSurface, SDL_handle)
     HOOK_FUNC(SDL_UnlockSurface, SDL_handle)
+    HOOK_FUNC(SDL_GL_GetProcAddress, SDL_handle)
 
     //HOOK_FUNC(glReadPixels, RTLD_NEXT)
 

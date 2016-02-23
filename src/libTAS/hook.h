@@ -51,7 +51,7 @@ void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
 void* (*SDL_GetWindowSurface_real)(void* window);
 int (*SDL_LockSurface_real)(void* surface);
 void (*SDL_UnlockSurface_real)(void* surface);
-
+void* (*SDL_GL_GetProcAddress_real)(const char* proc);
 
 void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
 

@@ -1,7 +1,6 @@
 ## ToDo list
 
 - Support game controller
-- Dump video
 - Dump audio
 - Add inputs into the game screen
 - Add key remapping
@@ -17,6 +16,9 @@
 - Standardize communication between game and program
 - Support fast-forward (some desyncs if done at the very beginning of the game)
 - Switch from read-only to write (incomplete without savestates)
+- Dump video
+-- Some muxers do not work (mp4)
+-- Disable game inputs (hotkeys are fine)
 - Support savestates (good luck)
 -- Disable openAL sound, remove one error
 -- Now got:
