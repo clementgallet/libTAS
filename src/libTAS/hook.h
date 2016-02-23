@@ -48,6 +48,10 @@ int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval);
 int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime);
 
 void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
+void* (*SDL_GetWindowSurface_real)(void* window);
+int (*SDL_LockSurface_real)(void* surface);
+void (*SDL_UnlockSurface_real)(void* surface);
+
 
 void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
 

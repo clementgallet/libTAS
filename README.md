@@ -6,4 +6,5 @@ Dependancies so far:
 - Xlib
 - libavcodec
 - libavutil
+- libswscale
 

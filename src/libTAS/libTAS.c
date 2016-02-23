@@ -141,7 +141,7 @@ void SDL_GL_SwapWindow(void)
             dump_inited = 1;
         }
         /* Write the current frame */
-        encodeOneFrame(frame_counter);
+        encodeOneFrame(frame_counter, gameWindow);
     }
 
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
