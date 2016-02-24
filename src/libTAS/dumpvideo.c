@@ -21,16 +21,28 @@ int openVideoDump(void* window, int video_opengl) {
     int width, height;
     SDL_GL_GetDrawableSize_real(window, &width, &height);
 
+    /* Dimensions must be a multiple of 2 */
+    if ((width % 1) || (height % 1)) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Screen dimensions must be a multiple of 2");
+        return 1;
+    }
+
     /* If the game uses openGL, the method to capture the screen will be different */
     useGL = video_opengl;
 
     if (useGL) {
+
+        /* Do we already have access to the glReadPixels function? */
         if (!glReadPixels_real) {
-            fprintf(stderr, "glReadPixels is needed but is not exported by the game.\n");
-            fprintf(stderr, "Importing it using SDL_GL_GetProcAddress.\n");
+            debuglog(LCF_DUMP | LCF_OGL, "glReadPixels is needed but not exported by the game");
+            if (!SDL_GL_GetProcAddress_real) {
+                debuglog(LCF_DUMP | LCF_OGL | LCF_SDL | LCF_ERROR, "SDL_GL_GetProcAddress is not available. Could not load glReadPixels");
+                return 1;
+            }
+            debuglog(LCF_DUMP | LCF_OGL, "Importing it using SDL_GL_GetProcAddress.");
             glReadPixels_real = SDL_GL_GetProcAddress_real("glReadPixels");
             if (!glReadPixels_real) {
-                fprintf(stderr, "Could not load function glReadPixels\n");
+                debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
                 return 1;
             }
         }
@@ -41,99 +53,53 @@ int openVideoDump(void* window, int video_opengl) {
         glpixels_flip = malloc(size);
     }
 
-    //avcodec_init();
-    av_log_set_level( AV_LOG_DEBUG );
+    /* Initialize AVCodec and AVFormat libraries */
     av_register_all();
-    avcodec_register_all(); // I should not need this
 
-    /*
-    AVCodec * codec2 = av_codec_next(NULL);
-    while(codec2 != NULL)
-    {
-        fprintf(stderr, "%s\n", codec2->long_name);
-        codec2 = av_codec_next(codec2);
-    }
-    */
-
-
-
-    int ret;
-
-    printf("Encode video file %s\n", filename);
-
-    /* find the mpeg1 video encoder */
-    
-
-    /*
-    fprintf(stderr, "Available pixfmt: \n");
-    int pi = 0;
-    while (codec->pix_fmts[pi] != -1) {
-        fprintf(stderr, "pf %d\n", codec->pix_fmts[pi]);
-        pi++;
-    }
-    */
-
-
-    /*
-    f = fopen(filename, "wb");
-    if (!f) {
-        fprintf(stderr, "Could not open %s\n", filename);
-        exit(1);
-    }
-    */
-    /* Initialize AVFormat */
+    /* Initialize AVOutputFormat */
     
     outputFormat = av_guess_format(NULL, filename, NULL);
-    //outputFormat = av_guess_format("mp4", NULL, NULL);
     if (!outputFormat) {
-        fprintf(stderr, "Could not find suitable output format\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not find suitable output format");
         return 1;
     }
 
-    // define AVFormatContext
-    // lallocate the output media context
+    /* Initialize AVFormatContext */
+
     formatContext = avformat_alloc_context();
-    //avformat_alloc_output_context2(&formatContext, NULL, NULL, filename);
-//  avformat_alloc_output_context(&formatContext, outputFormat, NULL, NULL);
     if (!formatContext) {
-        fprintf(stderr, "Memory error\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize AVFormatContext");
         return 1;
     }
-
-    //int codec_id = AV_CODEC_ID_H264;
-    int codec_id = AV_CODEC_ID_MPEG4;
-    outputFormat->video_codec = codec_id;
     formatContext->oformat = outputFormat;
 
-    //int codec_id = AV_CODEC_ID_MPEG4;
+    /* Initialize AVCodec */
+
     AVCodec *codec = NULL;
+    int codec_id = AV_CODEC_ID_MPEG4;
+    //int codec_id = AV_CODEC_ID_H264;
     codec = avcodec_find_encoder(codec_id);
     if (!codec) {
-        fprintf(stderr, "Codec not found\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Codec not found");
+        return 1;
+    }
+    outputFormat->video_codec = codec_id;
+
+    /* Initialize video stream */
+
+    video_st = avformat_new_stream(formatContext, codec);
+    if (!video_st) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
         return 1;
     }
 
-
-    video_st = avformat_new_stream(formatContext, codec);
-
-    fprintf(stderr, "Created new stream\n");
-
-    /*
-    avcodec_get_context_defaults3(video_st->codec, codec);*/
-
-    video_st->codec->coder_type = AVMEDIA_TYPE_VIDEO;
+    /* Fill video stream parameters */
     video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     video_st->codec->codec_id = codec_id;
 
-    /* put sample parameters */
     video_st->codec->bit_rate = 400000;
-
-    /* resolution must be a multiple of two */
     video_st->codec->width = width;
     video_st->codec->height = height;
-
-    /* frames per second */
-    //video_st->codec->time_base = (AVRational){1,60};
     video_st->time_base = (AVRational){1,60};
     video_st->codec->time_base = (AVRational){1,60};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
@@ -144,71 +110,80 @@ int openVideoDump(void* window, int video_opengl) {
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
         video_st->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
-
+    /* Use a preset for h264 */
     if (codec_id == AV_CODEC_ID_H264)
         av_opt_set(video_st->codec->priv_data, "preset", "slow", 0);
 
+    /* Open the codec */
     if (avcodec_open2(video_st->codec, codec, NULL) < 0) {
-        fprintf(stderr, "Could not open codec\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not open codec");
         return 1;
     }
     
-    
-    fprintf(stderr, "Alloc frame\n");
-    
+   
+    /* Initialize AVFrame */
+
     frame = av_frame_alloc();
     if (!frame) {
-        fprintf(stderr, "Could not allocate video frame\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate AVFrame");
         return 1;
     }
     frame->format = video_st->codec->pix_fmt;
     frame->width  = video_st->codec->width;
     frame->height = video_st->codec->height;
-    /* the image can be allocated by any means and av_image_alloc() is
-     * just the most convenient way if av_malloc() is to be used */
-    ret = av_image_alloc(frame->data, frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
+
+    /* Allocate the image buffer inside the AVFrame */
+
+    int ret = av_image_alloc(frame->data, frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
     if (ret < 0) {
-        fprintf(stderr, "Could not allocate raw picture buffer\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
         return 1;
     }
 
-    /* Just in case dimensions are not a multiple of 2 */
-    int yuvwidth  = RNDTO2 ( frame->width );
-    int yuvheight = RNDTO2 ( frame->height );
 
-    /* Initialize swscale for pixel format conversion */
+    /* Initialize swscale context for pixel format conversion */
+
     toYUVctx = sws_getContext(frame->width, frame->height,  
                               PIX_FMT_RGBA,
-                              yuvwidth, yuvheight, 
+                              frame->width, frame->height, 
                               PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
     if (toYUVctx == NULL) {
-        fprintf(stderr, "Could not allocate swscale context\n");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate swscale context");
         return 1;
     }
 
-
+    /* Print informations on input and output streams */
     av_dump_format(formatContext, 0, filename, 1);
     
     /* Set up output file */
-    avio_open(&formatContext->pb, filename, AVIO_FLAG_WRITE);
+    if (avio_open(&formatContext->pb, filename, AVIO_FLAG_WRITE) < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
+        return 1;
+    }
 
     /* Write header */
-    int rh = avformat_write_header(formatContext, NULL);
-    if (rh < 0) {
-        fprintf(stderr, "Could not write header!\n");
+    if (avformat_write_header(formatContext, NULL) < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not write header");
         return 1;
     }
 
     return 0;
 }
 
-void encodeOneFrame(unsigned long fcounter, void* window) {
+/*
+ * Encode one video frame and send it to the muxer
+ * Returns 0 if no error was encountered
+ */
+
+int encodeOneFrame(unsigned long fcounter, void* window) {
+
+    debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
 
     /* Initialize AVPacket */
     av_init_packet(&pkt);
-    pkt.data = NULL;    // packet data will be allocated by the encoder
+    pkt.data = NULL; // packet data will be allocated by the encoder
     pkt.size = 0;
 
     SDL_Surface* surface = NULL;
@@ -217,11 +192,12 @@ void encodeOneFrame(unsigned long fcounter, void* window) {
     int orig_stride[4] = {0};
 
     if (useGL) {
+        /* TODO: Check that the openGL dimensions did not change in between */
 
-        /* We access to the image pixels directly using glReadPixels */
         int size = frame->width * frame->height * 4;
+        /* We access to the image pixels directly using glReadPixels */
+        glReadPixels_real(0, 0, frame->width, frame->height, /* GL_RGBA */ 0x1908, /* GL_UNSIGNED_BYTE */ 0x1401, glpixels);
         /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
-        glReadPixels_real(0, 0, frame->width, frame->height, 0x1908 /* GL_RGBA */, 0x1401 /* GL_UNSIGNED_BYTE */, glpixels);
 
         /*
          * Flip image horizontally
@@ -245,24 +221,27 @@ void encodeOneFrame(unsigned long fcounter, void* window) {
 
     else {
         /* Not tested !! */
+        debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Access SDL_Surface pixels for video dump");
 
         /* Get surface from window */
         surface = SDL_GetWindowSurface_real(window);
 
-        /* We must lock the surface before accessing the raw pixels */
-        if (0 != SDL_LockSurface_real(surface))
-            fprintf(stderr, "Could not lock surface\n");
-
         /* Currently only supporting ARGB (32 bpp) pixel format */
         if (surface->format->BitsPerPixel != 32) {
-            fprintf(stderr, "Bad bpp for surface: %d\n", surface->format->BitsPerPixel);
-            return;
+            debuglog(LCF_DUMP | LCF_ERROR, "Bad bpp for surface: %d\n", surface->format->BitsPerPixel);
+            return 1;
         }
 
         /* Checking for a size modification */
         if ((surface->w != frame->width) || (surface->h != frame->height)) {
-            fprintf(stderr, "Window coords have changed (%d,%d) -> (%d,%d)\n", frame->width, frame->height, surface->w, surface->h);
-            return;
+            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", frame->width, frame->height, surface->w, surface->h);
+            return 1;
+        }
+
+        /* We must lock the surface before accessing the raw pixels */
+        if (0 != SDL_LockSurface_real(surface)) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
+            return 1;
         }
 
         orig_plane[0] = (const uint8_t*)(surface->pixels);
@@ -274,47 +253,60 @@ void encodeOneFrame(unsigned long fcounter, void* window) {
     int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
                 frame->height, frame->data, frame->linesize);
     if (rets != frame->height) {
-        fprintf(stderr, "We only could scale %d rows\n", rets);
-        return;
-    }
-
-    frame->pts = fcounter;
-
-    /* encode the image */
-    int got_output;
-    int ret = avcodec_encode_video2(video_st->codec, &pkt, frame, &got_output);
-    if (ret < 0) {
-        fprintf(stderr, "Error encoding frame\n");
-        return;
-    }
-    if (got_output) {
-        /* TODO: check these values */
-        pkt.pts = fcounter;
-        pkt.dts = fcounter;
-        //printf("Write frame %ld (size=%5d)\n", fcounter, pkt.size);
-        av_write_frame(formatContext, &pkt);
-        av_free_packet(&pkt);
+        debuglog(LCF_DUMP | LCF_ERROR, "We could only convert %d rows", rets);
+        if (!useGL) {
+            /* Unlock surface */
+            SDL_UnlockSurface_real(surface);
+        }
+        return 1;
     }
 
     if (!useGL) {
         /* Unlock surface */
         SDL_UnlockSurface_real(surface);
     }
+
+    frame->pts = fcounter;
+
+    /* Encode the image */
+    int got_output;
+    int ret = avcodec_encode_video2(video_st->codec, &pkt, frame, &got_output);
+    if (ret < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
+        return 1;
+    }
+
+    if (got_output) {
+        /* We have an encoder output to write */
+        pkt.pts = fcounter; // TODO: check this value
+        pkt.dts = fcounter; // TODO: check this value
+        if (av_write_frame(formatContext, &pkt) < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+            return 1;
+        }
+        debuglog(LCF_DUMP | LCF_FRAME, "Write frame %6ld (size=%6d)", fcounter, pkt.size);
+        av_free_packet(&pkt);
+    }
+
+    return 0;
 }
 
 
-void closeVideoDump() {
+int closeVideoDump() {
     /* Encode the remaining frames */
     for (int got_output = 1; got_output;) {
         int ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
         if (ret < 0) {
-            fprintf(stderr, "Error encoding frame\n");
-            exit(1);
+            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
+            return 1;
         }
 
         if (got_output) {
-            //printf("Write frame %3d (size=%5d)\n", -1, pkt.size);
-            av_write_frame(formatContext, &pkt);
+            if (av_write_frame(formatContext, &pkt) < 0) {
+                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+                return 1;
+            }
+            debuglog(LCF_DUMP | LCF_FRAME, "Write frame %6ld (size=%6d)", -1, pkt.size);
             av_free_packet(&pkt);
         }
     }
@@ -329,9 +321,12 @@ void closeVideoDump() {
 
     /* Free resources */
     avio_close(formatContext->pb);
+    avcodec_close(video_st->codec);
     avformat_free_context(formatContext);
     sws_freeContext(toYUVctx);
     av_freep(&frame->data[0]);
     av_frame_free(&frame);
+
+    return 0;
 }
 

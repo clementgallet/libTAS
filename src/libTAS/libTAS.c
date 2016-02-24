@@ -129,11 +129,21 @@ void SDL_GL_SwapWindow(void)
     if (tasflags.av_dumping) {
         if (! dump_inited) {
             /* Initializing the video dump */
-            openVideoDump(gameWindow, video_opengl);
+            int av = openVideoDump(gameWindow, video_opengl);
             dump_inited = 1;
+            if (av != 0)
+                /* Init failed, disable AV dumping */
+                tasflags.av_dumping = 0;
         }
+    }
+
+    if (tasflags.av_dumping) {
         /* Write the current frame */
-        encodeOneFrame(frame_counter, gameWindow);
+        int enc = encodeOneFrame(frame_counter, gameWindow);
+        if (enc != 0)
+            /* Encode failed, disable AV dumping */
+            tasflags.av_dumping = 0;
+
     }
 
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
