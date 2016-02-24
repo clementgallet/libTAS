@@ -1,15 +1,10 @@
 #include "libTAS.h"
 
 void* SDL_handle;
+int video_opengl = 0;
 
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
-unsigned char replaying = 0;
-
-unsigned char* recorded_inputs;
-unsigned long max_inputs;
-int replay_inputs_file;
-unsigned long max_inputs_to_replay;
 
 int socket_fd = 0;
 void * gameWindow;
@@ -67,9 +62,6 @@ void __attribute__((constructor)) init(void)
     send(socket_fd, &message, sizeof(int), 0);
     pid_t mypid = getpid();
     send(socket_fd, &mypid, sizeof(pid_t), 0);
-
-    recorded_inputs = malloc(sizeof(unsigned char) * 8192);
-    max_inputs = 8192;
 
     int i;
     for (i=0; i<16; i++)
@@ -137,7 +129,7 @@ void SDL_GL_SwapWindow(void)
     if (tasflags.av_dumping) {
         if (! dump_inited) {
             /* Initializing the video dump */
-            openVideoDump(gameWindow);
+            openVideoDump(gameWindow, video_opengl);
             dump_inited = 1;
         }
         /* Write the current frame */
@@ -167,13 +159,6 @@ void SDL_GL_SwapWindow(void)
         current_time.tv_usec = 0;
     }
 
-    //record_inputs();
-
-    /*
-    if (replaying)
-    {replay_inputs();
-        return;
-    }*/
 
     int message = MSGB_START_FRAMEBOUNDARY;
     send(socket_fd, &message, sizeof(int), 0);
@@ -203,6 +188,9 @@ int SDL_GL_SetSwapInterval(int interval)
 void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
+    if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
+        video_opengl = 1;
+
     return gameWindow;
 }
 

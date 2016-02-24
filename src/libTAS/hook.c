@@ -30,7 +30,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_UnlockSurface, SDL_handle)
     HOOK_FUNC(SDL_GL_GetProcAddress, SDL_handle)
 
-    //HOOK_FUNC(glReadPixels, RTLD_NEXT)
+    HOOK_FUNC(glReadPixels, RTLD_NEXT)
 
     return 1;
 }

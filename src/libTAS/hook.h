@@ -11,7 +11,7 @@
     if (!FUNC##_real)\
     {\
         debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
-        return 0;\
+        FUNC##_real = NULL;\
     }
 
 

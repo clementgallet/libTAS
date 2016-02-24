@@ -19,6 +19,7 @@
 - Dump video
 -- Some muxers do not work (mp4)
 -- Disable game inputs (hotkeys are fine)
+-- Must support or disable screen resizing
 - Support savestates (good luck)
 -- Disable openAL sound, remove one error
 -- Now got:

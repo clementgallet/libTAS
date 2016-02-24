@@ -10,19 +10,36 @@ AVOutputFormat *outputFormat = NULL;
 AVFormatContext *formatContext = NULL;
 AVStream* video_st;
 
-int yuvwidth, yuvheight;
-int ystride, uvstride;
-int ysize, uvsize, yuvsize;
+uint8_t* glpixels;
+uint8_t* glpixels_flip;
 
-typedef void (*glReadPixelsF)(int, int, int, int, unsigned int, unsigned int, void*);
-glReadPixelsF glReadPixels = NULL;
+int useGL;
 
-void openVideoDump(void* window) {
+int openVideoDump(void* window, int video_opengl) {
 
-    glReadPixels = (glReadPixelsF) SDL_GL_GetProcAddress_real("glReadPixels");
-    if (!glReadPixels)
-        fprintf(stderr, "Could not load function glReadPixels\n");
+    /* Get information about the current screen */
+    int width, height;
+    SDL_GL_GetDrawableSize_real(window, &width, &height);
 
+    /* If the game uses openGL, the method to capture the screen will be different */
+    useGL = video_opengl;
+
+    if (useGL) {
+        if (!glReadPixels_real) {
+            fprintf(stderr, "glReadPixels is needed but is not exported by the game.\n");
+            fprintf(stderr, "Importing it using SDL_GL_GetProcAddress.\n");
+            glReadPixels_real = SDL_GL_GetProcAddress_real("glReadPixels");
+            if (!glReadPixels_real) {
+                fprintf(stderr, "Could not load function glReadPixels\n");
+                return 1;
+            }
+        }
+
+        /* Initialize buffers for screen pixels */
+        int size = width * height * 4;
+        glpixels = malloc(size);
+        glpixels_flip = malloc(size);
+    }
 
     //avcodec_init();
     av_log_set_level( AV_LOG_DEBUG );
@@ -39,9 +56,6 @@ void openVideoDump(void* window) {
     */
 
 
-    /* Get information about the current screen */
-    int width, height;
-    SDL_GL_GetDrawableSize_real(window, &width, &height);
 
     int ret;
 
@@ -73,7 +87,7 @@ void openVideoDump(void* window) {
     //outputFormat = av_guess_format("mp4", NULL, NULL);
     if (!outputFormat) {
         fprintf(stderr, "Could not find suitable output format\n");
-        return;
+        return 1;
     }
 
     // define AVFormatContext
@@ -83,7 +97,7 @@ void openVideoDump(void* window) {
 //  avformat_alloc_output_context(&formatContext, outputFormat, NULL, NULL);
     if (!formatContext) {
         fprintf(stderr, "Memory error\n");
-        return;
+        return 1;
     }
 
     //int codec_id = AV_CODEC_ID_H264;
@@ -96,7 +110,7 @@ void openVideoDump(void* window) {
     codec = avcodec_find_encoder(codec_id);
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
-        exit(1);
+        return 1;
     }
 
 
@@ -121,9 +135,8 @@ void openVideoDump(void* window) {
     /* frames per second */
     //video_st->codec->time_base = (AVRational){1,60};
     video_st->time_base = (AVRational){1,60};
-    video_st->codec->time_base.den = 60;
-    video_st->codec->time_base.num = 1;
-    video_st->codec->gop_size = 12; /* emit one intra frame every ten frames */
+    video_st->codec->time_base = (AVRational){1,60};
+    video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
     video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
 
@@ -137,7 +150,7 @@ void openVideoDump(void* window) {
 
     if (avcodec_open2(video_st->codec, codec, NULL) < 0) {
         fprintf(stderr, "Could not open codec\n");
-        exit(1);
+        return 1;
     }
     
     
@@ -146,7 +159,7 @@ void openVideoDump(void* window) {
     frame = av_frame_alloc();
     if (!frame) {
         fprintf(stderr, "Could not allocate video frame\n");
-        exit(1);
+        return 1;
     }
     frame->format = video_st->codec->pix_fmt;
     frame->width  = video_st->codec->width;
@@ -156,19 +169,14 @@ void openVideoDump(void* window) {
     ret = av_image_alloc(frame->data, frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
     if (ret < 0) {
         fprintf(stderr, "Could not allocate raw picture buffer\n");
-        exit(1);
+        return 1;
     }
 
+    /* Just in case dimensions are not a multiple of 2 */
+    int yuvwidth  = RNDTO2 ( frame->width );
+    int yuvheight = RNDTO2 ( frame->height );
 
     /* Initialize swscale for pixel format conversion */
-    yuvwidth    = RNDTO2 ( frame->width );
-    yuvheight   = RNDTO2 ( frame->height );
-    ystride     = RNDTO32 ( yuvwidth );
-    uvstride    = RNDTO32 ( yuvwidth / 2 );
-    ysize       = ystride * yuvheight;
-    uvsize      = uvstride * ( yuvheight / 2 );
-    yuvsize     = ysize + ( 2 * uvsize );
-
     toYUVctx = sws_getContext(frame->width, frame->height,  
                               PIX_FMT_RGBA,
                               yuvwidth, yuvheight, 
@@ -177,7 +185,7 @@ void openVideoDump(void* window) {
 
     if (toYUVctx == NULL) {
         fprintf(stderr, "Could not allocate swscale context\n");
-        exit(1);
+        return 1;
     }
 
 
@@ -190,119 +198,114 @@ void openVideoDump(void* window) {
     int rh = avformat_write_header(formatContext, NULL);
     if (rh < 0) {
         fprintf(stderr, "Could not write header!\n");
+        return 1;
     }
-    
-    
-    fprintf(stderr, "Successfully inited avcodec and swscale\n");
+
+    return 0;
 }
 
 void encodeOneFrame(unsigned long fcounter, void* window) {
 
-    //fprintf(stderr, "Start encoding a frame\n");
+    /* Initialize AVPacket */
     av_init_packet(&pkt);
     pkt.data = NULL;    // packet data will be allocated by the encoder
     pkt.size = 0;
 
-    SDL_Surface* surface = SDL_GetWindowSurface_real(window);
-    /* SDL_ConvertPixels? */
-    if (0 != SDL_LockSurface_real(surface))
-        fprintf(stderr, "Could not lock surface\n");
+    SDL_Surface* surface = NULL;
 
-    if (surface->format->BitsPerPixel != 32) {
-        fprintf(stderr, "Bad bpp for surface: %d\n", surface->format->BitsPerPixel);
-        //return;
-    }
+    const uint8_t* orig_plane[4] = {0};
+    int orig_stride[4] = {0};
 
-    if ((surface->w != frame->width) || (surface->h != frame->height)) {
-        fprintf(stderr, "Window coords have changed (%d,%d) -> (%d,%d)\n", frame->width, frame->height, surface->w, surface->h);
-        return;
-    }
+    if (useGL) {
 
-    int got_output;
+        /* We access to the image pixels directly using glReadPixels */
+        int size = frame->width * frame->height * 4;
+        /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
+        glReadPixels_real(0, 0, frame->width, frame->height, 0x1908 /* GL_RGBA */, 0x1401 /* GL_UNSIGNED_BYTE */, glpixels);
 
-    fflush(stdout);
+        /*
+         * Flip image horizontally
+         * This is because OpenGL has a different reference point
+         * Code taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
+         * TODO: Could this be done without allocating another array ?
+         */
 
-    /* Get current screen pixels into the frame struct */
-
-    /* If we have access to glReadPixels, use it */
-
-    int size = frame->width * frame->height * 4;
-    uint8_t* glpixels = malloc(size);
-    //fprintf(stderr, "Call glReadPixels!\n");
-    /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
-    glReadPixels(0, 0, frame->width, frame->height, 0x1908 /* GL_RGBA */, 0x1401 /* GL_UNSIGNED_BYTE */, glpixels);
-    //glReadPixels(0, 0, frame->width, frame->height, 0x1907 /* GL_RGB */, 0x1401 /* GL_UNSIGNED_BYTE */, glpixels);
-    //fprintf(stderr, "Finish glReadPixels!\n");
-
-    /*
-     * Flip image horizontally
-     * This is because OpenGL has a different reference point
-     * Taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
-     * TODO: Could this be done without allocating another array ?
-     */
-    
-    uint8_t* fpixels = malloc(size);
-    int pitch = 4 * frame->width;
-    for (int line = 0; line < frame->height; line++) {
-        int pos = line * pitch;
-        for (int p=0; p<pitch; p++) {
-            fpixels[pos + p] = glpixels[(size-pos)-pitch + p];
+        int pitch = 4 * frame->width;
+        for (int line = 0; line < frame->height; line++) {
+            int pos = line * pitch;
+            for (int p=0; p<pitch; p++) {
+                glpixels_flip[pos + p] = glpixels[(size-pos)-pitch + p];
+            }
         }
+        
+        orig_plane[0] = (const uint8_t*)(glpixels_flip);
+        orig_stride[0] = frame->width * 4;
+
     }
 
-    /* If not, get the pixels from the SDL Surface */
+    else {
+        /* Not tested !! */
 
-    /* Copy the surface pixels */
-    //uint8_t* spixels = malloc(surface->pitch * surface->h);
-    //for (int pp=0; pp<surface->pitch * surface->h; pp++)
-    //    spixels[pp] = ((pp+3209)*3728) & 0xff;
-    //memcpy(spixels, surface->pixels, surface->pitch * surface->h);
+        /* Get surface from window */
+        surface = SDL_GetWindowSurface_real(window);
+
+        /* We must lock the surface before accessing the raw pixels */
+        if (0 != SDL_LockSurface_real(surface))
+            fprintf(stderr, "Could not lock surface\n");
+
+        /* Currently only supporting ARGB (32 bpp) pixel format */
+        if (surface->format->BitsPerPixel != 32) {
+            fprintf(stderr, "Bad bpp for surface: %d\n", surface->format->BitsPerPixel);
+            return;
+        }
+
+        /* Checking for a size modification */
+        if ((surface->w != frame->width) || (surface->h != frame->height)) {
+            fprintf(stderr, "Window coords have changed (%d,%d) -> (%d,%d)\n", frame->width, frame->height, surface->w, surface->h);
+            return;
+        }
+
+        orig_plane[0] = (const uint8_t*)(surface->pixels);
+        orig_stride[0] = surface->pitch;
+    }
 
 
-    //const uint8_t* orig_plane[4] = { (const uint8_t*)(surface->pixels), 0, 0, 0 };
-    //const uint8_t* orig_plane[4] = { (const uint8_t*)(spixels), 0, 0, 0 };
-    const uint8_t* orig_plane[4] = { (const uint8_t*)(fpixels), 0, 0, 0 };
-    //uint8_t* plane[4] = { (uint8_t*)(frame), (uint8_t*)(frame + ysize), (uint8_t*)(frame + ysize + uvsize), 0 };
-    //int orig_stride[4] = {surface->pitch, 0, 0, 0}; // Not sure at all
-    int orig_stride[4] = {frame->width * 4, 0, 0, 0}; // Not sure at all
-    //int stride[4] = { ystride, uvstride, uvstride, 0 };
-
-    /* Scale the image and copy it into the AVframe */
-    //int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
-    //            surface->h, plane, stride);
+    /* Change pixel format to YUV420p and copy it into the AVframe */
     int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
                 frame->height, frame->data, frame->linesize);
-    //fprintf(stderr, "ret of scale %d\n", rets);
-    //free(spixels);
+    if (rets != frame->height) {
+        fprintf(stderr, "We only could scale %d rows\n", rets);
+        return;
+    }
 
     frame->pts = fcounter;
 
     /* encode the image */
+    int got_output;
     int ret = avcodec_encode_video2(video_st->codec, &pkt, frame, &got_output);
     if (ret < 0) {
         fprintf(stderr, "Error encoding frame\n");
-        exit(1);
+        return;
     }
     if (got_output) {
+        /* TODO: check these values */
         pkt.pts = fcounter;
         pkt.dts = fcounter;
-        printf("Write frame %ld (size=%5d)\n", fcounter, pkt.size);
+        //printf("Write frame %ld (size=%5d)\n", fcounter, pkt.size);
         av_write_frame(formatContext, &pkt);
         av_free_packet(&pkt);
     }
 
-    SDL_UnlockSurface_real(surface);
-    free(glpixels);
-    free(fpixels);
-    //free(spixels);
+    if (!useGL) {
+        /* Unlock surface */
+        SDL_UnlockSurface_real(surface);
+    }
 }
 
 
 void closeVideoDump() {
+    /* Encode the remaining frames */
     for (int got_output = 1; got_output;) {
-        fflush(stdout);
-
-        /* encode the image */
         int ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
         if (ret < 0) {
             fprintf(stderr, "Error encoding frame\n");
@@ -310,23 +313,25 @@ void closeVideoDump() {
         }
 
         if (got_output) {
-            printf("Write frame %3d (size=%5d)\n", -1, pkt.size);
+            //printf("Write frame %3d (size=%5d)\n", -1, pkt.size);
             av_write_frame(formatContext, &pkt);
             av_free_packet(&pkt);
         }
     }
 
-    /* add sequence end code to have a real mpeg file */
-    //uint8_t endcode[] = { 0, 0, 1, 0xb7 };
-    //fwrite(endcode, 1, sizeof(endcode), f);
-    //fclose(f);
-    
+    if (useGL) {
+        free(glpixels);
+        free(glpixels_flip);
+    }
+
+    /* Write file trailer */
     av_write_trailer(formatContext);
+
+    /* Free resources */
     avio_close(formatContext->pb);
     avformat_free_context(formatContext);
     sws_freeContext(toYUVctx);
     av_freep(&frame->data[0]);
     av_frame_free(&frame);
-    printf("\n");
 }
 

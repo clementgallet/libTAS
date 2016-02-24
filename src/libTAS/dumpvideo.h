@@ -8,6 +8,6 @@
 #define RNDTO2(X) ( (X) & 0xFFFFFFFE )
 #define RNDTO32(X) ( ( (X) % 32 ) ? ( ( (X) + 32 ) & 0xFFFFFFE0 ) : (X) )
 
-void openVideoDump(void* window);
+int openVideoDump(void* window, int video_opengl);
 void encodeOneFrame(unsigned long fcounter, void* window);
 void closeVideoDump();
