@@ -2,11 +2,19 @@
 #define _SDL_h
 
 #include <inttypes.h> 
+#include <X11/Xlib.h>
 
 typedef uint8_t Uint8;
 typedef uint16_t Uint16;
 typedef uint32_t Uint32;
 typedef int32_t Sint32;
+typedef enum
+{
+    SDL_FALSE = 0,
+    SDL_TRUE = 1
+} SDL_bool;
+
+
 
 #define SDL_RELEASED	0
 #define SDL_PRESSED	1
@@ -1130,5 +1138,52 @@ typedef struct SDL_Surface
     /** Reference count -- used when freeing surface */
     int refcount;               /**< Read-mostly */
 } SDL_Surface;
+
+
+/**
+ *  These are the various supported windowing subsystems
+ */
+typedef enum
+{
+    SDL_SYSWM_UNKNOWN,
+    SDL_SYSWM_WINDOWS,
+    SDL_SYSWM_X11,
+    SDL_SYSWM_DIRECTFB,
+    SDL_SYSWM_COCOA,
+    SDL_SYSWM_UIKIT,
+    SDL_SYSWM_WAYLAND,
+    SDL_SYSWM_MIR,
+} SDL_SYSWM_TYPE;
+
+
+typedef struct SDL_version
+{
+    Uint8 major;        /**< major version */
+    Uint8 minor;        /**< minor version */
+    Uint8 patch;        /**< update version */
+} SDL_version;
+
+
+/**
+ *  The custom window manager information structure.
+ *
+ *  When this structure is returned, it holds information about which
+ *  low level system it is using, and will be one of SDL_SYSWM_TYPE.
+ */
+struct SDL_SysWMinfo
+{
+    SDL_version version;
+    SDL_SYSWM_TYPE subsystem;
+    union
+    {
+        struct
+        {
+            Display *display;           /**< The X11 display */
+            Window window;              /**< The X11 window */
+        } x11;
+   } info;
+};
+
+typedef struct SDL_SysWMinfo SDL_SysWMinfo;
 
 #endif /* _SDL_h */

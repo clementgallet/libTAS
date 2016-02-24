@@ -56,6 +56,12 @@ enum {
      * Arguments: size_t (string length) then char[len]
      */
     MSGN_DUMP_FILE,
+
+    /*
+     * Send the X11 window identifier of the game to the program
+     * Argument: int
+     */
+    MSGB_WINDOW_ID,
 };
 
 #endif // MESSAGES_H_INCLUDED

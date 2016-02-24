@@ -77,8 +77,7 @@ int main(int argc, char **argv)
     Display *display;
     XEvent event;
     // Find the window which has the current keyboard focus
-    Window win_focus;
-    int revert;
+    Window gameWindow;
     struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
@@ -145,8 +144,8 @@ int main(int argc, char **argv)
 
     nanosleep(&tim, NULL);
 
-    XGetInputFocus(display, &win_focus, &revert);
-    XSelectInput(display, win_focus, KeyPressMask);
+    //XGetInputFocus(display, &gameWindow, &revert);
+    //XSelectInput(display, gameWindow, KeyPressMask);
 
     default_hotkeys(hotkeys);
 
@@ -165,6 +164,12 @@ int main(int argc, char **argv)
             break;
         }
 
+        if (message == MSGB_WINDOW_ID) {
+            recv(socket_fd, &gameWindow, sizeof(Window), 0);
+            XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask);
+            recv(socket_fd, &message, sizeof(int), 0);
+        }
+
         if (message != MSGB_START_FRAMEBOUNDARY) {
             printf("Error in msg socket, waiting for frame boundary\n");
             exit(1);
@@ -178,10 +183,6 @@ int main(int argc, char **argv)
             
         /* We are at a frame boundary */
         do {
-
-            /* TODO: Remove this and get the game window cleanly */
-            XGetInputFocus(display, &win_focus, &revert);
-            XSelectInput(display, win_focus, KeyPressMask | KeyReleaseMask);
 
             XQueryKeymap(display, keyboard_state);
 

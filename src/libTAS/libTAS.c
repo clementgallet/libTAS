@@ -6,8 +6,17 @@ int video_opengl = 0;
 struct timeval current_time = { 0, 0 };
 unsigned long frame_counter = 0;
 
+/* Socket to communicate to the program */
 int socket_fd = 0;
-void * gameWindow;
+
+/* 
+ * Store the game window pointer
+ * We assume the game never handle multiple windows at a time
+ */
+void* gameWindow = NULL;
+
+/* Has the game window pointer be sent to the program? */
+int gw_sent = 0;
 
 char* dumpfile = NULL;
 
@@ -153,8 +162,6 @@ void SDL_GL_SwapWindow(void)
     /* Apparently, we must not put any code here before the SwapWindow call */
     SDL_GL_SwapWindow_real();
 
-
-
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
 
     /* Dumping audio and video if needed */
@@ -202,8 +209,41 @@ void SDL_GL_SwapWindow(void)
         current_time.tv_usec = 0;
     }
 
+    int message;
 
-    int message = MSGB_START_FRAMEBOUNDARY;
+    /* 
+     * We need to pass the game window identifier to the program
+     * so that it can capture inputs
+     */
+    if (gameWindow != NULL) {
+        if (!gw_sent) {
+
+            /* Access the X Window identifier from the SDL_Window struct */
+            SDL_SysWMinfo info;
+            SDL_GetVersion_real(&info.version);
+            if (SDL_GetWindowWMInfo_real(gameWindow, &info) == SDL_FALSE) {
+                debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
+                return;
+            }
+            if (info.subsystem != SDL_SYSWM_X11) {
+                debuglog(LCF_SDL | LCF_ERROR, "SDL says we are not running on X11");
+                return;
+            }
+            Window xgw = info.info.x11.window;
+
+            /* Send the X Window identifier to the program */
+            message = MSGB_WINDOW_ID;
+            send(socket_fd, &message, sizeof(int), 0);
+            send(socket_fd, &xgw, sizeof(Window), 0);
+            gw_sent = 1;
+        }
+    }
+    else {
+        debuglog(LCF_SDL | LCF_ERROR, "Window pointer is empty but the game wants to draw something.");
+        return;
+    }
+
+    message = MSGB_START_FRAMEBOUNDARY;
     send(socket_fd, &message, sizeof(int), 0);
     send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
 
@@ -234,12 +274,16 @@ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 fla
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
 
+    /* A new window was created. It needs to be passed to the program */
+    gw_sent = 0;
     return gameWindow;
 }
 
 void SDL_DestroyWindow(void* window){
     debuglog(LCF_SDL, "%s call.", __func__);
     SDL_DestroyWindow_real(window);
+    if (gameWindow == window)
+        gameWindow = NULL;
 }
 
 Uint32 SDL_GetWindowFlags(void* window){

@@ -52,6 +52,10 @@ void* (*SDL_GetWindowSurface_real)(void* window);
 int (*SDL_LockSurface_real)(void* surface);
 void (*SDL_UnlockSurface_real)(void* surface);
 void* (*SDL_GL_GetProcAddress_real)(const char* proc);
+void (*SDL_GetVersion_real)(SDL_version* ver);
+SDL_bool (*SDL_GetWindowWMInfo_real)(void* window, SDL_SysWMinfo* info);
+
+
 
 void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
 
