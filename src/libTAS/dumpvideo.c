@@ -1,7 +1,7 @@
 #include "dumpvideo.h"
 
 FILE *f;
-const char filename[] = "test.avi";
+char* filename = NULL;
 AVFrame *frame;
 AVPacket pkt;
 AVCodecContext *c= NULL;
@@ -15,7 +15,9 @@ uint8_t* glpixels_flip;
 
 int useGL;
 
-int openVideoDump(void* window, int video_opengl) {
+int openVideoDump(void* window, int video_opengl, char* dumpfile) {
+
+    filename = dumpfile;
 
     /* Get information about the current screen */
     int width, height;
@@ -326,6 +328,7 @@ int closeVideoDump() {
     sws_freeContext(toYUVctx);
     av_freep(&frame->data[0]);
     av_frame_free(&frame);
+    free(filename);
 
     return 0;
 }

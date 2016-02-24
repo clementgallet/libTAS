@@ -8,6 +8,6 @@
 
 #define RNDTO2(X) ( (X) & 0xFFFFFFFE )
 
-int openVideoDump(void* window, int video_opengl);
+int openVideoDump(void* window, int video_opengl, char* filename);
 int encodeOneFrame(unsigned long fcounter, void* window);
 int closeVideoDump();

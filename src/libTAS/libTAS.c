@@ -9,6 +9,8 @@ unsigned long frame_counter = 0;
 int socket_fd = 0;
 void * gameWindow;
 
+char* dumpfile = NULL;
+
 KeySym xkeyboard[16] = {0}; // TODO: Remove this magic number
 KeySym old_xkeyboard[16] = {0};
 
@@ -57,11 +59,42 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
-    /* Send game process pid */
     int message = MSGB_PID;
+    /* Send information to the program */
+
+    /* Send game process pid */
+    debuglog(LCF_SOCKET, "Send pid to program");
     send(socket_fd, &message, sizeof(int), 0);
     pid_t mypid = getpid();
     send(socket_fd, &mypid, sizeof(pid_t), 0);
+
+    /* End message */
+    message = MSGB_END_INIT;
+    send(socket_fd, &message, sizeof(int), 0);
+
+    /* Receive information from the program */
+    recv(socket_fd, &message, sizeof(int), 0);
+    while (message != MSGN_END_INIT) {
+        switch (message) {
+            case MSGN_TASFLAGS:
+                debuglog(LCF_SOCKET, "Receiving tas flags");
+                recv(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+                break;
+            case MSGN_DUMP_FILE:
+                debuglog(LCF_SOCKET, "Receiving dump filename");
+                size_t str_len;
+                recv(socket_fd, &str_len, sizeof(size_t), 0);
+                dumpfile = malloc(str_len * sizeof(char) + 1);
+                recv(socket_fd, dumpfile, str_len * sizeof(char), 0);
+                dumpfile[str_len] = '\0';
+                break;
+            default:
+                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d.", message);
+                exit(1);
+        }
+        recv(socket_fd, &message, sizeof(int), 0);
+    }
+        
 
     int i;
     for (i=0; i<16; i++)
@@ -129,7 +162,7 @@ void SDL_GL_SwapWindow(void)
     if (tasflags.av_dumping) {
         if (! dump_inited) {
             /* Initializing the video dump */
-            int av = openVideoDump(gameWindow, video_opengl);
+            int av = openVideoDump(gameWindow, video_opengl, dumpfile);
             dump_inited = 1;
             if (av != 0)
                 /* Init failed, disable AV dumping */

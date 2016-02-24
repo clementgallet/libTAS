@@ -26,6 +26,7 @@ char keyboard_state[32];
 KeySym hotkeys[HOTKEY_LEN];
 
 char *moviefile = NULL;
+char *dumpfile = NULL;
 FILE* fp;
 
 pid_t game_pid;
@@ -46,15 +47,22 @@ int main(int argc, char **argv)
 
     /* Parsing arguments */
     int c;
-    while ((c = getopt (argc, argv, "r:w:")) != -1)
+    while ((c = getopt (argc, argv, "r:w:d:")) != -1)
         switch (c) {
             case 'r':
+                /* Playback movie file */
                 tasflags.recording = 0;
                 moviefile = optarg;
                 break;
             case 'w':
+                /* Record movie file */
                 tasflags.recording = 1;
                 moviefile = optarg;
+                break;
+            case 'd':
+                /* Dump video to file */
+                tasflags.av_dumping = 1;
+                dumpfile = optarg;
                 break;
             case '?':
                 fprintf (stderr, "Unknown option character");
@@ -94,17 +102,43 @@ int main(int argc, char **argv)
 
     printf("Connected.\n");
 
-    /* Share informations */
+    /* Receive informations from the game */
 
-    /* Get the game process pid */
     recv(socket_fd, &message, sizeof(int), 0);
-    if (message == MSGB_PID) {
-        recv(socket_fd, &game_pid, sizeof(pid_t), 0);
+    while (message != MSGB_END_INIT) {
+
+        switch (message) {
+            /* Get the game process pid */
+            case MSGB_PID:
+                recv(socket_fd, &game_pid, sizeof(pid_t), 0);
+                break;
+
+            default:
+                fprintf(stderr, "Message init: unknown message\n");
+                exit(1);
+        }
+        recv(socket_fd, &message, sizeof(int), 0);
     }
-    else {
-        fprintf(stderr, "Error in msg socket, waiting for game pid\n");
-        exit(1);
+
+    /* Send informations to the game */
+
+    /* Send TAS flags */
+    message = MSGN_TASFLAGS;
+    send(socket_fd, &message, sizeof(int), 0);
+    send(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+
+    /* Send dump file */
+    if (tasflags.av_dumping) {
+        message = MSGN_DUMP_FILE;
+        send(socket_fd, &message, sizeof(int), 0);
+        size_t dumpfile_size = strlen(dumpfile);
+        send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
+        send(socket_fd, dumpfile, dumpfile_size * sizeof(char), 0);
     }
+
+    /* End message */
+    message = MSGN_END_INIT;
+    send(socket_fd, &message, sizeof(int), 0);
 
     tim.tv_sec  = 1;
     tim.tv_nsec = 0L;
