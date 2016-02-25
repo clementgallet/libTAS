@@ -1,5 +1,9 @@
 #include "keymapping.h"
 
+/* Map keyboard Keycodes to a single input of a keyboard or controller */
+struct SingleInput input_mapping[256] = {{0,0}};
+
+
 void default_hotkeys(KeySym *hotkeys){
 
     hotkeys[HOTKEY_PLAYPAUSE] = XK_Pause;
@@ -8,14 +12,19 @@ void default_hotkeys(KeySym *hotkeys){
     hotkeys[HOTKEY_READWRITE] = XK_o;
     hotkeys[HOTKEY_SAVESTATE] = XK_s;
     hotkeys[HOTKEY_LOADSTATE] = XK_l;
+
 }
 
 /* 
- * Format the keyboard state to be saved and passed to the game
- * It consists on converting keycode to keysyms, removing pressed hotkeys,
- * and listing the remaining pressed keys.
+ * We are building the whole AllInputs structure,
+ * that will be passed to the game and saved.
+ * We will be doing the following steps:
+ * - Convert keyboard keycodes (physical keys) to keysyms (key meaning)
+ * - Check if the keysym is mapped to a hotkey. If so, we skip it
+ * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
  */
-void format_keyboard(struct AllInputs* ai, Display *display, char keyboard_state[], KeySym hotkeys[]){
+
+void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[], KeySym hotkeys[]){
     int i,j,k;
     int keysym_i = 0;
 
@@ -41,17 +50,53 @@ void format_keyboard(struct AllInputs* ai, Display *display, char keyboard_state
                     }
                 }
 
-                if (k == HOTKEY_LEN) {
+                if (k < HOTKEY_LEN) {
+                    /* Dealing with a hotkey, skipping */
+                    continue;
+                }
 
-                    /* This is not a hotkey */
+                /* Checking the mapped input for that key */
+                struct SingleInput si = input_mapping[kc];
+
+                if (si.type == IT_NONE) {
+                    /* Key is mapped to nothing */
+                    continue;
+                }
+
+                if (si.type == IT_ID) {
+                    /* Key is mapped to itself */
+                    si.type = IT_KEYBOARD;
+                    si.value = ks;
+                }
+
+                if (si.type == IT_KEYBOARD) {
+
                     /* Checking the current number of keys */
                     if (keysym_i >= ALLINPUTS_MAXKEY) {
-                        fprintf(stderr, "We reached the maximum number of inputs (%d), skipping the rest", ALLINPUTS_MAXKEY);
+                        fprintf(stderr, "Reached maximum number of inputs (%d).", ALLINPUTS_MAXKEY);
                         return;
                     }
 
                     /* Saving the key */
-                    ai->keyboard[keysym_i++] = ks;
+                    ai->keyboard[keysym_i++] = si.value;
+                }
+
+                if (si.type >= IT_CONTROLLER1_AXIS_LEFTX) {
+                    /* Key is mapped to a game controller */
+
+                    /* Getting Controller id 
+                     * Arithmetic on enums is bad, no?
+                     */
+                    int controller_i = si.type / IT_CONTROLLER1_AXIS_LEFTX - 1;
+                    int controller_type = si.type % IT_CONTROLLER1_AXIS_LEFTX;
+                    int button_start = IT_CONTROLLER1_BUTTON_A % IT_CONTROLLER1_AXIS_LEFTX;
+                    if (controller_type < button_start) {
+                        ai->controller_axes[controller_i][controller_type] = (short) si.value;
+                    }
+                    else {
+                        int button_type = controller_type - button_start;
+                        ai->controller_buttons[controller_i] |= (si.value & 0x1) << button_type;
+                    }
                 }
             }
         }

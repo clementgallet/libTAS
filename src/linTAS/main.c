@@ -256,7 +256,7 @@ int main(int argc, char **argv)
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
-            format_keyboard(&ai, display, keyboard_state, hotkeys);
+            buildAllInputs(&ai, display, keyboard_state, hotkeys);
         }
 
         if (tasflags.recording == 1) {
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
-            format_keyboard(&ai, display, keyboard_state, hotkeys);
+            buildAllInputs(&ai, display, keyboard_state, hotkeys);
 
             /* Save inputs to file */
             if (!writeFrame(fp, frame_counter, ai)) {

@@ -13,6 +13,7 @@
 - Process and filter SDL events
 - Add a memory watch/search module
 - Add dummy Steam API functions so that the game can be launched without it
+-- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 
 ## Partially done
 
