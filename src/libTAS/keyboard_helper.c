@@ -1,4 +1,4 @@
-#include "keyboard.h"
+#include "keyboard_helper.h"
 
 /* The translation tables from an X11 keysym to a SDL keysym */
 static SDL_Keycode ODD_keymap[256];
@@ -11,31 +11,6 @@ void X11_InitKeymap(void)
 	/* Odd keys used in international keyboards */
 	for ( i=0; i<256; ++i )
 		ODD_keymap[i] = SDLK_UNKNOWN;
-
- 	/* Some of these might be mappable to an existing SDLK_ code */
-/* 	ODD_keymap[XK_dead_grave&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_acute&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_tilde&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_macron&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_breve&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_abovedot&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_diaeresis&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_abovering&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_doubleacute&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_caron&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_cedilla&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_ogonek&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_iota&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_voiced_sound&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_semivoiced_sound&0xFF] = SDLK_COMPOSE;
- 	ODD_keymap[XK_dead_belowdot&0xFF] = SDLK_COMPOSE;
-#ifdef XK_dead_hook
- 	ODD_keymap[XK_dead_hook&0xFF] = SDLK_COMPOSE;
-#endif
-#ifdef XK_dead_horn
- 	ODD_keymap[XK_dead_horn&0xFF] = SDLK_COMPOSE;
-#endif
-*/
 
 	/* Map the miscellaneous keys */
 	for ( i=0; i<256; ++i )
@@ -137,19 +112,9 @@ SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 	key = SDLK_UNKNOWN;
 	if ( xsym ) {
 		switch (xsym>>8) {
-		    case 0x1005FF:
-#ifdef SunXK_F36
-			if ( xsym == SunXK_F36 )
-				key = SDLK_F11;
-#endif
-#ifdef SunXK_F37
-			if ( xsym == SunXK_F37 )
-				key = SDLK_F12;
-#endif
-			break;
 		    case 0x00:	/* Latin 1 */
-			key = (SDL_Keycode)(xsym & 0xFF);
-			break;
+			    key = (SDL_Keycode)(xsym & 0xFF);
+			    break;
 		    case 0x01:	/* Latin 2 */
 		    case 0x02:	/* Latin 3 */
 		    case 0x03:	/* Latin 4 */
@@ -161,21 +126,17 @@ SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 		    case 0x0A:	/* Publishing */
 		    case 0x0C:	/* Hebrew */
 		    case 0x0D:	/* Thai */
-			/* These are wrong, but it's better than nothing */
-			key = (SDL_Keycode)(xsym & 0xFF);
-			break;
+			    /* These are wrong, but it's better than nothing */
+			    key = (SDL_Keycode)(xsym & 0xFF);
+			    break;
 		    case 0xFE:
-			key = ODD_keymap[xsym&0xFF];
-			break;
+                /* Odd keys used in international keyboards */
+			    break;
 		    case 0xFF:
-			key = MISC_keymap[xsym&0xFF];
-			break;
+			    key = MISC_keymap[xsym&0xFF];
+			    break;
 		    default:
-			/*
-			fprintf(stderr, "X11: Unhandled xsym, sym = 0x%04x\n",
-					(unsigned int)xsym);
-			*/
-			break;
+			    break;
 		}
 	}
 	return key;
@@ -205,3 +166,4 @@ void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym) {
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unused = 0;
 }
+

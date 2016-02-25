@@ -8,10 +8,10 @@ void advanceFrame(void)
        second. This does not give an integer number of microseconds though, so
        we have to keep track of the fractional part of the microseconds
        counter, and add a spare microsecond each time it's needed. */
-    const unsigned int fps = 60;
-    const unsigned int integer_increment = 1000000 / fps;
-    const unsigned int fractional_increment = 1000000 % fps;
-    static unsigned int fractional_part = fps / 2;
+    unsigned int fps = 60;
+    unsigned int integer_increment = 1000000 / fps;
+    unsigned int fractional_increment = 1000000 % fps;
+    unsigned int fractional_part = fps / 2;
 
     current_time.tv_usec += integer_increment;
     fractional_part += fractional_increment;

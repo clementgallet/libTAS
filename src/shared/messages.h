@@ -10,10 +10,10 @@ enum {
     MSGB_START_FRAMEBOUNDARY,
 
     /* 
-     * Send keyboard inputs
-     * Argument: char[32]
+     * Send all inputs to the game
+     * Argument: struct AllInputs
      */
-    MSGN_KEYBOARD_INPUT,
+    MSGN_ALL_INPUTS,
 
     /*
      * Send tasflags

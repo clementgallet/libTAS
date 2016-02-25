@@ -20,12 +20,8 @@ int gw_sent = 0;
 
 char* dumpfile = NULL;
 
-KeySym xkeyboard[16] = {0}; // TODO: Remove this magic number
-KeySym old_xkeyboard[16] = {0};
-
 void __attribute__((constructor)) init(void)
 {
-    
     // SMB uses its own version of SDL.
     SDL_handle = dlopen("/home/clement/supermeatboy/amd64/libSDL2-2.0.so.0",
                         RTLD_LAZY);
@@ -104,14 +100,11 @@ void __attribute__((constructor)) init(void)
         recv(socket_fd, &message, sizeof(int), 0);
     }
         
-
-    int i;
-    for (i=0; i<16; i++)
-        old_xkeyboard[i] = XK_VoidSymbol;
+    emptyInputs(&ai);
+    emptyInputs(&old_ai);
 
     X11_InitKeymap();
 
-    //proceed_commands();
 }
 
 void __attribute__((destructor)) term(void)
@@ -202,6 +195,7 @@ void SDL_GL_SwapWindow(void)
     if (oldflags.fastforward != tasflags.fastforward)
         SDL_GL_SetSwapInterval_real(!tasflags.fastforward);
 
+    /* We don't update AllInputs old_ai here. We update during the generation of events */
 
     ++frame_counter;
 }
@@ -242,14 +236,6 @@ void SDL_Quit(){
     send(socket_fd, &message, sizeof(int), 0);
     if (tasflags.av_dumping)
         closeVideoDump();
-}
-
-const Uint8* SDL_GetKeyboardState(__attribute__ ((unused)) int* numkeys)
-{
-    debuglog(LCF_SDL | LCF_KEYBOARD, "%s call.", __func__);
-    xkeyboardToSDLkeyboard(xkeyboard, keyboard_state);
-    //*numkeys = 512;
-    return keyboard_state;
 }
 
 int SDL_PeepEvents(SDL_Event*      events,
@@ -304,76 +290,20 @@ int SDL_PollEvent(SDL_Event *event)
         isone = SDL_PollEvent_real(event);
     }
 
+    /* Important: You must call the following two functions in that order!
+     * This is because the first one updates old_ai by removing elements
+     * to match ai, and the second one updates old_ai by adding elements
+     * to match ai. So if you call the second one before the first,
+     * the keyboard array in old_ai can overflow.
+     */
+    int getEvent = generateKeyUpEvent(event, gameWindow);
+    if (getEvent)
+        return 1;
 
-    /* Generate released keyboard input events */
+    getEvent = generateKeyDownEvent(event, gameWindow);
+    if (getEvent)
+        return 1;
 
-    int i, j;
-    for (i=0; i<16; i++) { // TODO: Another magic number
-        if (old_xkeyboard[i] == XK_VoidSymbol) {
-            continue;
-        }
-        for (j=0; j<16; j++) {
-            if (old_xkeyboard[i] == xkeyboard[j]) {
-                /* Key was not released */
-                break;
-            }
-        }
-        if (j == 16) {
-            /* Key was released. Generate event */
-            event->type = SDL_KEYUP;
-            event->key.state = SDL_RELEASED;
-            event->key.windowID = SDL_GetWindowID_real(gameWindow);
-            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
-
-            SDL_Keysym keysym;
-            xkeysymToSDL(&keysym, old_xkeyboard[i]);
-            event->key.keysym = keysym;
-
-            /* Update old keyboard state so that this event won't trigger inifinitely */
-            old_xkeyboard[i] = XK_VoidSymbol;
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", event->key.keysym.sym);
-            return 1;
-
-        }
-    }
-
-    /* Generate pressed keyboard input events */
-
-    int k;
-    for (i=0; i<16; i++) { // TODO: Another magic number
-        if (xkeyboard[i] == XK_VoidSymbol) {
-            continue;
-        }
-        for (j=0; j<16; j++) {
-            if (xkeyboard[i] == old_xkeyboard[j]) {
-                /* Key was not pressed */
-                break;
-            }
-        }
-        if (j == 16) {
-            /* Key was pressed. Generate event */
-            event->type = SDL_KEYDOWN;
-            event->key.state = SDL_PRESSED;
-            event->key.windowID = SDL_GetWindowID_real(gameWindow);
-            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
-
-            SDL_Keysym keysym;
-            xkeysymToSDL(&keysym, xkeyboard[i]);
-            event->key.keysym = keysym;
-
-            /* Update old keyboard state so that this event won't trigger inifinitely */
-            for (k=0; k<16; k++)
-                if (old_xkeyboard[k] == XK_VoidSymbol) {
-                    /* We found an empty space to put our key*/
-                    old_xkeyboard[k] = xkeyboard[i];
-                    break;
-                }
-
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", event->key.keysym.sym);
-            return 1;
-
-        }
-    }
     return 0;
 }
 
@@ -393,8 +323,8 @@ void proceed_commands(void)
             case MSGN_END_FRAMEBOUNDARY:
                 return;
 
-            case MSGN_KEYBOARD_INPUT:
-                recv(socket_fd, xkeyboard, 32 * sizeof(char), 0);
+            case MSGN_ALL_INPUTS:
+                recv(socket_fd, &ai, sizeof(struct AllInputs), 0);
                 break;
 
         }

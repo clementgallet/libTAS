@@ -33,6 +33,7 @@ pid_t game_pid;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
+    (void) display; // To remove unused warning
     (void) fprintf(stderr,
 		   "Ignoring Xlib error: error code %d request code %d\n",
 		   theEvent->error_code,
@@ -143,9 +144,6 @@ int main(int argc, char **argv)
     tim.tv_nsec = 0L;
 
     nanosleep(&tim, NULL);
-
-    //XGetInputFocus(display, &gameWindow, &revert);
-    //XSelectInput(display, gameWindow, KeyPressMask);
 
     default_hotkeys(hotkeys);
 
@@ -289,10 +287,9 @@ int main(int argc, char **argv)
         }
 
         /* Send inputs and end of frame */
-        message = MSGN_KEYBOARD_INPUT;
+        message = MSGN_ALL_INPUTS;
         send(socket_fd, &message, sizeof(int), 0);
-        /* TODO: Save the whole struct instead */
-        send(socket_fd, ai.keyboard, ALLINPUTS_MAXKEY * sizeof(KeySym), 0);
+        send(socket_fd, &ai, sizeof(struct AllInputs), 0);
 
         message = MSGN_END_FRAMEBOUNDARY; 
         send(socket_fd, &message, sizeof(int), 0);
