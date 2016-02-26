@@ -151,6 +151,15 @@ int main(int argc, char **argv)
         fp = openRecording(moviefile, tasflags.recording);
     }
 
+    /*
+     * Frame advance auto-repeat variables.
+     * If ar_ticks is >= 0 (auto-repeat activated), it increases by one every iteration of the do loop
+     * If ar_ticks > ar_delay and ar_ticks % ar_freq == 0 then trigger frame advance
+     */
+    int ar_ticks = -1;
+    int ar_delay = 50;
+    int ar_freq = tasflags.fastforward ? 8 : 2;
+
     while (1)
     {
         
@@ -192,7 +201,17 @@ int main(int argc, char **argv)
         do {
 
             XQueryKeymap(display, keyboard_state);
-            
+           
+            /* Implement frame-advance auto-repeat */
+            if (ar_ticks >= 0) {
+                ar_ticks++;
+                if ((ar_ticks > ar_delay) && !(ar_ticks % ar_freq))
+                    /* Trigger auto-repeat */
+                    isidle = 0;
+            }
+
+            //fprintf(stderr, "ticks: %d\n", ar_ticks);
+
             while( XPending( display ) ) {
             //while( XCheckWindowEvent( display, gameWindow, KeyPressMask | KeyReleaseMask, &event ) ) {
 
@@ -207,6 +226,7 @@ int main(int argc, char **argv)
                         isidle = 0;
                         tasflags.running = 0;
                         tasflagsmod = 1;
+                        ar_ticks = 0; // Activate auto-repeat
                     }
                     if (ks == hotkeys[HOTKEY_PLAYPAUSE]){
                         tasflags.running = !tasflags.running;
@@ -257,11 +277,15 @@ int main(int argc, char **argv)
                         }
                     }
 
+                    //fprintf(stderr, "Rel\n");
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == hotkeys[HOTKEY_FASTFORWARD]){
                         tasflags.fastforward = 0;
                         tasflagsmod = 1;
+                    }
+                    if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
+                        ar_ticks = -1; // Deactivate auto-repeat
                     }
                 }
             }

@@ -13,13 +13,13 @@
 - Add a memory watch/search module
 - Add dummy Steam API functions so that the game can be launched without it
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
+- Add an interface (ncurses?)
+- Support mouse
 
 ## Partially done
 
-- Inject inputs to the game (only keyboard for now)
 - Standardize communication between game and program
 -- Rewrite the socket sharing to assure that full information is send/receive (for arrays mainly)
-- Support fast-forward (some desyncs if done at the very beginning of the game)
 - Switch from read-only to write (incomplete without savestates)
 - Dump video
 -- Some muxers do not work (mp4)
@@ -37,4 +37,7 @@
 - Don't send keys that correspond to hotkeys
 - Record inputs and support playback
 - Write a better compile script
+- Support fast-forward (some desyncs if done at the very beginning of the game)
+- Inject keyboard inputs to the game
+- Add an auto-repeat for frame advance
 
