@@ -12,9 +12,9 @@ struct timeval
 
 void advanceFrame(void);
 
-int usleep(useconds_t usec);
-time_t time(time_t* t);
-int gettimeofday(struct timeval* tv, void* tz);
-void SDL_Delay(Uint32 sleep);
-Uint32 SDL_GetTicks(void);
+/* Override */ int usleep(useconds_t usec);
+/* Override */ time_t time(time_t* t);
+/* Override */ int gettimeofday(struct timeval* tv, void* tz);
+/* Override */ void SDL_Delay(Uint32 sleep);
+/* Override */ Uint32 SDL_GetTicks(void);
 

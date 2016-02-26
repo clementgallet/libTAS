@@ -1,7 +1,7 @@
 #include "openal.h"
 
 
-void* alcOpenDevice(const char* devicename)
+/* Override */ void* alcOpenDevice(const char* devicename)
 {
 
     debuglog(LCF_OPENAL, "Function %s called.\n", __func__);
@@ -18,6 +18,7 @@ void* alcOpenDevice(const char* devicename)
         ptr += strlen(ptr) + 1;
     }*/
 
+    (void) devicename; // To remove warning
     const char device[] = "No Output";
     return alcOpenDevice_real(device);
     //return alcOpenDevice_real(devicename);

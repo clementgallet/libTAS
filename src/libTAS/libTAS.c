@@ -1,17 +1,23 @@
 #include "libTAS.h"
 
+/* Handle to the SDL dynamic library that is shipped with the game */
 void* SDL_handle;
+
+/* Does SDL use OpenGL for display? */
 int video_opengl = 0;
 
 /* Socket to communicate to the program */
 int socket_fd = 0;
+/* Message that identify what is sent in the socket */
+int message;
 
 /* Frame counter */
 unsigned long frame_counter = 0;
 
 /* 
  * Store the game window pointer
- * We assume the game never handle multiple windows at a time
+ * (SDL_Window* in fact, but we don't need the SDL_Window struct)
+ * We assume the game never open multiple windows at a time
  */
 void* gameWindow = NULL;
 
@@ -64,11 +70,11 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
-    int message = MSGB_PID;
     /* Send information to the program */
 
     /* Send game process pid */
     debuglog(LCF_SOCKET, "Send pid to program");
+    message = MSGB_PID;
     send(socket_fd, &message, sizeof(int), 0);
     pid_t mypid = getpid();
     send(socket_fd, &mypid, sizeof(pid_t), 0);
@@ -103,8 +109,6 @@ void __attribute__((constructor)) init(void)
     emptyInputs(&ai);
     emptyInputs(&old_ai);
 
-    X11_InitKeymap();
-
 }
 
 void __attribute__((destructor)) term(void)
@@ -115,7 +119,7 @@ void __attribute__((destructor)) term(void)
     debuglog(LCF_SOCKET, "Exiting.");
 }
 
-void SDL_GL_SwapWindow(void)
+/* Override */ void SDL_GL_SwapWindow(void)
 {
     /* Apparently, we must not put any code here before the SwapWindow call */
     SDL_GL_SwapWindow_real();
@@ -146,8 +150,6 @@ void SDL_GL_SwapWindow(void)
 
     /* Advance deterministic time by one frame */
     advanceFrame();
-
-    int message;
 
     /* 
      * We need to pass the game window identifier to the program
@@ -200,14 +202,14 @@ void SDL_GL_SwapWindow(void)
     ++frame_counter;
 }
 
-int SDL_GL_SetSwapInterval(int interval)
+/* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
     return SDL_GL_SetSwapInterval_real(interval);
 }
     
 
-void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
+/* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
@@ -218,37 +220,33 @@ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 fla
     return gameWindow;
 }
 
-void SDL_DestroyWindow(void* window){
+/* Override */ void SDL_DestroyWindow(void* window){
     debuglog(LCF_SDL, "%s call.", __func__);
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
 }
 
-Uint32 SDL_GetWindowFlags(void* window){
+/* Override */ Uint32 SDL_GetWindowFlags(void* window){
     debuglog(LCF_SDL, "%s call.", __func__);
     return SDL_GetWindowFlags_real(window);
 }
 
-void SDL_Quit(){
+/* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, "%s call.", __func__);
-    int message = MSGB_QUIT;
+    message = MSGB_QUIT;
     send(socket_fd, &message, sizeof(int), 0);
     if (tasflags.av_dumping)
         closeVideoDump();
 }
 
-int SDL_PeepEvents(SDL_Event*      events,
-                   int             numevents,
-                   SDL_eventaction action,
-                   Uint32          minType,
-                   Uint32          maxType)
+/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
     debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
     return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
 }
 
-int SDL_PollEvent(SDL_Event *event)
+/* Override */ int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
     debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
@@ -311,8 +309,6 @@ void proceed_commands(void)
 {
     while (1)
     {
-        int message;
-
         recv(socket_fd, &message, sizeof(int), 0);
         switch (message)
         {

@@ -1,3 +1,4 @@
-src/libTAS:*.o
-src/linTAS:*.o
+src/libTAS/*.o
+src/linTAS/*.o
+src/shared/*.o
 

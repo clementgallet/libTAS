@@ -1,13 +1,13 @@
 #include "threads.h"
 #include "logging.h"
 
-SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
+/* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
     debuglog(LCF_THREAD, "SDL Thread %s was created.\n", name);
     return SDL_CreateThread(fn, name, data);
 }
 
-void SDL_WaitThread(SDL_Thread * thread, int *status)
+/* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
     debuglog(LCF_THREAD, "Waiting for another SDL thread.\n");
     SDL_WaitThread(thread, status);
@@ -21,7 +21,7 @@ void SDL_DetachThread(SDL_Thread * thread)
 }
 */
 
-int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg)
+/* Override */ int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg)
 {
     //if (1) {// Do not allow multi-threaded game
     //    return 0;
@@ -36,12 +36,14 @@ int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (v
         debuglog(LCF_THREAD, "Thread %ld was created.", *thread);
     return ret;
 }
-void pthread_exit (void *retval)
+
+/* Override */ void pthread_exit (void *retval)
 {
     debuglog(LCF_THREAD, "Thread has exited.");
     pthread_exit_real(retval);
 }
-int pthread_join (pthread_t thread, void **thread_return)
+
+/* Override */ int pthread_join (pthread_t thread, void **thread_return)
 {
     //if (1) {
     //    return 0;
@@ -49,7 +51,8 @@ int pthread_join (pthread_t thread, void **thread_return)
     debuglog(LCF_THREAD, "Joining thread %ld", thread);
     return pthread_join_real(thread, thread_return);
 }
-int pthread_detach (pthread_t thread){
+
+/* Override */ int pthread_detach (pthread_t thread){
     //if (1) {
     //    return 0;
     //}
@@ -57,7 +60,7 @@ int pthread_detach (pthread_t thread){
     return pthread_detach_real(thread);
 }
 
-int pthread_tryjoin_np(pthread_t thread, void **retval)
+/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval)
 {
     debuglog(LCF_THREAD, "Try to join thread %ld.", thread);
     int ret = pthread_tryjoin_np_real(thread, retval);
@@ -70,7 +73,7 @@ int pthread_tryjoin_np(pthread_t thread, void **retval)
     return ret;
 }
 
-int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime)
+/* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime)
 {
     debuglog(LCF_THREAD, "Try to join thread %ld in %ld ms.", thread, 1000*abstime->tv_sec + abstime->tv_nsec/1000000);
     int ret = pthread_timedjoin_np_real(thread, retval, abstime);
@@ -81,6 +84,5 @@ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec 
         debuglog(LCF_THREAD, "Call timed out before thread %ld terminated.", thread);
     }
     return ret;
-
 }
 

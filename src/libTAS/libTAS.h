@@ -29,15 +29,15 @@
 
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
-void SDL_GL_SwapWindow(void);
-void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
+/* Override */ void SDL_GL_SwapWindow(void);
+/* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
 //Uint32 SDL_GetWindowId(void* window);
-Uint32 SDL_GetWindowFlags(void* window);
-int SDL_PollEvent(SDL_Event* event);
-int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
-int SDL_GL_SetSwapInterval(int interval);
-void SDL_DestroyWindow(void* window);
-void SDL_Quit(void);
+/* Override */ Uint32 SDL_GetWindowFlags(void* window);
+/* Override */ int SDL_PollEvent(SDL_Event* event);
+/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+/* Override */ int SDL_GL_SetSwapInterval(int interval);
+/* Override */ void SDL_DestroyWindow(void* window);
+/* Override */ void SDL_Quit(void);
 void proceed_commands(void);
 
 #endif // LIBTAS_H_INCLUDED

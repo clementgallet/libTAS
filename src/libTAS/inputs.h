@@ -11,7 +11,7 @@
 extern struct AllInputs ai;
 extern struct AllInputs old_ai;
 
-Uint8* SDL_GetKeyboardState(int* numkeys);
+/* Override */ Uint8* SDL_GetKeyboardState(int* numkeys);
 int generateKeyUpEvent(SDL_Event *event, void* gameWindow);
 int generateKeyDownEvent(SDL_Event *event, void* gameWindow);
 

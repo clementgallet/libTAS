@@ -28,7 +28,7 @@ void advanceFrame(void)
     }
 }
 
-time_t time(time_t* t)
+/* Override */ time_t time(time_t* t)
 {
     debuglog(LCF_TIMEGET, "%s call - returning %d.", __func__, (long)current_time.tv_sec);
     if (t)
@@ -36,26 +36,26 @@ time_t time(time_t* t)
     return current_time.tv_sec;
 }
 
-int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
+/* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
     debuglog(LCF_TIMEGET, "%s call - returning (%d,%d).", __func__, (long)current_time.tv_sec, (long)current_time.tv_usec);
     *tv = current_time;
     return 0;
 }
 
-void SDL_Delay(unsigned int sleep)
+/* Override */ void SDL_Delay(unsigned int sleep)
 {
     debuglog(LCF_SDL | LCF_SLEEP, "%s call - sleep for %u ms.", __func__, sleep);
     usleep_real(sleep*1000);
 }
 
-int usleep(useconds_t usec)
+/* Override */ int usleep(useconds_t usec)
 {
     debuglog(LCF_SLEEP, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
     return usleep_real(usec);
 }
 
-Uint32 SDL_GetTicks(void)
+/* Override */ Uint32 SDL_GetTicks(void)
 {
     Uint32 msec = current_time.tv_sec*1000 + current_time.tv_usec/1000;
     debuglog(LCF_SDL | LCF_TIMEGET, "%s call - returning %d.", __func__, msec);

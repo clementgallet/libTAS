@@ -1,16 +1,11 @@
 #include "keyboard_helper.h"
 
 /* The translation tables from an X11 keysym to a SDL keysym */
-static SDL_Keycode ODD_keymap[256];
 static SDL_Keycode MISC_keymap[256];
 
 void X11_InitKeymap(void)
 {
 	int i;
-
-	/* Odd keys used in international keyboards */
-	for ( i=0; i<256; ++i )
-		ODD_keymap[i] = SDLK_UNKNOWN;
 
 	/* Map the miscellaneous keys */
 	for ( i=0; i<256; ++i )
@@ -107,6 +102,12 @@ void X11_InitKeymap(void)
 /* Get the translated SDL virtual keysym */
 SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 {
+    static int keymap_inited = 0;
+    if (! keymap_inited) {
+        X11_InitKeymap();
+        keymap_inited = 1;
+    }
+
 	SDL_Keycode key;
 
 	key = SDLK_UNKNOWN;

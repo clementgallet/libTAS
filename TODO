@@ -9,7 +9,6 @@
 - Add key remapping
 - Add config file for hotkeys and key remapping (libconfig?)
 - Deal with keyboard mapping and stuff
-- Write a better compile script
 - Process and filter SDL events
 - Add a memory watch/search module
 - Add dummy Steam API functions so that the game can be launched without it
@@ -37,4 +36,5 @@
 
 - Don't send keys that correspond to hotkeys
 - Record inputs and support playback
+- Write a better compile script
 

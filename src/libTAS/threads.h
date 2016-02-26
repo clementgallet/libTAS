@@ -6,14 +6,14 @@ typedef void SDL_Thread; // For now
 typedef unsigned long int pthread_t; // Does not seem to be much system-dependent
 
 
-SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
-void SDL_WaitThread(SDL_Thread * thread, int *status);
+/* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
+/* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status);
 //void SDL_DetachThread(SDL_Thread * thread);
 
-int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg);
-void pthread_exit (void *retval);
-int pthread_join (pthread_t thread, void **thread_return);
-int pthread_detach (pthread_t thread);
-int pthread_tryjoin_np(pthread_t thread, void **retval);
-int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
+/* Override */ int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg);
+/* Override */ void pthread_exit (void *retval);
+/* Override */ int pthread_join (pthread_t thread, void **thread_return);
+/* Override */ int pthread_detach (pthread_t thread);
+/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval);
+/* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 

@@ -165,6 +165,14 @@ int main(int argc, char **argv)
         if (message == MSGB_WINDOW_ID) {
             recv(socket_fd, &gameWindow, sizeof(Window), 0);
             XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask);
+            int iError = XGrabKeyboard(display, gameWindow, 1,
+                    GrabModeAsync, GrabModeAsync, CurrentTime); 
+            if (iError != GrabSuccess && iError == AlreadyGrabbed) {
+                XUngrabPointer(display, CurrentTime);
+                XFlush(display);
+                fprintf(stderr, "Keyboard is already grabbed\n");    
+            }
+
             recv(socket_fd, &message, sizeof(int), 0);
         }
 
@@ -179,12 +187,14 @@ int main(int argc, char **argv)
         int isidle = !tasflags.running;
         int tasflagsmod = 0; // register if tasflags have been modified on this frame
             
+
         /* We are at a frame boundary */
         do {
 
             XQueryKeymap(display, keyboard_state);
-
-            while( XPending( display ) > 0 ) {
+            
+            while( XPending( display ) ) {
+            //while( XCheckWindowEvent( display, gameWindow, KeyPressMask | KeyReleaseMask, &event ) ) {
 
                 XNextEvent(display, &event);
 
@@ -192,7 +202,6 @@ int main(int argc, char **argv)
                 {
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-                    //s = XKeysymToString(ks);
 
                     if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
                         isidle = 0;
@@ -229,6 +238,25 @@ int main(int argc, char **argv)
                 }
                 if (event.type == KeyRelease)
                 {
+                    /* 
+                     * Detect AutoRepeat key (KeyRelease followed by KeyPress) and skip both
+                     * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
+                     */
+                    if (XEventsQueued(display, QueuedAfterReading))
+                    {
+                        XEvent nev;
+                        XPeekEvent(display, &nev);
+
+                        if ((nev.type == KeyPress) && (nev.xkey.time == event.xkey.time) &&
+                                (nev.xkey.keycode == event.xkey.keycode))
+                        {
+                            /* delete retriggered KeyPress event */
+                            XNextEvent (display, &event);
+                            /* Skip current KeyRelease event */
+                            continue;
+                        }
+                    }
+
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == hotkeys[HOTKEY_FASTFORWARD]){
