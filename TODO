@@ -15,6 +15,7 @@
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Add an interface (ncurses?)
 - Support mouse
+- Add a deterministic timer instead of relying on SwapInterval
 
 ## Partially done
 

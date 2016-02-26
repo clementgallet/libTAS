@@ -8,12 +8,14 @@ typedef uint8_t Uint8;
 typedef uint16_t Uint16;
 typedef uint32_t Uint32;
 typedef int32_t Sint32;
+typedef int16_t Sint16;
 typedef enum
 {
     SDL_FALSE = 0,
     SDL_TRUE = 1
 } SDL_bool;
 
+typedef Sint32 SDL_JoystickID;
 
 
 #define SDL_RELEASED	0
@@ -969,12 +971,188 @@ typedef enum
                                          window be closed */
 } SDL_WindowEventID;
 
+/**
+ *  \brief Mouse motion event structure (event.motion.*)
+ */
+typedef struct SDL_MouseMotionEvent
+{
+    Uint32 type;        /**< ::SDL_MOUSEMOTION */
+    Uint32 timestamp;
+    Uint32 windowID;    /**< The window with mouse focus, if any */
+    Uint32 which;       /**< The mouse instance id, or SDL_TOUCH_MOUSEID */
+    Uint32 state;       /**< The current button state */
+    Sint32 x;           /**< X coordinate, relative to window */
+    Sint32 y;           /**< Y coordinate, relative to window */
+    Sint32 xrel;        /**< The relative motion in the X direction */
+    Sint32 yrel;        /**< The relative motion in the Y direction */
+} SDL_MouseMotionEvent;
+
+/**
+ *  \brief Mouse button event structure (event.button.*)
+ */
+typedef struct SDL_MouseButtonEvent
+{
+    Uint32 type;        /**< ::SDL_MOUSEBUTTONDOWN or ::SDL_MOUSEBUTTONUP */
+    Uint32 timestamp;
+    Uint32 windowID;    /**< The window with mouse focus, if any */
+    Uint32 which;       /**< The mouse instance id, or SDL_TOUCH_MOUSEID */
+    Uint8 button;       /**< The mouse button index */
+    Uint8 state;        /**< ::SDL_PRESSED or ::SDL_RELEASED */
+    Uint8 clicks;       /**< 1 for single-click, 2 for double-click, etc. */
+    Uint8 padding1;
+    Sint32 x;           /**< X coordinate, relative to window */
+    Sint32 y;           /**< Y coordinate, relative to window */
+} SDL_MouseButtonEvent;
+
+/**
+ *  \brief Mouse wheel event structure (event.wheel.*)
+ */
+typedef struct SDL_MouseWheelEvent
+{
+    Uint32 type;        /**< ::SDL_MOUSEWHEEL */
+    Uint32 timestamp;
+    Uint32 windowID;    /**< The window with mouse focus, if any */
+    Uint32 which;       /**< The mouse instance id, or SDL_TOUCH_MOUSEID */
+    Sint32 x;           /**< The amount scrolled horizontally, positive to the right and negative to the left */
+    Sint32 y;           /**< The amount scrolled vertically, positive away from the user and negative toward the user */
+} SDL_MouseWheelEvent;
+
+/**
+ *  \brief Joystick axis motion event structure (event.jaxis.*)
+ */
+typedef struct SDL_JoyAxisEvent
+{
+    Uint32 type;        /**< ::SDL_JOYAXISMOTION */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 axis;         /**< The joystick axis index */
+    Uint8 padding1;
+    Uint8 padding2;
+    Uint8 padding3;
+    Sint16 value;       /**< The axis value (range: -32768 to 32767) */
+    Uint16 padding4;
+} SDL_JoyAxisEvent;
+
+/**
+ *  \brief Joystick trackball motion event structure (event.jball.*)
+ */
+typedef struct SDL_JoyBallEvent
+{
+    Uint32 type;        /**< ::SDL_JOYBALLMOTION */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 ball;         /**< The joystick trackball index */
+    Uint8 padding1;
+    Uint8 padding2;
+    Uint8 padding3;
+    Sint16 xrel;        /**< The relative motion in the X direction */
+    Sint16 yrel;        /**< The relative motion in the Y direction */
+} SDL_JoyBallEvent;
+
+/**
+ *  \brief Joystick hat position change event structure (event.jhat.*)
+ */
+typedef struct SDL_JoyHatEvent
+{
+    Uint32 type;        /**< ::SDL_JOYHATMOTION */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 hat;          /**< The joystick hat index */
+    Uint8 value;        /**< The hat position value.
+                         *   \sa ::SDL_HAT_LEFTUP ::SDL_HAT_UP ::SDL_HAT_RIGHTUP
+                         *   \sa ::SDL_HAT_LEFT ::SDL_HAT_CENTERED ::SDL_HAT_RIGHT
+                         *   \sa ::SDL_HAT_LEFTDOWN ::SDL_HAT_DOWN ::SDL_HAT_RIGHTDOWN
+                         *
+                         *   Note that zero means the POV is centered.
+                         */
+    Uint8 padding1;
+    Uint8 padding2;
+} SDL_JoyHatEvent;
+
+/**
+ *  \brief Joystick button event structure (event.jbutton.*)
+ */
+typedef struct SDL_JoyButtonEvent
+{
+    Uint32 type;        /**< ::SDL_JOYBUTTONDOWN or ::SDL_JOYBUTTONUP */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 button;       /**< The joystick button index */
+    Uint8 state;        /**< ::SDL_PRESSED or ::SDL_RELEASED */
+    Uint8 padding1;
+    Uint8 padding2;
+} SDL_JoyButtonEvent;
+
+/**
+ *  \brief Joystick device event structure (event.jdevice.*)
+ */
+typedef struct SDL_JoyDeviceEvent
+{
+    Uint32 type;        /**< ::SDL_JOYDEVICEADDED or ::SDL_JOYDEVICEREMOVED */
+    Uint32 timestamp;
+    Sint32 which;       /**< The joystick device index for the ADDED event, instance id for the REMOVED event */
+} SDL_JoyDeviceEvent;
+
+
+/**
+ *  \brief Game controller axis motion event structure (event.caxis.*)
+ */
+typedef struct SDL_ControllerAxisEvent
+{
+    Uint32 type;        /**< ::SDL_CONTROLLERAXISMOTION */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 axis;         /**< The controller axis (SDL_GameControllerAxis) */
+    Uint8 padding1;
+    Uint8 padding2;
+    Uint8 padding3;
+    Sint16 value;       /**< The axis value (range: -32768 to 32767) */
+    Uint16 padding4;
+} SDL_ControllerAxisEvent;
+
+
+/**
+ *  \brief Game controller button event structure (event.cbutton.*)
+ */
+typedef struct SDL_ControllerButtonEvent
+{
+    Uint32 type;        /**< ::SDL_CONTROLLERBUTTONDOWN or ::SDL_CONTROLLERBUTTONUP */
+    Uint32 timestamp;
+    SDL_JoystickID which; /**< The joystick instance id */
+    Uint8 button;       /**< The controller button (SDL_GameControllerButton) */
+    Uint8 state;        /**< ::SDL_PRESSED or ::SDL_RELEASED */
+    Uint8 padding1;
+    Uint8 padding2;
+} SDL_ControllerButtonEvent;
+
+
+/**
+ *  \brief Controller device event structure (event.cdevice.*)
+ */
+typedef struct SDL_ControllerDeviceEvent
+{
+    Uint32 type;        /**< ::SDL_CONTROLLERDEVICEADDED, ::SDL_CONTROLLERDEVICEREMOVED, or ::SDL_CONTROLLERDEVICEREMAPPED */
+    Uint32 timestamp;
+    Sint32 which;       /**< The joystick device index for the ADDED event, instance id for the REMOVED or REMAPPED event */
+} SDL_ControllerDeviceEvent;
+
 
 typedef union SDL_Event
 {
     Uint32 type;                    /**< Event type, shared with all events */
     SDL_WindowEvent window;         /**< Window event data */
     SDL_KeyboardEvent key;          /**< Keyboard event data */
+    SDL_MouseMotionEvent motion;    /**< Mouse motion event data */
+    SDL_MouseButtonEvent button;    /**< Mouse button event data */
+    SDL_MouseWheelEvent wheel;      /**< Mouse wheel event data */
+    SDL_JoyAxisEvent jaxis;         /**< Joystick axis event data */
+    SDL_JoyBallEvent jball;         /**< Joystick ball event data */
+    SDL_JoyHatEvent jhat;           /**< Joystick hat event data */
+    SDL_JoyButtonEvent jbutton;     /**< Joystick button event data */
+    SDL_JoyDeviceEvent jdevice;     /**< Joystick device change event data */
+    SDL_ControllerAxisEvent caxis;      /**< Game Controller axis event data */
+    SDL_ControllerButtonEvent cbutton;  /**< Game Controller button event data */
+    SDL_ControllerDeviceEvent cdevice;  /**< Game Controller device event data */
     Uint8 padding[56];
 } SDL_Event;
 
@@ -1198,6 +1376,29 @@ typedef enum
     SDL_CONTROLLER_AXIS_MAX
 } SDL_GameControllerAxis;
 
+/**
+ *  The list of buttons available from a controller
+ */
+typedef enum
+{
+    SDL_CONTROLLER_BUTTON_INVALID = -1,
+    SDL_CONTROLLER_BUTTON_A,
+    SDL_CONTROLLER_BUTTON_B,
+    SDL_CONTROLLER_BUTTON_X,
+    SDL_CONTROLLER_BUTTON_Y,
+    SDL_CONTROLLER_BUTTON_BACK,
+    SDL_CONTROLLER_BUTTON_GUIDE,
+    SDL_CONTROLLER_BUTTON_START,
+    SDL_CONTROLLER_BUTTON_LEFTSTICK,
+    SDL_CONTROLLER_BUTTON_RIGHTSTICK,
+    SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    SDL_CONTROLLER_BUTTON_DPAD_UP,
+    SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+    SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    SDL_CONTROLLER_BUTTON_MAX
+} SDL_GameControllerButton;
 
 
 

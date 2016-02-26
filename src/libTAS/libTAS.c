@@ -302,6 +302,10 @@ void __attribute__((destructor)) term(void)
     if (getEvent)
         return 1;
 
+    getEvent = generateControllerEvent(event);
+    if (getEvent)
+        return 1;
+
     return 0;
 }
 

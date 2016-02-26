@@ -174,7 +174,7 @@ int main(int argc, char **argv)
         if (message == MSGB_WINDOW_ID) {
             recv(socket_fd, &gameWindow, sizeof(Window), 0);
             XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask);
-            int iError = XGrabKeyboard(display, gameWindow, 1,
+            int iError = XGrabKeyboard(display, gameWindow, 0,
                     GrabModeAsync, GrabModeAsync, CurrentTime); 
             if (iError != GrabSuccess && iError == AlreadyGrabbed) {
                 XUngrabPointer(display, CurrentTime);
