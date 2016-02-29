@@ -1,6 +1,5 @@
 ## ToDo list
 
-- Support game controller
 - Dump audio
 -- We should write our own buffer/source/mixer thing, I'm afraid
 - Add inputs into the game screen
@@ -41,4 +40,5 @@
 - Support fast-forward (some desyncs if done at the very beginning of the game)
 - Inject keyboard inputs to the game
 - Add an auto-repeat for frame advance
+- Support game controller
 

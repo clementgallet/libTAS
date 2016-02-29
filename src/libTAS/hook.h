@@ -7,6 +7,7 @@
 #include "SDL.h"
 #include "logging.h"
 
+
 #define HOOK_FUNC(FUNC,SOURCE) *(void**)&FUNC##_real = dlsym(SOURCE, #FUNC);\
     if (!FUNC##_real)\
     {\
@@ -14,8 +15,15 @@
         FUNC##_real = NULL;\
     }
 
+#if (!defined __timespec_defined)
+# define __timespec_defined 1
+struct timespec
+  {
+    time_t tv_sec; /* Seconds.  */
+    long tv_nsec;  /* Nanoseconds.  */
+  };
+#endif
 
-struct timespec;
 
 void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);

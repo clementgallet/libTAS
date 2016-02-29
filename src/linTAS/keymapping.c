@@ -13,6 +13,9 @@ void default_hotkeys(KeySym *hotkeys){
     hotkeys[HOTKEY_SAVESTATE] = XK_s;
     hotkeys[HOTKEY_LOADSTATE] = XK_l;
 
+    /* Map 'w' to button A */
+    input_mapping[52].type = IT_CONTROLLER1_BUTTON_A;
+    input_mapping[52].value = 1;
 }
 
 /* 

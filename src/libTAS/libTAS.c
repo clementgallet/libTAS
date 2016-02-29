@@ -121,7 +121,10 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_GL_SwapWindow(void)
 {
-    /* Apparently, we must not put any code here before the SwapWindow call */
+    /* Sleep until the end of the frame length if necessary */
+    //if (tasflags.running && !tasflags.fastforward)
+    //    sleepEndFrame();
+
     SDL_GL_SwapWindow_real();
 
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);

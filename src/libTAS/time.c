@@ -1,7 +1,14 @@
 #include "time.h"
 
-struct timeval current_time = { 0, 0 };
+/* Time that will be passed to the game 
+ * Increments exactly by 1/fps after each screen draw
+ */
+struct timeval deterministic_time = { 0, 0 };
 
+/* Real time structure, used to run at a given fps */
+struct timespec real_time = { 0, 0 };
+
+/* Advance the deterministic timer by exactly 1/fps */
 void advanceFrame(void)
 {
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
@@ -13,33 +20,100 @@ void advanceFrame(void)
     unsigned int fractional_increment = 1000000 % fps;
     unsigned int fractional_part = fps / 2;
 
-    current_time.tv_usec += integer_increment;
+    deterministic_time.tv_usec += integer_increment;
     fractional_part += fractional_increment;
     if (fractional_part >= fps)
     {
-        ++current_time.tv_usec;
+        ++deterministic_time.tv_usec;
         fractional_part -= fps;
     }
 
-    if (current_time.tv_usec == 1000000)
+    if (deterministic_time.tv_usec == 1000000)
     {
-        ++current_time.tv_sec;
-        current_time.tv_usec = 0;
+        ++deterministic_time.tv_sec;
+        deterministic_time.tv_usec = 0;
     }
+}
+
+/* Subtract correctly two timespec
+ * Taken from http://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
+ */
+
+int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y)
+{
+  /* Perform the carry for the later subtraction by updating y. */
+  if (x->tv_nsec < y->tv_nsec) {
+    int nsec = (y->tv_nsec - x->tv_nsec) / 1000000000 + 1;
+    y->tv_nsec -= 1000000000 * nsec;
+    y->tv_sec += nsec;
+  }
+  if (x->tv_nsec - y->tv_nsec > 1000000000) {
+    int nsec = (x->tv_nsec - y->tv_nsec) / 1000000000;
+    y->tv_nsec += 1000000000 * nsec;
+    y->tv_sec -= nsec;
+  }
+
+  /* Compute the time remaining to wait.
+     tv_usec is certainly positive. */
+  res->tv_sec = x->tv_sec - y->tv_sec;
+  res->tv_nsec = x->tv_nsec - y->tv_nsec;
+
+  /* Return 1 if result is negative. */
+  return x->tv_sec < y->tv_sec;
+}
+
+/* 
+ * When the game is running normally, we need to make our own sleep
+ * so that the game runs at normal speed
+ */
+void sleepEndFrame(void)
+{
+    if ((real_time.tv_sec == 0) && (real_time.tv_nsec == 0)) {
+        /* 
+         * This is our first call 
+         * We should not sleep, just update the real_time struct
+         */
+        clock_gettime(CLOCK_MONOTONIC, &real_time);
+        return;
+    }
+    struct timespec old_time = real_time;
+
+    /* Get the current time
+     * We use CLOCK_MONOTONIC as it is not influenced by
+     * timezone changes, leap seconds or so
+     * Taken from https://blog.habets.se/2010/09/gettimeofday-should-never-be-used-to-measure-time
+     */
+    clock_gettime(CLOCK_MONOTONIC, &real_time);
+
+    /* We add the length of a frame to the old time */
+    unsigned int fps = 60; // TODO: Put this somewhere else
+    old_time.tv_nsec += 1000000000 / fps;
+
+    struct timespec diff;
+    int neg = timespec_subtract(&diff, &old_time, &real_time);
+
+    /* Checking that we sleep for a positive time */
+    if (!neg) {
+
+        /* Sleeping */
+        nanosleep(&diff, NULL);
+    }
+    /* Updating again the real_time */
+    clock_gettime(CLOCK_MONOTONIC, &real_time);
 }
 
 /* Override */ time_t time(time_t* t)
 {
-    debuglog(LCF_TIMEGET, "%s call - returning %d.", __func__, (long)current_time.tv_sec);
+    debuglog(LCF_TIMEGET, "%s call - returning %d.", __func__, (long)deterministic_time.tv_sec);
     if (t)
-        *t = current_time.tv_sec;
-    return current_time.tv_sec;
+        *t = deterministic_time.tv_sec;
+    return deterministic_time.tv_sec;
 }
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET, "%s call - returning (%d,%d).", __func__, (long)current_time.tv_sec, (long)current_time.tv_usec);
-    *tv = current_time;
+    debuglog(LCF_TIMEGET, "%s call - returning (%d,%d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
+    *tv = deterministic_time;
     return 0;
 }
 
@@ -57,7 +131,7 @@ void advanceFrame(void)
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
-    Uint32 msec = current_time.tv_sec*1000 + current_time.tv_usec/1000;
+    Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_usec/1000;
     debuglog(LCF_SDL | LCF_TIMEGET, "%s call - returning %d.", __func__, msec);
     //return SDL_GetTicks_real();
     return msec;

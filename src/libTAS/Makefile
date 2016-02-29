@@ -1,6 +1,7 @@
 CC=gcc
 WARNINGS=-Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow
-CFLAGS=-std=c99 -fpic -c -g
+#CFLAGS=-std=c99 -fpic -c -g
+CFLAGS=-std=gnu99 -fpic -c -g
 LDFLAGS=-shared -lX11 -lavcodec -lswscale -lavformat
 SRCS=$(wildcard *.c) $(wildcard ../shared/*.c)
 OBJS=$(SRCS:.c=.o)
