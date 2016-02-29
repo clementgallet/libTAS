@@ -44,6 +44,8 @@ int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
     }
 
     fwrite(inputs.keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+    fwrite(inputs.controller_axes, sizeof(short), 4*6, fp);
+    fwrite(inputs.controller_buttons, sizeof(unsigned short), 4, fp);
     return 1;
 }
 
@@ -54,7 +56,9 @@ int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
 
     if (start_position == current_position) {
         size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
-        if (size != ALLINPUTS_MAXKEY) {
+        size += fread(inputs->controller_axes, sizeof(short), 4*6, fp);
+        size += fread(inputs->controller_buttons, sizeof(unsigned short), 4, fp);
+        if (size != sizeof(struct AllInputs)) {
             printf("Did not read all (%zu elements), end of file?\n", size);
             return 0;
         }
