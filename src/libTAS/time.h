@@ -8,7 +8,7 @@
 
 //typedef long time_t;
 //typedef long suseconds_t;
-//typedef unsigned long useconds_t;
+typedef unsigned long useconds_t;
 /*
 # ifndef _STRUCT_TIMEVAL
 #  define _STRUCT_TIMEVAL   1

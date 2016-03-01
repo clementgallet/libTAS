@@ -122,8 +122,8 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_GL_SwapWindow(void)
 {
     /* Sleep until the end of the frame length if necessary */
-    //if (tasflags.running && !tasflags.fastforward)
-    //    sleepEndFrame();
+    if (tasflags.running && !tasflags.fastforward)
+        sleepEndFrame();
 
     SDL_GL_SwapWindow_real();
 
@@ -208,7 +208,8 @@ void __attribute__((destructor)) term(void)
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
-    return SDL_GL_SetSwapInterval_real(interval);
+    //return SDL_GL_SetSwapInterval_real(interval);
+    return SDL_GL_SetSwapInterval_real(0);
 }
     
 
