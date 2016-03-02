@@ -37,6 +37,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_FreeSurface, SDL_handle)
     HOOK_FUNC(SDL_SetColorKey, SDL_handle)
     HOOK_FUNC(SDL_FillRect, SDL_handle)
+    HOOK_FUNC(SDL_BlitSurface, SDL_handle)
 
     HOOK_FUNC(glReadPixels, RTLD_NEXT)
     HOOK_FUNC(glGenTextures, RTLD_NEXT)
@@ -47,6 +48,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(glVertex2f, RTLD_NEXT)
     HOOK_FUNC(glTexCoord2f, RTLD_NEXT)
     HOOK_FUNC(glDeleteTextures, RTLD_NEXT)
+    HOOK_FUNC(glEnable, RTLD_NEXT)
 
     return 1;
 }

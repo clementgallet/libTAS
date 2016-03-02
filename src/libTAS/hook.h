@@ -86,6 +86,10 @@ SDL_Surface* (*SDL_CreateRGBSurface_real)
 void (*SDL_FreeSurface_real)(SDL_Surface * surface);
 int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
 int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
+int (*SDL_BlitSurface_real)(SDL_Surface*    src,
+                       const SDL_Rect* srcrect,
+                       SDL_Surface*    dst,
+                       SDL_Rect*       dstrect);
 
 
 
@@ -106,6 +110,7 @@ void (*glEnd_real)( void );
 void (*glVertex2f_real)( float x, float y );
 void (*glTexCoord2f_real)( float s, float t );
 void (*glDeleteTextures_real)( int n, const unsigned int *textures);
+void (*glEnable_real)( int cap );
 
 
 int hook_functions(void* SDL_handle);

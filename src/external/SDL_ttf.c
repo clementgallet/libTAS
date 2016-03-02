@@ -22,6 +22,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -552,6 +553,7 @@ TTF_Font* TTF_OpenFontIndex( const char *file, int ptsize, long index )
 {
     FILE *rw = fopen(file, "rb");
     if ( rw == NULL ) {
+        TTF_SetError("Count not open file: %s\n", strerror(errno));
         return NULL;
     }
     return TTF_OpenFontIndexRW(rw, 1, ptsize, index);

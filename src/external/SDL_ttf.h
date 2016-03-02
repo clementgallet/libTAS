@@ -263,7 +263,7 @@ int TTF_GetFontKerningSize(TTF_Font *font, int prev_index, int index) SDL_DEPREC
 int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch);
 
 /* We'll use SDL for reporting errors */
-#define TTF_SetError    printf
+#define TTF_SetError    printf("\n");printf
 //#define TTF_GetError    SDL_GetError
 
 #endif /* _SDL_TTF_H */
