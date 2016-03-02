@@ -9,6 +9,8 @@ typedef uint16_t Uint16;
 typedef uint32_t Uint32;
 typedef int32_t Sint32;
 typedef int16_t Sint16;
+typedef int64_t Sint64;
+
 typedef enum
 {
     SDL_FALSE = 0,
@@ -16,6 +18,22 @@ typedef enum
 } SDL_bool;
 
 typedef Sint32 SDL_JoystickID;
+
+typedef struct SDL_Color
+{
+    Uint8 r;
+    Uint8 g;
+    Uint8 b;
+    Uint8 a;
+} SDL_Color;
+
+typedef struct SDL_Palette
+{
+    int ncolors;
+    SDL_Color *colors;
+    Uint32 version;
+    int refcount;
+} SDL_Palette;
 
 
 #define SDL_RELEASED	0
@@ -1399,6 +1417,8 @@ typedef enum
     SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
     SDL_CONTROLLER_BUTTON_MAX
 } SDL_GameControllerButton;
+
+#define SDL_SWSURFACE       0           /**< Just here for compatibility */
 
 
 

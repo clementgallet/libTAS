@@ -4,7 +4,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdio.h>
-#include "SDL.h"
+#include "../external/SDL.h"
 #include "logging.h"
 
 
@@ -13,6 +13,22 @@
     {\
         debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
         FUNC##_real = NULL;\
+    }
+
+#define HOOK_GLFUNC(FUNC) HOOK_FUNC(FUNC,RTLD_NEXT)\
+    if (!FUNC##_real)\
+    {\
+        if (!SDL_GL_GetProcAddress_real) {\
+            debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "SDL_GL_GetProcAddress is not available. Could not load " #FUNC ".");\
+            FUNC##_real = NULL;\
+        }\
+        else {\
+            FUNC##_real = SDL_GL_GetProcAddress_real(#FUNC);\
+            if (!FUNC##_real)\
+            {\
+                debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "Could not load function " #FUNC ".");\
+            }\
+        }\
     }
 
 #if (!defined __timespec_defined)
@@ -25,6 +41,8 @@ struct timespec
 #endif
 
 
+void (*SDL_Init_real)(unsigned int flags);
+void (*SDL_Quit_real)(void);
 void(* SDL_GL_SwapWindow_real)(void);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (* SDL_GetWindowID_real)(void*);
@@ -62,11 +80,35 @@ void (*SDL_UnlockSurface_real)(void* surface);
 void* (*SDL_GL_GetProcAddress_real)(const char* proc);
 void (*SDL_GetVersion_real)(SDL_version* ver);
 SDL_bool (*SDL_GetWindowWMInfo_real)(void* window, SDL_SysWMinfo* info);
+SDL_Surface* (*SDL_CreateRGBSurface_real)
+    (Uint32 flags, int width, int height, int depth,
+     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+void (*SDL_FreeSurface_real)(SDL_Surface * surface);
+int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
+int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 
 
 
 void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
+void (*glGenTextures_real)(int n, unsigned int* tex);
+void (*glBindTexture_real)(int target, unsigned int tex);
+void (*glTexImage2D_real)( int target,
+    int level,
+    int internalFormat,
+    int width,
+    int height,
+    int border,
+    int format,
+    int type,
+    const void * data);
+void (*glBegin_real)( int mode );
+void (*glEnd_real)( void );
+void (*glVertex2f_real)( float x, float y );
+void (*glTexCoord2f_real)( float s, float t );
+void (*glDeleteTextures_real)( int n, const unsigned int *textures);
+
 
 int hook_functions(void* SDL_handle);
+int late_hook(void);
 
 #endif // HOOKSDL_H_INCLUDED

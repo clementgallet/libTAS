@@ -36,17 +36,8 @@ int openVideoDump(void* window, int video_opengl, char* dumpfile) {
 
         /* Do we already have access to the glReadPixels function? */
         if (!glReadPixels_real) {
-            debuglog(LCF_DUMP | LCF_OGL, "glReadPixels is needed but not exported by the game");
-            if (!SDL_GL_GetProcAddress_real) {
-                debuglog(LCF_DUMP | LCF_OGL | LCF_SDL | LCF_ERROR, "SDL_GL_GetProcAddress is not available. Could not load glReadPixels");
-                return 1;
-            }
-            debuglog(LCF_DUMP | LCF_OGL, "Importing it using SDL_GL_GetProcAddress.");
-            glReadPixels_real = SDL_GL_GetProcAddress_real("glReadPixels");
-            if (!glReadPixels_real) {
-                debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
-                return 1;
-            }
+            debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
+            return 1;
         }
 
         /* Initialize buffers for screen pixels */

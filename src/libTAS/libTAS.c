@@ -14,6 +14,9 @@ int message;
 /* Frame counter */
 unsigned long frame_counter = 0;
 
+/* Font used for displaying HUD on top of the game window */
+TTF_Font *font = NULL;
+
 /* 
  * Store the game window pointer
  * (SDL_Window* in fact, but we don't need the SDL_Window struct)
@@ -70,6 +73,18 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
+    /* Initialize SDL TTF */
+    if(TTF_Init() == -1) {
+        debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
+        exit(1);
+    }
+
+    font = TTF_OpenFont("/home/clement/libTAS/external/GenBkBasR.ttf", 65);
+    if (font == NULL) {
+        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
+        exit(1);
+    }
+
     /* Send information to the program */
 
     /* Send game process pid */
@@ -113,6 +128,8 @@ void __attribute__((constructor)) init(void)
 
 void __attribute__((destructor)) term(void)
 {
+    TTF_CloseFont(font);
+    TTF_Quit();
     dlclose(SDL_handle);
     close(socket_fd);
 
@@ -124,6 +141,27 @@ void __attribute__((destructor)) term(void)
     /* Sleep until the end of the frame length if necessary */
     if (tasflags.running && !tasflags.fastforward)
         sleepEndFrame();
+
+    SDL_Color color = {255, 255, 255, 0};
+    SDL_Surface* stext = TTF_RenderText_Blended(font, "test test", color);
+    unsigned int texture;
+    glGenTextures_real(1, &texture);
+    glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture); 
+    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, /*GL_RGBA*/ 0x1908, stext->w, stext->h, 0,
+                 /*GL_BGRA*/ 0x80E1, /*GL_UNSIGNED_BYTE*/ 0x1401, stext->pixels);
+glBegin_real(/*GL_QUADS*/ 0x0007);
+  {
+    int x = 0;
+    int y = 0;
+    glTexCoord2f_real(0,0); glVertex2f_real(x, y);
+    glTexCoord2f_real(1,0); glVertex2f_real(x + stext->w, y);
+    glTexCoord2f_real(1,1); glVertex2f_real(x + stext->w, y + stext->h);
+    glTexCoord2f_real(0,1); glVertex2f_real(x, y + stext->h);
+  }
+  glEnd_real();
+
+    glDeleteTextures_real(1, &texture);
+    SDL_FreeSurface_real(stext);
 
     SDL_GL_SwapWindow_real();
 
@@ -236,12 +274,21 @@ void __attribute__((destructor)) term(void)
     return SDL_GetWindowFlags_real(window);
 }
 
+/* Override */ void SDL_Init(unsigned int flags){
+    debuglog(LCF_SDL, "%s call.", __func__);
+    SDL_Init_real(flags);
+
+    /* Try to hook more functions after SDL was inited */
+    late_hook();
+}
+
 /* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, "%s call.", __func__);
     message = MSGB_QUIT;
     send(socket_fd, &message, sizeof(int), 0);
     if (tasflags.av_dumping)
         closeVideoDump();
+    SDL_Quit_real();
 }
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)

@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_H_INCLUDED
 #define KEYBOARD_H_INCLUDED
 
-#include "SDL.h"
+#include "../external/SDL.h"
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>

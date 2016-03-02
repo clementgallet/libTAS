@@ -5,7 +5,6 @@
 - Add inputs into the game screen
 -- For working with text and opengl, see http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl/5289823#5289823
 -- https://www.libsdl.org/projects/SDL_ttf/
-- Add key remapping
 - Add config file for hotkeys and key remapping (libconfig?)
 - Deal with keyboard mapping and stuff
 - Process and filter SDL events
@@ -14,7 +13,6 @@
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Add an interface (ncurses?)
 - Support mouse
-- Add a deterministic timer instead of relying on SwapInterval
 
 ## Partially done
 
@@ -31,6 +29,8 @@
     [xcb] Most likely this is a multi-threaded client and XInitThreads has not been called
     [xcb] Aborting, sorry about that.
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
+- Add key remapping
+-- Map KeyCode instead of KeySym
 
 ## Done
 
@@ -41,4 +41,5 @@
 - Inject keyboard inputs to the game
 - Add an auto-repeat for frame advance
 - Support game controller
+- Add a deterministic timer instead of relying on SwapInterval
 

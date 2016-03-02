@@ -14,7 +14,8 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-#include "SDL.h"
+#include "../external/SDL.h"
+#include "../external/SDL_ttf.h"
 #include "keyboard_helper.h"
 #include "hook.h"
 #include "../shared/messages.h"
@@ -29,6 +30,8 @@
 
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
+/* Override */ void SDL_Init(unsigned int flags);
+/* Override */ void SDL_Quit();
 /* Override */ void SDL_GL_SwapWindow(void);
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
 //Uint32 SDL_GetWindowId(void* window);

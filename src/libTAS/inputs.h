@@ -2,7 +2,7 @@
 #define INPUTS_H_INCL
 
 #include <X11/keysym.h>
-#include "SDL.h"
+#include "../external/SDL.h"
 #include "keyboard_helper.h"
 #include "logging.h"
 #include "hook.h"
