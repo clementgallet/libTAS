@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include "../external/SDL.h"
+#include "../external/gl.h"
 #include "logging.h"
 
 
@@ -122,7 +123,8 @@ void (*glLoadIdentity_real)(void);
 void (*glOrtho_real)(double left, double right, double bottom, double top, double near, double far);
 void (*glBlendFunc_real)(int sfactor, int dfactor);
 void (*glTexParameteri_real)(int target, int pname, int param);
-void (*glGetIntegerv_real)( int pname, int* data);
+void (*glGetIntegerv_real)( int pname, GLint* data);
+void (*glGetBooleanv_real)( int pname, GLboolean* data);
 
 int hook_functions(void* SDL_handle);
 int late_hook(void);

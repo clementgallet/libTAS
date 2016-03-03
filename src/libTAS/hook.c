@@ -60,6 +60,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(glBlendFunc, RTLD_NEXT)
     HOOK_FUNC(glTexParameteri, RTLD_NEXT)
     HOOK_FUNC(glGetIntegerv, RTLD_NEXT)
+    HOOK_FUNC(glGetBooleanv, RTLD_NEXT)
 
 
     return 1;
@@ -91,6 +92,7 @@ int late_hook(void) {
     HOOK_GLFUNC(glBlendFunc)
     HOOK_GLFUNC(glTexParameteri)
     HOOK_GLFUNC(glGetIntegerv)
+    HOOK_GLFUNC(glGetBooleanv)
 
     inited = 1;
     return 1;
