@@ -23,6 +23,7 @@
 #include "dumpvideo.h"
 #include "time.h"
 #include "inputs.h"
+#include "opengl.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -34,7 +35,7 @@ void __attribute__((destructor)) term(void);
 int nextpow2(int i);
 /* Override */ void SDL_Init(unsigned int flags);
 /* Override */ void SDL_Quit(void);
-/* Override */ void SDL_GL_SwapWindow(void);
+/* Override */ void SDL_GL_SwapWindow(void* window);
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
 //Uint32 SDL_GetWindowId(void* window);
 /* Override */ Uint32 SDL_GetWindowFlags(void* window);

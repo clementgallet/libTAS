@@ -136,23 +136,26 @@ void __attribute__((destructor)) term(void)
     debuglog(LCF_SOCKET, "Exiting.");
 }
 
-int nextpow2(int i)
-{
-    double logbase2 = log(i) / log(2);
-    return (int) floor(pow(2.0, ceil(logbase2)));
-}
 
-
-/* Override */ void SDL_GL_SwapWindow(void)
+/* Override */ void SDL_GL_SwapWindow(void* window)
 {
-    SDL_GL_SwapWindow_real();
-//#if 0
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+
+    /* Sleep until the end of the frame length if necessary */
+    if (tasflags.running && !tasflags.fastforward)
+        sleepEndFrame();
+
     SDL_Color color = {255, 0, 0, 0};
-    SDL_Surface* stext = TTF_RenderText_Blended(font, "test test", color);
-    if (stext == NULL) {
-        debuglog(LCF_SDL | LCF_ERROR, "Could not create text texture.");
-        return;
-    }
+    RenderText(font, "Test test", 640, 480, color, 2, 2);
+
+#if 0
+    //SDL_GL_SwapWindow_real(window);
+//#if 0
+    //SDL_Surface* stext = TTF_RenderText_Blended(font, "test test", color);
+    //if (stext == NULL) {
+    //    debuglog(LCF_SDL | LCF_ERROR, "Could not create text texture.");
+    //    return;
+    //}
     //SDL_Surface* stext = TTF_RenderText_Solid(font, "test test", color);
     //fprintf(stderr, "Surface dim: %d, %d\n", stext->w, stext->h);
     /* Create another surface with a power of 2 */
@@ -174,7 +177,7 @@ int nextpow2(int i)
     glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture); 
 //    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, 4, w, h, 0,
 //                 /*GL_BGRA*/ 0x80E1, /*GL_UNSIGNED_BYTE*/ 0x1401, stext2->pixels);
-    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, /*GL_RGBA*/ 0x1908, stext->w, stext->h, 1,
+    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, /*GL_RGBA*/ 0x1908, stext->w, stext->h, 0,
                  /*GL_BGRA*/ 0x80E1, /*GL_UNSIGNED_BYTE*/ 0x1401, stext->pixels);
 
 /* GL_NEAREST looks horrible, if scaled... */
@@ -183,10 +186,19 @@ int nextpow2(int i)
 
 
     /* Render texture */
-#if 0
     //glEnable_real(/*GL_TEXTURE_2D*/ 0x0DE1);
-    glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture);
+    //glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture);
 
+const float quadVertices[] = { -1.0f, 1.0f, 0.0f, 
+    1.0f, 1.0f, 0.0f, 
+    1.0f,-1.0f, 0.0f,
+    -1.0f,-1.0f, 0.0f
+}; 
+
+glVertexPointer_real(3, /*GL_FLOAT*/ 0x1406, 0, quadVertices);
+glDrawArrays_real(/*GL_QUADS*/ 0x0007, 0, 4);
+
+//#if 0
 glBegin_real(/*GL_QUADS*/ 0x0007);
   {
     int x = 0;
@@ -197,18 +209,13 @@ glBegin_real(/*GL_QUADS*/ 0x0007);
     glTexCoord2f_real(0,1); glVertex2f_real(x, y + stext->h);
   }
   glEnd_real();
-#endif
-    glDeleteTextures_real(1, &texture);
+    //glDisable_real(/*GL_TEXTURE_2D*/ 0x0DE1);
+    //glDeleteTextures_real(1, &texture);
     //SDL_FreeSurface_real(stext2);
     SDL_FreeSurface_real(stext);
 
-    SDL_GL_SwapWindow_real();
-
-    /* Sleep until the end of the frame length if necessary */
-    if (tasflags.running && !tasflags.fastforward)
-        sleepEndFrame();
-
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+#endif
+    SDL_GL_SwapWindow_real(window);
 
     /* Dumping audio and video if needed */
     static int dump_inited = 0;

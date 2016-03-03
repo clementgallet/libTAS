@@ -43,7 +43,7 @@ struct timespec
 
 void (*SDL_Init_real)(unsigned int flags);
 void (*SDL_Quit_real)(void);
-void(* SDL_GL_SwapWindow_real)(void);
+void(* SDL_GL_SwapWindow_real)(void* window);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (* SDL_GetWindowID_real)(void*);
 int (*SDL_PollEvent_real)(SDL_Event*);
@@ -111,7 +111,18 @@ void (*glVertex2f_real)( float x, float y );
 void (*glTexCoord2f_real)( float s, float t );
 void (*glDeleteTextures_real)( int n, const unsigned int *textures);
 void (*glEnable_real)( int cap );
+void (*glDisable_real)( int cap );
+void (*glVertexPointer_real)(int size, int type, int stride, const void* pointer);
+void (*glDrawArrays_real)( int mode, int first, int count);
 
+void (*glMatrixMode_real)(int mode);
+void (*glPushMatrix_real)(void);
+void (*glPopMatrix_real)(void);
+void (*glLoadIdentity_real)(void);
+void (*glOrtho_real)(double left, double right, double bottom, double top, double near, double far);
+void (*glBlendFunc_real)(int sfactor, int dfactor);
+void (*glTexParameteri_real)(int target, int pname, int param);
+void (*glGetIntegerv_real)( int pname, int* data);
 
 int hook_functions(void* SDL_handle);
 int late_hook(void);

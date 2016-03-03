@@ -13,6 +13,7 @@
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Add an interface (ncurses?)
 - Support mouse
+- Allow 32-bit or 64-bit lib compilation
 
 ## Partially done
 

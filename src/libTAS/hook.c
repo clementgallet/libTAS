@@ -49,6 +49,18 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(glTexCoord2f, RTLD_NEXT)
     HOOK_FUNC(glDeleteTextures, RTLD_NEXT)
     HOOK_FUNC(glEnable, RTLD_NEXT)
+    HOOK_FUNC(glDisable, RTLD_NEXT)
+    HOOK_FUNC(glVertexPointer, RTLD_NEXT)
+    HOOK_FUNC(glDrawArrays, RTLD_NEXT)
+    HOOK_FUNC(glMatrixMode, RTLD_NEXT)
+    HOOK_FUNC(glPushMatrix, RTLD_NEXT)
+    HOOK_FUNC(glPopMatrix, RTLD_NEXT)
+    HOOK_FUNC(glLoadIdentity, RTLD_NEXT)
+    HOOK_FUNC(glOrtho, RTLD_NEXT)
+    HOOK_FUNC(glBlendFunc, RTLD_NEXT)
+    HOOK_FUNC(glTexParameteri, RTLD_NEXT)
+    HOOK_FUNC(glGetIntegerv, RTLD_NEXT)
+
 
     return 1;
 }
@@ -67,6 +79,18 @@ int late_hook(void) {
     HOOK_GLFUNC(glVertex2f)
     HOOK_GLFUNC(glTexCoord2f)
     HOOK_GLFUNC(glDeleteTextures)
+    HOOK_GLFUNC(glEnable)
+    HOOK_GLFUNC(glDisable)
+    HOOK_GLFUNC(glVertexPointer)
+    HOOK_GLFUNC(glDrawArrays)
+    HOOK_GLFUNC(glMatrixMode)
+    HOOK_GLFUNC(glPushMatrix)
+    HOOK_GLFUNC(glPopMatrix)
+    HOOK_GLFUNC(glLoadIdentity)
+    HOOK_GLFUNC(glOrtho)
+    HOOK_GLFUNC(glBlendFunc)
+    HOOK_GLFUNC(glTexParameteri)
+    HOOK_GLFUNC(glGetIntegerv)
 
     inited = 1;
     return 1;
