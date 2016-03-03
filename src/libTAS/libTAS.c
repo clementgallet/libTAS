@@ -14,8 +14,10 @@ int message;
 /* Frame counter */
 unsigned long frame_counter = 0;
 
+#ifdef HUD
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
+#endif
 
 /* 
  * Store the game window pointer
@@ -73,6 +75,7 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
+#ifdef HUD
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
@@ -84,7 +87,7 @@ void __attribute__((constructor)) init(void)
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
         exit(1);
     }
-
+#endif
     /* Send information to the program */
 
     /* Send game process pid */
@@ -128,8 +131,10 @@ void __attribute__((constructor)) init(void)
 
 void __attribute__((destructor)) term(void)
 {
+#ifdef HUD
     TTF_CloseFont(font);
     TTF_Quit();
+#endif
     dlclose(SDL_handle);
     close(socket_fd);
 
@@ -145,76 +150,11 @@ void __attribute__((destructor)) term(void)
     if (tasflags.running && !tasflags.fastforward)
         sleepEndFrame();
 
+#ifdef HUD
     SDL_Color color = {255, 0, 0, 0};
     RenderText(font, "Test test", 640, 480, color, 2, 2);
-
-#if 0
-    //SDL_GL_SwapWindow_real(window);
-//#if 0
-    //SDL_Surface* stext = TTF_RenderText_Blended(font, "test test", color);
-    //if (stext == NULL) {
-    //    debuglog(LCF_SDL | LCF_ERROR, "Could not create text texture.");
-    //    return;
-    //}
-    //SDL_Surface* stext = TTF_RenderText_Solid(font, "test test", color);
-    //fprintf(stderr, "Surface dim: %d, %d\n", stext->w, stext->h);
-    /* Create another surface with a power of 2 */
-    //int w = nextpow2(stext->w);
-    //int h = nextpow2(stext->h);
-    //SDL_Surface* stext2 = SDL_CreateRGBSurface_real(SDL_SWSURFACE, w, h, 32, stext->format->Rmask, stext->format->Gmask, stext->format->Bmask, stext->format->Amask);
-    //if (stext2 == NULL) {
-    //    debuglog(LCF_SDL | LCF_ERROR, "Could not create intermediary texture.");
-    //    return;
-    //}
-    //SDL_Rect newr = {0, 0, stext->w, stext->h};
-    //fprintf(stderr, "New surface dim: %d, %d\n", w, h);
-    //SDL_BlitSurface_real(stext, NULL, stext2, NULL);
-    //SDL_BlitSurface_real(stext, &newr, stext2, &newr);
-    //fprintf(stderr, "New surface dim: %d, %d\n", w, h);
-
-    unsigned int texture;
-    glGenTextures_real(1, &texture);
-    glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture); 
-//    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, 4, w, h, 0,
-//                 /*GL_BGRA*/ 0x80E1, /*GL_UNSIGNED_BYTE*/ 0x1401, stext2->pixels);
-    glTexImage2D_real(/*GL_TEXTURE_2D*/ 0x0DE1, 0, /*GL_RGBA*/ 0x1908, stext->w, stext->h, 0,
-                 /*GL_BGRA*/ 0x80E1, /*GL_UNSIGNED_BYTE*/ 0x1401, stext->pixels);
-
-/* GL_NEAREST looks horrible, if scaled... */
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
-
-
-    /* Render texture */
-    //glEnable_real(/*GL_TEXTURE_2D*/ 0x0DE1);
-    //glBindTexture_real(/*GL_TEXTURE_2D*/ 0x0DE1, texture);
-
-const float quadVertices[] = { -1.0f, 1.0f, 0.0f, 
-    1.0f, 1.0f, 0.0f, 
-    1.0f,-1.0f, 0.0f,
-    -1.0f,-1.0f, 0.0f
-}; 
-
-glVertexPointer_real(3, /*GL_FLOAT*/ 0x1406, 0, quadVertices);
-glDrawArrays_real(/*GL_QUADS*/ 0x0007, 0, 4);
-
-//#if 0
-glBegin_real(/*GL_QUADS*/ 0x0007);
-  {
-    int x = 0;
-    int y = 0;
-    glTexCoord2f_real(0,0); glVertex2f_real(x, y);
-    glTexCoord2f_real(1,0); glVertex2f_real(x + stext->w, y);
-    glTexCoord2f_real(1,1); glVertex2f_real(x + stext->w, y + stext->h);
-    glTexCoord2f_real(0,1); glVertex2f_real(x, y + stext->h);
-  }
-  glEnd_real();
-    //glDisable_real(/*GL_TEXTURE_2D*/ 0x0DE1);
-    //glDeleteTextures_real(1, &texture);
-    //SDL_FreeSurface_real(stext2);
-    SDL_FreeSurface_real(stext);
-
 #endif
+
     SDL_GL_SwapWindow_real(window);
 
     /* Dumping audio and video if needed */
