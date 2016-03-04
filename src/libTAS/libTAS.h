@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/syscall.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
@@ -36,6 +37,7 @@ void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
 
 /* Override */ void SDL_Init(unsigned int flags);
+/* Override */ int SDL_InitSubSystem(Uint32 flags);
 /* Override */ void SDL_Quit(void);
 /* Override */ void SDL_GL_SwapWindow(void* window);
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);

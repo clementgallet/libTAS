@@ -43,6 +43,7 @@ struct timespec
 
 
 void (*SDL_Init_real)(unsigned int flags);
+int (*SDL_InitSubSystem_real)(Uint32 flags);
 void (*SDL_Quit_real)(void);
 void(* SDL_GL_SwapWindow_real)(void* window);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);

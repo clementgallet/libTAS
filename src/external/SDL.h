@@ -4,6 +4,15 @@
 #include <inttypes.h> 
 #include <X11/Xlib.h>
 
+#define SDL_INIT_TIMER          0x00000001
+#define SDL_INIT_AUDIO          0x00000010
+#define SDL_INIT_VIDEO          0x00000020  /**< SDL_INIT_VIDEO implies SDL_INIT_EVENTS */
+#define SDL_INIT_JOYSTICK       0x00000200  /**< SDL_INIT_JOYSTICK implies SDL_INIT_EVENTS */
+#define SDL_INIT_HAPTIC         0x00001000
+#define SDL_INIT_GAMECONTROLLER 0x00002000  /**< SDL_INIT_GAMECONTROLLER implies SDL_INIT_JOYSTICK */
+#define SDL_INIT_EVENTS         0x00004000
+#define SDL_INIT_NOPARACHUTE    0x00100000  /**< Don't catch fatal signals */
+
 typedef uint8_t Uint8;
 typedef uint16_t Uint16;
 typedef uint32_t Uint32;
@@ -1154,6 +1163,84 @@ typedef struct SDL_ControllerDeviceEvent
     Sint32 which;       /**< The joystick device index for the ADDED event, instance id for the REMOVED or REMAPPED event */
 } SDL_ControllerDeviceEvent;
 
+/**
+ *  These are the various supported windowing subsystems
+ */
+typedef enum
+{
+    SDL_SYSWM_UNKNOWN,
+    SDL_SYSWM_WINDOWS,
+    SDL_SYSWM_X11,
+    SDL_SYSWM_DIRECTFB,
+    SDL_SYSWM_COCOA,
+    SDL_SYSWM_UIKIT,
+    SDL_SYSWM_WAYLAND,
+    SDL_SYSWM_MIR,
+} SDL_SYSWM_TYPE;
+
+
+typedef struct SDL_version
+{
+    Uint8 major;        /**< major version */
+    Uint8 minor;        /**< minor version */
+    Uint8 patch;        /**< update version */
+} SDL_version;
+
+/**
+ *  The custom event structure.
+ */
+struct SDL_SysWMmsg
+{
+    SDL_version version;
+    SDL_SYSWM_TYPE subsystem;
+    union
+    {
+        struct {
+            XEvent event;
+        } x11;
+        /* Can't have an empty union */
+        int dummy;
+    } msg;
+};
+
+typedef struct SDL_SysWMmsg SDL_SysWMmsg;
+
+
+/**
+ *  The custom window manager information structure.
+ *
+ *  When this structure is returned, it holds information about which
+ *  low level system it is using, and will be one of SDL_SYSWM_TYPE.
+ */
+struct SDL_SysWMinfo
+{
+    SDL_version version;
+    SDL_SYSWM_TYPE subsystem;
+    union
+    {
+        struct
+        {
+            Display *display;           /**< The X11 display */
+            Window window;              /**< The X11 window */
+        } x11;
+   } info;
+};
+
+typedef struct SDL_SysWMinfo SDL_SysWMinfo;
+
+/**
+ *  \brief A video driver dependent system event (event.syswm.*)
+ *         This event is disabled by default, you can enable it with SDL_EventState()
+ *
+ *  \note If you want to use this event, you should include SDL_syswm.h.
+ */
+typedef struct SDL_SysWMEvent
+{
+    Uint32 type;        /**< ::SDL_SYSWMEVENT */
+    Uint32 timestamp;
+    SDL_SysWMmsg *msg;  /**< driver dependent data, defined in SDL_syswm.h */
+} SDL_SysWMEvent;
+
 
 typedef union SDL_Event
 {
@@ -1171,6 +1258,7 @@ typedef union SDL_Event
     SDL_ControllerAxisEvent caxis;      /**< Game Controller axis event data */
     SDL_ControllerButtonEvent cbutton;  /**< Game Controller button event data */
     SDL_ControllerDeviceEvent cdevice;  /**< Game Controller device event data */
+    SDL_SysWMEvent syswm;           /**< System dependent window event data */
     Uint8 padding[56];
 } SDL_Event;
 
@@ -1335,52 +1423,6 @@ typedef struct SDL_Surface
     int refcount;               /**< Read-mostly */
 } SDL_Surface;
 
-
-/**
- *  These are the various supported windowing subsystems
- */
-typedef enum
-{
-    SDL_SYSWM_UNKNOWN,
-    SDL_SYSWM_WINDOWS,
-    SDL_SYSWM_X11,
-    SDL_SYSWM_DIRECTFB,
-    SDL_SYSWM_COCOA,
-    SDL_SYSWM_UIKIT,
-    SDL_SYSWM_WAYLAND,
-    SDL_SYSWM_MIR,
-} SDL_SYSWM_TYPE;
-
-
-typedef struct SDL_version
-{
-    Uint8 major;        /**< major version */
-    Uint8 minor;        /**< minor version */
-    Uint8 patch;        /**< update version */
-} SDL_version;
-
-
-/**
- *  The custom window manager information structure.
- *
- *  When this structure is returned, it holds information about which
- *  low level system it is using, and will be one of SDL_SYSWM_TYPE.
- */
-struct SDL_SysWMinfo
-{
-    SDL_version version;
-    SDL_SYSWM_TYPE subsystem;
-    union
-    {
-        struct
-        {
-            Display *display;           /**< The X11 display */
-            Window window;              /**< The X11 window */
-        } x11;
-   } info;
-};
-
-typedef struct SDL_SysWMinfo SDL_SysWMinfo;
 
 typedef enum
 {

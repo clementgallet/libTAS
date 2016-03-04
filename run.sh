@@ -2,7 +2,7 @@
 
 Usage ()
 {
-    echo "usage: system_page [[[-f file ] [-i]] | [-h]]"
+    echo "usage: run.sh [-s|--sdl sdlpath] gameexecutable"
 }
 
 gamepath=/home/clement/supermeatboy/x86/SuperMeatBoy
@@ -27,7 +27,11 @@ do
     shift
 done
 
-LD_PRELOAD=./bin/libTAS.so $gamepath &
+# Some games do not work if it was not launched inside its folder
+
+cd ${gamepath%/*}
+LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} &
+cd - > /dev/null
 sleep 1
-./bin/linTAS -s $sdlpath
+./bin/linTAS -s $(pwd)/$sdlpath
 

@@ -3,6 +3,7 @@
 int hook_functions(void* SDL_handle) {
 
     HOOK_FUNC(SDL_Init, SDL_handle)
+    HOOK_FUNC(SDL_InitSubSystem, SDL_handle)
     HOOK_FUNC(SDL_Quit, SDL_handle)
     HOOK_FUNC(SDL_GL_SwapWindow, SDL_handle)
     HOOK_FUNC(SDL_CreateWindow, SDL_handle)

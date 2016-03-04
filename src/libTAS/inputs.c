@@ -168,7 +168,8 @@ int generateControllerEvent(SDL_Event* event)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, "%s call", __func__);
     /* For now, we declare one joystick */
-    return 1;
+    //return 1;
+    return 0;
 }
 
 /**

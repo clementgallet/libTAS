@@ -3,7 +3,7 @@
 /* Time that will be passed to the game 
  * Increments exactly by 1/fps after each screen draw
  */
-struct timeval deterministic_time = { 0, 0 };
+struct timeval deterministic_time = { 1, 0 };
 
 /* Real time structure, used to run at a given fps */
 struct timespec real_time = { 0, 0 };

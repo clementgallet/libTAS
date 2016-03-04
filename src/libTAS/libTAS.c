@@ -31,8 +31,13 @@ int gw_sent = 0;
 char* dumpfile = NULL;
 char* sdlfile = NULL;
 
+
 void __attribute__((constructor)) init(void)
 {
+    /* Multiple threads may launch the init function, but we only want the main thread to do this */
+    /* Actually it looks like only different processes will call init again, so the test below will fail everytime... */
+    if (getpid() != syscall(SYS_gettid))
+        return;
 
     initSocket();
 
@@ -203,6 +208,14 @@ void __attribute__((destructor)) term(void)
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
+    /* Disable fullscreen */
+    flags &= -1 ^ /*SDL_WINDOW_FULLSCREEN_DESKTOP*/ 0x00001001;
+
+    /* Check if the game provided screen coordinates */
+    if (w == 0 || h == 0) {
+        w = 800;
+        h = 600;
+    }
 
     /* A new window was created. It needs to be passed to the program */
     gw_sent = 0;
@@ -224,9 +237,41 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Init(unsigned int flags){
     debuglog(LCF_SDL, "%s call.", __func__);
     SDL_Init_real(flags);
-
+    if (flags & SDL_INIT_TIMER)
+        debuglog(LCF_SDL, "    SDL_TIMER enabled.");
+    if (flags & SDL_INIT_AUDIO)
+        debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
+    if (flags & SDL_INIT_VIDEO)
+        debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
+    if (flags & SDL_INIT_JOYSTICK)
+        debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
+    if (flags & SDL_INIT_HAPTIC)
+        debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
+    if (flags & SDL_INIT_GAMECONTROLLER)
+        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
+    if (flags & SDL_INIT_EVENTS)
+        debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
     /* Try to hook more functions after SDL was inited */
     late_hook();
+}
+
+/* Override */ int SDL_InitSubSystem(Uint32 flags){
+    debuglog(LCF_SDL, "%s call.", __func__);
+    if (flags & SDL_INIT_TIMER)
+        debuglog(LCF_SDL, "    SDL_TIMER enabled.");
+    if (flags & SDL_INIT_AUDIO)
+        debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
+    if (flags & SDL_INIT_VIDEO)
+        debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
+    if (flags & SDL_INIT_JOYSTICK)
+        debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
+    if (flags & SDL_INIT_HAPTIC)
+        debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
+    if (flags & SDL_INIT_GAMECONTROLLER)
+        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
+    if (flags & SDL_INIT_EVENTS)
+        debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+    return SDL_InitSubSystem_real(flags);
 }
 
 /* Override */ void SDL_Quit(){
@@ -281,6 +326,32 @@ void __attribute__((destructor)) term(void)
 
             case SDL_SYSWMEVENT:
                 debuglog(LCF_SDL | LCF_EVENTS, "Receiving a system specific event.");
+                switch (event->syswm.msg->subsystem) {
+                    case SDL_SYSWM_UNKNOWN:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Unknown subsystem.");
+                        break;
+                    case SDL_SYSWM_WINDOWS:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Windows subsystem.");
+                        break;
+                    case SDL_SYSWM_X11:
+                        debuglog(LCF_SDL | LCF_EVENTS, "X subsystem.");
+                        debuglog(LCF_SDL | LCF_EVENTS, "Getting an X event of type %d", event->syswm.msg->msg.x11.event.type);
+                        break;
+                    case SDL_SYSWM_DIRECTFB:
+                        debuglog(LCF_SDL | LCF_EVENTS, "DirectFB subsystem.");
+                        break;
+                    case SDL_SYSWM_COCOA:
+                        debuglog(LCF_SDL | LCF_EVENTS, "OSX subsystem.");
+                        break;
+                    case SDL_SYSWM_UIKIT:
+                        debuglog(LCF_SDL | LCF_EVENTS, "iOS subsystem.");
+                        break;
+                    default:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Another subsystem.");
+                        break;
+
+
+                }
                 return 1;
 
             case SDL_TEXTEDITING:
