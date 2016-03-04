@@ -253,36 +253,162 @@ void __attribute__((destructor)) term(void)
     int isone = SDL_PollEvent_real(event);
     while (isone == 1){
         /* TODO: Make a proper event filtering! */
-        if ((event->type == SDL_KEYDOWN) || (event->type == SDL_KEYUP)){
-            /*
-               if (event.type == SDL_KEYDOWN)
-               printf("KEYDOWN ");
-               if (event.type == SDL_KEYUP)
-               printf("KEYUP ");
-            //printf("windowID: %d\n", event.key.windowID);
-            //printf("timestamp: %d\n", event.key.timestamp);
-            printf("sym key: %d ", event.key.keysym.sym);
-            printf("scan key: %d\n", event.key.keysym.scancode);
-            */
-        }
-        else if (event->type == SDL_WINDOWEVENT){
-            switch (event->window.event) {
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_CLOSE:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
-                    break;
-                default:
-                    break;
-            }
-            return 1;
-        }
-        else {
-            return 1;
+        switch(event->type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving KEYUP/KEYDOWN event.");
+                break;
+
+            case SDL_QUIT:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving QUIT event.");
+                return 1;
+
+            case SDL_WINDOWEVENT:
+                switch (event->window.event) {
+                    case SDL_WINDOWEVENT_FOCUS_GAINED:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
+                        break;
+                    case SDL_WINDOWEVENT_FOCUS_LOST:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
+                        break;
+                    case SDL_WINDOWEVENT_CLOSE:
+                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
+                        break;
+                    default:
+                        break;
+                }
+                return 1;
+
+            case SDL_SYSWMEVENT:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a system specific event.");
+                return 1;
+
+            case SDL_TEXTEDITING:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text editing event.");
+                return 1;
+
+            case SDL_TEXTINPUT:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text input event.");
+                return 1;
+/*
+            case SDL_KEYMAPCHANGED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keymap change event.");
+                return 1;
+*/
+            case SDL_MOUSEMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse move event.");
+                return 1;
+
+            case SDL_MOUSEBUTTONDOWN:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse button press event.");
+                return 1;
+
+            case SDL_MOUSEBUTTONUP:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse button release event.");
+                return 1;
+
+            case SDL_MOUSEWHEEL:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse wheel event.");
+                return 1;
+
+            case SDL_JOYAXISMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick axis motion event.");
+                return 1;
+
+            case SDL_JOYBALLMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick trackball event.");
+                return 1;
+
+            case SDL_JOYHATMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick hat position event.");
+                return 1;
+
+            case SDL_JOYBUTTONDOWN:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick button press event.");
+                return 1;
+
+            case SDL_JOYBUTTONUP:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick button release event.");
+                return 1;
+
+            case SDL_JOYDEVICEADDED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick connected event.");
+                return 1;
+
+            case SDL_JOYDEVICEREMOVED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick disconnected event.");
+                return 1;
+
+            case SDL_CONTROLLERAXISMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller axis motion event.");
+                return 1;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller button press event.");
+                return 1;
+
+            case SDL_CONTROLLERBUTTONUP:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller button release event.");
+                return 1;
+
+            case SDL_CONTROLLERDEVICEADDED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller connected event.");
+                return 1;
+
+            case SDL_CONTROLLERDEVICEREMOVED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller disconnected event.");
+                return 1;
+
+            case SDL_CONTROLLERDEVICEREMAPPED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller mapping update event.");
+                return 1;
+
+            case SDL_FINGERDOWN:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device touch event.");
+                return 1;
+
+            case SDL_FINGERUP:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device release event.");
+                return 1;
+
+            case SDL_FINGERMOTION:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device drag event.");
+                return 1;
+
+            case SDL_DOLLARGESTURE:
+            case SDL_DOLLARRECORD:
+            case SDL_MULTIGESTURE:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a gesture event.");
+                return 1;
+
+            case SDL_CLIPBOARDUPDATE:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a clipboard update event.");
+                return 1;
+
+            case SDL_DROPFILE:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a drag and drop event.");
+                return 1;
+/*
+            case SDL_AUDIODEVICEADDED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a new audio device event.");
+                return 1;
+
+            case SDL_AUDIODEVICEREMOVED:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a audio device removal event.");
+                return 1;
+*/
+            case SDL_RENDER_TARGETS_RESET:
+//            case SDL_RENDER_DEVICE_RESET:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a render event.");
+                return 1;
+
+            case SDL_USEREVENT:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a user-specified event.");
+                return 1;
+
+            default:
+                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: %d.", event->type);
+                return 1;
         }
         isone = SDL_PollEvent_real(event);
     }
