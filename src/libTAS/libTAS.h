@@ -6,7 +6,6 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -26,15 +25,16 @@
 #include "time.h"
 #include "inputs.h"
 #include "opengl.h"
+#include "frame.h"
+#include "socket.h"
 
 #define MAGIC_NUMBER 42
-#define SOCKET_FILENAME "/tmp/libTAS.socket"
 
+extern unsigned long frame_counter;
 
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
 
-int nextpow2(int i);
 /* Override */ void SDL_Init(unsigned int flags);
 /* Override */ void SDL_Quit(void);
 /* Override */ void SDL_GL_SwapWindow(void* window);
@@ -45,6 +45,5 @@ int nextpow2(int i);
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
 /* Override */ int SDL_GL_SetSwapInterval(int interval);
 /* Override */ void SDL_DestroyWindow(void* window);
-void proceed_commands(void);
 
 #endif // LIBTAS_H_INCLUDED

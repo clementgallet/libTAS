@@ -42,6 +42,7 @@ typedef int LogCategoryFlag; enum
 	//LCF_REGISTRY = 1 << 29, // windows registry or system properties
 	LCF_THREAD   = 1 << 30,
 	//LCF_TIMERS   = 1 << 31, // as in async timer objects
+    LCF_ALL = -1,
 };
 
 #endif // LCF_H_INCL

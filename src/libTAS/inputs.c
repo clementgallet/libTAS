@@ -14,7 +14,7 @@ int controller_events = 1;
 /* Override */ Uint8* SDL_GetKeyboardState( int* numkeys)
 {
     (void) numkeys; // Remove unused warning
-    debuglog(LCF_SDL | LCF_KEYBOARD, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, "%s call.", __func__);
     xkeyboardToSDLkeyboard(ai.keyboard, SDL_keyboard);
     //*numkeys = 512;
     return SDL_keyboard;

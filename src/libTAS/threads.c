@@ -4,13 +4,13 @@
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
     debuglog(LCF_THREAD, "SDL Thread %s was created.\n", name);
-    return SDL_CreateThread(fn, name, data);
+    return SDL_CreateThread_real(fn, name, data);
 }
 
 /* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
     debuglog(LCF_THREAD, "Waiting for another SDL thread.\n");
-    SDL_WaitThread(thread, status);
+    SDL_WaitThread_real(thread, status);
 
 }
 /*

@@ -5,8 +5,8 @@ Usage ()
     echo "usage: system_page [[[-f file ] [-i]] | [-h]]"
 }
 
-gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
-sdlpath=/home/clement/supermeatboy/amd64/libSDL2-2.0.so.0
+gamepath=/home/clement/supermeatboy/x86/SuperMeatBoy
+sdlpath=/home/clement/supermeatboy/x86/libSDL2-2.0.so.0
 
 # Parse command-line arguments
 while [ $# -gt 0 ]

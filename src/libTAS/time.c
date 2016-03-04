@@ -104,7 +104,7 @@ void sleepEndFrame(void)
 
 /* Override */ time_t time(time_t* t)
 {
-    debuglog(LCF_TIMEGET, "%s call - returning %d.", __func__, (long)deterministic_time.tv_sec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning %d.", __func__, (long)deterministic_time.tv_sec);
     if (t)
         *t = deterministic_time.tv_sec;
     return deterministic_time.tv_sec;
@@ -112,28 +112,49 @@ void sleepEndFrame(void)
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET, "%s call - returning (%d,%d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning (%d,%d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
     *tv = deterministic_time;
     return 0;
 }
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    debuglog(LCF_SDL | LCF_SLEEP, "%s call - sleep for %u ms.", __func__, sleep);
-    usleep_real(sleep*1000);
+    debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u ms.", __func__, sleep);
+    if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
+        enterFrameBoundary();
+    else
+        usleep_real(sleep*1000);
 }
 
 /* Override */ int usleep(useconds_t usec)
 {
-    debuglog(LCF_SLEEP, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
+    debuglog(LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
     return usleep_real(usec);
 }
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
     Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_usec/1000;
-    debuglog(LCF_SDL | LCF_TIMEGET, "%s call - returning %d.", __func__, msec);
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call - true: %d, returning %d.", __func__, SDL_GetTicks_real(), msec);
     //return SDL_GetTicks_real();
+    
+    /*
+     * We implement a fail-safe code here:
+     * Some games expect SDL_GetTicks to increment, and will hang if not (Volgarr).
+     * If the game called this function too many times and get the same result,
+     * then we return the value + 1.
+     */
+    static int numcall = 0;
+    static Uint32 oldmsec;
+    if (msec == oldmsec) // TODO: oldmsec is undefined, but it is no big deal...
+        numcall++;
+    else
+        numcall = 0;
+    oldmsec = msec;
+    if (numcall > 100) {
+        numcall = 0;
+        return msec + 1;
+    }
     return msec;
 }
 

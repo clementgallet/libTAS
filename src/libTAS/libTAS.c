@@ -6,12 +6,11 @@ void* SDL_handle;
 /* Does SDL use OpenGL for display? */
 int video_opengl = 0;
 
-/* Socket to communicate to the program */
-int socket_fd = 0;
 /* Message that identify what is sent in the socket */
 int message;
 
 /* Frame counter */
+/* TODO: Where should I put this? */
 unsigned long frame_counter = 0;
 
 #ifdef LIBTAS_HUD
@@ -34,37 +33,8 @@ char* sdlfile = NULL;
 
 void __attribute__((constructor)) init(void)
 {
-    /* Connect using a Unix socket */
 
-    if (!unlink(SOCKET_FILENAME))
-        debuglog(LCF_SOCKET, "Removed stall socket.");
-
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
-    const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (bind(tmp_fd, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)))
-    {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't bind client socket.");
-        exit(-1);
-    }
-
-    if (listen(tmp_fd, 1))
-    {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't listen on client socket.");
-        exit(1);
-    }
-
-    debuglog(LCF_SOCKET, "Loading complete, awaiting client connection...");
-
-    if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
-    {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't accept client connection.");
-        exit(1);
-    }
-
-    debuglog(LCF_SOCKET, "Client connected.");
-
-    close(tmp_fd);
-    unlink(SOCKET_FILENAME);
+    initSocket();
 
 #ifdef LIBTAS_HUD
     /* Initialize SDL TTF */
@@ -83,44 +53,42 @@ void __attribute__((constructor)) init(void)
 
     /* Send game process pid */
     debuglog(LCF_SOCKET, "Send pid to program");
-    message = MSGB_PID;
-    send(socket_fd, &message, sizeof(int), 0);
+    sendMessage(MSGB_PID);
     pid_t mypid = getpid();
-    send(socket_fd, &mypid, sizeof(pid_t), 0);
+    sendData(&mypid, sizeof(pid_t));
 
     /* End message */
-    message = MSGB_END_INIT;
-    send(socket_fd, &message, sizeof(int), 0);
+    sendMessage(MSGB_END_INIT);
 
     /* Receive information from the program */
-    recv(socket_fd, &message, sizeof(int), 0);
+    receiveData(&message, sizeof(int));
     while (message != MSGN_END_INIT) {
         switch (message) {
             case MSGN_TASFLAGS:
                 debuglog(LCF_SOCKET, "Receiving tas flags");
-                recv(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+                receiveData(&tasflags, sizeof(struct TasFlags));
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 size_t str_len;
-                recv(socket_fd, &str_len, sizeof(size_t), 0);
+                receiveData(&str_len, sizeof(size_t));
                 dumpfile = malloc(str_len * sizeof(char) + 1);
-                recv(socket_fd, dumpfile, str_len * sizeof(char), 0);
+                receiveData(dumpfile, str_len * sizeof(char));
                 dumpfile[str_len] = '\0';
                 break;
             case MSGN_SDL_FILE:
                 debuglog(LCF_SOCKET, "Receiving sdl filename");
                 size_t sdl_len;
-                recv(socket_fd, &sdl_len, sizeof(size_t), 0);
+                receiveData(&sdl_len, sizeof(size_t));
                 sdlfile = malloc(sdl_len * sizeof(char) + 1);
-                recv(socket_fd, sdlfile, sdl_len * sizeof(char), 0);
+                receiveData(sdlfile, sdl_len * sizeof(char));
                 sdlfile[sdl_len] = '\0';
                 break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d.", message);
                 exit(1);
         }
-        recv(socket_fd, &message, sizeof(int), 0);
+        receiveData(&message, sizeof(int));
     }
         
     // SMB uses its own version of SDL.
@@ -146,7 +114,7 @@ void __attribute__((destructor)) term(void)
     TTF_Quit();
 #endif
     dlclose(SDL_handle);
-    close(socket_fd);
+    closeSocket();
 
     debuglog(LCF_SOCKET, "Exiting.");
 }
@@ -155,10 +123,6 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_GL_SwapWindow(void* window)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
-
-    /* Sleep until the end of the frame length if necessary */
-    if (tasflags.running && !tasflags.fastforward)
-        sleepEndFrame();
 
 #ifdef LIBTAS_HUD
     SDL_Color color = {255, 0, 0, 0};
@@ -191,9 +155,6 @@ void __attribute__((destructor)) term(void)
     }
 #endif
 
-    /* Advance deterministic time by one frame */
-    advanceFrame();
-
     /* 
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
@@ -215,9 +176,8 @@ void __attribute__((destructor)) term(void)
             Window xgw = info.info.x11.window;
 
             /* Send the X Window identifier to the program */
-            message = MSGB_WINDOW_ID;
-            send(socket_fd, &message, sizeof(int), 0);
-            send(socket_fd, &xgw, sizeof(Window), 0);
+            sendMessage(MSGB_WINDOW_ID);
+            sendData(&xgw, sizeof(Window));
             gw_sent = 1;
         }
     }
@@ -226,30 +186,15 @@ void __attribute__((destructor)) term(void)
         return;
     }
 
-    message = MSGB_START_FRAMEBOUNDARY;
-    send(socket_fd, &message, sizeof(int), 0);
-    send(socket_fd, &frame_counter, sizeof(unsigned long), 0);
+    enterFrameBoundary();
 
-    if (tasflags.running && tasflags.speed_divisor > 1)
-        usleep_real(1000000 * (tasflags.speed_divisor - 1) / 60);
-
-    struct TasFlags oldflags = tasflags;
-    proceed_commands();
-
-    /* Do the rest of the stuff before finishing the frame */
-    if (oldflags.fastforward != tasflags.fastforward)
-        SDL_GL_SetSwapInterval_real(!tasflags.fastforward);
-
-    /* We don't update AllInputs old_ai here. We update during the generation of events */
-
-    ++frame_counter;
 }
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
-    //return SDL_GL_SetSwapInterval_real(interval);
-    return SDL_GL_SetSwapInterval_real(0);
+    return SDL_GL_SetSwapInterval_real(interval);
+    //return SDL_GL_SetSwapInterval_real(0);
 }
     
 
@@ -286,8 +231,7 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, "%s call.", __func__);
-    message = MSGB_QUIT;
-    send(socket_fd, &message, sizeof(int), 0);
+    sendMessage(MSGB_QUIT);
 #ifdef LIBTAS_DUMP
     if (tasflags.av_dumping)
         closeVideoDump();
@@ -304,7 +248,7 @@ void __attribute__((destructor)) term(void)
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
     //return SDL_PollEvent_real(event);
-    debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "%s call.", __func__);
 
     int isone = SDL_PollEvent_real(event);
     while (isone == 1){
@@ -362,27 +306,5 @@ void __attribute__((destructor)) term(void)
         return 1;
 
     return 0;
-}
-
-void proceed_commands(void)
-{
-    while (1)
-    {
-        recv(socket_fd, &message, sizeof(int), 0);
-        switch (message)
-        {
-            case MSGN_TASFLAGS:
-                recv(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
-                break;
-
-            case MSGN_END_FRAMEBOUNDARY:
-                return;
-
-            case MSGN_ALL_INPUTS:
-                recv(socket_fd, &ai, sizeof(struct AllInputs), 0);
-                break;
-
-        }
-    }
 }
 

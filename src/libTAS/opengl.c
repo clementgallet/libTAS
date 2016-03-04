@@ -1,5 +1,7 @@
 #include "opengl.h"
 
+#ifdef LIBTAS_HUD
+
 /* Render a text on top of the game window 
  * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
  */
@@ -81,3 +83,4 @@ void RenderText(TTF_Font *font, const char* message, int sw, int sh, SDL_Color c
     SDL_FreeSurface_real(sFont);
 }
 
+#endif
