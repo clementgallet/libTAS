@@ -20,7 +20,9 @@
 #include "hook.h"
 #include "../shared/messages.h"
 #include "../shared/inputs.h"
+#ifdef LIBTAS_DUMP
 #include "dumpvideo.h"
+#endif
 #include "time.h"
 #include "inputs.h"
 #include "opengl.h"

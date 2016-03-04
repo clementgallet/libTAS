@@ -1,5 +1,7 @@
 #include "dumpvideo.h"
 
+#ifdef LIBTAS_DUMP
+
 FILE *f;
 char* filename = NULL;
 AVFrame *frame;
@@ -324,3 +326,4 @@ int closeVideoDump() {
     return 0;
 }
 
+#endif

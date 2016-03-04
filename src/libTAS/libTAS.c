@@ -14,7 +14,7 @@ int message;
 /* Frame counter */
 unsigned long frame_counter = 0;
 
-#ifdef HUD
+#ifdef LIBTAS_HUD
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
 #endif
@@ -66,7 +66,7 @@ void __attribute__((constructor)) init(void)
     close(tmp_fd);
     unlink(SOCKET_FILENAME);
 
-#ifdef HUD
+#ifdef LIBTAS_HUD
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
@@ -141,7 +141,7 @@ void __attribute__((constructor)) init(void)
 
 void __attribute__((destructor)) term(void)
 {
-#ifdef HUD
+#ifdef LIBTAS_HUD
     TTF_CloseFont(font);
     TTF_Quit();
 #endif
@@ -160,13 +160,14 @@ void __attribute__((destructor)) term(void)
     if (tasflags.running && !tasflags.fastforward)
         sleepEndFrame();
 
-#ifdef HUD
+#ifdef LIBTAS_HUD
     SDL_Color color = {255, 0, 0, 0};
     RenderText(font, "Test test", 640, 480, color, 2, 2);
 #endif
 
     SDL_GL_SwapWindow_real(window);
 
+#ifdef LIBTAS_DUMP
     /* Dumping audio and video if needed */
     static int dump_inited = 0;
     if (tasflags.av_dumping) {
@@ -188,6 +189,7 @@ void __attribute__((destructor)) term(void)
             tasflags.av_dumping = 0;
 
     }
+#endif
 
     /* Advance deterministic time by one frame */
     advanceFrame();
@@ -286,8 +288,10 @@ void __attribute__((destructor)) term(void)
     debuglog(LCF_SDL, "%s call.", __func__);
     message = MSGB_QUIT;
     send(socket_fd, &message, sizeof(int), 0);
+#ifdef LIBTAS_DUMP
     if (tasflags.av_dumping)
         closeVideoDump();
+#endif
     SDL_Quit_real();
 }
 

@@ -1,3 +1,6 @@
+#ifndef TIME_H_INCL
+#define TIME_H_INCL
+
 #include <time.h>
 #include <unistd.h>
 #include "logging.h"
@@ -37,3 +40,4 @@ int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec
 /* Override */ void SDL_Delay(Uint32 sleep);
 /* Override */ Uint32 SDL_GetTicks(void);
 
+#endif

@@ -1,3 +1,6 @@
+#ifndef THREADS_H_INCL
+#define THREADS_H_INCL
+
 #include "hook.h"
 #include <errno.h>
 
@@ -17,3 +20,4 @@ typedef unsigned long int pthread_t; // Does not seem to be much system-dependen
 /* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval);
 /* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
+#endif
