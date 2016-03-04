@@ -58,6 +58,12 @@ enum {
     MSGN_DUMP_FILE,
 
     /*
+     * Send the path of the SDL library to the game
+     * Arguments: size_t (string length) then char[len]
+     */
+    MSGN_SDL_FILE,
+
+    /*
      * Send the X11 window identifier of the game to the program
      * Argument: int
      */

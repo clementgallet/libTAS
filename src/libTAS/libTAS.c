@@ -30,20 +30,11 @@ void* gameWindow = NULL;
 int gw_sent = 0;
 
 char* dumpfile = NULL;
+char* sdlfile = NULL;
 
 void __attribute__((constructor)) init(void)
 {
-    // SMB uses its own version of SDL.
-    SDL_handle = dlopen("/home/clement/supermeatboy/amd64/libSDL2-2.0.so.0",
-                        RTLD_LAZY);
-    if (!SDL_handle)
-    {
-        debuglog(LCF_ERROR | LCF_HOOK, "Could not load SDL.");
-        exit(-1);
-    }
-
-    if (!hook_functions(SDL_handle))
-        exit(-1);
+    /* Connect using a Unix socket */
 
     if (!unlink(SOCKET_FILENAME))
         debuglog(LCF_SOCKET, "Removed stall socket.");
@@ -117,6 +108,14 @@ void __attribute__((constructor)) init(void)
                 recv(socket_fd, dumpfile, str_len * sizeof(char), 0);
                 dumpfile[str_len] = '\0';
                 break;
+            case MSGN_SDL_FILE:
+                debuglog(LCF_SOCKET, "Receiving sdl filename");
+                size_t sdl_len;
+                recv(socket_fd, &sdl_len, sizeof(size_t), 0);
+                sdlfile = malloc(sdl_len * sizeof(char) + 1);
+                recv(socket_fd, sdlfile, sdl_len * sizeof(char), 0);
+                sdlfile[sdl_len] = '\0';
+                break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d.", message);
                 exit(1);
@@ -124,6 +123,17 @@ void __attribute__((constructor)) init(void)
         recv(socket_fd, &message, sizeof(int), 0);
     }
         
+    // SMB uses its own version of SDL.
+    SDL_handle = dlopen(sdlfile, RTLD_LAZY);
+    if (!SDL_handle)
+    {
+        debuglog(LCF_ERROR | LCF_HOOK, "Could not load SDL.");
+        exit(-1);
+    }
+
+    if (!hook_functions(SDL_handle))
+        exit(-1);
+
     emptyInputs(&ai);
     emptyInputs(&old_ai);
 
