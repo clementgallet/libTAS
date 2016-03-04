@@ -156,12 +156,14 @@ void saveState(pid_t game_pid, struct State* state)
     while (read_mapping (mapsfile, &addr, &endaddr, &permissions[0], 
                 &offset, &device[0], &inode, &filename[0]))
     {
+        size = endaddr - addr;
+
         /* Get the segment's permissions.  */
         readflag  = (strchr (permissions, 'r') != 0);
         writeflag = (strchr (permissions, 'w') != 0);
         execflag  = (strchr (permissions, 'x') != 0);
 
-        /*
+        
         fprintf(stderr, 
                 "Save segment, %lld bytes at 0x%llx (%c%c%c)", 
                 size, addr, 
@@ -171,7 +173,7 @@ void saveState(pid_t game_pid, struct State* state)
         if (filename[0])
             fprintf(stderr, " for %s", filename);
         fprintf(stderr, "\n");
-        */
+        
 
         /* Filter based on permissions */
 
@@ -183,7 +185,6 @@ void saveState(pid_t game_pid, struct State* state)
         if (!writeflag)
             continue;
 
-        size = endaddr - addr;
 
         /* Fill the information on the section */
         state->sections[section_i].addr = addr;
@@ -241,12 +242,7 @@ void saveState(pid_t game_pid, struct State* state)
 
     /* Checking for errors */
     if (nread != (ssize_t)total_size) {
-        fprintf(stderr, "Not all memory was read!\n");
-        free(local);
-        free(remote);
-        fclose(mapsfile);
-        detachToGame(game_pid);
-        return;
+        fprintf(stderr, "Not all memory was read! Only %zd\n", nread);
     }
 
     if (nread == -1) {
@@ -305,8 +301,8 @@ void saveState(pid_t game_pid, struct State* state)
         state->n_sections = section_i;
     }
 
-    fprintf(stderr, "Wow, we actually did not raise any error. Saved %lld bytes\n", total_size);
-    state->total_size = total_size;
+    fprintf(stderr, "Wow, we actually did not raise any error. Saved %zd bytes out of %lld\n", nread, total_size);
+    state->total_size = nread;
 
     free(local);
     free(remote);
@@ -359,14 +355,22 @@ void loadState(pid_t game_pid, struct State* state)
     while (read_mapping (mapsfile, &addr, &endaddr, &permissions[0], 
                 &offset, &device[0], &inode, &filename[0]))
     {
+        /* Check if we reached the end of saved memory early */
+        if (total_size_loaded >= state->total_size) {
+            break;
+        }
+        
+
+        size = endaddr - addr;
+
         /* Get the segment's permissions.  */
         readflag  = (strchr (permissions, 'r') != 0);
         writeflag = (strchr (permissions, 'w') != 0);
         execflag  = (strchr (permissions, 'x') != 0);
 
-        /*
+        
            fprintf(stderr, 
-           "Save segment, %lld bytes at 0x%llx (%c%c%c)", 
+           "Load segment, %lld bytes at 0x%llx (%c%c%c)", 
            size, addr, 
            readflag  ? 'r' : '-', 
            writeflag ? 'w' : '-',
@@ -374,7 +378,7 @@ void loadState(pid_t game_pid, struct State* state)
            if (filename[0])
            fprintf(stderr, " for %s", filename);
            fprintf(stderr, "\n");
-           */
+           
 
         /* If we cannot write to the section, skip it */
         if (!writeflag)
@@ -398,7 +402,6 @@ void loadState(pid_t game_pid, struct State* state)
         }
 
         /* Match found, preparing the write */
-        size = endaddr - addr;
 
         local[0].iov_base = state->sections[si].mem;
         local[0].iov_len = size;

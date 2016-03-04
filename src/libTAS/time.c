@@ -142,7 +142,7 @@ void sleepEndFrame(void)
      * We implement a fail-safe code here:
      * Some games expect SDL_GetTicks to increment, and will hang if not (Volgarr).
      * If the game called this function too many times and get the same result,
-     * then we return the value + 1.
+     * then we increment the return value.
      */
     static int numcall = 0;
     static Uint32 oldmsec;
@@ -151,9 +151,10 @@ void sleepEndFrame(void)
     else
         numcall = 0;
     oldmsec = msec;
-    if (numcall > 100) {
-        numcall = 0;
-        return msec + 1;
+    if (numcall > 50) {
+        debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "Reiched GetTicks limit, return value+1.");
+        //numcall = 0;
+        return msec + numcall/50;
     }
     return msec;
 }
