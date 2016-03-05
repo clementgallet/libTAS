@@ -1,6 +1,16 @@
 #include "threads.h"
 #include "logging.h"
 
+/* 
+ * We will often want to know if we are running on the main thread
+ * Because only it can advance the deterministic timer 
+ */
+int isMainThread(void)
+{
+    return (getppid() == getpgrp());
+}
+
+
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
     debuglog(LCF_THREAD, "SDL Thread %s was created.\n", name);
@@ -23,9 +33,6 @@ void SDL_DetachThread(SDL_Thread * thread)
 
 /* Override */ int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg)
 {
-    //if (1) {// Do not allow multi-threaded game
-    //    return 0;
-    //}
     char name[16];
     name[0] = '\0';
     int ret = pthread_create_real(thread, attr, start_routine, arg);

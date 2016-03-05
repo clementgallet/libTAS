@@ -67,6 +67,8 @@ void* (*SDL_CreateThread_real)(int(*fn)(void*),
 void (*SDL_WaitThread_real)(void* thread, int *status);
 //void (*SDL_DetachThread_real)(void * thread);
 
+typedef unsigned long int pthread_t;
+
 int (*pthread_create_real) (void * thread, void * attr, void * (* start_routine) (void *), void * arg);
 void (*pthread_exit_real) (void *retval);
 int (*pthread_join_real) (unsigned long int thread, void **thread_return);
@@ -74,6 +76,7 @@ int (*pthread_detach_real) (unsigned long int thread);
 int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len);
 int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval);
 int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime);
+pthread_t (*pthread_self_real)(void);
 
 void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
 void* (*SDL_GetWindowSurface_real)(void* window);

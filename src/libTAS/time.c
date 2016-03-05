@@ -114,7 +114,7 @@ void sleepEndFrame(void)
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning (%d,%d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning (%d.%6d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
     *tv = deterministic_time;
     return 0;
 }
@@ -132,11 +132,14 @@ void sleepEndFrame(void)
 {
     debuglog(LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
     /* FIXME: Advancing deterministic timer */
-    deterministic_time.tv_usec += usec;
-    if (deterministic_time.tv_usec > 1000000) {
-        deterministic_time.tv_usec -= 1000000;
-        deterministic_time.tv_sec++;
+    if (isMainThread()) {
+        deterministic_time.tv_usec += usec;
+        if (deterministic_time.tv_usec > 1000000) {
+            deterministic_time.tv_usec -= 1000000;
+            deterministic_time.tv_sec++;
+        }
     }
+    //if (usec >= 10000 && usec <= 20000)
     //return usleep_real(usec);
     return 0;
 }

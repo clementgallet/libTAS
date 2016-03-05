@@ -35,8 +35,7 @@ char* sdlfile = NULL;
 void __attribute__((constructor)) init(void)
 {
     /* Multiple threads may launch the init function, but we only want the main thread to do this */
-    /* Actually it looks like only different processes will call init again, so the test below will fail everytime... */
-    if (getpid() != syscall(SYS_gettid))
+    if (! isMainThread())
         return;
 
     initSocket();
@@ -114,6 +113,8 @@ void __attribute__((constructor)) init(void)
 
 void __attribute__((destructor)) term(void)
 {
+    if (getppid() != getpgrp())
+        return;
 #ifdef LIBTAS_HUD
     TTF_CloseFont(font);
     TTF_Quit();
@@ -210,7 +211,7 @@ void __attribute__((destructor)) term(void)
     
 
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
+    debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: 0x%x.", __func__, title, x, y, w, h, flags);
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
 
@@ -219,6 +220,9 @@ void __attribute__((destructor)) term(void)
 
     /* Disable hidden windows */
     flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_HIDDEN*/ 0x00000008;
+
+    /* Disable high DPI mode */
+    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_ALLOW_HIGHDPI*/ 0x00002000;
 
     /* Check if the game provided screen coordinates */
     if (w == 0 || h == 0) {

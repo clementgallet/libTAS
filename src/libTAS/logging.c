@@ -14,6 +14,13 @@ void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
             strcat(str, ANSI_COLOR_GRAY);
         strcat(str, "[libTAS] ");
         size_t str_len = strlen(str);
+        if (isMainThread()) {
+            snprintf(str + str_len, 4096 - str_len - 1, "Main thread - ");
+        }
+        else if (pthread_self_real) {
+            snprintf(str + str_len, 4096 - str_len - 1, "Thread %lu - ", pthread_self_real());
+        }
+        str_len = strlen(str);
 
         va_list args;
         va_start(args, fmt);

@@ -27,6 +27,7 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(pthread_getname_np, RTLD_NEXT)
     HOOK_FUNC(pthread_tryjoin_np, RTLD_NEXT)
     HOOK_FUNC(pthread_timedjoin_np, RTLD_NEXT)
+    HOOK_FUNC(pthread_self, RTLD_NEXT)
     HOOK_FUNC(SDL_GL_GetDrawableSize, SDL_handle)
     HOOK_FUNC(SDL_GetWindowSurface, SDL_handle)
     HOOK_FUNC(SDL_LockSurface, SDL_handle)

@@ -28,6 +28,7 @@
 #include "opengl.h"
 #include "frame.h"
 #include "socket.h"
+#include "threads.h"
 
 #define MAGIC_NUMBER 42
 

@@ -6,6 +6,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "frame.h"
+#include "threads.h"
 
 /* Monotonic system-wide clock.  */
 //#   define CLOCK_MONOTONIC      1
