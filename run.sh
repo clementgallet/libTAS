@@ -6,7 +6,7 @@ Usage ()
 }
 
 gamepath=/home/clement/supermeatboy/x86/SuperMeatBoy
-sdlpath=/home/clement/supermeatboy/x86/libSDL2-2.0.so.0
+sdlpath=../supermeatboy/x86/libSDL2-2.0.so.0
 
 # Parse command-line arguments
 while [ $# -gt 0 ]

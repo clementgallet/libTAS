@@ -11,6 +11,8 @@ struct timespec real_time = { 0, 0 };
 /* Advance the deterministic timer by exactly 1/fps */
 void advanceFrame(void)
 {
+    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Advancing deterministic timer");
+
     /* Once the frame is drawn, we can increment the current time by 1/60 of a
        second. This does not give an integer number of microseconds though, so
        we have to keep track of the fractional part of the microseconds
@@ -129,7 +131,14 @@ void sleepEndFrame(void)
 /* Override */ int usleep(useconds_t usec)
 {
     debuglog(LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
-    return usleep_real(usec);
+    /* FIXME: Advancing deterministic timer */
+    deterministic_time.tv_usec += usec;
+    if (deterministic_time.tv_usec > 1000000) {
+        deterministic_time.tv_usec -= 1000000;
+        deterministic_time.tv_sec++;
+    }
+    //return usleep_real(usec);
+    return 0;
 }
 
 /* Override */ Uint32 SDL_GetTicks(void)
@@ -157,5 +166,30 @@ void sleepEndFrame(void)
         return msec + numcall/50;
     }
     return msec;
+}
+
+/* Override */ Uint64 SDL_GetPerformanceFrequency(void)
+{
+    //Uint64 freq = SDL_GetPerformanceFrequency_real();
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call.", __func__);
+    return 1000000000;
+}
+/* Override */ Uint64 SDL_GetPerformanceCounter(void)
+{
+    //Uint64 counter = SDL_GetPerformanceCounter_real();
+    
+    Uint64 counter = deterministic_time.tv_usec * 1000ULL + deterministic_time.tv_sec * 1000000000ULL;
+    /* Same as above, failsafe */
+    static int numcall = 0;
+    static Uint64 oldcounter;
+    if (counter == oldcounter) // TODO: oldcounter is undefined, but it is no big deal...
+        numcall++;
+    else
+        numcall = 0;
+    oldcounter = counter;
+    if (numcall > 50)
+        counter += 1000000ULL * (numcall/50); // Add 1 ms to the counter
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call, returning %" PRIu64 ".", __func__, counter);
+    return counter;
 }
 

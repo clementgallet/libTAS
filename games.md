@@ -20,3 +20,8 @@
 - Use SDL for threads
 - Enable Xlib events on SDL (what is it looking for?)
 
+### Limbo
+
+- Loading screen with threading at the beginning
+- Get access to the real time by some means...
+

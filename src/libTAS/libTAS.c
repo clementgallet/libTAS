@@ -184,6 +184,7 @@ void __attribute__((destructor)) term(void)
             sendMessage(MSGB_WINDOW_ID);
             sendData(&xgw, sizeof(Window));
             gw_sent = 1;
+            debuglog(LCF_SDL, "Send X11 window id: %d", xgw);
         }
     }
     else {
@@ -198,18 +199,26 @@ void __attribute__((destructor)) term(void)
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
-    return SDL_GL_SetSwapInterval_real(interval);
-    //return SDL_GL_SetSwapInterval_real(0);
+    //return SDL_GL_SetSwapInterval_real(interval);
+
+    /* If the game wants the current state of vsync, answer yes */
+    if (interval == -1)
+        return 1;
+    /* Disable vsync */
+    return SDL_GL_SetSwapInterval_real(0);
 }
     
 
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %d.", __func__, title, x, y, w, h, flags);
-    gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
+
     /* Disable fullscreen */
-    flags &= -1 ^ /*SDL_WINDOW_FULLSCREEN_DESKTOP*/ 0x00001001;
+    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_FULLSCREEN_DESKTOP*/ 0x00001001;
+
+    /* Disable hidden windows */
+    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_HIDDEN*/ 0x00000008;
 
     /* Check if the game provided screen coordinates */
     if (w == 0 || h == 0) {
@@ -217,6 +226,7 @@ void __attribute__((destructor)) term(void)
         h = 600;
     }
 
+    gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     /* A new window was created. It needs to be passed to the program */
     gw_sent = 0;
     return gameWindow;

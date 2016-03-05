@@ -209,7 +209,6 @@ int main(int argc, char **argv)
 
         int isidle = !tasflags.running;
         int tasflagsmod = 0; // register if tasflags have been modified on this frame
-            
 
         /* We are at a frame boundary */
         do {

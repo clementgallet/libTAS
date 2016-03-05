@@ -2,6 +2,9 @@
 
 void enterFrameBoundary(void)
 {
+    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
+
+
     /* Sleep until the end of the frame length if necessary */
     if (tasflags.running && !tasflags.fastforward)
         sleepEndFrame();
@@ -25,6 +28,8 @@ void enterFrameBoundary(void)
     /* We don't update AllInputs old_ai here. We update during the generation of events */
 
     ++frame_counter;
+
+    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Leave frame boundary");
 }
 
 void proceed_commands(void)

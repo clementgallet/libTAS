@@ -92,6 +92,8 @@ int (*SDL_BlitSurface_real)(SDL_Surface*    src,
                        const SDL_Rect* srcrect,
                        SDL_Surface*    dst,
                        SDL_Rect*       dstrect);
+Uint64 (*SDL_GetPerformanceFrequency_real)(void);
+Uint64 (*SDL_GetPerformanceCounter_real)(void);
 
 
 

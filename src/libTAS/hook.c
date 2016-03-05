@@ -39,6 +39,8 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_SetColorKey, SDL_handle)
     HOOK_FUNC(SDL_FillRect, SDL_handle)
     HOOK_FUNC(SDL_BlitSurface, SDL_handle)
+    HOOK_FUNC(SDL_GetPerformanceFrequency, SDL_handle)
+    HOOK_FUNC(SDL_GetPerformanceCounter, SDL_handle)
 
     HOOK_FUNC(glReadPixels, RTLD_NEXT)
     HOOK_FUNC(glGenTextures, RTLD_NEXT)

@@ -40,5 +40,8 @@ int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec
 /* Override */ int gettimeofday(struct timeval* tv, void* tz);
 /* Override */ void SDL_Delay(Uint32 sleep);
 /* Override */ Uint32 SDL_GetTicks(void);
+/* Override */ Uint64 SDL_GetPerformanceFrequency(void);
+/* Override */ Uint64 SDL_GetPerformanceCounter(void);
+
 
 #endif
