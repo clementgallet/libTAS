@@ -23,5 +23,5 @@
 ### Limbo
 
 - Loading screen with threading at the beginning
-- Get access to the real time by some means...
+- Get access to the real time using SDL GetPerformanceCounter and some other means...
 
