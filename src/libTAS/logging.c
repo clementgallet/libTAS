@@ -1,5 +1,6 @@
 #include "logging.h"
 
+
 void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
 {
     /* Use the extern variable tasflags */
@@ -9,17 +10,23 @@ void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
         if (lcf & LCF_ERROR)
             /* Write the text in red */
             strcat(str, ANSI_COLOR_RED);
-        else if ((lcf & LCF_FRAME) || (lcf & LCF_FREQUENT))
-            /* Write the text in gray */
-            strcat(str, ANSI_COLOR_GRAY);
+        else
+            /* Write the header text in white */
+            strcat(str, ANSI_COLOR_LIGHT_GRAY);
         strcat(str, "[libTAS] ");
         size_t str_len = strlen(str);
-        if (isMainThread()) {
-            snprintf(str + str_len, 4096 - str_len - 1, "Main thread - ");
+        if (pthread_self_real) {
+            char thstr[12];
+            stringify(pthread_self_real(), thstr);
+            if (isMainThread())
+                snprintf(str + str_len, 4096 - str_len - 1, "Thread %s (main) ", thstr);
+            else
+                snprintf(str + str_len, 4096 - str_len - 1, "Thread %s        ", thstr);
         }
-        else if (pthread_self_real) {
-            snprintf(str + str_len, 4096 - str_len - 1, "Thread %lu - ", pthread_self_real());
-        }
+
+        /* Reset color change */
+        strcat(str, ANSI_COLOR_RESET);
+
         str_len = strlen(str);
 
         va_list args;
@@ -27,11 +34,25 @@ void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
         vsnprintf(str + str_len, 4096 - str_len - 1, fmt, args);
         va_end(args);
 
-        if ((lcf & LCF_ERROR) || (lcf & LCF_FRAME) || (lcf & LCF_FREQUENT))
-            /* Reset color change */
-            strcat(str, ANSI_COLOR_RESET);
         strcat(str, "\n");
         fprintf(stderr, str);
     }
 }
 
+/* Print long integers as string for shorter ids. Use base64 */
+void stringify(unsigned long int id, char* str)
+{
+    int i = 0;
+    while (id) {
+        unsigned long digit = id % 64;
+        if (digit < 26) str[i] = (char)('A' + digit);
+        else if (digit < 52) str[i] = (char)('a' + (digit - 26));
+        else if (digit < 62) str[i] = (char)('0' + (digit - 52));
+        else if (digit == 62) str[i] = '+';
+        else str[i] = '/';
+
+        id /= 64;
+        i++;
+    }
+    str[i] = '\0';
+}

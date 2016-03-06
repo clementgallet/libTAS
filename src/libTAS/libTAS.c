@@ -35,8 +35,8 @@ char* sdlfile = NULL;
 void __attribute__((constructor)) init(void)
 {
     /* Multiple threads may launch the init function, but we only want the main thread to do this */
-    if (! isMainThread())
-        return;
+    //if (! isMainThread())
+    //    return;
 
     initSocket();
 
@@ -250,6 +250,9 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Init(unsigned int flags){
     debuglog(LCF_SDL, "%s call.", __func__);
+    /* The thread calling this is probably the main thread */
+    setMainThread();
+
     SDL_Init_real(flags);
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");

@@ -1,13 +1,31 @@
 #include "threads.h"
 #include "logging.h"
 
+pthread_t mainThread = 0;
+
+/* Indicate that we are running on the main thread */
+void setMainThread(void)
+{
+    if (mainThread != 0)
+        /* Main thread was already set */
+        return;
+    if (pthread_self_real)
+        mainThread = pthread_self_real();
+}
+
 /* 
  * We will often want to know if we are running on the main thread
- * Because only it can advance the deterministic timer 
+ * Because only it can advance the deterministic timer, and other stuff 
  */
 int isMainThread(void)
 {
-    return (getppid() == getpgrp());
+    if (pthread_self_real)
+        return (pthread_self_real() == mainThread);
+
+    /* If pthread library is not loaded, it is likely that the game is single threaded */
+    return 1;
+
+    //return (getppid() == getpgrp());
 }
 
 
@@ -37,10 +55,12 @@ void SDL_DetachThread(SDL_Thread * thread)
     name[0] = '\0';
     int ret = pthread_create_real(thread, attr, start_routine, arg);
     pthread_getname_np_real(*thread, name, 16);
+    char thstr[12];
+    stringify(*thread, thstr);
     if (name[0])
-        debuglog(LCF_THREAD, "Thread %ld was created (%s).", *thread, name);
+        debuglog(LCF_THREAD, "Thread %s was created (%s).", thstr, name);
     else
-        debuglog(LCF_THREAD, "Thread %ld was created.", *thread);
+        debuglog(LCF_THREAD, "Thread %s was created.", thstr);
     return ret;
 }
 
@@ -55,7 +75,9 @@ void SDL_DetachThread(SDL_Thread * thread)
     //if (1) {
     //    return 0;
     //}
-    debuglog(LCF_THREAD, "Joining thread %ld", thread);
+    char thstr[12];
+    stringify(thread, thstr);
+    debuglog(LCF_THREAD, "Joining thread %s", thstr);
     return pthread_join_real(thread, thread_return);
 }
 
@@ -63,32 +85,38 @@ void SDL_DetachThread(SDL_Thread * thread)
     //if (1) {
     //    return 0;
     //}
-    debuglog(LCF_THREAD, "Detaching thread %ld.", thread);
+    char thstr[12];
+    stringify(thread, thstr);
+    debuglog(LCF_THREAD, "Detaching thread %s.", thstr);
     return pthread_detach_real(thread);
 }
 
 /* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval)
 {
-    debuglog(LCF_THREAD, "Try to join thread %ld.", thread);
+    char thstr[12];
+    stringify(thread, thstr);
+    debuglog(LCF_THREAD, "Try to join thread %s.", thstr);
     int ret = pthread_tryjoin_np_real(thread, retval);
     if (ret == 0) {
-        debuglog(LCF_THREAD, "Joining thread %ld successfully.", thread);
+        debuglog(LCF_THREAD, "Joining thread %s successfully.", thstr);
     }
     if (ret == EBUSY) {
-        debuglog(LCF_THREAD, "Thread %ld has not yet terminated.", thread);
+        debuglog(LCF_THREAD, "Thread %s has not yet terminated.", thstr);
     }
     return ret;
 }
 
 /* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime)
 {
-    debuglog(LCF_THREAD, "Try to join thread %ld in %ld ms.", thread, 1000*abstime->tv_sec + abstime->tv_nsec/1000000);
+    char thstr[12];
+    stringify(thread, thstr);
+    debuglog(LCF_THREAD, "Try to join thread %s in %ld ms.", thstr, 1000*abstime->tv_sec + abstime->tv_nsec/1000000);
     int ret = pthread_timedjoin_np_real(thread, retval, abstime);
     if (ret == 0) {
-        debuglog(LCF_THREAD, "Joining thread %ld successfully.", thread);
+        debuglog(LCF_THREAD, "Joining thread %s successfully.", thstr);
     }
     if (ret == ETIMEDOUT) {
-        debuglog(LCF_THREAD, "Call timed out before thread %ld terminated.", thread);
+        debuglog(LCF_THREAD, "Call timed out before thread %s terminated.", thstr);
     }
     return ret;
 }

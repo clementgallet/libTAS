@@ -1,6 +1,7 @@
 CC=gcc
 WARNINGS=-Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow
 INCL=-L/home/clement/libTAS/src/external/criu/lib/c/ -Wl,-rpath=/home/clement/libTAS/src/external/criu/lib/c/
+#INCL=
 CFLAGS=-std=gnu11 -c -g
 #CFLAGS=-std=gnu11 -c -g -m32
 LDFLAGS=-lX11 -lcriu

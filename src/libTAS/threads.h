@@ -9,6 +9,7 @@ typedef int (*SDL_ThreadFunction) (void *data);
 typedef void SDL_Thread; // For now
 typedef unsigned long int pthread_t; // Does not seem to be much system-dependent
 
+void setMainThread(void);
 int isMainThread(void);
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
