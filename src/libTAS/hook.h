@@ -91,14 +91,13 @@ SDL_Surface* (*SDL_CreateRGBSurface_real)
 void (*SDL_FreeSurface_real)(SDL_Surface * surface);
 int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
 int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
-int (*SDL_BlitSurface_real)(SDL_Surface*    src,
-                       const SDL_Rect* srcrect,
-                       SDL_Surface*    dst,
-                       SDL_Rect*       dstrect);
 Uint64 (*SDL_GetPerformanceFrequency_real)(void);
 Uint64 (*SDL_GetPerformanceCounter_real)(void);
 
-
+typedef int SDL_TimerID;
+typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
+SDL_TimerID (*SDL_AddTimer_real)(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+SDL_bool (*SDL_RemoveTimer_real)(SDL_TimerID id);
 
 void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
 void (*glGenTextures_real)(int n, unsigned int* tex);

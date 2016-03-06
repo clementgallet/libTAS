@@ -1,5 +1,6 @@
 #include "savestates_criu.h"
 
+#ifdef CRIU
 void init_criu(int pid)
 {
     criu_init_opts();
@@ -21,4 +22,5 @@ int restore_criu(void)
 {
     return criu_restore();
 }
+#endif
 

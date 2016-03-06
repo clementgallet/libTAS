@@ -3,7 +3,7 @@
 /* Time that will be passed to the game 
  * Increments exactly by 1/fps after each screen draw
  */
-struct timeval deterministic_time = { 1, 0 };
+struct timeval deterministic_time = { 0, 0 };
 
 /* Real time structure, used to run at a given fps */
 struct timespec real_time = { 0, 0 };
@@ -195,5 +195,17 @@ void sleepEndFrame(void)
         counter += 1000000ULL * (numcall/50); // Add 1 ms to the counter
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call, returning %" PRIu64 ".", __func__, counter);
     return counter;
+}
+
+SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
+{
+    debuglog(LCF_TIMEFUNC | LCF_SDL, "Add SDL Timer with call after %d ms", interval);
+    return SDL_AddTimer_real(interval, callback, param);
+}
+
+SDL_bool SDL_RemoveTimer(SDL_TimerID id)
+{
+    debuglog(LCF_TIMEFUNC | LCF_SDL, "Remove SDL Timer.");
+    return SDL_RemoveTimer_real(id);
 }
 

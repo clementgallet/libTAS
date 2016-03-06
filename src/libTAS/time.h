@@ -43,6 +43,8 @@ int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec
 /* Override */ Uint32 SDL_GetTicks(void);
 /* Override */ Uint64 SDL_GetPerformanceFrequency(void);
 /* Override */ Uint64 SDL_GetPerformanceCounter(void);
+SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
 
 #endif

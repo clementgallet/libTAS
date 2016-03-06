@@ -13,7 +13,9 @@
 #include "keymapping.h"
 #include "recording.h"
 //#include "savestates.h"
+#ifdef CRIU
 #include "savestates_criu.h"
+#endif
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -162,7 +164,9 @@ int main(int argc, char **argv)
 
     default_hotkeys(hotkeys);
 
+#ifdef CRIU
     init_criu((int)game_pid);
+#endif
 
     if (tasflags.recording >= 0){
         fp = openRecording(moviefile, tasflags.recording);
@@ -269,13 +273,17 @@ int main(int argc, char **argv)
                         //if (didSave)
                         //    deallocState(&savestate);
                         //saveState(game_pid, &savestate);
+#ifdef CRIU
                         dump_criu();
+#endif
                         didSave = 1;
                     }
                     if (ks == hotkeys[HOTKEY_LOADSTATE]){
+#ifdef CRIU
                         if (didSave)
                             //loadState(game_pid, &savestate);
                             restore_criu();
+#endif
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */

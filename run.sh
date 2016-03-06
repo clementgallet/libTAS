@@ -2,7 +2,7 @@
 
 Usage ()
 {
-    echo "usage: run.sh [-s|--sdl sdlpath] gameexecutable"
+    echo "usage: run.sh [-s|--sdl sdlpath] gameexecutable [game options]"
 }
 
 gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
@@ -22,16 +22,25 @@ do
                     exit
                     ;;
     *)              gamepath=$1
+                    shift
+                    break
                     ;;
     esac
     shift
 done
 
 # Some games do not work if it was not launched inside its folder
-
 cd ${gamepath%/*}
-LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} &
+
+# Launching the game with the libTAS library as LD_PRELOAD
+LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} "$@" &
 cd - > /dev/null
 sleep 1
-./bin/linTAS -s $(pwd)/$sdlpath
+
+# Get the absolute path for the SDL library
+case $sdlpath in
+    /*) absolute=$sdlpath;;
+     *) absolute=$PWD/$sdlpath;;
+esac
+./bin/linTAS -s $absolute
 
