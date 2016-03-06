@@ -1,12 +1,7 @@
 #ifndef INPUTS_H_INCL
 #define INPUTS_H_INCL
 
-#include <X11/keysym.h>
 #include "../external/SDL.h"
-#include "keyboard_helper.h"
-#include "logging.h"
-#include "hook.h"
-#include "../shared/inputs.h"
 
 extern struct AllInputs ai;
 extern struct AllInputs old_ai;

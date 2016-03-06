@@ -2,6 +2,8 @@
 
 #ifdef LIBTAS_HUD
 
+#include "../external/gl.h"
+
 /* Render a text on top of the game window 
  * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
  */

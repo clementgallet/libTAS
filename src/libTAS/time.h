@@ -3,10 +3,8 @@
 
 #include <time.h>
 #include <unistd.h>
-#include "logging.h"
+#include "../external/SDL.h"
 #include "hook.h"
-#include "frame.h"
-#include "threads.h"
 
 /* Monotonic system-wide clock.  */
 //#   define CLOCK_MONOTONIC      1

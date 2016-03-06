@@ -1,4 +1,31 @@
 #include "hook.h"
+#include "logging.h"
+
+#define __USE_GNU
+#include <dlfcn.h>
+
+#define HOOK_FUNC(FUNC,SOURCE) *(void**)&FUNC##_real = dlsym(SOURCE, #FUNC);\
+    if (!FUNC##_real)\
+    {\
+        debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
+        FUNC##_real = NULL;\
+    }
+
+#define HOOK_GLFUNC(FUNC) HOOK_FUNC(FUNC,RTLD_NEXT)\
+    if (!FUNC##_real)\
+    {\
+        if (!SDL_GL_GetProcAddress_real) {\
+            debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "SDL_GL_GetProcAddress is not available. Could not load " #FUNC ".");\
+            FUNC##_real = NULL;\
+        }\
+        else {\
+            FUNC##_real = SDL_GL_GetProcAddress_real(#FUNC);\
+            if (!FUNC##_real)\
+            {\
+                debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "Could not load function " #FUNC ".");\
+            }\
+        }\
+    }
 
 int hook_functions(void* SDL_handle) {
 

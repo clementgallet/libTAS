@@ -1,4 +1,10 @@
 #include "inputs.h"
+#include "keyboard_helper.h"
+#include "logging.h"
+#include "hook.h"
+#include "../shared/inputs.h"
+#include <X11/keysym.h>
+#include <stdlib.h>
 
 struct AllInputs ai;
 struct AllInputs old_ai;

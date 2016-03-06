@@ -1,4 +1,10 @@
 #include "socket.h"
+#include <sys/socket.h>
+#include <stdlib.h>
+#include "../shared/lcf.h"
+#include <unistd.h>
+#include "logging.h"
+#include <sys/un.h>
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 

@@ -1,4 +1,13 @@
 #include "frame.h"
+#include "hook.h"
+#include "../shared/tasflags.h"
+#include "../shared/inputs.h"
+#include "../shared/messages.h"
+#include "inputs.h"
+#include "socket.h"
+#include "time.h"
+#include "libTAS.h"
+#include "logging.h"
 
 void enterFrameBoundary(void)
 {

@@ -1,14 +1,7 @@
 #ifndef LOGGING_H_INCL
 #define LOGGING_H_INCL
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include "../shared/tasflags.h"
 #include "../shared/lcf.h"
-#include "hook.h"
-#include "threads.h"
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c

@@ -1,6 +1,15 @@
 #include "dumpvideo.h"
-
 #ifdef LIBTAS_DUMP
+
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/opt.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+#include "hook.h"
+#include "logging.h"
+
+#define RNDTO2(X) ( (X) & 0xFFFFFFFE )
 
 FILE *f;
 char* filename = NULL;

@@ -1,4 +1,11 @@
 #include "logging.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include "../shared/tasflags.h"
+#include "hook.h"
+#include "threads.h"
 
 
 void debuglog(LogCategoryFlag lcf, const char* fmt, ...)

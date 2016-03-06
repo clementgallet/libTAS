@@ -2,8 +2,6 @@
 #define THREADS_H_INCL
 
 #include "hook.h"
-#include <errno.h>
-#include <unistd.h>
 
 typedef int (*SDL_ThreadFunction) (void *data);
 typedef void SDL_Thread; // For now

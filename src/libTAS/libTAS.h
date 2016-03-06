@@ -1,34 +1,7 @@
 #ifndef LIBTAS_H_INCLUDED
 #define LIBTAS_H_INCLUDED
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/un.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/errno.h>
-#include <sys/syscall.h>
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
-
 #include "../external/SDL.h"
-#include "../external/SDL_ttf.h"
-#include "keyboard_helper.h"
-#include "hook.h"
-#include "../shared/messages.h"
-#include "../shared/inputs.h"
-#ifdef LIBTAS_DUMP
-#include "dumpvideo.h"
-#endif
-#include "time.h"
-#include "inputs.h"
-#include "opengl.h"
-#include "frame.h"
-#include "socket.h"
-#include "threads.h"
 
 #define MAGIC_NUMBER 42
 

@@ -1,4 +1,7 @@
 #include "keyboard_helper.h"
+#include <string.h>
+#include <X11/XKBlib.h>
+#include <X11/Xlib.h>
 
 /* The translation tables from an X11 keysym to a SDL keysym */
 static SDL_Keycode MISC_keymap[256];

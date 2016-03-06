@@ -1,5 +1,7 @@
 #include "threads.h"
 #include "logging.h"
+#include <errno.h>
+#include <unistd.h>
 
 pthread_t mainThread = 0;
 

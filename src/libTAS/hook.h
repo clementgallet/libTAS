@@ -1,36 +1,9 @@
 #ifndef HOOKSDL_H_INCLUDED
 #define HOOKSDL_H_INCLUDED
 
-#define _GNU_SOURCE
-#include <dlfcn.h>
-#include <stdio.h>
 #include "../external/SDL.h"
 #include "../external/gl.h"
-#include "logging.h"
 
-
-#define HOOK_FUNC(FUNC,SOURCE) *(void**)&FUNC##_real = dlsym(SOURCE, #FUNC);\
-    if (!FUNC##_real)\
-    {\
-        debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
-        FUNC##_real = NULL;\
-    }
-
-#define HOOK_GLFUNC(FUNC) HOOK_FUNC(FUNC,RTLD_NEXT)\
-    if (!FUNC##_real)\
-    {\
-        if (!SDL_GL_GetProcAddress_real) {\
-            debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "SDL_GL_GetProcAddress is not available. Could not load " #FUNC ".");\
-            FUNC##_real = NULL;\
-        }\
-        else {\
-            FUNC##_real = SDL_GL_GetProcAddress_real(#FUNC);\
-            if (!FUNC##_real)\
-            {\
-                debuglog(LCF_HOOK | LCF_OGL | LCF_SDL | LCF_ERROR, "Could not load function " #FUNC ".");\
-            }\
-        }\
-    }
 
 #if (!defined __timespec_defined)
 # define __timespec_defined 1

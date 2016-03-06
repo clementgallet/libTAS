@@ -1,4 +1,7 @@
 #include "time.h"
+#include "logging.h"
+#include "frame.h"
+#include "threads.h"
 
 /* Time that will be passed to the game 
  * Increments exactly by 1/fps after each screen draw
@@ -124,7 +127,7 @@ void sleepEndFrame(void)
     debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u ms.", __func__, sleep);
     if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
         enterFrameBoundary();
-    if (!isMainThread)
+    if (!isMainThread())
         /* If another thread is sleeping, it may be because he waits to have a job
          * from the main thread. Let's give it access to the sleep */
         usleep_real(sleep*1000);
