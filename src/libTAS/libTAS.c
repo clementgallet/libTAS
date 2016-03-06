@@ -125,6 +125,30 @@ void __attribute__((destructor)) term(void)
     debuglog(LCF_SOCKET, "Exiting.");
 }
 
+/* SDL 1.2 */
+/* Override */ void SDL_GL_SwapBuffers(void)
+{
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+    SDL_GL_SwapBuffers_real();
+
+    /* TODO: Fill here same as SDL_GL_SwapWindow */
+
+    /* SDL 1.2 does only have one window,
+     * thus it does not provide any access to window identifiers.
+     * We need to pass a window id to linTAS so that it can capture inputs.
+     * In our case, let's just pass a dummy value indicating that
+     * we could not get access to it.
+     * It will have to guess it, probably by getting the active window
+     */
+    if (!gw_sent) {
+        Window w = 42; // TODO: No magic number
+        sendMessage(MSGB_WINDOW_ID);
+        sendData(&w, sizeof(Window));
+        gw_sent = 1;
+        debuglog(LCF_SDL, "Send dummy X11 window id.");
+    }
+    enterFrameBoundary();
+}
 
 /* Override */ void SDL_GL_SwapWindow(void* window)
 {
@@ -260,6 +284,8 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
     if (flags & SDL_INIT_VIDEO)
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
+    if (flags & SDL_INIT_CDROM)
+        debuglog(LCF_SDL, "    SDL_CDROM enabled.");
     if (flags & SDL_INIT_JOYSTICK)
         debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
     if (flags & SDL_INIT_HAPTIC)
@@ -280,6 +306,8 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
     if (flags & SDL_INIT_VIDEO)
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
+    if (flags & SDL_INIT_CDROM)
+        debuglog(LCF_SDL, "    SDL_CDROM enabled.");
     if (flags & SDL_INIT_JOYSTICK)
         debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
     if (flags & SDL_INIT_HAPTIC)
@@ -300,6 +328,20 @@ void __attribute__((destructor)) term(void)
 #endif
     SDL_Quit_real();
 }
+
+/* SDL 1.2 */
+/* Override */ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
+{
+    debuglog(LCF_SDL, "%s call with size (%d,%d), bpp %d and flags 0x%x.", __func__, width, height, bpp, flags);
+
+    /* Disable fullscreen */
+    flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
+
+    if (flags & /*SDL_OPENGL*/ 0x00000002)
+        video_opengl = 1;
+    return SDL_SetVideoMode_real(width, height, bpp, flags);
+}
+
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {

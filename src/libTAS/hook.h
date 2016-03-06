@@ -131,6 +131,12 @@ void (*glTexParameteri_real)(int target, int pname, int param);
 void (*glGetIntegerv_real)( int pname, GLint* data);
 void (*glGetBooleanv_real)( int pname, GLboolean* data);
 
+/* SDL 1.2 specific functions */
+
+SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
+void (*SDL_GL_SwapBuffers_real)(void);
+SDL_version * (*SDL_Linked_Version_real)(void);
+
 int hook_functions(void* SDL_handle);
 int late_hook(void);
 

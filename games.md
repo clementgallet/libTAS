@@ -28,10 +28,14 @@
 ### FEZ
 
 - Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
-- Use SDL library but does not hook any SDL Init or anything...
+- Use SDL library but we couldn't hook any SDL function...
 
 ### Towerfall
 
 - Same as FEZ
 
+### Braid
+
+- Multiple version have been published with SDL 1.2 or SDL 2
+- It uses PeepEvents to look for SDL Events
 

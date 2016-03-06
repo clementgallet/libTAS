@@ -194,6 +194,12 @@ int main(int argc, char **argv)
 
         if (message == MSGB_WINDOW_ID) {
             recv(socket_fd, &gameWindow, sizeof(Window), 0);
+            if (gameWindow == 42) {
+                /* libTAS could not get the window id
+                 * Let's get the active window */
+                int revert;
+                XGetInputFocus(display, &gameWindow, &revert);
+            }
             XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask | FocusChangeMask);
             int iError = XGrabKeyboard(display, gameWindow, 0,
                     GrabModeAsync, GrabModeAsync, CurrentTime); 
@@ -238,6 +244,7 @@ int main(int argc, char **argv)
                 XNextEvent(display, &event);
 
                 if (event.type == FocusIn) {
+                    fprintf(stderr, "Grabbing window\n");
                     int iError = XGrabKeyboard(display, gameWindow, 0,
                             GrabModeAsync, GrabModeAsync, CurrentTime); 
                     if (iError != GrabSuccess && iError == AlreadyGrabbed) {
@@ -247,6 +254,7 @@ int main(int argc, char **argv)
                     }
                 }
                 if (event.type == FocusOut) {
+                    fprintf(stderr, "Ungrabbing window\n");
                     XUngrabKeyboard(display, CurrentTime);
                 }
                 if (event.type == KeyPress)

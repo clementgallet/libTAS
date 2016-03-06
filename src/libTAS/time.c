@@ -124,8 +124,10 @@ void sleepEndFrame(void)
     debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u ms.", __func__, sleep);
     if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
         enterFrameBoundary();
-    //else
-    //    usleep_real(sleep*1000);
+    if (!isMainThread)
+        /* If another thread is sleeping, it may be because he waits to have a job
+         * from the main thread. Let's give it access to the sleep */
+        usleep_real(sleep*1000);
 }
 
 /* Override */ int usleep(useconds_t usec)
@@ -197,13 +199,13 @@ void sleepEndFrame(void)
     return counter;
 }
 
-SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
+/* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL, "Add SDL Timer with call after %d ms", interval);
     return SDL_AddTimer_real(interval, callback, param);
 }
 
-SDL_bool SDL_RemoveTimer(SDL_TimerID id)
+/* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL, "Remove SDL Timer.");
     return SDL_RemoveTimer_real(id);

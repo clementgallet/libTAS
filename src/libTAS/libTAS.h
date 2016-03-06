@@ -49,4 +49,7 @@ void __attribute__((destructor)) term(void);
 /* Override */ int SDL_GL_SetSwapInterval(int interval);
 /* Override */ void SDL_DestroyWindow(void* window);
 
+/* Override */ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags);
+/* Override */ void SDL_GL_SwapBuffers(void);
+
 #endif // LIBTAS_H_INCLUDED
