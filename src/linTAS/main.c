@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 
         if (message == MSGB_WINDOW_ID) {
             recv(socket_fd, &gameWindow, sizeof(Window), 0);
-            XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask);
+            XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask | FocusChangeMask);
             int iError = XGrabKeyboard(display, gameWindow, 0,
                     GrabModeAsync, GrabModeAsync, CurrentTime); 
             if (iError != GrabSuccess && iError == AlreadyGrabbed) {
@@ -233,6 +233,18 @@ int main(int argc, char **argv)
 
                 XNextEvent(display, &event);
 
+                if (event.type == FocusIn) {
+                    int iError = XGrabKeyboard(display, gameWindow, 0,
+                            GrabModeAsync, GrabModeAsync, CurrentTime); 
+                    if (iError != GrabSuccess && iError == AlreadyGrabbed) {
+                        XUngrabPointer(display, CurrentTime);
+                        XFlush(display);
+                        fprintf(stderr, "Keyboard is already grabbed\n");    
+                    }
+                }
+                if (event.type == FocusOut) {
+                    XUngrabKeyboard(display, CurrentTime);
+                }
                 if (event.type == KeyPress)
                 {
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;

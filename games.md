@@ -25,3 +25,13 @@
 - Loading screen with threading at the beginning
 - Get access to the real time using SDL GetPerformanceCounter and some other means...
 
+### FEZ
+
+- Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
+- Use SDL library but does not hook any SDL Init or anything...
+
+### Towerfall
+
+- Same as FEZ
+
+
