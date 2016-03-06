@@ -8,7 +8,7 @@
 #include "../shared/tasflags.h"
 #include "../shared/lcf.h"
 #include "hook.h"
-#include "thread.h"
+#include "threads.h"
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c

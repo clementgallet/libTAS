@@ -124,24 +124,25 @@ void sleepEndFrame(void)
     debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u ms.", __func__, sleep);
     if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
         enterFrameBoundary();
-    else
-        usleep_real(sleep*1000);
+    //else
+    //    usleep_real(sleep*1000);
 }
 
 /* Override */ int usleep(useconds_t usec)
 {
     debuglog(LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
     /* FIXME: Advancing deterministic timer */
+    /*
     if (isMainThread()) {
         deterministic_time.tv_usec += usec;
         if (deterministic_time.tv_usec > 1000000) {
             deterministic_time.tv_usec -= 1000000;
             deterministic_time.tv_sec++;
         }
-    }
+    }*/
     //if (usec >= 10000 && usec <= 20000)
-    //return usleep_real(usec);
-    return 0;
+    return usleep_real(usec);
+    //return 0;
 }
 
 /* Override */ Uint32 SDL_GetTicks(void)
