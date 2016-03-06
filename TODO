@@ -7,14 +7,13 @@
 -- https://www.libsdl.org/projects/SDL_ttf/
 - Add config file for hotkeys and key remapping (libconfig?)
 - Deal with keyboard mapping and stuff
-- Process and filter SDL events
 - Add a memory watch/search module
 - Add dummy Steam API functions so that the game can be launched without it
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Add an interface (ncurses?)
 - Support mouse
-- Allow 32-bit or 64-bit lib compilation
-- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls)
+- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
+- Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 
 ## Partially done
 
@@ -33,6 +32,10 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Add key remapping
 -- Map KeyCode instead of KeySym
+- Process and filter SDL events
+-- Problem is: SDL1.2 and SDL2 Events have a different type...
+- Allow 32-bit or 64-bit lib compilation
+-- Make it easier using a single make command maybe...
 
 ## Done
 

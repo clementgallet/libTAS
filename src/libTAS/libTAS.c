@@ -11,6 +11,7 @@
 #include <sys/syscall.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <stdarg.h>
 
 #include "../external/SDL_ttf.h"
 #include "keyboard_helper.h"
@@ -373,207 +374,128 @@ void __attribute__((destructor)) term(void)
 }
 
 
-/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
+/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, ...)
 {
     debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
+
+    /* We need to use a function signature with variable arguments,
+     * because SDL 1.2 and SDL 2 provide a different function with the same name.
+     * SDL 1.2 is int SDL_PeepEvents(SDL_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
+     * SDL 2   is int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+     */
+
+    Uint32 mask;
+    Uint32 minType, maxType;
+
+    va_list argp;
+    va_start(argp, action);
+    if (SDLver == 1) {
+        mask = va_arg(argp, Uint32);
+    }
+    else if (SDLver == 2) {
+        minType = va_arg(argp, Uint32);
+        maxType = va_arg(argp, Uint32);
+    }
+    else {
+        debuglog(LCF_SDL | LCF_ERROR, "Calling SDL_PeepEvents with no known SDL version!");
+    }
+    va_end(argp);
+    
+    switch (action) {
+        case SDL_ADDEVENT:
+
+        case SDL_PEEKEVENT:
+
+        case SDL_GETEVENT:
+
+
+
+
+    }
+
     return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
 }
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    //return SDL_PollEvent_real(event);
     debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "%s call.", __func__);
 
-    int isone = SDL_PollEvent_real(event);
-    while (isone == 1){
-        /* TODO: Make a proper event filtering! */
-        switch(event->type) {
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving KEYUP/KEYDOWN event.");
-                break;
+}
 
-            case SDL_QUIT:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving QUIT event.");
-                return 1;
+/* 
+ * This helper function will return a number of events from the generated event queue.
+ * This event queue consists on the real SDL event queue with our own filter
+ * (e.g. removing real input events)
+ * and generated SDL events containing mostly inputs passed from linTAS.
+ *
+ * Because SDL has multiple ways of accessing the event queue, we made this function
+ * with two parameter indicating the number of events we want and if we need 
+ * to update the queue by removing the returned event, or keep it in the queue.
+ * 
+ * The function returns the number of events returned.
+ */
+int getSomeEvents(SDL_Event *events, int numevents, int update)
+{
+    /* First we fetch the events of the real SDL event queue */
+    int evi = 0;
 
-            case SDL_WINDOWEVENT:
-                switch (event->window.event) {
-                    case SDL_WINDOWEVENT_FOCUS_GAINED:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
-                        break;
-                    case SDL_WINDOWEVENT_FOCUS_LOST:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
-                        break;
-                    case SDL_WINDOWEVENT_CLOSE:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
-                        break;
-                    default:
-                        break;
-                }
-                return 1;
+    /*
+     * If we pull some events that does not fit the filtering,
+     * we must push them back
+     */
+    int pushi = 0;
+    SDL_Event pushback[100]; // TODO: should be variable size... I need c++
 
-            case SDL_SYSWMEVENT:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a system specific event.");
-                switch (event->syswm.msg->subsystem) {
-                    case SDL_SYSWM_UNKNOWN:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Unknown subsystem.");
-                        break;
-                    case SDL_SYSWM_WINDOWS:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Windows subsystem.");
-                        break;
-                    case SDL_SYSWM_X11:
-                        debuglog(LCF_SDL | LCF_EVENTS, "X subsystem.");
-                        debuglog(LCF_SDL | LCF_EVENTS, "Getting an X event of type %d", event->syswm.msg->msg.x11.event.type);
-                        break;
-                    case SDL_SYSWM_DIRECTFB:
-                        debuglog(LCF_SDL | LCF_EVENTS, "DirectFB subsystem.");
-                        break;
-                    case SDL_SYSWM_COCOA:
-                        debuglog(LCF_SDL | LCF_EVENTS, "OSX subsystem.");
-                        break;
-                    case SDL_SYSWM_UIKIT:
-                        debuglog(LCF_SDL | LCF_EVENTS, "iOS subsystem.");
-                        break;
-                    default:
-                        debuglog(LCF_SDL | LCF_EVENTS, "Another subsystem.");
-                        break;
-
-
-                }
-                return 1;
-
-            case SDL_TEXTEDITING:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text editing event.");
-                return 1;
-
-            case SDL_TEXTINPUT:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text input event.");
-                return 1;
-/*
-            case SDL_KEYMAPCHANGED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keymap change event.");
-                return 1;
-*/
-            case SDL_MOUSEMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse move event.");
-                return 1;
-
-            case SDL_MOUSEBUTTONDOWN:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse button press event.");
-                return 1;
-
-            case SDL_MOUSEBUTTONUP:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse button release event.");
-                return 1;
-
-            case SDL_MOUSEWHEEL:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a mouse wheel event.");
-                return 1;
-
-            case SDL_JOYAXISMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick axis motion event.");
-                return 1;
-
-            case SDL_JOYBALLMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick trackball event.");
-                return 1;
-
-            case SDL_JOYHATMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick hat position event.");
-                return 1;
-
-            case SDL_JOYBUTTONDOWN:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick button press event.");
-                return 1;
-
-            case SDL_JOYBUTTONUP:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick button release event.");
-                return 1;
-
-            case SDL_JOYDEVICEADDED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick connected event.");
-                return 1;
-
-            case SDL_JOYDEVICEREMOVED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a joystick disconnected event.");
-                return 1;
-
-            case SDL_CONTROLLERAXISMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller axis motion event.");
-                return 1;
-
-            case SDL_CONTROLLERBUTTONDOWN:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller button press event.");
-                return 1;
-
-            case SDL_CONTROLLERBUTTONUP:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller button release event.");
-                return 1;
-
-            case SDL_CONTROLLERDEVICEADDED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller connected event.");
-                return 1;
-
-            case SDL_CONTROLLERDEVICEREMOVED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller disconnected event.");
-                return 1;
-
-            case SDL_CONTROLLERDEVICEREMAPPED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a controller mapping update event.");
-                return 1;
-
-            case SDL_FINGERDOWN:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device touch event.");
-                return 1;
-
-            case SDL_FINGERUP:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device release event.");
-                return 1;
-
-            case SDL_FINGERMOTION:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an input device drag event.");
-                return 1;
-
-            case SDL_DOLLARGESTURE:
-            case SDL_DOLLARRECORD:
-            case SDL_MULTIGESTURE:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a gesture event.");
-                return 1;
-
-            case SDL_CLIPBOARDUPDATE:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a clipboard update event.");
-                return 1;
-
-            case SDL_DROPFILE:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a drag and drop event.");
-                return 1;
-/*
-            case SDL_AUDIODEVICEADDED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a new audio device event.");
-                return 1;
-
-            case SDL_AUDIODEVICEREMOVED:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a audio device removal event.");
-                return 1;
-*/
-            case SDL_RENDER_TARGETS_RESET:
-//            case SDL_RENDER_DEVICE_RESET:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a render event.");
-                return 1;
-
-            case SDL_USEREVENT:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving a user-specified event.");
-                return 1;
-
-            default:
-                debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: %d.", event->type);
-                return 1;
+    int isone = SDL_PollEvent_real(events[evi]);
+    while ((isone == 1) && (evi < numevents)) {
+        /* 
+         * If the event is of a type that we must not
+         * send to the game (e.g. input type),
+         * we move on to the next event.
+         */
+        if (filterEvent(events[evi])) {
+            isone = SDL_PollEvent_real(event[evi]);
+            continue;
         }
-        isone = SDL_PollEvent_real(event);
+
+        if (events[evi].type == 42) { // TODO: get the actual filter
+            /* 
+             * We found an event of a matching type,
+             * we keep it in the array
+             */
+            evi++;
+
+            /* If we must not update the queue, we save the event */
+            if (!update)
+                pushback[pushi++] = events[evi];
+        }
+        else {
+            /*
+             * If the event is not of a matching type, we save it 
+             */
+            pushback[pushi++] = events[evi];
+        }
+
+        isone = SDL_PollEvent_real(event[evi]);
     }
 
-    /* Important: You must call the following two functions in that order!
+    /* Now, we must push back the events into the event queue */
+    for (int i=pushi-1; i>=0; i--) {
+        int ret = SDL_PushEvent_real(&(pushback[i]));
+    }
+
+    if (evi == numevents) {
+        /* We got enough events using the real SDL event queue. Returning */
+        return evi;
+    }
+
+    /* 
+     * We did not get enough event with the event queue only.
+     * Now we return our custom events.
+     */
+
+    /*
+     * Important: You must call the following two functions in that order!
      * This is because the first one updates old_ai by removing elements
      * to match ai, and the second one updates old_ai by adding elements
      * to match ai. So if you call the second one before the first,

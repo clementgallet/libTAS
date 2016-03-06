@@ -14,6 +14,7 @@ struct timespec
   };
 #endif
 
+extern int SDLver;
 
 void (*SDL_Init_real)(unsigned int flags);
 int (*SDL_InitSubSystem_real)(Uint32 flags);

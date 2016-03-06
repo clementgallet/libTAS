@@ -27,6 +27,8 @@
         }\
     }
 
+int SDLver;
+
 int hook_functions(void* SDL_handle) {
 
     HOOK_FUNC(SDL_GetVersion, SDL_handle)
@@ -42,6 +44,9 @@ int hook_functions(void* SDL_handle) {
         verp = SDL_Linked_Version_real();
         ver = *verp;
     }
+
+    /* We save the version major in an extern variable because we may need it elsewhere */
+    SDLver = ver.major;
 
     if (ver.major == 0) {
         debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not get SDL version...");
