@@ -23,6 +23,7 @@ void(* SDL_GL_SwapWindow_real)(void* window);
 void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (* SDL_GetWindowID_real)(void*);
 int (*SDL_PollEvent_real)(SDL_Event*);
+void (*SDL_PumpEvents_real)(void);
 int (*SDL_PeepEvents_real)(SDL_Event*, int, SDL_eventaction, Uint32, Uint32);
 Uint32 (*SDL_GetTicks_real)(void);
 Uint32 (*SDL_GetWindowFlags_real)(void*);
@@ -110,6 +111,8 @@ void (*glGetBooleanv_real)( int pname, GLboolean* data);
 SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 SDL_version * (*SDL_Linked_Version_real)(void);
+int (*SDL1_PollEvent_real)(SDL1_Event*);
+int (*SDL1_PeepEvents_real)(SDL1_Event*, int, SDL_eventaction, Uint32);
 
 int hook_functions(void* SDL_handle);
 int late_hook(void);

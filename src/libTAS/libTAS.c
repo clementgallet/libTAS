@@ -29,7 +29,7 @@
 #include "socket.h"
 #include "threads.h"
 #include "logging.h"
-
+#include "events.h"
 
 /* Handle to the SDL dynamic library that is shipped with the game */
 void* SDL_handle;
@@ -403,23 +403,26 @@ void __attribute__((destructor)) term(void)
     
     switch (action) {
         case SDL_ADDEVENT:
-
+            if (SDLver == 2)
+                return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
         case SDL_PEEKEVENT:
+            if (SDLver == 2)
+                return getSDL2Events(events, numevents, 0, minType, maxType);
 
         case SDL_GETEVENT:
-
-
-
+            if (SDLver == 2)
+                return getSDL2Events(events, numevents, 1, minType, maxType);
 
     }
 
-    return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
+    return 0;
 }
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
     debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "%s call.", __func__);
 
+    return getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT);
 }
 
 /* 
@@ -434,63 +437,80 @@ void __attribute__((destructor)) term(void)
  * 
  * The function returns the number of events returned.
  */
-int getSomeEvents(SDL_Event *events, int numevents, int update)
+int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, Uint32 maxType)
 {
-    /* First we fetch the events of the real SDL event queue */
-    int evi = 0;
 
-    /*
-     * If we pull some events that does not fit the filtering,
-     * we must push them back
+    SDL_PumpEvents_real();
+
+
+    /* Total number of events pulled from SDL_PeepEvents call */
+    int peepnb = 0;
+
+
+    if (update)
+        peepnb = SDL_PeepEvents_real(events, numevents, SDL_GETEVENT, minType, maxType);
+    else
+        peepnb = SDL_PeepEvents_real(events, numevents, SDL_PEEKEVENT, minType, maxType);
+
+    /* 
+     * Among all the events we pulled, we have to filter some
+     * (e.g. input type).
      */
-    int pushi = 0;
-    SDL_Event pushback[100]; // TODO: should be variable size... I need c++
 
-    int isone = SDL_PollEvent_real(events[evi]);
-    while ((isone == 1) && (evi < numevents)) {
-        /* 
-         * If the event is of a type that we must not
-         * send to the game (e.g. input type),
-         * we move on to the next event.
-         */
-        if (filterEvent(events[evi])) {
-            isone = SDL_PollEvent_real(event[evi]);
-            continue;
-        }
-
-        if (events[evi].type == 42) { // TODO: get the actual filter
+    for (int peepi = 0; peepi < peepnb; peepi++) {
+        if (filterEvent(&(events[peepi]))) {
             /* 
-             * We found an event of a matching type,
-             * we keep it in the array
+             * We have to filter this event.
+             * For now, let's just attribute an unused type.
+             * We will remove all filtered events later.
              */
-            evi++;
+            events[peepi].type = SDL_FIRSTEVENT;
+        }
+    }
 
-            /* If we must not update the queue, we save the event */
-            if (!update)
-                pushback[pushi++] = events[evi];
+    /* Now we remove all filtered events from the array
+     *
+     * | e0 | e1 | e2 | -- | -- | e3 | e4 |
+     *                  pd        ps
+     *                   _
+     *                  /\________/
+     */
+
+    int ps, pd = 0;
+    while (ps < peepnb) {
+        if (events[pd].type != SDL_FIRSTEVENT) {
+            pd++;
+            if (pd > ps)
+                ps++;
+        }
+        else if (events[ps].type == SDL_FIRSTEVENT) {
+            ps++;
         }
         else {
-            /*
-             * If the event is not of a matching type, we save it 
-             */
-            pushback[pushi++] = events[evi];
+            /* We are in a position to copy event ps to event pd */
+            events[pd] = events[ps];
+            events[ps].type = SDL_FIRSTEVENT;
+            ps++;
+            pd++;
         }
-
-        isone = SDL_PollEvent_real(event[evi]);
     }
 
-    /* Now, we must push back the events into the event queue */
-    for (int i=pushi-1; i>=0; i--) {
-        int ret = SDL_PushEvent_real(&(pushback[i]));
-    }
+    /* We update the total number of saved events */
+    peepnb = pd;
 
-    if (evi == numevents) {
-        /* We got enough events using the real SDL event queue. Returning */
-        return evi;
+    /* 
+     * TODO: Actually because of filtered events, we should make
+     * multiple passes to PeepEvents if we did not get the right number,
+     * but it gets complicated.
+     */
+
+    if (peepnb == numevents) {
+        /* We got the right number of events from the real event queue */
+        return peepnb;
     }
 
     /* 
-     * We did not get enough event with the event queue only.
+     * We did not get enough events with the event queue only.
      * Now we return our custom events.
      */
 
@@ -501,18 +521,36 @@ int getSomeEvents(SDL_Event *events, int numevents, int update)
      * to match ai. So if you call the second one before the first,
      * the keyboard array in old_ai can overflow.
      */
-    int getEvent = generateKeyUpEvent(event, gameWindow);
-    if (getEvent)
-        return 1;
 
-    getEvent = generateKeyDownEvent(event, gameWindow);
-    if (getEvent)
-        return 1;
+    /* Getting KeyUp events */
+    if ((SDL_KEYUP >= minType) && (SDL_KEYUP <= maxType))
+        peepnb += generateKeyUpEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
 
-    getEvent = generateControllerEvent(event);
-    if (getEvent)
-        return 1;
+    if (peepnb == numevents) return peepnb;
 
-    return 0;
+    if ((SDL_KEYDOWN >= minType) && (SDL_KEYDOWN <= maxType))
+
+        /* We must add this failsafe concerning the above comment.
+         * If we must update SDL_KEYDOWN but did not update SDL_KEYUP,
+         * this is bad. So we must update SDL_KEYUP events
+         * and discard the result.
+         */
+
+        if (update && ((SDL_KEYUP < minType) || (SDL_KEYUP > maxType)))
+            /* Update KEYUP events */
+            generateKeyUpEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+
+    peepnb += generateKeyDownEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+
+    if (peepnb == numevents) return peepnb;
+
+
+    if ((SDL_CONTROLLERAXISMOTION >= minType) && (SDL_CONTROLLERAXISMOTION <= maxType))
+        /* TODO: Split the function into functions for each event type,
+         * or pass the event filters to the function
+         */
+        peepnb += generateControllerEvent(events + peepnb*sizeof(SDL_Event), numevents - peepnb, update);
+
+    return peepnb;
 }
 

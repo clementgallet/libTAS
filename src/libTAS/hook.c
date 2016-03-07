@@ -4,12 +4,14 @@
 #define __USE_GNU
 #include <dlfcn.h>
 
-#define HOOK_FUNC(FUNC,SOURCE) *(void**)&FUNC##_real = dlsym(SOURCE, #FUNC);\
-    if (!FUNC##_real)\
+#define HOOK_FUNC_TARGET(FUNC,SOURCE,TARGET) *(void**)&TARGET = dlsym(SOURCE, #FUNC);\
+    if (!TARGET)\
     {\
         debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
-        FUNC##_real = NULL;\
+        TARGET = NULL;\
     }
+
+#define HOOK_FUNC(FUNC,SOURCE) HOOK_FUNC_TARGET(FUNC,SOURCE,FUNC##_real)
 
 #define HOOK_GLFUNC(FUNC) HOOK_FUNC(FUNC,RTLD_NEXT)\
     if (!FUNC##_real)\
@@ -57,28 +59,32 @@ int hook_functions(void* SDL_handle) {
         /* Hooking SDL 1.2 specific functions */
         HOOK_FUNC(SDL_GL_SwapBuffers, SDL_handle)
         HOOK_FUNC(SDL_SetVideoMode, SDL_handle)
+        /* These two functions have a different signature than the SDL2 version */
+        HOOK_FUNC_TARGET(SDL_PollEvent, SDL_handle, SDL1_PollEvent_real)
+        HOOK_FUNC_TARGET(SDL_PeepEvents, SDL_handle, SDL1_PeepEvents_real)
     }
     else if (ver.major == 2) {
         debuglog(LCF_SDL | LCF_HOOK, "Detected SDL 2 lib (%d.%d.%d).", ver.major, ver.minor, ver.patch);
         /* Hooking SDL 2 specific functions */
         HOOK_FUNC(SDL_GL_SwapWindow, SDL_handle)
-        HOOK_FUNC(SDL_CreateWindow, SDL_handle)
-        HOOK_FUNC(SDL_DestroyWindow, SDL_handle)
-        HOOK_FUNC(SDL_GetWindowID, SDL_handle)
-        HOOK_FUNC(SDL_GetWindowFlags, SDL_handle)
-    HOOK_FUNC(SDL_GL_SetSwapInterval, SDL_handle)
-    HOOK_FUNC(SDL_GL_GetDrawableSize, SDL_handle)
-    HOOK_FUNC(SDL_GetWindowSurface, SDL_handle)
-    HOOK_FUNC(SDL_GetWindowWMInfo, SDL_handle)
-    HOOK_FUNC(SDL_GetPerformanceFrequency, SDL_handle)
-    HOOK_FUNC(SDL_GetPerformanceCounter, SDL_handle)
+            HOOK_FUNC(SDL_CreateWindow, SDL_handle)
+            HOOK_FUNC(SDL_DestroyWindow, SDL_handle)
+            HOOK_FUNC(SDL_GetWindowID, SDL_handle)
+            HOOK_FUNC(SDL_GetWindowFlags, SDL_handle)
+            HOOK_FUNC(SDL_GL_SetSwapInterval, SDL_handle)
+            HOOK_FUNC(SDL_GL_GetDrawableSize, SDL_handle)
+            HOOK_FUNC(SDL_GetWindowSurface, SDL_handle)
+            HOOK_FUNC(SDL_GetWindowWMInfo, SDL_handle)
+            HOOK_FUNC(SDL_GetPerformanceFrequency, SDL_handle)
+            HOOK_FUNC(SDL_GetPerformanceCounter, SDL_handle)
+            HOOK_FUNC(SDL_PollEvent, SDL_handle)
+            HOOK_FUNC(SDL_PeepEvents, SDL_handle)
     }
 
+    HOOK_FUNC(SDL_PumpEvents, SDL_handle)
     HOOK_FUNC(SDL_Init, SDL_handle)
     HOOK_FUNC(SDL_InitSubSystem, SDL_handle)
     HOOK_FUNC(SDL_Quit, SDL_handle)
-    HOOK_FUNC(SDL_PollEvent, SDL_handle)
-    HOOK_FUNC(SDL_PeepEvents, SDL_handle)
     HOOK_FUNC(SDL_GetTicks, SDL_handle)
     HOOK_FUNC(usleep, RTLD_NEXT)
     HOOK_FUNC(alcGetString, RTLD_NEXT)

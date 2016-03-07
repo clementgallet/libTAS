@@ -26,9 +26,15 @@ int controller_events = 1;
     return SDL_keyboard;
 }
 
-/* Generate released keyboard input events */
-int generateKeyUpEvent(SDL_Event *event, void* gameWindow)
+/* Generate released keyboard input events
+ * The number of returned events is at most num,
+ * and we indicate if we want to update the input struct so that
+ * the events won't be returned again 
+ */
+
+int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update)
 {
+    int evi = 0;
     int i, j;
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
@@ -42,28 +48,36 @@ int generateKeyUpEvent(SDL_Event *event, void* gameWindow)
         }
         if (j == 16) {
             /* Key was released. Generate event */
-            event->type = SDL_KEYUP;
-            event->key.state = SDL_RELEASED;
-            event->key.windowID = SDL_GetWindowID_real(gameWindow);
-            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+            events[evi].type = SDL_KEYUP;
+            events[evi].key.state = SDL_RELEASED;
+            events[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+            events[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
 
             SDL_Keysym keysym;
             xkeysymToSDL(&keysym, old_ai.keyboard[i]);
-            event->key.keysym = keysym;
+            events[evi].key.keysym = keysym;
 
-            /* Update old keyboard state so that this event won't trigger inifinitely */
-            old_ai.keyboard[i] = XK_VoidSymbol;
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", event->key.keysym.sym);
-            return 1;
+            if (update) {
+                /* Update old keyboard state so that this event won't trigger inifinitely */
+                old_ai.keyboard[i] = XK_VoidSymbol;
+            }
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events[evi].key.keysym.sym);
+            evi++;
+
+            /* If we reached the asked number of events, returning */
+            if (evi == num)
+                return evi;
 
         }
     }
-    return 0;
+    /* We did not reached the asked number of events, returning the number */
+    return evi;
 }
 
 /* Generate pressed keyboard input events */
-int generateKeyDownEvent(SDL_Event *event, void* gameWindow)
+int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int update)
 {
+    int evi = 0;
     int i,j,k;
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
@@ -77,33 +91,44 @@ int generateKeyDownEvent(SDL_Event *event, void* gameWindow)
         }
         if (j == 16) {
             /* Key was pressed. Generate event */
-            event->type = SDL_KEYDOWN;
-            event->key.state = SDL_PRESSED;
-            event->key.windowID = SDL_GetWindowID_real(gameWindow);
-            event->key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+            events[evi].type = SDL_KEYDOWN;
+            events[evi].key.state = SDL_PRESSED;
+            events[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+            events[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
 
             SDL_Keysym keysym;
             xkeysymToSDL(&keysym, ai.keyboard[i]);
-            event->key.keysym = keysym;
+            events[evi].key.keysym = keysym;
 
-            /* Update old keyboard state so that this event won't trigger inifinitely */
-            for (k=0; k<16; k++)
-                if (old_ai.keyboard[k] == XK_VoidSymbol) {
-                    /* We found an empty space to put our key*/
-                    old_ai.keyboard[k] = ai.keyboard[i];
-                    break;
-                }
+            if (update) {
+                /* Update old keyboard state so that this event won't trigger inifinitely */
+                for (k=0; k<16; k++)
+                    if (old_ai.keyboard[k] == XK_VoidSymbol) {
+                        /* We found an empty space to put our key*/
+                        old_ai.keyboard[k] = ai.keyboard[i];
+                        break;
+                    }
+            }
 
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", event->key.keysym.sym);
-            return 1;
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events[evi].key.keysym.sym);
+            evi++;
+
+            /* Returning if we reached the asked number of events */
+            if (evi == num)
+                return evi;
 
         }
     }
-    return 0;
+
+    /* Returning the number of generated events */
+    return evi;
 }
 
-int generateControllerEvent(SDL_Event* event)
+/* Generate SDL2 GameController events */
+
+int generateControllerEvent(SDL_Event* events, int num, int update)
 {
+    int evi = 0;
     if (!controller_events)
         return 0;
     int ji = 0;
@@ -117,17 +142,23 @@ int generateControllerEvent(SDL_Event* event)
                 /* We got a change in a controller axis value */
 
                 /* Fill the event structure */
-                event->type = SDL_CONTROLLERAXISMOTION;
-                event->caxis.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
-                event->caxis.which = joyid[ji];
-                event->caxis.axis = axis;
-                event->caxis.value = ai.controller_axes[ji][axis];
+                events[evi].type = SDL_CONTROLLERAXISMOTION;
+                events[evi].caxis.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
+                events[evi].caxis.which = joyid[ji];
+                events[evi].caxis.axis = axis;
+                events[evi].caxis.value = ai.controller_axes[ji][axis];
 
-                /* Upload the old AllInput struct */
-                old_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+                if (update) {
+                    /* Upload the old AllInput struct */
+                    old_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+                }
 
-                /* Return the event */
-                return 1;
+                evi++;
+
+                if (evi == num) {
+                    /* Return the number of events */
+                    return evi;
+                }
             }
         }
 
@@ -142,29 +173,32 @@ int generateControllerEvent(SDL_Event* event)
 
                 /* Fill the event structure */
                 if ((buttons >> bi) & 0x1) {
-                    event->type = SDL_CONTROLLERBUTTONDOWN;
-                    event->cbutton.state = SDL_PRESSED;
+                    events[evi].type = SDL_CONTROLLERBUTTONDOWN;
+                    events[evi].cbutton.state = SDL_PRESSED;
                 }
                 else {
-                    event->type = SDL_CONTROLLERBUTTONUP;
-                    event->cbutton.state = SDL_RELEASED;
+                    events[evi].type = SDL_CONTROLLERBUTTONUP;
+                    events[evi].cbutton.state = SDL_RELEASED;
                 }
-                event->cbutton.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
-                event->cbutton.which = joyid[ji];
-                event->cbutton.button = bi;
+                events[evi].cbutton.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
+                events[evi].cbutton.which = joyid[ji];
+                events[evi].cbutton.button = bi;
 
-                /* Upload the old AllInput struct */
-                old_ai.controller_buttons[ji] ^= (1 << bi);
+                if (update) {
+                    /* Upload the old AllInput struct */
+                    old_ai.controller_buttons[ji] ^= (1 << bi);
+                }
 
-                /* Return the event */
-                return 1;
+                if (evi == num) {
+                    /* Return the number of events */
+                    return evi;
+                }
             }
         }
     }
 
-    /* No controller event generated */
-    return 0;
-
+    /* We did not reached the asked number of events, returning the number */
+    return evi;
 }
 
 /**

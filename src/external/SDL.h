@@ -1468,4 +1468,211 @@ typedef enum
 
 
 
+
+/*** SDL 1.2 event structures ***/
+
+/** Event enumerations */
+typedef enum {
+       SDL1_NOEVENT = 0,			/**< Unused (do not remove) */
+       SDL1_ACTIVEEVENT,			/**< Application loses/gains visibility */
+       SDL1_KEYDOWN,			/**< Keys pressed */
+       SDL1_KEYUP,			/**< Keys released */
+       SDL1_MOUSEMOTION,			/**< Mouse moved */
+       SDL1_MOUSEBUTTONDOWN,		/**< Mouse button pressed */
+       SDL1_MOUSEBUTTONUP,		/**< Mouse button released */
+       SDL1_JOYAXISMOTION,		/**< Joystick axis motion */
+       SDL1_JOYBALLMOTION,		/**< Joystick trackball motion */
+       SDL1_JOYHATMOTION,		/**< Joystick hat position change */
+       SDL1_JOYBUTTONDOWN,		/**< Joystick button pressed */
+       SDL1_JOYBUTTONUP,			/**< Joystick button released */
+       SDL1_QUIT,			/**< User-requested quit */
+       SDL1_SYSWMEVENT,			/**< System specific event */
+       SDL1_EVENT_RESERVEDA,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVEDB,		/**< Reserved for future use.. */
+       SDL1_VIDEORESIZE,			/**< User resized video mode */
+       SDL1_VIDEOEXPOSE,			/**< Screen needs to be redrawn */
+       SDL1_EVENT_RESERVED2,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVED3,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVED4,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVED5,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVED6,		/**< Reserved for future use.. */
+       SDL1_EVENT_RESERVED7,		/**< Reserved for future use.. */
+       /** Events SDL_USEREVENT through SDL_MAXEVENTS-1 are for your use */
+       SDL1_USEREVENT = 24,
+       /** This last event is only for bounding internal arrays
+	*  It is the number of bits in the event mask datatype -- Uint32
+        */
+       SDL1_NUMEVENTS = 32
+} SDL1_EventType;
+
+/** @name Predefined event masks */
+/*@{*/
+#define SDL1_EVENTMASK(X)	(1<<(X))
+typedef enum {
+	SDL1_ACTIVEEVENTMASK	= SDL1_EVENTMASK(SDL1_ACTIVEEVENT),
+	SDL1_KEYDOWNMASK		= SDL1_EVENTMASK(SDL1_KEYDOWN),
+	SDL1_KEYUPMASK	        = SDL1_EVENTMASK(SDL1_KEYUP),
+	SDL1_KEYEVENTMASK	    = SDL1_EVENTMASK(SDL1_KEYDOWN)|
+	                          SDL1_EVENTMASK(SDL1_KEYUP),
+	SDL1_MOUSEMOTIONMASK	= SDL1_EVENTMASK(SDL1_MOUSEMOTION),
+	SDL1_MOUSEBUTTONDOWNMASK	= SDL1_EVENTMASK(SDL1_MOUSEBUTTONDOWN),
+	SDL1_MOUSEBUTTONUPMASK	= SDL1_EVENTMASK(SDL1_MOUSEBUTTONUP),
+	SDL1_MOUSEEVENTMASK	= SDL1_EVENTMASK(SDL1_MOUSEMOTION)|
+	                          SDL1_EVENTMASK(SDL1_MOUSEBUTTONDOWN)|
+	                          SDL1_EVENTMASK(SDL1_MOUSEBUTTONUP),
+	SDL1_JOYAXISMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYAXISMOTION),
+	SDL1_JOYBALLMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYBALLMOTION),
+	SDL1_JOYHATMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYHATMOTION),
+	SDL1_JOYBUTTONDOWNMASK	= SDL1_EVENTMASK(SDL1_JOYBUTTONDOWN),
+	SDL1_JOYBUTTONUPMASK	= SDL1_EVENTMASK(SDL1_JOYBUTTONUP),
+	SDL1_JOYEVENTMASK	= SDL1_EVENTMASK(SDL1_JOYAXISMOTION)|
+	                          SDL1_EVENTMASK(SDL1_JOYBALLMOTION)|
+	                          SDL1_EVENTMASK(SDL1_JOYHATMOTION)|
+	                          SDL1_EVENTMASK(SDL1_JOYBUTTONDOWN)|
+	                          SDL1_EVENTMASK(SDL1_JOYBUTTONUP),
+	SDL1_VIDEORESIZEMASK	= SDL1_EVENTMASK(SDL1_VIDEORESIZE),
+	SDL1_VIDEOEXPOSEMASK	= SDL1_EVENTMASK(SDL1_VIDEOEXPOSE),
+	SDL1_QUITMASK		= SDL1_EVENTMASK(SDL1_QUIT),
+	SDL1_SYSWMEVENTMASK	= SDL1_EVENTMASK(SDL1_SYSWMEVENT)
+} SDL1_EventMask ;
+#define SDL1_ALLEVENTS		0xFFFFFFFF
+/*@}*/
+
+/** Application visibility event structure */
+typedef struct SDL1_ActiveEvent {
+	Uint8 type;	/**< SDL_ACTIVEEVENT */
+	Uint8 gain;	/**< Whether given states were gained or lost (1/0) */
+	Uint8 state;	/**< A mask of the focus states */
+} SDL1_ActiveEvent;
+
+typedef int SDLKey;
+typedef int SDLMod;
+
+typedef struct SDL_keysym {
+    Uint8 scancode;         /**< hardware specific scancode */
+    SDLKey sym;         /**< SDL virtual keysym */
+    SDLMod mod;         /**< current key modifiers */
+    Uint16 unicode;         /**< translated character */
+} SDL_keysym;
+
+/** Keyboard event structure */
+typedef struct SDL1_KeyboardEvent {
+	Uint8 type;	/**< SDL_KEYDOWN or SDL_KEYUP */
+	Uint8 which;	/**< The keyboard device index */
+	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
+	SDL_keysym keysym;
+} SDL1_KeyboardEvent;
+
+/** Mouse motion event structure */
+typedef struct SDL1_MouseMotionEvent {
+	Uint8 type;	/**< SDL_MOUSEMOTION */
+	Uint8 which;	/**< The mouse device index */
+	Uint8 state;	/**< The current button state */
+	Uint16 x, y;	/**< The X/Y coordinates of the mouse */
+	Sint16 xrel;	/**< The relative motion in the X direction */
+	Sint16 yrel;	/**< The relative motion in the Y direction */
+} SDL1_MouseMotionEvent;
+
+/** Mouse button event structure */
+typedef struct SDL1_MouseButtonEvent {
+	Uint8 type;	/**< SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP */
+	Uint8 which;	/**< The mouse device index */
+	Uint8 button;	/**< The mouse button index */
+	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
+	Uint16 x, y;	/**< The X/Y coordinates of the mouse at press time */
+} SDL1_MouseButtonEvent;
+
+/** Joystick axis motion event structure */
+typedef struct SDL1_JoyAxisEvent {
+	Uint8 type;	/**< SDL_JOYAXISMOTION */
+	Uint8 which;	/**< The joystick device index */
+	Uint8 axis;	/**< The joystick axis index */
+	Sint16 value;	/**< The axis value (range: -32768 to 32767) */
+} SDL1_JoyAxisEvent;
+
+/** Joystick trackball motion event structure */
+typedef struct SDL1_JoyBallEvent {
+	Uint8 type;	/**< SDL_JOYBALLMOTION */
+	Uint8 which;	/**< The joystick device index */
+	Uint8 ball;	/**< The joystick trackball index */
+	Sint16 xrel;	/**< The relative motion in the X direction */
+	Sint16 yrel;	/**< The relative motion in the Y direction */
+} SDL1_JoyBallEvent;
+
+/** Joystick hat position change event structure */
+typedef struct SDL1_JoyHatEvent {
+	Uint8 type;	/**< SDL_JOYHATMOTION */
+	Uint8 which;	/**< The joystick device index */
+	Uint8 hat;	/**< The joystick hat index */
+	Uint8 value;	/**< The hat position value:
+			 *   SDL_HAT_LEFTUP   SDL_HAT_UP       SDL_HAT_RIGHTUP
+			 *   SDL_HAT_LEFT     SDL_HAT_CENTERED SDL_HAT_RIGHT
+			 *   SDL_HAT_LEFTDOWN SDL_HAT_DOWN     SDL_HAT_RIGHTDOWN
+			 *  Note that zero means the POV is centered.
+			 */
+} SDL1_JoyHatEvent;
+
+/** Joystick button event structure */
+typedef struct SDL1_JoyButtonEvent {
+	Uint8 type;	/**< SDL_JOYBUTTONDOWN or SDL_JOYBUTTONUP */
+	Uint8 which;	/**< The joystick device index */
+	Uint8 button;	/**< The joystick button index */
+	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
+} SDL1_JoyButtonEvent;
+
+/** The "window resized" event
+ *  When you get this event, you are responsible for setting a new video
+ *  mode with the new width and height.
+ */
+typedef struct SDL1_ResizeEvent {
+	Uint8 type;	/**< SDL_VIDEORESIZE */
+	int w;		/**< New width */
+	int h;		/**< New height */
+} SDL1_ResizeEvent;
+
+/** The "screen redraw" event */
+typedef struct SDL1_ExposeEvent {
+	Uint8 type;	/**< SDL_VIDEOEXPOSE */
+} SDL1_ExposeEvent;
+
+/** The "quit requested" event */
+typedef struct SDL1_QuitEvent {
+	Uint8 type;	/**< SDL_QUIT */
+} SDL1_QuitEvent;
+
+/** A user-defined event type */
+typedef struct SDL1_UserEvent {
+	Uint8 type;	/**< SDL_USEREVENT through SDL_NUMEVENTS-1 */
+	int code;	/**< User defined event code */
+	void *data1;	/**< User defined data pointer */
+	void *data2;	/**< User defined data pointer */
+} SDL1_UserEvent;
+
+/** If you want to use this event, you should include SDL_syswm.h */
+struct SDL1_SysWMmsg;
+typedef struct SDL1_SysWMmsg SDL1_SysWMmsg;
+typedef struct SDL1_SysWMEvent {
+	Uint8 type;
+	SDL_SysWMmsg *msg;
+} SDL1_SysWMEvent;
+
+/** General event structure */
+typedef union SDL1_Event {
+	Uint8 type;
+	SDL1_ActiveEvent active;
+	SDL1_KeyboardEvent key;
+	SDL1_MouseMotionEvent motion;
+	SDL1_MouseButtonEvent button;
+	SDL1_JoyAxisEvent jaxis;
+	SDL1_JoyBallEvent jball;
+	SDL1_JoyHatEvent jhat;
+	SDL1_JoyButtonEvent jbutton;
+	SDL1_ResizeEvent resize;
+	SDL1_ExposeEvent expose;
+	SDL1_QuitEvent quit;
+	SDL1_UserEvent user;
+	SDL1_SysWMEvent syswm;
+} SDL1_Event;
+
+
 #endif /* _SDL_h */
