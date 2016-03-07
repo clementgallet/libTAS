@@ -25,5 +25,6 @@ void __attribute__((destructor)) term(void);
 /* Override */ void SDL_GL_SwapBuffers(void);
 
 int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, Uint32 maxType);
+int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask);
 
 #endif // LIBTAS_H_INCLUDED

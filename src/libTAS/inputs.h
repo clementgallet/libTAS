@@ -14,8 +14,11 @@ typedef int SDL_GameController;
 
 
 /* Override */ Uint8* SDL_GetKeyboardState(int* numkeys);
+/* Override */ Uint8* SDL_GetKeyState( int* numkeys);
 int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update);
+int generateKeyUp1Event(SDL1_Event *events, int num, int update);
 int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int update);
+int generateKeyDown1Event(SDL1_Event *events, int num, int update);
 int generateControllerEvent(SDL_Event* events, int num, int update);
 
 /* Override */ int SDL_NumJoysticks(void);

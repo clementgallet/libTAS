@@ -10,6 +10,7 @@ struct AllInputs ai;
 struct AllInputs old_ai;
 
 Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
+Uint8 SDL1_keyboard[SDLK1_LAST] = {0};
 
 SDL_JoystickID joyid[4] = {-1, -1, -1, -1};
 const char joy_name[] = "Universal joystick";
@@ -19,11 +20,25 @@ int controller_events = 1;
 
 /* Override */ Uint8* SDL_GetKeyboardState( int* numkeys)
 {
-    (void) numkeys; // Remove unused warning
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, "%s call.", __func__);
+
+    if (numkeys)
+        *numkeys = SDL_NUM_SCANCODES;
+
     xkeyboardToSDLkeyboard(ai.keyboard, SDL_keyboard);
     //*numkeys = 512;
     return SDL_keyboard;
+}
+
+/* Override */ Uint8* SDL_GetKeyState( int* numkeys)
+{
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, "%s call.", __func__);
+
+    if (numkeys)
+        *numkeys = SDLK1_LAST;
+
+    xkeyboardToSDL1keyboard(ai.keyboard, SDL1_keyboard);
+    return SDL1_keyboard;
 }
 
 /* Generate released keyboard input events
@@ -74,6 +89,49 @@ int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update)
     return evi;
 }
 
+/* TODO: Duplicate of the above code with SDL 1 instead */
+
+int generateKeyUp1Event(SDL1_Event *events, int num, int update)
+{
+    int evi = 0;
+    int i, j;
+    for (i=0; i<16; i++) { // TODO: Another magic number
+        if (old_ai.keyboard[i] == XK_VoidSymbol) {
+            continue;
+        }
+        for (j=0; j<16; j++) {
+            if (old_ai.keyboard[i] == ai.keyboard[j]) {
+                /* Key was not released */
+                break;
+            }
+        }
+        if (j == 16) {
+            /* Key was released. Generate event */
+            events[evi].type = SDL1_KEYUP;
+            events[evi].key.which = 0; // FIXME: I don't know what is going here
+            events[evi].key.state = SDL_RELEASED;
+
+            SDL_keysym keysym;
+            xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
+            events[evi].key.keysym = keysym;
+
+            if (update) {
+                /* Update old keyboard state so that this event won't trigger inifinitely */
+                old_ai.keyboard[i] = XK_VoidSymbol;
+            }
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events[evi].key.keysym.sym);
+            evi++;
+
+            /* If we reached the asked number of events, returning */
+            if (evi == num)
+                return evi;
+
+        }
+    }
+    /* We did not reached the asked number of events, returning the number */
+    return evi;
+}
+
 /* Generate pressed keyboard input events */
 int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int update)
 {
@@ -98,6 +156,55 @@ int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int updat
 
             SDL_Keysym keysym;
             xkeysymToSDL(&keysym, ai.keyboard[i]);
+            events[evi].key.keysym = keysym;
+
+            if (update) {
+                /* Update old keyboard state so that this event won't trigger inifinitely */
+                for (k=0; k<16; k++)
+                    if (old_ai.keyboard[k] == XK_VoidSymbol) {
+                        /* We found an empty space to put our key*/
+                        old_ai.keyboard[k] = ai.keyboard[i];
+                        break;
+                    }
+            }
+
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events[evi].key.keysym.sym);
+            evi++;
+
+            /* Returning if we reached the asked number of events */
+            if (evi == num)
+                return evi;
+
+        }
+    }
+
+    /* Returning the number of generated events */
+    return evi;
+}
+
+/* TODO: Same, duplicate code */
+int generateKeyDown1Event(SDL1_Event *events, int num, int update)
+{
+    int evi = 0;
+    int i,j,k;
+    for (i=0; i<16; i++) { // TODO: Another magic number
+        if (ai.keyboard[i] == XK_VoidSymbol) {
+            continue;
+        }
+        for (j=0; j<16; j++) {
+            if (ai.keyboard[i] == old_ai.keyboard[j]) {
+                /* Key was not pressed */
+                break;
+            }
+        }
+        if (j == 16) {
+            /* Key was pressed. Generate event */
+            events[evi].type = SDL1_KEYDOWN;
+            events[evi].key.which = 0; // FIXME: I don't know what is going here
+            events[evi].key.state = SDL_PRESSED;
+
+            SDL_keysym keysym;
+            xkeysymToSDL1(&keysym, ai.keyboard[i]);
             events[evi].key.keysym = keysym;
 
             if (update) {

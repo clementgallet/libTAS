@@ -399,16 +399,26 @@ void __attribute__((destructor)) term(void)
     
     switch (action) {
         case SDL_ADDEVENT:
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
+            if (SDLver == 1)
+                return SDL1_PeepEvents_real((SDL1_Event*) events, numevents, action, mask);
             if (SDLver == 2)
                 return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
+            break;
         case SDL_PEEKEVENT:
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to peek at %d events", numevents);
+            if (SDLver == 1)
+                return getSDL1Events((SDL1_Event*) events, numevents, 0, mask);
             if (SDLver == 2)
                 return getSDL2Events(events, numevents, 0, minType, maxType);
-
+            break;
         case SDL_GETEVENT:
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
+            if (SDLver == 1)
+                return getSDL1Events((SDL1_Event*) events, numevents, 1, mask);
             if (SDLver == 2)
                 return getSDL2Events(events, numevents, 1, minType, maxType);
-
+            break;
     }
 
     return 0;
@@ -424,17 +434,26 @@ void __attribute__((destructor)) term(void)
      */
     SDL_PumpEvents_real();
 
-    if (event)
+    if (event) {
         /* Fetch one event with update using our helper function */
-        return getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT);
-    else {
+        if (SDLver == 1)
+            return getSDL1Events((SDL1_Event*)event, 1, 1, SDL1_ALLEVENTS);
+        if (SDLver == 2)
+            return getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT);
+    } else {
         /*
          * In the case the event pointer is NULL, SDL doc says to
          * return 1 if there is an event in the queue and 0 of not,
          * without updating the queue
          */
-        SDL_Event ev;
-        return getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT);
+        if (SDLver == 1) {
+            SDL1_Event ev1;
+            return getSDL1Events(&ev1, 1, 0, SDL1_ALLEVENTS);
+        }
+        if (SDLver == 2) {
+            SDL_Event ev;
+            return getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT);
+        }
     }
 }
 
@@ -467,7 +486,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
      */
 
     for (int peepi = 0; peepi < peepnb; peepi++) {
-        if (filterEvent(&(events[peepi]))) {
+        if (filterSDL2Event(&(events[peepi]))) {
             /* 
              * We have to filter this event.
              * For now, let's just attribute an unused type.
@@ -537,7 +556,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
 
     if (peepnb == numevents) return peepnb;
 
-    if ((SDL_KEYDOWN >= minType) && (SDL_KEYDOWN <= maxType))
+    if ((SDL_KEYDOWN >= minType) && (SDL_KEYDOWN <= maxType)) {
 
         /* We must add this failsafe concerning the above comment.
          * If we must update SDL_KEYDOWN but did not update SDL_KEYUP,
@@ -549,7 +568,8 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
             /* Update KEYUP events */
             generateKeyUpEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
 
-    peepnb += generateKeyDownEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyDownEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+    }
 
     if (peepnb == numevents) return peepnb;
 
@@ -559,6 +579,119 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
          * or pass the event filters to the function
          */
         peepnb += generateControllerEvent(events + peepnb*sizeof(SDL_Event), numevents - peepnb, update);
+
+    return peepnb;
+}
+
+/* 
+ * Same as the getSDL2Events, except that we are dealing with SDL 1.2 events.
+ * These events have a different structure, and the filtering is also different.
+ * Otherwise, the function acheive the same goal.
+ */
+
+int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask)
+{
+
+    /* Total number of events pulled from SDL_PeepEvents call */
+    int peepnb = 0;
+
+    if (update)
+        peepnb = SDL1_PeepEvents_real(events, numevents, SDL_GETEVENT, mask);
+    else
+        peepnb = SDL1_PeepEvents_real(events, numevents, SDL_PEEKEVENT, mask);
+
+    /* 
+     * Among all the events we pulled, we have to filter some
+     * (e.g. input type).
+     */
+
+    for (int peepi = 0; peepi < peepnb; peepi++) {
+        if (filterSDL1Event(&(events[peepi]))) {
+            /* 
+             * We have to filter this event.
+             * For now, let's just attribute an unused type.
+             * We will remove all filtered events later.
+             */
+            events[peepi].type = SDL1_NOEVENT;
+        }
+    }
+
+    /* Now we remove all filtered events from the array
+     *
+     * | e0 | e1 | e2 | -- | -- | e3 | e4 |
+     *                  pd        ps
+     *                   _
+     *                  /\________/
+     */
+
+    int ps, pd = 0;
+    while (ps < peepnb) {
+        if (events[pd].type != SDL1_NOEVENT) {
+            pd++;
+            if (pd > ps)
+                ps++;
+        }
+        else if (events[ps].type == SDL1_NOEVENT) {
+            ps++;
+        }
+        else {
+            /* We are in a position to copy event ps to event pd */
+            events[pd] = events[ps];
+            events[ps].type = SDL1_NOEVENT;
+            ps++;
+            pd++;
+        }
+    }
+
+    /* We update the total number of saved events */
+    peepnb = pd;
+
+    /* 
+     * TODO: Actually because of filtered events, we should make
+     * multiple passes to PeepEvents if we did not get the right number,
+     * but it gets complicated.
+     */
+
+    if (peepnb == numevents) {
+        /* We got the right number of events from the real event queue */
+        return peepnb;
+    }
+
+    /* 
+     * We did not get enough events with the event queue only.
+     * Now we return our custom events.
+     */
+
+    /*
+     * Important: You must call the following two functions in that order!
+     * This is because the first one updates old_ai by removing elements
+     * to match ai, and the second one updates old_ai by adding elements
+     * to match ai. So if you call the second one before the first,
+     * the keyboard array in old_ai can overflow.
+     */
+
+    /* Getting KeyUp events */
+    if (mask & SDL1_KEYUPMASK)
+        peepnb += generateKeyUp1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+
+    if (peepnb == numevents) return peepnb;
+
+    if (mask & SDL1_KEYDOWNMASK) {
+
+        /* We must add this failsafe concerning the above comment.
+         * If we must update SDL_KEYDOWN but did not update SDL_KEYUP,
+         * this is bad. So we must update SDL_KEYUP events
+         * and discard the result.
+         */
+
+        if (update && (! (mask & SDL1_KEYUPMASK)))
+            /* Update KEYUP events */
+            generateKeyUp1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+
+    peepnb += generateKeyDown1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+    }
+
+    if (peepnb == numevents) return peepnb;
 
     return peepnb;
 }
