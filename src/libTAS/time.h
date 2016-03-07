@@ -28,7 +28,7 @@ struct timeval
 //extern int nanosleep (const struct timespec *requested_time,
 //                      struct timespec *remaining);
 
-
+extern unsigned long frame_counter;
 
 void advanceFrame(void);
 void sleepEndFrame(void);

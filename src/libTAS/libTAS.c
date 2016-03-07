@@ -40,10 +40,6 @@ int video_opengl = 0;
 /* Message that identify what is sent in the socket */
 int message;
 
-/* Frame counter */
-/* TODO: Where should I put this? */
-unsigned long frame_counter = 0;
-
 #ifdef LIBTAS_HUD
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
@@ -422,7 +418,24 @@ void __attribute__((destructor)) term(void)
 {
     debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "%s call.", __func__);
 
-    return getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT);
+    /* 
+     * SDL_PollEvent is supposed to call SDL_PumpEvents,
+     * so we are doing it ourselves
+     */
+    SDL_PumpEvents_real();
+
+    if (event)
+        /* Fetch one event with update using our helper function */
+        return getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT);
+    else {
+        /*
+         * In the case the event pointer is NULL, SDL doc says to
+         * return 1 if there is an event in the queue and 0 of not,
+         * without updating the queue
+         */
+        SDL_Event ev;
+        return getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT);
+    }
 }
 
 /* 
@@ -440,12 +453,8 @@ void __attribute__((destructor)) term(void)
 int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, Uint32 maxType)
 {
 
-    SDL_PumpEvents_real();
-
-
     /* Total number of events pulled from SDL_PeepEvents call */
     int peepnb = 0;
-
 
     if (update)
         peepnb = SDL_PeepEvents_real(events, numevents, SDL_GETEVENT, minType, maxType);

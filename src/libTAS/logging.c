@@ -6,6 +6,7 @@
 #include "../shared/tasflags.h"
 #include "hook.h"
 #include "threads.h"
+#include "time.h"
 
 
 void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
@@ -20,8 +21,9 @@ void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
         else
             /* Write the header text in white */
             strcat(str, ANSI_COLOR_LIGHT_GRAY);
-        strcat(str, "[libTAS] ");
         size_t str_len = strlen(str);
+        snprintf(str + str_len, 4096 - str_len - 1, "[libTAS f:%6lu] ", frame_counter);
+        str_len = strlen(str);
         if (pthread_self_real) {
             char thstr[12];
             stringify(pthread_self_real(), thstr);

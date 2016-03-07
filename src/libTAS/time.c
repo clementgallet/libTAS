@@ -11,6 +11,9 @@ struct timeval deterministic_time = { 0, 0 };
 /* Real time structure, used to run at a given fps */
 struct timespec real_time = { 0, 0 };
 
+/* Frame counter */
+unsigned long frame_counter = 0;
+
 /* Advance the deterministic timer by exactly 1/fps */
 void advanceFrame(void)
 {

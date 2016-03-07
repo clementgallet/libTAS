@@ -5,7 +5,6 @@
 
 #define MAGIC_NUMBER 42
 
-extern unsigned long frame_counter;
 
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
