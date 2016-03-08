@@ -47,7 +47,7 @@ int controller_events = 1;
  * the events won't be returned again 
  */
 
-int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update)
+int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
 {
     int evi = 0;
     int i, j;
@@ -63,20 +63,37 @@ int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update)
         }
         if (j == 16) {
             /* Key was released. Generate event */
-            events[evi].type = SDL_KEYUP;
-            events[evi].key.state = SDL_RELEASED;
-            events[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
-            events[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+            if (SDLver == 2) {
+                SDL_Event* events2 = (SDL_Event*)events;
+                events2[evi].type = SDL_KEYUP;
+                events2[evi].key.state = SDL_RELEASED;
+                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+                events2[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
 
-            SDL_Keysym keysym;
-            xkeysymToSDL(&keysym, old_ai.keyboard[i]);
-            events[evi].key.keysym = keysym;
+                SDL_Keysym keysym;
+                xkeysymToSDL(&keysym, old_ai.keyboard[i]);
+                events2[evi].key.keysym = keysym;
+
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events2[evi].key.keysym.sym);
+            }
+
+            if (SDLver == 1) {
+                SDL1_Event* events1 = (SDL1_Event*)events;
+                events1[evi].type = SDL1_KEYUP;
+                events1[evi].key.which = 0; // FIXME: I don't know what is going here
+                events1[evi].key.state = SDL_RELEASED;
+
+                SDL_keysym keysym;
+                xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
+                events1[evi].key.keysym = keysym;
+
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key %d.", events1[evi].key.keysym.sym);
+            }
 
             if (update) {
                 /* Update old keyboard state so that this event won't trigger inifinitely */
                 old_ai.keyboard[i] = XK_VoidSymbol;
             }
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events[evi].key.keysym.sym);
             evi++;
 
             /* If we reached the asked number of events, returning */
@@ -89,51 +106,9 @@ int generateKeyUpEvent(SDL_Event *events, void* gameWindow, int num, int update)
     return evi;
 }
 
-/* TODO: Duplicate of the above code with SDL 1 instead */
-
-int generateKeyUp1Event(SDL1_Event *events, int num, int update)
-{
-    int evi = 0;
-    int i, j;
-    for (i=0; i<16; i++) { // TODO: Another magic number
-        if (old_ai.keyboard[i] == XK_VoidSymbol) {
-            continue;
-        }
-        for (j=0; j<16; j++) {
-            if (old_ai.keyboard[i] == ai.keyboard[j]) {
-                /* Key was not released */
-                break;
-            }
-        }
-        if (j == 16) {
-            /* Key was released. Generate event */
-            events[evi].type = SDL1_KEYUP;
-            events[evi].key.which = 0; // FIXME: I don't know what is going here
-            events[evi].key.state = SDL_RELEASED;
-
-            SDL_keysym keysym;
-            xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
-            events[evi].key.keysym = keysym;
-
-            if (update) {
-                /* Update old keyboard state so that this event won't trigger inifinitely */
-                old_ai.keyboard[i] = XK_VoidSymbol;
-            }
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events[evi].key.keysym.sym);
-            evi++;
-
-            /* If we reached the asked number of events, returning */
-            if (evi == num)
-                return evi;
-
-        }
-    }
-    /* We did not reached the asked number of events, returning the number */
-    return evi;
-}
 
 /* Generate pressed keyboard input events */
-int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int update)
+int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
 {
     int evi = 0;
     int i,j,k;
@@ -149,14 +124,32 @@ int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int updat
         }
         if (j == 16) {
             /* Key was pressed. Generate event */
-            events[evi].type = SDL_KEYDOWN;
-            events[evi].key.state = SDL_PRESSED;
-            events[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
-            events[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+            if (SDLver == 2) {
+                SDL_Event* events2 = (SDL_Event*)events;
+                events2[evi].type = SDL_KEYDOWN;
+                events2[evi].key.state = SDL_PRESSED;
+                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+                events2[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
 
-            SDL_Keysym keysym;
-            xkeysymToSDL(&keysym, ai.keyboard[i]);
-            events[evi].key.keysym = keysym;
+                SDL_Keysym keysym;
+                xkeysymToSDL(&keysym, ai.keyboard[i]);
+                events2[evi].key.keysym = keysym;
+
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events2[evi].key.keysym.sym);
+            }
+
+            if (SDLver == 1) {
+                SDL1_Event* events1 = (SDL1_Event*)events;
+                events1[evi].type = SDL1_KEYDOWN;
+                events1[evi].key.which = 0; // FIXME: I don't know what is going here
+                events1[evi].key.state = SDL_PRESSED;
+
+                SDL_keysym keysym;
+                xkeysymToSDL1(&keysym, ai.keyboard[i]);
+                events1[evi].key.keysym = keysym;
+
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events1[evi].key.keysym.sym);
+            }
 
             if (update) {
                 /* Update old keyboard state so that this event won't trigger inifinitely */
@@ -168,7 +161,6 @@ int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int updat
                     }
             }
 
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events[evi].key.keysym.sym);
             evi++;
 
             /* Returning if we reached the asked number of events */
@@ -182,54 +174,6 @@ int generateKeyDownEvent(SDL_Event *events, void* gameWindow, int num, int updat
     return evi;
 }
 
-/* TODO: Same, duplicate code */
-int generateKeyDown1Event(SDL1_Event *events, int num, int update)
-{
-    int evi = 0;
-    int i,j,k;
-    for (i=0; i<16; i++) { // TODO: Another magic number
-        if (ai.keyboard[i] == XK_VoidSymbol) {
-            continue;
-        }
-        for (j=0; j<16; j++) {
-            if (ai.keyboard[i] == old_ai.keyboard[j]) {
-                /* Key was not pressed */
-                break;
-            }
-        }
-        if (j == 16) {
-            /* Key was pressed. Generate event */
-            events[evi].type = SDL1_KEYDOWN;
-            events[evi].key.which = 0; // FIXME: I don't know what is going here
-            events[evi].key.state = SDL_PRESSED;
-
-            SDL_keysym keysym;
-            xkeysymToSDL1(&keysym, ai.keyboard[i]);
-            events[evi].key.keysym = keysym;
-
-            if (update) {
-                /* Update old keyboard state so that this event won't trigger inifinitely */
-                for (k=0; k<16; k++)
-                    if (old_ai.keyboard[k] == XK_VoidSymbol) {
-                        /* We found an empty space to put our key*/
-                        old_ai.keyboard[k] = ai.keyboard[i];
-                        break;
-                    }
-            }
-
-            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events[evi].key.keysym.sym);
-            evi++;
-
-            /* Returning if we reached the asked number of events */
-            if (evi == num)
-                return evi;
-
-        }
-    }
-
-    /* Returning the number of generated events */
-    return evi;
-}
 
 /* Generate SDL2 GameController events */
 

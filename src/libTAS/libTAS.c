@@ -376,7 +376,7 @@ void __attribute__((destructor)) term(void)
 
     /* We need to use a function signature with variable arguments,
      * because SDL 1.2 and SDL 2 provide a different function with the same name.
-     * SDL 1.2 is int SDL_PeepEvents(SDL_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
+     * SDL 1.2 is int SDL_PeepEvents(SDL1_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
      * SDL 2   is int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
      */
 
@@ -455,6 +455,7 @@ void __attribute__((destructor)) term(void)
             return getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT);
         }
     }
+    return -1;
 }
 
 /* 
@@ -552,7 +553,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
 
     /* Getting KeyUp events */
     if ((SDL_KEYUP >= minType) && (SDL_KEYUP <= maxType))
-        peepnb += generateKeyUpEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
 
     if (peepnb == numevents) return peepnb;
 
@@ -566,9 +567,9 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
 
         if (update && ((SDL_KEYUP < minType) || (SDL_KEYUP > maxType)))
             /* Update KEYUP events */
-            generateKeyUpEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+            generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
 
-        peepnb += generateKeyDownEvent(events + peepnb*sizeof(SDL_Event), gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyDownEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
     }
 
     if (peepnb == numevents) return peepnb;
@@ -578,7 +579,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
         /* TODO: Split the function into functions for each event type,
          * or pass the event filters to the function
          */
-        peepnb += generateControllerEvent(events + peepnb*sizeof(SDL_Event), numevents - peepnb, update);
+        peepnb += generateControllerEvent(&events[peepnb], numevents - peepnb, update);
 
     return peepnb;
 }
@@ -672,7 +673,7 @@ int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask)
 
     /* Getting KeyUp events */
     if (mask & SDL1_KEYUPMASK)
-        peepnb += generateKeyUp1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+        peepnb += generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
 
     if (peepnb == numevents) return peepnb;
 
@@ -686,13 +687,17 @@ int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask)
 
         if (update && (! (mask & SDL1_KEYUPMASK)))
             /* Update KEYUP events */
-            generateKeyUp1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+            generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
 
-    peepnb += generateKeyDown1Event(events + peepnb*sizeof(SDL1_Event), numevents - peepnb, update);
+        peepnb += generateKeyDownEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
     }
 
-    if (peepnb == numevents) return peepnb;
+    if (peepnb == 2) {
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "2 events of type %d and %d", events[0].type, events[1].type);
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "2 events of sym %d and %d", events[0].key.keysym.sym, events[1].key.keysym.sym);
+    }
 
+    debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "Returning %d events.", peepnb);
     return peepnb;
 }
 

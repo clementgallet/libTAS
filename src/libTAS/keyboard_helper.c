@@ -326,11 +326,8 @@ void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym) {
 }
 
 void xkeysymToSDL1(SDL_keysym *keysym, KeySym xkeysym) {
-    fprintf(stderr, "xkeysym is %lu", xkeysym);
     keysym->sym = X11_Translate1Keysym(xkeysym);
-    fprintf(stderr, "SDL sym is %u", keysym->sym);
     keysym->scancode = GetScanFromKey1(keysym->sym);
-    fprintf(stderr, "SDL scan is %u", keysym->scancode);
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unicode = 0;
 }
