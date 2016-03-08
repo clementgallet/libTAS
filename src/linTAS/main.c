@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 
         if (message == MSGB_WINDOW_ID) {
             recv(socket_fd, &gameWindow, sizeof(Window), 0);
-            if (gameWindow == 42) {
+            if (gameWindow == 0) {
                 /* libTAS could not get the window id
                  * Let's get the active window */
                 int revert;

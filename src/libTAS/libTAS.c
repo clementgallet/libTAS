@@ -167,7 +167,7 @@ void __attribute__((destructor)) term(void)
      * It will have to guess it, probably by getting the active window
      */
     if (!gw_sent) {
-        Window w = 42; // TODO: No magic number
+        Window w = 0;
         sendMessage(MSGB_WINDOW_ID);
         sendData(&w, sizeof(Window));
         gw_sent = 1;

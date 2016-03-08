@@ -33,7 +33,6 @@
 - Add key remapping
 -- Map KeyCode instead of KeySym
 - Process and filter SDL events
--- Problem is: SDL1.2 and SDL2 Events have a different type...
 - Allow 32-bit or 64-bit lib compilation
 -- Make it easier using a single make command maybe...
 
