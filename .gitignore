@@ -2,4 +2,5 @@ src/libTAS/*.o
 src/linTAS/*.o
 src/shared/*.o
 src/external/*.o
+bin/
 
