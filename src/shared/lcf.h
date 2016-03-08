@@ -39,7 +39,7 @@ typedef int LogCategoryFlag; enum
 	LCF_EVENTS   = 1 << 26, // processing SDL events
 	LCF_WINDOW   = 1 << 27, // windows windows
 	//LCF_FILEIO   = 1 << 28,
-	//LCF_REGISTRY = 1 << 29, // windows registry or system properties
+	LCF_STEAM    = 1 << 29, // Steam API
 	LCF_THREAD   = 1 << 30,
 	//LCF_TIMERS   = 1 << 31, // as in async timer objects
     LCF_ALL = -1,

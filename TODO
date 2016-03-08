@@ -14,6 +14,7 @@
 - Support mouse
 - Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
+- Support non SDL stuff
 
 ## Partially done
 
@@ -33,8 +34,6 @@
 - Add key remapping
 -- Map KeyCode instead of KeySym
 - Process and filter SDL events
-- Allow 32-bit or 64-bit lib compilation
--- Make it easier using a single make command maybe...
 
 ## Done
 
@@ -46,4 +45,5 @@
 - Add an auto-repeat for frame advance
 - Support game controller
 - Add a deterministic timer instead of relying on SwapInterval
+- Allow 32-bit or 64-bit lib compilation
 

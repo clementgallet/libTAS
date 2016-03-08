@@ -141,7 +141,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
      *                  /\________/
      */
 
-    int ps, pd = 0;
+    int ps = 0, pd = 0;
     while (ps < peepnb) {
         if (events[pd].type != SDL_FIRSTEVENT) {
             pd++;
@@ -261,7 +261,7 @@ int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask)
      *                  /\________/
      */
 
-    int ps, pd = 0;
+    int ps = 0, pd = 0;
     while (ps < peepnb) {
         if (events[pd].type != SDL1_NOEVENT) {
             pd++;
@@ -328,12 +328,6 @@ int getSDL1Events(SDL1_Event *events, int numevents, int update, Uint32 mask)
         peepnb += generateKeyDownEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
     }
 
-    if (peepnb == 2) {
-        debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "2 events of type %d and %d", events[0].type, events[1].type);
-        debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "2 events of sym %d and %d", events[0].key.keysym.sym, events[1].key.keysym.sym);
-    }
-
-    debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "Returning %d events.", peepnb);
     return peepnb;
 }
 
