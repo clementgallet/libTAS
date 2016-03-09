@@ -3,8 +3,8 @@
 
 #include "../external/SDL.h"
 #include "../external/gl.h"
+#include "bits/pthreadtypes.h"
 
-#define OVERRIDE extern "C" 
 
 #if (!defined __timespec_defined)
 # define __timespec_defined 1
@@ -41,8 +41,7 @@ extern void* (*SDL_CreateThread_real)(int(*fn)(void*),
 extern void (*SDL_WaitThread_real)(void* thread, int *status);
 //void (*SDL_DetachThread_real)(void * thread);
 
-typedef unsigned long int pthread_t;
-extern int (*pthread_create_real) (void * thread, void * attr, void * (* start_routine) (void *), void * arg);
+extern int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
 extern void (*pthread_exit_real) (void *retval);
 extern int (*pthread_join_real) (unsigned long int thread, void **thread_return);
 extern int (*pthread_detach_real) (unsigned long int thread);

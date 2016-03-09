@@ -238,7 +238,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
 
         /* Checking for a size modification */
         if ((surface->w != frame->width) || (surface->h != frame->height)) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", frame->width, frame->height, surface->w, surface->h);
+            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",frame->width,",",frame->height,") -> (",surface->w,",",surface->h,")");
             return 1;
         }
 
@@ -257,7 +257,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
     int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
                 frame->height, frame->data, frame->linesize);
     if (rets != frame->height) {
-        debuglog(LCF_DUMP | LCF_ERROR, "We could only convert %d rows", rets);
+        debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",rets," rows");
         if (!useGL) {
             /* Unlock surface */
             SDL_UnlockSurface_real(surface);
@@ -288,7 +288,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
             return 1;
         }
-        debuglog(LCF_DUMP | LCF_FRAME, "Write frame %6ld (size=%6d)", fcounter, pkt.size);
+        debuglog(LCF_DUMP | LCF_FRAME, "Write frame ",fcounter," (size=",pkt.size,")");
         av_free_packet(&pkt);
     }
 
@@ -310,7 +310,7 @@ int closeVideoDump() {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
                 return 1;
             }
-            debuglog(LCF_DUMP | LCF_FRAME, "Write frame %6ld (size=%6d)", -1, pkt.size);
+            debuglog(LCF_DUMP | LCF_FRAME, "Write frame -1 (size=", pkt.size, ")");
             av_free_packet(&pkt);
         }
     }

@@ -29,7 +29,7 @@
         }\
     }
 
-int SDLver;
+int SDLver = 0;
 
 void (*SDL_Init_real)(unsigned int flags);
 int (*SDL_InitSubSystem_real)(Uint32 flags);
@@ -59,7 +59,7 @@ void (*SDL_WaitThread_real)(void* thread, int *status);
 
 typedef unsigned long int pthread_t;
 
-int (*pthread_create_real) (void * thread, void * attr, void * (* start_routine) (void *), void * arg);
+int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
 void (*pthread_exit_real) (void *retval);
 int (*pthread_join_real) (unsigned long int thread, void **thread_return);
 int (*pthread_detach_real) (unsigned long int thread);
@@ -147,7 +147,9 @@ int hook_functions(void* SDL_handle) {
         ver = *verp;
     }
 
-    /* We save the version major in an extern variable because we may need it elsewhere */
+    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", ver.major, ".", ver.minor, ".", ver.patch);
+
+    /* We save the version major in an extern variable because we may will it elsewhere */
     SDLver = ver.major;
 
     if (ver.major == 0) {
@@ -155,7 +157,6 @@ int hook_functions(void* SDL_handle) {
         return 0;
     }
     else if (ver.major == 1) {
-        debuglog(LCF_SDL | LCF_HOOK, "Detected SDL 1 lib (%d.%d.%d).", ver.major, ver.minor, ver.patch);
         /* Hooking SDL 1.2 specific functions */
         HOOK_FUNC(SDL_GL_SwapBuffers, SDL_handle)
         HOOK_FUNC(SDL_SetVideoMode, SDL_handle)
@@ -164,7 +165,6 @@ int hook_functions(void* SDL_handle) {
         HOOK_FUNC_TARGET(SDL_PeepEvents, SDL_handle, SDL1_PeepEvents_real)
     }
     else if (ver.major == 2) {
-        debuglog(LCF_SDL | LCF_HOOK, "Detected SDL 2 lib (%d.%d.%d).", ver.major, ver.minor, ver.patch);
         /* Hooking SDL 2 specific functions */
         HOOK_FUNC(SDL_GL_SwapWindow, SDL_handle)
             HOOK_FUNC(SDL_CreateWindow, SDL_handle)

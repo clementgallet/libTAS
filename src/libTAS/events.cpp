@@ -8,7 +8,7 @@
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, ...)
 {
-    debuglog(LCF_SDL | LCF_EVENTS, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_EVENTS, __func__, " call.");
 
     /* We need to use a function signature with variable arguments,
      * because SDL 1.2 and SDL 2 provide a different function with the same name.
@@ -35,21 +35,21 @@
     
     switch (action) {
         case SDL_ADDEVENT:
-            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add ", numevents, " events");
             if (SDLver == 1)
                 return SDL1_PeepEvents_real((SDL1_Event*) events, numevents, action, mask);
             if (SDLver == 2)
                 return SDL_PeepEvents_real(events, numevents, action, minType, maxType);
             break;
         case SDL_PEEKEVENT:
-            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to peek at %d events", numevents);
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to peek at ", numevents, " events");
             if (SDLver == 1)
                 return getSDL1Events((SDL1_Event*) events, numevents, 0, mask);
             if (SDLver == 2)
                 return getSDL2Events(events, numevents, 0, minType, maxType);
             break;
         case SDL_GETEVENT:
-            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
+            debuglog(LCF_SDL | LCF_EVENTS, "The game wants to get ", numevents, " events");
             if (SDLver == 1)
                 return getSDL1Events((SDL1_Event*) events, numevents, 1, mask);
             if (SDLver == 2)
@@ -62,7 +62,7 @@
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    debuglog(LCF_SDL | LCF_EVENTS | LCF_FRAME, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_EVENTS, __func__, " call.");
 
     /* 
      * SDL_PollEvent is supposed to call SDL_PumpEvents,
@@ -371,13 +371,13 @@ void logEvent(SDL_Event *event)
         case SDL_WINDOWEVENT:
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_FOCUS_GAINED:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window ", event->window.windowID, " gained keyboard focus.");
                     break;
                 case SDL_WINDOWEVENT_FOCUS_LOST:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window ", event->window.windowID, " lost keyboard focus.");
                     break;
                 case SDL_WINDOWEVENT_CLOSE:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window ", event->window.windowID, " closed.");
                     break;
                 default:
                     break;
@@ -395,7 +395,7 @@ void logEvent(SDL_Event *event)
                     break;
                 case SDL_SYSWM_X11:
                     debuglog(LCF_SDL | LCF_EVENTS, "X subsystem.");
-                    debuglog(LCF_SDL | LCF_EVENTS, "Getting an X event of type %d", event->syswm.msg->msg.x11.event.type);
+                    debuglog(LCF_SDL | LCF_EVENTS, "Getting an X event of type ", event->syswm.msg->msg.x11.event.type);
                     break;
                 case SDL_SYSWM_DIRECTFB:
                     debuglog(LCF_SDL | LCF_EVENTS, "DirectFB subsystem.");
@@ -536,10 +536,8 @@ void logEvent(SDL_Event *event)
             break;
 
         default:
-            debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: %d.", event->type);
+            debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: ", event->type, ".");
             break;
     }
-
-
-
 }
+

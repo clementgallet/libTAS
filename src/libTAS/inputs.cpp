@@ -20,7 +20,7 @@ int controller_events = 1;
 
 /* Override */ Uint8* SDL_GetKeyboardState( int* numkeys)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
 
     if (numkeys)
         *numkeys = SDL_NUM_SCANCODES;
@@ -32,7 +32,7 @@ int controller_events = 1;
 
 /* Override */ Uint8* SDL_GetKeyState( int* numkeys)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
 
     if (numkeys)
         *numkeys = SDLK1_LAST;
@@ -74,7 +74,7 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
                 xkeysymToSDL(&keysym, old_ai.keyboard[i]);
                 events2[evi].key.keysym = keysym;
 
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d.", events2[evi].key.keysym.sym);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key ", events2[evi].key.keysym.sym);
             }
 
             if (SDLver == 1) {
@@ -87,7 +87,7 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
                 xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
                 events1[evi].key.keysym = keysym;
 
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key %d.", events1[evi].key.keysym.sym);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", events1[evi].key.keysym.sym);
             }
 
             if (update) {
@@ -257,7 +257,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ int SDL_NumJoysticks(void)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call", __func__);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
     /* For now, we declare one joystick */
     //return 1;
     return 0;
@@ -268,7 +268,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
     /* For now, enabling 1 game controller */
     if (joystick_index == 0)
         return SDL_TRUE;
@@ -287,7 +287,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
     SDL_GameController* gc_id = new SDL_GameController;
     *gc_id = joystick_index;
 
@@ -303,7 +303,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
     return joy_name;
 }
 
@@ -312,7 +312,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, *gamecontroller);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", *gamecontroller);
     return joy_name;
 }
 
@@ -322,7 +322,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, "%s call with id %d", __func__, *gamecontroller);
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
     if (joyid[*gamecontroller] != -1)
         return SDL_TRUE;
     return SDL_FALSE;
@@ -339,7 +339,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ int SDL_GameControllerEventState(int state)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with state %d", __func__, state);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
     switch (state) {
         case 1:
             controller_events = 1;
@@ -364,7 +364,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                           SDL_GameControllerAxis axis)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, "%s call with id %d and axis %d", __func__, *gamecontroller, axis);
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller, " and axis ", axis);
 
     /* Check if controller is available */
     if (joyid[*gamecontroller] == -1)
@@ -387,7 +387,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 /* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, "%s call with id %d and button %d", __func__, *gamecontroller, button);
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller, " and button ", button);
 
     /* Check if controller is available */
     if (joyid[*gamecontroller] == -1)
@@ -407,10 +407,8 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  */
 /* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, "%s call with id %d", __func__, *gamecontroller);
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
 
     joyid[*gamecontroller] = -1;
-
 }
-
 

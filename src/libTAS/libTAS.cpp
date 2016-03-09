@@ -11,6 +11,7 @@
 #include <sys/syscall.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <iomanip>
 
 #include "../external/SDL_ttf.h"
 #include "keyboard_helper.h"
@@ -115,7 +116,7 @@ void __attribute__((constructor)) init(void)
                 sdlfile[sdl_len] = '\0';
                 break;
             default:
-                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d.", message);
+                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);
                 exit(1);
         }
         receiveData(&message, sizeof(int));
@@ -154,7 +155,7 @@ void __attribute__((destructor)) term(void)
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
     SDL_GL_SwapBuffers_real();
 
     /* TODO: Fill here same as SDL_GL_SwapWindow */
@@ -178,7 +179,7 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_GL_SwapWindow(void* window)
 {
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
 
 #ifdef LIBTAS_HUD
     SDL_Color color = {255, 0, 0, 0};
@@ -235,7 +236,7 @@ void __attribute__((destructor)) term(void)
             sendMessage(MSGB_WINDOW_ID);
             sendData(&xgw, sizeof(Window));
             gw_sent = 1;
-            debuglog(LCF_SDL, "Send X11 window id: %d", xgw);
+            debuglog(LCF_SDL, "Send X11 window id: ", xgw);
         }
     }
     else {
@@ -249,7 +250,7 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
-    debuglog(LCF_SDL | LCF_OGL, "%s call - setting to %d.", __func__, interval);
+    debuglog(LCF_SDL | LCF_OGL, __func__, " call - setting to ", interval);
     //return SDL_GL_SetSwapInterval_real(interval);
 
     /* If the game wants the current state of vsync, answer yes */
@@ -261,7 +262,7 @@ void __attribute__((destructor)) term(void)
     
 
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: 0x%x.", __func__, title, x, y, w, h, flags);
+    debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags);
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
 
@@ -287,19 +288,19 @@ void __attribute__((destructor)) term(void)
 }
 
 /* Override */ void SDL_DestroyWindow(void* window){
-    debuglog(LCF_SDL, "%s call.", __func__);
+    debuglog(LCF_SDL, __func__, " call.");
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(void* window){
-    debuglog(LCF_SDL, "%s call.", __func__);
+    debuglog(LCF_SDL, __func__, " call.");
     return SDL_GetWindowFlags_real(window);
 }
 
 /* Override */ void SDL_Init(unsigned int flags){
-    debuglog(LCF_SDL, "%s call.", __func__);
+    debuglog(LCF_SDL, __func__, " call.");
     /* The thread calling this is probably the main thread */
     setMainThread();
 
@@ -325,7 +326,7 @@ void __attribute__((destructor)) term(void)
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
-    debuglog(LCF_SDL, "%s call.", __func__);
+    debuglog(LCF_SDL, __func__, " call.");
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
     if (flags & SDL_INIT_AUDIO)
@@ -346,7 +347,7 @@ void __attribute__((destructor)) term(void)
 }
 
 /* Override */ void SDL_Quit(){
-    debuglog(LCF_SDL, "%s call.", __func__);
+    debuglog(LCF_SDL, __func__, " call.");
     sendMessage(MSGB_QUIT);
 #ifdef LIBTAS_DUMP
     if (tasflags.av_dumping)
@@ -358,7 +359,7 @@ void __attribute__((destructor)) term(void)
 /* SDL 1.2 */
 /* Override */ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
-    debuglog(LCF_SDL, "%s call with size (%d,%d), bpp %d and flags 0x%x.", __func__, width, height, bpp, flags);
+    debuglog(LCF_SDL, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags);
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);

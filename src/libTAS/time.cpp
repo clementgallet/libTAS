@@ -2,6 +2,7 @@
 #include "logging.h"
 #include "frame.h"
 #include "threads.h"
+#include <iomanip> // std::setw
 
 /* Time that will be passed to the game 
  * Increments exactly by 1/fps after each screen draw
@@ -112,7 +113,7 @@ void sleepEndFrame(void)
 
 /* Override */ time_t time(time_t* t)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning %d.", __func__, (long)deterministic_time.tv_sec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec);
     if (t)
         *t = deterministic_time.tv_sec;
     return deterministic_time.tv_sec;
@@ -120,14 +121,14 @@ void sleepEndFrame(void)
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, "%s call - returning (%d.%6d).", __func__, (long)deterministic_time.tv_sec, (long)deterministic_time.tv_usec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec, ".", std::setw(6), deterministic_time.tv_usec);
     *tv = deterministic_time;
     return 0;
 }
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u ms.", __func__, sleep);
+    debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, __func__, " call - sleep for ", sleep, " ms.");
     if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
         enterFrameBoundary();
     if (!isMainThread())
@@ -138,7 +139,7 @@ void sleepEndFrame(void)
 
 /* Override */ int usleep(useconds_t usec)
 {
-    debuglog(LCF_SLEEP | LCF_FRAME, "%s call - sleep for %u us.", __func__, (unsigned int)usec);
+    debuglog(LCF_SLEEP | LCF_FRAME, __func__, " call - sleep for ", usec, " us.");
     /* FIXME: Advancing deterministic timer */
     /*
     if (isMainThread()) {
@@ -156,7 +157,7 @@ void sleepEndFrame(void)
 /* Override */ Uint32 SDL_GetTicks(void)
 {
     Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_usec/1000;
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call - true: %d, returning %d.", __func__, SDL_GetTicks_real(), msec);
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - true: ", SDL_GetTicks_real(), ", returning ", msec);
     //return SDL_GetTicks_real();
     
     /*
@@ -183,7 +184,7 @@ void sleepEndFrame(void)
 /* Override */ Uint64 SDL_GetPerformanceFrequency(void)
 {
     //Uint64 freq = SDL_GetPerformanceFrequency_real();
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call.", __func__);
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call.");
     return 1000000000;
 }
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
@@ -201,13 +202,13 @@ void sleepEndFrame(void)
     oldcounter = counter;
     if (numcall > 50)
         counter += 1000000ULL * (numcall/50); // Add 1 ms to the counter
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "%s call, returning %" PRIu64 ".", __func__, counter);
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call, returning ", counter);
     return counter;
 }
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
-    debuglog(LCF_TIMEFUNC | LCF_SDL, "Add SDL Timer with call after %d ms", interval);
+    debuglog(LCF_TIMEFUNC | LCF_SDL, "Add SDL Timer with call after ", interval, " ms");
     return SDL_AddTimer_real(interval, callback, param);
 }
 

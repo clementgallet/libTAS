@@ -2,6 +2,7 @@
 #define LOGGING_H_INCL
 
 #include "../shared/lcf.h"
+#include <string>
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
@@ -24,7 +25,9 @@
 
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-void debuglog(LogCategoryFlag lcf, const char* msg, ...);
-void stringify(unsigned long int id, char* str);
+template<typename ...Args>
+void debuglog(LogCategoryFlag lcf, Args ...args);
+
+std::string stringify(unsigned long int id);
 
 #endif // LOGCATEGORY_H_INCL

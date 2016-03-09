@@ -1,67 +1,75 @@
 #include "logging.h"
-#include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include "../shared/tasflags.h"
 #include "hook.h"
 #include "threads.h"
 #include "time.h"
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+
+std::string stringify(unsigned long int id);
+void errlog();
+template<typename First, typename ...Rest>
+void errlog (First && first, Rest && ...rest);
 
 
-void debuglog(LogCategoryFlag lcf, const char* fmt, ...)
+void errlog() {}
+
+template<typename First, typename ...Rest>
+void errlog (First && first, Rest && ...rest)
+{
+    std::cerr << std::forward<First>(first);
+    errlog(std::forward<Rest>(rest)...);
+}
+
+template<typename ...Args>
+void debuglog(LogCategoryFlag lcf, Args ...args)
 {
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
-        char str[4096];
-        memset(str, '\0', sizeof(str));
         if (lcf & LCF_ERROR)
             /* Write the text in red */
-            strcat(str, ANSI_COLOR_RED);
+            std::cerr << ANSI_COLOR_RED;
         else
             /* Write the header text in white */
-            strcat(str, ANSI_COLOR_LIGHT_GRAY);
-        size_t str_len = strlen(str);
-        snprintf(str + str_len, 4096 - str_len - 1, "[libTAS f:%6lu] ", frame_counter);
-        str_len = strlen(str);
+            std::cerr << ANSI_COLOR_LIGHT_GRAY;
+
+        std::cerr << "[libTAS f:" << std::setw(6) << frame_counter << "] ";
+
         if (pthread_self_real) {
-            char thstr[12];
-            stringify(pthread_self_real(), thstr);
+            std::string thstr = stringify(pthread_self_real());
             if (isMainThread())
-                snprintf(str + str_len, 4096 - str_len - 1, "Thread %s (main) ", thstr);
+                std::cerr << "Thread " << thstr << " (main) ";
             else
-                snprintf(str + str_len, 4096 - str_len - 1, "Thread %s        ", thstr);
+                std::cerr << "Thread " << thstr << "        ";
         }
 
         /* Reset color change */
-        strcat(str, ANSI_COLOR_RESET);
+        std::cerr << ANSI_COLOR_RESET;
 
-        str_len = strlen(str);
+        /* Output arguments */
+        errlog(std::forward<Args>(args)...);
 
-        va_list args;
-        va_start(args, fmt);
-        vsnprintf(str + str_len, 4096 - str_len - 1, fmt, args);
-        va_end(args);
-
-        strcat(str, "\n");
-        fprintf(stderr, str);
+        std::cerr << std::endl;
     }
 }
 
 /* Print long integers as string for shorter ids. Use base64 */
-void stringify(unsigned long int id, char* str)
+std::string stringify(unsigned long int id)
 {
     int i = 0;
+    std::ostringstream oss;
     while (id) {
         unsigned long digit = id % 64;
-        if (digit < 26) str[i] = (char)('A' + digit);
-        else if (digit < 52) str[i] = (char)('a' + (digit - 26));
-        else if (digit < 62) str[i] = (char)('0' + (digit - 52));
-        else if (digit == 62) str[i] = '+';
-        else str[i] = '/';
+        if (digit < 26) oss << ('A' + digit);
+        else if (digit < 52) oss << ('a' + (digit - 26));
+        else if (digit < 62) oss << ('0' + (digit - 52));
+        else if (digit == 62) oss << '+';
+        else oss << '/';
 
         id /= 64;
-        i++;
     }
-    str[i] = '\0';
+    return oss.str();
 }
+

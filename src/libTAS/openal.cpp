@@ -7,7 +7,7 @@
 /* Override */ void* alcOpenDevice(const char* devicename)
 {
 
-    debuglog(LCF_OPENAL, "Function %s called.\n", __func__);
+    debuglog(LCF_OPENAL, __func__, " call.");
     /*
     const char *devices; 
     const char *ptr; 
