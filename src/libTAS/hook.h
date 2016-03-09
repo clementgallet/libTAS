@@ -42,7 +42,9 @@ extern void (*SDL_WaitThread_real)(void* thread, int *status);
 //void (*SDL_DetachThread_real)(void * thread);
 
 extern int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
-extern void (*pthread_exit_real) (void *retval);
+
+/* Standard _Noreturn c++11 tag does not seem to work with function pointers, so using the GCC attribute instead */
+extern __attribute__((__noreturn__)) void (*pthread_exit_real) (void *retval);
 extern int (*pthread_join_real) (unsigned long int thread, void **thread_return);
 extern int (*pthread_detach_real) (unsigned long int thread);
 extern int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len);

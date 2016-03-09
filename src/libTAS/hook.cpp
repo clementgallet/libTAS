@@ -60,7 +60,7 @@ void (*SDL_WaitThread_real)(void* thread, int *status);
 typedef unsigned long int pthread_t;
 
 int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
-void (*pthread_exit_real) (void *retval);
+void __attribute__((__noreturn__)) (*pthread_exit_real) (void *retval);
 int (*pthread_join_real) (unsigned long int thread, void **thread_return);
 int (*pthread_detach_real) (unsigned long int thread);
 int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len);

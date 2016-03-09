@@ -262,7 +262,7 @@ void __attribute__((destructor)) term(void)
     
 
 /* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags);
+    debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
 
@@ -359,7 +359,7 @@ void __attribute__((destructor)) term(void)
 /* SDL 1.2 */
 /* Override */ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
-    debuglog(LCF_SDL, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags);
+    debuglog(LCF_SDL, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);

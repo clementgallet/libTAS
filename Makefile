@@ -1,5 +1,5 @@
 .PHONY: all clean src/libTAS src/linTAS 
-OBJS=$(wildcard /src/libTAS/*.o) $(wildcard src/shared/*.o) $(wildcard /src/linTAS/*.o) $(wildcard src/external/*.o) 
+OBJS=$(wildcard src/libTAS/*.o) $(wildcard src/shared/*.o) $(wildcard src/linTAS/*.o) $(wildcard src/external/*.o) 
 
 all: 64bit
 
