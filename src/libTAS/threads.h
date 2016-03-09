@@ -10,15 +10,15 @@ typedef unsigned long int pthread_t; // Does not seem to be much system-dependen
 void setMainThread(void);
 int isMainThread(void);
 
-/* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
-/* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status);
+extern "C" SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
+extern "C" void SDL_WaitThread(SDL_Thread * thread, int *status);
 //void SDL_DetachThread(SDL_Thread * thread);
 
-/* Override */ int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg);
-/* Override */ void pthread_exit (void *retval);
-/* Override */ int pthread_join (pthread_t thread, void **thread_return);
-/* Override */ int pthread_detach (pthread_t thread);
-/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval);
-/* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
+extern "C" int pthread_create (pthread_t * thread, void * attr, void * (* start_routine) (void *), void * arg);
+extern "C" void pthread_exit (void *retval);
+extern "C" int pthread_join (pthread_t thread, void **thread_return);
+extern "C" int pthread_detach (pthread_t thread);
+extern "C" int pthread_tryjoin_np(pthread_t thread, void **retval);
+extern "C" int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
 #endif

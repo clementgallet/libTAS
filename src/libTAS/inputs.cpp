@@ -288,7 +288,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
-    SDL_GameController* gc_id = malloc(1);
+    SDL_GameController* gc_id = new SDL_GameController;
     *gc_id = joystick_index;
 
     /* Save the opening of the game controller */
@@ -362,7 +362,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
  *  The axis indices start at index 0.
  */
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
-                                                SDL_GameControllerAxis axis)
+                                          SDL_GameControllerAxis axis)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, "%s call with id %d and axis %d", __func__, *gamecontroller, axis);
 
@@ -412,7 +412,5 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     joyid[*gamecontroller] = -1;
 
 }
-
-
 
 

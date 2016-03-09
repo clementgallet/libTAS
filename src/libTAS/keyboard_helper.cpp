@@ -284,16 +284,16 @@ SDLKey X11_Translate1Keysym(KeySym xsym)
 }
 
 SDL_Scancode GetScanFromKey(SDL_Keycode keycode){
-    for (SDL_Scancode i=0; i<SDL_NUM_SCANCODES; i++)
+    for (int i=0; i<static_cast<int>(SDL_NUM_SCANCODES); i++)
         if (SDL_default_keymap[i] == keycode)
-            return i;
+            return static_cast<SDL_Scancode>(i);
     return SDL_SCANCODE_UNKNOWN;
 }
 
 SDL_Scancode GetScanFromKey1(SDLKey key){
-    for (SDL_Scancode i=0; i<SDL_NUM_SCANCODES; i++)
+    for (int i=0; i<static_cast<int>(SDL_NUM_SCANCODES); i++)
         if (SDL1_default_keymap[i] == key)
-            return i;
+            return static_cast<SDL_Scancode>(i);
     return SDL_SCANCODE_UNKNOWN;
 }
 

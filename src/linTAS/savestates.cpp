@@ -58,7 +58,7 @@ read_mapping (FILE *mapfile,
      * So I'm using strtoull instead.
      */
 
-    char* linestring = malloc(sizeof(char) * 1024);
+    char* linestring = (char*) malloc(sizeof(char) * 1024);
     if (linestring == NULL){
         fprintf(stderr, "malloc failed\n");
         return 0;
@@ -143,11 +143,11 @@ void saveState(pid_t game_pid, struct State* state)
     rewind(mapsfile);
 
     /* Allocate the state */
-    state->sections = malloc(n_sections * sizeof(struct StateSection));
+    state->sections = (struct StateSection*) malloc(n_sections * sizeof(struct StateSection));
 
     /* Allocate the structures to prepare the memory read */
-    struct iovec* local = malloc(n_sections * sizeof(struct iovec));
-    struct iovec* remote = malloc(n_sections * sizeof(struct iovec));
+    struct iovec* local = (struct iovec*) malloc(n_sections * sizeof(struct iovec));
+    struct iovec* remote = (struct iovec*) malloc(n_sections * sizeof(struct iovec));
 
     /* Now iterate until end-of-file. */
     int section_i = 0;
@@ -196,7 +196,7 @@ void saveState(pid_t game_pid, struct State* state)
         strncpy(state->sections[section_i].device, device, 8);
         state->sections[section_i].inode = inode;
         size_t filename_size = strnlen(filename, 2048);
-        state->sections[section_i].filename = malloc((filename_size + 1) * sizeof(char));
+        state->sections[section_i].filename = (char*) malloc((filename_size + 1) * sizeof(char));
         if (state->sections[section_i].filename == NULL) {
             fprintf(stderr, "Cound not alloc memory for filename\n");
             haserror = 1;
@@ -206,7 +206,7 @@ void saveState(pid_t game_pid, struct State* state)
         state->sections[section_i].filename[filename_size] = '\0';
 
         /* Allocate actual memory section */
-        state->sections[section_i].mem = malloc(size * sizeof(char));
+        state->sections[section_i].mem = (char*) malloc(size * sizeof(char));
         if (state->sections[section_i].mem == NULL) {
             fprintf(stderr, "Cound not alloc memory of size %lld for mem\n", size);
             haserror = 1;
@@ -286,7 +286,7 @@ void saveState(pid_t game_pid, struct State* state)
         return;
     }
 
-    struct StateSection* sections_realloc = realloc(state->sections, section_i * sizeof(struct StateSection));
+    struct StateSection* sections_realloc = (struct StateSection*) realloc(state->sections, section_i * sizeof(struct StateSection));
     if (sections_realloc == NULL) {
         fprintf(stderr, "Realloc failed\n");
         free(state->sections);
@@ -345,8 +345,8 @@ void loadState(pid_t game_pid, struct State* state)
      * As opposed to memory read, we are doing writes one at a time,
      * so that we can give more information on the first write error
      */
-    struct iovec* local = malloc(sizeof(struct iovec));
-    struct iovec* remote = malloc(sizeof(struct iovec));
+    struct iovec* local = (struct iovec*) malloc(sizeof(struct iovec));
+    struct iovec* remote = (struct iovec*) malloc(sizeof(struct iovec));
 
     /* Now iterate until end-of-file. */
     unsigned long long int total_size_loaded = 0;

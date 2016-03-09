@@ -102,7 +102,7 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 size_t str_len;
                 receiveData(&str_len, sizeof(size_t));
-                dumpfile = malloc(str_len * sizeof(char) + 1);
+                dumpfile = new char[str_len+1];
                 receiveData(dumpfile, str_len * sizeof(char));
                 dumpfile[str_len] = '\0';
                 break;
@@ -110,7 +110,7 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving sdl filename");
                 size_t sdl_len;
                 receiveData(&sdl_len, sizeof(size_t));
-                sdlfile = malloc(sdl_len * sizeof(char) + 1);
+                sdlfile = new char[sdl_len+1];
                 receiveData(sdlfile, sdl_len * sizeof(char));
                 sdlfile[sdl_len] = '\0';
                 break;

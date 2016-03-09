@@ -1188,7 +1188,7 @@ int TTF_SizeText(TTF_Font *font, const char *text, int *w, int *h)
 
     TTF_CHECKPOINTER(text, -1);
 
-    utf8 = alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         status = TTF_SizeUTF8(font, (char *)utf8, w, h);
@@ -1324,7 +1324,7 @@ int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h)
 
     TTF_CHECKPOINTER(text, -1);
 
-    utf8 = alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         status = TTF_SizeUTF8(font, (char *)utf8, w, h);
@@ -1342,7 +1342,7 @@ SDL_Surface *TTF_RenderText_Solid(TTF_Font *font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Solid(font, (char *)utf8, fg);
@@ -1392,7 +1392,7 @@ SDL_Surface *TTF_RenderUTF8_Solid(TTF_Font *font,
     dst_check = (Uint8*)textbuf->pixels + textbuf->pitch * textbuf->h;
 
     /* Fill the palette with the foreground color */
-    palette = textbuf->format->palette;
+    palette = (SDL_Palette*) textbuf->format->palette;
     palette->colors[0].r = 255 - fg.r;
     palette->colors[0].g = 255 - fg.g;
     palette->colors[0].b = 255 - fg.b;
@@ -1488,7 +1488,7 @@ SDL_Surface *TTF_RenderUNICODE_Solid(TTF_Font *font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Solid(font, (char *)utf8, fg);
@@ -1515,7 +1515,7 @@ SDL_Surface *TTF_RenderText_Shaded(TTF_Font *font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Shaded(font, (char *)utf8, fg, bg);
@@ -1570,7 +1570,7 @@ SDL_Surface *TTF_RenderUTF8_Shaded(TTF_Font *font,
     dst_check = (Uint8*)textbuf->pixels + textbuf->pitch * textbuf->h;
 
     /* Fill the palette with NUM_GRAYS levels of shading from bg to fg */
-    palette = textbuf->format->palette;
+    palette = (SDL_Palette*) textbuf->format->palette;
     rdiff = fg.r - bg.r;
     gdiff = fg.g - bg.g;
     bdiff = fg.b - bg.b;
@@ -1669,7 +1669,7 @@ SDL_Surface* TTF_RenderUNICODE_Shaded( TTF_Font* font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Shaded(font, (char *)utf8, fg, bg);
@@ -1699,7 +1699,7 @@ SDL_Surface *TTF_RenderText_Blended(TTF_Font *font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended(font, (char *)utf8, fg);
@@ -1840,7 +1840,7 @@ SDL_Surface *TTF_RenderUNICODE_Blended(TTF_Font *font,
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended(font, (char *)utf8, fg);
@@ -1858,7 +1858,7 @@ SDL_Surface *TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SD
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended_Wrapped(font, (char *)utf8, fg, wrapLength);
@@ -1922,7 +1922,7 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
 
         numLines = 0;
 
-        str = alloca(sizeof(char) * (str_len+1));
+        str = (char*) alloca(sizeof(char) * (str_len+1));
         if ( str == NULL ) {
             TTF_SetError("Out of memory");
             return(NULL);
@@ -2112,7 +2112,7 @@ SDL_Surface *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* tex
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended_Wrapped(font, (char *)utf8, fg, wrapLength);

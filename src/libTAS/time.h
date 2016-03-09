@@ -34,13 +34,13 @@ void advanceFrame(void);
 void sleepEndFrame(void);
 int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y);
 
-/* Override */ int usleep(useconds_t usec);
-/* Override */ time_t time(time_t* t);
-/* Override */ int gettimeofday(struct timeval* tv, void* tz);
-/* Override */ void SDL_Delay(Uint32 sleep);
-/* Override */ Uint32 SDL_GetTicks(void);
-/* Override */ Uint64 SDL_GetPerformanceFrequency(void);
-/* Override */ Uint64 SDL_GetPerformanceCounter(void);
+extern "C" int usleep(useconds_t usec);
+extern "C" time_t time(time_t* t);
+extern "C" int gettimeofday(struct timeval* tv, void* tz);
+extern "C" void SDL_Delay(Uint32 sleep);
+extern "C" Uint32 SDL_GetTicks(void);
+extern "C" Uint64 SDL_GetPerformanceFrequency(void);
+extern "C" Uint64 SDL_GetPerformanceCounter(void);
 SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
 SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 

@@ -1,4 +1,5 @@
 .PHONY: all clean src/libTAS src/linTAS 
+OBJS=$(wildcard /src/libTAS/*.o) $(wildcard src/shared/*.o) $(wildcard /src/linTAS/*.o) $(wildcard src/external/*.o) 
 
 all: 64bit
 
@@ -11,6 +12,5 @@ all: 64bit
 	$(MAKE) -C src/linTAS/ TARCH=-m32
 
 clean:
-	$(MAKE) -C src/libTAS/ clean
-	$(MAKE) -C src/linTAS/ clean
+	rm $(OBJS)
 

@@ -13,24 +13,24 @@ extern struct AllInputs old_ai;
 typedef int SDL_GameController;
 
 
-/* Override */ Uint8* SDL_GetKeyboardState(int* numkeys);
-/* Override */ Uint8* SDL_GetKeyState( int* numkeys);
+extern "C" Uint8* SDL_GetKeyboardState(int* numkeys);
+extern "C" Uint8* SDL_GetKeyState( int* numkeys);
 int generateKeyUpEvent(void *events, void* gameWindow, int num, int update);
 int generateKeyDownEvent(void *events, void* gameWindow, int num, int update);
 int generateControllerEvent(SDL_Event* events, int num, int update);
 
-/* Override */ int SDL_NumJoysticks(void);
-/* Override */ SDL_bool SDL_IsGameController(int joystick_index);
-/* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index);
-/* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index);
-/* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller);
-/* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller);
-/* Override */ int SDL_GameControllerEventState(int state);
-/* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
+extern "C" int SDL_NumJoysticks(void);
+extern "C" SDL_bool SDL_IsGameController(int joystick_index);
+extern "C" SDL_GameController *SDL_GameControllerOpen(int joystick_index);
+extern "C" const char *SDL_GameControllerNameForIndex(int joystick_index);
+extern "C" const char *SDL_GameControllerName(SDL_GameController *gamecontroller);
+extern "C" SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller);
+extern "C" int SDL_GameControllerEventState(int state);
+extern "C" Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                                 SDL_GameControllerAxis axis);
-/* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
+extern "C" Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button);
-/* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller);
+extern "C" void SDL_GameControllerClose(SDL_GameController *gamecontroller);
 
 
 
