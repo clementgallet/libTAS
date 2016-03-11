@@ -32,17 +32,18 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 std::string stringify(unsigned long int id);
+void debuglogverbose(LogCategoryFlag lcf, std::string str);
 
-void errlog();
-inline void errlog() {}
+void catlog(std::ostringstream &oss);
+inline void catlog(std::ostringstream &oss) {}
 
 template<typename First, typename ...Rest>
-void errlog (First && first, Rest && ...rest);
+void catlog (std::ostringstream &oss, First && first, Rest && ...rest);
 template<typename First, typename ...Rest>
-inline void errlog (First && first, Rest && ...rest)
+inline void catlog (std::ostringstream &oss, First && first, Rest && ...rest)
 {
-    std::cerr << std::forward<First>(first);
-    errlog(std::forward<Rest>(rest)...);
+    oss << std::forward<First>(first);
+    catlog(oss, std::forward<Rest>(rest)...);
 }
 
 /* Because of how templates work, the definition of the function has to be
@@ -56,33 +57,11 @@ void debuglog(LogCategoryFlag lcf, Args ...args);
 template<typename ...Args>
 inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
-    /* Use the extern variable tasflags */
-    if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
-        if (lcf & LCF_ERROR)
-            /* Write the text in red */
-            std::cerr << ANSI_COLOR_RED;
-        else
-            /* Write the header text in white */
-            std::cerr << ANSI_COLOR_LIGHT_GRAY;
-
-        std::cerr << "[libTAS f:" << std::setw(6) << frame_counter << "] ";
-
-        if (pthread_self_real) {
-            std::string thstr = stringify(pthread_self_real());
-            //if (isMainThread())
-            //    std::cerr << "Thread " << thstr << " (main) ";
-            //else
-                std::cerr << "Thread " << thstr << "        ";
-        }
-
-        /* Reset color change */
-        std::cerr << ANSI_COLOR_RESET;
-
-        /* Output arguments */
-        errlog(std::forward<Args>(args)...);
-
-        std::cerr << std::endl;
-    }
+    std::ostringstream oss;
+    catlog(oss, std::forward<Args>(args)...);
+    debuglogverbose(lcf, oss.str());
 }
 
+
 #endif // LOGCATEGORY_H_INCL
+
