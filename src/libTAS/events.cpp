@@ -8,7 +8,7 @@
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, ...)
 {
-    debuglog(LCF_SDL | LCF_EVENTS, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
     /* We need to use a function signature with variable arguments,
      * because SDL 1.2 and SDL 2 provide a different function with the same name.
@@ -62,7 +62,7 @@
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    debuglog(LCF_SDL | LCF_EVENTS, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
     /* 
      * SDL_PollEvent is supposed to call SDL_PumpEvents,
@@ -94,18 +94,125 @@
     return -1;
 }
 
-/* 
- * This helper function will return a number of events from the generated event queue.
- * This event queue consists on the real SDL event queue with our own filter
- * (e.g. removing real input events)
- * and generated SDL events containing mostly inputs passed from linTAS.
- *
- * Because SDL has multiple ways of accessing the event queue, we made this function
- * with two parameter indicating the number of events we want and if we need 
- * to update the queue by removing the returned event, or keep it in the queue.
- * 
- * The function returns the number of events returned.
- */
+/* Override */ SDL_bool SDL_HasEvent(Uint32 type)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    return SDL_HasEvents(type, type);
+}
+
+/* Override */ SDL_bool SDL_HasEvents(Uint32 minType, Uint32 maxType)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    /* Try to get one event without updating, and return if we got one */
+    SDL_Event ev;
+    return getSDL2Events(&ev, 1, 0, minType, maxType) ? SDL_TRUE : SDL_FALSE;
+}
+
+/* Override */ void SDL_FlushEvent(Uint32 type)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    return SDL_FlushEvents(type, type);
+}
+
+/* Override */ void SDL_FlushEvents(Uint32 minType, Uint32 maxType)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    /* Get events from the queue until we get nothing */
+    const int packet = 16;
+    SDL_Event evs[packet];
+    while (getSDL2Events(evs, packet, 1, minType, maxType)) {}
+
+}
+
+/* Override */ int SDL_WaitEvent(SDL_Event * event)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    SDL_PumpEvents_real();
+
+    if (event) {
+        while (! getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+            usleep_real(1000); // Wait 1 ms before trying again
+            SDL_PumpEvents_real();
+        }
+        return 1;
+    }
+    else {
+        SDL_Event ev;
+        while (! getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+            usleep_real(1000); // Wait 1 ms before trying again
+            SDL_PumpEvents_real();
+        }
+        return 1;
+    }
+}
+
+/* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
+{
+    debuglog(LCF_SDL | LCF_EVENTS | LCF_TIMEFUNC, __func__, " call with timeout ", timeout);
+
+    int t;
+    if (event) {
+        for (t=0; t<timeout; t++) {
+            SDL_PumpEvents_real();
+            if (getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT))
+                break;
+            usleep_real(1000); // Wait 1 ms before trying again
+        }
+        return (t<timeout);
+    }
+    else {
+        SDL_Event ev;
+        for (t=0; t<timeout; t++) {
+            SDL_PumpEvents_real();
+            if (getSDL2Events(event, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT))
+                break;
+            usleep_real(1000); // Wait 1 ms before trying again
+        }
+        return (t<timeout);
+    }
+}
+
+void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+}
+
+SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    return SDL_FALSE;
+}
+
+void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+}
+
+void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+}
+
+void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+}
+
+Uint8 SDL_EventState(Uint32 type, int state)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    return /*SDL_ENABLE*/ 1;
+}
+
+Uint32 SDL_RegisterEvents(int numevents)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    return SDL_USEREVENT;
+}
+
 int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, Uint32 maxType)
 {
 
@@ -220,11 +327,6 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
     return peepnb;
 }
 
-/* 
- * Same as the getSDL2Events, except that we are dealing with SDL 1.2 events.
- * These events have a different structure, and the filtering is also different.
- * Otherwise, the function acheive the same goal.
- */
 
 int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mask)
 {
@@ -331,7 +433,6 @@ int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mas
     return peepnb;
 }
 
-/* Return if the SDL event must be passed to the game or be filtered */
 int filterSDL2Event(SDL_Event *event)
 {
     switch(event->type) {
@@ -343,7 +444,6 @@ int filterSDL2Event(SDL_Event *event)
     }
 }
 
-/* Return if the SDL event must be passed to the game or be filtered */
 int filterSDL1Event(SDL1::SDL_Event *event)
 {
     switch(event->type) {
@@ -355,7 +455,6 @@ int filterSDL1Event(SDL1::SDL_Event *event)
     }
 }
 
-/* Print which event type is it */
 void logEvent(SDL_Event *event)
 {
     switch(event->type) {

@@ -1,13 +1,18 @@
 #include "logging.h"
 #include <stdlib.h>
+#include "threads.h"
+#include "../shared/tasflags.h"
 
 void debuglogverbose(LogCategoryFlag lcf, std::string str)
 {
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
         if (lcf & LCF_ERROR)
-            /* Write the text in red */
+            /* Write the header text in red */
             std::cerr << ANSI_COLOR_RED;
+        else if (lcf & LCF_TODO)
+            /* Write the header text in light red */
+            std::cerr << ANSI_COLOR_LIGHT_RED;
         else
             /* Write the header text in white */
             std::cerr << ANSI_COLOR_LIGHT_GRAY;
@@ -16,9 +21,9 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str)
 
         if (pthread_self_real) {
             std::string thstr = stringify(pthread_self_real());
-            //if (isMainThread())
-            //    std::cerr << "Thread " << thstr << " (main) ";
-            //else
+            if (isMainThread())
+                std::cerr << "Thread " << thstr << " (main) ";
+            else
                 std::cerr << "Thread " << thstr << "        ";
         }
 

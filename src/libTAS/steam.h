@@ -1,9 +1,9 @@
-#include "stdbool.h"
+#include "global.h"
 
-extern "C" void SteamAPI_Shutdown();
+OVERRIDE void SteamAPI_Shutdown();
 
 // checks if a local Steam client is running 
-extern "C" bool SteamAPI_IsSteamRunning();
+OVERRIDE bool SteamAPI_IsSteamRunning();
 
 // Detects if your executable was launched through the Steam client, and restarts your game through 
 // the client if necessary. The Steam client will be started if it is not running.
@@ -16,9 +16,9 @@ extern "C" bool SteamAPI_IsSteamRunning();
 //
 // NOTE: This function should be used only if you are using CEG or not using Steam's DRM. Once applied
 //       to your executable, Steam's DRM will handle restarting through Steam if necessary.
-extern "C" bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID );
+OVERRIDE bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID );
 
-extern "C" bool SteamAPI_Init();
+OVERRIDE bool SteamAPI_Init();
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 //	steam callback helper functions
@@ -30,9 +30,9 @@ extern "C" bool SteamAPI_Init();
 //  to as many functions/objects as are registered to it
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 
-extern "C" void SteamAPI_RunCallbacks();
+OVERRIDE void SteamAPI_RunCallbacks();
 
 // functions used by the utility CCallback objects to receive callbacks
-extern "C" void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
-extern "C" void SteamAPI_UnregisterCallback( void *pCallback );
+OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
+OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 

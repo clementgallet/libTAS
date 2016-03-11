@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "../external/SDL.h"
 #include "hook.h"
+#include "stdbool.h"
+#include "global.h"
 
 /* Monotonic system-wide clock.  */
 //#   define CLOCK_MONOTONIC      1
@@ -34,13 +36,13 @@ void advanceFrame(void);
 void sleepEndFrame(void);
 int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y);
 
-extern "C" int usleep(useconds_t usec);
-extern "C" time_t time(time_t* t);
-extern "C" int gettimeofday(struct timeval* tv, void* tz);
-extern "C" void SDL_Delay(Uint32 sleep);
-extern "C" Uint32 SDL_GetTicks(void);
-extern "C" Uint64 SDL_GetPerformanceFrequency(void);
-extern "C" Uint64 SDL_GetPerformanceCounter(void);
+OVERRIDE int usleep(useconds_t usec);
+OVERRIDE time_t time(time_t* t);
+OVERRIDE int gettimeofday(struct timeval* tv, void* tz);
+OVERRIDE void SDL_Delay(Uint32 sleep);
+OVERRIDE Uint32 SDL_GetTicks(void);
+OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
+OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
 SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
 SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 

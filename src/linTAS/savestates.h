@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <unistd.h>

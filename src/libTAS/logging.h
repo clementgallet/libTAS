@@ -6,7 +6,6 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "../shared/tasflags.h"
 #include "hook.h" // For pthread_self_real
 #include "time.h" // For frame_counter
 
@@ -62,6 +61,7 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     debuglogverbose(lcf, oss.str());
 }
 
+#define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")
 
 #endif // LOGCATEGORY_H_INCL
 
