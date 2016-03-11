@@ -10,7 +10,7 @@ struct AllInputs ai;
 struct AllInputs old_ai;
 
 Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
-Uint8 SDL1_keyboard[SDLK1_LAST] = {0};
+Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
 SDL_JoystickID joyid[4] = {-1, -1, -1, -1};
 const char joy_name[] = "Universal joystick";
@@ -35,7 +35,7 @@ int controller_events = 1;
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
 
     if (numkeys)
-        *numkeys = SDLK1_LAST;
+        *numkeys = SDL1::SDLK_LAST;
 
     xkeyboardToSDL1keyboard(ai.keyboard, SDL1_keyboard);
     return SDL1_keyboard;
@@ -78,12 +78,12 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
             }
 
             if (SDLver == 1) {
-                SDL1_Event* events1 = (SDL1_Event*)events;
-                events1[evi].type = SDL1_KEYUP;
+                SDL1::SDL_Event* events1 = (SDL1::SDL_Event*)events;
+                events1[evi].type = SDL1::SDL_KEYUP;
                 events1[evi].key.which = 0; // FIXME: I don't know what is going here
                 events1[evi].key.state = SDL_RELEASED;
 
-                SDL_keysym keysym;
+                SDL1::SDL_keysym keysym;
                 xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
                 events1[evi].key.keysym = keysym;
 
@@ -135,20 +135,20 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
                 xkeysymToSDL(&keysym, ai.keyboard[i]);
                 events2[evi].key.keysym = keysym;
 
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events2[evi].key.keysym.sym);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", events2[evi].key.keysym.sym);
             }
 
             if (SDLver == 1) {
-                SDL1_Event* events1 = (SDL1_Event*)events;
-                events1[evi].type = SDL1_KEYDOWN;
+                SDL1::SDL_Event* events1 = (SDL1::SDL_Event*)events;
+                events1[evi].type = SDL1::SDL_KEYDOWN;
                 events1[evi].key.which = 0; // FIXME: I don't know what is going here
                 events1[evi].key.state = SDL_PRESSED;
 
-                SDL_keysym keysym;
+                SDL1::SDL_keysym keysym;
                 xkeysymToSDL1(&keysym, ai.keyboard[i]);
                 events1[evi].key.keysym = keysym;
 
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d.", events1[evi].key.keysym.sym);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", events1[evi].key.keysym.sym);
             }
 
             if (update) {

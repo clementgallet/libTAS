@@ -680,280 +680,6 @@ enum
     SDLK_SLEEP = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SLEEP)
 };
 
-typedef enum {
-        /** @name ASCII mapped keysyms
-         *  The keyboard syms have been cleverly chosen to map to ASCII
-         */
-        /*@{*/
-	SDLK1_UNKNOWN		= 0,
-	SDLK1_FIRST		= 0,
-	SDLK1_BACKSPACE		= 8,
-	SDLK1_TAB		= 9,
-	SDLK1_CLEAR		= 12,
-	SDLK1_RETURN		= 13,
-	SDLK1_PAUSE		= 19,
-	SDLK1_ESCAPE		= 27,
-	SDLK1_SPACE		= 32,
-	SDLK1_EXCLAIM		= 33,
-	SDLK1_QUOTEDBL		= 34,
-	SDLK1_HASH		= 35,
-	SDLK1_DOLLAR		= 36,
-	SDLK1_AMPERSAND		= 38,
-	SDLK1_QUOTE		= 39,
-	SDLK1_LEFTPAREN		= 40,
-	SDLK1_RIGHTPAREN		= 41,
-	SDLK1_ASTERISK		= 42,
-	SDLK1_PLUS		= 43,
-	SDLK1_COMMA		= 44,
-	SDLK1_MINUS		= 45,
-	SDLK1_PERIOD		= 46,
-	SDLK1_SLASH		= 47,
-	SDLK1_0			= 48,
-	SDLK1_1			= 49,
-	SDLK1_2			= 50,
-	SDLK1_3			= 51,
-	SDLK1_4			= 52,
-	SDLK1_5			= 53,
-	SDLK1_6			= 54,
-	SDLK1_7			= 55,
-	SDLK1_8			= 56,
-	SDLK1_9			= 57,
-	SDLK1_COLON		= 58,
-	SDLK1_SEMICOLON		= 59,
-	SDLK1_LESS		= 60,
-	SDLK1_EQUALS		= 61,
-	SDLK1_GREATER		= 62,
-	SDLK1_QUESTION		= 63,
-	SDLK1_AT			= 64,
-	/* 
-	   Skip uppercase letters
-	 */
-	SDLK1_LEFTBRACKET	= 91,
-	SDLK1_BACKSLASH		= 92,
-	SDLK1_RIGHTBRACKET	= 93,
-	SDLK1_CARET		= 94,
-	SDLK1_UNDERSCORE		= 95,
-	SDLK1_BACKQUOTE		= 96,
-	SDLK1_a			= 97,
-	SDLK1_b			= 98,
-	SDLK1_c			= 99,
-	SDLK1_d			= 100,
-	SDLK1_e			= 101,
-	SDLK1_f			= 102,
-	SDLK1_g			= 103,
-	SDLK1_h			= 104,
-	SDLK1_i			= 105,
-	SDLK1_j			= 106,
-	SDLK1_k			= 107,
-	SDLK1_l			= 108,
-	SDLK1_m			= 109,
-	SDLK1_n			= 110,
-	SDLK1_o			= 111,
-	SDLK1_p			= 112,
-	SDLK1_q			= 113,
-	SDLK1_r			= 114,
-	SDLK1_s			= 115,
-	SDLK1_t			= 116,
-	SDLK1_u			= 117,
-	SDLK1_v			= 118,
-	SDLK1_w			= 119,
-	SDLK1_x			= 120,
-	SDLK1_y			= 121,
-	SDLK1_z			= 122,
-	SDLK1_DELETE		= 127,
-	/* End of ASCII mapped keysyms */
-        /*@}*/
-
-	/** @name International keyboard syms */
-        /*@{*/
-	SDLK1_WORLD_0		= 160,		/* 0xA0 */
-	SDLK1_WORLD_1		= 161,
-	SDLK1_WORLD_2		= 162,
-	SDLK1_WORLD_3		= 163,
-	SDLK1_WORLD_4		= 164,
-	SDLK1_WORLD_5		= 165,
-	SDLK1_WORLD_6		= 166,
-	SDLK1_WORLD_7		= 167,
-	SDLK1_WORLD_8		= 168,
-	SDLK1_WORLD_9		= 169,
-	SDLK1_WORLD_10		= 170,
-	SDLK1_WORLD_11		= 171,
-	SDLK1_WORLD_12		= 172,
-	SDLK1_WORLD_13		= 173,
-	SDLK1_WORLD_14		= 174,
-	SDLK1_WORLD_15		= 175,
-	SDLK1_WORLD_16		= 176,
-	SDLK1_WORLD_17		= 177,
-	SDLK1_WORLD_18		= 178,
-	SDLK1_WORLD_19		= 179,
-	SDLK1_WORLD_20		= 180,
-	SDLK1_WORLD_21		= 181,
-	SDLK1_WORLD_22		= 182,
-	SDLK1_WORLD_23		= 183,
-	SDLK1_WORLD_24		= 184,
-	SDLK1_WORLD_25		= 185,
-	SDLK1_WORLD_26		= 186,
-	SDLK1_WORLD_27		= 187,
-	SDLK1_WORLD_28		= 188,
-	SDLK1_WORLD_29		= 189,
-	SDLK1_WORLD_30		= 190,
-	SDLK1_WORLD_31		= 191,
-	SDLK1_WORLD_32		= 192,
-	SDLK1_WORLD_33		= 193,
-	SDLK1_WORLD_34		= 194,
-	SDLK1_WORLD_35		= 195,
-	SDLK1_WORLD_36		= 196,
-	SDLK1_WORLD_37		= 197,
-	SDLK1_WORLD_38		= 198,
-	SDLK1_WORLD_39		= 199,
-	SDLK1_WORLD_40		= 200,
-	SDLK1_WORLD_41		= 201,
-	SDLK1_WORLD_42		= 202,
-	SDLK1_WORLD_43		= 203,
-	SDLK1_WORLD_44		= 204,
-	SDLK1_WORLD_45		= 205,
-	SDLK1_WORLD_46		= 206,
-	SDLK1_WORLD_47		= 207,
-	SDLK1_WORLD_48		= 208,
-	SDLK1_WORLD_49		= 209,
-	SDLK1_WORLD_50		= 210,
-	SDLK1_WORLD_51		= 211,
-	SDLK1_WORLD_52		= 212,
-	SDLK1_WORLD_53		= 213,
-	SDLK1_WORLD_54		= 214,
-	SDLK1_WORLD_55		= 215,
-	SDLK1_WORLD_56		= 216,
-	SDLK1_WORLD_57		= 217,
-	SDLK1_WORLD_58		= 218,
-	SDLK1_WORLD_59		= 219,
-	SDLK1_WORLD_60		= 220,
-	SDLK1_WORLD_61		= 221,
-	SDLK1_WORLD_62		= 222,
-	SDLK1_WORLD_63		= 223,
-	SDLK1_WORLD_64		= 224,
-	SDLK1_WORLD_65		= 225,
-	SDLK1_WORLD_66		= 226,
-	SDLK1_WORLD_67		= 227,
-	SDLK1_WORLD_68		= 228,
-	SDLK1_WORLD_69		= 229,
-	SDLK1_WORLD_70		= 230,
-	SDLK1_WORLD_71		= 231,
-	SDLK1_WORLD_72		= 232,
-	SDLK1_WORLD_73		= 233,
-	SDLK1_WORLD_74		= 234,
-	SDLK1_WORLD_75		= 235,
-	SDLK1_WORLD_76		= 236,
-	SDLK1_WORLD_77		= 237,
-	SDLK1_WORLD_78		= 238,
-	SDLK1_WORLD_79		= 239,
-	SDLK1_WORLD_80		= 240,
-	SDLK1_WORLD_81		= 241,
-	SDLK1_WORLD_82		= 242,
-	SDLK1_WORLD_83		= 243,
-	SDLK1_WORLD_84		= 244,
-	SDLK1_WORLD_85		= 245,
-	SDLK1_WORLD_86		= 246,
-	SDLK1_WORLD_87		= 247,
-	SDLK1_WORLD_88		= 248,
-	SDLK1_WORLD_89		= 249,
-	SDLK1_WORLD_90		= 250,
-	SDLK1_WORLD_91		= 251,
-	SDLK1_WORLD_92		= 252,
-	SDLK1_WORLD_93		= 253,
-	SDLK1_WORLD_94		= 254,
-	SDLK1_WORLD_95		= 255,		/* 0xFF */
-        /*@}*/
-
-	/** @name Numeric keypad */
-        /*@{*/
-	SDLK1_KP0		= 256,
-	SDLK1_KP1		= 257,
-	SDLK1_KP2		= 258,
-	SDLK1_KP3		= 259,
-	SDLK1_KP4		= 260,
-	SDLK1_KP5		= 261,
-	SDLK1_KP6		= 262,
-	SDLK1_KP7		= 263,
-	SDLK1_KP8		= 264,
-	SDLK1_KP9		= 265,
-	SDLK1_KP_PERIOD		= 266,
-	SDLK1_KP_DIVIDE		= 267,
-	SDLK1_KP_MULTIPLY	= 268,
-	SDLK1_KP_MINUS		= 269,
-	SDLK1_KP_PLUS		= 270,
-	SDLK1_KP_ENTER		= 271,
-	SDLK1_KP_EQUALS		= 272,
-        /*@}*/
-
-	/** @name Arrows + Home/End pad */
-        /*@{*/
-	SDLK1_UP			= 273,
-	SDLK1_DOWN		= 274,
-	SDLK1_RIGHT		= 275,
-	SDLK1_LEFT		= 276,
-	SDLK1_INSERT		= 277,
-	SDLK1_HOME		= 278,
-	SDLK1_END		= 279,
-	SDLK1_PAGEUP		= 280,
-	SDLK1_PAGEDOWN		= 281,
-        /*@}*/
-
-	/** @name Function keys */
-        /*@{*/
-	SDLK1_F1			= 282,
-	SDLK1_F2			= 283,
-	SDLK1_F3			= 284,
-	SDLK1_F4			= 285,
-	SDLK1_F5			= 286,
-	SDLK1_F6			= 287,
-	SDLK1_F7			= 288,
-	SDLK1_F8			= 289,
-	SDLK1_F9			= 290,
-	SDLK1_F10		= 291,
-	SDLK1_F11		= 292,
-	SDLK1_F12		= 293,
-	SDLK1_F13		= 294,
-	SDLK1_F14		= 295,
-	SDLK1_F15		= 296,
-        /*@}*/
-
-	/** @name Key state modifier keys */
-        /*@{*/
-	SDLK1_NUMLOCK		= 300,
-	SDLK1_CAPSLOCK		= 301,
-	SDLK1_SCROLLOCK		= 302,
-	SDLK1_RSHIFT		= 303,
-	SDLK1_LSHIFT		= 304,
-	SDLK1_RCTRL		= 305,
-	SDLK1_LCTRL		= 306,
-	SDLK1_RALT		= 307,
-	SDLK1_LALT		= 308,
-	SDLK1_RMETA		= 309,
-	SDLK1_LMETA		= 310,
-	SDLK1_LSUPER		= 311,		/**< Left "Windows" key */
-	SDLK1_RSUPER		= 312,		/**< Right "Windows" key */
-	SDLK1_MODE		= 313,		/**< "Alt Gr" key */
-	SDLK1_COMPOSE		= 314,		/**< Multi-key compose key */
-        /*@}*/
-
-	/** @name Miscellaneous function keys */
-        /*@{*/
-	SDLK1_HELP		= 315,
-	SDLK1_PRINT		= 316,
-	SDLK1_SYSREQ		= 317,
-	SDLK1_BREAK		= 318,
-	SDLK1_MENU		= 319,
-	SDLK1_POWER		= 320,		/**< Power Macintosh power key */
-	SDLK1_EURO		= 321,		/**< Some european keyboards */
-	SDLK1_UNDO		= 322,		/**< Atari keyboard has Undo */
-        /*@}*/
-
-	/* Add any other keys here */
-
-	SDLK1_LAST
-} SDLKey;
-
-
 
 
 /**
@@ -1510,83 +1236,357 @@ typedef enum
 #define SDL_SWSURFACE       0           /**< Just here for compatibility */
 
 
-
-
 /*** SDL 1.2 event structures ***/
+
+namespace SDL1 {
 
 /** Event enumerations */
 typedef enum {
-       SDL1_NOEVENT = 0,			/**< Unused (do not remove) */
-       SDL1_ACTIVEEVENT,			/**< Application loses/gains visibility */
-       SDL1_KEYDOWN,			/**< Keys pressed */
-       SDL1_KEYUP,			/**< Keys released */
-       SDL1_MOUSEMOTION,			/**< Mouse moved */
-       SDL1_MOUSEBUTTONDOWN,		/**< Mouse button pressed */
-       SDL1_MOUSEBUTTONUP,		/**< Mouse button released */
-       SDL1_JOYAXISMOTION,		/**< Joystick axis motion */
-       SDL1_JOYBALLMOTION,		/**< Joystick trackball motion */
-       SDL1_JOYHATMOTION,		/**< Joystick hat position change */
-       SDL1_JOYBUTTONDOWN,		/**< Joystick button pressed */
-       SDL1_JOYBUTTONUP,			/**< Joystick button released */
-       SDL1_QUIT,			/**< User-requested quit */
-       SDL1_SYSWMEVENT,			/**< System specific event */
-       SDL1_EVENT_RESERVEDA,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVEDB,		/**< Reserved for future use.. */
-       SDL1_VIDEORESIZE,			/**< User resized video mode */
-       SDL1_VIDEOEXPOSE,			/**< Screen needs to be redrawn */
-       SDL1_EVENT_RESERVED2,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVED3,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVED4,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVED5,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVED6,		/**< Reserved for future use.. */
-       SDL1_EVENT_RESERVED7,		/**< Reserved for future use.. */
+       SDL_NOEVENT = 0,			/**< Unused (do not remove) */
+       SDL_ACTIVEEVENT,			/**< Application loses/gains visibility */
+       SDL_KEYDOWN,			/**< Keys pressed */
+       SDL_KEYUP,			/**< Keys released */
+       SDL_MOUSEMOTION,			/**< Mouse moved */
+       SDL_MOUSEBUTTONDOWN,		/**< Mouse button pressed */
+       SDL_MOUSEBUTTONUP,		/**< Mouse button released */
+       SDL_JOYAXISMOTION,		/**< Joystick axis motion */
+       SDL_JOYBALLMOTION,		/**< Joystick trackball motion */
+       SDL_JOYHATMOTION,		/**< Joystick hat position change */
+       SDL_JOYBUTTONDOWN,		/**< Joystick button pressed */
+       SDL_JOYBUTTONUP,			/**< Joystick button released */
+       SDL_QUIT,			/**< User-requested quit */
+       SDL_SYSWMEVENT,			/**< System specific event */
+       SDL_EVENT_RESERVEDA,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVEDB,		/**< Reserved for future use.. */
+       SDL_VIDEORESIZE,			/**< User resized video mode */
+       SDL_VIDEOEXPOSE,			/**< Screen needs to be redrawn */
+       SDL_EVENT_RESERVED2,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVED3,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVED4,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVED5,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVED6,		/**< Reserved for future use.. */
+       SDL_EVENT_RESERVED7,		/**< Reserved for future use.. */
        /** Events SDL_USEREVENT through SDL_MAXEVENTS-1 are for your use */
-       SDL1_USEREVENT = 24,
+       SDL_USEREVENT = 24,
        /** This last event is only for bounding internal arrays
 	*  It is the number of bits in the event mask datatype -- Uint32
         */
-       SDL1_NUMEVENTS = 32
-} SDL1_EventType;
+       SDL_NUMEVENTS = 32
+} SDL_EventType;
 
 /** @name Predefined event masks */
 /*@{*/
-#define SDL1_EVENTMASK(X)	(1<<(X))
+#define SDL_EVENTMASK(X)	(1<<(X))
 typedef enum {
-	SDL1_ACTIVEEVENTMASK	= SDL1_EVENTMASK(SDL1_ACTIVEEVENT),
-	SDL1_KEYDOWNMASK		= SDL1_EVENTMASK(SDL1_KEYDOWN),
-	SDL1_KEYUPMASK	        = SDL1_EVENTMASK(SDL1_KEYUP),
-	SDL1_KEYEVENTMASK	    = SDL1_EVENTMASK(SDL1_KEYDOWN)|
-	                          SDL1_EVENTMASK(SDL1_KEYUP),
-	SDL1_MOUSEMOTIONMASK	= SDL1_EVENTMASK(SDL1_MOUSEMOTION),
-	SDL1_MOUSEBUTTONDOWNMASK	= SDL1_EVENTMASK(SDL1_MOUSEBUTTONDOWN),
-	SDL1_MOUSEBUTTONUPMASK	= SDL1_EVENTMASK(SDL1_MOUSEBUTTONUP),
-	SDL1_MOUSEEVENTMASK	= SDL1_EVENTMASK(SDL1_MOUSEMOTION)|
-	                          SDL1_EVENTMASK(SDL1_MOUSEBUTTONDOWN)|
-	                          SDL1_EVENTMASK(SDL1_MOUSEBUTTONUP),
-	SDL1_JOYAXISMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYAXISMOTION),
-	SDL1_JOYBALLMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYBALLMOTION),
-	SDL1_JOYHATMOTIONMASK	= SDL1_EVENTMASK(SDL1_JOYHATMOTION),
-	SDL1_JOYBUTTONDOWNMASK	= SDL1_EVENTMASK(SDL1_JOYBUTTONDOWN),
-	SDL1_JOYBUTTONUPMASK	= SDL1_EVENTMASK(SDL1_JOYBUTTONUP),
-	SDL1_JOYEVENTMASK	= SDL1_EVENTMASK(SDL1_JOYAXISMOTION)|
-	                          SDL1_EVENTMASK(SDL1_JOYBALLMOTION)|
-	                          SDL1_EVENTMASK(SDL1_JOYHATMOTION)|
-	                          SDL1_EVENTMASK(SDL1_JOYBUTTONDOWN)|
-	                          SDL1_EVENTMASK(SDL1_JOYBUTTONUP),
-	SDL1_VIDEORESIZEMASK	= SDL1_EVENTMASK(SDL1_VIDEORESIZE),
-	SDL1_VIDEOEXPOSEMASK	= SDL1_EVENTMASK(SDL1_VIDEOEXPOSE),
-	SDL1_QUITMASK		= SDL1_EVENTMASK(SDL1_QUIT),
-	SDL1_SYSWMEVENTMASK	= SDL1_EVENTMASK(SDL1_SYSWMEVENT)
-} SDL1_EventMask ;
-#define SDL1_ALLEVENTS		0xFFFFFFFF
+	SDL_ACTIVEEVENTMASK	= SDL_EVENTMASK(SDL_ACTIVEEVENT),
+	SDL_KEYDOWNMASK		= SDL_EVENTMASK(SDL_KEYDOWN),
+	SDL_KEYUPMASK	        = SDL_EVENTMASK(SDL_KEYUP),
+	SDL_KEYEVENTMASK	    = SDL_EVENTMASK(SDL_KEYDOWN)|
+	                          SDL_EVENTMASK(SDL_KEYUP),
+	SDL_MOUSEMOTIONMASK	= SDL_EVENTMASK(SDL_MOUSEMOTION),
+	SDL_MOUSEBUTTONDOWNMASK	= SDL_EVENTMASK(SDL_MOUSEBUTTONDOWN),
+	SDL_MOUSEBUTTONUPMASK	= SDL_EVENTMASK(SDL_MOUSEBUTTONUP),
+	SDL_MOUSEEVENTMASK	= SDL_EVENTMASK(SDL_MOUSEMOTION)|
+	                          SDL_EVENTMASK(SDL_MOUSEBUTTONDOWN)|
+	                          SDL_EVENTMASK(SDL_MOUSEBUTTONUP),
+	SDL_JOYAXISMOTIONMASK	= SDL_EVENTMASK(SDL_JOYAXISMOTION),
+	SDL_JOYBALLMOTIONMASK	= SDL_EVENTMASK(SDL_JOYBALLMOTION),
+	SDL_JOYHATMOTIONMASK	= SDL_EVENTMASK(SDL_JOYHATMOTION),
+	SDL_JOYBUTTONDOWNMASK	= SDL_EVENTMASK(SDL_JOYBUTTONDOWN),
+	SDL_JOYBUTTONUPMASK	= SDL_EVENTMASK(SDL_JOYBUTTONUP),
+	SDL_JOYEVENTMASK	= SDL_EVENTMASK(SDL_JOYAXISMOTION)|
+	                          SDL_EVENTMASK(SDL_JOYBALLMOTION)|
+	                          SDL_EVENTMASK(SDL_JOYHATMOTION)|
+	                          SDL_EVENTMASK(SDL_JOYBUTTONDOWN)|
+	                          SDL_EVENTMASK(SDL_JOYBUTTONUP),
+	SDL_VIDEORESIZEMASK	= SDL_EVENTMASK(SDL_VIDEORESIZE),
+	SDL_VIDEOEXPOSEMASK	= SDL_EVENTMASK(SDL_VIDEOEXPOSE),
+	SDL_QUITMASK		= SDL_EVENTMASK(SDL_QUIT),
+	SDL_SYSWMEVENTMASK	= SDL_EVENTMASK(SDL_SYSWMEVENT),
+    SDL_ALLEVENTS       = 0xFFFFFFFF
+} SDL_EventMask ;
 /*@}*/
 
+typedef enum {
+        /** @name ASCII mapped keysyms
+         *  The keyboard syms have been cleverly chosen to map to ASCII
+         */
+        /*@{*/
+	SDLK_UNKNOWN		= 0,
+	SDLK_FIRST		= 0,
+	SDLK_BACKSPACE		= 8,
+	SDLK_TAB		= 9,
+	SDLK_CLEAR		= 12,
+	SDLK_RETURN		= 13,
+	SDLK_PAUSE		= 19,
+	SDLK_ESCAPE		= 27,
+	SDLK_SPACE		= 32,
+	SDLK_EXCLAIM		= 33,
+	SDLK_QUOTEDBL		= 34,
+	SDLK_HASH		= 35,
+	SDLK_DOLLAR		= 36,
+	SDLK_AMPERSAND		= 38,
+	SDLK_QUOTE		= 39,
+	SDLK_LEFTPAREN		= 40,
+	SDLK_RIGHTPAREN		= 41,
+	SDLK_ASTERISK		= 42,
+	SDLK_PLUS		= 43,
+	SDLK_COMMA		= 44,
+	SDLK_MINUS		= 45,
+	SDLK_PERIOD		= 46,
+	SDLK_SLASH		= 47,
+	SDLK_0			= 48,
+	SDLK_1			= 49,
+	SDLK_2			= 50,
+	SDLK_3			= 51,
+	SDLK_4			= 52,
+	SDLK_5			= 53,
+	SDLK_6			= 54,
+	SDLK_7			= 55,
+	SDLK_8			= 56,
+	SDLK_9			= 57,
+	SDLK_COLON		= 58,
+	SDLK_SEMICOLON		= 59,
+	SDLK_LESS		= 60,
+	SDLK_EQUALS		= 61,
+	SDLK_GREATER		= 62,
+	SDLK_QUESTION		= 63,
+	SDLK_AT			= 64,
+	/* 
+	   Skip uppercase letters
+	 */
+	SDLK_LEFTBRACKET	= 91,
+	SDLK_BACKSLASH		= 92,
+	SDLK_RIGHTBRACKET	= 93,
+	SDLK_CARET		= 94,
+	SDLK_UNDERSCORE		= 95,
+	SDLK_BACKQUOTE		= 96,
+	SDLK_a			= 97,
+	SDLK_b			= 98,
+	SDLK_c			= 99,
+	SDLK_d			= 100,
+	SDLK_e			= 101,
+	SDLK_f			= 102,
+	SDLK_g			= 103,
+	SDLK_h			= 104,
+	SDLK_i			= 105,
+	SDLK_j			= 106,
+	SDLK_k			= 107,
+	SDLK_l			= 108,
+	SDLK_m			= 109,
+	SDLK_n			= 110,
+	SDLK_o			= 111,
+	SDLK_p			= 112,
+	SDLK_q			= 113,
+	SDLK_r			= 114,
+	SDLK_s			= 115,
+	SDLK_t			= 116,
+	SDLK_u			= 117,
+	SDLK_v			= 118,
+	SDLK_w			= 119,
+	SDLK_x			= 120,
+	SDLK_y			= 121,
+	SDLK_z			= 122,
+	SDLK_DELETE		= 127,
+	/* End of ASCII mapped keysyms */
+        /*@}*/
+
+	/** @name International keyboard syms */
+        /*@{*/
+	SDLK_WORLD_0		= 160,		/* 0xA0 */
+	SDLK_WORLD_1		= 161,
+	SDLK_WORLD_2		= 162,
+	SDLK_WORLD_3		= 163,
+	SDLK_WORLD_4		= 164,
+	SDLK_WORLD_5		= 165,
+	SDLK_WORLD_6		= 166,
+	SDLK_WORLD_7		= 167,
+	SDLK_WORLD_8		= 168,
+	SDLK_WORLD_9		= 169,
+	SDLK_WORLD_10		= 170,
+	SDLK_WORLD_11		= 171,
+	SDLK_WORLD_12		= 172,
+	SDLK_WORLD_13		= 173,
+	SDLK_WORLD_14		= 174,
+	SDLK_WORLD_15		= 175,
+	SDLK_WORLD_16		= 176,
+	SDLK_WORLD_17		= 177,
+	SDLK_WORLD_18		= 178,
+	SDLK_WORLD_19		= 179,
+	SDLK_WORLD_20		= 180,
+	SDLK_WORLD_21		= 181,
+	SDLK_WORLD_22		= 182,
+	SDLK_WORLD_23		= 183,
+	SDLK_WORLD_24		= 184,
+	SDLK_WORLD_25		= 185,
+	SDLK_WORLD_26		= 186,
+	SDLK_WORLD_27		= 187,
+	SDLK_WORLD_28		= 188,
+	SDLK_WORLD_29		= 189,
+	SDLK_WORLD_30		= 190,
+	SDLK_WORLD_31		= 191,
+	SDLK_WORLD_32		= 192,
+	SDLK_WORLD_33		= 193,
+	SDLK_WORLD_34		= 194,
+	SDLK_WORLD_35		= 195,
+	SDLK_WORLD_36		= 196,
+	SDLK_WORLD_37		= 197,
+	SDLK_WORLD_38		= 198,
+	SDLK_WORLD_39		= 199,
+	SDLK_WORLD_40		= 200,
+	SDLK_WORLD_41		= 201,
+	SDLK_WORLD_42		= 202,
+	SDLK_WORLD_43		= 203,
+	SDLK_WORLD_44		= 204,
+	SDLK_WORLD_45		= 205,
+	SDLK_WORLD_46		= 206,
+	SDLK_WORLD_47		= 207,
+	SDLK_WORLD_48		= 208,
+	SDLK_WORLD_49		= 209,
+	SDLK_WORLD_50		= 210,
+	SDLK_WORLD_51		= 211,
+	SDLK_WORLD_52		= 212,
+	SDLK_WORLD_53		= 213,
+	SDLK_WORLD_54		= 214,
+	SDLK_WORLD_55		= 215,
+	SDLK_WORLD_56		= 216,
+	SDLK_WORLD_57		= 217,
+	SDLK_WORLD_58		= 218,
+	SDLK_WORLD_59		= 219,
+	SDLK_WORLD_60		= 220,
+	SDLK_WORLD_61		= 221,
+	SDLK_WORLD_62		= 222,
+	SDLK_WORLD_63		= 223,
+	SDLK_WORLD_64		= 224,
+	SDLK_WORLD_65		= 225,
+	SDLK_WORLD_66		= 226,
+	SDLK_WORLD_67		= 227,
+	SDLK_WORLD_68		= 228,
+	SDLK_WORLD_69		= 229,
+	SDLK_WORLD_70		= 230,
+	SDLK_WORLD_71		= 231,
+	SDLK_WORLD_72		= 232,
+	SDLK_WORLD_73		= 233,
+	SDLK_WORLD_74		= 234,
+	SDLK_WORLD_75		= 235,
+	SDLK_WORLD_76		= 236,
+	SDLK_WORLD_77		= 237,
+	SDLK_WORLD_78		= 238,
+	SDLK_WORLD_79		= 239,
+	SDLK_WORLD_80		= 240,
+	SDLK_WORLD_81		= 241,
+	SDLK_WORLD_82		= 242,
+	SDLK_WORLD_83		= 243,
+	SDLK_WORLD_84		= 244,
+	SDLK_WORLD_85		= 245,
+	SDLK_WORLD_86		= 246,
+	SDLK_WORLD_87		= 247,
+	SDLK_WORLD_88		= 248,
+	SDLK_WORLD_89		= 249,
+	SDLK_WORLD_90		= 250,
+	SDLK_WORLD_91		= 251,
+	SDLK_WORLD_92		= 252,
+	SDLK_WORLD_93		= 253,
+	SDLK_WORLD_94		= 254,
+	SDLK_WORLD_95		= 255,		/* 0xFF */
+        /*@}*/
+
+	/** @name Numeric keypad */
+        /*@{*/
+	SDLK_KP0		= 256,
+	SDLK_KP1		= 257,
+	SDLK_KP2		= 258,
+	SDLK_KP3		= 259,
+	SDLK_KP4		= 260,
+	SDLK_KP5		= 261,
+	SDLK_KP6		= 262,
+	SDLK_KP7		= 263,
+	SDLK_KP8		= 264,
+	SDLK_KP9		= 265,
+	SDLK_KP_PERIOD		= 266,
+	SDLK_KP_DIVIDE		= 267,
+	SDLK_KP_MULTIPLY	= 268,
+	SDLK_KP_MINUS		= 269,
+	SDLK_KP_PLUS		= 270,
+	SDLK_KP_ENTER		= 271,
+	SDLK_KP_EQUALS		= 272,
+        /*@}*/
+
+	/** @name Arrows + Home/End pad */
+        /*@{*/
+	SDLK_UP			= 273,
+	SDLK_DOWN		= 274,
+	SDLK_RIGHT		= 275,
+	SDLK_LEFT		= 276,
+	SDLK_INSERT		= 277,
+	SDLK_HOME		= 278,
+	SDLK_END		= 279,
+	SDLK_PAGEUP		= 280,
+	SDLK_PAGEDOWN		= 281,
+        /*@}*/
+
+	/** @name Function keys */
+        /*@{*/
+	SDLK_F1			= 282,
+	SDLK_F2			= 283,
+	SDLK_F3			= 284,
+	SDLK_F4			= 285,
+	SDLK_F5			= 286,
+	SDLK_F6			= 287,
+	SDLK_F7			= 288,
+	SDLK_F8			= 289,
+	SDLK_F9			= 290,
+	SDLK_F10		= 291,
+	SDLK_F11		= 292,
+	SDLK_F12		= 293,
+	SDLK_F13		= 294,
+	SDLK_F14		= 295,
+	SDLK_F15		= 296,
+        /*@}*/
+
+	/** @name Key state modifier keys */
+        /*@{*/
+	SDLK_NUMLOCK		= 300,
+	SDLK_CAPSLOCK		= 301,
+	SDLK_SCROLLOCK		= 302,
+	SDLK_RSHIFT		= 303,
+	SDLK_LSHIFT		= 304,
+	SDLK_RCTRL		= 305,
+	SDLK_LCTRL		= 306,
+	SDLK_RALT		= 307,
+	SDLK_LALT		= 308,
+	SDLK_RMETA		= 309,
+	SDLK_LMETA		= 310,
+	SDLK_LSUPER		= 311,		/**< Left "Windows" key */
+	SDLK_RSUPER		= 312,		/**< Right "Windows" key */
+	SDLK_MODE		= 313,		/**< "Alt Gr" key */
+	SDLK_COMPOSE		= 314,		/**< Multi-key compose key */
+        /*@}*/
+
+	/** @name Miscellaneous function keys */
+        /*@{*/
+	SDLK_HELP		= 315,
+	SDLK_PRINT		= 316,
+	SDLK_SYSREQ		= 317,
+	SDLK_BREAK		= 318,
+	SDLK_MENU		= 319,
+	SDLK_POWER		= 320,		/**< Power Macintosh power key */
+	SDLK_EURO		= 321,		/**< Some european keyboards */
+	SDLK_UNDO		= 322,		/**< Atari keyboard has Undo */
+        /*@}*/
+
+	/* Add any other keys here */
+
+	SDLK_LAST
+} SDLKey;
+
+
 /** Application visibility event structure */
-typedef struct SDL1_ActiveEvent {
+typedef struct SDL_ActiveEvent {
 	Uint8 type;	/**< SDL_ACTIVEEVENT */
 	Uint8 gain;	/**< Whether given states were gained or lost (1/0) */
 	Uint8 state;	/**< A mask of the focus states */
-} SDL1_ActiveEvent;
+} SDL_ActiveEvent;
 
 typedef int SDLMod;
 
@@ -1598,51 +1598,51 @@ typedef struct SDL_keysym {
 } SDL_keysym;
 
 /** Keyboard event structure */
-typedef struct SDL1_KeyboardEvent {
+typedef struct SDL_KeyboardEvent {
 	Uint8 type;	/**< SDL_KEYDOWN or SDL_KEYUP */
 	Uint8 which;	/**< The keyboard device index */
 	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
 	SDL_keysym keysym;
-} SDL1_KeyboardEvent;
+} SDL_KeyboardEvent;
 
 /** Mouse motion event structure */
-typedef struct SDL1_MouseMotionEvent {
+typedef struct SDL_MouseMotionEvent {
 	Uint8 type;	/**< SDL_MOUSEMOTION */
 	Uint8 which;	/**< The mouse device index */
 	Uint8 state;	/**< The current button state */
 	Uint16 x, y;	/**< The X/Y coordinates of the mouse */
 	Sint16 xrel;	/**< The relative motion in the X direction */
 	Sint16 yrel;	/**< The relative motion in the Y direction */
-} SDL1_MouseMotionEvent;
+} SDL_MouseMotionEvent;
 
 /** Mouse button event structure */
-typedef struct SDL1_MouseButtonEvent {
+typedef struct SDL_MouseButtonEvent {
 	Uint8 type;	/**< SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP */
 	Uint8 which;	/**< The mouse device index */
 	Uint8 button;	/**< The mouse button index */
 	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
 	Uint16 x, y;	/**< The X/Y coordinates of the mouse at press time */
-} SDL1_MouseButtonEvent;
+} SDL_MouseButtonEvent;
 
 /** Joystick axis motion event structure */
-typedef struct SDL1_JoyAxisEvent {
+typedef struct SDL_JoyAxisEvent {
 	Uint8 type;	/**< SDL_JOYAXISMOTION */
 	Uint8 which;	/**< The joystick device index */
 	Uint8 axis;	/**< The joystick axis index */
 	Sint16 value;	/**< The axis value (range: -32768 to 32767) */
-} SDL1_JoyAxisEvent;
+} SDL_JoyAxisEvent;
 
 /** Joystick trackball motion event structure */
-typedef struct SDL1_JoyBallEvent {
+typedef struct SDL_JoyBallEvent {
 	Uint8 type;	/**< SDL_JOYBALLMOTION */
 	Uint8 which;	/**< The joystick device index */
 	Uint8 ball;	/**< The joystick trackball index */
 	Sint16 xrel;	/**< The relative motion in the X direction */
 	Sint16 yrel;	/**< The relative motion in the Y direction */
-} SDL1_JoyBallEvent;
+} SDL_JoyBallEvent;
 
 /** Joystick hat position change event structure */
-typedef struct SDL1_JoyHatEvent {
+typedef struct SDL_JoyHatEvent {
 	Uint8 type;	/**< SDL_JOYHATMOTION */
 	Uint8 which;	/**< The joystick device index */
 	Uint8 hat;	/**< The joystick hat index */
@@ -1652,69 +1652,70 @@ typedef struct SDL1_JoyHatEvent {
 			 *   SDL_HAT_LEFTDOWN SDL_HAT_DOWN     SDL_HAT_RIGHTDOWN
 			 *  Note that zero means the POV is centered.
 			 */
-} SDL1_JoyHatEvent;
+} SDL_JoyHatEvent;
 
 /** Joystick button event structure */
-typedef struct SDL1_JoyButtonEvent {
+typedef struct SDL_JoyButtonEvent {
 	Uint8 type;	/**< SDL_JOYBUTTONDOWN or SDL_JOYBUTTONUP */
 	Uint8 which;	/**< The joystick device index */
 	Uint8 button;	/**< The joystick button index */
 	Uint8 state;	/**< SDL_PRESSED or SDL_RELEASED */
-} SDL1_JoyButtonEvent;
+} SDL_JoyButtonEvent;
 
 /** The "window resized" event
  *  When you get this event, you are responsible for setting a new video
  *  mode with the new width and height.
  */
-typedef struct SDL1_ResizeEvent {
+typedef struct SDL_ResizeEvent {
 	Uint8 type;	/**< SDL_VIDEORESIZE */
 	int w;		/**< New width */
 	int h;		/**< New height */
-} SDL1_ResizeEvent;
+} SDL_ResizeEvent;
 
 /** The "screen redraw" event */
-typedef struct SDL1_ExposeEvent {
+typedef struct SDL_ExposeEvent {
 	Uint8 type;	/**< SDL_VIDEOEXPOSE */
-} SDL1_ExposeEvent;
+} SDL_ExposeEvent;
 
 /** The "quit requested" event */
-typedef struct SDL1_QuitEvent {
+typedef struct SDL_QuitEvent {
 	Uint8 type;	/**< SDL_QUIT */
-} SDL1_QuitEvent;
+} SDL_QuitEvent;
 
 /** A user-defined event type */
-typedef struct SDL1_UserEvent {
+typedef struct SDL_UserEvent {
 	Uint8 type;	/**< SDL_USEREVENT through SDL_NUMEVENTS-1 */
 	int code;	/**< User defined event code */
 	void *data1;	/**< User defined data pointer */
 	void *data2;	/**< User defined data pointer */
-} SDL1_UserEvent;
+} SDL_UserEvent;
 
 /** If you want to use this event, you should include SDL_syswm.h */
-struct SDL1_SysWMmsg;
-typedef struct SDL1_SysWMmsg SDL1_SysWMmsg;
-typedef struct SDL1_SysWMEvent {
+struct SDL_SysWMmsg;
+typedef struct SDL_SysWMmsg SDL_SysWMmsg;
+typedef struct SDL_SysWMEvent {
 	Uint8 type;
 	SDL_SysWMmsg *msg;
-} SDL1_SysWMEvent;
+} SDL_SysWMEvent;
 
 /** General event structure */
-typedef union SDL1_Event {
+typedef union SDL_Event {
 	Uint8 type;
-	SDL1_ActiveEvent active;
-	SDL1_KeyboardEvent key;
-	SDL1_MouseMotionEvent motion;
-	SDL1_MouseButtonEvent button;
-	SDL1_JoyAxisEvent jaxis;
-	SDL1_JoyBallEvent jball;
-	SDL1_JoyHatEvent jhat;
-	SDL1_JoyButtonEvent jbutton;
-	SDL1_ResizeEvent resize;
-	SDL1_ExposeEvent expose;
-	SDL1_QuitEvent quit;
-	SDL1_UserEvent user;
-	SDL1_SysWMEvent syswm;
-} SDL1_Event;
+	SDL_ActiveEvent active;
+	SDL_KeyboardEvent key;
+	SDL_MouseMotionEvent motion;
+	SDL_MouseButtonEvent button;
+	SDL_JoyAxisEvent jaxis;
+	SDL_JoyBallEvent jball;
+	SDL_JoyHatEvent jhat;
+	SDL_JoyButtonEvent jbutton;
+	SDL_ResizeEvent resize;
+	SDL_ExposeEvent expose;
+	SDL_QuitEvent quit;
+	SDL_UserEvent user;
+	SDL_SysWMEvent syswm;
+} SDL_Event;
 
+}
 
 #endif /* _SDL_h */

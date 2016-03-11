@@ -126,8 +126,8 @@ void (*glGetBooleanv_real)( int pname, GLboolean* data);
 SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 SDL_version * (*SDL_Linked_Version_real)(void);
-int (*SDL1_PollEvent_real)(SDL1_Event*);
-int (*SDL1_PeepEvents_real)(SDL1_Event*, int, SDL_eventaction, Uint32);
+int (*SDL1_PollEvent_real)(SDL1::SDL_Event*);
+int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
 
 

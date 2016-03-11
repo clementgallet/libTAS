@@ -111,8 +111,8 @@ extern void (*glGetBooleanv_real)( int pname, GLboolean* data);
 extern SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 extern void (*SDL_GL_SwapBuffers_real)(void);
 extern SDL_version * (*SDL_Linked_Version_real)(void);
-extern int (*SDL1_PollEvent_real)(SDL1_Event*);
-extern int (*SDL1_PeepEvents_real)(SDL1_Event*, int, SDL_eventaction, Uint32);
+extern int (*SDL1_PollEvent_real)(SDL1::SDL_Event*);
+extern int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
 int hook_functions(void* SDL_handle);
 int late_hook(void);
