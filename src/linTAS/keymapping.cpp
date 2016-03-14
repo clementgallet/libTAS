@@ -31,7 +31,7 @@ void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[
     int i,j,k;
     int keysym_i = 0;
 
-    emptyInputs(ai);
+    ai->emptyInputs();
 
     for (i=0; i<32; i++) {
         if (keyboard_state[i] == 0)

@@ -133,8 +133,8 @@ void __attribute__((constructor)) init(void)
     if (!hook_functions(SDL_handle))
         exit(-1);
 
-    emptyInputs(&ai);
-    emptyInputs(&old_ai);
+    ai.emptyInputs();
+    old_ai.emptyInputs();
 
 }
 
