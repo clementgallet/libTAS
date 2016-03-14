@@ -1,8 +1,8 @@
 #include "keymapping.h"
+#include <map>
 
 /* Map keyboard Keycodes to a single input of a keyboard or controller */
-struct SingleInput input_mapping[256] = {{0,0}};
-
+std::map<KeySym,struct SingleInput> input_mapping;
 
 void default_hotkeys(KeySym *hotkeys){
 
@@ -14,8 +14,8 @@ void default_hotkeys(KeySym *hotkeys){
     hotkeys[HOTKEY_LOADSTATE] = XK_l;
 
     /* Map 'w' to button A */
-    input_mapping[52].type = IT_CONTROLLER1_BUTTON_A;
-    input_mapping[52].value = 1;
+    input_mapping[XK_w].type = IT_CONTROLLER1_BUTTON_A;
+    input_mapping[XK_w].value = 1;
 }
 
 /* 
@@ -57,7 +57,9 @@ void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[
                 }
 
                 /* Checking the mapped input for that key */
-                struct SingleInput si = input_mapping[kc];
+                struct SingleInput si = {IT_ID,0};
+                if (input_mapping.find(ks) != input_mapping.end()) 
+                    si = input_mapping[ks];
 
                 if (si.type == IT_NONE) {
                     /* Key is mapped to nothing */

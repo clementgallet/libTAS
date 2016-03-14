@@ -1,7 +1,7 @@
 #ifndef KEYMAPPING_H_INCLUDED
 #define KEYMAPPING_H_INCLUDED
 
-#include <stdio.h>
+#include <iostream>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
