@@ -36,7 +36,10 @@ void advanceFrame(void);
 void sleepEndFrame(void);
 int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y);
 
+OVERRIDE clock_t clock (void);
+OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp);
 OVERRIDE int usleep(useconds_t usec);
+OVERRIDE int nanosleep (const struct timespec *requested_time, struct timespec *remaining);
 OVERRIDE time_t time(time_t* t);
 OVERRIDE int gettimeofday(struct timeval* tv, void* tz);
 OVERRIDE void SDL_Delay(Uint32 sleep);

@@ -7,7 +7,7 @@
 /* Time that will be passed to the game 
  * Increments exactly by 1/fps after each screen draw
  */
-struct timeval deterministic_time = { 0, 0 };
+struct timespec deterministic_time = { 0, 0 };
 
 /* Real time structure, used to run at a given fps */
 struct timespec real_time = { 0, 0 };
@@ -25,22 +25,22 @@ void advanceFrame(void)
        we have to keep track of the fractional part of the microseconds
        counter, and add a spare microsecond each time it's needed. */
     unsigned int fps = 60;
-    unsigned int integer_increment = 1000000 / fps;
-    unsigned int fractional_increment = 1000000 % fps;
+    unsigned int integer_increment = 1000000000 / fps;
+    unsigned int fractional_increment = 1000000000 % fps;
     unsigned int fractional_part = fps / 2;
 
-    deterministic_time.tv_usec += integer_increment;
+    deterministic_time.tv_nsec += integer_increment;
     fractional_part += fractional_increment;
     if (fractional_part >= fps)
     {
-        ++deterministic_time.tv_usec;
+        ++deterministic_time.tv_nsec;
         fractional_part -= fps;
     }
 
-    if (deterministic_time.tv_usec == 1000000)
+    if (deterministic_time.tv_nsec == 1000000000)
     {
         ++deterministic_time.tv_sec;
-        deterministic_time.tv_usec = 0;
+        deterministic_time.tv_nsec = 0;
     }
 }
 
@@ -82,7 +82,7 @@ void sleepEndFrame(void)
          * This is our first call 
          * We should not sleep, just update the real_time struct
          */
-        clock_gettime(CLOCK_MONOTONIC, &real_time);
+        clock_gettime_real(CLOCK_MONOTONIC, &real_time);
         return;
     }
     struct timespec old_time = real_time;
@@ -92,7 +92,7 @@ void sleepEndFrame(void)
      * timezone changes, leap seconds or so
      * Taken from https://blog.habets.se/2010/09/gettimeofday-should-never-be-used-to-measure-time
      */
-    clock_gettime(CLOCK_MONOTONIC, &real_time);
+    clock_gettime_real(CLOCK_MONOTONIC, &real_time);
 
     /* We add the length of a frame to the old time */
     unsigned int fps = 60; // TODO: Put this somewhere else
@@ -108,7 +108,7 @@ void sleepEndFrame(void)
         nanosleep(&diff, NULL);
     }
     /* Updating again the real_time */
-    clock_gettime(CLOCK_MONOTONIC, &real_time);
+    clock_gettime_real(CLOCK_MONOTONIC, &real_time);
 }
 
 /* Override */ time_t time(time_t* t)
@@ -121,8 +121,40 @@ void sleepEndFrame(void)
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec, ".", std::setw(6), deterministic_time.tv_usec);
-    *tv = deterministic_time;
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec, ".", std::setw(6), deterministic_time.tv_nsec/1000);
+    tv->tv_sec = deterministic_time.tv_sec;
+    tv->tv_usec = deterministic_time.tv_nsec / 1000;
+    return 0;
+}
+
+/* Override */ clock_t clock (void)
+{
+    clock_t clk = (clock_t)(((double)deterministic_time.tv_sec + (double) (deterministic_time.tv_nsec) / 1000000000) * CLOCKS_PER_SEC);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", clk);
+    return clk;
+}
+
+
+/* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
+{
+    *tp = deterministic_time;
+
+    /* Same as SDL_GetTicks */
+    static int numcall = 0;
+    static timespec oldt;
+    if (tp->tv_sec == oldt.tv_sec && tp->tv_nsec == oldt.tv_nsec) // TODO: oldt is undefined, but it is no big deal...
+        numcall++;
+    else
+        numcall = 0;
+    oldt = *tp;
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "Reiched clock_gettime limit, return increased value.");
+    tp->tv_nsec += 10000000 * numcall;
+    if (tp->tv_nsec >= 1000000000) {
+        tp->tv_sec += tp->tv_nsec / 1000000000;
+        tp->tv_nsec = tp->tv_nsec % 1000000000;
+    }
+    clock_gettime_real(clock_id, tp);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;
 }
 
@@ -154,9 +186,15 @@ void sleepEndFrame(void)
     //return 0;
 }
 
+/* Override */ int nanosleep (const struct timespec *requested_time, struct timespec *remaining)
+{
+    debuglog(LCF_SLEEP | LCF_FREQUENT, __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
+    return nanosleep_real(requested_time, remaining);
+}
+
 /* Override */ Uint32 SDL_GetTicks(void)
 {
-    Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_usec/1000;
+    Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_nsec/1000000;
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - true: ", SDL_GetTicks_real(), ", returning ", msec);
     //return SDL_GetTicks_real();
     
@@ -191,7 +229,7 @@ void sleepEndFrame(void)
 {
     //Uint64 counter = SDL_GetPerformanceCounter_real();
     
-    Uint64 counter = deterministic_time.tv_usec * 1000ULL + deterministic_time.tv_sec * 1000000000ULL;
+    Uint64 counter = deterministic_time.tv_nsec + deterministic_time.tv_sec * 1000000000ULL;
     /* Same as above, failsafe */
     static int numcall = 0;
     static Uint64 oldcounter;

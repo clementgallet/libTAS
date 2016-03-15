@@ -44,7 +44,7 @@ int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(void*);
 
 int (*usleep_real)(unsigned long);
-
+int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 char* (*alcGetString_real)(void* device, int params);
 void* (*alcOpenDevice_real)(const char* devicename);
 
@@ -81,6 +81,8 @@ int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
 int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 Uint64 (*SDL_GetPerformanceFrequency_real)(void);
 Uint64 (*SDL_GetPerformanceCounter_real)(void);
+
+int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 typedef int SDL_TimerID;
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
@@ -186,6 +188,8 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_Quit, SDL_handle)
     HOOK_FUNC(SDL_GetTicks, SDL_handle)
     HOOK_FUNC(usleep, RTLD_NEXT)
+    HOOK_FUNC(nanosleep, RTLD_NEXT)
+    HOOK_FUNC(clock_gettime, RTLD_NEXT)
     HOOK_FUNC(alcGetString, RTLD_NEXT)
     HOOK_FUNC(alcOpenDevice, RTLD_NEXT)
     HOOK_FUNC(SDL_CreateThread, SDL_handle)

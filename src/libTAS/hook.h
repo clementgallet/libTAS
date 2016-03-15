@@ -5,6 +5,7 @@
 #include "../external/gl.h"
 #include "bits/pthreadtypes.h"
 #include "dlhook.h"
+#include <time.h>
 
 #if (!defined __timespec_defined)
 # define __timespec_defined 1
@@ -31,6 +32,7 @@ extern Uint32 (*SDL_GetWindowFlags_real)(void*);
 extern int (*SDL_GL_SetSwapInterval_real)(int interval);
 extern void (*SDL_DestroyWindow_real)(void*);
 extern int (*usleep_real)(unsigned long);
+extern int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 extern char* (*alcGetString_real)(void* device, int params);
 extern void* (*alcOpenDevice_real)(const char* devicename);
 
@@ -68,6 +70,8 @@ extern int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
 extern int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 extern Uint64 (*SDL_GetPerformanceFrequency_real)(void);
 extern Uint64 (*SDL_GetPerformanceCounter_real)(void);
+
+extern int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 typedef int SDL_TimerID;
 
