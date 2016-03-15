@@ -2,6 +2,7 @@
 #define DLHOOK_H_INCLUDED
 
 #include <dlfcn.h>
+#include <string>
 
 /* For hooking functions that perform dynamic library loading,
  * we have to use a special method.
@@ -26,6 +27,11 @@ extern struct dlfcn_hook {
     void *pad[4];
 } *_dlfcn_hook;
 
+/* Functions specifying that we want to call the original functions */
+void dlenter(void);
+void dlleave(void);
+
+/* Custom version of each dl functions */
 void *my_dlopen(const char *file, int mode, void *dl_caller);
 int my_dlclose(void *handle);
 void *my_dlsym(void *handle, const char *name, void *dl_caller);
@@ -36,5 +42,8 @@ int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags)
 int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
 void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
 
+/* Path of some libraries we will need */
+extern std::string sdlpath;
+extern std::string openalpath;
 
 #endif

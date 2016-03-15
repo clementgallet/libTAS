@@ -115,6 +115,7 @@ extern int (*SDL1_PollEvent_real)(SDL1::SDL_Event*);
 extern int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
 int hook_functions(void* SDL_handle);
-int late_hook(void);
+int late_openalhook(void);
+int late_glhook(void);
 
 #endif // HOOKSDL_H_INCLUDED

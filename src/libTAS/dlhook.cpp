@@ -1,5 +1,6 @@
 #include "dlhook.h"
 #include "logging.h"
+#include <cstring>
 
 static struct dlfcn_hook *old_dlfcn_hook;
 
@@ -17,87 +18,101 @@ static struct dlfcn_hook my_dlfcn_hook = {
 };
 
 static int depth = 0;
-static void enter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
-static void leave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
+void dlenter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
+void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
+std::string sdlpath;
+std::string openalpath;
 
 void *my_dlopen(const char *file, int mode, void *dl_caller) {
     void *result;
     debuglog(LCF_HOOK, __func__, " call with file ", file);
-    enter();
+    dlenter();
     result = dlopen(file, mode);
-    leave();
+    dlleave();
+    if (result != NULL) {
+        /* Try to identify some libraries we will be using later */
+        if (strstr(file, "libSDL2-2") != NULL)
+            sdlpath = std::string(file);
+        if (strstr(file, "libSDL-1") != NULL)
+            sdlpath = std::string(file);
+        if (strstr(file, "libopenal") != NULL)
+            openalpath = std::string(file);
+    }
     return result;
 }
 
 int my_dlclose(void *handle) {
     int result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dlclose(handle);
-    leave();
+    dlleave();
     return result;
 }
 
 void *my_dlsym(void *handle, const char *name, void *dl_caller) {
     void *result;
     debuglog(LCF_HOOK, __func__, " call with function ", name);
-    enter();
-    result = dlsym(handle, name);
-    leave();
+    dlenter();
+    /* Try to link to an already defined function first */
+    result = dlsym(RTLD_DEFAULT, name);
+    if (result == NULL)
+        result = dlsym(handle, name);
+    dlleave();
     return result;
 }
 
 void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller) {
     void *result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dlvsym(handle, name, version);
-    leave();
+    dlleave();
     return result;
 }
 
 char *my_dlerror(void) {
     char *result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dlerror();
-    leave();
+    dlleave();
     return result;
 }
 
 int my_dladdr(const void *address, Dl_info *info) {
     int result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dladdr(address, info);
-    leave();
+    dlleave();
     return result;
 }
 
 int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags) {
     int result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dladdr1(address, info, extra_info, flags);
-    leave();
+    dlleave();
     return result;
 }
 
 int my_dlinfo(void *handle, int request, void *arg, void *dl_caller) {
     int result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dlinfo(handle, request, arg);
-    leave();
+    dlleave();
     return result;
 }
 
 void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
     void *result;
     DEBUGLOGCALL(LCF_HOOK);
-    enter();
+    dlenter();
     result = dlmopen(nsid, file, mode);
-    leave();
+    dlleave();
     return result;
 }
 

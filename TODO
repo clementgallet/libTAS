@@ -31,9 +31,8 @@
     [xcb] Most likely this is a multi-threaded client and XInitThreads has not been called
     [xcb] Aborting, sorry about that.
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
-- Add key remapping
--- Map KeyCode instead of KeySym
 - Process and filter SDL events
+- Better manage static and dynamic hooking
 
 ## Done
 
@@ -46,4 +45,5 @@
 - Support game controller
 - Add a deterministic timer instead of relying on SwapInterval
 - Allow 32-bit or 64-bit lib compilation
+- Add key remapping
 

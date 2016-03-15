@@ -51,7 +51,7 @@ void SDL_DetachThread(SDL_Thread * thread)
 }
 */
 
-/* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg)
+/* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
     char name[16];
     name[0] = '\0';
@@ -81,7 +81,8 @@ void SDL_DetachThread(SDL_Thread * thread)
     return pthread_join_real(thread, thread_return);
 }
 
-/* Override */ int pthread_detach (pthread_t thread){
+/* Override */ int pthread_detach (pthread_t thread) throw()
+{
     //if (1) {
     //    return 0;
     //}
@@ -90,7 +91,7 @@ void SDL_DetachThread(SDL_Thread * thread)
     return pthread_detach_real(thread);
 }
 
-/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval)
+/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval) throw()
 {
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Try to join thread ", thstr);

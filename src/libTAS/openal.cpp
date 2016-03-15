@@ -8,6 +8,8 @@
 {
 
     debuglog(LCF_OPENAL, __func__, " call.");
+    late_openalhook();
+
     /*
     const char *devices; 
     const char *ptr; 
@@ -21,9 +23,9 @@
         ptr += strlen(ptr) + 1;
     }*/
 
-    (void) devicename; // To remove warning
-    const char device[] = "No Output";
-    return alcOpenDevice_real(device);
-    //return alcOpenDevice_real(devicename);
+    //(void) devicename; // To remove warning
+    //const char device[] = "No Output";
+    //return alcOpenDevice_real(device);
+    return alcOpenDevice_real(devicename);
 }
 

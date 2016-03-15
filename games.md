@@ -28,7 +28,7 @@
 ### FEZ
 
 - Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
-- Use SDL library but we couldn't hook any SDL function...
+- Use SDL library but we couldn't hook any SDL function, because Mono is using dynamic library loading
 
 ### Towerfall
 

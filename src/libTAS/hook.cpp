@@ -2,9 +2,6 @@
 #include "logging.h"
 #include <dlfcn.h>
 
-//#define __USE_GNU
-//#include <dlfcn.h>
-
 #define HOOK_FUNC_TARGET(FUNC,SOURCE,TARGET) *(void**)&TARGET = dlsym(SOURCE, #FUNC);\
     if (!TARGET)\
     {\
@@ -133,8 +130,10 @@ int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
 int hook_functions(void* SDL_handle) {
 
+    dlenter(); // Use real dlsym function
+    
     HOOK_FUNC(SDL_GetVersion, SDL_handle)
-    HOOK_FUNC(SDL_Linked_Version, SDL_handle);
+    HOOK_FUNC(SDL_Linked_Version, SDL_handle)
 
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
@@ -234,11 +233,31 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(glGetIntegerv, RTLD_NEXT)
     HOOK_FUNC(glGetBooleanv, RTLD_NEXT)
 
+    dlleave();
 
     return 1;
 }
 
-int late_hook(void) {
+int late_openalhook() {
+
+    static int inited = 0;
+    if (inited) return 1;
+
+    dlenter(); // Use real dlsym function
+  
+    if (! openalpath.empty()) {
+        void* openalhandle = dlopen(openalpath.c_str(), RTLD_LAZY);
+        HOOK_FUNC(alcGetString, openalhandle)
+        HOOK_FUNC(alcOpenDevice, openalhandle)
+    }
+
+    dlleave();
+
+    inited = 1;
+    return 1;
+}
+
+int late_glhook(void) {
 
     static int inited = 0;
     if (inited) return 1;

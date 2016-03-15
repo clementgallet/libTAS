@@ -322,7 +322,7 @@ void __attribute__((destructor)) term(void)
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
     /* Try to hook more functions after SDL was inited */
-    late_hook();
+    late_glhook();
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
