@@ -1,8 +1,9 @@
 #include "hook.h"
 #include "logging.h"
-
-#define __USE_GNU
 #include <dlfcn.h>
+
+//#define __USE_GNU
+//#include <dlfcn.h>
 
 #define HOOK_FUNC_TARGET(FUNC,SOURCE,TARGET) *(void**)&TARGET = dlsym(SOURCE, #FUNC);\
     if (!TARGET)\
@@ -128,7 +129,6 @@ void (*SDL_GL_SwapBuffers_real)(void);
 SDL_version * (*SDL_Linked_Version_real)(void);
 int (*SDL1_PollEvent_real)(SDL1::SDL_Event*);
 int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
-
 
 
 int hook_functions(void* SDL_handle) {

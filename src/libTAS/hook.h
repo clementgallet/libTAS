@@ -1,10 +1,10 @@
-#ifndef HOOKSDL_H_INCLUDED
-#define HOOKSDL_H_INCLUDED
+#ifndef HOOK_H_INCLUDED
+#define HOOK_H_INCLUDED
 
 #include "../external/SDL.h"
 #include "../external/gl.h"
 #include "bits/pthreadtypes.h"
-
+#include "dlhook.h"
 
 #if (!defined __timespec_defined)
 # define __timespec_defined 1
