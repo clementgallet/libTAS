@@ -33,6 +33,7 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
 - Better manage static and dynamic hooking
+- Deal with non/deterministic timers (look at hourglass code)
 
 ## Done
 

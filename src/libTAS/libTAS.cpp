@@ -30,6 +30,7 @@
 #include "threads.h"
 #include "logging.h"
 #include "events.h"
+#include "timer.h"
 
 /* Handle to the SDL dynamic library that is shipped with the game */
 void* SDL_handle;
@@ -136,6 +137,9 @@ void __attribute__((constructor)) init(void)
     ai.emptyInputs();
     old_ai.emptyInputs();
 
+    /* Initialize timers */
+    nonDetTimer.initialize();
+    detTimer.initialize();
 }
 
 void __attribute__((destructor)) term(void)
@@ -174,7 +178,7 @@ void __attribute__((destructor)) term(void)
         gw_sent = 1;
         debuglog(LCF_SDL, "Send dummy X11 window id.");
     }
-    enterFrameBoundary();
+    frameBoundary();
 }
 
 /* Override */ void SDL_GL_SwapWindow(void* window)
@@ -244,7 +248,7 @@ void __attribute__((destructor)) term(void)
         return;
     }
 
-    enterFrameBoundary();
+    frameBoundary();
 
 }
 
@@ -257,6 +261,7 @@ void __attribute__((destructor)) term(void)
     if (interval == -1)
         return 1;
     /* Disable vsync */
+    /* TODO: Put this at another place to be sure it is executed */
     return SDL_GL_SetSwapInterval_real(0);
 }
     

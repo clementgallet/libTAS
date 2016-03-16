@@ -11,6 +11,7 @@ struct TasFlags {
     LogCategoryFlag includeFlags; // which flags trigger a debug message
     LogCategoryFlag excludeFlags; // which flags prevent triggering a debug message
     int av_dumping; // Are we dumping audio and video?
+    unsigned int framerate; // Framerate at which the game is running. Set to 0 to use the nondeterministic timer
 };
 
 extern struct TasFlags tasflags;

@@ -2,7 +2,7 @@
 #define FRAME_H_INCL
 
 
-void enterFrameBoundary(void);
+void frameBoundary(void);
 void proceed_commands(void);
 
 #endif

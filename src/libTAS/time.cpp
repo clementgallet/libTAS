@@ -3,219 +3,119 @@
 #include "frame.h"
 #include "threads.h"
 #include <iomanip> // std::setw
-
-/* Time that will be passed to the game 
- * Increments exactly by 1/fps after each screen draw
- */
-struct timespec deterministic_time = { 0, 0 };
-
-/* Real time structure, used to run at a given fps */
-struct timespec real_time = { 0, 0 };
+#include "timer.h"
 
 /* Frame counter */
 unsigned long frame_counter = 0;
 
-/* Advance the deterministic timer by exactly 1/fps */
-void advanceFrame(void)
-{
-    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Advancing deterministic timer");
-
-    /* Once the frame is drawn, we can increment the current time by 1/60 of a
-       second. This does not give an integer number of microseconds though, so
-       we have to keep track of the fractional part of the microseconds
-       counter, and add a spare microsecond each time it's needed. */
-    unsigned int fps = 60;
-    unsigned int integer_increment = 1000000000 / fps;
-    unsigned int fractional_increment = 1000000000 % fps;
-    unsigned int fractional_part = fps / 2;
-
-    deterministic_time.tv_nsec += integer_increment;
-    fractional_part += fractional_increment;
-    if (fractional_part >= fps)
-    {
-        ++deterministic_time.tv_nsec;
-        fractional_part -= fps;
-    }
-
-    if (deterministic_time.tv_nsec == 1000000000)
-    {
-        ++deterministic_time.tv_sec;
-        deterministic_time.tv_nsec = 0;
-    }
-}
-
-/* Subtract correctly two timespec
- * Taken from http://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
- */
-
-int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y)
-{
-  /* Perform the carry for the later subtraction by updating y. */
-  if (x->tv_nsec < y->tv_nsec) {
-    int nsec = (y->tv_nsec - x->tv_nsec) / 1000000000 + 1;
-    y->tv_nsec -= 1000000000 * nsec;
-    y->tv_sec += nsec;
-  }
-  if (x->tv_nsec - y->tv_nsec > 1000000000) {
-    int nsec = (x->tv_nsec - y->tv_nsec) / 1000000000;
-    y->tv_nsec += 1000000000 * nsec;
-    y->tv_sec -= nsec;
-  }
-
-  /* Compute the time remaining to wait.
-     tv_usec is certainly positive. */
-  res->tv_sec = x->tv_sec - y->tv_sec;
-  res->tv_nsec = x->tv_nsec - y->tv_nsec;
-
-  /* Return 1 if result is negative. */
-  return x->tv_sec < y->tv_sec;
-}
-
-/* 
- * When the game is running normally, we need to make our own sleep
- * so that the game runs at normal speed
- */
-void sleepEndFrame(void)
-{
-    if ((real_time.tv_sec == 0) && (real_time.tv_nsec == 0)) {
-        /* 
-         * This is our first call 
-         * We should not sleep, just update the real_time struct
-         */
-        clock_gettime_real(CLOCK_MONOTONIC, &real_time);
-        return;
-    }
-    struct timespec old_time = real_time;
-
-    /* Get the current time
-     * We use CLOCK_MONOTONIC as it is not influenced by
-     * timezone changes, leap seconds or so
-     * Taken from https://blog.habets.se/2010/09/gettimeofday-should-never-be-used-to-measure-time
-     */
-    clock_gettime_real(CLOCK_MONOTONIC, &real_time);
-
-    /* We add the length of a frame to the old time */
-    unsigned int fps = 60; // TODO: Put this somewhere else
-    old_time.tv_nsec += 1000000000 / fps;
-
-    struct timespec diff;
-    int neg = timespec_subtract(&diff, &old_time, &real_time);
-
-    /* Checking that we sleep for a positive time */
-    if (!neg) {
-
-        /* Sleeping */
-        nanosleep(&diff, NULL);
-    }
-    /* Updating again the real_time */
-    clock_gettime_real(CLOCK_MONOTONIC, &real_time);
-}
+/*** Functions that access time ***/
 
 /* Override */ time_t time(time_t* t)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec);
+    struct timespec ts = detTimer.getTicks(TIMETYPE_TIME);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec);
     if (t)
-        *t = deterministic_time.tv_sec;
-    return deterministic_time.tv_sec;
+        *t = ts.tv_sec;
+    return ts.tv_sec;
 }
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", deterministic_time.tv_sec, ".", std::setw(6), deterministic_time.tv_nsec/1000);
-    tv->tv_sec = deterministic_time.tv_sec;
-    tv->tv_usec = deterministic_time.tv_nsec / 1000;
+    struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
+    tv->tv_sec = ts.tv_sec;
+    tv->tv_usec = ts.tv_nsec / 1000;
     return 0;
 }
 
 /* Override */ clock_t clock (void)
 {
-    clock_t clk = (clock_t)(((double)deterministic_time.tv_sec + (double) (deterministic_time.tv_nsec) / 1000000000) * CLOCKS_PER_SEC);
+    struct timespec ts = detTimer.getTicks(TIMETYPE_CLOCK);
+    clock_t clk = (clock_t)(((double)ts.tv_sec + (double) (ts.tv_nsec) / 1000000000) * CLOCKS_PER_SEC);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", clk);
     return clk;
 }
 
-
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    *tp = deterministic_time;
+    *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
 
-    /* Same as SDL_GetTicks */
-    static int numcall = 0;
-    static timespec oldt;
-    if (tp->tv_sec == oldt.tv_sec && tp->tv_nsec == oldt.tv_nsec) // TODO: oldt is undefined, but it is no big deal...
-        numcall++;
-    else
-        numcall = 0;
-    oldt = *tp;
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, "Reiched clock_gettime limit, return increased value.");
-    tp->tv_nsec += 10000000 * numcall;
-    if (tp->tv_nsec >= 1000000000) {
-        tp->tv_sec += tp->tv_nsec / 1000000000;
-        tp->tv_nsec = tp->tv_nsec % 1000000000;
-    }
-    clock_gettime_real(clock_id, tp);
+    //clock_gettime_real(clock_id, tp);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;
 }
 
+/*** Sleep functions ***/
+
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    debuglog(LCF_SDL | LCF_SLEEP | LCF_FRAME, __func__, " call - sleep for ", sleep, " ms.");
-    if (sleep > 10 && sleep < 20) // TODO: Very hacky for now
-        enterFrameBoundary();
-    if (!isMainThread())
-        /* If another thread is sleeping, it may be because he waits to have a job
-         * from the main thread. Let's give it access to the sleep */
-        usleep_real(sleep*1000);
+    bool mainT = isMainThread();
+    debuglog(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleep, " ms.");
+
+    struct timespec ts;
+    ts.tv_sec = sleep / 1000;
+    ts.tv_nsec = (sleep % 1000) * 1000000;
+
+    /* If the function was called from the main thread,
+     * transfer the wait to the timer and
+     * do not actually wait
+     */
+    if (sleep && mainT) {
+        detTimer.addDelay(ts);
+        ts.tv_sec = 0;
+        ts.tv_nsec = 0;
+    }
+
+    nanosleep_real(&ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
 {
-    debuglog(LCF_SLEEP | LCF_FRAME, __func__, " call - sleep for ", usec, " us.");
-    /* FIXME: Advancing deterministic timer */
-    /*
-    if (isMainThread()) {
-        deterministic_time.tv_usec += usec;
-        if (deterministic_time.tv_usec > 1000000) {
-            deterministic_time.tv_usec -= 1000000;
-            deterministic_time.tv_sec++;
-        }
-    }*/
-    //if (usec >= 10000 && usec <= 20000)
-    return usleep_real(usec);
-    //return 0;
+    bool mainT = isMainThread();
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", usec, " us.");
+
+    struct timespec ts;
+    ts.tv_sec = usec / 1000000;
+    ts.tv_nsec = (usec % 1000000) * 1000;
+
+    /* If the function was called from the main thread,
+     * transfer the wait to the timer and
+     * do not actually wait
+     */
+    if (usec && mainT) {
+        detTimer.addDelay(ts);
+        ts.tv_sec = 0;
+        ts.tv_nsec = 0;
+    }
+
+    nanosleep_real(&ts, NULL);
+    return 0;
 }
 
 /* Override */ int nanosleep (const struct timespec *requested_time, struct timespec *remaining)
 {
-    debuglog(LCF_SLEEP | LCF_FREQUENT, __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
+    bool mainT = isMainThread();
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
+
+    /* If the function was called from the main thread,
+     * transfer the wait to the timer and
+     * do not actually wait
+     */
+    if (mainT) {
+        detTimer.addDelay(*requested_time);
+        struct timespec owntime = {0, 0};
+        return nanosleep_real(&owntime, remaining);
+    }
+
     return nanosleep_real(requested_time, remaining);
 }
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
-    Uint32 msec = deterministic_time.tv_sec*1000 + deterministic_time.tv_nsec/1000000;
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - true: ", SDL_GetTicks_real(), ", returning ", msec);
-    //return SDL_GetTicks_real();
+    struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETTICKS);
+    Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - returning ", msec);
     
-    /*
-     * We implement a fail-safe code here:
-     * Some games expect SDL_GetTicks to increment, and will hang if not (Volgarr).
-     * If the game called this function too many times and get the same result,
-     * then we increment the return value.
-     */
-    static int numcall = 0;
-    static Uint32 oldmsec;
-    if (msec == oldmsec) // TODO: oldmsec is undefined, but it is no big deal...
-        numcall++;
-    else
-        numcall = 0;
-    oldmsec = msec;
-    if (numcall > 50) {
-        debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "Reiched GetTicks limit, return value+1.");
-        //numcall = 0;
-        return msec + numcall/50;
-    }
     return msec;
 }
 
@@ -229,30 +129,22 @@ void sleepEndFrame(void)
 {
     //Uint64 counter = SDL_GetPerformanceCounter_real();
     
-    Uint64 counter = deterministic_time.tv_nsec + deterministic_time.tv_sec * 1000000000ULL;
-    /* Same as above, failsafe */
-    static int numcall = 0;
-    static Uint64 oldcounter;
-    if (counter == oldcounter) // TODO: oldcounter is undefined, but it is no big deal...
-        numcall++;
-    else
-        numcall = 0;
-    oldcounter = counter;
-    if (numcall > 50)
-        counter += 1000000ULL * (numcall/50); // Add 1 ms to the counter
+    struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETPERFORMANCECOUNTER);
+    Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
+
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call, returning ", counter);
     return counter;
 }
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
-    debuglog(LCF_TIMEFUNC | LCF_SDL, "Add SDL Timer with call after ", interval, " ms");
+    debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
     return SDL_AddTimer_real(interval, callback, param);
 }
 
 /* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
-    debuglog(LCF_TIMEFUNC | LCF_SDL, "Remove SDL Timer.");
+    debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     return SDL_RemoveTimer_real(id);
 }
 

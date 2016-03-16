@@ -7,6 +7,7 @@
 typedef int (*SDL_ThreadFunction) (void *data);
 typedef void SDL_Thread; // For now
 
+pthread_t getThreadId(void);
 void setMainThread(void);
 int isMainThread(void);
 

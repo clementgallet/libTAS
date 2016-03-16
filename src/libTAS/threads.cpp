@@ -5,6 +5,14 @@
 
 pthread_t mainThread = 0;
 
+/* Get the current thread id */
+pthread_t getThreadId(void)
+{
+    if (pthread_self_real)
+        return pthread_self_real();
+    return 0;
+}
+
 /* Indicate that we are running on the main thread */
 void setMainThread(void)
 {
