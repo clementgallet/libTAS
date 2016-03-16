@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     Display *display;
     XEvent event;
     // Find the window which has the current keyboard focus
-    Window gameWindow;
+    Window gameWindow = 0;
     struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
@@ -222,6 +222,10 @@ int main(int argc, char **argv)
 
         int isidle = !tasflags.running;
         int tasflagsmod = 0; // register if tasflags have been modified on this frame
+
+        /* If we did not yet receive the game window id, just make the game running */
+        if (! gameWindow )
+            isidle = 0;
 
         /* We are at a frame boundary */
         do {

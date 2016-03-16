@@ -21,7 +21,8 @@ unsigned long frame_counter = 0;
 
 /* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
 {
-    struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    struct timespec ts = detTimer.getTicks(TIMETYPE_UNTRACKED);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
@@ -38,8 +39,8 @@ unsigned long frame_counter = 0;
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
-
+    //*tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
+    *tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
     //clock_gettime_real(clock_id, tp);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;

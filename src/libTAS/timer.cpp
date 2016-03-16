@@ -288,10 +288,10 @@ void DeterministicTimer::enterFrameBoundary()
      * then we wait the delta amount of time
      */
     if (!tasflags.fastforward && lastEnterValid) {
-        debuglog(LCF_SLEEP, "Add a wait of ", deltaTime.tv_sec * 1000000000 + deltaTime.tv_nsec, " nsec");
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
+            //debuglog(LCF_SLEEP, "Add a wait of ", deltaTime.tv_sec * 1000000000 + deltaTime.tv_nsec, " nsec");
             nanosleep_real((struct timespec*)&deltaTime, NULL);
         }
     }
