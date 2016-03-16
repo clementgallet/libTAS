@@ -39,8 +39,8 @@ unsigned long frame_counter = 0;
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    //*tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
-    *tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
+    //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
     //clock_gettime_real(clock_id, tp);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;

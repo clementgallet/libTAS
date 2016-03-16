@@ -58,10 +58,10 @@ int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
         size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
         size += fread(inputs->controller_axes, sizeof(short), 4*6, fp);
         size += fread(inputs->controller_buttons, sizeof(unsigned short), 4, fp);
-        if (size != sizeof(struct AllInputs)) {
-            printf("Did not read all (%zu elements), end of file?\n", size);
-            return 0;
-        }
+        //if (size != sizeof(struct AllInputs)) {
+        //    printf("Did not read all (%zu elements), end of file?\n", size);
+        //    return 0;
+        //}
         return 1;
     }
     else {

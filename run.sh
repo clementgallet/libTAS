@@ -7,6 +7,7 @@ Usage ()
 
 gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
 sdlpath=../supermeatboy/amd64/libSDL2-2.0.so.0
+movieopt=
 
 # Parse command-line arguments
 while [ $# -gt 0 ]
@@ -17,6 +18,12 @@ do
                     ;;
     -h | --help)    Usage
                     exit
+                    ;;
+    -r | --read)    shift
+                    movieopt="-r $1"
+                    ;;
+    -w | --write)   shift
+                    movieopt="-w $1"
                     ;;
     -*)             Usage
                     exit
@@ -42,5 +49,5 @@ case $sdlpath in
     /*) absolute=$sdlpath;;
      *) absolute=$PWD/$sdlpath;;
 esac
-./bin/linTAS -s $absolute
+./bin/linTAS -s $absolute $movieopt
 

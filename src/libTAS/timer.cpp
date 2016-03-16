@@ -246,7 +246,8 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* Subtract out ticks that were made when calling GetTicks() */
-    TimeHolder takenTicks = (ticks - lastEnterTicks) + forceAdvancedTicks;
+    //TimeHolder takenTicks = (ticks - lastEnterTicks) + forceAdvancedTicks;
+    TimeHolder takenTicks = (ticks - lastEnterTicks) /*+ forceAdvancedTicks*/;
 
     //int getCurrentFramestampLogical();
 
