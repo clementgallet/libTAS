@@ -28,11 +28,13 @@
 ### FEZ
 
 - Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
-- Use SDL library but we couldn't hook any SDL function, because Mono is using dynamic library loading
+- Mono is using SDL for display and stuff, so we are good. However it links dynamically to it
 
 ### Towerfall
 
 - Same as FEZ
+- The game uses udev to look for game controllers instead of the SDL API
+- The game can run at any fps
 
 ### Braid
 

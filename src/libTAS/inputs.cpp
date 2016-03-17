@@ -252,9 +252,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     return evi;
 }
 
-/**
- *  Count the number of joysticks attached to the system right now
- */
 /* Override */ int SDL_NumJoysticks(void)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
@@ -263,9 +260,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     //return 0;
 }
 
-/**
- *  Is the joystick on this index supported by the game controller interface?
- */
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
@@ -276,15 +270,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 
 }
 
-
-/**
- *  Open a game controller for use.
- *  The index passed as an argument refers to the N'th game controller on the system.
- *  This index is the value which will identify this controller in future controller
- *  events.
- *
- *  \return A controller identifier, or NULL if an error occurred.
- */
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
@@ -296,30 +281,34 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     return gc_id;
 }
 
-/**
- *  Get the implementation dependent name of a game controller.
- *  This can be called before any controllers are opened.
- *  If no name can be found, this function returns NULL.
- */
 /* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
     return joy_name;
 }
 
-/**
- *  Return the name for this currently opened controller
- */
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", *gamecontroller);
     return joy_name;
 }
 
-/**
- *  Returns SDL_TRUE if the controller has been opened and currently connected,
- *  or SDL_FALSE if it has not.
- */
+
+/* Override */ SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecontroller)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", *gamecontroller);
+    /* We simply return the same id */
+    return (SDL_Joystick*) gamecontroller;
+}
+
+/* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_TODO, __func__, " call with id ", joy);
+    SDL_GameController* gc_id = new SDL_GameController;
+    *gc_id = 0;
+	return gc_id;
+}
+
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
@@ -328,18 +317,9 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     return SDL_FALSE;
 }
 
-/**
- *  Enable/disable controller event polling.
- *
- *  If controller events are disabled, you must call SDL_GameControllerUpdate()
- *  yourself and check the state of the controller when you want controller
- *  information.
- *
- *  The state can be one of ::SDL_QUERY, ::SDL_ENABLE or ::SDL_IGNORE.
- */
 /* Override */ int SDL_GameControllerEventState(int state)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
+    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_TODO, __func__, " call with state ", state);
     switch (state) {
         case 1:
             controller_events = 1;
@@ -354,13 +334,23 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     }
 }
 
-/**
- *  Get the current state of an axis control on a game controller.
- *
- *  The state is a value ranging from -32768 to 32767.
- *
- *  The axis indices start at index 0.
- */
+/* Override */ void SDL_GameControllerUpdate(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+}
+
+/* Override */ SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char *pchString)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+	return SDL_CONTROLLER_AXIS_LEFTX;
+}
+
+/* Override */ const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+	return "";
+}
+
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                           SDL_GameControllerAxis axis)
 {
@@ -379,11 +369,18 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 
 }
 
-/**
- *  Get the current state of a button on a game controller.
- *
- *  The button indices start at index 0.
- */
+/* Override */ SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char *pchString)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+	return SDL_CONTROLLER_BUTTON_A;
+}
+
+/* Override */ const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+	return "";
+}
+
 /* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button)
 {
@@ -402,13 +399,52 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 
 }
 
-/**
- *  Close a controller previously opened with SDL_GameControllerOpen().
- */
 /* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
 
     joyid[*gamecontroller] = -1;
+}
+
+/*** Joystick devices ***/
+
+SDL_JoystickGUID nullGUID = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+
+SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+	return nullGUID;
+}
+
+
+/*** Haptic devices ***/
+
+int SDL_NumHaptics(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+	return 0;
+}
+
+SDL_Haptic * SDL_HapticOpen(int device_index)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+	return NULL;
+}
+
+int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+	return 0;
+}
+
+SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+	return NULL;
+}
+
+void SDL_HapticClose(SDL_Haptic * haptic)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
 }
 

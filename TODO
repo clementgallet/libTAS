@@ -15,6 +15,7 @@
 - Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Support non SDL stuff
+- hook udev as some games (e.g. Towerfall) use it to look for game controllers
 
 ## Partially done
 
@@ -33,7 +34,6 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
 - Better manage static and dynamic hooking
-- Deal with non/deterministic timers (look at hourglass code)
 
 ## Done
 
@@ -47,4 +47,5 @@
 - Add a deterministic timer instead of relying on SwapInterval
 - Allow 32-bit or 64-bit lib compilation
 - Add key remapping
+- Add both (non)/deterministic timers
 
