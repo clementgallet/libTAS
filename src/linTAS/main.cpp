@@ -13,6 +13,8 @@
 #include "keymapping.h"
 #include "recording.h"
 //#include "savestates.h"
+#include <vector>
+#include <string>
 #ifdef CRIU
 #include "savestates_criu.h"
 #endif
@@ -35,6 +37,8 @@ FILE* fp;
 
 pid_t game_pid;
 
+std::vector<std::string> shared_libs;
+
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
     (void) display; // To remove unused warning
@@ -52,7 +56,8 @@ int main(int argc, char **argv)
 
     /* Parsing arguments */
     int c;
-    while ((c = getopt (argc, argv, "r:w:d:s:")) != -1)
+    std::string libname;
+    while ((c = getopt (argc, argv, "r:w:d:s:l:")) != -1)
         switch (c) {
             case 'r':
                 /* Playback movie file */
@@ -72,6 +77,11 @@ int main(int argc, char **argv)
             case 's':
                 /* Path of the SDL library */
                 sdlfile = optarg;
+                break;
+            case 'l':
+                /* Shared library */
+                libname = optarg;
+                shared_libs.push_back(libname);
                 break;
             case '?':
                 fprintf (stderr, "Unknown option character");
@@ -151,6 +161,15 @@ int main(int argc, char **argv)
         size_t sdlfile_size = strlen(sdlfile);
         send(socket_fd, &sdlfile_size, sizeof(size_t), 0);
         send(socket_fd, sdlfile, sdlfile_size * sizeof(char), 0);
+    }
+
+    /* Send shared library names */
+    for (auto &name : shared_libs) {
+        message = MSGN_LIB_FILE;
+        send(socket_fd, &message, sizeof(int), 0);
+        size_t name_size = name.size();
+        send(socket_fd, &name_size, sizeof(size_t), 0);
+        send(socket_fd, name.c_str(), name_size, 0);
     }
 
     /* End message */

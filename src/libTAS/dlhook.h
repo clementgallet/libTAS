@@ -3,6 +3,7 @@
 
 #include <dlfcn.h>
 #include <string>
+#include <vector>
 
 /* For hooking functions that perform dynamic library loading,
  * we have to use a special method.
@@ -28,6 +29,8 @@ extern struct dlfcn_hook {
 } *_dlfcn_hook;
 
 std::string find_lib(const char* library);
+
+extern std::vector<std::string> libraries;
 
 /* Functions specifying that we want to call the original functions */
 void dlenter(void);

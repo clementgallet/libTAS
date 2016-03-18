@@ -1,7 +1,6 @@
 #include "dlhook.h"
 #include "logging.h"
 #include <cstring>
-#include <vector>
 
 static struct dlfcn_hook *old_dlfcn_hook;
 

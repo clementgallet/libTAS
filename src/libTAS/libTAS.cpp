@@ -12,6 +12,8 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <iomanip>
+#include <vector>
+#include <string>
 
 #include "../external/SDL_ttf.h"
 #include "keyboard_helper.h"
@@ -96,6 +98,8 @@ void __attribute__((constructor)) init(void)
     /* Receive information from the program */
     receiveData(&message, sizeof(int));
     while (message != MSGN_END_INIT) {
+        std::vector<char> buf;
+        std::string libstring;
         switch (message) {
             case MSGN_TASFLAGS:
                 debuglog(LCF_SOCKET, "Receiving tas flags");
@@ -116,6 +120,16 @@ void __attribute__((constructor)) init(void)
                 sdlfile = new char[sdl_len+1];
                 receiveData(sdlfile, sdl_len * sizeof(char));
                 sdlfile[sdl_len] = '\0';
+                break;
+            case MSGN_LIB_FILE:
+                debuglog(LCF_SOCKET, "Receiving lib filename");
+                size_t lib_len;
+                receiveData(&lib_len, sizeof(size_t));
+                buf.resize(lib_len, 0x00);
+                receiveData(&(buf[0]), lib_len);
+                libstring.assign(&(buf[0]), buf.size());
+                libraries.push_back(libstring);
+                debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);
