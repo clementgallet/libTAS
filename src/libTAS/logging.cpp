@@ -5,35 +5,37 @@
 
 void debuglogverbose(LogCategoryFlag lcf, std::string str)
 {
+    std::ostringstream oss;
+
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
         if (lcf & LCF_ERROR)
             /* Write the header text in red */
-            std::cerr << ANSI_COLOR_RED;
+            oss << ANSI_COLOR_RED;
         else if (lcf & LCF_TODO)
             /* Write the header text in light red */
-            std::cerr << ANSI_COLOR_LIGHT_RED;
+            oss << ANSI_COLOR_LIGHT_RED;
         else
             /* Write the header text in white */
-            std::cerr << ANSI_COLOR_LIGHT_GRAY;
+            oss << ANSI_COLOR_LIGHT_GRAY;
 
-        std::cerr << "[libTAS f:" << std::setw(6) << frame_counter << "] ";
+        oss << "[libTAS f:" << std::setw(6) << frame_counter << "] ";
 
         if (pthread_self_real) {
             std::string thstr = stringify(pthread_self_real());
             if (isMainThread())
-                std::cerr << "Thread " << thstr << " (main) ";
+                oss << "Thread " << thstr << " (main) ";
             else
-                std::cerr << "Thread " << thstr << "        ";
+                oss << "Thread " << thstr << "        ";
         }
 
         /* Reset color change */
-        std::cerr << ANSI_COLOR_RESET;
+        oss << ANSI_COLOR_RESET;
 
         /* Output arguments */
-        std::cerr << str;
+        oss << str << std::endl;
 
-        std::cerr << std::endl;
+        std::cerr << oss.str();
     }
 }
 
