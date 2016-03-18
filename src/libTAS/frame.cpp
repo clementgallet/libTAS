@@ -8,7 +8,7 @@
 #include "time.h"
 #include "libTAS.h"
 #include "logging.h"
-#include "timer.h"
+#include "DeterministicTimer.h"
 
 void frameBoundary(void)
 {

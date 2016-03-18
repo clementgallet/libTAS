@@ -33,8 +33,6 @@ extern int (*SDL_GL_SetSwapInterval_real)(int interval);
 extern void (*SDL_DestroyWindow_real)(void*);
 extern int (*usleep_real)(unsigned long);
 extern int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
-extern char* (*alcGetString_real)(void* device, int params);
-extern void* (*alcOpenDevice_real)(const char* devicename);
 
 /* Threads */
 extern void* (*SDL_CreateThread_real)(int(*fn)(void*),
@@ -118,8 +116,9 @@ extern SDL_version * (*SDL_Linked_Version_real)(void);
 extern int (*SDL1_PollEvent_real)(SDL1::SDL_Event*);
 extern int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
+#define LINK_SUFFIX(FUNC,LIB) link_function((void**)&FUNC##_real, #FUNC, LIB)
+bool link_function(void** function, const char* source, const char* library);
 int hook_functions(void* SDL_handle);
-int late_openalhook(void);
 int late_glhook(void);
 
 #endif // HOOKSDL_H_INCLUDED

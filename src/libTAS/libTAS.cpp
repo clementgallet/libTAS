@@ -30,7 +30,8 @@
 #include "threads.h"
 #include "logging.h"
 #include "events.h"
-#include "timer.h"
+#include "NonDeterministicTimer.h"
+#include "DeterministicTimer.h"
 
 /* Handle to the SDL dynamic library that is shipped with the game */
 void* SDL_handle;

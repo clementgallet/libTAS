@@ -27,6 +27,8 @@ extern struct dlfcn_hook {
     void *pad[4];
 } *_dlfcn_hook;
 
+std::string find_lib(const char* library);
+
 /* Functions specifying that we want to call the original functions */
 void dlenter(void);
 void dlleave(void);

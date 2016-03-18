@@ -2,13 +2,24 @@
 #include "logging.h"
 #include "hook.h"
 
+char* (*alcGetString_real)(void*, int) = nullptr;
+void* (*alcOpenDevice_real)(const char*) = nullptr;
+
+void link_openal(void);
+void link_openal(void)
+{
+    LINK_SUFFIX(alcOpenDevice, "openal");
+    LINK_SUFFIX(alcGetString, "openal");
+}
+
+
 #define ALC_DEVICE_SPECIFIER                     0x1005
 
 /* Override */ void* alcOpenDevice(const char* devicename)
 {
 
     debuglog(LCF_OPENAL, __func__, " call.");
-    late_openalhook();
+    link_openal();
 
     /*
     const char *devices; 

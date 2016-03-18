@@ -1,6 +1,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include <cstring>
+#include <vector>
 
 static struct dlfcn_hook *old_dlfcn_hook;
 
@@ -23,6 +24,18 @@ void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
 std::string sdlpath;
 std::string openalpath;
 
+std::vector<std::string> libraries;
+
+std::string find_lib(const char* library)
+{
+    for (std::vector<std::string>::const_iterator itr = libraries.begin(); itr != libraries.end(); ++itr)
+        if (itr->find(library) != std::string::npos)
+            return (*itr);
+
+    std::string emptystring;
+    return emptystring;
+}
+
 void *my_dlopen(const char *file, int mode, void *dl_caller) {
     void *result;
     debuglog(LCF_HOOK, __func__, " call with file ", file);
@@ -30,6 +43,10 @@ void *my_dlopen(const char *file, int mode, void *dl_caller) {
     result = dlopen(file, mode);
     dlleave();
     if (result != NULL) {
+        /* Store the successfully opened library */
+        std::string filestr(file);
+        libraries.push_back(filestr);
+
         /* Try to identify some libraries we will be using later */
         if (strstr(file, "libSDL2-2") != NULL)
             sdlpath = std::string(file);

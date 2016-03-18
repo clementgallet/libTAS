@@ -1,6 +1,7 @@
 #include "hook.h"
 #include "logging.h"
 #include <dlfcn.h>
+#include <string>
 
 #define HOOK_FUNC_TARGET(FUNC,SOURCE,TARGET) *(void**)&TARGET = dlsym(SOURCE, #FUNC);\
     if (!TARGET)\
@@ -27,6 +28,50 @@
         }\
     }
 
+
+bool link_function(void** function, const char* source, const char* library)
+{
+    /* Test if function is already linked */
+    if (*function != nullptr)
+        return true;
+
+    dlenter(); // Use real dl functions
+
+    /* First try to link it from the global namespace */
+    *function = dlsym(RTLD_NEXT, source);
+
+    if (*function != nullptr) {
+        dlleave();
+        return true;
+    }
+
+    /* If it did not succeed, try to link using a matching library
+     * loaded by the game.
+     */
+    std::string libpath = find_lib(library);
+
+    if (! libpath.empty()) {
+
+        /* Try to link again using a matching library */
+        void* handle = dlopen(libpath.c_str(), RTLD_LAZY);
+
+        if (handle != NULL) {
+            *function = dlsym(handle, source);
+
+            if (*function != nullptr) {
+                dlleave();
+                return true;
+            }
+        }
+    }
+    debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol ", source);
+
+    *function = nullptr;
+    dlleave();
+    return false;
+}
+
+
 int SDLver = 0;
 
 void (*SDL_Init_real)(unsigned int flags);
@@ -45,8 +90,6 @@ void (*SDL_DestroyWindow_real)(void*);
 
 int (*usleep_real)(unsigned long);
 int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
-char* (*alcGetString_real)(void* device, int params);
-void* (*alcOpenDevice_real)(const char* devicename);
 
 /* Threads */
 void* (*SDL_CreateThread_real)(int(*fn)(void*),
@@ -190,8 +233,6 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(usleep, RTLD_NEXT)
     HOOK_FUNC(nanosleep, RTLD_NEXT)
     HOOK_FUNC(clock_gettime, RTLD_NEXT)
-    HOOK_FUNC(alcGetString, RTLD_NEXT)
-    HOOK_FUNC(alcOpenDevice, RTLD_NEXT)
     HOOK_FUNC(SDL_CreateThread, SDL_handle)
     HOOK_FUNC(SDL_WaitThread, SDL_handle)
     //HOOK_FUNC(SDL_DetachThread, SDL_handle)
@@ -239,25 +280,6 @@ int hook_functions(void* SDL_handle) {
 
     dlleave();
 
-    return 1;
-}
-
-int late_openalhook() {
-
-    static int inited = 0;
-    if (inited) return 1;
-
-    dlenter(); // Use real dlsym function
-  
-    if (! openalpath.empty()) {
-        void* openalhandle = dlopen(openalpath.c_str(), RTLD_LAZY);
-        HOOK_FUNC(alcGetString, openalhandle)
-        HOOK_FUNC(alcOpenDevice, openalhandle)
-    }
-
-    dlleave();
-
-    inited = 1;
     return 1;
 }
 
