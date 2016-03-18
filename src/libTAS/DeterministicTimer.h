@@ -1,8 +1,10 @@
+#ifndef DETERMINISTICTIMER_H_INCL
+#define DETERMINISTICTIMER_H_INCL
+
 #include <time.h>
-#include "logging.h"
-#include "hook.h"
 #include "TimeHolder.h"
 
+/* An enum indicating which time-getting function query the time */
 enum TimeCallType
 {
     TIMETYPE_UNTRACKED = -1,
@@ -15,55 +17,9 @@ enum TimeCallType
     TIMETYPE_NUMTRACKEDTYPES
 };
 
-/* A simple timer that directly uses the system timer,
- * but is somewhat affected by fast-forward and frame advance.
- * It is not deterministic, but can be a good reference for
- * comparing against what the deterministic timer does.
- * (i.e. run the game first with this to see what the framerate is).
- *
- * If the game runs differently with this timer, then
- * probably this one is doing the more correct behavior,
- * especially if the chosen frame rate is wrong.
- * But many games will be unrecordable while using this timer.
- *
- * Code largely taken from Hourglass.
- */
-
-class NonDeterministicTimer
-{
-public:
-
-    /* Initialize the class members */
-    void initialize(void);
-
-    /* Update and return the time of the non deterministic timer */
-    struct timespec getTicks(void);
-
-    /* Function called when entering a frame boundary */
-    void enterFrameBoundary(void);
-
-    /* Function called when exiting a frame boundary,
-     * to take into account the time spent in it
-     */
-    void exitFrameBoundary(void);
-
-    /* Add a delay in the timer, and sleep */
-    void addDelay(struct timespec delayTicks);
-
-private:
-    TimeHolder ticks;
-    TimeHolder lasttime;
-    pthread_t frameThreadId;
-    TimeHolder lastEnterTime;
-    TimeHolder lastExitTime;
-};
-
-extern NonDeterministicTimer nonDetTimer;
-
-
 /* A timer that gives deterministic values, at least in the main thread.
  *
- * Deterministic means that calling FrameBoundary() and querying this timer
+ * Deterministic means that calling frameBoundary() and querying this timer
  * in the same order will produce the same stream of results,
  * independently of anything else like the system clock or CPU speed.
  *
@@ -142,4 +98,6 @@ private:
 };
 
 extern DeterministicTimer detTimer;
+
+#endif
 

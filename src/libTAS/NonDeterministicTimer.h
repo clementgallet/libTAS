@@ -1,0 +1,65 @@
+#ifndef NONDETERMINISTICTIMER_H_INCL
+#define NONDETERMINISTICTIMER_H_INCL
+
+#include <time.h>
+#include "TimeHolder.h"
+#include "threads.h"
+
+/* A simple timer that directly uses the system timer,
+ * but is somewhat affected by fast-forward and frame advance.
+ * It is not deterministic, but can be a good reference for
+ * comparing against what the deterministic timer does.
+ * (i.e. run the game first with this to see what the framerate is).
+ *
+ * If the game runs differently with this timer, then
+ * probably this one is doing the more correct behavior,
+ * especially if the chosen frame rate is wrong.
+ * But many games will be unrecordable while using this timer.
+ *
+ * To enable this timer, set the framerate to 0.
+ *
+ * Code largely taken from Hourglass.
+ */
+
+class NonDeterministicTimer
+{
+public:
+
+    /* Initialize the class members */
+    void initialize(void);
+
+    /* Update and return the time of the non deterministic timer */
+    struct timespec getTicks(void);
+
+    /* Function called when entering a frame boundary */
+    void enterFrameBoundary(void);
+
+    /* Function called when exiting a frame boundary,
+     * to take into account the time spent in it
+     */
+    void exitFrameBoundary(void);
+
+    /* Add a delay in the timer, and sleep */
+    void addDelay(struct timespec delayTicks);
+
+private:
+    /* Current time of the timer */
+    TimeHolder ticks;
+
+    /* Last time value of the timer */
+    TimeHolder lasttime;
+
+    /* Store which thread can update the timer */
+    pthread_t frameThreadId;
+
+    /* The real time of the last frame boundary enter */
+    TimeHolder lastEnterTime;
+
+    /* The real time of the last frame boundary exit */
+    TimeHolder lastExitTime;
+};
+
+extern NonDeterministicTimer nonDetTimer;
+
+#endif
+

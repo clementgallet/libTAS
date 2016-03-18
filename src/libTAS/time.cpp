@@ -3,7 +3,7 @@
 #include "frame.h"
 #include "threads.h"
 #include <iomanip> // std::setw
-#include "timer.h"
+#include "DeterministicTimer.h"
 
 /* Frame counter */
 unsigned long frame_counter = 0;

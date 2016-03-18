@@ -1,90 +1,9 @@
-#include "timer.h"
+#include "DeterministicTimer.h"
+#include "NonDeterministicTimer.h"
+#include "logging.h"
+#include "../shared/tasflags.h"
 #include "threads.h"
 #include "frame.h"
-#include "../shared/tasflags.h"
-
-NonDeterministicTimer nonDetTimer;
-DeterministicTimer detTimer;
-
-void NonDeterministicTimer::initialize(void)
-{
-    ticks.tv_sec = 0;
-    ticks.tv_nsec = 0;
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lasttime);
-    frameThreadId = 0;
-    lastEnterTime = lasttime;
-    lastExitTime = lasttime;
-}
-
-struct timespec NonDeterministicTimer::getTicks(void)
-{
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-
-    if(frameThreadId == 0)
-        frameThreadId = getThreadId();
-    /* Only one thread can perform this logic.
-     * Could this be a problem...? */
-    if(frameThreadId == getThreadId()) {
-
-        /* Get the real clock time */
-        TimeHolder realtime;
-        clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&realtime);
-
-        /* Compute the difference from the last call */
-        TimeHolder delta = realtime - lasttime;
-
-        if(tasflags.fastforward) { // fast-forward
-            delta = delta * 3; // arbitrary
-        }
-
-        /* If we paused at a frame boudary, we should not count that time */
-        TimeHolder frameBoundaryDur = lastExitTime - lastEnterTime;
-
-        /* If we just have the game running,
-         * do not count the normal frame boundary duration,
-         * as it would delay more and more the timer
-         */
-        if(frameBoundaryDur.tv_sec > 0 || frameBoundaryDur.tv_nsec > 50000000)
-        {
-            /* Remove the duration of the frame boundary from the elapsed time */
-            delta -= frameBoundaryDur;
-
-            /* Frame duration can only be used once per frame */
-            lastEnterTime = lastExitTime;
-        }
-
-        ticks += delta;
-
-        debuglog(LCF_TIMESET|LCF_FREQUENT, __func__, " added ", delta.tv_sec * 1000000000 + delta.tv_nsec, " nsec ");
-
-        lasttime = realtime;
-    }
-    return *(struct timespec*)&ticks;
-}
-
-void NonDeterministicTimer::enterFrameBoundary()
-{
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
-}
-
-void NonDeterministicTimer::exitFrameBoundary()
-{
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastExitTime);
-}
-
-void NonDeterministicTimer::addDelay(struct timespec delayTicks)
-{
-    DEBUGLOGCALL(LCF_SLEEP | LCF_FRAME);
-
-    if (tasflags.fastforward) {
-        delayTicks.tv_sec = 0;
-        delayTicks.tv_nsec = 0;
-    }
-    
-    nanosleep_real(&delayTicks, NULL);
-}
 
 #define MAX_NONFRAME_GETTIMES 4000
 
@@ -93,21 +12,19 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     if(tasflags.framerate == 0) {
-        struct timespec rv = nonDetTimer.getTicks();
-        return rv; // 0 framerate means disable deterministic timer
+        return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
     bool isFrameThread = isMainThread();
 
     /* Only the main thread can modify the timer */
-    if(!isFrameThread)
-    {
-        if(type != TIMETYPE_UNTRACKED)
-        {
+    if(!isFrameThread) {
+        if(type != TIMETYPE_UNTRACKED) {
 
-            /* Well, actually, if another thread get the time too many time,
+            /* Well, actually, if another thread get the time too many times,
              * we temporarily consider it as the main thread.
-             * This can lead to desyncs
+             * This can lead to desyncs, but it avoids freeze in games that
+             * expect the time to advance in other threads.
              */
             if(getTimes >= MAX_NONFRAME_GETTIMES)
             {
@@ -150,11 +67,6 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
             }
         }
 
-#if 0 // Not sure we need this
-        if (getTimes == MAX_NONFRAME_GETTIMES && !frameThreadId)
-            debuglog(LCF_TIMESET, "WARNING! temporarily switched to non-deterministic timer (%d)\n", ticks);
-        getTimes++;
-#endif
         if(ticksExtra) {
             /* Delay by ticksExtra ms. Arbitrary */
             struct timespec delay = {0, ticksExtra * 1000000};
@@ -195,9 +107,15 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
     while(addedDelay > maxDeferredDelay)
     {
+        /* Indicating that the following frame boundary is not
+         * a normal (draw) frame boundary.
+         */
         drawFB = false;
 
-        /* This decrements addedDelay by (basically) how much it advances ticks */
+        /* We have built up too much delay. We must enter a frame boundary,
+         * to advance the time.
+         * This decrements addedDelay by (basically) how much it advances ticks
+         */
         frameBoundary();
 
     }
@@ -232,6 +150,9 @@ void DeterministicTimer::enterFrameBoundary()
     if(tasflags.framerate == 0)
         return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
 
+    /* We compute by how much we should advance the timer
+     * to run exactly as the indicated framerate
+     */
     unsigned int integer_increment = 1000000000 / tasflags.framerate;
     unsigned int fractional_increment = 1000000000 % tasflags.framerate;
 
@@ -246,10 +167,8 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* Subtract out ticks that were made when calling GetTicks() */
-    //TimeHolder takenTicks = (ticks - lastEnterTicks) + forceAdvancedTicks;
+    /* Warning: adding forceAdvanceTicks or not can yield different results! */
     TimeHolder takenTicks = (ticks - lastEnterTicks) /*+ forceAdvancedTicks*/;
-
-    //int getCurrentFramestampLogical();
 
     /* If we enter the frame normally (with a screen draw),
      * then reset the forceAdvancedTicks
@@ -258,6 +177,7 @@ void DeterministicTimer::enterFrameBoundary()
         forceAdvancedTicks.tv_sec = 0;
         forceAdvancedTicks.tv_nsec = 0;
     }
+
     /* 
      * Did we already have advanced more ticks that the length of a frame?
      * If not, we add the remaining ticks
@@ -272,34 +192,26 @@ void DeterministicTimer::enterFrameBoundary()
     TimeHolder currentTime;
     clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
 
-    // calculate the target time we wanted to be at now
-    //DWORD timeScale = tasflags.timescale;
-    //DWORD timeScaleDiv = tasflags.timescaleDivisor;
-    //int desiredDeltaTime = ((int)(newTicks - lastOvershot)) * (int)timeScaleDiv;
-    //if(timeScale > 1)
-    //    desiredDeltaTime /= (int)timeScale;
-    //
+    /* calculate the target time we wanted to be at now */
+    /* TODO: This is where we would implement slowdown */
     TimeHolder desiredTime = lastEnterTime + timeIncrement;
 
     TimeHolder deltaTime = desiredTime - currentTime;
 
-    //AdvanceTimeAndMixAll(newTicks);
-
     /* If we are not fast forwarding, and not the first frame,
-     * then we wait the delta amount of time
+     * then we wait the delta amount of time.
      */
     if (!tasflags.fastforward && lastEnterValid) {
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
-            //debuglog(LCF_SLEEP, "Add a wait of ", deltaTime.tv_sec * 1000000000 + deltaTime.tv_nsec, " nsec");
             nanosleep_real((struct timespec*)&deltaTime, NULL);
         }
     }
 
     /* 
      * WARNING: This time update is not done in Hourglass,
-     * maybe intentionally.
+     * maybe intentionally (the author does not remember).
      */
     clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
 
@@ -328,3 +240,6 @@ void DeterministicTimer::initialize(void)
 
     drawFB = true;
 }
+
+DeterministicTimer detTimer;
+

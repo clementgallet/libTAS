@@ -1,3 +1,6 @@
+#ifndef TIMEHOLDER_H_INCL
+#define TIMEHOLDER_H_INCL
+
 #include <time.h>
 
 /* Class containing a time value stored as two fields:
@@ -82,4 +85,6 @@ public:
         return ts;
     }
 };
+
+#endif
 
