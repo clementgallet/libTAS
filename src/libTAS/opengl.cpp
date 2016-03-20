@@ -4,6 +4,55 @@
 
 #include "../external/gl.h"
 
+void (*glGenTextures_real)(int n, unsigned int* tex);
+void (*glBindTexture_real)(int target, unsigned int tex);
+void (*glTexImage2D_real)(int, int, int, int, int, int, int, int, const void*);
+void (*glBegin_real)( int mode );
+void (*glEnd_real)( void );
+void (*glVertex2f_real)( float x, float y );
+void (*glTexCoord2f_real)( float s, float t );
+void (*glDeleteTextures_real)( int n, const unsigned int *textures);
+void (*glEnable_real)( int cap );
+void (*glDisable_real)( int cap );
+void (*glVertexPointer_real)(int size, int type, int stride, const void* pointer);
+void (*glDrawArrays_real)( int mode, int first, int count);
+
+void (*glMatrixMode_real)(int mode);
+void (*glPushMatrix_real)(void);
+void (*glPopMatrix_real)(void);
+void (*glLoadIdentity_real)(void);
+void (*glOrtho_real)(double left, double right, double bottom, double top, double near, double far);
+void (*glBlendFunc_real)(int sfactor, int dfactor);
+void (*glTexParameteri_real)(int target, int pname, int param);
+void (*glGetIntegerv_real)( int pname, GLint* data);
+void (*glGetBooleanv_real)( int pname, GLboolean* data);
+
+/* Link function pointers to real opengl functions */
+void link_opengl(void);
+{
+    LINK_SUFFIX(glGenTextures, "libGL");
+    LINK_SUFFIX(glBindTexture, "libGL");
+    LINK_SUFFIX(glTexImage2D, "libGL");
+    LINK_SUFFIX(glBegin, "libGL");
+    LINK_SUFFIX(glEnd, "libGL");
+    LINK_SUFFIX(glVertex2f, "libGL");
+    LINK_SUFFIX(glTexCoord2f, "libGL");
+    LINK_SUFFIX(glDeleteTextures, "libGL");
+    LINK_SUFFIX(glEnable, "libGL");
+    LINK_SUFFIX(glDisable, "libGL");
+    LINK_SUFFIX(glVertexPointer, "libGL");
+    LINK_SUFFIX(glDrawArrays, "libGL");
+    LINK_SUFFIX(glMatrixMode, "libGL");
+    LINK_SUFFIX(glPushMatrix, "libGL");
+    LINK_SUFFIX(glPopMatrix, "libGL");
+    LINK_SUFFIX(glLoadIdentity, "libGL");
+    LINK_SUFFIX(glOrtho, "libGL");
+    LINK_SUFFIX(glBlendFunc, "libGL");
+    LINK_SUFFIX(glTexParameteri, "libGL");
+    LINK_SUFFIX(glGetIntegerv, "libGL");
+    LINK_SUFFIX(glGetBooleanv, "libGL");
+}
+
 /* Render a text on top of the game window 
  * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
  */
@@ -18,12 +67,12 @@ void RenderText(TTF_Font *font, const char* message, int sw, int sh, SDL_Color c
     //glPushMatrix_real();
     glLoadIdentity_real();
 
-    glDisable_real(/*GL_DEPTH_TEST*/ 0x0B71);
+    glDisable_real(GL_DEPTH_TEST);
 
     GLboolean tex2DEnabled;
     glGetBooleanv_real(GL_TEXTURE_2D, &tex2DEnabled);
 
-    glEnable_real(/*GL_TEXTURE_2D*/ 0x0DE0);
+    glEnable_real(GL_TEXTURE_2D);
 
     GLboolean blendEnabled;
     glGetBooleanv_real(GL_BLEND, &blendEnabled);

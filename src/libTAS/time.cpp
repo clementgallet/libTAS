@@ -139,6 +139,11 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     return counter;
 }
 
+/*** Timers ***/
+
+SDL_TimerID (*SDL_AddTimer_real)(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+SDL_bool (*SDL_RemoveTimer_real)(SDL_TimerID id);
+
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
@@ -156,4 +161,18 @@ void link_time(void)
     LINK_SUFFIX(nanosleep, nullptr);
     LINK_SUFFIX(clock_gettime, nullptr);
 }
+
+void link_sdltime(void)
+{
+    if (SDLver == 1) {
+        LINK_SUFFIX(SDL_AddTimer, "libSDL-1.2");
+        LINK_SUFFIX(SDL_RemoveTimer, "libSDL-1.2");
+        /* TODO: Add SDL 1.2 SetTimer */
+    }
+    if (SDLver == 2) {
+        LINK_SUFFIX(SDL_AddTimer, "libSDL2-2");
+        LINK_SUFFIX(SDL_RemoveTimer, "libSDL2-2");
+    }
+}
+
 

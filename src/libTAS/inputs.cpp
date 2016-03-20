@@ -5,6 +5,8 @@
 #include "../shared/inputs.h"
 #include <X11/keysym.h>
 #include <stdlib.h>
+#include "DeterministicTimer.h"
+#include "windows.h" // for SDL_GetWindowId_real
 
 struct AllInputs ai;
 struct AllInputs old_ai;
@@ -51,6 +53,7 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
 {
     int evi = 0;
     int i, j;
+	struct timespec time;
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -68,7 +71,8 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
                 events2[evi].type = SDL_KEYUP;
                 events2[evi].key.state = SDL_RELEASED;
                 events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
-                events2[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+                events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, old_ai.keyboard[i]);
@@ -112,6 +116,7 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
 {
     int evi = 0;
     int i,j,k;
+	struct timespec time;
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -129,7 +134,8 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
                 events2[evi].type = SDL_KEYDOWN;
                 events2[evi].key.state = SDL_PRESSED;
                 events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
-                events2[evi].key.timestamp = SDL_GetTicks_real() - 1; // TODO: Should use our deterministic timer instead
+				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+                events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, ai.keyboard[i]);
@@ -180,6 +186,7 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
 int generateControllerEvent(SDL_Event* events, int num, int update)
 {
     int evi = 0;
+	struct timespec time;
     if (!controller_events)
         return 0;
     int ji = 0;
@@ -194,7 +201,8 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 
                 /* Fill the event structure */
                 events[evi].type = SDL_CONTROLLERAXISMOTION;
-                events[evi].caxis.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
+				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+                events[evi].caxis.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                 events[evi].caxis.which = joyid[ji];
                 events[evi].caxis.axis = axis;
                 events[evi].caxis.value = ai.controller_axes[ji][axis];
@@ -231,7 +239,8 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
                     events[evi].type = SDL_CONTROLLERBUTTONUP;
                     events[evi].cbutton.state = SDL_RELEASED;
                 }
-                events[evi].cbutton.timestamp = SDL_GetTicks_real(); // TODO: maybe our timer instead
+				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+                events[evi].cbutton.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                 events[evi].cbutton.which = joyid[ji];
                 events[evi].cbutton.button = bi;
 

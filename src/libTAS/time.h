@@ -45,9 +45,13 @@ OVERRIDE void SDL_Delay(Uint32 sleep);
 OVERRIDE Uint32 SDL_GetTicks(void);
 OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
 OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
-SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
-SDL_bool SDL_RemoveTimer(SDL_TimerID id);
+
+typedef int SDL_TimerID;
+typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
+OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+OVERRIDE SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
 void link_time(void);
+void link_sdltime(void);
 
 #endif

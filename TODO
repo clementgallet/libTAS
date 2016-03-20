@@ -22,6 +22,7 @@
 - Deal with keyboard mapping and stuff
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Make the code thread safe
+- Add a license
 
 ## Partially done
 

@@ -2,20 +2,16 @@
 
 Usage ()
 {
-    echo "usage: run.sh [-s|--sdl sdlpath] gameexecutable [game options]"
+    echo "usage: run.sh gameexecutable [game options]"
 }
 
 gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
-sdlpath=../supermeatboy/amd64/libSDL2-2.0.so.0
 movieopt=
 
 # Parse command-line arguments
 while [ $# -gt 0 ]
 do
     case "$1" in
-    -s | --sdl)     shift
-                    sdlpath=$1
-                    ;;
     -h | --help)    Usage
                     exit
                     ;;
@@ -59,12 +55,6 @@ LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} "$@" &
 cd - > /dev/null
 sleep 1
 
-# Get the absolute path for the SDL library
-case $sdlpath in
-    /*) absolute=$sdlpath;;
-     *) absolute=$PWD/$sdlpath;;
-esac
-
 # Launch the TAS program
-./bin/linTAS -s $absolute $SHLIBS $movieopt
+./bin/linTAS $SHLIBS $movieopt
 

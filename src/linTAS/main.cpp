@@ -32,7 +32,6 @@ KeySym hotkeys[HOTKEY_LEN];
 
 char *moviefile = NULL;
 char *dumpfile = NULL;
-char *sdlfile = NULL;
 FILE* fp;
 
 pid_t game_pid;
@@ -57,7 +56,7 @@ int main(int argc, char **argv)
     /* Parsing arguments */
     int c;
     std::string libname;
-    while ((c = getopt (argc, argv, "r:w:d:s:l:")) != -1)
+    while ((c = getopt (argc, argv, "r:w:d:l:")) != -1)
         switch (c) {
             case 'r':
                 /* Playback movie file */
@@ -73,10 +72,6 @@ int main(int argc, char **argv)
                 /* Dump video to file */
                 tasflags.av_dumping = 1;
                 dumpfile = optarg;
-                break;
-            case 's':
-                /* Path of the SDL library */
-                sdlfile = optarg;
                 break;
             case 'l':
                 /* Shared library */
@@ -152,15 +147,6 @@ int main(int argc, char **argv)
         size_t dumpfile_size = strlen(dumpfile);
         send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
         send(socket_fd, dumpfile, dumpfile_size * sizeof(char), 0);
-    }
-
-    /* Send SDL path */
-    if (sdlfile) {
-        message = MSGN_SDL_FILE;
-        send(socket_fd, &message, sizeof(int), 0);
-        size_t sdlfile_size = strlen(sdlfile);
-        send(socket_fd, &sdlfile_size, sizeof(size_t), 0);
-        send(socket_fd, sdlfile, sdlfile_size * sizeof(char), 0);
     }
 
     /* Send shared library names */

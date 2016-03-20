@@ -31,41 +31,13 @@
 #ifndef _SDL_TTF_H
 #define _SDL_TTF_H
 
-#include "SDL.h"
-#include "../libTAS/hook.h" // Get SDL functions
+#include "hook.h"
 
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
 #define SDL_TTF_MAJOR_VERSION   2
 #define SDL_TTF_MINOR_VERSION   0
 #define SDL_TTF_PATCHLEVEL      14
-
-/* This macro can be used to fill a version structure with the compile-time
- * version of the SDL_ttf library.
- */
-#define SDL_TTF_VERSION(X)                          \
-{                                                   \
-    (X)->major = SDL_TTF_MAJOR_VERSION;             \
-    (X)->minor = SDL_TTF_MINOR_VERSION;             \
-    (X)->patch = SDL_TTF_PATCHLEVEL;                \
-}
-
-/* Backwards compatibility */
-#define TTF_MAJOR_VERSION   SDL_TTF_MAJOR_VERSION
-#define TTF_MINOR_VERSION   SDL_TTF_MINOR_VERSION
-#define TTF_PATCHLEVEL      SDL_TTF_PATCHLEVEL
-#define TTF_VERSION(X)      SDL_TTF_VERSION(X)
-
-/* Make sure this is defined (only available in newer SDL versions) */
-#ifndef SDL_DEPRECATED
-#define SDL_DEPRECATED
-#endif
-
-/* This function gets the version of the dynamically linked SDL_ttf library.
-   it should NOT be used to fill a version structure, instead you should
-   use the SDL_TTF_VERSION() macro.
- */
-const SDL_version * TTF_Linked_Version(void);
 
 /* ZERO WIDTH NO-BREAKSPACE (Unicode byte order mark) */
 #define UNICODE_BOM_NATIVE  0xFEFF
@@ -155,51 +127,6 @@ int TTF_SizeText(TTF_Font *font, const char *text, int *w, int *h);
 int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h);
 int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h);
 
-/* Create an 8-bit palettized surface and render the given text at
-   fast quality with the given font and color.  The 0 pixel is the
-   colorkey, giving a transparent background, and the 1 pixel is set
-   to the text color.
-   This function returns the new surface, or NULL if there was an error.
-*/
-SDL_Surface * TTF_RenderText_Solid(TTF_Font *font,
-                const char *text, SDL_Color fg);
-SDL_Surface * TTF_RenderUTF8_Solid(TTF_Font *font,
-                const char *text, SDL_Color fg);
-SDL_Surface * TTF_RenderUNICODE_Solid(TTF_Font *font,
-                const Uint16 *text, SDL_Color fg);
-
-/* Create an 8-bit palettized surface and render the given glyph at
-   fast quality with the given font and color.  The 0 pixel is the
-   colorkey, giving a transparent background, and the 1 pixel is set
-   to the text color.  The glyph is rendered without any padding or
-   centering in the X direction, and aligned normally in the Y direction.
-   This function returns the new surface, or NULL if there was an error.
-*/
-SDL_Surface * TTF_RenderGlyph_Solid(TTF_Font *font,
-                    Uint16 ch, SDL_Color fg);
-
-/* Create an 8-bit palettized surface and render the given text at
-   high quality with the given font and colors.  The 0 pixel is background,
-   while other pixels have varying degrees of the foreground color.
-   This function returns the new surface, or NULL if there was an error.
-*/
-SDL_Surface * TTF_RenderText_Shaded(TTF_Font *font,
-                const char *text, SDL_Color fg, SDL_Color bg);
-SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font,
-                const char *text, SDL_Color fg, SDL_Color bg);
-SDL_Surface * TTF_RenderUNICODE_Shaded(TTF_Font *font,
-                const Uint16 *text, SDL_Color fg, SDL_Color bg);
-
-/* Create an 8-bit palettized surface and render the given glyph at
-   high quality with the given font and colors.  The 0 pixel is background,
-   while other pixels have varying degrees of the foreground color.
-   The glyph is rendered without any padding or centering in the X
-   direction, and aligned normally in the Y direction.
-   This function returns the new surface, or NULL if there was an error.
-*/
-SDL_Surface * TTF_RenderGlyph_Shaded(TTF_Font *font,
-                Uint16 ch, SDL_Color fg, SDL_Color bg);
-
 /* Create a 32-bit ARGB surface and render the given text at high quality,
    using alpha blending to dither the font with the given color.
    This function returns the new surface, or NULL if there was an error.
@@ -234,14 +161,6 @@ SDL_Surface * TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
 SDL_Surface * TTF_RenderGlyph_Blended(TTF_Font *font,
                         Uint16 ch, SDL_Color fg);
 
-/* For compatibility with previous versions, here are the old functions */
-#define TTF_RenderText(font, text, fg, bg)  \
-    TTF_RenderText_Shaded(font, text, fg, bg)
-#define TTF_RenderUTF8(font, text, fg, bg)  \
-    TTF_RenderUTF8_Shaded(font, text, fg, bg)
-#define TTF_RenderUNICODE(font, text, fg, bg)   \
-    TTF_RenderUNICODE_Shaded(font, text, fg, bg)
-
 /* Close an opened font file */
 void TTF_CloseFont(TTF_Font *font);
 
@@ -250,14 +169,6 @@ void TTF_Quit(void);
 
 /* Check if the TTF engine is initialized */
 int TTF_WasInit(void);
-
-/* Get the kerning size of two glyphs indices */
-/* DEPRECATED: this function requires FreeType font indexes, not glyphs,
-   by accident, which we don't expose through this API, so it could give
-   wildly incorrect results, especially with non-ASCII values.
-   Going forward, please use TTF_GetFontKerningSizeGlyphs() instead, which
-   does what you probably expected this function to do. */
-int TTF_GetFontKerningSize(TTF_Font *font, int prev_index, int index) SDL_DEPRECATED;
 
 /* Get the kerning size of two glyphs */
 int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch);

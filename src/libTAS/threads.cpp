@@ -3,7 +3,13 @@
 #include <errno.h>
 #include <unistd.h>
 
-/* Original pthread functions */
+/* Original function pointers */
+void* (*SDL_CreateThread_real)(int(*fn)(void*),
+                       const char*   name,
+                       void*         data);
+void (*SDL_WaitThread_real)(void* thread, int *status);
+//void (*SDL_DetachThread_real)(void * thread);
+
 int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
 void __attribute__((__noreturn__)) (*pthread_exit_real) (void *retval) = nullptr;
 int (*pthread_join_real) (unsigned long int thread, void **thread_return) = nullptr;
@@ -142,4 +148,17 @@ void link_pthread(void)
     }
     return ret;
 }
+
+void link_sdlthreads(void)
+{
+    if (SDLver == 1) {
+        LINK_SUFFIX(SDL_CreateThread, "libSDL-1.2");
+        LINK_SUFFIX(SDL_WaitThread, "libSDL-1.2");
+    }
+    if (SDLver == 2) {
+        LINK_SUFFIX(SDL_CreateThread, "libSDL2-2");
+        LINK_SUFFIX(SDL_WaitThread, "libSDL2-2");
+    }
+}
+
 

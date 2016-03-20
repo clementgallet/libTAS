@@ -2,13 +2,17 @@
 #include "logging.h"
 #include "hook.h"
 #include "inputs.h"
-#include "libTAS.h" // for gameWindow variable
+#include "windows.h" // for gameWindow variable
 #include <stdarg.h>
 
+/* Pointers to original functions */
+void (*SDL_PumpEvents_real)(void);
+int (*SDL_PeepEvents_real)(SDL_Event*, int, SDL_eventaction, Uint32, Uint32);
+int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, ...)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
 
     /* We need to use a function signature with variable arguments,
      * because SDL 1.2 and SDL 2 provide a different function with the same name.
@@ -62,7 +66,7 @@
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
 
     /* 
      * SDL_PollEvent is supposed to call SDL_PumpEvents,
@@ -640,5 +644,17 @@ void logEvent(SDL_Event *event)
             debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: ", event->type, ".");
             break;
     }
+}
+
+void link_sdlevents(void)
+{
+	if (SDLver == 1) {
+		link_function((void**)&SDL1_PeepEvents_real, "SDL_PeepEvents", "libSDL-1.2");
+		LINK_SUFFIX(SDL_PumpEvents, "libSDL-1.2");
+	}
+	if (SDLver == 2) {
+		LINK_SUFFIX(SDL_PeepEvents, "libSDL2-2");
+		LINK_SUFFIX(SDL_PumpEvents, "libSDL2-2");
+	}
 }
 

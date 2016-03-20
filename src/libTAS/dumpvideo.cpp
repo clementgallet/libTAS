@@ -9,8 +9,6 @@
 #include "hook.h"
 #include "logging.h"
 
-#define RNDTO2(X) ( (X) & 0xFFFFFFFE )
-
 FILE *f;
 char* filename = NULL;
 AVFrame *frame;
@@ -26,7 +24,21 @@ uint8_t* glpixels_flip;
 
 int useGL;
 
+/* Original function pointers */
+void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
+void* (*SDL_GetWindowSurface_real)(void* window);
+int (*SDL_LockSurface_real)(void* surface);
+void (*SDL_UnlockSurface_real)(void* surface);
+void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
+
 int openVideoDump(void* window, int video_opengl, char* dumpfile) {
+
+    /* FIXME: Does not work with SDL 1.2 !!! */
+    LINK_SUFFIX(SDL_GL_GetDrawableSize, "libSDL2-2");
+    LINK_SUFFIX(SDL_GetWindowSurface, "libSDL2-2");
+    LINK_SUFFIX(SDL_LockSurface, "libSDL2-2");
+    LINK_SUFFIX(SDL_UnlockSurface, "libSDL2-2");
+    LINK_SUFFIX(glReadPixels, "libGL");
 
     filename = dumpfile;
 
@@ -104,7 +116,7 @@ int openVideoDump(void* window, int video_opengl, char* dumpfile) {
     video_st->codec->bit_rate = 400000;
     video_st->codec->width = width;
     video_st->codec->height = height;
-    video_st->time_base = (AVRational){1,60};
+    video_st->time_base = (AVRational){1,60}; // TODO: Put the actual framerate
     video_st->codec->time_base = (AVRational){1,60};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
