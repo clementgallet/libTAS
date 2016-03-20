@@ -1,21 +1,27 @@
 ## ToDo list
 
+### Features
+
 - Dump audio
 -- We should write our own buffer/source/mixer thing, I'm afraid
 - Add inputs into the game screen
 -- For working with text and opengl, see http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl/5289823#5289823
 -- https://www.libsdl.org/projects/SDL_ttf/
-- Add config file for hotkeys and key remapping (libconfig?)
-- Deal with keyboard mapping and stuff
 - Add a memory watch/search module
-- Add dummy Steam API functions so that the game can be launched without it
--- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Add an interface (ncurses?)
+-- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Support mouse
-- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
-- Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
-- Support non SDL stuff
 - hook udev as some games (e.g. Towerfall) use it to look for game controllers
+- Support non SDL stuff
+- Add config file for hotkeys and key remapping (libconfig?)
+- Add dummy Steam API functions so that the game can be launched without it
+- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
+
+### Fixes
+
+- Deal with keyboard mapping and stuff
+- Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
+- Make the code thread safe
 
 ## Partially done
 

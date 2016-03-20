@@ -32,9 +32,8 @@ struct timeval
 
 extern unsigned long frame_counter;
 
-void advanceFrame(void);
-void sleepEndFrame(void);
-int timespec_subtract (struct timespec *res, struct timespec *x, struct timespec *y);
+extern int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
+extern int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 
 OVERRIDE clock_t clock (void);
 OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp);
@@ -49,5 +48,6 @@ OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
 SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
 SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
+void link_time(void);
 
 #endif

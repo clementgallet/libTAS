@@ -34,6 +34,7 @@
 #include "events.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
+#include "dlhook.h"
 
 /* Handle to the SDL dynamic library that is shipped with the game */
 void* SDL_handle;
@@ -139,7 +140,9 @@ void __attribute__((constructor)) init(void)
     }
         
     // SMB uses its own version of SDL.
+    dlenter();
     SDL_handle = dlopen(sdlfile, RTLD_LAZY);
+    dlleave();
     if (!SDL_handle)
     {
         debuglog(LCF_ERROR | LCF_HOOK, "Could not load SDL.");
@@ -152,9 +155,13 @@ void __attribute__((constructor)) init(void)
     ai.emptyInputs();
     old_ai.emptyInputs();
 
+    link_time();
+
     /* Initialize timers */
     nonDetTimer.initialize();
     detTimer.initialize();
+
+
 }
 
 void __attribute__((destructor)) term(void)

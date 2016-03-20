@@ -5,7 +5,31 @@
 #include <string>
 #include <vector>
 
-/* For hooking functions that perform dynamic library loading,
+/* There are two ways a program can link to a shared library:
+ * either it was compiled with an include of the library header foo.h
+ * and using the library as an argument (-lfoo)
+ * or it can link using the set of dl functions (dlopen, dlsym, etc.)
+ * during the program runtime.
+ *
+ * In the first case, the functions of the shared library that the game
+ * is using are included in the list of symbols of the executable,
+ * so by writing a function with the same name and using the LD_PRELOAD trick,
+ * the game will call our function instead of the original.
+ *
+ * However, in the second case, the game declare a function pointer,
+ * and link the function inside the library to it at runtime.
+ * Then the game can call the function using its pointer.
+ * In this case, writing a function with the same name is not enough.
+ *
+ * One solution to this is to hook the functions that perform
+ * the dynamic library loading. Then, if the game try to load
+ * a function from a shared library, we will first try to load
+ * the function from inside the program first. If we found one,
+ * it is probably our custom function. By linking to it,
+ * the program will call our function instead of the function
+ * from the shared library.
+
+ * For hooking functions that perform dynamic library loading,
  * we have to use a special method.
  * Indeed, we cannot use dlsym to get the original function
  * because we are hooking dlsym itself.
@@ -49,6 +73,5 @@ void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
 
 /* Path of some libraries we will need */
 extern std::string sdlpath;
-extern std::string openalpath;
 
 #endif

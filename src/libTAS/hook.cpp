@@ -48,19 +48,22 @@ bool link_function(void** function, const char* source, const char* library)
     /* If it did not succeed, try to link using a matching library
      * loaded by the game.
      */
-    std::string libpath = find_lib(library);
 
-    if (! libpath.empty()) {
+    if (library != nullptr) {
+        std::string libpath = find_lib(library);
 
-        /* Try to link again using a matching library */
-        void* handle = dlopen(libpath.c_str(), RTLD_LAZY);
+        if (! libpath.empty()) {
 
-        if (handle != NULL) {
-            *function = dlsym(handle, source);
+            /* Try to link again using a matching library */
+            void* handle = dlopen(libpath.c_str(), RTLD_LAZY);
 
-            if (*function != nullptr) {
-                dlleave();
-                return true;
+            if (handle != NULL) {
+                *function = dlsym(handle, source);
+
+                if (*function != nullptr) {
+                    dlleave();
+                    return true;
+                }
             }
         }
     }
@@ -88,8 +91,6 @@ Uint32 (*SDL_GetWindowFlags_real)(void*);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(void*);
 
-int (*usleep_real)(unsigned long);
-int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 
 /* Threads */
 void* (*SDL_CreateThread_real)(int(*fn)(void*),
@@ -97,17 +98,6 @@ void* (*SDL_CreateThread_real)(int(*fn)(void*),
                        void*         data);
 void (*SDL_WaitThread_real)(void* thread, int *status);
 //void (*SDL_DetachThread_real)(void * thread);
-
-typedef unsigned long int pthread_t;
-
-int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
-void __attribute__((__noreturn__)) (*pthread_exit_real) (void *retval);
-int (*pthread_join_real) (unsigned long int thread, void **thread_return);
-int (*pthread_detach_real) (unsigned long int thread);
-int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len);
-int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval);
-int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime);
-pthread_t (*pthread_self_real)(void);
 
 void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
 void* (*SDL_GetWindowSurface_real)(void* window);
@@ -125,7 +115,6 @@ int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color)
 Uint64 (*SDL_GetPerformanceFrequency_real)(void);
 Uint64 (*SDL_GetPerformanceCounter_real)(void);
 
-int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 typedef int SDL_TimerID;
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
@@ -230,20 +219,9 @@ int hook_functions(void* SDL_handle) {
     HOOK_FUNC(SDL_InitSubSystem, SDL_handle)
     HOOK_FUNC(SDL_Quit, SDL_handle)
     HOOK_FUNC(SDL_GetTicks, SDL_handle)
-    HOOK_FUNC(usleep, RTLD_NEXT)
-    HOOK_FUNC(nanosleep, RTLD_NEXT)
-    HOOK_FUNC(clock_gettime, RTLD_NEXT)
     HOOK_FUNC(SDL_CreateThread, SDL_handle)
     HOOK_FUNC(SDL_WaitThread, SDL_handle)
     //HOOK_FUNC(SDL_DetachThread, SDL_handle)
-    HOOK_FUNC(pthread_create, RTLD_NEXT)
-    HOOK_FUNC(pthread_exit, RTLD_NEXT)
-    HOOK_FUNC(pthread_join, RTLD_NEXT)
-    HOOK_FUNC(pthread_detach, RTLD_NEXT)
-    HOOK_FUNC(pthread_getname_np, RTLD_NEXT)
-    HOOK_FUNC(pthread_tryjoin_np, RTLD_NEXT)
-    HOOK_FUNC(pthread_timedjoin_np, RTLD_NEXT)
-    HOOK_FUNC(pthread_self, RTLD_NEXT)
     HOOK_FUNC(SDL_LockSurface, SDL_handle)
     HOOK_FUNC(SDL_UnlockSurface, SDL_handle)
     HOOK_FUNC(SDL_GL_GetProcAddress, SDL_handle)

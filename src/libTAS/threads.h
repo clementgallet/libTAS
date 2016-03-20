@@ -4,6 +4,10 @@
 #include "hook.h"
 #include "global.h"
 
+typedef unsigned long int pthread_t;
+
+extern pthread_t (*pthread_self_real)(void);
+
 typedef int (*SDL_ThreadFunction) (void *data);
 typedef void SDL_Thread; // For now
 

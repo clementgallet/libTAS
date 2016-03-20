@@ -132,9 +132,10 @@
 
     SDL_PumpEvents_real();
 
+    struct timespec mssleep = {0, 1000000};
     if (event) {
         while (! getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-            usleep_real(1000); // Wait 1 ms before trying again
+            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
             SDL_PumpEvents_real();
         }
         return 1;
@@ -142,7 +143,7 @@
     else {
         SDL_Event ev;
         while (! getSDL2Events(&ev, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-            usleep_real(1000); // Wait 1 ms before trying again
+            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
             SDL_PumpEvents_real();
         }
         return 1;
@@ -154,12 +155,13 @@
     debuglog(LCF_SDL | LCF_EVENTS | LCF_TIMEFUNC, __func__, " call with timeout ", timeout);
 
     int t;
+    struct timespec mssleep = {0, 1000000};
     if (event) {
         for (t=0; t<timeout; t++) {
             SDL_PumpEvents_real();
             if (getSDL2Events(event, 1, 1, SDL_FIRSTEVENT, SDL_LASTEVENT))
                 break;
-            usleep_real(1000); // Wait 1 ms before trying again
+            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
         }
         return (t<timeout);
     }
@@ -169,7 +171,7 @@
             SDL_PumpEvents_real();
             if (getSDL2Events(event, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT))
                 break;
-            usleep_real(1000); // Wait 1 ms before trying again
+            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
         }
         return (t<timeout);
     }

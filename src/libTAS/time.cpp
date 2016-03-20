@@ -9,6 +9,7 @@
 unsigned long frame_counter = 0;
 
 /*** Functions that access time ***/
+int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ time_t time(time_t* t)
 {
@@ -47,6 +48,7 @@ unsigned long frame_counter = 0;
 }
 
 /*** Sleep functions ***/
+int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -147,5 +149,11 @@ unsigned long frame_counter = 0;
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     return SDL_RemoveTimer_real(id);
+}
+
+void link_time(void)
+{
+    LINK_SUFFIX(nanosleep, nullptr);
+    LINK_SUFFIX(clock_gettime, nullptr);
 }
 

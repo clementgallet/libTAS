@@ -2,6 +2,7 @@
 #include "logging.h"
 #include "frame.h"
 #include "../shared/tasflags.h"
+#include "time.h" // clock_gettime_real
 
 void NonDeterministicTimer::initialize(void)
 {

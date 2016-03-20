@@ -4,6 +4,7 @@
 #include "../shared/tasflags.h"
 #include "threads.h"
 #include "frame.h"
+#include "time.h" // clock_gettime_real
 
 #define MAX_NONFRAME_GETTIMES 4000
 

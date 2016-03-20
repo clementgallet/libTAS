@@ -31,8 +31,6 @@ extern Uint32 (*SDL_GetTicks_real)(void);
 extern Uint32 (*SDL_GetWindowFlags_real)(void*);
 extern int (*SDL_GL_SetSwapInterval_real)(int interval);
 extern void (*SDL_DestroyWindow_real)(void*);
-extern int (*usleep_real)(unsigned long);
-extern int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
 
 /* Threads */
 extern void* (*SDL_CreateThread_real)(int(*fn)(void*),
@@ -40,18 +38,6 @@ extern void* (*SDL_CreateThread_real)(int(*fn)(void*),
                        void*         data);
 extern void (*SDL_WaitThread_real)(void* thread, int *status);
 //void (*SDL_DetachThread_real)(void * thread);
-
-extern int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg);
-
-/* Standard _Noreturn c++11 tag does not seem to work with function pointers, so using the GCC attribute instead */
-extern __attribute__((__noreturn__)) void (*pthread_exit_real) (void *retval);
-extern int (*pthread_join_real) (unsigned long int thread, void **thread_return);
-extern int (*pthread_detach_real) (unsigned long int thread);
-extern int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len);
-extern int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval);
-extern int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime);
-
-extern pthread_t (*pthread_self_real)(void);
 
 extern void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
 extern void* (*SDL_GetWindowSurface_real)(void* window);
@@ -68,8 +54,6 @@ extern int (*SDL_SetColorKey_real)(SDL_Surface * surface, int flag, Uint32 key);
 extern int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 extern Uint64 (*SDL_GetPerformanceFrequency_real)(void);
 extern Uint64 (*SDL_GetPerformanceCounter_real)(void);
-
-extern int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 typedef int SDL_TimerID;
 

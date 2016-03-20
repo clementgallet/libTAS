@@ -17,7 +17,7 @@ static struct dlfcn_hook my_dlfcn_hook = {
     pad      : {0, 0, 0, 0}
 };
 
-static int depth = 0;
+static int depth;
 void dlenter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
 void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
 std::string sdlpath;
@@ -51,8 +51,6 @@ void *my_dlopen(const char *file, int mode, void *dl_caller) {
             sdlpath = std::string(file);
         if (strstr(file, "libSDL-1") != NULL)
             sdlpath = std::string(file);
-        if (strstr(file, "libopenal") != NULL)
-            openalpath = std::string(file);
     }
     return result;
 }
@@ -134,7 +132,7 @@ void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
 
 __attribute__((constructor))
 static void init(void) {
-    old_dlfcn_hook = _dlfcn_hook;
+ old_dlfcn_hook = _dlfcn_hook;
     _dlfcn_hook = &my_dlfcn_hook;
 }
 
