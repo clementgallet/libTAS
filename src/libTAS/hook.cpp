@@ -1,17 +1,7 @@
 #include "hook.h"
 #include "logging.h"
-#include <dlfcn.h>
 #include <string>
-
-#define HOOK_FUNC_TARGET(FUNC,SOURCE,TARGET) *(void**)&TARGET = dlsym(SOURCE, #FUNC);\
-    if (!TARGET)\
-    {\
-        debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol " #FUNC ".");\
-        TARGET = NULL;\
-    }
-
-#define HOOK_FUNC(FUNC,SOURCE) HOOK_FUNC_TARGET(FUNC,SOURCE,FUNC##_real)
-
+#include "dlhook.h"
 
 bool link_function(void** function, const char* source, const char* library)
 {
@@ -58,23 +48,18 @@ bool link_function(void** function, const char* source, const char* library)
     return false;
 }
 
-
 int SDLver = 0;
 
-
-
 void (*SDL_GetVersion_real)(SDL_version* ver);
-
 /* SDL 1.2 specific functions */
-
 SDL_version * (*SDL_Linked_Version_real)(void);
-
 
 int get_sdlversion(void)
 {
 
     LINK_SUFFIX(SDL_GetVersion, "libSDL2-2");
-    LINK_SUFFIX(SDL_Linked_Version, "libSDL-1.2");
+    if (SDL_GetVersion_real == nullptr)
+        LINK_SUFFIX(SDL_Linked_Version, "libSDL-1.2");
 
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
@@ -87,7 +72,7 @@ int get_sdlversion(void)
         ver = *verp;
     }
 
-    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", ver.major, ".", ver.minor, ".", ver.patch);
+    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", (int)ver.major, ".", (int)ver.minor, ".", (int)ver.patch);
 
     /* We save the version major in an extern variable because we will use it elsewhere */
     SDLver = ver.major;
