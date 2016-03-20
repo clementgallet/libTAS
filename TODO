@@ -22,7 +22,6 @@
 - Deal with keyboard mapping and stuff
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Make the code thread safe
-- Add a license
 
 ## Partially done
 
@@ -41,6 +40,7 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
 - Better manage static and dynamic hooking
+- Add a license
 
 ## Done
 

@@ -17,17 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_H_INCLUDED
-#define LIBTAS_H_INCLUDED
+#include "AllInputs.h"
 
-#include "../external/SDL.h"
-#include "global.h"
-
-void __attribute__((constructor)) init(void);
-void __attribute__((destructor)) term(void);
-
-OVERRIDE void SDL_Init(unsigned int flags);
-OVERRIDE int SDL_InitSubSystem(Uint32 flags);
-OVERRIDE void SDL_Quit(void);
-
-#endif // LIBTAS_H_INCLUDED
+void AllInputs::emptyInputs() {
+    int i,j;
+    for (i=0; i<ALLINPUTS_MAXKEY; i++)
+        keyboard[i] = XK_VoidSymbol;
+    for (i=0; i<4; i++) {
+        for (j=0; j<6; j++)
+            controller_axes[i][j] = 0;
+        controller_buttons[i] = 0;
+    }
+}

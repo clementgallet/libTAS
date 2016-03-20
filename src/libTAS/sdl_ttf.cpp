@@ -19,6 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+/* Code modified by Clément Gallet */
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

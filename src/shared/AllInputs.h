@@ -17,17 +17,21 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_H_INCLUDED
-#define LIBTAS_H_INCLUDED
+#ifndef ALLINPUTS_H_INCLUDED
+#define ALLINPUTS_H_INCLUDED
 
-#include "../external/SDL.h"
-#include "global.h"
+#define ALLINPUTS_MAXKEY 16
 
-void __attribute__((constructor)) init(void);
-void __attribute__((destructor)) term(void);
+#include <X11/Xlib.h> // For the KeySym type
+#include <X11/keysym.h>
 
-OVERRIDE void SDL_Init(unsigned int flags);
-OVERRIDE int SDL_InitSubSystem(Uint32 flags);
-OVERRIDE void SDL_Quit(void);
+class AllInputs {
+    public:
+        KeySym keyboard[ALLINPUTS_MAXKEY];
+        short controller_axes[4][6];
+        unsigned short controller_buttons[4];
 
-#endif // LIBTAS_H_INCLUDED
+        void emptyInputs();
+};
+
+#endif // INPUTS_H_INCLUDED

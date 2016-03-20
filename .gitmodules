@@ -1,3 +1,0 @@
-[submodule "src/external/criu"]
-	path = src/external/criu
-	url = https://github.com/xemul/criu.git
