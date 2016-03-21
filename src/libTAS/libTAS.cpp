@@ -51,11 +51,12 @@ void (*SDL_Quit_real)(void);
 
 void __attribute__((constructor)) init(void)
 {
-    /* Multiple threads may launch the init function, but we only want the main thread to do this */
-    //if (! isMainThread())
-    //    return;
-
-    initSocket();
+    bool didConnect = initSocket();
+    /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
+     * In this case, we must detect it and do not run this again
+     */
+    if (! didConnect)
+        return;
 
 #ifdef LIBTAS_HUD
     /* Initialize SDL TTF */
@@ -116,7 +117,7 @@ void __attribute__((constructor)) init(void)
         }
         receiveData(&message, sizeof(int));
     }
-        
+    
     ai.emptyInputs();
     old_ai.emptyInputs();
 

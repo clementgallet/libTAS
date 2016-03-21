@@ -22,7 +22,7 @@
 
 #include <stddef.h>
 
-void initSocket(void);
+bool initSocket(void);
 void closeSocket(void);
 void sendData(void* elem, size_t size);
 void sendMessage(int message);

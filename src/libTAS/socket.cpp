@@ -19,6 +19,7 @@
 
 #include "socket.h"
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include "../shared/lcf.h"
 #include <unistd.h>
@@ -30,10 +31,18 @@
 /* Socket to communicate to the program */
 static int socket_fd = 0;
 
-void initSocket(void)
+bool initSocket(void)
 {
-    /* Connect using a Unix socket */
+    /* Check if socket file already exists. If so, it is probably because
+     * the link is already done in another process of the game.
+     * In this case, we just return immediately.
+     */
+    struct stat st;
+    int result = stat(SOCKET_FILENAME, &st);
+    if (result == 0)
+        return false;
 
+    /* Connect using a Unix socket */
     if (!unlink(SOCKET_FILENAME))
         debuglog(LCF_SOCKET, "Removed stall socket.");
 
@@ -62,8 +71,9 @@ void initSocket(void)
     debuglog(LCF_SOCKET, "Client connected.");
 
     close(tmp_fd);
-    unlink(SOCKET_FILENAME);
+    //unlink(SOCKET_FILENAME);
 
+    return true;
 }
 
 void closeSocket(void)

@@ -10,8 +10,8 @@
 - Add a memory watch/search module
 - Add an interface (ncurses?)
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
+- Support non-gamecontroller joysticks
 - Support mouse
-- hook udev as some games (e.g. Towerfall) use it to look for game controllers
 - Support non SDL stuff
 - Add config file for hotkeys and key remapping (libconfig?)
 - Add dummy Steam API functions so that the game can be launched without it

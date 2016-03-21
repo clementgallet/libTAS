@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Remove stall socket here
+rm -f /tmp/libTAS.socket
+
 Usage ()
 {
     echo "usage: run.sh gameexecutable [game options]"
