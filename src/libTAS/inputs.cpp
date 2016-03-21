@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "../shared/AllInputs.h"
+#include "../shared/tasflags.h"
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "DeterministicTimer.h"
@@ -202,6 +203,28 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
 
 /* Generate SDL2 GameController events */
 
+int generateControllerAdded(SDL_Event* events, int num, int update)
+{
+    struct timespec time;
+
+    /* Number of controllers added in total */
+    static int controllersAdded = 0;
+
+    /* Number of controllers added during this function call */
+    int curAdded = 0;
+
+    while ((curAdded < num) && ((curAdded + controllersAdded) < tasflags.numControllers)) {
+        events[curAdded].type = SDL_CONTROLLERDEVICEADDED;
+        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        events[curAdded].cdevice.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+        events[curAdded].cdevice.which = curAdded + controllersAdded;
+        curAdded++;
+    }
+    if (update)
+        controllersAdded += curAdded;
+    return curAdded;
+}
+
 int generateControllerEvent(SDL_Event* events, int num, int update)
 {
     int evi = 0;
@@ -284,15 +307,13 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
     /* For now, we declare one joystick */
-    return 1;
-    //return 0;
+    return tasflags.numControllers;
 }
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    /* For now, enabling 1 game controller */
-    if (joystick_index == 0)
+    if (joystick_index >= 0 && joystick_index < tasflags.numControllers)
         return SDL_TRUE;
     return SDL_FALSE;
 

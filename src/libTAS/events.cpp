@@ -276,6 +276,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
     int ps = 0, pd = 0;
     while (ps < peepnb) {
         if (events[pd].type != SDL_FIRSTEVENT) {
+            logEvent(&events[pd]);
             pd++;
             if (pd > ps)
                 ps++;
@@ -287,6 +288,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
             /* We are in a position to copy event ps to event pd */
             events[pd] = events[ps];
             events[ps].type = SDL_FIRSTEVENT;
+            logEvent(&events[pd]);
             ps++;
             pd++;
         }
@@ -310,6 +312,15 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
      * We did not get enough events with the event queue only.
      * Now we return our custom events.
      */
+
+    /* Generate controllers plugged in.
+     * Some games use this to detect controllers instead of using SDL_NumJoysticks
+     */
+    if ((SDL_CONTROLLERDEVICEADDED >= minType) && (SDL_CONTROLLERDEVICEADDED <= maxType)) {
+        debuglog(LCF_ERROR, "Will generate an ADDED event");
+        peepnb += generateControllerAdded(&events[peepnb], numevents - peepnb, update);
+    }
+    if (peepnb == numevents) return peepnb;
 
     /*
      * Important: You must call the following two functions in that order!
@@ -463,6 +474,19 @@ int filterSDL2Event(SDL_Event *event)
     switch(event->type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
+        case SDL_JOYAXISMOTION:
+        case SDL_JOYBALLMOTION:
+        case SDL_JOYHATMOTION:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        case SDL_JOYDEVICEADDED:
+        case SDL_JOYDEVICEREMOVED:
+        case SDL_CONTROLLERAXISMOTION:
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_CONTROLLERDEVICEREMAPPED:
             return 1;
         default:
             return 0;

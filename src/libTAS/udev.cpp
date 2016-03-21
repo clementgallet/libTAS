@@ -110,7 +110,7 @@ struct udev_device *udev_device_new_from_syspath(struct udev *udev, const char *
 }
 struct udev_device *udev_device_new_from_devnum(struct udev *udev, char type, dev_t devnum)
 {
-    DEBUGLOGCALL(LCF_UDEV);
+    debuglog(LCF_UDEV, __func__, " call with type ", type, " and devnum ", devnum);
     return udev_device_new_from_devnum_real(udev, type, devnum);
 }
 struct udev_device *udev_device_new_from_subsystem_sysname(struct udev *udev, const char *subsystem, const char *sysname)
