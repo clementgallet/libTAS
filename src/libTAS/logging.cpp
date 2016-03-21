@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "threads.h"
 #include "../shared/tasflags.h"
+#include "unistd.h" // For isatty
 
 void debuglogverbose(LogCategoryFlag lcf, std::string str)
 {
@@ -28,17 +29,20 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str)
 
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
-        if (lcf & LCF_ERROR)
-            /* Write the header text in red */
-            oss << ANSI_COLOR_RED;
-        else if (lcf & LCF_TODO)
-            /* Write the header text in light red */
-            oss << ANSI_COLOR_LIGHT_RED;
-        else
-            /* Write the header text in white */
-            oss << ANSI_COLOR_LIGHT_GRAY;
-
-        oss << "[libTAS f:" << std::setw(6) << frame_counter << "] ";
+        /* We only print colors if displayed on a terminal */
+        bool isTerm = isatty(/*cerr*/ 2);
+        if (isTerm) {
+            if (lcf & LCF_ERROR)
+                /* Write the header text in red */
+                oss << ANSI_COLOR_RED;
+            else if (lcf & LCF_TODO)
+                /* Write the header text in light red */
+                oss << ANSI_COLOR_LIGHT_RED;
+            else
+                /* Write the header text in white */
+                oss << ANSI_COLOR_LIGHT_GRAY;
+        }
+        oss << "[libTAS f:" << frame_counter << "] ";
 
         if (pthread_self_real) {
             std::string thstr = stringify(pthread_self_real());
@@ -48,8 +52,10 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str)
                 oss << "Thread " << thstr << "        ";
         }
 
-        /* Reset color change */
-        oss << ANSI_COLOR_RESET;
+        if (isTerm) {
+            /* Reset color change */
+            oss << ANSI_COLOR_RESET;
+        }
 
         /* Output arguments */
         oss << str << std::endl;
