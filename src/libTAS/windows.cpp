@@ -29,25 +29,24 @@
 
 /* 
  * Store the game window pointer
- * (SDL_Window* in fact, but we don't need the SDL_Window struct)
  * We assume the game never open multiple windows at a time
  */
-void* gameWindow = NULL;
+SDL_Window* gameWindow = nullptr;
 
 /* Has the game window pointer be sent to the program? */
-int gw_sent = 0;
+bool gw_sent = 0;
 
 /* Does SDL use OpenGL for display? */
-int video_opengl = 0;
+bool video_opengl = 0;
 
 /* Original function pointers */
-void(* SDL_GL_SwapWindow_real)(void* window);
-void*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
-Uint32 (*SDL_GetWindowID_real)(void*);
-Uint32 (*SDL_GetWindowFlags_real)(void*);
-SDL_bool (*SDL_GetWindowWMInfo_real)(void* window, SDL_SysWMinfo* info);
+void(* SDL_GL_SwapWindow_real)(SDL_Window* window);
+SDL_Window*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
+Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
+Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
+SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
-void (*SDL_DestroyWindow_real)(void*);
+void (*SDL_DestroyWindow_real)(SDL_Window*);
 SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 
@@ -76,7 +75,7 @@ void (*SDL_GL_SwapBuffers_real)(void);
     frameBoundary();
 }
 
-/* Override */ void SDL_GL_SwapWindow(void* window)
+/* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
 
@@ -115,7 +114,7 @@ void (*SDL_GL_SwapBuffers_real)(void);
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
      */
-    if (gameWindow != NULL) {
+    if (gameWindow != nullptr) {
         if (!gw_sent) {
 
             /* Access the X Window identifier from the SDL_Window struct */
@@ -134,7 +133,7 @@ void (*SDL_GL_SwapBuffers_real)(void);
             /* Send the X Window identifier to the program */
             sendMessage(MSGB_WINDOW_ID);
             sendData(&xgw, sizeof(Window));
-            gw_sent = 1;
+            gw_sent = true;
             debuglog(LCF_SDL, "Send X11 window id: ", xgw);
         }
     }
@@ -147,21 +146,29 @@ void (*SDL_GL_SwapBuffers_real)(void);
 
 }
 
+static int swapInterval = 0;
+
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL, __func__, " call - setting to ", interval);
-    //return SDL_GL_SetSwapInterval_real(interval);
 
-    /* If the game wants the current state of vsync, answer yes */
-    if (interval == -1)
-        return 1;
+    /* We save the interval if the game wants it later */
+    swapInterval = interval;
+    
     /* Disable vsync */
     /* TODO: Put this at another place to be sure it is executed */
-    return SDL_GL_SetSwapInterval_real(0);
+    SDL_GL_SetSwapInterval_real(0);
+
+    return 0; // Success
 }
     
+/* Override */ int SDL_GL_GetSwapInterval(int interval)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL);
+    return swapInterval;
+}
 
-/* Override */ void* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
+/* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
@@ -183,25 +190,37 @@ void (*SDL_GL_SwapBuffers_real)(void);
 
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     /* A new window was created. It needs to be passed to the program */
-    gw_sent = 0;
+    gw_sent = false;
     return gameWindow;
 }
 
-/* Override */ void SDL_DestroyWindow(void* window){
-    debuglog(LCF_SDL, __func__, " call.");
+/* Override */ void SDL_DestroyWindow(SDL_Window* window){
+    DEBUGLOGCALL(LCF_SDL);
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
 }
 
-/* Override */ Uint32 SDL_GetWindowID(void* window){
-    debuglog(LCF_SDL, __func__, " call.");
+/* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
+    DEBUGLOGCALL(LCF_SDL);
     return SDL_GetWindowID_real(window);
 }
 
-/* Override */ Uint32 SDL_GetWindowFlags(void* window){
-    debuglog(LCF_SDL, __func__, " call.");
+/* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
+    DEBUGLOGCALL(LCF_SDL);
     return SDL_GetWindowFlags_real(window);
+}
+
+int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
+{
+    debuglog(LCF_SDL, __func__, " call with flags ", flags);
+    return 0; // success
+}
+
+void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
+{
+    debuglog(LCF_SDL, __func__, " call with border ", bordered);
+    /* Don't do anything */
 }
 
 /* SDL 1.2 */

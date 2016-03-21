@@ -53,9 +53,9 @@ void link_openal(void)
         ptr += strlen(ptr) + 1;
     }*/
 
-    (void) devicename; // To remove warning
-    const char device[] = "No Output";
-    return alcOpenDevice_real(device);
-    //return alcOpenDevice_real(devicename);
+    //(void) devicename; // To remove warning
+    //const char device[] = "No Output";
+    //return alcOpenDevice_real(device);
+    return alcOpenDevice_real(devicename);
 }
 

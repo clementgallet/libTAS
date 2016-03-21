@@ -317,7 +317,6 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
      * Some games use this to detect controllers instead of using SDL_NumJoysticks
      */
     if ((SDL_CONTROLLERDEVICEADDED >= minType) && (SDL_CONTROLLERDEVICEADDED <= maxType)) {
-        debuglog(LCF_ERROR, "Will generate an ADDED event");
         peepnb += generateControllerAdded(&events[peepnb], numevents - peepnb, update);
     }
     if (peepnb == numevents) return peepnb;
