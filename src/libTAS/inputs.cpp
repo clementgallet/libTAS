@@ -35,7 +35,7 @@ Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
 Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
 SDL_JoystickID joyid[4] = {-1, -1, -1, -1};
-const char joy_name[] = "Universal joystick";
+const char joy_name[] = "XInput Controller";
 
 /* Do we have to generate controller events? */
 int controller_events = 1;
@@ -342,7 +342,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     return joy_name;
 }
 
-
 /* Override */ SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", *gamecontroller);
@@ -388,18 +387,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
 }
 
-/* Override */ SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char *pchString)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-	return SDL_CONTROLLER_AXIS_LEFTX;
-}
-
-/* Override */ const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-	return "";
-}
-
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                           SDL_GameControllerAxis axis)
 {
@@ -416,18 +403,6 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     /* Return axis value */
     return ai.controller_axes[joyid[*gamecontroller]][axis];
 
-}
-
-/* Override */ SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char *pchString)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-	return SDL_CONTROLLER_BUTTON_A;
-}
-
-/* Override */ const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-	return "";
 }
 
 /* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
@@ -457,14 +432,43 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
 
 /*** Joystick devices ***/
 
-SDL_JoystickGUID nullGUID = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+SDL_JoystickGUID xinputGUID = {{3,0,0,0,94,4,0,0,142,2,0,0,20,1,0,0}};
 
 SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-	return nullGUID;
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+	return xinputGUID;
 }
 
+const char* SDL_JoystickName(SDL_Joystick* joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    return "Microsoft X-Box 360 pad";
+}
+
+int SDL_JoystickNumAxes(SDL_Joystick* joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    return 6;
+}
+
+int SDL_JoystickNumBalls(SDL_Joystick* joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    return 0;
+}
+
+int SDL_JoystickNumButtons(SDL_Joystick* joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    return 11;
+}
+
+int SDL_JoystickNumHats(SDL_Joystick* joystick)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    return 1;
+}
 
 /*** Haptic devices ***/
 
