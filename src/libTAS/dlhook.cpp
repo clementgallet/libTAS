@@ -39,8 +39,6 @@ static struct dlfcn_hook my_dlfcn_hook = {
 static int depth;
 void dlenter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
 void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
-std::string sdlpath;
-std::string openalpath;
 
 std::vector<std::string> libraries;
 
@@ -64,12 +62,6 @@ void *my_dlopen(const char *file, int mode, void *dl_caller) {
         /* Store the successfully opened library */
         std::string filestr(file);
         libraries.push_back(filestr);
-
-        /* Try to identify some libraries we will be using later */
-        if (strstr(file, "libSDL2-2") != NULL)
-            sdlpath = std::string(file);
-        if (strstr(file, "libSDL-1") != NULL)
-            sdlpath = std::string(file);
     }
     return result;
 }
