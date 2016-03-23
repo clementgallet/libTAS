@@ -3,8 +3,8 @@ WARNINGS=-Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equ
 CFLAGS=-std=gnu++11 -fpic -c -g -fvisibility=hidden -fvisibility-inlines-hidden $(TARCH)
 #CFLAGS=-std=gnu99 -fpic -c -g -m32
 #LDFLAGS=-shared -lX11 -lavcodec -lswscale -lavformat -lfreetype
-LDFLAGS=-shared -lX11 $(TARCH)
-SRCS=$(wildcard *.cpp) $(wildcard ../shared/*.cpp) $(wildcard ../external/*.cpp)
+LDFLAGS=-shared -lX11 $(TARCH) -lsndfile
+SRCS=$(wildcard *.cpp) $(wildcard audio/*.cpp) $(wildcard ../shared/*.cpp) $(wildcard ../external/*.cpp)
 OBJS=$(SRCS:.cpp=.o)
 DEPS=../external/SDL.h
 INCL=-I/usr/include/freetype2

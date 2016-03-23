@@ -71,6 +71,9 @@ private:
     /* Store which thread can update the timer */
     pthread_t frameThreadId;
 
+    /* The time of the last frame boundary enter */
+    TimeHolder lastEnterTicks;
+
     /* The real time of the last frame boundary enter */
     TimeHolder lastEnterTime;
 

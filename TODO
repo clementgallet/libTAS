@@ -2,19 +2,17 @@
 
 ### Features
 
-- Dump audio
--- We should write our own buffer/source/mixer thing, I'm afraid
 - Add inputs into the game screen
 -- For working with text and opengl, see http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl/5289823#5289823
 -- https://www.libsdl.org/projects/SDL_ttf/
 - Add a memory watch/search module
 - Add an interface (ncurses?)
--- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Support non-gamecontroller joysticks
 - Support mouse
 - Support non SDL stuff
 - Add config file for hotkeys and key remapping (libconfig?)
 - Add dummy Steam API functions so that the game can be launched without it
+-- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 - Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 
 ### Fixes
@@ -39,8 +37,9 @@
     [xcb] Aborting, sorry about that.
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
-- Better manage static and dynamic hooking
-- Add a license
+- Dump audio
+-- Buggy sound for now
+-- Should we use libavresample for converting samples to the right format?
 
 ## Done
 
@@ -55,4 +54,6 @@
 - Allow 32-bit or 64-bit lib compilation
 - Add key remapping
 - Add both (non)/deterministic timers
+- Better manage static and dynamic hooking
+- Add a license
 

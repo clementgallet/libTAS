@@ -22,11 +22,13 @@
 #include "frame.h"
 #include "../shared/tasflags.h"
 #include "time.h" // clock_gettime_real
+#include "audio/AudioBuffer.h"
 
 void NonDeterministicTimer::initialize(void)
 {
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
+    lastEnterTicks = ticks;
     clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lasttime);
     frameThreadId = 0;
     lastEnterTime = lasttime;
@@ -83,6 +85,11 @@ void NonDeterministicTimer::enterFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
     clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
+
+    /* Doing the audio mixing here */
+    getTicks();
+    TimeHolder elapsedTicks = ticks - lastEnterTicks;
+    bufferList.mixAllBuffers(*(struct timespec*)&elapsedTicks);
 }
 
 void NonDeterministicTimer::exitFrameBoundary()

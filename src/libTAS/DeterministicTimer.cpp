@@ -24,6 +24,7 @@
 #include "threads.h"
 #include "frame.h"
 #include "time.h" // clock_gettime_real
+#include "audio/AudioBuffer.h"
 
 #define MAX_NONFRAME_GETTIMES 4000
 
@@ -170,6 +171,8 @@ void DeterministicTimer::enterFrameBoundary()
     if(tasflags.framerate == 0)
         return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
 
+    /*** First we update the state of the internal timer ***/
+
     /* We compute by how much we should advance the timer
      * to run exactly as the indicated framerate
      */
@@ -207,6 +210,11 @@ void DeterministicTimer::enterFrameBoundary()
         ticks += deltaTicks;
         debuglog(LCF_TIMESET | LCF_FRAME, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
     }
+
+    /* Doing the audio mixing here */
+    bufferList.mixAllBuffers(*(struct timespec*)&timeIncrement);
+
+    /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
 
     /* Get the current actual time */
     TimeHolder currentTime;
