@@ -42,7 +42,7 @@ AudioBuffer::AudioBuffer(void)
     frequency = 44100; // Same
     size = 0;
     position = 0;
-    volume = 1;
+    volume = 1.0f; // Default from openal-soft
     source = SOURCE_UNDETERMINED;
     looping = false;
     state = SOURCE_INITIAL;
@@ -50,14 +50,13 @@ AudioBuffer::AudioBuffer(void)
     processed = false;
 }
 
-int AudioBuffer::nbQueueAlive()
+int AudioBuffer::nbQueue()
 {
     int nbQueued = 0;
     AudioBuffer* nab = this;
     while (nab->nextBuffer != nullptr) {
+        nbQueued++;
         nab = nab->nextBuffer;
-        if (! nab->processed)
-            nbQueued++;
     }
     return nbQueued;
 }
@@ -72,6 +71,78 @@ int AudioBuffer::nbQueueProcessed()
             nbProcessed++;
     }
     return nbProcessed;
+}
+
+int AudioBuffer::queueSize()
+{
+    int totalSize = 0;
+    AudioBuffer* nab = this;
+    while (nab->nextBuffer != nullptr) {
+        nab = nab->nextBuffer;
+        totalSize += nab->size;
+    }
+    return totalSize;
+}
+
+int AudioBuffer::getPosition()
+{
+    int totalPos = 0;
+    AudioBuffer* nab = this;
+    while (nab->nextBuffer != nullptr) {
+        nab = nab->nextBuffer;
+
+        if (nab->processed)
+            totalPos += nab->size;
+        else {
+            totalPos += nab->position;
+            break;
+        }
+    }
+
+    return totalPos;
+}
+
+void AudioBuffer::setPosition(int pos)
+{
+    /* We first store the state of the queue so that we can set it later */
+    SourceState curState = this->getState();
+
+    int localPos = pos;
+    AudioBuffer* nab = this;
+    while (nab->nextBuffer != nullptr) {
+        nab = nab->nextBuffer;
+
+        if (nab->looping) {
+            /* Position rollback to zero for looping buffers */
+            localPos = localPos % nab->size;
+        }
+
+        if (localPos < nab->size) {
+            /* We set the position in this buffer */
+
+            /* Fix unaligned position */
+            localPos -= localPos % (nab->nbChannels * nab->bitDepth / 8);
+            nab->position = localPos;
+            nab->state = curState;
+            nab->processed = false;
+            break;
+        }
+        else {
+            /* We traverse the buffer */
+            nab->position = 0;
+            nab->state = SOURCE_STOPPED;
+            nab->processed = true;
+            localPos -= nab->size;
+        }
+    }
+
+    /* Now we set the rest of the queue to inital and non-processed state */
+    while (nab->nextBuffer != nullptr) {
+        nab = nab->nextBuffer;
+        nab->position = 0;
+        nab->state = SOURCE_INITIAL;
+        nab->processed = false;
+    }
 }
 
 void AudioBuffer::changeState(SourceState newstate)
@@ -109,12 +180,15 @@ void AudioBuffer::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
     if (size == 0)
         return;
 
+
     /* Mixing buffer volume and master volume.
-     * I have no idea if the arithmetic is good,
-     * but the range is good at least.
+	 * Taken from openAL doc:
+     * "The implementation is free to clamp the total gain (effective gain
+     * per-source multiplied by the listener gain) to one to prevent overflow."
+     *
      * TODO: This is where we can support panning.
      */
-    float resultVolume = volume * outVolume;
+    float resultVolume = std::max(1.0f, volume * outVolume);
     int lvas = (int)(resultVolume * 65536);
     int rvas = (int)(resultVolume * 65536);
 
@@ -204,7 +278,7 @@ void AudioBuffer::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
 
                     if (ab_queue->size > remainingBytes) {
                         /* We play part of this queue buffer */
-                        ab_queue->state = SOURCE_PLAYING;
+                        ab_queue->state = SOURCE_PLAYED;
                         ab_queue->position = remainingBytes;
                         std::copy(&ab_queue->samples[0], &ab_queue->samples[remaining], std::back_inserter(unwrapSamples));
                         break;
@@ -312,6 +386,12 @@ void AudioBufferList::mixAllBuffers(struct timespec ticks)
 
     for (auto& buffer : buffers) {
         buffer->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
+    }
+
+    /* We change all SOURCE_PLAYED to SOURCE_PLAYING */
+    for (auto& buffer : buffers) {
+        if (buffer->state == SOURCE_PLAYED)
+            buffer->state = SOURCE_PLAYING;
     }
 
     /* TEMP! WAV output */

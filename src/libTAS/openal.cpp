@@ -61,12 +61,12 @@ void link_openal(void)
 }
 
 ALenum alError;
-#define ALSETERROR(error) if(alError==0) alError = error;
+#define ALSETERROR(error) if(alError==AL_NO_ERROR) alError = error
 
 ALenum alGetError(ALvoid)
 {
     ALenum err = alError;
-    alError = 0;
+    alError = AL_NO_ERROR;
     return err;
 }
 
@@ -177,12 +177,9 @@ void alGenSources(ALsizei n, ALuint *sources)
 {
     debuglog(LCF_OPENAL, __func__, "call - generate ", n, " sources");
 	for (int i=0; i<n; i++) {
-        AudioBuffer *ab;
-		int id = bufferList.createBuffer(&ab);
+		int id = bufferList.createBuffer(nullptr);
 		if (id > 0) {
 			sources[i] = (ALuint) id;
-            /* When creating a source, we consider it as a buffer that have been processed */
-            ab->processed = true;
         }
 		/* TODO: else generate an error */ 
 	}
@@ -226,6 +223,27 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         case AL_REFERENCE_DISTANCE:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
+        case AL_SEC_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (ab->nextBuffer != nullptr) {
+                value *= (ALfloat) (ab->nextBuffer->frequency * ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+                ab->setPosition((int)value);
+            }
+            break;
+        case AL_SAMPLE_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (ab->nextBuffer != nullptr) {
+                value *= (ALfloat) (ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+                ab->setPosition((int)value);
+            }
+            break;
+        case AL_BYTE_OFFSET:
+            ab->setPosition((int)value);
+            break;
     }
 }
 
@@ -245,33 +263,58 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    if (ab == nullptr) {
+        ALSETERROR(AL_INVALID_NAME);
         return;
+    }
 
     AudioBuffer* bindab;
+    SourceState state;
     switch(param) {
         case AL_LOOPING:
             ab->looping = value;
+            /* FIXME: Propagate looping to buffers here? */
             break;
         case AL_BUFFER:
-            bindab = bufferList.getBuffer(value);
-            if (bindab == nullptr)
-                return;
-            ab->nextBuffer = bindab;
+            /* Bind a buffer to the source */
+            state = ab->getState();
+
+            if ((state == SOURCE_PLAYING) || (state == SOURCE_PAUSED)) {
+                ALSETERROR(AL_INVALID_OPERATION);
+            }
+
+            if ((state == SOURCE_INITIAL) || (state == SOURCE_STOPPED)) {
+                if (value == 0) {
+                    /* Unbind buffer from source */
+                    ab->nextBuffer = nullptr;
+                    ab->processed = false;
+                }
+                else {
+                    bindab = bufferList.getBuffer(value);
+                    if (bindab == nullptr) {
+                        ALSETERROR(AL_INVALID_VALUE);
+                        return;
+                    }
+                    ab->nextBuffer = bindab;
+                    ab->processed = true;
+                    bindab->nextBuffer = nullptr;
+                    bindab->state = state;
+                }
+            }
             break;
         case AL_SOURCE_STATE:
             switch(value) {
                 case AL_INITIAL:
-                    ab->state = SOURCE_INITIAL;
+                    ab->changeState(SOURCE_INITIAL);
                     break;
                 case AL_PLAYING:
-                    ab->state = SOURCE_PLAYING;
+                    ab->changeState(SOURCE_PLAYING);
                     break;
                 case AL_PAUSED:
-                    ab->state = SOURCE_PAUSED;
+                    ab->changeState(SOURCE_PAUSED);
                     break;
                 case AL_STOPPED:
-                    ab->state = SOURCE_STOPPED;
+                    ab->changeState(SOURCE_STOPPED);
                     break;
             }
             break;
@@ -280,6 +323,11 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         case AL_CONE_OUTER_ANGLE:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
+        case AL_SEC_OFFSET:
+        case AL_SAMPLE_OFFSET:
+        case AL_BYTE_OFFSET:
+            alSourcef(source, param, (ALfloat)value);
+            break;;
     }
 }
 
@@ -317,6 +365,29 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         case AL_REFERENCE_DISTANCE:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
+        case AL_SEC_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (ab->nextBuffer != nullptr) {
+                ALfloat pos = (ALfloat) ab->getPosition();
+                pos /= (ALfloat) (ab->nextBuffer->frequency * ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+                *value = pos;
+            }
+            break;
+        case AL_SAMPLE_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (ab->nextBuffer != nullptr) {
+                ALfloat pos = (ALfloat) ab->getPosition();
+                pos /= (ALfloat) (ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+                *value = pos;
+            }
+            break;
+        case AL_BYTE_OFFSET:
+            *value = (ALfloat) ab->getPosition();
+            break;
     }
 }
 
@@ -336,16 +407,22 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    if (ab == nullptr) {
+        ALSETERROR(AL_INVALID_NAME);
         return;
+    }
 
+    SourceState state;
     switch(param) {
         case AL_BUFFER:
             if (ab->nextBuffer != nullptr)
                 *value = ab->nextBuffer->id;
+            else
+                *value = AL_NONE;
             break;
         case AL_SOURCE_STATE:
-            switch(ab->state) {
+            state = ab->getState();
+            switch(state) {
                 case SOURCE_INITIAL:
                     *value = AL_INITIAL;
                     break;
@@ -364,10 +441,23 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_BUFFERS_QUEUED:
-            *value = ab->nbQueueAlive();
+            *value = ab->nbQueue();
             break;
         case AL_BUFFERS_PROCESSED:
-            *value = ab->nbQueueProcessed();
+            state = ab->getState();
+            if (state == SOURCE_STOPPED)
+                *value = ab->nbQueue();
+            else if (state == SOURCE_INITIAL)
+                *value = 0;
+            else
+                *value = ab->nbQueueProcessed();
+            break;
+        case AL_SEC_OFFSET:
+        case AL_SAMPLE_OFFSET:
+        case AL_BYTE_OFFSET:
+            ALfloat res;
+            alGetSourcef(source, param, &res);
+            *value = (ALint) res;
             break;
     }
 }

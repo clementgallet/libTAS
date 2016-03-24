@@ -35,6 +35,12 @@ enum SourceState {
     SOURCE_PLAYING,
     SOURCE_STOPPED,
     SOURCE_PAUSED,
+    /* We add another state here, when a buffer was newly played
+     * and must not be played a second time on the same frame.
+     * This prevent multiple play on queued buffers.
+     * This state is changed to SOURCE_PLAYING after the mix.
+     */
+    SOURCE_PLAYED,
 };
 
 class AudioBuffer
@@ -67,7 +73,8 @@ class AudioBuffer
 
         /*** Source parameters ***/
 
-        /* Volume of the source. Range [0,1] */
+        /* Volume of the source.
+         * Can be larger than 1 but output volume will be clamped to one */
         float volume;
 
         /* Is it a static source (we got the entire buffer at once)
@@ -98,13 +105,32 @@ class AudioBuffer
          * that were not processed (not read until the end),
          * not counting itself.
          */
-        int nbQueueAlive();
+        int nbQueue();
 
         /* Returns the number of buffers in its queue
-         * that were processed (read until the end),
          * not counting itself.
          */
         int nbQueueProcessed();
+
+        /* Returns the sum of the sizes of each queued buffer */
+        int queueSize();
+
+        /* Get the position of playback inside a queue of buffers
+         * The position is relate to the beginning of the first buffer in queue.
+         */
+        int getPosition();
+
+        /* Set the position of playback inside a queue of buffers.
+         * The position is relate to the beginning of the first buffer in queue.
+         * Buffers that are traversed by position set are marked as processed.
+         * Buffers that are not entirely traversed are marked as non processed.
+         *
+         * If pos is greater than the size of the buffer queue,
+         * all buffers are stopped and traversed.
+         *
+         * Argument pos is expressed in bytes
+         */
+        void setPosition(int pos);
 
         /* Change the state of the buffer.
          * This is not a trivial operation, because if we have a queue of buffers,
@@ -131,7 +157,8 @@ class AudioBufferList
     public:
         AudioBufferList();
 
-        /* Master volume. Range [0,1] */
+        /* Master volume.
+         * Can be larger than 1 but output volume will be clamped to one */
         float outVolume;
 
         /* Bit depth of the buffer (usually 8 or 16) */
