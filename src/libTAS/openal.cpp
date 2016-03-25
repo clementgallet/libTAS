@@ -21,6 +21,8 @@
 #include "logging.h"
 #include "hook.h"
 #include "audio/AudioBuffer.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioContext.h"
 
 char* (*alcGetString_real)(void*, int) = nullptr;
 void* (*alcOpenDevice_real)(const char*) = nullptr;
@@ -126,6 +128,9 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
         case AL_FORMAT_STEREO16:
             align = 4;
             break;
+        default:
+            debuglog(LCF_OPENAL | LCF_ERROR, "Unsupported format: ", format);
+            return;
     }
     if ((size % align) != 0) {
         /* Size is not aligned */

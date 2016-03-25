@@ -24,7 +24,7 @@
 #include "threads.h"
 #include "frame.h"
 #include "time.h" // clock_gettime_real
-#include "audio/AudioBuffer.h"
+#include "audio/AudioContext.h"
 
 #define MAX_NONFRAME_GETTIMES 4000
 

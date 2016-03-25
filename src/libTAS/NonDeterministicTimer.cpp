@@ -22,7 +22,7 @@
 #include "frame.h"
 #include "../shared/tasflags.h"
 #include "time.h" // clock_gettime_real
-#include "audio/AudioBuffer.h"
+#include "audio/AudioContext.h"
 
 void NonDeterministicTimer::initialize(void)
 {
