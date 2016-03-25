@@ -37,9 +37,9 @@ AudioBufferList bufferList;
 AudioBuffer::AudioBuffer(void)
 {
     id = 0;
-    bitDepth = 8; // TODO: look for real default
-    nbChannels = 2; // Same
-    frequency = 44100; // Same
+    bitDepth = 16;
+    nbChannels = 1;
+    frequency = 0;
     size = 0;
     position = 0;
     volume = 1.0f; // Default from openal-soft
@@ -216,7 +216,7 @@ void AudioBuffer::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
              * Let's take the dumb solution when looping:
              * just replicate the buffer as many times as needed in a new buffer
              */
-
+            /* FIXME: Apparently looping is done on the entire queue, not the current buffer!!! */
             /* Use the vector constructor for the first copy */
             /* TODO: Keep the vector allocated somewhere? */
             std::vector<uint8_t> unwrapSamples (&samples[oldPosition], &samples[size]);
