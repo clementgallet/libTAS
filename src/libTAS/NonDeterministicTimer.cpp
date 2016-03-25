@@ -89,7 +89,7 @@ void NonDeterministicTimer::enterFrameBoundary()
     /* Doing the audio mixing here */
     getTicks();
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
-    bufferList.mixAllBuffers(*(struct timespec*)&elapsedTicks);
+    audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
 }
 
 void NonDeterministicTimer::exitFrameBoundary()

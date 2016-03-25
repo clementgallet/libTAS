@@ -74,7 +74,7 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
 {
     debuglog(LCF_OPENAL, __func__, " call - generate ", n, " buffers");
 	for (int i=0; i<n; i++) {
-		int id = bufferList.createBuffer(nullptr);
+		int id = audiocontext.createBuffer();
 		if (id > 0)
 			buffers[i] = (ALuint) id;
 		/* TODO: else generate an error */ 
@@ -86,26 +86,26 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
     debuglog(LCF_OPENAL, __func__, " call - delete ", n, " buffers");
 	for (int i=0; i<n; i++) {
         /* Check if all buffers exist before removing any. */
-	    if (! bufferList.isBuffer(buffers[i])) {
+	    if (! audiocontext.isBuffer(buffers[i])) {
             ALSETERROR(AL_INVALID_NAME);
             return;
         }
     }
 	for (int i=0; i<n; i++) {        
-		bufferList.deleteBuffer(buffers[i]);
+		audiocontext.deleteBuffer(buffers[i]);
 	}
 }
 
 ALboolean alIsBuffer(ALuint buffer)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-	return bufferList.isBuffer(buffer);
+	return audiocontext.isBuffer(buffer);
 }
 
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
 {
     debuglog(LCF_OPENAL, __func__, " call - copy buffer data of format ", format, ", size ", size, " and frequency ", freq, " into buffer ", buffer);
-	AudioBuffer* ab = bufferList.getBuffer(buffer);
+	AudioBuffer* ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
@@ -170,7 +170,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
         return;
     }
         
-	AudioBuffer* ab = bufferList.getBuffer(buffer);
+	AudioBuffer* ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
@@ -226,7 +226,7 @@ void alGenSources(ALsizei n, ALuint *sources)
 {
     debuglog(LCF_OPENAL, __func__, " call - generate ", n, " sources");
 	for (int i=0; i<n; i++) {
-		int id = bufferList.createBuffer(nullptr);
+		int id = audiocontext.createSource();
 		if (id > 0) {
 			sources[i] = (ALuint) id;
         }
@@ -239,39 +239,39 @@ void alDeleteSources(ALsizei n, ALuint *sources)
     debuglog(LCF_OPENAL, __func__, " call - delete ", n, " sources");
 	for (int i=0; i<n; i++) {
         /* Check if all sources exist before removing any. */
-	    if (! bufferList.isBuffer(sources[i])) {
+	    if (! audiocontext.isSource(sources[i])) {
             ALSETERROR(AL_INVALID_NAME);
             return;
         }
     }
 	for (int i=0; i<n; i++) {
         /* If the source is deleted when playing, the source must be stopped first */
-        AudioBuffer* ab = bufferList.getBuffer(sources[i]);
-        SourceState state = ab->getState();
-        if (state == SOURCE_PLAYING)
-            ab->changeState(SOURCE_STOPPED);
-		bufferList.deleteBuffer(sources[i]);
+        AudioSource* as = audiocontext.getSource(sources[i]);
+        if (as->state == SOURCE_PLAYING)
+            as->state = SOURCE_STOPPED;
+		audiocontext.deleteSource(sources[i]);
 	}
 }
 
 ALboolean alIsSource(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-	return bufferList.isBuffer(source);
+	return audiocontext.isSource(source);
 } 
 
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr) {
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
 
+    AudioBuffer* ab;
     switch(param) {
         case AL_GAIN:
-            ab->volume = value;
+            as->volume = value;
             debuglog(LCF_OPENAL, "  Set gain of ", value);
             break;
         case AL_PITCH:
@@ -289,25 +289,27 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
-            if (ab->nextBuffer != nullptr) {
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
                 debuglog(LCF_OPENAL, "  Set position of ", value, " seconds");
-                value *= (ALfloat) (ab->nextBuffer->frequency * ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
-                ab->setPosition((int)value);
+                value *= (ALfloat) (ab->frequency * ab->nbChannels * ab->bitDepth / 8);
+                as->setPosition((int)value);
             }
             break;
         case AL_SAMPLE_OFFSET:
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
-            if (ab->nextBuffer != nullptr) {
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
                 debuglog(LCF_OPENAL, "  Set position of ", value, " samples");
-                value *= (ALfloat) (ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
-                ab->setPosition((int)value);
+                value *= (ALfloat) (ab->nbChannels * ab->bitDepth / 8);
+                as->setPosition((int)value);
             }
             break;
         case AL_BYTE_OFFSET:
             debuglog(LCF_OPENAL, "  Set position of ", value, " bytes");
-            ab->setPosition((int)value);
+            as->setPosition((int)value);
             break;
         default:
             ALSETERROR(AL_INVALID_OPERATION);
@@ -334,8 +336,8 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr) {
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
@@ -346,41 +348,39 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         case AL_LOOPING:
             debuglog(LCF_OPENAL, "  Set looping of ", value);
             if (value == AL_TRUE)
-                ab->looping = true;
+                as->looping = true;
             else if (value == AL_FALSE)
-                ab->looping = false;
+                as->looping = false;
             else
                 ALSETERROR(AL_INVALID_VALUE);
-            /* FIXME: Propagate looping to buffers here? */
             break;
         case AL_BUFFER:
             /* Bind a buffer to the source */
-            state = ab->getState();
 
-            if ((state == SOURCE_PLAYING) || (state == SOURCE_PAUSED)) {
+            if ((as->state == SOURCE_PLAYING) || (as->state == SOURCE_PAUSED)) {
                 ALSETERROR(AL_INVALID_OPERATION);
                 return;
             }
 
             if (value == 0) {
                 /* Unbind buffer from source */
-                ab->nextBuffer = nullptr;
-                ab->processed = false;
-                ab->source = SOURCE_UNDETERMINED;
+                as->buffer_queue.clear();
+                as->queue_index = 0;
+                as->source = SOURCE_UNDETERMINED;
+                as->position = 0;
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
-                bindab = bufferList.getBuffer(value);
+                bindab = audiocontext.getBuffer(value);
                 if (bindab == nullptr) {
                     ALSETERROR(AL_INVALID_VALUE);
                     return;
                 }
-                ab->nextBuffer = bindab;
-                ab->processed = true;
-                ab->source = SOURCE_STATIC;
-                bindab->nextBuffer = nullptr;
-                bindab->state = state;
-                bindab->position = 0;
+                as->buffer_queue.clear();
+                as->buffer_queue.push_back(bindab);
+                as->queue_index = 0;
+                as->source = SOURCE_STATIC;
+                as->position = 0;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;
@@ -424,13 +424,14 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         return;
     }
         
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
+    AudioBuffer* ab;
     switch(param) {
         case AL_GAIN:
-            *value = ab->volume;
+            *value = as->volume;
             debuglog(LCF_OPENAL, "  Get gain of ", *value);
             break;
         case AL_PITCH:
@@ -448,9 +449,10 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
-            if (ab->nextBuffer != nullptr) {
-                ALfloat pos = (ALfloat) ab->getPosition();
-                pos /= (ALfloat) (ab->nextBuffer->frequency * ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                ALfloat pos = (ALfloat) as->getPosition();
+                pos /= (ALfloat) (ab->frequency * ab->nbChannels * ab->bitDepth / 8);
                 *value = pos;
                 debuglog(LCF_OPENAL, "  Get position of ", *value, " seconds");
             }
@@ -459,15 +461,16 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
-            if (ab->nextBuffer != nullptr) {
-                ALfloat pos = (ALfloat) ab->getPosition();
-                pos /= (ALfloat) (ab->nextBuffer->nbChannels * ab->nextBuffer->bitDepth / 8);
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                ALfloat pos = (ALfloat) as->getPosition();
+                pos /= (ALfloat) (ab->nbChannels * ab->bitDepth / 8);
                 *value = pos;
                 debuglog(LCF_OPENAL, "  Get position of ", *value, " samples");
             }
             break;
         case AL_BYTE_OFFSET:
-            *value = (ALfloat) ab->getPosition();
+            *value = (ALfloat) as->getPosition();
             debuglog(LCF_OPENAL, "  Get position of ", *value, " bytes");
             break;
         default:
@@ -496,23 +499,22 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         return;
     }
         
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr) {
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
 
-    SourceState state;
     switch(param) {
         case AL_BUFFER:
-            if (ab->nextBuffer != nullptr)
-                *value = ab->nextBuffer->id;
+            if (! as->buffer_queue.empty())
+                // TODO: for queued buffers, return the index of current buffer?
+                *value = as->buffer_queue[0]->id;
             else
                 *value = AL_NONE;
             break;
         case AL_SOURCE_STATE:
-            state = ab->getState();
-            switch(state) {
+            switch(as->state) {
                 case SOURCE_INITIAL:
                     *value = AL_INITIAL;
                     debuglog(LCF_OPENAL, "  Get source state INITIAL");
@@ -532,7 +534,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             }
             break;
         case AL_SOURCE_TYPE:
-            switch(ab->source) {
+            switch(as->source) {
                 case SOURCE_UNDETERMINED:
                     *value = AL_UNDETERMINED;
                     debuglog(LCF_OPENAL, "  Get source type UNDETERMINED");
@@ -551,17 +553,16 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_BUFFERS_QUEUED:
-            *value = ab->nbQueue();
+            *value = as->nbQueue();
             debuglog(LCF_OPENAL, "  Get number of queued buffers of ", *value);
             break;
         case AL_BUFFERS_PROCESSED:
-            state = ab->getState();
-            if (state == SOURCE_STOPPED)
-                *value = ab->nbQueue();
-            else if (state == SOURCE_INITIAL)
+            if (as->state == SOURCE_STOPPED)
+                *value = as->nbQueue();
+            else if (as->state == SOURCE_INITIAL)
                 *value = 0;
             else
-                *value = ab->nbQueueProcessed();
+                *value = as->nbQueueProcessed();
             debuglog(LCF_OPENAL, "  Get number of processed queued buffers of ", *value);
             break;
         case AL_SEC_OFFSET:
@@ -592,16 +593,15 @@ void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 void alSourcePlay(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
-    SourceState state = ab->getState();
-    if (state == SOURCE_PLAYING) {
+    if (as->state == SOURCE_PLAYING) {
         /* Restart the play from the beginning */
-        ab->setPosition(0);
+        as->setPosition(0);
     }
-    ab->changeState(SOURCE_PLAYING);
+    as->state = SOURCE_PLAYING;
 }
 
 void alSourcePlayv(ALsizei n, ALuint *sources)
@@ -614,16 +614,15 @@ void alSourcePlayv(ALsizei n, ALuint *sources)
 void alSourcePause(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
-    SourceState state = ab->getState();
-    if (state != SOURCE_PLAYED) {
+    if (as->state != SOURCE_PLAYING) {
         /* Illegal operation. */
         return;
     }
-    ab->changeState(SOURCE_PAUSED);
+    as->state = SOURCE_PAUSED;
 }
 
 void alSourcePausev(ALsizei n, ALuint *sources)
@@ -636,16 +635,15 @@ void alSourcePausev(ALsizei n, ALuint *sources)
 void alSourceStop(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
-    SourceState state = ab->getState();
-    if ((state == SOURCE_INITIAL) || (state == SOURCE_STOPPED)) {
+    if ((as->state == SOURCE_INITIAL) || (as->state == SOURCE_STOPPED)) {
         /* Illegal operation. */
         return;
     }
-    ab->changeState(SOURCE_STOPPED);
+    as->state = SOURCE_STOPPED;
 }
 
 void alSourceStopv(ALsizei n, ALuint *sources)
@@ -658,17 +656,16 @@ void alSourceStopv(ALsizei n, ALuint *sources)
 void alSourceRewind(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
-    SourceState state = ab->getState();
-    if (state == SOURCE_INITIAL) {
+    if (as->state == SOURCE_INITIAL) {
         /* Illegal operation. */
         return;
     }
-    ab->setPosition(0);
-    ab->changeState(SOURCE_INITIAL);
+    as->setPosition(0);
+    as->state = SOURCE_INITIAL;
 }
 
 void alSourceRewindv(ALsizei n, ALuint *sources)
@@ -681,32 +678,25 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     debuglog(LCF_OPENAL, "Pushing ", n, " buffers in the queue");
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
     /* Check if the source has a static buffer attached */
-    if (ab->source == SOURCE_STATIC) {
+    if (as->source == SOURCE_STATIC) {
         ALSETERROR(AL_INVALID_OPERATION);
         return;
     }
 
-    ab->source = SOURCE_STREAMING;
-
-    /* Locate the last buffer on the queue */
-    while (ab->nextBuffer != nullptr) {
-        ab = ab->nextBuffer;
-    }
+    as->source = SOURCE_STREAMING;
 
     for (int i=0; i<n; i++) {
-        AudioBuffer* queue_ab = bufferList.getBuffer(buffers[i]);
+        AudioBuffer* queue_ab = audiocontext.getBuffer(buffers[i]);
         if (queue_ab == nullptr)
             return;
 
-        queue_ab->source = SOURCE_STREAMING; // Is it necessary?
-
-        ab->nextBuffer = queue_ab;
-        ab = queue_ab;
+        queue_ab->processed = false;
+        as->buffer_queue.push_back(queue_ab);
         debuglog(LCF_OPENAL, "  Pushed buffer ", buffers[i]);
     }
 }
@@ -714,33 +704,27 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = bufferList.getBuffer(source);
-    if (ab == nullptr)
+    AudioSource* as = audiocontext.getSource(source);
+    if (as == nullptr)
         return;
 
     /* Check if we can unqueue that number of buffers */
-    int processedBuffers = ab->nbQueueProcessed();
+    int processedBuffers = as->nbQueueProcessed();
     if (processedBuffers < n) {
         ALSETERROR(AL_INVALID_VALUE);
         return;
     }
 
-    AudioBuffer* ab_queue = ab;
+    /* Save the id of the unqueued buffers */
     for (int i=0; i<n; i++) {
-        ab_queue = ab_queue->nextBuffer;
-        if (ab_queue == nullptr)
-            return;
-
-        if (! ab_queue->processed)
-            /* This should not happen because of the previous check */
-            return;
-
-        /* Save the id of the unqueued buffer */
-        buffers[i] = ab_queue->id;
+        buffers[i] = as->buffer_queue[i]->id;
     }
 
-    /* Link the source AudioBuffer to the first non-unqueued Audio Buffer */
-    ab->nextBuffer = ab_queue->nextBuffer;
+    /* Remove the buffers from the queue.
+     * TODO: This is slow on a vector, maybe use forward_list?
+     */
+    as->buffer_queue.erase(as->buffer_queue.begin(), as->buffer_queue.begin()+n);
+    as->queue_index -= n;
 }
 
 /*** Listener ***/
@@ -749,7 +733,7 @@ void alListenerf(ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     if (param == AL_GAIN)
-        bufferList.outVolume = value;
+        audiocontext.outVolume = value;
 }
 
 void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
@@ -790,7 +774,7 @@ void alGetListenerf(ALenum param, ALfloat *value)
             ALSETERROR(AL_INVALID_VALUE);
             return;
         }
-        *value = bufferList.outVolume;
+        *value = audiocontext.outVolume;
     }
 }
 
@@ -826,8 +810,5 @@ void alGetListeneriv(ALenum param, ALint *values)
     DEBUGLOGCALL(LCF_OPENAL);
     debuglog(LCF_OPENAL, "Operation not supported");
 }
-
-
-
 
 

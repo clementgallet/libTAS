@@ -35,20 +35,12 @@ enum SourceState {
     SOURCE_PLAYING,
     SOURCE_STOPPED,
     SOURCE_PAUSED,
-    /* We add another state here, when a buffer was newly played
-     * and must not be played a second time on the same frame.
-     * This prevent multiple play on queued buffers.
-     * This state is changed to SOURCE_PLAYING after the mix.
-     */
-    SOURCE_PLAYED,
 };
 
 class AudioBuffer
 {
     public:
         AudioBuffer();
-
-        /*** Buffer parameters ***/
 
         /* Identifier of the buffer */
         int id;
@@ -68,10 +60,20 @@ class AudioBuffer
         /* Audio samples */
         std::vector<uint8_t> samples;
 
+        /* Indicate if a buffer has been read entirely */
+        bool processed;
+};
+
+class AudioSource
+{
+    public:
+        AudioSource();
+
+        /* Identifier of the buffer */
+        int id;
+
         /* Position inside the buffer, in bytes */
         int position;
-
-        /*** Source parameters ***/
 
         /* Volume of the source.
          * Can be larger than 1 but output volume will be clamped to one */
@@ -88,18 +90,12 @@ class AudioBuffer
         /* Is the source playing? */
         SourceState state;
 
-        /* If multiple buffers must be played in sequence,
-         * we store a pointer to the next buffer to play,
-         * or nullptr if it is the last buffer.
-         *
-         * On OpenAL, buffers and sources are separated,
-         * so we consider the source as the primary buffer
-         * with no samples, which points to the actual buffer with samples
-         */
-        AudioBuffer* nextBuffer;
+        /* A queue of buffers to play */
+        /* TODO: choose another struct like forward_list ? */
+        std::vector<AudioBuffer*> buffer_queue;
 
-        /* Indicate if a buffer has been read entirely */
-        bool processed;
+        /* Indicate the current position in the buffer queue */
+        int queue_index;
 
         /* Returns the number of buffers in its queue
          * that were not processed (not read until the end),
@@ -132,17 +128,6 @@ class AudioBuffer
          */
         void setPosition(int pos);
 
-        /* Change the state of the buffer.
-         * This is not a trivial operation, because if we have a queue of buffers,
-         * we need to change the state of the first buffer that is not processed.
-         */
-        void changeState(SourceState newstate);
-
-        /* Get the state of the buffer.
-         * Same as above concerning queued buffers
-         */
-        SourceState getState();
-
         /* Mix the buffer with an external buffer of the given format.
          * The number of samples to mix correspond to the number of ticks given.
          * This function is just preparing the buffer to be mixed,
@@ -152,10 +137,10 @@ class AudioBuffer
 };
 
 
-class AudioBufferList
+class AudioContext
 {
     public:
-        AudioBufferList();
+        AudioContext();
 
         /* Master volume.
          * Can be larger than 1 but output volume will be clamped to one */
@@ -173,10 +158,8 @@ class AudioBufferList
         /* Mixed buffer during a frame */
         std::vector<uint8_t> outSamples;
 
-        /* Create a new buffer object and return an id of the buffer or -1 if it failed 
-         * Optionally fill abp with a pointer to the created AudioBuffer.
-         */
-        int createBuffer(AudioBuffer** abp);
+        /* Create a new buffer object and return an id of the buffer or -1 if it failed */
+        int createBuffer(void);
 
         /* Delete buffers that have a corresponding id */
         void deleteBuffer(int id);
@@ -187,17 +170,30 @@ class AudioBufferList
         /* Return the buffer of requested id, or nullptr if not exists */
         AudioBuffer* getBuffer(int id);
 
-        /* Mix all buffers that are playing */
-        void mixAllBuffers(struct timespec ticks);
+        /* Create a new source object and return an id of the source or -1 if it failed */
+        int createSource(void);
+
+        /* Delete source that have a corresponding id */
+        void deleteSource(int id);
+
+        /* Returns if a source id correspond to an existing source */
+        bool isSource(int id);
+
+        /* Return the source of requested id, or nullptr if not exists */
+        AudioSource* getSource(int id);
+
+        /* Mix all source that are playing */
+        void mixAllSources(struct timespec ticks);
 
         /*** Temporary!!! WAV output ***/
         SndfileHandle file;
 
     private:
         std::forward_list<AudioBuffer*> buffers;
+        std::forward_list<AudioSource*> sources;
 };
 
-extern AudioBufferList bufferList;
+extern AudioContext audiocontext;
 
 #endif
 

@@ -212,7 +212,7 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* Doing the audio mixing here */
-    bufferList.mixAllBuffers(*(struct timespec*)&timeIncrement);
+    audiocontext.mixAllSources(*(struct timespec*)&timeIncrement);
 
     /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
 

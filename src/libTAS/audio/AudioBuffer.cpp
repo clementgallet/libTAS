@@ -21,8 +21,10 @@
 #include "audiomixing.h"
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::copy
+#include "../logging.h"
 
-#define MAXBUFFERS 256
+#define MAXBUFFERS 256 // TODO: put correct value
+#define MAXSOURCES 256
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int frequency)
@@ -32,7 +34,7 @@ static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int
     return (int) bytes;
 }
 
-AudioBufferList bufferList;
+AudioContext audiocontext;
 
 AudioBuffer::AudioBuffer(void)
 {
@@ -41,148 +43,96 @@ AudioBuffer::AudioBuffer(void)
     nbChannels = 1;
     frequency = 0;
     size = 0;
+    processed = false;
+}
+
+AudioSource::AudioSource(void)
+{
+    id = 0;
     position = 0;
     volume = 1.0f; // Default from openal-soft
     source = SOURCE_UNDETERMINED;
     looping = false;
     state = SOURCE_INITIAL;
-    nextBuffer = nullptr;
-    processed = false;
+    queue_index = 0;
 }
 
-int AudioBuffer::nbQueue()
+int AudioSource::nbQueue()
 {
-    int nbQueued = 0;
-    AudioBuffer* nab = this;
-    while (nab->nextBuffer != nullptr) {
-        nbQueued++;
-        nab = nab->nextBuffer;
-    }
-    return nbQueued;
+    return buffer_queue.size();
 }
 
-int AudioBuffer::nbQueueProcessed()
+int AudioSource::nbQueueProcessed()
 {
-    int nbProcessed = 0;
-    AudioBuffer* nab = this;
-    while (nab->nextBuffer != nullptr) {
-        nab = nab->nextBuffer;
-        if (nab->processed)
-            nbProcessed++;
-    }
-    return nbProcessed;
+    return queue_index;
 }
 
-int AudioBuffer::queueSize()
+int AudioSource::queueSize()
 {
     int totalSize = 0;
-    AudioBuffer* nab = this;
-    while (nab->nextBuffer != nullptr) {
-        nab = nab->nextBuffer;
-        totalSize += nab->size;
+    for (auto& buffer : buffer_queue) {
+        totalSize += buffer->size;
     }
     return totalSize;
 }
 
-int AudioBuffer::getPosition()
+int AudioSource::getPosition()
 {
     int totalPos = 0;
-    AudioBuffer* nab = this;
-    while (nab->nextBuffer != nullptr) {
-        nab = nab->nextBuffer;
-
-        if (nab->processed)
-            totalPos += nab->size;
-        else {
-            totalPos += nab->position;
-            break;
-        }
+    for (int i=0; i<queue_index; i++) {
+        totalPos += buffer_queue[i]->size;
     }
+    totalPos += position;
 
     return totalPos;
 }
 
-void AudioBuffer::setPosition(int pos)
+void AudioSource::setPosition(int pos)
 {
-    /* We first store the state of the queue so that we can set it later */
-    SourceState curState = this->getState();
-
     int localPos = pos;
-    AudioBuffer* nab = this;
-    while (nab->nextBuffer != nullptr) {
-        nab = nab->nextBuffer;
+    
+    if (looping) {
+        localPos %= queueSize();
+    }
 
-        if (nab->looping) {
-            /* Position rollback to zero for looping buffers */
-            localPos = localPos % nab->size;
+    for (int i=0; i<buffer_queue.size(); i++) {
+        AudioBuffer* ab = buffer_queue[i];
+        if (localPos == -1) {
+            /* We have set the position already.
+             * We have to mark the remaining buffers as unprocessed
+             */
+            ab->processed = false;
         }
-
-        if (localPos < nab->size) {
+        else if (localPos < ab->size) {
             /* We set the position in this buffer */
 
             /* Fix unaligned position */
-            localPos -= localPos % (nab->nbChannels * nab->bitDepth / 8);
-            nab->position = localPos;
-            nab->state = curState;
-            nab->processed = false;
-            break;
+            localPos -= localPos % (ab->nbChannels * ab->bitDepth / 8);
+            position = localPos;
+            ab->processed = false;
+            localPos = -1;
         }
         else {
             /* We traverse the buffer */
-            nab->position = 0;
-            nab->state = SOURCE_STOPPED;
-            nab->processed = true;
-            localPos -= nab->size;
+            ab->processed = true;
+            localPos -= ab->size;
         }
-    }
-
-    /* Now we set the rest of the queue to inital and non-processed state */
-    while (nab->nextBuffer != nullptr) {
-        nab = nab->nextBuffer;
-        nab->position = 0;
-        nab->state = SOURCE_INITIAL;
-        nab->processed = false;
     }
 }
 
-void AudioBuffer::changeState(SourceState newstate)
+void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
-    AudioBuffer* nab = this;
-    while (nab != nullptr) {
-        if (! nab->processed) {
-            nab->state = newstate;
-            return;
-        }
-        nab = nab->nextBuffer;
-    }
-}
-
-SourceState AudioBuffer::getState()
-{
-    AudioBuffer* nab = this;
-    while (nab != nullptr) {
-        if (! nab->processed) {
-            return nab->state;
-        }
-        nab = nab->nextBuffer;
-    }
-    return SOURCE_STOPPED;
-}
-
-void AudioBuffer::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
-{
-    if (processed)
-        return;
-
+    //debuglog(LCF_SOUND | LCF_FRAME, "Start mixing buffer ", id, " of state ", state);
     if (state != SOURCE_PLAYING)
         return;
 
-    if (size == 0)
+    if (buffer_queue.empty())
         return;
 
+    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing source ", id);
 
-    /* Mixing buffer volume and master volume.
-	 * Taken from openAL doc:
+    /* Mixing source volume and master volume.
+     * Taken from openAL doc:
      * "The implementation is free to clamp the total gain (effective gain
      * per-source multiplied by the listener gain) to one to prevent overflow."
      *
@@ -192,121 +142,104 @@ void AudioBuffer::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
     int lvas = (int)(resultVolume * 65536);
     int rvas = (int)(resultVolume * 65536);
 
+    AudioBuffer* curBuf = buffer_queue[queue_index];
+
     /* Number of bytes to advance in the buffer samples */
-    int inBytes = ticksToBytes(ticks, bitDepth, nbChannels, frequency);
+    int inBytes = ticksToBytes(ticks, curBuf->bitDepth, curBuf->nbChannels, curBuf->frequency);
 
     int oldPosition = position;
     int newPosition = position + inBytes;
 
-    if (newPosition < size) {
+    if (newPosition < curBuf->size) {
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
-        MixFromToInternal(&samples[oldPosition], inBytes,
+        debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays buffer ", curBuf->id, " in range ", oldPosition, " - ", position);
+        MixFromToInternal(&curBuf->samples[oldPosition], inBytes,
                 outSamples, outBytes,
-                bitDepth, nbChannels,
+                curBuf->bitDepth, curBuf->nbChannels,
                 outBitDepth, outNbChannels,
                 false, lvas, rvas);
     }
     else {
-        /* We reached the end of the buffer. We have several scenarios here: */
+        /* We reached the end of the buffer
+         *
+         * Let's take the dumb solution:
+         * just copy the rest of the buffer queue in a new array, while supporting looping
+         */
 
+        /* TODO: In the special case of last element of the queue and no looping,
+         * we don't need any copy
+         */
+
+        /* Use the vector constructor for the first copy */
+        /* TODO: Keep the vector allocated somewhere? */
+        std::vector<uint8_t> unwrapSamples (&curBuf->samples[oldPosition], &curBuf->samples[curBuf->size]);
+        unwrapSamples.reserve(inBytes);
+
+        int remainingBytes = inBytes - unwrapSamples.size();
+        int queue_size = buffer_queue.size();
+        int finalIndex;
+        int finalPos;
+
+        /* Our for loop conditions are different if we are looping or not */
         if (looping) {
-            /*
-             * Let's take the dumb solution when looping:
-             * just replicate the buffer as many times as needed in a new buffer
-             */
-            /* FIXME: Apparently looping is done on the entire queue, not the current buffer!!! */
-            /* Use the vector constructor for the first copy */
-            /* TODO: Keep the vector allocated somewhere? */
-            std::vector<uint8_t> unwrapSamples (&samples[oldPosition], &samples[size]);
-            unwrapSamples.reserve(inBytes);
-
-            int remainingBytes = inBytes - unwrapSamples.size();
-            while (remainingBytes > 0) {
-                if (remainingBytes > size)
-                    std::copy(&samples[0], &samples[size], std::back_inserter(unwrapSamples));
-                else
-                    std::copy(&samples[0], &samples[remainingBytes], std::back_inserter(unwrapSamples));
+            for (int i=(queue_index+1)%queue_size; remainingBytes>0; i=(i+1)%queue_size) {
+                AudioBuffer* loopbuf = buffer_queue[i];
+                if (remainingBytes > loopbuf->size) {
+                    std::copy(&loopbuf->samples[0], &loopbuf->samples[loopbuf->size], std::back_inserter(unwrapSamples));
+                    loopbuf->processed = true; // Are buffers in a loop ever processed??
+                }
+                else {
+                    std::copy(&loopbuf->samples[0], &loopbuf->samples[remainingBytes], std::back_inserter(unwrapSamples));
+                    finalIndex = i;
+                    finalPos = remainingBytes;
+                }
+                remainingBytes = inBytes - unwrapSamples.size();
+            }
+        }
+        else {
+            for (int i=queue_index+1; (remainingBytes>0) && (i<queue_size); i++) {
+                AudioBuffer* loopbuf = buffer_queue[i];
+                if (remainingBytes > loopbuf->size) {
+                    std::copy(&loopbuf->samples[0], &loopbuf->samples[loopbuf->size], std::back_inserter(unwrapSamples));
+                    loopbuf->processed = true;
+                }
+                else {
+                    std::copy(&loopbuf->samples[0], &loopbuf->samples[remainingBytes], std::back_inserter(unwrapSamples));
+                    finalIndex = i;
+                    finalPos = remainingBytes;
+                }
                 remainingBytes = inBytes - unwrapSamples.size();
             }
 
-            /* Update the position in the buffer */
-            position = newPosition % size;
+        }
 
-            /* Our unwrap buffer is ready to be mixed */
-            MixFromToInternal(&unwrapSamples[0], inBytes, 
-                    outSamples, outBytes,
-                    bitDepth, nbChannels,
-                    outBitDepth, outNbChannels,
-                    false, lvas, rvas);
+        if (remainingBytes > 0) {
+            /* We reached the end of the buffer queue */
+            position = 0;
+            queue_index = 0;
+            state = SOURCE_STOPPED;
+            debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
         }
         else {
-            /* We did not loop, so this buffer is read entirely */
-            position = 0;
-            state = SOURCE_STOPPED;
-            processed = true;
-
-            if (nextBuffer == nullptr) {
-                /* There are no queued buffers, so we are pretty much done. */
-
-                /* Mix the buffer until the end */
-                MixFromToInternal(&samples[oldPosition], size,
-                        outSamples, outBytes,
-                        bitDepth, nbChannels,
-                        outBitDepth, outNbChannels,
-                        true, lvas, rvas);
-            }
-            else {
-                /* We reached the end of a buffer and need to read from the 
-                 * next buffer in the queue.
-                 * Again, we take the (bad?) solution of building an unwrap buffer.
-                 * Alternate solutions: call MixFromToInternal multiple times
-                 * or call this function recursively (basically the same).
-                 * Or use libavresample for mixing...
-                 */
-                std::vector<uint8_t> unwrapSamples (&samples[oldPosition], &samples[size]);
-                unwrapSamples.reserve(inBytes);
-
-                int remainingBytes = inBytes - unwrapSamples.size();
-                bool remaining = true;
-
-                AudioBuffer* ab_queue = nextBuffer;
-
-                /* Crawling the AudioBuffer queue */
-                while (ab_queue != nullptr) {
-
-                    if (ab_queue->size > remainingBytes) {
-                        /* We play part of this queue buffer */
-                        ab_queue->state = SOURCE_PLAYED;
-                        ab_queue->position = remainingBytes;
-                        std::copy(&ab_queue->samples[0], &ab_queue->samples[remaining], std::back_inserter(unwrapSamples));
-                        break;
-                    }
-                    else {
-                        /* This buffer is also read entirely */
-                        ab_queue->state = SOURCE_STOPPED;
-                        ab_queue->position = 0;
-                        ab_queue->processed = true;
-                        std::copy(&ab_queue->samples[0], &ab_queue->samples[ab_queue->size], std::back_inserter(unwrapSamples));
-                    }
-                    remainingBytes = inBytes - unwrapSamples.size();
-                    ab_queue = ab_queue->nextBuffer;
-                }
-
-                /* Now we mix with our unwrap buffer */
-                MixFromToInternal(&unwrapSamples[0], unwrapSamples.size(),
-                        outSamples, outBytes,
-                        bitDepth, nbChannels,
-                        outBitDepth, outNbChannels,
-                        ab_queue == nullptr, lvas, rvas);
-            }
+            /* Update the position in the buffer */
+            queue_index = finalIndex;
+            position = finalPos;
+            debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " to some other buffers");
         }
+
+        /* Our unwrap buffer is ready to be mixed */
+        MixFromToInternal(&unwrapSamples[0], inBytes, 
+                outSamples, outBytes,
+                curBuf->bitDepth, curBuf->nbChannels,
+                outBitDepth, outNbChannels,
+                false, lvas, rvas);
     }
 }
 
 
-AudioBufferList::AudioBufferList(void)
+AudioContext::AudioContext(void)
 {
     outVolume = 1; // Not sure it is default value
     outBitDepth = 16;
@@ -317,7 +250,7 @@ AudioBufferList::AudioBufferList(void)
     file = SndfileHandle("test.wav", SFM_WRITE, SF_FORMAT_WAV | SF_FORMAT_PCM_16, outNbChannels, outFrequency);
 }
 
-int AudioBufferList::createBuffer(AudioBuffer** abp)
+int AudioContext::createBuffer(void)
 {
     if ((! buffers.empty()) && buffers.front()->id >= MAXBUFFERS)
         return -1;
@@ -335,14 +268,10 @@ int AudioBufferList::createBuffer(AudioBuffer** abp)
     }
     buffers.push_front(newab);
 
-    /* Optionally return the pointer to the buffer as well */
-    if (abp != nullptr)
-        *abp = newab;
-
     return newab->id;
 }
 
-void AudioBufferList::deleteBuffer(int id)
+void AudioContext::deleteBuffer(int id)
 {
     buffers.remove_if([id](AudioBuffer* const& buffer)
         {
@@ -354,7 +283,7 @@ void AudioBufferList::deleteBuffer(int id)
         });
 }
 
-bool AudioBufferList::isBuffer(int id)
+bool AudioContext::isBuffer(int id)
 {
     for (auto& buffer : buffers) {
         if (buffer->id == id)
@@ -364,7 +293,7 @@ bool AudioBufferList::isBuffer(int id)
     return false;
 }
 
-AudioBuffer* AudioBufferList::getBuffer(int id)
+AudioBuffer* AudioContext::getBuffer(int id)
 {
     for (auto& buffer : buffers) {
         if (buffer->id == id)
@@ -374,9 +303,63 @@ AudioBuffer* AudioBufferList::getBuffer(int id)
     return nullptr;
 }
 
-void AudioBufferList::mixAllBuffers(struct timespec ticks)
+int AudioContext::createSource(void)
+{
+    if ((! sources.empty()) && sources.front()->id >= MAXSOURCES)
+        return -1;
+
+    AudioSource* newas = new AudioSource;
+
+    if (sources.empty()) {
+        newas->id = 1;
+    }
+    else {
+        /* Get the id of the last AudioSource
+         * (situated at the beginning of the list) */
+        int last_id = sources.front()->id;
+        newas->id = last_id + 1;
+    }
+    sources.push_front(newas);
+
+    return newas->id;
+}
+
+void AudioContext::deleteSource(int id)
+{
+    sources.remove_if([id](AudioSource* const& source)
+        {
+            if (source->id == id) {
+                delete source;
+                return true;
+            }
+            return false;
+        });
+}
+
+bool AudioContext::isSource(int id)
+{
+    for (auto& source : sources) {
+        if (source->id == id)
+            return true;
+    }
+
+    return false;
+}
+
+AudioSource* AudioContext::getSource(int id)
+{
+    for (auto& source : sources) {
+        if (source->id == id)
+            return source;
+    }
+
+    return nullptr;
+}
+
+void AudioContext::mixAllSources(struct timespec ticks)
 {
     int outBytes = ticksToBytes(ticks, outBitDepth, outNbChannels, outFrequency);
+    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing ", outBytes, " of buffers");
 
     /* Silent the output buffer */
     if (outBitDepth == 8) // Unsigned 8-bit samples
@@ -384,14 +367,8 @@ void AudioBufferList::mixAllBuffers(struct timespec ticks)
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
 
-    for (auto& buffer : buffers) {
-        buffer->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
-    }
-
-    /* We change all SOURCE_PLAYED to SOURCE_PLAYING */
-    for (auto& buffer : buffers) {
-        if (buffer->state == SOURCE_PLAYED)
-            buffer->state = SOURCE_PLAYING;
+    for (auto& source : sources) {
+        source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
     /* TEMP! WAV output */
