@@ -22,6 +22,10 @@
 
 #include <vector>
 #include "AudioBuffer.h"
+extern "C" {
+#include <libavresample/avresample.h>
+}
+#include <sndfile.hh>
 
 enum SourceType {
     SOURCE_UNDETERMINED,
@@ -68,6 +72,12 @@ class AudioSource
 
         /* Indicate the current position in the buffer queue */
         int queue_index;
+
+        /* Context for resampling audio */
+        AVAudioResampleContext *avr;
+
+        /* Temporary! Sound file handle */
+        SndfileHandle file;
 
         /* Returns the number of buffers in its queue
          * that were not processed (not read until the end),

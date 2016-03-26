@@ -35,7 +35,7 @@ static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int
 
 AudioContext::AudioContext(void)
 {
-    outVolume = 1; // Not sure it is default value
+    outVolume = 1.0f;
     outBitDepth = 16;
     outNbChannels = 2;
     outFrequency = 44100;
