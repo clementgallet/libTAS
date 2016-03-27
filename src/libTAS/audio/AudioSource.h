@@ -51,6 +51,11 @@ class AudioSource
         /* Position inside the buffer, in bytes */
         int position;
 
+        /* Because we must read an aligned number of bytes,
+         * we must keep track of the difference and correct when necessary
+         */
+        int align_rest;
+
         /* Volume of the source.
          * Can be larger than 1 but output volume will be clamped to one */
         float volume;

@@ -153,7 +153,11 @@ AudioSource* AudioContext::getSource(int id)
 void AudioContext::mixAllSources(struct timespec ticks)
 {
     int outBytes = ticksToBytes(ticks, outBitDepth, outNbChannels, outFrequency);
-    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing ", outBytes, " of buffers");
+    /* Add an extra to take into account extra samples in source because of alignment.
+     * FIXME: probably not the right amount...
+     */
+    outBytes += outNbChannels * outBitDepth / 8;
+    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
 
     /* Silent the output buffer */
     if (outBitDepth == 8) // Unsigned 8-bit samples
