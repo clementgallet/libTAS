@@ -26,10 +26,10 @@
 AudioContext audiocontext;
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
-static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int frequency)
+static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
     uint64_t nsecs = ((uint64_t) ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
-    uint64_t bytes = (nsecs * (bitDepth / 8) * nbChannels * frequency) / 1000000000;
+    uint64_t bytes = (nsecs * alignSize * frequency) / 1000000000;
     return (int) bytes;
 }
 
@@ -38,6 +38,7 @@ AudioContext::AudioContext(void)
     outVolume = 1.0f;
     outBitDepth = 16;
     outNbChannels = 2;
+    outAlignSize = 4;
     outFrequency = 44100;
     
     /* TEMP! WAV out */
@@ -152,11 +153,11 @@ AudioSource* AudioContext::getSource(int id)
 
 void AudioContext::mixAllSources(struct timespec ticks)
 {
-    int outBytes = ticksToBytes(ticks, outBitDepth, outNbChannels, outFrequency);
+    int outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
     /* Add an extra to take into account extra samples in source because of alignment.
      * FIXME: probably not the right amount...
      */
-    outBytes += outNbChannels * outBitDepth / 8;
+    outBytes += outAlignSize;
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
 
     /* Silent the output buffer */

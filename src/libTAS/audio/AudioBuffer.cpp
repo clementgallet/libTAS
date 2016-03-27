@@ -23,7 +23,8 @@ AudioBuffer::AudioBuffer(void)
 {
     id = 0;
     bitDepth = 16;
-    nbChannels = 1;
+    nbChannels = 2;
+    alignSize = 4;
     frequency = 0;
     size = 0;
     processed = false;

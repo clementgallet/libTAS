@@ -145,6 +145,7 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     /* Fill the buffer informations */
     ab->size = size;
     ab->frequency = freq;
+    ab->alignSize = align;
     switch(format) {
         case AL_FORMAT_MONO8:
             ab->bitDepth = 8;
@@ -373,6 +374,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 as->queue_index = 0;
                 as->source = SOURCE_UNDETERMINED;
                 as->position = 0;
+                as->align_rest = 0;
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
@@ -386,6 +388,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 as->queue_index = 0;
                 as->source = SOURCE_STATIC;
                 as->position = 0;
+                as->align_rest = 0;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;

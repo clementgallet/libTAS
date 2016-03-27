@@ -37,6 +37,9 @@ class AudioBuffer
         /* Number of channels of the buffer */
         int nbChannels;
 
+        /* Size of a single sample (chan * bitdepth / 8) */
+        int alignSize;
+
         /* Frequency of buffer in Hz */
         int frequency;
 

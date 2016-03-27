@@ -116,7 +116,7 @@ void AudioSource::setPosition(int pos)
             /* We set the position in this buffer */
 
             /* Fix unaligned position */
-            localPos -= localPos % (ab->nbChannels * ab->bitDepth / 8);
+            localPos -= localPos % ab->alignSize;
             position = localPos;
             ab->processed = false;
             localPos = -1;
@@ -199,8 +199,7 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
 
     /* Number of bytes to advance in the buffer samples */
     int inBytes = ticksToBytes(ticks, curBuf->bitDepth, curBuf->nbChannels, curBuf->frequency) + align_rest;
-    int align = curBuf->nbChannels * (curBuf->bitDepth / 8);
-    align_rest = inBytes % align;
+    align_rest = inBytes % curBuf->alignSize;
     inBytes -= align_rest;
 
     int oldPosition = position;
@@ -208,10 +207,9 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
 
     /* Allocate the mixed audio array */
     uint8_t* mixedSamples;
-    int linesize;
-    int inNSamples = inBytes / (curBuf->nbChannels * curBuf->bitDepth / 8);
+    int inNSamples = inBytes / curBuf->alignSize;
     int outNSamples = outBytes / (outNbChannels * outBitDepth / 8);
-    av_samples_alloc(&mixedSamples, &linesize, outNbChannels, outNSamples, outFormat, 0);
+    av_samples_alloc(&mixedSamples, nullptr, outNbChannels, outNSamples, outFormat, 0);
 
     int convOutSamples = 0;
     uint8_t* begSamples = &curBuf->samples[oldPosition];
@@ -225,7 +223,7 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
     else {
         /* We reached the end of the buffer */
 
-        int nSamples = (curBuf->size - oldPosition) / (curBuf->nbChannels * curBuf->bitDepth / 8);
+        int nSamples = (curBuf->size - oldPosition) / curBuf->alignSize;
         avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
 
         int remainingBytes = inBytes - (curBuf->size - oldPosition);
@@ -239,13 +237,13 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
                 AudioBuffer* loopbuf = buffer_queue[i];
                 begSamples = &loopbuf->samples[0];
                 if (remainingBytes > loopbuf->size) {
-                    nSamples = loopbuf->size / (loopbuf->nbChannels * loopbuf->bitDepth / 8);
+                    nSamples = loopbuf->size / loopbuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
                     loopbuf->processed = true; // Are buffers in a loop ever processed??
                     remainingBytes -= loopbuf->size;
                 }
                 else {
-                    nSamples = loopbuf->size / (loopbuf->nbChannels * loopbuf->bitDepth / 8);
+                    nSamples = loopbuf->size / loopbuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
                     finalIndex = i;
                     finalPos = remainingBytes;
@@ -258,13 +256,13 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
                 AudioBuffer* loopbuf = buffer_queue[i];
                 begSamples = &loopbuf->samples[0];
                 if (remainingBytes > loopbuf->size) {
-                    nSamples = loopbuf->size / (loopbuf->nbChannels * loopbuf->bitDepth / 8);
+                    nSamples = loopbuf->size / loopbuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
                     loopbuf->processed = true;
                     remainingBytes -= loopbuf->size;
                 }
                 else {
-                    nSamples = loopbuf->size / (loopbuf->nbChannels * loopbuf->bitDepth / 8);
+                    nSamples = loopbuf->size / loopbuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
                     finalIndex = i;
                     finalPos = remainingBytes;
@@ -279,6 +277,7 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
         if (remainingBytes > 0) {
             /* We reached the end of the buffer queue */
             position = 0;
+            align_rest = 0;
             queue_index = 0;
             state = SOURCE_STOPPED;
             avresample_close(avr);

@@ -41,6 +41,9 @@ class AudioContext
         /* Number of channels of the buffer */
         int outNbChannels;
 
+        /* Size of a sample (chan * bitdepth / 8) */
+        int outAlignSize;
+
         /* Frequency of buffer in Hz */
         int outFrequency;
 
