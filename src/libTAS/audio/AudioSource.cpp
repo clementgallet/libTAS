@@ -18,7 +18,6 @@
  */
 
 #include "AudioSource.h"
-#include "audiomixing.h"
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::copy
 #include "../logging.h"

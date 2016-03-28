@@ -39,7 +39,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     return ts.tv_sec;
 }
 
-/* Override */ int gettimeofday(struct timeval* tv, __attribute__ ((unused)) void* tz)
+/* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
 {
     //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
     struct timespec ts = detTimer.getTicks(TIMETYPE_UNTRACKED);

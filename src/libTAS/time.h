@@ -59,7 +59,7 @@ OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp);
 OVERRIDE int usleep(useconds_t usec);
 OVERRIDE int nanosleep (const struct timespec *requested_time, struct timespec *remaining);
 OVERRIDE time_t time(time_t* t);
-OVERRIDE int gettimeofday(struct timeval* tv, void* tz);
+OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) throw();
 OVERRIDE void SDL_Delay(Uint32 sleep);
 OVERRIDE Uint32 SDL_GetTicks(void);
 OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);

@@ -19,6 +19,7 @@
 
 #include "../logging.h"
 #include "AudioContext.h"
+#include "AudioPlayer.h"
 
 #define MAXBUFFERS 2048 // TODO: put correct value
 #define MAXSOURCES 256
@@ -153,7 +154,7 @@ AudioSource* AudioContext::getSource(int id)
 
 void AudioContext::mixAllSources(struct timespec ticks)
 {
-    int outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
+    outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
     /* Add an extra to take into account extra samples in source because of alignment.
      * FIXME: probably not the right amount...
      */
@@ -173,11 +174,16 @@ void AudioContext::mixAllSources(struct timespec ticks)
             minNSamples = (sourceNSamples < minNSamples) ? sourceNSamples : minNSamples;
     }
 
+	/* Save the actual number of sample bytes */
+	outBytes = minNSamples * outAlignSize;
+
     /* TEMP! WAV output */
     if (outBitDepth == 8)
         file.writeRaw((void*)&outSamples[0], minNSamples * outNbChannels);
     if (outBitDepth == 16)
         file.writef((int16_t*)&outSamples[0], minNSamples);
+
+	audioplayer.play(*this);
 }
 
 
