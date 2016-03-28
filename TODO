@@ -38,8 +38,10 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
 - Dump audio
--- Buggy sound for now
--- Should we use libavresample for converting samples to the right format?
+-- Queued buffers are played twice
+-- Need to actually play the audio
+-- Redirect to the dump script
+-- Support compressed formats (MSADPCM)
 
 ## Done
 

@@ -166,13 +166,18 @@ void AudioContext::mixAllSources(struct timespec ticks)
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
 
+    int minNSamples = 1 + outBytes / outAlignSize;
     for (auto& source : sources) {
-        source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
+        int sourceNSamples = source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
+        if (sourceNSamples > 0)
+            minNSamples = (sourceNSamples < minNSamples) ? sourceNSamples : minNSamples;
     }
 
     /* TEMP! WAV output */
+    if (outBitDepth == 8)
+        file.writeRaw((void*)&outSamples[0], minNSamples * outNbChannels);
     if (outBitDepth == 16)
-        file.write((int16_t*)&outSamples[0], outBytes/2);
+        file.writef((int16_t*)&outSamples[0], minNSamples);
 }
 
 

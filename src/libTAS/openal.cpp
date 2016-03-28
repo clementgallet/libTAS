@@ -717,12 +717,18 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
         return;
 
     /* Check if we can unqueue that number of buffers */
-    int processedBuffers = as->nbQueueProcessed();
+    int processedBuffers;
+    if (as->state == SOURCE_STOPPED)
+        processedBuffers = as->nbQueue();
+    else
+        processedBuffers = as->nbQueueProcessed();
     if (processedBuffers < n) {
         ALSETERROR(AL_INVALID_VALUE);
         return;
     }
 
+    debuglog(LCF_OPENAL, "Unqueueing ", n, " buffers out of ", as->nbQueue());
+    
     /* Save the id of the unqueued buffers */
     for (int i=0; i<n; i++) {
         buffers[i] = as->buffer_queue[i]->id;
@@ -732,7 +738,8 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
      * TODO: This is slow on a vector, maybe use forward_list?
      */
     as->buffer_queue.erase(as->buffer_queue.begin(), as->buffer_queue.begin()+n);
-    as->queue_index -= n;
+    if (as->state != SOURCE_STOPPED)
+        as->queue_index -= n;
 }
 
 /*** Listener ***/

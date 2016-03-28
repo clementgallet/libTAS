@@ -35,23 +35,6 @@ static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int
     return (int) bytes;
 }
 
-void gen_random(char *s, const int len) {
-    static const char alphanum[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-
-    for (int i = 0; i < len-4; ++i) {
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
-    }
-
-    s[len-4] = '.';
-    s[len-3] = 'w';
-    s[len-2] = 'a';
-    s[len-1] = 'v';
-    s[len] = '\0';
-}
-
 AudioSource::AudioSource(void)
 {
     id = 0;
@@ -129,14 +112,13 @@ void AudioSource::setPosition(int pos)
     }
 }
 
-void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
+int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
-    //debuglog(LCF_SOUND | LCF_FRAME, "Start mixing buffer ", id, " of state ", state);
     if (state != SOURCE_PLAYING)
-        return;
+        return -1;
 
     if (buffer_queue.empty())
-        return;
+        return -1;
 
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing source ", id);
 
@@ -177,13 +159,6 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
 
         /* Open the context */
         avresample_open(avr);
-
-        /* Init the WAV out */
-        char filename[13];
-        gen_random(filename, 12);
-        filename[0] = curBuf->nbChannels == 1 ? 'm' : 's';
-        filename[1] = curBuf->bitDepth == 8 ? '8' : '6';
-        file = SndfileHandle(filename, SFM_WRITE, SF_FORMAT_WAV | ((outBitDepth==16)?SF_FORMAT_PCM_16:SF_FORMAT_PCM_U8), outNbChannels, outFrequency);
     }
 
     /* Mixing source volume and master volume.
@@ -208,7 +183,8 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
     /* Allocate the mixed audio array */
     uint8_t* mixedSamples;
     int inNSamples = inBytes / curBuf->alignSize;
-    int outNSamples = outBytes / (outNbChannels * outBitDepth / 8);
+    int outAlignSize = (outNbChannels * outBitDepth / 8);
+    int outNSamples = outBytes / outAlignSize;
     av_samples_alloc(&mixedSamples, nullptr, outNbChannels, outNSamples, outFormat, 0);
 
     int convOutSamples = 0;
@@ -291,9 +267,43 @@ void AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBy
         }
     }
 
-    if (outBitDepth == 8)
-        file.writeRaw((void*)mixedSamples, std::max(convOutSamples*outNbChannels, outBytes));
-    if (outBitDepth == 16)
-        file.writef((int16_t*)mixedSamples, std::max(convOutSamples, outNSamples));
+    int nSamples = std::min(convOutSamples, outNSamples);
+
+#define clamptofullsignedrange(x,lo,hi) (((unsigned int)((x)-(lo))<=(unsigned int)((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
+
+    /* Add mixed source to the output buffer */
+    if (outBitDepth == 8) {
+        for (int s=0; s<nSamples*outNbChannels; s+=outNbChannels) {
+            int myL = ((uint8_t*)mixedSamples)[s];
+            int otherL = ((uint8_t*)outSamples)[s];
+            int sumL = otherL + ((myL * lvas) >> 16) - 256;
+            ((uint8_t*)outSamples)[s] = clamptofullsignedrange(sumL, 0, (1<<8)-1);
+
+            if (outNbChannels == 2) {
+                int myR = ((uint8_t*)mixedSamples)[s+1];
+                int otherR = ((uint8_t*)outSamples)[s+1];
+                int sumR = otherR + ((myR * rvas) >> 16);
+                ((uint8_t*)outSamples)[s+1] = clamptofullsignedrange(sumR, 0, (1<<8)-1);
+            }
+        }
+    }
+
+    if (outBitDepth == 16) {
+        for (int s=0; s<nSamples*outNbChannels; s+=outNbChannels) {
+            int myL = ((int16_t*)mixedSamples)[s];
+            int otherL = ((int16_t*)outSamples)[s];
+            int sumL = otherL + ((myL * lvas) >> 16);
+            ((int16_t*)outSamples)[s] = clamptofullsignedrange(sumL, -(1<<15), (1<<15)-1);
+
+            if (outNbChannels == 2) {
+                int myR = ((int16_t*)mixedSamples)[s+1];
+                int otherR = ((int16_t*)outSamples)[s+1];
+                int sumR = otherR + ((myR * rvas) >> 16);
+                ((int16_t*)outSamples)[s+1] = clamptofullsignedrange(sumR, -(1<<15), (1<<15)-1);
+            }
+        }
+    }
+
+    return nSamples;
 }
 

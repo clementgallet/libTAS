@@ -25,7 +25,6 @@
 extern "C" {
 #include <libavresample/avresample.h>
 }
-#include <sndfile.hh>
 
 enum SourceType {
     SOURCE_UNDETERMINED,
@@ -81,9 +80,6 @@ class AudioSource
         /* Context for resampling audio */
         AVAudioResampleContext *avr;
 
-        /* Temporary! Sound file handle */
-        SndfileHandle file;
-
         /* Returns the number of buffers in its queue
          * that were not processed (not read until the end),
          * not counting itself.
@@ -117,10 +113,9 @@ class AudioSource
 
         /* Mix the buffer with an external buffer of the given format.
          * The number of samples to mix correspond to the number of ticks given.
-         * This function is just preparing the buffer to be mixed,
-         * the actual mixing is done in an external function.
+         * The function returns the number of samples written in the output buffer.
          */
-        void mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
+        int mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
 };
 
 #endif
