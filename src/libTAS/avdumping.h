@@ -17,15 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DUMPVIDEO_H_INCL
-#define DUMPVIDEO_H_INCL
+#ifndef AVDUMPING_H_INCL
+#define AVDUMPING_H_INCL
 
-#ifdef LIBTAS_DUMP
+#ifndef LIBTAS_DISABLE_AVDUMPING
 
+#include <string>
 
-int openVideoDump(void* window, int video_opengl, char* filename);
+int openAVDumping(void* window, int video_opengl, std::string filename);
 int encodeOneFrame(unsigned long fcounter, void* window);
-int closeVideoDump();
+int closeAVDumping();
 
 #endif
 #endif

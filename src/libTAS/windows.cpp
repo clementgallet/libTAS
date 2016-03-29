@@ -22,9 +22,10 @@
 #include "logging.h"
 #include "socket.h"
 #include "../shared/messages.h"
+#include "../shared/tasflags.h"
 #include "frame.h"
-#ifdef LIBTAS_DUMP
-#include "dumpvideo.h"
+#ifndef LIBTAS_DISABLE_AVDUMPING
+#include "avdumping.h"
 #endif
 
 /* 
@@ -36,8 +37,7 @@ SDL_Window* gameWindow = nullptr;
 /* Has the game window pointer be sent to the program? */
 bool gw_sent = 0;
 
-/* Does SDL use OpenGL for display? */
-bool video_opengl = 0;
+std::string dumpfile;
 
 /* Original function pointers */
 void(* SDL_GL_SwapWindow_real)(SDL_Window* window);
@@ -86,27 +86,16 @@ void (*SDL_GL_SwapBuffers_real)(void);
 
     SDL_GL_SwapWindow_real(window);
 
-#ifdef LIBTAS_DUMP
-    /* Dumping audio and video if needed */
-    static int dump_inited = 0;
-    if (tasflags.av_dumping) {
-        if (! dump_inited) {
-            /* Initializing the video dump */
-            int av = openVideoDump(gameWindow, video_opengl, dumpfile);
-            dump_inited = 1;
-            if (av != 0)
-                /* Init failed, disable AV dumping */
-                tasflags.av_dumping = 0;
-        }
-    }
-
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    /* Dumping audio and video */
     if (tasflags.av_dumping) {
         /* Write the current frame */
         int enc = encodeOneFrame(frame_counter, gameWindow);
-        if (enc != 0)
+        if (enc != 0) {
             /* Encode failed, disable AV dumping */
+            closeAVDumping();
             tasflags.av_dumping = 0;
-
+        }
     }
 #endif
 
@@ -170,9 +159,6 @@ static int swapInterval = 0;
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
-    if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
-        video_opengl = 1;
-
     /* Disable fullscreen */
     flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_FULLSCREEN_DESKTOP*/ 0x00001001;
 
@@ -191,6 +177,20 @@ static int swapInterval = 0;
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
+
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    /* Initializing the video dump */
+    int video_opengl = 0;
+    if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
+        video_opengl = 1;
+
+    int av = openAVDumping(gameWindow, video_opengl, dumpfile);
+    if (av != 0) {
+        /* Init failed, disable AV dumping */
+        tasflags.av_dumping = 0;
+    }
+#endif
+
     return gameWindow;
 }
 
@@ -199,6 +199,10 @@ static int swapInterval = 0;
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    if (tasflags.av_dumping)
+        closeAVDumping();
+#endif
 }
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
@@ -231,8 +235,13 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
+    /* Unused variable for now, but will be useful when
+     * video dumping will be supported for SDL 1.2
+     */
+    int video_opengl = 0;
     if (flags & /*SDL_OPENGL*/ 0x00000002)
         video_opengl = 1;
+
     return SDL_SetVideoMode_real(width, height, bpp, flags);
 }
 

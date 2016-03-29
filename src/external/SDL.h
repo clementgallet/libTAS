@@ -22,7 +22,7 @@
 #ifndef _SDL_h
 #define _SDL_h
 
-#include <inttypes.h> 
+#include <stdint.h> 
 #include <X11/Xlib.h>
 
 #define SDL_INIT_TIMER          0x00000001

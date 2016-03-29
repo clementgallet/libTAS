@@ -15,6 +15,14 @@ To enable video dumping, you will need:
 - libavutil
 - libswscale
 
+To enable audio dumping or audio playback, you will need:
+
+- libavresample
+
+To enable audio playback, you will also need:
+
+- libpulse-simple
+
 To enable HUD on top of the game screen, you will need:
 
 - libfreetype
@@ -25,7 +33,7 @@ Be careful that you must compile your code in the same arch as the game. Type `m
 
 This program supports for now only games based on the SDL library. You must give the path to the SDL lib generally bundled with the game.
 
-```./run.sh -s sdlpath gameexecutable \[game commandline arguments\]```
+```./run.sh gameexecutable [game_commandline_arguments]```
 
 For now, what you can do is:
 

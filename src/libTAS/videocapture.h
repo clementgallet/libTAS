@@ -17,18 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_H_INCLUDED
-#define LIBTAS_H_INCLUDED
+#ifndef VIDEOCAPTURE_H_INCL
+#define VIDEOCAPTURE_H_INCL
 
-#include "../external/SDL.h"
-#include "global.h"
+#ifndef LIBTAS_DISABLE_AVDUMPING
 
-void __attribute__((constructor)) init(void);
-void __attribute__((destructor)) term(void);
+#include <stdint.h>
 
-OVERRIDE void SDL_Init(unsigned int flags);
-OVERRIDE int SDL_InitSubSystem(Uint32 flags);
-OVERRIDE void SDL_Quit(void);
+int initVideoCapture(void* window, int video_opengl, int *pwidth, int *pheight);
+int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride[]);
 
-#endif // LIBTAS_H_INCLUDED
+#endif
+#endif
 

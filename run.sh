@@ -54,10 +54,12 @@ do SHLIBS="$SHLIBS -l $lib"
 done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
+echo "LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} \"$@\" &"
 LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} "$@" &
 cd - > /dev/null
 sleep 1
 
 # Launch the TAS program
+echo "./bin/linTAS $SHLIBS $movieopt"
 ./bin/linTAS $SHLIBS $movieopt
 

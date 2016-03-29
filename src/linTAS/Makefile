@@ -1,6 +1,6 @@
 CC=g++
 WARNINGS=-Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow
-CFLAGS=-std=gnu++11 -c -g $(TARCH)
+CFLAGS=-std=gnu++11 -c -g $(TARCH) $(DEFS)
 LDFLAGS=-lX11 $(TARCH)
 SRCS=$(wildcard *.cpp) $(wildcard ../shared/*.cpp)
 OBJS=$(SRCS:.cpp=.o)

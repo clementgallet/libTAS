@@ -42,8 +42,6 @@
 TTF_Font *font = NULL;
 #endif
 
-char* dumpfile = NULL;
-
 /* Function pointers to real functions */
 void (*SDL_Init_real)(unsigned int flags);
 int (*SDL_InitSubSystem_real)(Uint32 flags);
@@ -51,6 +49,7 @@ void (*SDL_Quit_real)(void);
 
 void __attribute__((constructor)) init(void)
 {
+    debuglog(LCF_ERROR, "Constructor");
     bool didConnect = initSocket();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
@@ -97,9 +96,9 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 size_t str_len;
                 receiveData(&str_len, sizeof(size_t));
-                dumpfile = new char[str_len+1];
-                receiveData(dumpfile, str_len * sizeof(char));
-                dumpfile[str_len] = '\0';
+                buf.resize(str_len, 0x00);
+                receiveData(&(buf[0]), str_len);
+                dumpfile.assign(&(buf[0]), buf.size());
                 break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
@@ -215,10 +214,6 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, __func__, " call.");
     sendMessage(MSGB_QUIT);
-#ifdef LIBTAS_DUMP
-    if (tasflags.av_dumping)
-        closeVideoDump();
-#endif
     SDL_Quit_real();
 }
 

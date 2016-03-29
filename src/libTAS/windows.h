@@ -22,11 +22,15 @@
 
 #include "global.h"
 #include "../external/SDL.h"
+#include <string>
 
 typedef void SDL_Window;
 
 extern void* gameWindow;
 extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
+
+/* Filename of the AV encode */
+extern std::string dumpfile;
 
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
