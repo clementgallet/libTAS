@@ -20,7 +20,7 @@
 #include "tasflags.h"
 
 //struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_FREQUENT | LCF_FRAME, 0, 0};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_FREQUENT | LCF_FRAME, 0, 60, 1};
+//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_NONE, 0, 60, 1};
 struct TasFlags tasflags = {0, 1, -1, 0, LCF_OPENAL | LCF_SOUND, LCF_NONE, 0, 60, 1};
 //struct TasFlags tasflags = {0, 1, -1, 0, LCF_JOYSTICK, LCF_NONE, 0, 60};
 //struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_NONE, 0, 60};

@@ -20,6 +20,7 @@
 - Deal with keyboard mapping and stuff
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Make the code thread safe
+- Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
 
 ## Partially done
 
@@ -39,9 +40,10 @@
 - Process and filter SDL events
 - Dump audio
 -- Queued buffers are played twice
--- Need to actually play the audio
+-- Playing the audio disabled fastforward
 -- Redirect to the dump script
 -- Support compressed formats (MSADPCM)
+-- Volume tuning does not work (SMB)
 
 ## Done
 

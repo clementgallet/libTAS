@@ -346,7 +346,8 @@ typedef void ALvoid;
 /** Context string: Space-separated extension list. */
 #define AL_EXTENSIONS                            0xB004
 
-OVERRIDE void* alcOpenDevice(const char* devicename);
+/*** OpenAL functions ***/
+
 OVERRIDE ALenum alGetError(ALvoid);
 
 /** Create Buffer objects */

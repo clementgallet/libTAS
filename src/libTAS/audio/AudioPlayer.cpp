@@ -73,7 +73,7 @@ bool AudioPlayer::play(AudioContext& ac)
     }
 
     int latency = pa_simple_get_latency(pa_s, nullptr);
-    debuglog(LCF_SOUND | LCF_ERROR, "Latency is ", latency, " us");
+    debuglog(LCF_SOUND, "Latency is ", latency, " us");
 
     return true;
 }
