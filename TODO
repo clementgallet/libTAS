@@ -40,10 +40,8 @@
 - Process and filter SDL events
 - Dump audio
 -- Queued buffers are played twice
--- Playing the audio disabled fastforward
 -- Redirect to the dump script
 -- Support compressed formats (MSADPCM)
--- Volume tuning does not work (SMB)
 
 ## Done
 

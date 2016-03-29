@@ -19,6 +19,7 @@
 
 #include "../logging.h"
 #include "AudioPlayer.h"
+#include "../../shared/tasflags.h"
 
 AudioPlayer audioplayer;
 
@@ -67,13 +68,19 @@ bool AudioPlayer::play(AudioContext& ac)
         inited = true;
     }
 
-    if (pa_simple_write(pa_s, (void*)&ac.outSamples[0], ac.outBytes, NULL) < 0) {
-        debuglog(LCF_SOUND | LCF_ERROR, "pa_simple_new() failed");
-        return false;
-    }
-
     int latency = pa_simple_get_latency(pa_s, nullptr);
     debuglog(LCF_SOUND, "Latency is ", latency, " us");
+
+    /* If we are fast-forwarding, we don't want to fill the audio buffer,
+     * otherwise the pulseaudio server would ask us to wait for the buffer to be processed
+     */
+    if (tasflags.fastforward)
+        return true;
+
+    if (pa_simple_write(pa_s, (void*)&ac.outSamples[0], ac.outBytes, NULL) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "pa_simple_write() failed");
+        return false;
+    }
 
     return true;
 }

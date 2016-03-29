@@ -167,9 +167,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
      *
      * TODO: This is where we can support panning.
      */
-    float resultVolume = std::max(1.0f, volume * outVolume);
-    int lvas = (int)(resultVolume * 65536);
-    int rvas = (int)(resultVolume * 65536);
+    float resultVolume = (volume * outVolume) > 1.0?1.0:(volume*outVolume);
+    int lvas = (int)(resultVolume * 65536.0f);
+    int rvas = (int)(resultVolume * 65536.0f);
 
     /* Number of bytes to advance in the buffer samples */
     int inBytes = ticksToBytes(ticks, curBuf->bitDepth, curBuf->nbChannels, curBuf->frequency) + align_rest;
