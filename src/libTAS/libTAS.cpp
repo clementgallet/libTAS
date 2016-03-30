@@ -37,6 +37,9 @@
 #include "hook.h"
 #include "inputs.h"
 
+/* Did we call our constructor? */
+bool libTAS_init = false;
+
 #ifdef LIBTAS_HUD
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
@@ -47,9 +50,8 @@ void (*SDL_Init_real)(unsigned int flags);
 int (*SDL_InitSubSystem_real)(Uint32 flags);
 void (*SDL_Quit_real)(void);
 
-void __attribute__((constructor)) init(void)
+void __attribute__((constructor (101))) init(void)
 {
-    debuglog(LCF_ERROR, "Constructor");
     bool didConnect = initSocket();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
@@ -126,6 +128,7 @@ void __attribute__((constructor)) init(void)
     nonDetTimer.initialize();
     detTimer.initialize();
 
+    libTAS_init = true;
 
 }
 

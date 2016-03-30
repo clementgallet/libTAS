@@ -59,6 +59,11 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
+    if (!libTAS_init) {
+        tp->tv_sec = 0;
+        tp->tv_nsec = 0;
+        return 0;
+    }
     *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
     //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
     //clock_gettime_real(clock_id, tp);

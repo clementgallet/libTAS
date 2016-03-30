@@ -17,11 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBTAS_GLOBAL_H_INCL
+#define LIBTAS_GLOBAL_H_INCL
+
 /* Include this file in every source code that override functions of the game */
 
 #if __GNUC__ >= 4
     #define OVERRIDE extern "C" __attribute__ ((visibility ("default")))
 #else
     #define OVERRIDE extern "C"
+#endif
+
+/* Some code may be executed before we ever have time to call our constructor,
+ * so we keep track of this
+ * Definition is in libTAS.cpp
+ */
+extern bool libTAS_init;
+
 #endif
 

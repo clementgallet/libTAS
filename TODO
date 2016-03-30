@@ -21,6 +21,7 @@
 - Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Make the code thread safe
 - Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
+-- Also use this to detect if some code is executed before we had a chance to call our lib init function
 
 ## Partially done
 
