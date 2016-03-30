@@ -335,7 +335,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 as->queue_index = 0;
                 as->source = SOURCE_UNDETERMINED;
                 as->position = 0;
-                as->align_rest = 0;
+                as->samples_frac = 0;
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
@@ -349,7 +349,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 as->queue_index = 0;
                 as->source = SOURCE_STATIC;
                 as->position = 0;
-                as->align_rest = 0;
+                as->samples_frac = 0;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;

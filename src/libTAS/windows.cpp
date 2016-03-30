@@ -172,7 +172,7 @@ static int swapInterval = 0;
         video_opengl = 1;
 
     if (tasflags.av_dumping) {
-        int av = openAVDumping(gameWindow, video_opengl, dumpfile);
+        int av = openAVDumping(gameWindow, video_opengl, dumpfile, frame_counter);
         if (av != 0) {
             /* Init failed, disable AV dumping */
             tasflags.av_dumping = 0;

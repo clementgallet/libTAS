@@ -29,8 +29,15 @@ AudioContext audiocontext;
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
+    static int64_t samples_frac = 0;
     uint64_t nsecs = ((uint64_t) ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
-    uint64_t bytes = (nsecs * alignSize * frequency) / 1000000000;
+    uint64_t samples = (nsecs * frequency) / 1000000000;
+    samples_frac += (nsecs * frequency) % 1000000000;
+    if (samples_frac >= 500000000) {
+        samples_frac -= 1000000000;
+        samples++;
+    }
+    uint64_t bytes = samples * alignSize;
     return (int) bytes;
 }
 
@@ -41,9 +48,6 @@ AudioContext::AudioContext(void)
     outNbChannels = 2;
     outAlignSize = 4;
     outFrequency = 44100;
-    
-    /* TEMP! WAV out */
-    file = SndfileHandle("test.wav", SFM_WRITE, SF_FORMAT_WAV | SF_FORMAT_PCM_16, outNbChannels, outFrequency);
 }
 
 int AudioContext::createBuffer(void)
@@ -160,7 +164,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
      * FIXME: actually, set the correct value here, and too bad if a source does not fill it entirely,
      * otherwise, this will probably cause av desync.
      */
-    outBytes += outAlignSize;
+    //outBytes += outAlignSize;
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
 
     /* Silent the output buffer */
@@ -169,25 +173,11 @@ void AudioContext::mixAllSources(struct timespec ticks)
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
 
-    int minNSamples = 1 + outBytes / outAlignSize;
     for (auto& source : sources) {
-        int sourceNSamples = source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
-        if (sourceNSamples > 0)
-            minNSamples = (sourceNSamples < minNSamples) ? sourceNSamples : minNSamples;
+        source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
 	/* Save the actual number of samples and size */
-	outNbSamples = minNSamples;
-	outBytes = minNSamples * outAlignSize;
-
-    /* TEMP! WAV output */
-    if (outBitDepth == 8)
-        file.writeRaw((void*)&outSamples[0], minNSamples * outNbChannels);
-    if (outBitDepth == 16)
-        file.writef((int16_t*)&outSamples[0], minNSamples);
-
-	audioplayer.play(*this);
+	outNbSamples = outBytes / outAlignSize;
 }
-
-
 

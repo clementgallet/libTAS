@@ -27,10 +27,16 @@ extern "C" {
 #include <stdlib.h>
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
-static int ticksToBytes(struct timespec ticks, int bitDepth, int nbChannels, int frequency)
+int AudioSource::ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
     uint64_t nsecs = ((uint64_t) ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
-    uint64_t bytes = (nsecs * (bitDepth / 8) * nbChannels * frequency) / 1000000000;
+    uint64_t samples = (nsecs * frequency) / 1000000000;
+    samples_frac += (nsecs * frequency) % 1000000000;
+    if (samples_frac >= 500000000) {
+        samples_frac -= 1000000000;
+        samples++;
+    }
+    uint64_t bytes = samples * alignSize;
     return (int) bytes;
 }
 
@@ -38,7 +44,7 @@ AudioSource::AudioSource(void)
 {
     id = 0;
     position = 0;
-    align_rest = 0;
+    samples_frac = 0;
     volume = 1.0f;
     source = SOURCE_UNDETERMINED;
     looping = false;
@@ -100,6 +106,7 @@ void AudioSource::setPosition(int pos)
             /* Fix unaligned position */
             localPos -= localPos % ab->alignSize;
             position = localPos;
+            samples_frac = 0;
             ab->processed = false;
             localPos = -1;
         }
@@ -171,10 +178,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int lvas = (int)(resultVolume * 65536.0f);
     int rvas = (int)(resultVolume * 65536.0f);
 
-    /* Number of bytes to advance in the buffer samples */
-    int inBytes = ticksToBytes(ticks, curBuf->bitDepth, curBuf->nbChannels, curBuf->frequency) + align_rest;
-    align_rest = inBytes % curBuf->alignSize;
-    inBytes -= align_rest;
+    /* Number of bytes to advance in the buffer samples.
+     * This number is automatically aligned inside the function.
+    */
+    int inBytes = ticksToBytes(ticks, curBuf->alignSize, curBuf->frequency);
 
     int oldPosition = position;
     int newPosition = position + inBytes;
@@ -183,8 +190,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     uint8_t* mixedSamples;
     int inNSamples = inBytes / curBuf->alignSize;
     int outAlignSize = (outNbChannels * outBitDepth / 8);
-    int outNSamples = outBytes / outAlignSize;
-    av_samples_alloc(&mixedSamples, nullptr, outNbChannels, outNSamples, outFormat, 0);
+    int outNbSamples = outBytes / outAlignSize;
+    av_samples_alloc(&mixedSamples, nullptr, outNbChannels, outNbSamples, outFormat, 0);
 
     int convOutSamples = 0;
     uint8_t* begSamples = &curBuf->samples[oldPosition];
@@ -193,7 +200,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays buffer ", curBuf->id, " in range ", oldPosition, " - ", position);
-        convOutSamples = avresample_convert(avr, &mixedSamples, outNSamples, outNSamples, &begSamples, inNSamples, inNSamples);
+        convOutSamples = avresample_convert(avr, &mixedSamples, outNbSamples, outNbSamples, &begSamples, inNSamples, inNSamples);
     }
     else {
         /* We reached the end of the buffer */
@@ -247,12 +254,12 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         }
 
         /* Get the mixed samples */
-        convOutSamples = avresample_read(avr, &mixedSamples, outNSamples);
+        convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
 
         if (remainingBytes > 0) {
             /* We reached the end of the buffer queue */
             position = 0;
-            align_rest = 0;
+            samples_frac = 0;
             queue_index = 0;
             state = SOURCE_STOPPED;
             avresample_close(avr);
@@ -266,7 +273,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         }
     }
 
-    int nSamples = std::min(convOutSamples, outNSamples);
+    int nSamples = std::min(convOutSamples, outNbSamples);
 
 #define clamptofullsignedrange(x,lo,hi) (((unsigned int)((x)-(lo))<=(unsigned int)((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 

@@ -50,10 +50,10 @@ class AudioSource
         /* Position inside the buffer, in bytes */
         int position;
 
-        /* Because we must read an aligned number of bytes,
-         * we must keep track of the difference and correct when necessary
+        /* Because we might read a non-integer number of samples,
+         * we must keep track of the fractional part
          */
-        int align_rest;
+        int64_t samples_frac;
 
         /* Volume of the source.
          * Can be larger than 1 but output volume will be clamped to one */
@@ -79,6 +79,11 @@ class AudioSource
 
         /* Context for resampling audio */
         AVAudioResampleContext *avr;
+
+        /* Helper function to convert ticks into an aligned number of bytes
+         * in the audio buffer
+         */
+        int ticksToBytes(struct timespec ticks, int alignSize, int frequency);
 
         /* Returns the number of buffers in its queue
          * that were not processed (not read until the end),

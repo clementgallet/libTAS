@@ -41,7 +41,6 @@
 - Process and filter SDL events
 - Dump audio
 -- Queued buffers are played twice
--- Redirect to the dump script
 -- Support compressed formats (MSADPCM)
 
 ## Done

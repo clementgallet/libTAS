@@ -253,7 +253,7 @@ void DeterministicTimer::initialize(void)
 {
     getTimes = 0;
     ticks = {0, 0};
-    fractional_part = tasflags.framerate / 2;
+    fractional_part = 0;
     clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
     lastEnterTicks = ticks;
 

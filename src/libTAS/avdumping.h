@@ -24,7 +24,7 @@
 
 #include <string>
 
-int openAVDumping(void* window, int video_opengl, std::string filename);
+int openAVDumping(void* window, int video_opengl, std::string filename, int start_frame);
 int encodeOneFrame(unsigned long fcounter, void* window);
 int closeAVDumping();
 

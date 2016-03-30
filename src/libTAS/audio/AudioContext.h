@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <forward_list>
-#include <sndfile.hh>
 #include "AudioBuffer.h"
 #include "AudioSource.h"
 
@@ -82,9 +81,6 @@ class AudioContext
 
         /* Mix all source that are playing */
         void mixAllSources(struct timespec ticks);
-
-        /*** Temporary!!! WAV output ***/
-        SndfileHandle file;
 
     private:
         std::forward_list<AudioBuffer*> buffers;

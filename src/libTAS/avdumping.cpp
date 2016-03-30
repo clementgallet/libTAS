@@ -42,9 +42,16 @@ AVFormatContext *formatContext = NULL;
 AVStream* video_st;
 AVStream* audio_st;
 
-uint8_t* audio_samples = NULL;
+/* We save the frame when the dumping begins */
+int start_frame;
 
-int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
+/* The accumulated number of audio samples */
+uint64_t accum_samples;
+
+int openAVDumping(void* window, int video_opengl, std::string dumpfile, int sf) {
+
+    start_frame = sf;
+    accum_samples = 0;
 
     int width, height;
     initVideoCapture(window, video_opengl, &width, &height);
@@ -132,7 +139,6 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
         debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
         return 1;
     }
-    //outputFormat->audio_codec = audio_codec_id;
 
     /* Initialize audio stream */
 
@@ -168,15 +174,6 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open audio codec");
         return 1;
     }
-
-#if 0  
-    /* Allocate audio samples */
-    audio_samples = (uint8_t*)av_malloc(3000);
-    if (!audio_samples) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate audio samples buffer");
-        return 1;
-    }
-#endif
 
     /* Initialize video AVFrame */
 
@@ -233,7 +230,7 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
 }
 
 /*
- * Encode one video frame and send it to the muxer
+ * Encode one frame and send it to the muxer
  * Returns 0 if no error was encountered
  */
 
@@ -262,7 +259,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
         return 1;
     }
 
-    video_frame->pts = fcounter;
+    video_frame->pts = fcounter - start_frame;
 
     /* Encode the image */
     int got_output;
@@ -273,9 +270,10 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
     }
 
     if (got_output) {
-        /* We have an encoder output to write */
-        vpkt.pts = fcounter; // TODO: check this value
-        vpkt.dts = fcounter; // TODO: check this value
+        /* Rescale output packet timestamp values from codec to stream timebase */
+        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
         vpkt.stream_index = video_st->index;
         if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
@@ -305,9 +303,8 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
     }
 
     audio_frame->nb_samples = frame_size;
-    /* TODO: Set this value correctly. If incorrect, video stream won't show */
-    /* See https://ffmpeg.org/doxygen/trunk/doc_2examples_2muxing_8c-example.html */
-    //audio_frame->pts = fcounter;
+    audio_frame->pts = av_rescale_q(accum_samples, (AVRational){1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
+    accum_samples += frame_size;
 
     avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
                                              &audiocontext.outSamples[0], frame_size*audiocontext.outAlignSize, 1);
@@ -320,6 +317,9 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
 
     if (got_output) {
         /* We have an encoder output to write */
+        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
         apkt.stream_index = audio_st->index;
         if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
