@@ -50,6 +50,9 @@ class AudioContext
         /* Mixed buffer during a frame */
         std::vector<uint8_t> outSamples;
 
+        /* Size of the mixed buffer in samples */
+        int outNbSamples;
+
         /* Size of the mixed buffer in bytes */
         int outBytes;
 

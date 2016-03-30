@@ -18,22 +18,38 @@
  */
 
 #include "frame.h"
-#include "hook.h"
 #include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
 #include "../shared/messages.h"
 #include "inputs.h"
 #include "socket.h"
-#include "time.h"
 #include "libTAS.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
+#include "windows.h" // gameWindow
+#ifndef LIBTAS_DISABLE_AVDUMPING
+#include "avdumping.h"
+#endif
 
 void frameBoundary(void)
 {
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
 
     detTimer.enterFrameBoundary();
+
+    /* Audio mixing is done above, so encode must be called after */
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    /* Dumping audio and video */
+    if (tasflags.av_dumping) {
+        /* Write the current frame */
+        int enc = encodeOneFrame(frame_counter, gameWindow);
+        if (enc != 0) {
+            /* Encode failed, disable AV dumping */
+            closeAVDumping();
+            tasflags.av_dumping = 0;
+        }
+    }
+#endif
 
     sendMessage(MSGB_START_FRAMEBOUNDARY);
     sendData(&frame_counter, sizeof(unsigned long));

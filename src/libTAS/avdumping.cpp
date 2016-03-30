@@ -30,16 +30,19 @@ extern "C" {
 #include "hook.h"
 #include "logging.h"
 #include "videocapture.h"
+#include "audio/AudioContext.h"
 
 FILE *f;
 std::string filename;
-AVFrame *frame;
-AVPacket pkt;
-AVCodecContext *c= NULL;
+AVFrame* video_frame;
+AVFrame* audio_frame;
 struct SwsContext *toYUVctx = NULL;
 AVOutputFormat *outputFormat = NULL;
 AVFormatContext *formatContext = NULL;
 AVStream* video_st;
+AVStream* audio_st;
+
+uint8_t* audio_samples = NULL;
 
 int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
 
@@ -67,27 +70,30 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
     }
     formatContext->oformat = outputFormat;
 
-    /* Initialize AVCodec */
+    /*** Create video stream ***/
 
-    AVCodec *codec = NULL;
+    /* Initialize video AVCodec */
+
+    AVCodec *video_codec = NULL;
     AVCodecID codec_id = AV_CODEC_ID_MPEG4;
     //int codec_id = AV_CODEC_ID_H264;
-    codec = avcodec_find_encoder(codec_id);
-    if (!codec) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Codec not found");
+    video_codec = avcodec_find_encoder(codec_id);
+    if (!video_codec) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
         return 1;
     }
     outputFormat->video_codec = codec_id;
 
     /* Initialize video stream */
 
-    video_st = avformat_new_stream(formatContext, codec);
+    video_st = avformat_new_stream(formatContext, video_codec);
     if (!video_st) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
         return 1;
     }
 
     /* Fill video stream parameters */
+    video_st->id = formatContext->nb_streams - 1;
     video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     video_st->codec->codec_id = codec_id;
 
@@ -109,26 +115,86 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
         av_opt_set(video_st->codec->priv_data, "preset", "slow", 0);
 
     /* Open the codec */
-    if (avcodec_open2(video_st->codec, codec, NULL) < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not open codec");
+    if (avcodec_open2(video_st->codec, video_codec, NULL) < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not open video codec");
         return 1;
     }
     
-   
-    /* Initialize AVFrame */
+    /*** Create audio stream ***/
 
-    frame = av_frame_alloc();
-    if (!frame) {
+    /* Initialize audio AVCodec */
+
+    AVCodec *audio_codec = NULL;
+    AVCodecID audio_codec_id = AV_CODEC_ID_PCM_S16LE;
+    //AVCodecID audio_codec_id = AV_CODEC_ID_VORBIS;
+    audio_codec = avcodec_find_encoder(audio_codec_id);
+    if (!audio_codec) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
+        return 1;
+    }
+    //outputFormat->audio_codec = audio_codec_id;
+
+    /* Initialize audio stream */
+
+    audio_st = avformat_new_stream(formatContext, audio_codec);
+    if (!audio_st) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
+        return 1;
+    }
+
+    /* Fill audio stream parameters */
+
+    audio_st->id = formatContext->nb_streams - 1;
+    audio_st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
+    if (audiocontext.outBitDepth == 8)
+        audio_st->codec->sample_fmt = AV_SAMPLE_FMT_U8;
+    else if (audiocontext.outBitDepth == 16)
+        audio_st->codec->sample_fmt = AV_SAMPLE_FMT_S16;
+    else {
+        debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
+        return 1;
+    }
+    audio_st->codec->bit_rate = 64000;
+    audio_st->codec->sample_rate = audiocontext.outFrequency;
+    audio_st->codec->channels = audiocontext.outNbChannels;
+
+    /* Some formats want stream headers to be separate. */
+
+    if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
+        audio_st->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+
+    /* Open the codec */
+    if (avcodec_open2(audio_st->codec, audio_codec, NULL) < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not open audio codec");
+        return 1;
+    }
+
+#if 0  
+    /* Allocate audio samples */
+    audio_samples = (uint8_t*)av_malloc(3000);
+    if (!audio_samples) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate audio samples buffer");
+        return 1;
+    }
+#endif
+
+    /* Initialize video AVFrame */
+
+    video_frame = av_frame_alloc();
+    if (!video_frame) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate AVFrame");
         return 1;
     }
-    frame->format = video_st->codec->pix_fmt;
-    frame->width  = video_st->codec->width;
-    frame->height = video_st->codec->height;
+    video_frame->format = video_st->codec->pix_fmt;
+    video_frame->width  = video_st->codec->width;
+    video_frame->height = video_st->codec->height;
+
+    /* Initialize audio AVFrame */
+    audio_frame = av_frame_alloc();
 
     /* Allocate the image buffer inside the AVFrame */
 
-    int ret = av_image_alloc(frame->data, frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
+    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
         return 1;
@@ -137,9 +203,9 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
 
     /* Initialize swscale context for pixel format conversion */
 
-    toYUVctx = sws_getContext(frame->width, frame->height,  
+    toYUVctx = sws_getContext(video_frame->width, video_frame->height,  
                               PIX_FMT_RGBA,
-                              frame->width, frame->height, 
+                              video_frame->width, video_frame->height, 
                               PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
@@ -173,6 +239,7 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile) {
 
 int encodeOneFrame(unsigned long fcounter, void* window) {
 
+    /*** Video ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
 
     const uint8_t* orig_plane[4] = {0};
@@ -182,39 +249,83 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
     captureVideoFrame(window, orig_plane, orig_stride);
 
     /* Initialize AVPacket */
-    av_init_packet(&pkt);
-    pkt.data = NULL; // packet data will be allocated by the encoder
-    pkt.size = 0;
-
+    AVPacket vpkt;
+    vpkt.data = NULL;
+    vpkt.size = 0;
+    av_init_packet(&vpkt);
 
     /* Change pixel format to YUV420p and copy it into the AVframe */
     int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
-                frame->height, frame->data, frame->linesize);
-    if (rets != frame->height) {
+                video_frame->height, video_frame->data, video_frame->linesize);
+    if (rets != video_frame->height) {
         debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",rets," rows");
         return 1;
     }
 
-    frame->pts = fcounter;
+    video_frame->pts = fcounter;
 
     /* Encode the image */
     int got_output;
-    int ret = avcodec_encode_video2(video_st->codec, &pkt, frame, &got_output);
+    int ret = avcodec_encode_video2(video_st->codec, &vpkt, video_frame, &got_output);
     if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
+        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding video frame");
         return 1;
     }
 
     if (got_output) {
         /* We have an encoder output to write */
-        pkt.pts = fcounter; // TODO: check this value
-        pkt.dts = fcounter; // TODO: check this value
-        if (av_write_frame(formatContext, &pkt) < 0) {
+        vpkt.pts = fcounter; // TODO: check this value
+        vpkt.dts = fcounter; // TODO: check this value
+        vpkt.stream_index = video_st->index;
+        if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
             return 1;
         }
-        debuglog(LCF_DUMP | LCF_FRAME, "Write frame ",fcounter," (size=",pkt.size,")");
-        av_free_packet(&pkt);
+        av_free_packet(&vpkt);
+    }
+
+    /*** Audio ***/
+    debuglog(LCF_DUMP | LCF_FRAME, "Encode an audio frame");
+
+    /* Initialize AVPacket */
+    AVPacket apkt;
+    apkt.data = NULL;
+    apkt.size = 0;
+    av_init_packet(&apkt);
+
+    int frame_size;
+    if (audio_st->codec->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
+        frame_size = audiocontext.outNbSamples;
+    else {
+        frame_size = audio_st->codec->frame_size;
+        if (frame_size > audiocontext.outNbSamples) {
+            debuglog(LCF_DUMP | LCF_FRAME | LCF_ERROR, "This is bad...");
+            frame_size = audiocontext.outNbSamples;
+        }
+    }
+
+    audio_frame->nb_samples = frame_size;
+    /* TODO: Set this value correctly. If incorrect, video stream won't show */
+    /* See https://ffmpeg.org/doxygen/trunk/doc_2examples_2muxing_8c-example.html */
+    //audio_frame->pts = fcounter;
+
+    avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
+                                             &audiocontext.outSamples[0], frame_size*audiocontext.outAlignSize, 1);
+
+    ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
+    if (ret < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
+        return 1;
+    }
+
+    if (got_output) {
+        /* We have an encoder output to write */
+        apkt.stream_index = audio_st->index;
+        if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+            return 1;
+        }
+        av_free_packet(&apkt);
     }
 
     return 0;
@@ -224,19 +335,26 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
 int closeAVDumping() {
     /* Encode the remaining frames */
     for (int got_output = 1; got_output;) {
-        int ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
+
+        /* Initialize AVPacket */
+        AVPacket vpkt;
+        vpkt.data = NULL;
+        vpkt.size = 0;
+        av_init_packet(&vpkt);
+
+        int ret = avcodec_encode_video2(video_st->codec, &vpkt, NULL, &got_output);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
             return 1;
         }
 
         if (got_output) {
-            if (av_write_frame(formatContext, &pkt) < 0) {
+            if (av_write_frame(formatContext, &vpkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
                 return 1;
             }
-            debuglog(LCF_DUMP | LCF_FRAME, "Write frame -1 (size=", pkt.size, ")");
-            av_free_packet(&pkt);
+            debuglog(LCF_DUMP | LCF_FRAME, "Write frame -1 (size=", vpkt.size, ")");
+            av_free_packet(&vpkt);
         }
     }
 
@@ -246,10 +364,12 @@ int closeAVDumping() {
     /* Free resources */
     avio_close(formatContext->pb);
     avcodec_close(video_st->codec);
+    avcodec_close(audio_st->codec);
     avformat_free_context(formatContext);
     sws_freeContext(toYUVctx);
-    av_freep(&frame->data[0]);
-    av_frame_free(&frame);
+    av_freep(&video_frame->data[0]);
+    av_frame_free(&video_frame);
+    av_frame_free(&audio_frame);
 
     return 0;
 }

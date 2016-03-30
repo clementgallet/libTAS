@@ -1,7 +1,8 @@
 .PHONY: all clean src/libTAS src/linTAS 
 OBJS=$(wildcard src/libTAS/*.o) $(wildcard src/shared/*.o) $(wildcard src/linTAS/*.o) $(wildcard src/external/*.o) 
 
-DEFS=-DLIBTAS_DISABLE_AVDUMPING
+#DEFS=-DLIBTAS_DISABLE_AVDUMPING
+DEFS=
 
 all: 64bit
 

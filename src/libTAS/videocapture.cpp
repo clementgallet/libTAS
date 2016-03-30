@@ -114,6 +114,7 @@ int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride
                 winpixels[pos + p] = glpixels[(size-pos)-pitch + p];
             }
         }
+
     }
 
     else {

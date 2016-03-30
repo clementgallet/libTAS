@@ -86,19 +86,6 @@ void (*SDL_GL_SwapBuffers_real)(void);
 
     SDL_GL_SwapWindow_real(window);
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
-    /* Dumping audio and video */
-    if (tasflags.av_dumping) {
-        /* Write the current frame */
-        int enc = encodeOneFrame(frame_counter, gameWindow);
-        if (enc != 0) {
-            /* Encode failed, disable AV dumping */
-            closeAVDumping();
-            tasflags.av_dumping = 0;
-        }
-    }
-#endif
-
     /* 
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
@@ -184,10 +171,12 @@ static int swapInterval = 0;
     if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
         video_opengl = 1;
 
-    int av = openAVDumping(gameWindow, video_opengl, dumpfile);
-    if (av != 0) {
-        /* Init failed, disable AV dumping */
-        tasflags.av_dumping = 0;
+    if (tasflags.av_dumping) {
+        int av = openAVDumping(gameWindow, video_opengl, dumpfile);
+        if (av != 0) {
+            /* Init failed, disable AV dumping */
+            tasflags.av_dumping = 0;
+        }
     }
 #endif
 

@@ -10,6 +10,7 @@ Usage ()
 
 gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
 movieopt=
+dumpopt=
 
 # Parse command-line arguments
 while [ $# -gt 0 ]
@@ -17,6 +18,9 @@ do
     case "$1" in
     -h | --help)    Usage
                     exit
+                    ;;
+    -d | --dump)    shift
+                    dumpopt="-d $1"
                     ;;
     -r | --read)    shift
                     movieopt="-r $1"
@@ -54,12 +58,12 @@ do SHLIBS="$SHLIBS -l $lib"
 done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
-echo "LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} \"$@\" &"
+echo "LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} $@ &"
 LD_PRELOAD=$OLDPWD/bin/libTAS.so ./${gamepath##*/} "$@" &
 cd - > /dev/null
 sleep 1
 
 # Launch the TAS program
-echo "./bin/linTAS $SHLIBS $movieopt"
-./bin/linTAS $SHLIBS $movieopt
+echo "./bin/linTAS $SHLIBS $movieopt $dumpopt"
+./bin/linTAS $SHLIBS $movieopt $dumpopt
 

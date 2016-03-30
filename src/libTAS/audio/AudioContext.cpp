@@ -157,6 +157,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
     outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
     /* Add an extra to take into account extra samples in source because of alignment.
      * FIXME: probably not the right amount...
+     * FIXME: actually, set the correct value here, and too bad if a source does not fill it entirely,
+     * otherwise, this will probably cause av desync.
      */
     outBytes += outAlignSize;
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
@@ -174,7 +176,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
             minNSamples = (sourceNSamples < minNSamples) ? sourceNSamples : minNSamples;
     }
 
-	/* Save the actual number of sample bytes */
+	/* Save the actual number of samples and size */
+	outNbSamples = minNSamples;
 	outBytes = minNSamples * outAlignSize;
 
     /* TEMP! WAV output */

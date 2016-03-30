@@ -68,9 +68,10 @@ bool AudioPlayer::play(AudioContext& ac)
         inited = true;
     }
 
+    /*
     int latency = pa_simple_get_latency(pa_s, nullptr);
     debuglog(LCF_SOUND, "Latency is ", latency, " us");
-
+    */
     /* If we are fast-forwarding, we don't want to fill the audio buffer,
      * otherwise the pulseaudio server would ask us to wait for the buffer to be processed
      */
