@@ -170,14 +170,8 @@ void link_pthread(void)
 
 void link_sdlthreads(void)
 {
-    if (SDLver == 1) {
-        LINK_SUFFIX(SDL_CreateThread, "libSDL-1.2");
-        LINK_SUFFIX(SDL_WaitThread, "libSDL-1.2");
-    }
-    if (SDLver == 2) {
-        LINK_SUFFIX(SDL_CreateThread, "libSDL2-2");
-        LINK_SUFFIX(SDL_WaitThread, "libSDL2-2");
-    }
+    LINK_SUFFIX_SDLX(SDL_CreateThread);
+    LINK_SUFFIX_SDLX(SDL_WaitThread);
 }
 
 

@@ -188,15 +188,9 @@ void link_time(void)
 
 void link_sdltime(void)
 {
-    if (SDLver == 1) {
-        LINK_SUFFIX(SDL_AddTimer, "libSDL-1.2");
-        LINK_SUFFIX(SDL_RemoveTimer, "libSDL-1.2");
-        /* TODO: Add SDL 1.2 SetTimer */
-    }
-    if (SDLver == 2) {
-        LINK_SUFFIX(SDL_AddTimer, "libSDL2-2");
-        LINK_SUFFIX(SDL_RemoveTimer, "libSDL2-2");
-    }
+    LINK_SUFFIX_SDLX(SDL_AddTimer);
+    LINK_SUFFIX_SDLX(SDL_RemoveTimer);
+    /* TODO: Add SDL 1.2 SetTimer */
 }
 
 

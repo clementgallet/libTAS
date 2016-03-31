@@ -55,10 +55,12 @@ int initVideoCapture(void* window, int video_opengl, int *pwidth, int *pheight)
     /* Link the required functions, and get the window dimensions */
     if (SDLver == 1) {
         LINK_SUFFIX_SDL1(SDL_GetVideoSurface);
-        LINK_SUFFIX_SDL1(SDL_LockSurface);
-        LINK_SUFFIX_SDL1(SDL_UnlockSurface);
         if (useGL)
             LINK_SUFFIX(glReadPixels, "libGL");
+        else {
+            LINK_SUFFIX_SDL1(SDL_LockSurface);
+            LINK_SUFFIX_SDL1(SDL_UnlockSurface);
+        }
 
         /* Get dimensions from the window surface */
         if (!SDL_GetVideoSurface_real) {

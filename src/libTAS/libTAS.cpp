@@ -36,6 +36,9 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs.h"
+#ifndef LIBTAS_DISABLE_AVDUMPING
+#include "avdumping.h"
+#endif
 
 /* Did we call our constructor? */
 bool libTAS_init = false;
@@ -156,20 +159,13 @@ void __attribute__((destructor)) term(void)
     get_sdlversion();
 
     /* Link function pointers to SDL functions */
-    if (SDLver == 1) {
-        LINK_SUFFIX(SDL_Init, "libSDL-1.2");
-        LINK_SUFFIX(SDL_InitSubSystem, "libSDL-1.2");
-        LINK_SUFFIX(SDL_Quit, "libSDL-1.2");
-    }
-    if (SDLver == 2) {
-        LINK_SUFFIX(SDL_Init, "libSDL2-2");
-        LINK_SUFFIX(SDL_InitSubSystem, "libSDL2-2");
-        LINK_SUFFIX(SDL_Quit, "libSDL2-2");
-    }
+    LINK_SUFFIX_SDLX(SDL_Init);
+    LINK_SUFFIX_SDLX(SDL_InitSubSystem);
+    LINK_SUFFIX_SDLX(SDL_Quit);
 
     link_sdlwindows();
     link_sdlevents();
-	link_sdlthreads();
+    link_sdlthreads();
 #ifdef LIBTAS_HUD
     link_opengl(); // TODO: Put this when creating the opengl context
 #endif
@@ -216,6 +212,16 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, __func__, " call.");
+
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    /* SDL 1.2 does not have a destroy window function,
+     * because there is only one window,
+     * so we close the av dumping here instead
+     */
+    if (tasflags.av_dumping && (SDLver == 1))
+        closeAVDumping();
+#endif
+
     sendMessage(MSGB_QUIT);
     SDL_Quit_real();
 }

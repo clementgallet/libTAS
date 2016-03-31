@@ -4,7 +4,7 @@ CFLAGS=-std=gnu++11 -fpic -c -g -fvisibility=hidden -fvisibility-inlines-hidden 
 CFLAGS+= `pkg-config --cflags libavresample libavcodec libswscale libavformat libavutil libpulse-simple`
 #LDFLAGS=-shared -lX11 -lfreetype
 #LDFLAGS=-shared -lX11 $(TARCH) -lsndfile -lavresample -lavcodec -lswscale -lavformat -lpulse-simple
-LDFLAGS=-shared -lX11 $(TARCH) -lsndfile
+LDFLAGS=-shared -lX11 $(TARCH)
 LDFLAGS+= `pkg-config --libs libavresample libavcodec libswscale libavformat libavutil libpulse-simple`
 SRCS=$(wildcard *.cpp) $(wildcard audio/*.cpp) $(wildcard ../shared/*.cpp) $(wildcard ../external/*.cpp)
 OBJS=$(SRCS:.cpp=.o)

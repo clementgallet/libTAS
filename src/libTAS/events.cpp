@@ -690,13 +690,12 @@ void logEvent(SDL_Event *event)
 
 void link_sdlevents(void)
 {
-	if (SDLver == 1) {
-		link_function((void**)&SDL1_PeepEvents_real, "SDL_PeepEvents", "libSDL-1.2");
-		LINK_SUFFIX(SDL_PumpEvents, "libSDL-1.2");
-	}
-	if (SDLver == 2) {
-		LINK_SUFFIX(SDL_PeepEvents, "libSDL2-2");
-		LINK_SUFFIX(SDL_PumpEvents, "libSDL2-2");
-	}
+    if (SDLver == 1) {
+        link_function((void**)&SDL1_PeepEvents_real, "SDL_PeepEvents", "libSDL-1.2");
+    }
+    if (SDLver == 2) {
+        LINK_SUFFIX_SDL2(SDL_PeepEvents);
+    }
+    LINK_SUFFIX_SDLX(SDL_PumpEvents);
 }
 

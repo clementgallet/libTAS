@@ -167,11 +167,11 @@ static int swapInterval = 0;
 
 #ifndef LIBTAS_DISABLE_AVDUMPING
     /* Initializing the video dump */
-    int video_opengl = 0;
-    if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
-        video_opengl = 1;
-
     if (tasflags.av_dumping) {
+        int video_opengl = 0;
+        if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
+            video_opengl = 1;
+
         int av = openAVDumping(gameWindow, video_opengl, dumpfile, frame_counter);
         if (av != 0) {
             /* Init failed, disable AV dumping */
@@ -248,17 +248,17 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 void link_sdlwindows(void)
 {
     if (SDLver == 1) {
-        LINK_SUFFIX(SDL_GL_SwapBuffers, "libSDL-1.2");
-        LINK_SUFFIX(SDL_SetVideoMode, "libSDL-1.2");
+        LINK_SUFFIX_SDL1(SDL_GL_SwapBuffers);
+        LINK_SUFFIX_SDL1(SDL_SetVideoMode);
     }
     if (SDLver == 2) {
-        LINK_SUFFIX(SDL_GL_SwapWindow, "libSDL2-2");
-        LINK_SUFFIX(SDL_CreateWindow, "libSDL2-2");
-        LINK_SUFFIX(SDL_DestroyWindow, "libSDL2-2");
-        LINK_SUFFIX(SDL_GetWindowID, "libSDL2-2");
-        LINK_SUFFIX(SDL_GetWindowFlags, "libSDL2-2");
-        LINK_SUFFIX(SDL_GL_SetSwapInterval, "libSDL2-2");
-        LINK_SUFFIX(SDL_GetWindowWMInfo, "libSDL2-2");
+        LINK_SUFFIX_SDL2(SDL_GL_SwapWindow);
+        LINK_SUFFIX_SDL2(SDL_CreateWindow);
+        LINK_SUFFIX_SDL2(SDL_DestroyWindow);
+        LINK_SUFFIX_SDL2(SDL_GetWindowID);
+        LINK_SUFFIX_SDL2(SDL_GetWindowFlags);
+        LINK_SUFFIX_SDL2(SDL_GL_SetSwapInterval);
+        LINK_SUFFIX_SDL2(SDL_GetWindowWMInfo);
     }
 }
 
