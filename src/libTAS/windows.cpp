@@ -47,7 +47,7 @@ Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
 SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(SDL_Window*);
-SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
+SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 
 /* SDL 1.2 */
@@ -217,21 +217,32 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 }
 
 /* SDL 1.2 */
-/* Override */ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
+/* Override */ SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
     debuglog(LCF_SDL, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
-    /* Unused variable for now, but will be useful when
-     * video dumping will be supported for SDL 1.2
-     */
+    /* Call real function, but do not return yet */
+    SDL1::SDL_Surface *surf = SDL_SetVideoMode_real(width, height, bpp, flags);
+
+#ifndef LIBTAS_DISABLE_AVDUMPING
+    /* Initializing the video dump */
     int video_opengl = 0;
     if (flags & /*SDL_OPENGL*/ 0x00000002)
         video_opengl = 1;
 
-    return SDL_SetVideoMode_real(width, height, bpp, flags);
+    if (tasflags.av_dumping) {
+        int av = openAVDumping(gameWindow, video_opengl, dumpfile, frame_counter);
+        if (av != 0) {
+            /* Init failed, disable AV dumping */
+            tasflags.av_dumping = 0;
+        }
+    }
+#endif
+
+    return surf;
 }
 
 void link_sdlwindows(void)

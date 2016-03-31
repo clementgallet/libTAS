@@ -26,6 +26,9 @@ extern int SDLver;
 extern void (*SDL_GetVersion_real)(SDL_version* ver);
 
 #define LINK_SUFFIX(FUNC,LIB) link_function((void**)&FUNC##_real, #FUNC, LIB)
+#define LINK_SUFFIX_SDL1(FUNC) LINK_SUFFIX(FUNC,"libSDL-1.2")
+#define LINK_SUFFIX_SDL2(FUNC) LINK_SUFFIX(FUNC,"libSDL2-2")
+
 bool link_function(void** function, const char* source, const char* library);
 int get_sdlversion(void);
 

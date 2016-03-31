@@ -135,7 +135,7 @@ OVERRIDE int SDL_GL_GetSwapInterval(void);
  */
 OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 
-OVERRIDE SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags);
+OVERRIDE SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags);
 OVERRIDE void SDL_GL_SwapBuffers(void);
 
 void link_sdlwindows(void);
