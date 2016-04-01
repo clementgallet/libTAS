@@ -334,7 +334,9 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
 
 int closeAVDumping() {
     /* Encode the remaining frames */
-    for (int got_output = 1; got_output;) {
+    int got_video = 1;
+    int got_audio = 1;
+    for (; got_video || got_audio;) {
 
         /* Initialize AVPacket */
         AVPacket vpkt;
@@ -342,20 +344,48 @@ int closeAVDumping() {
         vpkt.size = 0;
         av_init_packet(&vpkt);
 
-        int ret = avcodec_encode_video2(video_st->codec, &vpkt, NULL, &got_output);
+        int ret = avcodec_encode_video2(video_st->codec, &vpkt, NULL, &got_video);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
             return 1;
         }
 
-        if (got_output) {
-            if (av_write_frame(formatContext, &vpkt) < 0) {
+        if (got_video) {
+            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
+            vpkt.stream_index = video_st->index;
+            if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
                 return 1;
             }
-            debuglog(LCF_DUMP | LCF_FRAME, "Write frame -1 (size=", vpkt.size, ")");
             av_free_packet(&vpkt);
         }
+
+        AVPacket apkt;
+        apkt.data = NULL;
+        apkt.size = 0;
+        av_init_packet(&apkt);
+
+        ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_audio);
+        if (ret < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
+            return 1;
+        }
+
+        if (got_audio) {
+            /* We have an encoder output to write */
+            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
+            apkt.stream_index = audio_st->index;
+            if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
+                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+                return 1;
+            }
+            av_free_packet(&apkt);
+        }
+
     }
 
     /* Write file trailer */

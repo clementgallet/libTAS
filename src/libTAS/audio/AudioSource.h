@@ -30,6 +30,7 @@ enum SourceType {
     SOURCE_UNDETERMINED,
     SOURCE_STATIC,
     SOURCE_STREAMING,
+    SOURCE_CALLBACK,
 };
 
 enum SourceState {
@@ -71,7 +72,6 @@ class AudioSource
         SourceState state;
 
         /* A queue of buffers to play */
-        /* TODO: choose another struct like forward_list ? */
         std::vector<AudioBuffer*> buffer_queue;
 
         /* Indicate the current position in the buffer queue */
@@ -79,6 +79,11 @@ class AudioSource
 
         /* Context for resampling audio */
         AVAudioResampleContext *avr;
+
+        /* In case of callback type, callback function.
+         * We send as an argument a pointer to the buffer to refill.
+         */
+        void (*callback)(AudioBuffer*);
 
         /* Helper function to convert ticks into an aligned number of bytes
          * in the audio buffer

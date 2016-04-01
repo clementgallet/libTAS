@@ -20,7 +20,7 @@
 #ifndef OPENAL_H_INCL
 #define OPENAL_H_INCL
 
-#include "global.h"
+#include "../global.h"
 
 typedef char ALboolean;
 typedef char ALchar;

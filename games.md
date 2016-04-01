@@ -19,6 +19,7 @@
 
 - Use SDL for threads
 - Enable Xlib events on SDL (what is it looking for?)
+- Use pulseaudio-simple for music
 
 ### Limbo
 
@@ -40,4 +41,5 @@
 
 - Multiple version have been published with SDL 1.2 or SDL 2
 - It uses PeepEvents to look for SDL Events
+- Use SDL Audio for music
 

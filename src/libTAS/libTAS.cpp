@@ -150,31 +150,37 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Init(unsigned int flags){
     debuglog(LCF_SDL, __func__, " call.");
+
+    /* Some games may call this function multiple times */
+    static int inited = 0;
+    if (inited == 0) {
+
+        /* Get which sdl version we are using.
+         * Stores it in an extern variable.
+         */
+        get_sdlversion();
+
+        /* Link function pointers to SDL functions */
+        LINK_SUFFIX_SDLX(SDL_Init);
+        LINK_SUFFIX_SDLX(SDL_InitSubSystem);
+        LINK_SUFFIX_SDLX(SDL_Quit);
+
+        link_sdlwindows();
+        link_sdlevents();
+        link_sdlthreads();
+#ifdef LIBTAS_HUD
+        link_opengl(); // TODO: Put this when creating the opengl context
+#endif
+        inited = 1;
+    }
+
     /* The thread calling this is probably the main thread */
     setMainThread();
 
-    /* Get which sdl version we are using.
-     * Stores it in an extern variable.
-     */
-    get_sdlversion();
-
-    /* Link function pointers to SDL functions */
-    LINK_SUFFIX_SDLX(SDL_Init);
-    LINK_SUFFIX_SDLX(SDL_InitSubSystem);
-    LINK_SUFFIX_SDLX(SDL_Quit);
-
-    link_sdlwindows();
-    link_sdlevents();
-    link_sdlthreads();
-#ifdef LIBTAS_HUD
-    link_opengl(); // TODO: Put this when creating the opengl context
-#endif
-
-    SDL_Init_real(flags);
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
     if (flags & SDL_INIT_AUDIO)
-        debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
+        debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
     if (flags & SDL_INIT_VIDEO)
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
     if (flags & SDL_INIT_CDROM)
@@ -187,6 +193,11 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+
+    /* Disabling Audio subsystem so that it does not create an extra thread */
+    flags ^= ~SDL_INIT_AUDIO;
+
+    SDL_Init_real(flags);
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
@@ -194,7 +205,7 @@ void __attribute__((destructor)) term(void)
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
     if (flags & SDL_INIT_AUDIO)
-        debuglog(LCF_SDL, "    SDL_AUDIO enabled.");
+        debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
     if (flags & SDL_INIT_VIDEO)
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
     if (flags & SDL_INIT_CDROM)
@@ -207,6 +218,10 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+
+    /* Disabling Audio subsystem so that it does not create an extra thread */
+    flags ^= ~SDL_INIT_AUDIO;
+
     return SDL_InitSubSystem_real(flags);
 }
 

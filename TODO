@@ -40,8 +40,8 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Process and filter SDL events
 - Dump audio
--- Queued buffers are played twice
 -- Support compressed formats (MSADPCM)
+-- Support SDL Audio
 
 ## Done
 

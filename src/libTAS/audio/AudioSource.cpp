@@ -180,7 +180,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     /* Number of bytes to advance in the buffer samples.
      * This number is automatically aligned inside the function.
-    */
+     */
     int inBytes = ticksToBytes(ticks, curBuf->alignSize, curBuf->frequency);
 
     int oldPosition = position;
@@ -204,73 +204,100 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     }
     else {
         /* We reached the end of the buffer */
-
+        debuglog(LCF_SOUND | LCF_FRAME, "Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->size);
         int nSamples = (curBuf->size - oldPosition) / curBuf->alignSize;
-        avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+        if (nSamples > 0)
+            avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
 
         int remainingBytes = inBytes - (curBuf->size - oldPosition);
-        int queue_size = buffer_queue.size();
-        int finalIndex;
-        int finalPos;
-
-        /* Our for loop conditions are different if we are looping or not */
-        if (looping) {
-            for (int i=(queue_index+1)%queue_size; remainingBytes>0; i=(i+1)%queue_size) {
-                AudioBuffer* loopbuf = buffer_queue[i];
-                begSamples = &loopbuf->samples[0];
-                if (remainingBytes > loopbuf->size) {
-                    nSamples = loopbuf->size / loopbuf->alignSize;
+        if (source == SOURCE_CALLBACK) {
+            /* We refill our buffer using the callback function,
+             * until we got enough bytes for this frame
+             */
+            while (remainingBytes > 0) {
+                callback(curBuf);
+                begSamples = &curBuf->samples[0];
+                if (remainingBytes > curBuf->size) {
+                    nSamples = curBuf->size / curBuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
-                    loopbuf->processed = true; // Are buffers in a loop ever processed??
-                    remainingBytes -= loopbuf->size;
+                    remainingBytes -= curBuf->size;
                 }
                 else {
-                    nSamples = loopbuf->size / loopbuf->alignSize;
+                    nSamples = remainingBytes / curBuf->alignSize;
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
-                    finalIndex = i;
-                    finalPos = remainingBytes;
+                    position = remainingBytes;
                     remainingBytes = 0;
                 }
             }
+
+            /* Get the mixed samples */
+            convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
         }
         else {
-            for (int i=queue_index+1; (remainingBytes>0) && (i<queue_size); i++) {
-                AudioBuffer* loopbuf = buffer_queue[i];
-                begSamples = &loopbuf->samples[0];
-                if (remainingBytes > loopbuf->size) {
-                    nSamples = loopbuf->size / loopbuf->alignSize;
-                    avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
-                    loopbuf->processed = true;
-                    remainingBytes -= loopbuf->size;
+            int queue_size = buffer_queue.size();
+            int finalIndex;
+            int finalPos;
+
+            /* Our for loop conditions are different if we are looping or not */
+            if (looping) {
+                for (int i=(queue_index+1)%queue_size; remainingBytes>0; i=(i+1)%queue_size) {
+                    AudioBuffer* loopbuf = buffer_queue[i];
+                    begSamples = &loopbuf->samples[0];
+                    if (remainingBytes > loopbuf->size) {
+                        nSamples = loopbuf->size / loopbuf->alignSize;
+                        avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+                        loopbuf->processed = true; // Are buffers in a loop ever processed??
+                        remainingBytes -= loopbuf->size;
+                    }
+                    else {
+                        nSamples = remainingBytes / loopbuf->alignSize;
+                        avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+                        finalIndex = i;
+                        finalPos = remainingBytes;
+                        remainingBytes = 0;
+                    }
                 }
-                else {
-                    nSamples = loopbuf->size / loopbuf->alignSize;
-                    avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
-                    finalIndex = i;
-                    finalPos = remainingBytes;
-                    remainingBytes = 0;
+            }
+            else {
+                for (int i=queue_index+1; (remainingBytes>0) && (i<queue_size); i++) {
+                    AudioBuffer* loopbuf = buffer_queue[i];
+                    begSamples = &loopbuf->samples[0];
+                    if (remainingBytes > loopbuf->size) {
+                        nSamples = loopbuf->size / loopbuf->alignSize;
+                        avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+                        loopbuf->processed = true;
+                        remainingBytes -= loopbuf->size;
+                    }
+                    else {
+                        nSamples = remainingBytes / loopbuf->alignSize;
+                        avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+                        finalIndex = i;
+                        finalPos = remainingBytes;
+                        remainingBytes = 0;
+                    }
                 }
+            }
+
+            /* Get the mixed samples */
+            convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
+
+            if (remainingBytes > 0) {
+                /* We reached the end of the buffer queue */
+                position = 0;
+                samples_frac = 0;
+                queue_index = 0;
+                state = SOURCE_STOPPED;
+                avresample_close(avr);
+                debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
+            }
+            else {
+                /* Update the position in the buffer */
+                queue_index = finalIndex;
+                position = finalPos;
+                debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " to some other buffers");
             }
         }
 
-        /* Get the mixed samples */
-        convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
-
-        if (remainingBytes > 0) {
-            /* We reached the end of the buffer queue */
-            position = 0;
-            samples_frac = 0;
-            queue_index = 0;
-            state = SOURCE_STOPPED;
-            avresample_close(avr);
-            debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
-        }
-        else {
-            /* Update the position in the buffer */
-            queue_index = finalIndex;
-            position = finalPos;
-            debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " to some other buffers");
-        }
     }
 
     int nSamples = std::min(convOutSamples, outNbSamples);

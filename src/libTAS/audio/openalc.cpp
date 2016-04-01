@@ -18,7 +18,7 @@
  */
 
 #include "openalc.h"
-#include "logging.h"
+#include "../logging.h"
 
 #define MAXCONTEXTS 32 // TODO: Get proper value
 
@@ -41,9 +41,6 @@ ALCenum alcError;
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    //link_openal();
-
-    //return alcOpenDevice_real(devicename);
     return &dummyDevice;
 }
 
@@ -68,7 +65,7 @@ ALCenum alcError;
     DEBUGLOGCALL(LCF_OPENAL);
 
     if (context == NULL) {
-        currentContext = *context;
+        currentContext = -1;
         return ALC_FALSE;
     }
 

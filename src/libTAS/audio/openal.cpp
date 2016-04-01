@@ -18,10 +18,10 @@
  */
 
 #include "openal.h"
-#include "logging.h"
-#include "audio/AudioBuffer.h"
-#include "audio/AudioSource.h"
-#include "audio/AudioContext.h"
+#include "../logging.h"
+#include "AudioBuffer.h"
+#include "AudioSource.h"
+#include "AudioContext.h"
 
 ALenum alError;
 #define ALSETERROR(error) if(alError==AL_NO_ERROR) alError = error
