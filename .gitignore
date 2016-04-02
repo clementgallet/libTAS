@@ -1,7 +1,5 @@
-src/libTAS/*.o
-src/libTAS/audio/*.o
-src/linTAS/*.o
-src/shared/*.o
-src/external/*.o
 bin/
-
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake

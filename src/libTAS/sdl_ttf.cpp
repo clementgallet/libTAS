@@ -21,6 +21,8 @@
 
 /* Code modified by Clément Gallet */
 
+#ifdef LIBTAS_ENABLE_HUD
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1796,4 +1798,6 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch)
     }
     return (delta.x >> 6);
 }
+
+#endif
 

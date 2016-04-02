@@ -31,6 +31,8 @@
 #ifndef _SDL_TTF_H
 #define _SDL_TTF_H
 
+#ifdef LIBTAS_ENABLE_HUD
+
 #include "hook.h"
 
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
@@ -177,4 +179,6 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch);
 #define TTF_SetError    printf("\n");printf
 //#define TTF_GetError    SDL_GetError
 
+#endif
 #endif /* _SDL_TTF_H */
+

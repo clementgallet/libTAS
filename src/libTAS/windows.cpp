@@ -24,7 +24,7 @@
 #include "../shared/messages.h"
 #include "../shared/tasflags.h"
 #include "frame.h"
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
 
@@ -79,7 +79,7 @@ void (*SDL_GL_SwapBuffers_real)(void);
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
     SDL_Color color = {255, 0, 0, 0};
     RenderText(font, "Test test", 640, 480, color, 2, 2);
 #endif
@@ -165,7 +165,7 @@ static int swapInterval = 0;
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
     if (tasflags.av_dumping) {
         int video_opengl = 0;
@@ -188,7 +188,7 @@ static int swapInterval = 0;
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
     if (tasflags.av_dumping)
         closeAVDumping();
 #endif
@@ -227,7 +227,7 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
     /* Call real function, but do not return yet */
     SDL1::SDL_Surface *surf = SDL_SetVideoMode_real(width, height, bpp, flags);
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
     int video_opengl = 0;
     if (flags & /*SDL_OPENGL*/ 0x00000002)

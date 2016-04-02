@@ -20,7 +20,7 @@
 #ifndef OPENGL_H_INCL
 #define OPENGL_H_INCL
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
 
 #include "../external/SDL_ttf.h"
 

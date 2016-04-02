@@ -20,7 +20,7 @@
 #ifndef AVDUMPING_H_INCL
 #define AVDUMPING_H_INCL
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 
 #include <string>
 

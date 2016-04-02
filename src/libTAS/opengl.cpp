@@ -19,7 +19,7 @@
 
 #include "opengl.h"
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
 
 #include "../external/gl.h"
 

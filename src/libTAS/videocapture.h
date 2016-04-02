@@ -20,7 +20,7 @@
 #ifndef VIDEOCAPTURE_H_INCL
 #define VIDEOCAPTURE_H_INCL
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 
 #include <stdint.h>
 

@@ -27,7 +27,7 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "windows.h" // gameWindow
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
 
@@ -38,7 +38,7 @@ void frameBoundary(void)
     detTimer.enterFrameBoundary();
 
     /* Audio mixing is done above, so encode must be called after */
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Dumping audio and video */
     if (tasflags.av_dumping) {
         /* Write the current frame */

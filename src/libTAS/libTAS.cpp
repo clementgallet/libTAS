@@ -36,14 +36,14 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs.h"
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
 
 /* Did we call our constructor? */
 bool libTAS_init = false;
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
 #endif
@@ -62,7 +62,7 @@ void __attribute__((constructor (101))) init(void)
     if (! didConnect)
         return;
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
@@ -141,7 +141,7 @@ void __attribute__((destructor)) term(void)
 {
     dlhook_end();
 
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
     TTF_CloseFont(font);
     TTF_Quit();
 #endif
@@ -170,7 +170,7 @@ void __attribute__((destructor)) term(void)
         link_sdlwindows();
         link_sdlevents();
         link_sdlthreads();
-#ifdef LIBTAS_HUD
+#ifdef LIBTAS_ENABLE_HUD
         link_opengl(); // TODO: Put this when creating the opengl context
 #endif
         inited = 1;
@@ -197,7 +197,7 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
 
     /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags ^= ~SDL_INIT_AUDIO;
+    flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
     SDL_Init_real(flags);
 }
@@ -222,7 +222,7 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
 
     /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags ^= ~SDL_INIT_AUDIO;
+    flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
     return SDL_InitSubSystem_real(flags);
 }
@@ -230,7 +230,7 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Quit(){
     debuglog(LCF_SDL, __func__, " call.");
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
     /* SDL 1.2 does not have a destroy window function,
      * because there is only one window,
      * so we close the av dumping here instead

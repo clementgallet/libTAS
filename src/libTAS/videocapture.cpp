@@ -19,7 +19,7 @@
 
 #include "videocapture.h"
 
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 
 #include "hook.h"
 #include "logging.h"

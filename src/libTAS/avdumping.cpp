@@ -18,7 +18,7 @@
  */
 
 #include "avdumping.h"
-#ifndef LIBTAS_DISABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 
 extern "C" {
 #include <libavcodec/avcodec.h>
