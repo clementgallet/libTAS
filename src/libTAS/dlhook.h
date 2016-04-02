@@ -90,7 +90,10 @@ int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags)
 int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
 void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
 
-/* Path of some libraries we will need */
-extern std::string sdlpath;
+/* We must call the init function before ever attempting to call an
+ * original dl function, otherwise expect an endless loop.
+ */
+void dlhook_init(void);
+void dlhook_end(void);
 
 #endif

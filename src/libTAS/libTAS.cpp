@@ -125,6 +125,8 @@ void __attribute__((constructor (101))) init(void)
     ai.emptyInputs();
     old_ai.emptyInputs();
 
+    /* We initialize our dl functions hooking, and link some functions */
+    dlhook_init();
     link_time();
 
     /* Initialize timers */
@@ -137,8 +139,8 @@ void __attribute__((constructor (101))) init(void)
 
 void __attribute__((destructor)) term(void)
 {
-    if (getppid() != getpgrp())
-        return;
+    dlhook_end();
+
 #ifdef LIBTAS_HUD
     TTF_CloseFont(font);
     TTF_Quit();

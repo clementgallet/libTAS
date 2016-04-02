@@ -141,14 +141,14 @@ void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
     return result;
 }
 
-__attribute__((constructor))
-static void init(void) {
- old_dlfcn_hook = _dlfcn_hook;
+void dlhook_init(void)
+{
+    old_dlfcn_hook = _dlfcn_hook;
     _dlfcn_hook = &my_dlfcn_hook;
 }
 
-__attribute__((destructor))
-static void fini(void) {
+void dlhook_end(void)
+{
     _dlfcn_hook = old_dlfcn_hook;
 }
 

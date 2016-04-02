@@ -1,0 +1,69 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(libTAS)
+
+file(GLOB_RECURSE lib_sources src/libTAS/*)
+file(GLOB_RECURSE lin_sources src/linTAS/*)
+file(GLOB shared_sources src/shared/*)
+file(GLOB external_sources src/external/*)
+
+set(EXECUTABLE_OUTPUT_PATH bin/)
+set(LIBRARY_OUTPUT_PATH bin/)
+#set(CMAKE_CXX_STANDARD 11)
+
+add_executable(linTAS ${lin_sources} ${shared_sources} ${external_sources})
+add_library(TAS SHARED ${lib_sources} ${shared_sources} ${external_sources})
+
+# Add some c++ requirements
+target_compile_features(TAS PRIVATE cxx_auto_type cxx_nullptr cxx_range_for cxx_variadic_templates)
+target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
+
+# Common flags
+target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow)
+
+# Add X11 library
+find_package(X11 REQUIRED)
+include_directories(${X11_INCLUDE_DIRS})
+target_link_libraries (linTAS ${X11_LIBRARIES})
+target_link_libraries (TAS ${X11_LIBRARIES})
+
+# Search for librairies
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVRESAMPLE libavresample)
+pkg_check_modules(AVVIDEO libavcodec libswscale libavformat)
+pkg_check_modules(PULSESIMPLE libpulse-simple)
+pkg_check_modules(FREETYPE freetype2)
+
+if (AVRESAMPLE_FOUND AND AVVIDEO_FOUND)
+    # Enable av dumping
+    message(STATUS "AV dumping is enabled")
+    target_include_directories(TAS PUBLIC ${AVRESAMPLE_INCLUDE_DIRS} ${AVVIDEO_INCLUDE_DIRS})
+    link_directories(${AVRESAMPLE_LIBRARY_DIRS} ${AVVIDEO_LIBRARY_DIRS})
+    target_link_libraries(TAS ${AVRESAMPLE_LIBRAIRIES} ${AVVIDEO_LIBRARIES})
+    add_definitions(-DENABLE_AVDUMPING)
+else()
+    message(WARNING "AV dumping is disabled")
+endif()
+
+if (AVRESAMPLE_FOUND AND PULSESIMPLE_FOUND)
+    # Enable sound playback
+    message(STATUS "Sound playback is enabled")
+    target_include_directories(TAS PUBLIC ${AVRESAMPLE_INCLUDE_DIRS} ${PULSESIMPLE_INCLUDE_DIRS})
+    target_link_libraries(TAS ${AVRESAMPLE_LIBRAIRIES} ${PULSESIMPLE_LIBRARIES})
+    link_directories(${AVRESAMPLE_LIBRARY_DIRS} ${PULSESIMPLE_LIBRARY_DIRS})
+    add_definitions(-DENABLE_SOUNDPLAYBACK)
+else()
+    message(WARNING "Sound playback is disabled")
+endif()
+
+if (FREETYPE_FOUND)
+    # Enable HUD
+    message(STATUS "HUD is enabled")
+    target_include_directories(TAS PUBLIC ${FREETYPE_INCLUDE_DIRS})
+    target_link_libraries(TAS ${FREETYPE_LIBRAIRIES})
+    link_directories(${FREETYPE_LIBRARY_DIRS})
+    add_definitions(-DENABLE_HUD)
+else()
+    message(WARNING "HUD is disabled")
+endif()
+
