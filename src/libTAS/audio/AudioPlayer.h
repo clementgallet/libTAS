@@ -20,6 +20,8 @@
 #ifndef AUDIOPLAYER_H_INCL
 #define AUDIOPLAYER_H_INCL
 
+#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
+
 #include "AudioContext.h"
 #include <pulse/simple.h>
 
@@ -46,3 +48,5 @@ class AudioPlayer
 extern AudioPlayer audioplayer;
 
 #endif
+#endif
+

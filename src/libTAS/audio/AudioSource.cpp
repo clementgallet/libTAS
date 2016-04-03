@@ -21,9 +21,11 @@
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::copy
 #include "../logging.h"
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
     #include <libavutil/opt.h>
 }
+#endif
 #include <stdlib.h>
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
@@ -51,7 +53,9 @@ AudioSource::AudioSource(void)
     state = SOURCE_INITIAL;
     queue_index = 0;
 
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     avr = avresample_alloc_context();
+#endif
 }
 
 int AudioSource::nbQueue()
@@ -130,6 +134,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     AudioBuffer* curBuf = buffer_queue[queue_index];
 
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     /* Get the sample format */
     AVSampleFormat inFormat, outFormat;
     if (curBuf->bitDepth == 8)
@@ -166,6 +171,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* Open the context */
         avresample_open(avr);
     }
+#endif
 
     /* Mixing source volume and master volume.
      * Taken from openAL doc:
@@ -187,27 +193,33 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int newPosition = position + inBytes;
 
     /* Allocate the mixed audio array */
-    uint8_t* mixedSamples;
     int inNSamples = inBytes / curBuf->alignSize;
     int outAlignSize = (outNbChannels * outBitDepth / 8);
     int outNbSamples = outBytes / outAlignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+    uint8_t* mixedSamples;
     av_samples_alloc(&mixedSamples, nullptr, outNbChannels, outNbSamples, outFormat, 0);
+#endif
 
     int convOutSamples = 0;
     uint8_t* begSamples = &curBuf->samples[oldPosition];
-    if (newPosition < curBuf->size) {
+    if (newPosition <= curBuf->size) {
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays buffer ", curBuf->id, " in range ", oldPosition, " - ", position);
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         convOutSamples = avresample_convert(avr, &mixedSamples, outNbSamples, outNbSamples, &begSamples, inNSamples, inNSamples);
+#endif
     }
     else {
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->size);
         int nSamples = (curBuf->size - oldPosition) / curBuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         if (nSamples > 0)
             avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
 
         int remainingBytes = inBytes - (curBuf->size - oldPosition);
         if (source == SOURCE_CALLBACK) {
@@ -219,19 +231,25 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 begSamples = &curBuf->samples[0];
                 if (remainingBytes > curBuf->size) {
                     nSamples = curBuf->size / curBuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                     remainingBytes -= curBuf->size;
                 }
                 else {
                     nSamples = remainingBytes / curBuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                     position = remainingBytes;
                     remainingBytes = 0;
                 }
             }
 
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
             /* Get the mixed samples */
             convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
+#endif
         }
         else {
             int queue_size = buffer_queue.size();
@@ -245,13 +263,17 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     begSamples = &loopbuf->samples[0];
                     if (remainingBytes > loopbuf->size) {
                         nSamples = loopbuf->size / loopbuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                         avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                         loopbuf->processed = true; // Are buffers in a loop ever processed??
                         remainingBytes -= loopbuf->size;
                     }
                     else {
                         nSamples = remainingBytes / loopbuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                         avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                         finalIndex = i;
                         finalPos = remainingBytes;
                         remainingBytes = 0;
@@ -264,13 +286,17 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     begSamples = &loopbuf->samples[0];
                     if (remainingBytes > loopbuf->size) {
                         nSamples = loopbuf->size / loopbuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                         avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                         loopbuf->processed = true;
                         remainingBytes -= loopbuf->size;
                     }
                     else {
                         nSamples = remainingBytes / loopbuf->alignSize;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                         avresample_convert(avr, nullptr, 0, 0, &begSamples, nSamples, nSamples);
+#endif
                         finalIndex = i;
                         finalPos = remainingBytes;
                         remainingBytes = 0;
@@ -278,8 +304,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 }
             }
 
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
             /* Get the mixed samples */
             convOutSamples = avresample_read(avr, &mixedSamples, outNbSamples);
+#endif
 
             if (remainingBytes > 0) {
                 /* We reached the end of the buffer queue */
@@ -287,7 +315,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 samples_frac = 0;
                 queue_index = 0;
                 state = SOURCE_STOPPED;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                 avresample_close(avr);
+#endif
                 debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
             }
             else {
@@ -301,6 +331,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     }
 
     int nSamples = std::min(convOutSamples, outNbSamples);
+
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 
 #define clamptofullsignedrange(x,lo,hi) (((unsigned int)((x)-(lo))<=(unsigned int)((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
@@ -336,6 +368,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
         }
     }
+#endif
 
     return nSamples;
 }

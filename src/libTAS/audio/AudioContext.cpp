@@ -159,12 +159,6 @@ AudioSource* AudioContext::getSource(int id)
 void AudioContext::mixAllSources(struct timespec ticks)
 {
     outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
-    /* Add an extra to take into account extra samples in source because of alignment.
-     * FIXME: probably not the right amount...
-     * FIXME: actually, set the correct value here, and too bad if a source does not fill it entirely,
-     * otherwise, this will probably cause av desync.
-     */
-    //outBytes += outAlignSize;
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
 
     /* Silent the output buffer */
@@ -176,6 +170,11 @@ void AudioContext::mixAllSources(struct timespec ticks)
     for (auto& source : sources) {
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
+
+#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
+    /* Play the music */
+    audioplayer.play(*this);
+#endif
 
 	/* Save the actual number of samples and size */
 	outNbSamples = outBytes / outAlignSize;

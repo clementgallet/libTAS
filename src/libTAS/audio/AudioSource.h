@@ -22,9 +22,11 @@
 
 #include <vector>
 #include "AudioBuffer.h"
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
 #include <libavresample/avresample.h>
 }
+#endif
 
 enum SourceType {
     SOURCE_UNDETERMINED,
@@ -77,8 +79,10 @@ class AudioSource
         /* Indicate the current position in the buffer queue */
         int queue_index;
 
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         /* Context for resampling audio */
         AVAudioResampleContext *avr;
+#endif
 
         /* In case of callback type, callback function.
          * We send as an argument a pointer to the buffer to refill.

@@ -17,8 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../logging.h"
 #include "AudioPlayer.h"
+
+#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
+
+#include "../logging.h"
 #include "../../shared/tasflags.h"
 
 AudioPlayer audioplayer;
@@ -68,13 +71,6 @@ bool AudioPlayer::play(AudioContext& ac)
         inited = true;
     }
 
-    /*
-    int latency = pa_simple_get_latency(pa_s, nullptr);
-    debuglog(LCF_SOUND, "Latency is ", latency, " us");
-    */
-    /* If we are fast-forwarding, we don't want to fill the audio buffer,
-     * otherwise the pulseaudio server would ask us to wait for the buffer to be processed
-     */
     if (tasflags.fastforward)
         return true;
 
@@ -86,4 +82,5 @@ bool AudioPlayer::play(AudioContext& ac)
     return true;
 }
 
+#endif
 
