@@ -32,8 +32,6 @@ extern "C" {
 #include "videocapture.h"
 #include "audio/AudioContext.h"
 
-FILE *f;
-std::string filename;
 AVFrame* video_frame;
 AVFrame* audio_frame;
 struct SwsContext *toYUVctx = NULL;
@@ -48,7 +46,7 @@ int start_frame;
 /* The accumulated number of audio samples */
 uint64_t accum_samples;
 
-int openAVDumping(void* window, int video_opengl, std::string dumpfile, int sf) {
+int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
 
     start_frame = sf;
     accum_samples = 0;
@@ -56,15 +54,13 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile, int sf) 
     int width, height;
     initVideoCapture(window, video_opengl, &width, &height);
 
-    filename = dumpfile;
-
     /* Initialize AVCodec and AVFormat libraries */
     av_register_all();
 
     /* Initialize AVOutputFormat */
-    outputFormat = av_guess_format(NULL, filename.c_str(), NULL);
+    outputFormat = av_guess_format(NULL, dumpfile, NULL);
     if (!outputFormat) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not find suitable output format");
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not find suitable output format for file ", dumpfile);
         return 1;
     }
 
@@ -212,10 +208,10 @@ int openAVDumping(void* window, int video_opengl, std::string dumpfile, int sf) 
     }
 
     /* Print informations on input and output streams */
-    av_dump_format(formatContext, 0, filename.c_str(), 1);
+    av_dump_format(formatContext, 0, dumpfile, 1);
     
     /* Set up output file */
-    if (avio_open(&formatContext->pb, filename.c_str(), AVIO_FLAG_WRITE) < 0) {
+    if (avio_open(&formatContext->pb, dumpfile, AVIO_FLAG_WRITE) < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
         return 1;
     }
@@ -367,7 +363,7 @@ int closeAVDumping() {
         apkt.size = 0;
         av_init_packet(&apkt);
 
-        ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_audio);
+        ret = avcodec_encode_audio2(audio_st->codec, &apkt, NULL, &got_audio);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
             return 1;

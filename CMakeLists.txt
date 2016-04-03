@@ -23,9 +23,9 @@ target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing
 
 # Add X11 library
 find_package(X11 REQUIRED)
-include_directories(${X11_INCLUDE_DIRS})
-target_link_libraries (linTAS ${X11_LIBRARIES})
-target_link_libraries (TAS ${X11_LIBRARIES})
+include_directories(${X11_X11_INCLUDE_DIRS})
+target_link_libraries (linTAS ${X11_X11_LIB})
+target_link_libraries (TAS ${X11_X11_LIB})
 
 # Add optional features
 find_package(PkgConfig REQUIRED)
@@ -33,14 +33,14 @@ find_package(PkgConfig REQUIRED)
 # AV dumping
 option(ENABLE_DUMPING "Enable AV dumping" ON)
 
-pkg_check_modules(AVRESAMPLE libavresample)
+pkg_check_modules(SWRESAMPLE libswresample)
 pkg_check_modules(AVVIDEO libavcodec libswscale libavformat)
-if (ENABLE_DUMPING AND AVRESAMPLE_FOUND AND AVVIDEO_FOUND)
+if (ENABLE_DUMPING AND SWRESAMPLE_FOUND AND AVVIDEO_FOUND)
     # Enable av dumping
     message(STATUS "AV dumping is enabled")
-    target_include_directories(TAS PUBLIC ${AVRESAMPLE_INCLUDE_DIRS} ${AVVIDEO_INCLUDE_DIRS})
-    link_directories(${AVRESAMPLE_LIBRARY_DIRS} ${AVVIDEO_LIBRARY_DIRS})
-    target_link_libraries(TAS ${AVRESAMPLE_LIBRARIES} ${AVVIDEO_LIBRARIES})
+    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${AVVIDEO_INCLUDE_DIRS})
+    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${AVVIDEO_LIBRARY_DIRS})
+    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${AVVIDEO_LIBRARIES})
     add_definitions(-DLIBTAS_ENABLE_AVDUMPING)
 else()
     message(WARNING "AV dumping is disabled")
@@ -50,12 +50,12 @@ endif()
 option(ENABLE_SOUND "Enable sound playback" ON)
 
 pkg_check_modules(PULSESIMPLE libpulse-simple)
-if (ENABLE_SOUND AND AVRESAMPLE_FOUND AND PULSESIMPLE_FOUND)
+if (ENABLE_SOUND AND SWRESAMPLE_FOUND AND PULSESIMPLE_FOUND)
     # Enable sound playback
     message(STATUS "Sound playback is enabled")
-    target_include_directories(TAS PUBLIC ${AVRESAMPLE_INCLUDE_DIRS} ${PULSESIMPLE_INCLUDE_DIRS})
-    target_link_libraries(TAS ${AVRESAMPLE_LIBRARIES} ${PULSESIMPLE_LIBRARIES})
-    link_directories(${AVRESAMPLE_LIBRARY_DIRS} ${PULSESIMPLE_LIBRARY_DIRS})
+    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${PULSESIMPLE_INCLUDE_DIRS})
+    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${PULSESIMPLE_LIBRARIES})
+    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${PULSESIMPLE_LIBRARY_DIRS})
     add_definitions(-DLIBTAS_ENABLE_SOUNDPLAYBACK)
 else()
     message(WARNING "Sound playback is disabled")

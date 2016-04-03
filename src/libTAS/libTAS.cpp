@@ -99,11 +99,13 @@ void __attribute__((constructor (101))) init(void)
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
-                size_t str_len;
-                receiveData(&str_len, sizeof(size_t));
-                buf.resize(str_len, 0x00);
-                receiveData(&(buf[0]), str_len);
-                dumpfile.assign(&(buf[0]), buf.size());
+                size_t dump_len;
+                receiveData(&dump_len, sizeof(size_t));
+                /* TODO: Put all this in TasFlags class methods */
+                av_filename = (char*)malloc(dump_len+1);
+                receiveData(av_filename, dump_len);
+                av_filename[dump_len] = '\0';
+                debuglog(LCF_SOCKET, "File ", av_filename);
                 break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");

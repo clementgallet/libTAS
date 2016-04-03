@@ -33,6 +33,7 @@ AudioPlayer::AudioPlayer(void)
 
 bool AudioPlayer::init(pa_sample_format_t format, int nbChannels, int frequency)
 {
+    debuglog(LCF_SOUND, "Init audio player");
     pa_sample_spec pa_ss;
 
     pa_ss.format = format;
@@ -60,6 +61,7 @@ bool AudioPlayer::init(pa_sample_format_t format, int nbChannels, int frequency)
 
 bool AudioPlayer::play(AudioContext& ac)
 {
+    debuglog(LCF_SOUND, "Play an audio frame");
     if (!inited) {
         pa_sample_format_t format;
         if (ac.outBitDepth == 8)

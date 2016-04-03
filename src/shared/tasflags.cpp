@@ -19,11 +19,15 @@
 
 #include "tasflags.h"
 
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_FREQUENT | LCF_FRAME, 0, 0};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_NONE, 0, 60, 1};
-struct TasFlags tasflags = {0, 1, -1, 0, LCF_OPENAL | LCF_SOUND | LCF_ERROR | LCF_DUMP, LCF_NONE, 0, 60, 1};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_JOYSTICK, LCF_NONE, 0, 60};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_NONE, 0, 60};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_ALL, LCF_NONE, 0, 0};
-//struct TasFlags tasflags = {0, 1, -1, 0, LCF_EVENTS, LCF_NONE, 0};
+struct TasFlags tasflags = {
+    running        : 0,
+    speed_divisor  : 1,
+    recording      : -1,
+    fastforward    : 0,
+    includeFlags   : LCF_OPENAL | LCF_SOUND | LCF_ERROR,
+    excludeFlags   : LCF_NONE,
+    av_dumping     : 0,
+    framerate      : 60,
+    numControllers : 1
+}; 
 

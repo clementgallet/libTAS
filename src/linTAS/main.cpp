@@ -50,7 +50,6 @@ char keyboard_state[32];
 KeySym hotkeys[HOTKEY_LEN];
 
 char *moviefile = NULL;
-char *dumpfile = NULL;
 FILE* fp;
 
 pid_t game_pid;
@@ -74,7 +73,7 @@ int main(int argc, char **argv)
 
     /* Parsing arguments */
     int c;
-    std::string libname;
+    std::string libname, dumpfile;
     while ((c = getopt (argc, argv, "r:w:d:l:")) != -1)
         switch (c) {
             case 'r':
@@ -163,9 +162,9 @@ int main(int argc, char **argv)
     if (tasflags.av_dumping) {
         message = MSGN_DUMP_FILE;
         send(socket_fd, &message, sizeof(int), 0);
-        size_t dumpfile_size = strlen(dumpfile);
+        size_t dumpfile_size = dumpfile.size();
         send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
-        send(socket_fd, dumpfile, dumpfile_size * sizeof(char), 0);
+        send(socket_fd, dumpfile.c_str(), dumpfile_size, 0);
     }
 
     /* Send shared library names */

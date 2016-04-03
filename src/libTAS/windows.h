@@ -29,8 +29,7 @@ typedef void SDL_Window;
 extern void* gameWindow;
 extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
 
-/* Filename of the AV encode */
-extern std::string dumpfile;
+extern char* av_filename;
 
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is

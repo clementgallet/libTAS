@@ -22,6 +22,7 @@
 
 #include "../external/SDL.h"
 #include "global.h"
+#include <string>
 
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);

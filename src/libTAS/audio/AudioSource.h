@@ -24,7 +24,7 @@
 #include "AudioBuffer.h"
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
-#include <libavresample/avresample.h>
+#include <libswresample/swresample.h>
 }
 #endif
 
@@ -81,7 +81,10 @@ class AudioSource
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         /* Context for resampling audio */
-        AVAudioResampleContext *avr;
+        struct SwrContext *swr;
+
+        /* Temporary array of mixed samples */
+        std::vector<uint8_t> mixedSamples;
 #endif
 
         /* In case of callback type, callback function.

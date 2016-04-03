@@ -24,6 +24,7 @@
 #include "../shared/messages.h"
 #include "../shared/tasflags.h"
 #include "frame.h"
+#include "libTAS.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -37,7 +38,7 @@ SDL_Window* gameWindow = nullptr;
 /* Has the game window pointer be sent to the program? */
 bool gw_sent = 0;
 
-std::string dumpfile;
+char* av_filename = nullptr;
 
 /* Original function pointers */
 void(* SDL_GL_SwapWindow_real)(SDL_Window* window);
@@ -172,7 +173,8 @@ static int swapInterval = 0;
         if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
             video_opengl = 1;
 
-        int av = openAVDumping(gameWindow, video_opengl, dumpfile, frame_counter);
+        debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
+        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
         if (av != 0) {
             /* Init failed, disable AV dumping */
             tasflags.av_dumping = 0;
@@ -234,7 +236,7 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
         video_opengl = 1;
 
     if (tasflags.av_dumping) {
-        int av = openAVDumping(gameWindow, video_opengl, dumpfile, frame_counter);
+        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
         if (av != 0) {
             /* Init failed, disable AV dumping */
             tasflags.av_dumping = 0;
