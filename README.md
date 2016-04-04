@@ -1,39 +1,42 @@
-# libTAS
+## libTAS
 
 GNU/Linux software to (hopefully) give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser).
 
-# Compile
+## Compile
 
-The current dependancies so far are:
+Compiling is done using cmake. From the root directory just type `cmake .` (the dot does matter), then `make`.
 
-- Xlib
+The current mandatory dependancies so far are `libx11-dev`.
 
-To enable video dumping, you will need:
+To enable audio and video dumping, you will need:
 
 - libavcodec
 - libavformat
 - libavutil
 - libswscale
-
-To enable audio dumping or audio playback, you will need:
-
-- libavresample
+- libswrescale
 
 To enable audio playback, you will also need:
 
+- libswrescale
 - libpulse-simple
 
-To enable HUD on top of the game screen, you will need:
+To enable HUD on top of the game screen (currently not working, disabled by default), you will need:
 
 - libfreetype
 
-Be careful that you must compile your code in the same arch as the game. Type `make 32bit` or `make 64bit`.
+Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
+If you want to manually disable a feature, you must add just after the `cmake` command either `-DENABLE_DUMPING=OFF`, `-DENABLE_SOUND=OFF` or `-DENABLE_HUD=OFF`.
 
-# Run
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=32bit.toolchain.cmake .`. 
 
-This program supports for now only games based on the SDL library. You must give the path to the SDL lib generally bundled with the game.
+## Run
 
-```./run.sh gameexecutable [game_commandline_arguments]```
+To run this program, just type:
+
+    ./run.sh [options] game_executable_path [game_commandline_arguments]
+
+You can type `./run.sh -h` to have a description of the program options.
 
 For now, what you can do is:
 
@@ -41,5 +44,9 @@ For now, what you can do is:
 - pause/play, using the `pause` key
 - fast forward, using the `tab` key
 - record and playback inputs
-- dump the video
+- dump the audio/video
+
+## Licence
+
+libTAS is distributed under the terms of the GNU General Public License v3.
 

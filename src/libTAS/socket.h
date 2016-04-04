@@ -17,15 +17,26 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKET_H_INCL
-#define SOCKET_H_INCL
+#ifndef LIBTAS_SOCKET_H_INCL
+#define LIBTAS_SOCKET_H_INCL
 
 #include <stddef.h>
 
+/* Initiate a socket connection with linTAS */
 bool initSocket(void);
+
+/* Close the socket connection */
 void closeSocket(void);
+
+/* Send data over the socket. Data is stored at the beginning of
+ * pointer elem, and has the specified size in bytes.
+ */
 void sendData(void* elem, size_t size);
+
+/* Helper function to send a message over the socket */
 void sendMessage(int message);
+
+/* Receive data from the socket. Same arguments as sendData() */
 void receiveData(void* elem, size_t size);
 
 #endif

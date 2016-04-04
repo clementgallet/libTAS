@@ -17,10 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LCF_H_INCL
-#define LCF_H_INCL
+#ifndef LIBTAS_LCF_H_INCL
+#define LIBTAS_LCF_H_INCL
 
-/* Taken from the Hourglass code. Some categories will obviously not be used. */
+/* Taken from the Hourglass code.
+ * Categories for printing debug messages.
+ * Some categories will obviously not be used. */
 typedef int LogCategoryFlag; enum
 {
 	LCF_NONE     = 0,
@@ -53,7 +55,7 @@ typedef int LogCategoryFlag; enum
 	LCF_JOYSTICK = 1 << 21, // for both SDL_Joystick and SDL_GameController
 	LCF_OPENAL   = 1 << 22, // call to openAL functions
 	LCF_SOUND    = 1 << 23,
-	LCF_UDEV  = 1 << 24,
+	//LCF_UDEV     = 1 << 24,
 	//LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.
 	LCF_EVENTS   = 1 << 26, // processing SDL events
 	LCF_WINDOW   = 1 << 27, // windows windows
@@ -64,4 +66,5 @@ typedef int LogCategoryFlag; enum
     LCF_ALL = -1,
 };
 
-#endif // LCF_H_INCL
+#endif
+

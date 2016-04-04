@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MESSAGES_H_INCLUDED
-#define MESSAGES_H_INCLUDED
+#ifndef LIBTAS_MESSAGES_H_INCLUDED
+#define LIBTAS_MESSAGES_H_INCLUDED
 
 enum {
     /* 
@@ -77,12 +77,6 @@ enum {
     MSGN_DUMP_FILE,
 
     /*
-     * Send the path of the SDL library to the game
-     * Arguments: size_t (string length) then char[len]
-     */
-    MSGN_SDL_FILE,
-
-    /*
      * Send the name of a shared library used by the game
      * Arguments: size_t (string length) then char[len]
      */
@@ -95,4 +89,5 @@ enum {
     MSGB_WINDOW_ID,
 };
 
-#endif // MESSAGES_H_INCLUDED
+#endif
+

@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_H_INCLUDED
-#define LIBTAS_H_INCLUDED
+#ifndef LIBTAS_LIBTAS_H_INCLUDED
+#define LIBTAS_LIBTAS_H_INCLUDED
 
 #include "../external/SDL.h"
 #include "global.h"
@@ -27,9 +27,27 @@
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
 
+/**
+ *  This function initializes the subsystems specified by \c flags
+ */
 OVERRIDE void SDL_Init(unsigned int flags);
+
+/**
+ *  This function initializes specific SDL subsystems
+ *
+ *  Subsystem initialization is ref-counted, you must call
+ *  SDL_QuitSubSystem for each SDL_InitSubSystem to correctly
+ *  shutdown a subsystem manually (or call SDL_Quit to force shutdown).
+ *  If a subsystem is already loaded then this call will
+ *  increase the ref-count and return.
+ */
 OVERRIDE int SDL_InitSubSystem(Uint32 flags);
+
+/**
+ *  This function cleans up all initialized subsystems. You should
+ *  call it upon all exit conditions.
+ */
 OVERRIDE void SDL_Quit(void);
 
-#endif // LIBTAS_H_INCLUDED
+#endif
 

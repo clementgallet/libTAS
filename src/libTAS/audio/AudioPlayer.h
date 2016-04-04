@@ -17,14 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AUDIOPLAYER_H_INCL
-#define AUDIOPLAYER_H_INCL
+#ifndef LIBTAS_AUDIOPLAYER_H_INCL
+#define LIBTAS_AUDIOPLAYER_H_INCL
 
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
 
 #include "AudioContext.h"
 #include <pulse/simple.h>
 
+/* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
     public:

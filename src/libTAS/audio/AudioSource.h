@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AUDIOSOURCE_H_INCL
-#define AUDIOSOURCE_H_INCL
+#ifndef LIBTAS_AUDIOSOURCE_H_INCL
+#define LIBTAS_AUDIOSOURCE_H_INCL
 
 #include <vector>
 #include "AudioBuffer.h"
@@ -30,8 +30,22 @@ extern "C" {
 
 enum SourceType {
     SOURCE_UNDETERMINED,
+
+    /* Source does only store one audio buffer, and stops at the end
+     * of it, or loop back.
+     */
     SOURCE_STATIC,
+
+    /* Source stores a queue of buffers and read the next one when the
+     * current one is finish reading.
+     * The game can pull buffers from the queue that have been read
+     * entirely, and push more buffers
+     */
     SOURCE_STREAMING,
+
+    /* Source stores only one audio buffer. When it is finished reading,
+     * it calls a callback function that refills the audio buffer
+     */
     SOURCE_CALLBACK,
 };
 
@@ -42,6 +56,14 @@ enum SourceState {
     SOURCE_PAUSED,
 };
 
+/* Class storing an audio source, whose role is to control the playback
+ * of an audio buffer or a queue of audio buffers.
+ * It is also in charge of eventually resample the buffer(s) and mix them
+ * with an extern sample buffer.
+ *
+ * Its role is close to the openAL source object, with some additions from
+ * SDL audio system (callback method mainly).
+ */
 class AudioSource
 {
     public:

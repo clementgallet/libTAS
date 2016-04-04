@@ -17,15 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPENGL_H_INCL
-#define OPENGL_H_INCL
+#ifndef LIBTAS_OPENGL_H_INCL
+#define LIBTAS_OPENGL_H_INCL
 
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "../external/SDL_ttf.h"
 
+/* Link to openGL functions */
 void link_opengl(void);
 
+/* Build and display an openGL texture containing the specified text
+ * For now, does not really work.
+ */
 void RenderText(TTF_Font *font, const char* message, int sw, int sh, SDL_Color color, int x, int y);
 
 #endif

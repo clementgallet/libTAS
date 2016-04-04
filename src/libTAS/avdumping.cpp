@@ -328,7 +328,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
 }
 
 
-int closeAVDumping() {
+int closeAVDumping(void) {
     /* Encode the remaining frames */
     int got_video = 1;
     int got_audio = 1;

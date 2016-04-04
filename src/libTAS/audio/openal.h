@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPENAL_H_INCL
-#define OPENAL_H_INCL
+#ifndef LIBTAS_OPENAL_H_INCL
+#define LIBTAS_OPENAL_H_INCL
 
 #include "../global.h"
 

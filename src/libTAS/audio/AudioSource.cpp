@@ -202,11 +202,11 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int outNbSamples = outBytes / outAlignSize;
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     mixedSamples.resize(outBytes);
+    uint8_t* begMixed = &mixedSamples[0];
 #endif
 
     int convOutSamples = 0;
     uint8_t* begSamples = &curBuf->samples[oldPosition];
-    uint8_t* begMixed = &mixedSamples[0];
     if (newPosition <= curBuf->size) {
         /* We did not reach the end of the buffer, easy case */
 

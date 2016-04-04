@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DLHOOK_H_INCLUDED
-#define DLHOOK_H_INCLUDED
+#ifndef LIBTAS_DLHOOK_H_INCLUDED
+#define LIBTAS_DLHOOK_H_INCLUDED
 
 #include <dlfcn.h>
 #include <string>
@@ -58,6 +58,9 @@
  * the internal struct of dl functions
  */
 
+/* Internal struct of pointers to dl functions that is used
+ * specifically by glibc
+ */
 extern struct dlfcn_hook {
     void *(*dlopen)(const char *, int, void *);
     int (*dlclose)(void *);
@@ -71,15 +74,29 @@ extern struct dlfcn_hook {
     void *pad[4];
 } *_dlfcn_hook;
 
-std::string find_lib(const char* library);
-
+/* Set of libraries that are loaded by the game,
+ * either at startup (link time) or using the dl functions.
+ */
 extern std::vector<std::string> libraries;
 
-/* Functions specifying that we want to call the original functions */
+/* Locate a library path in the above set from a substring,
+ * and returns the first match.
+ */
+std::string find_lib(const char* library);
+
+/* Functions used to call the original dl functions.
+ * Use like this:
+ *   dlenter();
+ *   fp = dlsym(RTLD_NEXT, source); // Will call real dlsym function.
+ *   dlleave();
+ * dlenter() and dlleave() have a call count.
+ * You can call multiple times dlenter() (e.g. in different threads),
+ * but must call dlleave() the same number of times.
+ */
 void dlenter(void);
 void dlleave(void);
 
-/* Custom version of each dl functions */
+/* Custom version of each dl function */
 void *my_dlopen(const char *file, int mode, void *dl_caller);
 int my_dlclose(void *handle);
 void *my_dlsym(void *handle, const char *name, void *dl_caller);
@@ -90,10 +107,15 @@ int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags)
 int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
 void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
 
-/* We must call the init function before ever attempting to call an
- * original dl function, otherwise expect an endless loop.
+/* Set up the our function pointers to replace the internal function pointers
+ * of the dl library.
+ * We *must* call the init function as early as possible, before the game or
+ * any library has a chance to call a dl function. Also before we start to use
+ * dlenter() and dlleave(). Otherwise we can miss hooking some functions,
+ * or can trigger an endless loop.
  */
 void dlhook_init(void);
 void dlhook_end(void);
 
 #endif
+

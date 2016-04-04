@@ -5,7 +5,12 @@ rm -f /tmp/libTAS.socket
 
 Usage ()
 {
-    echo "usage: run.sh gameexecutable [game options]"
+    echo "Usage: ./run.sh [options] game_executable_path [game_cmdline_arguments]"
+    echo "Options are:"
+    echo "  -d, --dump FILE     Start a audio/video encode into the specified FILE"
+    echo "  -r, --read MOVIE    Play game inputs from MOVIE file"
+    echo "  -w, --write MOVIE   Record game inputs into the specified MOVIE file"
+    echo "  -h, --help          Show this message"
 }
 
 gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy

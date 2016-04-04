@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SDLAUDIO_H_INCL
-#define SDLAUDIO_H_INCL
+#ifndef LIBTAS_SDLAUDIO_H_INCL
+#define LIBTAS_SDLAUDIO_H_INCL
 
 #include "../global.h"
 #include "../../external/SDL.h"

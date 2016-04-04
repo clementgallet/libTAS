@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STEAM_H_INCL
-#define STEAM_H_INCL
+#ifndef LIBTAS_STEAM_H_INCL
+#define LIBTAS_STEAM_H_INCL
 
 #include "global.h"
 

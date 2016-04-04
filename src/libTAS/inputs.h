@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INPUTS_H_INCL
-#define INPUTS_H_INCL
+#ifndef LIBTAS_INPUTS_H_INCL
+#define LIBTAS_INPUTS_H_INCL
 
 #include "../external/SDL.h"
 #include "global.h"
@@ -45,8 +45,8 @@ typedef struct {
 } SDL_JoystickGUID;
 
 /* Keyboard functions */
-OVERRIDE Uint8* SDL_GetKeyboardState(int* numkeys);
-OVERRIDE Uint8* SDL_GetKeyState( int* numkeys);
+OVERRIDE Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
+OVERRIDE Uint8* SDL_GetKeyState( int* numkeys); // SDL 1
 
 /* 
  * Generate at most `num` events of type SDL_KEYUP, store them in `events`
@@ -284,4 +284,5 @@ OVERRIDE SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick);
  */
 OVERRIDE void SDL_HapticClose(SDL_Haptic * haptic);
 
-#endif // INPUTS_H_INCL
+#endif
+

@@ -17,12 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AUDIOBUFFER_H_INCL
-#define AUDIOBUFFER_H_INCL
+#ifndef LIBTAS_AUDIOBUFFER_H_INCL
+#define LIBTAS_AUDIOBUFFER_H_INCL
 
 #include <vector>
 #include <stdint.h>
 
+/* Class storing samples of an audio buffer, and all the related information
+ * like sample format, frequency, channels, etc.
+ */
 class AudioBuffer
 {
     public:

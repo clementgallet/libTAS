@@ -17,14 +17,27 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VIDEOCAPTURE_H_INCL
-#define VIDEOCAPTURE_H_INCL
+#ifndef LIBTAS_VIDEOCAPTURE_H_INCL
+#define LIBTAS_VIDEOCAPTURE_H_INCL
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
 #include <stdint.h>
 
+/* Initiate the video capture and get the screen dimensions
+ * @return 0 if successful or 1 if an error occured
+ */
 int initVideoCapture(void* window, int video_opengl, int *pwidth, int *pheight);
+
+/* Capture the pixels from the screen and copy it to the following structs:
+ * @param plane   Array of 4 elements containing a pointer to list of
+ *                pixel values for each plane. For non-planar formats
+ *                (like RGB/RGBA), all pixels are stored in the first list
+ * @param stride  Array of 4 elements containing the size in bytes of a
+ *                row of pixels for each plane. For non-planar formats,
+ *                the first element contains width * (size of a pixel).
+ * @return        0 if successful or 1 if an error occured
+ */
 int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride[]);
 
 #endif

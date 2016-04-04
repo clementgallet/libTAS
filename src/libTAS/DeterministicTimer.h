@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DETERMINISTICTIMER_H_INCL
-#define DETERMINISTICTIMER_H_INCL
+#ifndef LIBTAS_DETERMINISTICTIMER_H_INCL
+#define LIBTAS_DETERMINISTICTIMER_H_INCL
 
 #include <time.h>
 #include "TimeHolder.h"

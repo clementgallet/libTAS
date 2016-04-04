@@ -17,21 +17,36 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HOOK_H_INCLUDED
-#define HOOK_H_INCLUDED
+#ifndef LIBTAS_HOOK_H_INCLUDED
+#define LIBTAS_HOOK_H_INCLUDED
 
 #include "../external/SDL.h"
 
+/* Version of the SDL library */
 extern int SDLver;
+
 extern void (*SDL_GetVersion_real)(SDL_version* ver);
 
+/* Get access to a function from a substring of the library name
+ * For example, if we want to access to the SDL_Init() function:
+ *   void (*SDL_Init_real)(void);
+ *   link_function((void**)&SDL_Init_real, "SDL_Init", "libSDL2-2");
+ *
+ * @param[out] function   pointer the function pointer we want to access
+ * @param[in]  source     name of the function we want to access
+ * @param[in]  library    substring of the name of the library which contains the function
+ * @return                whether we successfully accessed to the function
+ */
+bool link_function(void** function, const char* source, const char* library);
+
+/* Some macros to make the above function easier to use */
 #define LINK_SUFFIX(FUNC,LIB) link_function((void**)&FUNC##_real, #FUNC, LIB)
 #define LINK_SUFFIX_SDL1(FUNC) LINK_SUFFIX(FUNC,"libSDL-1.2")
 #define LINK_SUFFIX_SDL2(FUNC) LINK_SUFFIX(FUNC,"libSDL2-2")
 #define LINK_SUFFIX_SDLX(FUNC) (SDLver==1)?LINK_SUFFIX_SDL1(FUNC):LINK_SUFFIX_SDL2(FUNC)
 
-
-bool link_function(void** function, const char* source, const char* library);
+/* Returns the major version of the SDL library used in the game */
 int get_sdlversion(void);
 
-#endif // HOOKSDL_H_INCLUDED
+#endif
+

@@ -27,7 +27,7 @@ void* (*SDL_CreateThread_real)(int(*fn)(void*),
                        const char*   name,
                        void*         data);
 void (*SDL_WaitThread_real)(void* thread, int *status);
-//void (*SDL_DetachThread_real)(void * thread);
+void (*SDL_DetachThread_real)(void * thread);
 
 int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
 void __attribute__((__noreturn__)) (*pthread_exit_real) (void *retval) = nullptr;
@@ -80,17 +80,16 @@ int isMainThread(void)
 
 /* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
-    debuglog(LCF_THREAD, "Waiting for another SDL thread.");
+    DEBUGLOGCALL(LCF_THREAD);
     SDL_WaitThread_real(thread, status);
-
 }
-/*
-void SDL_DetachThread(SDL_Thread * thread)
+
+/* Override */ void SDL_DetachThread(SDL_Thread * thread)
 {
-    debuglog(LCF_THREAD, "Some SDL thread is detaching.\n");
+    DEBUGLOGCALL(LCF_THREAD);
     SDL_DetachThread(thread);
 }
-*/
+
 
 void link_pthread(void);
 void link_pthread(void)
@@ -172,6 +171,6 @@ void link_sdlthreads(void)
 {
     LINK_SUFFIX_SDLX(SDL_CreateThread);
     LINK_SUFFIX_SDLX(SDL_WaitThread);
+    LINK_SUFFIX_SDLX(SDL_DetachThread);
 }
-
 

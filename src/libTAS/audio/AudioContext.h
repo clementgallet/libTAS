@@ -17,14 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AUDIOCONTEXT_H_INCL
-#define AUDIOCONTEXT_H_INCL
+#ifndef LIBTAS_AUDIOCONTEXT_H_INCL
+#define LIBTAS_AUDIOCONTEXT_H_INCL
 
 #include <vector>
 #include <forward_list>
 #include "AudioBuffer.h"
 #include "AudioSource.h"
 
+/* This class stores a set of audio sources and audio buffers, and
+ * is in charge of creating or deleting them.
+ * It makes the mixing of all sources that are playing, and
+ * eventually send the mixed samples to the audio player
+ *
+ * For now, only one object is created, even if openAL can
+ * deal with multiple contexts, or SDL can open multiple devices.
+ */
 class AudioContext
 {
     public:

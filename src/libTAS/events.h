@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EVENTS_H_INCLUDED
-#define EVENTS_H_INCLUDED
+#ifndef LIBTAS_EVENTS_H_INCLUDED
+#define LIBTAS_EVENTS_H_INCLUDED
 
 #include "global.h"
 #include "../external/SDL.h"
@@ -189,10 +189,10 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
  */
 int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mask);
 
-/* Return if the SDL event must be passed to the game or be filtered */
+/* Return if the SDL 1 event must be passed to the game or be filtered */
 int filterSDL1Event(SDL1::SDL_Event *event);
 
-/* Return if the SDL event must be passed to the game or be filtered */
+/* Return if the SDL 2 event must be passed to the game or be filtered */
 int filterSDL2Event(SDL_Event *event);
 
 /* Print which event type is it */

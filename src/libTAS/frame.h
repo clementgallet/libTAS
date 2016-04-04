@@ -17,10 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FRAME_H_INCL
-#define FRAME_H_INCL
+#ifndef LIBTAS_FRAME_H_INCL
+#define LIBTAS_FRAME_H_INCL
 
+/* Called to initiate a frame boundary.
+ * Does several things like:
+ * - Advancing timers
+ * - Receiving data from linTAS and sending data to it
+ * - Dumping audio/video
+ *
+ * It is mainly called during a screen refresh, but can be called
+ * also by the timer when we need to advance time to avoid a
+ * game softlock (game expect time to pass).
+ */
 void frameBoundary(void);
+
+/* Process messages that are received from linTAS */
 void proceed_commands(void);
 
 #endif
