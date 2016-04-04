@@ -183,6 +183,35 @@ OVERRIDE void SDL_GameControllerClose(SDL_GameController *gamecontroller);
  */
 OVERRIDE SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick);
 
+/**
+ *  Return the name for this currently opened joystick.
+ *  If no name can be found, this function returns NULL.
+ */
+OVERRIDE const char *SDL_JoystickName(SDL_Joystick * joystick);
+
+/**
+ *  Get the number of general axis controls on a joystick.
+ */
+OVERRIDE int SDL_JoystickNumAxes(SDL_Joystick * joystick);
+
+/**
+ *  Get the number of trackballs on a joystick.
+ *
+ *  Joystick trackballs have only relative motion events associated
+ *  with them and their state cannot be polled.
+ */
+OVERRIDE int SDL_JoystickNumBalls(SDL_Joystick * joystick);
+
+/**
+ *  Get the number of POV hats on a joystick.
+ */
+OVERRIDE int SDL_JoystickNumHats(SDL_Joystick * joystick);
+
+/**
+ *  Get the number of buttons on a joystick.
+ */
+OVERRIDE int SDL_JoystickNumButtons(SDL_Joystick * joystick);
+
 
 
 /*** Haptic devices ***/

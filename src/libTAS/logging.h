@@ -53,7 +53,7 @@ std::string stringify(unsigned long int id);
 void debuglogverbose(LogCategoryFlag lcf, std::string str);
 
 void catlog(std::ostringstream &oss);
-inline void catlog(std::ostringstream &oss) {}
+inline void catlog(std::ostringstream&) {}
 
 template<typename First, typename ...Rest>
 void catlog (std::ostringstream &oss, First && first, Rest && ...rest);

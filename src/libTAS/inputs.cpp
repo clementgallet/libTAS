@@ -69,7 +69,7 @@ int controller_events = 1;
  * the events won't be returned again 
  */
 
-int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
+int generateKeyUpEvent(void *events, void* gw, int num, int update)
 {
     int evi = 0;
     int i, j;
@@ -90,7 +90,7 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
                 SDL_Event* events2 = (SDL_Event*)events;
                 events2[evi].type = SDL_KEYUP;
                 events2[evi].key.state = SDL_RELEASED;
-                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+                events2[evi].key.windowID = SDL_GetWindowID_real(gw);
 				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -132,7 +132,7 @@ int generateKeyUpEvent(void *events, void* gameWindow, int num, int update)
 
 
 /* Generate pressed keyboard input events */
-int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
+int generateKeyDownEvent(void *events, void* gw, int num, int update)
 {
     int evi = 0;
     int i,j,k;
@@ -153,7 +153,7 @@ int generateKeyDownEvent(void *events, void* gameWindow, int num, int update)
                 SDL_Event* events2 = (SDL_Event*)events;
                 events2[evi].type = SDL_KEYDOWN;
                 events2[evi].key.state = SDL_PRESSED;
-                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
+                events2[evi].key.windowID = SDL_GetWindowID_real(gw);
 				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 

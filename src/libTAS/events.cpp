@@ -189,7 +189,6 @@ int (*SDL1_PeepEvents_real)(SDL1::SDL_Event*, int, SDL_eventaction, Uint32);
         return (t<timeout);
     }
     else {
-        SDL_Event ev;
         for (t=0; t<timeout; t++) {
             SDL_PumpEvents_real();
             if (getSDL2Events(event, 1, 0, SDL_FIRSTEVENT, SDL_LASTEVENT))

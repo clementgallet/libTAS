@@ -310,7 +310,6 @@ void alSourcei(ALuint source, ALenum param, ALint value)
     }
 
     AudioBuffer* bindab;
-    SourceState state;
     switch(param) {
         case AL_LOOPING:
             debuglog(LCF_OPENAL, "  Set looping of ", value);
@@ -515,6 +514,9 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
                 case SOURCE_STREAMING:
                     *value = AL_STREAMING;
                     debuglog(LCF_OPENAL, "  Get source type STREAMING");
+                    break;
+                default:
+                    ALSETERROR(AL_INVALID_VALUE);
                     break;
             }
             break;

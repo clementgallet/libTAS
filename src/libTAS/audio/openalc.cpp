@@ -157,11 +157,11 @@ ALCenum alcError;
     DEBUGLOGCALL(LCF_OPENAL);
     if (enumname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
-        return NULL;
+        return 0;
     }
     
     debuglog(LCF_OPENAL | LCF_ERROR, "Requesting enum ", enumname);
-    return NULL;
+    return 0;
 }
 
 const ALCchar* alcNoErrorStr = "No error";

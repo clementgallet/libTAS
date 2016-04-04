@@ -268,6 +268,8 @@ const char* dummySDLDevice = "libTAS device";
     ab->samples.insert(ab->samples.end(), &((uint8_t*)data)[0], &((uint8_t*)data)[len]);
     ab->size = len;
     sourceSDL->buffer_queue.push_back(ab);
+
+    return 0;
 }
 
 /* Override */ Uint32 SDL_GetQueuedAudioSize(SDL_AudioDeviceID dev)

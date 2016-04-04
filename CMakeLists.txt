@@ -19,7 +19,7 @@ target_compile_features(TAS PRIVATE cxx_auto_type cxx_nullptr cxx_range_for cxx_
 target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 
 # Common flags
-target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Wredundant-decls -Winit-self -Wshadow)
+target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter)
 
 # Add X11 library
 find_package(X11 REQUIRED)

@@ -141,6 +141,33 @@ OVERRIDE void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata);
  */
 OVERRIDE void SDL_FilterEvents(SDL_EventFilter filter, void *userdata);
 
+/* @{ */
+#define SDL_QUERY   -1
+#define SDL_IGNORE   0
+#define SDL_DISABLE  0
+#define SDL_ENABLE   1
+
+/**
+ *  This function allows you to set the state of processing certain events.
+ *   - If \c state is set to ::SDL_IGNORE, that event will be automatically
+ *     dropped from the event queue and will not event be filtered.
+ *   - If \c state is set to ::SDL_ENABLE, that event will be processed
+ *     normally.
+ *   - If \c state is set to ::SDL_QUERY, SDL_EventState() will return the
+ *     current processing state of the specified event.
+ */
+OVERRIDE Uint8 SDL_EventState(Uint32 type, int state);
+/* @} */
+
+/**
+ *  This function allocates a set of user-defined events, and returns
+ *  the beginning event number for that set of events.
+ *
+ *  If there aren't enough user-defined events left, this function
+ *  returns (Uint32)-1
+ */
+OVERRIDE Uint32 SDL_RegisterEvents(int numevents);
+
 /* 
  * This helper function will return a number of events from the generated event queue.
  * This event queue consists on the real SDL event queue with our own filter

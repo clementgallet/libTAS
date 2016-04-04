@@ -139,7 +139,7 @@ static int swapInterval = 0;
     return 0; // Success
 }
     
-/* Override */ int SDL_GL_GetSwapInterval(int interval)
+/* Override */ int SDL_GL_GetSwapInterval(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL);
     return swapInterval;

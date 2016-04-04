@@ -54,7 +54,6 @@ void frameBoundary(void)
     sendMessage(MSGB_START_FRAMEBOUNDARY);
     sendData(&frame_counter, sizeof(unsigned long));
 
-    struct TasFlags oldflags = tasflags;
     proceed_commands();
 
     /* We don't update AllInputs old_ai here. We update during the generation of events */

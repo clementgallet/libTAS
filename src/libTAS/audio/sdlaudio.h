@@ -97,23 +97,6 @@ typedef Uint16 SDL_AudioFormat;
 /* @} */
 
 /**
- *  \name Native audio byte ordering
- */
-/* @{ */
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-#define AUDIO_U16SYS    AUDIO_U16LSB
-#define AUDIO_S16SYS    AUDIO_S16LSB
-#define AUDIO_S32SYS    AUDIO_S32LSB
-#define AUDIO_F32SYS    AUDIO_F32LSB
-#else
-#define AUDIO_U16SYS    AUDIO_U16MSB
-#define AUDIO_S16SYS    AUDIO_S16MSB
-#define AUDIO_S32SYS    AUDIO_S32MSB
-#define AUDIO_F32SYS    AUDIO_F32MSB
-#endif
-/* @} */
-
-/**
  *  \name Allow change flags
  *
  *  Which audio format changes are allowed when opening a device.

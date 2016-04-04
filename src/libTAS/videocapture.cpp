@@ -132,6 +132,8 @@ int initVideoCapture(void* window, int video_opengl, int *pwidth, int *pheight)
          */
         glpixels.resize(size);
     }
+
+    return 0;
 }
 
 int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride[])
@@ -211,6 +213,7 @@ int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride
     orig_plane[0] = (const uint8_t*)(&winpixels[0]);
     orig_stride[0] = width * 4;
 
+    return 0;
 }
 
 #endif
