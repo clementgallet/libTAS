@@ -40,6 +40,7 @@
 - Process and filter SDL events
 - Dump audio
 -- Support compressed formats (MSADPCM)
+--- See https://github.com/flibitijibibo/FNA-MGHistory/blob/fez-sdl2/MonoGame.Framework/Audio/MSADPCMToPCM.cs
 -- Test SDL 2 Audio (push method)
 
 ## Done

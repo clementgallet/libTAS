@@ -19,24 +19,22 @@
 
 #include "openalc.h"
 #include "../logging.h"
+#include <iostream>
 
-#define MAXCONTEXTS 32 // TODO: Get proper value
-
-ALCdevice dummyDevice;
-ALCcontext dummyContexts[MAXCONTEXTS];
-int highestContext = -1;
+ALCdevice dummyDevice = 0;
+ALCcontext dummyContext = -1;
 ALCcontext currentContext = -1;
 
-ALCenum alcError;
+ALCenum alcError = ALC_NO_ERROR;
 #define ALCSETERROR(error) if(alcError==ALC_NO_ERROR) alcError = error
 
 /* Override */ ALCenum alcGetError(ALCdevice *device)
 {
+    DEBUGLOGCALL(LCF_OPENAL);
     ALCenum err = alcError;
     alcError = ALC_NO_ERROR;
     return err;
 }
-
 
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
@@ -53,11 +51,12 @@ ALCenum alcError;
 /* Override */ ALCcontext* alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    highestContext++;
-    dummyContexts[highestContext] = highestContext;
-    if (highestContext > 0)
+    if (dummyContext != -1) {
         debuglog(LCF_OPENAL | LCF_TODO, "We don't support multiple openAL contexts yet");
-    return &dummyContexts[highestContext];
+        return NULL;
+    }
+    dummyContext = 0;
+    return &dummyContext;
 }
 
 /* Override */ ALCboolean alcMakeContextCurrent(ALCcontext *context)
@@ -66,15 +65,15 @@ ALCenum alcError;
 
     if (context == NULL) {
         currentContext = -1;
-        return ALC_FALSE;
-    }
-
-    if (dummyContexts[*context] == -1) {
-        ALCSETERROR(ALC_INVALID_CONTEXT);
         return ALC_TRUE;
     }
+
+    if (*context != 0) {
+        ALCSETERROR(ALC_INVALID_CONTEXT);
+        return ALC_FALSE;
+    }
     currentContext = *context;
-    return ALC_FALSE;
+    return ALC_TRUE;
 }
 
 /* Override */ void alcProcessContext(ALCcontext *context)
@@ -82,7 +81,7 @@ ALCenum alcError;
     DEBUGLOGCALL(LCF_OPENAL);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
-    if (dummyContexts[*context] == -1)
+    if (*context != dummyContext)
         ALCSETERROR(ALC_INVALID_CONTEXT);
 }
 
@@ -91,7 +90,7 @@ ALCenum alcError;
     DEBUGLOGCALL(LCF_OPENAL);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
-    if (dummyContexts[*context] == -1)
+    if (*context != dummyContext)
         ALCSETERROR(ALC_INVALID_CONTEXT);
 }
 
@@ -100,12 +99,12 @@ ALCenum alcError;
     DEBUGLOGCALL(LCF_OPENAL);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
-    if (dummyContexts[*context] != -1) {
+    if (*context == dummyContext) {
         if (*context == currentContext) {
             ALCSETERROR(ALC_INVALID_VALUE);
         }
         else {
-            dummyContexts[*context] = -1;
+            dummyContext = -1;
         }
     }
     else
@@ -118,7 +117,7 @@ ALCenum alcError;
     if (currentContext == -1)
         return NULL;
     else
-        return &dummyContexts[currentContext];
+        return &dummyContext;
 
 }
 
@@ -174,11 +173,12 @@ const ALCchar* alcExtensionsStr = ""; // extensions strings separated by space
 const ALCchar* alcDeviceListStr = "libTAS device\0"; // must be double null-terminated
 const ALCchar* alcDeviceStr = "libTAS device";
 const ALCchar* alcCaptureListStr = "\0"; // must be double null-terminated
-
+const ALCchar* alcDefault = "";
 
 /* Override */ const ALCchar* alcGetString(ALCdevice *device, ALCenum param)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    //debuglog(LCF_OPENAL, __func__, " call with param ", std::hex, param, std::dec);
+    debuglog(LCF_OPENAL, __func__, " call with param ", param);
 
     switch (param) {
         case ALC_DEFAULT_DEVICE_SPECIFIER:
@@ -230,7 +230,7 @@ const ALCchar* alcCaptureListStr = "\0"; // must be double null-terminated
         case ALC_OUT_OF_MEMORY:
             return alcOutOfMemoryStr;
         default:
-            return NULL;
+            return alcDefault;
     }
 }
 
