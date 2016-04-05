@@ -244,6 +244,8 @@ const char* dummySDLDevice = "libTAS device";
         return -1;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     /* We try to reuse a buffer that has been processed from the source*/
     AudioBuffer *ab;
     if (sourceSDL->nbQueueProcessed() > 0) {

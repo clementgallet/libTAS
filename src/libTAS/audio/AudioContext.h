@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <forward_list>
+#include <mutex>
 #include "AudioBuffer.h"
 #include "AudioSource.h"
 
@@ -89,6 +90,9 @@ class AudioContext
 
         /* Mix all source that are playing */
         void mixAllSources(struct timespec ticks);
+
+        /* Mutex to protect access to all audio objects */
+        std::mutex mutex;
 
     private:
         std::forward_list<AudioBuffer*> buffers;

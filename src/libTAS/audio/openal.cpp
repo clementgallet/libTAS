@@ -36,33 +36,33 @@ ALenum alGetError(ALvoid)
 void alGenBuffers(ALsizei n, ALuint *buffers)
 {
     debuglog(LCF_OPENAL, __func__, " call - generate ", n, " buffers");
-	for (int i=0; i<n; i++) {
-		int id = audiocontext.createBuffer();
-		if (id > 0)
-			buffers[i] = (ALuint) id;
-		/* TODO: else generate an error */ 
-	}
+    for (int i=0; i<n; i++) {
+        int id = audiocontext.createBuffer();
+        if (id > 0)
+            buffers[i] = (ALuint) id;
+        /* TODO: else generate an error */ 
+    }
 }
 
 void alDeleteBuffers(ALsizei n, ALuint *buffers)
 {
     debuglog(LCF_OPENAL, __func__, " call - delete ", n, " buffers");
-	for (int i=0; i<n; i++) {
+    for (int i=0; i<n; i++) {
         /* Check if all buffers exist before removing any. */
-	    if (! audiocontext.isBuffer(buffers[i])) {
+        if (! audiocontext.isBuffer(buffers[i])) {
             ALSETERROR(AL_INVALID_NAME);
             return;
         }
     }
-	for (int i=0; i<n; i++) {        
-		audiocontext.deleteBuffer(buffers[i]);
-	}
+    for (int i=0; i<n; i++) {        
+        audiocontext.deleteBuffer(buffers[i]);
+    }
 }
 
 ALboolean alIsBuffer(ALuint buffer)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-	return audiocontext.isBuffer(buffer);
+    return audiocontext.isBuffer(buffer);
 }
 
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
@@ -74,6 +74,8 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    
     /* Fill the buffer informations */
     ab->size = size;
     ab->frequency = freq;
@@ -236,6 +238,8 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     AudioBuffer* ab;
     switch(param) {
         case AL_GAIN:
@@ -309,6 +313,8 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     AudioBuffer* bindab;
     switch(param) {
@@ -569,6 +575,8 @@ void alSourcePlay(ALuint source)
     if (as == nullptr)
         return;
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     if (as->state == SOURCE_PLAYING) {
         /* Restart the play from the beginning */
         as->setPosition(0);
@@ -589,6 +597,8 @@ void alSourcePause(ALuint source)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     if (as->state != SOURCE_PLAYING) {
         /* Illegal operation. */
@@ -611,6 +621,8 @@ void alSourceStop(ALuint source)
     if (as == nullptr)
         return;
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     if ((as->state == SOURCE_INITIAL) || (as->state == SOURCE_STOPPED)) {
         /* Illegal operation. */
         return;
@@ -631,6 +643,8 @@ void alSourceRewind(ALuint source)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     if (as->state == SOURCE_INITIAL) {
         /* Illegal operation. */
@@ -653,6 +667,8 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Check if the source has a static buffer attached */
     if (as->source == SOURCE_STATIC) {
@@ -680,6 +696,8 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Check if we can unqueue that number of buffers */
     int processedBuffers;
