@@ -119,6 +119,9 @@ class AudioSource
          */
         int ticksToBytes(struct timespec ticks, int alignSize, int frequency);
 
+        /* Init parameters */
+        void init();
+
         /* Returns the number of buffers in its queue
          * that were not processed (not read until the end),
          * not counting itself.

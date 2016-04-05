@@ -238,8 +238,6 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-
     AudioBuffer* ab;
     switch(param) {
         case AL_GAIN:
@@ -337,11 +335,10 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 
             if (value == 0) {
                 /* Unbind buffer from source */
+                as->init();
                 as->buffer_queue.clear();
-                as->queue_index = 0;
                 as->source = SOURCE_UNDETERMINED;
-                as->position = 0;
-                as->samples_frac = 0;
+                as->state = SOURCE_INITIAL;
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
@@ -350,12 +347,11 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                     ALSETERROR(AL_INVALID_VALUE);
                     return;
                 }
+                as->init();
                 as->buffer_queue.clear();
                 as->buffer_queue.push_back(bindab);
-                as->queue_index = 0;
                 as->source = SOURCE_STATIC;
-                as->position = 0;
-                as->samples_frac = 0;
+                as->state = SOURCE_INITIAL;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;
@@ -468,7 +464,7 @@ void alGetSourcefv(ALuint source, ALenum param, ALfloat *values)
 
 void alGetSourcei(ALuint source, ALenum param, ALint *value)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglog(LCF_OPENAL, __func__, " call for source ", source);
 
     if (value == nullptr) {
         return;
@@ -575,8 +571,6 @@ void alSourcePlay(ALuint source)
     if (as == nullptr)
         return;
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-
     if (as->state == SOURCE_PLAYING) {
         /* Restart the play from the beginning */
         as->setPosition(0);
@@ -597,8 +591,6 @@ void alSourcePause(ALuint source)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
-
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     if (as->state != SOURCE_PLAYING) {
         /* Illegal operation. */
@@ -621,12 +613,11 @@ void alSourceStop(ALuint source)
     if (as == nullptr)
         return;
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-
     if ((as->state == SOURCE_INITIAL) || (as->state == SOURCE_STOPPED)) {
         /* Illegal operation. */
         return;
     }
+    as->init();
     as->state = SOURCE_STOPPED;
 }
 
@@ -643,8 +634,6 @@ void alSourceRewind(ALuint source)
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
-
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     if (as->state == SOURCE_INITIAL) {
         /* Illegal operation. */
@@ -663,7 +652,7 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
-    debuglog(LCF_OPENAL, "Pushing ", n, " buffers in the queue");
+    debuglog(LCF_OPENAL, "Pushing ", n, " buffers in the queue of source ", source);
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
@@ -697,8 +686,6 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     if (as == nullptr)
         return;
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-
     /* Check if we can unqueue that number of buffers */
     int processedBuffers;
     if (as->state == SOURCE_STOPPED)
@@ -712,6 +699,8 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     debuglog(LCF_OPENAL, "Unqueueing ", n, " buffers out of ", as->nbQueue());
     
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     /* Save the id of the unqueued buffers */
     for (int i=0; i<n; i++) {
         buffers[i] = as->buffer_queue[i]->id;

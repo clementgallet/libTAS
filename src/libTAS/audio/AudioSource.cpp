@@ -59,6 +59,17 @@ AudioSource::AudioSource(void)
 #endif
 }
 
+void AudioSource::init(void)
+{
+    position = 0;
+    samples_frac = 0;
+    queue_index = 0;
+#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+    if (swr_is_initialized(swr))
+        swr_close(swr);
+#endif
+}
+
 int AudioSource::nbQueue()
 {
     return buffer_queue.size();
@@ -331,13 +342,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (remainingBytes > 0) {
                 /* We reached the end of the buffer queue */
-                position = 0;
-                samples_frac = 0;
-                queue_index = 0;
+                init();
                 state = SOURCE_STOPPED;
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                swr_close(swr);
-#endif
                 debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
             }
             else {
