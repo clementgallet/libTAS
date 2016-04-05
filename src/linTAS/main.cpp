@@ -34,9 +34,6 @@
 //#include "savestates.h"
 #include <vector>
 #include <string>
-#ifdef CRIU
-#include "savestates_criu.h"
-#endif
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -58,7 +55,6 @@ std::vector<std::string> shared_libs;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
-    (void) display; // To remove unused warning
     (void) fprintf(stderr,
 		   "Ignoring Xlib error: error code %d request code %d\n",
 		   theEvent->error_code,
@@ -187,10 +183,6 @@ int main(int argc, char **argv)
 
     default_hotkeys(hotkeys);
 
-#ifdef CRIU
-    init_criu((int)game_pid);
-#endif
-
     if (tasflags.recording >= 0){
         fp = openRecording(moviefile, tasflags.recording);
     }
@@ -224,6 +216,7 @@ int main(int argc, char **argv)
                 XGetInputFocus(display, &gameWindow, &revert);
             }
             XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+#if 0
             int iError = XGrabKeyboard(display, gameWindow, 0,
                     GrabModeAsync, GrabModeAsync, CurrentTime); 
             if (iError != GrabSuccess && iError == AlreadyGrabbed) {
@@ -231,7 +224,7 @@ int main(int argc, char **argv)
                 XFlush(display);
                 fprintf(stderr, "Keyboard is already grabbed\n");    
             }
-
+#endif
             recv(socket_fd, &message, sizeof(int), 0);
         }
 
@@ -263,13 +256,10 @@ int main(int argc, char **argv)
                     isidle = 0;
             }
 
-            //fprintf(stderr, "ticks: %d\n", ar_ticks);
-
             while( XPending( display ) ) {
-            //while( XCheckWindowEvent( display, gameWindow, KeyPressMask | KeyReleaseMask, &event ) ) {
 
                 XNextEvent(display, &event);
-
+#if 0
                 if (event.type == FocusIn) {
                     fprintf(stderr, "Grabbing window\n");
                     int iError = XGrabKeyboard(display, gameWindow, 0,
@@ -284,10 +274,12 @@ int main(int argc, char **argv)
                     fprintf(stderr, "Ungrabbing window\n");
                     XUngrabKeyboard(display, CurrentTime);
                 }
+#endif
                 if (event.type == KeyPress)
                 {
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                    fprintf(stderr, "Pre\n");
 
                     if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
                         isidle = 0;
@@ -308,17 +300,9 @@ int main(int argc, char **argv)
                         //if (didSave)
                         //    deallocState(&savestate);
                         //saveState(game_pid, &savestate);
-#ifdef CRIU
-                        dump_criu();
-#endif
                         didSave = 1;
                     }
                     if (ks == hotkeys[HOTKEY_LOADSTATE]){
-#ifdef CRIU
-                        if (didSave)
-                            //loadState(game_pid, &savestate);
-                            restore_criu();
-#endif
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
@@ -331,10 +315,12 @@ int main(int argc, char **argv)
                 }
                 if (event.type == KeyRelease)
                 {
+                    fprintf(stderr, "Rel\n");
                     /* 
                      * Detect AutoRepeat key (KeyRelease followed by KeyPress) and skip both
                      * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
                      */
+#if 0
                     if (XEventsQueued(display, QueuedAfterReading))
                     {
                         XEvent nev;
@@ -349,8 +335,7 @@ int main(int argc, char **argv)
                             continue;
                         }
                     }
-
-                    //fprintf(stderr, "Rel\n");
+#endif
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == hotkeys[HOTKEY_FASTFORWARD]){
@@ -375,7 +360,7 @@ int main(int argc, char **argv)
         struct AllInputs ai;
 
         if (tasflags.recording == -1) {
-            /* Grab keyboard inputs */
+            /* Get keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
@@ -383,7 +368,7 @@ int main(int argc, char **argv)
         }
 
         if (tasflags.recording == 1) {
-            /* Grab keyboard inputs */
+            /* Get keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
