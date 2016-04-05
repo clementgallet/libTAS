@@ -22,11 +22,37 @@
 AudioBuffer::AudioBuffer(void)
 {
     id = 0;
+    format = SAMPLE_FMT_S16;
     bitDepth = 16;
     nbChannels = 2;
     alignSize = 4;
     frequency = 0;
     size = 0;
     processed = false;
+}
+
+void AudioBuffer::update(void)
+{
+    switch (format) {
+        case SAMPLE_FMT_U8:
+            bitDepth = 8;
+            break;
+        case SAMPLE_FMT_S16:
+            bitDepth = 16;
+            break;
+        case SAMPLE_FMT_S32:
+            bitDepth = 32;
+            break;
+        case SAMPLE_FMT_FLT:
+            bitDepth = 32;
+            break;
+        case SAMPLE_FMT_DBL:
+            bitDepth = 64;
+            break;
+        default:
+            break;
+    }
+
+    alignSize = nbChannels * bitDepth / 8;
 }
 

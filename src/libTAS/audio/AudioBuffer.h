@@ -23,6 +23,15 @@
 #include <vector>
 #include <stdint.h>
 
+enum SampleFormat {
+    SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
+    SAMPLE_FMT_S16, /* Signed 16-bit samples */ 
+    SAMPLE_FMT_S32, /* Signed 32-bit samples */ 
+    SAMPLE_FMT_FLT, /* 32-bit floating point samples */ 
+    SAMPLE_FMT_DBL, /* 64-bit floating point samples */ 
+    SAMPLE_FMT_NB
+};
+
 /* Class storing samples of an audio buffer, and all the related information
  * like sample format, frequency, channels, etc.
  */
@@ -31,10 +40,16 @@ class AudioBuffer
     public:
         AudioBuffer();
 
+        /* Update fields (bitDepth, alignSize) based on sample format */
+        void update(void);
+
         /* Identifier of the buffer */
         int id;
 
-        /* Bit depth of the buffer (usually 8 or 16) */
+        /* Sample format */
+        SampleFormat format;
+
+        /* Bit depth of the buffer */
         int bitDepth;
 
         /* Number of channels of the buffer */

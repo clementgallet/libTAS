@@ -138,10 +138,26 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     /* Get the sample format */
     AVSampleFormat inFormat, outFormat;
-    if (curBuf->bitDepth == 8)
-        inFormat = AV_SAMPLE_FMT_U8;
-    if (curBuf->bitDepth == 16)
-        inFormat = AV_SAMPLE_FMT_S16;
+    switch (curBuf->format) {
+        case SAMPLE_FMT_U8:
+            inFormat = AV_SAMPLE_FMT_U8;
+            break;
+        case SAMPLE_FMT_S16:
+            inFormat = AV_SAMPLE_FMT_S16;
+            break;
+        case SAMPLE_FMT_S32:
+            inFormat = AV_SAMPLE_FMT_S32;
+            break;
+        case SAMPLE_FMT_FLT:
+            inFormat = AV_SAMPLE_FMT_FLT;
+            break;
+        case SAMPLE_FMT_DBL:
+            inFormat = AV_SAMPLE_FMT_DBL;
+            break;
+        default:
+            debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Unknown sample format");
+            break;
+    }
     if (outBitDepth == 8)
         outFormat = AV_SAMPLE_FMT_U8;
     if (outBitDepth == 16)

@@ -9,11 +9,10 @@
 - Add an interface (ncurses?)
 - Support non-gamecontroller joysticks
 - Support mouse
-- Support non SDL stuff
+- Support non SDL stuff (Unity?)
 - Add config file for hotkeys and key remapping (libconfig?)
 - Add dummy Steam API functions so that the game can be launched without it
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
-- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 
 ### Fixes
 
@@ -31,6 +30,7 @@
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates (good luck)
+-- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 -- Disable openAL sound, remove one error
 -- Now got:
     [xcb] Unknown sequence number while processing queue

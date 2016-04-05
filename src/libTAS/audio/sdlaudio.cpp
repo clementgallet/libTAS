@@ -82,6 +82,9 @@ Uint16 bufferSamplesSize;
 
 AudioSource* sourceSDL;
 
+/* Function that is called by an AudioSource when the played sound buffer
+ * is empty
+ */
 void fillBufferCallback(AudioBuffer* ab);
 void fillBufferCallback(AudioBuffer* ab)
 {
@@ -109,22 +112,27 @@ void fillBufferCallback(AudioBuffer* ab)
 
         switch(desired->format) {
             case AUDIO_U8:
-                buffer->bitDepth = 8;
+                buffer->format = SAMPLE_FMT_U8;
                 break;
             case AUDIO_S16LSB:
-                buffer->bitDepth = 16;
+                buffer->format = SAMPLE_FMT_S16;
+                break;
+            case AUDIO_S32LSB:
+                buffer->format = SAMPLE_FMT_S32;
+                break;
+            case AUDIO_F32LSB:
+                buffer->format = SAMPLE_FMT_FLT;
                 break;
             default:
                 debuglog(LCF_SDL | LCF_SOUND, "Unsupported audio format");
                 return -1;
         }
         buffer->nbChannels = desired->channels;
+        buffer->update();
 
         debuglog(LCF_SDL | LCF_SOUND, "Format ",buffer->bitDepth," bits");
         debuglog(LCF_SDL | LCF_SOUND, "Frequency ",buffer->frequency, " Hz");
         debuglog(LCF_SDL | LCF_SOUND, "Channels ",buffer->nbChannels);
-
-        buffer->alignSize = buffer->nbChannels * buffer->bitDepth / 8;
 
         buffer->size = desired->samples * buffer->alignSize;
         buffer->samples.resize(buffer->size);
@@ -143,7 +151,7 @@ void fillBufferCallback(AudioBuffer* ab)
         desired->size = buffer->size;
 
         /* Filling silence value. Not sure what to put here */
-        desired->silence = (buffer->bitDepth==8)?0x80:0x00;
+        desired->silence = (buffer->format==SAMPLE_FMT_U8)?0x80:0x00;
 
         audioCallback = desired->callback;
         callbackArg = desired->userdata;
@@ -257,6 +265,7 @@ const char* dummySDLDevice = "libTAS device";
         }
 
         AudioBuffer *ref = sourceSDL->buffer_queue[0];
+        ab->format = ref->format;
         ab->bitDepth = ref->bitDepth;
         ab->nbChannels = ref->nbChannels;
         ab->alignSize = ref->alignSize;

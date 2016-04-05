@@ -74,26 +74,51 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
         return;
     }
 
-    /* Check for size validity */
-    int align;
+    /* Fill the buffer informations */
+    ab->size = size;
+    ab->frequency = freq;
     switch(format) {
         case AL_FORMAT_MONO8:
-            align = 1;
+            ab->format = SAMPLE_FMT_U8;
+            ab->nbChannels = 1;
             break;
         case AL_FORMAT_MONO16:
-            align = 2;
+            ab->format = SAMPLE_FMT_S16;
+            ab->nbChannels = 1;
             break;
         case AL_FORMAT_STEREO8:
-            align = 2;
+            ab->format = SAMPLE_FMT_U8;
+            ab->nbChannels = 2;
             break;
         case AL_FORMAT_STEREO16:
-            align = 4;
+            ab->format = SAMPLE_FMT_S16;
+            ab->nbChannels = 2;
+            break;
+        case AL_FORMAT_MONO_FLOAT32:
+            ab->format = SAMPLE_FMT_FLT;
+            ab->nbChannels = 1;
+            break;
+        case AL_FORMAT_STEREO_FLOAT32:
+            ab->format = SAMPLE_FMT_FLT;
+            ab->nbChannels = 2;
+            break;
+        case AL_FORMAT_MONO_DOUBLE_EXT:
+            ab->format = SAMPLE_FMT_DBL;
+            ab->nbChannels = 1;
+            break;
+        case AL_FORMAT_STEREO_DOUBLE_EXT:
+            ab->format = SAMPLE_FMT_DBL;
+            ab->nbChannels = 2;
             break;
         default:
             debuglog(LCF_OPENAL | LCF_ERROR, "Unsupported format: ", format);
             return;
     }
-    if ((size % align) != 0) {
+
+    ab->update();
+
+    /* Check for size validity */
+    if ((size % ab->alignSize) != 0) {
         /* Size is not aligned */
         ALSETERROR(AL_INVALID_VALUE);
         return;
@@ -103,30 +128,6 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     ab->samples.clear();
     ab->samples.insert(ab->samples.end(), &((uint8_t*)data)[0], &((uint8_t*)data)[size]);
 
-    /* Fill the buffer informations */
-    ab->size = size;
-    ab->frequency = freq;
-    ab->alignSize = align;
-    switch(format) {
-        case AL_FORMAT_MONO8:
-            ab->bitDepth = 8;
-            ab->nbChannels = 1;
-            break;
-        case AL_FORMAT_MONO16:
-            ab->bitDepth = 16;
-            ab->nbChannels = 1;
-            break;
-        case AL_FORMAT_STEREO8:
-            ab->bitDepth = 8;
-            ab->nbChannels = 2;
-            break;
-        case AL_FORMAT_STEREO16:
-            ab->bitDepth = 16;
-            ab->nbChannels = 2;
-            break;
-        default:
-            break;
-    }
 }
 
 void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
@@ -661,6 +662,7 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     as->source = SOURCE_STREAMING;
 
+    /* TODO: Check that all buffers have the same format */
     for (int i=0; i<n; i++) {
         AudioBuffer* queue_ab = audiocontext.getBuffer(buffers[i]);
         if (queue_ab == nullptr)

@@ -346,6 +346,13 @@ typedef void ALvoid;
 /** Context string: Space-separated extension list. */
 #define AL_EXTENSIONS                            0xB004
 
+/*** OpenAL extensions ***/
+#define AL_FORMAT_MONO_FLOAT32                   0x10010
+#define AL_FORMAT_STEREO_FLOAT32                 0x10011
+#define AL_FORMAT_MONO_DOUBLE_EXT                0x10012
+#define AL_FORMAT_STEREO_DOUBLE_EXT              0x10013
+
+
 /*** OpenAL functions ***/
 
 OVERRIDE ALenum alGetError(ALvoid);
