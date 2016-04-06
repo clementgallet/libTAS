@@ -115,10 +115,14 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
         case AL_FORMAT_MONO_MSADPCM_SOFT:
             ab->format = SAMPLE_FMT_MSADPCM;
             ab->nbChannels = 1;
+            if (ab->blockSamples == 0)
+                ab->blockSamples = 64;
             break;
         case AL_FORMAT_STEREO_MSADPCM_SOFT:
             ab->format = SAMPLE_FMT_MSADPCM;
             ab->nbChannels = 2;
+            if (ab->blockSamples == 0)
+                ab->blockSamples = 64;
             break;
         default:
             debuglog(LCF_OPENAL | LCF_ERROR, "Unsupported format: ", format);
@@ -742,7 +746,6 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
         if (queue_ab == nullptr)
             return;
 
-        queue_ab->processed = false;
         as->buffer_queue.push_back(queue_ab);
         debuglog(LCF_OPENAL, "  Pushed buffer ", buffers[i]);
     }

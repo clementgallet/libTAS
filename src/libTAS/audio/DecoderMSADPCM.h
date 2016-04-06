@@ -24,8 +24,8 @@
 #ifndef LIBTAS_DECODERMSADPCM_H_INCL
 #define LIBTAS_DECODERMSADPCM_H_INCL
 
-#include <istream>
 #include <vector>
+#include "BinaryIStream.h"
 
 class DecoderMSADPCM
 {
@@ -38,7 +38,7 @@ class DecoderMSADPCM
          * @param blockAlign [in]  size (in samples!) of a single ADPCM block
          * @param pcmOut     [out] destination buffer
          */
-        static void toPCM(std::istream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut);
+        static void toPCM(BinaryIStream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut);
 
     private:
         /**

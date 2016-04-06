@@ -22,6 +22,26 @@
 
 #include <vector>
 #include <stdint.h>
+#include <istream>
+
+/* Method to build an istream from a uint8_t array without any copy
+ * Taken from http://stackoverflow.com/a/13059195
+ */
+
+struct membuf: std::streambuf {
+    membuf(uint8_t const* base, size_t size) {
+        char* p((char*)(base));
+        this->setg(p, p, p + size);
+    }
+};
+
+struct imemstream: virtual membuf, std::istream {
+    imemstream(uint8_t const* base, size_t size)
+        : membuf(base, size)
+        , std::istream(static_cast<std::streambuf*>(this)) {
+    }
+};
+
 
 enum SampleFormat {
     SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
@@ -42,9 +62,6 @@ class AudioBuffer
     public:
         AudioBuffer();
 
-        /* Update fields (bitDepth, alignSize, sampleSize) based on sample format */
-        void update(void);
-
         /* Return if the buffer size is correct regarding buffer parameters */
         bool checkSize(void);
 
@@ -64,14 +81,8 @@ class AudioBuffer
         /* Sample format */
         SampleFormat format;
 
-        /* Bit depth of the buffer */
-        int bitDepth;
-
         /* Number of channels of the buffer */
         int nbChannels;
-
-        /* Size of a single sample (chan * bitdepth / 8) */
-        int alignSize;
 
         /* Frequency of buffer in Hz */
         int frequency;
@@ -79,22 +90,34 @@ class AudioBuffer
         /* Size of the buffer in bytes */
         int size;
 
-        /* Size of the buffer in samples */
-        int sampleSize;
-
         /* Audio samples */
         std::vector<uint8_t> samples;
 
-        /* Indicate if a buffer has been read entirely */
-        bool processed;
-
-        /* Number of samples in a block for compressed formats
-         * -1: default value
-         */
-        int blockSamples = -1;
+        /* Number of samples in a block for compressed formats */
+        int blockSamples;
 
         /* In the case of compressed audio, temporary uncompressed buffer */
         std::vector<int16_t> rawSamples;
+
+        /* Update all fields below based on above fields */
+        void update(void);
+
+        /* Bit depth of the buffer. Computed from format */
+        int bitDepth;
+
+        /* Size of a single sample for uncompressed format.
+         * Computed from format and nbChannels
+        */
+        int alignSize;
+
+        /* Size of the buffer in samples. Computed from size and alignSize */
+        int sampleSize;
+
+        /* Size of a block in bytes, for compressed formats.
+         * Computed from blockSamples and format.
+        */
+        int blockSize;
+
 };
 
 #endif

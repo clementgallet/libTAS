@@ -101,31 +101,22 @@ int AudioSource::getPosition()
 
 void AudioSource::setPosition(int pos)
 {
-    int localPos = pos;
     
     if (looping) {
-        localPos %= queueSize();
+        pos %= queueSize();
     }
 
     for (int i=0; i<buffer_queue.size(); i++) {
         AudioBuffer* ab = buffer_queue[i];
-        if (localPos == -1) {
-            /* We have set the position already.
-             * We have to mark the remaining buffers as unprocessed
-             */
-            ab->processed = false;
-        }
-        else if (localPos < ab->sampleSize) {
+        if (pos < ab->sampleSize) {
             /* We set the position in this buffer */
-            position = localPos;
+            position = pos;
             samples_frac = 0;
-            ab->processed = false;
-            localPos = -1;
+            break;
         }
         else {
             /* We traverse the buffer */
-            ab->processed = true;
-            localPos -= ab->sampleSize;
+            pos -= ab->sampleSize;
         }
     }
 }
@@ -285,9 +276,6 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                         finalIndex = i;
                         finalPos = availableSamples;
                     }
-                    else {
-                        loopbuf->processed = true; // Are buffers in a loop ever processed??
-                    }
                     remainingSamples -= availableSamples;
                 }
             }
@@ -301,9 +289,6 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     if (remainingSamples == availableSamples) {
                         finalIndex = i;
                         finalPos = availableSamples;
-                    }
-                    else {
-                        loopbuf->processed = true;
                     }
                     remainingSamples -= availableSamples;
                 }

@@ -251,7 +251,6 @@ const char* dummySDLDevice = "libTAS device";
     if (sourceSDL->nbQueueProcessed() > 0) {
         /* Removing first buffer */
         ab = sourceSDL->buffer_queue[0];
-        ab->processed = false;
         sourceSDL->buffer_queue.erase(sourceSDL->buffer_queue.begin());
         sourceSDL->queue_index--;
     }

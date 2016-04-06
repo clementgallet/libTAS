@@ -19,7 +19,8 @@
 
 #include "AudioBuffer.h"
 #include "DecoderMSADPCM.h"
-#include <istream>
+#include "BinaryIStream.h"
+#include "../logging.h"
 
 AudioBuffer::AudioBuffer(void)
 {
@@ -30,7 +31,7 @@ AudioBuffer::AudioBuffer(void)
     alignSize = 4;
     frequency = 0;
     size = 0;
-    processed = false;
+    blockSamples = 0;
 }
 
 void AudioBuffer::update(void)
@@ -66,10 +67,10 @@ void AudioBuffer::update(void)
             sampleSize = size / alignSize;
             break;
         case SAMPLE_FMT_MSADPCM:
-            if (blockSamples == -1)
-                blockSamples = 64; // default value. TODO: source
+            
             /* Number of bytes of a block */
-            int blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
+            blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
+
             sampleSize = blockSamples * (size / blockSize);
             if ((size % blockSize) >= (7 * nbChannels))
                 /* We have an incomplete block */
@@ -92,24 +93,6 @@ bool AudioBuffer::checkSize(void)
     }
     return true;
 }
-
-/* Method to build an istream from a uint8_t array without any copy
- * Taken from http://stackoverflow.com/a/13059195
- */
-
-struct membuf: std::streambuf {
-    membuf(char const* base, size_t size) {
-        char* p(const_cast<char*>(base));
-        this->setg(p, p, p + size);
-    }
-};
-
-struct imemstream: virtual membuf, std::istream {
-    imemstream(char const* base, size_t size)
-        : membuf(base, size)
-        , std::istream(static_cast<std::streambuf*>(this)) {
-    }
-};
 
 int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
 {
@@ -135,17 +118,14 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
             int firstBlock = position / blockSamples;
             int lastBlock = 1 + (position + nbSamples - 1) / blockSamples;
 
-            /* Number of bytes of a block */
-            int blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
-
             /* Pointer to the beginning of the first block to read */
-            char* firstSamples = (char*)&samples[firstBlock*blockSize];
+            uint8_t* firstSamples = &samples[firstBlock*blockSize];
 
             /* Size of the portion of compressed buffer to decompress */
-            int portionSize = std::max(size - firstBlock*blockSize, (lastBlock-firstBlock)*blockSize);
+            int portionSize = std::min(size - firstBlock*blockSize, (lastBlock-firstBlock)*blockSize);
 
-            /* We wrap this portion into an istream */
-            imemstream sourceStream(firstSamples, portionSize);
+            /* We wrap this portion into an home-made binary stream */
+            BinaryIStream sourceStream(firstSamples, portionSize);
 
             /*** 2. Prepare the uncompressed buffer ***/
 
@@ -163,6 +143,8 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
             int totSamples = nbSamples;
             if ((rawSamples.size()/nbChannels - rawPosition) < nbSamples)
                 totSamples = rawSamples.size()/nbChannels - rawPosition;
+
+            debuglog(LCF_SOUND, "   Decompressed ", portionSize, " B -> ", rawSamples.size(), " B");
             return totSamples;
     }
     return 0;

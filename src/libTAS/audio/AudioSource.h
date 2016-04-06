@@ -122,14 +122,11 @@ class AudioSource
         /* Init parameters */
         void init();
 
-        /* Returns the number of buffers in its queue
-         * that were not processed (not read until the end),
-         * not counting itself.
-         */
+        /* Returns the number of buffers in its queue */
         int nbQueue();
 
         /* Returns the number of buffers in its queue
-         * not counting itself.
+         * that are read until the end.
          */
         int nbQueueProcessed();
 
@@ -143,11 +140,9 @@ class AudioSource
 
         /* Set the position of playback inside a queue of buffers (in samples).
          * The position is relate to the beginning of the first buffer in queue.
-         * Buffers that are traversed by position set are marked as processed.
-         * Buffers that are not entirely traversed are marked as non processed.
          *
          * If pos is greater than the size of the buffer queue,
-         * all buffers are stopped and traversed.
+         * the source is stopped.
          *
          * Argument pos is expressed in samples
          */

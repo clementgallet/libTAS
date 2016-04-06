@@ -73,7 +73,7 @@ int16_t DecoderMSADPCM::calculateSample(uint8_t nibble, uint8_t predictor, int16
     return sample;
 }
 
-void DecoderMSADPCM::toPCM(std::istream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut)
+void DecoderMSADPCM::toPCM(BinaryIStream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut)
 {
     /* Mono or Stereo? */
     if (nbChannels == 1) {
@@ -92,9 +92,11 @@ void DecoderMSADPCM::toPCM(std::istream &source, int nbChannels, int sampleAlign
             pcmOut.push_back(sample1);
 
             /* Go through the bytes in this MSADPCM block. */
-            uint8_t sampleByte;
-            for (int bi = 2; (bi < sampleAlign) && (source >> sampleByte); bi += 2) {
+            for (int bi = 2; bi < sampleAlign; bi += 2) {
                 /* Each sample is one half of a nibbleBlock. */
+                uint8_t sampleByte;
+                source >> sampleByte;
+                if (!source) break;
                 pcmOut.push_back(calculateSample(sampleByte >>  4, predictor, sample1, sample2, delta));
                 pcmOut.push_back(calculateSample(sampleByte & 0xF, predictor, sample1, sample2, delta));
             }
@@ -105,7 +107,6 @@ void DecoderMSADPCM::toPCM(std::istream &source, int nbChannels, int sampleAlign
 
         /* Read to the end of the buffer */
         while (source >> lpredictor) {
-            
             int16_t lsample1, lsample2, ldelta;
             int16_t rsample1, rsample2, rdelta;
 
@@ -122,8 +123,10 @@ void DecoderMSADPCM::toPCM(std::istream &source, int nbChannels, int sampleAlign
             pcmOut.push_back(rsample1);
 
             /* Go through the bytes in this MSADPCM block. */
-            uint8_t sampleByte;
-            for (int bi = 4; (bi < sampleAlign*2) && (source >> sampleByte); bi += 2) {
+            for (int bi = 4; bi < (sampleAlign*2); bi += 2) {
+                uint8_t sampleByte;
+                source >> sampleByte;
+                if (!source) break;
                 /* Each sample is one half of a nibbleBlock. */
                 pcmOut.push_back(calculateSample(sampleByte >>  4, lpredictor, lsample1, lsample2, ldelta));
                 pcmOut.push_back(calculateSample(sampleByte & 0xF, rpredictor, rsample1, rsample2, rdelta));
