@@ -163,6 +163,10 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
             *value = ab->size;
             debuglog(LCF_OPENAL, "  Get size of ", *value);
             return;
+        case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
+            // TODO
+            debuglog(LCF_OPENAL, "  Get block alignment of ", *value);
+            return;
         default:
             ALSETERROR(AL_INVALID_VALUE);
             return;
@@ -262,7 +266,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 debuglog(LCF_OPENAL, "  Set position of ", value, " seconds");
-                value *= (ALfloat) (ab->frequency * ab->nbChannels * ab->bitDepth / 8);
+                value *= (ALfloat) ab->frequency;
                 as->setPosition((int)value);
             }
             break;
@@ -270,16 +274,16 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                debuglog(LCF_OPENAL, "  Set position of ", value, " samples");
-                value *= (ALfloat) (ab->nbChannels * ab->bitDepth / 8);
-                as->setPosition((int)value);
-            }
+            debuglog(LCF_OPENAL, "  Set position of ", value, " samples");
+            as->setPosition((int)value);
             break;
         case AL_BYTE_OFFSET:
-            debuglog(LCF_OPENAL, "  Set position of ", value, " bytes");
-            as->setPosition((int)value);
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                value /= (ALfloat) ab->alignSize;
+                debuglog(LCF_OPENAL, "  Set position of ", value, " bytes");
+                as->setPosition((int)value);
+            }
             break;
         default:
             ALSETERROR(AL_INVALID_OPERATION);
@@ -423,26 +427,26 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 ALfloat pos = (ALfloat) as->getPosition();
-                pos /= (ALfloat) (ab->frequency * ab->nbChannels * ab->bitDepth / 8);
+                pos /= (ALfloat) ab->frequency;
                 *value = pos;
                 debuglog(LCF_OPENAL, "  Get position of ", *value, " seconds");
             }
             break;
         case AL_SAMPLE_OFFSET:
+            *value = (ALfloat) as->getPosition();
+            debuglog(LCF_OPENAL, "  Get position of ", *value, " samples");
+            break;
+        case AL_BYTE_OFFSET:
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 ALfloat pos = (ALfloat) as->getPosition();
-                pos /= (ALfloat) (ab->nbChannels * ab->bitDepth / 8);
+                pos *= (ALfloat) ab->alignSize;
                 *value = pos;
-                debuglog(LCF_OPENAL, "  Get position of ", *value, " samples");
+                debuglog(LCF_OPENAL, "  Get position of ", *value, " bytes");
             }
-            break;
-        case AL_BYTE_OFFSET:
-            *value = (ALfloat) as->getPosition();
-            debuglog(LCF_OPENAL, "  Get position of ", *value, " bytes");
             break;
         default:
             ALSETERROR(AL_INVALID_OPERATION);

@@ -54,5 +54,14 @@ void AudioBuffer::update(void)
     }
 
     alignSize = nbChannels * bitDepth / 8;
+
+    switch (format) {
+        case SAMPLE_FMT_U8:
+        case SAMPLE_FMT_S16:
+        case SAMPLE_FMT_S32:
+        case SAMPLE_FMT_FLT:
+        case SAMPLE_FMT_DBL:
+            sampleSize = size / alignSize;
+    }
 }
 

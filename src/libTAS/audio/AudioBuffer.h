@@ -29,6 +29,8 @@ enum SampleFormat {
     SAMPLE_FMT_S32, /* Signed 32-bit samples */ 
     SAMPLE_FMT_FLT, /* 32-bit floating point samples */ 
     SAMPLE_FMT_DBL, /* 64-bit floating point samples */ 
+
+    SAMPLE_FMT_MSADPCM, /* Compressed MS-ADPCM format */ 
     SAMPLE_FMT_NB
 };
 
@@ -40,7 +42,7 @@ class AudioBuffer
     public:
         AudioBuffer();
 
-        /* Update fields (bitDepth, alignSize) based on sample format */
+        /* Update fields (bitDepth, alignSize, sampleSize) based on sample format */
         void update(void);
 
         /* Identifier of the buffer */
@@ -64,11 +66,20 @@ class AudioBuffer
         /* Size of the buffer in bytes */
         int size;
 
+        /* Size of the buffer in samples */
+        int sampleSize;
+
         /* Audio samples */
         std::vector<uint8_t> samples;
 
         /* Indicate if a buffer has been read entirely */
         bool processed;
+
+        /* Number of samples in a block for compressed formats
+         * -1: default value
+         */
+        int blockSamples = -1;
+
 };
 
 #endif

@@ -72,7 +72,7 @@ class AudioSource
         /* Identifier of the buffer */
         int id;
 
-        /* Position inside the buffer, in bytes */
+        /* Position inside the buffer, in samples */
         int position;
 
         /* Because we might read a non-integer number of samples,
@@ -114,10 +114,10 @@ class AudioSource
          */
         void (*callback)(AudioBuffer*);
 
-        /* Helper function to convert ticks into an aligned number of bytes
+        /* Helper function to convert ticks into a number of samples
          * in the audio buffer
          */
-        int ticksToBytes(struct timespec ticks, int alignSize, int frequency);
+        int ticksToSamples(struct timespec ticks, int frequency);
 
         /* Init parameters */
         void init();
@@ -136,12 +136,12 @@ class AudioSource
         /* Returns the sum of the sizes of each queued buffer */
         int queueSize();
 
-        /* Get the position of playback inside a queue of buffers
+        /* Get the position of playback inside a queue of buffers (in samples).
          * The position is relate to the beginning of the first buffer in queue.
          */
         int getPosition();
 
-        /* Set the position of playback inside a queue of buffers.
+        /* Set the position of playback inside a queue of buffers (in samples).
          * The position is relate to the beginning of the first buffer in queue.
          * Buffers that are traversed by position set are marked as processed.
          * Buffers that are not entirely traversed are marked as non processed.
@@ -149,7 +149,7 @@ class AudioSource
          * If pos is greater than the size of the buffer queue,
          * all buffers are stopped and traversed.
          *
-         * Argument pos is expressed in bytes
+         * Argument pos is expressed in samples
          */
         void setPosition(int pos);
 

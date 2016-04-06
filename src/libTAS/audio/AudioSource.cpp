@@ -30,7 +30,7 @@ extern "C" {
 #include <stdlib.h>
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
-int AudioSource::ticksToBytes(struct timespec ticks, int alignSize, int frequency)
+int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 {
     uint64_t nsecs = ((uint64_t) ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
     uint64_t samples = (nsecs * frequency) / 1000000000;
@@ -39,8 +39,7 @@ int AudioSource::ticksToBytes(struct timespec ticks, int alignSize, int frequenc
         samples_frac -= 1000000000;
         samples++;
     }
-    uint64_t bytes = samples * alignSize;
-    return (int) bytes;
+    return samples;
 }
 
 AudioSource::AudioSource(void)
@@ -84,7 +83,7 @@ int AudioSource::queueSize()
 {
     int totalSize = 0;
     for (auto& buffer : buffer_queue) {
-        totalSize += buffer->size;
+        totalSize += buffer->sampleSize;
     }
     return totalSize;
 }
@@ -93,7 +92,7 @@ int AudioSource::getPosition()
 {
     int totalPos = 0;
     for (int i=0; i<queue_index; i++) {
-        totalPos += buffer_queue[i]->size;
+        totalPos += buffer_queue[i]->sampleSize;
     }
     totalPos += position;
 
@@ -116,11 +115,8 @@ void AudioSource::setPosition(int pos)
              */
             ab->processed = false;
         }
-        else if (localPos < ab->size) {
+        else if (localPos < ab->sampleSize) {
             /* We set the position in this buffer */
-
-            /* Fix unaligned position */
-            localPos -= localPos % ab->alignSize;
             position = localPos;
             samples_frac = 0;
             ab->processed = false;
@@ -129,7 +125,7 @@ void AudioSource::setPosition(int pos)
         else {
             /* We traverse the buffer */
             ab->processed = true;
-            localPos -= ab->size;
+            localPos -= ab->sampleSize;
         }
     }
 }
@@ -218,13 +214,12 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     /* Number of bytes to advance in the buffer samples.
      * This number is automatically aligned inside the function.
      */
-    int inBytes = ticksToBytes(ticks, curBuf->alignSize, curBuf->frequency);
+    int inNbSamples = ticksToSamples(ticks, curBuf->frequency);
 
     int oldPosition = position;
-    int newPosition = position + inBytes;
+    int newPosition = position + inNbSamples;
 
     /* Allocate the mixed audio array */
-    int inNSamples = inBytes / curBuf->alignSize;
     int outAlignSize = (outNbChannels * outBitDepth / 8);
     int outNbSamples = outBytes / outAlignSize;
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
@@ -233,47 +228,47 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 #endif
 
     int convOutSamples = 0;
-    uint8_t* begSamples = &curBuf->samples[oldPosition];
-    if (newPosition <= curBuf->size) {
+    uint8_t* begSamples = &curBuf->samples[oldPosition*curBuf->alignSize];
+    if (newPosition <= curBuf->sampleSize) {
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays buffer ", curBuf->id, " in range ", oldPosition, " - ", position);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        convOutSamples = swr_convert(swr, &begMixed, outNbSamples, (const uint8_t**)&begSamples, inNSamples);
+        convOutSamples = swr_convert(swr, &begMixed, outNbSamples, (const uint8_t**)&begSamples, inNbSamples);
 #endif
     }
     else {
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->size);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        int nSamples = (curBuf->size - oldPosition) / curBuf->alignSize;
+        int nSamples = curBuf->sampleSize - oldPosition;
         if (nSamples > 0)
             swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
 
-        int remainingBytes = inBytes - (curBuf->size - oldPosition);
+        int remainingSamples = inNbSamples - (curBuf->sampleSize - oldPosition);
         if (source == SOURCE_CALLBACK) {
             /* We refill our buffer using the callback function,
              * until we got enough bytes for this frame
              */
-            while (remainingBytes > 0) {
+            while (remainingSamples > 0) {
                 callback(curBuf);
                 begSamples = &curBuf->samples[0];
-                if (remainingBytes > curBuf->size) {
+                if (remainingSamples > curBuf->sampleSize) {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    nSamples = curBuf->size / curBuf->alignSize;
+                    nSamples = curBuf->sampleSize;
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
-                    remainingBytes -= curBuf->size;
+                    remainingSamples -= curBuf->sampleSize;
                 }
                 else {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    nSamples = remainingBytes / curBuf->alignSize;
+                    nSamples = remainingSamples;
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
-                    position = remainingBytes;
-                    remainingBytes = 0;
+                    position = remainingSamples;
+                    remainingSamples = 0;
                 }
             }
 
@@ -289,48 +284,48 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             /* Our for loop conditions are different if we are looping or not */
             if (looping) {
-                for (int i=(queue_index+1)%queue_size; remainingBytes>0; i=(i+1)%queue_size) {
+                for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     AudioBuffer* loopbuf = buffer_queue[i];
                     begSamples = &loopbuf->samples[0];
-                    if (remainingBytes > loopbuf->size) {
+                    if (remainingSamples > loopbuf->sampleSize) {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = loopbuf->size / loopbuf->alignSize;
+                        nSamples = loopbuf->sampleSize;
                         swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
                         loopbuf->processed = true; // Are buffers in a loop ever processed??
-                        remainingBytes -= loopbuf->size;
+                        remainingSamples -= loopbuf->sampleSize;
                     }
                     else {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = remainingBytes / loopbuf->alignSize;
+                        nSamples = remainingSamples;
                         swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
                         finalIndex = i;
-                        finalPos = remainingBytes;
-                        remainingBytes = 0;
+                        finalPos = remainingSamples;
+                        remainingSamples = 0;
                     }
                 }
             }
             else {
-                for (int i=queue_index+1; (remainingBytes>0) && (i<queue_size); i++) {
+                for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     AudioBuffer* loopbuf = buffer_queue[i];
                     begSamples = &loopbuf->samples[0];
-                    if (remainingBytes > loopbuf->size) {
+                    if (remainingSamples > loopbuf->sampleSize) {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = loopbuf->size / loopbuf->alignSize;
+                        nSamples = loopbuf->sampleSize;
                         swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
                         loopbuf->processed = true;
-                        remainingBytes -= loopbuf->size;
+                        remainingSamples -= loopbuf->sampleSize;
                     }
                     else {
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = remainingBytes / loopbuf->alignSize;
+                        nSamples = remainingSamples;
                         swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
 #endif
                         finalIndex = i;
-                        finalPos = remainingBytes;
-                        remainingBytes = 0;
+                        finalPos = remainingSamples;
+                        remainingSamples = 0;
                     }
                 }
             }
@@ -340,7 +335,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
 #endif
 
-            if (remainingBytes > 0) {
+            if (remainingSamples > 0) {
                 /* We reached the end of the buffer queue */
                 init();
                 state = SOURCE_STOPPED;
