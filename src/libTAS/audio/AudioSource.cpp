@@ -228,8 +228,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 #endif
 
     int convOutSamples = 0;
-    uint8_t* begSamples = &curBuf->samples[oldPosition*curBuf->alignSize];
-    if (newPosition <= curBuf->sampleSize) {
+    uint8_t* begSamples;
+    int availableSamples = curBuf->getSamples(begSamples, inNbSamples, oldPosition);
+
+    if (availableSamples == inNbSamples) {
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
@@ -242,34 +244,24 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->size);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        int nSamples = curBuf->sampleSize - oldPosition;
-        if (nSamples > 0)
-            swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
+        if (availableSamples > 0)
+            swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
 
-        int remainingSamples = inNbSamples - (curBuf->sampleSize - oldPosition);
+        int remainingSamples = inNbSamples - availableSamples;
         if (source == SOURCE_CALLBACK) {
             /* We refill our buffer using the callback function,
              * until we got enough bytes for this frame
              */
             while (remainingSamples > 0) {
                 callback(curBuf);
-                begSamples = &curBuf->samples[0];
-                if (remainingSamples > curBuf->sampleSize) {
+                availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    nSamples = curBuf->sampleSize;
-                    swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
+                    swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
-                    remainingSamples -= curBuf->sampleSize;
-                }
-                else {
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    nSamples = remainingSamples;
-                    swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
-#endif
-                    position = remainingSamples;
-                    remainingSamples = 0;
-                }
+                if (remainingSamples == availableSamples)
+                    position = availableSamples;
+                remainingSamples -= availableSamples;
             }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
@@ -286,47 +278,35 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             if (looping) {
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     AudioBuffer* loopbuf = buffer_queue[i];
-                    begSamples = &loopbuf->samples[0];
-                    if (remainingSamples > loopbuf->sampleSize) {
+                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = loopbuf->sampleSize;
-                        swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
+                    swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
-                        loopbuf->processed = true; // Are buffers in a loop ever processed??
-                        remainingSamples -= loopbuf->sampleSize;
+                    if (remainingSamples == availableSamples) {
+                        finalIndex = i;
+                        finalPos = availableSamples;
                     }
                     else {
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = remainingSamples;
-                        swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
-#endif
-                        finalIndex = i;
-                        finalPos = remainingSamples;
-                        remainingSamples = 0;
+                        loopbuf->processed = true; // Are buffers in a loop ever processed??
                     }
+                    remainingSamples -= availableSamples;
                 }
             }
             else {
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     AudioBuffer* loopbuf = buffer_queue[i];
-                    begSamples = &loopbuf->samples[0];
-                    if (remainingSamples > loopbuf->sampleSize) {
+                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = loopbuf->sampleSize;
-                        swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
+                    swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
-                        loopbuf->processed = true;
-                        remainingSamples -= loopbuf->sampleSize;
+                    if (remainingSamples == availableSamples) {
+                        finalIndex = i;
+                        finalPos = availableSamples;
                     }
                     else {
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                        nSamples = remainingSamples;
-                        swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, nSamples);
-#endif
-                        finalIndex = i;
-                        finalPos = remainingSamples;
-                        remainingSamples = 0;
+                        loopbuf->processed = true;
                     }
+                    remainingSamples -= availableSamples;
                 }
             }
 

@@ -430,6 +430,14 @@ OVERRIDE ALboolean alIsBuffer(ALuint buffer);
 /** Specifies the data to be copied into a buffer */
 OVERRIDE void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq);
 
+/** Set Buffer parameters, */
+OVERRIDE void alBufferf(ALuint buffer, ALenum param, ALfloat value);
+OVERRIDE void alBuffer3f(ALuint buffer, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3);
+OVERRIDE void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values);
+OVERRIDE void alBufferi(ALuint buffer, ALenum param, ALint value);
+OVERRIDE void alBuffer3i(ALuint buffer, ALenum param, ALint value1, ALint value2, ALint value3);
+OVERRIDE void alBufferiv(ALuint buffer, ALenum param, const ALint *values);
+
 /** Get Buffer parameters. */
 OVERRIDE void alGetBufferi(ALuint buffer, ALenum pname, ALint *value);
 OVERRIDE void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values);

@@ -112,6 +112,14 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
             ab->format = SAMPLE_FMT_DBL;
             ab->nbChannels = 2;
             break;
+        case AL_FORMAT_MONO_MSADPCM_SOFT:
+            ab->format = SAMPLE_FMT_MSADPCM;
+            ab->nbChannels = 1;
+            break;
+        case AL_FORMAT_STEREO_MSADPCM_SOFT:
+            ab->format = SAMPLE_FMT_MSADPCM;
+            ab->nbChannels = 2;
+            break;
         default:
             debuglog(LCF_OPENAL | LCF_ERROR, "Unsupported format: ", format);
             return;
@@ -120,8 +128,7 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     ab->update();
 
     /* Check for size validity */
-    if ((size % ab->alignSize) != 0) {
-        /* Size is not aligned */
+    if (! ab->checkSize()) {
         ALSETERROR(AL_INVALID_VALUE);
         return;
     }
@@ -131,6 +138,64 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     ab->samples.insert(ab->samples.end(), &((uint8_t*)data)[0], &((uint8_t*)data)[size]);
 
 }
+
+void alBufferf(ALuint buffer, ALenum param, ALfloat value)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    debuglog(LCF_OPENAL, "Operation not supported");
+}
+
+void alBuffer3f(ALuint buffer, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    debuglog(LCF_OPENAL, "Operation not supported");
+}
+
+void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    debuglog(LCF_OPENAL, "Operation not supported");
+}
+
+void alBufferi(ALuint buffer, ALenum param, ALint value)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    AudioBuffer* ab = audiocontext.getBuffer(buffer);
+    if (ab == nullptr) {
+        ALSETERROR(AL_INVALID_NAME);
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+    switch(param) {
+        case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
+            debuglog(LCF_OPENAL, "  Set block alignment ", value);
+            ab->blockSamples = value;
+            ab->update();
+            break;
+        default:
+            debuglog(LCF_OPENAL, "  Operation not supported");
+            return;
+    }
+}
+
+void alBuffer3i(ALuint buffer, ALenum param, ALint value1, ALint value2, ALint value3)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    debuglog(LCF_OPENAL, "Operation not supported");
+}
+
+void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
+{
+    DEBUGLOGCALL(LCF_OPENAL);
+    if (values == nullptr) {
+        ALSETERROR(AL_INVALID_VALUE);
+        return;
+    }
+    alBufferi(buffer, param, *values);
+}
+
 
 void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 {
@@ -164,7 +229,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
             debuglog(LCF_OPENAL, "  Get size of ", *value);
             return;
         case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
-            // TODO
+            *value = ab->blockSamples;
             debuglog(LCF_OPENAL, "  Get block alignment of ", *value);
             return;
         default:

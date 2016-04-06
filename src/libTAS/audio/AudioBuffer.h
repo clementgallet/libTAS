@@ -45,6 +45,19 @@ class AudioBuffer
         /* Update fields (bitDepth, alignSize, sampleSize) based on sample format */
         void update(void);
 
+        /* Return if the buffer size is correct regarding buffer parameters */
+        bool checkSize(void);
+
+        /* Function to access samples of the buffer.
+         * @param [out] outSamples    pointer to the beginning of the
+         *                            returned samples
+         * @param [in]  outNbSamples  number of samples to get
+         * @param [in]  position      position (in samples) from where to
+         *                            get samples
+         * @return                    the effective number of samples returned
+         */
+        int getSamples( uint8_t* &outSamples, int outNbSamples, int position);
+
         /* Identifier of the buffer */
         int id;
 

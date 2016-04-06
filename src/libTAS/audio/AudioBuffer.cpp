@@ -62,6 +62,56 @@ void AudioBuffer::update(void)
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
             sampleSize = size / alignSize;
+            break;
+        case SAMPLE_FMT_MSADPCM:
+            if (blockSamples == -1)
+                blockSamples = 64; // default value. TODO: source
+            /* Number of bytes of a block */
+            int blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
+            sampleSize = blockSamples * (size / blockSize);
+            if ((size % blockSize) >= (7 * nbChannels))
+                /* We have an incomplete block */
+                sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+            break;
     }
 }
+
+bool AudioBuffer::checkSize(void)
+{
+    switch (format) {
+        case SAMPLE_FMT_U8:
+        case SAMPLE_FMT_S16:
+        case SAMPLE_FMT_S32:
+        case SAMPLE_FMT_FLT:
+        case SAMPLE_FMT_DBL:
+            return (size % alignSize) == 0;
+        case SAMPLE_FMT_MSADPCM:
+            return (size % nbChannels) == 0;
+    }
+    return true;
+}
+
+int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
+{
+    switch (format) {
+        case SAMPLE_FMT_U8:
+        case SAMPLE_FMT_S16:
+        case SAMPLE_FMT_S32:
+        case SAMPLE_FMT_FLT:
+        case SAMPLE_FMT_DBL:
+            /* Simple case, we just return a position in our sample buffer */
+            outSamples = &samples[position*alignSize];
+            if ((sampleSize - position) >= nbSamples)
+                /* We can return the number of samples asked */
+                return nbSamples;
+            else
+                /* We reach the end of the buffer */
+                return (sampleSize - position);
+        case SAMPLE_FMT_MSADPCM:
+            return (size % nbChannels) == 0;
+    }
+    return 0;
+}
+
+
 
