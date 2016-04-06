@@ -18,6 +18,8 @@
  */
 
 #include "AudioBuffer.h"
+#include "DecoderMSADPCM.h"
+#include <istream>
 
 AudioBuffer::AudioBuffer(void)
 {
@@ -91,6 +93,24 @@ bool AudioBuffer::checkSize(void)
     return true;
 }
 
+/* Method to build an istream from a uint8_t array without any copy
+ * Taken from http://stackoverflow.com/a/13059195
+ */
+
+struct membuf: std::streambuf {
+    membuf(char const* base, size_t size) {
+        char* p(const_cast<char*>(base));
+        this->setg(p, p, p + size);
+    }
+};
+
+struct imemstream: virtual membuf, std::istream {
+    imemstream(char const* base, size_t size)
+        : membuf(base, size)
+        , std::istream(static_cast<std::streambuf*>(this)) {
+    }
+};
+
 int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
 {
     switch (format) {
@@ -108,7 +128,42 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
                 /* We reach the end of the buffer */
                 return (sampleSize - position);
         case SAMPLE_FMT_MSADPCM:
-            return (size % nbChannels) == 0;
+
+            /*** 1. Compute which portion of our buffer we decompress ***/
+
+            /* Number of blocks to read */
+            int firstBlock = position / blockSamples;
+            int lastBlock = 1 + (position + nbSamples - 1) / blockSamples;
+
+            /* Number of bytes of a block */
+            int blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
+
+            /* Pointer to the beginning of the first block to read */
+            char* firstSamples = (char*)&samples[firstBlock*blockSize];
+
+            /* Size of the portion of compressed buffer to decompress */
+            int portionSize = std::max(size - firstBlock*blockSize, (lastBlock-firstBlock)*blockSize);
+
+            /* We wrap this portion into an istream */
+            imemstream sourceStream(firstSamples, portionSize);
+
+            /*** 2. Prepare the uncompressed buffer ***/
+
+            /* Compute the maximum uncompressed size */
+            int rawSize = nbSamples * nbChannels;
+            rawSamples.clear();
+            rawSamples.reserve(rawSize);
+
+            /*** 3. Call the decompression routine ***/
+            DecoderMSADPCM::toPCM(sourceStream, nbChannels, blockSamples, rawSamples);
+
+            /*** 4. Return the proper values ***/
+            int rawPosition = position % blockSamples;
+            outSamples = (uint8_t*) &rawSamples[rawPosition*nbChannels];
+            int totSamples = nbSamples;
+            if ((rawSamples.size()/nbChannels - rawPosition) < nbSamples)
+                totSamples = rawSamples.size()/nbChannels - rawPosition;
+            return totSamples;
     }
     return 0;
 }

@@ -93,6 +93,8 @@ class AudioBuffer
          */
         int blockSamples = -1;
 
+        /* In the case of compressed audio, temporary uncompressed buffer */
+        std::vector<int16_t> rawSamples;
 };
 
 #endif

@@ -150,6 +150,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             inFormat = AV_SAMPLE_FMT_U8;
             break;
         case SAMPLE_FMT_S16:
+        case SAMPLE_FMT_MSADPCM:
             inFormat = AV_SAMPLE_FMT_S16;
             break;
         case SAMPLE_FMT_S32:
@@ -211,9 +212,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int lvas = (int)(resultVolume * 65536.0f);
     int rvas = (int)(resultVolume * 65536.0f);
 
-    /* Number of bytes to advance in the buffer samples.
-     * This number is automatically aligned inside the function.
-     */
+    /* Number of samples to advance in the buffer. */
     int inNbSamples = ticksToSamples(ticks, curBuf->frequency);
 
     int oldPosition = position;

@@ -279,7 +279,6 @@ int main(int argc, char **argv)
                 {
                     KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-                    fprintf(stderr, "Pre\n");
 
                     if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
                         isidle = 0;
@@ -315,7 +314,6 @@ int main(int argc, char **argv)
                 }
                 if (event.type == KeyRelease)
                 {
-                    fprintf(stderr, "Rel\n");
                     /* 
                      * Detect AutoRepeat key (KeyRelease followed by KeyPress) and skip both
                      * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
