@@ -21,7 +21,7 @@
 #include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
 #include "../shared/messages.h"
-#include "inputs.h"
+#include "inputs/inputs.h" // AllInputs ai object
 #include "socket.h"
 #include "libTAS.h"
 #include "logging.h"

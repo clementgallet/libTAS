@@ -21,7 +21,6 @@
 #include <string.h>
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
-#include "stdio.h"
 
 static const SDL_Keycode SDL_default_keymap[SDL_NUM_SCANCODES] = {
     0, 0, 0, 0,

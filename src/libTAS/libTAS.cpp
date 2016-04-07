@@ -35,7 +35,7 @@
 #include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
 #include "hook.h"
-#include "inputs.h"
+#include "inputs/inputs.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
