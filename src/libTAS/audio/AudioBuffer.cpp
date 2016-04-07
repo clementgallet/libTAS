@@ -31,7 +31,9 @@ AudioBuffer::AudioBuffer(void)
     alignSize = 4;
     frequency = 0;
     size = 0;
+    sampleSize = 0;
     blockSamples = 0;
+    blockSize = 0;
 }
 
 void AudioBuffer::update(void)

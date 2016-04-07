@@ -210,9 +210,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int newPosition = position + inNbSamples;
 
     /* Allocate the mixed audio array */
-    int outAlignSize = (outNbChannels * outBitDepth / 8);
-    int outNbSamples = outBytes / outAlignSize;
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+    int outNbSamples = outBytes / (outNbChannels * outBitDepth / 8);
     mixedSamples.resize(outBytes);
     uint8_t* begMixed = &mixedSamples[0];
 #endif
@@ -225,14 +224,14 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
-        debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays buffer ", curBuf->id, " in range ", oldPosition, " - ", position);
+        debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         convOutSamples = swr_convert(swr, &begMixed, outNbSamples, (const uint8_t**)&begSamples, inNbSamples);
 #endif
     }
     else {
         /* We reached the end of the buffer */
-        debuglog(LCF_SOUND | LCF_FRAME, "Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->size);
+        debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         if (availableSamples > 0)
             swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
@@ -249,6 +248,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
+                debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read again from 0 to ", availableSamples);
                 if (remainingSamples == availableSamples)
                     position = availableSamples;
                 remainingSamples -= availableSamples;
@@ -269,6 +269,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     AudioBuffer* loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
+                    debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
@@ -283,6 +284,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     AudioBuffer* loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
+                    debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);
 #endif
@@ -303,13 +305,12 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 /* We reached the end of the buffer queue */
                 init();
                 state = SOURCE_STOPPED;
-                debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " until the end of the queue");
+                debuglog(LCF_SOUND | LCF_FRAME, "  End of the queue reached");
             }
             else {
                 /* Update the position in the buffer */
                 queue_index = finalIndex;
                 position = finalPos;
-                debuglog(LCF_SOUND | LCF_FRAME, "Source ", id, " plays from buffer ", curBuf->id, " to some other buffers");
             }
         }
 

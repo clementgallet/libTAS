@@ -88,7 +88,6 @@ AudioSource* sourceSDL;
 void fillBufferCallback(AudioBuffer* ab);
 void fillBufferCallback(AudioBuffer* ab)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     audioCallback(callbackArg, &ab->samples[0], ab->size);
 }
 
@@ -135,6 +134,7 @@ void fillBufferCallback(AudioBuffer* ab)
         debuglog(LCF_SDL | LCF_SOUND, "Channels ",buffer->nbChannels);
 
         buffer->size = desired->samples * buffer->alignSize;
+        buffer->update(); // Yes, a second time, to fill sampleSize based on size.
         buffer->samples.resize(buffer->size);
    
         /* Push buffers in a source */
@@ -145,7 +145,7 @@ void fillBufferCallback(AudioBuffer* ab)
         sourceSDL->source = SOURCE_CALLBACK;
         sourceSDL->callback = fillBufferCallback;
         /* We simulate an empty buffer by setting the position at the end */
-        sourceSDL->position = buffer->size;
+        sourceSDL->position = buffer->sampleSize;
 
         /* We must fill some information in the structs */
         desired->size = buffer->size;
