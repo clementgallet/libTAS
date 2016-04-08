@@ -25,13 +25,14 @@
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
-#include "../windows.h" // for SDL_GetWindowId_real
+#include "../windows.h" // for SDL_GetWindowId_real and gameWindow
 #include "sdlgamecontroller.h" // sdl_controller_event
+#include "sdlpointer.h" // MASK constants
 
 struct AllInputs ai;
 struct AllInputs old_ai;
 
-int generateKeyUpEvent(void *events, void* gw, int num, int update)
+int generateKeyUpEvent(void *events, int num, int update)
 {
     int evi = 0;
     int i, j;
@@ -52,7 +53,7 @@ int generateKeyUpEvent(void *events, void* gw, int num, int update)
                 SDL_Event* events2 = (SDL_Event*)events;
                 events2[evi].type = SDL_KEYUP;
                 events2[evi].key.state = SDL_RELEASED;
-                events2[evi].key.windowID = SDL_GetWindowID_real(gw);
+                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
 				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -94,7 +95,7 @@ int generateKeyUpEvent(void *events, void* gw, int num, int update)
 
 
 /* Generate pressed keyboard input events */
-int generateKeyDownEvent(void *events, void* gw, int num, int update)
+int generateKeyDownEvent(void *events, int num, int update)
 {
     int evi = 0;
     int i,j,k;
@@ -115,7 +116,7 @@ int generateKeyDownEvent(void *events, void* gw, int num, int update)
                 SDL_Event* events2 = (SDL_Event*)events;
                 events2[evi].type = SDL_KEYDOWN;
                 events2[evi].key.state = SDL_PRESSED;
-                events2[evi].key.windowID = SDL_GetWindowID_real(gw);
+                events2[evi].key.windowID = SDL_GetWindowID_real(gameWindow);
 				time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 events2[evi].key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -208,6 +209,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
                 events[evi].caxis.which = ji;
                 events[evi].caxis.axis = axis;
                 events[evi].caxis.value = ai.controller_axes[ji][axis];
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis ", axis);
 
                 if (update) {
                     /* Upload the old AllInput struct */
@@ -245,6 +247,7 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
                 events[evi].cbutton.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                 events[evi].cbutton.which = ji;
                 events[evi].cbutton.button = bi;
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONX with button ", bi);
 
                 if (update) {
                     /* Upload the old AllInput struct */
@@ -262,4 +265,149 @@ int generateControllerEvent(SDL_Event* events, int num, int update)
     /* We did not reached the asked number of events, returning the number */
     return evi;
 }
+
+int generateMouseMotionEvent(void* event, int update)
+{
+    if ((ai.pointer_x == old_ai.pointer_x) && (ai.pointer_y == old_ai.pointer_y))
+        return 0;
+
+    /* We got a change in mouse position */
+
+    /* Fill the event structure */
+    /* TODO: Deal if pointer is out of screen */
+
+    if (SDLver == 2) {
+        SDL_Event* event2 = (SDL_Event*)event;
+        event2->type = SDL_MOUSEMOTION;
+        struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        event2->motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+        event2->motion.windowID = SDL_GetWindowID_real(gameWindow);
+        event2->motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+        /* Build up mouse state */
+        event2->motion.state = 0;
+        if (ai.pointer_mask & Button1Mask)
+            event2->motion.state |= SDL_BUTTON_LMASK;
+        if (ai.pointer_mask & Button2Mask)
+            event2->motion.state |= SDL_BUTTON_MMASK;
+        if (ai.pointer_mask & Button3Mask)
+            event2->motion.state |= SDL_BUTTON_RMASK;
+        if (ai.pointer_mask & Button4Mask)
+            event2->motion.state |= SDL_BUTTON_X1MASK;
+        if (ai.pointer_mask & Button5Mask)
+            event2->motion.state |= SDL_BUTTON_X2MASK;
+
+        event2->motion.x = ai.pointer_x;
+        event2->motion.y = ai.pointer_y;
+        event2->motion.xrel = ai.pointer_x - old_ai.pointer_x;
+        event2->motion.yrel = ai.pointer_y - old_ai.pointer_y;
+    }
+    if (SDLver == 1) {
+        SDL1::SDL_Event* event1 = (SDL1::SDL_Event*)event;
+        event1->type = SDL1::SDL_MOUSEMOTION;
+        event1->motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+        /* Build up mouse state */
+        event1->motion.state = 0;
+        if (ai.pointer_mask & Button1Mask)
+            event1->motion.state |= SDL1::SDL_BUTTON_LMASK;
+        if (ai.pointer_mask & Button2Mask)
+            event1->motion.state |= SDL1::SDL_BUTTON_MMASK;
+        if (ai.pointer_mask & Button3Mask)
+            event1->motion.state |= SDL1::SDL_BUTTON_RMASK;
+        if (ai.pointer_mask & Button4Mask)
+            event1->motion.state |= SDL1::SDL_BUTTON_X1MASK;
+        if (ai.pointer_mask & Button5Mask)
+            event1->motion.state |= SDL1::SDL_BUTTON_X2MASK;
+
+        event1->motion.x = (Uint16) ai.pointer_x;
+        event1->motion.y = (Uint16) ai.pointer_y;
+        event1->motion.xrel = (Sint16)(ai.pointer_x - old_ai.pointer_x);
+        event1->motion.yrel = (Sint16)(ai.pointer_y - old_ai.pointer_y);
+    }
+    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+
+    if (update) {
+        /* Upload the old AllInput struct */
+        old_ai.pointer_x = ai.pointer_x;
+        old_ai.pointer_y = ai.pointer_y;
+    }
+
+    return 1;
+}
+
+int generateMouseButtonEvent(void* events, int num, int update)
+{
+    int evi = 0;
+    struct timespec time;
+
+    static int xbuttons[] = {SDL_BUTTON_LMASK,
+        SDL_BUTTON_MMASK, SDL_BUTTON_RMASK,
+        SDL_BUTTON_X1MASK, SDL_BUTTON_X2MASK};
+    static int sdlbuttons[] = {SDL_BUTTON_LEFT,
+        SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT,
+        SDL_BUTTON_X1, SDL_BUTTON_X2};
+    static int sdl1buttons[] = {SDL1::SDL_BUTTON_LEFT,
+        SDL1::SDL_BUTTON_MIDDLE, SDL1::SDL_BUTTON_RIGHT,
+        SDL1::SDL_BUTTON_X1, SDL1::SDL_BUTTON_X2};
+
+    for (int bi=0; bi<5; bi++) {
+        if ((ai.pointer_mask & xbuttons[bi]) != (old_ai.pointer_mask & xbuttons[bi])) {
+            /* We got a change in a button state */
+
+            /* Fill the event structure */
+            if (SDLver == 2) {
+                SDL_Event* events2 = (SDL_Event*)events;
+                if (ai.pointer_mask & xbuttons[bi]) {
+                    events2[evi].type = SDL_MOUSEBUTTONDOWN;
+                    events2[evi].button.state = SDL_PRESSED;
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdlbuttons[bi]);
+                }
+                else {
+                    events2[evi].type = SDL_MOUSEBUTTONUP;
+                    events2[evi].button.state = SDL_RELEASED;
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
+                }
+                time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+                events2[evi].button.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+                events2[evi].button.windowID = SDL_GetWindowID_real(gameWindow);
+                events2[evi].button.which = 0; // TODO: Same as above...
+                events2[evi].button.button = sdlbuttons[bi];
+                events2[evi].button.clicks = 1;
+                events2[evi].button.x = ai.pointer_x;
+                events2[evi].button.y = ai.pointer_y;
+            }
+            if (SDLver == 1) {
+                SDL1::SDL_Event* events1 = (SDL1::SDL_Event*)events;
+                if (ai.pointer_mask & xbuttons[bi]) {
+                    events1[evi].type = SDL1::SDL_MOUSEBUTTONDOWN;
+                    events1[evi].button.state = SDL_PRESSED;
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdlbuttons[bi]);
+                }
+                else {
+                    events1[evi].type = SDL1::SDL_MOUSEBUTTONUP;
+                    events1[evi].button.state = SDL_RELEASED;
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
+                }
+                events1[evi].button.which = 0; // TODO: Same as above...
+                events1[evi].button.button = sdl1buttons[bi];
+                events1[evi].button.x = (Uint16) ai.pointer_x;
+                events1[evi].button.y = (Uint16) ai.pointer_y;
+            }
+            if (update) {
+                /* Upload the old AllInput struct */
+                old_ai.pointer_mask ^= xbuttons[bi];
+            }
+
+            if (evi == num) {
+                /* Return the number of events */
+                return evi;
+            }
+        }
+    }
+
+    /* We did not reached the asked number of events, returning the number */
+    return evi;
+}
+
 

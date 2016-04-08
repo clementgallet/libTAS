@@ -330,7 +330,7 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
 
     /* Getting KeyUp events */
     if ((SDL_KEYUP >= minType) && (SDL_KEYUP <= maxType))
-        peepnb += generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyUpEvent(&events[peepnb], numevents - peepnb, update);
 
     if (peepnb == numevents) return peepnb;
 
@@ -344,19 +344,29 @@ int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, 
 
         if (update && ((SDL_KEYUP < minType) || (SDL_KEYUP > maxType)))
             /* Update KEYUP events */
-            generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+            generateKeyUpEvent(&events[peepnb], numevents - peepnb, update);
 
-        peepnb += generateKeyDownEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyDownEvent(&events[peepnb], numevents - peepnb, update);
     }
 
     if (peepnb == numevents) return peepnb;
-
 
     if ((SDL_CONTROLLERAXISMOTION >= minType) && (SDL_CONTROLLERAXISMOTION <= maxType))
         /* TODO: Split the function into functions for each event type,
          * or pass the event filters to the function
          */
         peepnb += generateControllerEvent(&events[peepnb], numevents - peepnb, update);
+
+    if (peepnb == numevents) return peepnb;
+
+    if ((SDL_MOUSEMOTION >= minType) && (SDL_MOUSEMOTION <= maxType))
+        peepnb += generateMouseMotionEvent(&events[peepnb], update);
+
+    if (peepnb == numevents) return peepnb;
+
+    if ((SDL_MOUSEBUTTONDOWN >= minType) && (SDL_MOUSEBUTTONDOWN <= maxType))
+        /* TODO: Oops, we are also passing MOUSEBUTTONUP events... */
+        peepnb += generateMouseButtonEvent(&events[peepnb], numevents - peepnb, update);
 
     return peepnb;
 }
@@ -445,7 +455,7 @@ int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mas
 
     /* Getting KeyUp events */
     if (mask & SDL1::SDL_KEYUPMASK)
-        peepnb += generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyUpEvent(&events[peepnb], numevents - peepnb, update);
 
     if (peepnb == numevents) return peepnb;
 
@@ -459,10 +469,21 @@ int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mas
 
         if (update && (! (mask & SDL1::SDL_KEYUPMASK)))
             /* Update KEYUP events */
-            generateKeyUpEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+            generateKeyUpEvent(&events[peepnb], numevents - peepnb, update);
 
-        peepnb += generateKeyDownEvent(&events[peepnb], gameWindow, numevents - peepnb, update);
+        peepnb += generateKeyDownEvent(&events[peepnb], numevents - peepnb, update);
     }
+
+    if (peepnb == numevents) return peepnb;
+
+    if (mask & SDL1::SDL_MOUSEMOTIONMASK)
+        peepnb += generateMouseMotionEvent(&events[peepnb], update);
+
+    if (peepnb == numevents) return peepnb;
+
+    if (mask & SDL1::SDL_MOUSEBUTTONDOWN)
+        /* TODO: Oops, we are also passing MOUSEBUTTONUP events... */
+        peepnb += generateMouseButtonEvent(&events[peepnb], numevents - peepnb, update);
 
     return peepnb;
 }

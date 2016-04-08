@@ -31,16 +31,23 @@ extern struct AllInputs old_ai;
  * and update the input structures depending on the value `update`
  * If update is true, the events won't be generated again on a future call
  */
-int generateKeyUpEvent(void *events, void* gameWindow, int num, int update);
+int generateKeyUpEvent(void *events, int num, int update);
 
 /* Same as above but with events SDL_KEYDOWN */
-int generateKeyDownEvent(void *events, void* gameWindow, int num, int update);
+int generateKeyDownEvent(void *events, int num, int update);
 
 /* Generate at most `num` events indicating that a controller was plugged in */
 int generateControllerAdded(SDL_Event* events, int num, int update);
 
 /* Same as KeyUp/KeyDown functions but with controller events */
 int generateControllerEvent(SDL_Event* events, int num, int update);
+
+/* Same as above with MouseMotion event. We have at most one event to return,
+ * so we don't need the num parameter. */
+int generateMouseMotionEvent(void* event, int update);
+
+/* Same as above with the MouseButton event */
+int generateMouseButtonEvent(void* events, int num, int update);
 
 #endif
 

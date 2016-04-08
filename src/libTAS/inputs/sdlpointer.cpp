@@ -69,14 +69,26 @@ Uint32 SDL_GetGlobalMouseState(int *x, int *y)
 Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
-    if (x != NULL)
-        *x = ai.pointer_x - old_ai.pointer_x;
-    if (y != NULL)
-        *y = ai.pointer_y - old_ai.pointer_y;
 
-    /* Updating the old input struct */
-    old_ai.pointer_x = ai.pointer_x;
-    old_ai.pointer_y = ai.pointer_y;
+    static bool first = true;
+    static int oldx = 0;
+    static int oldy = 0;
+
+    /* For the first call, just output zero deltas */
+    if (first) {
+        oldx = ai.pointer_x;
+        oldy = ai.pointer_y;
+        first = false;
+    }
+
+    if (x != NULL)
+        *x = ai.pointer_x - oldx;
+    if (y != NULL)
+        *y = ai.pointer_y - oldy;
+
+    /* Updating the old pointer coordinates */
+    oldx = ai.pointer_x;
+    oldy = ai.pointer_y;
 
     /* Translating Xlib pointer mask to SDL pointer state */
     Uint32 sdlmask = 0;

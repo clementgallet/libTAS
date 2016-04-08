@@ -232,17 +232,20 @@ extern DECLSPEC int SDLCALL SDL_ShowCursor(int toggle);
  *   - Button 2:  Middle mouse button
  *   - Button 3:  Right mouse button
  */
-#define SDL_BUTTON(X)       (1 << ((X)-1))
-#define SDL_BUTTON_LEFT     1
-#define SDL_BUTTON_MIDDLE   2
-#define SDL_BUTTON_RIGHT    3
-#define SDL_BUTTON_X1       4
-#define SDL_BUTTON_X2       5
-#define SDL_BUTTON_LMASK    SDL_BUTTON(SDL_BUTTON_LEFT)
-#define SDL_BUTTON_MMASK    SDL_BUTTON(SDL_BUTTON_MIDDLE)
-#define SDL_BUTTON_RMASK    SDL_BUTTON(SDL_BUTTON_RIGHT)
-#define SDL_BUTTON_X1MASK   SDL_BUTTON(SDL_BUTTON_X1)
-#define SDL_BUTTON_X2MASK   SDL_BUTTON(SDL_BUTTON_X2)
+
+/* Enum instead */
+enum {
+    SDL_BUTTON_LEFT = 1,
+    SDL_BUTTON_MIDDLE = 2,
+    SDL_BUTTON_RIGHT = 3,
+    SDL_BUTTON_X1 = 4,
+    SDL_BUTTON_X2 = 5,
+    SDL_BUTTON_LMASK = (1 << ((1)-1)),
+    SDL_BUTTON_MMASK = (1 << ((2)-1)),
+    SDL_BUTTON_RMASK = (1 << ((3)-1)),
+    SDL_BUTTON_X1MASK = (1 << ((4)-1)),
+    SDL_BUTTON_X2MASK = (1 << ((5)-1)),
+};
 
 #endif
 

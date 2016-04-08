@@ -41,8 +41,6 @@
 - Process and filter SDL events
 - Dump audio
 -- Test SDL 2 Audio (push method)
-- Support mouse
--- Events are not generated
 
 ## Done
 
@@ -60,4 +58,5 @@
 - Add both (non)/deterministic timers
 - Better manage static and dynamic hooking
 - Add a license
+- Support mouse
 
