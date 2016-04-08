@@ -99,6 +99,11 @@ OVERRIDE void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
 OVERRIDE int SDL_WarpMouseGlobal(int x, int y);
 
 /**
+ * Set the position of the mouse cursor (generates a mouse motion event)
+ */
+OVERRIDE void SDL_WarpMouse(Uint16 x, Uint16 y);
+
+/**
  *  \brief Set relative mouse mode.
  *
  *  \param enabled Whether or not to enable relative mode
@@ -216,6 +221,7 @@ extern DECLSPEC SDL_Cursor *SDLCALL SDL_GetDefaultCursor(void);
  */
 extern DECLSPEC void SDLCALL SDL_FreeCursor(SDL_Cursor * cursor);
 
+#endif
 /**
  *  \brief Toggle whether or not the cursor is shown.
  *
@@ -224,8 +230,8 @@ extern DECLSPEC void SDLCALL SDL_FreeCursor(SDL_Cursor * cursor);
  *
  *  \return 1 if the cursor is shown, or 0 if the cursor is hidden.
  */
-extern DECLSPEC int SDLCALL SDL_ShowCursor(int toggle);
-#endif
+OVERRIDE int SDL_ShowCursor(int toggle);
+
 /**
  *  Used as a mask when testing buttons in buttonstate.
  *   - Button 1:  Left mouse button

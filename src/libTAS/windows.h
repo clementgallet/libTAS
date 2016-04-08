@@ -199,6 +199,22 @@ OVERRIDE SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uin
  */
 OVERRIDE void SDL_GL_SwapBuffers(void);
 
+typedef enum {
+	SDL_GRAB_QUERY = -1,
+	SDL_GRAB_OFF = 0,
+	SDL_GRAB_ON = 1,
+	SDL_GRAB_FULLSCREEN	/**< Used internally */
+} SDL_GrabMode;
+/**
+ * This function allows you to set and query the input grab state of
+ * the application.  It returns the new input grab state.
+ *
+ * Grabbing means that the mouse is confined to the application window,
+ * and nearly all keyboard input is passed directly to the application,
+ * and not interpreted by a window manager, if any.
+ */
+OVERRIDE SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
+
 void link_sdlwindows(void);
 
 #endif

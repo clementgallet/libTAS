@@ -108,15 +108,20 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
     /* We should not support that I guess */
 }
 
 int SDL_WarpMouseGlobal(int x, int y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
     /* We should not support that I guess */
     return -1;
+}
+
+void SDL_WarpMouse(Uint16 x, Uint16 y)
+{
+    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
 }
 
 SDL_bool relativeMode = SDL_FALSE;
@@ -139,6 +144,18 @@ SDL_bool SDL_GetRelativeMouseMode(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
     return relativeMode;
+}
+
+
+int SDL_ShowCursor(int toggle)
+{
+    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call with ", toggle);
+
+    /* We keep the state of the cursor, but we keep it shown. */
+    static int showCursor = 1;
+    if (toggle != -1)
+        showCursor = toggle;
+    return showCursor;
 }
 
 

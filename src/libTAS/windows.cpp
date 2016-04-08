@@ -247,6 +247,15 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
     return surf;
 }
 
+SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
+{
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE, __func__, " call with mode ", mode);
+    static SDL_GrabMode fakeGrab = SDL_GRAB_OFF;
+    if (mode != SDL_GRAB_QUERY)
+        fakeGrab = mode;
+    return fakeGrab;
+}
+
 void link_sdlwindows(void)
 {
     if (SDLver == 1) {
