@@ -23,6 +23,11 @@
 #include "global.h"
 #include "../external/SDL.h"
 
+/* Pull all events from the SDL event queue and push them into our
+ * emulated event queue, filtering unwanted events (input events mainly).
+ */
+void pushNativeEvents(void);
+
 /**
  *  Checks the event queue for messages and optionally returns them.
  *
@@ -168,32 +173,11 @@ OVERRIDE Uint8 SDL_EventState(Uint32 type, int state);
  */
 OVERRIDE Uint32 SDL_RegisterEvents(int numevents);
 
-/* 
- * This helper function will return a number of events from the generated event queue.
- * This event queue consists on the real SDL event queue with our own filter
- * (e.g. removing real input events)
- * and generated SDL events containing mostly inputs passed from linTAS.
- *
- * Because SDL has multiple ways of accessing the event queue, we made this function
- * with two parameter indicating the number of events we want and if we need 
- * to update the queue by removing the returned event, or keep it in the queue.
- * 
- * The function returns the number of events returned.
- */
-int getSDL2Events(SDL_Event *events, int numevents, int update, Uint32 minType, Uint32 maxType);
-
-/* 
- * Same as the getSDL2Events, except that we are dealing with SDL 1.2 events.
- * These events have a different structure, and the filtering is also different.
- * Otherwise, the function acheive the same goal.
- */
-int getSDL1Events(SDL1::SDL_Event *events, int numevents, int update, Uint32 mask);
-
 /* Return if the SDL 1 event must be passed to the game or be filtered */
-int filterSDL1Event(SDL1::SDL_Event *event);
+bool filterSDL1Event(SDL1::SDL_Event *event);
 
 /* Return if the SDL 2 event must be passed to the game or be filtered */
-int filterSDL2Event(SDL_Event *event);
+bool filterSDL2Event(SDL_Event *event);
 
 /* Print which event type is it */
 void logEvent(SDL_Event *event);

@@ -30,6 +30,8 @@
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
+#include "EventQueue.h"
+#include "events.h"
 
 void frameBoundary(void)
 {
@@ -55,6 +57,20 @@ void frameBoundary(void)
     sendData(&frame_counter, sizeof(unsigned long));
 
     proceed_commands();
+
+    /* Push native SDL events into our emulated event queue */
+    pushNativeEvents();
+
+    /* Push generated events */
+    generateKeyUpEvents();
+    generateKeyDownEvents();
+    if (SDLver == 2) {
+        if (frame_counter == 0)
+            generateControllerAdded();
+        generateControllerEvents();
+    }
+    generateMouseMotionEvents();
+    generateMouseButtonEvents();
 
     /* We don't update AllInputs old_ai here. We update during the generation of events */
     ++frame_counter;

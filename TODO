@@ -38,9 +38,11 @@
     [xcb] Most likely this is a multi-threaded client and XInitThreads has not been called
     [xcb] Aborting, sorry about that.
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
-- Process and filter SDL events
 - Dump audio
 -- Test SDL 2 Audio (push method)
+- Emulate our own event queue
+-- Support enabling/disabling events (for controllers/joysticks)
+-- Support filtering
 
 ## Done
 
