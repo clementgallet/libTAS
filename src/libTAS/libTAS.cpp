@@ -126,6 +126,7 @@ void __attribute__((constructor (101))) init(void)
     
     ai.emptyInputs();
     old_ai.emptyInputs();
+    game_ai.emptyInputs();
 
     /* We initialize our dl functions hooking, and link some functions */
     dlhook_init();

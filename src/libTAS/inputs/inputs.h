@@ -23,8 +23,17 @@
 #include "../../external/SDL.h"
 #include "../global.h"
 
+/* Inputs that are sent from linTAS */
 extern struct AllInputs ai;
+
+/* Last state of the inputs, used to generate events */
 extern struct AllInputs old_ai;
+
+/* Fake state of the inputs that is seen by the game.
+ * This struct is used when the game want to set inputs, such as
+ * Warping the cursor position.
+ */
+extern struct AllInputs game_ai;
 
 /* 
  * Generate at most `num` events of type SDL_KEYUP, store them in `events`

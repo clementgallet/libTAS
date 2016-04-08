@@ -31,6 +31,7 @@
 
 struct AllInputs ai;
 struct AllInputs old_ai;
+struct AllInputs game_ai;
 
 int generateKeyUpEvent(void *events, int num, int update)
 {
@@ -271,6 +272,10 @@ int generateMouseMotionEvent(void* event, int update)
     if ((ai.pointer_x == old_ai.pointer_x) && (ai.pointer_y == old_ai.pointer_y))
         return 0;
 
+    /* Check if cursor is out of window. Don't return an event for now */
+    if (ai.pointer_x < 0)
+        return 0;
+
     /* We got a change in mouse position */
 
     /* Fill the event structure */
@@ -320,10 +325,10 @@ int generateMouseMotionEvent(void* event, int update)
         if (ai.pointer_mask & Button5Mask)
             event1->motion.state |= SDL1::SDL_BUTTON_X2MASK;
 
-        event1->motion.x = (Uint16) ai.pointer_x;
-        event1->motion.y = (Uint16) ai.pointer_y;
         event1->motion.xrel = (Sint16)(ai.pointer_x - old_ai.pointer_x);
         event1->motion.yrel = (Sint16)(ai.pointer_y - old_ai.pointer_y);
+        event1->motion.x = (Uint16) (game_ai.pointer_x + event1->motion.xrel);
+        event1->motion.y = (Uint16) (game_ai.pointer_y + event1->motion.yrel);
     }
     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
 
@@ -331,6 +336,8 @@ int generateMouseMotionEvent(void* event, int update)
         /* Upload the old AllInput struct */
         old_ai.pointer_x = ai.pointer_x;
         old_ai.pointer_y = ai.pointer_y;
+        game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+        game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
     }
 
     return 1;

@@ -122,6 +122,9 @@ int SDL_WarpMouseGlobal(int x, int y)
 void SDL_WarpMouse(Uint16 x, Uint16 y)
 {
     debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
+    game_ai.pointer_x = x;
+    game_ai.pointer_y = y;
+    /* FIXME: We need to generate a MOUSEMOTION event here! */
 }
 
 SDL_bool relativeMode = SDL_FALSE;
