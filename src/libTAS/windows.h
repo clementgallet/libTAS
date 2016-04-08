@@ -26,7 +26,7 @@
 
 typedef void SDL_Window;
 
-extern void* gameWindow;
+extern SDL_Window* gameWindow;
 extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
 
 extern char* av_filename;
@@ -69,12 +69,12 @@ OVERRIDE SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, in
 /**
  *  \brief Get the numeric ID of a window, for logging purposes.
  */
-OVERRIDE Uint32 SDL_GetWindowID(void* SDL_Window);
+OVERRIDE Uint32 SDL_GetWindowID(SDL_Window* window);
 
 /**
  *  \brief Get the window flags.
  */
-OVERRIDE Uint32 SDL_GetWindowFlags(void* SDL_Window);
+OVERRIDE Uint32 SDL_GetWindowFlags(SDL_Window* window);
 
 /**
  *  \brief Set the border state of a window.

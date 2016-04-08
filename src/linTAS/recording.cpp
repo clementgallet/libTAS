@@ -54,15 +54,10 @@ void readHeader(FILE* fp)
 
 int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
 {
-    int start_position = HEADER_SIZE + frame * sizeof(struct AllInputs);
-    long int current_position = ftell(fp);
-
-    if (start_position != current_position) {
-        printf("Did not write, bad position\n");
-        return 0;
-    }
-
     fwrite(inputs.keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+    fwrite(&inputs.pointer_x, sizeof(int), 1, fp);
+    fwrite(&inputs.pointer_y, sizeof(int), 1, fp);
+    fwrite(&inputs.pointer_mask, sizeof(unsigned int), 1, fp);
     fwrite(inputs.controller_axes, sizeof(short), 4*6, fp);
     fwrite(inputs.controller_buttons, sizeof(unsigned short), 4, fp);
     return 1;
@@ -70,23 +65,17 @@ int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
 
 int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
 {
-    int start_position = HEADER_SIZE + frame * sizeof(struct AllInputs);
-    long int current_position = ftell(fp);
-
-    if (start_position == current_position) {
-        size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
-        size += fread(inputs->controller_axes, sizeof(short), 4*6, fp);
-        size += fread(inputs->controller_buttons, sizeof(unsigned short), 4, fp);
-        //if (size != sizeof(struct AllInputs)) {
-        //    printf("Did not read all (%zu elements), end of file?\n", size);
-        //    return 0;
-        //}
-        return 1;
-    }
-    else {
-        printf("Did not read, bad position\n");
-    }
-    return 0;
+    size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+    size += fread(&inputs->pointer_x, sizeof(int), 1, fp);
+    size += fread(&inputs->pointer_y, sizeof(int), 1, fp);
+    size += fread(&inputs->pointer_mask, sizeof(unsigned int), 1, fp);
+    size += fread(inputs->controller_axes, sizeof(short), 4*6, fp);
+    size += fread(inputs->controller_buttons, sizeof(unsigned short), 4, fp);
+    //if (size != sizeof(struct AllInputs)) {
+    //    printf("Did not read all (%zu elements), end of file?\n", size);
+    //    return 0;
+    //}
+    return 1;
 }
 
 void truncateRecording(FILE* fp)

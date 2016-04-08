@@ -2,8 +2,6 @@
 
 ### Compatibility
 
-- Support non-gamecontroller joysticks
-- Support mouse
 - Support non SDL stuff (Unity?)
 - Add dummy Steam API functions so that the game can be launched without it
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
@@ -43,6 +41,8 @@
 - Process and filter SDL events
 - Dump audio
 -- Test SDL 2 Audio (push method)
+- Support mouse
+-- Events are not generated
 
 ## Done
 
@@ -53,6 +53,7 @@
 - Inject keyboard inputs to the game
 - Add an auto-repeat for frame advance
 - Support game controller
+- Support non-gamecontroller joysticks
 - Add a deterministic timer instead of relying on SwapInterval
 - Allow 32-bit or 64-bit lib compilation
 - Add key remapping

@@ -7,8 +7,8 @@ file(GLOB_RECURSE lin_sources src/linTAS/*)
 file(GLOB shared_sources src/shared/*)
 file(GLOB external_sources src/external/*)
 
-set(EXECUTABLE_OUTPUT_PATH bin/)
-set(LIBRARY_OUTPUT_PATH bin/)
+set(EXECUTABLE_OUTPUT_PATH ./)
+set(LIBRARY_OUTPUT_PATH ./)
 #set(CMAKE_CXX_STANDARD 11)
 
 add_executable(linTAS ${lin_sources} ${shared_sources} ${external_sources})

@@ -23,6 +23,11 @@ void AllInputs::emptyInputs() {
     int i,j;
     for (i=0; i<ALLINPUTS_MAXKEY; i++)
         keyboard[i] = XK_VoidSymbol;
+
+    pointer_x = 0;
+    pointer_y = 0;
+    pointer_mask = 0;
+
     for (i=0; i<4; i++) {
         for (j=0; j<6; j++)
             controller_axes[i][j] = 0;

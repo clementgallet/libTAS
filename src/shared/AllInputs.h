@@ -24,6 +24,7 @@
 #include <X11/keysym.h>
 
 #define ALLINPUTS_MAXKEY 16
+#define ALLINPUTS_MAXJOYS 4
 
 /* Input structure that is filled by linTAS and send to libTAS every frame
  * Structure is inspired by SDL.
@@ -46,12 +47,19 @@ class AllInputs {
          */
         KeySym keyboard[ALLINPUTS_MAXKEY];
 
+        /* Pointer coordinates relative to the origin of the game window */
+        int pointer_x;
+        int pointer_y;
+
+        /* Pointer buttons */
+        unsigned int pointer_mask;
+
         /* controller_axes[i][j] stores the state of axis j of controller i.
          * List of axes is coming from SDL GameController.
          * Maybe we should use our own enum and translate to SDL enum, in case
          * we must support other joystick libraries like plain joydev.
          */
-        short controller_axes[4][6];
+        short controller_axes[ALLINPUTS_MAXJOYS][6];
 
         /* controller_buttons[i] stores the bitmap state of buttons of
          * controller i. Bit j set means that button j is pressed.
@@ -59,7 +67,7 @@ class AllInputs {
          * 16 buttons in a controller.
          * Again, the list of buttons is taken from SDL GameController. 
          */
-        unsigned short controller_buttons[4];
+        unsigned short controller_buttons[ALLINPUTS_MAXJOYS];
 
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();

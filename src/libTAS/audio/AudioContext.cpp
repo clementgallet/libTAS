@@ -21,8 +21,8 @@
 #include "AudioContext.h"
 #include "AudioPlayer.h"
 
-#define MAXBUFFERS 2048 // TODO: put correct value
-#define MAXSOURCES 256
+#define MAXBUFFERS 2048 // Max I've seen so far: 960
+#define MAXSOURCES 256 // Max I've seen so far: 112
 
 AudioContext audiocontext;
 
