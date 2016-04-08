@@ -26,13 +26,10 @@
 #include "EventQueue.h"
 
 /* Pointers to original functions */
-void (*SDL_PumpEvents_real)(void);
 int (*SDL_PollEvent_real)(void*);
 
 void pushNativeEvents(void)
 {
-    SDL_PumpEvents_real();
-
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
         while (SDL_PollEvent_real((void*)&ev))
@@ -202,7 +199,6 @@ void pushNativeEvents(void)
     else {
         SDL_Event ev;
         for (t=0; t<timeout; t++) {
-            SDL_PumpEvents_real();
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
             nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
@@ -268,9 +264,9 @@ bool filterSDL2Event(SDL_Event *event)
         case SDL_CONTROLLERDEVICEADDED:
         case SDL_CONTROLLERDEVICEREMOVED:
         case SDL_CONTROLLERDEVICEREMAPPED:
-            return 1;
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
@@ -279,9 +275,17 @@ bool filterSDL1Event(SDL1::SDL_Event *event)
     switch(event->type) {
         case SDL1::SDL_KEYDOWN:
         case SDL1::SDL_KEYUP:
-            return 1;
+        case SDL1::SDL_MOUSEMOTION:
+        case SDL1::SDL_MOUSEBUTTONDOWN:
+        case SDL1::SDL_MOUSEBUTTONUP:
+        case SDL1::SDL_JOYAXISMOTION:
+        case SDL1::SDL_JOYBALLMOTION:
+        case SDL1::SDL_JOYHATMOTION:
+        case SDL1::SDL_JOYBUTTONDOWN:
+        case SDL1::SDL_JOYBUTTONUP:
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
@@ -472,7 +476,6 @@ void logEvent(SDL_Event *event)
 
 void link_sdlevents(void)
 {
-    LINK_SUFFIX_SDLX(SDL_PumpEvents);
     LINK_SUFFIX_SDLX(SDL_PollEvent);
 }
 
