@@ -32,9 +32,13 @@
 #endif
 #include "EventQueue.h"
 #include "events.h"
+#include <mutex>
+
+std::mutex frameMutex;
 
 void frameBoundary(void)
 {
+    std::lock_guard<std::mutex> guard(frameMutex);
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
 
     detTimer.enterFrameBoundary();

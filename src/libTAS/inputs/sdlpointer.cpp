@@ -25,6 +25,7 @@
 #include "../../shared/tasflags.h"
 #include "../windows.h" // gameWindow
 #include <X11/X.h>
+#include "../EventQueue.h"
 
 SDL_Window *SDL_GetMouseFocus(void)
 {
@@ -124,7 +125,30 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
     game_ai.pointer_x = x;
     game_ai.pointer_y = y;
-    /* FIXME: We need to generate a MOUSEMOTION event here! */
+
+    /* We have to generate an MOUSEMOTION event. */
+    SDL1::SDL_Event event1;
+    event1.type = SDL1::SDL_MOUSEMOTION;
+    event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+    /* Build up mouse state */
+    event1.motion.state = 0;
+    if (ai.pointer_mask & Button1Mask)
+        event1.motion.state |= SDL1::SDL_BUTTON_LMASK;
+    if (ai.pointer_mask & Button2Mask)
+        event1.motion.state |= SDL1::SDL_BUTTON_MMASK;
+    if (ai.pointer_mask & Button3Mask)
+        event1.motion.state |= SDL1::SDL_BUTTON_RMASK;
+    if (ai.pointer_mask & Button4Mask)
+        event1.motion.state |= SDL1::SDL_BUTTON_X1MASK;
+    if (ai.pointer_mask & Button5Mask)
+        event1.motion.state |= SDL1::SDL_BUTTON_X2MASK;
+
+    event1.motion.x = x;
+    event1.motion.y = y;
+    event1.motion.xrel = (Sint16)(game_ai.pointer_x - x);
+    event1.motion.yrel = (Sint16)(game_ai.pointer_y - y);
+    sdlEventQueue.insert(&event1);
 }
 
 SDL_bool relativeMode = SDL_FALSE;

@@ -124,7 +124,7 @@ int EventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
 
             if (update) {
                 /* Deleting the object and removing it from the list */
-                delete (SDL1::SDL_Event*)(*it);
+                delete ev;
                 it = eventQueue.erase(it);
             }
             else

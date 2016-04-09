@@ -26,20 +26,29 @@
 #include "EventQueue.h"
 
 /* Pointers to original functions */
-int (*SDL_PollEvent_real)(void*);
+void (*SDL_PumpEvents_real)(void);
+int (*SDL1_PeepEvents_real)(SDL1::SDL_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
+int (*SDL2_PeepEvents_real)(SDL_Event *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
 
 void pushNativeEvents(void)
 {
+    SDL_PumpEvents_real();
+
+    /* We use SDL_PeepEvents() for gathering events from the SDL queue,
+     * as it is the native function of getting events.
+     * i.e. all other functions call this function internally.
+     */
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (SDL_PollEvent_real((void*)&ev))
+        while (SDL1_PeepEvents_real(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS)) {
             if (! filterSDL1Event(&ev))
                 sdlEventQueue.insert(&ev);
+        }
     }
 
     if (SDLver == 2) {
         SDL_Event ev;
-        while (SDL_PollEvent_real((void*)&ev))
+        while (SDL2_PeepEvents_real(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
     }
@@ -476,6 +485,10 @@ void logEvent(SDL_Event *event)
 
 void link_sdlevents(void)
 {
-    LINK_SUFFIX_SDLX(SDL_PollEvent);
+    LINK_SUFFIX_SDLX(SDL_PumpEvents);
+    if (SDLver == 1)
+        link_function((void**)&SDL1_PeepEvents_real, "SDL_PeepEvents", "libSDL-1.2");
+    if (SDLver == 2)
+        link_function((void**)&SDL2_PeepEvents_real, "SDL_PeepEvents", "libSDL2-2");
 }
 
