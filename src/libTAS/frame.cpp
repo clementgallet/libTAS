@@ -68,11 +68,9 @@ void frameBoundary(void)
     /* Push generated events */
     generateKeyUpEvents();
     generateKeyDownEvents();
-    if (SDLver == 2) {
-        if (frame_counter == 0)
-            generateControllerAdded();
-        generateControllerEvents();
-    }
+    if (frame_counter == 0)
+        generateControllerAdded();
+    generateControllerEvents();
     generateMouseMotionEvents();
     generateMouseButtonEvents();
 

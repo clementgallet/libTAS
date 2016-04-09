@@ -40,6 +40,7 @@
     SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
 - Dump audio
 -- Test SDL 2 Audio (push method)
+-- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
 - Emulate our own event queue
 -- Support enabling/disabling events (for controllers/joysticks)
 -- Support filtering
