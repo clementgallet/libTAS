@@ -26,7 +26,8 @@
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
 #include "../windows.h" // for SDL_GetWindowId_real and gameWindow
-#include "sdlgamecontroller.h" // sdl_controller_event
+#include "sdlgamecontroller.h" // sdl_controller_events
+#include "sdljoystick.h" // sdl_joystick_event
 #include "sdlpointer.h" // MASK constants
 #include "../EventQueue.h"
 
@@ -155,6 +156,9 @@ void generateControllerAdded(void)
     if (SDLver == 1)
         return;
 
+    if (!sdl_controller_events)
+        return;
+
     struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -174,28 +178,52 @@ void generateControllerAdded(void)
 
 void generateControllerEvents(void)
 {
-    if (!sdl_controller_events)
+    /* Ok, doc says that:
+     *   "If controller events are disabled, you must call SDL_GameControllerUpdate()
+     *   yourself and check the state of the controller when you want controller
+     *   information."
+     *
+     * What happens if GC events are disabled, but Joystick events are
+     * enabled? If Joystick events are enabled, SDL_JoystickUpdate() is called
+     * during SDL_PumpEvents(). However, Joysticks and GCs use the same storage,
+     * GCs are just remapping of Joysticks. As a proof, SDL_GameControllerUpdate()
+     * does nothing more than calling SDL_JoystickUpdate().
+     *
+     * It seems that disabling only SDL_GC events keep updating the joystick
+     * states in the event loop. Or maybe when a joystick is detected as GC
+     * compatible, it automatically disable Joystick events?
+     *
+     * For now, I'm going to remove Joy/GC update only when both GC and Joy
+     * events are disabled.
+     */
+
+    if (!sdl_controller_events && !sdl_joystick_events)
         return;
 
     struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<tasflags.numControllers; ji++) {
-        /* Check for axes change */
         for (int axis=0; axis<6; axis++) {
+            /* Update game_ai axes */
+            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+
+            /* Check for axes change */
             if (ai.controller_axes[ji][axis] != old_ai.controller_axes[ji][axis]) {
                 /* We got a change in a controller axis value */
 
                 /* Fill the event structure */
                 if (SDLver == 2) {
                     SDL_Event event2;
-                    event2.type = SDL_CONTROLLERAXISMOTION;
-                    event2.caxis.timestamp = timestamp;
-                    event2.caxis.which = ji;
-                    event2.caxis.axis = axis;
-                    event2.caxis.value = ai.controller_axes[ji][axis];
-                    sdlEventQueue.insert(&event2);
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis ", axis);
+                    if (sdl_controller_events) {
+                        event2.type = SDL_CONTROLLERAXISMOTION;
+                        event2.caxis.timestamp = timestamp;
+                        event2.caxis.which = ji;
+                        event2.caxis.axis = axis;
+                        event2.caxis.value = ai.controller_axes[ji][axis];
+                        sdlEventQueue.insert(&event2);
+                        debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis ", axis);
+                    }
 
                     event2.type = SDL_JOYAXISMOTION;
                     event2.jaxis.timestamp = timestamp;
@@ -224,6 +252,9 @@ void generateControllerEvents(void)
             }
         }
 
+        /* Update game_ai buttons */
+        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
+        
         /* Check for button change */
         unsigned short buttons = ai.controller_buttons[ji];
         unsigned short old_buttons = old_ai.controller_buttons[ji];
@@ -234,23 +265,25 @@ void generateControllerEvents(void)
 
                 /* Fill the event structure */
 
-                if (SDLver == 2) {
-                    /* SDL2 controller button */
-                    SDL_Event event2;
-                    if ((buttons >> bi) & 0x1) {
-                        event2.type = SDL_CONTROLLERBUTTONDOWN;
-                        event2.cbutton.state = SDL_PRESSED;
-                        debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONDOWN with button ", bi);
+                if (sdl_controller_events) {
+                    if (SDLver == 2) {
+                        /* SDL2 controller button */
+                        SDL_Event event2;
+                        if ((buttons >> bi) & 0x1) {
+                            event2.type = SDL_CONTROLLERBUTTONDOWN;
+                            event2.cbutton.state = SDL_PRESSED;
+                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONDOWN with button ", bi);
+                        }
+                        else {
+                            event2.type = SDL_CONTROLLERBUTTONUP;
+                            event2.cbutton.state = SDL_RELEASED;
+                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONUP with button ", bi);
+                        }
+                        event2.cbutton.timestamp = timestamp;
+                        event2.cbutton.which = ji;
+                        event2.cbutton.button = bi;
+                        sdlEventQueue.insert(&event2);
                     }
-                    else {
-                        event2.type = SDL_CONTROLLERBUTTONUP;
-                        event2.cbutton.state = SDL_RELEASED;
-                        debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONUP with button ", bi);
-                    }
-                    event2.cbutton.timestamp = timestamp;
-                    event2.cbutton.which = ji;
-                    event2.cbutton.button = bi;
-                    sdlEventQueue.insert(&event2);
                 }
 
                 if (bi < 11) {

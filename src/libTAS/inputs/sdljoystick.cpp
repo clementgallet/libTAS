@@ -25,6 +25,10 @@
 #include "../../shared/tasflags.h"
 #include <stdlib.h>
 
+/* Do we have to generate joystick events? */
+/* TODO: Put this global somewhere else */
+bool sdl_joystick_events = true;
+
 /* Override */ int SDL_NumJoysticks(void)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
@@ -176,12 +180,29 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 /* Override */ void SDL_JoystickUpdate(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+
+    for (int j=0; j<tasflags.numControllers; j++) {
+        for (int a=0; a<AllInputs::MAXAXES; a++)
+            game_ai.controller_axes[j][a] = ai.controller_axes[j][a];
+        game_ai.controller_buttons[j] = ai.controller_buttons[j];
+    }
 }
 
 /* Override */ int SDL_JoystickEventState(int state)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
-    return 0;
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
+    switch (state) {
+        case SDL_ENABLE:
+            sdl_joystick_events = true;
+            return 1;
+        case SDL_IGNORE:
+            sdl_joystick_events = false;
+            return 0;
+        case SDL_QUERY:
+            return sdl_joystick_events;
+        default:
+            return state;
+    }
 }
 
 /* Override */ Sint16 SDL_JoystickGetAxis(SDL_Joystick * joystick, int axis)
@@ -194,7 +215,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
     if (axis >= 6)
         return 0;
 
-    return ai.controller_axes[*joystick][axis];
+    return game_ai.controller_axes[*joystick][axis];
 }
 
 /* Override */ Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat)
@@ -208,13 +229,13 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
         return 0;
 
     Uint8 hatState = SDL_HAT_CENTERED;
-    if (ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
+    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
         hatState |= SDL_HAT_UP;
-    if (ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
         hatState |= SDL_HAT_DOWN;
-    if (ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
         hatState |= SDL_HAT_LEFT;
-    if (ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
         hatState |= SDL_HAT_RIGHT;
 
     return hatState;
@@ -236,7 +257,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
     if (button >= 11)
         return 0;
 
-    return (ai.controller_buttons[*joystick] >> button) & 0x1;
+    return (game_ai.controller_buttons[*joystick] >> button) & 0x1;
 }
 
 /* Override */ void SDL_JoystickClose(SDL_Joystick * joystick)

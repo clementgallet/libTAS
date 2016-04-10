@@ -31,6 +31,10 @@
  */
 class AllInputs {
     public:
+
+        static const int MAXJOYS = 4;
+        static const int MAXAXES = 6;
+
         /* Keyboard state. Each element is a (X11) KeySym of a pressed key.
          * KeySym is a 4-byte integer struct containing a key symbol or meaning,
          * not the physical key itself, so it can contain misc or non-latin symbols
@@ -59,7 +63,7 @@ class AllInputs {
          * Maybe we should use our own enum and translate to SDL enum, in case
          * we must support other joystick libraries like plain joydev.
          */
-        short controller_axes[ALLINPUTS_MAXJOYS][6];
+        short controller_axes[MAXJOYS][MAXAXES];
 
         /* controller_buttons[i] stores the bitmap state of buttons of
          * controller i. Bit j set means that button j is pressed.
@@ -67,7 +71,7 @@ class AllInputs {
          * 16 buttons in a controller.
          * Again, the list of buttons is taken from SDL GameController. 
          */
-        unsigned short controller_buttons[ALLINPUTS_MAXJOYS];
+        unsigned short controller_buttons[MAXJOYS];
 
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();

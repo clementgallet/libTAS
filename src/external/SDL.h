@@ -37,6 +37,9 @@
 #define SDL_INIT_NOPARACHUTE    0x00100000  /**< Don't catch fatal signals */
 #define SDL_INIT_EVENTTHREAD    0x01000000  /**< SDL 1.2 only Not supported on all OS's */
 
+#define SDL_QUERY  -1
+#define SDL_IGNORE  0
+#define SDL_ENABLE  1
 
 typedef uint8_t Uint8;
 typedef uint16_t Uint16;

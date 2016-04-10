@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 /* Do we have to generate controller events? */
+/* TODO: Put this global somewhere else */
 bool sdl_controller_events = true;
 
 SDL_GameController gcids[4] = {-1, -1, -1, -1};
@@ -95,15 +96,15 @@ const char joy_name[] = "XInput Controller";
 
 /* Override */ int SDL_GameControllerEventState(int state)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK | LCF_TODO, __func__, " call with state ", state);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
     switch (state) {
-        case 1:
+        case SDL_ENABLE:
             sdl_controller_events = true;
             return 1;
-        case 0:
+        case SDL_IGNORE:
             sdl_controller_events = false;
             return 0;
-        case -1:
+        case SDL_QUERY:
             return sdl_controller_events;
         default:
             return state;
@@ -112,7 +113,8 @@ const char joy_name[] = "XInput Controller";
 
 /* Override */ void SDL_GameControllerUpdate(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    SDL_JoystickUpdate();
 }
 
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
@@ -132,7 +134,7 @@ const char joy_name[] = "XInput Controller";
         return 0;
 
     /* Return axis value */
-    return ai.controller_axes[*gamecontroller][axis];
+    return game_ai.controller_axes[*gamecontroller][axis];
 
 }
 
@@ -153,7 +155,7 @@ const char joy_name[] = "XInput Controller";
         return 0;
 
     /* Return button value */
-    return (ai.controller_buttons[*gamecontroller] >> button) & 0x1;
+    return (game_ai.controller_buttons[*gamecontroller] >> button) & 0x1;
 
 }
 

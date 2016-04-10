@@ -4,7 +4,7 @@ GNU/Linux software to (hopefully) give TAS tools to games. Code orginates from [
 
 ## Compile
 
-Compiling is done using cmake. From the root directory just type `cmake .` (the dot does matter), then `make`.
+Compiling is done using cmake. From the root directory just type `cd build && cmake ..`, then `make`.
 
 The current mandatory dependancies so far are `libx11-dev`.
 
@@ -28,7 +28,7 @@ To enable HUD on top of the game screen (currently not working, disabled by defa
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually disable a feature, you must add just after the `cmake` command either `-DENABLE_DUMPING=OFF`, `-DENABLE_SOUND=OFF` or `-DENABLE_HUD=OFF`.
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=32bit.toolchain.cmake .`. 
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=32bit.toolchain.cmake ..`
 
 ## Run
 
