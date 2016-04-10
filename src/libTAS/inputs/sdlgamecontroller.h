@@ -102,16 +102,6 @@ OVERRIDE int SDL_GameControllerEventState(int state);
 OVERRIDE void SDL_GameControllerUpdate(void);
 
 /**
- *  turn this string into a axis mapping
- */
-OVERRIDE SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char *pchString);
-
-/**
- *  turn this axis enum into a string mapping
- */
-OVERRIDE const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis);
-
-/**
  *  Get the current state of an axis control on a game controller.
  *
  *  The state is a value ranging from -32768 to 32767.
@@ -120,15 +110,6 @@ OVERRIDE const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis a
  */
 OVERRIDE Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                                 SDL_GameControllerAxis axis);
-/**
- *  turn this string into a button mapping
- */
-OVERRIDE SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char *pchString);
-
-/**
- *  turn this button enum into a string mapping
- */
-OVERRIDE const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button);
 
 /**
  *  Get the current state of a button on a game controller.
@@ -142,6 +123,12 @@ OVERRIDE Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
  *  Close a controller previously opened with SDL_GameControllerOpen().
  */
 OVERRIDE void SDL_GameControllerClose(SDL_GameController *gamecontroller);
+
+/* We don't need to hook these functions */
+// SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char *pchString);
+// const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis);
+// SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char *pchString);
+// const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button);
 
 #endif
 

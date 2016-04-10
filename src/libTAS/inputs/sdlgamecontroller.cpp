@@ -28,7 +28,7 @@
 /* Do we have to generate controller events? */
 bool sdl_controller_events = true;
 
-SDL_JoystickID joyid[4] = {-1, -1, -1, -1};
+SDL_GameController gcids[4] = {-1, -1, -1, -1};
 const char joy_name[] = "XInput Controller";
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
@@ -43,12 +43,14 @@ const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    SDL_GameController* gc_id = new SDL_GameController;
-    *gc_id = joystick_index;
+    if (joystick_index < 0 || joystick_index >= tasflags.numControllers)
+        return NULL;
+    if (gcids[joystick_index] != -1)
+        return NULL;
 
     /* Save the opening of the game controller */
-    joyid[joystick_index] = joystick_index;
-    return gc_id;
+    gcids[joystick_index] = joystick_index;
+    return &gcids[joystick_index];
 }
 
 /* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index)
@@ -73,17 +75,22 @@ const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_TODO, __func__, " call with id ", joy);
-    SDL_GameController* gc_id = new SDL_GameController;
-    *gc_id = 0;
-	return gc_id;
+    if (joy < 0 || joy >= tasflags.numControllers)
+        return NULL;
+    if (gcids[joy] != -1)
+        return NULL;
+	return &gcids[joy];
 }
 
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
-    if (joyid[*gamecontroller] != -1)
-        return SDL_TRUE;
-    return SDL_FALSE;
+    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+        return SDL_FALSE;
+    if (gcids[*gamecontroller] == -1)
+        return SDL_FALSE;
+
+    return SDL_TRUE;
 }
 
 /* Override */ int SDL_GameControllerEventState(int state)
@@ -113,8 +120,11 @@ const char joy_name[] = "XInput Controller";
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller, " and axis ", axis);
 
+    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+        return 0;
+
     /* Check if controller is available */
-    if (joyid[*gamecontroller] == -1)
+    if (gcids[*gamecontroller] == -1)
         return 0;
 
     /* Check if axis is valid */
@@ -122,7 +132,7 @@ const char joy_name[] = "XInput Controller";
         return 0;
 
     /* Return axis value */
-    return ai.controller_axes[joyid[*gamecontroller]][axis];
+    return ai.controller_axes[*gamecontroller][axis];
 
 }
 
@@ -131,8 +141,11 @@ const char joy_name[] = "XInput Controller";
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller, " and button ", button);
 
+    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+        return 0;
+
     /* Check if controller is available */
-    if (joyid[*gamecontroller] == -1)
+    if (gcids[*gamecontroller] == -1)
         return 0;
 
     /* Check if button is valid */
@@ -140,7 +153,7 @@ const char joy_name[] = "XInput Controller";
         return 0;
 
     /* Return button value */
-    return (ai.controller_buttons[joyid[*gamecontroller]] >> button) & 0x1;
+    return (ai.controller_buttons[*gamecontroller] >> button) & 0x1;
 
 }
 
@@ -148,6 +161,9 @@ const char joy_name[] = "XInput Controller";
 {
     debuglog(LCF_SDL | LCF_JOYSTICK | LCF_FRAME, __func__, " call with id ", *gamecontroller);
 
-    joyid[*gamecontroller] = -1;
+    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+        return;
+
+    gcids[*gamecontroller] = -1;
 }
 
