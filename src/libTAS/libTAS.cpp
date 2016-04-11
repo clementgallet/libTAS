@@ -49,9 +49,9 @@ TTF_Font *font = NULL;
 #endif
 
 /* Function pointers to real functions */
-void (*SDL_Init_real)(unsigned int flags);
-int (*SDL_InitSubSystem_real)(Uint32 flags);
-void (*SDL_Quit_real)(void);
+void (*SDL_Init_real)(unsigned int flags) = nullptr;
+int (*SDL_InitSubSystem_real)(Uint32 flags) = nullptr;
+void (*SDL_Quit_real)(void) = nullptr;
 
 void __attribute__((constructor (101))) init(void)
 {
@@ -131,6 +131,7 @@ void __attribute__((constructor (101))) init(void)
     /* We initialize our dl functions hooking, and link some functions */
     dlhook_init();
     link_time();
+    link_pthread();
 
     /* Initialize timers */
     nonDetTimer.initialize();
@@ -156,28 +157,37 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Init(unsigned int flags){
     debuglog(LCF_SDL, __func__, " call.");
 
-    /* Some games may call this function multiple times */
-    static int inited = 0;
-    if (inited == 0) {
+    /* Get which sdl version we are using.
+     * Stores it in an extern variable.
+     */
+    get_sdlversion();
 
-        /* Get which sdl version we are using.
-         * Stores it in an extern variable.
-         */
-        get_sdlversion();
+    LINK_SUFFIX_SDLX(SDL_Init);
+    /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
+     * so we put the rest of relevent code in that function
+     */
+    SDL_Init_real(flags);
+}
 
-        /* Link function pointers to SDL functions */
-        LINK_SUFFIX_SDLX(SDL_Init);
-        LINK_SUFFIX_SDLX(SDL_InitSubSystem);
-        LINK_SUFFIX_SDLX(SDL_Quit);
+/* Override */ int SDL_InitSubSystem(Uint32 flags){
+    debuglog(LCF_SDL, __func__, " call.");
 
-        link_sdlwindows();
-        link_sdlevents();
-        link_sdlthreads();
+    /* Get which sdl version we are using.
+     * Stores it in an extern variable.
+     */
+    get_sdlversion();
+
+    /* Link function pointers to SDL functions */
+    LINK_SUFFIX_SDLX(SDL_Init);
+    LINK_SUFFIX_SDLX(SDL_InitSubSystem);
+    LINK_SUFFIX_SDLX(SDL_Quit);
+
+    link_sdlwindows();
+    link_sdlevents();
+    link_sdlthreads();
 #ifdef LIBTAS_ENABLE_HUD
-        link_opengl(); // TODO: Put this when creating the opengl context
+    link_opengl(); // TODO: Put this when creating the opengl context
 #endif
-        inited = 1;
-    }
 
     /* The thread calling this is probably the main thread */
     setMainThread();
@@ -191,38 +201,19 @@ void __attribute__((destructor)) term(void)
     if (flags & SDL_INIT_CDROM)
         debuglog(LCF_SDL, "    SDL_CDROM enabled.");
     if (flags & SDL_INIT_JOYSTICK)
-        debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
+        debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
     if (flags & SDL_INIT_HAPTIC)
         debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
     if (flags & SDL_INIT_GAMECONTROLLER)
-        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
+        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
 
-    /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
+    /* Disabling Joystick subsystem, we don't need any initialization from SDL */
+    flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;
 
-    SDL_Init_real(flags);
-}
-
-/* Override */ int SDL_InitSubSystem(Uint32 flags){
-    debuglog(LCF_SDL, __func__, " call.");
-    if (flags & SDL_INIT_TIMER)
-        debuglog(LCF_SDL, "    SDL_TIMER enabled.");
-    if (flags & SDL_INIT_AUDIO)
-        debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
-    if (flags & SDL_INIT_VIDEO)
-        debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
-    if (flags & SDL_INIT_CDROM)
-        debuglog(LCF_SDL, "    SDL_CDROM enabled.");
-    if (flags & SDL_INIT_JOYSTICK)
-        debuglog(LCF_SDL, "    SDL_JOYSTICK enabled.");
-    if (flags & SDL_INIT_HAPTIC)
-        debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
-    if (flags & SDL_INIT_GAMECONTROLLER)
-        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER enabled.");
-    if (flags & SDL_INIT_EVENTS)
-        debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+    /* Disabling GameController subsystem, we don't need any initialization from SDL */
+    flags &= 0xFFFFFFFF ^ SDL_INIT_GAMECONTROLLER;
 
     /* Disabling Audio subsystem so that it does not create an extra thread */
     flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;

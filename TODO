@@ -11,6 +11,8 @@
 - Add inputs into the game screen
 -- For working with text and opengl, see http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl/5289823#5289823
 -- https://www.libsdl.org/projects/SDL_ttf/
+-- https://github.com/icebreaker/Gwen
+-- http://cegui.org.uk/wiki/Main_Page
 - Add a memory watch/search module
 - Add an interface (ncurses?)
 - Add config file for hotkeys and key remapping (libconfig?)

@@ -75,6 +75,8 @@ SDL_version * (*SDL_Linked_Version_real)(void);
 
 int get_sdlversion(void)
 {
+    if (SDLver != 0)
+        return 1;
 
     LINK_SUFFIX(SDL_GetVersion, "libSDL2-2");
     if (SDL_GetVersion_real == nullptr)
@@ -98,7 +100,6 @@ int get_sdlversion(void)
 
     if (ver.major == 0) {
         debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not get SDL version...");
-        dlleave();
         return 0;
     }
 

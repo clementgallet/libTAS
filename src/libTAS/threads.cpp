@@ -90,8 +90,6 @@ int isMainThread(void)
     SDL_DetachThread(thread);
 }
 
-
-void link_pthread(void);
 void link_pthread(void)
 {
     LINK_SUFFIX(pthread_create, "pthread");

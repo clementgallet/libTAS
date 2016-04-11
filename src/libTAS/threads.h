@@ -131,6 +131,7 @@ OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
 OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
 void link_sdlthreads(void);
+void link_pthread(void);
 
 #endif
 
