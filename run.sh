@@ -45,7 +45,7 @@ do
 done
 
 # Some games do not work if it was not launched inside its folder
-cd ${gamepath%/*}
+cd "${gamepath%/*}"
 
 # Get the list of all shared libraries used by the game
 # Source: http://unix.stackexchange.com/a/101833
@@ -56,7 +56,7 @@ if [ ! -p "$mypipe" ]
 then
     mkfifo $mypipe
 fi
-ldd ./${gamepath##*/} | awk '/=>/{print $(NF-1)}' > $mypipe &
+ldd ./"${gamepath##*/}" | awk '/=>/{print $(NF-1)}' > $mypipe &
 
 while read lib
 do SHLIBS="$SHLIBS -l $lib"
@@ -64,7 +64,7 @@ done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
 echo "LD_PRELOAD=$OLDPWD/build/libTAS.so ./${gamepath##*/} $@ &"
-LD_PRELOAD=$OLDPWD/build/libTAS.so ./${gamepath##*/} "$@" &
+LD_PRELOAD=$OLDPWD/build/libTAS.so ./"${gamepath##*/}" "$@" &
 cd - > /dev/null
 sleep 1
 
