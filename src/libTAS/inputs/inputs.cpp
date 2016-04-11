@@ -259,6 +259,9 @@ void generateControllerEvents(void)
         unsigned short buttons = ai.controller_buttons[ji];
         unsigned short old_buttons = old_ai.controller_buttons[ji];
 
+        /* We take care of only generating the hat event once */
+        bool hatGenerated = false;
+
         for (int bi=0; bi<16; bi++) {
             if (((buttons >> bi) & 0x1) != ((old_buttons >> bi) & 0x1)) {
                 /* We got a change in a button state */
@@ -325,9 +328,6 @@ void generateControllerEvents(void)
                     }
                 }
 
-                /* We take care of only generating the hat event once */
-                static bool hatGenerated = false;
-
                 if ((!hatGenerated) && (bi >= 11)) {
                     hatGenerated = true;
 
@@ -344,7 +344,7 @@ void generateControllerEvents(void)
                     if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
                         hatState |= SDL_HAT_RIGHT;
 
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", hatState);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
 
                     if (SDLver == 2) {
                         /* SDL2 joystick hat */
