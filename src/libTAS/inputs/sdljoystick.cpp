@@ -21,13 +21,10 @@
 #include "inputs.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/tasflags.h"
 #include <stdlib.h>
-
-/* Do we have to generate joystick events? */
-/* TODO: Put this global somewhere else */
-bool sdl_joystick_events = true;
 
 /* Override */ int SDL_NumJoysticks(void)
 {
@@ -214,15 +211,52 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 /* Override */ int SDL_JoystickEventState(int state)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
+    const int joyevents1[] = {
+        SDL1::SDL_JOYAXISMOTION,
+        SDL1::SDL_JOYBUTTONDOWN,
+        SDL1::SDL_JOYBUTTONUP,
+        SDL1::SDL_JOYHATMOTION,
+        SDL1::SDL_JOYBALLMOTION
+    };
+
+    const int joyevents2[] = {
+        SDL_JOYAXISMOTION,
+        SDL_JOYBUTTONDOWN,
+        SDL_JOYBUTTONUP,
+        SDL_JOYHATMOTION,
+        SDL_JOYBALLMOTION,
+        SDL_JOYDEVICEADDED,
+        SDL_JOYDEVICEREMOVED
+    };
+
+    bool isFiltered = true;
     switch (state) {
         case SDL_ENABLE:
-            sdl_joystick_events = true;
+            if (SDLver == 1)
+                for (int e=0; e<5; e++)
+                    sdlEventQueue.removeFilter(joyevents1[e]);
+            if (SDLver == 2)
+                for (int e=0; e<7; e++)
+                    sdlEventQueue.removeFilter(joyevents2[e]);
             return 1;
         case SDL_IGNORE:
-            sdl_joystick_events = false;
+            if (SDLver == 1)
+                for (int e=0; e<5; e++)
+                    sdlEventQueue.setFilter(joyevents1[e]);
+            if (SDLver == 2)
+                for (int e=0; e<7; e++)
+                    sdlEventQueue.setFilter(joyevents2[e]);
             return 0;
         case SDL_QUERY:
-            return sdl_joystick_events;
+            if (SDLver == 1)
+                for (int e=0; e<5; e++)
+                    isFiltered = isFiltered && sdlEventQueue.isFiltered(joyevents1[e]);
+            if (SDLver == 2)
+                for (int e=0; e<7; e++)
+                    isFiltered = isFiltered && sdlEventQueue.isFiltered(joyevents2[e]);
+            if (isFiltered)
+                return SDL_IGNORE;
+            return SDL_ENABLE;
         default:
             return state;
     }

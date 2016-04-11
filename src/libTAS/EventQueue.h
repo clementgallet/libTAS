@@ -21,12 +21,15 @@
 #define LIBTAS_EVENTQUEUE_H_INCLUDED
 
 #include <list>
+#include <set>
 #include "../external/SDL.h"
 
 class EventQueue
 {
     public:
         ~EventQueue();
+
+        void init();
 
         void insert(SDL1::SDL_Event* event);
         void insert(SDL_Event* event);
@@ -37,8 +40,13 @@ class EventQueue
         void flush(Uint32 mask);
         void flush(Uint32 minType, Uint32 maxType);
 
+        void setFilter(int type);
+        void removeFilter(int type);
+        bool isFiltered(int type);
+
     private:
         std::list<void*> eventQueue;
+        std::set<int> filteredEvents;
 
 };
 

@@ -20,6 +20,8 @@
 #include "EventQueue.h"
 #include "logging.h"
 #include "string.h"
+#include "hook.h"
+#include "../external/SDL.h"
 
 EventQueue sdlEventQueue;
 
@@ -31,6 +33,33 @@ EventQueue::~EventQueue()
         if (SDLver == 2)
             delete (SDL_Event*) ev;
     }
+}
+
+void EventQueue::init(void)
+{
+    if (SDLver == 2) {
+        /* Insert default filters */
+        filteredEvents.insert(SDL_TEXTINPUT);
+        filteredEvents.insert(SDL_TEXTEDITING);
+        filteredEvents.insert(SDL_SYSWMEVENT);
+    }
+}
+
+void EventQueue::setFilter(int type)
+{
+    filteredEvents.insert(type);
+}
+
+void EventQueue::removeFilter(int type)
+{
+    std::set<int>::iterator it = filteredEvents.find(type);
+    if (it != filteredEvents.end())
+        filteredEvents.erase(it);
+}
+
+bool EventQueue::isFiltered(int type)
+{
+    return filteredEvents.find(type) != filteredEvents.end();
 }
 
 #define EVENTQUEUE_MAXLEN 1024

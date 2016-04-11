@@ -89,9 +89,11 @@ void pushNativeEvents(void)
             debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add ", numevents, " events");
             for (int i=0; i<numevents; i++) {
                 if (SDLver == 1)
-                    sdlEventQueue.insert(&events1[i]);
+                    if (! filterSDL1Event(&events1[i]))
+                        sdlEventQueue.insert(&events1[i]);
                 if (SDLver == 2)
-                    sdlEventQueue.insert(&events[i]);
+                    if (! filterSDL2Event(&events[i]))
+                        sdlEventQueue.insert(&events[i]);
             }
             break;
         case SDL_PEEKEVENT:

@@ -23,9 +23,6 @@
 #include "../../external/SDL.h"
 #include "../global.h"
 
-/* Do we have to generate controller events? */
-extern bool sdl_joystick_events;
-
 typedef int SDL_Joystick;
 
 /* A structure that encodes the stable unique id for a joystick device */

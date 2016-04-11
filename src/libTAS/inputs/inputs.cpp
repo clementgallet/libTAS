@@ -137,7 +137,7 @@ void generateKeyDownEvents(void)
 
                 sdlEventQueue.insert(&event1);
 
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", event1.key.keysym.sym);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
             /* Update old keyboard state */
@@ -154,9 +154,6 @@ void generateKeyDownEvents(void)
 void generateControllerAdded(void)
 {
     if (SDLver == 1)
-        return;
-
-    if (!sdl_controller_events)
         return;
 
     struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
@@ -189,8 +186,8 @@ void generateControllerEvents(void)
          * in the SDL documentation. The game must then call
          * SDL_[Joystick/GameController]Update to update the joystick state.
          */
-        bool genGC = sdl_controller_events && SDL_GameControllerGetAttached(&ji);
-        bool genJoy = sdl_joystick_events && SDL_JoystickGetAttached(&ji);
+        bool genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
+        bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
         if (!genGC && !genJoy)
             continue;
 

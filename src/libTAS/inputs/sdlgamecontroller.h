@@ -25,9 +25,6 @@
 #include "inputs.h"
 #include "../global.h"
 
-/* Do we have to generate controller events? */
-extern bool sdl_controller_events;
-
 /* 
  * Declaring SDL_GameController structs
  * to be simply an int containing the controller id.

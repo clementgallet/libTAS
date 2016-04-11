@@ -21,13 +21,10 @@
 #include "inputs.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/tasflags.h"
 #include <stdlib.h>
-
-/* Do we have to generate controller events? */
-/* TODO: Put this global somewhere else */
-bool sdl_controller_events = true;
 
 SDL_GameController gcids[4] = {-1, -1, -1, -1};
 const char joy_name[] = "XInput Controller";
@@ -95,15 +92,31 @@ const char joy_name[] = "XInput Controller";
 /* Override */ int SDL_GameControllerEventState(int state)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
+    const int gcevents[] = {
+        SDL_CONTROLLERDEVICEADDED,
+        SDL_CONTROLLERDEVICEREMOVED,
+        SDL_CONTROLLERDEVICEREMAPPED,
+        SDL_CONTROLLERAXISMOTION,
+        SDL_CONTROLLERBUTTONDOWN,
+        SDL_CONTROLLERBUTTONUP
+    };
+
+    bool isFiltered = true;
     switch (state) {
         case SDL_ENABLE:
-            sdl_controller_events = true;
+            for (int e=0; e<6; e++)
+                sdlEventQueue.removeFilter(gcevents[e]);
             return 1;
         case SDL_IGNORE:
-            sdl_controller_events = false;
+            for (int e=0; e<6; e++)
+                sdlEventQueue.setFilter(gcevents[e]);
             return 0;
         case SDL_QUERY:
-            return sdl_controller_events;
+            for (int e=0; e<6; e++)
+                isFiltered = isFiltered && sdlEventQueue.isFiltered(gcevents[e]);
+            if (isFiltered)
+                return SDL_IGNORE;
+            return SDL_ENABLE;
         default:
             return state;
     }

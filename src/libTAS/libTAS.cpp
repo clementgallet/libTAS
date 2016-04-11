@@ -164,9 +164,23 @@ void __attribute__((destructor)) term(void)
 
     LINK_SUFFIX_SDLX(SDL_Init);
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
-     * so we put the rest of relevent code in that function
+     * but in SDL2, SDL_Init() can actually never be called by the game,
+     * so we put the rest of relevent code in the SubSystem function.
+     * 
+     * ...well, this is in theory. If on SDL2 we call SDL_Init(), it
+     * does not call our SDL_InitSubSystem() function. Maybe it has to do with
+     * some compiler optimization, because the real SDL_Init() function looks
+     * like this:
+     *      int SDL_Init(Uint32 flags) {
+     *          return SDL_InitSubSystem(flags);
+     *      }
+     * So maybe the compiler is inlining stuff. To fix this, we call
+     * ourselves our own SDL_InitSubSystem() function.
      */
-    SDL_Init_real(flags);
+    if (SDLver == 1)
+        SDL_Init_real(flags);
+    if (SDLver == 2)
+        SDL_InitSubSystem(flags);
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
