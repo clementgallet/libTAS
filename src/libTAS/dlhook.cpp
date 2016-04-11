@@ -58,11 +58,8 @@ void *my_dlopen(const char *file, int mode, void *dl_caller) {
     dlenter();
     result = dlopen(file, mode);
     dlleave();
-    if (result != NULL) {
-        /* Store the successfully opened library */
-        std::string filestr(file);
-        libraries.push_back(filestr);
-    }
+    if (result)
+        libraries.push_back((file)?file:"");
     return result;
 }
 
