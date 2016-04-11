@@ -49,7 +49,11 @@ const char* joyname = "Microsoft X-Box 360 pad";
 /* Override */ const char* SDL_JoystickName(SDL_Joystick* joystick)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-    return "Microsoft X-Box 360 pad";
+    /* Do not use joystick argument unless you know what you are doing.
+     * Because SDL 1.2 can call this function, but the argument is 
+     * of type int.
+     */
+    return joyname;
 }
 
 #define MAX_SDLJOYS 4
@@ -130,19 +134,38 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
 /* Override */ SDL_bool SDL_JoystickGetAttached(SDL_Joystick * joystick)
 {
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", *joystick);
     if (!isIdValidOpen(joystick))
         return SDL_FALSE;
 
     return SDL_TRUE;
 }
 
+/* Override */ int SDL_JoystickOpened(int device_index)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    if (!isIdValidOpen(&device_index))
+        return 0;
+
+    return 1;
+}
+
 /* Override */ SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick * joystick)
 {
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", *joystick);
     if (!isIdValidOpen(joystick))
         return -1;
 
     return (SDL_JoystickID) joyids[*joystick];
+}
 
+int SDL_JoystickIndex(SDL_Joystick *joystick)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", *joystick);
+    if (!isIdValidOpen(joystick))
+        return -1;
+
+    return (int) joyids[*joystick];
 }
 
 /* Override */ int SDL_JoystickNumAxes(SDL_Joystick* joystick)

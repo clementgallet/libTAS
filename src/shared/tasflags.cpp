@@ -24,7 +24,7 @@ struct TasFlags tasflags = {
     speed_divisor  : 1,
     recording      : -1,
     fastforward    : 0,
-    includeFlags   : LCF_MOUSE,
+    includeFlags   : LCF_JOYSTICK,
     //includeFlags   : LCF_ALL,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,

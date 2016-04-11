@@ -74,6 +74,8 @@ OVERRIDE SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick);
 /**
  *  Return the name for this currently opened joystick.
  *  If no name can be found, this function returns NULL.
+ *  Note: in SDL 1, there is a function of the same name,
+ *  which is actually SDL_JoystickNameForIndex(int).
  */
 OVERRIDE const char *SDL_JoystickName(SDL_Joystick * joystick);
 
@@ -82,10 +84,20 @@ OVERRIDE const char *SDL_JoystickName(SDL_Joystick * joystick);
  */
 OVERRIDE SDL_bool SDL_JoystickGetAttached(SDL_Joystick * joystick);
 
+/** SDL 1.2
+ * Returns 1 if the joystick has been opened, or 0 if it has not.
+ */
+OVERRIDE int SDL_JoystickOpened(int device_index);
+
 /**
  *  Get the instance ID of an opened joystick or -1 if the joystick is invalid.
  */
 OVERRIDE SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick * joystick);
+
+/** SDL 1.2
+ * Get the device index of an opened joystick.
+ */
+OVERRIDE int SDL_JoystickIndex(SDL_Joystick *joystick);
 
 /**
  *  Get the number of general axis controls on a joystick.

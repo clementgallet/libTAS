@@ -46,8 +46,6 @@ const char joy_name[] = "XInput Controller";
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
     if (joystick_index < 0 || joystick_index >= tasflags.numControllers)
         return NULL;
-    if (gcids[joystick_index] != -1)
-        return NULL;
 
     /* Save the opening of the game controller */
     gcids[joystick_index] = joystick_index;
