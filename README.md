@@ -46,6 +46,8 @@ For now, what you can do is:
 - record and playback inputs
 - dump the audio/video
 
+Note: the game starts up **paused**.
+
 ## Licence
 
 libTAS is distributed under the terms of the GNU General Public License v3.
