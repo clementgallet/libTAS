@@ -256,7 +256,6 @@ void generateControllerEvents(void)
                 /* We got a change in a button state */
 
                 /* Fill the event structure */
-
                 if (genGC) {
                     if (SDLver == 2) {
                         /* SDL2 controller button */

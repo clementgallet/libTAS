@@ -229,34 +229,34 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
         SDL_JOYDEVICEREMOVED
     };
 
-    bool isFiltered = true;
+    bool enabled = false;
     switch (state) {
         case SDL_ENABLE:
             if (SDLver == 1)
                 for (int e=0; e<5; e++)
-                    sdlEventQueue.removeFilter(joyevents1[e]);
+                    sdlEventQueue.enable(joyevents1[e]);
             if (SDLver == 2)
                 for (int e=0; e<7; e++)
-                    sdlEventQueue.removeFilter(joyevents2[e]);
+                    sdlEventQueue.enable(joyevents2[e]);
             return 1;
         case SDL_IGNORE:
             if (SDLver == 1)
                 for (int e=0; e<5; e++)
-                    sdlEventQueue.setFilter(joyevents1[e]);
+                    sdlEventQueue.disable(joyevents1[e]);
             if (SDLver == 2)
                 for (int e=0; e<7; e++)
-                    sdlEventQueue.setFilter(joyevents2[e]);
+                    sdlEventQueue.disable(joyevents2[e]);
             return 0;
         case SDL_QUERY:
             if (SDLver == 1)
                 for (int e=0; e<5; e++)
-                    isFiltered = isFiltered && sdlEventQueue.isFiltered(joyevents1[e]);
+                    enabled = enabled || sdlEventQueue.isEnabled(joyevents1[e]);
             if (SDLver == 2)
                 for (int e=0; e<7; e++)
-                    isFiltered = isFiltered && sdlEventQueue.isFiltered(joyevents2[e]);
-            if (isFiltered)
-                return SDL_IGNORE;
-            return SDL_ENABLE;
+                    enabled = enabled || sdlEventQueue.isEnabled(joyevents2[e]);
+            if (enabled)
+                return SDL_ENABLE;
+            return SDL_IGNORE;
         default:
             return state;
     }

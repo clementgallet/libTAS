@@ -39,33 +39,36 @@ void EventQueue::init(void)
 {
     if (SDLver == 2) {
         /* Insert default filters */
-        filteredEvents.insert(SDL_TEXTINPUT);
-        filteredEvents.insert(SDL_TEXTEDITING);
-        filteredEvents.insert(SDL_SYSWMEVENT);
+        droppedEvents.insert(SDL_TEXTINPUT);
+        droppedEvents.insert(SDL_TEXTEDITING);
+        droppedEvents.insert(SDL_SYSWMEVENT);
     }
 }
 
-void EventQueue::setFilter(int type)
+void EventQueue::disable(int type)
 {
-    filteredEvents.insert(type);
+    droppedEvents.insert(type);
 }
 
-void EventQueue::removeFilter(int type)
+void EventQueue::enable(int type)
 {
-    std::set<int>::iterator it = filteredEvents.find(type);
-    if (it != filteredEvents.end())
-        filteredEvents.erase(it);
+    std::set<int>::iterator it = droppedEvents.find(type);
+    if (it != droppedEvents.end())
+        droppedEvents.erase(it);
 }
 
-bool EventQueue::isFiltered(int type)
+bool EventQueue::isEnabled(int type)
 {
-    return filteredEvents.find(type) != filteredEvents.end();
+    return droppedEvents.find(type) == droppedEvents.end();
 }
 
 #define EVENTQUEUE_MAXLEN 1024
 
 void EventQueue::insert(SDL_Event* event)
 {
+    if (!isEnabled(event->type))
+        return;
+
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
 
@@ -82,6 +85,9 @@ void EventQueue::insert(SDL_Event* event)
 
 void EventQueue::insert(SDL1::SDL_Event* event)
 {
+    if (!isEnabled(event->type))
+        return;
+
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
 

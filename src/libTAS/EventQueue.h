@@ -40,13 +40,13 @@ class EventQueue
         void flush(Uint32 mask);
         void flush(Uint32 minType, Uint32 maxType);
 
-        void setFilter(int type);
-        void removeFilter(int type);
-        bool isFiltered(int type);
+        void enable(int type);
+        void disable(int type);
+        bool isEnabled(int type);
 
     private:
         std::list<void*> eventQueue;
-        std::set<int> filteredEvents;
+        std::set<int> droppedEvents;
 
 };
 

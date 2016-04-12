@@ -101,22 +101,22 @@ const char joy_name[] = "XInput Controller";
         SDL_CONTROLLERBUTTONUP
     };
 
-    bool isFiltered = true;
+    bool enabled = false;
     switch (state) {
         case SDL_ENABLE:
             for (int e=0; e<6; e++)
-                sdlEventQueue.removeFilter(gcevents[e]);
+                sdlEventQueue.enable(gcevents[e]);
             return 1;
         case SDL_IGNORE:
             for (int e=0; e<6; e++)
-                sdlEventQueue.setFilter(gcevents[e]);
+                sdlEventQueue.disable(gcevents[e]);
             return 0;
         case SDL_QUERY:
             for (int e=0; e<6; e++)
-                isFiltered = isFiltered && sdlEventQueue.isFiltered(gcevents[e]);
-            if (isFiltered)
-                return SDL_IGNORE;
-            return SDL_ENABLE;
+                enabled = enabled || sdlEventQueue.isEnabled(gcevents[e]);
+            if (enabled)
+                return SDL_ENABLE;
+            return SDL_IGNORE;
         default:
             return state;
     }
