@@ -42,4 +42,16 @@
 - Multiple version have been published with SDL 1.2 or SDL 2
 - It uses PeepEvents to look for SDL Events
 - Use SDL Audio for music
+- Warp pointer and use deltas to move the game pointer
+
+### Faster Than Light
+
+- Use SDL 1.2
+- Do strange things with pointers also
+
+### VVVVVV
+
+- Use SDL 2
+- Use software rendering
+- Use delays for constant fps
 

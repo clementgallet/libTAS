@@ -66,8 +66,18 @@ bool EventQueue::isEnabled(int type)
 
 void EventQueue::insert(SDL_Event* event)
 {
+    /* Before inserting the event, we have some checks in a specific order */
+
+    /* 1. Check that the event type is enabled */
     if (!isEnabled(event->type))
         return;
+
+    /* 2. Run the event filter if set, and check the returned value */
+    if (filterFunc != nullptr) {
+        int isInserted = filterFunc(filterData, event);
+        if (!isInserted)
+            return;
+    }
 
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
@@ -85,8 +95,18 @@ void EventQueue::insert(SDL_Event* event)
 
 void EventQueue::insert(SDL1::SDL_Event* event)
 {
+    /* Before inserting the event, we have some checks in a specific order */
+
+    /* 1. Check that the event type is enabled */
     if (!isEnabled(event->type))
         return;
+
+    /* 2. Run the event filter if set, and check the returned value */
+    if (filterFunc1 != nullptr) {
+        int isInserted = filterFunc1(event);
+        if (!isInserted)
+            return;
+    }
 
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
@@ -214,5 +234,51 @@ void EventQueue::flush(Uint32 mask)
         }
     }
 }
+
+void EventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
+{
+    std::list<void*>::iterator it = eventQueue.begin();
+    while (it != eventQueue.end()) {
+        SDL_Event* ev = (SDL_Event*) (*it);
+
+        /* Run the filter function and check the result */
+        int isKept = filter(userdata, ev);
+        if (!isKept) {
+            /* Deleting the object and removing it from the list */
+            delete (SDL_Event*)(*it);
+            it = eventQueue.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void EventQueue::setFilter(SDL_EventFilter filter, void* userdata)
+{
+    filterFunc = filter;
+    filterData = userdata;
+}
+
+void EventQueue::setFilter(SDL1::SDL_EventFilter filter)
+{
+    filterFunc1 = filter;
+}
+
+bool EventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
+{
+    if (filterFunc == nullptr)
+        return false;
+    *filter = filterFunc;
+    *userdata = filterData;
+    return true;
+}
+
+SDL1::SDL_EventFilter EventQueue::getFilter(void)
+{
+    return filterFunc1;
+}
+
+
 
 

@@ -602,6 +602,8 @@ namespace SDL1 {
         int refcount;				/**< Read-mostly */
     } SDL_Surface;
 
+    typedef int (*SDL_EventFilter)(const SDL_Event *event);
+
 }
 
 #endif /* _SDL_h */
