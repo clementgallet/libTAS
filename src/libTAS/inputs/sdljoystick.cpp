@@ -199,7 +199,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ void SDL_JoystickUpdate(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
 
     for (int j=0; j<tasflags.numControllers; j++) {
         for (int a=0; a<AllInputs::MAXAXES; a++)

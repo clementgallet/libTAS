@@ -72,8 +72,16 @@ class EventQueue
         void setFilter(SDL_EventFilter filter, void* userdata);
         void setFilter(SDL1::SDL_EventFilter filter);
 
+        /* Return the filter */
         bool getFilter(SDL_EventFilter* filter, void** userdata);
         SDL1::SDL_EventFilter getFilter(void);
+
+        /* Add a watcher that is called when an event is inserted */
+        void addWatch(SDL_EventFilter filter, void* userdata);
+
+        /* Remove a watcher */
+        void delWatch(SDL_EventFilter filter, void* userdata);
+
     private:
         std::list<void*> eventQueue;
         std::set<int> droppedEvents;

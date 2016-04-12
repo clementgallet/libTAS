@@ -79,6 +79,12 @@ void EventQueue::insert(SDL_Event* event)
             return;
     }
 
+    /* 3. Call all watchers on the event */
+    for (auto watch: watches) {
+        watch.first(watch.second, event);
+    }
+
+    /* 4. Check the size of the queue */    
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
 
@@ -277,6 +283,18 @@ bool EventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
 SDL1::SDL_EventFilter EventQueue::getFilter(void)
 {
     return filterFunc1;
+}
+
+void EventQueue::addWatch(SDL_EventFilter filter, void* userdata)
+{
+    watches.insert(std::make_pair(filter, userdata));
+}
+
+void EventQueue::delWatch(SDL_EventFilter filter, void* userdata)
+{
+    std::set<std::pair<SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
+    if (it != watches.end())
+        watches.erase(it);
 }
 
 

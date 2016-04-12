@@ -258,12 +258,14 @@ SDL_bool SDL2_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 
 void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    sdlEventQueue.addWatch(filter, userdata);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 }
 
 void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    sdlEventQueue.delWatch(filter, userdata);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 }
 
 void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
