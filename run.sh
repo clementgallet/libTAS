@@ -10,12 +10,18 @@ Usage ()
     echo "  -d, --dump FILE     Start a audio/video encode into the specified FILE"
     echo "  -r, --read MOVIE    Play game inputs from MOVIE file"
     echo "  -w, --write MOVIE   Record game inputs into the specified MOVIE file"
+    echo "  -L, --libpath PATH  Indicate a path to additional libraries the game"
+    echo "                      will want to import."
+    echo "  -R, --runpath PATH  From which directory the game must be launched."
+    echo "                      Set to the executable directory by default."
     echo "  -h, --help          Show this message"
 }
 
-gamepath=/home/clement/supermeatboy/amd64/SuperMeatBoy
+gamepath=
 movieopt=
 dumpopt=
+libdir=
+rundir=
 
 # Parse command-line arguments
 while [ $# -gt 0 ]
@@ -33,6 +39,12 @@ do
     -w | --write)   shift
                     movieopt="-w $1"
                     ;;
+    -L | --libpath) shift
+                    libdir=$1
+                    ;;
+    -R | --runpath) shift
+                    rundir=$1
+                    ;;
     -*)             Usage
                     exit
                     ;;
@@ -44,8 +56,17 @@ do
     shift
 done
 
-# Some games do not work if it was not launched inside its folder
-cd ${gamepath%/*}
+# Change to the directory set by the user, or the game directory by default.
+if [ -z $rundir ]
+then
+    cd ${gamepath%/*}
+else
+    cd $rundir
+fi
+
+# Export optional library directories
+echo "export LD_LIBRARY_PATH=\"$OLDPWD/$libdir:$LD_LIBRARY_PATH\""
+export LD_LIBRARY_PATH="$OLDPWD/$libdir:$LD_LIBRARY_PATH"
 
 # Get the list of all shared libraries used by the game
 # Source: http://unix.stackexchange.com/a/101833
@@ -56,15 +77,15 @@ if [ ! -p "$mypipe" ]
 then
     mkfifo $mypipe
 fi
-ldd ./${gamepath##*/} | awk '/=>/{print $(NF-1)}' > $mypipe &
+ldd $OLDPWD/$gamepath | awk '/=>/{print $(NF-1)}' > $mypipe &
 
 while read lib
 do SHLIBS="$SHLIBS -l $lib"
 done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
-echo "LD_PRELOAD=$OLDPWD/build/libTAS.so ./${gamepath##*/} $@ &"
-LD_PRELOAD=$OLDPWD/build/libTAS.so ./${gamepath##*/} "$@" &
+echo "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath $@ &"
+LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath "$@" &
 cd - > /dev/null
 sleep 1
 

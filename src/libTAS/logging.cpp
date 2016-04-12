@@ -44,13 +44,11 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str)
         }
         oss << "[libTAS f:" << frame_counter << "] ";
 
-        if (pthread_self_real) {
-            std::string thstr = stringify(pthread_self_real());
-            if (isMainThread())
-                oss << "Thread " << thstr << " (main) ";
-            else
-                oss << "Thread " << thstr << "        ";
-        }
+        std::string thstr = stringify(getThreadId());
+        if (isMainThread())
+            oss << "Thread " << thstr << " (main) ";
+        else
+            oss << "Thread " << thstr << "        ";
 
         if (isTerm) {
             /* Reset color change */
