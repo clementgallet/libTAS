@@ -197,9 +197,9 @@ int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
     /* Initialize swscale context for pixel format conversion */
 
     toYUVctx = sws_getContext(video_frame->width, video_frame->height,  
-                              PIX_FMT_RGBA,
+                              AV_PIX_FMT_RGBA,
                               video_frame->width, video_frame->height, 
-                              PIX_FMT_YUV420P,
+                              AV_PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
     if (toYUVctx == NULL) {

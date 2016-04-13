@@ -59,9 +59,9 @@ done
 # Change to the directory set by the user, or the game directory by default.
 if [ -z $rundir ]
 then
-    cd ${gamepath%/*}
+    cd "${gamepath%/*}"
 else
-    cd $rundir
+    cd "$rundir"
 fi
 
 # Export optional library directories
@@ -77,7 +77,7 @@ if [ ! -p "$mypipe" ]
 then
     mkfifo $mypipe
 fi
-ldd $OLDPWD/$gamepath | awk '/=>/{print $(NF-1)}' > $mypipe &
+ldd "$OLDPWD/$gamepath" | awk '/=>/{print $(NF-1)}' > $mypipe &
 
 while read lib
 do SHLIBS="$SHLIBS -l $lib"
@@ -85,7 +85,7 @@ done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
 echo "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath $@ &"
-LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath "$@" &
+LD_PRELOAD=$OLDPWD/build/libTAS.so "$OLDPWD/$gamepath" "$@" &
 cd - > /dev/null
 sleep 1
 
