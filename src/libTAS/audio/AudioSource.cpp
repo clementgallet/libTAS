@@ -28,6 +28,7 @@ extern "C" {
 }
 #endif
 #include <stdlib.h>
+#include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
@@ -243,7 +244,12 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
              * until we got enough bytes for this frame
              */
             while (remainingSamples > 0) {
+                /* Before doing the callback, we must fake that the timer has
+                 * advanced by the number of samples already read
+                 */
+                detTimer.fakeAdvanceTimer({0, (inNbSamples-remainingSamples)/curBuf->frequency});
                 callback(curBuf);
+                detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     swr_convert(swr, nullptr, 0, (const uint8_t**)&begSamples, availableSamples);

@@ -30,6 +30,7 @@
 
 struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKED)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     if(tasflags.framerate == 0) {
@@ -95,12 +96,14 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
         }
     }
 
-    return *(struct timespec*)&ticks;
+    TimeHolder fakeTicks = ticks + fakeExtraTicks;
+    return *(struct timespec*)&fakeTicks;
 }
 
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
+    //std::lock_guard<std::mutex> lock(mutex);
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
     if(tasflags.framerate == 0) // 0 framerate means disable deterministic timer
@@ -144,6 +147,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
 void DeterministicTimer::exitFrameBoundary()
 {
+    //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
 
     /* Reset the counts of each time get function */
@@ -166,6 +170,7 @@ void DeterministicTimer::exitFrameBoundary()
 
 void DeterministicTimer::enterFrameBoundary()
 {
+    //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
 
     if(tasflags.framerate == 0)
@@ -249,6 +254,10 @@ void DeterministicTimer::enterFrameBoundary()
     lastEnterValid = true;
 }
 
+void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
+    fakeExtraTicks = *(TimeHolder*) &extraTicks;
+}
+
 void DeterministicTimer::initialize(void)
 {
     getTimes = 0;
@@ -264,6 +273,7 @@ void DeterministicTimer::initialize(void)
 
     forceAdvancedTicks = {0, 0};
     addedDelay = {0, 0};
+    fakeExtraTicks = {0, 0};
     lastEnterValid = false;
 
     drawFB = true;

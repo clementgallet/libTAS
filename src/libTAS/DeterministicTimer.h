@@ -22,6 +22,7 @@
 
 #include <time.h>
 #include "TimeHolder.h"
+#include <mutex>
 
 /* An enum indicating which time-getting function query the time */
 enum TimeCallType
@@ -69,6 +70,15 @@ public:
     /* Add a delay in the timer, and sleep */
 	void addDelay(struct timespec delayTicks);
 
+    /* In specific situations, we must fake advancing timer.
+     * This function temporarily fake adding ticks to the timer.
+     * To be used like this:
+     *     detTimer.fakeAdvanceTimer({0, 1000000});
+     *     // Code that call GetTicks()
+     *     detTimer.fakeAdvanceTimer({0, 0});
+     */
+    void fakeAdvanceTimer(struct timespec extraTicks);
+
 private:
 
     /* Number of getTicks calls of a non main thread */
@@ -85,6 +95,12 @@ private:
 
     /* Timer value during the last frame boundary enter */
     TimeHolder lastEnterTicks;
+
+    /*
+     * Extra ticks to add to GetTicks().
+     * Required for very specific situations.
+     */
+    TimeHolder fakeExtraTicks;
 
     /* 
      * Real time of the last frame boundary enter.
@@ -114,6 +130,9 @@ private:
     /* Limit for each time-getting method before time auto-advances to avoid a freeze */
     unsigned int altGetTimes [TIMETYPE_NUMTRACKEDTYPES];
     unsigned int altGetTimeLimits [TIMETYPE_NUMTRACKEDTYPES];
+
+    /* Mutex to protect access to all audio objects */
+    std::mutex mutex;
 };
 
 extern DeterministicTimer detTimer;
