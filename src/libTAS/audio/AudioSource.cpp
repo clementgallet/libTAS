@@ -247,7 +247,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 /* Before doing the callback, we must fake that the timer has
                  * advanced by the number of samples already read
                  */
-                detTimer.fakeAdvanceTimer({0, (inNbSamples-remainingSamples)/curBuf->frequency});
+                int64_t extraTicks = 1000000000 * (inNbSamples-remainingSamples);
+                extraTicks /= curBuf->frequency;
+                detTimer.fakeAdvanceTimer({extraTicks % 1000000000, extraTicks / 1000000000});
                 callback(curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);

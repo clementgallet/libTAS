@@ -30,7 +30,7 @@
 
 struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKED)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     if(tasflags.framerate == 0) {

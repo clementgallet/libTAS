@@ -166,7 +166,7 @@ AudioSource* AudioContext::getSource(int id)
 
 void AudioContext::mixAllSources(struct timespec ticks)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    //std::lock_guard<std::mutex> lock(mutex);
 
     outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
