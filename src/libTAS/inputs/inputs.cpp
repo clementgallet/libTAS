@@ -431,19 +431,19 @@ void generateMouseMotionEvents(void)
     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
 
     /* Upload the old AllInput struct */
-    old_ai.pointer_x = ai.pointer_x;
-    old_ai.pointer_y = ai.pointer_y;
     game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
     game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+    old_ai.pointer_x = ai.pointer_x;
+    old_ai.pointer_y = ai.pointer_y;
 }
 
 void generateMouseButtonEvents(void)
 {
     struct timespec time;
 
-    static int xbuttons[] = {SDL_BUTTON_LMASK,
-        SDL_BUTTON_MMASK, SDL_BUTTON_RMASK,
-        SDL_BUTTON_X1MASK, SDL_BUTTON_X2MASK};
+    static int xbuttons[] = {Button1Mask,
+        Button2Mask, Button3Mask,
+        Button4Mask, Button5Mask};
     static int sdlbuttons[] = {SDL_BUTTON_LEFT,
         SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT,
         SDL_BUTTON_X1, SDL_BUTTON_X2};
@@ -483,17 +483,17 @@ void generateMouseButtonEvents(void)
                 if (ai.pointer_mask & xbuttons[bi]) {
                     event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
                     event1.button.state = SDL_PRESSED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdlbuttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdl1buttons[bi]);
                 }
                 else {
                     event1.type = SDL1::SDL_MOUSEBUTTONUP;
                     event1.button.state = SDL_RELEASED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdl1buttons[bi]);
                 }
                 event1.button.which = 0; // TODO: Same as above...
                 event1.button.button = sdl1buttons[bi];
-                event1.button.x = (Uint16) ai.pointer_x;
-                event1.button.y = (Uint16) ai.pointer_y;
+                event1.button.x = (Uint16) game_ai.pointer_x;
+                event1.button.y = (Uint16) game_ai.pointer_y;
                 sdlEventQueue.insert(&event1);
             }
 
