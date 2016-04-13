@@ -27,8 +27,7 @@
 
 /* Pointers to original functions */
 void (*SDL_PumpEvents_real)(void);
-int (*SDL1_PeepEvents_real)(SDL1::SDL_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
-int (*SDL2_PeepEvents_real)(SDL_Event *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+int (*SDL_PeepEvents_real)(void *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
 
 void pushNativeEvents(void)
 {
@@ -40,7 +39,7 @@ void pushNativeEvents(void)
      */
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (SDL1_PeepEvents_real(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS)) {
+        while (SDL_PeepEvents_real((void*)&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (! filterSDL1Event(&ev))
                 sdlEventQueue.insert(&ev);
         }
@@ -48,14 +47,14 @@ void pushNativeEvents(void)
 
     if (SDLver == 2) {
         SDL_Event ev;
-        while (SDL2_PeepEvents_real(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
+        while (SDL_PeepEvents_real((void*)&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
     }
 }
 
 
-/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, ...)
+/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
 
@@ -66,23 +65,12 @@ void pushNativeEvents(void)
      */
 
     Uint32 mask;
-    Uint32 minType, maxType;
     SDL1::SDL_Event* events1;
 
-    va_list argp;
-    va_start(argp, action);
     if (SDLver == 1) {
-        mask = va_arg(argp, Uint32);
+        mask = minType;
         events1 = (SDL1::SDL_Event*) events;
     }
-    else if (SDLver == 2) {
-        minType = va_arg(argp, Uint32);
-        maxType = va_arg(argp, Uint32);
-    }
-    else {
-        debuglog(LCF_SDL | LCF_ERROR, "Calling SDL_PeepEvents with no known SDL version!");
-    }
-    va_end(argp);
     
     switch (action) {
         case SDL_ADDEVENT:
@@ -219,53 +207,40 @@ void pushNativeEvents(void)
     }
 }
 
-void SDL_SetEventFilter(SDL_EventFilter filter, ...)
+void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
-    SDL1::SDL_EventFilter filter1;
-    void* userdata;
 
-    va_list argp;
-    va_start(argp, filter);
-    if (SDLver == 1) {
-        filter1 = (SDL1::SDL_EventFilter) filter;
-    }
-    if (SDLver == 2) {
-        userdata = va_arg(argp, void*);
-    }
-    va_end(argp);
-    
     if (SDLver == 1)
-        sdlEventQueue.setFilter(filter1);
+        sdlEventQueue.setFilter((SDL1::SDL_EventFilter) filter);
     if (SDLver == 2)
         sdlEventQueue.setFilter(filter, userdata);
 }
 
-void* SDL_GetEventFilter;
-SDL1::SDL_EventFilter SDL1_GetEventFilter(void)
+void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
-    return sdlEventQueue.getFilter();
-}
+    if (SDLver == 1)
+        return (void*)sdlEventQueue.getFilter();
+    if (SDLver == 2) {
+        if (sdlEventQueue.getFilter(filter, userdata))
+            return (void*)SDL_TRUE;
+        return (void*)SDL_FALSE;
+    }
 
-SDL_bool SDL2_GetEventFilter(SDL_EventFilter * filter, void **userdata)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
-    if (sdlEventQueue.getFilter(filter, userdata))
-        return SDL_TRUE;
-    return SDL_FALSE;
+    return NULL;
 }
 
 void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    sdlEventQueue.addWatch(filter, userdata);
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    sdlEventQueue.addWatch(filter, userdata);
 }
 
 void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    sdlEventQueue.delWatch(filter, userdata);
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    sdlEventQueue.delWatch(filter, userdata);
 }
 
 void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
@@ -528,13 +503,6 @@ void logEvent(SDL_Event *event)
 void link_sdlevents(void)
 {
     LINK_SUFFIX_SDLX(SDL_PumpEvents);
-    if (SDLver == 1) {
-        link_function((void**)&SDL1_PeepEvents_real, "SDL_PeepEvents", "libSDL-1.2");
-        SDL_GetEventFilter = (void*) SDL1_GetEventFilter;
-    }
-    if (SDLver == 2) {
-        link_function((void**)&SDL2_PeepEvents_real, "SDL_PeepEvents", "libSDL2-2");
-        SDL_GetEventFilter = (void*) SDL2_GetEventFilter;
-    }
+    LINK_SUFFIX_SDLX(SDL_PeepEvents);
 }
 
