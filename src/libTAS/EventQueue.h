@@ -76,10 +76,10 @@ class EventQueue
         bool getFilter(SDL_EventFilter* filter, void** userdata);
         SDL1::SDL_EventFilter getFilter(void);
 
-        /* Add a watcher that is called when an event is inserted */
+        /* Add a watch that is called when an event is inserted */
         void addWatch(SDL_EventFilter filter, void* userdata);
 
-        /* Remove a watcher */
+        /* Remove a watch */
         void delWatch(SDL_EventFilter filter, void* userdata);
 
     private:

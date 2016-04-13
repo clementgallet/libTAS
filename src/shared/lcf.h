@@ -58,7 +58,7 @@ typedef int LogCategoryFlag; enum
 	//LCF_UDEV     = 1 << 24,
 	//LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.
 	LCF_EVENTS   = 1 << 26, // processing SDL events
-	LCF_WINDOW   = 1 << 27, // windows windows
+	LCF_WINDOW   = 1 << 27,
 	//LCF_FILEIO   = 1 << 28,
 	LCF_STEAM    = 1 << 29, // Steam API
 	LCF_THREAD   = 1 << 30,

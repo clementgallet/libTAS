@@ -19,8 +19,6 @@
 
 ### Fixes
 
-- Deal with keyboard mapping and stuff
-- Fix grab/ungrab window when a new one is created (ungrab following FocusOut old window comes *after* grab from new window)
 - Make the code thread safe
 - Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
 -- Also use this to detect if some code is executed before we had a chance to call our lib init function
@@ -43,9 +41,8 @@
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
-- Emulate our own event queue
--- Support enabling/disabling events (for controllers/joysticks)
--- Support filtering
+- Support software rendering
+-- AV dumping not tested yet. Should use RenderReadPixels
 
 ## Done
 
@@ -64,4 +61,5 @@
 - Better manage static and dynamic hooking
 - Add a license
 - Support mouse
+- Emulate our own event queue
 

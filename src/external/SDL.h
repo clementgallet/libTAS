@@ -41,6 +41,31 @@
 #define SDL_IGNORE  0
 #define SDL_ENABLE  1
 
+/**
+ *  \brief The flags on a window
+ *
+ *  \sa SDL_GetWindowFlags()
+ */
+typedef enum
+{
+    SDL_WINDOW_FULLSCREEN = 0x00000001,         /**< fullscreen window */
+    SDL_WINDOW_OPENGL = 0x00000002,             /**< window usable with OpenGL context */
+    SDL_WINDOW_SHOWN = 0x00000004,              /**< window is visible */
+    SDL_WINDOW_HIDDEN = 0x00000008,             /**< window is not visible */
+    SDL_WINDOW_BORDERLESS = 0x00000010,         /**< no window decoration */
+    SDL_WINDOW_RESIZABLE = 0x00000020,          /**< window can be resized */
+    SDL_WINDOW_MINIMIZED = 0x00000040,          /**< window is minimized */
+    SDL_WINDOW_MAXIMIZED = 0x00000080,          /**< window is maximized */
+    SDL_WINDOW_INPUT_GRABBED = 0x00000100,      /**< window has grabbed input focus */
+    SDL_WINDOW_INPUT_FOCUS = 0x00000200,        /**< window has input focus */
+    SDL_WINDOW_MOUSE_FOCUS = 0x00000400,        /**< window has mouse focus */
+    SDL_WINDOW_FULLSCREEN_DESKTOP = ( SDL_WINDOW_FULLSCREEN | 0x00001000 ),
+    SDL_WINDOW_FOREIGN = 0x00000800,            /**< window not created by SDL */
+    SDL_WINDOW_ALLOW_HIGHDPI = 0x00002000,      /**< window should be created in high-DPI mode if supported */
+    SDL_WINDOW_MOUSE_CAPTURE = 0x00004000       /**< window has mouse captured (unrelated to INPUT_GRABBED) */
+} SDL_WindowFlags;
+
+
 typedef uint8_t Uint8;
 typedef uint16_t Uint16;
 typedef uint32_t Uint32;

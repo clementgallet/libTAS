@@ -25,6 +25,7 @@
 #include <string>
 
 typedef void SDL_Window;
+typedef void SDL_Renderer;
 
 extern SDL_Window* gameWindow;
 extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
@@ -133,6 +134,58 @@ OVERRIDE int SDL_GL_GetSwapInterval(void);
  *  \brief Destroy a window.
  */
 OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
+
+/**
+ *  \brief Flags used when creating a rendering context
+ */
+typedef enum
+{
+    SDL_RENDERER_SOFTWARE = 0x00000001,         /**< The renderer is a software fallback */
+    SDL_RENDERER_ACCELERATED = 0x00000002,      /**< The renderer uses hardware
+                                                     acceleration */
+    SDL_RENDERER_PRESENTVSYNC = 0x00000004,     /**< Present is synchronized
+                                                     with the refresh rate */
+    SDL_RENDERER_TARGETTEXTURE = 0x00000008     /**< The renderer supports
+                                                     rendering to texture */
+} SDL_RendererFlags;
+
+/**
+ *  \brief Create a window and default renderer
+ *
+ *  \param width    The width of the window
+ *  \param height   The height of the window
+ *  \param window_flags The flags used to create the window
+ *  \param window   A pointer filled with the window, or NULL on error
+ *  \param renderer A pointer filled with the renderer, or NULL on error
+ *
+ *  \return 0 on success, or -1 on error
+ */
+OVERRIDE int SDL_CreateWindowAndRenderer(
+                 int width, int height, Uint32 window_flags,
+                 SDL_Window **window, SDL_Renderer **renderer);
+
+/**
+ *  \brief Create a 2D rendering context for a window.
+ *
+ *  \param window The window where rendering is displayed.
+ *  \param index    The index of the rendering driver to initialize, or -1 to
+ *                  initialize the first one supporting the requested flags.
+ *  \param flags    ::SDL_RendererFlags.
+ *
+ *  \return A valid rendering context or NULL if there was an error.
+ *
+ *  \sa SDL_CreateSoftwareRenderer()
+ *  \sa SDL_GetRendererInfo()
+ *  \sa SDL_DestroyRenderer()
+ */
+OVERRIDE SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
+
+/**
+ *  \brief Update the screen with rendering performed.
+ */
+OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
+
+
 
 /**
  * Set up a video mode with the specified width, height and bits-per-pixel.

@@ -48,13 +48,18 @@ Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
 SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(SDL_Window*);
+
+SDL_Renderer* (*SDL_CreateRenderer_real)(SDL_Window * window, int index, Uint32 flags);
+int (*SDL_CreateWindowAndRenderer_real)(int, int, Uint32, SDL_Window**, SDL_Renderer**);
+void (*SDL_RenderPresent_real)(SDL_Renderer * renderer);
+
 SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
     SDL_GL_SwapBuffers_real();
 
     /* TODO: Fill here same as SDL_GL_SwapWindow */
@@ -76,21 +81,9 @@ void (*SDL_GL_SwapBuffers_real)(void);
     frameBoundary();
 }
 
-/* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
+int sendXid(void);
+int sendXid(void)
 {
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL, __func__, " call.");
-
-#ifdef LIBTAS_ENABLE_HUD
-    SDL_Color color = {255, 0, 0, 0};
-    RenderText(font, "Test test", 640, 480, color, 2, 2);
-#endif
-
-    SDL_GL_SwapWindow_real(window);
-
-    /* 
-     * We need to pass the game window identifier to the program
-     * so that it can capture inputs
-     */
     if (gameWindow != nullptr) {
         if (!gw_sent) {
 
@@ -99,11 +92,11 @@ void (*SDL_GL_SwapBuffers_real)(void);
             SDL_GetVersion_real(&info.version);
             if (SDL_GetWindowWMInfo_real(gameWindow, &info) == SDL_FALSE) {
                 debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
-                return;
+                return -1;
             }
             if (info.subsystem != SDL_SYSWM_X11) {
                 debuglog(LCF_SDL | LCF_ERROR, "SDL says we are not running on X11");
-                return;
+                return -1;
             }
             Window xgw = info.info.x11.window;
 
@@ -116,8 +109,28 @@ void (*SDL_GL_SwapBuffers_real)(void);
     }
     else {
         debuglog(LCF_SDL | LCF_ERROR, "Window pointer is empty but the game wants to draw something.");
-        return;
+        return -1;
     }
+    return 0;
+}
+
+/* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
+{
+    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
+
+#ifdef LIBTAS_ENABLE_HUD
+    SDL_Color color = {255, 0, 0, 0};
+    RenderText(font, "Test test", 640, 480, color, 2, 2);
+#endif
+
+    SDL_GL_SwapWindow_real(window);
+
+    /* 
+     * We need to pass the game window identifier to the program
+     * so that it can capture inputs
+     */
+    if (sendXid() != 0)
+        return;
 
     frameBoundary();
 
@@ -127,7 +140,7 @@ static int swapInterval = 0;
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
-    debuglog(LCF_SDL | LCF_OGL, __func__, " call - setting to ", interval);
+    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call - setting to ", interval);
 
     /* We save the interval if the game wants it later */
     swapInterval = interval;
@@ -141,26 +154,20 @@ static int swapInterval = 0;
     
 /* Override */ int SDL_GL_GetSwapInterval(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL);
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
     return swapInterval;
 }
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     /* Disable fullscreen */
-    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_FULLSCREEN_DESKTOP*/ 0x00001001;
+    flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     /* Disable hidden windows */
-    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_HIDDEN*/ 0x00000008;
+    flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
 
     /* Disable high DPI mode */
-    flags &= 0xFFFFFFFF ^ /*SDL_WINDOW_ALLOW_HIGHDPI*/ 0x00002000;
-
-    /* Check if the game provided screen coordinates */
-    if (w == 0 || h == 0) {
-        w = 800;
-        h = 600;
-    }
+    flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
     gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
     /* A new window was created. It needs to be passed to the program */
@@ -170,7 +177,7 @@ static int swapInterval = 0;
     /* Initializing the video dump */
     if (tasflags.av_dumping) {
         int video_opengl = 0;
-        if (flags & /* SDL_WINDOW_OPENGL */ 0x00000002)
+        if (flags & SDL_WINDOW_OPENGL)
             video_opengl = 1;
 
         debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
@@ -186,7 +193,7 @@ static int swapInterval = 0;
 }
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window){
-    DEBUGLOGCALL(LCF_SDL);
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     SDL_DestroyWindow_real(window);
     if (gameWindow == window)
         gameWindow = NULL;
@@ -197,31 +204,98 @@ static int swapInterval = 0;
 }
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
-    DEBUGLOGCALL(LCF_SDL);
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     return SDL_GetWindowID_real(window);
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
-    DEBUGLOGCALL(LCF_SDL);
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     return SDL_GetWindowFlags_real(window);
 }
 
 int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
-    debuglog(LCF_SDL, __func__, " call with flags ", flags);
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flags ", flags);
     return 0; // success
 }
 
 void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
-    debuglog(LCF_SDL, __func__, " call with border ", bordered);
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with border ", bordered);
     /* Don't do anything */
 }
+
+SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    if (flags & SDL_RENDERER_SOFTWARE)
+        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
+    if (flags & SDL_RENDERER_ACCELERATED)
+        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_ACCELERATED");
+    if (flags & SDL_RENDERER_PRESENTVSYNC)
+        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
+    if (flags & SDL_RENDERER_TARGETTEXTURE)
+        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
+    return SDL_CreateRenderer_real(window, index, flags);
+}
+
+int SDL_CreateWindowAndRenderer(int width, int height,
+        Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    debuglog(LCF_SDL | LCF_WINDOW, "  size ", width, " x ", height);
+
+    /* Disable fullscreen */
+    window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
+
+    /* Disable hidden windows */
+    window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
+
+    /* Disable high DPI mode */
+    window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
+
+    int ret = SDL_CreateWindowAndRenderer_real(width, height, window_flags, window, renderer);
+    gameWindow = *window;
+
+    /* A new window was created. It needs to be passed to the program */
+    gw_sent = false;
+
+#ifdef LIBTAS_ENABLE_AVDUMPING
+    /* Initializing the video dump */
+    if (tasflags.av_dumping) {
+
+        debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
+        int av = openAVDumping(gameWindow, 0, av_filename, frame_counter);
+        if (av != 0) {
+            /* Init failed, disable AV dumping */
+            tasflags.av_dumping = 0;
+        }
+    }
+#endif
+
+    return ret;
+}
+
+void SDL_RenderPresent(SDL_Renderer * renderer)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    SDL_RenderPresent_real(renderer);
+
+    /* 
+     * We need to pass the game window identifier to the program
+     * so that it can capture inputs
+     */
+    if (sendXid() != 0)
+        return;
+
+    frameBoundary();
+}
+
 
 /* SDL 1.2 */
 /* Override */ SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
-    debuglog(LCF_SDL, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
@@ -249,7 +323,7 @@ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 
 SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE, __func__, " call with mode ", mode);
+    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, __func__, " call with mode ", mode);
     static SDL_GrabMode fakeGrab = SDL_GRAB_OFF;
     if (mode != SDL_GRAB_QUERY)
         fakeGrab = mode;
@@ -270,6 +344,9 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL2(SDL_GetWindowFlags);
         LINK_SUFFIX_SDL2(SDL_GL_SetSwapInterval);
         LINK_SUFFIX_SDL2(SDL_GetWindowWMInfo);
+        LINK_SUFFIX_SDL2(SDL_CreateRenderer);
+        LINK_SUFFIX_SDL2(SDL_CreateWindowAndRenderer);
+        LINK_SUFFIX_SDL2(SDL_RenderPresent);
     }
 }
 
