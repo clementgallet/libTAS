@@ -27,7 +27,7 @@
 /* Initiate the video capture and get the screen dimensions
  * @return 0 if successful or 1 if an error occured
  */
-int initVideoCapture(void* window, int video_opengl, int *pwidth, int *pheight);
+int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight);
 
 /* Capture the pixels from the screen and copy it to the following structs:
  * @param plane   Array of 4 elements containing a pointer to list of

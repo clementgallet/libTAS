@@ -38,6 +38,10 @@ SDL_Window* gameWindow = nullptr;
 /* Has the game window pointer be sent to the program? */
 bool gw_sent = 0;
 
+/* Does the game use openGL? */
+bool video_opengl = false;
+
+/* Path of the dump file */
 char* av_filename = nullptr;
 
 /* Original function pointers */
@@ -48,6 +52,7 @@ Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
 SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(SDL_Window*);
+void (*SDL_SetWindowSize_real)(SDL_Window* window, int w, int h);
 
 SDL_Renderer* (*SDL_CreateRenderer_real)(SDL_Window * window, int index, Uint32 flags);
 int (*SDL_CreateWindowAndRenderer_real)(int, int, Uint32, SDL_Window**, SDL_Renderer**);
@@ -176,9 +181,10 @@ static int swapInterval = 0;
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
     if (tasflags.av_dumping) {
-        int video_opengl = 0;
         if (flags & SDL_WINDOW_OPENGL)
-            video_opengl = 1;
+            video_opengl = true;
+        else
+            video_opengl = false;
 
         debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
         int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
@@ -265,7 +271,7 @@ int SDL_CreateWindowAndRenderer(int width, int height,
     if (tasflags.av_dumping) {
 
         debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
-        int av = openAVDumping(gameWindow, 0, av_filename, frame_counter);
+        int av = openAVDumping(gameWindow, false, av_filename, frame_counter);
         if (av != 0) {
             /* Init failed, disable AV dumping */
             tasflags.av_dumping = 0;
@@ -291,6 +297,27 @@ void SDL_RenderPresent(SDL_Renderer * renderer)
     frameBoundary();
 }
 
+void SDL_SetWindowSize(SDL_Window* window, int w, int h)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", w, " x ", h);
+
+    SDL_SetWindowSize_real(window, w, h);
+
+    /* We need to close the dumping if needed, and open a new one */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+    if (tasflags.av_dumping) {
+        debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
+        closeAVDumping();
+        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
+        if (av != 0) {
+            /* Init failed, disable AV dumping */
+            tasflags.av_dumping = 0;
+        }
+    }
+#endif
+}
+
 
 /* SDL 1.2 */
 /* Override */ SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
@@ -305,9 +332,10 @@ void SDL_RenderPresent(SDL_Renderer * renderer)
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
-    int video_opengl = 0;
     if (flags & /*SDL_OPENGL*/ 0x00000002)
-        video_opengl = 1;
+        video_opengl = true;
+    else
+        video_opengl = false;
 
     if (tasflags.av_dumping) {
         int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
@@ -347,6 +375,7 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL2(SDL_CreateRenderer);
         LINK_SUFFIX_SDL2(SDL_CreateWindowAndRenderer);
         LINK_SUFFIX_SDL2(SDL_RenderPresent);
+        LINK_SUFFIX_SDL2(SDL_SetWindowSize);
     }
 }
 

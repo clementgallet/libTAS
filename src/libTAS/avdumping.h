@@ -38,7 +38,7 @@
  *                      done from the beginning.
  * @return              1 if error, 0 if not
  */
-int openAVDumping(void* window, int video_opengl, char* filename, int start_frame);
+int openAVDumping(void* window, bool video_opengl, char* filename, int start_frame);
 
 /* Encode a video and audio frame.
  * @param fconter       Frame counter

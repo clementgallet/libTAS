@@ -186,6 +186,7 @@ OVERRIDE SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32
 OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
 
 
+OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
 
 /**
  * Set up a video mode with the specified width, height and bits-per-pixel.

@@ -31,6 +31,7 @@ extern "C" {
 #include "logging.h"
 #include "videocapture.h"
 #include "audio/AudioContext.h"
+#include "../shared/tasflags.h"
 
 AVFrame* video_frame;
 AVFrame* audio_frame;
@@ -46,13 +47,22 @@ int start_frame;
 /* The accumulated number of audio samples */
 uint64_t accum_samples;
 
-int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
+int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
+
+    if (tasflags.framerate <= 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Not supporting non deterministic timer");
+        return 1;
+    }
 
     start_frame = sf;
     accum_samples = 0;
 
     int width, height;
-    initVideoCapture(window, video_opengl, &width, &height);
+    int bpp = initVideoCapture(window, video_opengl, &width, &height);
+    if (bpp < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Unable to initialize video capture");
+        return 1;
+    }
 
     /* Initialize AVCodec and AVFormat libraries */
     av_register_all();
@@ -103,8 +113,8 @@ int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
     video_st->codec->bit_rate = 400000;
     video_st->codec->width = width;
     video_st->codec->height = height;
-    video_st->time_base = (AVRational){1,60}; // TODO: Put the actual framerate
-    video_st->codec->time_base = (AVRational){1,60};
+    video_st->time_base = (AVRational){1,tasflags.framerate};
+    video_st->codec->time_base = (AVRational){1,tasflags.framerate};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
     video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -187,7 +197,7 @@ int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
 
     /* Allocate the image buffer inside the AVFrame */
 
-    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
+    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, bpp);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
         return 1;
@@ -197,7 +207,7 @@ int openAVDumping(void* window, int video_opengl, char* dumpfile, int sf) {
     /* Initialize swscale context for pixel format conversion */
 
     toYUVctx = sws_getContext(video_frame->width, video_frame->height,  
-                              AV_PIX_FMT_RGBA,
+                              (bpp==32)?AV_PIX_FMT_RGBA:AV_PIX_FMT_RGB24,
                               video_frame->width, video_frame->height, 
                               AV_PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
