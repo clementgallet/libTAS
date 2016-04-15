@@ -64,11 +64,27 @@ void (*SDL_RenderPresent_real)(SDL_Renderer * renderer);
 SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
 
+/* Deciding if we actually draw the frame */
+static bool skipDraw(void)
+{
+    static int skipCounter = 0;
+    if (tasflags.fastforward) {
+        if (skipCounter++ > 10)
+            skipCounter = 0;
+    }
+    else
+        skipCounter = 0;
+
+    return skipCounter;
+}
+
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
-    SDL_GL_SwapBuffers_real();
+
+    if (!skipDraw())
+        SDL_GL_SwapBuffers_real();
 
     /* TODO: Fill here same as SDL_GL_SwapWindow */
 
@@ -131,7 +147,8 @@ int sendXid(void)
     RenderText(font, "Test test", 640, 480, color, 2, 2);
 #endif
 
-    SDL_GL_SwapWindow_real(window);
+    if (!skipDraw())
+        SDL_GL_SwapWindow_real(window);
 
     /* 
      * We need to pass the game window identifier to the program
@@ -332,7 +349,9 @@ void updateTitle(float fps, float lfps)
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    SDL_RenderPresent_real(renderer);
+
+    if (!skipDraw())
+        SDL_RenderPresent_real(renderer);
 
     /* 
      * We need to pass the game window identifier to the program
@@ -364,7 +383,6 @@ void updateTitle(float fps, float lfps)
     }
 #endif
 }
-
 
 /* SDL 1.2 */
 /* Override */ SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
