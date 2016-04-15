@@ -28,7 +28,6 @@
 #include <vector>
 #include <string.h> // memcpy
 
-
 bool useGL;
 
 /* Temporary pixel arrays */
@@ -53,12 +52,14 @@ int width, height;
 int size;
 
 void* renderer;
-int bpp = 0;
+int pixelSize = 0;
+int glPixFmt;
 
-int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
+AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
 {
     /* If the game uses openGL, the method to capture the screen will be different */
     useGL = video_opengl;
+    AVPixelFormat pixfmt = AV_PIX_FMT_NONE;
 
     /* Link the required functions, and get the window dimensions */
     if (SDLver == 1) {
@@ -73,23 +74,18 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
         /* Get dimensions from the window surface */
         if (!SDL_GetVideoSurface_real) {
             debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetVideoSurface.");
-            return -1;
+            return AV_PIX_FMT_NONE;
         }
 
         SDL1::SDL_Surface *surf = SDL_GetVideoSurface_real();
         
-        /* Currently only supporting ARGB (32 bpp) pixel format */
-        bpp = surf->format->BitsPerPixel;
+        pixelSize = surf->format->BytesPerPixel;
+        pixfmt = AV_PIX_FMT_RGBA; // TODO
         
         *pwidth = surf->w;
         *pheight = surf->h;
     }
     else if (SDLver == 2) {
-
-        LINK_SUFFIX_SDL2(SDL_GetWindowPixelFormat);
-        Uint32 pixelfmt = SDL_GetWindowPixelFormat_real(window);
-        bpp = (pixelfmt >> 8) & 0xFF;
-        debuglog(LCF_DUMP | LCF_SDL, "Dumped video has bpp of ", bpp);
 
         if (useGL) {
             LINK_SUFFIX_SDL2(SDL_GL_GetDrawableSize);
@@ -98,20 +94,72 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
             /* Get information about the current screen */
             if (!SDL_GL_GetDrawableSize_real) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GL_GetDrawableSize.");
-                return -1;
+                return AV_PIX_FMT_NONE;
             }
 
             SDL_GL_GetDrawableSize_real(window, pwidth, pheight);
+            pixfmt = AV_PIX_FMT_BGRA;
+            pixelSize = 4;
         }
         else {
             LINK_SUFFIX_SDL2(SDL_RenderReadPixels);
             LINK_SUFFIX_SDL2(SDL_GetRenderer);
             LINK_SUFFIX_SDL2(SDL_GetRendererOutputSize);
+            LINK_SUFFIX_SDL2(SDL_GetWindowPixelFormat);
+
+            Uint32 sdlpixfmt = SDL_GetWindowPixelFormat_real(window);
+            /* TODO: There are probably helper functions to build pixel
+             * format constants from channel masks
+             */
+            switch (sdlpixfmt) {
+                case SDL_PIXELFORMAT_RGBA8888:
+                    pixfmt = AV_PIX_FMT_BGRA;
+                    debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
+                    break;
+                case SDL_PIXELFORMAT_BGRA8888:
+                    pixfmt = AV_PIX_FMT_RGBA;
+                    debuglog(LCF_DUMP | LCF_SDL, "  BGRA");
+                    break;
+                case SDL_PIXELFORMAT_ARGB8888:
+                    pixfmt = AV_PIX_FMT_ABGR;
+                    debuglog(LCF_DUMP | LCF_SDL, "  ARGB");
+                    break;
+                case SDL_PIXELFORMAT_ABGR8888:
+                    pixfmt = AV_PIX_FMT_ARGB;
+                    debuglog(LCF_DUMP | LCF_SDL, "  ABGR");
+                    break;
+                case SDL_PIXELFORMAT_RGB24:
+                    pixfmt = AV_PIX_FMT_BGR24;
+                    debuglog(LCF_DUMP | LCF_SDL, "  RGB24");
+                    break;
+                case SDL_PIXELFORMAT_BGR24:
+                    pixfmt = AV_PIX_FMT_RGB24;
+                    debuglog(LCF_DUMP | LCF_SDL, "  BGR24");
+                    break;
+                case SDL_PIXELFORMAT_RGB888:
+                    pixfmt = AV_PIX_FMT_BGR0;
+                    debuglog(LCF_DUMP | LCF_SDL, "  RGB888");
+                    break;
+                case SDL_PIXELFORMAT_RGBX8888:
+                    pixfmt = AV_PIX_FMT_RGB0;
+                    debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
+                    break;
+                case SDL_PIXELFORMAT_BGR888:
+                    pixfmt = AV_PIX_FMT_0BGR;
+                    debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
+                    break;
+                case SDL_PIXELFORMAT_BGRX8888:
+                    pixfmt = AV_PIX_FMT_BGR0;
+                    break;
+                default:
+                    debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format");
+            }
+            pixelSize = sdlpixfmt & 0xFF;
 
             /* Get surface from window */
             if (!SDL_GetRendererOutputSize_real) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
-                return -1;
+                return AV_PIX_FMT_NONE;
             }
 
             renderer = SDL_GetRenderer_real(window);
@@ -120,13 +168,7 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
     }
     else {
         debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Unknown SDL version.");
-        return -1;
-    }
-
-    /* Check bpp */
-    if ((bpp != 32) && (bpp != 24)) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Unsupported pixel format of bpp ", bpp);
-        return -1;
+        return AV_PIX_FMT_NONE;
     }
 
     /* Save dimensions for later */
@@ -134,20 +176,20 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
     height = *pheight;
 
     /* Allocate an array of pixels */
-    size = width * height * (bpp/8);
+    size = width * height * pixelSize;
     winpixels.resize(size);
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
         debuglog(LCF_DUMP | LCF_ERROR, "Screen dimensions must be a multiple of 2");
-        return -1;
+        return AV_PIX_FMT_NONE;
     }
 
     if (useGL) {
         /* Do we already have access to the glReadPixels function? */
         if (!glReadPixels_real) {
             debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
-            return -1;
+            return AV_PIX_FMT_NONE;
         }
 
         /* Allocate another pixels array,
@@ -156,19 +198,18 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
         glpixels.resize(size);
     }
 
-    return bpp;
+    return pixfmt;
 }
 
 int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 {
-    int pitch = (bpp/8) * width;
+    int pitch = pixelSize * width;
 
     if (useGL) {
         /* TODO: Check that the openGL dimensions did not change in between */
 
         /* We access to the image pixels directly using glReadPixels */
-        int pixfmt = (bpp==32)?GL_RGBA:GL_RGB;
-        glReadPixels_real(0, 0, width, height, pixfmt, GL_UNSIGNED_BYTE, &glpixels[0]);
+        glReadPixels_real(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &glpixels[0]);
         /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
 
         /*

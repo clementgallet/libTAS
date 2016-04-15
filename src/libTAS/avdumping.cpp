@@ -58,8 +58,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     accum_samples = 0;
 
     int width, height;
-    int bpp = initVideoCapture(window, video_opengl, &width, &height);
-    if (bpp < 0) {
+    AVPixelFormat pixfmt = initVideoCapture(window, video_opengl, &width, &height);
+    if (pixfmt == AV_PIX_FMT_NONE) {
         debuglog(LCF_DUMP | LCF_ERROR, "Unable to initialize video capture");
         return 1;
     }
@@ -197,7 +197,7 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
 
     /* Allocate the image buffer inside the AVFrame */
 
-    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, bpp);
+    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
         return 1;
@@ -207,7 +207,7 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     /* Initialize swscale context for pixel format conversion */
 
     toYUVctx = sws_getContext(video_frame->width, video_frame->height,  
-                              (bpp==32)?AV_PIX_FMT_RGBA:AV_PIX_FMT_RGB24,
+                              pixfmt,
                               video_frame->width, video_frame->height, 
                               AV_PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
