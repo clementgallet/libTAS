@@ -50,6 +50,7 @@ SDL_Window*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
 Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
 SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
+void* (*SDL_GL_CreateContext_real)(SDL_Window *window);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
 void (*SDL_DestroyWindow_real)(SDL_Window*);
 void (*SDL_SetWindowSize_real)(SDL_Window* window, int w, int h);
@@ -141,6 +142,16 @@ int sendXid(void)
 
 }
 
+void* SDL_GL_CreateContext(SDL_Window *window)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    void* context = SDL_GL_CreateContext_real(window);
+
+    /* We override this function just to disable vsync */
+    SDL_GL_SetSwapInterval_real(0);
+    return context;
+}
+
 static int swapInterval = 0;
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
@@ -150,10 +161,6 @@ static int swapInterval = 0;
     /* We save the interval if the game wants it later */
     swapInterval = interval;
     
-    /* Disable vsync */
-    /* TODO: Put this at another place to be sure it is executed */
-    SDL_GL_SetSwapInterval_real(0);
-
     return 0; // Success
 }
     
@@ -376,6 +383,7 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL2(SDL_CreateWindowAndRenderer);
         LINK_SUFFIX_SDL2(SDL_RenderPresent);
         LINK_SUFFIX_SDL2(SDL_SetWindowSize);
+        LINK_SUFFIX_SDL2(SDL_GL_CreateContext);
     }
 }
 
