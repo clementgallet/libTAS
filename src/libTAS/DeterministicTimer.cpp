@@ -140,7 +140,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
          * to advance the time.
          * This decrements addedDelay by (basically) how much it advances ticks
          */
-        frameBoundary();
+        frameBoundary(false);
 
     }
 }

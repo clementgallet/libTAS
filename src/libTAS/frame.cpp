@@ -31,10 +31,50 @@
 #include "EventQueue.h"
 #include "events.h"
 #include <mutex>
+#include <iomanip>
+
+/* Compute real and logical fps */
+static bool computeFPS(bool drawFB, float& fps, float& lfps)
+{
+    static int computeCounter = 0;
+    static TimeHolder lastTime = {0, 0};
+    static TimeHolder lastTicks = {0, 0};
+    static int drawFrameCount = 0;
+    static int lastFrameCount = 0;
+
+    if (drawFB)
+        drawFrameCount++;
+
+    if (++computeCounter > 60) {
+        computeCounter = 0;
+
+        TimeHolder currentTime;
+        clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+
+        struct timespec tsTicks = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        TimeHolder currentTicks = *(TimeHolder*)&tsTicks;
+
+        /* Compute real fps (number of drawn screens per second) */
+        TimeHolder deltaTime = currentTime - lastTime;
+        fps = (float)(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+
+        /* Compute logical fps (number of drawn screens per timer second) */
+        TimeHolder deltaTicks = currentTicks - lastTicks;
+        lfps = (float)(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+
+        lastTime = currentTime;
+        lastTicks = currentTicks;
+        lastFrameCount = drawFrameCount;
+
+        return true;
+    }
+
+    return false;
+}
 
 std::mutex frameMutex;
 
-void frameBoundary(void)
+void frameBoundary(bool drawFB)
 {
     std::lock_guard<std::mutex> guard(frameMutex);
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
@@ -72,8 +112,12 @@ void frameBoundary(void)
     generateMouseMotionEvents();
     generateMouseButtonEvents();
 
-    /* We don't update AllInputs old_ai here. We update during the generation of events */
     ++frame_counter;
+
+    /* Print FPS */
+    float fps, lfps;
+    if (computeFPS(drawFB, fps, lfps))
+        debuglog(LCF_TIMEFUNC | LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Leave frame boundary");

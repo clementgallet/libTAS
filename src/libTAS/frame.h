@@ -26,11 +26,11 @@
  * - Receiving data from linTAS and sending data to it
  * - Dumping audio/video
  *
- * It is mainly called during a screen refresh, but can be called
- * also by the timer when we need to advance time to avoid a
+ * It is mainly called during a screen refresh (drawFB == true),
+ * but can be called also by the timer when we need to advance time to avoid a
  * game softlock (game expect time to pass).
  */
-void frameBoundary(void);
+void frameBoundary(bool drawFB);
 
 /* Process messages that are received from linTAS */
 void proceed_commands(void);

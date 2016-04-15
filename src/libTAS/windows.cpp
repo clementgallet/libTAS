@@ -84,7 +84,7 @@ void (*SDL_GL_SwapBuffers_real)(void);
         gw_sent = 1;
         debuglog(LCF_SDL, "Send dummy X11 window id.");
     }
-    frameBoundary();
+    frameBoundary(true);
 }
 
 int sendXid(void);
@@ -138,8 +138,7 @@ int sendXid(void)
     if (sendXid() != 0)
         return;
 
-    frameBoundary();
-
+    frameBoundary(true);
 }
 
 void* SDL_GL_CreateContext(SDL_Window *window)
@@ -301,7 +300,7 @@ void SDL_RenderPresent(SDL_Renderer * renderer)
     if (sendXid() != 0)
         return;
 
-    frameBoundary();
+    frameBoundary(true);
 }
 
 void SDL_SetWindowSize(SDL_Window* window, int w, int h)
