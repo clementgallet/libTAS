@@ -47,11 +47,18 @@
 ### Faster Than Light
 
 - Use SDL 1.2
-- Do strange things with pointers also
 
 ### VVVVVV
 
 - Use SDL 2
 - Use software rendering
 - Use delays for constant fps
+
+### Teslagrad
+
+- Unity
+
+### Thomas Was Alone
+
+- Unity
 

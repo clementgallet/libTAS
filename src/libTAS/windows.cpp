@@ -49,6 +49,8 @@ void(* SDL_GL_SwapWindow_real)(SDL_Window* window);
 SDL_Window*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
 Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
 Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
+void (*SDL_SetWindowTitle_real)(void * window, const char *title);
+void (*SDL_WM_SetCaption_real)(const char *title, const char *icon);
 SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
 void* (*SDL_GL_CreateContext_real)(SDL_Window *window);
 int (*SDL_GL_SetSwapInterval_real)(int interval);
@@ -169,8 +171,14 @@ static int swapInterval = 0;
     return swapInterval;
 }
 
+std::string origTitle;
+std::string origIcon;
+
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
+
+    origTitle = title;
+
     /* Disable fullscreen */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
@@ -225,19 +233,52 @@ static int swapInterval = 0;
     return SDL_GetWindowFlags_real(window);
 }
 
-int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
+/* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
+{
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
+    if (title != NULL)
+        origTitle = title;
+    SDL_SetWindowTitle_real(window, title);
+}
+
+/* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
+{
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
+    if (title != NULL)
+        origTitle = title;
+    if (icon != NULL)
+        origIcon = icon;
+    SDL_WM_SetCaption_real(title, icon);
+}
+
+void updateTitle(float fps, float lfps)
+{
+    std::ostringstream out;
+    out << " (fps: " << std::fixed << std::setprecision(1) << fps;
+    out << " - lfps: " << lfps << ")";
+    std::string newTitle = origTitle + out.str();
+    if (SDLver == 1) {
+        SDL_WM_SetCaption_real(newTitle.c_str(), origIcon.c_str());
+    }
+    if (SDLver == 2) {
+        if (gameWindow)
+            SDL_SetWindowTitle_real(gameWindow, newTitle.c_str());
+    }
+}
+
+/* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flags ", flags);
     return 0; // success
 }
 
-void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
+/* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with border ", bordered);
     /* Don't do anything */
 }
 
-SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
+/* Override */ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     if (flags & SDL_RENDERER_SOFTWARE)
@@ -251,7 +292,7 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     return SDL_CreateRenderer_real(window, index, flags);
 }
 
-int SDL_CreateWindowAndRenderer(int width, int height,
+/* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
@@ -288,7 +329,7 @@ int SDL_CreateWindowAndRenderer(int width, int height,
     return ret;
 }
 
-void SDL_RenderPresent(SDL_Renderer * renderer)
+/* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     SDL_RenderPresent_real(renderer);
@@ -303,7 +344,7 @@ void SDL_RenderPresent(SDL_Renderer * renderer)
     frameBoundary(true);
 }
 
-void SDL_SetWindowSize(SDL_Window* window, int w, int h)
+/* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", w, " x ", h);
@@ -355,7 +396,7 @@ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
     return surf;
 }
 
-SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
+/* Override */ SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, __func__, " call with mode ", mode);
     static SDL_GrabMode fakeGrab = SDL_GRAB_OFF;
@@ -369,6 +410,7 @@ void link_sdlwindows(void)
     if (SDLver == 1) {
         LINK_SUFFIX_SDL1(SDL_GL_SwapBuffers);
         LINK_SUFFIX_SDL1(SDL_SetVideoMode);
+        LINK_SUFFIX_SDL1(SDL_WM_SetCaption);
     }
     if (SDLver == 2) {
         LINK_SUFFIX_SDL2(SDL_GL_SwapWindow);
@@ -383,6 +425,7 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL2(SDL_RenderPresent);
         LINK_SUFFIX_SDL2(SDL_SetWindowSize);
         LINK_SUFFIX_SDL2(SDL_GL_CreateContext);
+        LINK_SUFFIX_SDL2(SDL_SetWindowTitle);
     }
 }
 

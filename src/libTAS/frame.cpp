@@ -30,6 +30,7 @@
 #endif
 #include "EventQueue.h"
 #include "events.h"
+#include "windows.h"
 #include <mutex>
 #include <iomanip>
 
@@ -116,8 +117,10 @@ void frameBoundary(bool drawFB)
 
     /* Print FPS */
     float fps, lfps;
-    if (computeFPS(drawFB, fps, lfps))
+    if (computeFPS(drawFB, fps, lfps)) {
         debuglog(LCF_TIMEFUNC | LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
+        updateTitle(fps, lfps);
+    }
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Leave frame boundary");

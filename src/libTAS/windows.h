@@ -32,6 +32,9 @@ extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
 
 extern char* av_filename;
 
+/* Update the window title with fps */
+void updateTitle(float fps, float lfps);
+
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.
@@ -76,6 +79,18 @@ OVERRIDE Uint32 SDL_GetWindowID(SDL_Window* window);
  *  \brief Get the window flags.
  */
 OVERRIDE Uint32 SDL_GetWindowFlags(SDL_Window* window);
+
+/**
+ *  \brief Set the title of a window, in UTF-8 format.
+ *
+ *  \sa SDL_GetWindowTitle()
+ */
+OVERRIDE void SDL_SetWindowTitle(SDL_Window * window, const char *title);
+
+/** SDL 1.2
+ * Sets the title and icon text of the display window (UTF-8 encoded)
+ */
+OVERRIDE void SDL_WM_SetCaption(const char *title, const char *icon);
 
 /**
  *  \brief Set the border state of a window.
