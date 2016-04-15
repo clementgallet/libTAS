@@ -38,7 +38,7 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
  *                the first element contains width * (size of a pixel).
  * @return        0 if successful or 1 if an error occured
  */
-int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride[]);
+int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[]);
 
 #endif
 #endif

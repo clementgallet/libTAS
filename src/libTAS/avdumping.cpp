@@ -240,7 +240,7 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
  * Returns 0 if no error was encountered
  */
 
-int encodeOneFrame(unsigned long fcounter, void* window) {
+int encodeOneFrame(unsigned long fcounter) {
 
     /*** Video ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
@@ -249,7 +249,7 @@ int encodeOneFrame(unsigned long fcounter, void* window) {
     int orig_stride[4] = {0};
 
     /* Access to the screen pixels */
-    captureVideoFrame(window, orig_plane, orig_stride);
+    captureVideoFrame(orig_plane, orig_stride);
 
     /* Initialize AVPacket */
     AVPacket vpkt;

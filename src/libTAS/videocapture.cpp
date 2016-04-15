@@ -159,7 +159,7 @@ int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
     return bpp;
 }
 
-int captureVideoFrame(void *window, const uint8_t* orig_plane[], int orig_stride[])
+int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 {
     int pitch = (bpp/8) * width;
 

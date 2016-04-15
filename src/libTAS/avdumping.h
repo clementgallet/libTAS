@@ -45,7 +45,7 @@ int openAVDumping(void* window, bool video_opengl, char* filename, int start_fra
  * @param window        SDL Window* (needed for software rendering)
  * @return              1 if error, 0 if not
  */
-int encodeOneFrame(unsigned long fcounter, void* window);
+int encodeOneFrame(unsigned long fcounter);
 
 /* Close all allocated objects at the end of a av dump
  * @return              1 if error, 0 if not

@@ -23,10 +23,8 @@
 #include "../shared/messages.h"
 #include "inputs/inputs.h" // AllInputs ai object
 #include "socket.h"
-#include "libTAS.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
-#include "windows.h" // gameWindow
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -48,7 +46,7 @@ void frameBoundary(void)
     /* Dumping audio and video */
     if (tasflags.av_dumping) {
         /* Write the current frame */
-        int enc = encodeOneFrame(frame_counter, gameWindow);
+        int enc = encodeOneFrame(frame_counter);
         if (enc != 0) {
             /* Encode failed, disable AV dumping */
             closeAVDumping();
