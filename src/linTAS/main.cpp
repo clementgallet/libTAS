@@ -365,12 +365,14 @@ int main(int argc, char **argv)
             buildAllInputs(&ai, display, keyboard_state, hotkeys);
 
             /* Get the pointer position and mask */
-            Window w;
-            int i;
-            Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-            if (!onScreen) {
-                ai.pointer_x = -1;
-                ai.pointer_y = -1;
+            if (gameWindow) {
+                Window w;
+                int i;
+                Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                if (!onScreen) {
+                    ai.pointer_x = -1;
+                    ai.pointer_y = -1;
+                }
             }
         }
 
@@ -382,12 +384,14 @@ int main(int argc, char **argv)
             buildAllInputs(&ai, display, keyboard_state, hotkeys);
 
             /* Get the pointer position and mask */
-            Window w;
-            int i;
-            Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-            if (!onScreen) {
-                ai.pointer_x = -1;
-                ai.pointer_y = -1;
+            if (gameWindow) {
+                Window w;
+                int i;
+                Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                if (!onScreen) {
+                    ai.pointer_x = -1;
+                    ai.pointer_y = -1;
+                }
             }
 
             /* Save inputs to file */
