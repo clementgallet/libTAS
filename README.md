@@ -19,7 +19,7 @@ To enable audio and video dumping, you will need:
 To enable audio playback, you will also need:
 
 - libswrescale
-- libpulse-simple
+- libasound
 
 To enable HUD on top of the game screen (currently not working, disabled by default), you will need:
 

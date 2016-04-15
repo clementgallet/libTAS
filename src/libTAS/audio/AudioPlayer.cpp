@@ -28,31 +28,72 @@ AudioPlayer audioplayer;
 
 AudioPlayer::AudioPlayer(void)
 {
+    if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
+        debuglog(LCF_SOUND, "  Cannot open default audio device");
+    }
+
     inited = false;
 }
 
-bool AudioPlayer::init(pa_sample_format_t format, int nbChannels, int frequency)
+AudioPlayer::~AudioPlayer(void)
+{
+    snd_pcm_close(phandle);
+}
+
+bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
 {
     debuglog(LCF_SOUND, "Init audio player");
-    pa_sample_spec pa_ss;
 
-    pa_ss.format = format;
-    pa_ss.channels = nbChannels;
-    pa_ss.rate = frequency;
+    snd_pcm_hw_params_t *hw_params;
 
-    pa_s = pa_simple_new(NULL,  // Use the default server.
-            "TAS game",         // Our application's name.
-            PA_STREAM_PLAYBACK,
-            NULL,               // Use the default device.
-            "Audio",            // Description of our stream.
-            &pa_ss,             // Our sample format.
-            NULL,               // Use default channel map
-            NULL,               // Use default buffering attributes.
-            NULL                // Ignore error code.
-            );
+    if (snd_pcm_hw_params_malloc(&hw_params) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_malloc failed");
+        return false;
+    }
 
-    if (pa_s == nullptr) {
-        debuglog(LCF_SOUND | LCF_ERROR, "pa_simple_new() failed");
+    if (snd_pcm_hw_params_any(phandle, hw_params) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_any failed");
+        return false;
+    }
+
+    if (snd_pcm_hw_params_set_access(phandle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_access failed");
+        return false;
+    }
+
+    if (snd_pcm_hw_params_set_format(phandle, hw_params, format) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_format failed");
+        return false;
+    }
+
+    int dir;
+    if (snd_pcm_hw_params_set_rate_near(phandle, hw_params, &frequency, &dir) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
+        return false;
+    }
+
+    if (tasflags.framerate != 0) {
+        snd_pcm_uframes_t buffer_size = frequency / tasflags.framerate;
+        if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
+            debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
+            return false;
+        }
+    }
+
+    if (snd_pcm_hw_params_set_channels(phandle, hw_params, nbChannels) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_channels failed");
+        return false;
+    }
+
+    if (snd_pcm_hw_params(phandle, hw_params) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params failed");
+        return false;
+    }
+
+    snd_pcm_hw_params_free(hw_params);
+
+    if (snd_pcm_prepare(phandle) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_prepare failed");
         return false;
     }
 
@@ -61,14 +102,13 @@ bool AudioPlayer::init(pa_sample_format_t format, int nbChannels, int frequency)
 
 bool AudioPlayer::play(AudioContext& ac)
 {
-    debuglog(LCF_SOUND, "Play an audio frame");
     if (!inited) {
-        pa_sample_format_t format;
+        snd_pcm_format_t format;
         if (ac.outBitDepth == 8)
-            format = PA_SAMPLE_U8;
+            format = SND_PCM_FORMAT_U8;
         if (ac.outBitDepth == 16)
-            format = PA_SAMPLE_S16LE;
-        if (!init(format, ac.outNbChannels, ac.outFrequency))
+            format = SND_PCM_FORMAT_S16_LE;
+        if (!init(format, ac.outNbChannels, (unsigned int)ac.outFrequency))
             return false;
         inited = true;
     }
@@ -76,10 +116,25 @@ bool AudioPlayer::play(AudioContext& ac)
     if (tasflags.fastforward)
         return true;
 
-    if (pa_simple_write(pa_s, (void*)&ac.outSamples[0], ac.outBytes, NULL) < 0) {
-        debuglog(LCF_SOUND | LCF_ERROR, "pa_simple_write() failed");
-        return false;
-    }
+    debuglog(LCF_SOUND, "Play an audio frame");
+    int err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
+	if (err < 0) {
+		if (err == -EPIPE) {
+			debuglog(LCF_SOUND, "  Underrun");
+			err = snd_pcm_prepare(phandle);
+			if (err < 0) {
+				debuglog(LCF_SOUND | LCF_ERROR, "  Can't recovery from underrun, prepare failed: ", snd_strerror(err));
+			    return false;
+            }
+            else {
+                snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
+            }
+		}
+		else {
+			debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_writei() failed: ", snd_strerror (err));
+			return false;
+		}
+	}
 
     return true;
 }

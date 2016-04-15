@@ -23,6 +23,7 @@
 #include "threads.h"
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
+#include "backtrace.h"
 
 /* Frame counter */
 unsigned long frame_counter = 0;
@@ -68,6 +69,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
     //clock_gettime_real(clock_id, tp);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
+    //printBacktrace();
     return 0;
 }
 

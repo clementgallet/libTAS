@@ -23,24 +23,25 @@
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
 
 #include "AudioContext.h"
-#include <pulse/simple.h>
+#include <alsa/asoundlib.h>
 
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
     public:
         AudioPlayer();
+        ~AudioPlayer();
 		
 		/* Store if the connection was inited */
 		bool inited;
 
-        /* Connection to the pulseaudio server */
-        pa_simple *pa_s;
+        /* Connection to the sound system */
+        snd_pcm_t *phandle;
 
         /* Init the connection to the server.
          * Return if the connection was successful
          */
-		bool init(pa_sample_format_t format, int nbChannels, int frequency);
+		bool init(snd_pcm_format_t format, int nbChannels, unsigned int frequency);
 
         /* Play the audio buffer stored in the audio context */
 		bool play(AudioContext& ac);

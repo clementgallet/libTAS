@@ -181,12 +181,12 @@ void AudioContext::mixAllSources(struct timespec ticks)
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
+	/* Save the actual number of samples and size */
+	outNbSamples = outBytes / outAlignSize;
+
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     /* Play the music */
     audioplayer.play(*this);
 #endif
-
-	/* Save the actual number of samples and size */
-	outNbSamples = outBytes / outAlignSize;
 }
 

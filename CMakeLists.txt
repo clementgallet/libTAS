@@ -49,13 +49,13 @@ endif()
 # Sound playback
 option(ENABLE_SOUND "Enable sound playback" ON)
 
-pkg_check_modules(PULSESIMPLE libpulse-simple)
-if (ENABLE_SOUND AND SWRESAMPLE_FOUND AND PULSESIMPLE_FOUND)
+pkg_check_modules(ALSA alsa)
+if (ENABLE_SOUND AND SWRESAMPLE_FOUND AND ALSA_FOUND)
     # Enable sound playback
     message(STATUS "Sound playback is enabled")
-    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${PULSESIMPLE_INCLUDE_DIRS})
-    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${PULSESIMPLE_LIBRARIES})
-    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${PULSESIMPLE_LIBRARY_DIRS})
+    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS})
+    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${ALSA_LIBRARIES})
+    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${ALSA_LIBRARY_DIRS})
     add_definitions(-DLIBTAS_ENABLE_SOUNDPLAYBACK)
 else()
     message(WARNING "Sound playback is disabled")
