@@ -97,12 +97,6 @@ public:
 
     /* Bring the tv_nsec value inside the range [0,999999999] */
     void normalize();
-
-    struct timespec toTimeSpec()
-    {
-        struct timespec ts = {this->tv_sec, this->tv_nsec};
-        return ts;
-    }
 };
 
 #endif

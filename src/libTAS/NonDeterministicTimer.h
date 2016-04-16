@@ -68,8 +68,8 @@ private:
     /* Last time value of the timer */
     TimeHolder lasttime;
 
-    /* Store which thread can update the timer */
-    pthread_t frameThreadId;
+    /* Are we inside a frame boundary? */
+    bool inFB;
 
     /* The time of the last frame boundary enter */
     TimeHolder lastEnterTicks;
