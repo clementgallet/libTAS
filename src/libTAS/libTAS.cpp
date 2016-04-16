@@ -36,6 +36,7 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs/inputs.h"
+#include "fileio.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -199,6 +200,7 @@ void __attribute__((destructor)) term(void)
     link_sdlwindows();
     link_sdlevents();
     link_sdlthreads();
+    link_sdlfileio();
 #ifdef LIBTAS_ENABLE_HUD
     link_opengl(); // TODO: Put this when creating the opengl context
 #endif

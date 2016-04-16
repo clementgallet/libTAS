@@ -29,7 +29,6 @@
 ### FEZ
 
 - Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
-- Mono is using SDL for display and stuff, so we are good. However it links dynamically to it
 
 ### Towerfall
 
@@ -61,4 +60,9 @@
 ### Thomas Was Alone
 
 - Unity
+
+### Bastion
+
+- Use SDL 1.2 only for joystick
+- Mono branch for the game: https://github.com/SupergiantGames/MonoGame/tree/linux_port
 

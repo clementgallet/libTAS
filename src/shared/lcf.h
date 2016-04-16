@@ -59,7 +59,7 @@ typedef int LogCategoryFlag; enum
 	//LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.
 	LCF_EVENTS   = 1 << 26, // processing SDL events
 	LCF_WINDOW   = 1 << 27,
-	//LCF_FILEIO   = 1 << 28,
+	LCF_FILEIO   = 1 << 28,
 	LCF_STEAM    = 1 << 29, // Steam API
 	LCF_THREAD   = 1 << 30,
 	//LCF_TIMERS   = 1 << 31, // as in async timer objects

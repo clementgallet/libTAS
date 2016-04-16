@@ -45,6 +45,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
     struct timespec ts = detTimer.getTicks(TIMETYPE_UNTRACKED);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
+    //printBacktrace();
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
     return 0;
@@ -69,7 +70,6 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
     //clock_gettime_real(clock_id, tp);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
-    //printBacktrace();
     return 0;
 }
 
