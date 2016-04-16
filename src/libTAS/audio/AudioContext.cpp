@@ -168,8 +168,17 @@ void AudioContext::mixAllSources(struct timespec ticks)
 {
     //std::lock_guard<std::mutex> lock(mutex);
 
+    /* Check that ticks is positive! */
+    if (ticks.tv_sec < 0) {
+        debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Negative number of ticks for audio mixing!");
+        return;
+    }
+
     outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
-    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outBytes, " of buffers");
+	/* Save the actual number of samples and size */
+	outNbSamples = outBytes / outAlignSize;
+
+    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outNbSamples, " samples");
 
     /* Silent the output buffer */
     if (outBitDepth == 8) // Unsigned 8-bit samples
@@ -180,9 +189,6 @@ void AudioContext::mixAllSources(struct timespec ticks)
     for (auto& source : sources) {
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
-
-	/* Save the actual number of samples and size */
-	outNbSamples = outBytes / outAlignSize;
 
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     /* Play the music */

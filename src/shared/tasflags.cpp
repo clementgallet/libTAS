@@ -25,10 +25,10 @@ struct TasFlags tasflags = {
     recording      : -1,
     fastforward    : 0,
     //includeFlags   : LCF_FRAME,
-    includeFlags   : LCF_DUMP,
+    includeFlags   : LCF_SOUND,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,
-    framerate      : 60,
+    framerate      : 0,
     numControllers : 1
 }; 
 

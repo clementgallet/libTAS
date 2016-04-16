@@ -72,12 +72,11 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
         return false;
     }
 
-    if (tasflags.framerate != 0) {
-        snd_pcm_uframes_t buffer_size = frequency / tasflags.framerate;
-        if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
-            debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
-            return false;
-        }
+    snd_pcm_uframes_t buffer_size = 2 * frequency / ((tasflags.framerate>0)?tasflags.framerate:30);
+    debuglog(LCF_SOUND, "  Buffer size is ", buffer_size);
+    if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
+        debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
+        return false;
     }
 
     if (snd_pcm_hw_params_set_channels(phandle, hw_params, nbChannels) < 0) {

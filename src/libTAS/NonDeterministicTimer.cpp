@@ -63,7 +63,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
          * do not count the normal frame boundary duration,
          * as it would delay more and more the timer
          */
-        if(frameBoundaryDur.tv_sec > 0 || frameBoundaryDur.tv_nsec > 50000000)
+        if(frameBoundaryDur.tv_sec > 0 || ((frameBoundaryDur.tv_sec >= 0) && (frameBoundaryDur.tv_nsec > 50000000)))
         {
             /* Remove the duration of the frame boundary from the elapsed time */
             delta -= frameBoundaryDur;
@@ -89,7 +89,8 @@ void NonDeterministicTimer::enterFrameBoundary()
     /* Doing the audio mixing here */
     getTicks();
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
-    //audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
+    audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
+
     lastEnterTicks = ticks;
 }
 
