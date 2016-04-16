@@ -165,8 +165,11 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
     void* context = SDL_GL_CreateContext_real(window);
 
-    /* We override this function just to disable vsync */
-    SDL_GL_SetSwapInterval_real(0);
+    /* We override this function just to disable vsync,
+     * except when using non deterministic timer.
+     */
+    if (tasflags.framerate > 0)
+        SDL_GL_SetSwapInterval_real(0);
     return context;
 }
 
@@ -178,6 +181,10 @@ static int swapInterval = 0;
 
     /* We save the interval if the game wants it later */
     swapInterval = interval;
+   
+    /* When using non deterministic timer, we let the game set vsync */
+    if (tasflags.framerate > 0)
+        return SDL_GL_SetSwapInterval_real(interval);
     
     return 0; // Success
 }
