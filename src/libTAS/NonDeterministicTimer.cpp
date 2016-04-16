@@ -39,11 +39,11 @@ struct timespec NonDeterministicTimer::getTicks(void)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
-    if(frameThreadId == 0)
-        frameThreadId = getThreadId();
-    /* Only one thread can perform this logic.
-     * Could this be a problem...? */
-    if(frameThreadId == getThreadId()) {
+    bool isFrameThread = isMainThread();
+
+    /* Only the main thread can modify the timer */
+    /* Could this be a problem...? */
+    if(isFrameThread) {
 
         /* Get the real clock time */
         TimeHolder realtime;
@@ -89,7 +89,8 @@ void NonDeterministicTimer::enterFrameBoundary()
     /* Doing the audio mixing here */
     getTicks();
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
-    audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
+    //audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
+    lastEnterTicks = ticks;
 }
 
 void NonDeterministicTimer::exitFrameBoundary()
