@@ -27,6 +27,8 @@
 #include <sstream>
 #include "hook.h" // For pthread_self_real
 #include "time.h" // For frame_counter
+#include "ThreadState.h"
+#include <cstdio>
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
@@ -98,9 +100,18 @@ void debuglog(LogCategoryFlag lcf, Args ...args);
 template<typename ...Args>
 inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
+    /* Not printing anything if thread state is set to NOLOG */
+    if (threadState.isNoLog())
+        return;
+
+    /* We avoid recursive loops by protecting eventual recursive calls to debuglog
+     * in the following code
+     */
+    threadState.setNoLog(true);
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
     debuglogverbose(lcf, oss.str());
+    threadState.setNoLog(false);
 }
 
 /* If we only want to print the function name... */

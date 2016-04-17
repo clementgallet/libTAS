@@ -104,7 +104,7 @@ FILE *fopen64 (const char *filename, const char *modes)
         }
     }
     /* For now, we must *not* call debuglog as it will break */
-    //debuglog(LCF_FILEIO, __func__, " call with file '", filename, "' and mode ", modes);
+    debuglog(LCF_FILEIO, __func__, " call with file '", filename, "' and mode ", modes);
     return fopen64_real(filename, modes);
 }
 
@@ -143,7 +143,7 @@ int putc (int c, FILE *stream)
 
 size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
 {
-    //DEBUGLOGCALL(LCF_FILEIO);
+    DEBUGLOGCALL(LCF_FILEIO);
     return fwrite_real(ptr, size, n, s);
 }
 
