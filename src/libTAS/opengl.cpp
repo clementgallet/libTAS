@@ -22,6 +22,7 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "../external/gl.h"
+#include "logging.h"
 
 void (*glGenTextures_real)(int n, unsigned int* tex);
 void (*glBindTexture_real)(int target, unsigned int tex);
@@ -47,7 +48,7 @@ void (*glGetIntegerv_real)( int pname, GLint* data);
 void (*glGetBooleanv_real)( int pname, GLboolean* data);
 
 /* Link function pointers to real opengl functions */
-void link_opengl(void);
+void link_opengl(void)
 {
     LINK_SUFFIX(glGenTextures, "libGL");
     LINK_SUFFIX(glBindTexture, "libGL");
@@ -72,10 +73,42 @@ void link_opengl(void);
     LINK_SUFFIX(glGetBooleanv, "libGL");
 }
 
+/* Font used for displaying HUD on top of the game window */
+TTF_Font *font = NULL;
+
+void initTTF(void)
+{
+    link_opengl(); // TODO: Put this when creating the opengl context
+
+    /* Initialize SDL TTF */
+    if(TTF_Init() == -1) {
+        debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
+        exit(1);
+    }
+
+    font = TTF_OpenFont("/home/clement/libTAS/src/external/GenBkBasR.ttf", 30);
+    if (font == NULL) {
+        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
+        exit(1);
+    }
+}
+
+void finiTTF(void)
+{
+    TTF_CloseFont(font);
+    TTF_Quit();
+}
+
 /* Render a text on top of the game window 
  * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
  */
-void RenderText(TTF_Font *font, const char* message, int sw, int sh, SDL_Color color, int x, int y) {
+void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int y) {
+    static int inited = 0;
+    if (inited == 0) {
+        initTTF();
+        inited = 1;
+    }
+
     glMatrixMode_real(GL_PROJECTION);
     glPushMatrix_real();
     glLoadIdentity_real();

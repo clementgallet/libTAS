@@ -22,15 +22,18 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "../external/SDL_ttf.h"
+#include "sdl_ttf.h"
 
 /* Link to openGL functions */
 void link_opengl(void);
 
+void initTTF(void);
+void finiTTF(void);
+
 /* Build and display an openGL texture containing the specified text
  * For now, does not really work.
  */
-void RenderText(TTF_Font *font, const char* message, int sw, int sh, SDL_Color color, int x, int y);
+void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int y);
 
 #endif
 #endif

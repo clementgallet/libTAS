@@ -66,3 +66,7 @@
 - Use SDL 1.2 only for joystick
 - Mono branch for the game: https://github.com/SupergiantGames/MonoGame/tree/linux_port
 
+### Hotline Miami
+
+- Use openGL inside qt4
+

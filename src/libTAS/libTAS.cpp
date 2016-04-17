@@ -25,12 +25,10 @@
 #include "dlhook.h"
 #include "events.h"
 #include "threads.h"
-#include "opengl.h"
 #include "socket.h"
 #include "logging.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
-#include "sdl_ttf.h"
 #include "../shared/messages.h"
 #include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
@@ -43,11 +41,6 @@
 
 /* Did we call our constructor? */
 bool libTAS_init = false;
-
-#ifdef LIBTAS_ENABLE_HUD
-/* Font used for displaying HUD on top of the game window */
-TTF_Font *font = NULL;
-#endif
 
 /* Function pointers to real functions */
 void (*SDL_Init_real)(unsigned int flags) = nullptr;
@@ -63,19 +56,6 @@ void __attribute__((constructor (101))) init(void)
     if (! didConnect)
         return;
 
-#ifdef LIBTAS_ENABLE_HUD
-    /* Initialize SDL TTF */
-    if(TTF_Init() == -1) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
-        exit(1);
-    }
-
-    font = TTF_OpenFont("/home/clement/libTAS/src/external/FreeSans.ttf", 30);
-    if (font == NULL) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
-        exit(1);
-    }
-#endif
     /* Send information to the program */
 
     /* Send game process pid */
@@ -147,10 +127,6 @@ void __attribute__((destructor)) term(void)
 {
     dlhook_end();
 
-#ifdef LIBTAS_ENABLE_HUD
-    TTF_CloseFont(font);
-    TTF_Quit();
-#endif
     closeSocket();
 
     debuglog(LCF_SOCKET, "Exiting.");
@@ -202,9 +178,6 @@ void __attribute__((destructor)) term(void)
     link_sdlevents();
     link_sdlthreads();
     link_sdlfileio();
-#ifdef LIBTAS_ENABLE_HUD
-    link_opengl(); // TODO: Put this when creating the opengl context
-#endif
 
     /* The thread calling this is probably the main thread */
     setMainThread();

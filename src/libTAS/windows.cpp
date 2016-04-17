@@ -25,6 +25,7 @@
 #include "../shared/tasflags.h"
 #include "frame.h"
 #include "libTAS.h"
+#include "opengl.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -144,7 +145,7 @@ int sendXid(void)
 
 #ifdef LIBTAS_ENABLE_HUD
     SDL_Color color = {255, 0, 0, 0};
-    RenderText(font, "Test test", 640, 480, color, 2, 2);
+    RenderText("Test test", 640, 480, color, 2, 2);
 #endif
 
     if (!skipDraw())

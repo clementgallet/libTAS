@@ -34,6 +34,9 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "hook.h"
+#include <stdio.h>
+
+extern void (*SDL_FreeSurface_real)(SDL_Surface * surface);
 
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
