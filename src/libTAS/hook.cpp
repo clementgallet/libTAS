@@ -28,7 +28,11 @@ bool link_function(void** function, const char* source, const char* library)
     if (*function != nullptr)
         return true;
 
-    dlenter(); // Use real dl functions
+    /* Initialize the pointers to use real dl functions */
+    dlhook_init();
+
+    dlenter();
+    /* From this function dl* call will refer to real dl functions */
 
     /* First try to link it from the global namespace */
     *function = dlsym(RTLD_NEXT, source);

@@ -140,8 +140,12 @@ void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
 
 void dlhook_init(void)
 {
-    old_dlfcn_hook = _dlfcn_hook;
-    _dlfcn_hook = &my_dlfcn_hook;
+    static int inited = 0;
+    if (!inited) {
+        old_dlfcn_hook = _dlfcn_hook;
+        _dlfcn_hook = &my_dlfcn_hook;
+        inited = 1;
+    }
 }
 
 void dlhook_end(void)

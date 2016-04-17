@@ -130,7 +130,8 @@ void __attribute__((constructor (101))) init(void)
     game_ai.emptyInputs();
 
     /* We initialize our dl functions hooking, and link some functions */
-    dlhook_init();
+    link_stdiofileio();
+    link_posixfileio();
     link_time();
     link_pthread();
 

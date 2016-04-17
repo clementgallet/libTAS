@@ -17,18 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tasflags.h"
+#ifndef LIBTAS_BACKTRACE_H_INCL
+#define LIBTAS_BACKTRACE_H_INCL
 
-struct TasFlags tasflags = {
-    running        : 0,
-    speed_divisor  : 1,
-    recording      : -1,
-    fastforward    : 0,
-    //includeFlags   : LCF_ALL,
-    includeFlags   : LCF_FILEIO | LCF_ERROR,
-    excludeFlags   : LCF_NONE,
-    av_dumping     : 0,
-    framerate      : 60,
-    numControllers : 1
-}; 
+void printBacktrace(void);
+
+#endif
 
