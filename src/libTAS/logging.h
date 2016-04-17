@@ -61,7 +61,7 @@ std::string stringify(unsigned long int id);
 /* Main function to print the debug message str (or not), and additional
  * information, based on the LogCategoryFlag value
  */
-void debuglogverbose(LogCategoryFlag lcf, std::string str);
+void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string& outstr);
 
 /* Helper functions to concatenate different arguments arbitrary types into
  * a string stream. Because it uses variadic templates, its definition must
@@ -110,9 +110,14 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     threadState.setNoLog(true);
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
-    debuglogverbose(lcf, oss.str());
+    std::string outstr;
+    debuglogverbose(lcf, oss.str(), outstr);
+    std::cerr << outstr;
     threadState.setNoLog(false);
 }
+
+/* Print the debug message using stdio functions */
+void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 
 /* If we only want to print the function name... */
 #define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")

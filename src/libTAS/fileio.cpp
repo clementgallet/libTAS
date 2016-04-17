@@ -89,8 +89,15 @@ FILE *fopen (const char *filename, const char *modes)
             return NULL;
         }
     }
-    /* For now, we must *not* call debuglog as it will break */
-    //debuglog(LCF_FILEIO, __func__, " call with file '", filename, "' and mode ", modes);
+
+    /* iostream functions are banned inside this function, I'm not sure why.
+     * This is the case for every open function.
+     * Generating debug message using stdio.
+     */
+    if (filename)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
     return fopen_real(filename, modes);
 }
 
@@ -103,11 +110,14 @@ FILE *fopen64 (const char *filename, const char *modes)
             return NULL;
         }
     }
-    /* For now, we must *not* call debuglog as it will break */
-    debuglog(LCF_FILEIO, __func__, " call with file '", filename, "' and mode ", modes);
+
+    if (filename)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
+
     return fopen64_real(filename, modes);
 }
-
 
 int fprintf (FILE *stream, const char *format, ...)
 {
@@ -143,10 +153,17 @@ int putc (int c, FILE *stream)
 
 size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
 {
-    DEBUGLOGCALL(LCF_FILEIO);
+    if (!fwrite_real) {
+        link_stdiofileio();
+        if (!fwrite_real) {
+            printf("Failed to link fwrite\n");
+            return 0;
+        }
+    }
+    //DEBUGLOGCALL(LCF_FILEIO);
+    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
     return fwrite_real(ptr, size, n, s);
 }
-
 
 void link_stdiofileio(void)
 {
@@ -179,8 +196,10 @@ int open (const char *file, int oflag, ...)
         }
     }
 
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
 
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -211,8 +230,10 @@ int open64 (const char *file, int oflag, ...)
         }
     }
 
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
 
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -243,8 +264,10 @@ int openat (int fd, const char *file, int oflag, ...)
         }
     }
 
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
 
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -274,9 +297,11 @@ int openat64 (int fd, const char *file, int oflag, ...)
             return -1;
         }
     }
-
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+    else
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
 
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -307,8 +332,7 @@ int creat (const char *file, mode_t mode)
         }
     }
 
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = creat_real(file, mode);
     return fd;
@@ -324,8 +348,7 @@ int creat64 (const char *file, mode_t mode)
         }
     }
 
-    /* Again, debuglog is calling open, so we cannot call it right now */
-    //debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = creat64_real(file, mode);
     return fd;
@@ -334,22 +357,21 @@ int creat64 (const char *file, mode_t mode)
 ssize_t write (int fd, const void *buf, size_t n)
 {
     if (!write_real) return n;
-    //DEBUGLOGCALL(LCF_FILEIO);
-    //printBacktrace();
+    DEBUGLOGCALL(LCF_FILEIO);
     return write_real(fd, buf, n);
 }
 
 ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
 {
     if (!pwrite_real) return n;
-    //DEBUGLOGCALL(LCF_FILEIO);
+    DEBUGLOGCALL(LCF_FILEIO);
     return pwrite_real(fd, buf, n, offset);
 }
 
 ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
 {
     if (!pwrite64_real) return n;
-    //DEBUGLOGCALL(LCF_FILEIO);
+    DEBUGLOGCALL(LCF_FILEIO);
     return pwrite64_real(fd, buf, n, offset);
 }
 

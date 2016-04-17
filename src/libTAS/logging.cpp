@@ -22,8 +22,9 @@
 #include "threads.h"
 #include "../shared/tasflags.h"
 #include "unistd.h" // For isatty
+#include <cstdarg>
 
-void debuglogverbose(LogCategoryFlag lcf, std::string str)
+void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
 {
     std::ostringstream oss;
 
@@ -58,11 +59,33 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str)
         /* Output arguments */
         oss << str << std::endl;
 
-        std::cerr << oss.str();
+        outstr = oss.str();
     }
 }
 
+void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
+{
+    /* Not printing anything if thread state is set to NOLOG */
+    if (threadState.isNoLog())
+        return;
 
+    /* We avoid recursive loops by protecting eventual recursive calls to debuglog
+     * in the following code
+     */
+    threadState.setNoLog(true);
+    /* Build main log string */
+    char s[2048];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(s, 2048, fmt, args);
+    va_end(args);
+
+    std::string str(s);
+    std::string outstr;
+    debuglogverbose(lcf, str, outstr);
+    fprintf(stderr, outstr.c_str());
+    threadState.setNoLog(false);
+}
 
 /* Print long integers as string for shorter ids. Use base64 */
 std::string stringify(unsigned long int id)
