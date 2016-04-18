@@ -47,7 +47,7 @@ void (*SDL_Init_real)(unsigned int flags) = nullptr;
 int (*SDL_InitSubSystem_real)(Uint32 flags) = nullptr;
 void (*SDL_Quit_real)(void) = nullptr;
 
-void __attribute__((constructor (101))) init(void)
+void __attribute__((constructor)) init(void)
 {
     bool didConnect = initSocket();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
@@ -70,6 +70,7 @@ void __attribute__((constructor (101))) init(void)
     /* Receive information from the program */
     int message;
     receiveData(&message, sizeof(int));
+    libraries = new std::vector<std::string>;
     while (message != MSGN_END_INIT) {
         std::vector<char> buf;
         std::string libstring;
@@ -95,7 +96,7 @@ void __attribute__((constructor (101))) init(void)
                 buf.resize(lib_len, 0x00);
                 receiveData(&(buf[0]), lib_len);
                 libstring.assign(&(buf[0]), buf.size());
-                libraries.push_back(libstring);
+                libraries->push_back(libstring);
                 debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;
             default:

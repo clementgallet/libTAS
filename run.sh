@@ -10,6 +10,7 @@ Usage ()
     echo "  -d, --dump FILE     Start a audio/video encode into the specified FILE"
     echo "  -r, --read MOVIE    Play game inputs from MOVIE file"
     echo "  -w, --write MOVIE   Record game inputs into the specified MOVIE file"
+    echo "  -l, --lib     PATH  Manually import a library"
     echo "  -L, --libpath PATH  Indicate a path to additional libraries the game"
     echo "                      will want to import."
     echo "  -R, --runpath PATH  From which directory the game must be launched."
@@ -22,6 +23,7 @@ movieopt=
 dumpopt=
 libdir=
 rundir=
+SHLIBS=
 
 # Parse command-line arguments
 while [ $# -gt 0 ]
@@ -38,6 +40,9 @@ do
                     ;;
     -w | --write)   shift
                     movieopt="-w $1"
+                    ;;
+    -l | --lib)     shift
+                    SHLIBS="${SHLIBS} -l $1"
                     ;;
     -L | --libpath) shift
                     libdir=$1
@@ -70,7 +75,6 @@ export LD_LIBRARY_PATH="$OLDPWD/$libdir:$LD_LIBRARY_PATH"
 
 # Get the list of all shared libraries used by the game
 # Source: http://unix.stackexchange.com/a/101833
-SHLIBS=
 
 mypipe=/tmp/libpipe
 if [ ! -p "$mypipe" ]
@@ -85,11 +89,11 @@ done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
 echo "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath $@ &"
-LD_PRELOAD=$OLDPWD/build/libTAS.so "$OLDPWD/$gamepath" "$@" &
+LD_PRELOAD=$OLDPWD/build32/libTAS.so "$OLDPWD/$gamepath" "$@" &
 cd - > /dev/null
 sleep 1
 
 # Launch the TAS program
 echo "./build/linTAS $SHLIBS $movieopt $dumpopt"
-./build/linTAS $SHLIBS $movieopt $dumpopt
+./build32/linTAS $SHLIBS $movieopt $dumpopt
 

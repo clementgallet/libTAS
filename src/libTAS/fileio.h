@@ -20,6 +20,9 @@
 #ifndef LIBTAS_FILEIO_H_INCLUDED
 #define LIBTAS_FILEIO_H_INCLUDED
 
+#define LIBTAS_DISABLE_FILEIO_HOOKING
+#ifndef LIBTAS_DISABLE_FILEIO_HOOKING
+
 #include "../external/SDL.h"
 #include "global.h"
 #include <cstdio>
@@ -110,7 +113,6 @@ typedef struct SDL_RWops
 OVERRIDE SDL_RWops *SDL_RWFromFile(const char *file, const char *mode);
 OVERRIDE SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose);
 
-void link_sdlfileio(void);
 
 /* Open a file and create a new stream for it. */
 OVERRIDE FILE *fopen (const char *filename, const char *modes);
@@ -130,7 +132,6 @@ OVERRIDE int putc (int c, FILE *stream);
 OVERRIDE size_t fwrite (const void *ptr, size_t size,
 		      size_t n, FILE *s);
 
-void link_stdiofileio(void);
 
 /* Open FILE and return a new file descriptor for it, or -1 on error.
    OFLAG determines the type of access used.  If O_CREAT or O_TMPFILE is set
@@ -166,6 +167,10 @@ OVERRIDE ssize_t pwrite (int fd, const void *buf, size_t n,
 OVERRIDE ssize_t pwrite64 (int fd, const void *buf, size_t n,
 			 __off64_t offset);
 
+#endif
+
+void link_sdlfileio(void);
+void link_stdiofileio(void);
 void link_posixfileio(void);
 
 #endif

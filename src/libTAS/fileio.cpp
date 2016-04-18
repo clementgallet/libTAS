@@ -18,6 +18,10 @@
  */
 
 #include "fileio.h"
+
+#define LIBTAS_DISABLE_FILEIO_HOOKING
+#ifndef LIBTAS_DISABLE_FILEIO_HOOKING
+
 #include "logging.h"
 #include "hook.h"
 #include <cstdarg>
@@ -393,4 +397,12 @@ void link_posixfileio(void)
     LINK_SUFFIX(pwrite, nullptr);
     LINK_SUFFIX(pwrite64, nullptr);
 }
+
+#else
+
+void link_posixfileio(void) {}
+void link_stdiofileio(void) {}
+void link_sdlfileio(void) {}
+
+#endif
 
