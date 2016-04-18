@@ -67,13 +67,12 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
     if (!clock_gettime_real) {
-        /* Some libraries can call this *very* early, so trying to link here */
-        link_time();
-        if (!clock_gettime_real) {
-            tp->tv_sec = 0;
-            tp->tv_nsec = 0;
-            return 0;
-        }
+        /* Some libraries can call this *very* early, and trying to link
+         * results in a crash.
+         */
+        tp->tv_sec = 0;
+        tp->tv_nsec = 0;
+        return 0;
     }
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     if (threadState.isNative()) {
