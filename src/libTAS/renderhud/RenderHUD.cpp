@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_HUD
+
 #include "RenderHUD.h"
 #include "../logging.h"
 #include "../hook.h"
@@ -29,7 +31,7 @@ int (*SDL_UpperBlit_real)(SDL_Surface* src, const SDL_Rect* srcrect, SDL_Surface
 RenderHUD::RenderHUD()
 {
     outline_size = 1;
-    font_size = 30;
+    font_size = 20;
 }
 
 RenderHUD::~RenderHUD()
@@ -92,5 +94,5 @@ void RenderHUD::destroyTextSurface()
     SDL_FreeSurface_real(bg_surf);
 }
 
-
+#endif
 

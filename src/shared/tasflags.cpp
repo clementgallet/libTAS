@@ -28,7 +28,7 @@ struct TasFlags tasflags = {
     //includeFlags   : LCF_FILEIO | LCF_ERROR,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,
-    framerate      : 30,
+    framerate      : 60,
     numControllers : 1
 }; 
 

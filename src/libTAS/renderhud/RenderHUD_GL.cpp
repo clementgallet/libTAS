@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#ifdef LIBTAS_ENABLE_HUD
+#ifdef LIBTAS_ENABLE_HUD
 
 #include "RenderHUD_GL.h"
 #include "../logging.h"
@@ -177,4 +177,6 @@ void RenderHUD_GL::exitRender(void)
 
     glUseProgram_real(oldProgram);
 } 
+
+#endif
 

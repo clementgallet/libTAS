@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#ifdef LIBTAS_ENABLE_HUD
+#ifdef LIBTAS_ENABLE_HUD
 
 #include "RenderHUD_SDL2.h"
 #include "../logging.h"
@@ -58,4 +58,6 @@ void RenderHUD_SDL2::renderText(const char* text, SDL_Color fg_color, SDL_Color 
 
     destroyTextSurface();
 }
+
+#endif
 

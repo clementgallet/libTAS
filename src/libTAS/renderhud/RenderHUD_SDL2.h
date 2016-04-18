@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_HUD
+
 #ifndef LIBTAS_RENDERHUD_SDL2_H_INCL
 #define LIBTAS_RENDERHUD_SDL2_H_INCL
 
@@ -36,5 +38,6 @@ class RenderHUD_SDL2 : public RenderHUD
         SDL_Renderer* renderer;
 };
 
+#endif
 #endif
 

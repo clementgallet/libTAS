@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_HUD
+
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
 
@@ -49,5 +51,6 @@ class RenderHUD
         SDL_Surface* bg_surf;
 };
 
+#endif
 #endif
 

@@ -148,7 +148,8 @@ int sendXid(void)
     SDL_Color fg_color = {255, 255, 255, 0};
     SDL_Color bg_color = {0, 0, 0, 0};
     static RenderHUD_GL renderHUD;
-    renderHUD.renderText("Test test", fg_color, bg_color, 2, 2);
+    std::string text = std::to_string(frame_counter);
+    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
 #endif
 
     if (!skipDraw())
