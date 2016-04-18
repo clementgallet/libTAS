@@ -26,6 +26,7 @@
 #include "frame.h"
 #include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
+#include "renderhud/RenderHUD_SDL2.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -359,6 +360,14 @@ void updateTitle(float fps, float lfps)
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+
+#ifdef LIBTAS_ENABLE_HUD
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    static RenderHUD_SDL2 renderHUD;
+    renderHUD.setRenderer(renderer);
+    renderHUD.renderText("Test test", fg_color, bg_color, 2, 2);
+#endif
 
     if (!skipDraw())
         SDL_RenderPresent_real(renderer);

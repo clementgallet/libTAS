@@ -17,36 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_RENDERHUD_H_INCL
-#define LIBTAS_RENDERHUD_H_INCL
+#ifndef LIBTAS_RENDERHUD_SDL2_H_INCL
+#define LIBTAS_RENDERHUD_SDL2_H_INCL
 
+#include "RenderHUD.h"
 #include "../../external/SDL.h"
-#include "sdl_ttf.h"
+#include "../windows.h"
 
-class RenderHUD
+class RenderHUD_SDL2 : public RenderHUD
 {
     public:
-        RenderHUD();
-        virtual ~RenderHUD();
-
-        virtual void init();
-        virtual void init(const char* path);
-
-        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) = 0;
-
-    protected:
-        SDL_Surface* createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color);
-        void destroyTextSurface();
+        ~RenderHUD_SDL2();
+        void init(void);
+        void setRenderer(SDL_Renderer* r);
+        void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y);
 
     private:
-        int outline_size;
-        int font_size;
-
-        TTF_Font* fg_font;
-        TTF_Font* bg_font;
-
-        SDL_Surface* fg_surf;
-        SDL_Surface* bg_surf;
+        SDL_Renderer* renderer;
 };
 
 #endif
