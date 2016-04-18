@@ -144,8 +144,9 @@ int sendXid(void)
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
 #ifdef LIBTAS_ENABLE_HUD
-    SDL_Color color = {255, 0, 0, 0};
-    RenderText("Test test", 640, 480, color, 2, 2);
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    RenderText("Test test", 1024, 768, fg_color, bg_color, 2, 2);
 #endif
 
     if (!skipDraw())

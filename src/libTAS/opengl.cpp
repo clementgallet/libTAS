@@ -46,6 +46,10 @@ void (*glBlendFunc_real)(int sfactor, int dfactor);
 void (*glTexParameteri_real)(int target, int pname, int param);
 void (*glGetIntegerv_real)( int pname, GLint* data);
 void (*glGetBooleanv_real)( int pname, GLboolean* data);
+void (*glUseProgram_real)(unsigned int program);
+int (*SDL_SetSurfaceBlendMode_real)(SDL_Surface* surface, SDL_BlendMode blendMode);
+int (*SDL_UpperBlit_real)(SDL_Surface* src, const SDL_Rect* srcrect, SDL_Surface* dst,SDL_Rect* dstrect);
+
 
 /* Link function pointers to real opengl functions */
 void link_opengl(void)
@@ -71,10 +75,16 @@ void link_opengl(void)
     LINK_SUFFIX(glTexParameteri, "libGL");
     LINK_SUFFIX(glGetIntegerv, "libGL");
     LINK_SUFFIX(glGetBooleanv, "libGL");
+    LINK_SUFFIX(glUseProgram, "libGL");
+    LINK_SUFFIX_SDL2(SDL_SetSurfaceBlendMode);
+    LINK_SUFFIX_SDL2(SDL_UpperBlit);
 }
 
 /* Font used for displaying HUD on top of the game window */
 TTF_Font *font = NULL;
+TTF_Font *font_outline = NULL;
+
+static int outline_size = 1;
 
 void initTTF(void)
 {
@@ -91,6 +101,14 @@ void initTTF(void)
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
         exit(1);
     }
+
+    font_outline = TTF_OpenFont("/home/clement/libTAS/src/external/GenBkBasR.ttf", 30);
+    if (font_outline == NULL) {
+        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
+        exit(1);
+    }
+
+    TTF_SetFontOutline( font_outline, outline_size );
 }
 
 void finiTTF(void)
@@ -102,12 +120,16 @@ void finiTTF(void)
 /* Render a text on top of the game window 
  * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
  */
-void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int y) {
+void RenderText(const char* message, int sw, int sh, SDL_Color fg_color, SDL_Color bg_color, int x, int y) {
     static int inited = 0;
     if (inited == 0) {
         initTTF();
         inited = 1;
     }
+
+    GLint current_program;
+    glGetIntegerv_real(GL_CURRENT_PROGRAM, &current_program);
+    glUseProgram_real(0);
 
     glMatrixMode_real(GL_PROJECTION);
     glPushMatrix_real();
@@ -116,7 +138,7 @@ void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int
     glOrtho_real(0, sw, sh, 0, -1, 1); // m_Width and m_Height is the resolution of window
 
     glMatrixMode_real(GL_MODELVIEW);
-    //glPushMatrix_real();
+    glPushMatrix_real();
     glLoadIdentity_real();
 
     glDisable_real(GL_DEPTH_TEST);
@@ -143,15 +165,24 @@ void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int
 
     /* Create text texture */
     //#if 0
-    GLuint texture;
-    glGenTextures_real(1, &texture);
+    static GLuint texture = 0;
+    if (texture == 0) {
+        glGenTextures_real(1, &texture);
+    }
     glBindTexture_real(GL_TEXTURE_2D, texture);
 
-    SDL_Surface * sFont = TTF_RenderText_Blended(font, message, color);
+    SDL_Surface * sFont = TTF_RenderText_Blended(font, message, fg_color);
+    SDL_Surface * sFont_outline = TTF_RenderText_Blended(font_outline, message, bg_color);
+    SDL_Rect rect = {outline_size, outline_size, sFont->w, sFont->h};
+
+/* blit text onto its outline */
+    SDL_SetSurfaceBlendMode_real(sFont, SDL_BLENDMODE_BLEND);
+    SDL_UpperBlit_real(sFont, NULL, sFont_outline, &rect);
+    SDL_FreeSurface_real(sFont);
 
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D_real(GL_TEXTURE_2D, 0, GL_RGBA, sFont->w, sFont->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, sFont->pixels);
+    glTexImage2D_real(GL_TEXTURE_2D, 0, GL_RGBA, sFont_outline->w, sFont_outline->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, sFont_outline->pixels);
 
     glBegin_real(GL_QUADS);
     {
@@ -180,10 +211,12 @@ void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int
     glMatrixMode_real(GL_PROJECTION);
     glPopMatrix_real();
     glMatrixMode_real(GL_MODELVIEW);
-    //glPopMatrix_real();
+    glPopMatrix_real();
 
-    glDeleteTextures_real(1, &texture);
-    SDL_FreeSurface_real(sFont);
+    glUseProgram_real(current_program);
+    
+    //glDeleteTextures_real(1, &texture);
+    SDL_FreeSurface_real(sFont_outline);
 }
 
 #endif

@@ -13,6 +13,8 @@
 -- https://www.libsdl.org/projects/SDL_ttf/
 -- https://github.com/icebreaker/Gwen
 -- http://cegui.org.uk/wiki/Main_Page
+--- http://cegui.org.uk/wiki/The_Beginner_Guide_to_Getting_CEGUI_Rendering
+--- https://bitbucket.org/cegui/cegui/src/63f5e40d6d53f6e8cc652b2cc3cec95c09ce2e54/cegui/src/RendererModules/OpenGL/GLRenderer.cpp
 - Add a memory watch/search module
 - Add an interface (ncurses?)
 - Add config file for hotkeys and key remapping (libconfig?)

@@ -33,7 +33,7 @@ void finiTTF(void);
 /* Build and display an openGL texture containing the specified text
  * For now, does not really work.
  */
-void RenderText(const char* message, int sw, int sh, SDL_Color color, int x, int y);
+void RenderText(const char* message, int sw, int sh, SDL_Color fg_color, SDL_Color bg_color, int x, int y);
 
 #endif
 #endif
