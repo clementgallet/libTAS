@@ -25,6 +25,7 @@
 #include "frame.h"
 #include "time.h" // clock_gettime_real
 #include "audio/AudioContext.h"
+#include "ThreadState.h"
 
 #define MAX_NONFRAME_GETTIMES 4000
 
@@ -33,11 +34,22 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
+    /* If we are in the native thread state, just return the real time */
+    if (threadState.isNative()) {
+        struct timespec realtime;
+        clock_gettime_real(CLOCK_REALTIME, &realtime);
+        return realtime;
+    }
+
     if(tasflags.framerate == 0) {
         return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
     bool isFrameThread = isMainThread();
+
+    /* If it is our own code calling this, we don't need to track the call */
+    if (threadState.isOwnCode())
+        type = TIMETYPE_UNTRACKED;
 
     /* Only the main thread can modify the timer */
     if(!isFrameThread) {
@@ -108,6 +120,10 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
     if(tasflags.framerate == 0) // 0 framerate means disable deterministic timer
         return nonDetTimer.addDelay(delayTicks);
+
+    /* We don't handle wait if it is our own code calling this. */
+    if (threadState.isOwnCode())
+        return;
 
     /* Deferring as much of the delay as possible
      * until the place where the regular per-frame delay is applied

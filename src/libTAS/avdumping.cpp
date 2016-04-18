@@ -32,6 +32,8 @@ extern "C" {
 #include "videocapture.h"
 #include "audio/AudioContext.h"
 #include "../shared/tasflags.h"
+#include "ThreadState.h"
+
 
 AVFrame* video_frame;
 AVFrame* audio_frame;
@@ -113,8 +115,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     video_st->codec->bit_rate = 400000;
     video_st->codec->width = width;
     video_st->codec->height = height;
-    video_st->time_base = (AVRational){1,tasflags.framerate};
-    video_st->codec->time_base = (AVRational){1,tasflags.framerate};
+    video_st->time_base = (AVRational){1,(int)tasflags.framerate};
+    video_st->codec->time_base = (AVRational){1,(int)tasflags.framerate};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
     video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -218,20 +220,24 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     }
 
     /* Print informations on input and output streams */
+    threadState.setOwnCode(true); // We protect the following code because it performs IO that we hook
     av_dump_format(formatContext, 0, dumpfile, 1);
     
     /* Set up output file */
     if (avio_open(&formatContext->pb, dumpfile, AVIO_FLAG_WRITE) < 0) {
+        threadState.setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
         return 1;
     }
 
     /* Write header */
     if (avformat_write_header(formatContext, NULL) < 0) {
+        threadState.setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not write header");
         return 1;
     }
 
+    threadState.setOwnCode(false);
     return 0;
 }
 

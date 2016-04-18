@@ -24,6 +24,7 @@
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
 #include "backtrace.h"
+#include "ThreadState.h"
 
 /* Frame counter */
 unsigned long frame_counter = 0;
@@ -33,8 +34,9 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ time_t time(time_t* t)
 {
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(TIMETYPE_TIME);
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec);
     if (t)
         *t = ts.tv_sec;
     return ts.tv_sec;
@@ -42,9 +44,11 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
 {
-    //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
+    //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     //printBacktrace();
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
@@ -53,23 +57,33 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ clock_t clock (void)
 {
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(TIMETYPE_CLOCK);
     clock_t clk = (clock_t)(((double)ts.tv_sec + (double) (ts.tv_nsec) / 1000000000) * CLOCKS_PER_SEC);
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call - returning ", clk);
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", clk);
     return clk;
 }
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    if (!libTAS_init) {
-        tp->tv_sec = 0;
-        tp->tv_nsec = 0;
-        return 0;
+    if (!clock_gettime_real) {
+        /* Some libraries can call this *very* early, so trying to link here */
+        link_time();
+        if (!clock_gettime_real) {
+            tp->tv_sec = 0;
+            tp->tv_nsec = 0;
+            return 0;
+        }
     }
-    *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
-    //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    //clock_gettime_real(clock_id, tp);
-    debuglog(LCF_TIMEGET | LCF_FREQUENT, __func__, " call, returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    if (threadState.isNative()) {
+        clock_gettime_real(clock_id, tp);
+    }
+    else {
+        //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
+    }
+    debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;
 }
 
@@ -85,11 +99,12 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     ts.tv_sec = sleep / 1000;
     ts.tv_nsec = (sleep % 1000) * 1000000;
 
-    /* If the function was called from the main thread,
+    /* If the function was called from the main thread
+     * and we are not in the native thread state,
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (sleep && mainT) {
+    if (sleep && mainT && !threadState.isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -107,11 +122,12 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     ts.tv_sec = usec / 1000000;
     ts.tv_nsec = (usec % 1000000) * 1000;
 
-    /* If the function was called from the main thread,
+    /* If the function was called from the main thread
+     * and we are not in the native thread state,
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (usec && mainT) {
+    if (usec && mainT && !threadState.isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -126,11 +142,12 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     bool mainT = isMainThread();
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
 
-    /* If the function was called from the main thread,
+    /* If the function was called from the main thread
+     * and we are not in the native thread state,
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (mainT) {
+    if (mainT && !threadState.isNative()) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
         return nanosleep_real(&owntime, remaining);
@@ -150,18 +167,17 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
 
 /* Override */ Uint64 SDL_GetPerformanceFrequency(void)
 {
-    //Uint64 freq = SDL_GetPerformanceFrequency_real();
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call.");
     return 1000000000;
 }
+
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
-    //Uint64 counter = SDL_GetPerformanceCounter_real();
-    
+    DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET | LCF_FRAME);
     struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call, returning ", counter);
+    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "  returning ", counter);
     return counter;
 }
 

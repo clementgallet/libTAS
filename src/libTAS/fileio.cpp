@@ -356,7 +356,13 @@ int creat64 (const char *file, mode_t mode)
 
 ssize_t write (int fd, const void *buf, size_t n)
 {
-    if (!write_real) return n;
+    if (!write_real) {
+        link_posixfileio();
+        if (!write_real) {
+            printf("Failed to link write\n");
+            return -1;
+        }
+    }
     DEBUGLOGCALL(LCF_FILEIO);
     return write_real(fd, buf, n);
 }
