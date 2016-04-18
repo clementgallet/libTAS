@@ -17,23 +17,37 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_OPENGL_H_INCL
-#define LIBTAS_OPENGL_H_INCL
+#ifndef LIBTAS_RENDERHUD_H_INCL
+#define LIBTAS_RENDERHUD_H_INCL
 
-#ifdef LIBTAS_ENABLE_HUD
-
+#include "../../external/SDL.h"
 #include "sdl_ttf.h"
 
-/* Link to openGL functions */
-void link_opengl(void);
+class RenderHUD
+{
+    public:
+        RenderHUD();
+        virtual ~RenderHUD();
 
-void initTTF(void);
-void finiTTF(void);
+        void init();
+        void init(const char* path);
 
-/* Build and display an openGL texture containing the specified text
- * For now, does not really work.
- */
-void RenderText(const char* message, int sw, int sh, SDL_Color fg_color, SDL_Color bg_color, int x, int y);
+        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) = 0;
+
+    protected:
+        SDL_Surface* createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color);
+        void destroyTextSurface();
+
+    private:
+        int outline_size;
+        int font_size;
+
+        TTF_Font* fg_font;
+        TTF_Font* bg_font;
+
+        SDL_Surface* fg_surf;
+        SDL_Surface* bg_surf;
+};
 
 #endif
-#endif
+

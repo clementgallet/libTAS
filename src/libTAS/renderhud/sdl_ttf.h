@@ -33,7 +33,8 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "hook.h"
+#include "../hook.h"
+#include "../../external/SDL.h"
 #include <stdio.h>
 
 extern void (*SDL_FreeSurface_real)(SDL_Surface * surface);

@@ -17,12 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "opengl.h"
+//#ifdef LIBTAS_ENABLE_HUD
 
-#ifdef LIBTAS_ENABLE_HUD
-
-#include "../external/gl.h"
-#include "logging.h"
+#include "RenderHUD_GL.h"
+#include "../logging.h"
+#include "../hook.h"
 
 void (*glGenTextures_real)(int n, unsigned int* tex);
 void (*glBindTexture_real)(int target, unsigned int tex);
@@ -47,13 +46,18 @@ void (*glTexParameteri_real)(int target, int pname, int param);
 void (*glGetIntegerv_real)( int pname, GLint* data);
 void (*glGetBooleanv_real)( int pname, GLboolean* data);
 void (*glUseProgram_real)(unsigned int program);
-int (*SDL_SetSurfaceBlendMode_real)(SDL_Surface* surface, SDL_BlendMode blendMode);
-int (*SDL_UpperBlit_real)(SDL_Surface* src, const SDL_Rect* srcrect, SDL_Surface* dst,SDL_Rect* dstrect);
 
-
-/* Link function pointers to real opengl functions */
-void link_opengl(void)
+RenderHUD_GL::~RenderHUD_GL()
 {
+    /* We should destroy our created GL texture here,
+     * but they are not handled yet.
+     */
+}
+
+void RenderHUD_GL::init()
+{
+    RenderHUD::init();
+
     LINK_SUFFIX(glGenTextures, "libGL");
     LINK_SUFFIX(glBindTexture, "libGL");
     LINK_SUFFIX(glTexImage2D, "libGL");
@@ -76,66 +80,21 @@ void link_opengl(void)
     LINK_SUFFIX(glGetIntegerv, "libGL");
     LINK_SUFFIX(glGetBooleanv, "libGL");
     LINK_SUFFIX(glUseProgram, "libGL");
-    LINK_SUFFIX_SDL2(SDL_SetSurfaceBlendMode);
-    LINK_SUFFIX_SDL2(SDL_UpperBlit);
 }
 
-/* Font used for displaying HUD on top of the game window */
-TTF_Font *font = NULL;
-TTF_Font *font_outline = NULL;
-
-static int outline_size = 1;
-
-void initTTF(void)
+void RenderHUD_GL::enterRender(void)
 {
-    link_opengl(); // TODO: Put this when creating the opengl context
-
-    /* Initialize SDL TTF */
-    if(TTF_Init() == -1) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
-        exit(1);
-    }
-
-    font = TTF_OpenFont("/home/clement/libTAS/src/external/GenBkBasR.ttf", 30);
-    if (font == NULL) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
-        exit(1);
-    }
-
-    font_outline = TTF_OpenFont("/home/clement/libTAS/src/external/GenBkBasR.ttf", 30);
-    if (font_outline == NULL) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
-        exit(1);
-    }
-
-    TTF_SetFontOutline( font_outline, outline_size );
-}
-
-void finiTTF(void)
-{
-    TTF_CloseFont(font);
-    TTF_Quit();
-}
-
-/* Render a text on top of the game window 
- * Taken from http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl
- */
-void RenderText(const char* message, int sw, int sh, SDL_Color fg_color, SDL_Color bg_color, int x, int y) {
-    static int inited = 0;
-    if (inited == 0) {
-        initTTF();
-        inited = 1;
-    }
-
-    GLint current_program;
-    glGetIntegerv_real(GL_CURRENT_PROGRAM, &current_program);
+    glGetIntegerv_real(GL_CURRENT_PROGRAM, &oldProgram);
     glUseProgram_real(0);
+
+    GLint viewport[4];
+    glGetIntegerv_real(GL_VIEWPORT, viewport);
 
     glMatrixMode_real(GL_PROJECTION);
     glPushMatrix_real();
     glLoadIdentity_real();
-    //glOrtho_real(0, sw, 0, sh, -1, 1); // m_Width and m_Height is the resolution of window
-    glOrtho_real(0, sw, sh, 0, -1, 1); // m_Width and m_Height is the resolution of window
+    //glOrtho_real(0, sw, sh, 0, -1, 1);
+    glOrtho_real(0, viewport[2], viewport[3], 0, -1, 1);
 
     glMatrixMode_real(GL_MODELVIEW);
     glPushMatrix_real();
@@ -143,80 +102,79 @@ void RenderText(const char* message, int sw, int sh, SDL_Color fg_color, SDL_Col
 
     glDisable_real(GL_DEPTH_TEST);
 
-    GLboolean tex2DEnabled;
-    glGetBooleanv_real(GL_TEXTURE_2D, &tex2DEnabled);
+    glGetBooleanv_real(GL_TEXTURE_2D, &oldTex2DEnabled);
 
     glEnable_real(GL_TEXTURE_2D);
 
-    GLboolean blendEnabled;
-    glGetBooleanv_real(GL_BLEND, &blendEnabled);
+    glGetBooleanv_real(GL_BLEND, &oldBlendEnabled);
 
-    GLint blendSrc;
-    GLint blendDst;
-    glGetIntegerv_real(GL_BLEND_SRC_ALPHA, &blendSrc);
-    glGetIntegerv_real(GL_BLEND_DST_ALPHA, &blendDst);
+    glGetIntegerv_real(GL_BLEND_SRC_ALPHA, &oldBlendSrc);
+    glGetIntegerv_real(GL_BLEND_DST_ALPHA, &oldBlendDst);
 
     glEnable_real(GL_BLEND);
     glBlendFunc_real(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Get previous blind texture */
-    GLint last_tex = 0;
-    glGetIntegerv_real(GL_TEXTURE_BINDING_2D, &last_tex);
+    glGetIntegerv_real(GL_TEXTURE_BINDING_2D, &oldTex);
+}
 
-    /* Create text texture */
-    //#if 0
+void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
+{
+    static int inited = 0;
+    if (inited == 0) {
+        init();
+        inited = 1;
+    }
+
+    enterRender();
+
+    /* TODO: Manage GL textures!!! */
     static GLuint texture = 0;
     if (texture == 0) {
         glGenTextures_real(1, &texture);
     }
     glBindTexture_real(GL_TEXTURE_2D, texture);
 
-    SDL_Surface * sFont = TTF_RenderText_Blended(font, message, fg_color);
-    SDL_Surface * sFont_outline = TTF_RenderText_Blended(font_outline, message, bg_color);
-    SDL_Rect rect = {outline_size, outline_size, sFont->w, sFont->h};
-
-/* blit text onto its outline */
-    SDL_SetSurfaceBlendMode_real(sFont, SDL_BLENDMODE_BLEND);
-    SDL_UpperBlit_real(sFont, NULL, sFont_outline, &rect);
-    SDL_FreeSurface_real(sFont);
+    SDL_Surface* surf = createTextSurface(text, fg_color, bg_color);
 
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D_real(GL_TEXTURE_2D, 0, GL_RGBA, sFont_outline->w, sFont_outline->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, sFont_outline->pixels);
+
+    /* TODO: We should lock the surface I guess */
+    glTexImage2D_real(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
 
     glBegin_real(GL_QUADS);
     {
         glTexCoord2f_real(0,0); glVertex2f_real(x, y);
-        glTexCoord2f_real(1,0); glVertex2f_real(x + sFont->w, y);
-        glTexCoord2f_real(1,1); glVertex2f_real(x + sFont->w, y + sFont->h);
-        glTexCoord2f_real(0,1); glVertex2f_real(x, y + sFont->h);
+        glTexCoord2f_real(1,0); glVertex2f_real(x + surf->w, y);
+        glTexCoord2f_real(1,1); glVertex2f_real(x + surf->w, y + surf->h);
+        glTexCoord2f_real(0,1); glVertex2f_real(x, y + surf->h);
     }
     glEnd_real();
 
-    if (last_tex != 0) {
-        glBindTexture_real(GL_TEXTURE_2D, last_tex);
+    destroyTextSurface();
+
+    exitRender();
+}
+
+void RenderHUD_GL::exitRender(void)
+{
+    if (oldTex != 0) {
+        glBindTexture_real(GL_TEXTURE_2D, oldTex);
     }
 
-    //#endif
-
-    if (! blendEnabled )
+    if (! oldBlendEnabled )
         glDisable_real(GL_BLEND);
-    glBlendFunc_real(blendSrc, blendDst);
+    glBlendFunc_real(oldBlendSrc, oldBlendDst);
 
-    if (! tex2DEnabled )
+    if (! oldTex2DEnabled )
         glDisable_real(GL_TEXTURE_2D);
-
-    //glEnable_real(GL_DEPTH_TEST);
 
     glMatrixMode_real(GL_PROJECTION);
     glPopMatrix_real();
     glMatrixMode_real(GL_MODELVIEW);
     glPopMatrix_real();
 
-    glUseProgram_real(current_program);
-    
-    //glDeleteTextures_real(1, &texture);
-    SDL_FreeSurface_real(sFont_outline);
-}
+    glUseProgram_real(oldProgram);
+} 
 
-#endif

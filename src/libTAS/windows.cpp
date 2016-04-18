@@ -25,7 +25,7 @@
 #include "../shared/tasflags.h"
 #include "frame.h"
 #include "libTAS.h"
-#include "opengl.h"
+#include "renderhud/RenderHUD_GL.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -146,7 +146,8 @@ int sendXid(void)
 #ifdef LIBTAS_ENABLE_HUD
     SDL_Color fg_color = {255, 255, 255, 0};
     SDL_Color bg_color = {0, 0, 0, 0};
-    RenderText("Test test", 1024, 768, fg_color, bg_color, 2, 2);
+    static RenderHUD_GL renderHUD;
+    renderHUD.renderText("Test test", fg_color, bg_color, 2, 2);
 #endif
 
     if (!skipDraw())
