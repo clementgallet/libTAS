@@ -18,6 +18,7 @@
  */
 
 #include "backtrace.h"
+#include "ThreadState.h"
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <iostream>
@@ -39,6 +40,7 @@ static std::string demangle( const char* const symbol )
 
 void printBacktrace(void)
 {
+    threadState.setNoLog(true);
     void* addresses[256];
     const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
     const std::unique_ptr< char*, decltype( &std::free ) > symbols(
@@ -73,5 +75,6 @@ void printBacktrace(void)
         }
         std::cerr << std::endl;
     }
+    threadState.setNoLog(false);
 }
 

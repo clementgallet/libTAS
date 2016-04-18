@@ -49,7 +49,6 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
 
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
-    //printBacktrace();
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
     return 0;
@@ -75,6 +74,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
         return 0;
     }
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    //printBacktrace();
     if (threadState.isNative()) {
         clock_gettime_real(clock_id, tp);
     }

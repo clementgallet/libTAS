@@ -38,7 +38,9 @@ struct AllInputs game_ai;
 void generateKeyUpEvents(void)
 {
     int i, j;
-    struct timespec time;
+    threadState.setOwnCode(true);
+    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -56,7 +58,6 @@ void generateKeyUpEvents(void)
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
                 event2.key.windowID = SDL_GetWindowID_real(gameWindow);
-                time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
@@ -95,7 +96,10 @@ void generateKeyUpEvents(void)
 void generateKeyDownEvents(void)
 {
     int i,j,k;
-	struct timespec time;
+    threadState.setOwnCode(true);
+	struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
+
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -113,7 +117,6 @@ void generateKeyDownEvents(void)
                 event2.type = SDL_KEYDOWN;
                 event2.key.state = SDL_PRESSED;
                 event2.key.windowID = SDL_GetWindowID_real(gameWindow);
-                time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
@@ -156,7 +159,9 @@ void generateControllerAdded(void)
     if (SDLver == 1)
         return;
 
+    threadState.setOwnCode(true);
     struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < tasflags.numControllers; i++) {
@@ -175,7 +180,9 @@ void generateControllerAdded(void)
 
 void generateControllerEvents(void)
 {
+    threadState.setOwnCode(true);
     struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<tasflags.numControllers; ji++) {
@@ -186,8 +193,10 @@ void generateControllerEvents(void)
          * in the SDL documentation. The game must then call
          * SDL_[Joystick/GameController]Update to update the joystick state.
          */
+        threadState.setOwnCode(true);
         bool genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
         bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
+        threadState.setOwnCode(false);
         if (!genGC && !genJoy)
             continue;
 
@@ -380,7 +389,9 @@ void generateMouseMotionEvents(void)
     if (SDLver == 2) {
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
+        threadState.setOwnCode(true);
         struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        threadState.setOwnCode(false);
         event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
         event2.motion.windowID = SDL_GetWindowID_real(gameWindow);
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
@@ -439,7 +450,9 @@ void generateMouseMotionEvents(void)
 
 void generateMouseButtonEvents(void)
 {
-    struct timespec time;
+    threadState.setOwnCode(true);
+    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
 
     static int xbuttons[] = {Button1Mask,
         Button2Mask, Button3Mask,
@@ -468,7 +481,6 @@ void generateMouseButtonEvents(void)
                     event2.button.state = SDL_RELEASED;
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
                 }
-                time = detTimer.getTicks(TIMETYPE_UNTRACKED);
                 event2.button.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                 event2.button.windowID = SDL_GetWindowID_real(gameWindow);
                 event2.button.which = 0; // TODO: Same as above...
