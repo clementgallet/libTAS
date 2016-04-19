@@ -282,6 +282,19 @@ typedef enum {
 	SDL_GRAB_ON = 1,
 	SDL_GRAB_FULLSCREEN	/**< Used internally */
 } SDL_GrabMode;
+
+/**
+ * On hardware that supports double-buffering, this function sets up a flip
+ * and returns.  The hardware will wait for vertical retrace, and then swap
+ * video buffers before the next video surface blit or lock will return.
+ * On hardware that doesn not support double-buffering, this is equivalent
+ * to calling SDL_UpdateRect(screen, 0, 0, 0, 0);
+ * The SDL_DOUBLEBUF flag must have been passed to SDL_SetVideoMode() when
+ * setting the video mode for this function to perform hardware flipping.
+ * This function returns 0 if successful, or -1 if there was an error.
+ */
+OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
+
 /**
  * This function allows you to set and query the input grab state of
  * the application.  It returns the new input grab state.

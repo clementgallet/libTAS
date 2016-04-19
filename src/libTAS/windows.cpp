@@ -65,6 +65,7 @@ void (*SDL_RenderPresent_real)(SDL_Renderer * renderer);
 
 SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
 void (*SDL_GL_SwapBuffers_real)(void);
+int (*SDL_Flip_real)(SDL1::SDL_Surface *screen);
 
 /* Deciding if we actually draw the frame */
 static bool skipDraw(void)
@@ -367,7 +368,8 @@ void updateTitle(float fps, float lfps)
     SDL_Color bg_color = {0, 0, 0, 0};
     static RenderHUD_SDL2 renderHUD;
     renderHUD.setRenderer(renderer);
-    renderHUD.renderText("Test test", fg_color, bg_color, 2, 2);
+    std::string text = std::to_string(frame_counter);
+    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
 #endif
 
     if (!skipDraw())
@@ -434,6 +436,33 @@ void updateTitle(float fps, float lfps)
     return surf;
 }
 
+/* Override */ int SDL_Flip(SDL1::SDL_Surface *screen)
+{
+    debuglog(LCF_SDL | LCF_FRAME | LCF_WINDOW, __func__, " call.");
+
+    int ret = 0;
+    if (!skipDraw())
+        ret = SDL_Flip_real(screen);
+
+    /* SDL 1.2 does only have one window,
+     * thus it does not provide any access to window identifiers.
+     * We need to pass a window id to linTAS so that it can capture inputs.
+     * In our case, let's just pass a dummy value indicating that
+     * we could not get access to it.
+     * It will have to guess it, probably by getting the active window
+     */
+    if (!gw_sent) {
+        Window w = 0;
+        sendMessage(MSGB_WINDOW_ID);
+        sendData(&w, sizeof(Window));
+        gw_sent = 1;
+        debuglog(LCF_SDL, "Send dummy X11 window id.");
+    }
+    frameBoundary(true);
+
+    return ret;
+}
+
 /* Override */ SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, __func__, " call with mode ", mode);
@@ -449,6 +478,7 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL1(SDL_GL_SwapBuffers);
         LINK_SUFFIX_SDL1(SDL_SetVideoMode);
         LINK_SUFFIX_SDL1(SDL_WM_SetCaption);
+        LINK_SUFFIX_SDL1(SDL_Flip);
     }
     if (SDLver == 2) {
         LINK_SUFFIX_SDL2(SDL_GL_SwapWindow);
