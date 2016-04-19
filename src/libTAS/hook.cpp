@@ -20,9 +20,8 @@
 #include "hook.h"
 #include "logging.h"
 #include <string>
-#include "dlhook.h"
 
-bool link_function(void** function, const char* source, const char* library)
+bool link_function(void** function, const char* source, const char* library, const char *version /*= nullptr*/)
 {
     /* Test if function is already linked */
     if (*function != nullptr)
@@ -35,10 +34,14 @@ bool link_function(void** function, const char* source, const char* library)
     /* From this function dl* call will refer to real dl functions */
 
     /* First try to link it from the global namespace */
-    *function = dlsym(RTLD_NEXT, source);
+    if (version)
+        *function = dlvsym(RTLD_NEXT, source, version);
+    else
+        *function = dlsym(RTLD_NEXT, source);
 
     if (*function != nullptr) {
         dlleave();
+        debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
         return true;
     }
 
@@ -59,6 +62,7 @@ bool link_function(void** function, const char* source, const char* library)
 
                 if (*function != nullptr) {
                     dlleave();
+                    debuglog(LCF_HOOK, "Imported from lib symbol ", source, " function : ", *function);
                     return true;
                 }
             }

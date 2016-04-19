@@ -21,6 +21,7 @@
 #define LIBTAS_HOOK_H_INCLUDED
 
 #include "../external/SDL.h"
+#include "dlhook.h"
 
 /* Version of the SDL library */
 extern int SDLver;
@@ -39,10 +40,11 @@ namespace orig {
  * @param[in]  library    substring of the name of the library which contains the function
  * @return                whether we successfully accessed to the function
  */
-bool link_function(void** function, const char* source, const char* library);
+bool link_function(void** function, const char* source, const char* library, const char *version = nullptr);
 
 /* Some macros to make the above function easier to use */
 #define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)
+#define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, LIB, V)
 #define LINK_NAMESPACE_SDL1(FUNC) LINK_NAMESPACE(FUNC,"libSDL-1.2")
 #define LINK_NAMESPACE_SDL2(FUNC) LINK_NAMESPACE(FUNC,"libSDL2-2")
 #define LINK_NAMESPACE_SDLX(FUNC) (SDLver==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)

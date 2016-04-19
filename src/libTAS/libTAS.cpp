@@ -36,6 +36,7 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs/inputs.h"
+#include "ThreadManager.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -141,7 +142,8 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Init(unsigned int flags){
     debuglog(LCF_SDL, __func__, " call.");
-
+    debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
+    ThreadManager::get().init(pthread_self());
     /* Get which sdl version we are using.
      * Stores it in an extern variable.
      */
@@ -247,7 +249,7 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
-
+    debuglog(LCF_THREAD, ThreadManager::get().summary());
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* SDL 1.2 does not have a destroy window function,
      * because there is only one window,

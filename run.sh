@@ -5,7 +5,7 @@ rm -f /tmp/libTAS.socket
 
 Usage ()
 {
-    echo "Usage: ./run.sh [options] game_executable_path [game_cmdline_arguments]"
+    echo "Usage: ./run.sh [options] game_executable_relative_path [game_cmdline_arguments]"
     echo "Options are:"
     echo "  -d, --dump FILE     Start a audio/video encode into the specified FILE"
     echo "  -r, --read MOVIE    Play game inputs from MOVIE file"

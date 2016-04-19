@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(libTAS)
-
+# From here : http://stackoverflow.com/questions/28250081/when-should-i-rerun-cmake
+# Note: We do not recommend using GLOB to collect a list of source files from your source tree.
+# If no CMakeLists.txt file changes when a source is added or removed,
+# then the generated build system cannot know when to ask CMake to regenerate.
 file(GLOB_RECURSE lib_sources src/libTAS/*)
 file(GLOB_RECURSE lin_sources src/linTAS/*)
 file(GLOB shared_sources src/shared/*)
