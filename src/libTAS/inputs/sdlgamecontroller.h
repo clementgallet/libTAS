@@ -62,6 +62,20 @@ OVERRIDE SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecon
 OVERRIDE SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joyid);
 
 /**
+ *  Get a mapping string for a GUID
+ *
+ *  \return the mapping string.  Must be freed with SDL_free.  Returns NULL if no mapping is available
+ */
+OVERRIDE char *SDL_GameControllerMappingForGUID( SDL_JoystickGUID guid );
+
+/**
+ *  Get a mapping string for an open GameController
+ *
+ *  \return the mapping string.  Must be freed with SDL_free.  Returns NULL if no mapping is available
+ */
+OVERRIDE char *SDL_GameControllerMapping( SDL_GameController * gamecontroller );
+
+/**
  *  Get the implementation dependent name of a game controller.
  *  This can be called before any controllers are opened.
  *  If no name can be found, this function returns NULL.

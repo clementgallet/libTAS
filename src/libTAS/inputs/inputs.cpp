@@ -195,7 +195,9 @@ void generateControllerEvents(void)
          */
         threadState.setOwnCode(true);
         bool genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
-        bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
+        //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
+        /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
+        bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(&ji) || SDL_GameControllerGetAttached(&ji));
         threadState.setOwnCode(false);
         if (!genGC && !genJoy)
             continue;

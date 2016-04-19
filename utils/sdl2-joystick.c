@@ -8,6 +8,7 @@
 int main()
 {
   SDL_Init(SDL_INIT_JOYSTICK);
+  SDL_Init(SDL_INIT_GAMECONTROLLER);
   atexit(SDL_Quit);
 
   int num_joysticks = SDL_NumJoysticks();
@@ -36,6 +37,13 @@ int main()
       printf("\n");
 
       SDL_JoystickClose(js);
+    }
+    if (SDL_IsGameController(i))
+    {
+        SDL_GameController* gc = SDL_GameControllerOpen(i);
+        char* mapping = SDL_GameControllerMapping(gc);
+        printf("gc mapping: %s\n", mapping);
+        SDL_free(mapping);
     }
   }
 
