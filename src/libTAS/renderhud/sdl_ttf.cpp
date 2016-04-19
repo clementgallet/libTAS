@@ -39,10 +39,6 @@
 
 #include "sdl_ttf.h"
 
-SDL_Surface* (*SDL_CreateRGBSurface_real)(Uint32, int, int, int, Uint32, Uint32, Uint32, Uint32);
-void (*SDL_FreeSurface_real)(SDL_Surface * surface);
-int (*SDL_FillRect_real)(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
-
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using
    supports 256 shades of gray, but we should instead key off of num_grays
    in the result FT_Bitmap after the FT_Render_Glyph() call. */
@@ -174,12 +170,12 @@ static int TTF_strikethrough_top_row(TTF_Font *font)
     return font->height / 2;
 }
 
-static void TTF_initLineMectrics(const TTF_Font *font, const SDL_Surface *textbuf, const int row, Uint8 **pdst, int *pheight)
+static void TTF_initLineMectrics(const TTF_Font *font, const SurfaceARGB *textbuf, const int row, Uint8 **pdst, int *pheight)
 {
     Uint8 *dst;
     int height;
 
-    dst = (Uint8 *)textbuf->pixels;
+    dst = (Uint8 *)textbuf->pixels.data();
     if ( row > 0 ) {
         dst += row * textbuf->pitch;
     }
@@ -197,10 +193,10 @@ static void TTF_initLineMectrics(const TTF_Font *font, const SDL_Surface *textbu
    at the given row. The row value must take the
    outline into account.
 */
-static void TTF_drawLine_Blended(const TTF_Font *font, const SDL_Surface *textbuf, const int row, const Uint32 color)
+static void TTF_drawLine_Blended(const TTF_Font *font, const SurfaceARGB *textbuf, const int row, const Uint32 color)
 {
     int line;
-    Uint32 *dst_check = (Uint32*)textbuf->pixels + textbuf->pitch/4 * textbuf->h;
+    const Uint32 *dst_check = textbuf->pixels.data() + textbuf->pitch/4 * textbuf->h;
     Uint8 *dst8; /* destination, byte version */
     Uint32 *dst;
     int height;
@@ -276,16 +272,6 @@ int TTF_Init( void )
         ++TTF_initialized;
     }
 
-    if (SDLver == 1) {
-        LINK_SUFFIX(SDL_CreateRGBSurface, "libSDL-1.2");
-        LINK_SUFFIX(SDL_FreeSurface, "libSDL-1.2");
-        LINK_SUFFIX(SDL_FillRect, "libSDL-1.2");
-    }
-    if (SDLver == 2) {
-        LINK_SUFFIX(SDL_CreateRGBSurface, "libSDL2-2");
-        LINK_SUFFIX(SDL_FreeSurface, "libSDL2-2");
-        LINK_SUFFIX(SDL_FillRect, "libSDL2-2");
-    }
     return status;
 }
 
@@ -1255,10 +1241,10 @@ int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h)
     return status;
 }
 
-SDL_Surface *TTF_RenderText_Blended(TTF_Font *font,
+SurfaceARGB *TTF_RenderText_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg)
 {
-    SDL_Surface *surface = NULL;
+    SurfaceARGB *surface = NULL;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1273,13 +1259,13 @@ SDL_Surface *TTF_RenderText_Blended(TTF_Font *font,
     return surface;
 }
 
-SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
+SurfaceARGB *TTF_RenderUTF8_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg)
 {
     SDL_bool first;
     int xstart;
     int width, height;
-    SDL_Surface *textbuf;
+    SurfaceARGB *textbuf;
     Uint32 alpha;
     Uint32 pixel;
     Uint8 *src;
@@ -1301,15 +1287,14 @@ SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
     }
 
     /* Create the target surface */
-    textbuf = SDL_CreateRGBSurface_real(SDL_SWSURFACE, width, height, 32,
-                               0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    textbuf = new SurfaceARGB(width, height);
     if ( textbuf == NULL ) {
         return(NULL);
     }
 
     /* Adding bound checking to avoid all kinds of memory corruption errors
        that may occur. */
-    dst_check = (Uint32*)textbuf->pixels + textbuf->pitch/4 * textbuf->h;
+    dst_check = textbuf->pixels.data() + textbuf->pitch/4 * textbuf->h;
 
     /* check kerning */
     use_kerning = FT_HAS_KERNING( font->face ) && font->kerning;
@@ -1319,7 +1304,7 @@ SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
     first = SDL_TRUE;
     xstart = 0;
     pixel = (fg.r<<16)|(fg.g<<8)|fg.b;
-    SDL_FillRect_real(textbuf, NULL, pixel); /* Initialize with fg and 0 alpha */
+    textbuf->fill(pixel); /* Initialize with fg and 0 alpha */
     while ( textlen > 0 ) {
         Uint16 c = UTF8_getch(&text, &textlen);
         if ( c == UNICODE_BOM_NATIVE || c == UNICODE_BOM_SWAPPED ) {
@@ -1329,7 +1314,7 @@ SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
         error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
         if ( error ) {
             TTF_SetFTError("Couldn't find glyph", error);
-            SDL_FreeSurface_real( textbuf );
+            delete textbuf;
             return NULL;
         }
         glyph = font->current;
@@ -1361,7 +1346,7 @@ SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
             if ( row+glyph->yoffset >= textbuf->h ) {
                 continue;
             }
-            dst = (Uint32*) textbuf->pixels +
+            dst = textbuf->pixels.data() +
                 (row+glyph->yoffset) * textbuf->pitch/4 +
                 xstart + glyph->minx;
 
@@ -1396,10 +1381,10 @@ SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font,
     return(textbuf);
 }
 
-SDL_Surface *TTF_RenderUNICODE_Blended(TTF_Font *font,
+SurfaceARGB *TTF_RenderUNICODE_Blended(TTF_Font *font,
                 const Uint16 *text, SDL_Color fg)
 {
-    SDL_Surface *surface = NULL;
+    SurfaceARGB *surface = NULL;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1415,9 +1400,9 @@ SDL_Surface *TTF_RenderUNICODE_Blended(TTF_Font *font,
 }
 
 
-SDL_Surface *TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SDL_Color fg, Uint32 wrapLength)
+SurfaceARGB *TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SDL_Color fg, Uint32 wrapLength)
 {
-    SDL_Surface *surface = NULL;
+    SurfaceARGB *surface = NULL;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1443,13 +1428,13 @@ static SDL_bool CharacterIsDelimiter(char c, const char *delimiters)
     return SDL_FALSE;
 }
 
-SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
+SurfaceARGB *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
                                     const char *text, SDL_Color fg, Uint32 wrapLength)
 {
     SDL_bool first;
     int xstart;
     int width, height;
-    SDL_Surface *textbuf;
+    SurfaceARGB *textbuf;
     Uint32 alpha;
     Uint32 pixel;
     Uint8 *src;
@@ -1554,11 +1539,9 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
     }
 
     /* Create the target surface */
-    textbuf = SDL_CreateRGBSurface_real(SDL_SWSURFACE,
-            (numLines > 1) ? (int)wrapLength : width,
-            height * numLines + (lineSpace * (numLines - 1)),
-            32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    if ( textbuf == NULL ) {
+    textbuf = new SurfaceARGB((numLines > 1) ? (int)wrapLength : width,
+            height * numLines + (lineSpace * (numLines - 1)));
+    if ( textbuf == nullptr ) {
         if ( strLines ) {
             free(strLines);
         }
@@ -1569,14 +1552,14 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
 
     /* Adding bound checking to avoid all kinds of memory corruption errors
      that may occur. */
-    dst_check = (Uint32*)textbuf->pixels + textbuf->pitch/4 * textbuf->h;
+    dst_check = textbuf->pixels.data() + textbuf->pitch/4 * textbuf->h;
 
     /* check kerning */
     use_kerning = FT_HAS_KERNING( font->face ) && font->kerning;
 
     /* Load and render each character */
     pixel = (fg.r<<16)|(fg.g<<8)|fg.b;
-    SDL_FillRect_real(textbuf, NULL, pixel); /* Initialize with fg and 0 alpha */
+    textbuf->fill(pixel); /* Initialize with fg and 0 alpha */
 
     for ( line = 0; line < numLines; line++ ) {
         if ( strLines ) {
@@ -1594,7 +1577,7 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
             error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
             if ( error ) {
                 TTF_SetFTError("Couldn't find glyph", error);
-                SDL_FreeSurface_real( textbuf );
+                delete textbuf;
                 return NULL;
             }
             glyph = font->current;
@@ -1626,7 +1609,7 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
                 if ( row+glyph->yoffset >= textbuf->h ) {
                     continue;
                 }
-                dst =  ((Uint32*)textbuf->pixels + rowSize * line) +
+                dst =  (textbuf->pixels.data() + rowSize * line) +
                 (row+glyph->yoffset) * textbuf->pitch/4 +
                 xstart + glyph->minx;
 
@@ -1668,10 +1651,10 @@ SDL_Surface *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
     return(textbuf);
 }
 
-SDL_Surface *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* text,
+SurfaceARGB *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* text,
                                                SDL_Color fg, Uint32 wrapLength)
 {
-    SDL_Surface *surface = NULL;
+    SurfaceARGB *surface = NULL;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1686,7 +1669,7 @@ SDL_Surface *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* tex
     return surface;
 }
 
-SDL_Surface *TTF_RenderGlyph_Blended(TTF_Font *font, Uint16 ch, SDL_Color fg)
+SurfaceARGB *TTF_RenderGlyph_Blended(TTF_Font *font, Uint16 ch, SDL_Color fg)
 {
     Uint16 ucs2[2] = { ch, 0 };
     Uint8 utf8[4];

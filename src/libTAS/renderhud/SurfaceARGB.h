@@ -19,37 +19,29 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#ifndef LIBTAS_RENDERHUD_H_INCL
-#define LIBTAS_RENDERHUD_H_INCL
+#ifndef LIBTAS_SURFACEARGB_H_INCL
+#define LIBTAS_SURFACEARGB_H_INCL
 
-#include "../../external/SDL.h"
-#include "sdl_ttf.h"
-#include "SurfaceARGB.h"
+#include <cstdint>
+#include <vector>
 
-class RenderHUD
+/* Create a simple ARGB surface class that can be used by sdl_ttf,
+ * instead of the SDL_Surface struct.
+ * This allows to use sdl_ttf without needing any function
+ * from the SDL library.
+ */
+class SurfaceARGB
 {
-    public:
-        RenderHUD();
-        virtual ~RenderHUD();
+	public:
+		int w, h;
+		int pitch;
+        std::vector<uint32_t> pixels;
 
-        virtual void init();
-        virtual void init(const char* path);
+        SurfaceARGB(int width, int height);
 
-        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) = 0;
+		void fill(uint32_t color);
 
-    protected:
-        SurfaceARGB* createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color);
-        void destroyTextSurface();
-
-    private:
-        int outline_size;
-        int font_size;
-
-        TTF_Font* fg_font;
-        TTF_Font* bg_font;
-
-        SurfaceARGB* fg_surf;
-        SurfaceARGB* bg_surf;
+        void blit(SurfaceARGB* src, int x, int y);
 };
 
 #endif

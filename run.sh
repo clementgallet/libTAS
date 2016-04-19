@@ -89,11 +89,11 @@ done < $mypipe
 
 # Launching the game with the libTAS library as LD_PRELOAD
 echo "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/$gamepath $@ &"
-LD_PRELOAD=$OLDPWD/build32/libTAS.so "$OLDPWD/$gamepath" "$@" &
+LD_PRELOAD=$OLDPWD/build/libTAS.so "$OLDPWD/$gamepath" "$@" &
 cd - > /dev/null
 sleep 1
 
 # Launch the TAS program
 echo "./build/linTAS $SHLIBS $movieopt $dumpopt"
-./build32/linTAS $SHLIBS $movieopt $dumpopt
+./build/linTAS $SHLIBS $movieopt $dumpopt
 
