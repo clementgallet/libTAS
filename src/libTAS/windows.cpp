@@ -27,9 +27,8 @@
 #include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL2.h"
-#ifdef LIBTAS_ENABLE_AVDUMPING
+#include "ThreadState.h"
 #include "avdumping.h"
-#endif
 
 /* 
  * Store the game window pointer
@@ -86,8 +85,10 @@ static bool skipDraw(void)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
+    threadState.setNative(true);
     if (!skipDraw())
         SDL_GL_SwapBuffers_real();
+    threadState.setNative(false);
 
     /* TODO: Fill here same as SDL_GL_SwapWindow */
 
@@ -153,8 +154,10 @@ int sendXid(void)
     renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
 #endif
 
+    threadState.setNative(true);
     if (!skipDraw())
         SDL_GL_SwapWindow_real(window);
+    threadState.setNative(false);
 
     /* 
      * We need to pass the game window identifier to the program
@@ -496,4 +499,35 @@ void link_sdlwindows(void)
         LINK_SUFFIX_SDL2(SDL_SetWindowTitle);
     }
 }
+
+void (*glXSwapBuffers_real)( Display *dpy, XID drawable );
+void glXSwapBuffers( Display *dpy, XID drawable )
+{
+    LINK_SUFFIX(glXSwapBuffers, "libGL");
+    debuglog(LCF_FRAME | LCF_WINDOW, __func__, " call.");
+
+#ifdef LIBTAS_ENABLE_HUD
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    static RenderHUD_GL renderHUD;
+    std::string text = std::to_string(frame_counter);
+    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
+#endif
+
+    threadState.setNative(true);
+    if (!skipDraw())
+        glXSwapBuffers_real(dpy, drawable);
+    threadState.setNative(false);
+
+    if (!gw_sent) {
+        sendMessage(MSGB_WINDOW_ID);
+        sendData(&drawable, sizeof(Window));
+        gw_sent = 1;
+        debuglog(LCF_SDL, "Sent X11 window id: ", drawable);
+    }
+
+    frameBoundary(true);
+}
+
+
 

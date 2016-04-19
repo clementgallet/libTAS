@@ -23,6 +23,7 @@
 #include "global.h"
 #include "../external/SDL.h"
 #include <string>
+#include <X11/X.h>
 
 typedef void SDL_Window;
 typedef void SDL_Renderer;
@@ -306,6 +307,9 @@ OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
 OVERRIDE SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
 
 void link_sdlwindows(void);
+
+OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
+
 
 #endif
 
