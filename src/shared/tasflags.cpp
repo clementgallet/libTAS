@@ -24,7 +24,7 @@ struct TasFlags tasflags = {
     speed_divisor  : 1,
     recording      : -1,
     fastforward    : 0,
-    includeFlags   : LCF_SDL | LCF_HOOK | LCF_SOCKET,
+    includeFlags   : LCF_SDL | LCF_HOOK | LCF_SOCKET | LCF_ERROR,
     //includeFlags   : LCF_FILEIO | LCF_ERROR,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,

@@ -82,8 +82,6 @@ SurfaceARGB* RenderHUD::createTextSurface(const char* text, SDL_Color fg_color, 
 
     /* Blit text onto its outline. */
     bg_surf->blit(fg_surf, outline_size, outline_size);
-    //SDL_SetSurfaceBlendMode_real(fg_surf, SDL_BLENDMODE_BLEND);
-    //SDL_UpperBlit_real(fg_surf, NULL, bg_surf, &rect);
     delete fg_surf;
 
     return bg_surf;

@@ -37,27 +37,34 @@ void SurfaceARGB::fill(uint32_t color)
 
 void SurfaceARGB::blit(SurfaceARGB* src, int x, int y)
 {
-    if ((x + src->w) > w) {
-        debuglog(LCF_ERROR, "Cannot blit");
-        return;
-    }
-    if ((y + src->h) > h) {
-        debuglog(LCF_ERROR, "Cannot blit");
-        return;
-    }
-
     /* Code taken from SDL 2 software blitting BlitRGBtoRGBPixelAlpha() */
     int width = src->w;
     int height = src->h;
+
+    /* Check bounds */
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+    if ((x + width) > w)
+        width = w - x;
+    if ((y + height) > h)
+        height = h - y;
+    if (width <= 0)
+        return;
+    if (height <= 0)
+        return;
+
     uint32_t *srcp = src->pixels.data();
     uint32_t *dstp = pixels.data() + y*w + x;
-    int dstskip = w - src->w;
+    int dstskip = w - width;
 
     while (height--) {
         /* The code originally uses a Duff's device.
          * Let's try to trust the compiler optmisations.
          */
-        while (width--) {
+        int curwidth = width;
+        while (curwidth--) {
             uint32_t dalpha;
             uint32_t d;
             uint32_t s1;
