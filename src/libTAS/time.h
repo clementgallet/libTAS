@@ -55,6 +55,11 @@ OVERRIDE int usleep(useconds_t usec);
    __THROW.  */
 OVERRIDE int nanosleep (const struct timespec *requested_time, struct timespec *remaining);
 
+/* High-resolution sleep with the specified clock. */
+OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
+			    const struct timespec *req,
+			    struct timespec *rem);
+
 /* Return the current time and put it in *TIMER if TIMER is not NULL.  */
 OVERRIDE time_t time(time_t* t);
 

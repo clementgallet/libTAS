@@ -155,6 +155,38 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     return nanosleep_real(requested_time, remaining);
 }
 
+/* Override */int clock_nanosleep (clockid_t clock_id, int flags,
+			    const struct timespec *req,
+			    struct timespec *rem)
+{
+    bool mainT = isMainThread();
+    TimeHolder sleeptime;
+    if (flags == 0) {
+        /* time is relative */
+        sleeptime = *(TimeHolder*)req;
+    }
+    else {
+        /* time is absolute */
+        struct timespec curtime = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        sleeptime = *(TimeHolder*)req - *(TimeHolder*)&curtime;
+    }
+
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleeptime.tv_sec * 1000000000 + sleeptime.tv_nsec, " nsec");
+
+    /* If the function was called from the main thread
+     * and we are not in the native thread state,
+     * transfer the wait to the timer and
+     * do not actually wait
+     */
+    if (mainT && !threadState.isNative()) {
+        detTimer.addDelay(*(struct timespec*)&sleeptime);
+        struct timespec owntime = {0, 0};
+        return nanosleep_real(&owntime, rem);
+    }
+
+    return nanosleep_real((struct timespec*)&sleeptime, rem);
+}
+
 /* Override */ Uint32 SDL_GetTicks(void)
 {
     struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETTICKS);
