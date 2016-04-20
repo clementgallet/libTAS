@@ -66,31 +66,10 @@ SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint
 void (*SDL_GL_SwapBuffers_real)(void);
 int (*SDL_Flip_real)(SDL1::SDL_Surface *screen);
 
-/* Deciding if we actually draw the frame */
-static bool skipDraw(void)
-{
-    static int skipCounter = 0;
-    if (tasflags.fastforward) {
-        if (skipCounter++ > 10)
-            skipCounter = 0;
-    }
-    else
-        skipCounter = 0;
-
-    return skipCounter;
-}
-
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
-
-    threadState.setNative(true);
-    if (!skipDraw())
-        SDL_GL_SwapBuffers_real();
-    threadState.setNative(false);
-
-    /* TODO: Fill here same as SDL_GL_SwapWindow */
 
     /* SDL 1.2 does only have one window,
      * thus it does not provide any access to window identifiers.
@@ -106,7 +85,14 @@ static bool skipDraw(void)
         gw_sent = 1;
         debuglog(LCF_SDL, "Send dummy X11 window id.");
     }
-    frameBoundary(true);
+
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_GL renderHUD;
+    frameBoundary(true, [] () {SDL_GL_SwapBuffers_real();}, renderHUD);
+#else
+    frameBoundary(true, [] () {SDL_GL_SwapBuffers_real();});
+#endif
 }
 
 int sendXid(void);
@@ -146,19 +132,6 @@ int sendXid(void)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
-#ifdef LIBTAS_ENABLE_HUD
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
-    static RenderHUD_GL renderHUD;
-    std::string text = std::to_string(frame_counter);
-    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
-#endif
-
-    threadState.setNative(true);
-    if (!skipDraw())
-        SDL_GL_SwapWindow_real(window);
-    threadState.setNative(false);
-
     /* 
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
@@ -166,7 +139,13 @@ int sendXid(void)
     if (sendXid() != 0)
         return;
 
-    frameBoundary(true);
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_GL renderHUD;
+    frameBoundary(true, [&] () {SDL_GL_SwapWindow_real(window);}, renderHUD);
+#else
+    frameBoundary(true, [&] () {SDL_GL_SwapWindow_real(window);});
+#endif
 }
 
 void* SDL_GL_CreateContext(SDL_Window *window)
@@ -366,18 +345,6 @@ void updateTitle(float fps, float lfps)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
-#ifdef LIBTAS_ENABLE_HUD
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
-    static RenderHUD_SDL2 renderHUD;
-    renderHUD.setRenderer(renderer);
-    std::string text = std::to_string(frame_counter);
-    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
-#endif
-
-    if (!skipDraw())
-        SDL_RenderPresent_real(renderer);
-
     /* 
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
@@ -385,7 +352,14 @@ void updateTitle(float fps, float lfps)
     if (sendXid() != 0)
         return;
 
-    frameBoundary(true);
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_SDL2 renderHUD;
+    renderHUD.setRenderer(renderer);
+    frameBoundary(true, [&] () {SDL_RenderPresent_real(renderer);}, renderHUD);
+#else
+    frameBoundary(true, [&] () {SDL_RenderPresent_real(renderer);});
+#endif
 }
 
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
@@ -443,10 +417,6 @@ void updateTitle(float fps, float lfps)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_WINDOW, __func__, " call.");
 
-    int ret = 0;
-    if (!skipDraw())
-        ret = SDL_Flip_real(screen);
-
     /* SDL 1.2 does only have one window,
      * thus it does not provide any access to window identifiers.
      * We need to pass a window id to linTAS so that it can capture inputs.
@@ -461,9 +431,16 @@ void updateTitle(float fps, float lfps)
         gw_sent = 1;
         debuglog(LCF_SDL, "Send dummy X11 window id.");
     }
-    frameBoundary(true);
 
-    return ret;
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD dummy; // TODO: We do not yet have a SDL1 HUD
+    frameBoundary(true, [&] () {SDL_Flip_real(screen);}, dummy);
+#else
+    frameBoundary(true, [&] () {SDL_Flip_real(screen);});
+#endif
+
+    return 0;
 }
 
 /* Override */ SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
@@ -506,19 +483,6 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     LINK_SUFFIX(glXSwapBuffers, "libGL");
     debuglog(LCF_FRAME | LCF_WINDOW, __func__, " call.");
 
-#ifdef LIBTAS_ENABLE_HUD
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
-    static RenderHUD_GL renderHUD;
-    std::string text = std::to_string(frame_counter);
-    renderHUD.renderText(text.c_str(), fg_color, bg_color, 2, 2);
-#endif
-
-    threadState.setNative(true);
-    if (!skipDraw())
-        glXSwapBuffers_real(dpy, drawable);
-    threadState.setNative(false);
-
     if (!gw_sent) {
         sendMessage(MSGB_WINDOW_ID);
         sendData(&drawable, sizeof(Window));
@@ -526,8 +490,12 @@ void glXSwapBuffers( Display *dpy, XID drawable )
         debuglog(LCF_SDL, "Sent X11 window id: ", drawable);
     }
 
-    frameBoundary(true);
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_GL renderHUD;
+    frameBoundary(true, [&] () {glXSwapBuffers_real(dpy, drawable);}, renderHUD);
+#else
+    frameBoundary(true, [&] () {glXSwapBuffers_real(dpy, drawable);});
+#endif
 }
-
-
 

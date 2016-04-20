@@ -8,13 +8,6 @@
 
 ### Features
 
-- Add inputs into the game screen
--- For working with text and opengl, see http://stackoverflow.com/questions/5289447/using-sdl-ttf-with-opengl/5289823#5289823
--- https://www.libsdl.org/projects/SDL_ttf/
--- https://github.com/icebreaker/Gwen
--- http://cegui.org.uk/wiki/Main_Page
---- http://cegui.org.uk/wiki/The_Beginner_Guide_to_Getting_CEGUI_Rendering
---- https://bitbucket.org/cegui/cegui/src/63f5e40d6d53f6e8cc652b2cc3cec95c09ce2e54/cegui/src/RendererModules/OpenGL/GLRenderer.cpp
 - Add a memory watch/search module
 - Add an interface (ncurses?)
 - Add config file for hotkeys and key remapping (libconfig?)
@@ -44,7 +37,9 @@
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
 - Support software rendering
--- AV dumping not tested yet. Should use RenderReadPixels
+-- AV dump of SDL 1 missing
+- Add inputs into the game screen
+-- Frame count is shown, but inputs would take more time
 
 ## Done
 

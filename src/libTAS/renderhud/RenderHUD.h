@@ -35,7 +35,7 @@ class RenderHUD
         virtual void init();
         virtual void init(const char* path);
 
-        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) = 0;
+        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) {};
 
     protected:
         SurfaceARGB* createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color);

@@ -25,9 +25,7 @@
 #include "socket.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
-#ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
-#endif
 #include "EventQueue.h"
 #include "events.h"
 #include "windows.h"
@@ -73,9 +71,27 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
     return false;
 }
 
+/* Deciding if we actually draw the frame */
+static bool skipDraw(void)
+{
+    static int skipCounter = 0;
+    if (tasflags.fastforward) {
+        if (skipCounter++ > 10)
+            skipCounter = 0;
+    }
+    else
+        skipCounter = 0;
+
+    return skipCounter;
+}
+
 std::mutex frameMutex;
 
-void frameBoundary(bool drawFB)
+#ifdef LIBTAS_ENABLE_HUD
+void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
+#else
+void frameBoundary(bool drawFB, std::function<void()> draw)
+#endif
 {
     std::lock_guard<std::mutex> guard(frameMutex);
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
@@ -95,6 +111,18 @@ void frameBoundary(bool drawFB)
         }
     }
 #endif
+
+#ifdef LIBTAS_ENABLE_HUD
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    std::string text = std::to_string(frame_counter);
+    hud.renderText(text.c_str(), fg_color, bg_color, 2, 2);
+#endif
+
+    threadState.setNative(true);
+    if (!skipDraw())
+        draw();
+    threadState.setNative(false);
 
     sendMessage(MSGB_START_FRAMEBOUNDARY);
     sendData(&frame_counter, sizeof(unsigned long));

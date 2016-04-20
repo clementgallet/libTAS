@@ -26,6 +26,7 @@
 #include "time.h" // clock_gettime_real
 #include "audio/AudioContext.h"
 #include "ThreadState.h"
+#include "renderhud/RenderHUD.h"
 
 #define MAX_NONFRAME_GETTIMES 4000
 
@@ -156,8 +157,12 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
          * to advance the time.
          * This decrements addedDelay by (basically) how much it advances ticks
          */
-        frameBoundary(false);
-
+#ifdef LIBTAS_ENABLE_HUD
+        static RenderHUD dummy;
+        frameBoundary(false, [] () {}, dummy);
+#else
+        frameBoundary(false, [] () {});
+#endif
     }
 }
 
@@ -285,7 +290,7 @@ void DeterministicTimer::initialize(void)
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
         altGetTimes[i] = 0;
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
-        altGetTimeLimits[i] = 100;
+        altGetTimeLimits[i] = 20;
 
     forceAdvancedTicks = {0, 0};
     addedDelay = {0, 0};

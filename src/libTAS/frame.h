@@ -20,6 +20,9 @@
 #ifndef LIBTAS_FRAME_H_INCL
 #define LIBTAS_FRAME_H_INCL
 
+#include <functional>
+#include "renderhud/RenderHUD.h"
+
 /* Called to initiate a frame boundary.
  * Does several things like:
  * - Advancing timers
@@ -30,7 +33,11 @@
  * but can be called also by the timer when we need to advance time to avoid a
  * game softlock (game expect time to pass).
  */
-void frameBoundary(bool drawFB);
+#ifdef LIBTAS_ENABLE_HUD
+void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud);
+#else
+void frameBoundary(bool drawFB, std::function<void()> draw);
+#endif
 
 /* Process messages that are received from linTAS */
 void proceed_commands(void);
