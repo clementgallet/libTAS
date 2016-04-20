@@ -26,6 +26,7 @@
 #include "frame.h"
 #include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
+#include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
 #include "ThreadState.h"
 #include "avdumping.h"
@@ -434,8 +435,8 @@ void updateTitle(float fps, float lfps)
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
-    static RenderHUD dummy; // TODO: We do not yet have a SDL1 HUD
-    frameBoundary(true, [&] () {SDL_Flip_real(screen);}, dummy);
+    static RenderHUD_SDL1 renderHUD;
+    frameBoundary(true, [&] () {SDL_Flip_real(screen);}, renderHUD);
 #else
     frameBoundary(true, [&] () {SDL_Flip_real(screen);});
 #endif

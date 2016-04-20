@@ -19,34 +19,29 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "RenderHUD_SDL2.h"
+#include "RenderHUD_SDL1.h"
 #include "../logging.h"
 #include "../hook.h"
 
-static SDL_Surface *(*SDL_CreateRGBSurfaceFrom_real)(void *pixels,
+static SDL1::SDL_Surface *(*SDL_CreateRGBSurfaceFrom_real)(void *pixels,
                 int width, int height, int depth, int pitch,
                 Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
-static int (*SDL_RenderCopy_real)(SDL_Renderer* renderer, void* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
-static void* (*SDL_CreateTextureFromSurface_real)(SDL_Renderer* renderer, SDL_Surface*  surface);
+static SDL1::SDL_Surface *(*SDL_GetVideoSurface_real)(void);
+static int (*SDL_UpperBlit_real)(SDL1::SDL_Surface *src, SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL_Rect *dstrect);
 
-RenderHUD_SDL2::~RenderHUD_SDL2()
+RenderHUD_SDL1::~RenderHUD_SDL1()
 {
 }
 
-void RenderHUD_SDL2::init(void)
+void RenderHUD_SDL1::init(void)
 {
-    LINK_SUFFIX_SDL2(SDL_RenderCopy);
-    LINK_SUFFIX_SDL2(SDL_CreateTextureFromSurface);
-    LINK_SUFFIX_SDL2(SDL_CreateRGBSurfaceFrom);
+    LINK_SUFFIX_SDL1(SDL_GetVideoSurface);
+    LINK_SUFFIX_SDL1(SDL_UpperBlit);
+    LINK_SUFFIX_SDL1(SDL_CreateRGBSurfaceFrom);
     RenderHUD::init();
 }
 
-void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
-{
-    renderer = r;
-}
-
-void RenderHUD_SDL2::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
+void RenderHUD_SDL1::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
 {
     static int inited = 0;
     if (inited == 0) {
@@ -55,11 +50,12 @@ void RenderHUD_SDL2::renderText(const char* text, SDL_Color fg_color, SDL_Color 
     }
 
     SurfaceARGB* surf = createTextSurface(text, fg_color, bg_color);
-    SDL_Surface* sdlsurf = SDL_CreateRGBSurfaceFrom_real(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    void* tex = SDL_CreateTextureFromSurface_real(renderer, sdlsurf);
+    SDL1::SDL_Surface* sdlsurf = SDL_CreateRGBSurfaceFrom_real(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+
+    SDL1::SDL_Surface* screen = SDL_GetVideoSurface_real();
 
     SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
-    SDL_RenderCopy_real(renderer, tex, NULL, &rect);
+    SDL_UpperBlit_real(sdlsurf, NULL, screen, &rect);
 
     destroyTextSurface();
 }
