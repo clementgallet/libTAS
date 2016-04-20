@@ -44,7 +44,7 @@ AVStream* video_st;
 AVStream* audio_st;
 
 /* We save the frame when the dumping begins */
-int start_frame;
+int start_frame = -1;
 
 /* The accumulated number of audio samples */
 uint64_t accum_samples;
@@ -248,6 +248,10 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
 
 int encodeOneFrame(unsigned long fcounter) {
 
+    /* Check if the encode was inited */
+    if (start_frame == -1)
+        return 0;
+
     /*** Video ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
 
@@ -413,6 +417,7 @@ int closeAVDumping(void) {
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
 
+    start_frame = -1;
     return 0;
 }
 
