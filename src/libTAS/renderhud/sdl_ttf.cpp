@@ -24,7 +24,7 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include <math.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -1241,10 +1241,10 @@ int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h)
     return status;
 }
 
-SurfaceARGB *TTF_RenderText_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg)
 {
-    SurfaceARGB *surface = NULL;
+    std::unique_ptr<SurfaceARGB> surface = nullptr;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1259,13 +1259,13 @@ SurfaceARGB *TTF_RenderText_Blended(TTF_Font *font,
     return surface;
 }
 
-SurfaceARGB *TTF_RenderUTF8_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg)
 {
     SDL_bool first;
     int xstart;
     int width, height;
-    SurfaceARGB *textbuf;
+    std::unique_ptr<SurfaceARGB> textbuf;
     Uint32 alpha;
     Uint32 pixel;
     Uint8 *src;
@@ -1287,7 +1287,7 @@ SurfaceARGB *TTF_RenderUTF8_Blended(TTF_Font *font,
     }
 
     /* Create the target surface */
-    textbuf = new SurfaceARGB(width, height);
+    textbuf = std::unique_ptr<SurfaceARGB>(new SurfaceARGB(width, height));
     if ( textbuf == NULL ) {
         return(NULL);
     }
@@ -1314,7 +1314,6 @@ SurfaceARGB *TTF_RenderUTF8_Blended(TTF_Font *font,
         error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
         if ( error ) {
             TTF_SetFTError("Couldn't find glyph", error);
-            delete textbuf;
             return NULL;
         }
         glyph = font->current;
@@ -1370,21 +1369,21 @@ SurfaceARGB *TTF_RenderUTF8_Blended(TTF_Font *font,
     /* Handle the underline style */
     if ( TTF_HANDLE_STYLE_UNDERLINE(font) ) {
         row = TTF_underline_top_row(font);
-        TTF_drawLine_Blended(font, textbuf, row, pixel);
+        TTF_drawLine_Blended(font, textbuf.get(), row, pixel);
     }
 
     /* Handle the strikethrough style */
     if ( TTF_HANDLE_STYLE_STRIKETHROUGH(font) ) {
         row = TTF_strikethrough_top_row(font);
-        TTF_drawLine_Blended(font, textbuf, row, pixel);
+        TTF_drawLine_Blended(font, textbuf.get(), row, pixel);
     }
     return(textbuf);
 }
 
-SurfaceARGB *TTF_RenderUNICODE_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
                 const Uint16 *text, SDL_Color fg)
 {
-    SurfaceARGB *surface = NULL;
+    std::unique_ptr<SurfaceARGB> surface = nullptr;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1400,9 +1399,9 @@ SurfaceARGB *TTF_RenderUNICODE_Blended(TTF_Font *font,
 }
 
 
-SurfaceARGB *TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SDL_Color fg, Uint32 wrapLength)
+std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SDL_Color fg, Uint32 wrapLength)
 {
-    SurfaceARGB *surface = NULL;
+    std::unique_ptr<SurfaceARGB> surface = nullptr;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1428,13 +1427,13 @@ static SDL_bool CharacterIsDelimiter(char c, const char *delimiters)
     return SDL_FALSE;
 }
 
-SurfaceARGB *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
-                                    const char *text, SDL_Color fg, Uint32 wrapLength)
+std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
+                           const char *text, SDL_Color fg, Uint32 wrapLength)
 {
     SDL_bool first;
     int xstart;
     int width, height;
-    SurfaceARGB *textbuf;
+    std::unique_ptr<SurfaceARGB> textbuf;
     Uint32 alpha;
     Uint32 pixel;
     Uint8 *src;
@@ -1539,9 +1538,8 @@ SurfaceARGB *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
     }
 
     /* Create the target surface */
-    textbuf = new SurfaceARGB((numLines > 1) ? (int)wrapLength : width,
-            height * numLines + (lineSpace * (numLines - 1)));
-    if ( textbuf == nullptr ) {
+    textbuf = std::unique_ptr<SurfaceARGB>(new SurfaceARGB((numLines > 1) ? (int)wrapLength : width, height * numLines + (lineSpace * (numLines - 1))));
+    if ( !textbuf ) {
         if ( strLines ) {
             free(strLines);
         }
@@ -1577,7 +1575,6 @@ SurfaceARGB *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
             error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
             if ( error ) {
                 TTF_SetFTError("Couldn't find glyph", error);
-                delete textbuf;
                 return NULL;
             }
             glyph = font->current;
@@ -1651,10 +1648,10 @@ SurfaceARGB *TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
     return(textbuf);
 }
 
-SurfaceARGB *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* text,
+std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* text,
                                                SDL_Color fg, Uint32 wrapLength)
 {
-    SurfaceARGB *surface = NULL;
+    std::unique_ptr<SurfaceARGB> surface = nullptr;
     Uint8 *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
@@ -1669,7 +1666,7 @@ SurfaceARGB *TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* tex
     return surface;
 }
 
-SurfaceARGB *TTF_RenderGlyph_Blended(TTF_Font *font, Uint16 ch, SDL_Color fg)
+std::unique_ptr<SurfaceARGB> TTF_RenderGlyph_Blended(TTF_Font *font, Uint16 ch, SDL_Color fg)
 {
     Uint16 ucs2[2] = { ch, 0 };
     Uint8 utf8[4];

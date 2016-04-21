@@ -49,15 +49,13 @@ void RenderHUD_SDL1::renderText(const char* text, SDL_Color fg_color, SDL_Color 
         inited = 1;
     }
 
-    SurfaceARGB* surf = createTextSurface(text, fg_color, bg_color);
+    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL1::SDL_Surface* sdlsurf = SDL_CreateRGBSurfaceFrom_real(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
     SDL1::SDL_Surface* screen = SDL_GetVideoSurface_real();
 
     SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
     SDL_UpperBlit_real(sdlsurf, NULL, screen, &rect);
-
-    destroyTextSurface();
 }
 
 #endif

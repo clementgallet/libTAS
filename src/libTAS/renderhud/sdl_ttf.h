@@ -37,6 +37,7 @@
 #include "../../external/SDL.h"
 #include <stdio.h>
 #include "SurfaceARGB.h"
+#include <memory>
 
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
@@ -136,11 +137,11 @@ int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h);
    using alpha blending to dither the font with the given color.
    This function returns the new surface, or NULL if there was an error.
 */
-SurfaceARGB * TTF_RenderText_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg);
-SurfaceARGB * TTF_RenderUTF8_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
                 const char *text, SDL_Color fg);
-SurfaceARGB * TTF_RenderUNICODE_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
                 const Uint16 *text, SDL_Color fg);
 
 
@@ -150,11 +151,11 @@ SurfaceARGB * TTF_RenderUNICODE_Blended(TTF_Font *font,
    if it extends beyond wrapLength in pixels.
    This function returns the new surface, or NULL if there was an error.
 */
-SurfaceARGB * TTF_RenderText_Blended_Wrapped(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font,
                 const char *text, SDL_Color fg, Uint32 wrapLength);
-SurfaceARGB * TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
                 const char *text, SDL_Color fg, Uint32 wrapLength);
-SurfaceARGB * TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
                 const Uint16 *text, SDL_Color fg, Uint32 wrapLength);
 
 /* Create a 32-bit ARGB surface and render the given glyph at high quality,
@@ -163,7 +164,7 @@ SurfaceARGB * TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
    direction, and aligned normally in the Y direction.
    This function returns the new surface, or NULL if there was an error.
 */
-SurfaceARGB * TTF_RenderGlyph_Blended(TTF_Font *font,
+std::unique_ptr<SurfaceARGB> TTF_RenderGlyph_Blended(TTF_Font *font,
                         Uint16 ch, SDL_Color fg);
 
 /* Close an opened font file */

@@ -135,7 +135,7 @@ void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg
     }
     glBindTexture_real(GL_TEXTURE_2D, texture);
 
-    SurfaceARGB* surf = createTextSurface(text, fg_color, bg_color);
+    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
 
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -150,8 +150,6 @@ void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg
         glTexCoord2f_real(0,1); glVertex2f_real(x, y + surf->h);
     }
     glEnd_real();
-
-    destroyTextSurface();
 
     exitRender();
 }

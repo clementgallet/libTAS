@@ -75,21 +75,15 @@ void RenderHUD::init(const char* path)
     TTF_SetFontOutline(bg_font, outline_size);
 }
 
-SurfaceARGB* RenderHUD::createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color)
+std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color)
 {
-    fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
-    bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
+    std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
+    std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
 
     /* Blit text onto its outline. */
-    bg_surf->blit(fg_surf, outline_size, outline_size);
-    delete fg_surf;
+    bg_surf->blit(fg_surf.get(), outline_size, outline_size);
 
     return bg_surf;
-}
-
-void RenderHUD::destroyTextSurface()
-{
-    delete bg_surf;
 }
 
 #endif

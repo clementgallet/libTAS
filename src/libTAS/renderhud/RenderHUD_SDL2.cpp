@@ -54,14 +54,12 @@ void RenderHUD_SDL2::renderText(const char* text, SDL_Color fg_color, SDL_Color 
         inited = 1;
     }
 
-    SurfaceARGB* surf = createTextSurface(text, fg_color, bg_color);
+    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL_Surface* sdlsurf = SDL_CreateRGBSurfaceFrom_real(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
     void* tex = SDL_CreateTextureFromSurface_real(renderer, sdlsurf);
 
     SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
     SDL_RenderCopy_real(renderer, tex, NULL, &rect);
-
-    destroyTextSurface();
 }
 
 #endif
