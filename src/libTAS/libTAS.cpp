@@ -21,9 +21,9 @@
 #include <vector>
 #include <string>
 #include "time.h"
-#include "windows.h"
+#include "sdlwindows.h"
 #include "dlhook.h"
-#include "events.h"
+#include "sdlevents.h"
 #include "threads.h"
 #include "socket.h"
 #include "logging.h"

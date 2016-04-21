@@ -23,7 +23,7 @@
 #include "../hook.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/tasflags.h"
-#include "../windows.h" // gameWindow
+#include "../sdlwindows.h" // gameWindow
 #include <X11/X.h>
 #include "../EventQueue.h"
 

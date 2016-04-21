@@ -17,14 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windows.h"
+#include "sdlwindows.h"
 #include "hook.h"
 #include "logging.h"
 #include "socket.h"
 #include "../shared/messages.h"
 #include "../shared/tasflags.h"
 #include "frame.h"
-#include "libTAS.h"
+//#include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"

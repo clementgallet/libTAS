@@ -24,7 +24,7 @@
 
 #include "RenderHUD.h"
 #include "../../external/SDL.h"
-#include "../windows.h"
+#include "../sdlwindows.h" // SDL_Renderer
 
 class RenderHUD_SDL2 : public RenderHUD
 {

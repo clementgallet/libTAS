@@ -17,11 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "events.h"
+#include "sdlevents.h"
 #include "logging.h"
 #include "hook.h"
-//#include "inputs/inputs.h"
-#include "windows.h" // for gameWindow variable
+#include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
 
 /* Pointers to original functions */

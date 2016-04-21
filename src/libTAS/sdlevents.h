@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_EVENTS_H_INCLUDED
-#define LIBTAS_EVENTS_H_INCLUDED
+#ifndef LIBTAS_SDLEVENTS_H_INCLUDED
+#define LIBTAS_SDLEVENTS_H_INCLUDED
 
 #include "global.h"
 #include "../external/SDL.h"

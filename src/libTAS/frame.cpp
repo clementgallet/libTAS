@@ -28,8 +28,7 @@
 #include "DeterministicTimer.h"
 #include "avdumping.h"
 #include "EventQueue.h"
-#include "events.h"
-#include "windows.h"
+#include "sdlwindows.h"
 #include <mutex>
 #include <iomanip>
 

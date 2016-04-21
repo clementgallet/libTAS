@@ -26,7 +26,7 @@
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
-#include "../windows.h" // for SDL_GetWindowId_real and gameWindow
+#include "../sdlwindows.h" // for SDL_GetWindowId_real and gameWindow
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdlpointer.h" // MASK constants

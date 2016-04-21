@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_WINDOWS_H_INCL
-#define LIBTAS_WINDOWS_H_INCL
+#ifndef LIBTAS_SDLWINDOWS_H_INCL
+#define LIBTAS_SDLWINDOWS_H_INCL
 
 #include "global.h"
 #include "../external/SDL.h"

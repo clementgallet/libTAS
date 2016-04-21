@@ -23,7 +23,7 @@
 #include "../../external/SDL.h"
 #include "inputs.h"
 #include "../global.h"
-#include "../windows.h" // SDL_Window
+#include "../sdlwindows.h" // SDL_Window
 
 //typedef SDL_Cursor int;   /* Implementation dependent */
 

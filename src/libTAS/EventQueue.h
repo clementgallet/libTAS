@@ -23,7 +23,7 @@
 #include <list>
 #include <set>
 #include "../external/SDL.h"
-#include "events.h" // SDL_EventFilter
+#include "sdlevents.h" // SDL_EventFilter
 
 class EventQueue
 {
