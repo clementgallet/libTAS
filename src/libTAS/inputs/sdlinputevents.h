@@ -17,9 +17,29 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "inputs.h"
+#ifndef LIBTAS_SDLINPUTEVENTS_H_INCL
+#define LIBTAS_SDLINPUTEVENTS_H_INCL
 
-struct AllInputs ai;
-struct AllInputs old_ai;
-struct AllInputs game_ai;
+#include "../../external/SDL.h"
+#include "../global.h"
+
+/* Generate events of type SDL_KEYUP, store them in our emulated event queue */
+void generateSDLKeyUpEvents(void);
+
+/* Same as above but with events SDL_KEYDOWN */
+void generateSDLKeyDownEvents(void);
+
+/* Generate events indicating that a controller was plugged in */
+void generateSDLControllerAdded(void);
+
+/* Same as KeyUp/KeyDown functions but with controller events */
+void generateSDLControllerEvents(void);
+
+/* Same as above with MouseMotion event */
+void generateSDLMouseMotionEvents(void);
+
+/* Same as above with the MouseButton event */
+void generateSDLMouseButtonEvents(void);
+
+#endif
 

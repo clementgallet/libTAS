@@ -22,7 +22,6 @@
 
 #include "sdljoystick.h"
 #include "../../external/SDL.h"
-#include "inputs.h"
 #include "../global.h"
 
 /* 

@@ -20,8 +20,9 @@
 #ifndef LIBTAS_INPUTS_H_INCL
 #define LIBTAS_INPUTS_H_INCL
 
-#include "../../external/SDL.h"
-#include "../global.h"
+/* TODO: I don't know where to put these, so in a separate file for now */
+
+#include "../../shared/AllInputs.h"
 
 /* Inputs that are sent from linTAS */
 extern struct AllInputs ai;
@@ -34,24 +35,6 @@ extern struct AllInputs old_ai;
  * Warping the cursor position.
  */
 extern struct AllInputs game_ai;
-
-/* Generate events of type SDL_KEYUP, store them in our emulated event queue */
-void generateKeyUpEvents(void);
-
-/* Same as above but with events SDL_KEYDOWN */
-void generateKeyDownEvents(void);
-
-/* Generate events indicating that a controller was plugged in */
-void generateControllerAdded(void);
-
-/* Same as KeyUp/KeyDown functions but with controller events */
-void generateControllerEvents(void);
-
-/* Same as above with MouseMotion event */
-void generateMouseMotionEvents(void);
-
-/* Same as above with the MouseButton event */
-void generateMouseButtonEvents(void);
 
 #endif
 

@@ -20,9 +20,8 @@
 #include "events.h"
 #include "logging.h"
 #include "hook.h"
-#include "inputs/inputs.h"
+//#include "inputs/inputs.h"
 #include "windows.h" // for gameWindow variable
-#include <stdarg.h>
 #include "EventQueue.h"
 
 /* Pointers to original functions */
