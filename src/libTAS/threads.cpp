@@ -23,19 +23,21 @@
 #include <unistd.h>
 
 /* Original function pointers */
-void* (*SDL_CreateThread_real)(int(*fn)(void*),
-                       const char*   name,
-                       void*         data);
-void (*SDL_WaitThread_real)(void* thread, int *status);
+namespace orig {
+    static void* (*SDL_CreateThread)(int(*fn)(void*),
+            const char*   name,
+            void*         data);
+    static void (*SDL_WaitThread)(void* thread, int *status);
 
-int (*pthread_create_real) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
-void __attribute__((__noreturn__)) (*pthread_exit_real) (void *retval) = nullptr;
-int (*pthread_join_real) (unsigned long int thread, void **thread_return) = nullptr;
-int (*pthread_detach_real) (unsigned long int thread) = nullptr;
-int (*pthread_getname_np_real)(unsigned long int thread, char *name, size_t len) = nullptr;
-int (*pthread_tryjoin_np_real)(unsigned long int thread, void **retval) = nullptr;
-int (*pthread_timedjoin_np_real)(unsigned long int thread, void **retval, const struct timespec *abstime) = nullptr;
-pthread_t (*pthread_self_real)(void) = nullptr;
+    static int (*pthread_create) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
+    static void __attribute__((__noreturn__)) (*pthread_exit) (void *retval) = nullptr;
+    static int (*pthread_join) (unsigned long int thread, void **thread_return) = nullptr;
+    static int (*pthread_detach) (unsigned long int thread) = nullptr;
+    static int (*pthread_getname_np)(unsigned long int thread, char *name, size_t len) = nullptr;
+    static int (*pthread_tryjoin_np)(unsigned long int thread, void **retval) = nullptr;
+    static int (*pthread_timedjoin_np)(unsigned long int thread, void **retval, const struct timespec *abstime) = nullptr;
+    static pthread_t (*pthread_self)(void) = nullptr;
+}
 
 /* We keep the identifier of the main thread */
 pthread_t mainThread = 0;
@@ -43,8 +45,8 @@ pthread_t mainThread = 0;
 /* Get the current thread id */
 pthread_t getThreadId(void)
 {
-    if (pthread_self_real != nullptr)
-        return pthread_self_real();
+    if (orig::pthread_self != nullptr)
+        return orig::pthread_self();
     return 0;
 }
 
@@ -54,8 +56,8 @@ void setMainThread(void)
     if (mainThread != 0)
         /* Main thread was already set */
         return;
-    if (pthread_self_real != nullptr)
-        mainThread = pthread_self_real();
+    if (orig::pthread_self != nullptr)
+        mainThread = orig::pthread_self();
 }
 
 /* 
@@ -64,8 +66,8 @@ void setMainThread(void)
  */
 int isMainThread(void)
 {
-    if (pthread_self_real != nullptr)
-        return (pthread_self_real() == mainThread);
+    if (orig::pthread_self != nullptr)
+        return (orig::pthread_self() == mainThread);
 
     /* If pthread library is not loaded, it is likely that the game is single threaded */
     return 1;
@@ -74,25 +76,25 @@ int isMainThread(void)
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
     debuglog(LCF_THREAD, "SDL Thread ", name, " was created.");
-    return SDL_CreateThread_real(fn, name, data);
+    return orig::SDL_CreateThread(fn, name, data);
 }
 
 /* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
     DEBUGLOGCALL(LCF_THREAD);
-    SDL_WaitThread_real(thread, status);
+    orig::SDL_WaitThread(thread, status);
 }
 
 void link_pthread(void)
 {
-    LINK_SUFFIX(pthread_create, "pthread");
-    LINK_SUFFIX(pthread_exit, "pthread");
-    LINK_SUFFIX(pthread_join, "pthread");
-    LINK_SUFFIX(pthread_detach, "pthread");
-    LINK_SUFFIX(pthread_getname_np, "pthread");
-    LINK_SUFFIX(pthread_tryjoin_np, "pthread");
-    LINK_SUFFIX(pthread_timedjoin_np, "pthread");
-    LINK_SUFFIX(pthread_self, "pthread");
+    LINK_NAMESPACE(pthread_create, "pthread");
+    LINK_NAMESPACE(pthread_exit, "pthread");
+    LINK_NAMESPACE(pthread_join, "pthread");
+    LINK_NAMESPACE(pthread_detach, "pthread");
+    LINK_NAMESPACE(pthread_getname_np, "pthread");
+    LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
+    LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
+    LINK_NAMESPACE(pthread_self, "pthread");
 }
 
 /* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
@@ -100,8 +102,8 @@ void link_pthread(void)
     link_pthread();
     char name[16];
     name[0] = '\0';
-    int ret = pthread_create_real(thread, attr, start_routine, arg);
-    pthread_getname_np_real(*thread, name, 16);
+    int ret = orig::pthread_create(thread, attr, start_routine, arg);
+    orig::pthread_getname_np(*thread, name, 16);
     std::string thstr = stringify(*thread);
     if (name[0])
         debuglog(LCF_THREAD, "Thread ", thstr, " was created (", name, ").");
@@ -113,28 +115,28 @@ void link_pthread(void)
 /* Override */ void pthread_exit (void *retval)
 {
     debuglog(LCF_THREAD, "Thread has exited.");
-    pthread_exit_real(retval);
+    orig::pthread_exit(retval);
 }
 
 /* Override */ int pthread_join (pthread_t thread, void **thread_return)
 {
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
-    return pthread_join_real(thread, thread_return);
+    return orig::pthread_join(thread, thread_return);
 }
 
 /* Override */ int pthread_detach (pthread_t thread) throw()
 {
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
-    return pthread_detach_real(thread);
+    return orig::pthread_detach(thread);
 }
 
 /* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval) throw()
 {
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Try to join thread ", thstr);
-    int ret = pthread_tryjoin_np_real(thread, retval);
+    int ret = orig::pthread_tryjoin_np(thread, retval);
     if (ret == 0) {
         debuglog(LCF_THREAD, "Joining thread ", thstr, " successfully.");
     }
@@ -148,7 +150,7 @@ void link_pthread(void)
 {
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Try to join thread ", thstr, " in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
-    int ret = pthread_timedjoin_np_real(thread, retval, abstime);
+    int ret = orig::pthread_timedjoin_np(thread, retval, abstime);
     if (ret == 0) {
         debuglog(LCF_THREAD, "Joining thread ", thstr, " successfully.");
     }
@@ -160,7 +162,7 @@ void link_pthread(void)
 
 void link_sdlthreads(void)
 {
-    LINK_SUFFIX_SDLX(SDL_CreateThread);
-    LINK_SUFFIX_SDLX(SDL_WaitThread);
+    LINK_NAMESPACE_SDLX(SDL_CreateThread);
+    LINK_NAMESPACE_SDLX(SDL_WaitThread);
 }
 

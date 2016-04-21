@@ -23,11 +23,13 @@
 #include "../logging.h"
 #include "../hook.h"
 
-static SDL1::SDL_Surface *(*SDL_CreateRGBSurfaceFrom_real)(void *pixels,
-                int width, int height, int depth, int pitch,
-                Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
-static SDL1::SDL_Surface *(*SDL_GetVideoSurface_real)(void);
-static int (*SDL_UpperBlit_real)(SDL1::SDL_Surface *src, SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL_Rect *dstrect);
+namespace orig {
+    static SDL1::SDL_Surface *(*SDL_CreateRGBSurfaceFrom)(void *pixels,
+            int width, int height, int depth, int pitch,
+            Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+    static SDL1::SDL_Surface *(*SDL_GetVideoSurface)(void);
+    static int (*SDL_UpperBlit)(SDL1::SDL_Surface *src, SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL_Rect *dstrect);
+}
 
 RenderHUD_SDL1::~RenderHUD_SDL1()
 {
@@ -35,9 +37,9 @@ RenderHUD_SDL1::~RenderHUD_SDL1()
 
 void RenderHUD_SDL1::init(void)
 {
-    LINK_SUFFIX_SDL1(SDL_GetVideoSurface);
-    LINK_SUFFIX_SDL1(SDL_UpperBlit);
-    LINK_SUFFIX_SDL1(SDL_CreateRGBSurfaceFrom);
+    LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+    LINK_NAMESPACE_SDL1(SDL_UpperBlit);
+    LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);
     RenderHUD::init();
 }
 
@@ -50,12 +52,12 @@ void RenderHUD_SDL1::renderText(const char* text, SDL_Color fg_color, SDL_Color 
     }
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
-    SDL1::SDL_Surface* sdlsurf = SDL_CreateRGBSurfaceFrom_real(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    SDL1::SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
-    SDL1::SDL_Surface* screen = SDL_GetVideoSurface_real();
+    SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
 
     SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
-    SDL_UpperBlit_real(sdlsurf, NULL, screen, &rect);
+    orig::SDL_UpperBlit(sdlsurf, NULL, screen, &rect);
 }
 
 #endif

@@ -47,25 +47,27 @@ bool video_opengl = false;
 char* av_filename = nullptr;
 
 /* Original function pointers */
-void(* SDL_GL_SwapWindow_real)(SDL_Window* window);
-SDL_Window*(* SDL_CreateWindow_real)(const char*, int, int, int, int, Uint32);
-Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
-Uint32 (*SDL_GetWindowFlags_real)(SDL_Window*);
-void (*SDL_SetWindowTitle_real)(void * window, const char *title);
-void (*SDL_WM_SetCaption_real)(const char *title, const char *icon);
-SDL_bool (*SDL_GetWindowWMInfo_real)(SDL_Window* window, SDL_SysWMinfo* info);
-void* (*SDL_GL_CreateContext_real)(SDL_Window *window);
-int (*SDL_GL_SetSwapInterval_real)(int interval);
-void (*SDL_DestroyWindow_real)(SDL_Window*);
-void (*SDL_SetWindowSize_real)(SDL_Window* window, int w, int h);
+namespace orig {
+    static void(* SDL_GL_SwapWindow)(SDL_Window* window);
+    static SDL_Window*(* SDL_CreateWindow)(const char*, int, int, int, int, Uint32);
+    Uint32 (*SDL_GetWindowID)(SDL_Window*);
+    static Uint32 (*SDL_GetWindowFlags)(SDL_Window*);
+    static void (*SDL_SetWindowTitle)(void * window, const char *title);
+    static void (*SDL_WM_SetCaption)(const char *title, const char *icon);
+    static SDL_bool (*SDL_GetWindowWMInfo)(SDL_Window* window, SDL_SysWMinfo* info);
+    static void* (*SDL_GL_CreateContext)(SDL_Window *window);
+    static int (*SDL_GL_SetSwapInterval)(int interval);
+    static void (*SDL_DestroyWindow)(SDL_Window*);
+    static void (*SDL_SetWindowSize)(SDL_Window* window, int w, int h);
 
-SDL_Renderer* (*SDL_CreateRenderer_real)(SDL_Window * window, int index, Uint32 flags);
-int (*SDL_CreateWindowAndRenderer_real)(int, int, Uint32, SDL_Window**, SDL_Renderer**);
-void (*SDL_RenderPresent_real)(SDL_Renderer * renderer);
+    static SDL_Renderer* (*SDL_CreateRenderer)(SDL_Window * window, int index, Uint32 flags);
+    static int (*SDL_CreateWindowAndRenderer)(int, int, Uint32, SDL_Window**, SDL_Renderer**);
+    static void (*SDL_RenderPresent)(SDL_Renderer * renderer);
 
-SDL1::SDL_Surface *(*SDL_SetVideoMode_real)(int width, int height, int bpp, Uint32 flags);
-void (*SDL_GL_SwapBuffers_real)(void);
-int (*SDL_Flip_real)(SDL1::SDL_Surface *screen);
+    static SDL1::SDL_Surface *(*SDL_SetVideoMode)(int width, int height, int bpp, Uint32 flags);
+    static void (*SDL_GL_SwapBuffers)(void);
+    static int (*SDL_Flip)(SDL1::SDL_Surface *screen);
+}
 
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
@@ -90,9 +92,9 @@ int (*SDL_Flip_real)(SDL1::SDL_Surface *screen);
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
-    frameBoundary(true, [] () {SDL_GL_SwapBuffers_real();}, renderHUD);
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, renderHUD);
 #else
-    frameBoundary(true, [] () {SDL_GL_SwapBuffers_real();});
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();});
 #endif
 }
 
@@ -104,8 +106,8 @@ int sendXid(void)
 
             /* Access the X Window identifier from the SDL_Window struct */
             SDL_SysWMinfo info;
-            SDL_GetVersion_real(&info.version);
-            if (SDL_GetWindowWMInfo_real(gameWindow, &info) == SDL_FALSE) {
+            orig::SDL_GetVersion(&info.version);
+            if (orig::SDL_GetWindowWMInfo(gameWindow, &info) == SDL_FALSE) {
                 debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
                 return -1;
             }
@@ -143,22 +145,22 @@ int sendXid(void)
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
-    frameBoundary(true, [&] () {SDL_GL_SwapWindow_real(window);}, renderHUD);
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {SDL_GL_SwapWindow_real(window);});
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);});
 #endif
 }
 
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
-    void* context = SDL_GL_CreateContext_real(window);
+    void* context = orig::SDL_GL_CreateContext(window);
 
     /* We override this function just to disable vsync,
      * except when using non deterministic timer.
      */
     if (tasflags.framerate > 0)
-        SDL_GL_SetSwapInterval_real(0);
+        orig::SDL_GL_SetSwapInterval(0);
     return context;
 }
 
@@ -173,7 +175,7 @@ static int swapInterval = 0;
    
     /* When using non deterministic timer, we let the game set vsync */
     if (tasflags.framerate > 0)
-        return SDL_GL_SetSwapInterval_real(interval);
+        return orig::SDL_GL_SetSwapInterval(interval);
     
     return 0; // Success
 }
@@ -201,7 +203,7 @@ std::string origIcon;
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
-    gameWindow = SDL_CreateWindow_real(title, x, y, w, h, flags); // Save the game window
+    gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
@@ -227,7 +229,7 @@ std::string origIcon;
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    SDL_DestroyWindow_real(window);
+    orig::SDL_DestroyWindow(window);
     if (gameWindow == window)
         gameWindow = NULL;
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -238,12 +240,12 @@ std::string origIcon;
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    return SDL_GetWindowID_real(window);
+    return orig::SDL_GetWindowID(window);
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    return SDL_GetWindowFlags_real(window);
+    return orig::SDL_GetWindowFlags(window);
 }
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
@@ -251,7 +253,7 @@ std::string origIcon;
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
     if (title != NULL)
         origTitle = title;
-    SDL_SetWindowTitle_real(window, title);
+    orig::SDL_SetWindowTitle(window, title);
 }
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
@@ -261,7 +263,7 @@ std::string origIcon;
         origTitle = title;
     if (icon != NULL)
         origIcon = icon;
-    SDL_WM_SetCaption_real(title, icon);
+    orig::SDL_WM_SetCaption(title, icon);
 }
 
 void updateTitle(float fps, float lfps)
@@ -271,11 +273,11 @@ void updateTitle(float fps, float lfps)
     out << " - lfps: " << lfps << ")";
     std::string newTitle = origTitle + out.str();
     if (SDLver == 1) {
-        SDL_WM_SetCaption_real(newTitle.c_str(), origIcon.c_str());
+        orig::SDL_WM_SetCaption(newTitle.c_str(), origIcon.c_str());
     }
     if (SDLver == 2) {
         if (gameWindow)
-            SDL_SetWindowTitle_real(gameWindow, newTitle.c_str());
+            orig::SDL_SetWindowTitle(gameWindow, newTitle.c_str());
     }
 }
 
@@ -302,7 +304,7 @@ void updateTitle(float fps, float lfps)
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
     if (flags & SDL_RENDERER_TARGETTEXTURE)
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
-    return SDL_CreateRenderer_real(window, index, flags);
+    return orig::SDL_CreateRenderer(window, index, flags);
 }
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
@@ -320,7 +322,7 @@ void updateTitle(float fps, float lfps)
     /* Disable high DPI mode */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
-    int ret = SDL_CreateWindowAndRenderer_real(width, height, window_flags, window, renderer);
+    int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     gameWindow = *window;
 
     /* A new window was created. It needs to be passed to the program */
@@ -357,9 +359,9 @@ void updateTitle(float fps, float lfps)
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2 renderHUD;
     renderHUD.setRenderer(renderer);
-    frameBoundary(true, [&] () {SDL_RenderPresent_real(renderer);}, renderHUD);
+    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {SDL_RenderPresent_real(renderer);});
+    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);});
 #endif
 }
 
@@ -368,7 +370,7 @@ void updateTitle(float fps, float lfps)
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", w, " x ", h);
 
-    SDL_SetWindowSize_real(window, w, h);
+    orig::SDL_SetWindowSize(window, w, h);
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -393,7 +395,7 @@ void updateTitle(float fps, float lfps)
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
     /* Call real function, but do not return yet */
-    SDL1::SDL_Surface *surf = SDL_SetVideoMode_real(width, height, bpp, flags);
+    SDL1::SDL_Surface *surf = orig::SDL_SetVideoMode(width, height, bpp, flags);
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
@@ -436,9 +438,9 @@ void updateTitle(float fps, float lfps)
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
-    frameBoundary(true, [&] () {SDL_Flip_real(screen);}, renderHUD);
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {SDL_Flip_real(screen);});
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);});
 #endif
 
     return 0;
@@ -456,32 +458,35 @@ void updateTitle(float fps, float lfps)
 void link_sdlwindows(void)
 {
     if (SDLver == 1) {
-        LINK_SUFFIX_SDL1(SDL_GL_SwapBuffers);
-        LINK_SUFFIX_SDL1(SDL_SetVideoMode);
-        LINK_SUFFIX_SDL1(SDL_WM_SetCaption);
-        LINK_SUFFIX_SDL1(SDL_Flip);
+        LINK_NAMESPACE_SDL1(SDL_GL_SwapBuffers);
+        LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
+        LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
+        LINK_NAMESPACE_SDL1(SDL_Flip);
     }
     if (SDLver == 2) {
-        LINK_SUFFIX_SDL2(SDL_GL_SwapWindow);
-        LINK_SUFFIX_SDL2(SDL_CreateWindow);
-        LINK_SUFFIX_SDL2(SDL_DestroyWindow);
-        LINK_SUFFIX_SDL2(SDL_GetWindowID);
-        LINK_SUFFIX_SDL2(SDL_GetWindowFlags);
-        LINK_SUFFIX_SDL2(SDL_GL_SetSwapInterval);
-        LINK_SUFFIX_SDL2(SDL_GetWindowWMInfo);
-        LINK_SUFFIX_SDL2(SDL_CreateRenderer);
-        LINK_SUFFIX_SDL2(SDL_CreateWindowAndRenderer);
-        LINK_SUFFIX_SDL2(SDL_RenderPresent);
-        LINK_SUFFIX_SDL2(SDL_SetWindowSize);
-        LINK_SUFFIX_SDL2(SDL_GL_CreateContext);
-        LINK_SUFFIX_SDL2(SDL_SetWindowTitle);
+        LINK_NAMESPACE_SDL2(SDL_GL_SwapWindow);
+        LINK_NAMESPACE_SDL2(SDL_CreateWindow);
+        LINK_NAMESPACE_SDL2(SDL_DestroyWindow);
+        LINK_NAMESPACE_SDL2(SDL_GetWindowID);
+        LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
+        LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
+        LINK_NAMESPACE_SDL2(SDL_GetWindowWMInfo);
+        LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
+        LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
+        LINK_NAMESPACE_SDL2(SDL_RenderPresent);
+        LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
+        LINK_NAMESPACE_SDL2(SDL_GL_CreateContext);
+        LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
     }
 }
 
-void (*glXSwapBuffers_real)( Display *dpy, XID drawable );
+namespace orig {
+    static void (*glXSwapBuffers)( Display *dpy, XID drawable );
+}
+
 void glXSwapBuffers( Display *dpy, XID drawable )
 {
-    LINK_SUFFIX(glXSwapBuffers, "libGL");
+    LINK_NAMESPACE(glXSwapBuffers, "libGL");
     debuglog(LCF_FRAME | LCF_WINDOW, __func__, " call.");
 
     if (!gw_sent) {
@@ -494,9 +499,9 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
-    frameBoundary(true, [&] () {glXSwapBuffers_real(dpy, drawable);}, renderHUD);
+    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {glXSwapBuffers_real(dpy, drawable);});
+    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
 #endif
 }
 

@@ -24,12 +24,14 @@
 #include "EventQueue.h"
 
 /* Pointers to original functions */
-void (*SDL_PumpEvents_real)(void);
-int (*SDL_PeepEvents_real)(void *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+namespace orig {
+    static void (*SDL_PumpEvents)(void);
+    static int (*SDL_PeepEvents)(void *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+}
 
 void pushNativeEvents(void)
 {
-    SDL_PumpEvents_real();
+    orig::SDL_PumpEvents();
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
      * as it is the native function of getting events.
@@ -37,7 +39,7 @@ void pushNativeEvents(void)
      */
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (SDL_PeepEvents_real((void*)&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
+        while (orig::SDL_PeepEvents((void*)&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (! filterSDL1Event(&ev))
                 sdlEventQueue.insert(&ev);
         }
@@ -45,7 +47,7 @@ void pushNativeEvents(void)
 
     if (SDLver == 2) {
         SDL_Event ev;
-        while (SDL_PeepEvents_real((void*)&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
+        while (orig::SDL_PeepEvents((void*)&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
     }
@@ -163,7 +165,7 @@ void pushNativeEvents(void)
     struct timespec mssleep = {0, 1000000};
     if (event) {
         while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
-            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
+            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             pushNativeEvents();
         }
         return 1;
@@ -171,7 +173,7 @@ void pushNativeEvents(void)
     else {
         SDL_Event ev;
         while (! sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false)) {
-            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
+            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             pushNativeEvents();
         }
         return 1;
@@ -188,7 +190,7 @@ void pushNativeEvents(void)
         for (t=0; t<timeout; t++) {
             if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
                 break;
-            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
+            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             pushNativeEvents();
         }
         return (t<timeout);
@@ -198,7 +200,7 @@ void pushNativeEvents(void)
         for (t=0; t<timeout; t++) {
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
-            nanosleep_real(&mssleep, NULL); // Wait 1 ms before trying again
+            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             pushNativeEvents();
         }
         return (t<timeout);
@@ -500,7 +502,7 @@ void logEvent(SDL_Event *event)
 
 void link_sdlevents(void)
 {
-    LINK_SUFFIX_SDLX(SDL_PumpEvents);
-    LINK_SUFFIX_SDLX(SDL_PeepEvents);
+    LINK_NAMESPACE_SDLX(SDL_PumpEvents);
+    LINK_NAMESPACE_SDLX(SDL_PeepEvents);
 }
 

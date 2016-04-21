@@ -29,11 +29,13 @@
 
 extern unsigned long frame_counter;
 
-/* We need at least one function to get the real clock time */
-extern int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
+namespace orig {
+    /* We need at least one function to get the real clock time */
+    extern int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
 
-/* We need at least one function to make a sleep */
-extern int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
+    /* We need at least one function to make a sleep */
+    extern int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
+}
 
 /* Time used by the program so far (user time + system time).
    The result / CLOCKS_PER_SECOND is program time in seconds.  */

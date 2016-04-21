@@ -73,27 +73,29 @@ bool link_function(void** function, const char* source, const char* library)
 
 int SDLver = 0;
 
-void (*SDL_GetVersion_real)(SDL_version* ver);
-/* SDL 1.2 specific functions */
-SDL_version * (*SDL_Linked_Version_real)(void);
+namespace orig {
+    void (*SDL_GetVersion)(SDL_version* ver);
+    /* SDL 1.2 specific functions */
+    SDL_version * (*SDL_Linked_Version)(void);
+}
 
 int get_sdlversion(void)
 {
     if (SDLver != 0)
         return 1;
 
-    LINK_SUFFIX(SDL_GetVersion, "libSDL2-2");
-    if (SDL_GetVersion_real == nullptr)
-        LINK_SUFFIX(SDL_Linked_Version, "libSDL-1.2");
+    LINK_NAMESPACE_SDL2(SDL_GetVersion);
+    if (orig::SDL_GetVersion == nullptr)
+        LINK_NAMESPACE_SDL1(SDL_Linked_Version);
 
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
-    if (SDL_GetVersion_real) {
-        SDL_GetVersion_real(&ver);
+    if (orig::SDL_GetVersion) {
+        orig::SDL_GetVersion(&ver);
     }
-    else if (SDL_Linked_Version_real) {
+    else if (orig::SDL_Linked_Version) {
         SDL_version *verp;
-        verp = SDL_Linked_Version_real();
+        verp = orig::SDL_Linked_Version();
         ver = *verp;
     }
 

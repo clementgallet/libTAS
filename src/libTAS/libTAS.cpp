@@ -43,9 +43,11 @@
 bool libTAS_init = false;
 
 /* Function pointers to real functions */
-void (*SDL_Init_real)(unsigned int flags) = nullptr;
-int (*SDL_InitSubSystem_real)(Uint32 flags) = nullptr;
-void (*SDL_Quit_real)(void) = nullptr;
+namespace orig {
+    static void (*SDL_Init)(unsigned int flags) = nullptr;
+    static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
+    static void (*SDL_Quit)(void) = nullptr;
+}
 
 void __attribute__((constructor)) init(void)
 {
@@ -141,7 +143,7 @@ void __attribute__((destructor)) term(void)
      */
     get_sdlversion();
 
-    LINK_SUFFIX_SDLX(SDL_Init);
+    LINK_NAMESPACE_SDLX(SDL_Init);
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
      * so we put the rest of relevent code in the SubSystem function.
@@ -157,7 +159,7 @@ void __attribute__((destructor)) term(void)
      * ourselves our own SDL_InitSubSystem() function.
      */
     if (SDLver == 1)
-        SDL_Init_real(flags);
+        orig::SDL_Init(flags);
     if (SDLver == 2)
         SDL_InitSubSystem(flags);
 }
@@ -171,9 +173,9 @@ void __attribute__((destructor)) term(void)
     get_sdlversion();
 
     /* Link function pointers to SDL functions */
-    LINK_SUFFIX_SDLX(SDL_Init);
-    LINK_SUFFIX_SDLX(SDL_InitSubSystem);
-    LINK_SUFFIX_SDLX(SDL_Quit);
+    LINK_NAMESPACE_SDLX(SDL_Init);
+    LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
+    LINK_NAMESPACE_SDLX(SDL_Quit);
 
     link_sdlwindows();
     link_sdlevents();
@@ -209,7 +211,7 @@ void __attribute__((destructor)) term(void)
     /* Disabling Audio subsystem so that it does not create an extra thread */
     flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
-    return SDL_InitSubSystem_real(flags);
+    return orig::SDL_InitSubSystem(flags);
 }
 
 /* Override */ void SDL_Quit(){
@@ -225,7 +227,7 @@ void __attribute__((destructor)) term(void)
 #endif
 
     sendMessage(MSGB_QUIT);
-    SDL_Quit_real();
+    orig::SDL_Quit();
 }
 
 

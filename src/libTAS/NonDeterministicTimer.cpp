@@ -21,7 +21,7 @@
 #include "logging.h"
 #include "frame.h"
 #include "../shared/tasflags.h"
-#include "time.h" // clock_gettime_real
+#include "time.h" // orig::clock_gettime
 #include "audio/AudioContext.h"
 
 void NonDeterministicTimer::initialize(void)
@@ -29,7 +29,7 @@ void NonDeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     lastEnterTicks = ticks;
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lasttime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lasttime);
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;
@@ -51,7 +51,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
         /* Get the real clock time */
         TimeHolder realtime;
-        clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&realtime);
+        orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&realtime);
 
         /* Compute the difference from the last call */
         TimeHolder delta = realtime - lasttime;
@@ -90,7 +90,7 @@ void NonDeterministicTimer::enterFrameBoundary()
     getTicks();
     inFB = true;
 
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
 
     /* Doing the audio mixing here */
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
@@ -102,7 +102,7 @@ void NonDeterministicTimer::enterFrameBoundary()
 void NonDeterministicTimer::exitFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastExitTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastExitTime);
     inFB = false;
 }
 
@@ -115,7 +115,7 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
         delayTicks.tv_nsec = 0;
     }
     
-    nanosleep_real(&delayTicks, NULL);
+    orig::nanosleep(&delayTicks, NULL);
 }
 
 NonDeterministicTimer nonDetTimer;

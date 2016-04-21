@@ -26,7 +26,7 @@
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
-#include "../sdlwindows.h" // for SDL_GetWindowId_real and gameWindow
+#include "../sdlwindows.h" // for orig::SDL_GetWindowId and gameWindow
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdlpointer.h" // MASK constants
@@ -54,7 +54,7 @@ void generateSDLKeyUpEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
-                event2.key.windowID = SDL_GetWindowID_real(gameWindow);
+                event2.key.windowID = orig::SDL_GetWindowID(gameWindow);
                 event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
@@ -113,7 +113,7 @@ void generateSDLKeyDownEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYDOWN;
                 event2.key.state = SDL_PRESSED;
-                event2.key.windowID = SDL_GetWindowID_real(gameWindow);
+                event2.key.windowID = orig::SDL_GetWindowID(gameWindow);
                 event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 SDL_Keysym keysym;
@@ -392,7 +392,7 @@ void generateSDLMouseMotionEvents(void)
         struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
         threadState.setOwnCode(false);
         event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-        event2.motion.windowID = SDL_GetWindowID_real(gameWindow);
+        event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
         /* Build up mouse state */
@@ -481,7 +481,7 @@ void generateSDLMouseButtonEvents(void)
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
                 }
                 event2.button.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-                event2.button.windowID = SDL_GetWindowID_real(gameWindow);
+                event2.button.windowID = orig::SDL_GetWindowID(gameWindow);
                 event2.button.which = 0; // TODO: Same as above...
                 event2.button.button = sdlbuttons[bi];
                 event2.button.clicks = 1;

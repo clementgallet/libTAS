@@ -35,17 +35,17 @@ std::vector<uint8_t> glpixels;
 std::vector<uint8_t> winpixels;
 
 /* Original function pointers */
-void (*SDL_GL_GetDrawableSize_real)(void* window, int* w, int* h);
-SDL_Surface* (*SDL_GetWindowSurface_real)(void* window);
-SDL1::SDL_Surface* (*SDL_GetVideoSurface_real)(void);
-int (*SDL_LockSurface_real)(SDL1::SDL_Surface* surface);
-void (*SDL_UnlockSurface_real)(SDL1::SDL_Surface* surface);
-int (*SDL_RenderReadPixels_real)(void*, const SDL_Rect*, Uint32, void*, int);
-Uint32 (*SDL_GetWindowPixelFormat_real)(void* window);
-void* (*SDL_GetRenderer_real)(void* window);
-int (*SDL_GetRendererOutputSize_real)(void* renderer, int* w, int* h);
-
-void (*glReadPixels_real)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
+namespace orig {
+    static void (*SDL_GL_GetDrawableSize)(void* window, int* w, int* h);
+    static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
+    static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
+    static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
+    static int (*SDL_RenderReadPixels)(void*, const SDL_Rect*, Uint32, void*, int);
+    static Uint32 (*SDL_GetWindowPixelFormat)(void* window);
+    static void* (*SDL_GetRenderer)(void* window);
+    static int (*SDL_GetRendererOutputSize)(void* renderer, int* w, int* h);
+    static void (*glReadPixels)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
+}
 
 /* Video dimensions */
 int width, height;
@@ -63,21 +63,21 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
 
     /* Link the required functions, and get the window dimensions */
     if (SDLver == 1) {
-        LINK_SUFFIX_SDL1(SDL_GetVideoSurface);
+        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         if (useGL)
-            LINK_SUFFIX(glReadPixels, "libGL");
+            LINK_NAMESPACE(glReadPixels, "libGL");
         else {
-            LINK_SUFFIX_SDL1(SDL_LockSurface);
-            LINK_SUFFIX_SDL1(SDL_UnlockSurface);
+            LINK_NAMESPACE_SDL1(SDL_LockSurface);
+            LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
         }
 
         /* Get dimensions from the window surface */
-        if (!SDL_GetVideoSurface_real) {
+        if (!orig::SDL_GetVideoSurface) {
             debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetVideoSurface.");
             return AV_PIX_FMT_NONE;
         }
 
-        SDL1::SDL_Surface *surf = SDL_GetVideoSurface_real();
+        SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
         
         pixelSize = surf->format->BytesPerPixel;
         pixfmt = AV_PIX_FMT_RGBA; // TODO
@@ -88,26 +88,26 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
     else if (SDLver == 2) {
 
         if (useGL) {
-            LINK_SUFFIX_SDL2(SDL_GL_GetDrawableSize);
-            LINK_SUFFIX(glReadPixels, "libGL");
+            LINK_NAMESPACE_SDL2(SDL_GL_GetDrawableSize);
+            LINK_NAMESPACE(glReadPixels, "libGL");
 
             /* Get information about the current screen */
-            if (!SDL_GL_GetDrawableSize_real) {
+            if (!orig::SDL_GL_GetDrawableSize) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GL_GetDrawableSize.");
                 return AV_PIX_FMT_NONE;
             }
 
-            SDL_GL_GetDrawableSize_real(window, pwidth, pheight);
+            orig::SDL_GL_GetDrawableSize(window, pwidth, pheight);
             pixfmt = AV_PIX_FMT_BGRA;
             pixelSize = 4;
         }
         else {
-            LINK_SUFFIX_SDL2(SDL_RenderReadPixels);
-            LINK_SUFFIX_SDL2(SDL_GetRenderer);
-            LINK_SUFFIX_SDL2(SDL_GetRendererOutputSize);
-            LINK_SUFFIX_SDL2(SDL_GetWindowPixelFormat);
+            LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
+            LINK_NAMESPACE_SDL2(SDL_GetRenderer);
+            LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
+            LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
 
-            Uint32 sdlpixfmt = SDL_GetWindowPixelFormat_real(window);
+            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
             /* TODO: There are probably helper functions to build pixel
              * format constants from channel masks
              */
@@ -157,13 +157,13 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
             pixelSize = sdlpixfmt & 0xFF;
 
             /* Get surface from window */
-            if (!SDL_GetRendererOutputSize_real) {
+            if (!orig::SDL_GetRendererOutputSize) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
                 return AV_PIX_FMT_NONE;
             }
 
-            renderer = SDL_GetRenderer_real(window);
-            SDL_GetRendererOutputSize_real(renderer, pwidth, pheight);
+            renderer = orig::SDL_GetRenderer(window);
+            orig::SDL_GetRendererOutputSize(renderer, pwidth, pheight);
         }
     }
     else {
@@ -187,7 +187,7 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
 
     if (useGL) {
         /* Do we already have access to the glReadPixels function? */
-        if (!glReadPixels_real) {
+        if (!orig::glReadPixels) {
             debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
             return AV_PIX_FMT_NONE;
         }
@@ -209,7 +209,7 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
         /* TODO: Check that the openGL dimensions did not change in between */
 
         /* We access to the image pixels directly using glReadPixels */
-        glReadPixels_real(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &glpixels[0]);
+        orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &glpixels[0]);
         /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
 
         /*
@@ -234,7 +234,7 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 
         if (SDLver == 1) {
             /* Get surface from window */
-            SDL1::SDL_Surface* surf1 = SDL_GetVideoSurface_real();
+            SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
             /* Checking for a size modification */
             int cw = surf1->w;
@@ -245,7 +245,7 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
             }
 
             /* We must lock the surface before accessing the raw pixels */
-            int ret = SDL_LockSurface_real(surf1);
+            int ret = orig::SDL_LockSurface(surf1);
             if (ret != 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
                 return 1;
@@ -255,19 +255,19 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
             memcpy(&winpixels[0], surf1->pixels, size);
 
             /* Unlock surface */
-            SDL_UnlockSurface_real(surf1);
+            orig::SDL_UnlockSurface(surf1);
         }
 
         if (SDLver == 2) {
             /* Checking for a size modification */
             int cw, ch;
-            SDL_GetRendererOutputSize_real(renderer, &cw, &ch);
+            orig::SDL_GetRendererOutputSize(renderer, &cw, &ch);
             if ((cw != width) || (ch != height)) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
                 return 1;
             }
 
-            SDL_RenderReadPixels_real(renderer, NULL, 0, &winpixels[0], pitch);
+            orig::SDL_RenderReadPixels(renderer, NULL, 0, &winpixels[0], pitch);
         }
     }
 

@@ -29,7 +29,10 @@ typedef void SDL_Window;
 typedef void SDL_Renderer;
 
 extern SDL_Window* gameWindow;
-extern Uint32 (*SDL_GetWindowID_real)(SDL_Window*);
+
+namespace orig {
+    extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
+}
 
 extern char* av_filename;
 

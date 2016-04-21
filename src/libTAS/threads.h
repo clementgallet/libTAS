@@ -25,8 +25,6 @@
 
 typedef unsigned long int pthread_t;
 
-extern pthread_t (*pthread_self_real)(void);
-
 typedef int (*SDL_ThreadFunction) (void *data);
 /* Opaque struct of a SDL thread */
 typedef void SDL_Thread;

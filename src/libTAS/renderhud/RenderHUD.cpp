@@ -25,9 +25,6 @@
 
 const char* fontpath = "/home/clement/libTAS/src/external/GenBkBasR.ttf";
 
-int (*SDL_SetSurfaceBlendMode_real)(SDL_Surface* surface, SDL_BlendMode blendMode);
-int (*SDL_UpperBlit_real)(SDL_Surface* src, const SDL_Rect* srcrect, SDL_Surface* dst,SDL_Rect* dstrect);
-
 RenderHUD::RenderHUD()
 {
     outline_size = 1;
@@ -51,9 +48,6 @@ void RenderHUD::init()
 
 void RenderHUD::init(const char* path)
 {
-    LINK_SUFFIX_SDL2(SDL_SetSurfaceBlendMode);
-    LINK_SUFFIX_SDL2(SDL_UpperBlit);
-
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");

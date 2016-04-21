@@ -23,29 +23,30 @@
 #include "../logging.h"
 #include "../hook.h"
 
-void (*glGenTextures_real)(int n, unsigned int* tex);
-void (*glBindTexture_real)(int target, unsigned int tex);
-void (*glTexImage2D_real)(int, int, int, int, int, int, int, int, const void*);
-void (*glBegin_real)( int mode );
-void (*glEnd_real)( void );
-void (*glVertex2f_real)( float x, float y );
-void (*glTexCoord2f_real)( float s, float t );
-void (*glDeleteTextures_real)( int n, const unsigned int *textures);
-void (*glEnable_real)( int cap );
-void (*glDisable_real)( int cap );
-void (*glVertexPointer_real)(int size, int type, int stride, const void* pointer);
-void (*glDrawArrays_real)( int mode, int first, int count);
-
-void (*glMatrixMode_real)(int mode);
-void (*glPushMatrix_real)(void);
-void (*glPopMatrix_real)(void);
-void (*glLoadIdentity_real)(void);
-void (*glOrtho_real)(double left, double right, double bottom, double top, double near, double far);
-void (*glBlendFunc_real)(int sfactor, int dfactor);
-void (*glTexParameteri_real)(int target, int pname, int param);
-void (*glGetIntegerv_real)( int pname, GLint* data);
-void (*glGetBooleanv_real)( int pname, GLboolean* data);
-void (*glUseProgram_real)(unsigned int program);
+namespace orig {
+    static void (*glGenTextures)(int n, unsigned int* tex);
+    static void (*glBindTexture)(int target, unsigned int tex);
+    static void (*glTexImage2D)(int, int, int, int, int, int, int, int, const void*);
+    static void (*glBegin)( int mode );
+    static void (*glEnd)( void );
+    static void (*glVertex2f)( float x, float y );
+    static void (*glTexCoord2f)( float s, float t );
+    static void (*glDeleteTextures)( int n, const unsigned int *textures);
+    static void (*glEnable)( int cap );
+    static void (*glDisable)( int cap );
+    static void (*glVertexPointer)(int size, int type, int stride, const void* pointer);
+    static void (*glDrawArrays)( int mode, int first, int count);
+    static void (*glMatrixMode)(int mode);
+    static void (*glPushMatrix)(void);
+    static void (*glPopMatrix)(void);
+    static void (*glLoadIdentity)(void);
+    static void (*glOrtho)(double left, double right, double bottom, double top, double near, double far);
+    static void (*glBlendFunc)(int sfactor, int dfactor);
+    static void (*glTexParameteri)(int target, int pname, int param);
+    static void (*glGetIntegerv)( int pname, GLint* data);
+    static void (*glGetBooleanv)( int pname, GLboolean* data);
+    static void (*glUseProgram)(unsigned int program);
+}
 
 RenderHUD_GL::~RenderHUD_GL()
 {
@@ -58,64 +59,64 @@ void RenderHUD_GL::init()
 {
     RenderHUD::init();
 
-    LINK_SUFFIX(glGenTextures, "libGL");
-    LINK_SUFFIX(glBindTexture, "libGL");
-    LINK_SUFFIX(glTexImage2D, "libGL");
-    LINK_SUFFIX(glBegin, "libGL");
-    LINK_SUFFIX(glEnd, "libGL");
-    LINK_SUFFIX(glVertex2f, "libGL");
-    LINK_SUFFIX(glTexCoord2f, "libGL");
-    LINK_SUFFIX(glDeleteTextures, "libGL");
-    LINK_SUFFIX(glEnable, "libGL");
-    LINK_SUFFIX(glDisable, "libGL");
-    LINK_SUFFIX(glVertexPointer, "libGL");
-    LINK_SUFFIX(glDrawArrays, "libGL");
-    LINK_SUFFIX(glMatrixMode, "libGL");
-    LINK_SUFFIX(glPushMatrix, "libGL");
-    LINK_SUFFIX(glPopMatrix, "libGL");
-    LINK_SUFFIX(glLoadIdentity, "libGL");
-    LINK_SUFFIX(glOrtho, "libGL");
-    LINK_SUFFIX(glBlendFunc, "libGL");
-    LINK_SUFFIX(glTexParameteri, "libGL");
-    LINK_SUFFIX(glGetIntegerv, "libGL");
-    LINK_SUFFIX(glGetBooleanv, "libGL");
-    LINK_SUFFIX(glUseProgram, "libGL");
+    LINK_NAMESPACE(glGenTextures, "libGL");
+    LINK_NAMESPACE(glBindTexture, "libGL");
+    LINK_NAMESPACE(glTexImage2D, "libGL");
+    LINK_NAMESPACE(glBegin, "libGL");
+    LINK_NAMESPACE(glEnd, "libGL");
+    LINK_NAMESPACE(glVertex2f, "libGL");
+    LINK_NAMESPACE(glTexCoord2f, "libGL");
+    LINK_NAMESPACE(glDeleteTextures, "libGL");
+    LINK_NAMESPACE(glEnable, "libGL");
+    LINK_NAMESPACE(glDisable, "libGL");
+    LINK_NAMESPACE(glVertexPointer, "libGL");
+    LINK_NAMESPACE(glDrawArrays, "libGL");
+    LINK_NAMESPACE(glMatrixMode, "libGL");
+    LINK_NAMESPACE(glPushMatrix, "libGL");
+    LINK_NAMESPACE(glPopMatrix, "libGL");
+    LINK_NAMESPACE(glLoadIdentity, "libGL");
+    LINK_NAMESPACE(glOrtho, "libGL");
+    LINK_NAMESPACE(glBlendFunc, "libGL");
+    LINK_NAMESPACE(glTexParameteri, "libGL");
+    LINK_NAMESPACE(glGetIntegerv, "libGL");
+    LINK_NAMESPACE(glGetBooleanv, "libGL");
+    LINK_NAMESPACE(glUseProgram, "libGL");
 }
 
 void RenderHUD_GL::enterRender(void)
 {
-    glGetIntegerv_real(GL_CURRENT_PROGRAM, &oldProgram);
-    glUseProgram_real(0);
+    orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);
+    orig::glUseProgram(0);
 
     GLint viewport[4];
-    glGetIntegerv_real(GL_VIEWPORT, viewport);
+    orig::glGetIntegerv(GL_VIEWPORT, viewport);
 
-    glMatrixMode_real(GL_PROJECTION);
-    glPushMatrix_real();
-    glLoadIdentity_real();
-    //glOrtho_real(0, sw, sh, 0, -1, 1);
-    glOrtho_real(0, viewport[2], viewport[3], 0, -1, 1);
+    orig::glMatrixMode(GL_PROJECTION);
+    orig::glPushMatrix();
+    orig::glLoadIdentity();
+    //orig::glOrtho(0, sw, sh, 0, -1, 1);
+    orig::glOrtho(0, viewport[2], viewport[3], 0, -1, 1);
 
-    glMatrixMode_real(GL_MODELVIEW);
-    glPushMatrix_real();
-    glLoadIdentity_real();
+    orig::glMatrixMode(GL_MODELVIEW);
+    orig::glPushMatrix();
+    orig::glLoadIdentity();
 
-    glDisable_real(GL_DEPTH_TEST);
+    orig::glDisable(GL_DEPTH_TEST);
 
-    glGetBooleanv_real(GL_TEXTURE_2D, &oldTex2DEnabled);
+    orig::glGetBooleanv(GL_TEXTURE_2D, &oldTex2DEnabled);
 
-    glEnable_real(GL_TEXTURE_2D);
+    orig::glEnable(GL_TEXTURE_2D);
 
-    glGetBooleanv_real(GL_BLEND, &oldBlendEnabled);
+    orig::glGetBooleanv(GL_BLEND, &oldBlendEnabled);
 
-    glGetIntegerv_real(GL_BLEND_SRC_ALPHA, &oldBlendSrc);
-    glGetIntegerv_real(GL_BLEND_DST_ALPHA, &oldBlendDst);
+    orig::glGetIntegerv(GL_BLEND_SRC_ALPHA, &oldBlendSrc);
+    orig::glGetIntegerv(GL_BLEND_DST_ALPHA, &oldBlendDst);
 
-    glEnable_real(GL_BLEND);
-    glBlendFunc_real(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    orig::glEnable(GL_BLEND);
+    orig::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Get previous blind texture */
-    glGetIntegerv_real(GL_TEXTURE_BINDING_2D, &oldTex);
+    orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
 }
 
 void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
@@ -131,25 +132,25 @@ void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg
     /* TODO: Manage GL textures!!! */
     static GLuint texture = 0;
     if (texture == 0) {
-        glGenTextures_real(1, &texture);
+        orig::glGenTextures(1, &texture);
     }
-    glBindTexture_real(GL_TEXTURE_2D, texture);
+    orig::glBindTexture(GL_TEXTURE_2D, texture);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
 
-    glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri_real(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D_real(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels.data());
+    orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels.data());
 
-    glBegin_real(GL_QUADS);
+    orig::glBegin(GL_QUADS);
     {
-        glTexCoord2f_real(0,0); glVertex2f_real(x, y);
-        glTexCoord2f_real(1,0); glVertex2f_real(x + surf->w, y);
-        glTexCoord2f_real(1,1); glVertex2f_real(x + surf->w, y + surf->h);
-        glTexCoord2f_real(0,1); glVertex2f_real(x, y + surf->h);
+        orig::glTexCoord2f(0,0); orig::glVertex2f(x, y);
+        orig::glTexCoord2f(1,0); orig::glVertex2f(x + surf->w, y);
+        orig::glTexCoord2f(1,1); orig::glVertex2f(x + surf->w, y + surf->h);
+        orig::glTexCoord2f(0,1); orig::glVertex2f(x, y + surf->h);
     }
-    glEnd_real();
+    orig::glEnd();
 
     exitRender();
 }
@@ -157,22 +158,22 @@ void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg
 void RenderHUD_GL::exitRender(void)
 {
     if (oldTex != 0) {
-        glBindTexture_real(GL_TEXTURE_2D, oldTex);
+        orig::glBindTexture(GL_TEXTURE_2D, oldTex);
     }
 
     if (! oldBlendEnabled )
-        glDisable_real(GL_BLEND);
-    glBlendFunc_real(oldBlendSrc, oldBlendDst);
+        orig::glDisable(GL_BLEND);
+    orig::glBlendFunc(oldBlendSrc, oldBlendDst);
 
     if (! oldTex2DEnabled )
-        glDisable_real(GL_TEXTURE_2D);
+        orig::glDisable(GL_TEXTURE_2D);
 
-    glMatrixMode_real(GL_PROJECTION);
-    glPopMatrix_real();
-    glMatrixMode_real(GL_MODELVIEW);
-    glPopMatrix_real();
+    orig::glMatrixMode(GL_PROJECTION);
+    orig::glPopMatrix();
+    orig::glMatrixMode(GL_MODELVIEW);
+    orig::glPopMatrix();
 
-    glUseProgram_real(oldProgram);
+    orig::glUseProgram(oldProgram);
 } 
 
 #endif

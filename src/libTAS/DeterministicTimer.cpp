@@ -23,7 +23,7 @@
 #include "../shared/tasflags.h"
 #include "threads.h"
 #include "frame.h"
-#include "time.h" // clock_gettime_real
+#include "time.h" // orig::clock_gettime
 #include "audio/AudioContext.h"
 #include "ThreadState.h"
 #include "renderhud/RenderHUD.h"
@@ -38,7 +38,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     /* If we are in the native thread state, just return the real time */
     if (threadState.isNative()) {
         struct timespec realtime;
-        clock_gettime_real(CLOCK_REALTIME, &realtime);
+        orig::clock_gettime(CLOCK_REALTIME, &realtime);
         return realtime;
     }
 
@@ -143,7 +143,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     {
         /* Sleep, because the caller would have yielded at least a little */
         struct timespec nosleep = {0, 0};
-        nanosleep_real(&nosleep, NULL);
+        orig::nanosleep(&nosleep, NULL);
     }
 
     while(addedDelay > maxDeferredDelay)
@@ -244,7 +244,7 @@ void DeterministicTimer::enterFrameBoundary()
 
     /* Get the current actual time */
     TimeHolder currentTime;
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
 
     /* calculate the target time we wanted to be at now */
     /* TODO: This is where we would implement slowdown */
@@ -259,7 +259,7 @@ void DeterministicTimer::enterFrameBoundary()
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
-            nanosleep_real((struct timespec*)&deltaTime, NULL);
+            orig::nanosleep((struct timespec*)&deltaTime, NULL);
         }
     }
 
@@ -267,7 +267,7 @@ void DeterministicTimer::enterFrameBoundary()
      * WARNING: This time update is not done in Hourglass,
      * maybe intentionally (the author does not remember).
      */
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
 
     lastEnterTime = currentTime;
 
@@ -284,7 +284,7 @@ void DeterministicTimer::initialize(void)
     getTimes = 0;
     ticks = {0, 0};
     fractional_part = 0;
-    clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
     lastEnterTicks = ticks;
 
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)

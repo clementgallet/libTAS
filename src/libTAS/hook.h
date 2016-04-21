@@ -25,7 +25,9 @@
 /* Version of the SDL library */
 extern int SDLver;
 
-extern void (*SDL_GetVersion_real)(SDL_version* ver);
+namespace orig {
+    extern void (*SDL_GetVersion)(SDL_version* ver);
+}
 
 /* Get access to a function from a substring of the library name
  * For example, if we want to access to the SDL_Init() function:
@@ -40,10 +42,10 @@ extern void (*SDL_GetVersion_real)(SDL_version* ver);
 bool link_function(void** function, const char* source, const char* library);
 
 /* Some macros to make the above function easier to use */
-#define LINK_SUFFIX(FUNC,LIB) link_function((void**)&FUNC##_real, #FUNC, LIB)
-#define LINK_SUFFIX_SDL1(FUNC) LINK_SUFFIX(FUNC,"libSDL-1.2")
-#define LINK_SUFFIX_SDL2(FUNC) LINK_SUFFIX(FUNC,"libSDL2-2")
-#define LINK_SUFFIX_SDLX(FUNC) (SDLver==1)?LINK_SUFFIX_SDL1(FUNC):LINK_SUFFIX_SDL2(FUNC)
+#define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)
+#define LINK_NAMESPACE_SDL1(FUNC) LINK_NAMESPACE(FUNC,"libSDL-1.2")
+#define LINK_NAMESPACE_SDL2(FUNC) LINK_NAMESPACE(FUNC,"libSDL2-2")
+#define LINK_NAMESPACE_SDLX(FUNC) (SDLver==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)
 
 /* Returns the major version of the SDL library used in the game */
 int get_sdlversion(void);

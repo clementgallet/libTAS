@@ -48,7 +48,7 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
         computeCounter = 0;
 
         TimeHolder currentTime;
-        clock_gettime_real(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+        orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
 
         struct timespec tsTicks = detTimer.getTicks(TIMETYPE_UNTRACKED);
         TimeHolder currentTicks = *(TimeHolder*)&tsTicks;

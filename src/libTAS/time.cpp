@@ -30,7 +30,9 @@
 unsigned long frame_counter = 0;
 
 /*** Functions that access time ***/
-int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
+namespace orig {
+    int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
+}
 
 /* Override */ time_t time(time_t* t)
 {
@@ -65,7 +67,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    if (!clock_gettime_real) {
+    if (!orig::clock_gettime) {
         /* Some libraries can call this *very* early, and trying to link
          * results in a crash.
          */
@@ -76,7 +78,7 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     //printBacktrace();
     if (threadState.isNative()) {
-        clock_gettime_real(clock_id, tp);
+        orig::clock_gettime(clock_id, tp);
     }
     else {
         //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
@@ -87,7 +89,9 @@ int (*clock_gettime_real) (clockid_t clock_id, struct timespec *tp);
 }
 
 /*** Sleep functions ***/
-int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *remaining);
+namespace orig {
+    int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
+}
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -109,7 +113,7 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
         ts.tv_nsec = 0;
     }
 
-    nanosleep_real(&ts, NULL);
+    orig::nanosleep(&ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
@@ -132,7 +136,7 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
         ts.tv_nsec = 0;
     }
 
-    nanosleep_real(&ts, NULL);
+    orig::nanosleep(&ts, NULL);
     return 0;
 }
 
@@ -149,10 +153,10 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     if (mainT && !threadState.isNative()) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
-        return nanosleep_real(&owntime, remaining);
+        return orig::nanosleep(&owntime, remaining);
     }
 
-    return nanosleep_real(requested_time, remaining);
+    return orig::nanosleep(requested_time, remaining);
 }
 
 /* Override */int clock_nanosleep (clockid_t clock_id, int flags,
@@ -181,10 +185,10 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
     if (mainT && !threadState.isNative()) {
         detTimer.addDelay(*(struct timespec*)&sleeptime);
         struct timespec owntime = {0, 0};
-        return nanosleep_real(&owntime, rem);
+        return orig::nanosleep(&owntime, rem);
     }
 
-    return nanosleep_real((struct timespec*)&sleeptime, rem);
+    return orig::nanosleep((struct timespec*)&sleeptime, rem);
 }
 
 /* Override */ Uint32 SDL_GetTicks(void)
@@ -213,32 +217,33 @@ int (*nanosleep_real) (const struct timespec *requested_time, struct timespec *r
 }
 
 /*** Timers ***/
-
-SDL_TimerID (*SDL_AddTimer_real)(Uint32 interval, SDL_NewTimerCallback callback, void *param);
-SDL_bool (*SDL_RemoveTimer_real)(SDL_TimerID id);
+namespace orig {
+    static SDL_TimerID (*SDL_AddTimer)(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+    static SDL_bool (*SDL_RemoveTimer)(SDL_TimerID id);
+}
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
-    return SDL_AddTimer_real(interval, callback, param);
+    return orig::SDL_AddTimer(interval, callback, param);
 }
 
 /* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
     debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
-    return SDL_RemoveTimer_real(id);
+    return orig::SDL_RemoveTimer(id);
 }
 
 void link_time(void)
 {
-    LINK_SUFFIX(nanosleep, nullptr);
-    LINK_SUFFIX(clock_gettime, nullptr);
+    LINK_NAMESPACE(nanosleep, nullptr);
+    LINK_NAMESPACE(clock_gettime, nullptr);
 }
 
 void link_sdltime(void)
 {
-    LINK_SUFFIX_SDLX(SDL_AddTimer);
-    LINK_SUFFIX_SDLX(SDL_RemoveTimer);
+    LINK_NAMESPACE_SDLX(SDL_AddTimer);
+    LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
     /* TODO: Add SDL 1.2 SetTimer */
 }
 
