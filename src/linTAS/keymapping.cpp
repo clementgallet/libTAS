@@ -109,8 +109,8 @@ void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[
                 if (si.type == IT_KEYBOARD) {
 
                     /* Checking the current number of keys */
-                    if (keysym_i >= ALLINPUTS_MAXKEY) {
-                        fprintf(stderr, "Reached maximum number of inputs (%d).", ALLINPUTS_MAXKEY);
+                    if (keysym_i >= AllInputs::MAXKEYS) {
+                        fprintf(stderr, "Reached maximum number of inputs (%d).", AllInputs::MAXKEYS);
                         return;
                     }
 

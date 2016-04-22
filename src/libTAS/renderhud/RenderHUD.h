@@ -25,6 +25,7 @@
 #include "../../external/SDL.h"
 #include "sdl_ttf.h"
 #include "SurfaceARGB.h"
+#include "../../shared/AllInputs.h"
 #include <memory>
 
 /* This class handles the display of some text over the game screen (HUD).
@@ -65,6 +66,9 @@ class RenderHUD
 
         /* Display the frame count on screen */
         void renderFrame(int framecount);
+
+        /* Display the inputs on screen */
+        void renderInputs(AllInputs& ai);
 
     protected:
         /* Create a texture from a text, using colors for the text and the outline */

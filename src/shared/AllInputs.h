@@ -23,15 +23,13 @@
 #include <X11/Xlib.h> // For the KeySym type
 #include <X11/keysym.h>
 
-#define ALLINPUTS_MAXKEY 16
-#define ALLINPUTS_MAXJOYS 4
-
 /* Input structure that is filled by linTAS and send to libTAS every frame
  * Structure is inspired by SDL.
  */
 class AllInputs {
     public:
 
+        static const int MAXKEYS = 16;
         static const int MAXJOYS = 4;
         static const int MAXAXES = 6;
 
@@ -49,7 +47,7 @@ class AllInputs {
          * and there would be a highly non-trivial translation between bitmap
          * position and equivalent KeySym.
          */
-        KeySym keyboard[ALLINPUTS_MAXKEY];
+        KeySym keyboard[MAXKEYS];
 
         /* Pointer coordinates relative to the origin of the game window */
         int pointer_x;

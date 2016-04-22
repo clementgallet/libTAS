@@ -22,6 +22,8 @@
 #include "RenderHUD.h"
 #include "../logging.h"
 #include "../hook.h"
+#include <sstream>
+#include <X11/Xlib.h> // For the KeySym type
 
 const char* fontpath = "/home/clement/libTAS/src/external/GenBkBasR.ttf";
 
@@ -54,13 +56,13 @@ void RenderHUD::init(const char* path)
         return;
     }
 
-    fg_font = TTF_OpenFont(path, 30);
+    fg_font = TTF_OpenFont(path, 20);
     if (fg_font == NULL) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
         return;
     }
 
-    bg_font = TTF_OpenFont(path, 30);
+    bg_font = TTF_OpenFont(path, 20);
     if (bg_font == NULL) {
         debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
         return;
@@ -79,6 +81,63 @@ std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, SDL_
 
     return bg_surf;
 }
+
+void RenderHUD::renderFrame(int framecount)
+{
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    std::string text = std::to_string(framecount);
+    renderText(text.c_str(), fg_color, bg_color, 2, 2);
+}
+
+void RenderHUD::renderInputs(AllInputs& ai)
+{
+    std::ostringstream oss;
+
+    /* Keyboard */
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        if (ai.keyboard[i] != XK_VoidSymbol) {
+            oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
+        }
+    }
+
+    /* Mouse */
+    if (ai.pointer_x != -1) {
+        oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << "] ";
+    }
+    if (ai.pointer_mask & Button1Mask)
+        oss << "[M b1] ";
+    if (ai.pointer_mask & Button2Mask)
+        oss << "[M b2] ";
+    if (ai.pointer_mask & Button3Mask)
+        oss << "[M b3] ";
+    if (ai.pointer_mask & Button4Mask)
+        oss << "[M b4] ";
+    if (ai.pointer_mask & Button5Mask)
+        oss << "[M b5] ";
+
+    /* Joystick */
+    for (int i=0; i<AllInputs::MAXJOYS; i++) {
+        for (int j=0; j<AllInputs::MAXAXES; j++) {
+            if (ai.controller_axes[i][j] != 0)
+                oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";
+        }
+
+        for (int j=0; j<16; j++) {
+            if (ai.controller_buttons[i] & (1 << j))
+                oss << "[J" << i << " b" << j << "] ";
+        }
+    }
+
+    /* Render */
+    SDL_Color fg_color = {255, 255, 255, 0};
+    SDL_Color bg_color = {0, 0, 0, 0};
+    std::string text = oss.str();
+    renderText(text.c_str(), fg_color, bg_color, 2, 400);
+}
+
+
+
 
 #endif
 

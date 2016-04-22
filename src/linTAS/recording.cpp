@@ -54,23 +54,23 @@ void readHeader(FILE* fp)
 
 int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs)
 {
-    fwrite(inputs.keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+    fwrite(inputs.keyboard, sizeof(KeySym), AllInputs::MAXKEYS, fp);
     fwrite(&inputs.pointer_x, sizeof(int), 1, fp);
     fwrite(&inputs.pointer_y, sizeof(int), 1, fp);
     fwrite(&inputs.pointer_mask, sizeof(unsigned int), 1, fp);
-    fwrite(inputs.controller_axes, sizeof(short), 4*6, fp);
-    fwrite(inputs.controller_buttons, sizeof(unsigned short), 4, fp);
+    fwrite(inputs.controller_axes, sizeof(short), AllInputs::MAXJOYS*AllInputs::MAXAXES, fp);
+    fwrite(inputs.controller_buttons, sizeof(unsigned short), AllInputs::MAXJOYS, fp);
     return 1;
 }
 
 int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs)
 {
-    size_t size = fread(inputs->keyboard, sizeof(KeySym), ALLINPUTS_MAXKEY, fp);
+    size_t size = fread(inputs->keyboard, sizeof(KeySym), AllInputs::MAXKEYS, fp);
     size += fread(&inputs->pointer_x, sizeof(int), 1, fp);
     size += fread(&inputs->pointer_y, sizeof(int), 1, fp);
     size += fread(&inputs->pointer_mask, sizeof(unsigned int), 1, fp);
-    size += fread(inputs->controller_axes, sizeof(short), 4*6, fp);
-    size += fread(inputs->controller_buttons, sizeof(unsigned short), 4, fp);
+    size += fread(inputs->controller_axes, sizeof(short), AllInputs::MAXJOYS*AllInputs::MAXAXES, fp);
+    size += fread(inputs->controller_buttons, sizeof(unsigned short), AllInputs::MAXJOYS, fp);
     //if (size != sizeof(struct AllInputs)) {
     //    printf("Did not read all (%zu elements), end of file?\n", size);
     //    return 0;

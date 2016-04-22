@@ -31,7 +31,7 @@ int XQueryKeymap( Display* display, char keymap[32])
     memset(keymap, 0, 32);
     for (int kc=0; kc<256; kc++) {
         KeySym ks = XkbKeycodeToKeysym(display, (KeyCode)kc, 0, 0);
-        for (int i=0; i<ALLINPUTS_MAXKEY; i++) {
+        for (int i=0; i<AllInputs::MAXKEYS; i++) {
             if (ks == ai.keyboard[i]) {
                 keymap[kc>>3] |= (1 << kc&0x7);
                 break;

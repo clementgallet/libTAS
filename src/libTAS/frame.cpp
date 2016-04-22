@@ -113,10 +113,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
-    std::string text = std::to_string(frame_counter);
-    hud.renderText(text.c_str(), fg_color, bg_color, 2, 2);
+    hud.renderFrame(frame_counter);
+    hud.renderInputs(ai);
 #endif
 
     threadState.setNative(true);
