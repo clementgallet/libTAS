@@ -31,15 +31,14 @@
 #include "../shared/messages.h"
 #include "keymapping.h"
 #include "recording.h"
-//#include "savestates.h"
+#include "SaveState.h"
 #include <vector>
 #include <string>
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
-//struct State savestate;
-int didSave = 0;
+SaveState savestate;
 
 unsigned long int frame_counter = 0;
 
@@ -296,12 +295,10 @@ int main(int argc, char **argv)
                         tasflagsmod = 1;
                     }
                     if (ks == hotkeys[HOTKEY_SAVESTATE]){
-                        //if (didSave)
-                        //    deallocState(&savestate);
-                        //saveState(game_pid, &savestate);
-                        didSave = 1;
+                        savestate.save(game_pid);
                     }
                     if (ks == hotkeys[HOTKEY_LOADSTATE]){
+                        savestate.load(game_pid);
                     }
                     if (ks == hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
@@ -426,8 +423,6 @@ int main(int argc, char **argv)
 
     }
 
-    //if (didSave)
-        //deallocState(&savestate);
     if (tasflags.recording >= 0){
         closeRecording(fp);
     }
