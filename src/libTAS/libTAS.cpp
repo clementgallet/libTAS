@@ -21,6 +21,8 @@
 #include <vector>
 #include <string>
 #include "time.h"
+#include "timer.h"
+#include "sleep.h"
 #include "sdlwindows.h"
 #include "dlhook.h"
 #include "sdlevents.h"
@@ -116,6 +118,8 @@ void __attribute__((constructor)) init(void)
     link_stdiofileio();
     link_posixfileio();
     link_time();
+    link_sleep();
+    link_sdltimer();
     link_pthread();
 
     /* Initialize timers */

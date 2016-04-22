@@ -22,6 +22,7 @@
 #include "hook.h"
 #include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
+#include "sleep.h"
 
 /* Pointers to original functions */
 namespace orig {

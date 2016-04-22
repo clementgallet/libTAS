@@ -24,6 +24,7 @@
 #include "threads.h"
 #include "frame.h"
 #include "time.h" // orig::clock_gettime
+#include "sleep.h" // orig::nanosleep
 #include "audio/AudioContext.h"
 #include "ThreadState.h"
 #include "renderhud/RenderHUD.h"

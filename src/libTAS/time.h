@@ -32,9 +32,6 @@ extern unsigned long frame_counter;
 namespace orig {
     /* We need at least one function to get the real clock time */
     extern int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
-
-    /* We need at least one function to make a sleep */
-    extern int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
 }
 
 /* Time used by the program so far (user time + system time).
@@ -43,24 +40,6 @@ OVERRIDE clock_t clock (void);
 
 /* Get current value of clock CLOCK_ID and store it in TP.  */
 OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp);
-
-/* Sleep USECONDS microseconds, or until a signal arrives that is not blocked
-   or ignored.
-
-   This function is a cancellation point and therefore not marked with
-   __THROW.  */
-OVERRIDE int usleep(useconds_t usec);
-
-/* Pause execution for a number of nanoseconds.
-
-   This function is a cancellation point and therefore not marked with
-   __THROW.  */
-OVERRIDE int nanosleep (const struct timespec *requested_time, struct timespec *remaining);
-
-/* High-resolution sleep with the specified clock. */
-OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
-			    const struct timespec *req,
-			    struct timespec *rem);
 
 /* Return the current time and put it in *TIMER if TIMER is not NULL.  */
 OVERRIDE time_t time(time_t* t);
@@ -71,11 +50,6 @@ OVERRIDE time_t time(time_t* t);
    NOTE: This form of timezone information is obsolete.
    Use the functions and variables declared in <time.h> instead.  */
 OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) throw();
-
-/**
- * \brief Wait a specified number of milliseconds before returning.
- */
-OVERRIDE void SDL_Delay(Uint32 sleep);
 
 /**
  * \brief Get the number of milliseconds since the SDL library initialization.
@@ -94,26 +68,6 @@ OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
  */
 OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
 
-typedef int SDL_TimerID;
-typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
-
-/**
- * \brief Add a new timer to the pool of timers already running.
- *
- * \return A timer ID, or 0 when an error occurs.
- */
-OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
-
-/**
- * \brief Remove a timer knowing its ID.
- *
- * \return A boolean value indicating success or failure.
- *
- * \warning It is not safe to remove a timer multiple times.
- */
-OVERRIDE SDL_bool SDL_RemoveTimer(SDL_TimerID id);
-
 void link_time(void);
-void link_sdltime(void);
 
 #endif
