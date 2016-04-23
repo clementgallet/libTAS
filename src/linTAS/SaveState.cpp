@@ -87,14 +87,15 @@ void SaveState::fillSections(pid_t game_pid)
     std::string line;
     while (std::getline(mapsfile, line)) {
 
-        StateSection* section = new StateSection;
+        std::unique_ptr<StateSection> section = std::unique_ptr<StateSection>(new StateSection);
         section->readMap(line);
 
         std::cerr << "Save segment, " << section->size << " bytes";
         std::cerr << " at 0x" << std::hex << section->addr << std::dec << " (";
-        std::cerr << section->readflag ?'r':'-';
-        std::cerr << section->writeflag?'w':'-';
-        std::cerr << section->execflag ?'x':'-';
+        std::cerr << (section->readflag ?'r':'-');
+        std::cerr << (section->writeflag?'w':'-');
+        std::cerr << (section->execflag ?'x':'-');
+        std::cerr << (section->sharedflag ?'s':'p');
         std::cerr << ") " << section->filename << std::endl;
 
         /* Filter based on permissions */
@@ -107,13 +108,17 @@ void SaveState::fillSections(pid_t game_pid)
         if (!section->writeflag)
             continue;
 
+        if (section->sharedflag)
+            continue;
+
         /* Allocate actual memory section */
         section->mem.resize(section->size);
 
-        /* Insert the section into the savestate */
-        sections.push_back(std::unique_ptr<StateSection>(section));
-
         total_size += section->size;
+
+        /* Insert the section into the savestate */
+        sections.push_back(std::move(section));
+
     }
 }
 
@@ -126,16 +131,17 @@ bool SaveState::save(pid_t game_pid)
      */
     attachToGame(game_pid);
 
-    sections.empty();
+    sections.clear();
 
     fillSections(game_pid);
 
     for (auto& section : sections) {
+        //std::cerr << "saddr: " << std::hex << section->addr << std::dec << std::endl;
         struct iovec local, remote;
         section->toIovec(local, remote);
 
         /* Read call */
-        std::cout << "Reading section of size " << section->size << std::endl;
+        std::cout << "Reading section of size " << section->size << " starting " << std::hex << section->addr << std::dec << std::endl;
         ssize_t nread = process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
 
         /* Checking for errors */

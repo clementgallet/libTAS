@@ -19,6 +19,7 @@
 
 #include "StateSection.h"
 #include <sstream>
+#include <iostream>
 
 void StateSection::readMap(std::string& line)
 {
@@ -36,6 +37,7 @@ void StateSection::readMap(std::string& line)
     readflag = (flags.find('r') != std::string::npos);
     writeflag = (flags.find('w') != std::string::npos);
     execflag = (flags.find('x') != std::string::npos);
+    sharedflag = (flags.find('s') != std::string::npos);
 
     /* Read the rest */
     iss >> offset >> device >> inode;
@@ -48,7 +50,9 @@ void StateSection::toIovec(struct iovec& local, struct iovec& remote)
 {
     local.iov_base = (void*) mem.data();
     local.iov_len = size;
+    //std::cout << "addr: " << std::hex << addr << std::dec << std::endl;
     remote.iov_base = (void*) addr;
+    //std::cout << "vaddr: " << remote.iov_base << std::endl;
     remote.iov_len = size;
 }
 

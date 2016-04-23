@@ -34,6 +34,7 @@ class StateSection {
         bool readflag;
         bool writeflag;
         bool execflag;
+        bool sharedflag;
         int offset;
         std::string device;
         int inode;
