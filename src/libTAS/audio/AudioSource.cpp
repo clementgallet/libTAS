@@ -331,32 +331,32 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     /* Add mixed source to the output buffer */
     if (outBitDepth == 8) {
         for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-            int myL = static_cast<uint8_t*>(mixedSamples.data())[s];
-            int otherL = static_cast<uint8_t*>(outSamples)[s];
+            int myL = mixedSamples[s];
+            int otherL = outSamples[s];
             int sumL = otherL + ((myL * lvas) >> 16) - 256;
-            static_cast<uint8_t*>(outSamples)[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
+            outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
 
             if (outNbChannels == 2) {
-                int myR = static_cast<uint8_t*>mixedSamples.data()[s+1];
-                int otherR = static_cast<uint8_t*>(outSamples)[s+1];
+                int myR = mixedSamples[s+1];
+                int otherR = outSamples[s+1];
                 int sumR = otherR + ((myR * rvas) >> 16);
-                static_cast<uint8_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
+                outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
             }
         }
     }
 
     if (outBitDepth == 16) {
         for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-            int myL = static_cast<int16_t*>(mixedSamples.data())[s];
-            int otherL = static_cast<int16_t*>(outSamples)[s];
+            int myL = reinterpret_cast<int16_t*>(mixedSamples.data())[s];
+            int otherL = reinterpret_cast<int16_t*>(outSamples)[s];
             int sumL = otherL + ((myL * lvas) >> 16);
-            static_cast<int16_t*>(outSamples)[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
+            reinterpret_cast<int16_t*>(outSamples)[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
 
             if (outNbChannels == 2) {
-                int myR = static_cast<int16_t*>(mixedSamples.data())[s+1];
-                int otherR = static_cast<int16_t*>(outSamples)[s+1];
+                int myR = reinterpret_cast<int16_t*>(mixedSamples.data())[s+1];
+                int otherR = reinterpret_cast<int16_t*>(outSamples)[s+1];
                 int sumR = otherR + ((myR * rvas) >> 16);
-                static_cast<int16_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
+                reinterpret_cast<int16_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
             }
         }
     }

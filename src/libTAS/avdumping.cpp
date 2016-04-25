@@ -319,7 +319,7 @@ int encodeOneFrame(unsigned long fcounter) {
     }
 
     audio_frame->nb_samples = frame_size;
-    audio_frame->pts = av_rescale_q(accum_samples, static_cast<AVRational>({1, audio_st->codec->sample_rate}), audio_st->codec->time_base);
+    audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
     accum_samples += frame_size;
 
     avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,

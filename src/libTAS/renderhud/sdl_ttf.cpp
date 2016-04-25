@@ -175,7 +175,7 @@ static void TTF_initLineMectrics(const TTF_Font *font, const SurfaceARGB *textbu
     Uint8 *dst;
     int height;
 
-    dst = static_cast<Uint8*>(textbuf->pixels.data());
+    dst = reinterpret_cast<Uint8*>(const_cast<unsigned int*>(textbuf->pixels.data()));
     if ( row > 0 ) {
         dst += row * textbuf->pitch;
     }
@@ -913,8 +913,8 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
 {
     const Uint8 *p = *(const Uint8**)src;
     size_t left = 0;
-    SDL_bool overlong = SDL_FALSE;
-    SDL_bool underflow = SDL_FALSE;
+    bool overlong = false;
+    bool underflow = false;
     Uint32 ch = UNKNOWN_UNICODE;
 
     if (*srclen == 0) {
@@ -923,7 +923,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
     if (p[0] >= 0xFC) {
         if ((p[0] & 0xFE) == 0xFC) {
             if (p[0] == 0xFC && (p[1] & 0xFC) == 0x80) {
-                overlong = SDL_TRUE;
+                overlong = true;
             }
             ch = (Uint32) (p[0] & 0x01);
             left = 5;
@@ -931,7 +931,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
     } else if (p[0] >= 0xF8) {
         if ((p[0] & 0xFC) == 0xF8) {
             if (p[0] == 0xF8 && (p[1] & 0xF8) == 0x80) {
-                overlong = SDL_TRUE;
+                overlong = true;
             }
             ch = (Uint32) (p[0] & 0x03);
             left = 4;
@@ -939,7 +939,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
     } else if (p[0] >= 0xF0) {
         if ((p[0] & 0xF8) == 0xF0) {
             if (p[0] == 0xF0 && (p[1] & 0xF0) == 0x80) {
-                overlong = SDL_TRUE;
+                overlong = true;
             }
             ch = (Uint32) (p[0] & 0x07);
             left = 3;
@@ -947,7 +947,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
     } else if (p[0] >= 0xE0) {
         if ((p[0] & 0xF0) == 0xE0) {
             if (p[0] == 0xE0 && (p[1] & 0xE0) == 0x80) {
-                overlong = SDL_TRUE;
+                overlong = true;
             }
             ch = (Uint32) (p[0] & 0x0F);
             left = 2;
@@ -955,7 +955,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
     } else if (p[0] >= 0xC0) {
         if ((p[0] & 0xE0) == 0xC0) {
             if ((p[0] & 0xDE) == 0xC0) {
-                overlong = SDL_TRUE;
+                overlong = true;
             }
             ch = (Uint32) (p[0] & 0x1F);
             left = 1;
@@ -980,7 +980,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
         --left;
     }
     if (left > 0) {
-        underflow = SDL_TRUE;
+        underflow = true;
     }
     /* Technically overlong sequences are invalid and should not be interpreted.
        However, it doesn't cause a security risk here and I don't see any harm in

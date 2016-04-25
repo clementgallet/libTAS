@@ -33,9 +33,9 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "../hook.h"
+//#include "../hook.h"
 #include "../../external/SDL.h"
-#include <stdio.h>
+//#include <stdio.h>
 #include "SurfaceARGB.h"
 #include <memory>
 
