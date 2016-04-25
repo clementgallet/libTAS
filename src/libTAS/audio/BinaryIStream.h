@@ -47,7 +47,7 @@ class BinaryIStream
 
         BinaryIStream(std::vector<uint8_t> &data)
         {
-            values = &data[0];
+            values = data.data();
             size = data.size();
             pos = 0;
             end = false;
@@ -82,7 +82,7 @@ class BinaryIStream
              */
             stream.temp[0] = stream.values[stream.pos];
             stream.temp[1] = stream.values[stream.pos+1];
-            v = *(int16_t*)stream.temp;
+            v = *reinterpret_cast<int16_t*>(stream.temp);
             stream.pos += 2;
             return stream;
         }

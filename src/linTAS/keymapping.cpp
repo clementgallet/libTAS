@@ -128,7 +128,7 @@ void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[
                     int controller_type = si.type % IT_CONTROLLER1_AXIS_LEFTX;
                     int button_start = IT_CONTROLLER1_BUTTON_A % IT_CONTROLLER1_AXIS_LEFTX;
                     if (controller_type < button_start) {
-                        ai->controller_axes[controller_i][controller_type] = (short) si.value;
+                        ai->controller_axes[controller_i][controller_type] = static_cast<short>(si.value);
                     }
                     else {
                         int button_type = controller_type - button_start;

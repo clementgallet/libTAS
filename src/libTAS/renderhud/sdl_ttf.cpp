@@ -175,7 +175,7 @@ static void TTF_initLineMectrics(const TTF_Font *font, const SurfaceARGB *textbu
     Uint8 *dst;
     int height;
 
-    dst = (Uint8 *)textbuf->pixels.data();
+    dst = static_cast<Uint8*>(textbuf->pixels.data());
     if ( row > 0 ) {
         dst += row * textbuf->pitch;
     }

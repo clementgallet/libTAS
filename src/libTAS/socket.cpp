@@ -48,7 +48,7 @@ bool initSocket(void)
 
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (bind(tmp_fd, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)))
+    if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {
         debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't bind client socket.");
         exit(-1);

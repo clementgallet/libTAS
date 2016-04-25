@@ -688,7 +688,7 @@ SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 	if ( xsym ) {
 		switch (xsym>>8) {
 		    case 0x00:	/* Latin 1 */
-			    key = (SDL_Keycode)(xsym & 0xFF);
+			    key = static_cast<SDL_Keycode>(xsym & 0xFF);
 			    break;
 		    case 0x01:	/* Latin 2 */
 		    case 0x02:	/* Latin 3 */
@@ -702,7 +702,7 @@ SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 		    case 0x0C:	/* Hebrew */
 		    case 0x0D:	/* Thai */
 			    /* These are wrong, but it's better than nothing */
-			    key = (SDL_Keycode)(xsym & 0xFF);
+			    key = static_cast<SDL_Keycode>(xsym & 0xFF);
 			    break;
 		    case 0xFE:
                 /* Odd keys used in international keyboards */
@@ -732,7 +732,7 @@ SDL1::SDLKey X11_Translate1Keysym(KeySym xsym)
 	if ( xsym ) {
 		switch (xsym>>8) {
 		    case 0x00:	/* Latin 1 */
-			key = (SDL1::SDLKey)(xsym & 0xFF);
+			key = static_cast<SDL1::SDLKey>(xsym & 0xFF);
 			break;
 		    case 0x01:	/* Latin 2 */
 		    case 0x02:	/* Latin 3 */
@@ -746,7 +746,7 @@ SDL1::SDLKey X11_Translate1Keysym(KeySym xsym)
 		    case 0x0C:	/* Hebrew */
 		    case 0x0D:	/* Thai */
 			/* These are wrong, but it's better than nothing */
-			key = (SDL1::SDLKey)(xsym & 0xFF);
+			key = static_cast<SDL1::SDLKey>(xsym & 0xFF);
 			break;
 		    case 0xFE:
 			break;

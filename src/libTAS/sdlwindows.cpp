@@ -251,7 +251,7 @@ std::string origIcon;
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
-    if (title != NULL)
+    if (title)
         origTitle = title;
     orig::SDL_SetWindowTitle(window, title);
 }
@@ -259,9 +259,9 @@ std::string origIcon;
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
-    if (title != NULL)
+    if (title)
         origTitle = title;
-    if (icon != NULL)
+    if (icon)
         origIcon = icon;
     orig::SDL_WM_SetCaption(title, icon);
 }

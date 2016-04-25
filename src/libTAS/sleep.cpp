@@ -101,14 +101,14 @@ namespace orig {
 {
     bool mainT = isMainThread();
     TimeHolder sleeptime;
+    sleeptime = *req;
     if (flags == 0) {
         /* time is relative */
-        sleeptime = *(TimeHolder*)req;
     }
     else {
         /* time is absolute */
         struct timespec curtime = detTimer.getTicks(TIMETYPE_UNTRACKED);
-        sleeptime = *(TimeHolder*)req - *(TimeHolder*)&curtime;
+        sleeptime -= curtime;
     }
 
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleeptime.tv_sec * 1000000000 + sleeptime.tv_nsec, " nsec");
@@ -119,12 +119,12 @@ namespace orig {
      * do not actually wait
      */
     if (mainT && !threadState.isNative()) {
-        detTimer.addDelay(*(struct timespec*)&sleeptime);
+        detTimer.addDelay(sleeptime);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, rem);
     }
 
-    return orig::nanosleep((struct timespec*)&sleeptime, rem);
+    return orig::nanosleep(&sleeptime, rem);
 }
 
 void link_sleep(void)

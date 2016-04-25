@@ -36,8 +36,8 @@
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
 {
     static int computeCounter = 0;
-    static TimeHolder lastTime = {0, 0};
-    static TimeHolder lastTicks = {0, 0};
+    static TimeHolder lastTime;
+    static TimeHolder lastTicks;
     static int drawFrameCount = 0;
     static int lastFrameCount = 0;
 
@@ -48,18 +48,19 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
         computeCounter = 0;
 
         TimeHolder currentTime;
-        orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+        orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
 
         struct timespec tsTicks = detTimer.getTicks(TIMETYPE_UNTRACKED);
-        TimeHolder currentTicks = *(TimeHolder*)&tsTicks;
+        TimeHolder currentTicks;
+        currentTicks = tsTicks;
 
         /* Compute real fps (number of drawn screens per second) */
         TimeHolder deltaTime = currentTime - lastTime;
-        fps = (float)(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+        fps = static_cast<float>(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
 
         /* Compute logical fps (number of drawn screens per timer second) */
         TimeHolder deltaTicks = currentTicks - lastTicks;
-        lfps = (float)(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+        lfps = static_cast<float>(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
 
         lastTime = currentTime;
         lastTicks = currentTicks;

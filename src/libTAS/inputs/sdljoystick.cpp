@@ -154,7 +154,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
         return -1;
 
     /* This function can be called without the joystick been opened... */
-    return (SDL_JoystickID) *joystick;
+    return static_cast<SDL_JoystickID>(*joystick);
 }
 
 int SDL_JoystickIndex(SDL_Joystick *joystick)
@@ -163,7 +163,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     if (!isIdValidOpen(joystick))
         return -1;
 
-    return (int) joyids[*joystick];
+    return static_cast<int>(*joystick);
 }
 
 /* Override */ int SDL_JoystickNumAxes(SDL_Joystick* joystick)

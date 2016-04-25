@@ -73,7 +73,7 @@ const char joy_name[] = "XInput Controller";
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
     /* We simply return the same id */
-    return (SDL_Joystick*) gamecontroller;
+    return reinterpret_cast<SDL_Joystick*>(gamecontroller);
 }
 
 /* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
@@ -97,7 +97,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
      * The game is supposed to free this, so we must allocate it.
      */
     int mapsize = strlen(xbox360Mapping);
-    char* mapping = (char*) malloc(mapsize+1);
+    char* mapping = static_cast<char*>(malloc(mapsize+1));
     strcpy(mapping, xbox360Mapping);
     return mapping;
 }
@@ -117,7 +117,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
      * The game is supposed to free the char*, so we must 
      * allocate it. */
     int mapsize = strlen(xbox360Mapping);
-    char* mapping = (char*) malloc(mapsize+1);
+    char* mapping = static_cast<char*>(malloc(mapsize+1));
     strcpy(mapping, xbox360Mapping);
     return mapping;
 }

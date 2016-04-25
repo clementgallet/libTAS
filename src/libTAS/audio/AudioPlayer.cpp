@@ -108,7 +108,7 @@ bool AudioPlayer::play(AudioContext& ac)
             format = SND_PCM_FORMAT_U8;
         if (ac.outBitDepth == 16)
             format = SND_PCM_FORMAT_S16_LE;
-        if (!init(format, ac.outNbChannels, (unsigned int)ac.outFrequency))
+        if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency)))
             return false;
         inited = true;
     }

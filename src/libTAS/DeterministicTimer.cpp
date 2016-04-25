@@ -111,7 +111,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     }
 
     TimeHolder fakeTicks = ticks + fakeExtraTicks;
-    return *(struct timespec*)&fakeTicks;
+    return fakeTicks;
 }
 
 
@@ -136,9 +136,9 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
     TimeHolder maxDeferredDelay = timeIncrement * 6;
 
-    addedDelay += *(TimeHolder*)&delayTicks;
-    ticks += *(TimeHolder*)&delayTicks;
-    forceAdvancedTicks += *(TimeHolder*)&delayTicks;
+    addedDelay += delayTicks;
+    ticks += delayTicks;
+    forceAdvancedTicks += delayTicks;
 
     if(!tasflags.fastforward)
     {
@@ -239,13 +239,13 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* Doing the audio mixing here */
-    audiocontext.mixAllSources(*(struct timespec*)&timeIncrement);
+    audiocontext.mixAllSources(timeIncrement);
 
     /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
 
     /* Get the current actual time */
     TimeHolder currentTime;
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
 
     /* calculate the target time we wanted to be at now */
     /* TODO: This is where we would implement slowdown */
@@ -260,7 +260,7 @@ void DeterministicTimer::enterFrameBoundary()
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
-            orig::nanosleep((struct timespec*)&deltaTime, NULL);
+            orig::nanosleep(&deltaTime, NULL);
         }
     }
 
@@ -268,7 +268,7 @@ void DeterministicTimer::enterFrameBoundary()
      * WARNING: This time update is not done in Hourglass,
      * maybe intentionally (the author does not remember).
      */
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&currentTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
 
     lastEnterTime = currentTime;
 
@@ -277,15 +277,16 @@ void DeterministicTimer::enterFrameBoundary()
 }
 
 void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
-    fakeExtraTicks = *(TimeHolder*) &extraTicks;
+    fakeExtraTicks = extraTicks;
 }
 
 void DeterministicTimer::initialize(void)
 {
     getTimes = 0;
-    ticks = {0, 0};
+    ticks.tv_sec = 0;
+    ticks.tv_nsec = 0;
     fractional_part = 0;
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
     lastEnterTicks = ticks;
 
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
@@ -293,9 +294,10 @@ void DeterministicTimer::initialize(void)
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
         altGetTimeLimits[i] = 20;
 
-    forceAdvancedTicks = {0, 0};
-    addedDelay = {0, 0};
-    fakeExtraTicks = {0, 0};
+    addedDelay.tv_sec = 0;
+    addedDelay.tv_nsec = 0;
+    forceAdvancedTicks = addedDelay;
+    fakeExtraTicks = addedDelay;
     lastEnterValid = false;
 
     drawFB = true;

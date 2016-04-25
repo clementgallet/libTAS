@@ -29,9 +29,9 @@ EventQueue::~EventQueue()
 {
     for (auto ev: eventQueue) {
         if (SDLver == 1)
-            delete (SDL1::SDL_Event*) ev;
+            delete static_cast<SDL1::SDL_Event*>(ev);
         if (SDLver == 2)
-            delete (SDL_Event*) ev;
+            delete static_cast<SDL_Event*>(ev);
     }
 }
 
@@ -96,7 +96,7 @@ void EventQueue::insert(SDL_Event* event)
     memcpy(ev, event, sizeof(SDL_Event));
 
     /* Push the event at the end of the queue */
-    eventQueue.push_back((void*)ev);
+    eventQueue.push_back(ev);
 }
 
 void EventQueue::insert(SDL1::SDL_Event* event)
@@ -122,7 +122,7 @@ void EventQueue::insert(SDL1::SDL_Event* event)
     memcpy(ev, event, sizeof(SDL1::SDL_Event));
 
     /* Push the event at the end of the queue */
-    eventQueue.push_back((void*)ev);
+    eventQueue.push_back(ev);
 }
 
 int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
@@ -134,7 +134,7 @@ int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, 
 
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = (SDL_Event*) (*it);
+        SDL_Event* ev = static_cast<SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if ((ev->type >= minType) && (ev->type <= maxType)) {
@@ -145,7 +145,7 @@ int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, 
 
             if (update) {
                 /* Deleting the object and removing it from the list */
-                delete (SDL_Event*)(*it);
+                delete ev;
                 it = eventQueue.erase(it);
             }
             else
@@ -174,7 +174,7 @@ int EventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
 
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL1::SDL_Event* ev = (SDL1::SDL_Event*) (*it);
+        SDL1::SDL_Event* ev = static_cast<SDL1::SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if (mask & SDL_EVENTMASK(ev->type)) {
@@ -209,12 +209,12 @@ void EventQueue::flush(Uint32 minType, Uint32 maxType)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = (SDL_Event*) (*it);
+        SDL_Event* ev = static_cast<SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if ((ev->type >= minType) && (ev->type <= maxType)) {
             /* Deleting the object and removing it from the list */
-            delete (SDL_Event*)(*it);
+            delete ev;
             it = eventQueue.erase(it);
         }
         else {
@@ -227,12 +227,12 @@ void EventQueue::flush(Uint32 mask)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL1::SDL_Event* ev = (SDL1::SDL_Event*) (*it);
+        SDL1::SDL_Event* ev = static_cast<SDL1::SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if (mask & SDL_EVENTMASK(ev->type)) {
             /* Deleting the object and removing it from the list */
-            delete (SDL1::SDL_Event*)(*it);
+            delete ev;
             it = eventQueue.erase(it);
         }
         else {
@@ -245,13 +245,13 @@ void EventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = (SDL_Event*) (*it);
+        SDL_Event* ev = static_cast<SDL_Event*>(*it);
 
         /* Run the filter function and check the result */
         int isKept = filter(userdata, ev);
         if (!isKept) {
             /* Deleting the object and removing it from the list */
-            delete (SDL_Event*)(*it);
+            delete ev;
             it = eventQueue.erase(it);
         }
         else {

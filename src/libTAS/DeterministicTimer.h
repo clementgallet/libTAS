@@ -53,6 +53,11 @@ enum TimeCallType
 
 class DeterministicTimer
 {
+    /* We will be using TimeHolder* <-> struct timespec* casting a lot, so we
+     * must check if TimeHolder has a standard layout so that pointers to
+     * TimeHolder objects can safely ba casted to struct timespec pointers. */
+    static_assert(std::is_standard_layout<TimeHolder>::value, "TimeHolder must be standard layout");
+
 public:
 
     /* Initialize the class members */

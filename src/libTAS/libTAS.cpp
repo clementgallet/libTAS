@@ -88,7 +88,7 @@ void __attribute__((constructor)) init(void)
                 size_t dump_len;
                 receiveData(&dump_len, sizeof(size_t));
                 /* TODO: Put all this in TasFlags class methods */
-                av_filename = (char*)malloc(dump_len+1);
+                av_filename = static_cast<char*>(malloc(dump_len+1));
                 receiveData(av_filename, dump_len);
                 av_filename[dump_len] = '\0';
                 debuglog(LCF_SOCKET, "File ", av_filename);

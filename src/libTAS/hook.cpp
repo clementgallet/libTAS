@@ -99,7 +99,7 @@ int get_sdlversion(void)
         ver = *verp;
     }
 
-    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", (int)ver.major, ".", (int)ver.minor, ".", (int)ver.patch);
+    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", static_cast<int>(ver.major), ".", static_cast<int>(ver.minor), ".", static_cast<int>(ver.patch));
 
     /* We save the version major in an extern variable because we will use it elsewhere */
     SDLver = ver.major;

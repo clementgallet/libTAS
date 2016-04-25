@@ -26,7 +26,7 @@ int16_t DecoderMSADPCM::calculateSample(uint8_t nibble, uint8_t predictor, int16
      * Get a signed number out of the nibble. We need to retain the
      * original nibble value for when we access AdaptionTable[].
      */
-    int8_t signedNibble = (int8_t) nibble;
+    int8_t signedNibble = static_cast<int8_t>(nibble);
     if ((signedNibble & 0x8) == 0x8) {
         signedNibble -= 0x10;
     }
@@ -58,13 +58,13 @@ int16_t DecoderMSADPCM::calculateSample(uint8_t nibble, uint8_t predictor, int16
     } else if (sampleInt > INT16_MAX) {
         sample = INT16_MAX;
     } else {
-        sample = (int16_t) sampleInt;
+        sample = static_cast<int16_t>(sampleInt);
     }
 
     /* Shuffle samples, get new delta */
     sample2 = sample1;
     sample1 = sample;
-    delta = (int16_t) (adaptionTable[nibble] * delta / 256);
+    delta = static_cast<int16_t>(adaptionTable[nibble] * delta / 256);
 
     /* Saturate the delta to a lower bound of 16 */
     if (delta < 16)

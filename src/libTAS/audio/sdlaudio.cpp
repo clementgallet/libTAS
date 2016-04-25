@@ -192,7 +192,7 @@ const char* dummySDLDevice = "libTAS device";
     if (iscapture != 0)
         return 0;
 
-    SDL_OpenAudio((SDL_AudioSpec*)desired, obtained); // TODO: cast probably not good
+    SDL_OpenAudio(const_cast<SDL_AudioSpec*>(desired), obtained); // TODO: cast probably not good
     return 2;    
 }
 
@@ -275,7 +275,7 @@ const char* dummySDLDevice = "libTAS device";
 
     /* Filling buffer */
     ab->samples.clear();
-    ab->samples.insert(ab->samples.end(), &((uint8_t*)data)[0], &((uint8_t*)data)[len]);
+    ab->samples.insert(ab->samples.end(), static_cast<const uint8_t*>(data), &(static_cast<const uint8_t*>(data))[len]);
     ab->size = len;
     sourceSDL->buffer_queue.push_back(ab);
 

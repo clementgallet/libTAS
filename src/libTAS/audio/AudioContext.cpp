@@ -30,7 +30,7 @@ AudioContext audiocontext;
 static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
     static int64_t samples_frac = 0;
-    uint64_t nsecs = ((uint64_t) ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
+    uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
     uint64_t samples = (nsecs * frequency) / 1000000000;
     samples_frac += (nsecs * frequency) % 1000000000;
     if (samples_frac >= 500000000) {
@@ -38,7 +38,7 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
         samples++;
     }
     uint64_t bytes = samples * alignSize;
-    return (int) bytes;
+    return static_cast<int>(bytes);
 }
 
 AudioContext::AudioContext(void)

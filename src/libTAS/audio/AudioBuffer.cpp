@@ -141,7 +141,7 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
 
             /*** 4. Return the proper values ***/
             int rawPosition = position % blockSamples;
-            outSamples = (uint8_t*) &rawSamples[rawPosition*nbChannels];
+            outSamples = reinterpret_cast<uint8_t*>(&rawSamples[rawPosition*nbChannels]);
             int totSamples = nbSamples;
             if ((rawSamples.size()/nbChannels - rawPosition) < nbSamples)
                 totSamples = rawSamples.size()/nbChannels - rawPosition;

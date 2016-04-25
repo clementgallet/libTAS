@@ -252,7 +252,7 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
             }
 
             /* I know memcpy is not recommended for vectors... */
-            memcpy(&winpixels[0], surf1->pixels, size);
+            memcpy(winpixels.data(), surf1->pixels, size);
 
             /* Unlock surface */
             orig::SDL_UnlockSurface(surf1);
@@ -267,11 +267,11 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
                 return 1;
             }
 
-            orig::SDL_RenderReadPixels(renderer, NULL, 0, &winpixels[0], pitch);
+            orig::SDL_RenderReadPixels(renderer, NULL, 0, winpixels.data(), pitch);
         }
     }
 
-    orig_plane[0] = (const uint8_t*)(&winpixels[0]);
+    orig_plane[0] = const_cast<const uint8_t*>(winpixels.data());
     orig_stride[0] = pitch;
 
     return 0;

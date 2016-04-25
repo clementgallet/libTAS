@@ -18,6 +18,7 @@
  */
 
 #include "TimeHolder.h"
+#include <iostream>
 
 TimeHolder TimeHolder::shiftadd(TimeHolder& pow, TimeHolder& mult, int m)
 {

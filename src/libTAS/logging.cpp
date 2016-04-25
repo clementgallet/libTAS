@@ -93,9 +93,9 @@ std::string stringify(unsigned long int id)
     std::ostringstream oss;
     while (id) {
         unsigned long digit = id % 64;
-        if (digit < 26) oss << (char)('A' + digit);
-        else if (digit < 52) oss << (char)('a' + (digit - 26));
-        else if (digit < 62) oss << (char)('0' + (digit - 52));
+        if (digit < 26) oss << static_cast<char>('A' + digit);
+        else if (digit < 52) oss << static_cast<char>('a' + (digit - 26));
+        else if (digit < 62) oss << static_cast<char>('0' + (digit - 52));
         else if (digit == 62) oss << '+';
         else oss << '/';
 

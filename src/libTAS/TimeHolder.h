@@ -25,78 +25,77 @@
 /* Class containing a time value stored as two fields:
  * - tv_sec: number of seconds
  * - tv_nsec: number of nanoseconds
- * This structure reflects the timespec struct.
- * Moreover, this class is designed to be POD (plain old data),
- * so that it should be safely casted to a struct timespec.
+ * Those fields are inherited from the timespec struct, which allows
+ * casting.
  */
 
-class TimeHolder
+class TimeHolder : public timespec
 {
-public:
-    long int tv_sec;
-    long int tv_nsec;
+    public:
 
-    TimeHolder &operator=(const TimeHolder& th)
-    {
-        this->tv_sec = th.tv_sec;
-        this->tv_nsec = th.tv_nsec;
-        return *this;
-    }
+        TimeHolder &operator=(const timespec& th)
+        {
+            this->tv_sec = th.tv_sec;
+            this->tv_nsec = th.tv_nsec;
+            return *this;
+        }
 
-    TimeHolder operator+(const TimeHolder& th)
-    {
-        TimeHolder sum;
-        sum.tv_sec = this->tv_sec + th.tv_sec;
-        sum.tv_nsec = this->tv_nsec + th.tv_nsec;
-        sum.normalize();
-        return sum;
-    }
+        TimeHolder operator+(const timespec& th)
+        {
+            TimeHolder sum;
+            sum.tv_sec = this->tv_sec + th.tv_sec;
+            sum.tv_nsec = this->tv_nsec + th.tv_nsec;
+            sum.normalize();
+            return sum;
+        }
 
-    TimeHolder& operator+=(const TimeHolder& th)
-    {
-        this->tv_sec += th.tv_sec;
-        this->tv_nsec += th.tv_nsec;
-        this->normalize();
-        return *this;
-    }
+        TimeHolder& operator+=(const timespec& th)
+        {
+            this->tv_sec += th.tv_sec;
+            this->tv_nsec += th.tv_nsec;
+            this->normalize();
+            return *this;
+        }
 
-    TimeHolder& operator-=(const TimeHolder& th)
-    {
-        this->tv_sec -= th.tv_sec;
-        this->tv_nsec -= th.tv_nsec;
-        this->normalize();
-        return *this;
-    }
+        TimeHolder& operator-=(const timespec& th)
+        {
+            this->tv_sec -= th.tv_sec;
+            this->tv_nsec -= th.tv_nsec;
+            this->normalize();
+            return *this;
+        }
 
-    TimeHolder operator-(const TimeHolder& th)
-    {
-        TimeHolder diff;
-        diff.tv_sec = this->tv_sec - th.tv_sec;
-        diff.tv_nsec = this->tv_nsec - th.tv_nsec;
-        diff.normalize();
-        return diff;
-    }
+        TimeHolder operator-(const timespec& th)
+        {
+            TimeHolder diff;
+            diff.tv_sec = this->tv_sec - th.tv_sec;
+            diff.tv_nsec = this->tv_nsec - th.tv_nsec;
+            diff.normalize();
+            return diff;
+        }
 
-    TimeHolder operator*(const int& m)
-    {
-        TimeHolder orig = *this;
-        TimeHolder mult = {0, 0};
+        TimeHolder operator*(const int& m)
+        {
+            TimeHolder orig = *this;
+            TimeHolder mult;
+            mult.tv_sec = 0;
+            mult.tv_nsec = 0;
 
-        return shiftadd(orig, mult, m);
-    }
+            return shiftadd(orig, mult, m);
+        }
 
-    bool operator>(const TimeHolder& th ) const
-    {
-        return ((this->tv_sec > th.tv_sec) || ((this->tv_sec == th.tv_sec) && (this->tv_nsec > th.tv_nsec)));
-    }
+        bool operator>(const timespec& th ) const
+        {
+            return ((this->tv_sec > th.tv_sec) || ((this->tv_sec == th.tv_sec) && (this->tv_nsec > th.tv_nsec)));
+        }
 
-    /* Use a shift and add algorithm for multiplying a TimeHolder
-     * by an integer, so that we should never overflow the tv_nsec value
-     */
-    TimeHolder shiftadd(TimeHolder& pow, TimeHolder& mult, int m);
+        /* Use a shift and add algorithm for multiplying a TimeHolder
+         * by an integer, so that we should never overflow the tv_nsec value
+         */
+        TimeHolder shiftadd(TimeHolder& pow, TimeHolder& mult, int m);
 
-    /* Bring the tv_nsec value inside the range [0,999999999] */
-    void normalize();
+        /* Bring the tv_nsec value inside the range [0,999999999] */
+        void normalize();
 };
 
 #endif

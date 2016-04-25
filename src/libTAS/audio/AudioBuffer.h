@@ -28,21 +28,6 @@
  * Taken from http://stackoverflow.com/a/13059195
  */
 
-struct membuf: std::streambuf {
-    membuf(uint8_t const* base, size_t size) {
-        char* p((char*)(base));
-        this->setg(p, p, p + size);
-    }
-};
-
-struct imemstream: virtual membuf, std::istream {
-    imemstream(uint8_t const* base, size_t size)
-        : membuf(base, size)
-        , std::istream(static_cast<std::streambuf*>(this)) {
-    }
-};
-
-
 enum SampleFormat {
     SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
     SAMPLE_FMT_S16, /* Signed 16-bit samples */ 

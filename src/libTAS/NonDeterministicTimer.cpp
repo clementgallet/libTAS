@@ -30,7 +30,7 @@ void NonDeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     lastEnterTicks = ticks;
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lasttime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &lasttime);
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;
@@ -42,7 +42,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
     /* During a frame boundary, we freeze the timer */
     if (inFB)
-        return *(struct timespec*)&ticks;
+        return ticks;
 
     bool isFrameThread = isMainThread();
 
@@ -52,7 +52,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
         /* Get the real clock time */
         TimeHolder realtime;
-        orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&realtime);
+        orig::clock_gettime(CLOCK_MONOTONIC, &realtime);
 
         /* Compute the difference from the last call */
         TimeHolder delta = realtime - lasttime;
@@ -82,7 +82,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
         lasttime = realtime;
     }
-    return *(struct timespec*)&ticks;
+    return ticks;
 }
 
 void NonDeterministicTimer::enterFrameBoundary()
@@ -91,11 +91,11 @@ void NonDeterministicTimer::enterFrameBoundary()
     getTicks();
     inFB = true;
 
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastEnterTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
 
     /* Doing the audio mixing here */
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
-    audiocontext.mixAllSources(*(struct timespec*)&elapsedTicks);
+    audiocontext.mixAllSources(elapsedTicks);
 
     lastEnterTicks = ticks;
 }
@@ -103,7 +103,7 @@ void NonDeterministicTimer::enterFrameBoundary()
 void NonDeterministicTimer::exitFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    orig::clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&lastExitTime);
+    orig::clock_gettime(CLOCK_MONOTONIC, &lastExitTime);
     inFB = false;
 }
 

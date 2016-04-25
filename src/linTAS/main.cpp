@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
     printf("Connecting to libTAS...\n");
 
-    if (connect(socket_fd, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)))
+    if (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {
         printf("Couldn’t connect to socket.\n");
         return 1;
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 #endif
                 if (event.type == KeyPress)
                 {
-                    KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
+                    KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
                     if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
                         }
                     }
 #endif
-                    KeyCode kc = ((XKeyPressedEvent*)&event)->keycode;
+                    KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == hotkeys[HOTKEY_FASTFORWARD]){
                         tasflags.fastforward = 0;
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
 
         } while (isidle);
 
-        struct AllInputs ai;
+        AllInputs ai;
 
         if (tasflags.recording == -1) {
             /* Get keyboard inputs */

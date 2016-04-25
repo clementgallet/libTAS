@@ -40,7 +40,7 @@ void pushNativeEvents(void)
      */
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (orig::SDL_PeepEvents((void*)&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
+        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (! filterSDL1Event(&ev))
                 sdlEventQueue.insert(&ev);
         }
@@ -48,7 +48,7 @@ void pushNativeEvents(void)
 
     if (SDLver == 2) {
         SDL_Event ev;
-        while (orig::SDL_PeepEvents((void*)&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
+        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
     }
@@ -70,7 +70,7 @@ void pushNativeEvents(void)
 
     if (SDLver == 1) {
         mask = minType;
-        events1 = (SDL1::SDL_Event*) events;
+        events1 = reinterpret_cast<SDL1::SDL_Event*>(events);
     }
     
     switch (action) {
@@ -111,7 +111,7 @@ void pushNativeEvents(void)
     if (event) {
         /* Fetch one event with update using our helper function */
         if (SDLver == 1)
-            return sdlEventQueue.pop((SDL1::SDL_Event*)event, 1, SDL1::SDL_ALLEVENTS, true);
+            return sdlEventQueue.pop(reinterpret_cast<SDL1::SDL_Event*>(event), 1, SDL1::SDL_ALLEVENTS, true);
         if (SDLver == 2)
             return sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true);
     } else {
@@ -213,7 +213,7 @@ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
     if (SDLver == 1)
-        sdlEventQueue.setFilter((SDL1::SDL_EventFilter) filter);
+        sdlEventQueue.setFilter(reinterpret_cast<SDL1::SDL_EventFilter>(filter));
     if (SDLver == 2)
         sdlEventQueue.setFilter(filter, userdata);
 }
@@ -222,11 +222,11 @@ void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     if (SDLver == 1)
-        return (void*)sdlEventQueue.getFilter();
+        return reinterpret_cast<void*>(sdlEventQueue.getFilter());
     if (SDLver == 2) {
         if (sdlEventQueue.getFilter(filter, userdata))
-            return (void*)SDL_TRUE;
-        return (void*)SDL_FALSE;
+            return reinterpret_cast<void*>(SDL_TRUE);
+        return reinterpret_cast<void*>(SDL_FALSE);
     }
 
     return NULL;

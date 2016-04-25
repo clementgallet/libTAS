@@ -115,8 +115,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     video_st->codec->bit_rate = 400000;
     video_st->codec->width = width;
     video_st->codec->height = height;
-    video_st->time_base = (AVRational){1,(int)tasflags.framerate};
-    video_st->codec->time_base = (AVRational){1,(int)tasflags.framerate};
+    video_st->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
+    video_st->codec->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
     video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -287,8 +287,8 @@ int encodeOneFrame(unsigned long fcounter) {
 
     if (got_output) {
         /* Rescale output packet timestamp values from codec to stream timebase */
-        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
         vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
         vpkt.stream_index = video_st->index;
         if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
@@ -319,7 +319,7 @@ int encodeOneFrame(unsigned long fcounter) {
     }
 
     audio_frame->nb_samples = frame_size;
-    audio_frame->pts = av_rescale_q(accum_samples, (AVRational){1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
+    audio_frame->pts = av_rescale_q(accum_samples, static_cast<AVRational>({1, audio_st->codec->sample_rate}), audio_st->codec->time_base);
     accum_samples += frame_size;
 
     avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
@@ -333,8 +333,8 @@ int encodeOneFrame(unsigned long fcounter) {
 
     if (got_output) {
         /* We have an encoder output to write */
-        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
         apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
         apkt.stream_index = audio_st->index;
         if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
@@ -367,8 +367,8 @@ int closeAVDumping(void) {
         }
 
         if (got_video) {
-            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
             vpkt.stream_index = video_st->index;
             if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
@@ -391,8 +391,8 @@ int closeAVDumping(void) {
 
         if (got_audio) {
             /* We have an encoder output to write */
-            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
             apkt.stream_index = audio_st->index;
             if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
