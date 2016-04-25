@@ -44,6 +44,12 @@ class SurfaceARGB
         void blit(SurfaceARGB* src, int x, int y);
 };
 
+struct Color
+{
+    uint8_t r, g, b, a;
+};
+
+
 #endif
 #endif
 

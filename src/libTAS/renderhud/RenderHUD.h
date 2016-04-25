@@ -22,7 +22,7 @@
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
 
-#include "../../external/SDL.h"
+//#include "../../external/SDL.h"
 #include "sdl_ttf.h"
 #include "SurfaceARGB.h"
 #include "../../shared/AllInputs.h"
@@ -62,7 +62,7 @@ class RenderHUD
          * @param x         x position of the text (top-left corner)
          * @param y         y position of the text (top-left corner)
          */
-        virtual void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y) {};
+        virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {};
 
         /* Display the frame count on screen */
         void renderFrame(int framecount);
@@ -72,7 +72,7 @@ class RenderHUD
 
     protected:
         /* Create a texture from a text, using colors for the text and the outline */
-        std::unique_ptr<SurfaceARGB> createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color);
+        std::unique_ptr<SurfaceARGB> createTextSurface(const char* text, Color fg_color, Color bg_color);
 
     private:
         int outline_size;

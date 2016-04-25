@@ -20,6 +20,7 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "RenderHUD_SDL2.h"
+#include "../../external/SDL.h"
 #include "../logging.h"
 #include "../hook.h"
 
@@ -48,7 +49,7 @@ void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
     renderer = r;
 }
 
-void RenderHUD_SDL2::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
+void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     static int inited = 0;
     if (inited == 0) {

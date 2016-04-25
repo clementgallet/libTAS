@@ -52,26 +52,26 @@ void RenderHUD::init(const char* path)
 {
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't init SDL TTF.");
+        debuglog(LCF_ERROR, "Couldn't init SDL TTF.");
         return;
     }
 
     fg_font = TTF_OpenFont(path, 20);
     if (fg_font == NULL) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
+        debuglog(LCF_ERROR, "Couldn't load font");
         return;
     }
 
     bg_font = TTF_OpenFont(path, 20);
     if (bg_font == NULL) {
-        debuglog(LCF_ERROR | LCF_SDL, "Couldn't load font");
+        debuglog(LCF_ERROR, "Couldn't load font");
         return;
     }
 
     TTF_SetFontOutline(bg_font, outline_size);
 }
 
-std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, SDL_Color fg_color, SDL_Color bg_color)
+std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
 {
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
     std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
@@ -84,8 +84,8 @@ std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, SDL_
 
 void RenderHUD::renderFrame(int framecount)
 {
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
+    Color fg_color = {255, 255, 255, 0};
+    Color bg_color = {0, 0, 0, 0};
     std::string text = std::to_string(framecount);
     renderText(text.c_str(), fg_color, bg_color, 2, 2);
 }
@@ -130,14 +130,11 @@ void RenderHUD::renderInputs(AllInputs& ai)
     }
 
     /* Render */
-    SDL_Color fg_color = {255, 255, 255, 0};
-    SDL_Color bg_color = {0, 0, 0, 0};
+    Color fg_color = {255, 255, 255, 0};
+    Color bg_color = {0, 0, 0, 0};
     std::string text = oss.str();
     renderText(text.c_str(), fg_color, bg_color, 2, 400);
 }
-
-
-
 
 #endif
 

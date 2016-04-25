@@ -23,7 +23,6 @@
 #define LIBTAS_RENDERHUD_SDL2_H_INCL
 
 #include "RenderHUD.h"
-#include "../../external/SDL.h"
 #include "../sdlwindows.h" // SDL_Renderer
 
 class RenderHUD_SDL2 : public RenderHUD
@@ -32,7 +31,7 @@ class RenderHUD_SDL2 : public RenderHUD
         ~RenderHUD_SDL2();
         void init(void);
         void setRenderer(SDL_Renderer* r);
-        void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y);
+        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 
     private:
         SDL_Renderer* renderer;

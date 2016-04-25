@@ -119,7 +119,7 @@ void RenderHUD_GL::enterRender(void)
     orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
 }
 
-void RenderHUD_GL::renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y)
+void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     static int inited = 0;
     if (inited == 0) {

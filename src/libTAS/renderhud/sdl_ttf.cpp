@@ -24,7 +24,6 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include <math.h>
-//#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -64,7 +63,7 @@ typedef struct cached_glyph {
     int maxy;
     int yoffset;
     int advance;
-    Uint16 cached;
+    uint16_t cached;
 } c_glyph;
 
 /* The structure used to hold internal font information */
@@ -170,14 +169,21 @@ static int TTF_strikethrough_top_row(TTF_Font *font)
     return font->height / 2;
 }
 
-static void TTF_initLineMectrics(const TTF_Font *font, const SurfaceARGB *textbuf, const int row, Uint8 **pdst, int *pheight)
+/* Draw a blended line of underline_height (+ optional outline)
+   at the given row. The row value must take the
+   outline into account.
+*/
+static void TTF_drawLine_Blended(const TTF_Font *font, const SurfaceARGB *textbuf, const int row, const uint32_t color)
 {
-    Uint8 *dst;
+    int line;
+    const uint32_t *dst_check = textbuf->pixels.data() + textbuf->pitch/4 * textbuf->h;
+    uint32_t *dst = const_cast<uint32_t*>(textbuf->pixels.data());
     int height;
+    int col;
+    uint32_t pixel = color | 0xFF000000; /* Amask */
 
-    dst = reinterpret_cast<Uint8*>(const_cast<unsigned int*>(textbuf->pixels.data()));
     if ( row > 0 ) {
-        dst += row * textbuf->pitch;
+        dst += row * textbuf->w;
     }
 
     height = font->underline_height;
@@ -185,26 +191,6 @@ static void TTF_initLineMectrics(const TTF_Font *font, const SurfaceARGB *textbu
     if ( font->outline > 0 ) {
         height += font->outline * 2;
     }
-    *pdst = dst;
-    *pheight = height;
-}
-
-/* Draw a blended line of underline_height (+ optional outline)
-   at the given row. The row value must take the
-   outline into account.
-*/
-static void TTF_drawLine_Blended(const TTF_Font *font, const SurfaceARGB *textbuf, const int row, const Uint32 color)
-{
-    int line;
-    const Uint32 *dst_check = textbuf->pixels.data() + textbuf->pitch/4 * textbuf->h;
-    Uint8 *dst8; /* destination, byte version */
-    Uint32 *dst;
-    int height;
-    int col;
-    Uint32 pixel = color | 0xFF000000; /* Amask */
-
-    TTF_initLineMectrics(font, textbuf, row, &dst8, &height);
-    dst = (Uint32 *) dst8;
 
     /* Draw line */
     for ( line=height; line>0 && dst < dst_check; --line ) {
@@ -224,39 +210,6 @@ void TTF_ByteSwappedUNICODE(int swapped)
     TTF_byteswapped = swapped;
 }
 
-static void TTF_SetFTError(const char *msg, FT_Error error)
-{
-#ifdef USE_FREETYPE_ERRORS
-#undef FTERRORS_H
-#define FT_ERRORDEF( e, v, s )  { e, s },
-    static const struct
-    {
-      int          err_code;
-      const char*  err_msg;
-    } ft_errors[] = {
-#include <freetype/fterrors.h>
-    };
-    int i;
-    const char *err_msg;
-    char buffer[1024];
-
-    err_msg = NULL;
-    for ( i=0; i<((sizeof ft_errors)/(sizeof ft_errors[0])); ++i ) {
-        if ( error == ft_errors[i].err_code ) {
-            err_msg = ft_errors[i].err_msg;
-            break;
-        }
-    }
-    if ( ! err_msg ) {
-        err_msg = "unknown FreeType error";
-    }
-    TTF_SetError("%s: %s", msg, err_msg);
-#else
-    (void)error; // Remove warning
-    TTF_SetError("%s", msg);
-#endif /* USE_FREETYPE_ERRORS */
-}
-
 int TTF_Init( void )
 {
     int status = 0;
@@ -264,7 +217,7 @@ int TTF_Init( void )
     if ( ! TTF_initialized ) {
         FT_Error error = FT_Init_FreeType( &library );
         if ( error ) {
-            TTF_SetFTError("Couldn't init FreeType engine", error);
+            TTF_SetError("Couldn't init FreeType engine");
             status = -1;
         }
     }
@@ -300,7 +253,7 @@ TTF_Font* TTF_OpenFontIndexRW( FILE *src, int freesrc, int ptsize, long index )
     FT_Fixed scale;
     FT_Stream stream;
     FT_CharMap found;
-    Sint64 position;
+    int64_t position;
     int i;
 
     if ( ! TTF_initialized ) {
@@ -359,7 +312,7 @@ TTF_Font* TTF_OpenFontIndexRW( FILE *src, int freesrc, int ptsize, long index )
 
     error = FT_Open_Face( library, &font->args, index, &font->face );
     if ( error ) {
-        TTF_SetFTError( "Couldn't load font file", error );
+        TTF_SetError( "Couldn't load font file" );
         TTF_CloseFont( font );
         return NULL;
     }
@@ -387,7 +340,7 @@ TTF_Font* TTF_OpenFontIndexRW( FILE *src, int freesrc, int ptsize, long index )
         /* Set the character size and use default DPI (72) */
         error = FT_Set_Char_Size( font->face, 0, ptsize * 64, 0, 0 );
         if ( error ) {
-            TTF_SetFTError( "Couldn't set font size", error );
+            TTF_SetError( "Couldn't set font size" );
             TTF_CloseFont( font );
             return NULL;
         }
@@ -460,7 +413,7 @@ TTF_Font* TTF_OpenFontIndex( const char *file, int ptsize, long index )
 {
     FILE *rw = fopen(file, "rb");
     if ( rw == NULL ) {
-        TTF_SetError("Count not open file: %s\n", strerror(errno));
+        TTF_SetError("Count not open file");
         return NULL;
     }
     return TTF_OpenFontIndexRW(rw, 1, ptsize, index);
@@ -499,7 +452,7 @@ static void Flush_Cache( TTF_Font* font )
     }
 }
 
-static FT_Error Load_Glyph( TTF_Font* font, Uint16 ch, c_glyph* cached, int want )
+static FT_Error Load_Glyph( TTF_Font* font, uint16_t ch, c_glyph* cached, int want )
 {
     FT_Face face;
     FT_Error error;
@@ -776,11 +729,11 @@ static FT_Error Load_Glyph( TTF_Font* font, Uint16 ch, c_glyph* cached, int want
             int col;
             int offset;
             int pixel;
-            Uint8* pixmap;
+            uint8_t* pixmap;
 
             /* The pixmap is a little hard, we have to add and clamp */
             for ( row = dst->rows - 1; row >= 0; --row ) {
-                pixmap = (Uint8*) dst->buffer + row * dst->pitch;
+                pixmap = (uint8_t*) dst->buffer + row * dst->pitch;
                 for ( offset=1; offset <= font->glyph_overhang; ++offset ) {
                     for ( col = dst->width - 1; col > 0; --col ) {
                         if ( mono ) {
@@ -790,7 +743,7 @@ static FT_Error Load_Glyph( TTF_Font* font, Uint16 ch, c_glyph* cached, int want
                             if ( pixel > NUM_GRAYS - 1 ) {
                                 pixel = NUM_GRAYS - 1;
                             }
-                            pixmap[col] = (Uint8) pixel;
+                            pixmap[col] = (uint8_t) pixel;
                         }
                     }
                 }
@@ -816,7 +769,7 @@ static FT_Error Load_Glyph( TTF_Font* font, Uint16 ch, c_glyph* cached, int want
     return 0;
 }
 
-static FT_Error Find_Glyph( TTF_Font* font, Uint16 ch, int want )
+static FT_Error Find_Glyph( TTF_Font* font, uint16_t ch, int want )
 {
     int retval = 0;
     int hsize = sizeof( font->cache ) / sizeof( font->cache[0] );
@@ -851,7 +804,7 @@ void TTF_CloseFont( TTF_Font* font )
 }
 
 /* Gets the number of bytes used by a null terminated UCS2 string */
-static size_t UCS2_len(const Uint16 *text)
+static size_t UCS2_len(const uint16_t *text)
 {
     size_t count = 0;
     while (*text++) {
@@ -861,10 +814,10 @@ static size_t UCS2_len(const Uint16 *text)
 }
 
 /* Convert a Latin-1 string to a UTF-8 string */
-static void LATIN1_to_UTF8(const char *src, Uint8 *dst)
+static void LATIN1_to_UTF8(const char *src, uint8_t *dst)
 {
     while (*src) {
-        Uint8 ch = *(Uint8*)src++;
+        uint8_t ch = *(uint8_t*)src++;
         if (ch <= 0x7F) {
             *dst++ = ch;
         } else {
@@ -876,12 +829,12 @@ static void LATIN1_to_UTF8(const char *src, Uint8 *dst)
 }
 
 /* Convert a UCS-2 string to a UTF-8 string */
-static void UCS2_to_UTF8(const Uint16 *src, Uint8 *dst)
+static void UCS2_to_UTF8(const uint16_t *src, uint8_t *dst)
 {
     int swapped = TTF_byteswapped;
 
     while (*src) {
-        Uint16 ch = *(Uint16*)src++;
+        uint16_t ch = *(uint16_t*)src++;
         if (ch == UNICODE_BOM_NATIVE) {
             swapped = 0;
             continue;
@@ -894,14 +847,14 @@ static void UCS2_to_UTF8(const Uint16 *src, Uint8 *dst)
             ch = (ch << 8) | (ch >> 8);
         }
         if (ch <= 0x7F) {
-            *dst++ = (Uint8) ch;
+            *dst++ = (uint8_t) ch;
         } else if (ch <= 0x7FF) {
-            *dst++ = 0xC0 | (Uint8) ((ch >> 6) & 0x1F);
-            *dst++ = 0x80 | (Uint8) (ch & 0x3F);
+            *dst++ = 0xC0 | (uint8_t) ((ch >> 6) & 0x1F);
+            *dst++ = 0x80 | (uint8_t) (ch & 0x3F);
         } else {
-            *dst++ = 0xE0 | (Uint8) ((ch >> 12) & 0x0F);
-            *dst++ = 0x80 | (Uint8) ((ch >> 6) & 0x3F);
-            *dst++ = 0x80 | (Uint8) (ch & 0x3F);
+            *dst++ = 0xE0 | (uint8_t) ((ch >> 12) & 0x0F);
+            *dst++ = 0x80 | (uint8_t) ((ch >> 6) & 0x3F);
+            *dst++ = 0x80 | (uint8_t) (ch & 0x3F);
         }
     }
     *dst = '\0';
@@ -909,13 +862,13 @@ static void UCS2_to_UTF8(const Uint16 *src, Uint8 *dst)
 
 /* Gets a unicode value from a UTF-8 encoded string and advance the string */
 #define UNKNOWN_UNICODE 0xFFFD
-static Uint32 UTF8_getch(const char **src, size_t *srclen)
+static uint32_t UTF8_getch(const char **src, size_t *srclen)
 {
-    const Uint8 *p = *(const Uint8**)src;
+    const uint8_t *p = *(const uint8_t**)src;
     size_t left = 0;
     bool overlong = false;
     bool underflow = false;
-    Uint32 ch = UNKNOWN_UNICODE;
+    uint32_t ch = UNKNOWN_UNICODE;
 
     if (*srclen == 0) {
         return UNKNOWN_UNICODE;
@@ -925,7 +878,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
             if (p[0] == 0xFC && (p[1] & 0xFC) == 0x80) {
                 overlong = true;
             }
-            ch = (Uint32) (p[0] & 0x01);
+            ch = (uint32_t) (p[0] & 0x01);
             left = 5;
         }
     } else if (p[0] >= 0xF8) {
@@ -933,7 +886,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
             if (p[0] == 0xF8 && (p[1] & 0xF8) == 0x80) {
                 overlong = true;
             }
-            ch = (Uint32) (p[0] & 0x03);
+            ch = (uint32_t) (p[0] & 0x03);
             left = 4;
         }
     } else if (p[0] >= 0xF0) {
@@ -941,7 +894,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
             if (p[0] == 0xF0 && (p[1] & 0xF0) == 0x80) {
                 overlong = true;
             }
-            ch = (Uint32) (p[0] & 0x07);
+            ch = (uint32_t) (p[0] & 0x07);
             left = 3;
         }
     } else if (p[0] >= 0xE0) {
@@ -949,7 +902,7 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
             if (p[0] == 0xE0 && (p[1] & 0xE0) == 0x80) {
                 overlong = true;
             }
-            ch = (Uint32) (p[0] & 0x0F);
+            ch = (uint32_t) (p[0] & 0x0F);
             left = 2;
         }
     } else if (p[0] >= 0xC0) {
@@ -957,12 +910,12 @@ static Uint32 UTF8_getch(const char **src, size_t *srclen)
             if ((p[0] & 0xDE) == 0xC0) {
                 overlong = true;
             }
-            ch = (Uint32) (p[0] & 0x1F);
+            ch = (uint32_t) (p[0] & 0x1F);
             left = 1;
         }
     } else {
         if ((p[0] & 0x80) == 0x00) {
-            ch = (Uint32) p[0];
+            ch = (uint32_t) p[0];
         }
     }
     ++*src;
@@ -1048,19 +1001,19 @@ char *TTF_FontFaceStyleName(const TTF_Font *font)
     return(font->face->style_name);
 }
 
-int TTF_GlyphIsProvided(const TTF_Font *font, Uint16 ch)
+int TTF_GlyphIsProvided(const TTF_Font *font, uint16_t ch)
 {
   return(FT_Get_Char_Index(font->face, ch));
 }
 
-int TTF_GlyphMetrics(TTF_Font *font, Uint16 ch,
+int TTF_GlyphMetrics(TTF_Font *font, uint16_t ch,
                      int* minx, int* maxx, int* miny, int* maxy, int* advance)
 {
     FT_Error error;
 
     error = Find_Glyph(font, ch, CACHED_METRICS);
     if ( error ) {
-        TTF_SetFTError("Couldn't find glyph", error);
+        TTF_SetError("Couldn't find glyph");
         return -1;
     }
 
@@ -1091,11 +1044,11 @@ int TTF_GlyphMetrics(TTF_Font *font, Uint16 ch,
 int TTF_SizeText(TTF_Font *font, const char *text, int *w, int *h)
 {
     int status = -1;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, -1);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         status = TTF_SizeUTF8(font, (char *)utf8, w, h);
@@ -1137,14 +1090,14 @@ int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h)
     textlen = strlen(text);
     x= 0;
     while ( textlen > 0 ) {
-        Uint16 c = UTF8_getch(&text, &textlen);
+        uint16_t c = UTF8_getch(&text, &textlen);
         if ( c == UNICODE_BOM_NATIVE || c == UNICODE_BOM_SWAPPED ) {
             continue;
         }
 
         error = Find_Glyph(font, c, CACHED_METRICS);
         if ( error ) {
-            TTF_SetFTError("Couldn't find glyph", error);
+            TTF_SetError("Couldn't find glyph" );
             return -1;
         }
         glyph = font->current;
@@ -1224,14 +1177,14 @@ int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h)
     return status;
 }
 
-int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h)
+int TTF_SizeUNICODE(TTF_Font *font, const uint16_t *text, int *w, int *h)
 {
     int status = -1;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, -1);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         status = TTF_SizeUTF8(font, (char *)utf8, w, h);
@@ -1242,14 +1195,14 @@ int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h)
 }
 
 std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended(TTF_Font *font,
-                const char *text, SDL_Color fg)
+                const char *text, Color fg)
 {
     std::unique_ptr<SurfaceARGB> surface = nullptr;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended(font, (char *)utf8, fg);
@@ -1260,17 +1213,17 @@ std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended(TTF_Font *font,
 }
 
 std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
-                const char *text, SDL_Color fg)
+                const char *text, Color fg)
 {
-    SDL_bool first;
+    bool first;
     int xstart;
     int width, height;
     std::unique_ptr<SurfaceARGB> textbuf;
-    Uint32 alpha;
-    Uint32 pixel;
-    Uint8 *src;
-    Uint32 *dst;
-    Uint32 *dst_check;
+    uint32_t alpha;
+    uint32_t pixel;
+    uint8_t *src;
+    uint32_t *dst;
+    uint32_t *dst_check;
     int row, col;
     c_glyph *glyph;
     FT_Error error;
@@ -1301,19 +1254,19 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
 
     /* Load and render each character */
     textlen = strlen(text);
-    first = SDL_TRUE;
+    first = true;
     xstart = 0;
     pixel = (fg.r<<16)|(fg.g<<8)|fg.b;
     textbuf->fill(pixel); /* Initialize with fg and 0 alpha */
     while ( textlen > 0 ) {
-        Uint16 c = UTF8_getch(&text, &textlen);
+        uint16_t c = UTF8_getch(&text, &textlen);
         if ( c == UNICODE_BOM_NATIVE || c == UNICODE_BOM_SWAPPED ) {
             continue;
         }
 
         error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
         if ( error ) {
-            TTF_SetFTError("Couldn't find glyph", error);
+            TTF_SetError("Couldn't find glyph");
             return NULL;
         }
         glyph = font->current;
@@ -1334,7 +1287,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
         if ( first && (glyph->minx < 0) ) {
             xstart -= glyph->minx;
         }
-        first = SDL_FALSE;
+        first = false;
 
         for ( row = 0; row < (int)glyph->pixmap.rows; ++row ) {
             /* Make sure we don't go either over, or under the
@@ -1352,7 +1305,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
             /* Added code to adjust src pointer for pixmaps to
              * account for pitch.
              * */
-            src = (Uint8*) (glyph->pixmap.buffer + glyph->pixmap.pitch * row);
+            src = (uint8_t*) (glyph->pixmap.buffer + glyph->pixmap.pitch * row);
             for ( col = width; col>0 && dst < dst_check; --col) {
                 alpha = *src++;
                 *dst++ |= pixel | (alpha << 24);
@@ -1381,14 +1334,14 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
 }
 
 std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
-                const Uint16 *text, SDL_Color fg)
+                const uint16_t *text, Color fg)
 {
     std::unique_ptr<SurfaceARGB> surface = nullptr;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended(font, (char *)utf8, fg);
@@ -1399,14 +1352,14 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
 }
 
 
-std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, SDL_Color fg, Uint32 wrapLength)
+std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font, const char *text, Color fg, uint32_t wrapLength)
 {
     std::unique_ptr<SurfaceARGB> surface = nullptr;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (strlen(text)*2+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (strlen(text)*2+1));
     if ( utf8 ) {
         LATIN1_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended_Wrapped(font, (char *)utf8, fg, wrapLength);
@@ -1416,29 +1369,29 @@ std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font, cons
     return surface;
 }
 
-static SDL_bool CharacterIsDelimiter(char c, const char *delimiters)
+static bool CharacterIsDelimiter(char c, const char *delimiters)
 {
     while (*delimiters) {
         if (c == *delimiters) {
-            return SDL_TRUE;
+            return true;
         }
         ++delimiters;
     }
-    return SDL_FALSE;
+    return false;
 }
 
 std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
-                           const char *text, SDL_Color fg, Uint32 wrapLength)
+                           const char *text, Color fg, uint32_t wrapLength)
 {
-    SDL_bool first;
+    bool first;
     int xstart;
     int width, height;
     std::unique_ptr<SurfaceARGB> textbuf;
-    Uint32 alpha;
-    Uint32 pixel;
-    Uint8 *src;
-    Uint32 *dst;
-    Uint32 *dst_check;
+    uint32_t alpha;
+    uint32_t pixel;
+    uint8_t *src;
+    uint32_t *dst;
+    uint32_t *dst_check;
     int row, col;
     c_glyph *glyph;
     FT_Error error;
@@ -1518,7 +1471,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
                 *spot = '\0';
 
                 TTF_SizeUTF8(font, tok, &w, &h);
-                if ((Uint32)w <= wrapLength) {
+                if ((uint32_t)w <= wrapLength) {
                     break;
                 } else {
                     /* Back up and try again... */
@@ -1564,17 +1517,17 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
             text = strLines[line];
         }
         textlen = strlen(text);
-        first = SDL_TRUE;
+        first = true;
         xstart = 0;
         while ( textlen > 0 ) {
-            Uint16 c = UTF8_getch(&text, &textlen);
+            uint16_t c = UTF8_getch(&text, &textlen);
             if ( c == UNICODE_BOM_NATIVE || c == UNICODE_BOM_SWAPPED ) {
                 continue;
             }
 
             error = Find_Glyph(font, c, CACHED_METRICS|CACHED_PIXMAP);
             if ( error ) {
-                TTF_SetFTError("Couldn't find glyph", error);
+                TTF_SetError("Couldn't find glyph");
                 return NULL;
             }
             glyph = font->current;
@@ -1595,7 +1548,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
             if ( first && (glyph->minx < 0) ) {
                 xstart -= glyph->minx;
             }
-            first = SDL_FALSE;
+            first = false;
 
             for ( row = 0; row < (int)glyph->pixmap.rows; ++row ) {
                 /* Make sure we don't go either over, or under the
@@ -1613,7 +1566,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
                 /* Added code to adjust src pointer for pixmaps to
                  * account for pitch.
                  * */
-                src = (Uint8*) (glyph->pixmap.buffer + glyph->pixmap.pitch * row);
+                src = (uint8_t*) (glyph->pixmap.buffer + glyph->pixmap.pitch * row);
                 for ( col = width; col>0 && dst < dst_check; --col) {
                     alpha = *src++;
                     *dst++ |= pixel | (alpha << 24);
@@ -1648,15 +1601,15 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
     return(textbuf);
 }
 
-std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const Uint16* text,
-                                               SDL_Color fg, Uint32 wrapLength)
+std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, const uint16_t* text,
+                                               Color fg, uint32_t wrapLength)
 {
     std::unique_ptr<SurfaceARGB> surface = nullptr;
-    Uint8 *utf8;
+    uint8_t *utf8;
 
     TTF_CHECKPOINTER(text, NULL);
 
-    utf8 = (Uint8*) alloca(sizeof(Uint8) * (UCS2_len(text)*3+1));
+    utf8 = (uint8_t*) alloca(sizeof(uint8_t) * (UCS2_len(text)*3+1));
     if ( utf8 ) {
         UCS2_to_UTF8(text, utf8);
         surface = TTF_RenderUTF8_Blended_Wrapped(font, (char *)utf8, fg, wrapLength);
@@ -1666,10 +1619,10 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font, c
     return surface;
 }
 
-std::unique_ptr<SurfaceARGB> TTF_RenderGlyph_Blended(TTF_Font *font, Uint16 ch, SDL_Color fg)
+std::unique_ptr<SurfaceARGB> TTF_RenderGlyph_Blended(TTF_Font *font, uint16_t ch, Color fg)
 {
-    Uint16 ucs2[2] = { ch, 0 };
-    Uint8 utf8[4];
+    uint16_t ucs2[2] = { ch, 0 };
+    uint8_t utf8[4];
 
     UCS2_to_UTF8(ucs2, utf8);
     return TTF_RenderUTF8_Blended(font, (char *)utf8, fg);
@@ -1743,7 +1696,7 @@ int TTF_WasInit( void )
     return TTF_initialized;
 }
 
-int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch)
+int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t ch)
 {
     int error;
     int glyph_index, prev_index;
@@ -1759,21 +1712,21 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch)
 
     error = Find_Glyph(font, ch, CACHED_METRICS);
     if (error) {
-        TTF_SetFTError("Couldn't find glyph", error);
+        TTF_SetError("Couldn't find glyph");
         return -1;
     }
     glyph_index = font->current->index;
 
     error = Find_Glyph(font, previous_ch, CACHED_METRICS);
     if (error) {
-        TTF_SetFTError("Couldn't find glyph", error);
+        TTF_SetError("Couldn't find glyph");
         return -1;
     }
     prev_index = font->current->index;
 
     error = FT_Get_Kerning(font->face, prev_index, glyph_index, ft_kerning_default, &delta);
     if (error) {
-        TTF_SetFTError("Couldn't get glyph kerning", error);
+        TTF_SetError("Couldn't get glyph kerning");
         return -1;
     }
     return (delta.x >> 6);

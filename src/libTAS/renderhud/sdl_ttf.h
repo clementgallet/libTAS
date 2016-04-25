@@ -33,11 +33,9 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-//#include "../hook.h"
-#include "../../external/SDL.h"
-//#include <stdio.h>
 #include "SurfaceARGB.h"
 #include <memory>
+#include <iostream>
 
 /* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
 */
@@ -118,31 +116,31 @@ char * TTF_FontFaceFamilyName(const TTF_Font *font);
 char * TTF_FontFaceStyleName(const TTF_Font *font);
 
 /* Check wether a glyph is provided by the font or not */
-int TTF_GlyphIsProvided(const TTF_Font *font, Uint16 ch);
+int TTF_GlyphIsProvided(const TTF_Font *font, uint16_t ch);
 
 /* Get the metrics (dimensions) of a glyph
    To understand what these metrics mean, here is a useful link:
     http://freetype.sourceforge.net/freetype2/docs/tutorial/step2.html
  */
-int TTF_GlyphMetrics(TTF_Font *font, Uint16 ch,
+int TTF_GlyphMetrics(TTF_Font *font, uint16_t ch,
                      int *minx, int *maxx,
                                      int *miny, int *maxy, int *advance);
 
 /* Get the dimensions of a rendered string of text */
 int TTF_SizeText(TTF_Font *font, const char *text, int *w, int *h);
 int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h);
-int TTF_SizeUNICODE(TTF_Font *font, const Uint16 *text, int *w, int *h);
+int TTF_SizeUNICODE(TTF_Font *font, const uint16_t *text, int *w, int *h);
 
 /* Create a 32-bit ARGB surface and render the given text at high quality,
    using alpha blending to dither the font with the given color.
    This function returns the new surface, or NULL if there was an error.
 */
 std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended(TTF_Font *font,
-                const char *text, SDL_Color fg);
+                const char *text, Color fg);
 std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
-                const char *text, SDL_Color fg);
+                const char *text, Color fg);
 std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
-                const Uint16 *text, SDL_Color fg);
+                const uint16_t *text, Color fg);
 
 
 /* Create a 32-bit ARGB surface and render the given text at high quality,
@@ -152,11 +150,11 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended(TTF_Font *font,
    This function returns the new surface, or NULL if there was an error.
 */
 std::unique_ptr<SurfaceARGB> TTF_RenderText_Blended_Wrapped(TTF_Font *font,
-                const char *text, SDL_Color fg, Uint32 wrapLength);
+                const char *text, Color fg, uint32_t wrapLength);
 std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
-                const char *text, SDL_Color fg, Uint32 wrapLength);
+                const char *text, Color fg, uint32_t wrapLength);
 std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
-                const Uint16 *text, SDL_Color fg, Uint32 wrapLength);
+                const uint16_t *text, Color fg, uint32_t wrapLength);
 
 /* Create a 32-bit ARGB surface and render the given glyph at high quality,
    using alpha blending to dither the font with the given color.
@@ -165,7 +163,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUNICODE_Blended_Wrapped(TTF_Font *font,
    This function returns the new surface, or NULL if there was an error.
 */
 std::unique_ptr<SurfaceARGB> TTF_RenderGlyph_Blended(TTF_Font *font,
-                        Uint16 ch, SDL_Color fg);
+                        uint16_t ch, Color fg);
 
 /* Close an opened font file */
 void TTF_CloseFont(TTF_Font *font);
@@ -177,11 +175,9 @@ void TTF_Quit(void);
 int TTF_WasInit(void);
 
 /* Get the kerning size of two glyphs */
-int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, Uint16 previous_ch, Uint16 ch);
+int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t ch);
 
-/* We'll use SDL for reporting errors */
-#define TTF_SetError    printf("\n");printf
-//#define TTF_GetError    SDL_GetError
+#define TTF_SetError(MSG)    std::cerr << MSG << std::endl;
 
 #endif
 #endif /* _SDL_TTF_H */

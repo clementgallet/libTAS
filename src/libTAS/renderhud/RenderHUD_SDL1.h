@@ -23,14 +23,13 @@
 #define LIBTAS_RENDERHUD_SDL1_H_INCL
 
 #include "RenderHUD.h"
-#include "../../external/SDL.h"
 
 class RenderHUD_SDL1 : public RenderHUD
 {
     public:
         ~RenderHUD_SDL1();
         void init(void);
-        void renderText(const char* text, SDL_Color fg_color, SDL_Color bg_color, int x, int y);
+        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 };
 
 #endif
