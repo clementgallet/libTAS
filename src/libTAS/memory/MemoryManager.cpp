@@ -320,7 +320,6 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     }
 
     file_size += block_size;
-    //LEAVE(mod->m_blocks->m_address);
     return mod->blocks->address;
 }
 
@@ -338,7 +337,7 @@ uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
      */
     if ((bytes * 2) < allocation_granularity)
     {
-        uint8_t* allocation = allocateInExistingBlock(bytes * 2, flags); // TODO: Why *2 ??
+        uint8_t* allocation = allocateInExistingBlock(bytes, flags);
         if (allocation != nullptr)
         {
             return allocation;
@@ -361,7 +360,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         return nullptr;
     }
 
-    int realloc_bytes = makeBytesAligned(bytes * 2, 8); // TODO: Why *2 ??
+    int realloc_bytes = makeBytesAligned(bytes, 8);
 
     MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED);
 
@@ -403,9 +402,9 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
          * The memory block that would be free'd is smaller than anything that can fit there.
          * Do nothing.
          */
-        debuglogstdio(LCF_MEMORY, "  smaller size");
         if (adjustment < 0)
         {
+            debuglogstdio(LCF_MEMORY, "  smaller size");
             return mbd->address;
         }
 
@@ -467,13 +466,18 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
     /*
      * Adjustment is not possible, allocate somewhere else.
      */
+    debuglogstdio(LCF_MEMORY, "  allocate elsewhere");
     uint8_t* allocation = allocateUnprotected(bytes, flags);
     if (allocation == nullptr)
     {
-        debuglogstdio(LCF_MEMORY, "  allocate elsewhere");
         return nullptr;
     }
-    memcpy(allocation, address, block->bytes);
+    if (bytes < block->bytes) {
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "  cannot copy all the realloc memory");
+        memcpy(allocation, address, bytes);
+    }
+    else
+        memcpy(allocation, address, block->bytes);
     deallocateUnprotected(address);
     return allocation;
 }
@@ -481,7 +485,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 void MemoryManager::deallocateUnprotected(uint8_t* address)
 {
     debuglogstdio(LCF_MEMORY, "%s call with address %p", __func__, address);
-    dumpAllocationTable();
+
     if (address == nullptr)
     {
         return;
