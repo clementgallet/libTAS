@@ -23,6 +23,7 @@
 #include "../shared/tasflags.h"
 #include "unistd.h" // For isatty
 #include <cstdarg>
+#include <cstring>
 
 void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
 {
@@ -73,17 +74,48 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
      * in the following code
      */
     threadState.setNoLog(true);
-    /* Build main log string */
-    char s[2048];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(s, 2048, fmt, args);
-    va_end(args);
 
-    std::string str(s);
-    std::string outstr;
-    debuglogverbose(lcf, str, outstr);
-    fprintf(stderr, outstr.c_str());
+    /* Build main log string */
+    int maxsize = 2048;
+    char s[2048] = {'\0'};
+    int size = 0;
+
+    /* Use the extern variable tasflags */
+    if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
+        /* We only print colors if displayed on a terminal */
+        bool isTerm = isatty(/*cerr*/ 2);
+        if (isTerm) {
+            if (lcf & LCF_ERROR)
+                /* Write the header text in red */
+                strncat(s, ANSI_COLOR_RED, maxsize-size-1);
+            else if (lcf & LCF_TODO)
+                /* Write the header text in light red */
+                strncat(s, ANSI_COLOR_LIGHT_RED, maxsize-size-1);
+            else
+                /* Write the header text in white */
+                strncat(s, ANSI_COLOR_LIGHT_GRAY, maxsize-size-1);
+        }
+        size = strlen(s);
+
+        snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
+        size = strlen(s);
+
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(s + size, maxsize-size-1, fmt, args);
+        va_end(args);
+        size = strlen(s);
+
+        if (isTerm) {
+            /* Reset color change */
+            strncat(s, ANSI_COLOR_RESET "\n", maxsize-size-1);
+        }
+        else
+            strncat(s, "\n", maxsize-size-1);
+
+        fprintf(stderr, s);
+    }
+
     threadState.setNoLog(false);
 }
 

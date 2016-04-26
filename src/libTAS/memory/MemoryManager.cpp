@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <atomic>
 #include <iomanip>
 #include "../logging.h"
 
@@ -132,7 +131,6 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
         int object_flags,
         int block_flags)
 {
-    //ENTER(address, bytes, object_flags, block_flags);
     /*
      * Make sure only relevant flags are set.
      */
@@ -171,13 +169,12 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
         }
     }
 memory_block_search_done:
-    //LEAVE(rv);
     return rv;
 }
 
 uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags)
 {
-    //ENTER(bytes, flags);
+    debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
     bytes = makeBytesAligned(bytes, 8);
     MemoryBlockDescription* best_block = findBlock(nullptr, bytes, flags, MemoryBlockDescription::FREE);
 
@@ -207,18 +204,17 @@ uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags)
         memset(static_cast<void*>(best_block->address), 0, best_block->bytes);
     }
 
-    //LEAVE(best_block->m_address);
     return best_block->address;
 }
 
 uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 {
+    debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
+
     /*
      * Calculate the size of the mapped file and make sure the allocation is a multible of
      * 8 bytes.
      */
-    //ENTER(bytes, flags);
-    static off_t file_size = 0; // TODO: Move it elsewhere
     size_t block_size = allocation_granularity;
     int bytes_for_mod_and_mbd = sizeof(MemoryObjectDescription) + sizeof(MemoryBlockDescription);
     bytes_for_mod_and_mbd = makeBytesAligned(bytes_for_mod_and_mbd, 8);
@@ -252,40 +248,16 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
         access |= PROT_EXEC;
     }
 
-    /*
-     * TODO: Decide a naming scheme, to easier ID segments in a save state.
-     * -- Warepire
-     */
-    /*
-     * Ensure GetLastError() returns an error-code from CreateFileMapping.
-     */
-    //SetLastError(ERROR_SUCCESS);
-    int fd = shm_open("/libtas", O_RDWR | O_CREAT, 0666);
-    if (fd == -1) {
-        /* Error */
+    if (ftruncate(fd, file_size + block_size) == -1) {
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Could not extend shared memory file");
+        return nullptr;
     }
 
-    if (ftruncate(fd, file_size + block_size) == -1) {
-        /* Error */
-    }
-    /*
-       HANDLE map_file = CreateFileMapping(INVALID_HANDLE_VALUE,
-       nullptr,
-       PAGE_EXECUTE_READWRITE,
-       0,
-       file_size,
-       nullptr);
-       if (GetLastError() == ERROR_ALREADY_EXISTS || map_file == nullptr)
-       {
-       return nullptr;
-       }
-       */
     void* addr = mmap(0, block_size, access, MAP_SHARED, fd, file_size);
 
-    //uintptr_t addr = MapViewOfFileEx(map_file, access, 0, 0, file_size, target_address);
-    if (addr == nullptr)
+    if (addr == MAP_FAILED)
     {
-        //CloseHandle(map_file);
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Could not create shared memory block");
         return nullptr;
     }
 
@@ -309,8 +281,12 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     else
     {
         memory_objects->insertSorted(mod);
+        /* Always make memory_objects points to the first MOD */
+        if (memory_objects->prev)
+            memory_objects = static_cast<MemoryObjectDescription*>(memory_objects->prev);
     }
 
+    debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", mod->address, mod->bytes);
     addr = static_cast<void*>(mod->address + sizeof(MemoryObjectDescription));
 
     MemoryBlockDescription* mbd = static_cast<MemoryBlockDescription*>(addr);
@@ -323,6 +299,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
      * There is also no need to insert this one.
      */
     mod->blocks = mbd;
+    debuglogstdio(LCF_MEMORY, "Create new MBD of address %p and size %d", mbd->address, mbd->bytes);
 
     if (static_cast<size_t>(bytes + bytes_for_mod_and_mbd + size_of_mbd) < block_size)
     {
@@ -339,6 +316,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
         mbd->top = mod;
 
         mod->blocks->insertSorted(mbd);
+        debuglogstdio(LCF_MEMORY, "Create new free MBD of address %p and size %d", mbd->address, mbd->bytes);
     }
 
     file_size += block_size;
@@ -348,7 +326,8 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 
 uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
 {
-    //ENTER(bytes, flags);
+    debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
+
     if (bytes == 0)
     {
         return nullptr;
@@ -370,7 +349,7 @@ uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
 
 uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int flags)
 {
-    //ENTER(address, bytes, flags);
+    debuglogstdio(LCF_MEMORY, "%s call with address %p and bytes %d", __func__, address, bytes);
 
     if (address == nullptr)
     {
@@ -407,6 +386,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
          */
         if (adjustment + size_of_mbd < 0)
         {
+            debuglogstdio(LCF_MEMORY, "  smaller size and new free block");
             uint8_t* addr = mbd->address + realloc_bytes;
             MemoryBlockDescription *new_mbd = reinterpret_cast<MemoryBlockDescription*>(addr);
             new_mbd->address = addr + size_of_mbd;
@@ -423,6 +403,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
          * The memory block that would be free'd is smaller than anything that can fit there.
          * Do nothing.
          */
+        debuglogstdio(LCF_MEMORY, "  smaller size");
         if (adjustment < 0)
         {
             return mbd->address;
@@ -442,6 +423,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
              */
             if (mbd->bytes + size_of_mbd <= adjustment)
             {
+                debuglogstdio(LCF_MEMORY, "  larger size to full block");
                 block->bytes += mbd->bytes + size_of_mbd;
                 mbd->unlink();
                 rv = block->address;
@@ -451,6 +433,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
              */
             else
             {
+                debuglogstdio(LCF_MEMORY, "  larger size");
                 uint8_t* addr = mbd->address - size_of_mbd + adjustment;
                 MemoryBlockDescription* new_mbd = reinterpret_cast<MemoryBlockDescription*>(addr);
                 mbd->unlink();
@@ -487,6 +470,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
     uint8_t* allocation = allocateUnprotected(bytes, flags);
     if (allocation == nullptr)
     {
+        debuglogstdio(LCF_MEMORY, "  allocate elsewhere");
         return nullptr;
     }
     memcpy(allocation, address, block->bytes);
@@ -496,7 +480,8 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 
 void MemoryManager::deallocateUnprotected(uint8_t* address)
 {
-    //ENTER(address);
+    debuglogstdio(LCF_MEMORY, "%s call with address %p", __func__, address);
+    dumpAllocationTable();
     if (address == nullptr)
     {
         return;
@@ -505,7 +490,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
     MemoryBlockDescription* block = findBlock(address, 0, 0, MemoryBlockDescription::USED);
     if (block == nullptr)
     {
-        debuglog(LCF_MEMORY, "WARNING: Attempted removal of unknown memory!");
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted removal of unknown memory!");
         return;
     }
     block->flags = MemoryBlockDescription::FREE;
@@ -525,49 +510,43 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         block->next->unlink();
     }
 
-    /*
-     * Entire memory block deallocated, use some address math to find the
-     * MemoryObjectDescription.
-     */
+    /* Entire memory block deallocated. */
     if (block->prev == nullptr && block->next == nullptr && block->flags == MemoryBlockDescription::FREE)
     {
+        debuglogstdio(LCF_MEMORY, "  unmap a block");
         MemoryObjectDescription* mod = static_cast<MemoryObjectDescription*>(block->top);
+
         mod->unlink();
+
+        /* If first MOD of the list, we must update memory_objects */
+        if (!mod->prev)
+            memory_objects = static_cast<MemoryObjectDescription*>(mod->next);
 
         munmap(mod->address, mod->bytes);
     }
-    //LEAVE();
 }
 
 void MemoryManager::init()
 {
-    //ENTER();
-    //DLL_ASSERT(MemoryManagerInternal::memory_manager_inited == false);
+    debuglogstdio(LCF_MEMORY, "%s call", __func__);
+    fd = shm_open("/libtas", O_RDWR | O_CREAT, 0666);
+    if (fd == -1) {
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "  could not open shared memory file");
+        /* Error */
+    }
 
-    //SYSTEM_INFO si;
-    //GetSystemInfo(&si);
-
-    /*
-     * TODO: Decide end address using the game's /LARGEADDRESS flag.
-     * -- Warepire
-     */
-    //const uintptr_t LARGE_ADDRESS_SPACE_START = reinterpret_cast<uintptr_t>(0x80000000);
-    //const uintptr_t LARGE_ADDRESS_SPACE_END = reinterpret_cast<uintptr_t>(0xC0000000);
-    //MemoryManagerInternal::minimum_allowed_address = si.lpMinimumApplicationAddress;
-    //MemoryManagerInternal::maximum_allowed_address = const_cast<uintptr_t>(LARGE_ADDRESS_SPACE_START);
-    /*
-     * TODO: Will this need to be calculated using dwPageSize?
-     * -- Warepire
-     */
     size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 8);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
-    memory_manager_inited = true;
+    inited = true;
+    file_size = 0;
 }
 
 void* MemoryManager::allocate(int bytes, int flags)
 {
-    //DLL_ASSERT(MemoryManagerInternal::memory_manager_inited);
+    if (!inited)
+        init();
+
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags);
     allocation_lock.clear();
@@ -576,7 +555,6 @@ void* MemoryManager::allocate(int bytes, int flags)
 
 void* MemoryManager::reallocate(void* address, int bytes, int flags)
 {
-    //DLL_ASSERT(MemoryManagerInternal::memory_manager_inited);
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
     allocation_lock.clear();
@@ -585,7 +563,6 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
 
 void MemoryManager::deallocate(void* address)
 {
-    //DLL_ASSERT(MemoryManagerInternal::memory_manager_inited);
     while (allocation_lock.test_and_set() == true) {}
     deallocateUnprotected(static_cast<uint8_t*>(address));
     allocation_lock.clear();
@@ -593,8 +570,6 @@ void MemoryManager::deallocate(void* address)
 
 size_t MemoryManager::getSizeOfAllocation(const void* address)
 {
-    //DLL_ASSERT(MemoryManagerInternal::memory_manager_inited);
-    //ENTER(address);
     if (address == nullptr)
     {
         return 0;
@@ -621,13 +596,15 @@ void MemoryManager::dumpAllocationTable()
     while (mod != nullptr)
     {
         mbd = mod->blocks;
-        debuglog(LCF_MEMORY, std::hex, "MOD this=", mod, " addr=", mod->address, " bytes=", mod->bytes, " flags=", mod->flags, " blocks=", mod->blocks, std::dec);
+        debuglogstdio(LCF_MEMORY, "MOD this=%p addr=%p bytes=%d flags=%X blocks=%p", mod, mod->address, mod->bytes, mod->flags, mod->blocks);
         while (mbd != nullptr)
         {
-            debuglog(LCF_MEMORY, std::hex, "MBD this=", mbd, " addr=", mbd->address, " bytes=", mbd->bytes, " flags=", mbd->flags, std::dec);
+            debuglogstdio(LCF_MEMORY, "MBD this=%p addr=%p bytes=%d flags=%X", mbd, mbd->address, mbd->bytes, mbd->flags);
             mbd = static_cast<MemoryBlockDescription*>(mbd->next);
         }
         mod = static_cast<MemoryObjectDescription*>(mod->next);
     }
 }
+
+MemoryManager memorymanager;
 

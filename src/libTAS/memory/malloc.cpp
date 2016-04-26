@@ -23,25 +23,27 @@
 
 void *malloc (size_t size) throw()
 {
-    debuglog(LCF_MEMORY, __func__, " call with size ", size);
-    return memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+    debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
+    void* addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+    debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
+    return addr;
 }
 
 void *calloc (size_t nmemb, size_t size) throw()
 {
-    debuglog(LCF_MEMORY, __func__, " call with size ", nmemb * size);
+    debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     return memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT);
 }
 
 void *realloc (void *ptr, size_t size) throw()
 {
-    debuglog(LCF_MEMORY, __func__, " call with ptr ", ptr, " and size ", size);
+    debuglogstdio(LCF_MEMORY, "%s call with ptr %p and size %d", __func__, ptr, size);
     return memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
 }
 
 void free (void *ptr) throw()
 {
-    debuglog(LCF_MEMORY, __func__, " call with ptr ", ptr);
+    debuglogstdio(LCF_MEMORY, "%s call with ptr %p", __func__, ptr);
     return memorymanager.deallocate(ptr);
 }
 

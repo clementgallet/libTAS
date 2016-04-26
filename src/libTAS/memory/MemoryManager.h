@@ -7,15 +7,7 @@
 #ifndef LIBTAS_MEMORYMANAGER_H_INCLUDED
 #define LIBTAS_MEMORYMANAGER_H_INCLUDED
 
-//#include <Windows.h>
-
-//#include <map>
-//#include <memory>
-//#include <set>
-//#include <utility>
-//#include <vector>
-
-//#include <print.h>
+#include <atomic>
 
 /*
  * Memory Manager
@@ -55,8 +47,8 @@
 
 struct AddressLinkedList
 {
-    AddressLinkedList* prev;
-    AddressLinkedList* next;
+    AddressLinkedList* prev = nullptr;
+    AddressLinkedList* next = nullptr;
     //AddressLinkedList** head;
     uint8_t* address;
     int bytes;
@@ -111,10 +103,12 @@ class MemoryManager
     private:
 
         MemoryObjectDescription* memory_objects = nullptr;
-        bool memory_manager_inited = false;
+        bool inited = false;
         int allocation_granularity;
         int size_of_mbd;
         std::atomic_flag allocation_lock;
+        int fd;
+        off_t file_size;
 
         /*
          * Internal allocation functions
@@ -132,6 +126,8 @@ class MemoryManager
                 int object_flags,
                 int block_flags);
 };
+
+extern MemoryManager memorymanager;
 
 #endif
 
