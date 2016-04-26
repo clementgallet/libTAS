@@ -4,17 +4,18 @@
  * Refer to the file COPYING.txt in the project root.
  */
 
-#pragma once
+#ifndef LIBTAS_MEMORYMANAGER_H_INCLUDED
+#define LIBTAS_MEMORYMANAGER_H_INCLUDED
 
-#include <Windows.h>
+//#include <Windows.h>
 
-#include <map>
-#include <memory>
-#include <set>
-#include <utility>
-#include <vector>
+//#include <map>
+//#include <memory>
+//#include <set>
+//#include <utility>
+//#include <vector>
 
-#include <print.h>
+//#include <print.h>
 
 /*
  * Memory Manager
@@ -51,9 +52,10 @@
  *
  * -- Warepire
  */
+
 namespace MemoryManager
 {
-    enum AllocationFlags : UINT
+    enum AllocationFlags
     {
         ALLOC_WRITE     = 0x00000001,
         ALLOC_READONLY  = 0x00000002,
@@ -64,10 +66,12 @@ namespace MemoryManager
 
     void Init();
 
-    LPVOID Allocate(UINT bytes, UINT flags);
-    LPVOID Reallocate(LPVOID address, UINT bytes, UINT flags);
-    void Deallocate(LPVOID address);
+    void* Allocate(int bytes, int flags);
+    void* Reallocate(void* address, int bytes, int flags);
+    void Deallocate(void* address);
 
-    SIZE_T GetSizeOfAllocation(LPCVOID address);
+    size_t GetSizeOfAllocation(const void* address);
 };
+
+#endif
 
