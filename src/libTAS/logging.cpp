@@ -100,18 +100,19 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
         snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
         size = strlen(s);
 
+        if (isTerm) {
+            /* Reset color change */
+            strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
+            size = strlen(s);
+        }
+
         va_list args;
         va_start(args, fmt);
         vsnprintf(s + size, maxsize-size-1, fmt, args);
         va_end(args);
         size = strlen(s);
 
-        if (isTerm) {
-            /* Reset color change */
-            strncat(s, ANSI_COLOR_RESET "\n", maxsize-size-1);
-        }
-        else
-            strncat(s, "\n", maxsize-size-1);
+        strncat(s, "\n", maxsize-size-1);
 
         fprintf(stderr, s);
     }

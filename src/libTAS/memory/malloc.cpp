@@ -32,13 +32,17 @@ void *malloc (size_t size) throw()
 void *calloc (size_t nmemb, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
-    return memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT);
+    void* addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT);
+    debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
+    return addr;
 }
 
 void *realloc (void *ptr, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p and size %d", __func__, ptr, size);
-    return memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
+    void* addr = memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
+    debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
+    return addr;
 }
 
 void free (void *ptr) throw()

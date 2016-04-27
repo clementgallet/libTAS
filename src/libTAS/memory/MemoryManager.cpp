@@ -14,8 +14,6 @@
 #include "../logging.h"
 
 #include "MemoryManager.h"
-//#include <print.h>
-//#include <Utils.h>
 
 static int makeBytesAligned(int bytes, int alignment)
 {
@@ -24,8 +22,6 @@ static int makeBytesAligned(int bytes, int alignment)
 
 void AddressLinkedList::insertSorted(AddressLinkedList* item)
 {
-    //DLL_ASSERT(list != nullptr && item != nullptr && list->m_address != item->m_address);
-
     AddressLinkedList* it = this;
     while (true)
     {
@@ -59,13 +55,7 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
         }
     }
 }
-/*
- * Helper functions
- */
 
-/*
- * The list-parameter can be any element in the list.
- */
 void AddressLinkedList::unlink()
 {
     //DLL_ASSERT(item != nullptr);
@@ -79,49 +69,6 @@ void AddressLinkedList::unlink()
     }
 }
 
-//uintptr_t minimum_allowed_address = nullptr;
-//uintptr_t maximum_allowed_address = nullptr;
-
-/*
- * TODO: Once debuglog is rewritten, make this a debuglog maskable call
- * -- Warepire
- */
-
-#if 0
-uint8_t* FindAllocationBaseAddress(uint32_t bytes, uint32_t flags)
-{
-    MEMORY_BASIC_INFORMATION best_gap;
-    memset(&best_gap, 0, sizeof(best_gap));
-    MEMORY_BASIC_INFORMATION this_gap;
-    uintptr_t current_address = const_cast<uintptr_t>(minimum_allowed_address);
-
-    while (current_address < maximum_allowed_address)
-    {
-        VirtualQuery(current_address, &this_gap, sizeof(this_gap));
-        current_address = static_cast<LPBYTE>(current_address) + allocation_granularity;
-        if (this_gap.State == MEM_FREE && this_gap.RegionSize >= bytes &&
-                (best_gap.RegionSize > this_gap.RegionSize || best_gap.RegionSize == 0))
-        {
-            best_gap = this_gap;
-            /*
-             * Perfect match, break early.
-             */
-            if (best_gap.RegionSize == bytes)
-            {
-                break;
-            }
-        }
-    }
-    /*
-     * No memory allocation possible, no space available to allocate at.
-     */
-    if (best_gap.RegionSize == 0)
-    {
-        return nullptr;
-    }
-    return best_gap.BaseAddress;
-}
-#endif
 /*
  * A 0 / nullptr value of a parameter means "any"
  * Returns nullptr if block was found.
@@ -223,12 +170,6 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     {
         block_size += allocation_granularity;
     }
-
-    /*uintptr_t target_address = FindAllocationBaseAddress(block_size, flags);
-      if (target_address == nullptr)
-      {
-      return nullptr;
-      }*/
 
     int access = 0;
     if (flags & MemoryManager::ALLOC_WRITE)
@@ -337,7 +278,7 @@ uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
      */
     if ((bytes * 2) < allocation_granularity)
     {
-        uint8_t* allocation = allocateInExistingBlock(bytes, flags);
+        uint8_t* allocation = allocateInExistingBlock(bytes*2, flags);
         if (allocation != nullptr)
         {
             return allocation;
@@ -360,9 +301,15 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         return nullptr;
     }
 
-    int realloc_bytes = makeBytesAligned(bytes, 8);
+    int realloc_bytes = makeBytesAligned(bytes*2, 8);
 
     MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED);
+
+    if (block == nullptr)
+    {
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted realloc of unknown memory!");
+        return nullptr;
+    }
 
     /*
      * Attempt to adjust at the current location.
@@ -514,6 +461,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         block->next->unlink();
     }
 
+#if 0
     /* Entire memory block deallocated. */
     if (block->prev == nullptr && block->next == nullptr && block->flags == MemoryBlockDescription::FREE)
     {
@@ -528,12 +476,13 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
 
         munmap(mod->address, mod->bytes);
     }
+#endif
 }
 
 void MemoryManager::init()
 {
     debuglogstdio(LCF_MEMORY, "%s call", __func__);
-    fd = shm_open("/libtas", O_RDWR | O_CREAT, 0666);
+    fd = shm_open("/libtas", O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd == -1) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "  could not open shared memory file");
         /* Error */
@@ -554,6 +503,8 @@ void* MemoryManager::allocate(int bytes, int flags)
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags);
     allocation_lock.clear();
+    if (!rv)
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
     return static_cast<void*>(rv);
 }
 
@@ -562,6 +513,8 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
     allocation_lock.clear();
+    if (!rv)
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
     return static_cast<void*>(rv);
 }
 
