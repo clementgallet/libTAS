@@ -122,7 +122,7 @@ memory_block_search_done:
 uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
-    bytes = makeBytesAligned(bytes, 8);
+    bytes = makeBytesAligned(bytes, 16);
     MemoryBlockDescription* best_block = findBlock(nullptr, bytes, flags, MemoryBlockDescription::FREE);
 
     if (best_block == nullptr)
@@ -160,12 +160,12 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 
     /*
      * Calculate the size of the mapped file and make sure the allocation is a multible of
-     * 8 bytes.
+     * 16 bytes.
      */
     size_t block_size = allocation_granularity;
     int bytes_for_mod_and_mbd = sizeof(MemoryObjectDescription) + sizeof(MemoryBlockDescription);
-    bytes_for_mod_and_mbd = makeBytesAligned(bytes_for_mod_and_mbd, 8);
-    bytes = makeBytesAligned(bytes, 8);
+    bytes_for_mod_and_mbd = makeBytesAligned(bytes_for_mod_and_mbd, 16);
+    bytes = makeBytesAligned(bytes, 16);
     while (block_size < static_cast<size_t>(bytes + bytes_for_mod_and_mbd))
     {
         block_size += allocation_granularity;
@@ -267,6 +267,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
+    //dumpAllocationTable();
 
     if (bytes == 0)
     {
@@ -278,7 +279,7 @@ uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
      */
     if ((bytes * 2) < allocation_granularity)
     {
-        uint8_t* allocation = allocateInExistingBlock(bytes*2, flags);
+        uint8_t* allocation = allocateInExistingBlock(bytes, flags);
         if (allocation != nullptr)
         {
             return allocation;
@@ -301,7 +302,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         return nullptr;
     }
 
-    int realloc_bytes = makeBytesAligned(bytes*2, 8);
+    int realloc_bytes = makeBytesAligned(bytes, 16);
 
     MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED);
 
@@ -316,16 +317,14 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
      */
     if (realloc_bytes < allocation_granularity && block != nullptr)
     {
-        MemoryBlockDescription* mbd = block;
         int adjustment = (realloc_bytes - block->bytes);
 
         /*
          * No difference.
          */
         if (adjustment == 0)
-
         {
-            return mbd->address;
+            return block->address;
         }
         /*
          * Reallocating to smaller buffer and it would actually free a useful memory block.
@@ -333,17 +332,17 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         if (adjustment + size_of_mbd < 0)
         {
             debuglogstdio(LCF_MEMORY, "  smaller size and new free block");
-            uint8_t* addr = mbd->address + realloc_bytes;
+            uint8_t* addr = block->address + realloc_bytes;
             MemoryBlockDescription *new_mbd = reinterpret_cast<MemoryBlockDescription*>(addr);
             new_mbd->address = addr + size_of_mbd;
-            new_mbd->bytes = abs(adjustment);
+            new_mbd->bytes = block->bytes - realloc_bytes - size_of_mbd;
             new_mbd->flags = MemoryBlockDescription::FREE;
 
-            mbd->bytes = bytes;
+            block->bytes = bytes;
 
-            mbd->insertSorted(new_mbd);
+            block->insertSorted(new_mbd);
 
-            return mbd->address;
+            return block->address;
         }
         /*
          * The memory block that would be free'd is smaller than anything that can fit there.
@@ -352,27 +351,25 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         if (adjustment < 0)
         {
             debuglogstdio(LCF_MEMORY, "  smaller size");
-            return mbd->address;
+            return block->address;
         }
 
         /*
          * Expand block.
          */
-        mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+        MemoryBlockDescription* mbd = static_cast<MemoryBlockDescription*>(block->next);
         if (mbd != nullptr &&
-                mbd->bytes > adjustment &&
+                adjustment <= mbd->bytes + size_of_mbd &&
                 mbd->flags == MemoryBlockDescription::FREE)
         {
-            uint8_t* rv = nullptr;
             /*
              * The remaining part of the block is too small for anything, give the full block.
              */
-            if (mbd->bytes + size_of_mbd <= adjustment)
+            if (adjustment >= mbd->bytes)
             {
                 debuglogstdio(LCF_MEMORY, "  larger size to full block");
                 block->bytes += mbd->bytes + size_of_mbd;
                 mbd->unlink();
-                rv = block->address;
             }
             /*
              * Adjust MemoryBlockDescription and update it.
@@ -385,22 +382,19 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
                 mbd->unlink();
                 memmove(new_mbd, mbd, sizeof(MemoryBlockDescription));
 
-                new_mbd->address = addr + adjustment;
+                new_mbd->address = addr + size_of_mbd;
                 new_mbd->bytes -= adjustment;
 
+                block->bytes += adjustment;
                 block->insertSorted(new_mbd);
-                rv = block->address;
             }
 
-            if (rv != nullptr)
+            if (flags & MemoryManager::ALLOC_ZEROINIT)
             {
-                mbd->bytes = realloc_bytes;
-                if (flags & MemoryManager::ALLOC_ZEROINIT)
-                {
-                    memset(rv + adjustment, 0, adjustment);
-                }
-                return rv;
+                memset(block->address, 0, block->bytes);
             }
+
+            return block->address;
         }
     }
     /*
@@ -488,7 +482,7 @@ void MemoryManager::init()
         /* Error */
     }
 
-    size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 8);
+    size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 16);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
     inited = true;
