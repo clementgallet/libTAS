@@ -7,6 +7,12 @@
 #ifndef LIBTAS_MANAGEDALLOCATOR_H_INCL
 #define LIBTAS_MANAGEDALLOCATOR_H_INCL
 
+#include "MemoryManager.h"
+#include <map>
+#include <set>
+#include <vector>
+#include <string>
+
 template<class T>
 class ManagedAllocator
 {
@@ -34,30 +40,25 @@ class ManagedAllocator
            */
         pointer address(reference x) const
         {
-            ENTER();
             return &x;
         }
         const_pointer address(const_reference x) const
         {
-            ENTER();
             return &x;
         }
 
         pointer allocate(size_type n, const_pointer hint = 0)
         {
-            ENTER(n);
-            static const UINT flags = MemoryManager::ALLOC_WRITE;
-            return reinterpret_cast<pointer>(MemoryManager::Allocate(n * sizeof(value_type), flags));
+            static const int flags = MemoryManager::ALLOC_WRITE;
+            return reinterpret_cast<pointer>(memorymanager.allocate(n * sizeof(value_type), flags));
         }
         void deallocate(pointer p, size_type n)
         {
-            ENTER(p);
-            MemoryManager::Deallocate(p);
+            memorymanager.deallocate(p);
         }
 
         size_type max_size() const
         {
-            ENTER();
             /*
              * Copy Microsoft's own implementation of max_size.
              */
@@ -67,16 +68,14 @@ class ManagedAllocator
         template<class U, class... Args>
             void construct(U* p, Args&&... args)
             {
-                ENTER(p);
                 /*
                  * Placement-new, will not attempt to allocate space.
                  */
-                ::new (reinterpret_cast<LPVOID>(p)) U(std::forward<Args>(args)...);
+                ::new (reinterpret_cast<void*>(p)) U(std::forward<Args>(args)...);
             }
         template<class U>
             void destroy(U* p)
             {
-                ENTER(p);
                 p->~U();
             }
 };
@@ -100,15 +99,18 @@ bool operator!=(const ManagedAllocator<T1>&, const ManagedAllocator<T2>&)
 /*
  * Safe containers, using the regular std containers bare is not allowed.
  */
+namespace safe {
+    template<class key, class value, class compare = std::less<key>>
+        using map = std::map<key, value, compare, ManagedAllocator<std::pair<const key, value>>>;
 
-template<class key, class value, class compare = std::less<key>>
-using SafeMap = std::map<key, value, compare, ManagedAllocator<std::pair<const key, value>>>;
+    template<class key, class compare = std::less<key>>
+        using set = std::set<key, compare, ManagedAllocator<key>>;
 
-template<class key, class compare = std::less<key>>
-using SafeSet = std::set<key, compare, ManagedAllocator<key>>;
+    template<class value>
+        using vector = std::vector<value, ManagedAllocator<value>>;
 
-template<class value>
-using SafeVector = std::vector<value, ManagedAllocator<value>>;
+    using string = std::basic_string<char, std::char_traits<char>, ManagedAllocator<char>>;
+}
 
 #endif
 

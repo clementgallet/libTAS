@@ -47,7 +47,7 @@ bool link_function(void** function, const char* source, const char* library)
      */
 
     if (library != nullptr) {
-        std::string libpath = find_lib(library);
+        safe::string libpath = find_lib(library);
 
         if (! libpath.empty()) {
 

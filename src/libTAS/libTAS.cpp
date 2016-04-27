@@ -74,10 +74,10 @@ void __attribute__((constructor)) init(void)
     /* Receive information from the program */
     int message;
     receiveData(&message, sizeof(int));
-    libraries = new std::vector<std::string>;
+    libraries = new safe::vector<safe::string>;
     while (message != MSGN_END_INIT) {
         std::vector<char> buf;
-        std::string libstring;
+        safe::string libstring;
         switch (message) {
             case MSGN_TASFLAGS:
                 debuglog(LCF_SOCKET, "Receiving tas flags");
