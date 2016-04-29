@@ -91,6 +91,7 @@ class MemoryManager
             REALLOC_NO_MOVE = 0x00000010,
         };
 
+        MemoryManager();
         void init();
 
         void* allocate(int bytes, int flags);
@@ -102,8 +103,7 @@ class MemoryManager
 
     private:
 
-        MemoryObjectDescription* memory_objects = nullptr;
-        bool inited = false;
+        MemoryObjectDescription* memory_objects;
         int allocation_granularity;
         int size_of_mbd;
         std::atomic_flag allocation_lock;
@@ -128,6 +128,7 @@ class MemoryManager
 };
 
 extern MemoryManager memorymanager;
+extern bool mminited;
 
 #endif
 

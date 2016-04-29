@@ -71,6 +71,16 @@ void AddressLinkedList::unlink()
     }
 }
 
+MemoryManager::MemoryManager(void)
+{
+    debuglogstdio(LCF_MEMORY, "%s constructor called!", __func__);
+    if (!mminited) {
+        debuglogstdio(LCF_MEMORY, "%s constructor init!", __func__);
+        memory_objects = nullptr;
+        mminited = true;
+    }
+}
+
 /*
  * A 0 / nullptr value of a parameter means "any"
  * Returns nullptr if block was found.
@@ -482,13 +492,13 @@ void MemoryManager::init()
     size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 16);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
-    inited = true;
     file_size = 0;
+    mminited = true;
 }
 
 void* MemoryManager::allocate(int bytes, int flags)
 {
-    if (!inited)
+    if (!mminited)
         init();
 
     while (allocation_lock.test_and_set() == true) {}
@@ -555,4 +565,5 @@ void MemoryManager::dumpAllocationTable()
 }
 
 MemoryManager memorymanager;
+bool mminited = false;
 
