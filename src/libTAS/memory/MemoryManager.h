@@ -49,7 +49,7 @@ struct AddressLinkedList
 {
     AddressLinkedList* prev = nullptr;
     AddressLinkedList* next = nullptr;
-    //AddressLinkedList** head;
+    AddressLinkedList** head;
     uint8_t* address;
     int bytes;
     int flags;

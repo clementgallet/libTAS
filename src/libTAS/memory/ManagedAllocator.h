@@ -12,6 +12,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include "../logging.h"
 
 template<class T>
 class ManagedAllocator
@@ -31,13 +32,13 @@ class ManagedAllocator
                 typedef ManagedAllocator<U> other;
             };
 
-        /*
-           __nothrow ManagedAllocator() {}
-           __nothrow ManagedAllocator(const ManagedAllocator& alloc) {}
+        
+           ManagedAllocator() {}
+           ManagedAllocator(const ManagedAllocator& alloc) {}
            template<class U>
-           __nothrow ManagedAllocator(const ManagedAllocator<U>& alloc) {}
+           ManagedAllocator(const ManagedAllocator<U>& alloc) {}
            ~ManagedAllocator() {}
-           */
+           
         pointer address(reference x) const
         {
             return &x;
@@ -49,11 +50,13 @@ class ManagedAllocator
 
         pointer allocate(size_type n, const_pointer hint = 0)
         {
+            debuglogstdio(LCF_MEMORY, "%s call with length %d and sizeof %d", __func__, n, sizeof(value_type));
             static const int flags = MemoryManager::ALLOC_WRITE;
             return reinterpret_cast<pointer>(memorymanager.allocate(n * sizeof(value_type), flags));
         }
         void deallocate(pointer p, size_type n)
         {
+            debuglogstdio(LCF_MEMORY, "%s call with pointer %p, length %d and sizeof %d", __func__, p, n, sizeof(value_type));
             memorymanager.deallocate(p);
         }
 

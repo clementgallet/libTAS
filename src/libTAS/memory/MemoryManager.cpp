@@ -22,6 +22,7 @@ static int makeBytesAligned(int bytes, int alignment)
 
 void AddressLinkedList::insertSorted(AddressLinkedList* item)
 {
+    item->head = head;
     AddressLinkedList* it = this;
     while (true)
     {
@@ -36,6 +37,8 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
                 item->prev = it->prev;
                 item->next = it;
                 it->prev = item;
+                if (item->prev == nullptr)
+                    *(item->head) = item;
                 break;
             }
         }
@@ -58,7 +61,6 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
 
 void AddressLinkedList::unlink()
 {
-    //DLL_ASSERT(item != nullptr);
     if (prev != nullptr)
     {
         prev->next = next;
@@ -217,14 +219,12 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 
     if (memory_objects == nullptr)
     {
+        mod->head = reinterpret_cast<AddressLinkedList**>(&memory_objects);
         memory_objects = mod;
     }
     else
     {
         memory_objects->insertSorted(mod);
-        /* Always make memory_objects points to the first MOD */
-        if (memory_objects->prev)
-            memory_objects = static_cast<MemoryObjectDescription*>(memory_objects->prev);
     }
 
     debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", mod->address, mod->bytes);
@@ -235,6 +235,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     mbd->bytes = bytes;
     mbd->flags = MemoryBlockDescription::USED;
     mbd->top = mod;
+    mbd->head = reinterpret_cast<AddressLinkedList**>(&mod->blocks);
     /*
      * mod->blocks is always an invalid pointer here.
      * There is also no need to insert this one.
@@ -463,10 +464,6 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         MemoryObjectDescription* mod = static_cast<MemoryObjectDescription*>(block->top);
 
         mod->unlink();
-
-        /* If first MOD of the list, we must update memory_objects */
-        if (!mod->prev)
-            memory_objects = static_cast<MemoryObjectDescription*>(mod->next);
 
         munmap(mod->address, mod->bytes);
     }
