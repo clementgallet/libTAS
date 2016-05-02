@@ -64,7 +64,7 @@ bool link_function(void** function, const char* source, const char* library)
             }
         }
     }
-    debuglog(LCF_ERROR | LCF_HOOK, "Could not import symbol ", source);
+    debuglogstdio(LCF_ERROR | LCF_HOOK, "Could not import symbol %s", source);
 
     *function = nullptr;
     dlleave();

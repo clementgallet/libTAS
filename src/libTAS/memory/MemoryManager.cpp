@@ -15,6 +15,10 @@
 
 #include "MemoryManager.h"
 
+namespace orig {
+    static void (*free)(void*);
+}
+
 static int makeBytesAligned(int bytes, int alignment)
 {
     return bytes + ((alignment - (bytes % alignment)) % alignment);
@@ -460,6 +464,8 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
     if (block == nullptr)
     {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted removal of unknown memory!");
+        LINK_NAMESPACE(free, nullptr);
+        orig::free(address);
         return;
     }
     block->flags = MemoryBlockDescription::FREE;
