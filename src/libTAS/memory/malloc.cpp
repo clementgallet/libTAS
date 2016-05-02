@@ -22,7 +22,7 @@
 #include "MemoryManager.h"
 #include "../dlhook.h"
 
-bool custom_mm = false; // TODO: Make this an option
+bool custom_mm = true; // TODO: Make this an option
 
 namespace orig {
     static void *(*malloc) (size_t size) throw();
@@ -41,7 +41,7 @@ void *malloc (size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
     if (custom_mm)
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     else {
         LINK_NAMESPACE(malloc, nullptr);
         addr = orig::malloc(size);
@@ -60,7 +60,7 @@ void *calloc (size_t nmemb, size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
     if (custom_mm)
-        addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT);
+        addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT, 0);
     else {
         /*
          * We must add a hack here, because to access to the original
@@ -109,7 +109,7 @@ void *valloc (size_t size) throw()
     void* addr;
     if (custom_mm) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
     else {
         LINK_NAMESPACE(valloc, nullptr);
@@ -125,7 +125,7 @@ void *pvalloc (size_t size) throw()
     void* addr;
     if (custom_mm) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
     else {
         LINK_NAMESPACE(pvalloc, nullptr);
@@ -141,9 +141,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) throw()
     void* addr;
     int ret = 0;
     if (custom_mm) {
-        if (alignment > 16)
-            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment %d not supported!", alignment);
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
         if (!addr)
             ret = ENOMEM;
         *memptr = addr;
@@ -161,9 +159,7 @@ void *aligned_alloc (size_t alignment, size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
     if (custom_mm) {
-        if (alignment > 16)
-            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment %d not supported!", alignment);
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
         LINK_NAMESPACE(aligned_alloc, nullptr);
@@ -178,9 +174,7 @@ void *memalign (size_t alignment, size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
     if (custom_mm) {
-        if (alignment > 16)
-            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment %d not supported!", alignment);
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE);
+        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
         LINK_NAMESPACE(memalign, nullptr);

@@ -54,10 +54,9 @@ struct AddressLinkedList
     int bytes;
     int flags;
 
+    int deltaAlign(int align);
     void insertSorted(AddressLinkedList* item);
     void unlink(void);
-
-
 };
 
 struct MemoryBlockDescription :
@@ -69,6 +68,7 @@ struct MemoryBlockDescription :
         FREE = 0x00000002,
     };
 
+    int header_size;
     AddressLinkedList* top;
 };
 
@@ -94,7 +94,7 @@ class MemoryManager
         MemoryManager();
         void init();
 
-        void* allocate(int bytes, int flags);
+        void* allocate(int bytes, int flags, int align);
         void* reallocate(void* address, int bytes, int flags);
         void deallocate(void* address);
 
@@ -106,6 +106,7 @@ class MemoryManager
 
         MemoryObjectDescription* memory_objects;
         int allocation_granularity;
+        int global_align;
         int size_of_mod;
         int size_of_mbd;
         std::atomic_flag allocation_lock;
@@ -115,9 +116,9 @@ class MemoryManager
         /*
          * Internal allocation functions
          */
-        uint8_t* allocateUnprotected(int bytes, int flags);
-        uint8_t* allocateInExistingBlock(int bytes, int flags);
-        uint8_t* allocateWithNewBlock(int bytes, int flags);
+        uint8_t* allocateUnprotected(int bytes, int flags, int align);
+        uint8_t* allocateInExistingBlock(int bytes, int flags, int align);
+        uint8_t* allocateWithNewBlock(int bytes, int flags, int align);
 
         uint8_t* reallocateUnprotected(uint8_t* address, int bytes, int flags);
 
@@ -126,7 +127,8 @@ class MemoryManager
         MemoryBlockDescription* findBlock(const uint8_t* address,
                 int bytes,
                 int object_flags,
-                int block_flags);
+                int block_flags,
+                int align);
 };
 
 extern MemoryManager memorymanager;

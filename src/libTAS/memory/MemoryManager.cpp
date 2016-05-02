@@ -19,9 +19,21 @@ namespace orig {
     static void (*free)(void*);
 }
 
-static int makeBytesAligned(int bytes, int alignment)
+static intptr_t makeBytesAligned(intptr_t bytes, int alignment)
 {
+    if (alignment == 0)
+        return bytes;
     return bytes + ((alignment - (bytes % alignment)) % alignment);
+}
+
+int AddressLinkedList::deltaAlign(int align)
+{
+    if (align) {
+        intptr_t addr = reinterpret_cast<intptr_t>(address);
+        intptr_t delta = makeBytesAligned(addr, align) - addr;
+        return static_cast<int>(delta);
+    }
+    return 0;
 }
 
 void AddressLinkedList::insertSorted(AddressLinkedList* item)
@@ -87,9 +99,7 @@ void AddressLinkedList::unlink()
 
 MemoryManager::MemoryManager(void)
 {
-    debuglogstdio(LCF_MEMORY, "%s constructor called!", __func__);
     if (!mminited) {
-        debuglogstdio(LCF_MEMORY, "%s constructor init!", __func__);
         memory_objects = nullptr;
         mminited = true;
     }
@@ -102,7 +112,8 @@ MemoryManager::MemoryManager(void)
 MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
         int bytes,
         int object_flags,
-        int block_flags)
+        int block_flags,
+        int align)
 {
     /*
      * Make sure only relevant flags are set.
@@ -112,6 +123,7 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
         MemoryManager::ALLOC_WRITE;
 
     MemoryBlockDescription* rv = nullptr;
+    int best_size = 0;
 
     for (MemoryObjectDescription* mod = memory_objects;
             mod != nullptr;
@@ -125,8 +137,11 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
                     mbd != nullptr;
                     mbd = static_cast<MemoryBlockDescription*>(mbd->next))
             {
+                /* In case we need an aligned address, we have to compute the real size of the block */
+                int block_size = mbd->bytes - mbd->deltaAlign(align);
+
                 if ((!address || address == mbd->address ) &&
-                        (bytes == 0 || bytes <= mbd->bytes) &&
+                        (bytes == 0 || bytes <= block_size) &&
                         (block_flags == 0 || block_flags == mbd->flags))
                 {
                     /* If we find a block by its address, we have a match so returning immediatly */
@@ -134,9 +149,10 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
                         return mbd;
 
                     /* If we find a block by its size, we try to return the block with the smallest difference size */
-                    if (rv == nullptr || mbd->bytes < rv->bytes)
+                    if (rv == nullptr || block_size < best_size)
                     {
                         rv = mbd;
+                        best_size = block_size;
                     }
 
                     /* If we have a perfect size match, returning immediatly */
@@ -151,18 +167,42 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
     return rv;
 }
 
-uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags)
+uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags, int align)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
-    bytes = makeBytesAligned(bytes, 16);
-    MemoryBlockDescription* best_block = findBlock(nullptr, bytes, flags, MemoryBlockDescription::FREE);
+    bytes = makeBytesAligned(static_cast<intptr_t>(bytes), global_align);
+    MemoryBlockDescription* best_block = findBlock(nullptr, bytes, flags, MemoryBlockDescription::FREE, align);
 
     if (best_block == nullptr)
     {
         return 0;
     }
 
+    int da = best_block->deltaAlign(align);
+
+    /* Update the returned block */
     best_block->flags = MemoryBlockDescription::USED;
+    best_block->address = best_block->address + da;
+    if (makeBytesAligned(reinterpret_cast<intptr_t>(best_block->address), align) != reinterpret_cast<intptr_t>(best_block->address))
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Address won't be aligned, bug somewhere!");
+
+    best_block->bytes -= da;
+
+    /* Check if there is enough space to build a new empty block.
+     * Note: empty blocks have zero alignment!
+     *
+     * Before:
+     *   |--------|--------------------------------------------------|
+     *       bb                       bb->bytes
+     *
+     * Alignment:
+     *   |--------|------|-------------------------------------------|
+     *       bb      da               bb->bytes
+     *
+     * New block:
+     *   |--------|------|------------------|--------|---------------|
+     *       bb      da          bytes          mbd      mbd->bytes
+     */
     if (best_block->bytes > bytes + size_of_mbd)
     {
         uint8_t* free_space = best_block->address + bytes;
@@ -186,17 +226,17 @@ uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags)
     return best_block->address;
 }
 
-uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
+uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags, int align)
 {
-    debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
+    debuglogstdio(LCF_MEMORY, "%s call with bytes %d and align %d", __func__, bytes, align);
 
     /*
      * Calculate the size of the mapped file and make sure the allocation is a multible of
-     * 16 bytes.
+     * global_align bytes.
      */
     size_t block_size = allocation_granularity;
-    int bytes_for_mod_and_mbd = size_of_mod + size_of_mbd;
-    bytes = makeBytesAligned(bytes, 16);
+    int bytes_for_mod_and_mbd = makeBytesAligned(static_cast<intptr_t>(size_of_mod + size_of_mbd), align);
+    bytes = makeBytesAligned(static_cast<intptr_t>(bytes), global_align);
     while (block_size < static_cast<size_t>(bytes + bytes_for_mod_and_mbd))
     {
         block_size += allocation_granularity;
@@ -260,7 +300,10 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     addr = static_cast<void*>(mod->address + size_of_mod);
 
     MemoryBlockDescription* mbd = static_cast<MemoryBlockDescription*>(addr);
-    mbd->address = static_cast<uint8_t*>(addr) + size_of_mbd;
+    mbd->address = mod->address + bytes_for_mod_and_mbd;
+    /* Check alignment */
+    if (makeBytesAligned(reinterpret_cast<intptr_t>(mbd->address), align) != reinterpret_cast<intptr_t>(mbd->address))
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Address won't be aligned, bug somewhere!");
     mbd->bytes = bytes;
     mbd->flags = MemoryBlockDescription::USED;
     mbd->top = mod;
@@ -277,17 +320,17 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
         /*
          * This block can be used for more than one allocation.
          */
-        addr = static_cast<void*>(mod->address + bytes + bytes_for_mod_and_mbd);
-        mbd = static_cast<MemoryBlockDescription*>(addr);
+        addr = static_cast<void*>(mbd->address + bytes);
+        MemoryBlockDescription* freembd = static_cast<MemoryBlockDescription*>(addr);
         int free_space = block_size - (bytes + bytes_for_mod_and_mbd + size_of_mbd);
 
-        mbd->address = mod->address + bytes + bytes_for_mod_and_mbd + size_of_mbd;
-        mbd->bytes = free_space;
-        mbd->flags = MemoryBlockDescription::FREE;
-        mbd->top = mod;
+        freembd->address = mod->address + bytes + bytes_for_mod_and_mbd + size_of_mbd;
+        freembd->bytes = free_space;
+        freembd->flags = MemoryBlockDescription::FREE;
+        freembd->top = mod;
 
-        mod->blocks->insertSorted(mbd);
-        debuglogstdio(LCF_MEMORY, "Create new free MBD of address %p and size %d", mbd->address, mbd->bytes);
+        mbd->insertSorted(freembd);
+        debuglogstdio(LCF_MEMORY, "Create new free MBD of address %p and size %d", freembd->address, freembd->bytes);
     }
     else {
         /* We cannot build a free block, so we update the first block to take the whole size */
@@ -295,10 +338,10 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     }
 
     file_size += block_size;
-    return mod->blocks->address;
+    return mbd->address;
 }
 
-uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
+uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags, int align)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
 
@@ -312,13 +355,13 @@ uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
      */
     if ((bytes * 2) < allocation_granularity)
     {
-        uint8_t* allocation = allocateInExistingBlock(bytes, flags);
+        uint8_t* allocation = allocateInExistingBlock(bytes, flags, align);
         if (allocation != nullptr)
         {
             return allocation;
         }
     }
-    return allocateWithNewBlock(bytes, flags);
+    return allocateWithNewBlock(bytes, flags, align);
 }
 
 uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int flags)
@@ -327,7 +370,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 
     if (address == nullptr)
     {
-        return allocateUnprotected(bytes, flags);
+        return allocateUnprotected(bytes, flags, 0);
     }
     if (bytes == 0)
     {
@@ -335,9 +378,9 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
         return nullptr;
     }
 
-    int realloc_bytes = makeBytesAligned(bytes, 16);
+    int realloc_bytes = makeBytesAligned(static_cast<intptr_t>(bytes), global_align);
 
-    MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED);
+    MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED, 0);
 
     if (block == nullptr)
     {
@@ -371,7 +414,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
             new_mbd->bytes = block->bytes - realloc_bytes - size_of_mbd;
             new_mbd->flags = MemoryBlockDescription::FREE;
 
-            block->bytes = bytes;
+            block->bytes = realloc_bytes;
 
             block->insertSorted(new_mbd);
 
@@ -441,7 +484,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
      * Adjustment is not possible, allocate somewhere else.
      */
     debuglogstdio(LCF_MEMORY, "  allocate elsewhere");
-    uint8_t* allocation = allocateUnprotected(bytes, flags);
+    uint8_t* allocation = allocateUnprotected(bytes, flags, 0);
     if (allocation == nullptr)
     {
         return nullptr;
@@ -466,15 +509,21 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         return;
     }
 
-    MemoryBlockDescription* block = findBlock(address, 0, 0, MemoryBlockDescription::USED);
+    MemoryBlockDescription* block = findBlock(address, 0, 0, MemoryBlockDescription::USED, 0);
     if (block == nullptr)
     {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted removal of unknown memory!");
-        LINK_NAMESPACE(free, nullptr);
-        orig::free(address);
+        //LINK_NAMESPACE(free, nullptr);
+        //orig::free(address);
         return;
     }
+
+    /* Flag the block as free. Also, remove any alignment */
     block->flags = MemoryBlockDescription::FREE;
+    uint8_t* base_addr = reinterpret_cast<uint8_t*>(block);
+    intptr_t delta = reinterpret_cast<intptr_t>(block->address) - reinterpret_cast<intptr_t>(base_addr + size_of_mbd);
+    block->address = base_addr + size_of_mbd;
+    block->bytes += delta;
 
     /*
      * Attempt block merging.
@@ -514,21 +563,22 @@ void MemoryManager::init()
         /* Error */
     }
 
-    size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 16);
-    size_of_mod = makeBytesAligned(sizeof(MemoryObjectDescription), 16);
+    global_align = 16;
+    size_of_mbd = makeBytesAligned(static_cast<intptr_t>(sizeof(MemoryBlockDescription)), global_align);
+    size_of_mod = makeBytesAligned(static_cast<intptr_t>(sizeof(MemoryObjectDescription)), global_align);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
     file_size = 0;
     mminited = true;
 }
 
-void* MemoryManager::allocate(int bytes, int flags)
+void* MemoryManager::allocate(int bytes, int flags, int align)
 {
     if (!mminited)
         init();
 
     while (allocation_lock.test_and_set() == true) {}
-    uint8_t* rv = allocateUnprotected(bytes, flags);
+    uint8_t* rv = allocateUnprotected(bytes, flags, align);
     checkAllocationTable();
     allocation_lock.clear();
     if (!rv)
@@ -565,7 +615,7 @@ size_t MemoryManager::getSizeOfAllocation(const void* address)
     while (MemoryManager::allocation_lock.test_and_set() == true) {}
     size_t rv = 0;
     MemoryBlockDescription* mbd =
-        findBlock(static_cast<const uint8_t*>(address), 0, 0, MemoryBlockDescription::USED);
+        findBlock(static_cast<const uint8_t*>(address), 0, 0, MemoryBlockDescription::USED, 0);
 
     if (mbd != nullptr)
     {
@@ -583,15 +633,18 @@ void MemoryManager::checkAllocationTable()
     while (mod != nullptr)
     {
         mbd = mod->blocks;
-        int mod_size = size_of_mod;
+        uint8_t* mod_end;
         while (mbd != nullptr)
         {
-            mod_size += size_of_mbd + mbd->bytes;
-
-            /* Check address value based on MBD base address */
-            uint8_t* comp_addr = reinterpret_cast<uint8_t*>(mbd) + size_of_mbd;
-            if (comp_addr != mbd->address)
-                debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD address %p, should be %p", mbd->address, comp_addr);
+            /*
+             * Check address value based on MBD base address and size of MBD.
+             * This is only relevent for free blocks which does not have alignment
+             */
+            if (mbd->flags == MemoryBlockDescription::FREE) {
+                uint8_t* comp_addr = reinterpret_cast<uint8_t*>(mbd) + size_of_mbd;
+                if (comp_addr != mbd->address)
+                    debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD address %p, should be %p", mbd->address, comp_addr);
+            }
 
             /* Check continuity with the next MBD */
             if (mbd->next) {
@@ -599,13 +652,17 @@ void MemoryManager::checkAllocationTable()
                 if (mbd->address + mbd->bytes != next_mbd_addr)
                     debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD interval. Next MBD is %p, should be %p", next_mbd_addr, mbd->address + mbd->bytes);
             }
+            else {
+                /* Compute the end address of the last block */
+                mod_end = mbd->address + mbd->bytes;
+            }
 
             mbd = static_cast<MemoryBlockDescription*>(mbd->next);
         }
         
-        /* Check size of MDO */
-        if (mod_size != mod->bytes)
-            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MOD size. Stored %d and computed %d", mod->bytes, mod_size);
+        /* Check end of MOD */
+        if (mod_end != mod->address + mod->bytes)
+            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MOD end. %p from MOD and %p from last MBD", mod->address + mod->bytes, mod_end);
 
         mod = static_cast<MemoryObjectDescription*>(mod->next);
     }

@@ -52,7 +52,7 @@ class ManagedAllocator
         {
             debuglogstdio(LCF_MEMORY, "%s call with length %d and sizeof %d", __func__, n, sizeof(value_type));
             static const int flags = MemoryManager::ALLOC_WRITE;
-            return reinterpret_cast<pointer>(memorymanager.allocate(n * sizeof(value_type), flags));
+            return reinterpret_cast<pointer>(memorymanager.allocate(n * sizeof(value_type), flags, 0));
         }
         void deallocate(pointer p, size_type n)
         {
