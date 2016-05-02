@@ -141,12 +141,18 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
                 int block_size = mbd->bytes - mbd->deltaAlign(align);
 
                 if ((!address || address == mbd->address ) &&
-                        (bytes == 0 || bytes <= block_size) &&
+                        (bytes == 0 || block_size >= bytes) &&
                         (block_flags == 0 || block_flags == mbd->flags))
                 {
                     /* If we find a block by its address, we have a match so returning immediatly */
                     if (address)
                         return mbd;
+
+                    /* If we have a good size match, returning immediatly */
+                    if (block_size < bytes * 2)
+                    {
+                        return mbd;
+                    }
 
                     /* If we find a block by its size, we try to return the block with the smallest difference size */
                     if (rv == nullptr || block_size < best_size)
@@ -155,11 +161,6 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
                         best_size = block_size;
                     }
 
-                    /* If we have a perfect size match, returning immediatly */
-                    if (bytes == rv->bytes)
-                    {
-                        return mbd;
-                    }
                 }
             }
         }
@@ -579,7 +580,7 @@ void* MemoryManager::allocate(int bytes, int flags, int align)
 
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags, align);
-    checkAllocationTable();
+    //checkAllocationTable();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -590,7 +591,7 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
 {
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
-    checkAllocationTable();
+    //checkAllocationTable();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -601,7 +602,7 @@ void MemoryManager::deallocate(void* address)
 {
     while (allocation_lock.test_and_set() == true) {}
     deallocateUnprotected(static_cast<uint8_t*>(address));
-    checkAllocationTable();
+    //checkAllocationTable();
     allocation_lock.clear();
 }
 
