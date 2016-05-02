@@ -175,8 +175,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
      * 16 bytes.
      */
     size_t block_size = allocation_granularity;
-    int bytes_for_mod_and_mbd = sizeof(MemoryObjectDescription) + sizeof(MemoryBlockDescription);
-    bytes_for_mod_and_mbd = makeBytesAligned(bytes_for_mod_and_mbd, 16);
+    int bytes_for_mod_and_mbd = size_of_mod + size_of_mbd;
     bytes = makeBytesAligned(bytes, 16);
     while (block_size < static_cast<size_t>(bytes + bytes_for_mod_and_mbd))
     {
@@ -216,7 +215,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 
     if (flags & MemoryManager::ALLOC_ZEROINIT)
     {
-        memset(addr, 0, bytes + bytes_for_mod_and_mbd);
+        memset(addr, 0, block_size);
     }
 
     MemoryObjectDescription* mod = static_cast<MemoryObjectDescription*>(addr);
@@ -238,10 +237,10 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
     }
 
     debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", mod->address, mod->bytes);
-    addr = static_cast<void*>(mod->address + sizeof(MemoryObjectDescription));
+    addr = static_cast<void*>(mod->address + size_of_mod);
 
     MemoryBlockDescription* mbd = static_cast<MemoryBlockDescription*>(addr);
-    mbd->address = mod->address + bytes_for_mod_and_mbd;
+    mbd->address = static_cast<uint8_t*>(addr) + size_of_mbd;
     mbd->bytes = bytes;
     mbd->flags = MemoryBlockDescription::USED;
     mbd->top = mod;
@@ -278,7 +277,6 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
 uint8_t* MemoryManager::allocateUnprotected(int bytes, int flags)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
-    //dumpAllocationTable();
 
     if (bytes == 0)
     {
@@ -391,7 +389,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
                 uint8_t* addr = mbd->address - size_of_mbd + adjustment;
                 MemoryBlockDescription* new_mbd = reinterpret_cast<MemoryBlockDescription*>(addr);
                 mbd->unlink();
-                memmove(new_mbd, mbd, sizeof(MemoryBlockDescription));
+                memmove(new_mbd, mbd, size_of_mbd);
 
                 new_mbd->address = addr + size_of_mbd;
                 new_mbd->bytes -= adjustment;
@@ -437,6 +435,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 void MemoryManager::deallocateUnprotected(uint8_t* address)
 {
     debuglogstdio(LCF_MEMORY, "%s call with address %p", __func__, address);
+    dumpAllocationTable();
 
     if (address == nullptr)
     {
@@ -490,6 +489,7 @@ void MemoryManager::init()
     }
 
     size_of_mbd = makeBytesAligned(sizeof(MemoryBlockDescription), 16);
+    size_of_mod = makeBytesAligned(sizeof(MemoryObjectDescription), 16);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
     file_size = 0;
@@ -503,6 +503,7 @@ void* MemoryManager::allocate(int bytes, int flags)
 
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags);
+    checkAllocationTable();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -513,6 +514,7 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
 {
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
+    checkAllocationTable();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -523,6 +525,7 @@ void MemoryManager::deallocate(void* address)
 {
     while (allocation_lock.test_and_set() == true) {}
     deallocateUnprotected(static_cast<uint8_t*>(address));
+    checkAllocationTable();
     allocation_lock.clear();
 }
 
@@ -545,6 +548,41 @@ size_t MemoryManager::getSizeOfAllocation(const void* address)
 
     allocation_lock.clear();
     return rv;
+}
+
+void MemoryManager::checkAllocationTable()
+{
+    MemoryObjectDescription* mod = memory_objects;
+    MemoryBlockDescription* mbd = nullptr;
+    while (mod != nullptr)
+    {
+        mbd = mod->blocks;
+        int mod_size = size_of_mod;
+        while (mbd != nullptr)
+        {
+            mod_size += size_of_mbd + mbd->bytes;
+
+            /* Check address value based on MBD base address */
+            uint8_t* comp_addr = reinterpret_cast<uint8_t*>(mbd) + size_of_mbd;
+            if (comp_addr != mbd->address)
+                debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD address %p, should be %p", mbd->address, comp_addr);
+
+            /* Check continuity with the next MBD */
+            if (mbd->next) {
+                uint8_t* next_mbd_addr = reinterpret_cast<uint8_t*>(mbd->next);
+                if (mbd->address + mbd->bytes != next_mbd_addr)
+                    debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD interval. Next MBD is %p, should be %p", next_mbd_addr, mbd->address + mbd->bytes);
+            }
+
+            mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+        }
+        
+        /* Check size of MDO */
+        if (mod_size != mod->bytes)
+            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MOD size. Stored %d and computed %d", mod->bytes, mod_size);
+
+        mod = static_cast<MemoryObjectDescription*>(mod->next);
+    }
 }
 
 void MemoryManager::dumpAllocationTable()

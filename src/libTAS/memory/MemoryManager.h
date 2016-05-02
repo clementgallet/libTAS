@@ -100,11 +100,13 @@ class MemoryManager
 
         size_t getSizeOfAllocation(const void* address);
         void dumpAllocationTable();
+        void checkAllocationTable();
 
     private:
 
         MemoryObjectDescription* memory_objects;
         int allocation_granularity;
+        int size_of_mod;
         int size_of_mbd;
         std::atomic_flag allocation_lock;
         int fd;

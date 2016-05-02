@@ -57,6 +57,9 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
             oss << ANSI_COLOR_RESET;
         }
 
+        if (lcf & LCF_ERROR)
+            oss << "ERROR: ";
+
         /* Output arguments */
         oss << str << std::endl;
 
@@ -103,6 +106,11 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
         if (isTerm) {
             /* Reset color change */
             strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
+            size = strlen(s);
+        }
+
+        if (lcf & LCF_ERROR) {
+            strncat(s, "ERROR: ", maxsize-size-1);
             size = strlen(s);
         }
 
