@@ -23,9 +23,33 @@
 #include "../global.h"
 #include <cstdlib>
 
+/* Allocate SIZE bytes of memory.  */
 OVERRIDE void *malloc (size_t size) throw();
+
+/* Allocate NMEMB elements of SIZE bytes each, all initialized to 0.  */
 OVERRIDE void *calloc (size_t nmemb, size_t size) throw();
+
+/* Re-allocate the previously allocated block in ptr, making the new
+   block SIZE bytes long.  */
 OVERRIDE void *realloc (void *ptr, size_t size) throw();
+
+/* Allocate SIZE bytes on a page boundary.  */
+OVERRIDE void *valloc (size_t size) throw();
+
+/* Equivalent to valloc(minimum-page-that-holds(n)), that is, round up
+   size to nearest pagesize. */
+OVERRIDE void *pvalloc (size_t size) throw();
+
+/* Allocate memory of SIZE bytes with an alignment of ALIGNMENT.  */
+OVERRIDE int posix_memalign (void **memptr, size_t alignment, size_t size) throw();
+
+/* ISO C variant of aligned allocation.  */
+OVERRIDE void *aligned_alloc (size_t alignment, size_t size) throw();
+
+/* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */
+OVERRIDE void *memalign (size_t alignment, size_t size) throw();
+
+/* Free a block allocated by `malloc', `realloc' or `calloc'.  */
 OVERRIDE void free (void *ptr) throw();
 
 #endif
