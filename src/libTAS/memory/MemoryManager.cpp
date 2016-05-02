@@ -34,11 +34,17 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
             }
             else
             {
+                /* Insert item between it->prev (possibly nullptr) and it */
                 item->prev = it->prev;
                 item->next = it;
-                it->prev = item;
-                if (item->prev == nullptr)
+                if (it->prev) {
+                    it->prev->next = item;
+                }
+                else {
+                    /* item becomes the first element, updating head */
                     *(item->head) = item;
+                }
+                it->prev = item;
                 break;
             }
         }
@@ -50,8 +56,11 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
             }
             else
             {
+                /* Insert item between it and it->next (possibly nullptr) */
                 item->prev = it;
                 item->next = it->next;
+                if (it->next)
+                    it->next->prev = item;
                 it->next = item;
                 break;
             }
@@ -61,12 +70,13 @@ void AddressLinkedList::insertSorted(AddressLinkedList* item)
 
 void AddressLinkedList::unlink()
 {
-    if (prev != nullptr)
-    {
+    if (prev == nullptr) {
+        *head = next;
+    }
+    else {
         prev->next = next;
     }
-    if (next != nullptr)
-    {
+    if (next != nullptr) {
         next->prev = prev;
     }
 }
@@ -269,6 +279,10 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags)
         mod->blocks->insertSorted(mbd);
         debuglogstdio(LCF_MEMORY, "Create new free MBD of address %p and size %d", mbd->address, mbd->bytes);
     }
+    else {
+        /* We cannot build a free block, so we update the first block to take the whole size */
+        mbd->bytes = block_size - bytes_for_mod_and_mbd;
+    }
 
     file_size += block_size;
     return mod->blocks->address;
@@ -435,7 +449,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 void MemoryManager::deallocateUnprotected(uint8_t* address)
 {
     debuglogstdio(LCF_MEMORY, "%s call with address %p", __func__, address);
-    dumpAllocationTable();
+    //dumpAllocationTable();
 
     if (address == nullptr)
     {
