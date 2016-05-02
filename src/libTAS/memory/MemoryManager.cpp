@@ -97,7 +97,7 @@ MemoryManager::MemoryManager(void)
 
 /*
  * A 0 / nullptr value of a parameter means "any"
- * Returns nullptr if block was found.
+ * Returns nullptr if no block was found.
  */
 MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
         int bytes,
@@ -118,30 +118,36 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
             mod = static_cast<MemoryObjectDescription*>(mod->next))
     {
         uint8_t* mod_end_address = mod->address + mod->bytes;
-        if (((address != nullptr && address >= mod->address && address < mod_end_address) || address == nullptr) &&
-                ((object_flags != 0 && object_flags == mod->flags) || object_flags == 0))
+        if ((!address || (address >= mod->address && address < mod_end_address)) &&
+                (object_flags == 0 || object_flags == mod->flags))
         {
             for (MemoryBlockDescription* mbd = mod->blocks;
                     mbd != nullptr;
                     mbd = static_cast<MemoryBlockDescription*>(mbd->next))
             {
-                if (((address != nullptr && address == mbd->address) || address == nullptr) &&
-                        ((bytes != 0 && bytes <= mbd->bytes) || bytes == 0) &&
-                        ((block_flags != 0 && block_flags == mbd->flags) || block_flags == 0))
+                if ((!address || address == mbd->address ) &&
+                        (bytes == 0 || bytes <= mbd->bytes) &&
+                        (block_flags == 0 || block_flags == mbd->flags))
                 {
-                    if (rv == nullptr || rv->bytes > mbd->bytes)
+                    /* If we find a block by its address, we have a match so returning immediatly */
+                    if (address)
+                        return mbd;
+
+                    /* If we find a block by its size, we try to return the block with the smallest difference size */
+                    if (rv == nullptr || mbd->bytes < rv->bytes)
                     {
                         rv = mbd;
                     }
+
+                    /* If we have a perfect size match, returning immediatly */
                     if (bytes == rv->bytes)
                     {
-                        goto memory_block_search_done;
+                        return mbd;
                     }
                 }
             }
         }
     }
-memory_block_search_done:
     return rv;
 }
 
