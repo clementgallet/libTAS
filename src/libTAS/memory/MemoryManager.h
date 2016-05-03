@@ -55,8 +55,7 @@ struct AddressLinkedList
     int flags;
 
     int deltaAlign(int align);
-    void insertSorted(AddressLinkedList* item);
-    void unlink(void);
+    void insert(AddressLinkedList* all);
 };
 
 struct MemoryBlockDescription :
@@ -124,8 +123,8 @@ class MemoryManager
 
         void deallocateUnprotected(uint8_t* address);
 
-        MemoryBlockDescription* findBlock(const uint8_t* address,
-                int bytes,
+        MemoryBlockDescription* findBlock(const uint8_t* address);
+        MemoryBlockDescription* findBlock(int bytes,
                 int object_flags,
                 int block_flags,
                 int align);

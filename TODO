@@ -40,6 +40,8 @@
 -- AV dump of SDL 1 missing
 - Add inputs into the game screen
 -- Frame count is shown, but inputs would take more time
+- Memory manager
+-- See http://g.oswego.edu/dl/html/malloc.html for some nice tips
 
 ## Done
 

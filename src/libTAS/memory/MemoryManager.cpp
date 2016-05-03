@@ -36,65 +36,11 @@ int AddressLinkedList::deltaAlign(int align)
     return 0;
 }
 
-void AddressLinkedList::insertSorted(AddressLinkedList* item)
+void AddressLinkedList::insert(AddressLinkedList* all)
 {
-    item->head = head;
-    AddressLinkedList* it = this;
-    while (true)
-    {
-        if (item->address < it->address)
-        {
-            if (it->prev != nullptr && item->address < it->prev->address)
-            {
-                it = it->prev;
-            }
-            else
-            {
-                /* Insert item between it->prev (possibly nullptr) and it */
-                item->prev = it->prev;
-                item->next = it;
-                if (it->prev) {
-                    it->prev->next = item;
-                }
-                else {
-                    /* item becomes the first element, updating head */
-                    *(item->head) = item;
-                }
-                it->prev = item;
-                break;
-            }
-        }
-        else
-        {
-            if (it->next != nullptr && item->address > it->next->address)
-            {
-                it = it->next;
-            }
-            else
-            {
-                /* Insert item between it and it->next (possibly nullptr) */
-                item->prev = it;
-                item->next = it->next;
-                if (it->next)
-                    it->next->prev = item;
-                it->next = item;
-                break;
-            }
-        }
-    }
-}
-
-void AddressLinkedList::unlink()
-{
-    if (prev == nullptr) {
-        *head = next;
-    }
-    else {
-        prev->next = next;
-    }
-    if (next != nullptr) {
-        next->prev = prev;
-    }
+    all->head = head;
+    all->next = next;
+    next = all;
 }
 
 MemoryManager::MemoryManager(void)
@@ -109,8 +55,36 @@ MemoryManager::MemoryManager(void)
  * A 0 / nullptr value of a parameter means "any"
  * Returns nullptr if no block was found.
  */
-MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
-        int bytes,
+MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address)
+{
+    MemoryObjectDescription* base_mod = memory_objects;
+    MemoryObjectDescription* mod = memory_objects;
+    do {
+        uint8_t* mod_end_address = mod->address + mod->bytes;
+        if (address >= mod->address && address < mod_end_address) {
+            MemoryBlockDescription* base_mbd = mod->blocks;
+            MemoryBlockDescription* mbd = mod->blocks;
+            do {
+                if (address == mbd->address) {
+                    /* Update pointers to current mod and next mbd for optimisation */
+                    memory_objects = mod;
+                    mod->blocks = static_cast<MemoryBlockDescription*>(mbd->next);
+                    return mbd;
+                }
+                mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+            } while (mbd != base_mbd);
+        }
+        mod = static_cast<MemoryObjectDescription*>(mod->next);
+    } while (mod != base_mod);
+
+    return nullptr;
+}
+
+/*
+ * A 0 / nullptr value of a parameter means "any"
+ * Returns nullptr if no block was found.
+ */
+MemoryBlockDescription* MemoryManager::findBlock(int bytes,
         int object_flags,
         int block_flags,
         int align)
@@ -125,32 +99,25 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
     MemoryBlockDescription* rv = nullptr;
     int best_size = 0;
 
-    for (MemoryObjectDescription* mod = memory_objects;
-            mod != nullptr;
-            mod = static_cast<MemoryObjectDescription*>(mod->next))
-    {
-        uint8_t* mod_end_address = mod->address + mod->bytes;
-        if ((!address || (address >= mod->address && address < mod_end_address)) &&
-                (object_flags == 0 || object_flags == mod->flags))
-        {
-            for (MemoryBlockDescription* mbd = mod->blocks;
-                    mbd != nullptr;
-                    mbd = static_cast<MemoryBlockDescription*>(mbd->next))
-            {
+    MemoryObjectDescription* base_mod = memory_objects;
+    MemoryObjectDescription* mod = memory_objects;
+    do {
+        if (object_flags == 0 || object_flags == mod->flags) {
+            MemoryBlockDescription* base_mbd = mod->blocks;
+            MemoryBlockDescription* mbd = mod->blocks;
+            do {
                 /* In case we need an aligned address, we have to compute the real size of the block */
                 int block_size = mbd->bytes - mbd->deltaAlign(align);
 
-                if ((!address || address == mbd->address ) &&
-                        (bytes == 0 || block_size >= bytes) &&
+                if ((bytes == 0 || block_size >= bytes) &&
                         (block_flags == 0 || block_flags == mbd->flags))
                 {
-                    /* If we find a block by its address, we have a match so returning immediatly */
-                    if (address)
-                        return mbd;
-
                     /* If we have a good size match, returning immediatly */
                     if (block_size < bytes * 2)
                     {
+                        /* Update pointers to current mod and mbd for optimisation */
+                        memory_objects = mod;
+                        mod->blocks = mbd;
                         return mbd;
                     }
 
@@ -162,9 +129,11 @@ MemoryBlockDescription* MemoryManager::findBlock(const uint8_t* address,
                     }
 
                 }
-            }
+                mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+            } while (mbd != base_mbd);
         }
-    }
+        mod = static_cast<MemoryObjectDescription*>(mod->next);
+    } while (mod != base_mod);
     return rv;
 }
 
@@ -172,7 +141,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags, int align)
 {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, bytes);
     bytes = makeBytesAligned(static_cast<intptr_t>(bytes), global_align);
-    MemoryBlockDescription* best_block = findBlock(nullptr, bytes, flags, MemoryBlockDescription::FREE, align);
+    MemoryBlockDescription* best_block = findBlock(bytes, flags, MemoryBlockDescription::FREE, align);
 
     if (best_block == nullptr)
     {
@@ -216,7 +185,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(int bytes, int flags, int align)
 
         best_block->bytes = bytes;
 
-        best_block->insertSorted(mbd);
+        best_block->insert(mbd);
     }
 
     if (flags & MemoryManager::ALLOC_ZEROINIT)
@@ -290,11 +259,12 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags, int align)
     if (memory_objects == nullptr)
     {
         mod->head = reinterpret_cast<AddressLinkedList**>(&memory_objects);
+        mod->next = mod;
         memory_objects = mod;
     }
     else
     {
-        memory_objects->insertSorted(mod);
+        memory_objects->insert(mod);
     }
 
     debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", mod->address, mod->bytes);
@@ -308,6 +278,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags, int align)
     mbd->bytes = bytes;
     mbd->flags = MemoryBlockDescription::USED;
     mbd->top = mod;
+    mbd->next = mbd;
     mbd->head = reinterpret_cast<AddressLinkedList**>(&mod->blocks);
     /*
      * mod->blocks is always an invalid pointer here.
@@ -330,7 +301,7 @@ uint8_t* MemoryManager::allocateWithNewBlock(int bytes, int flags, int align)
         freembd->flags = MemoryBlockDescription::FREE;
         freembd->top = mod;
 
-        mbd->insertSorted(freembd);
+        mbd->insert(freembd);
         debuglogstdio(LCF_MEMORY, "Create new free MBD of address %p and size %d", freembd->address, freembd->bytes);
     }
     else {
@@ -381,7 +352,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 
     int realloc_bytes = makeBytesAligned(static_cast<intptr_t>(bytes), global_align);
 
-    MemoryBlockDescription* block = findBlock(address, 0, flags, MemoryBlockDescription::USED, 0);
+    MemoryBlockDescription* block = findBlock(address);
 
     if (block == nullptr)
     {
@@ -417,7 +388,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
 
             block->bytes = realloc_bytes;
 
-            block->insertSorted(new_mbd);
+            block->insert(new_mbd);
 
             return block->address;
         }
@@ -435,7 +406,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
          * Expand block.
          */
         MemoryBlockDescription* mbd = static_cast<MemoryBlockDescription*>(block->next);
-        if (mbd != nullptr &&
+        if (mbd->address > block->address &&
                 adjustment <= mbd->bytes + size_of_mbd &&
                 mbd->flags == MemoryBlockDescription::FREE)
         {
@@ -446,7 +417,13 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
             {
                 debuglogstdio(LCF_MEMORY, "  larger size to full block");
                 block->bytes += mbd->bytes + size_of_mbd;
-                mbd->unlink();
+                /* 
+                 * Removing mbd from the list, and checking if it's the
+                 * reference in the mod. In that case, switching to block.
+                 */
+                block->next = mbd->next;
+                if (*block->head == mbd)
+                    *block->head = block;
             }
             /*
              * Adjust MemoryBlockDescription and update it.
@@ -456,14 +433,17 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, int bytes, int f
                 debuglogstdio(LCF_MEMORY, "  larger size");
                 uint8_t* addr = mbd->address - size_of_mbd + adjustment;
                 MemoryBlockDescription* new_mbd = reinterpret_cast<MemoryBlockDescription*>(addr);
-                mbd->unlink();
+
+                //mbd->unlink();
                 memmove(new_mbd, mbd, size_of_mbd);
 
                 new_mbd->address = addr + size_of_mbd;
                 new_mbd->bytes -= adjustment;
 
                 block->bytes += adjustment;
-                block->insertSorted(new_mbd);
+                block->next = new_mbd;
+                if (*block->head == mbd)
+                    *block->head = new_mbd;
             }
 
             if (flags & MemoryManager::ALLOC_ZEROINIT)
@@ -510,7 +490,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         return;
     }
 
-    MemoryBlockDescription* block = findBlock(address, 0, 0, MemoryBlockDescription::USED, 0);
+    MemoryBlockDescription* block = findBlock(address);
     if (block == nullptr)
     {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted removal of unknown memory!");
@@ -529,16 +509,16 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
     /*
      * Attempt block merging.
      */
-    if (block->next != nullptr && block->next->flags == MemoryBlockDescription::FREE)
+    if (block->next->address > block->address && block->next->flags == MemoryBlockDescription::FREE)
     {
         block->bytes += block->next->bytes + size_of_mbd;
-        block->next->unlink();
-    }
-    if (block->prev != nullptr && block->prev->flags == MemoryBlockDescription::FREE)
-    {
-        block = static_cast<MemoryBlockDescription*>(block->prev);
-        block->bytes += block->next->bytes + size_of_mbd;
-        block->next->unlink();
+
+        /* Remove block->next from the linked list.
+         * Also, check the reference mbd in the mod.
+         */
+        if (*block->head == block->next)
+            *block->head = block->next->next;
+        block->next = block->next->next;
     }
 
 #if 0
@@ -616,7 +596,7 @@ size_t MemoryManager::getSizeOfAllocation(const void* address)
     while (MemoryManager::allocation_lock.test_and_set() == true) {}
     size_t rv = 0;
     MemoryBlockDescription* mbd =
-        findBlock(static_cast<const uint8_t*>(address), 0, 0, MemoryBlockDescription::USED, 0);
+        findBlock(static_cast<const uint8_t*>(address));
 
     if (mbd != nullptr)
     {
