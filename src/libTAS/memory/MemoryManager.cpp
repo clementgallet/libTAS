@@ -46,9 +46,11 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
             uint32_t bneed = ((size - 1) / mod->bsize) + 1; // ceil(size / mod->bsize)
             uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
 
-            for (uint32_t x = mod->lfb + 1; x != mod->lfb; ++x) {
+            uint8_t wrap = 0;
+            for (uint32_t x = mod->lfb + 1; wrap == 0 || (wrap == 1 && x <= mod->lfb); ++x) {
                 /* just wrap around */
                 if (x >= bcnt) {
+                    wrap++;
                     x = 0;
                 }
 
@@ -217,7 +219,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
 
 
     for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
-        uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
+        uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
             intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(mod) - size_of_mod;  /* get offset to get block */
@@ -341,6 +343,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
             }
             /* update free block count */
             mod->used -= x - bi;
+            mod->lfb = bi - 1;
             return;
         }
     }
