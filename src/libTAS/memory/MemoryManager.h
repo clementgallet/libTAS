@@ -45,37 +45,18 @@
  * -- Warepire
  */
 
-struct AddressLinkedList
+struct MemoryObjectDescription
 {
-    AddressLinkedList* prev = nullptr;
-    AddressLinkedList* next = nullptr;
-    AddressLinkedList** head;
-    uint8_t* address;
-    int bytes;
-    int flags;
-
-    int deltaAlign(int align);
-    void insert(AddressLinkedList* all);
+    MemoryObjectDescription* next;
+    uint32_t size;
+    uint32_t used;
+    uint32_t bsize;
+    uint32_t lfb;
 };
 
-struct MemoryBlockDescription :
-    public AddressLinkedList
+struct MemoryHeapDescription
 {
-    enum MemoryBlockState
-    {
-        USED = 0x00000001,
-        FREE = 0x00000002,
-    };
-
-    int header_size;
-    AddressLinkedList* top;
-};
-
-struct MemoryObjectDescription :
-    public AddressLinkedList
-{
-    int object;
-    MemoryBlockDescription* blocks;
+    MemoryObjectDescription* fmod;
 };
 
 class MemoryManager
@@ -97,17 +78,16 @@ class MemoryManager
         void* reallocate(void* address, int bytes, int flags);
         void deallocate(void* address);
 
-        size_t getSizeOfAllocation(const void* address);
+#if 0
         void dumpAllocationTable();
         void checkAllocationTable();
-
+#endif
     private:
 
-        MemoryObjectDescription* memory_objects;
-        int allocation_granularity;
+        MemoryHeapDescription heap;
+        uint32_t allocation_granularity;
         int global_align;
         int size_of_mod;
-        int size_of_mbd;
         std::atomic_flag allocation_lock;
         int fd;
         off_t file_size;
@@ -115,19 +95,14 @@ class MemoryManager
         /*
          * Internal allocation functions
          */
-        uint8_t* allocateUnprotected(int bytes, int flags, int align);
-        uint8_t* allocateInExistingBlock(int bytes, int flags, int align);
-        uint8_t* allocateWithNewBlock(int bytes, int flags, int align);
+        uint8_t* allocateUnprotected(uint32_t size, int flags, int align);
+        uint8_t* allocateInExistingBlock(uint32_t size, int flags, int align);
+        void newBlock(uint32_t size, int flags);
 
-        uint8_t* reallocateUnprotected(uint8_t* address, int bytes, int flags);
+        uint8_t* reallocateUnprotected(uint8_t* address, uint32_t size, int flags);
 
         void deallocateUnprotected(uint8_t* address);
 
-        MemoryBlockDescription* findBlock(const uint8_t* address);
-        MemoryBlockDescription* findBlock(int bytes,
-                int object_flags,
-                int block_flags,
-                int align);
 };
 
 extern MemoryManager memorymanager;
