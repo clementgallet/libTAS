@@ -188,10 +188,11 @@ void free (void *ptr) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p", __func__, ptr);
     if (custom_mm)
-        return memorymanager.deallocate(ptr);
+        memorymanager.deallocate(ptr);
     else {
         LINK_NAMESPACE(free, nullptr);
-        return orig::free(ptr);
+        orig::free(ptr);
     }
+    debuglogstdio(LCF_MEMORY, "  returns");
 }
 

@@ -142,6 +142,7 @@ void MemoryManager::newBlock(uint32_t size, int flags)
     }
 
     void* addr = mmap(0, block_size, access, MAP_SHARED, fd, file_size);
+    file_size += block_size;
 
     if (addr == MAP_FAILED)
     {
@@ -167,11 +168,15 @@ void MemoryManager::newBlock(uint32_t size, int flags)
     for (uint32_t x = 0; x < bcnt; x++)
         bm[x] = 5;
 
+    /* Check real remaining size */
+    uint32_t remaining_size = mod->size - bcnt * mod->bsize;
+    if (remaining_size < size)
+        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Did not allocate enough size in the new block: %d and %d requested", remaining_size, size);
+
     mod->lfb = bcnt - 1;
     mod->used = bcnt;
     debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", addr, mod->size);
 
-    file_size += block_size;
 }
 
 uint8_t* MemoryManager::allocateUnprotected(uint32_t size, int flags, int align)
@@ -316,6 +321,9 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
             intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(mod) - size_of_mod;  /* get offset to get block */
+            /* Check address alignment */
+            if (ptroff % mod->bsize)
+                debuglogstdio(LCF_MEMORY | LCF_ERROR, "Address not aligned to block size!");
             /* block offset in BM */
             uint32_t bi = ptroff / mod->bsize;
             /* .. */
@@ -352,7 +360,7 @@ void MemoryManager::init()
 
     fmod = nullptr;
     global_align = 16;
-    size_of_mod = makeBytesAligned(static_cast<intptr_t>(sizeof(MemoryObjectDescription)), global_align);
+    size_of_mod = makeBytesAligned(sizeof(MemoryObjectDescription), global_align);
     allocation_granularity = getpagesize();
     allocation_lock.clear();
     file_size = 0;
