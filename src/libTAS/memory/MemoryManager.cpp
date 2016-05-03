@@ -32,17 +32,17 @@ static uint8_t k_heapBMGetNID(uint8_t a, uint8_t b) {
     return c;
 }
 
-uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int align)
-{
+uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int align) {
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, size);
     size = makeBytesAligned(static_cast<intptr_t>(size), global_align);
 
 	/* iterate blocks */
-	for (MemoryObjectDescription* mod = heap.fmod; mod; mod = mod->next) {
+	for (MemoryObjectDescription* mod = fmod; mod; mod = mod->next) {
 		/* check if block has enough room */
 		if (mod->size - (mod->used * mod->bsize) >= size) {
  
-			uint32_t bcnt = mod->size / mod->bsize;		
+            //debuglogstdio(LCF_MEMORY, "Possibly enough room");
+			uint32_t bcnt = mod->size / mod->bsize;
 			uint32_t bneed = (size / mod->bsize) * mod->bsize < size ? size / mod->bsize + 1 : size / mod->bsize;
 			uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
  
@@ -55,10 +55,11 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
 				if (bm[x] == 0) {
                     /* check alignment here */
                     /* TODO: alignment is a power of 2. Should be optimised */
-                    if (align && !((x * mod->bsize + reinterpret_cast<uintptr_t>(&mod[1])) % align)) {
+                    if (!align || !((x * mod->bsize + reinterpret_cast<uintptr_t>(&mod[1])) % align)) {
                         /* count free blocks */
                         uint32_t y;
                         for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
+                        //debuglogstdio(LCF_MEMORY, "Found segment %d and need %d", y, bneed);
 
                         /* we have enough, now allocate them */
                         if (y == bneed) {
@@ -146,8 +147,8 @@ void MemoryManager::newBlock(uint32_t size, int flags)
     MemoryObjectDescription* mod = static_cast<MemoryObjectDescription*>(addr);
     mod->size = block_size - size_of_mod;
     mod->bsize = global_align;
-    mod->next = heap.fmod;
-    heap.fmod = mod;
+    mod->next = fmod;
+    fmod = mod;
 
     uint32_t bcnt = block_size / mod->bsize;
     uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
@@ -164,6 +165,8 @@ void MemoryManager::newBlock(uint32_t size, int flags)
     mod->lfb = bcnt - 1;
     mod->used = bcnt;
     debuglogstdio(LCF_MEMORY, "Create new MOD of address %p and size %d", addr, mod->size);
+
+    file_size += block_size;
 }
 
 uint8_t* MemoryManager::allocateUnprotected(uint32_t size, int flags, int align)
@@ -203,7 +206,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
     }
 
 
-    for (MemoryObjectDescription *mod = heap.fmod; mod; mod = mod->next) {
+    for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
         uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
@@ -285,7 +288,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         return;
     }
 
-    for (MemoryObjectDescription *mod = heap.fmod; mod; mod = mod->next) {
+    for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
         uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
@@ -321,7 +324,7 @@ void MemoryManager::init()
         /* Error */
     }
 
-    heap.fmod = nullptr;
+    fmod = nullptr;
     global_align = 16;
     size_of_mod = makeBytesAligned(static_cast<intptr_t>(sizeof(MemoryObjectDescription)), global_align);
     allocation_granularity = getpagesize();

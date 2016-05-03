@@ -54,11 +54,6 @@ struct MemoryObjectDescription
     uint32_t lfb;
 };
 
-struct MemoryHeapDescription
-{
-    MemoryObjectDescription* fmod;
-};
-
 class MemoryManager
 {
     public:
@@ -84,7 +79,7 @@ class MemoryManager
 #endif
     private:
 
-        MemoryHeapDescription heap;
+        MemoryObjectDescription* fmod;
         uint32_t allocation_granularity;
         int global_align;
         int size_of_mod;
