@@ -44,7 +44,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
             //debuglogstdio(LCF_MEMORY, "Possibly enough room");
 			uint32_t bcnt = mod->size / mod->bsize;
 			uint32_t bneed = (size / mod->bsize) * mod->bsize < size ? size / mod->bsize + 1 : size / mod->bsize;
-			uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
+			uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
  
 			for (uint32_t x = (mod->lfb + 1 >= bcnt ? 0 : mod->lfb + 1); x != mod->lfb; ++x) {
 				/* just wrap around */
@@ -55,7 +55,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
 				if (bm[x] == 0) {
                     /* check alignment here */
                     /* TODO: alignment is a power of 2. Should be optimised */
-                    if (!align || !((x * mod->bsize + reinterpret_cast<uintptr_t>(&mod[1])) % align)) {
+                    if (!align || !((x * mod->bsize + reinterpret_cast<uintptr_t>(mod) + size_of_mod) % align)) {
                         /* count free blocks */
                         uint32_t y;
                         for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
@@ -77,7 +77,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
                             /* count used blocks NOT bytes */
                             mod->used += y;
 
-                            return reinterpret_cast<uint8_t*>(&mod[1]) + x * mod->bsize;
+                            return reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
                         }
 
                         /* x will be incremented by one ONCE more in our FOR loop */
@@ -101,7 +101,6 @@ void MemoryManager::newBlock(uint32_t size, int flags)
      * global_align bytes.
      */
     size_t block_size = allocation_granularity;
-    //int bytes_for_mod_and_mbd = makeBytesAligned(static_cast<intptr_t>(size_of_mod + size_of_mbd), align);
     size = makeBytesAligned(static_cast<intptr_t>(size), global_align);
     while (block_size - size_of_mod - (block_size / global_align) < size)
     {
@@ -151,7 +150,7 @@ void MemoryManager::newBlock(uint32_t size, int flags)
     fmod = mod;
 
     uint32_t bcnt = block_size / mod->bsize;
-    uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
+    uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
 
     /* Clear bitmap */
     for (uint32_t x = 0; x < bcnt; x++)
@@ -210,11 +209,11 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
         uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
-            intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(&mod[1]);  /* get offset to get block */
+            intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(mod) - size_of_mod;  /* get offset to get block */
             /* block offset in BM */
             uint32_t bi = ptroff / mod->bsize;
             /* .. */
-            uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
+            uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
             /* clear allocation */
             uint8_t id = bm[bi];
             /* oddly.. GCC did not optimize this */
@@ -292,11 +291,11 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
-            intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(&mod[1]);  /* get offset to get block */
+            intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(mod) - size_of_mod;  /* get offset to get block */
             /* block offset in BM */
             uint32_t bi = ptroff / mod->bsize;
             /* .. */
-            uint8_t* bm = reinterpret_cast<uint8_t*>(&mod[1]);
+            uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
             /* clear allocation */
             uint8_t id = bm[bi];
             /* oddly.. GCC did not optimize this */
@@ -340,7 +339,8 @@ void* MemoryManager::allocate(int bytes, int flags, int align)
 
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags, align);
-    //checkAllocationTable();
+    dumpAllocationTable();
+    checkIntegrity();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -351,7 +351,7 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
 {
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
-    //checkAllocationTable();
+    checkIntegrity();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -362,70 +362,53 @@ void MemoryManager::deallocate(void* address)
 {
     while (allocation_lock.test_and_set() == true) {}
     deallocateUnprotected(static_cast<uint8_t*>(address));
-    //checkAllocationTable();
+    checkIntegrity();
     allocation_lock.clear();
 }
 
-#if 0
-void MemoryManager::checkAllocationTable()
+void MemoryManager::checkIntegrity()
 {
-    MemoryObjectDescription* mod = memory_objects;
-    MemoryBlockDescription* mbd = nullptr;
-    while (mod != nullptr)
-    {
-        mbd = mod->blocks;
-        uint8_t* mod_end;
-        while (mbd != nullptr)
-        {
-            /*
-             * Check address value based on MBD base address and size of MBD.
-             * This is only relevent for free blocks which does not have alignment
-             */
-            if (mbd->flags == MemoryBlockDescription::FREE) {
-                uint8_t* comp_addr = reinterpret_cast<uint8_t*>(mbd) + size_of_mbd;
-                if (comp_addr != mbd->address)
-                    debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD address %p, should be %p", mbd->address, comp_addr);
-            }
-
-            /* Check continuity with the next MBD */
-            if (mbd->next) {
-                uint8_t* next_mbd_addr = reinterpret_cast<uint8_t*>(mbd->next);
-                if (mbd->address + mbd->bytes != next_mbd_addr)
-                    debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MBD interval. Next MBD is %p, should be %p", next_mbd_addr, mbd->address + mbd->bytes);
-            }
-            else {
-                /* Compute the end address of the last block */
-                mod_end = mbd->address + mbd->bytes;
-            }
-
-            mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+    for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
+        uint32_t bused = 0;
+        uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
+        uint32_t max = mod->size / mod->bsize;
+        for (uint32_t x = 0; x < max; ++x) {
+            if (bm[x] != 0)
+                bused++;
         }
-        
-        /* Check end of MOD */
-        if (mod_end != mod->address + mod->bytes)
-            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Wrong MOD end. %p from MOD and %p from last MBD", mod->address + mod->bytes, mod_end);
-
-        mod = static_cast<MemoryObjectDescription*>(mod->next);
+        if (mod->used != bused)
+            debuglogstdio(LCF_MEMORY | LCF_ERROR, "Incorrect number of blocks for MOD %p. MOD: %d, count: %d", mod, mod->used, bused);
     }
 }
 
 void MemoryManager::dumpAllocationTable()
 {
-    MemoryObjectDescription* mod = memory_objects;
-    MemoryBlockDescription* mbd = nullptr;
-    while (mod != nullptr)
-    {
-        mbd = mod->blocks;
-        debuglogstdio(LCF_MEMORY, "MOD this=%p addr=%p bytes=%d flags=%X blocks=%p", mod, mod->address, mod->bytes, mod->flags, mod->blocks);
-        while (mbd != nullptr)
-        {
-            debuglogstdio(LCF_MEMORY, "MBD this=%p addr=%p bytes=%d flags=%X", mbd, mbd->address, mbd->bytes, mbd->flags);
-            mbd = static_cast<MemoryBlockDescription*>(mbd->next);
+    for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
+        debuglogstdio(LCF_MEMORY, "MOD %p of size %d", mod, mod->size);
+        uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
+        uint32_t max = mod->size / mod->bsize;
+        uint8_t curid = bm[0];
+        uint32_t curpos = 0;
+        for (uint32_t x = 0; x < max; ++x) {
+            if (bm[x] != curid) {
+                /* End of segment, print info */
+                if (curid == 0)
+                    debuglogstdio(LCF_MEMORY, "Free segment of size %d", (x - curpos)*mod->bsize);
+                else
+                    debuglogstdio(LCF_MEMORY, "Segment id %d of size %d", curid, (x - curpos)*mod->bsize);
+
+                curid = bm[x];
+                curpos = x;
+            }
         }
-        mod = static_cast<MemoryObjectDescription*>(mod->next);
+        /* Last segment */
+        if (curid == 0)
+            debuglogstdio(LCF_MEMORY, "Free segment of size %d", (max - curpos)*mod->bsize);
+        else
+            debuglogstdio(LCF_MEMORY, "Segment id %d of size %d", curid, (max - curpos)*mod->bsize);
     }
 }
-#endif
+
 MemoryManager memorymanager;
 bool mminited = false;
 

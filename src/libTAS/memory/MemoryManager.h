@@ -73,10 +73,8 @@ class MemoryManager
         void* reallocate(void* address, int bytes, int flags);
         void deallocate(void* address);
 
-#if 0
         void dumpAllocationTable();
-        void checkAllocationTable();
-#endif
+        void checkIntegrity();
     private:
 
         MemoryObjectDescription* fmod;
