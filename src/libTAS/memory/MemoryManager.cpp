@@ -36,60 +36,64 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
     debuglogstdio(LCF_MEMORY, "%s call with bytes %d", __func__, size);
     size = makeBytesAligned(static_cast<intptr_t>(size), global_align);
 
-	/* iterate blocks */
-	for (MemoryObjectDescription* mod = fmod; mod; mod = mod->next) {
-		/* check if block has enough room */
-		if (mod->size - (mod->used * mod->bsize) >= size) {
- 
+    /* iterate blocks */
+    for (MemoryObjectDescription* mod = fmod; mod; mod = mod->next) {
+        /* check if block has enough room */
+        if (mod->size - (mod->used * mod->bsize) >= size) {
+
             //debuglogstdio(LCF_MEMORY, "Possibly enough room");
-			uint32_t bcnt = mod->size / mod->bsize;
-			uint32_t bneed = (size / mod->bsize) * mod->bsize < size ? size / mod->bsize + 1 : size / mod->bsize;
-			uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
- 
-			for (uint32_t x = (mod->lfb + 1 >= bcnt ? 0 : mod->lfb + 1); x != mod->lfb; ++x) {
-				/* just wrap around */
-				if (x >= bcnt) {
-					x = 0;
-				}		
- 
-				if (bm[x] == 0) {
-                    /* check alignment here */
-                    /* TODO: alignment is a power of 2. Should be optimised */
-                    if (!align || !((x * mod->bsize + reinterpret_cast<uintptr_t>(mod) + size_of_mod) % align)) {
-                        /* count free blocks */
-                        uint32_t y;
-                        for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
-                        //debuglogstdio(LCF_MEMORY, "Found segment %d and need %d", y, bneed);
+            uint32_t bcnt = mod->size / mod->bsize;
+            uint32_t bneed = ((size - 1) / mod->bsize) + 1; // ceil(size / mod->bsize)
+            uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
 
-                        /* we have enough, now allocate them */
-                        if (y == bneed) {
-                            /* find ID that does not match left or right */
-                            uint8_t nid = k_heapBMGetNID(bm[x - 1], bm[x + y]);
+            for (uint32_t x = mod->lfb + 1; x != mod->lfb; ++x) {
+                /* just wrap around */
+                if (x >= bcnt) {
+                    x = 0;
+                }
 
-                            /* allocate by setting id */
-                            for (uint32_t z = 0; z < y; ++z) {
-                                bm[x + z] = nid;
-                            }
+                if (bm[x])
+                    continue;
 
-                            /* optimization */
-                            mod->lfb = (x + bneed) - 2;
+                /* check alignment here */
+                /* TODO: alignment is a power of 2. Should be optimised */
+                if (align && ((x * mod->bsize + reinterpret_cast<uintptr_t>(mod) + size_of_mod) % align))
+                    continue;
 
-                            /* count used blocks NOT bytes */
-                            mod->used += y;
+                /* count free blocks */
+                uint32_t y;
+                for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
+                //debuglogstdio(LCF_MEMORY, "Found segment %d and need %d", y, bneed);
 
-                            return reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
-                        }
+                /* we have enough, now allocate them */
+                if (y == bneed) {
+                    /* find ID that does not match left or right */
 
-                        /* x will be incremented by one ONCE more in our FOR loop */
-                        x += (y - 1);
-                        continue;
+                    /* bm[x + y] can overflow on the data,
+                     * but it should not be a problem */
+                    uint8_t nid = k_heapBMGetNID(bm[x - 1], bm[x + y]);
+
+                    /* allocate by setting id */
+                    for (uint32_t z = 0; z < bneed; ++z) {
+                        bm[x + z] = nid;
                     }
-				}
-			}
-		}
-	}
 
-   return nullptr; 
+                    /* optimization */
+                    mod->lfb = (x + bneed) - 2;
+
+                    /* count used blocks NOT bytes */
+                    mod->used += bneed;
+
+                    return reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
+                }
+
+                /* x will be incremented by one ONCE more in our FOR loop */
+                x += (y - 1);
+            }
+        }
+    }
+
+    return nullptr; 
 }
 
 void MemoryManager::newBlock(uint32_t size, int flags)
@@ -101,8 +105,8 @@ void MemoryManager::newBlock(uint32_t size, int flags)
      * global_align bytes.
      */
     size_t block_size = allocation_granularity;
-    size = makeBytesAligned(static_cast<intptr_t>(size), global_align);
-    while (block_size - size_of_mod - (block_size / global_align) < size)
+    size = makeBytesAligned(size, global_align);
+    while (block_size - size_of_mod - makeBytesAligned(block_size / global_align, global_align) < size)
     {
         block_size += allocation_granularity;
     }
@@ -157,7 +161,7 @@ void MemoryManager::newBlock(uint32_t size, int flags)
         bm[x] = 0;
 
     /* Reserve room for bitmap */
-    bcnt = (bcnt / mod->bsize) * mod->bsize < bcnt ? bcnt / mod->bsize + 1 : bcnt / mod->bsize;
+    bcnt = ((bcnt - 1) / mod->bsize) + 1; // ceil(bcnt / mod->bsize)
     for (uint32_t x = 0; x < bcnt; x++)
         bm[x] = 5;
 
@@ -248,9 +252,26 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
 
             if (x == bi + rb) {
                 /* Reallocate to larger size that fits in the empty blocks */
-                for (x = x0; x - bi < rb; ++x) {
-                    bm[x] = id;
+
+                /*
+                 * Warning! we must check the id of the next segment. It might
+                 * be a used block with the same id. In that case, we must
+                 * change the id of the current segment
+                 */
+                if (x < max && bm[x] == id) {
+                    /* Detected a segment with same id */
+                    uint8_t nid = k_heapBMGetNID(bm[bi - 1], bm[x]);
+                    for (x = bi; x - bi < rb; ++x) {
+                        bm[x] = nid;
+                    }
                 }
+                else {
+                    /* Just extend the id on the free blocks */
+                    for (x = x0; x - bi < rb; ++x) {
+                        bm[x] = id;
+                    }
+                }
+
                 /* update free block count */
                 mod->used += x - x0;
                 return address;
@@ -261,6 +282,9 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
                 bm[x] = 0;
             }
 
+            /* update free block count */
+            mod->used -= x - bi;
+
             uint8_t* newaddr = allocateUnprotected(size, flags, 0);
             if (!newaddr) {
                 return nullptr;
@@ -268,8 +292,6 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
 
             memcpy(newaddr, address, (x - bi) * mod->bsize);
 
-            /* update free block count */
-            mod->used -= x - bi;
             return newaddr;
         }
     }
@@ -288,7 +310,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
     }
 
     for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
-        uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod);
+        uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
         if (address > mod_addr && address < mod_addr + mod->size) {
             /* found block */
             intptr_t ptroff = reinterpret_cast<intptr_t>(address) - reinterpret_cast<intptr_t>(mod) - size_of_mod;  /* get offset to get block */
@@ -298,6 +320,9 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
             uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
             /* clear allocation */
             uint8_t id = bm[bi];
+            /* Check if we deallocate in the middle of a segment */
+            if (bm[bi-1] == id)
+                debuglogstdio(LCF_MEMORY | LCF_ERROR, "Deallocate in the middle of a segment!");
             /* oddly.. GCC did not optimize this */
             uint32_t max = mod->size / mod->bsize;
             uint32_t x;
@@ -310,7 +335,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
         }
     }
 
-    debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: Attempted removal of unknown memory!");
+    debuglogstdio(LCF_MEMORY | LCF_ERROR, "Attempted removal of unknown memory!");
     return;
 }
 
