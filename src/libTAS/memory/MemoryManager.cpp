@@ -84,7 +84,14 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
                     /* count used blocks NOT bytes */
                     mod->used += bneed;
 
-                    return reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
+                    uint8_t* addr = reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
+
+                    if (flags & MemoryManager::ALLOC_ZEROINIT)
+                    {
+                        memset(addr, 0, size);
+                    }
+
+                    return addr;
                 }
 
                 /* x will be incremented by one ONCE more in our FOR loop */
@@ -142,18 +149,13 @@ void MemoryManager::newBlock(uint32_t size, int flags)
         return;
     }
 
-    if (flags & MemoryManager::ALLOC_ZEROINIT)
-    {
-        memset(addr, 0, block_size);
-    }
-
     MemoryObjectDescription* mod = static_cast<MemoryObjectDescription*>(addr);
     mod->size = block_size - size_of_mod;
     mod->bsize = global_align;
     mod->next = fmod;
     fmod = mod;
 
-    uint32_t bcnt = block_size / mod->bsize;
+    uint32_t bcnt = mod->size / mod->bsize;
     uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
 
     /* Clear bitmap */
@@ -364,7 +366,7 @@ void* MemoryManager::allocate(int bytes, int flags, int align)
 
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags, align);
-    dumpAllocationTable();
+    //dumpAllocationTable();
     checkIntegrity();
     allocation_lock.clear();
     if (!rv)
