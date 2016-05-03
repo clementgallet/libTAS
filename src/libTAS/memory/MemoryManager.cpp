@@ -229,24 +229,20 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
             uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
             /* clear allocation */
             uint8_t id = bm[bi];
-            /* oddly.. GCC did not optimize this */
-            //uint32_t max = mod->size / mod->bsize;
-            //for (uint32_t x = bi; bm[x] == id && x < max; ++x) {
-            //    bm[x] = 0;
-            //}
+            /* Check if we deallocate in the middle of a segment */
+            if (bm[bi-1] == id)
+                debuglogstdio(LCF_MEMORY | LCF_ERROR, "Deallocate in the middle of a segment!");
 
-
-            int realloc_bytes = makeBytesAligned(static_cast<intptr_t>(size), mod->bsize);
-            uint32_t rb = realloc_bytes / mod->bsize;
+            uint32_t rb = (size - 1) / mod->bsize + 1; // ceil(size / mod->bsize)
 
             /* Check if we have enough space for the new size */
             uint32_t max = mod->size / mod->bsize;
             uint32_t x;
             for (x = bi; bm[x] == id && x < max && x - bi < rb; ++x) {}
 
-            if (x == bi + rb) {
+            uint32_t x0 = x;
+            if (x - bi == rb) {
                 /* reallocate to smaller size. Just reset the rest of the bitmap */
-                uint32_t x0 = x;
                 for (; bm[x] == id && x < max; ++x) {
                     bm[x] = 0;
                 }
@@ -256,10 +252,9 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
             }
 
             /* Continuing on free blocks */
-            uint32_t x0 = x;
             for (; bm[x] == 0 && x < max && x - bi < rb; ++x) {}
 
-            if (x == bi + rb) {
+            if (x - bi == rb) {
                 /* Reallocate to larger size that fits in the empty blocks */
 
                 /*
@@ -299,7 +294,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
                 return nullptr;
             }
 
-            memcpy(newaddr, address, (x - bi) * mod->bsize);
+            memmove(newaddr, address, (x - bi) * mod->bsize);
 
             return newaddr;
         }
@@ -343,7 +338,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
             }
             /* update free block count */
             mod->used -= x - bi;
-            mod->lfb = bi - 1;
+            //mod->lfb = bi - 1;
             return;
         }
     }
@@ -378,7 +373,7 @@ void* MemoryManager::allocate(int bytes, int flags, int align)
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags, align);
     //dumpAllocationTable();
-    checkIntegrity();
+    //checkIntegrity();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -389,7 +384,7 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
 {
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = reallocateUnprotected(static_cast<uint8_t*>(address), bytes, flags);
-    checkIntegrity();
+    //checkIntegrity();
     allocation_lock.clear();
     if (!rv)
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "WARNING: returning null pointer!");
@@ -400,7 +395,7 @@ void MemoryManager::deallocate(void* address)
 {
     while (allocation_lock.test_and_set() == true) {}
     deallocateUnprotected(static_cast<uint8_t*>(address));
-    checkIntegrity();
+    //checkIntegrity();
     allocation_lock.clear();
 }
 
@@ -410,6 +405,9 @@ void MemoryManager::checkIntegrity()
         uint32_t bused = 0;
         uint8_t* bm = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
         uint32_t max = mod->size / mod->bsize;
+        if (bm[0] != 5)
+            debuglogstdio(LCF_MEMORY | LCF_ERROR, "First block was corrupted");
+
         for (uint32_t x = 0; x < max; ++x) {
             if (bm[x] != 0)
                 bused++;
