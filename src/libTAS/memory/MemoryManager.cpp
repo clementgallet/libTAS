@@ -1,19 +1,33 @@
 /*
- * (c) 2015- Hourglass Resurrection Team
- * Hourglass Resurrection is licensed under GPL v2.
- * Refer to the file COPYING.txt in the project root.
+    Copyright 2015-2016 Clément Gallet <clement.gallet@ens-lyon.org>
+
+    This file is part of libTAS.
+
+    libTAS is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libTAS is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include <Windows.h>
 #include <unistd.h> // getpagesize()
 #include <cstring>
 #include <cstdint>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <iomanip>
 #include "../logging.h"
 
 #include "MemoryManager.h"
+
+/* Did we initialize our memory manager? *Must* be global */
+bool mminited = false;
 
 /*
  * Return a multiple of alignment just above bytes
@@ -28,6 +42,7 @@ static uint32_t makeBytesAligned(uint32_t bytes, uint32_t alignment)
     return alignment + (bytes & ~(alignment-1));
 }
 
+/* Returns an integer that is different from a, b and 0 */
 static uint8_t newId(uint8_t a, uint8_t b) {
     uint8_t c;  
     for (c = a + 1; c == b || c == 0; ++c);
@@ -367,6 +382,18 @@ void* MemoryManager::allocate(int bytes, int flags, int align)
     if (!mminited)
         init();
 
+    /* align *must* be 0 (default) or a power of two */
+    if (align && (align & (align - 1))) {
+        /* align is not a power of two, taking the next one */
+        /* code taken from http://graphics.stanford.edu/~seander/bithacks.html */
+        align |= align >> 1;
+        align |= align >> 2;
+        align |= align >> 4;
+        align |= align >> 8;
+        align |= align >> 16;
+        align++;
+    }
+
     while (allocation_lock.test_and_set() == true) {}
     uint8_t* rv = allocateUnprotected(bytes, flags, align);
     //dumpAllocationTable();
@@ -443,5 +470,4 @@ void MemoryManager::dumpAllocationTable()
 }
 
 MemoryManager memorymanager;
-bool mminited = false;
 
