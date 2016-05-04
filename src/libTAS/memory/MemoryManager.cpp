@@ -28,10 +28,6 @@ static uint32_t makeBytesAligned(uint32_t bytes, uint32_t alignment)
     return alignment + (bytes & ~(alignment-1));
 }
 
-MemoryManager::MemoryManager(void)
-{
-}
-
 static uint8_t newId(uint8_t a, uint8_t b) {
     uint8_t c;  
     for (c = a + 1; c == b || c == 0; ++c);

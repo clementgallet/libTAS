@@ -66,7 +66,6 @@ class MemoryManager
             REALLOC_NO_MOVE = 0x00000010,
         };
 
-        MemoryManager();
         void init();
 
         void* allocate(int bytes, int flags, int align);
@@ -77,6 +76,13 @@ class MemoryManager
         void checkIntegrity();
     private:
 
+        /*
+         * Warning: we must *not* enter default value for parameters,
+         * because they will be initialized too late, after that some
+         * allocation had been queried. Variable initialization are done
+         * inside the init() function which is protected by a global variable,
+         * as globals are intialized early enough.
+         */
         MemoryObjectDescription* fmod;
         uint32_t allocation_granularity;
         int global_align;
