@@ -203,18 +203,47 @@ uint8_t* MemoryManager::allocateUnprotected(uint32_t size, int flags, int align)
         return nullptr;
     }
     /*
-     * If the allocation needs 50% or more of a block, go immediately for a new block.
-     * This includes allocations that needs more than one block.
+     * If the allocation needs 50% or more of a block, go preferably for
+     * a new block (see below). Otherwise, always try to allocate in 
+     * existing blocks.
      */
-    if ((size * 2) < allocation_granularity)
-    {
+    if ((size * 2) < allocation_granularity) {
         uint8_t* allocation = allocateInExistingBlock(size, flags, align);
         if (allocation) {
             return allocation;
         }
     }
-    /* Allocate a bigger block size so that we are sure to find an aligned segment */
-    newBlock(size + align, flags);
+    else {
+        /*
+         * Before going directly for a new block, try only the first
+         * (most recent) memory block and check for size only.
+         * If enough size, try to go for allocation in existing memory.
+         * This allows to reuse blocks more often, resulting in fewer
+         * distinct mmap allocations (from >10000 to <1000).
+         *
+         * Always checking for existing free blocks (which has a higher
+         * chance of failing for big allocation size) would lead to
+         * a huge speed cost. So this strategy gives a decent balance
+         * between performance and memory waste.
+         * However, there is still significant memory wasted compared to
+         * always check for existing memory.
+         * We may learn from strategies of common malloc allocations.
+         */
+        if (fmod && (fmod->size - (fmod->used * fmod->bsize) >= size)) {
+            uint8_t* allocation = allocateInExistingBlock(size, flags, align);
+            if (allocation) {
+                return allocation;
+            }
+        }
+    }
+    /*
+     * Reserving the double size does actually saves a lot of memory and
+     * reduces the number of distinct allocating blocks.
+     * There might be more advanced optimizations, like using bins of memory
+     * size, or using larger block size for big allocations. For now, this
+     * seems to do fine.
+     */
+    newBlock(2 * size, flags); // Reserving double size
     return allocateInExistingBlock(size, flags, align);
 }
 
