@@ -15,18 +15,24 @@
 
 #include "MemoryManager.h"
 
-static int makeBytesAligned(int bytes, int alignment)
+/*
+ * Return a multiple of alignment just above bytes
+ * Only works if alignment is a power of two.
+ */
+static uint32_t makeBytesAligned(uint32_t bytes, uint32_t alignment)
 {
     if (alignment == 0)
         return bytes;
-    return bytes + ((alignment - (bytes % alignment)) % alignment);
+    if ((bytes & (alignment - 1)) == 0)
+        return bytes;
+    return alignment + (bytes & ~(alignment-1));
 }
 
 MemoryManager::MemoryManager(void)
 {
 }
 
-static uint8_t k_heapBMGetNID(uint8_t a, uint8_t b) {
+static uint8_t newId(uint8_t a, uint8_t b) {
     uint8_t c;  
     for (c = a + 1; c == b || c == 0; ++c);
     return c;
@@ -58,14 +64,12 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
                     continue;
 
                 /* check alignment here */
-                /* TODO: alignment is a power of 2. Should be optimised */
-                if (align && ((x * mod->bsize + reinterpret_cast<uintptr_t>(mod) + size_of_mod) % align))
+                if (align && (((x * mod->bsize + reinterpret_cast<uintptr_t>(mod) + size_of_mod) & (static_cast<uintptr_t>(align)-1)) != 0))
                     continue;
 
                 /* count free blocks */
                 uint32_t y;
                 for (y = 0; bm[x + y] == 0 && y < bneed && (x + y) < bcnt; ++y);
-                //debuglogstdio(LCF_MEMORY, "Found segment %d and need %d", y, bneed);
 
                 /* we have enough, now allocate them */
                 if (y == bneed) {
@@ -73,7 +77,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
 
                     /* bm[x + y] can overflow on the data,
                      * but it should not be a problem */
-                    uint8_t nid = k_heapBMGetNID(bm[x - 1], bm[x + y]);
+                    uint8_t nid = newId(bm[x - 1], bm[x + y]);
 
                     /* allocate by setting id */
                     for (uint32_t z = 0; z < bneed; ++z) {
@@ -88,8 +92,7 @@ uint8_t* MemoryManager::allocateInExistingBlock(uint32_t size, int flags, int al
 
                     uint8_t* addr = reinterpret_cast<uint8_t*>(mod) + size_of_mod + x * mod->bsize;
 
-                    if (flags & MemoryManager::ALLOC_ZEROINIT)
-                    {
+                    if (flags & MemoryManager::ALLOC_ZEROINIT) {
                         memset(addr, 0, size);
                     }
 
@@ -199,7 +202,8 @@ uint8_t* MemoryManager::allocateUnprotected(uint32_t size, int flags, int align)
             return allocation;
         }
     }
-    newBlock(size, flags);
+    /* Allocate a bigger block size so that we are sure to find an aligned segment */
+    newBlock(size + align, flags);
     return allocateInExistingBlock(size, flags, align);
 }
 
@@ -207,16 +211,13 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
 {
     debuglogstdio(LCF_MEMORY, "%s call with address %p and size %d", __func__, address, size);
 
-    if (address == nullptr)
-    {
+    if (address == nullptr) {
         return allocateUnprotected(size, flags, 0);
     }
-    if (size == 0)
-    {
+    if (size == 0) {
         deallocateUnprotected(address);
         return nullptr;
     }
-
 
     for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
         uint8_t* mod_addr = reinterpret_cast<uint8_t*>(mod) + size_of_mod;
@@ -264,7 +265,7 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
                  */
                 if (x < max && bm[x] == id) {
                     /* Detected a segment with same id */
-                    uint8_t nid = k_heapBMGetNID(bm[bi - 1], bm[x]);
+                    uint8_t nid = newId(bm[bi - 1], bm[x]);
                     for (x = bi; x - bi < rb; ++x) {
                         bm[x] = nid;
                     }
