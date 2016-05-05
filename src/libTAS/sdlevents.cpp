@@ -32,6 +32,7 @@ namespace orig {
 
 void pushNativeEvents(void)
 {
+    return;
     orig::SDL_PumpEvents();
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
@@ -54,6 +55,11 @@ void pushNativeEvents(void)
     }
 }
 
+/* Override */ void SDL_PumpEvents(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
+    return;
+}
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {

@@ -25,7 +25,11 @@
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/mman.h> // shm_open
 #include <dirent.h>
+#include <fcntl.h>   // open
+#include <unistd.h>  // read, write, close
+#include <cstdio>    // BUFSIZ
 
 static void attachToGame(pid_t game_pid)
 {
@@ -95,6 +99,7 @@ static void detachToGame(pid_t game_pid)
  */
 void SaveState::fillSections(pid_t game_pid)
 {
+    sections.clear();
 
     /* Compose the filename for the /proc memory map, and open it. */
     std::ostringstream oss;
@@ -176,20 +181,26 @@ void SaveState::fillRegisters(pid_t game_pid)
 bool SaveState::save(pid_t game_pid)
 {
     /* Attach to the game process */
-    /* 
-     * Actually, we don't need this, just the signal to freeze the game, I guess.
-     * TODO: leaving it for now.
-     */
     attachToGame(game_pid);
 
-    sections.clear();
+    /* Save heap memory */
+    int heap_fd = shm_open("/libtas", O_RDONLY, 0666);
+    int state_fd = open("savestate.bin", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    char buf[BUFSIZ];
+    size_t size;
+
+    while ((size = read(heap_fd, buf, BUFSIZ)) > 0) {
+        write(state_fd, buf, size);
+    }
+
+    close(heap_fd);
+    close(state_fd);
 
     fillRegisters(game_pid);
 
     fillSections(game_pid);
 
     for (auto& section : sections) {
-        //std::cerr << "saddr: " << std::hex << section->addr << std::dec << std::endl;
         struct iovec local, remote;
         section->toIovec(local, remote);
 
@@ -236,6 +247,18 @@ bool SaveState::load(pid_t game_pid)
      * TODO: leaving it for now.
      */
     attachToGame(game_pid);
+
+    int heap_fd = shm_open("/libtas", O_WRONLY, 0666);
+    int state_fd = open("savestate.bin", O_RDONLY, 0644);
+    char buf[BUFSIZ];
+    size_t size;
+
+    while ((size = read(state_fd, buf, BUFSIZ)) > 0) {
+        write(heap_fd, buf, size);
+    }
+
+    close(heap_fd);
+    close(state_fd);
 
     for (auto& ti : threads) {
         ti.loadRegisters();

@@ -28,6 +28,8 @@
  */
 void pushNativeEvents(void);
 
+OVERRIDE void SDL_PumpEvents(void);
+
 /**
  *  Checks the event queue for messages and optionally returns them.
  *
