@@ -229,7 +229,8 @@ uint8_t* MemoryManager::allocateUnprotected(uint32_t size, int flags, int align)
          * always check for existing memory.
          * We may learn from strategies of common malloc allocations.
          */
-        if (fmod && (fmod->size - (fmod->used * fmod->bsize) >= size)) {
+        if ((fmod && (fmod->size - (fmod->used * fmod->bsize) >= size)) ||
+            (lmod && (lmod->size - (lmod->used * lmod->bsize) >= size))) {
             uint8_t* allocation = allocateInExistingBlock(size, flags, align);
             if (allocation) {
                 return allocation;
@@ -379,6 +380,7 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
             }
             /* update free block count */
             mod->used -= x - bi;
+            lmod = mod;
             //mod->lfb = bi - 1;
             return;
         }
@@ -398,6 +400,7 @@ void MemoryManager::init()
     }
 
     fmod = nullptr;
+    lmod = nullptr;
     global_align = 16;
     size_of_mod = makeBytesAligned(sizeof(MemoryObjectDescription), global_align);
     allocation_granularity = getpagesize();

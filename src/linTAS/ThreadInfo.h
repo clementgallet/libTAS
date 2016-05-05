@@ -17,35 +17,21 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SAVESTATE_H_INCLUDED
-#define LIBTAS_SAVESTATE_H_INCLUDED
+#ifndef LIBTAS_THREADINFO_H_INCLUDED
+#define LIBTAS_THREADINFO_H_INCLUDED
 
-#include "StateSection.h"
-#include "ThreadInfo.h"
-#include <vector>
-#include <memory>
+#include <sys/types.h>
+#include <sys/user.h>
 
-/* Store the full game memory */
-class SaveState {
+/* Store a section of the game memory */
+class ThreadInfo {
     public:
-        /* Meta data */
-        uint64_t frame_count;
+        pid_t tid;
+        struct user_regs_struct regs;
+        bool needattach;
 
-        /* Memory sections */
-        int n_sections;
-        uint64_t total_size;
-
-        /* Vector of memory sections */
-        std::vector<std::unique_ptr<StateSection>> sections;
-
-        std::vector<ThreadInfo> threads;
-
-        /* Access and save all memory regions of the game process that are writable. */
-        void fillSections(pid_t game_pid);
-        void fillRegisters(pid_t game_pid);
-        bool save(pid_t game_pid);
-        bool load(pid_t game_pid);
-
+        void saveRegisters(void);
+        void loadRegisters(void);
 };
 
 #endif

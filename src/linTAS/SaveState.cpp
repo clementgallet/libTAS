@@ -25,15 +25,15 @@
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <dirent.h>
 
 static void attachToGame(pid_t game_pid)
 {
     /* Try to attach to the game process */
-    if (ptrace(PTRACE_ATTACH, game_pid, NULL, NULL) != 0)
+    if (ptrace(PTRACE_ATTACH, game_pid, nullptr, nullptr) != 0)
     {
-        int errattch = errno;
         /* if ptrace() gives EPERM, it might be because another process is already attached */
-        if (errattch == EPERM)
+        if (errno == EPERM)
         {
             fprintf(stderr, "Process is currently attached\n");
         }
@@ -59,14 +59,39 @@ static void attachToGame(pid_t game_pid)
     }
 }
 
+static void gettids(pid_t game_pid, std::vector<pid_t> &tids)
+{
+    std::ostringstream oss;
+    oss << "/proc/" << game_pid << "/task";
+
+    DIR *dir = opendir(oss.str().c_str());
+    if (!dir) {
+        fprintf(stderr, "Could not access to TIDs\n");
+        return;
+    }
+
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != nullptr) {
+        pid_t tid;
+        try {
+            tid = std::stoi(std::string(ent->d_name));
+        }
+        catch(std::invalid_argument& e) {
+            continue;
+        }
+        tids.push_back(tid);
+    }
+    closedir(dir);
+}
+
+
 static void detachToGame(pid_t game_pid)
 {
-    ptrace(PTRACE_DETACH, game_pid, NULL, NULL);
+    ptrace(PTRACE_DETACH, game_pid, nullptr, nullptr);
 }
 
 /*
  * Access and save all memory regions of the game process that are writable.
- * Code originally taken from GDB
  */
 void SaveState::fillSections(pid_t game_pid)
 {
@@ -90,14 +115,6 @@ void SaveState::fillSections(pid_t game_pid)
         std::unique_ptr<StateSection> section = std::unique_ptr<StateSection>(new StateSection);
         section->readMap(line);
 
-        std::cerr << "Save segment, " << section->size << " bytes";
-        std::cerr << " at 0x" << std::hex << section->addr << std::dec << " (";
-        std::cerr << (section->readflag ?'r':'-');
-        std::cerr << (section->writeflag?'w':'-');
-        std::cerr << (section->execflag ?'x':'-');
-        std::cerr << (section->sharedflag ?'s':'p');
-        std::cerr << ") " << section->filename << std::endl;
-
         /* Filter based on permissions */
 
         /* We must at least be able to read the section */
@@ -108,17 +125,51 @@ void SaveState::fillSections(pid_t game_pid)
         if (!section->writeflag)
             continue;
 
-        if (section->sharedflag)
-            continue;
+        /* The other rules are:
+         * - copy the first rw segment (main application global memory)
+         * - copy the heap (should be very small, because heap allocations
+         *     are done with our memory manager
+         * - copy the stack of each thread
+         */
+        if ( (total_size == 0) || 
+             (section->filename.find("heap") != std::string::npos) ||
+             (section->filename.find("stack") != std::string::npos) ) {
 
-        /* Allocate actual memory section */
-        section->mem.resize(section->size);
+            std::cerr << "Save segment, " << section->size << " bytes";
+            std::cerr << " at 0x" << std::hex << section->addr << std::dec << " (";
+            std::cerr << (section->readflag ?'r':'-');
+            std::cerr << (section->writeflag?'w':'-');
+            std::cerr << (section->execflag ?'x':'-');
+            std::cerr << (section->sharedflag ?'s':'p');
+            std::cerr << ") " << section->filename << std::endl;
 
-        total_size += section->size;
+            /* Allocate actual memory section */
+            section->mem.resize(section->size);
 
-        /* Insert the section into the savestate */
-        sections.push_back(std::move(section));
+            total_size += section->size;
 
+            /* Insert the section into the savestate */
+            sections.push_back(std::move(section));
+        }
+    }
+}
+
+/*
+ * Access and save all memory regions of the game process that are writable.
+ */
+void SaveState::fillRegisters(pid_t game_pid)
+{
+    threads.clear();
+
+    std::vector<pid_t> tids;
+    gettids(game_pid, tids);
+ 
+    for (auto tid: tids) {
+        ThreadInfo ti;
+        ti.tid = tid;
+        ti.needattach = tid != game_pid;
+        ti.saveRegisters();
+        threads.push_back(ti);
     }
 }
 
@@ -132,6 +183,8 @@ bool SaveState::save(pid_t game_pid)
     attachToGame(game_pid);
 
     sections.clear();
+
+    fillRegisters(game_pid);
 
     fillSections(game_pid);
 
@@ -183,6 +236,10 @@ bool SaveState::load(pid_t game_pid)
      * TODO: leaving it for now.
      */
     attachToGame(game_pid);
+
+    for (auto& ti : threads) {
+        ti.loadRegisters();
+    }
 
     for (auto& section : sections) {
         struct iovec local, remote;

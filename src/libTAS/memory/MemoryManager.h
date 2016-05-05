@@ -114,6 +114,9 @@ class MemoryManager
         /* Pointer to the first memory segment */
         MemoryObjectDescription* fmod;
 
+        /* Pointer to the first memory segment */
+        MemoryObjectDescription* lmod;
+
         /* Base memory size we can allocate with mmap. Usually the page size */
         uint32_t allocation_granularity;
 
