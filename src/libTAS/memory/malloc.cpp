@@ -41,7 +41,7 @@ namespace orig {
 void *malloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
-    //printBacktrace();
+    printBacktrace();
     void* addr;
     if (custom_mm && !threadState.isNative())
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
@@ -198,6 +198,16 @@ void free (void *ptr) throw()
         LINK_NAMESPACE(free, nullptr);
         orig::free(ptr);
     }
+    
+    if (custom_mm && !res && !threadState.isNative()) {
+        fprintf(stderr, "Native free was performed under non native thread state!\n");
+        printBacktrace();
+    }
+    if (custom_mm && res && threadState.isNative()) {
+        fprintf(stderr, "Non native free was performed under native thread state!\n");
+        printBacktrace();
+    }
+    
     debuglogstdio(LCF_MEMORY, "  returns");
 }
 

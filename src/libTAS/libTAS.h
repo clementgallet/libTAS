@@ -43,6 +43,9 @@ OVERRIDE void SDL_Init(unsigned int flags);
  */
 OVERRIDE int SDL_InitSubSystem(Uint32 flags);
 
+OVERRIDE int SDL_VideoInit(const char* driver_name);
+OVERRIDE void SDL_VideoQuit(void);
+
 /**
  *  This function cleans up all initialized subsystems. You should
  *  call it upon all exit conditions.

@@ -27,14 +27,15 @@
 /* Code taken from http://stackoverflow.com/a/19190421 */
 static const char* demangle( const char* const symbol )
 {
+    /*
     const std::unique_ptr< char, decltype( &std::free ) > demangled(
             abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
     if( demangled ) {
         return demangled.get();
     }
-    else {
+    else {*/
         return symbol;
-    }
+    //}
 }
 
 void printBacktrace(void)
@@ -46,14 +47,13 @@ void printBacktrace(void)
 
     //threadState.setNoLog(true);
     void* addresses[256];
-    const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
-    const std::unique_ptr< char*, decltype( &std::free ) > symbols(
-            ::backtrace_symbols( addresses, n ), &std::free );
+    const int n = backtrace(addresses, 256);
+    char** symbols = backtrace_symbols(addresses, n);
     for( int i = 0; i < n; ++i ) {
         /* We parse the symbols retrieved from backtrace_symbols() to
          * extract the "real" symbols that represent the mangled names.
          */
-        char* const symbol = symbols.get()[ i ];
+        char* const symbol = symbols[i];
         char* end = symbol;
         while( *end ) {
             ++end;
@@ -79,6 +79,7 @@ void printBacktrace(void)
         }
     }
     fprintf(stderr, "\n");
+    free(symbols);
     //threadState.setNoLog(false);
     recurs = 0;
 }

@@ -154,7 +154,9 @@ int sendXid(void)
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    threadState.setNative(true);
     void* context = orig::SDL_GL_CreateContext(window);
+    threadState.setNative(false);
 
     /* We override this function just to disable vsync,
      * except when using non deterministic timer.
@@ -203,7 +205,9 @@ std::string origIcon;
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
+    threadState.setNative(true);
     gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
+    threadState.setNative(false);
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
@@ -229,7 +233,9 @@ std::string origIcon;
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    //threadState.setNative(true);
     orig::SDL_DestroyWindow(window);
+    //threadState.setNative(false);
     if (gameWindow == window)
         gameWindow = NULL;
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -322,7 +328,9 @@ void updateTitle(float fps, float lfps)
     /* Disable high DPI mode */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
+    //threadState.setNative(true);
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
+    //threadState.setNative(false);
     gameWindow = *window;
 
     /* A new window was created. It needs to be passed to the program */
@@ -395,7 +403,9 @@ void updateTitle(float fps, float lfps)
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
     /* Call real function, but do not return yet */
+    //threadState.setNative(true);
     SDL1::SDL_Surface *surf = orig::SDL_SetVideoMode(width, height, bpp, flags);
+    //threadState.setNative(false);
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */

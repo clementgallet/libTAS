@@ -23,7 +23,7 @@ target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing
 
 # For shared memory functions
 target_link_libraries (linTAS -lrt)
-target_link_libraries (TAS -lrt)
+target_link_libraries (TAS -lrt -rdynamic)
 
 # Add X11 library
 find_package(X11 REQUIRED)

@@ -48,6 +48,8 @@ bool libTAS_init = false;
 namespace orig {
     static void (*SDL_Init)(unsigned int flags) = nullptr;
     static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
+    static int (*SDL_VideoInit)(const char* driver_name) = nullptr;
+    static void (*SDL_VideoQuit)(void) = nullptr;
     static void (*SDL_Quit)(void) = nullptr;
 }
 
@@ -179,6 +181,8 @@ void __attribute__((destructor)) term(void)
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_Init);
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
+    LINK_NAMESPACE_SDLX(SDL_VideoInit);
+    LINK_NAMESPACE_SDLX(SDL_VideoQuit);
     LINK_NAMESPACE_SDLX(SDL_Quit);
 
     link_sdlwindows();
@@ -215,14 +219,28 @@ void __attribute__((destructor)) term(void)
     /* Disabling Audio subsystem so that it does not create an extra thread */
     flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
+    return orig::SDL_InitSubSystem(flags);
+}
+
+/* Override */ int SDL_VideoInit(const char* driver_name)
+{
+    DEBUGLOGCALL(LCF_SDL);
     threadState.setNative(true);
-    int rv = orig::SDL_InitSubSystem(flags);
+    int rv = orig::SDL_VideoInit(driver_name);
     threadState.setNative(false);
     return rv;
 }
 
+/* Override */ void SDL_VideoQuit(void)
+{
+    DEBUGLOGCALL(LCF_SDL);
+    threadState.setNative(true);
+    orig::SDL_VideoQuit();
+    threadState.setNative(false);
+}
+
 /* Override */ void SDL_Quit(){
-    debuglog(LCF_SDL, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL);
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* SDL 1.2 does not have a destroy window function,
