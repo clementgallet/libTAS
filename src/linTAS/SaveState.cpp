@@ -137,7 +137,7 @@ void SaveState::fillSections(pid_t game_pid)
          * - copy the stack of each thread
          */
         if ( (total_size == 0) || 
-             (section->filename.find("heap") != std::string::npos) ||
+             //(section->filename.find("heap") != std::string::npos) ||
              (section->filename.find("stack") != std::string::npos) ) {
 
             std::cerr << "Save segment, " << section->size << " bytes";

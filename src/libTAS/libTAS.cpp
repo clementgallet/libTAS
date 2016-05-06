@@ -215,7 +215,10 @@ void __attribute__((destructor)) term(void)
     /* Disabling Audio subsystem so that it does not create an extra thread */
     flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
-    return orig::SDL_InitSubSystem(flags);
+    threadState.setNative(true);
+    int rv = orig::SDL_InitSubSystem(flags);
+    threadState.setNative(false);
+    return rv;
 }
 
 /* Override */ void SDL_Quit(){

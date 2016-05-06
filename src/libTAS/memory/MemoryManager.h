@@ -93,7 +93,7 @@ class MemoryManager
          * Deallocate a segment of memory using the base address.
          * We know how much size we need to deallocate
          */
-        void deallocate(void* address);
+        bool deallocate(void* address);
 
         /*
          * Debug functions to print the current allocation layout,
@@ -164,7 +164,7 @@ class MemoryManager
         uint8_t* reallocateUnprotected(uint8_t* address, uint32_t size, int flags);
 
         /* Thread unsafe deallocate */
-        void deallocateUnprotected(uint8_t* address);
+        bool deallocateUnprotected(uint8_t* address);
 
 };
 

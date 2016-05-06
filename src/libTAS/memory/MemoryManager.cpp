@@ -347,12 +347,12 @@ uint8_t* MemoryManager::reallocateUnprotected(uint8_t* address, uint32_t size, i
 
 }
 
-void MemoryManager::deallocateUnprotected(uint8_t* address)
+bool MemoryManager::deallocateUnprotected(uint8_t* address)
 {
     debuglogstdio(LCF_MEMORY, "%s call with address %p", __func__, address);
 
     if (address == nullptr) {
-        return;
+        return true;
     }
 
     for (MemoryObjectDescription *mod = fmod; mod; mod = mod->next) {
@@ -382,12 +382,12 @@ void MemoryManager::deallocateUnprotected(uint8_t* address)
             mod->used -= x - bi;
             lmod = mod;
             //mod->lfb = bi - 1;
-            return;
+            return true;
         }
     }
 
     debuglogstdio(LCF_MEMORY | LCF_ERROR, "Attempted removal of unknown memory!");
-    return;
+    return false;
 }
 
 void MemoryManager::init()
@@ -447,12 +447,13 @@ void* MemoryManager::reallocate(void* address, int bytes, int flags)
     return static_cast<void*>(rv);
 }
 
-void MemoryManager::deallocate(void* address)
+bool MemoryManager::deallocate(void* address)
 {
     while (allocation_lock.test_and_set() == true) {}
-    deallocateUnprotected(static_cast<uint8_t*>(address));
+    bool res = deallocateUnprotected(static_cast<uint8_t*>(address));
     //checkIntegrity();
     allocation_lock.clear();
+    return res;
 }
 
 void MemoryManager::checkIntegrity()

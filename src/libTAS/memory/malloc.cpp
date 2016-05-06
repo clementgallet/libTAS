@@ -21,6 +21,8 @@
 #include "../logging.h"
 #include "MemoryManager.h"
 #include "../dlhook.h"
+#include "../ThreadState.h"
+#include "../backtrace.h"
 
 bool custom_mm = true; // TODO: Make this an option
 
@@ -39,8 +41,9 @@ namespace orig {
 void *malloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
+    //printBacktrace();
     void* addr;
-    if (custom_mm)
+    if (custom_mm && !threadState.isNative())
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     else {
         LINK_NAMESPACE(malloc, nullptr);
@@ -59,7 +62,7 @@ void *calloc (size_t nmemb, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (custom_mm)
+    if (custom_mm && !threadState.isNative())
         addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT, 0);
     else {
         /*
@@ -95,7 +98,7 @@ void *realloc (void *ptr, size_t size) throw()
     void* addr;
     if (custom_mm)
         addr = memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
-    else {
+    if (!custom_mm || !addr) {
         LINK_NAMESPACE(realloc, nullptr);
         addr = orig::realloc(ptr, size);
     }
@@ -107,7 +110,7 @@ void *valloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (custom_mm) {
+    if (custom_mm && !threadState.isNative()) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
@@ -123,7 +126,7 @@ void *pvalloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (custom_mm) {
+    if (custom_mm && !threadState.isNative()) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
@@ -140,7 +143,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
     int ret = 0;
-    if (custom_mm) {
+    if (custom_mm && !threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
         if (!addr)
             ret = ENOMEM;
@@ -158,7 +161,7 @@ void *aligned_alloc (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
-    if (custom_mm) {
+    if (custom_mm && !threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
@@ -173,7 +176,7 @@ void *memalign (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
-    if (custom_mm) {
+    if (custom_mm && !threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
@@ -187,9 +190,11 @@ void *memalign (size_t alignment, size_t size) throw()
 void free (void *ptr) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p", __func__, ptr);
+    //if (custom_mm && !threadState.isNative())
+    bool res = true;
     if (custom_mm)
-        memorymanager.deallocate(ptr);
-    else {
+        res = memorymanager.deallocate(ptr);
+    if (!custom_mm || !res) {
         LINK_NAMESPACE(free, nullptr);
         orig::free(ptr);
     }
