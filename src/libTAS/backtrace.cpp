@@ -21,12 +21,11 @@
 #include "ThreadState.h"
 #include <cxxabi.h>
 #include <execinfo.h>
-#include <iostream>
-#include <string>
 #include <memory>
+#include <cstdio>
 
 /* Code taken from http://stackoverflow.com/a/19190421 */
-static std::string demangle( const char* const symbol )
+static const char* demangle( const char* const symbol )
 {
     const std::unique_ptr< char, decltype( &std::free ) > demangled(
             abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
@@ -40,7 +39,12 @@ static std::string demangle( const char* const symbol )
 
 void printBacktrace(void)
 {
-    threadState.setNoLog(true);
+    static int recurs = 0;
+    if (recurs)
+        return;
+    recurs = 1;
+
+    //threadState.setNoLog(true);
     void* addresses[256];
     const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
     const std::unique_ptr< char*, decltype( &std::free ) > symbols(
@@ -66,15 +70,16 @@ void printBacktrace(void)
         }
 
         if( begin != symbol ) {
-            std::cerr << std::string( symbol, ++begin - symbol );
+            fprintf(stderr, "%.*s", static_cast<int>(++begin - symbol), symbol);
             *end++ = '\0';
-            std::cerr << demangle( begin ) << '+' << end;
+            fprintf(stderr, "%s+%s\n", demangle( begin ), end);
         }
         else {
-            std::cerr << symbol;
+            fprintf(stderr, "%s\n", symbol);
         }
-        std::cerr << std::endl;
     }
-    threadState.setNoLog(false);
+    fprintf(stderr, "\n");
+    //threadState.setNoLog(false);
+    recurs = 0;
 }
 
