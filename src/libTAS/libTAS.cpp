@@ -48,7 +48,8 @@ bool libTAS_init = false;
 namespace orig {
     static void (*SDL_Init)(unsigned int flags) = nullptr;
     static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
-    static int (*SDL_VideoInit)(const char* driver_name) = nullptr;
+    static int (*SDL1_VideoInit)(const char* driver_name, Uint32 flags) = nullptr;
+    static int (*SDL2_VideoInit)(const char* driver_name) = nullptr;
     static void (*SDL_VideoQuit)(void) = nullptr;
     static void (*SDL_Quit)(void) = nullptr;
 }
@@ -181,7 +182,10 @@ void __attribute__((destructor)) term(void)
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_Init);
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
-    LINK_NAMESPACE_SDLX(SDL_VideoInit);
+    if (SDLver == 1)
+        link_function((void**)&orig::SDL1_VideoInit, "SDL_VideoInit", "libSDL-1.2");
+    if (SDLver == 2)
+        link_function((void**)&orig::SDL2_VideoInit, "SDL_VideoInit", "libSDL2-2");
     LINK_NAMESPACE_SDLX(SDL_VideoQuit);
     LINK_NAMESPACE_SDLX(SDL_Quit);
 
@@ -222,12 +226,18 @@ void __attribute__((destructor)) term(void)
     return orig::SDL_InitSubSystem(flags);
 }
 
-/* Override */ int SDL_VideoInit(const char* driver_name)
+/* Override */ int SDL_VideoInit(const char* driver_name, Uint32 flags)
 {
     DEBUGLOGCALL(LCF_SDL);
-    threadState.setNative(true);
-    int rv = orig::SDL_VideoInit(driver_name);
-    threadState.setNative(false);
+    int rv = 0;
+    //threadState.setNative(true);
+    if (SDLver == 1) {
+        rv = orig::SDL1_VideoInit(driver_name, flags);
+    }
+    if (SDLver == 2) {
+        rv = orig::SDL2_VideoInit(driver_name);
+    }
+    //threadState.setNative(false);
     return rv;
 }
 

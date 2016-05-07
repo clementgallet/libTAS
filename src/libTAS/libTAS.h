@@ -43,7 +43,7 @@ OVERRIDE void SDL_Init(unsigned int flags);
  */
 OVERRIDE int SDL_InitSubSystem(Uint32 flags);
 
-OVERRIDE int SDL_VideoInit(const char* driver_name);
+OVERRIDE int SDL_VideoInit(const char* driver_name, Uint32 flags);
 OVERRIDE void SDL_VideoQuit(void);
 
 /**

@@ -41,7 +41,7 @@ namespace orig {
 void *malloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
-    printBacktrace();
+    //printBacktrace();
     void* addr;
     if (custom_mm && !threadState.isNative())
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
