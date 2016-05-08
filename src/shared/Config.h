@@ -30,8 +30,8 @@ struct Config {
     /* Do we use our custom memory manager for dynamically allocated memory? */
     bool custom_memorymanager;
     
-    /* Allow the game to write into savefiles */
-    bool allow_savefiles;
+    /* Prevent the game to write into savefiles */
+    bool prevent_savefiles;
 };
 
 extern struct Config config;

@@ -28,6 +28,10 @@
 #include <cstdio>
 #include <iostream>
 #include <fcntl.h>
+#include <map>
+#include <string>
+#include <sys/stat.h>
+#include <errno.h>
 
 /*** SDL file IO ***/
 
@@ -50,7 +54,7 @@ SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
     debuglog(LCF_FILEIO, __func__, " call with file ", file, " with mode ", mode);
     SDL_RWops* handle = orig::SDL_RWFromFile(file, mode);
 
-    if (!config.allow_savefiles) {
+    if (!config.prevent_savefiles) {
     /* We replace the write callback with our own function */
         if (handle)
             handle->write = dummyWrite;
@@ -63,7 +67,7 @@ SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose)
     debuglog(LCF_FILEIO, __func__, " call");
     SDL_RWops* handle = orig::SDL_RWFromFP(fp, autoclose);
 
-    if (!config.allow_savefiles) {
+    if (!config.prevent_savefiles) {
         /* We replace the write callback with our own function */
         if (handle)
             handle->write = dummyWrite;
@@ -193,9 +197,54 @@ namespace orig {
     static int (*openat64) (int fd, const char *file, int oflag, ...);
     static int (*creat) (const char *file, mode_t mode);
     static int (*creat64) (const char *file, mode_t mode);
+    static int (*close) (int fd);
     static ssize_t (*write) (int fd, const void *buf, size_t n);
     static ssize_t (*pwrite) (int fd, const void *buf, size_t n, __off_t offset);
     static ssize_t (*pwrite64) (int fd, const void *buf, size_t n, __off64_t offset);
+}
+
+static std::map<int, std::string> posix_savefiles;
+
+static bool isSaveFile(const char *file, int oflag)
+{
+    if (!config.prevent_savefiles)
+        return false;
+
+    if (!file)
+        return false;
+
+    static bool inited = 0;
+    if (!inited) {
+        posix_savefiles.clear();
+        inited = 1;
+    }
+
+    /* Check if file is writeable */
+    if ((oflag & 0x3) == O_RDONLY)
+        return false;
+
+    /* Check if file is a dev file */
+    struct stat filestat;
+    int rv = stat(file, &filestat);
+
+    if (rv == -1) {
+        /*
+         * If the file does not exists,
+         * we consider it as a savefile
+         */
+        if (errno == ENOENT)
+            return true;
+
+        /* For any other error, let's say no */
+        return false;
+    }
+
+    /* Check if the file is a regular file */
+    if (S_ISREG(filestat.st_mode))
+        return true;
+
+    return false;
+
 }
 
 int open (const char *file, int oflag, ...)
@@ -209,10 +258,11 @@ int open (const char *file, int oflag, ...)
     }
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
 
+    int fd;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -222,14 +272,17 @@ int open (const char *file, int oflag, ...)
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
 
-        int fd = orig::open(file, oflag, mode);
-        return fd;
+        fd = orig::open(file, oflag, mode);
     }
     else
     {
-        int fd = orig::open(file, oflag);
-        return fd;
+        fd = orig::open(file, oflag);
     }
+
+    if (isSaveFile(file, oflag))
+        posix_savefiles[fd] = std::string(file); // non NULL file is tested in isSaveFile()
+
+    return fd;
 }
 
 int open64 (const char *file, int oflag, ...)
@@ -243,10 +296,11 @@ int open64 (const char *file, int oflag, ...)
     }
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
 
+    int fd;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -256,14 +310,17 @@ int open64 (const char *file, int oflag, ...)
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
 
-        int fd = orig::open64(file, oflag, mode);
-        return fd;
+        fd = orig::open64(file, oflag, mode);
     }
     else
     {
-        int fd = orig::open64(file, oflag);
-        return fd;
+        fd = orig::open64(file, oflag);
     }
+
+    if (isSaveFile(file, oflag))
+        posix_savefiles[fd] = std::string(file); // non NULL file is tested in isSaveFile()
+
+    return fd;
 }
 
 int openat (int fd, const char *file, int oflag, ...)
@@ -277,10 +334,11 @@ int openat (int fd, const char *file, int oflag, ...)
     }
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
 
+    int newfd;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -290,14 +348,17 @@ int openat (int fd, const char *file, int oflag, ...)
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
 
-        int newfd = orig::openat(fd, file, oflag, mode);
-        return newfd;
+        newfd = orig::openat(fd, file, oflag, mode);
     }
     else
     {
-        int newfd = orig::openat(fd, file, oflag);
-        return newfd;
+        newfd = orig::openat(fd, file, oflag);
     }
+
+    if (isSaveFile(file, oflag))
+        posix_savefiles[newfd] = std::string(file); // non NULL file is tested in isSaveFile()
+
+    return newfd;
 }
 
 int openat64 (int fd, const char *file, int oflag, ...)
@@ -311,10 +372,11 @@ int openat64 (int fd, const char *file, int oflag, ...)
     }
     
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %d", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %d", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
 
+    int newfd;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -324,14 +386,17 @@ int openat64 (int fd, const char *file, int oflag, ...)
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
 
-        int newfd = orig::openat64(fd, file, oflag, mode);
-        return newfd;
+        newfd = orig::openat64(fd, file, oflag, mode);
     }
     else
     {
-        int newfd = orig::openat64(fd, file, oflag);
-        return newfd;
+        newfd = orig::openat64(fd, file, oflag);
     }
+
+    if (isSaveFile(file, oflag))
+        posix_savefiles[newfd] = std::string(file); // non NULL file is tested in isSaveFile()
+
+    return newfd;
 }
 
 int creat (const char *file, mode_t mode)
@@ -347,6 +412,10 @@ int creat (const char *file, mode_t mode)
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = orig::creat(file, mode);
+
+    if (file)
+        posix_savefiles[fd] = std::string(file);
+
     return fd;
 }
 
@@ -363,7 +432,33 @@ int creat64 (const char *file, mode_t mode)
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = orig::creat64(file, mode);
+
+    if (file)
+        posix_savefiles[fd] = std::string(file);
+
     return fd;
+}
+
+int close (int fd)
+{
+    if (!orig::close) {
+        link_posixfileio();
+        if (!orig::close) {
+            printf("Failed to link close\n");
+            return -1;
+        }
+    }
+
+    DEBUGLOGCALL(LCF_FILEIO);
+
+    int rv = orig::close(fd);
+
+    if (posix_savefiles.find(fd) != posix_savefiles.end()) {
+        debuglog(LCF_FILEIO, "  close savefile ", posix_savefiles[fd]);
+        posix_savefiles.erase(fd);
+    }
+
+    return rv;
 }
 
 ssize_t write (int fd, const void *buf, size_t n)
@@ -376,6 +471,13 @@ ssize_t write (int fd, const void *buf, size_t n)
         }
     }
     DEBUGLOGCALL(LCF_FILEIO);
+
+    if (config.prevent_savefiles) {
+        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
+            return n;
+        }
+    }
     return orig::write(fd, buf, n);
 }
 
@@ -383,6 +485,13 @@ ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
 {
     if (!orig::pwrite) return n;
     DEBUGLOGCALL(LCF_FILEIO);
+
+    if (config.prevent_savefiles) {
+        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
+            return n;
+        }
+    }
     return orig::pwrite(fd, buf, n, offset);
 }
 
@@ -390,6 +499,13 @@ ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
 {
     if (!orig::pwrite64) return n;
     DEBUGLOGCALL(LCF_FILEIO);
+
+    if (config.prevent_savefiles) {
+        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
+            return n;
+        }
+    }
     return orig::pwrite64(fd, buf, n, offset);
 }
 
@@ -401,6 +517,7 @@ void link_posixfileio(void)
     LINK_NAMESPACE(openat64, nullptr);
     LINK_NAMESPACE(creat, nullptr);
     LINK_NAMESPACE(creat64, nullptr);
+    LINK_NAMESPACE(close, nullptr);
     LINK_NAMESPACE(write, nullptr);
     LINK_NAMESPACE(pwrite, nullptr);
     LINK_NAMESPACE(pwrite64, nullptr);

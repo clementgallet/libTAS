@@ -153,6 +153,9 @@ OVERRIDE int openat64 (int fd, const char *file, int oflag, ...);
 OVERRIDE int creat (const char *file, mode_t mode);
 OVERRIDE int creat64 (const char *file, mode_t mode);
 
+/* Close the file descriptor FD. */
+OVERRIDE int close (int fd);
+
 /* Write N bytes of BUF to FD.  Return the number written, or -1. */
 OVERRIDE ssize_t write (int fd, const void *buf, size_t n);
 
