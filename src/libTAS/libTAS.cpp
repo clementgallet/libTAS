@@ -118,8 +118,6 @@ void __attribute__((constructor)) init(void)
     game_ai.emptyInputs();
 
     /* We initialize our dl functions hooking, and link some functions */
-    link_stdiofileio();
-    link_posixfileio();
     link_time();
     link_sleep();
     link_sdltimer();

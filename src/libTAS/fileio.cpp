@@ -159,13 +159,7 @@ static bool isSaveFile(const char *file, const char *modes)
 
 FILE *fopen (const char *filename, const char *modes)
 {
-    if (!orig::fopen) {
-        link_stdiofileio();
-        if (!orig::fopen) {
-            printf("Failed to link fopen\n");
-            return NULL;
-        }
-    }
+    LINK_NAMESPACE(fopen, nullptr);
 
     /* iostream functions are banned inside this function, I'm not sure why.
      * This is the case for every open function.
@@ -186,13 +180,7 @@ FILE *fopen (const char *filename, const char *modes)
 
 FILE *fopen64 (const char *filename, const char *modes)
 {
-    if (!orig::fopen64) {
-        link_stdiofileio();
-        if (!orig::fopen64) {
-            printf("Failed to link fopen64\n");
-            return NULL;
-        }
-    }
+    LINK_NAMESPACE(fopen64, nullptr);
 
     if (filename)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
@@ -209,14 +197,7 @@ FILE *fopen64 (const char *filename, const char *modes)
 
 int fclose (FILE *stream)
 {
-    if (!orig::fclose) {
-        link_stdiofileio();
-        if (!orig::fclose) {
-            printf("Failed to link fclose\n");
-            return 0;
-        }
-    }
-
+    LINK_NAMESPACE(fclose, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     int rv = orig::fclose(stream);
@@ -232,7 +213,8 @@ int fclose (FILE *stream)
 
 int fprintf (FILE *stream, const char *format, ...)
 {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(fprintf, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
@@ -261,6 +243,7 @@ int fprintf (FILE *stream, const char *format, ...)
      */
     va_list args;
     va_start(args, format);
+    LINK_NAMESPACE(vfprintf, nullptr);
     int ret = orig::vfprintf(stream, format, args);
     va_end(args);
     return ret;
@@ -268,7 +251,8 @@ int fprintf (FILE *stream, const char *format, ...)
 
 int vfprintf (FILE *s, const char *format, va_list arg)
 {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(vfprintf, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(s) != stdio_savefiles.end()) {
@@ -293,7 +277,8 @@ int vfprintf (FILE *s, const char *format, va_list arg)
 
 int fputc (int c, FILE *stream)
 {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(fputc, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
@@ -307,7 +292,8 @@ int fputc (int c, FILE *stream)
 
 int putc (int c, FILE *stream)
 {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(putc, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
@@ -321,13 +307,7 @@ int putc (int c, FILE *stream)
 
 size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
 {
-    if (!orig::fwrite) {
-        link_stdiofileio();
-        if (!orig::fwrite) {
-            printf("Failed to link fwrite\n");
-            return 0;
-        }
-    }
+    LINK_NAMESPACE(fwrite, nullptr);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(s) != stdio_savefiles.end()) {
@@ -341,18 +321,6 @@ size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
     //DEBUGLOGCALL(LCF_FILEIO);
     //debuglogstdio(LCF_FILEIO, "%s call", __func__);
     return orig::fwrite(ptr, size, n, s);
-}
-
-void link_stdiofileio(void)
-{
-    LINK_NAMESPACE(fopen, nullptr);
-    LINK_NAMESPACE(fopen64, nullptr);
-    LINK_NAMESPACE(fclose, nullptr);
-    LINK_NAMESPACE(fprintf, nullptr);
-    LINK_NAMESPACE(vfprintf, nullptr);
-    LINK_NAMESPACE(fputc, nullptr);
-    LINK_NAMESPACE(putc, nullptr);
-    LINK_NAMESPACE(fwrite, nullptr);
 }
 
 namespace orig {
@@ -401,14 +369,7 @@ static bool isSaveFile(const char *file, int oflag)
 
 int open (const char *file, int oflag, ...)
 {
-    if (!orig::open) {
-        link_posixfileio();
-        if (!orig::open) {
-            printf("Failed to link open\n");
-            return -1;
-        }
-    }
-
+    LINK_NAMESPACE(open, nullptr);
     if (file)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
@@ -439,14 +400,7 @@ int open (const char *file, int oflag, ...)
 
 int open64 (const char *file, int oflag, ...)
 {
-    if (!orig::open64) {
-        link_posixfileio();
-        if (!orig::open64) {
-            printf("Failed to link open64\n");
-            return -1;
-        }
-    }
-
+    LINK_NAMESPACE(open64, nullptr);
     if (file)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
@@ -477,14 +431,7 @@ int open64 (const char *file, int oflag, ...)
 
 int openat (int fd, const char *file, int oflag, ...)
 {
-    if (!orig::openat) {
-        link_posixfileio();
-        if (!orig::openat) {
-            printf("Failed to link openat\n");
-            return -1;
-        }
-    }
-
+    LINK_NAMESPACE(openat, nullptr);
     if (file)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
@@ -515,14 +462,7 @@ int openat (int fd, const char *file, int oflag, ...)
 
 int openat64 (int fd, const char *file, int oflag, ...)
 {
-    if (!orig::openat64) {
-        link_posixfileio();
-        if (!orig::openat64) {
-            printf("Failed to link openat64\n");
-            return -1;
-        }
-    }
-    
+    LINK_NAMESPACE(openat64, nullptr);
     if (file)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
     else
@@ -553,14 +493,7 @@ int openat64 (int fd, const char *file, int oflag, ...)
 
 int creat (const char *file, mode_t mode)
 {
-    if (!orig::creat) {
-        link_posixfileio();
-        if (!orig::creat) {
-            printf("Failed to link creat\n");
-            return -1;
-        }
-    }
-
+    LINK_NAMESPACE(creat, nullptr);
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = orig::creat(file, mode);
@@ -573,14 +506,7 @@ int creat (const char *file, mode_t mode)
 
 int creat64 (const char *file, mode_t mode)
 {
-    if (!orig::creat64) {
-        link_posixfileio();
-        if (!orig::creat64) {
-            printf("Failed to link creat64\n");
-            return -1;
-        }
-    }
-
+    LINK_NAMESPACE(creat64, nullptr);
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd = orig::creat64(file, mode);
@@ -593,15 +519,8 @@ int creat64 (const char *file, mode_t mode)
 
 int close (int fd)
 {
-    if (!orig::close) {
-        link_posixfileio();
-        if (!orig::close) {
-            printf("Failed to link close\n");
-            return -1;
-        }
-    }
-
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(close, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     int rv = orig::close(fd);
 
@@ -615,14 +534,8 @@ int close (int fd)
 
 ssize_t write (int fd, const void *buf, size_t n)
 {
-    if (!orig::write) {
-        link_posixfileio();
-        if (!orig::write) {
-            printf("Failed to link write\n");
-            return -1;
-        }
-    }
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(write, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (posix_savefiles.find(fd) != posix_savefiles.end()) {
@@ -635,8 +548,8 @@ ssize_t write (int fd, const void *buf, size_t n)
 
 ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
 {
-    if (!orig::pwrite) return n;
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(pwrite, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (posix_savefiles.find(fd) != posix_savefiles.end()) {
@@ -649,8 +562,8 @@ ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
 
 ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
 {
-    if (!orig::pwrite64) return n;
-    DEBUGLOGCALL(LCF_FILEIO);
+    LINK_NAMESPACE(pwrite64, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (posix_savefiles.find(fd) != posix_savefiles.end()) {
@@ -661,24 +574,8 @@ ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
     return orig::pwrite64(fd, buf, n, offset);
 }
 
-void link_posixfileio(void)
-{
-    LINK_NAMESPACE(open, nullptr);
-    LINK_NAMESPACE(open64, nullptr);
-    LINK_NAMESPACE(openat, nullptr);
-    LINK_NAMESPACE(openat64, nullptr);
-    LINK_NAMESPACE(creat, nullptr);
-    LINK_NAMESPACE(creat64, nullptr);
-    LINK_NAMESPACE(close, nullptr);
-    LINK_NAMESPACE(write, nullptr);
-    LINK_NAMESPACE(pwrite, nullptr);
-    LINK_NAMESPACE(pwrite64, nullptr);
-}
-
 #else
 
-void link_posixfileio(void) {}
-void link_stdiofileio(void) {}
 void link_sdlfileio(void) {}
 
 #endif

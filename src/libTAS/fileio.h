@@ -175,8 +175,6 @@ OVERRIDE ssize_t pwrite64 (int fd, const void *buf, size_t n,
 #endif
 
 void link_sdlfileio(void);
-void link_stdiofileio(void);
-void link_posixfileio(void);
 
 #endif
 
