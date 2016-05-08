@@ -117,6 +117,9 @@ OVERRIDE SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose);
 OVERRIDE FILE *fopen (const char *filename, const char *modes);
 OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
 
+/* Close STREAM. */
+OVERRIDE int fclose (FILE *stream);
+
 /* Write formatted output to STREAM. */
 OVERRIDE int fprintf (FILE *stream, const char *format, ...);
 
