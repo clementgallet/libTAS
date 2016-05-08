@@ -130,6 +130,15 @@ OVERRIDE int vfprintf (FILE *s, const char *format, va_list arg);
 OVERRIDE int fputc (int c, FILE *stream);
 OVERRIDE int putc (int c, FILE *stream);
 
+/* Faster version when locking is not necessary. */
+OVERRIDE int putc_unlocked (int c, FILE *stream);
+
+/* Write a string to STREAM. */
+OVERRIDE int fputs (const char *s, FILE *stream);
+
+/* This function does the same as `fputs' but does not lock the stream. */
+OVERRIDE int fputs_unlocked (const char *s, FILE *stream);
+
 /* Write chunks of generic data to STREAM. */
 OVERRIDE size_t fwrite (const void *ptr, size_t size,
 		      size_t n, FILE *s);

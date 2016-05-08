@@ -92,6 +92,9 @@ namespace orig {
     static int (*vfprintf) (FILE *s, const char *format, va_list arg) = nullptr;
     static int (*fputc) (int c, FILE *stream) = nullptr;
     static int (*putc) (int c, FILE *stream) = nullptr;
+    static int (*putc_unlocked) (int c, FILE *stream);
+    static int (*fputs) (const char *s, FILE *stream);
+    static int (*fputs_unlocked) (const char *s, FILE *stream);
     static size_t (*fwrite) (const void *ptr, size_t size,
             size_t n, FILE *s) = nullptr;
 }
@@ -100,7 +103,7 @@ static std::map<FILE*, std::string> stdio_savefiles;
 
 static bool isWriteable(const char *modes)
 {
-    if (strcmp(modes, "r") || strcmp(modes, "rb"))
+    if ((strcmp(modes, "r") == 0) || (strcmp(modes, "rb") == 0))
         return false;
     return true;
 }
@@ -293,7 +296,7 @@ int fputc (int c, FILE *stream)
 int putc (int c, FILE *stream)
 {
     LINK_NAMESPACE(putc, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (config.prevent_savefiles) {
         if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
@@ -303,6 +306,51 @@ int putc (int c, FILE *stream)
     }
 
     return orig::putc(c, stream);
+}
+
+int putc_unlocked (int c, FILE *stream)
+{
+    LINK_NAMESPACE(putc_unlocked, nullptr);
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (config.prevent_savefiles) {
+        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
+            return c;
+        }
+    }
+
+    return orig::putc_unlocked(c, stream);
+}
+
+int fputs (const char *s, FILE *stream)
+{
+    LINK_NAMESPACE(fputs, nullptr);
+    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (config.prevent_savefiles) {
+        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
+            return 0;
+        }
+    }
+
+    return orig::fputs(s, stream);
+}
+
+int fputs_unlocked (const char *s, FILE *stream)
+{
+    LINK_NAMESPACE(fputs_unlocked, nullptr);
+    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (config.prevent_savefiles) {
+        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
+            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
+            return 0;
+        }
+    }
+
+    return orig::fputs_unlocked(s, stream);
 }
 
 size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
