@@ -154,9 +154,9 @@ int sendXid(void)
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
-    threadState.setNative(true);
+    //threadState.setNative(true);
     void* context = orig::SDL_GL_CreateContext(window);
-    threadState.setNative(false);
+    //threadState.setNative(false);
 
     /* We override this function just to disable vsync,
      * except when using non deterministic timer.

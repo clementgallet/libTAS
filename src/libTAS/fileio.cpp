@@ -19,16 +19,15 @@
 
 #include "fileio.h"
 
-#define LIBTAS_DISABLE_FILEIO_HOOKING
-#ifndef LIBTAS_DISABLE_FILEIO_HOOKING
+#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
 #include "logging.h"
 #include "hook.h"
+#include "../shared/Config.h"
 #include <cstdarg>
 #include <cstdio>
 #include <iostream>
-#include "backtrace.h"
-#include "fcntl.h"
+#include <fcntl.h>
 
 /*** SDL file IO ***/
 
@@ -51,9 +50,11 @@ SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
     debuglog(LCF_FILEIO, __func__, " call with file ", file, " with mode ", mode);
     SDL_RWops* handle = orig::SDL_RWFromFile(file, mode);
 
+    if (!config.allow_savefiles) {
     /* We replace the write callback with our own function */
-    //if (handle)
-    //    handle->write = dummyWrite;
+        if (handle)
+            handle->write = dummyWrite;
+    }
     return handle;
 }
 
@@ -62,9 +63,11 @@ SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose)
     debuglog(LCF_FILEIO, __func__, " call");
     SDL_RWops* handle = orig::SDL_RWFromFP(fp, autoclose);
 
-    /* We replace the write callback with our own function */
-    //if (handle)
-    //    handle->write = dummyWrite;
+    if (!config.allow_savefiles) {
+        /* We replace the write callback with our own function */
+        if (handle)
+            handle->write = dummyWrite;
+    }
     return handle;
 }
 

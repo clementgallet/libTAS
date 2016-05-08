@@ -80,3 +80,13 @@ else()
     message(WARNING "HUD is disabled")
 endif()
 
+# FILEIO HOOKING
+option(ENABLE_FILEIO_HOOKING "Enable file IO hooking" OFF)
+if (ENABLE_FILEIO_HOOKING)
+    # Enable file IO hooking
+    message(STATUS "File IO hooking is enabled")
+    add_definitions(-DLIBTAS_ENABLE_FILEIO_HOOKING)
+else()
+    message(WARNING "File IO hooking is disabled")
+endif()
+

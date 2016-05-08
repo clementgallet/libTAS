@@ -17,18 +17,24 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tasflags.h"
+#ifndef LIBTAS_CONFIG_H_INCLUDED
+#define LIBTAS_CONFIG_H_INCLUDED
 
-struct TasFlags tasflags = {
-    running        : 0,
-    speed_divisor  : 1,
-    recording      : -1,
-    fastforward    : 0,
-    includeFlags   : LCF_FILEIO,
-    //includeFlags   : LCF_ERROR,
-    excludeFlags   : LCF_NONE,
-    av_dumping     : 0,
-    framerate      : 60,
-    numControllers : 1
-}; 
+struct Config {
+    /* Display frame count in the HUD */
+    bool hud_framecount;
+
+    /* Display inputs in the HUD */
+    bool hud_inputs;
+
+    /* Do we use our custom memory manager for dynamically allocated memory? */
+    bool custom_memorymanager;
+    
+    /* Allow the game to write into savefiles */
+    bool allow_savefiles;
+};
+
+extern struct Config config;
+
+#endif
 

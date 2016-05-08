@@ -20,8 +20,7 @@
 #ifndef LIBTAS_FILEIO_H_INCLUDED
 #define LIBTAS_FILEIO_H_INCLUDED
 
-#define LIBTAS_DISABLE_FILEIO_HOOKING
-#ifndef LIBTAS_DISABLE_FILEIO_HOOKING
+#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
 #include "../external/SDL.h"
 #include "global.h"

@@ -17,18 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tasflags.h"
+#include "Config.h"
 
-struct TasFlags tasflags = {
-    running        : 0,
-    speed_divisor  : 1,
-    recording      : -1,
-    fastforward    : 0,
-    includeFlags   : LCF_FILEIO,
-    //includeFlags   : LCF_ERROR,
-    excludeFlags   : LCF_NONE,
-    av_dumping     : 0,
-    framerate      : 60,
-    numControllers : 1
+struct Config config = {
+    hud_framecount : true,
+    hud_inputs : true,
+    custom_memorymanager : false,
+    allow_savefiles : true
 }; 
 

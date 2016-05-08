@@ -21,6 +21,7 @@
 #include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
 #include "../shared/messages.h"
+#include "../shared/Config.h"
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/sdlinputevents.h"
 #include "socket.h"
@@ -114,8 +115,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    hud.renderFrame(frame_counter);
-    hud.renderInputs(ai);
+    if (config.hud_framecount)
+        hud.renderFrame(frame_counter);
+    if (config.hud_inputs)
+        hud.renderInputs(ai);
 #endif
 
     threadState.setNative(true);
