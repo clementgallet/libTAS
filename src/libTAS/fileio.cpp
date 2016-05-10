@@ -27,12 +27,14 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <fcntl.h>
-#include <map>
+#include <set>
 #include <string>
 #include <sys/stat.h>
 #include <errno.h>
+#include "ThreadState.h"
 
 /*** SDL file IO ***/
 
@@ -99,13 +101,38 @@ namespace orig {
             size_t n, FILE *s) = nullptr;
 }
 
-static std::map<FILE*, std::string> stdio_savefiles;
+static std::set<std::string> savefiles;
+
+static std::string copyFile(const char* source)
+{
+    std::string dest(source);
+    dest += ".libTAS";
+
+    /*
+     * If we already register the savefile, we already have
+     * copied once, so we don't want to do it again.
+     */
+    if (savefiles.find(dest) != savefiles.end())
+        return dest;
+
+    threadState.setOwnCode(true);
+    std::ifstream ss(source, std::ios::binary);
+    std::ofstream ds(dest, std::ios::binary);
+
+    if (!ss.fail()) {
+        ds << ss.rdbuf();
+    }
+
+    savefiles.insert(dest);
+    threadState.setOwnCode(false);
+    return dest;
+}
 
 static bool isWriteable(const char *modes)
 {
-    if ((strcmp(modes, "r") == 0) || (strcmp(modes, "rb") == 0))
-        return false;
-    return true;
+    if (strstr(modes, "w") || strstr(modes, "a") || strstr(modes, "+"))
+        return true;
+    return false;
 }
 
 static bool isSaveFile(const char *file)
@@ -115,6 +142,19 @@ static bool isSaveFile(const char *file)
 
     if (!file)
         return false;
+
+    static bool inited = 0;
+    if (!inited) {
+        /* 
+         * Normally, we shouldn't have to clear the savefiles set,
+         * as it is clearly during creation. However, games break without
+         * clearing it. I suppose it is because we are using the set
+         * before it had time to initialize, and it seems clearing it
+         * is enough to make it usable.
+         */
+        savefiles.clear();
+        inited = 1;
+    }
 
     /* Check if file is a dev file */
     struct stat filestat;
@@ -133,29 +173,20 @@ static bool isSaveFile(const char *file)
     }
 
     /* Check if the file is a regular file */
-    if (S_ISREG(filestat.st_mode))
-        return true;
+    if (! S_ISREG(filestat.st_mode))
+        return false;
 
-    return false;
+    /* Check if the file is a message queue, semaphore or shared memory object */
+    if (S_TYPEISMQ(&filestat) || S_TYPEISSEM(&filestat) || S_TYPEISSHM(&filestat))
+        return false;
+
+    return true;
 }
 
 static bool isSaveFile(const char *file, const char *modes)
 {
     if (!isWriteable(modes))
         return false;
-
-    static bool inited = 0;
-    if (!inited) {
-        /* 
-         * Normally, we shouldn't have to clear the posix_savefiles map,
-         * as it is clearly during creation. However, games break without
-         * clearing it. I suppose it is because we are using the map
-         * before it had time to initialize, and it seems clearing it
-         * is enough to make it usable.
-         */
-        stdio_savefiles.clear();
-        inited = 1;
-    }
 
     return isSaveFile(file);
 }
@@ -173,10 +204,15 @@ FILE *fopen (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    FILE* f = orig::fopen(filename, modes);
+    FILE* f;
 
-    if (isSaveFile(filename, modes))
-        stdio_savefiles[f] = std::string(filename); // non NULL file is tested in isSaveFile()
+    if (!threadState.isOwnCode() && isSaveFile(filename, modes)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(filename);
+        f = orig::fopen(newfile.c_str(), modes);
+    }
+    else
+        f = orig::fopen(filename, modes);
 
     return f;
 }
@@ -190,10 +226,15 @@ FILE *fopen64 (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    FILE* f = orig::fopen64(filename, modes);
+    FILE* f;
 
-    if (isSaveFile(filename, modes))
-        stdio_savefiles[f] = std::string(filename); // non NULL file is tested in isSaveFile()
+    if (!threadState.isOwnCode() && isSaveFile(filename, modes)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(filename);
+        f = orig::fopen64(newfile.c_str(), modes);
+    }
+    else
+        f = orig::fopen64(filename, modes);
 
     return f;
 }
@@ -205,11 +246,6 @@ int fclose (FILE *stream)
 
     int rv = orig::fclose(stream);
 
-    if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-        debuglog(LCF_FILEIO, "  close savefile ", stdio_savefiles[stream]);
-        stdio_savefiles.erase(stream);
-    }
-
     return rv;
 
 }
@@ -217,29 +253,7 @@ int fclose (FILE *stream)
 int fprintf (FILE *stream, const char *format, ...)
 {
     LINK_NAMESPACE(fprintf, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-
-            /* 
-             * We still have to compute the number of characters that the
-             * game think have been written. Using vsnprintf for this.
-             *
-             * We don't need to create a buffer containing all written characters
-             * to get access to that number, so only using a one-length array
-             */
-            char c;
-
-            va_list args;
-            va_start(args, format);
-            int ret = vsnprintf(&c, 1, format, args);
-            va_end(args);
-
-            return ret;
-        }
-    }
+    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     /* We cannot pass the arguments to fprintf_real. However, we
      * can build a va_list and pass it to vfprintf
@@ -257,24 +271,6 @@ int vfprintf (FILE *s, const char *format, va_list arg)
     LINK_NAMESPACE(vfprintf, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(s) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[s]);
-
-            /* 
-             * We still have to compute the number of characters that the
-             * game think have been written. Using vsnprintf for this.
-             *
-             * We don't need to create a buffer containing all written characters
-             * to get access to that number, so only using a one-length array
-             */
-            char c;
-
-            int ret = vsnprintf(&c, 1, format, arg);
-            return ret;
-        }
-    }
-
     return orig::vfprintf(s, format, arg);
 }
 
@@ -283,27 +279,13 @@ int fputc (int c, FILE *stream)
     LINK_NAMESPACE(fputc, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-            return c;
-        }
-    }
-
     return orig::fputc(c, stream);
 }
 
 int putc (int c, FILE *stream)
 {
     LINK_NAMESPACE(putc, nullptr);
-    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-            return c;
-        }
-    }
+    debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     return orig::putc(c, stream);
 }
@@ -313,13 +295,6 @@ int putc_unlocked (int c, FILE *stream)
     LINK_NAMESPACE(putc_unlocked, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-            return c;
-        }
-    }
-
     return orig::putc_unlocked(c, stream);
 }
 
@@ -327,13 +302,6 @@ int fputs (const char *s, FILE *stream)
 {
     LINK_NAMESPACE(fputs, nullptr);
     //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-            return 0;
-        }
-    }
 
     return orig::fputs(s, stream);
 }
@@ -343,28 +311,12 @@ int fputs_unlocked (const char *s, FILE *stream)
     LINK_NAMESPACE(fputs_unlocked, nullptr);
     //debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(stream) != stdio_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[stream]);
-            return 0;
-        }
-    }
-
     return orig::fputs_unlocked(s, stream);
 }
 
 size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
 {
     LINK_NAMESPACE(fwrite, nullptr);
-
-    if (config.prevent_savefiles) {
-        if (stdio_savefiles.find(s) != stdio_savefiles.end()) {
-            //debuglog(LCF_FILEIO, "  prevent write to ", stdio_savefiles[s]);
-            if (size == 0)
-                return 0;
-            return n;
-        }
-    }
 
     //DEBUGLOGCALL(LCF_FILEIO);
     //debuglogstdio(LCF_FILEIO, "%s call", __func__);
@@ -384,12 +336,18 @@ namespace orig {
     static ssize_t (*pwrite64) (int fd, const void *buf, size_t n, __off64_t offset);
 }
 
-static std::map<int, std::string> posix_savefiles;
-
 static bool isWriteable(int oflag)
 {
     if ((oflag & 0x3) == O_RDONLY)
         return false;
+
+    /*
+     * This is a sort of hack to prevent considering new shared
+     * memory files as a savefile, which are opened using O_CLOEXEC
+     */
+    if (oflag & O_CLOEXEC)
+        return false;
+
     return true;
 }
 
@@ -399,19 +357,6 @@ static bool isSaveFile(const char *file, int oflag)
     if (!isWriteable(oflag))
         return false;
 
-    static bool inited = 0;
-    if (!inited) {
-        /* 
-         * Normally, we shouldn't have to clear the posix_savefiles map,
-         * as it is clearly during creation. However, games break without
-         * clearing it. I suppose it is because we are using the map
-         * before it had time to initialize, and it seems clearing it
-         * is enough to make it usable.
-         */
-        posix_savefiles.clear();
-        inited = 1;
-    }
-
     return isSaveFile(file);
 }
 
@@ -419,29 +364,28 @@ int open (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open, nullptr);
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
 
     int fd;
+    mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
-        mode_t mode;
 
         va_start(arg_list, oflag);
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
+    }
 
-        fd = orig::open(file, oflag, mode);
+    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        fd = orig::open(newfile.c_str(), oflag, mode);
     }
     else
-    {
-        fd = orig::open(file, oflag);
-    }
-
-    if (isSaveFile(file, oflag))
-        posix_savefiles[fd] = std::string(file); // non NULL file is tested in isSaveFile()
+        fd = orig::open(file, oflag, mode);
 
     return fd;
 }
@@ -450,29 +394,28 @@ int open64 (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open64, nullptr);
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
 
     int fd;
+    mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
-        mode_t mode;
 
         va_start(arg_list, oflag);
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
+    }
 
-        fd = orig::open64(file, oflag, mode);
+    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        fd = orig::open64(newfile.c_str(), oflag, mode);
     }
     else
-    {
-        fd = orig::open64(file, oflag);
-    }
-
-    if (isSaveFile(file, oflag))
-        posix_savefiles[fd] = std::string(file); // non NULL file is tested in isSaveFile()
+        fd = orig::open64(file, oflag, mode);
 
     return fd;
 }
@@ -481,29 +424,28 @@ int openat (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat, nullptr);
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
 
     int newfd;
+    mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
-        mode_t mode;
 
         va_start(arg_list, oflag);
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
+    }
 
-        newfd = orig::openat(fd, file, oflag, mode);
+    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        newfd = orig::openat(fd, newfile.c_str(), oflag, mode);
     }
     else
-    {
-        newfd = orig::openat(fd, file, oflag);
-    }
-
-    if (isSaveFile(file, oflag))
-        posix_savefiles[newfd] = std::string(file); // non NULL file is tested in isSaveFile()
+        newfd = orig::openat(fd, file, oflag, mode);
 
     return newfd;
 }
@@ -512,29 +454,28 @@ int openat64 (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat64, nullptr);
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %X", __func__, file, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %X", __func__, oflag);
+        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
 
     int newfd;
+    mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
-        mode_t mode;
 
         va_start(arg_list, oflag);
         mode = va_arg(arg_list, mode_t);
         va_end(arg_list);
+    }
 
-        newfd = orig::openat64(fd, file, oflag, mode);
+    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        newfd = orig::openat64(fd, newfile.c_str(), oflag, mode);
     }
     else
-    {
-        newfd = orig::openat64(fd, file, oflag);
-    }
-
-    if (isSaveFile(file, oflag))
-        posix_savefiles[newfd] = std::string(file); // non NULL file is tested in isSaveFile()
+        newfd = orig::openat64(fd, file, oflag, mode);
 
     return newfd;
 }
@@ -544,10 +485,15 @@ int creat (const char *file, mode_t mode)
     LINK_NAMESPACE(creat, nullptr);
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
-    int fd = orig::creat(file, mode);
+    int fd;
 
-    if (file)
-        posix_savefiles[fd] = std::string(file);
+    if (!threadState.isOwnCode() && file) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        fd = orig::creat(newfile.c_str(), mode);
+    }
+    else
+        fd = orig::creat(file, mode);
 
     return fd;
 }
@@ -557,10 +503,15 @@ int creat64 (const char *file, mode_t mode)
     LINK_NAMESPACE(creat64, nullptr);
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
-    int fd = orig::creat64(file, mode);
+    int fd;
 
-    if (file)
-        posix_savefiles[fd] = std::string(file);
+    if (!threadState.isOwnCode() && file) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        fd = orig::creat64(newfile.c_str(), mode);
+    }
+    else
+        fd = orig::creat64(file, mode);
 
     return fd;
 }
@@ -572,11 +523,6 @@ int close (int fd)
 
     int rv = orig::close(fd);
 
-    if (posix_savefiles.find(fd) != posix_savefiles.end()) {
-        debuglog(LCF_FILEIO, "  close savefile ", posix_savefiles[fd]);
-        posix_savefiles.erase(fd);
-    }
-
     return rv;
 }
 
@@ -585,12 +531,6 @@ ssize_t write (int fd, const void *buf, size_t n)
     LINK_NAMESPACE(write, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
-            return n;
-        }
-    }
     return orig::write(fd, buf, n);
 }
 
@@ -599,12 +539,6 @@ ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
     LINK_NAMESPACE(pwrite, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
-            return n;
-        }
-    }
     return orig::pwrite(fd, buf, n, offset);
 }
 
@@ -613,12 +547,6 @@ ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
     LINK_NAMESPACE(pwrite64, nullptr);
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (config.prevent_savefiles) {
-        if (posix_savefiles.find(fd) != posix_savefiles.end()) {
-            debuglog(LCF_FILEIO, "  prevent write to ", posix_savefiles[fd]);
-            return n;
-        }
-    }
     return orig::pwrite64(fd, buf, n, offset);
 }
 

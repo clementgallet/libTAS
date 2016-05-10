@@ -32,7 +32,6 @@ namespace orig {
 
 void pushNativeEvents(void)
 {
-    return;
     orig::SDL_PumpEvents();
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
