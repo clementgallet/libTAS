@@ -90,3 +90,12 @@ else()
     message(WARNING "File IO hooking is disabled")
 endif()
 
+option(ENABLE_CUSTOM_MALLOC "Enable custom Memory Allocation" OFF)
+if (ENABLE_CUSTOM_MALLOC)
+    # Enable custom allocator
+    message(STATUS "Custom memory allocator is enabled")
+    add_definitions(-DLIBTAS_ENABLE_CUSTOM_MALLOC)
+else()
+    message(WARNING "Custom memory allocator is disabled")
+endif()
+

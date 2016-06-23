@@ -27,9 +27,6 @@ struct Config {
     /* Display inputs in the HUD */
     bool hud_inputs;
 
-    /* Do we use our custom memory manager for dynamically allocated memory? */
-    bool custom_memorymanager;
-    
     /* Prevent the game to write into savefiles */
     bool prevent_savefiles;
 };

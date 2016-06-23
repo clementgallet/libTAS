@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 #ifndef LIBTAS_MEMORYMANAGER_H_INCLUDED
 #define LIBTAS_MEMORYMANAGER_H_INCLUDED
 
@@ -170,5 +171,6 @@ class MemoryManager
 
 extern MemoryManager memorymanager;
 
+#endif
 #endif
 
