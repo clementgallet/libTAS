@@ -102,12 +102,6 @@ void link_pthread(void)
     LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
     LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
     LINK_NAMESPACE(pthread_self, "pthread");
-    //Link to specific pthread version, dirty dirty... But avoid some wrong linking
-    // FIXME: detect the correct pthread version automatically !!!!
-    LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
-    LINK_NAMESPACE_VERSION(pthread_cond_timedwait, "pthread", "GLIBC_2.3.2");
-    LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
-    LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
 }
 
 typedef struct arg_t {
@@ -138,10 +132,11 @@ void *wrapper(void *arg)
 }
 
 
-
 /* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
-    //link_pthread();
+    // FIXME: here the "correct" way to do that is to have "if (!orig) link;" in
+    // every pthread entry point (to initialize the function on demand)
+    link_pthread();
     ThreadManager &tm = ThreadManager::get();
     char name[16];
     name[0] = '\0';
@@ -173,12 +168,14 @@ void *wrapper(void *arg)
 
 /* Override */ void pthread_exit (void *retval)
 {
+    link_pthread();
     debuglog(LCF_THREAD, "Thread has exited.");
     orig::pthread_exit(retval);
 }
 
 /* Override */ int pthread_join (pthread_t thread, void **thread_return)
 {
+    link_pthread();
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
     int retVal = orig::pthread_join(thread, thread_return);
@@ -188,6 +185,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_detach (pthread_t thread) throw()
 {
+    link_pthread();
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
     ThreadManager::get().resume();
@@ -220,64 +218,6 @@ void *wrapper(void *arg)
         debuglog(LCF_THREAD, "Call timed out before thread ", thstr, " terminated.");
     }
     return ret;
-}
-
-/* Override */ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
-{
-#if 0
-    pthread_t tid = orig::pthread_self();
-    std::string thstr = stringify(tid);
-    ThreadManager &tm = ThreadManager::get();
-    if (tid == tm.main())
-        debuglog(LCF_THREAD, "Condition wait from main ", thstr, "!");
-    else if (tm.waitFor(tid))
-        debuglog(LCF_THREAD, "Condition wait from awaited thread ", thstr, "!");
-#endif
-    int ret = orig::pthread_cond_wait(cond, mutex);
-    return ret;
-}
-
-/* Override */ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime)
-{
-#if 0
-    pthread_t tid = orig::pthread_self();
-    std::string thstr = stringify(tid);
-    ThreadManager &tm = ThreadManager::get();
-    if (tid == tm.main())
-        debuglog(LCF_THREAD, "Condition timedwait from main ", thstr, "!");
-    else if (tm.waitFor(tid))
-        debuglog(LCF_THREAD, "Condition timedwait from awaited thread ", thstr, "!");
-#endif
-    int ret = orig::pthread_cond_timedwait(cond, mutex, abstime);
-    return ret;
-}
-
-/* Override */ int pthread_cond_signal(pthread_cond_t *cond)
-{
-#if 0
-    pthread_t tid = orig::pthread_self();
-    std::string thstr = stringify(tid);
-    ThreadManager &tm = ThreadManager::get();
-    if (tid == tm.main())
-        debuglog(LCF_THREAD, "Signaling condition from main ", thstr, "!");
-    else if (tm.waitFor(tid))
-        debuglog(LCF_THREAD, "Signaling condition from awaited thread ", thstr, "!");
-#endif
-    return orig::pthread_cond_signal(cond);
-}
-
-/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond)
-{
-#if 0
-    pthread_t tid = orig::pthread_self();
-    std::string thstr = stringify(tid);
-    ThreadManager &tm = ThreadManager::get();
-    if (tid == tm.main())
-        debuglog(LCF_THREAD, "Broadcasting condition from main ", thstr, "!");
-    else if (tm.waitFor(tid))
-        debuglog(LCF_THREAD, "Broadcasting condition from awaited thread ", thstr, "!");
-#endif
-    return orig::pthread_cond_broadcast(cond);
 }
 
 void link_sdlthreads(void)
