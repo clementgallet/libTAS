@@ -36,7 +36,6 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs/inputs.h"
-#include "fileio.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include "avdumping.h"
 #endif
@@ -190,7 +189,6 @@ void __attribute__((destructor)) term(void)
     link_sdlwindows();
     link_sdlevents();
     link_sdlthreads();
-    link_sdlfileio();
 
     /* The thread calling this is probably the main thread */
     setMainThread();

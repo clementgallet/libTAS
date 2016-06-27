@@ -36,61 +36,7 @@
 #include <errno.h>
 #include "ThreadState.h"
 
-/*** SDL file IO ***/
-
-namespace orig {
-    static SDL_RWops *(*SDL_RWFromFile)(const char *file, const char *mode);
-    static SDL_RWops *(*SDL_RWFromFP)(FILE * fp, SDL_bool autoclose);
-}
-
-size_t dummyWrite (struct SDL_RWops * context, const void *ptr,
-                              size_t size, size_t num);
-size_t dummyWrite (struct SDL_RWops * context, const void *ptr,
-                              size_t size, size_t num)
-{
-    debuglog(LCF_FILEIO, "Preventing writing ", num, " objects of size ", size);
-    return num;
-}
-
-SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
-{
-    debuglog(LCF_FILEIO, __func__, " call with file ", file, " with mode ", mode);
-    SDL_RWops* handle = orig::SDL_RWFromFile(file, mode);
-
-    if (!config.prevent_savefiles) {
-    /* We replace the write callback with our own function */
-        if (handle)
-            handle->write = dummyWrite;
-    }
-    return handle;
-}
-
-SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose)
-{
-    debuglog(LCF_FILEIO, __func__, " call");
-    SDL_RWops* handle = orig::SDL_RWFromFP(fp, autoclose);
-
-    if (!config.prevent_savefiles) {
-        /* We replace the write callback with our own function */
-        if (handle)
-            handle->write = dummyWrite;
-    }
-    return handle;
-}
-
-void link_sdlfileio(void)
-{
-    LINK_NAMESPACE_SDL2(SDL_RWFromFile);
-    LINK_NAMESPACE_SDL2(SDL_RWFromFP);
-}
-
-/*** stdio file IO ***/
-
-namespace orig {
-    static FILE *(*fopen) (const char *filename, const char *modes) = nullptr;
-    static FILE *(*fopen64) (const char *filename, const char *modes) = nullptr;
-    static int (*fclose) (FILE *stream) = nullptr;
-}
+/*** Helper functions ***/
 
 static std::set<std::string> savefiles;
 
@@ -107,15 +53,17 @@ static std::string copyFile(const char* source)
         return dest;
 
     threadState.setOwnCode(true);
-    std::ifstream ss(source, std::ios::binary);
-    std::ofstream ds(dest, std::ios::binary);
+    {
+        std::ifstream ss(source, std::ios::binary);
+        std::ofstream ds(dest, std::ios::binary);
 
-    if (!ss.fail()) {
-        ds << ss.rdbuf();
+        if (!ss.fail()) {
+            ds << ss.rdbuf();
+        }
     }
-
-    savefiles.insert(dest);
     threadState.setOwnCode(false);
+    savefiles.insert(dest);
+
     return dest;
 }
 
@@ -180,6 +128,44 @@ static bool isSaveFile(const char *file, const char *modes)
         return false;
 
     return isSaveFile(file);
+}
+
+
+/*** SDL file IO ***/
+
+namespace orig {
+    static SDL_RWops *(*SDL_RWFromFile)(const char *file, const char *mode);
+}
+
+SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
+{
+    debuglog(LCF_FILEIO, __func__, " call with file ", file, " with mode ", mode);
+    LINK_NAMESPACE_SDL2(SDL_RWFromFile);
+
+    SDL_RWops* handle;
+
+    if (!threadState.isOwnCode() && isSaveFile(file, mode)) {
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        std::string newfile = copyFile(file);
+        threadState.setNative(true);
+        handle = orig::SDL_RWFromFile(newfile.c_str(), mode);
+        threadState.setNative(false);
+    }
+    else {
+        threadState.setNative(true);
+        handle = orig::SDL_RWFromFile(file, mode);
+        threadState.setNative(false);
+    }
+
+    return handle;
+}
+
+/*** stdio file IO ***/
+
+namespace orig {
+    static FILE *(*fopen) (const char *filename, const char *modes) = nullptr;
+    static FILE *(*fopen64) (const char *filename, const char *modes) = nullptr;
+    static int (*fclose) (FILE *stream) = nullptr;
 }
 
 FILE *fopen (const char *filename, const char *modes)
@@ -440,10 +426,6 @@ int close (int fd)
 
     return rv;
 }
-
-#else
-
-void link_sdlfileio(void) {}
 
 #endif
 

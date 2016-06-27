@@ -110,7 +110,6 @@ typedef struct SDL_RWops
 /* @{ */
 
 OVERRIDE SDL_RWops *SDL_RWFromFile(const char *file, const char *mode);
-OVERRIDE SDL_RWops *SDL_RWFromFP(FILE * fp, SDL_bool autoclose);
 
 
 /* Open a file and create a new stream for it. */
@@ -145,8 +144,5 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 OVERRIDE int close (int fd);
 
 #endif
-
-void link_sdlfileio(void);
-
 #endif
 
