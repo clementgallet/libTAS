@@ -90,15 +90,6 @@ namespace orig {
     static FILE *(*fopen) (const char *filename, const char *modes) = nullptr;
     static FILE *(*fopen64) (const char *filename, const char *modes) = nullptr;
     static int (*fclose) (FILE *stream) = nullptr;
-    static int (*fprintf) (FILE *stream, const char *format, ...) = nullptr;
-    static int (*vfprintf) (FILE *s, const char *format, va_list arg) = nullptr;
-    static int (*fputc) (int c, FILE *stream) = nullptr;
-    static int (*putc) (int c, FILE *stream) = nullptr;
-    static int (*putc_unlocked) (int c, FILE *stream);
-    static int (*fputs) (const char *s, FILE *stream);
-    static int (*fputs_unlocked) (const char *s, FILE *stream);
-    static size_t (*fwrite) (const void *ptr, size_t size,
-            size_t n, FILE *s) = nullptr;
 }
 
 static std::set<std::string> savefiles;
@@ -250,79 +241,6 @@ int fclose (FILE *stream)
 
 }
 
-int fprintf (FILE *stream, const char *format, ...)
-{
-    LINK_NAMESPACE(fprintf, nullptr);
-    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    /* We cannot pass the arguments to fprintf_real. However, we
-     * can build a va_list and pass it to vfprintf
-     */
-    va_list args;
-    va_start(args, format);
-    LINK_NAMESPACE(vfprintf, nullptr);
-    int ret = orig::vfprintf(stream, format, args);
-    va_end(args);
-    return ret;
-}
-
-int vfprintf (FILE *s, const char *format, va_list arg)
-{
-    LINK_NAMESPACE(vfprintf, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::vfprintf(s, format, arg);
-}
-
-int fputc (int c, FILE *stream)
-{
-    LINK_NAMESPACE(fputc, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::fputc(c, stream);
-}
-
-int putc (int c, FILE *stream)
-{
-    LINK_NAMESPACE(putc, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::putc(c, stream);
-}
-
-int putc_unlocked (int c, FILE *stream)
-{
-    LINK_NAMESPACE(putc_unlocked, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::putc_unlocked(c, stream);
-}
-
-int fputs (const char *s, FILE *stream)
-{
-    LINK_NAMESPACE(fputs, nullptr);
-    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::fputs(s, stream);
-}
-
-int fputs_unlocked (const char *s, FILE *stream)
-{
-    LINK_NAMESPACE(fputs_unlocked, nullptr);
-    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::fputs_unlocked(s, stream);
-}
-
-size_t fwrite (const void *ptr, size_t size, size_t n, FILE *s)
-{
-    LINK_NAMESPACE(fwrite, nullptr);
-
-    //DEBUGLOGCALL(LCF_FILEIO);
-    //debuglogstdio(LCF_FILEIO, "%s call", __func__);
-    return orig::fwrite(ptr, size, n, s);
-}
-
 namespace orig {
     static int (*open) (const char *file, int oflag, ...);
     static int (*open64) (const char *file, int oflag, ...);
@@ -331,9 +249,6 @@ namespace orig {
     static int (*creat) (const char *file, mode_t mode);
     static int (*creat64) (const char *file, mode_t mode);
     static int (*close) (int fd);
-    static ssize_t (*write) (int fd, const void *buf, size_t n);
-    static ssize_t (*pwrite) (int fd, const void *buf, size_t n, __off_t offset);
-    static ssize_t (*pwrite64) (int fd, const void *buf, size_t n, __off64_t offset);
 }
 
 static bool isWriteable(int oflag)
@@ -524,30 +439,6 @@ int close (int fd)
     int rv = orig::close(fd);
 
     return rv;
-}
-
-ssize_t write (int fd, const void *buf, size_t n)
-{
-    LINK_NAMESPACE(write, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::write(fd, buf, n);
-}
-
-ssize_t pwrite (int fd, const void *buf, size_t n, __off_t offset)
-{
-    LINK_NAMESPACE(pwrite, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::pwrite(fd, buf, n, offset);
-}
-
-ssize_t pwrite64 (int fd, const void *buf, size_t n, __off64_t offset)
-{
-    LINK_NAMESPACE(pwrite64, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
-
-    return orig::pwrite64(fd, buf, n, offset);
 }
 
 #else

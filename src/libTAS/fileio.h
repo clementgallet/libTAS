@@ -120,30 +120,6 @@ OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
 /* Close STREAM. */
 OVERRIDE int fclose (FILE *stream);
 
-/* Write formatted output to STREAM. */
-OVERRIDE int fprintf (FILE *stream, const char *format, ...);
-
-/* Write formatted output to S from argument list ARG. */
-OVERRIDE int vfprintf (FILE *s, const char *format, va_list arg);
-
-/* Write a character to STREAM. */
-OVERRIDE int fputc (int c, FILE *stream);
-OVERRIDE int putc (int c, FILE *stream);
-
-/* Faster version when locking is not necessary. */
-OVERRIDE int putc_unlocked (int c, FILE *stream);
-
-/* Write a string to STREAM. */
-OVERRIDE int fputs (const char *s, FILE *stream);
-
-/* This function does the same as `fputs' but does not lock the stream. */
-OVERRIDE int fputs_unlocked (const char *s, FILE *stream);
-
-/* Write chunks of generic data to STREAM. */
-OVERRIDE size_t fwrite (const void *ptr, size_t size,
-		      size_t n, FILE *s);
-
-
 /* Open FILE and return a new file descriptor for it, or -1 on error.
    OFLAG determines the type of access used.  If O_CREAT or O_TMPFILE is set
    in OFLAG, the third argument is taken as a `mode_t', the mode of the
@@ -167,19 +143,6 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 
 /* Close the file descriptor FD. */
 OVERRIDE int close (int fd);
-
-/* Write N bytes of BUF to FD.  Return the number written, or -1. */
-OVERRIDE ssize_t write (int fd, const void *buf, size_t n);
-
-/* Write N bytes of BUF to FD at the given position OFFSET without
-   changing the file pointer.  Return the number written, or -1. */
-OVERRIDE ssize_t pwrite (int fd, const void *buf, size_t n,
-		       __off_t offset);
-
-/* Write N bytes of BUF to FD at the given position OFFSET without
-   changing the file pointer.  Return the number written, or -1.  */
-OVERRIDE ssize_t pwrite64 (int fd, const void *buf, size_t n,
-			 __off64_t offset);
 
 #endif
 
