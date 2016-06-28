@@ -40,16 +40,20 @@
 
 static std::set<std::string> savefiles;
 
+/*
+ * Copy the file detected as a savefile in another file if not done already,
+ * and returns the name of the new file.
+ */
 static std::string copyFile(const char* source)
 {
-    std::string dest(source);
-    dest += ".libTAS";
+    std::string sstr(source);
+    std::string dest = sstr + ".libTAS";
 
     /*
      * If we already register the savefile, we already have
      * copied once, so we don't want to do it again.
      */
-    if (savefiles.find(dest) != savefiles.end())
+    if (savefiles.find(sstr) != savefiles.end())
         return dest;
 
     threadState.setOwnCode(true);
@@ -62,11 +66,12 @@ static std::string copyFile(const char* source)
         }
     }
     threadState.setOwnCode(false);
-    savefiles.insert(dest);
+    savefiles.insert(sstr);
 
     return dest;
 }
 
+/* Check if the file open permission allows for write operation */
 static bool isWriteable(const char *modes)
 {
     if (strstr(modes, "w") || strstr(modes, "a") || strstr(modes, "+"))
@@ -74,6 +79,7 @@ static bool isWriteable(const char *modes)
     return false;
 }
 
+/* Detect save files (excluding the writeable flag), basically if the file is regular */
 static bool isSaveFile(const char *file)
 {
     if (!config.prevent_savefiles)
@@ -81,19 +87,6 @@ static bool isSaveFile(const char *file)
 
     if (!file)
         return false;
-
-    static bool inited = 0;
-    if (!inited) {
-        /* 
-         * Normally, we shouldn't have to clear the savefiles set,
-         * as it is clearly during creation. However, games break without
-         * clearing it. I suppose it is because we are using the set
-         * before it had time to initialize, and it seems clearing it
-         * is enough to make it usable.
-         */
-        savefiles.clear();
-        inited = 1;
-    }
 
     /* Check if file is a dev file */
     struct stat filestat;
@@ -122,11 +115,34 @@ static bool isSaveFile(const char *file)
     return true;
 }
 
+/* Specific savefile check for stdio and SDL open functions */
 static bool isSaveFile(const char *file, const char *modes)
 {
+    static bool inited = 0;
+    if (!inited) {
+        /* 
+         * Normally, we shouldn't have to clear the savefiles set,
+         * as it is clearly during creation. However, games break without
+         * clearing it. I suppose it is because we are using the set
+         * before it had time to initialize, and it seems clearing it
+         * is enough to make it usable.
+         */
+        savefiles.clear();
+        inited = 1;
+    }
+
+    /* If the file has already been registered as a savefile, open the duplicate file,
+     * even if the open is read-only.
+     */
+    std::string sstr(file);
+    if (savefiles.find(sstr) != savefiles.end())
+        return true;
+
+    /* If the file was not registered, check if the opening is writeable. */
     if (!isWriteable(modes))
         return false;
 
+    /* Check the file is regular */
     return isSaveFile(file);
 }
 
@@ -254,6 +270,26 @@ static bool isWriteable(int oflag)
 
 static bool isSaveFile(const char *file, int oflag)
 {
+    static bool inited = 0;
+    if (!inited) {
+        /* 
+         * Normally, we shouldn't have to clear the savefiles set,
+         * as it is clearly during creation. However, games break without
+         * clearing it. I suppose it is because we are using the set
+         * before it had time to initialize, and it seems clearing it
+         * is enough to make it usable.
+         */
+        savefiles.clear();
+        inited = 1;
+    }
+
+    /* If the file has already been registered as a savefile, open the duplicate file,
+     * even if the open is read-only.
+     */
+    std::string sstr(file);
+    if (savefiles.find(sstr) != savefiles.end())
+        return true;
+
     /* Check if file is writeable */
     if (!isWriteable(oflag))
         return false;
