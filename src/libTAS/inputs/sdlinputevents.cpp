@@ -408,10 +408,10 @@ void generateSDLMouseMotionEvents(void)
         if (ai.pointer_mask & Button5Mask)
             event2.motion.state |= SDL_BUTTON_X2MASK;
 
-        event2.motion.x = ai.pointer_x;
-        event2.motion.y = ai.pointer_y;
         event2.motion.xrel = ai.pointer_x - old_ai.pointer_x;
         event2.motion.yrel = ai.pointer_y - old_ai.pointer_y;
+        event2.motion.x = game_ai.pointer_x + event2.motion.xrel;
+        event2.motion.y = game_ai.pointer_y + event2.motion.yrel;
         sdlEventQueue.insert(&event2);
     }
     if (SDLver == 1) {

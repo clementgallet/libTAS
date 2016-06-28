@@ -24,6 +24,7 @@
 #include "../../shared/AllInputs.h"
 #include "../../shared/tasflags.h"
 #include "../sdlwindows.h" // gameWindow
+#include "../DeterministicTimer.h" // detTimer
 #include <X11/X.h>
 #include "../EventQueue.h"
 
@@ -77,19 +78,19 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
     /* For the first call, just output zero deltas */
     if (first) {
-        oldx = ai.pointer_x;
-        oldy = ai.pointer_y;
+        oldx = game_ai.pointer_x;
+        oldy = game_ai.pointer_y;
         first = false;
     }
 
     if (x != NULL)
-        *x = ai.pointer_x - oldx;
+        *x = game_ai.pointer_x - oldx;
     if (y != NULL)
-        *y = ai.pointer_y - oldy;
+        *y = game_ai.pointer_y - oldy;
 
     /* Updating the old pointer coordinates */
-    oldx = ai.pointer_x;
-    oldy = ai.pointer_y;
+    oldx = game_ai.pointer_x;
+    oldy = game_ai.pointer_y;
 
     /* Translating Xlib pointer mask to SDL pointer state */
     Uint32 sdlmask = 0;
@@ -110,21 +111,53 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
     debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
-    /* We should not support that I guess */
+
+    /* We have to generate an MOUSEMOTION event. */
+    SDL_Event event2;
+    event2.type = SDL_MOUSEMOTION;
+    threadState.setOwnCode(true);
+    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    threadState.setOwnCode(false);
+    event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+    event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
+    event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+    /* Build up mouse state */
+    event2.motion.state = 0;
+    if (ai.pointer_mask & Button1Mask)
+        event2.motion.state |= SDL_BUTTON_LMASK;
+    if (ai.pointer_mask & Button2Mask)
+        event2.motion.state |= SDL_BUTTON_MMASK;
+    if (ai.pointer_mask & Button3Mask)
+        event2.motion.state |= SDL_BUTTON_RMASK;
+    if (ai.pointer_mask & Button4Mask)
+        event2.motion.state |= SDL_BUTTON_X1MASK;
+    if (ai.pointer_mask & Button5Mask)
+        event2.motion.state |= SDL_BUTTON_X2MASK;
+
+    event2.motion.x = x;
+    event2.motion.y = y;
+    event2.motion.xrel = game_ai.pointer_x - x;
+    event2.motion.yrel = game_ai.pointer_y - y;
+    sdlEventQueue.insert(&event2);
+
+    /* Update the pointer coordinates */
+    game_ai.pointer_x = x;
+    game_ai.pointer_y = y;
 }
 
 int SDL_WarpMouseGlobal(int x, int y)
 {
     debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
-    /* We should not support that I guess */
-    return -1;
+
+    /* Should we support this? */
+    SDL_WarpMouseInWindow(nullptr, x, y);
+    return 0;
 }
 
 void SDL_WarpMouse(Uint16 x, Uint16 y)
 {
     debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
-    game_ai.pointer_x = x;
-    game_ai.pointer_y = y;
 
     /* We have to generate an MOUSEMOTION event. */
     SDL1::SDL_Event event1;
@@ -149,6 +182,10 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     event1.motion.xrel = (Sint16)(game_ai.pointer_x - x);
     event1.motion.yrel = (Sint16)(game_ai.pointer_y - y);
     sdlEventQueue.insert(&event1);
+
+    /* Update the pointer coordinates */
+    game_ai.pointer_x = x;
+    game_ai.pointer_y = y;
 }
 
 SDL_bool relativeMode = SDL_FALSE;

@@ -19,7 +19,15 @@
 
 #include "inputs.h"
 
+/* Inputs received from linTAS */
 struct AllInputs ai;
+
+/* Previous inputs, used to detected pressed keys, mouse delta positions, etc. */
 struct AllInputs old_ai;
+
+/*
+ * Inputs that are seen by the game. It differs from ai in only rare cases:
+ * - when the game warps the mouse cursor
+ */
 struct AllInputs game_ai;
 
