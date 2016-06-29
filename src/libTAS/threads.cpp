@@ -120,8 +120,9 @@ void *wrapper(void *arg)
     auto go = args->go;
 
 #if 0
+    // NOTE: turn this to '#if 1' to impose de-sync on every single thread
     debuglog(LCF_THREAD, "WAITING for 2 sec");
-    sleep(2);
+    sleep(1);
 #endif
     // Wait for main thread to be ready to sleep
     while (!*go)
