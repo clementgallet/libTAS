@@ -22,7 +22,6 @@
 struct Config config = {
     hud_framecount : true,
     hud_inputs : true,
-    custom_memorymanager : false,
     prevent_savefiles : true
-}; 
+};
 

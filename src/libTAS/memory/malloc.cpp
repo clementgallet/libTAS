@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 #include "malloc.h"
 #include "../logging.h"
 #include "MemoryManager.h"
 #include "../dlhook.h"
 #include "../ThreadState.h"
 #include "../backtrace.h"
-#include "../../shared/Config.h"
 
 namespace orig {
     static void *(*malloc) (size_t size) throw();
@@ -42,7 +42,7 @@ void *malloc (size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     //printBacktrace();
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative())
+    if (!threadState.isNative())
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     else {
         LINK_NAMESPACE(malloc, nullptr);
@@ -61,7 +61,7 @@ void *calloc (size_t nmemb, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative())
+    if (!threadState.isNative())
         addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT, 0);
     else {
         /*
@@ -95,9 +95,8 @@ void *realloc (void *ptr, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p and size %d", __func__, ptr, size);
     void* addr;
-    if (config.custom_memorymanager)
-        addr = memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
-    if (!config.custom_memorymanager || !addr) {
+    addr = memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
+    if (!addr) {
         LINK_NAMESPACE(realloc, nullptr);
         addr = orig::realloc(ptr, size);
     }
@@ -109,7 +108,7 @@ void *valloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative()) {
+    if (!threadState.isNative()) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
@@ -125,7 +124,7 @@ void *pvalloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative()) {
+    if (!threadState.isNative()) {
         debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
     }
@@ -142,7 +141,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
     int ret = 0;
-    if (config.custom_memorymanager && !threadState.isNative()) {
+    if (!threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
         if (!addr)
             ret = ENOMEM;
@@ -160,7 +159,7 @@ void *aligned_alloc (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative()) {
+    if (!threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
@@ -175,7 +174,7 @@ void *memalign (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
     void* addr;
-    if (config.custom_memorymanager && !threadState.isNative()) {
+    if (!threadState.isNative()) {
         addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
     }
     else {
@@ -189,24 +188,22 @@ void *memalign (size_t alignment, size_t size) throw()
 void free (void *ptr) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p", __func__, ptr);
-    //if (config.custom_memorymanager && !threadState.isNative())
     bool res = true;
-    if (config.custom_memorymanager)
-        res = memorymanager.deallocate(ptr);
-    if (!config.custom_memorymanager || !res) {
+    res = memorymanager.deallocate(ptr);
+    if (!res) {
         LINK_NAMESPACE(free, nullptr);
         orig::free(ptr);
     }
     
-    if (config.custom_memorymanager && !res && !threadState.isNative()) {
+    if (!res && !threadState.isNative()) {
         fprintf(stderr, "Native free was performed under non native thread state!\n");
         printBacktrace();
     }
-    if (config.custom_memorymanager && res && threadState.isNative()) {
+    if (res && threadState.isNative()) {
         fprintf(stderr, "Non native free was performed under native thread state!\n");
         printBacktrace();
     }
     
     debuglogstdio(LCF_MEMORY, "  returns");
 }
-
+#endif

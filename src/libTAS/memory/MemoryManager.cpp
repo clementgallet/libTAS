@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 #include <unistd.h> // getpagesize()
 #include <cstring>
 #include <cstdint>
@@ -503,4 +504,4 @@ void MemoryManager::dumpAllocationTable()
 }
 
 MemoryManager memorymanager;
-
+#endif

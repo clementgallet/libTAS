@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 #ifndef LIBTAS_MALLOC_H_INCL
 #define LIBTAS_MALLOC_H_INCL
 
@@ -52,5 +53,6 @@ OVERRIDE void *memalign (size_t alignment, size_t size) throw();
 /* Free a block allocated by `malloc', `realloc' or `calloc'.  */
 OVERRIDE void free (void *ptr) throw();
 
+#endif
 #endif
 

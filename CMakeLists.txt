@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(libTAS)
-
+# From here : http://stackoverflow.com/questions/28250081/when-should-i-rerun-cmake
+# Note: We do not recommend using GLOB to collect a list of source files from your source tree.
+# If no CMakeLists.txt file changes when a source is added or removed,
+# then the generated build system cannot know when to ask CMake to regenerate.
 file(GLOB_RECURSE lib_sources src/libTAS/*)
 file(GLOB_RECURSE lin_sources src/linTAS/*)
 file(GLOB shared_sources src/shared/*)
@@ -88,5 +91,14 @@ if (ENABLE_FILEIO_HOOKING)
     add_definitions(-DLIBTAS_ENABLE_FILEIO_HOOKING)
 else()
     message(WARNING "File IO hooking is disabled")
+endif()
+
+option(ENABLE_CUSTOM_MALLOC "Enable custom Memory Allocation" OFF)
+if (ENABLE_CUSTOM_MALLOC)
+    # Enable custom allocator
+    message(STATUS "Custom memory allocator is enabled")
+    add_definitions(-DLIBTAS_ENABLE_CUSTOM_MALLOC)
+else()
+    message(WARNING "Custom memory allocator is disabled")
 endif()
 

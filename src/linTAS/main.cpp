@@ -117,16 +117,23 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-
+    const int MAX_RETRIES = 3;
+    int retry = 0;
     printf("Connecting to libTAS...\n");
 
-    if (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
-    {
-        printf("Couldn’t connect to socket.\n");
-        return 1;
+    while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
+                   sizeof(struct sockaddr_un))) {
+        printf("Attempt #%i: Couldn’t connect to socket.\n", retry + 1);
+        retry++;
+        if (retry < MAX_RETRIES) {
+            printf("Retrying in 2s");
+            sleep(2);
+        } else {
+            return 1;
+        }
     }
 
-    printf("Connected.\n");
+    printf("Attempt #%i: Connected.\n", retry + 1);
 
     /* Receive informations from the game */
 

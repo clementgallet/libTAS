@@ -21,6 +21,9 @@
 #include "logging.h"
 #include <errno.h>
 #include <unistd.h>
+#include <cstring>
+#include <atomic>
+#include "ThreadManager.h"
 
 /* Original function pointers */
 namespace orig {
@@ -37,6 +40,10 @@ namespace orig {
     static int (*pthread_tryjoin_np)(unsigned long int thread, void **retval) = nullptr;
     static int (*pthread_timedjoin_np)(unsigned long int thread, void **retval, const struct timespec *abstime) = nullptr;
     static pthread_t (*pthread_self)(void) = nullptr;
+    static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
+    static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
+    static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
+    static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
 }
 
 /* We keep the identifier of the main thread */
@@ -97,38 +104,92 @@ void link_pthread(void)
     LINK_NAMESPACE(pthread_self, "pthread");
 }
 
+typedef struct arg_t {
+    pthread_t *tid;
+    void *(*start)(void *);
+    void *arg;
+    std::atomic<int> *go;
+} arg_t;
+
+void *wrapper(void *arg);
+void *wrapper(void *arg)
+{
+    arg_t *args = (arg_t *)arg;
+    auto start = args->start;
+    auto routine_arg = args->arg;
+    auto go = args->go;
+
+#if 0
+    // NOTE: turn this to '#if 1' to impose de-sync on every single thread
+    debuglog(LCF_THREAD, "WAITING for 2 sec");
+    sleep(1);
+#endif
+    // Wait for main thread to be ready to sleep
+    while (!*go)
+        ;
+    void *ret = start(routine_arg);
+    debuglog(LCF_THREAD, "WE ARE DONE ", start);
+    return ret;
+}
+
+
 /* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
+    // FIXME: here the "correct" way to do that is to have "if (!orig) link;" in
+    // every pthread entry point (to initialize the function on demand)
     link_pthread();
+    ThreadManager &tm = ThreadManager::get();
     char name[16];
     name[0] = '\0';
-    int ret = orig::pthread_create(thread, attr, start_routine, arg);
+    // 'go' is a small barrier to synchronize the main thread with the thread created
+    // Avoids issues when the created thread is so fast that it's detached
+    // before the main thread goes to sleep (ie: starvation => program blocked)
+    std::atomic<int> go(0);
+    arg_t args;
+    args.start = start_routine;
+    args.arg = arg;
+    args.tid = thread;
+    args.go = &go;
+    int ret = orig::pthread_create(thread, attr, wrapper, &args);
+    tm.start(*thread, __builtin_return_address(0), (void*)start_routine);
     orig::pthread_getname_np(*thread, name, 16);
     std::string thstr = stringify(*thread);
     if (name[0])
         debuglog(LCF_THREAD, "Thread ", thstr, " was created (", name, ").");
     else
         debuglog(LCF_THREAD, "Thread ", thstr, " was created.");
+    debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
+
+    // Say to thread created that it can go!
+    go = 1;
+    //Check and suspend main thread if needed
+    tm.suspend(*thread);
     return ret;
 }
 
 /* Override */ void pthread_exit (void *retval)
 {
+    link_pthread();
     debuglog(LCF_THREAD, "Thread has exited.");
     orig::pthread_exit(retval);
 }
 
 /* Override */ int pthread_join (pthread_t thread, void **thread_return)
 {
+    link_pthread();
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
-    return orig::pthread_join(thread, thread_return);
+    int retVal = orig::pthread_join(thread, thread_return);
+    ThreadManager::get().end(thread);
+    return retVal;
 }
 
 /* Override */ int pthread_detach (pthread_t thread) throw()
 {
+    link_pthread();
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
+    ThreadManager::get().resume();
     return orig::pthread_detach(thread);
 }
 

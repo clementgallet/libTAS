@@ -14,6 +14,7 @@
 #include <string>
 #include "../logging.h"
 
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 template<class T>
 class ManagedAllocator
 {
@@ -98,11 +99,13 @@ bool operator!=(const ManagedAllocator<T1>&, const ManagedAllocator<T2>&)
 {
     return false;
 }
+#endif
 
 /*
  * Safe containers, using the regular std containers bare is not allowed.
  */
 namespace safe {
+#ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
     template<class key, class value, class compare = std::less<key>>
         using map = std::map<key, value, compare, ManagedAllocator<std::pair<const key, value>>>;
 
@@ -113,6 +116,18 @@ namespace safe {
         using vector = std::vector<value, ManagedAllocator<value>>;
 
     using string = std::basic_string<char, std::char_traits<char>, ManagedAllocator<char>>;
+#else
+    template<class key, class value, class compare = std::less<key>>
+        using map = std::map<key, value, compare>;
+
+    template<class key, class compare = std::less<key>>
+        using set = std::set<key, compare>;
+
+    template<class value>
+        using vector = std::vector<value>;
+
+    using string = std::basic_string<char, std::char_traits<char>>;
+#endif
 }
 
 #endif
