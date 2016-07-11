@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <time.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -34,6 +34,8 @@
 #include "SaveState.h"
 #include <vector>
 #include <string>
+#include <sstream>
+#include <iostream>
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -51,6 +53,7 @@ FILE* fp;
 pid_t game_pid;
 
 std::vector<std::string> shared_libs;
+std::string libname, libdir, rundir, dumpfile, gamepath;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -62,14 +65,28 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
     return 0;
 }
 
+void print_usage(void);
+void print_usage(void)
+{
+    std::cout << "Usage: ./run.sh [options] game_executable_relative_path [game_cmdline_arguments]" << std::endl;
+    std::cout << "Options are:" << std::endl;
+    std::cout << "  -d, --dump FILE     Start a audio/video encode into the specified FILE" << std::endl;
+    std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
+    std::cout << "  -w, --write MOVIE   Record game inputs into the specified MOVIE file" << std::endl;
+    std::cout << "  -l, --lib     PATH  Manually import a library" << std::endl;
+    std::cout << "  -L, --libpath PATH  Indicate a path to additional libraries the game" << std::endl;
+    std::cout << "                      will want to import." << std::endl;
+    std::cout << "  -R, --runpath PATH  From which directory the game must be launched." << std::endl;
+    std::cout << "                      Set to the executable directory by default." << std::endl;
+    std::cout << "  -h, --help          Show this message" << std::endl;
+}
+
+void launchGame(void);
 int main(int argc, char **argv)
 {
-    int message;
-
     /* Parsing arguments */
     int c;
-    std::string libname, dumpfile;
-    while ((c = getopt (argc, argv, "r:w:d:l:")) != -1)
+    while ((c = getopt (argc, argv, "r:w:d:l:L:R:h")) != -1)
         switch (c) {
             case 'r':
                 /* Playback movie file */
@@ -91,12 +108,62 @@ int main(int argc, char **argv)
                 libname = optarg;
                 shared_libs.push_back(libname);
                 break;
-            case '?':
-                fprintf (stderr, "Unknown option character");
+            case 'R':
+                /* run directory */
+                rundir = optarg;
                 break;
+            case 'L':
+                /* Shared library directory */
+                libdir = optarg;
+                break;
+            case '?':
+                fprintf (stderr, "Unknown option character\n");
+            case 'h':
+                print_usage();
+                return 0;
             default:
                 return 1;
         }
+
+    /* Game path */
+    gamepath = argv[optind];
+
+    launchGame();
+    return 0;
+}
+
+void launchGame(void)
+{
+    /* Remove the file socket */
+    system("rm -f /tmp/libTAS.socket");
+
+    /* Build the system command for calling the game */
+    std::ostringstream cmd;
+
+    if (!libdir.empty())
+        cmd << "export LD_LIBRARY_PATH=\"" << libdir << ":$LD_LIBRARY_PATH\" && ";
+    if (!rundir.empty())
+        cmd << "cd " << rundir << " && ";
+    else
+        cmd << "cd . && ";
+    cmd << "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/" << gamepath << " &";
+
+    std::cout << "Execute: " << cmd.str() << std::endl;
+    system(cmd.str().c_str());
+
+    /* Get the shared libs of the game executable */
+    std::ostringstream libcmd;
+    libcmd << "ldd " << gamepath << "  | awk '/=>/{print $(NF-1)}'";
+    FILE *libstr;
+    std::cout << "Execute: " << libcmd.str() << std::endl;
+    libstr = popen(libcmd.str().c_str(), "r");
+    if (libstr != NULL) {
+        char buf[1000];
+        while (fgets(buf, sizeof buf, libstr) != 0) {
+            shared_libs.push_back(std::string(buf));
+        }
+        pclose(libstr);
+    }
 
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -122,14 +189,14 @@ int main(int argc, char **argv)
     printf("Connecting to libTAS...\n");
 
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
-                   sizeof(struct sockaddr_un))) {
+                sizeof(struct sockaddr_un))) {
         printf("Attempt #%i: Couldn’t connect to socket.\n", retry + 1);
         retry++;
         if (retry < MAX_RETRIES) {
-            printf("Retrying in 2s");
+            printf("Retrying in 2s\n");
             sleep(2);
         } else {
-            return 1;
+            return;
         }
     }
 
@@ -137,6 +204,7 @@ int main(int argc, char **argv)
 
     /* Receive informations from the game */
 
+    int message;
     recv(socket_fd, &message, sizeof(int), 0);
     while (message != MSGB_END_INIT) {
 
@@ -204,7 +272,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        
+
         /* Wait for frame boundary */
         recv(socket_fd, &message, sizeof(int), 0);
 
@@ -238,7 +306,7 @@ int main(int argc, char **argv)
             printf("Error in msg socket, waiting for frame boundary\n");
             exit(1);
         }
-                   
+
         recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
 
 
@@ -253,7 +321,7 @@ int main(int argc, char **argv)
         do {
 
             XQueryKeymap(display, keyboard_state);
-           
+
             /* Implement frame-advance auto-repeat */
             if (ar_ticks >= 0) {
                 ar_ticks++;
@@ -434,6 +502,5 @@ int main(int argc, char **argv)
         closeRecording(fp);
     }
     close(socket_fd);
-    return 0;
 }
 
