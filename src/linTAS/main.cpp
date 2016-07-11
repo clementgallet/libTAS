@@ -36,6 +36,8 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include "Context.h"
+#include "ui.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -47,13 +49,14 @@ unsigned long int frame_counter = 0;
 char keyboard_state[32];
 KeySym hotkeys[HOTKEY_LEN];
 
-char *moviefile = NULL;
 FILE* fp;
 
 pid_t game_pid;
 
 std::vector<std::string> shared_libs;
 std::string libname, libdir, rundir, dumpfile, gamepath;
+
+Context context;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -91,12 +94,12 @@ int main(int argc, char **argv)
             case 'r':
                 /* Playback movie file */
                 tasflags.recording = 0;
-                moviefile = optarg;
+                context.moviefile = optarg;
                 break;
             case 'w':
                 /* Record movie file */
                 tasflags.recording = 1;
-                moviefile = optarg;
+                context.moviefile = optarg;
                 break;
             case 'd':
                 /* Dump video to file */
@@ -126,8 +129,10 @@ int main(int argc, char **argv)
         }
 
     /* Game path */
-    gamepath = argv[optind];
+    context.gamepath = argv[optind];
 
+    init_ui();
+    update_ui(context);
     launchGame();
     return 0;
 }
@@ -146,7 +151,7 @@ void launchGame(void)
         cmd << "cd " << rundir << " && ";
     else
         cmd << "cd . && ";
-    cmd << "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/" << gamepath << " &";
+    cmd << "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/" << context.gamepath << " &";
 
     std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
@@ -258,7 +263,7 @@ void launchGame(void)
     default_hotkeys(hotkeys);
 
     if (tasflags.recording >= 0){
-        fp = openRecording(moviefile, tasflags.recording);
+        fp = openRecording(context.moviefile.c_str(), tasflags.recording);
     }
 
     /*
