@@ -54,16 +54,15 @@ FILE* fp;
 pid_t game_pid;
 
 std::vector<std::string> shared_libs;
-std::string libname, libdir, rundir, dumpfile, gamepath;
+std::string libname, libdir, rundir, dumpfile;
 
 Context context;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
-    (void) fprintf(stderr,
-		   "Ignoring Xlib error: error code %d request code %d\n",
-		   theEvent->error_code,
-		   theEvent->request_code);
+    (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
+            theEvent->error_code,
+            theEvent->request_code);
 
     return 0;
 }
@@ -120,7 +119,7 @@ int main(int argc, char **argv)
                 libdir = optarg;
                 break;
             case '?':
-                fprintf (stderr, "Unknown option character\n");
+                std::cout << "Unknown option character" << std::endl;
             case 'h':
                 print_usage();
                 return 0;
@@ -131,9 +130,10 @@ int main(int argc, char **argv)
     /* Game path */
     context.gamepath = argv[optind];
 
-    init_ui();
-    update_ui(context);
+    ui_init();
+    ui_update_nogame(context);
     launchGame();
+    ui_end();
     return 0;
 }
 
@@ -153,14 +153,14 @@ void launchGame(void)
         cmd << "cd . && ";
     cmd << "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/" << context.gamepath << " &";
 
-    std::cout << "Execute: " << cmd.str() << std::endl;
+    //std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
 
     /* Get the shared libs of the game executable */
     std::ostringstream libcmd;
-    libcmd << "ldd " << gamepath << "  | awk '/=>/{print $(NF-1)}'";
+    libcmd << "ldd " << context.gamepath << "  | awk '/=>/{print $(NF-1)}'";
     FILE *libstr;
-    std::cout << "Execute: " << libcmd.str() << std::endl;
+    //std::cout << "Execute: " << libcmd.str() << std::endl;
     libstr = popen(libcmd.str().c_str(), "r");
     if (libstr != NULL) {
         char buf[1000];
@@ -185,27 +185,27 @@ void launchGame(void)
     display = XOpenDisplay(NULL);
     if (display == NULL)
     {
-        fprintf(stderr, "Cannot open display\n");
+        ui_print("Cannot open display\n");
         exit(1);
     }
 
     const int MAX_RETRIES = 3;
     int retry = 0;
-    printf("Connecting to libTAS...\n");
+    ui_print("Connecting to libTAS...\n");
 
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
                 sizeof(struct sockaddr_un))) {
-        printf("Attempt #%i: Couldn’t connect to socket.\n", retry + 1);
+        ui_print("Attempt #%i: Couldn’t connect to socket.\n", retry + 1);
         retry++;
         if (retry < MAX_RETRIES) {
-            printf("Retrying in 2s\n");
+            ui_print("Retrying in 2s\n");
             sleep(2);
         } else {
             return;
         }
     }
 
-    printf("Attempt #%i: Connected.\n", retry + 1);
+    ui_print("Attempt #%i: Connected.\n", retry + 1);
 
     /* Receive informations from the game */
 
@@ -220,7 +220,7 @@ void launchGame(void)
                 break;
 
             default:
-                fprintf(stderr, "Message init: unknown message\n");
+                ui_print("Message init: unknown message\n");
                 exit(1);
         }
         recv(socket_fd, &message, sizeof(int), 0);
@@ -282,7 +282,7 @@ void launchGame(void)
         recv(socket_fd, &message, sizeof(int), 0);
 
         if (message == MSGB_QUIT) {
-            printf("Game has quit. Exiting\n");
+            ui_print("Game has quit. Exiting\n");
             break;
         }
 
@@ -308,7 +308,7 @@ void launchGame(void)
         }
 
         if (message != MSGB_START_FRAMEBOUNDARY) {
-            printf("Error in msg socket, waiting for frame boundary\n");
+            ui_print("Error in msg socket, waiting for frame boundary\n");
             exit(1);
         }
 
