@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "main.h"
 #include <cstdlib>
 #include <cstdio>
 #include <time.h>
@@ -58,6 +59,8 @@ std::string libname, libdir, rundir, dumpfile;
 
 Context context;
 
+bool quit = true;
+
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
     (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
@@ -67,7 +70,6 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
     return 0;
 }
 
-void print_usage(void);
 void print_usage(void)
 {
     std::cout << "Usage: ./run.sh [options] game_executable_relative_path [game_cmdline_arguments]" << std::endl;
@@ -83,7 +85,6 @@ void print_usage(void)
     std::cout << "  -h, --help          Show this message" << std::endl;
 }
 
-void launchGame(void);
 int main(int argc, char **argv)
 {
     /* Parsing arguments */
@@ -132,13 +133,13 @@ int main(int argc, char **argv)
 
     ui_init();
     ui_update_nogame(context);
-    launchGame();
-    ui_end();
     return 0;
 }
 
-void launchGame(void)
+void* launchGame(void* arg)
 {
+    quit = false;
+
     /* Remove the file socket */
     system("rm -f /tmp/libTAS.socket");
 
@@ -201,7 +202,7 @@ void launchGame(void)
             ui_print("Retrying in 2s\n");
             sleep(2);
         } else {
-            return;
+            return NULL;
         }
     }
 
@@ -498,6 +499,11 @@ void launchGame(void)
         send(socket_fd, &message, sizeof(int), 0);
         send(socket_fd, &ai, sizeof(struct AllInputs), 0);
 
+        if (quit) {
+            message = MSGN_USERQUIT;
+            send(socket_fd, &message, sizeof(int), 0);
+        }
+
         message = MSGN_END_FRAMEBOUNDARY; 
         send(socket_fd, &message, sizeof(int), 0);
 
@@ -507,5 +513,8 @@ void launchGame(void)
         closeRecording(fp);
     }
     close(socket_fd);
+
+    quit = true;
+    return NULL;
 }
 

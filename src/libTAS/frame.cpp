@@ -32,6 +32,7 @@
 #include "sdlwindows.h"
 #include <mutex>
 #include <iomanip>
+#include "libTAS.h"
 
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
@@ -166,6 +167,11 @@ void proceed_commands(void)
 
         switch (message)
         {
+            case MSGN_USERQUIT:
+                if (SDLver > 0)
+                    SDL_Quit();
+                break;
+
             case MSGN_TASFLAGS:
                 receiveData(&tasflags, sizeof(struct TasFlags));
                 break;

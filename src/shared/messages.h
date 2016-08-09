@@ -53,6 +53,12 @@ enum {
     MSGB_QUIT,
 
     /*
+     * The program tells the game that the user has requested a quit
+     * Argument: none
+     */
+    MSGN_USERQUIT,
+
+    /*
      * Send the game pid so that the program can attach to it
      * Argument: pid_t
      */
