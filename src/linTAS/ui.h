@@ -24,6 +24,7 @@
 
 void ui_init(void);
 void ui_update_nogame(Context &context);
+void ui_hotkeys_menu();
 void ui_print(const char* msg, ...);
 void ui_end(void);
 

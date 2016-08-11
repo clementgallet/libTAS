@@ -20,8 +20,6 @@
 #ifndef KEYMAPPING_H_INCLUDED
 #define KEYMAPPING_H_INCLUDED
 
-#include <iostream>
-//#include <X11/XKBlib.h>
 #include "../shared/AllInputs.h"
 
 void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[], KeySym hotkeys[]);

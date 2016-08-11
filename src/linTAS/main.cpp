@@ -131,6 +131,8 @@ int main(int argc, char **argv)
     /* Game path */
     context.gamepath = argv[optind];
 
+    config.default_hotkeys();
+
     ui_init();
     ui_update_nogame(context);
     return 0;
@@ -260,8 +262,6 @@ void* launchGame(void* arg)
     tim.tv_nsec = 0L;
 
     nanosleep(&tim, NULL);
-
-    config.default_hotkeys();
 
     if (tasflags.recording >= 0){
         fp = openRecording(context.moviefile.c_str(), tasflags.recording);

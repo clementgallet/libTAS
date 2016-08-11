@@ -24,6 +24,11 @@
 #include <cstdarg>
 #include <pthread.h>
 #include <signal.h>
+#include <X11/Xlib.h>
+#include "../shared/Config.h"
+#include <X11/XKBlib.h>
+
+Display *display;
 
 void ui_init(void)
 {
@@ -31,6 +36,13 @@ void ui_init(void)
     raw();                 /* Line buffering disabled  */
     keypad(stdscr, TRUE);  /* We get F1, F2 etc..      */
     noecho();              /* Don't echo() while we do getch */
+
+    display = XOpenDisplay(NULL);
+    if (display == NULL)
+    {
+        ui_print("Cannot open display");
+        exit(1);
+    }
 }
 
 void ui_update_nogame(Context &context)
@@ -40,11 +52,12 @@ void ui_update_nogame(Context &context)
     mvprintw(0, 0, "Game path: %s", context.gamepath.c_str());
     mvprintw(1, 0, "Movie path: %s", context.moviefile.c_str());
 
-    char *menu_choices[] = {
+    const char * const menu_choices[] = {
         "Start",
+        "Hotkeys",
         "Exit",
     };
-    int n_items = 2;
+    int n_items = 3;
     ITEM **menu_items = (ITEM**) calloc(n_items+1, sizeof(ITEM*));
     for (int i=0; i<n_items; i++)
         menu_items[i] = new_item(menu_choices[i], "");
@@ -78,6 +91,12 @@ void ui_update_nogame(Context &context)
                     }
                 }
                 if (index == 1) {
+                    unpost_menu(menu);
+                    ui_hotkeys_menu();
+                    post_menu(menu);
+                    refresh();
+                }
+                if (index == 2) {
                     end = true;
                 }
                 break;
@@ -91,6 +110,87 @@ void ui_update_nogame(Context &context)
 
     ui_end();
 }
+
+static KeySym get_next_keypressed()
+{
+    Window window;
+    XEvent event;
+    int revert;
+    XGetInputFocus(display, &window, &revert);
+    XSelectInput(display, window, KeyPressMask);
+    while (1) {
+        XNextEvent(display, &event);
+        if (event.type == KeyPress)
+        {
+            KeyCode kc = event.xkey.keycode;
+            KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+            return ks;
+        }
+    }
+    return 0;
+}
+
+void ui_hotkeys_menu()
+{
+
+    std::string hotkey_names[HOTKEY_LEN];
+    hotkey_names[HOTKEY_PLAYPAUSE] = "Play/Pause";
+    hotkey_names[HOTKEY_FRAMEADVANCE] = "Frame Advance";
+    hotkey_names[HOTKEY_FASTFORWARD] = "Fast-forward";
+    hotkey_names[HOTKEY_READWRITE] = "Toggle ReadWrite/ReadOnly";
+    hotkey_names[HOTKEY_SAVESTATE] = "Save State";
+    hotkey_names[HOTKEY_LOADSTATE] = "Load State";
+
+    const char * menu_choices[HOTKEY_LEN+2];
+    for (int i=0; i<HOTKEY_LEN; i++)
+        menu_choices[i] = hotkey_names[i].c_str();
+    menu_choices[HOTKEY_LEN] = "Exit";
+
+    ITEM **menu_items = (ITEM**) calloc(HOTKEY_LEN+1, sizeof(ITEM*));
+    for (int i=0; i<HOTKEY_LEN; i++)
+        menu_items[i] = new_item(menu_choices[i], XKeysymToString(config.hotkeys[i]));
+    menu_items[HOTKEY_LEN] = new_item(menu_choices[HOTKEY_LEN], "");
+    menu_items[HOTKEY_LEN+1] = (ITEM*) NULL;
+
+    MENU *menu = new_menu(menu_items);
+    post_menu(menu);
+    refresh();
+
+    int c;
+    bool end = false;
+    while(!end) {
+        c = getch();
+        switch(c) {
+            case KEY_DOWN:
+                menu_driver(menu, REQ_DOWN_ITEM);
+                break;
+            case KEY_UP:
+                menu_driver(menu, REQ_UP_ITEM);
+                break;
+            case 10:
+                ITEM *cur = current_item(menu);
+                int index = item_index(cur);
+                if (index == HOTKEY_LEN) {
+                    end = true;
+                    break;
+                }
+
+                free_item(menu_items[index]);
+                menu_items[index] = new_item(menu_choices[index], "<press key>");
+                KeySym ks = get_next_keypressed();
+                free_item(menu_items[index]);
+                config.hotkeys[index] = ks;
+                menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
+
+        }
+    }
+    unpost_menu(menu);
+    free_menu(menu);
+    for (int i=0; i<HOTKEY_LEN+1; i++)
+        free_item(menu_items[i]);
+
+}
+
 
 void ui_print(const char* msg, ...)
 {
