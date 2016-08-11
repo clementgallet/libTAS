@@ -39,6 +39,7 @@
 #include <iostream>
 #include "Context.h"
 #include "ui.h"
+#include "../shared/Config.h"
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -48,7 +49,6 @@ SaveState savestate;
 unsigned long int frame_counter = 0;
 
 char keyboard_state[32];
-KeySym hotkeys[HOTKEY_LEN];
 
 FILE* fp;
 
@@ -261,7 +261,7 @@ void* launchGame(void* arg)
 
     nanosleep(&tim, NULL);
 
-    default_hotkeys(hotkeys);
+    config.default_hotkeys();
 
     if (tasflags.recording >= 0){
         fp = openRecording(context.moviefile.c_str(), tasflags.recording);
@@ -360,28 +360,28 @@ void* launchGame(void* arg)
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
-                    if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
+                    if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         isidle = 0;
                         tasflags.running = 0;
                         tasflagsmod = 1;
                         ar_ticks = 0; // Activate auto-repeat
                     }
-                    if (ks == hotkeys[HOTKEY_PLAYPAUSE]){
+                    if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
                         tasflags.running = !tasflags.running;
                         tasflagsmod = 1;
                         isidle = !tasflags.running;
                     }
-                    if (ks == hotkeys[HOTKEY_FASTFORWARD]){
+                    if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         tasflags.fastforward = 1;
                         tasflagsmod = 1;
                     }
-                    if (ks == hotkeys[HOTKEY_SAVESTATE]){
+                    if (ks == config.hotkeys[HOTKEY_SAVESTATE]){
                         savestate.save(game_pid);
                     }
-                    if (ks == hotkeys[HOTKEY_LOADSTATE]){
+                    if (ks == config.hotkeys[HOTKEY_LOADSTATE]){
                         savestate.load(game_pid);
                     }
-                    if (ks == hotkeys[HOTKEY_READWRITE]){
+                    if (ks == config.hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
                         if (tasflags.recording >= 0)
                             tasflags.recording = !tasflags.recording;
@@ -414,11 +414,11 @@ void* launchGame(void* arg)
 #endif
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-                    if (ks == hotkeys[HOTKEY_FASTFORWARD]){
+                    if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         tasflags.fastforward = 0;
                         tasflagsmod = 1;
                     }
-                    if (ks == hotkeys[HOTKEY_FRAMEADVANCE]){
+                    if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
                 }
@@ -440,7 +440,7 @@ void* launchGame(void* arg)
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
-            buildAllInputs(&ai, display, keyboard_state, hotkeys);
+            buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
 
             /* Get the pointer position and mask */
             if (gameWindow) {
@@ -459,7 +459,7 @@ void* launchGame(void* arg)
             XQueryKeymap(display, keyboard_state);
 
             /* Format the keyboard state and save it in the AllInputs struct */
-            buildAllInputs(&ai, display, keyboard_state, hotkeys);
+            buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
 
             /* Get the pointer position and mask */
             if (gameWindow) {

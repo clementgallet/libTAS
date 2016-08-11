@@ -19,9 +19,38 @@
 
 #include "Config.h"
 
-struct Config config = {
+Config config = {
     hud_framecount : true,
     hud_inputs : true,
     prevent_savefiles : true
 };
+
+void Config::default_hotkeys()
+{
+    hotkeys[HOTKEY_PLAYPAUSE] = XK_Pause;
+    hotkeys[HOTKEY_FRAMEADVANCE] = XK_v;
+    hotkeys[HOTKEY_FASTFORWARD] = XK_Tab;
+    hotkeys[HOTKEY_READWRITE] = XK_p;
+    hotkeys[HOTKEY_SAVESTATE] = XK_s;
+    hotkeys[HOTKEY_LOADSTATE] = XK_m;
+
+    input_mapping[XK_w].type = IT_CONTROLLER1_BUTTON_A;
+    input_mapping[XK_w].value = 1;
+    input_mapping[XK_x].type = IT_CONTROLLER1_BUTTON_B;
+    input_mapping[XK_x].value = 1;
+    input_mapping[XK_c].type = IT_CONTROLLER1_BUTTON_X;
+    input_mapping[XK_c].value = 1;
+    input_mapping[XK_d].type = IT_CONTROLLER1_BUTTON_LEFTSHOULDER;
+    input_mapping[XK_d].value = 1;
+    input_mapping[XK_f].type = IT_CONTROLLER1_BUTTON_RIGHTSHOULDER;
+    input_mapping[XK_f].value = 1;
+    input_mapping[XK_i].type = IT_CONTROLLER1_BUTTON_DPAD_UP;
+    input_mapping[XK_i].value = 1;
+    input_mapping[XK_k].type = IT_CONTROLLER1_BUTTON_DPAD_DOWN;
+    input_mapping[XK_k].value = 1;
+    input_mapping[XK_j].type = IT_CONTROLLER1_BUTTON_DPAD_LEFT;
+    input_mapping[XK_j].value = 1;
+    input_mapping[XK_l].type = IT_CONTROLLER1_BUTTON_DPAD_RIGHT;
+    input_mapping[XK_l].value = 1;
+}
 
