@@ -177,10 +177,16 @@ void ui_hotkeys_menu()
 
                 free_item(menu_items[index]);
                 menu_items[index] = new_item(menu_choices[index], "<press key>");
+                //set_menu_items(menu, menu_items);
+                refresh();
+                ui_print("Waiting for key pressed");
                 KeySym ks = get_next_keypressed();
+                ui_print("Key pressed is %d", ks);
                 free_item(menu_items[index]);
                 config.hotkeys[index] = ks;
                 menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
+                //set_menu_items(menu, menu_items);
+                refresh();
 
         }
     }
