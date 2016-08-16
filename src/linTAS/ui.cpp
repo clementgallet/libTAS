@@ -55,9 +55,10 @@ void ui_update_nogame(Context &context)
     const char * const menu_choices[] = {
         "Start",
         "Hotkeys",
+        "Inputs",
         "Exit",
     };
-    int n_items = 3;
+    int n_items = 4;
     ITEM **menu_items = (ITEM**) calloc(n_items+1, sizeof(ITEM*));
     for (int i=0; i<n_items; i++)
         menu_items[i] = new_item(menu_choices[i], "");
@@ -97,6 +98,12 @@ void ui_update_nogame(Context &context)
                     refresh();
                 }
                 if (index == 2) {
+                    unpost_menu(menu);
+                    ui_inputs_menu();
+                    post_menu(menu);
+                    refresh();
+                }
+                if (index == 3) {
                     end = true;
                 }
                 break;
@@ -149,7 +156,6 @@ void ui_rebuild_menu(MENU *menu, ITEM **menu_items, ITEM *cur)
 
 void ui_hotkeys_menu()
 {
-
     std::string hotkey_names[HOTKEY_LEN];
     hotkey_names[HOTKEY_PLAYPAUSE] = "Play/Pause";
     hotkey_names[HOTKEY_FRAMEADVANCE] = "Frame Advance";
@@ -207,6 +213,73 @@ void ui_hotkeys_menu()
     unpost_menu(menu);
     free_menu(menu);
     for (int i=0; i<HOTKEY_LEN+1; i++)
+        free_item(menu_items[i]);
+
+}
+
+void ui_inputs_menu()
+{
+
+    int n_items = config.input_list.size();
+    const char * menu_choices[n_items+1];
+    for (int i=0; i<n_items; i++)
+        menu_choices[i] = config.input_list[i].description.c_str();
+    menu_choices[n_items] = "Exit";
+
+    ITEM **menu_items = (ITEM**) calloc(n_items+2, sizeof(ITEM*));
+    for (int i=0; i<n_items; i++) {
+        const char* mapstr = "<default>";
+        for (std::map<KeySym,SingleInput>::iterator iter = config.input_mapping.begin(); iter != config.input_mapping.end(); ++iter) {
+            KeySym ks = iter->first;
+            SingleInput si = iter->second;
+            if (si == config.input_list[i]) {
+                mapstr = XKeysymToString(ks);
+                break;
+            }
+        }
+        menu_items[i] = new_item(menu_choices[i], mapstr);
+    }
+    menu_items[n_items] = new_item("Exit", "");
+    menu_items[n_items+1] = (ITEM*) NULL;
+
+    MENU *menu = new_menu(menu_items);
+    post_menu(menu);
+    refresh();
+
+    int c;
+    bool end = false;
+    while(!end) {
+        c = getch();
+        switch(c) {
+            case KEY_DOWN:
+                menu_driver(menu, REQ_DOWN_ITEM);
+                break;
+            case KEY_UP:
+                menu_driver(menu, REQ_UP_ITEM);
+                break;
+            case 10:
+                ITEM *cur = current_item(menu);
+                int index = item_index(cur);
+                if (index == n_items) {
+                    end = true;
+                    break;
+                }
+
+                free_item(menu_items[index]);
+                menu_items[index] = new_item(menu_choices[index], "<press key>");
+                ui_rebuild_menu(menu, menu_items, menu_items[index]);
+                ui_print("Waiting for key pressed");
+                KeySym ks = get_next_keypressed();
+                free_item(menu_items[index]);
+                config.input_mapping[ks] = config.input_list[index];
+                menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
+                ui_rebuild_menu(menu, menu_items, menu_items[index]);
+
+        }
+    }
+    unpost_menu(menu);
+    free_menu(menu);
+    for (int i=0; i<n_items+1; i++)
         free_item(menu_items[i]);
 
 }

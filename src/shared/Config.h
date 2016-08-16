@@ -21,6 +21,8 @@
 #define LIBTAS_CONFIG_H_INCLUDED
 
 #include <map>
+#include <vector>
+#include <string>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
@@ -139,6 +141,15 @@ typedef int InputType; enum {
 struct SingleInput {
     InputType type;
     int value;
+    std::string description;
+
+    bool operator==( const SingleInput &si ) const {
+        return (type == si.type) && (value == si.value);
+    }
+
+    bool operator<( const SingleInput &si ) const {
+        return ((type < si.type) || ((type == si.type) && (value < si.value)));
+    }
 };
 
 class Config {
@@ -153,7 +164,10 @@ class Config {
         bool prevent_savefiles;
 
         /* Map keyboard Keycodes to a single input of a keyboard or controller */
-        std::map<KeySym,struct SingleInput> input_mapping;
+        std::map<KeySym,SingleInput> input_mapping;
+
+        /* List of inputs that can be mapped to a single key */
+        std::vector<SingleInput> input_list;
 
         KeySym hotkeys[HOTKEY_LEN];
 
