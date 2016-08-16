@@ -117,17 +117,34 @@ static KeySym get_next_keypressed()
     XEvent event;
     int revert;
     XGetInputFocus(display, &window, &revert);
-    XSelectInput(display, window, KeyPressMask);
+    XSelectInput(display, window, KeyPressMask | KeyReleaseMask);
+
+    /* Empty event queue */
+    while (XPending (display)) {
+        XNextEvent(display, &event);
+    }
+
     while (1) {
         XNextEvent(display, &event);
         if (event.type == KeyPress)
         {
+            ui_print("KeyPress event");
             KeyCode kc = event.xkey.keycode;
+            ui_print("KeyCode is %d", kc);
             KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
             return ks;
         }
     }
     return 0;
+}
+
+void ui_rebuild_menu(MENU *menu, ITEM **menu_items, ITEM *cur)
+{
+    unpost_menu(menu);
+    set_menu_items(menu, menu_items);
+    post_menu(menu);
+    set_current_item(menu, cur);
+    refresh();
 }
 
 void ui_hotkeys_menu()
@@ -141,12 +158,12 @@ void ui_hotkeys_menu()
     hotkey_names[HOTKEY_SAVESTATE] = "Save State";
     hotkey_names[HOTKEY_LOADSTATE] = "Load State";
 
-    const char * menu_choices[HOTKEY_LEN+2];
+    const char * menu_choices[HOTKEY_LEN+1];
     for (int i=0; i<HOTKEY_LEN; i++)
         menu_choices[i] = hotkey_names[i].c_str();
     menu_choices[HOTKEY_LEN] = "Exit";
 
-    ITEM **menu_items = (ITEM**) calloc(HOTKEY_LEN+1, sizeof(ITEM*));
+    ITEM **menu_items = (ITEM**) calloc(HOTKEY_LEN+2, sizeof(ITEM*));
     for (int i=0; i<HOTKEY_LEN; i++)
         menu_items[i] = new_item(menu_choices[i], XKeysymToString(config.hotkeys[i]));
     menu_items[HOTKEY_LEN] = new_item(menu_choices[HOTKEY_LEN], "");
@@ -177,16 +194,13 @@ void ui_hotkeys_menu()
 
                 free_item(menu_items[index]);
                 menu_items[index] = new_item(menu_choices[index], "<press key>");
-                //set_menu_items(menu, menu_items);
-                refresh();
+                ui_rebuild_menu(menu, menu_items, menu_items[index]);
                 ui_print("Waiting for key pressed");
                 KeySym ks = get_next_keypressed();
-                ui_print("Key pressed is %d", ks);
                 free_item(menu_items[index]);
                 config.hotkeys[index] = ks;
                 menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
-                //set_menu_items(menu, menu_items);
-                refresh();
+                ui_rebuild_menu(menu, menu_items, menu_items[index]);
 
         }
     }
