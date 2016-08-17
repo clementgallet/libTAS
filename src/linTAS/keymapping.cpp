@@ -60,7 +60,7 @@ void buildAllInputs(struct AllInputs* ai, Display *display, char keyboard_state[
                 }
 
                 /* Checking the mapped input for that key */
-                struct SingleInput si = {IT_ID,0};
+                struct SingleInput si = {IT_NONE,0};
                 if (config.input_mapping.find(ks) != config.input_mapping.end()) 
                     si = config.input_mapping[ks];
 

@@ -36,6 +36,27 @@ void Config::default_hotkeys()
     hotkeys[HOTKEY_SAVESTATE] = XK_s;
     hotkeys[HOTKEY_LOADSTATE] = XK_m;
 
+    int min_keycodes_return, max_keycodes_return;
+    Display *display = XOpenDisplay(NULL);
+    if (display == NULL)
+    {
+        return;
+    }
+
+    XDisplayKeycodes(display, &min_keycodes_return, &max_keycodes_return);
+    for (int k=min_keycodes_return; k<=max_keycodes_return; k++) {
+        KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
+        if (ks == NoSymbol) continue;
+
+        SingleInput si;
+        si.type = IT_KEYBOARD;
+        si.value = static_cast<int>(ks);
+        si.description = XKeysymToString(ks);
+        input_list.push_back(si);
+
+        input_mapping[ks].type = IT_ID;
+    }
+
     input_mapping[XK_w].type = IT_CONTROLLER1_BUTTON_A;
     input_mapping[XK_w].value = 1;
     input_mapping[XK_x].type = IT_CONTROLLER1_BUTTON_B;
@@ -54,24 +75,6 @@ void Config::default_hotkeys()
     input_mapping[XK_j].value = 1;
     input_mapping[XK_l].type = IT_CONTROLLER1_BUTTON_DPAD_RIGHT;
     input_mapping[XK_l].value = 1;
-
-    int min_keycodes_return, max_keycodes_return;
-    Display *display = XOpenDisplay(NULL);
-    if (display == NULL)
-    {
-        return;
-    }
-
-    XDisplayKeycodes(display, &min_keycodes_return, &max_keycodes_return);
-    for (int k=min_keycodes_return; k<=max_keycodes_return; k++) {
-        KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
-        if (ks == NoSymbol) continue;
-        SingleInput si;
-        si.type = IT_KEYBOARD;
-        si.value = static_cast<int>(ks);
-        si.description = XKeysymToString(ks);
-        input_list.push_back(si);
-    }
 
 }
 

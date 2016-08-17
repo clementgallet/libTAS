@@ -207,6 +207,7 @@ void ui_hotkeys_menu()
                 config.hotkeys[index] = ks;
                 menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
                 ui_rebuild_menu(menu, menu_items, menu_items[index]);
+                break;
 
         }
     }
@@ -228,7 +229,7 @@ void ui_inputs_menu()
 
     ITEM **menu_items = (ITEM**) calloc(n_items+2, sizeof(ITEM*));
     for (int i=0; i<n_items; i++) {
-        const char* mapstr = "<default>";
+        const char* mapstr = "<none>";
         for (std::map<KeySym,SingleInput>::iterator iter = config.input_mapping.begin(); iter != config.input_mapping.end(); ++iter) {
             KeySym ks = iter->first;
             SingleInput si = iter->second;
@@ -236,6 +237,11 @@ void ui_inputs_menu()
                 mapstr = XKeysymToString(ks);
                 break;
             }
+            if ((si.type == IT_ID) && (config.input_list[i].type == IT_KEYBOARD) && (config.input_list[i].value == ks)) {
+                mapstr = "<self>";
+                break;
+            }
+
         }
         menu_items[i] = new_item(menu_choices[i], mapstr);
     }
@@ -248,6 +254,10 @@ void ui_inputs_menu()
 
     int c;
     bool end = false;
+    ITEM *cur;
+    int index;
+    KeySym ks;
+    SingleInput si;
     while(!end) {
         c = getch();
         switch(c) {
@@ -257,9 +267,55 @@ void ui_inputs_menu()
             case KEY_UP:
                 menu_driver(menu, REQ_UP_ITEM);
                 break;
+            case KEY_NPAGE:
+                menu_driver(menu, REQ_SCR_DPAGE);
+                break;
+            case KEY_PPAGE:
+                menu_driver(menu, REQ_SCR_UPAGE);
+                break;
+            case KEY_END:
+                menu_driver(menu, REQ_LAST_ITEM);
+                break;
+            case KEY_HOME:
+                menu_driver(menu, REQ_FIRST_ITEM);
+                break;
+            case KEY_F(1): // self
+                cur = current_item(menu);
+                index = item_index(cur);
+                if (index == n_items) {
+                    break;
+                }
+                ks = config.input_list[index].value;
+                config.input_mapping.erase(ks);
+                si.type = IT_ID;
+                config.input_mapping[ks] = si;
+                free_item(menu_items[index]);
+                menu_items[index] = new_item(menu_choices[index], "<self>");
+                ui_rebuild_menu(menu, menu_items, menu_items[index]);
+
+                break;
+            case KEY_F(2): // none
+                cur = current_item(menu);
+                index = item_index(cur);
+                if (index == n_items) {
+                    break;
+                }
+
+                for (std::map<KeySym,SingleInput>::iterator iter = config.input_mapping.begin(); iter != config.input_mapping.end(); ++iter) {
+                    ks = iter->first;
+                    si = iter->second;
+                    if (si == config.input_list[index]) {
+                        config.input_mapping.erase(iter);
+                        free_item(menu_items[index]);
+                        menu_items[index] = new_item(menu_choices[index], "<none>");
+                        ui_rebuild_menu(menu, menu_items, menu_items[index]);
+                        break;
+                    }
+                }
+                break;
             case 10:
-                ITEM *cur = current_item(menu);
-                int index = item_index(cur);
+                cur = current_item(menu);
+                index = item_index(cur);
                 if (index == n_items) {
                     end = true;
                     break;
@@ -269,12 +325,12 @@ void ui_inputs_menu()
                 menu_items[index] = new_item(menu_choices[index], "<press key>");
                 ui_rebuild_menu(menu, menu_items, menu_items[index]);
                 ui_print("Waiting for key pressed");
-                KeySym ks = get_next_keypressed();
+                ks = get_next_keypressed();
                 free_item(menu_items[index]);
                 config.input_mapping[ks] = config.input_list[index];
                 menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
                 ui_rebuild_menu(menu, menu_items, menu_items[index]);
-
+                break;
         }
     }
     unpost_menu(menu);
