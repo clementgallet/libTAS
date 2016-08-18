@@ -36,10 +36,13 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <iostream>
 #include "Context.h"
 #include "ui.h"
 #include "../shared/Config.h"
+#include <limits.h> // PATH_MAX
+#include <libgen.h> // dirname
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -55,7 +58,7 @@ FILE* fp;
 pid_t game_pid;
 
 std::vector<std::string> shared_libs;
-std::string libname, libdir, rundir, dumpfile;
+std::string libname;
 
 Context context;
 
@@ -89,35 +92,55 @@ int main(int argc, char **argv)
 {
     /* Parsing arguments */
     int c;
+    char buf[PATH_MAX];
+    char* abspath;
+    std::ofstream o;
     while ((c = getopt (argc, argv, "r:w:d:l:L:R:h")) != -1)
         switch (c) {
             case 'r':
-                /* Playback movie file */
-                tasflags.recording = 0;
-                context.moviefile = optarg;
-                break;
             case 'w':
-                /* Record movie file */
-                tasflags.recording = 1;
-                context.moviefile = optarg;
+                /* Record/Playback movie file */
+
+                /* We must be sure that the file exists, otherwise the following call
+                 * to realpath will fail. */
+                o.open(optarg);
+                o.close();
+
+                abspath = realpath(optarg, buf);
+                if (abspath) {
+                    context.moviefile = abspath;
+                    tasflags.recording = (c == 'r')?0:1;
+                }
                 break;
             case 'd':
                 /* Dump video to file */
-                tasflags.av_dumping = 1;
-                dumpfile = optarg;
+                abspath = realpath(optarg, buf);
+                if (abspath) {
+                    tasflags.av_dumping = 1;
+                    context.dumpfile = abspath;
+                }
                 break;
             case 'l':
                 /* Shared library */
-                libname = optarg;
-                shared_libs.push_back(libname);
+                abspath = realpath(optarg, buf);
+                if (abspath) {
+                    libname = abspath;
+                    shared_libs.push_back(libname);
+                }
                 break;
             case 'R':
                 /* run directory */
-                rundir = optarg;
+                abspath = realpath(optarg, buf);
+                if (abspath) {
+                    context.rundir = abspath;
+                }
                 break;
             case 'L':
                 /* Shared library directory */
-                libdir = optarg;
+                abspath = realpath(optarg, buf);
+                if (abspath) {
+                    context.libdir = abspath;
+                }
                 break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
@@ -128,8 +151,19 @@ int main(int argc, char **argv)
                 return 1;
         }
 
+    /* libTAS.so path */
+    /* TODO: Not portable! */
+    ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
+    std::string binpath = std::string( buf, (count > 0) ? count : 0 );
+    char* binpathptr = const_cast<char*>(binpath.c_str());
+    context.libtaspath = dirname(binpathptr);
+    context.libtaspath += "/libTAS.so"; // Quite bad programming
+
     /* Game path */
-    context.gamepath = argv[optind];
+    abspath = realpath(argv[optind], buf);
+    if (abspath) {
+        context.gamepath = abspath;
+    }
 
     config.default_hotkeys();
 
@@ -148,13 +182,11 @@ void* launchGame(void* arg)
     /* Build the system command for calling the game */
     std::ostringstream cmd;
 
-    if (!libdir.empty())
-        cmd << "export LD_LIBRARY_PATH=\"" << libdir << ":$LD_LIBRARY_PATH\" && ";
-    if (!rundir.empty())
-        cmd << "cd " << rundir << " && ";
-    else
-        cmd << "cd . && ";
-    cmd << "LD_PRELOAD=$OLDPWD/build/libTAS.so $OLDPWD/" << context.gamepath << " &";
+    if (!context.libdir.empty())
+        cmd << "export LD_LIBRARY_PATH=\"" << context.libdir << ":$LD_LIBRARY_PATH\" && ";
+    if (!context.rundir.empty())
+        cmd << "cd " << context.rundir << " && ";
+    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " &";
 
     //std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
@@ -240,9 +272,9 @@ void* launchGame(void* arg)
     if (tasflags.av_dumping) {
         message = MSGN_DUMP_FILE;
         send(socket_fd, &message, sizeof(int), 0);
-        size_t dumpfile_size = dumpfile.size();
+        size_t dumpfile_size = context.dumpfile.size();
         send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
-        send(socket_fd, dumpfile.c_str(), dumpfile_size, 0);
+        send(socket_fd, context.dumpfile.c_str(), dumpfile_size, 0);
     }
 
     /* Send shared library names */

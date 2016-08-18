@@ -27,11 +27,23 @@ struct Context {
     /* tas flags */
     TasFlags tasflags;
 
-    /* Path of the game executable */
+    /* Absolute path of libTAS.so */
+    std::string libtaspath;
+
+    /* Absolute path of the game executable */
     std::string gamepath;
 
-    /* Path of the movie file */
+    /* Absolute path of the movie file */
     std::string moviefile;
+
+    /* Absolute path of the dump file */
+    std::string dumpfile;
+
+    /* Path of the libraries used by the game */
+    std::string libdir;
+
+    /* Path where the game needs to run */
+    std::string rundir;
 };
 
 #endif

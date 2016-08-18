@@ -40,9 +40,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 To run this program, just type:
 
-    ./build/linTAS game_executable_relative_path [game_cmdline_arguments]
+    ./linTAS game_executable_path [game_cmdline_arguments]
 
-You can type `./build/linTAS -h` to have a description of the program options.
+You can type `./linTAS -h` to have a description of the program options.
 
 The programs prompts a text-based user interface where you can start the game or change several options.
 
