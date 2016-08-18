@@ -15,8 +15,6 @@
 ### Fixes
 
 - Make the code thread safe
-- Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
--- Also use this to detect if some code is executed before we had a chance to call our lib init function
 
 ## Partially done
 
@@ -36,12 +34,7 @@
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
-- Support software rendering
--- AV dump of SDL 1 missing
-- Add inputs into the game screen
--- Frame count is shown, but inputs would take more time
-- Memory manager
--- See http://g.oswego.edu/dl/html/malloc.html for some nice tips
+- Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
 
 ## Done
 
@@ -61,4 +54,7 @@
 - Add a license
 - Support mouse
 - Emulate our own event queue
+- Memory manager
+- Support software rendering
+- Add inputs into the game screen
 

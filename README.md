@@ -14,19 +14,25 @@ To enable audio and video dumping, you will need:
 - libavformat
 - libavutil
 - libswscale
-- libswrescale
+- libswresample
 
 To enable audio playback, you will also need:
 
-- libswrescale
+- libswresample
 - libasound
 
-To enable HUD on top of the game screen (currently not working, disabled by default), you will need:
+To enable HUD on the game screen, you will need:
 
 - libfreetype
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
-If you want to manually disable a feature, you must add just after the `cmake` command either `-DENABLE_DUMPING=OFF`, `-DENABLE_SOUND=OFF` or `-DENABLE_HUD=OFF`.
+If you want to manually enable/disable a feature, you must add just after the `cmake` command:
+
+- `-DENABLE_DUMPING=ON/OFF`: enable/disable video and audio dumping
+- `-DENABLE_SOUND=ON/OFF`: enable/disable audio playback
+- `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
+- `-DENABLE_CUSTOM_MALLOC=ON/OFF`: enable/disable custom dynamic memory management
+- `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file writing control to disable savefiles
 
 Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=32bit.toolchain.cmake ..`
 
@@ -34,11 +40,13 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 To run this program, just type:
 
-    ./run.sh [options] game_executable_path [game_commandline_arguments]
+    ./build/linTAS game_executable_relative_path [game_cmdline_arguments]
 
-You can type `./run.sh -h` to have a description of the program options.
+You can type `./build/linTAS -h` to have a description of the program options.
 
-For now, what you can do is:
+The programs prompts a text-based user interface where you can start the game or change several options.
+
+Here are the default controls when the game has started:
 
 - frame advancing, using the `V` key
 - pause/play, using the `pause` key

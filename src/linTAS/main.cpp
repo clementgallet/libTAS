@@ -72,7 +72,7 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 
 void print_usage(void)
 {
-    std::cout << "Usage: ./run.sh [options] game_executable_relative_path [game_cmdline_arguments]" << std::endl;
+    std::cout << "Usage: linTAS [options] game_executable_relative_path [game_cmdline_arguments]" << std::endl;
     std::cout << "Options are:" << std::endl;
     std::cout << "  -d, --dump FILE     Start a audio/video encode into the specified FILE" << std::endl;
     std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
