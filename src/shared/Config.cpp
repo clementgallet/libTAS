@@ -29,6 +29,7 @@ Config config = {
 
 void Config::default_hotkeys()
 {
+    /* Set default hotkeys */
     hotkeys[HOTKEY_PLAYPAUSE] = XK_Pause;
     hotkeys[HOTKEY_FRAMEADVANCE] = XK_v;
     hotkeys[HOTKEY_FASTFORWARD] = XK_Tab;
@@ -36,14 +37,16 @@ void Config::default_hotkeys()
     hotkeys[HOTKEY_SAVESTATE] = XK_s;
     hotkeys[HOTKEY_LOADSTATE] = XK_m;
 
+    /* Gather the list of valid X11 KeyCode values */
     int min_keycodes_return, max_keycodes_return;
     Display *display = XOpenDisplay(NULL);
     if (display == NULL)
-    {
         return;
-    }
-
     XDisplayKeycodes(display, &min_keycodes_return, &max_keycodes_return);
+
+    /* Build the list of KeySym values to be mapped based on valid KeyCodes.
+     * This list is dependent on the keyboard layout.
+     */
     for (int k=min_keycodes_return; k<=max_keycodes_return; k++) {
         KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
         if (ks == NoSymbol) continue;
@@ -57,6 +60,10 @@ void Config::default_hotkeys()
         input_mapping[ks].type = IT_ID;
     }
 
+    /* Filling some custom mapping to controller buttons.
+     * This is for testing, it will be removed when the controller mapping
+     * interface will be implemented.
+     */
     input_mapping[XK_w].type = IT_CONTROLLER1_BUTTON_A;
     input_mapping[XK_w].value = 1;
     input_mapping[XK_x].type = IT_CONTROLLER1_BUTTON_B;

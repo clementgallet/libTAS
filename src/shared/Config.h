@@ -37,6 +37,7 @@ enum
     HOTKEY_LEN
 };
 
+/* Some structures to represent single inputs */
 typedef int InputType; enum {
     IT_NONE = -1, /* No input */
     IT_ID = 0, /* Same input */
@@ -152,6 +153,8 @@ struct SingleInput {
     }
 };
 
+/* Structure holding program configuration that is saved in a file */
+
 class Config {
     public:
         /* Display frame count in the HUD */
@@ -163,14 +166,16 @@ class Config {
         /* Prevent the game to write into savefiles */
         bool prevent_savefiles;
 
-        /* Map keyboard Keycodes to a single input of a keyboard or controller */
+        /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<KeySym,SingleInput> input_mapping;
 
         /* List of inputs that can be mapped to a single key */
         std::vector<SingleInput> input_list;
 
+        /* Mapping of hotkeys */
         KeySym hotkeys[HOTKEY_LEN];
 
+        /* Initialize hotkeys and mapping list */
         void default_hotkeys();
 
         void save_config();

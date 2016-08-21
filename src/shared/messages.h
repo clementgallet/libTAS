@@ -20,9 +20,10 @@
 #ifndef LIBTAS_MESSAGES_H_INCLUDED
 #define LIBTAS_MESSAGES_H_INCLUDED
 
+/* List of message identification values that is sent from/to the game */
 enum {
     /* 
-     * The game notices the program that he reaches a frame boundary.
+     * The game notices the program that he reached a frame boundary.
      * Then he sends the frame number
      * Argument: unsigned long
      */
