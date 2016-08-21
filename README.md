@@ -1,10 +1,14 @@
 ## libTAS
 
-GNU/Linux software to (hopefully) give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser).
+GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser).
 
 ## Compile
 
-Compiling is done using cmake. From the root directory just type `cd build && cmake ..`, then `make`.
+Compiling is done using cmake. From the root directory just type:
+    mkdir build
+    cd build
+    cmake ..
+    make
 
 The current mandatory dependancies so far are `libx11-dev`.
 
@@ -34,7 +38,7 @@ If you want to manually enable/disable a feature, you must add just after the `c
 - `-DENABLE_CUSTOM_MALLOC=ON/OFF`: enable/disable custom dynamic memory management
 - `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file writing control to disable savefiles
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=32bit.toolchain.cmake ..`
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`
 
 ## Run
 
@@ -44,7 +48,7 @@ To run this program, just type:
 
 You can type `./linTAS -h` to have a description of the program options.
 
-The programs prompts a text-based user interface where you can start the game or change several options.
+The program prompts a text-based user interface where you can start the game or change several options.
 
 Here are the default controls when the game has started:
 
@@ -56,7 +60,7 @@ Here are the default controls when the game has started:
 
 Note: the game starts up **paused**.
 
-## Licence
+## License
 
 libTAS is distributed under the terms of the GNU General Public License v3.
 
