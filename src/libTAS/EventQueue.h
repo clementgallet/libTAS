@@ -25,6 +25,13 @@
 #include "../external/SDL.h"
 #include "sdlevents.h" // SDL_EventFilter
 
+/* This is a replacement of the SDL event queue.
+ * It allows us to perform our own filtering, for exemple
+ * to remove the original input events.
+ * It makes the implementation of SDL events API functions easier,
+ * by having more control of what is inside the queue.
+ * Also, it supports both SDL1 and SDL2 events.
+ */
 class EventQueue
 {
     public:

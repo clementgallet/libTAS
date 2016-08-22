@@ -31,6 +31,7 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
 
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
+#if 0
         /* We only print colors if displayed on a terminal */
         bool isTerm = isatty(/*cerr*/ 2);
         if (isTerm) {
@@ -44,6 +45,7 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
                 /* Write the header text in white */
                 oss << ANSI_COLOR_LIGHT_GRAY;
         }
+#endif
         oss << "[libTAS f:" << frame_counter << "] ";
 
         std::string thstr = stringify(getThreadId());
@@ -52,10 +54,12 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
         else
             oss << "Thread " << thstr << "        ";
 
+#if 0
         if (isTerm) {
             /* Reset color change */
             oss << ANSI_COLOR_RESET;
         }
+#endif
 
         if (lcf & LCF_ERROR)
             oss << "ERROR: ";
@@ -85,6 +89,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
     /* Use the extern variable tasflags */
     if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
+#if 0
         /* We only print colors if displayed on a terminal */
         bool isTerm = isatty(/*cerr*/ 2);
         if (isTerm) {
@@ -98,16 +103,19 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
                 /* Write the header text in white */
                 strncat(s, ANSI_COLOR_LIGHT_GRAY, maxsize-size-1);
         }
+#endif
         size = strlen(s);
 
         snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
         size = strlen(s);
 
+#if 0
         if (isTerm) {
             /* Reset color change */
             strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
             size = strlen(s);
         }
+#endif
 
         if (lcf & LCF_ERROR) {
             strncat(s, "ERROR: ", maxsize-size-1);

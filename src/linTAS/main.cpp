@@ -186,7 +186,7 @@ void* launchGame(void* arg)
         cmd << "export LD_LIBRARY_PATH=\"" << context.libdir << ":$LD_LIBRARY_PATH\" && ";
     if (!context.rundir.empty())
         cmd << "cd " << context.rundir << " && ";
-    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " &";
+    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " > log.txt 2>&1 &";
 
     //std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
@@ -221,7 +221,7 @@ void* launchGame(void* arg)
     if (display == NULL)
     {
         ui_print("Cannot open display\n");
-        exit(1);
+        return nullptr;
     }
 
     const int MAX_RETRIES = 3;
@@ -236,7 +236,7 @@ void* launchGame(void* arg)
             ui_print("Retrying in 2s\n");
             sleep(2);
         } else {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -256,7 +256,7 @@ void* launchGame(void* arg)
 
             default:
                 ui_print("Message init: unknown message\n");
-                exit(1);
+                return nullptr;
         }
         recv(socket_fd, &message, sizeof(int), 0);
     }
@@ -342,7 +342,7 @@ void* launchGame(void* arg)
 
         if (message != MSGB_START_FRAMEBOUNDARY) {
             ui_print("Error in msg socket, waiting for frame boundary\n");
-            exit(1);
+            return nullptr;
         }
 
         recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
@@ -547,6 +547,6 @@ void* launchGame(void* arg)
     close(socket_fd);
 
     quit = true;
-    return NULL;
+    return nullptr;
 }
 
