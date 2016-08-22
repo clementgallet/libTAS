@@ -60,6 +60,71 @@ void Config::default_hotkeys()
         input_mapping[ks].type = IT_ID;
     }
 
+    /* Add controller mapping */
+    input_list.push_back({IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_B, 1, "Controller 1 - B"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_X, 1, "Controller 1 - X"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_Y, 1, "Controller 1 - Y"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_BACK, 1, "Controller 1 - Back"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_GUIDE, 1, "Controller 1 - Guide"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_START, 1, "Controller 1 - Start"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_LEFTSTICK, 1, "Controller 1 - Left Stick"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_RIGHTSTICK, 1, "Controller 1 - Right Stick"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_LEFTSHOULDER, 1, "Controller 1 - Left Shoulder"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_RIGHTSHOULDER, 1, "Controller 1 - Right Shoulder"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_UP, 1, "Controller 1 - Dpad Up"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_DOWN, 1, "Controller 1 - Dpad Down"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Controller 1 - Dpad Left"});
+    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Controller 1 - Dpad Right"});
+
+    input_list.push_back({IT_CONTROLLER2_BUTTON_A, 1, "Controller 2 - A"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_B, 1, "Controller 2 - B"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_X, 1, "Controller 2 - X"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_Y, 1, "Controller 2 - Y"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_BACK, 1, "Controller 2 - Back"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_GUIDE, 1, "Controller 2 - Guide"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_START, 1, "Controller 2 - Start"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_LEFTSTICK, 1, "Controller 2 - Left Stick"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_RIGHTSTICK, 1, "Controller 2 - Right Stick"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_LEFTSHOULDER, 1, "Controller 2 - Left Shoulder"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_RIGHTSHOULDER, 1, "Controller 2 - Right Shoulder"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_UP, 1, "Controller 2 - Dpad Up"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Controller 2 - Dpad Down"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Controller 2 - Dpad Left"});
+    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Controller 2 - Dpad Right"});
+
+    input_list.push_back({IT_CONTROLLER3_BUTTON_A, 1, "Controller 3 - A"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_B, 1, "Controller 3 - B"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_X, 1, "Controller 3 - X"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_Y, 1, "Controller 3 - Y"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_BACK, 1, "Controller 3 - Back"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_GUIDE, 1, "Controller 3 - Guide"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_START, 1, "Controller 3 - Start"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_LEFTSTICK, 1, "Controller 3 - Left Stick"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_RIGHTSTICK, 1, "Controller 3 - Right Stick"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_LEFTSHOULDER, 1, "Controller 3 - Left Shoulder"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_RIGHTSHOULDER, 1, "Controller 3 - Right Shoulder"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_UP, 1, "Controller 3 - Dpad Up"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_DOWN, 1, "Controller 3 - Dpad Down"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Controller 3 - Dpad Left"});
+    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Controller 3 - Dpad Right"});
+
+    input_list.push_back({IT_CONTROLLER4_BUTTON_A, 1, "Controller 4 - A"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_B, 1, "Controller 4 - B"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_X, 1, "Controller 4 - X"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_Y, 1, "Controller 4 - Y"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_BACK, 1, "Controller 4 - Back"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_GUIDE, 1, "Controller 4 - Guide"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_START, 1, "Controller 4 - Start"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_LEFTSTICK, 1, "Controller 4 - Left Stick"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_RIGHTSTICK, 1, "Controller 4 - Right Stick"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_LEFTSHOULDER, 1, "Controller 4 - Left Shoulder"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_RIGHTSHOULDER, 1, "Controller 4 - Right Shoulder"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_UP, 1, "Controller 4 - Dpad Up"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Controller 4 - Dpad Down"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Controller 4 - Dpad Left"});
+    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Controller 4 - Dpad Right"});
+
     /* Filling some custom mapping to controller buttons.
      * This is for testing, it will be removed when the controller mapping
      * interface will be implemented.
