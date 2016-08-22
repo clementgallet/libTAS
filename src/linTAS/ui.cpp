@@ -56,9 +56,10 @@ void ui_update_nogame(Context &context)
         "Start",
         "Hotkeys",
         "Inputs",
+        "Log flags",
         "Exit",
     };
-    int n_items = 4;
+    int n_items = 5;
     ITEM **menu_items = (ITEM**) calloc(n_items+1, sizeof(ITEM*));
     for (int i=0; i<n_items; i++)
         menu_items[i] = new_item(menu_choices[i], "");
@@ -104,6 +105,12 @@ void ui_update_nogame(Context &context)
                     refresh();
                 }
                 if (index == 3) {
+                    unpost_menu(menu);
+                    ui_lcf_menu(context);
+                    post_menu(menu);
+                    refresh();
+                }
+                if (index == 4) {
                     end = true;
                 }
                 break;
@@ -330,6 +337,125 @@ void ui_inputs_menu()
                 config.input_mapping[ks] = config.input_list[index];
                 menu_items[index] = new_item(menu_choices[index], XKeysymToString(ks));
                 ui_rebuild_menu(menu, menu_items, menu_items[index]);
+                break;
+        }
+    }
+    unpost_menu(menu);
+    free_menu(menu);
+    for (int i=0; i<n_items+1; i++)
+        free_item(menu_items[i]);
+
+}
+
+void ui_lcf_menu(Context &context)
+{
+    LogCategoryFlag lcf_list[] = {
+        LCF_NONE,     LCF_UNTESTED, LCF_DESYNC, LCF_FREQUENT, LCF_ERROR,
+        LCF_TODO,     LCF_FRAME,    LCF_HOOK,   LCF_TIMEFUNC, LCF_TIMESET,
+        LCF_TIMEGET,  LCF_WAIT,     LCF_SLEEP,  LCF_SOCKET,   LCF_OGL,
+        LCF_DUMP,     LCF_SDL,      LCF_MEMORY, LCF_KEYBOARD, LCF_MOUSE,
+        LCF_JOYSTICK, LCF_OPENAL,   LCF_SOUND,  LCF_EVENTS,   LCF_WINDOW,
+        LCF_FILEIO,   LCF_STEAM,    LCF_THREAD, LCF_TIMERS,   LCF_ALL
+    };
+
+    std::string lcf_names[] = {
+        "no",       "untested", "desync", "frequent",       "error",
+        "todo",     "frame",    "hook",   "time functions", "time set",
+        "time get", "wait",     "sleep",  "socket",         "openGL",
+        "av dump",  "SDL",      "memory", "keyboard",       "mouse",
+        "joystick", "openAL",   "sound",  "events",         "window",
+        "file IO",  "Steam",    "thread", "timer",          "all"
+    };
+
+    int n_items = sizeof(lcf_list) / sizeof(LogCategoryFlag);
+    std::string menu_choices[2*n_items+1];
+    for (int i=0; i<n_items; i++) {
+        menu_choices[i] = "Enable ";
+        menu_choices[i] += lcf_names[i];
+        menu_choices[i] += " logs";
+    }
+    for (int i=n_items; i<2*n_items; i++) {
+        menu_choices[i] = "Disable ";
+        menu_choices[i] += lcf_names[i-n_items];
+        menu_choices[i] += " logs";
+    }
+
+    ITEM **menu_items = (ITEM**) calloc(2*n_items+2, sizeof(ITEM*));
+    for (int i=0; i<2*n_items; i++) {
+        menu_items[i] = new_item(menu_choices[i].c_str(), "");
+    }
+    menu_items[2*n_items] = new_item("Exit", "");
+    menu_items[2*n_items+1] = (ITEM*) NULL;
+
+    MENU *menu = new_menu(menu_items);
+    menu_opts_off(menu, O_ONEVALUE);
+
+    post_menu(menu);
+
+    /* Fill the menu with the current lcf state */
+    for (int i=0; i<n_items; i++) {
+        if (context.tasflags.includeFlags & lcf_list[i]) {
+            ui_print("Toggle item %d", i);
+            set_current_item(menu, menu_items[i]);
+            menu_driver(menu, REQ_TOGGLE_ITEM);
+        }
+        if (context.tasflags.excludeFlags & lcf_list[i]) {
+            set_current_item(menu, menu_items[i+n_items]);
+            menu_driver(menu, REQ_TOGGLE_ITEM);
+        }
+    }
+
+    set_current_item(menu, menu_items[0]);
+    refresh();
+
+    int c;
+    bool end = false;
+    ITEM *cur;
+    int index;
+    while(!end) {
+        c = getch();
+        switch(c) {
+            case KEY_DOWN:
+                menu_driver(menu, REQ_DOWN_ITEM);
+                break;
+            case KEY_UP:
+                menu_driver(menu, REQ_UP_ITEM);
+                break;
+            case KEY_NPAGE:
+                menu_driver(menu, REQ_SCR_DPAGE);
+                break;
+            case KEY_PPAGE:
+                menu_driver(menu, REQ_SCR_UPAGE);
+                break;
+            case KEY_END:
+                menu_driver(menu, REQ_LAST_ITEM);
+                break;
+            case KEY_HOME:
+                menu_driver(menu, REQ_FIRST_ITEM);
+                break;
+            case ' ':
+                cur = current_item(menu);
+                index = item_index(cur);
+                if (index == 2*n_items) {
+                    break;
+                }
+
+                menu_driver(menu, REQ_TOGGLE_ITEM);
+
+                if (index < n_items)
+                    /* Toggle include flag */
+                    context.tasflags.includeFlags ^= lcf_list[index]; 
+                else
+                    /* Toggle exclude flag */
+                    context.tasflags.excludeFlags ^= lcf_list[index-n_items]; 
+                break;
+            case 10:
+                cur = current_item(menu);
+                index = item_index(cur);
+                if (index == 2*n_items) {
+                    end = true;
+                    break;
+                }
                 break;
         }
     }
