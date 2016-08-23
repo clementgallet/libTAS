@@ -90,6 +90,8 @@ void print_usage(void)
 
 int main(int argc, char **argv)
 {
+    context.tasflags = tasflags; // To get the default values.
+
     /* Parsing arguments */
     int c;
     char buf[PATH_MAX];

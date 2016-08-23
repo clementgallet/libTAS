@@ -350,21 +350,21 @@ void ui_inputs_menu()
 void ui_lcf_menu(Context &context)
 {
     LogCategoryFlag lcf_list[] = {
-        LCF_NONE,     LCF_UNTESTED, LCF_DESYNC, LCF_FREQUENT, LCF_ERROR,
-        LCF_TODO,     LCF_FRAME,    LCF_HOOK,   LCF_TIMEFUNC, LCF_TIMESET,
-        LCF_TIMEGET,  LCF_WAIT,     LCF_SLEEP,  LCF_SOCKET,   LCF_OGL,
-        LCF_DUMP,     LCF_SDL,      LCF_MEMORY, LCF_KEYBOARD, LCF_MOUSE,
-        LCF_JOYSTICK, LCF_OPENAL,   LCF_SOUND,  LCF_EVENTS,   LCF_WINDOW,
-        LCF_FILEIO,   LCF_STEAM,    LCF_THREAD, LCF_TIMERS,   LCF_ALL
+        LCF_UNTESTED, LCF_DESYNC,   LCF_FREQUENT, LCF_ERROR,
+        LCF_TODO,     LCF_FRAME,    LCF_HOOK,     LCF_TIMEFUNC, LCF_TIMESET,
+        LCF_TIMEGET,  LCF_WAIT,     LCF_SLEEP,    LCF_SOCKET,   LCF_OGL,
+        LCF_DUMP,     LCF_SDL,      LCF_MEMORY,   LCF_KEYBOARD, LCF_MOUSE,
+        LCF_JOYSTICK, LCF_OPENAL,   LCF_SOUND,    LCF_EVENTS,   LCF_WINDOW,
+        LCF_FILEIO,   LCF_STEAM,    LCF_THREAD,   LCF_TIMERS,
     };
 
     std::string lcf_names[] = {
-        "no",       "untested", "desync", "frequent",       "error",
-        "todo",     "frame",    "hook",   "time functions", "time set",
-        "time get", "wait",     "sleep",  "socket",         "openGL",
-        "av dump",  "SDL",      "memory", "keyboard",       "mouse",
-        "joystick", "openAL",   "sound",  "events",         "window",
-        "file IO",  "Steam",    "thread", "timer",          "all"
+        "untested", "desync", "frequent", "error",
+        "todo",     "frame",  "hook",     "time functions", "time set",
+        "time get", "wait",   "sleep",    "socket",         "openGL",
+        "av dump",  "SDL",    "memory",   "keyboard",       "mouse",
+        "joystick", "openAL", "sound",    "events",         "window",
+        "file IO",  "Steam",  "thread",   "timer",
     };
 
     int n_items = sizeof(lcf_list) / sizeof(LogCategoryFlag);
@@ -395,7 +395,6 @@ void ui_lcf_menu(Context &context)
     /* Fill the menu with the current lcf state */
     for (int i=0; i<n_items; i++) {
         if (context.tasflags.includeFlags & lcf_list[i]) {
-            ui_print("Toggle item %d", i);
             set_current_item(menu, menu_items[i]);
             menu_driver(menu, REQ_TOGGLE_ITEM);
         }
