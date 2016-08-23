@@ -232,7 +232,7 @@ void* launchGame(void* arg)
 
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
                 sizeof(struct sockaddr_un))) {
-        ui_print("Attempt #%i: Couldn’t connect to socket.\n", retry + 1);
+        ui_print("Attempt #%i: Couldn't connect to socket.\n", retry + 1);
         retry++;
         if (retry < MAX_RETRIES) {
             ui_print("Retrying in 2s\n");

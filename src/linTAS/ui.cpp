@@ -49,8 +49,8 @@ void ui_update_nogame(Context &context)
 {
     pthread_t t_game;
 
-    mvprintw(0, 0, "Game path: %s", context.gamepath.c_str());
-    mvprintw(1, 0, "Movie path: %s", context.moviefile.c_str());
+    //mvprintw(0, 0, "Game path: %s", context.gamepath.c_str());
+    //mvprintw(1, 0, "Movie path: %s", context.moviefile.c_str());
 
     const char * const menu_choices[] = {
         "Start",
