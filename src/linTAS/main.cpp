@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     char buf[PATH_MAX];
     char* abspath;
     std::ofstream o;
-    while ((c = getopt (argc, argv, "r:w:d:l:L:R:h")) != -1)
+    while ((c = getopt (argc, argv, "+r:w:d:l:L:R:h")) != -1)
         switch (c) {
             case 'r':
             case 'w':
@@ -167,6 +167,12 @@ int main(int argc, char **argv)
         context.gamepath = abspath;
     }
 
+    /* Game arguments */
+    for (int i = optind+1; i < argc; i++) {
+        context.gameargs += argv[i];
+        context.gameargs += " ";
+    }
+
     config.default_hotkeys();
 
     ui_init();
@@ -188,7 +194,7 @@ void* launchGame(void* arg)
         cmd << "export LD_LIBRARY_PATH=\"" << context.libdir << ":$LD_LIBRARY_PATH\" && ";
     if (!context.rundir.empty())
         cmd << "cd " << context.rundir << " && ";
-    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " > log.txt 2>&1 &";
+    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " " << context.gameargs << " > log.txt 2>&1 &";
 
     //std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());

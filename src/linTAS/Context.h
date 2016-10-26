@@ -33,6 +33,9 @@ struct Context {
     /* Absolute path of the game executable */
     std::string gamepath;
 
+    /* Arguments passed to the game */
+    std::string gameargs;
+
     /* Absolute path of the movie file */
     std::string moviefile;
 
