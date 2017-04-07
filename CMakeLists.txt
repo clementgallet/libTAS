@@ -34,6 +34,10 @@ include_directories(${X11_X11_INCLUDE_DIRS})
 target_link_libraries (linTAS ${X11_X11_LIB})
 target_link_libraries (TAS ${X11_X11_LIB})
 
+# Add FLTK library
+find_package(FLTK REQUIRED)
+target_link_libraries(linTAS ${FLTK_LIBRARIES})
+
 # Add optional features
 find_package(PkgConfig REQUIRED)
 
@@ -101,4 +105,3 @@ if (ENABLE_CUSTOM_MALLOC)
 else()
     message(WARNING "Custom memory allocator is disabled")
 endif()
-

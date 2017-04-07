@@ -38,8 +38,10 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <signal.h>
 #include "Context.h"
-#include "ui.h"
+// #include "ui.h"
+#include "ui/MainWindow.h"
 #include "../shared/Config.h"
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
@@ -66,9 +68,9 @@ bool quit = true;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
-    (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
-            theEvent->error_code,
-            theEvent->request_code);
+    // (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
+    //         theEvent->error_code,
+    //         theEvent->request_code);
 
     return 0;
 }
@@ -175,9 +177,13 @@ int main(int argc, char **argv)
 
     config.default_hotkeys();
 
-    ui_init();
-    ui_update_nogame(context);
-    return 0;
+    /* Starts the user interface */
+    MainWindow *ui = new MainWindow(context);
+    return Fl::run();
+
+    // ui_init();
+    // ui_update_nogame(context);
+    // return 0;
 }
 
 void* launchGame(void* arg)
@@ -228,27 +234,27 @@ void* launchGame(void* arg)
     display = XOpenDisplay(NULL);
     if (display == NULL)
     {
-        ui_print("Cannot open display\n");
+        // ui_print("Cannot open display\n");
         return nullptr;
     }
 
     const int MAX_RETRIES = 3;
     int retry = 0;
-    ui_print("Connecting to libTAS...\n");
+    // ui_print("Connecting to libTAS...\n");
 
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
                 sizeof(struct sockaddr_un))) {
-        ui_print("Attempt #%i: Couldn't connect to socket.\n", retry + 1);
+        // ui_print("Attempt #%i: Couldn't connect to socket.\n", retry + 1);
         retry++;
         if (retry < MAX_RETRIES) {
-            ui_print("Retrying in 2s\n");
+            // ui_print("Retrying in 2s\n");
             sleep(2);
         } else {
             return nullptr;
         }
     }
 
-    ui_print("Attempt #%i: Connected.\n", retry + 1);
+    // ui_print("Attempt #%i: Connected.\n", retry + 1);
 
     /* Receive informations from the game */
 
@@ -263,7 +269,7 @@ void* launchGame(void* arg)
                 break;
 
             default:
-                ui_print("Message init: unknown message\n");
+                // ui_print("Message init: unknown message\n");
                 return nullptr;
         }
         recv(socket_fd, &message, sizeof(int), 0);
@@ -323,7 +329,7 @@ void* launchGame(void* arg)
         recv(socket_fd, &message, sizeof(int), 0);
 
         if (message == MSGB_QUIT) {
-            ui_print("Game has quit. Exiting\n");
+            // ui_print("Game has quit. Exiting\n");
             break;
         }
 
@@ -338,18 +344,18 @@ void* launchGame(void* arg)
             XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask | FocusChangeMask);
 #if 0
             int iError = XGrabKeyboard(display, gameWindow, 0,
-                    GrabModeAsync, GrabModeAsync, CurrentTime); 
+                    GrabModeAsync, GrabModeAsync, CurrentTime);
             if (iError != GrabSuccess && iError == AlreadyGrabbed) {
                 XUngrabPointer(display, CurrentTime);
                 XFlush(display);
-                fprintf(stderr, "Keyboard is already grabbed\n");    
+                fprintf(stderr, "Keyboard is already grabbed\n");
             }
 #endif
             recv(socket_fd, &message, sizeof(int), 0);
         }
 
         if (message != MSGB_START_FRAMEBOUNDARY) {
-            ui_print("Error in msg socket, waiting for frame boundary\n");
+            // ui_print("Error in msg socket, waiting for frame boundary\n");
             return nullptr;
         }
 
@@ -383,11 +389,11 @@ void* launchGame(void* arg)
                 if (event.type == FocusIn) {
                     fprintf(stderr, "Grabbing window\n");
                     int iError = XGrabKeyboard(display, gameWindow, 0,
-                            GrabModeAsync, GrabModeAsync, CurrentTime); 
+                            GrabModeAsync, GrabModeAsync, CurrentTime);
                     if (iError != GrabSuccess && iError == AlreadyGrabbed) {
                         XUngrabPointer(display, CurrentTime);
                         XFlush(display);
-                        fprintf(stderr, "Keyboard is already grabbed\n");    
+                        fprintf(stderr, "Keyboard is already grabbed\n");
                     }
                 }
                 if (event.type == FocusOut) {
@@ -432,7 +438,7 @@ void* launchGame(void* arg)
                 }
                 if (event.type == KeyRelease)
                 {
-                    /* 
+                    /*
                      * Detect AutoRepeat key (KeyRelease followed by KeyPress) and skip both
                      * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
                      */
@@ -544,7 +550,7 @@ void* launchGame(void* arg)
             send(socket_fd, &message, sizeof(int), 0);
         }
 
-        message = MSGN_END_FRAMEBOUNDARY; 
+        message = MSGN_END_FRAMEBOUNDARY;
         send(socket_fd, &message, sizeof(int), 0);
 
     }
@@ -557,4 +563,3 @@ void* launchGame(void* arg)
     quit = true;
     return nullptr;
 }
-

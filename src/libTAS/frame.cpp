@@ -30,6 +30,7 @@
 #include "avdumping.h"
 #include "EventQueue.h"
 #include "sdlwindows.h"
+#include "sdlevents.h"
 #include <mutex>
 #include <iomanip>
 #include "libTAS.h"
@@ -168,8 +169,7 @@ void proceed_commands(void)
         switch (message)
         {
             case MSGN_USERQUIT:
-                if (SDLver > 0)
-                    SDL_Quit();
+                pushQuitEvent();
                 break;
 
             case MSGN_TASFLAGS:
@@ -186,4 +186,3 @@ void proceed_commands(void)
         }
     }
 }
-

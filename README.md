@@ -102,6 +102,7 @@ fi
 ```
 
 In this exemple, for a `x86_64` arch, you must run:
+
     linTAS -L /pathtogame/x86_64 -R /pathtogame /pathtogame/x86_64/vvvvvv.x86_64
 
 

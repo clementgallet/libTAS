@@ -54,6 +54,22 @@ void pushNativeEvents(void)
     }
 }
 
+
+void pushQuitEvent(void)
+{
+    if (SDLver == 1) {
+        SDL1::SDL_Event ev;
+        ev.type = SDL1::SDL_QUIT;
+        sdlEventQueue.insert(&ev);
+    }
+
+    if (SDLver == 2) {
+        SDL_Event ev;
+        ev.type = SDL_QUIT;
+        sdlEventQueue.insert(&ev);
+    }
+}
+
 /* Override */ void SDL_PumpEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
@@ -77,7 +93,7 @@ void pushNativeEvents(void)
         mask = minType;
         events1 = reinterpret_cast<SDL1::SDL_Event*>(events);
     }
-    
+
     switch (action) {
         case SDL_ADDEVENT:
             debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add ", numevents, " events");
@@ -511,4 +527,3 @@ void link_sdlevents(void)
     LINK_NAMESPACE_SDLX(SDL_PumpEvents);
     LINK_NAMESPACE_SDLX(SDL_PeepEvents);
 }
-

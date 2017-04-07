@@ -28,6 +28,10 @@
  */
 void pushNativeEvents(void);
 
+/* Add a quit event in the event queue. */
+void pushQuitEvent(void);
+
+
 OVERRIDE void SDL_PumpEvents(void);
 
 /**
@@ -193,4 +197,3 @@ void logEvent(SDL_Event *event);
 void link_sdlevents(void);
 
 #endif
-
