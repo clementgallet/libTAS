@@ -22,11 +22,46 @@
 
 MainWindow::MainWindow(Context &c) : context(c)
 {
-    main_window = new Fl_Window(300, 200);
-    launch = new Fl_Button(10, 70, 90, 25, "Start");
+    main_window = new Fl_Window(600, 400);
+    gamepath = new Fl_Input(10, 20, 500, 30, "Game path");
+    gamepath->align(FL_ALIGN_TOP_LEFT);
+    gamepath->value(c.gamepath.c_str());
+
+    gamepathchooser = new Fl_File_Chooser(c.gamepath.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Game path");
+    gamepathchooser->preview(0);
+//    gamepathchooser->callback(confirm_gamepath_cb, this);
+
+    browsegamepath = new Fl_Button(520, 20, 70, 30, "Browse");
+    browsegamepath->callback((Fl_Callback*) browse_gamepath_cb, this);
+
+    framecount = new Fl_Output(80, 60, 60, 30, "Frames:");
+    framestr = std::to_string(context.framecount);
+    framecount->value(framestr.c_str());
+
+    launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback((Fl_Callback*) launch_cb, this);
     main_window->end();
     main_window->show();
+}
+
+void MainWindow::update()
+{
+    /* This function is called by a child thread so we need to protect
+       the calls to Fltk widgets */
+    Fl::lock();
+    /* Update frame count */
+    framestr = std::to_string(context.framecount);
+    framecount->value(framestr.c_str());
+    framecount->redraw();
+
+    /* Update game status (running/stopped) */
+    if (quit) {
+        launch->label("Start");
+        launch->redraw();
+    }
+
+    Fl::unlock();
+    Fl::awake();
 }
 
 void launch_cb(Fl_Widget* w, void* v)
@@ -47,5 +82,25 @@ void launch_cb(Fl_Widget* w, void* v)
         w->label("Start");
         w->redraw();
     }
+}
 
+void browse_gamepath_cb(Fl_Widget* w, void* v)
+{
+    MainWindow *mw = (MainWindow*) v;
+    mw->gamepathchooser->show();
+    /* This is not pretty, but the Fl_File_Chooser callback
+       is called when click on a file, not when you hit "Ok"
+       This is a workaround.
+     */
+    while (mw->gamepathchooser->shown()) {
+        Fl::wait();
+    }
+
+    const char* filename = mw->gamepathchooser->value(1);
+
+    /* If the user hit "Cancel", the returned value is null */
+    if (filename) {
+        mw->gamepath->value(mw->gamepathchooser->value(1));
+        mw->context.gamepath = std::string(mw->gamepathchooser->value(1));
+    }
 }

@@ -51,18 +51,13 @@
 
 SaveState savestate;
 
-unsigned long int frame_counter = 0;
-
-char keyboard_state[32];
-
-FILE* fp;
-
 pid_t game_pid;
 
 std::vector<std::string> shared_libs;
 std::string libname;
 
 Context context;
+MainWindow *ui;
 
 bool quit = true;
 
@@ -118,6 +113,9 @@ int main(int argc, char **argv)
                 break;
             case 'd':
                 /* Dump video to file */
+                o.open(optarg);
+                o.close();
+
                 abspath = realpath(optarg, buf);
                 if (abspath) {
                     tasflags.av_dumping = 1;
@@ -178,7 +176,7 @@ int main(int argc, char **argv)
     config.default_hotkeys();
 
     /* Starts the user interface */
-    MainWindow *ui = new MainWindow(context);
+    ui = new MainWindow(context);
     return Fl::run();
 
     // ui_init();
@@ -309,6 +307,7 @@ void* launchGame(void* arg)
 
     nanosleep(&tim, NULL);
 
+    FILE* fp;
     if (tasflags.recording >= 0){
         fp = openRecording(context.moviefile.c_str(), tasflags.recording);
     }
@@ -359,8 +358,8 @@ void* launchGame(void* arg)
             return nullptr;
         }
 
-        recv(socket_fd, &frame_counter, sizeof(unsigned long), 0);
-
+        recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);
+        ui->update();
 
         int isidle = !tasflags.running;
         int tasflagsmod = 0; // register if tasflags have been modified on this frame
@@ -368,6 +367,8 @@ void* launchGame(void* arg)
         /* If we did not yet receive the game window id, just make the game running */
         if (! gameWindow )
             isidle = 0;
+
+        char keyboard_state[32];
 
         /* We are at a frame boundary */
         do {
@@ -519,7 +520,7 @@ void* launchGame(void* arg)
             }
 
             /* Save inputs to file */
-            if (!writeFrame(fp, frame_counter, ai)) {
+            if (!writeFrame(fp, context.framecount, ai)) {
                 /* Writing failed, returning to no recording mode */
                 tasflags.recording = -1;
             }
@@ -527,7 +528,7 @@ void* launchGame(void* arg)
 
         if (tasflags.recording == 0) {
             /* Save inputs to file */
-            if (!readFrame(fp, frame_counter, &ai)) {
+            if (!readFrame(fp, context.framecount, &ai)) {
                 /* Writing failed, returning to no recording mode */
                 tasflags.recording = -1;
             }
@@ -561,5 +562,7 @@ void* launchGame(void* arg)
     close(socket_fd);
 
     quit = true;
+    ui->update();
+
     return nullptr;
 }

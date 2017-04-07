@@ -24,6 +24,10 @@
 #include "../shared/tasflags.h"
 
 struct Context {
+
+    /* frame count */
+    unsigned long int framecount = 0;
+
     /* tas flags */
     TasFlags tasflags;
 
@@ -50,5 +54,3 @@ struct Context {
 };
 
 #endif
-
-

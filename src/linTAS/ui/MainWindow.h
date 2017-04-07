@@ -23,6 +23,9 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Output.H>
 #include <thread>
 
 #include "../Context.h"
@@ -31,13 +34,19 @@ class MainWindow {
     public:
         MainWindow(Context &c);
         std::thread game_thread;
-    private:
         Context &context;
         Fl_Window *main_window;
         Fl_Button *launch;
+        Fl_Input *gamepath;
+        Fl_Button *browsegamepath;
+        Fl_File_Chooser *gamepathchooser;
+        Fl_Output *framecount;
+        std::string framestr;
 
+        void update();
 };
 
 void launch_cb(Fl_Widget*, void*);
+void browse_gamepath_cb(Fl_Widget*, void*);
 
 #endif
