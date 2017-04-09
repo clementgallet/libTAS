@@ -40,6 +40,11 @@ class MainWindow {
         Fl_Input *gamepath;
         Fl_Button *browsegamepath;
         Fl_File_Chooser *gamepathchooser;
+
+        Fl_Input *moviepath;
+        Fl_Button *browsemoviepath;
+        Fl_File_Chooser *moviepathchooser;
+
         Fl_Output *framecount;
         std::string framestr;
 
@@ -48,5 +53,6 @@ class MainWindow {
 
 void launch_cb(Fl_Widget*, void*);
 void browse_gamepath_cb(Fl_Widget*, void*);
+void browse_moviepath_cb(Fl_Widget*, void*);
 
 #endif

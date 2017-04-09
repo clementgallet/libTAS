@@ -167,6 +167,12 @@ int main(int argc, char **argv)
         context.gamepath = abspath;
     }
 
+    /* F a movie fi if enmtp */
+    if ( (!context.gamepath.empty()) && context.moviefile.empty()) {
+        context.moviefile = context.gamepath + ".ltm";
+        tasflags.recording = 1;
+    }
+
     /* Game arguments */
     for (int i = optind+1; i < argc; i++) {
         context.gameargs += argv[i];

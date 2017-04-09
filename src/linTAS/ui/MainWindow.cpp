@@ -23,16 +23,30 @@
 MainWindow::MainWindow(Context &c) : context(c)
 {
     main_window = new Fl_Window(600, 400);
-    gamepath = new Fl_Input(10, 20, 500, 30, "Game path");
+
+    /* Game Executable */
+    gamepath = new Fl_Input(10, 20, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->value(c.gamepath.c_str());
 
     gamepathchooser = new Fl_File_Chooser(c.gamepath.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Game path");
     gamepathchooser->preview(0);
-//    gamepathchooser->callback(confirm_gamepath_cb, this);
 
-    browsegamepath = new Fl_Button(520, 20, 70, 30, "Browse");
+    browsegamepath = new Fl_Button(520, 20, 70, 30, "Browse...");
     browsegamepath->callback((Fl_Callback*) browse_gamepath_cb, this);
+
+    /* Movie File */
+    moviepath = new Fl_Input(10, 120, 500, 30, "Movie File");
+    moviepath->align(FL_ALIGN_TOP_LEFT);
+    moviepath->value(c.moviefile.c_str());
+
+    moviepathchooser = new Fl_File_Chooser(c.moviefile.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Choose a movie file");
+    moviepathchooser->preview(0);
+
+    browsemoviepath = new Fl_Button(520, 120, 70, 30, "Browse...");
+    browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb, this);
+
+
 
     framecount = new Fl_Output(80, 60, 60, 30, "Frames:");
     framestr = std::to_string(context.framecount);
@@ -102,5 +116,33 @@ void browse_gamepath_cb(Fl_Widget* w, void* v)
     if (filename) {
         mw->gamepath->value(mw->gamepathchooser->value(1));
         mw->context.gamepath = std::string(mw->gamepathchooser->value(1));
+
+        /* Change the movie file also */
+        mw->context.moviefile = mw->context.gamepath;
+        mw->context.moviefile += ".ltm";
+        mw->moviepath->value(mw->context.moviefile.c_str());
+    }
+}
+
+
+void browse_moviepath_cb(Fl_Widget* w, void* v)
+{
+    // TODO: Almost duplicate of browse_gamepath_cb...
+    MainWindow *mw = (MainWindow*) v;
+    mw->moviepathchooser->show();
+    /* This is not pretty, but the Fl_File_Chooser callback
+       is called when click on a file, not when you hit "Ok"
+       This is a workaround.
+     */
+    while (mw->moviepathchooser->shown()) {
+        Fl::wait();
+    }
+
+    const char* filename = mw->moviepathchooser->value(1);
+
+    /* If the user hit "Cancel", the returned value is null */
+    if (filename) {
+        mw->moviepath->value(mw->moviepathchooser->value(1));
+        mw->context.moviefile = std::string(mw->moviepathchooser->value(1));
     }
 }
