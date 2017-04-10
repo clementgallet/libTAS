@@ -19,37 +19,41 @@
 
 #include "MainWindow.h"
 #include "../main.h"
+#include <iostream>
 
 MainWindow::MainWindow(Context &c) : context(c)
 {
     main_window = new Fl_Window(600, 400);
 
     /* Game Executable */
-    gamepath = new Fl_Input(10, 20, 500, 30, "Game Executable");
+    gamepath = new Fl_Input(10, 300, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
-    gamepath->value(c.gamepath.c_str());
+    gamepath->value(context.gamepath.c_str());
 
-    gamepathchooser = new Fl_File_Chooser(c.gamepath.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Game path");
+    gamepathchooser = new Fl_File_Chooser(context.gamepath.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Game path");
     gamepathchooser->preview(0);
 
-    browsegamepath = new Fl_Button(520, 20, 70, 30, "Browse...");
+    browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
     browsegamepath->callback((Fl_Callback*) browse_gamepath_cb, this);
 
     /* Movie File */
-    moviepath = new Fl_Input(10, 120, 500, 30, "Movie File");
+    moviepath = new Fl_Input(10, 20, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
-    moviepath->value(c.moviefile.c_str());
+    moviepath->value(context.moviefile.c_str());
 
-    moviepathchooser = new Fl_File_Chooser(c.moviefile.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Choose a movie file");
+    moviepathchooser = new Fl_File_Chooser(context.moviefile.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Choose a movie file");
     moviepathchooser->preview(0);
 
-    browsemoviepath = new Fl_Button(520, 120, 70, 30, "Browse...");
+    browsemoviepath = new Fl_Button(520, 20, 70, 30, "Browse...");
     browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb, this);
 
-
+    logicalfps = new Fl_Int_Input(160, 120, 40, 30, "Frames per second");
+    std::string fpsstr = std::to_string(context.tasflags.framerate);
+    logicalfps->value(fpsstr.c_str());
+    logicalfps->callback((Fl_Callback*) set_fps_cb, this);
 
     framecount = new Fl_Output(80, 60, 60, 30, "Frames:");
-    framestr = std::to_string(context.framecount);
+    std::string framestr = std::to_string(context.framecount);
     framecount->value(framestr.c_str());
 
     launch = new Fl_Button(10, 350, 70, 40, "Start");
@@ -58,21 +62,46 @@ MainWindow::MainWindow(Context &c) : context(c)
     main_window->show();
 }
 
-void MainWindow::update()
+void MainWindow::update_status()
 {
-    /* This function is called by a child thread so we need to protect
-       the calls to Fltk widgets */
-    Fl::lock();
-    /* Update frame count */
-    framestr = std::to_string(context.framecount);
-    framecount->value(framestr.c_str());
-    framecount->redraw();
+    /* Update game status (active/inactive) */
 
-    /* Update game status (running/stopped) */
+    /* This function might be called by another thread */
+    Fl::lock();
+
     if (quit) {
         launch->label("Start");
         launch->redraw();
+        moviepath->activate();
+        browsemoviepath->activate();
+        gamepath->activate();
+        browsegamepath->activate();
+        logicalfps->activate();
+
     }
+    else {
+        launch->label("Stop");
+        launch->redraw();
+        moviepath->deactivate();
+        browsemoviepath->deactivate();
+        gamepath->deactivate();
+        browsegamepath->deactivate();
+        logicalfps->deactivate();
+    }
+
+    Fl::unlock();
+    Fl::awake();
+}
+
+void MainWindow::update()
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    /* Update frame count */
+    std::string framestr = std::to_string(context.framecount);
+    framecount->value(framestr.c_str());
+    framecount->redraw();
 
     Fl::unlock();
     Fl::awake();
@@ -82,19 +111,21 @@ void launch_cb(Fl_Widget* w, void* v)
 {
     MainWindow *mw = (MainWindow*) v;
     if (quit) { // TODO: move this quit variable elsewhere, in Context ?
+
+        /* Check that there might be a thread from a previous game execution */
+        if (mw->game_thread.joinable())
+            mw->game_thread.join();
+
         /* Start game */
+        quit = false;
         mw->game_thread = std::thread{launchGame, nullptr};
-        w->label("Stop");
-        w->redraw();
     }
     else {
         w->deactivate();
         w->redraw();
         quit = true;
-        mw->game_thread.join();
+        mw->game_thread.detach();
         w->activate();
-        w->label("Start");
-        w->redraw();
     }
 }
 
@@ -124,7 +155,6 @@ void browse_gamepath_cb(Fl_Widget* w, void* v)
     }
 }
 
-
 void browse_moviepath_cb(Fl_Widget* w, void* v)
 {
     // TODO: Almost duplicate of browse_gamepath_cb...
@@ -145,4 +175,13 @@ void browse_moviepath_cb(Fl_Widget* w, void* v)
         mw->moviepath->value(mw->moviepathchooser->value(1));
         mw->context.moviefile = std::string(mw->moviepathchooser->value(1));
     }
+}
+
+void set_fps_cb(Fl_Widget* w, void* v)
+{
+    MainWindow *mw = (MainWindow*) v;
+    Fl_Int_Input *ii = (Fl_Int_Input*) w;
+    std::string fpsstr = ii->value();
+    mw->context.tasflags.framerate = std::stoi(fpsstr);
+    std::cout << "Set fps to " << mw->context.tasflags.framerate << std::endl;
 }

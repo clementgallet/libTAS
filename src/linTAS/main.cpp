@@ -108,7 +108,7 @@ int main(int argc, char **argv)
                 abspath = realpath(optarg, buf);
                 if (abspath) {
                     context.moviefile = abspath;
-                    tasflags.recording = (c == 'r')?0:1;
+                    context.tasflags.recording = (c == 'r')?0:1;
                 }
                 break;
             case 'd':
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    tasflags.av_dumping = 1;
+                    context.tasflags.av_dumping = 1;
                     context.dumpfile = abspath;
                 }
                 break;
@@ -167,10 +167,10 @@ int main(int argc, char **argv)
         context.gamepath = abspath;
     }
 
-    /* F a movie fi if enmtp */
+    /* Fill a movie name if empty */
     if ( (!context.gamepath.empty()) && context.moviefile.empty()) {
         context.moviefile = context.gamepath + ".ltm";
-        tasflags.recording = 1;
+        context.tasflags.recording = 1;
     }
 
     /* Game arguments */
@@ -183,6 +183,8 @@ int main(int argc, char **argv)
 
     /* Starts the user interface */
     ui = new MainWindow(context);
+    /* Start the threaded environnment */
+    Fl::lock();
     return Fl::run();
 
     // ui_init();
@@ -192,7 +194,7 @@ int main(int argc, char **argv)
 
 void* launchGame(void* arg)
 {
-    quit = false;
+    ui->update_status();
 
     /* Remove the file socket */
     system("rm -f /tmp/libTAS.socket");
@@ -284,10 +286,10 @@ void* launchGame(void* arg)
     /* Send TAS flags */
     message = MSGN_TASFLAGS;
     send(socket_fd, &message, sizeof(int), 0);
-    send(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+    send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
 
     /* Send dump file */
-    if (tasflags.av_dumping) {
+    if (context.tasflags.av_dumping) {
         message = MSGN_DUMP_FILE;
         send(socket_fd, &message, sizeof(int), 0);
         size_t dumpfile_size = context.dumpfile.size();
@@ -314,8 +316,8 @@ void* launchGame(void* arg)
     nanosleep(&tim, NULL);
 
     FILE* fp;
-    if (tasflags.recording >= 0){
-        fp = openRecording(context.moviefile.c_str(), tasflags.recording);
+    if (context.tasflags.recording >= 0){
+        fp = openRecording(context.moviefile.c_str(), context.tasflags.recording);
     }
 
     /*
@@ -325,7 +327,7 @@ void* launchGame(void* arg)
      */
     int ar_ticks = -1;
     int ar_delay = 50;
-    int ar_freq = tasflags.fastforward ? 8 : 2;
+    int ar_freq = context.tasflags.fastforward ? 8 : 2;
 
     while (1)
     {
@@ -334,6 +336,7 @@ void* launchGame(void* arg)
         recv(socket_fd, &message, sizeof(int), 0);
 
         if (message == MSGB_QUIT) {
+            std::cout << "Got quit message from game" << std::endl;
             // ui_print("Game has quit. Exiting\n");
             break;
         }
@@ -360,6 +363,7 @@ void* launchGame(void* arg)
         }
 
         if (message != MSGB_START_FRAMEBOUNDARY) {
+            std::cout << "Got unknown message!!!" << std::endl;
             // ui_print("Error in msg socket, waiting for frame boundary\n");
             return nullptr;
         }
@@ -367,7 +371,7 @@ void* launchGame(void* arg)
         recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);
         ui->update();
 
-        int isidle = !tasflags.running;
+        int isidle = !context.tasflags.running;
         int tasflagsmod = 0; // register if tasflags have been modified on this frame
 
         /* If we did not yet receive the game window id, just make the game running */
@@ -415,17 +419,17 @@ void* launchGame(void* arg)
 
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         isidle = 0;
-                        tasflags.running = 0;
+                        context.tasflags.running = 0;
                         tasflagsmod = 1;
                         ar_ticks = 0; // Activate auto-repeat
                     }
                     if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
-                        tasflags.running = !tasflags.running;
+                        context.tasflags.running = !context.tasflags.running;
                         tasflagsmod = 1;
-                        isidle = !tasflags.running;
+                        isidle = !context.tasflags.running;
                     }
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
-                        tasflags.fastforward = 1;
+                        context.tasflags.fastforward = 1;
                         tasflagsmod = 1;
                     }
                     if (ks == config.hotkeys[HOTKEY_SAVESTATE]){
@@ -436,9 +440,9 @@ void* launchGame(void* arg)
                     }
                     if (ks == config.hotkeys[HOTKEY_READWRITE]){
                         /* TODO: Use enum instead of values */
-                        if (tasflags.recording >= 0)
-                            tasflags.recording = !tasflags.recording;
-                        if (tasflags.recording == 1)
+                        if (context.tasflags.recording >= 0)
+                            context.tasflags.recording = !context.tasflags.recording;
+                        if (context.tasflags.recording == 1)
                             truncateRecording(fp);
                         tasflagsmod = 1;
                     }
@@ -468,7 +472,7 @@ void* launchGame(void* arg)
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
-                        tasflags.fastforward = 0;
+                        context.tasflags.fastforward = 0;
                         tasflagsmod = 1;
                     }
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
@@ -488,7 +492,7 @@ void* launchGame(void* arg)
 
         AllInputs ai;
 
-        if (tasflags.recording == -1) {
+        if (context.tasflags.recording == -1) {
             /* Get keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
@@ -507,7 +511,7 @@ void* launchGame(void* arg)
             }
         }
 
-        if (tasflags.recording == 1) {
+        if (context.tasflags.recording == 1) {
             /* Get keyboard inputs */
             XQueryKeymap(display, keyboard_state);
 
@@ -528,15 +532,15 @@ void* launchGame(void* arg)
             /* Save inputs to file */
             if (!writeFrame(fp, context.framecount, ai)) {
                 /* Writing failed, returning to no recording mode */
-                tasflags.recording = -1;
+                context.tasflags.recording = -1;
             }
         }
 
-        if (tasflags.recording == 0) {
+        if (context.tasflags.recording == 0) {
             /* Save inputs to file */
             if (!readFrame(fp, context.framecount, &ai)) {
                 /* Writing failed, returning to no recording mode */
-                tasflags.recording = -1;
+                context.tasflags.recording = -1;
             }
         }
 
@@ -544,7 +548,7 @@ void* launchGame(void* arg)
         if (tasflagsmod) {
             message = MSGN_TASFLAGS;
             send(socket_fd, &message, sizeof(int), 0);
-            send(socket_fd, &tasflags, sizeof(struct TasFlags), 0);
+            send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
         }
 
         /* Send inputs and end of frame */
@@ -562,13 +566,13 @@ void* launchGame(void* arg)
 
     }
 
-    if (tasflags.recording >= 0){
+    if (context.tasflags.recording >= 0){
         closeRecording(fp);
     }
     close(socket_fd);
 
     quit = true;
-    ui->update();
+    ui->update_status();
 
     return nullptr;
 }

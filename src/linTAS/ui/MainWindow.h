@@ -24,6 +24,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Int_Input.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Output.H>
 #include <thread>
@@ -45,14 +46,17 @@ class MainWindow {
         Fl_Button *browsemoviepath;
         Fl_File_Chooser *moviepathchooser;
 
-        Fl_Output *framecount;
-        std::string framestr;
+        Fl_Int_Input *logicalfps;
 
+        Fl_Output *framecount;
+
+        void update_status();
         void update();
 };
 
 void launch_cb(Fl_Widget*, void*);
 void browse_gamepath_cb(Fl_Widget*, void*);
 void browse_moviepath_cb(Fl_Widget*, void*);
+void set_fps_cb(Fl_Widget*, void*);
 
 #endif
