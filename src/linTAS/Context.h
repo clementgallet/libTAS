@@ -37,6 +37,9 @@ struct Context {
     /* tas flags */
     TasFlags tasflags;
 
+    /* was the tasflags modified */
+    bool tasflags_modified;
+
     /* Absolute path of libTAS.so */
     std::string libtaspath;
 

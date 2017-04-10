@@ -367,19 +367,21 @@ void* launchGame(void* arg)
         }
 
         recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);
-        ui->update();
+        /* Update frame count in the UI */
+        ui->update(false);
 
-        int isidle = !context.tasflags.running;
-        int tasflagsmod = 0; // register if tasflags have been modified on this frame
-
-        /* If we did not yet receive the game window id, just make the game running */
-        if (! gameWindow )
-            isidle = 0;
+        //int isidle = !context.tasflags.running;
+        //int tasflagsmod = 0; // register if tasflags have been modified on this frame
 
         char keyboard_state[32];
 
         /* We are at a frame boundary */
         do {
+
+            /* If we did not yet receive the game window id, just make the game running */
+            if (! gameWindow ) {
+              break;
+            }
 
             XQueryKeymap(display, keyboard_state);
 
@@ -388,7 +390,7 @@ void* launchGame(void* arg)
                 ar_ticks++;
                 if ((ar_ticks > ar_delay) && !(ar_ticks % ar_freq))
                     /* Trigger auto-repeat */
-                    isidle = 0;
+                    context.tasflags.running = 1;
             }
 
             while( XPending( display ) ) {
@@ -416,19 +418,22 @@ void* launchGame(void* arg)
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
-                        isidle = 0;
+                        //isidle = 0;
                         context.tasflags.running = 0;
-                        tasflagsmod = 1;
+                        ui->update(true);
+                        context.tasflags_modified = true;
                         ar_ticks = 0; // Activate auto-repeat
                     }
                     if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
                         context.tasflags.running = !context.tasflags.running;
-                        tasflagsmod = 1;
-                        isidle = !context.tasflags.running;
+                        ui->update(true);
+                        context.tasflags_modified = true;
+                        //isidle = !context.tasflags.running;
                     }
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 1;
-                        tasflagsmod = 1;
+                        ui->update(true);
+                        context.tasflags_modified = true;
                     }
                     if (ks == config.hotkeys[HOTKEY_SAVESTATE]){
                         savestate.save(game_pid);
@@ -442,7 +447,7 @@ void* launchGame(void* arg)
                             context.tasflags.recording = !context.tasflags.recording;
                         if (context.tasflags.recording == 1)
                             truncateRecording(fp);
-                        tasflagsmod = 1;
+                        context.tasflags_modified = true;
                     }
                 }
                 if (event.type == KeyRelease)
@@ -471,7 +476,8 @@ void* launchGame(void* arg)
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 0;
-                        tasflagsmod = 1;
+                        ui->update(true);
+                        context.tasflags_modified = true;
                     }
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         ar_ticks = -1; // Deactivate auto-repeat
@@ -479,14 +485,19 @@ void* launchGame(void* arg)
                 }
             }
 
+
+//            if (context.tasflags_modified) {
+                /* Show the new flags to the UI */
+//            }
+
             /* Sleep a bit to not surcharge the processor */
-            if (isidle) {
+            if (!context.tasflags.running) {
                 tim.tv_sec  = 0;
                 tim.tv_nsec = 10000000L;
                 nanosleep(&tim, NULL);
             }
 
-        } while (isidle);
+        } while (!context.tasflags.running);
 
         AllInputs ai;
 
@@ -543,10 +554,11 @@ void* launchGame(void* arg)
         }
 
         /* Send tasflags if modified */
-        if (tasflagsmod) {
+        if (context.tasflags_modified) {
             message = MSGN_TASFLAGS;
             send(socket_fd, &message, sizeof(int), 0);
             send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
+            context.tasflags_modified = false;
         }
 
         /* Send inputs and end of frame */

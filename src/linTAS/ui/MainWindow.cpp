@@ -47,17 +47,28 @@ MainWindow::MainWindow(Context &c) : context(c)
     browsemoviepath = new Fl_Button(520, 20, 70, 30, "Browse...");
     browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb, this);
 
+    /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 120, 40, 30, "Frames per second");
     std::string fpsstr = std::to_string(context.tasflags.framerate);
     logicalfps->value(fpsstr.c_str());
     logicalfps->callback((Fl_Callback*) set_fps_cb, this);
 
+    /* Pause/FF */
+    pausecheck = new Fl_Check_Button(120, 160, 20, 20, "Pause");
+    pausecheck->callback((Fl_Callback*) pause_cb, this);
+    fastforwardcheck = new Fl_Check_Button(120, 200, 20, 20, "Fast-forward");
+    fastforwardcheck->callback((Fl_Callback*) fastforward_cb, this);
+
+    /* Frame count */
     framecount = new Fl_Output(80, 60, 60, 30, "Frames:");
     std::string framestr = std::to_string(context.framecount);
     framecount->value(framestr.c_str());
 
     launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback((Fl_Callback*) launch_cb, this);
+
+    update(true);
+
     main_window->end();
     main_window->show();
 }
@@ -73,7 +84,7 @@ void MainWindow::update_status()
         case Context::INACTIVE:
             launch->label("Start");
             launch->activate();
-            launch->redraw();
+            //launch->redraw();
             moviepath->activate();
             browsemoviepath->activate();
             gamepath->activate();
@@ -82,7 +93,7 @@ void MainWindow::update_status()
             break;
         case Context::STARTING:
             launch->deactivate();
-            launch->redraw();
+            //launch->redraw();
             moviepath->deactivate();
             browsemoviepath->deactivate();
             gamepath->deactivate();
@@ -92,11 +103,11 @@ void MainWindow::update_status()
         case Context::ACTIVE:
             launch->activate();
             launch->label("Stop");
-            launch->redraw();
+            //launch->redraw();
             break;
         case Context::QUITTING:
             launch->deactivate();
-            launch->redraw();
+            //launch->redraw();
             break;
         default:
             break;
@@ -106,7 +117,7 @@ void MainWindow::update_status()
     Fl::awake();
 }
 
-void MainWindow::update()
+void MainWindow::update(bool status)
 {
     /* This function is called by another thread */
     Fl::lock();
@@ -114,8 +125,15 @@ void MainWindow::update()
     /* Update frame count */
     std::string framestr = std::to_string(context.framecount);
     framecount->value(framestr.c_str());
-    framecount->redraw();
+    //framecount->redraw();
 
+    if (status) {
+        /* Update pause status */
+        pausecheck->value(!context.tasflags.running);
+
+        /* Update fastforward status */
+        fastforwardcheck->value(context.tasflags.fastforward);
+    }
     Fl::unlock();
     Fl::awake();
 }
@@ -199,5 +217,22 @@ void set_fps_cb(Fl_Widget* w, void* v)
     Fl_Int_Input *ii = (Fl_Int_Input*) w;
     std::string fpsstr = ii->value();
     mw->context.tasflags.framerate = std::stoi(fpsstr);
-    std::cout << "Set fps to " << mw->context.tasflags.framerate << std::endl;
+}
+
+void pause_cb(Fl_Widget* w, void* v)
+{
+    MainWindow *mw = (MainWindow*) v;
+    Fl_Check_Button *cb = (Fl_Check_Button*) w;
+    int cb_val = (int)cb->value();
+    mw->context.tasflags.running = !cb_val;
+    mw->context.tasflags_modified = true;
+}
+
+void fastforward_cb(Fl_Widget* w, void* v)
+{
+    MainWindow *mw = (MainWindow*) v;
+    Fl_Check_Button *cb = (Fl_Check_Button*) w;
+    int cb_val = (int)cb->value();
+    mw->context.tasflags.fastforward = cb_val;
+    mw->context.tasflags_modified = true;
 }

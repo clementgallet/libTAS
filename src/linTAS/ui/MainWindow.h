@@ -27,6 +27,7 @@
 #include <FL/Fl_Int_Input.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Output.H>
+#include <FL/Fl_Check_Button.H>
 #include <thread>
 
 #include "../Context.h"
@@ -48,15 +49,20 @@ class MainWindow {
 
         Fl_Int_Input *logicalfps;
 
+        Fl_Check_Button *pausecheck;
+        Fl_Check_Button *fastforwardcheck;
+
         Fl_Output *framecount;
 
         void update_status();
-        void update();
+        void update(bool status);
 };
 
 void launch_cb(Fl_Widget*, void*);
 void browse_gamepath_cb(Fl_Widget*, void*);
 void browse_moviepath_cb(Fl_Widget*, void*);
 void set_fps_cb(Fl_Widget*, void*);
+void pause_cb(Fl_Widget*, void*);
+void fastforward_cb(Fl_Widget*, void*);
 
 #endif
