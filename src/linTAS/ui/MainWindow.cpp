@@ -69,24 +69,37 @@ void MainWindow::update_status()
     /* This function might be called by another thread */
     Fl::lock();
 
-    if (quit) {
-        launch->label("Start");
-        launch->redraw();
-        moviepath->activate();
-        browsemoviepath->activate();
-        gamepath->activate();
-        browsegamepath->activate();
-        logicalfps->activate();
-
-    }
-    else {
-        launch->label("Stop");
-        launch->redraw();
-        moviepath->deactivate();
-        browsemoviepath->deactivate();
-        gamepath->deactivate();
-        browsegamepath->deactivate();
-        logicalfps->deactivate();
+    switch (context.status) {
+        case Context::INACTIVE:
+            launch->label("Start");
+            launch->activate();
+            launch->redraw();
+            moviepath->activate();
+            browsemoviepath->activate();
+            gamepath->activate();
+            browsegamepath->activate();
+            logicalfps->activate();
+            break;
+        case Context::STARTING:
+            launch->deactivate();
+            launch->redraw();
+            moviepath->deactivate();
+            browsemoviepath->deactivate();
+            gamepath->deactivate();
+            browsegamepath->deactivate();
+            logicalfps->deactivate();
+            break;
+        case Context::ACTIVE:
+            launch->activate();
+            launch->label("Stop");
+            launch->redraw();
+            break;
+        case Context::QUITTING:
+            launch->deactivate();
+            launch->redraw();
+            break;
+        default:
+            break;
     }
 
     Fl::unlock();
@@ -110,22 +123,25 @@ void MainWindow::update()
 void launch_cb(Fl_Widget* w, void* v)
 {
     MainWindow *mw = (MainWindow*) v;
-    if (quit) { // TODO: move this quit variable elsewhere, in Context ?
 
-        /* Check that there might be a thread from a previous game execution */
-        if (mw->game_thread.joinable())
-            mw->game_thread.join();
+    switch (mw->context.status) {
+        case Context::INACTIVE:
+            /* Check that there might be a thread from a previous game execution */
+            if (mw->game_thread.joinable())
+                mw->game_thread.join();
 
-        /* Start game */
-        quit = false;
-        mw->game_thread = std::thread{launchGame, nullptr};
-    }
-    else {
-        w->deactivate();
-        w->redraw();
-        quit = true;
-        mw->game_thread.detach();
-        w->activate();
+            /* Start game */
+            mw->context.status = Context::STARTING;
+            mw->update_status();
+            mw->game_thread = std::thread{launchGame, nullptr};
+            break;
+        case Context::ACTIVE:
+            mw->context.status = Context::QUITTING;
+            mw->update_status();
+            mw->game_thread.detach();
+            break;
+        default:
+            break;
     }
 }
 

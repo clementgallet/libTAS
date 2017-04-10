@@ -59,8 +59,6 @@ std::string libname;
 Context context;
 MainWindow *ui;
 
-bool quit = true;
-
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
     // (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
@@ -194,6 +192,7 @@ int main(int argc, char **argv)
 
 void* launchGame(void* arg)
 {
+    context.status = Context::ACTIVE;
     ui->update_status();
 
     /* Remove the file socket */
@@ -336,7 +335,6 @@ void* launchGame(void* arg)
         recv(socket_fd, &message, sizeof(int), 0);
 
         if (message == MSGB_QUIT) {
-            std::cout << "Got quit message from game" << std::endl;
             // ui_print("Game has quit. Exiting\n");
             break;
         }
@@ -556,7 +554,7 @@ void* launchGame(void* arg)
         send(socket_fd, &message, sizeof(int), 0);
         send(socket_fd, &ai, sizeof(struct AllInputs), 0);
 
-        if (quit) {
+        if (context.status == Context::QUITTING) {
             message = MSGN_USERQUIT;
             send(socket_fd, &message, sizeof(int), 0);
         }
@@ -571,7 +569,7 @@ void* launchGame(void* arg)
     }
     close(socket_fd);
 
-    quit = true;
+    context.status = Context::INACTIVE;
     ui->update_status();
 
     return nullptr;

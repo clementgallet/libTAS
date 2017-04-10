@@ -23,8 +23,4 @@
 void print_usage(void);
 void* launchGame(void* arg);
 
-extern bool quit;
-
 #endif
-
-

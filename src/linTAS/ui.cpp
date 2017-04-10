@@ -84,11 +84,11 @@ void ui_update_nogame(Context &context)
                 ITEM *cur = current_item(menu);
                 int index = item_index(cur);
                 if (index == 0) {
-                    if (quit) {
+                    if (context.status == 0) {
                         pthread_create(&t_game,NULL,launchGame,NULL);
                     }
                     else {
-                        quit = true;
+                        context.status = 0;
                         pthread_join(t_game, NULL);
                     }
                 }
@@ -443,10 +443,10 @@ void ui_lcf_menu(Context &context)
 
                 if (index < n_items)
                     /* Toggle include flag */
-                    context.tasflags.includeFlags ^= lcf_list[index]; 
+                    context.tasflags.includeFlags ^= lcf_list[index];
                 else
                     /* Toggle exclude flag */
-                    context.tasflags.excludeFlags ^= lcf_list[index-n_items]; 
+                    context.tasflags.excludeFlags ^= lcf_list[index-n_items];
                 break;
             case 10:
                 cur = current_item(menu);
@@ -483,4 +483,3 @@ void ui_end(void)
 {
     endwin();
 }
-
