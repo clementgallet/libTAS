@@ -28,16 +28,33 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Check_Button.H>
+#include <Fl/Fl_Menu_Bar.H>
+#include <Fl/Fl_Menu_Item.H>
 #include <thread>
 
 #include "../Context.h"
 
 class MainWindow {
     public:
-        MainWindow(Context &c);
+        /* Implement a Singleton pattern */
+        static MainWindow& getInstance()
+        {
+            static MainWindow instance;
+            return instance;
+        }
+
+        MainWindow(MainWindow const&) = delete;
+        void operator=(MainWindow const&) = delete;
+
+        void build(Context* c);
+
         std::thread game_thread;
-        Context &context;
+        Context *context;
         Fl_Window *main_window;
+
+        Fl_Menu_Bar *menu_bar;
+        static Fl_Menu_Item menu_items[];
+
         Fl_Button *launch;
         Fl_Input *gamepath;
         Fl_Button *browsegamepath;
@@ -56,6 +73,9 @@ class MainWindow {
 
         void update_status();
         void update(bool status);
+
+    private:
+        MainWindow() {}
 };
 
 void launch_cb(Fl_Widget*, void*);

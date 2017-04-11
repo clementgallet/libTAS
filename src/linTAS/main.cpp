@@ -57,7 +57,6 @@ std::vector<std::string> shared_libs;
 std::string libname;
 
 Context context;
-MainWindow *ui;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -180,7 +179,9 @@ int main(int argc, char **argv)
     config.default_hotkeys();
 
     /* Starts the user interface */
-    ui = new MainWindow(context);
+    MainWindow& ui = MainWindow::getInstance();
+    ui.build(&context);
+
     /* Start the threaded environnment */
     Fl::lock();
     return Fl::run();
@@ -193,7 +194,8 @@ int main(int argc, char **argv)
 void* launchGame(void* arg)
 {
     context.status = Context::ACTIVE;
-    ui->update_status();
+    MainWindow& ui = MainWindow::getInstance();
+    ui.update_status();
 
     /* Remove the file socket */
     system("rm -f /tmp/libTAS.socket");
@@ -368,7 +370,7 @@ void* launchGame(void* arg)
 
         recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);
         /* Update frame count in the UI */
-        ui->update(false);
+        ui.update(false);
 
         //int isidle = !context.tasflags.running;
         //int tasflagsmod = 0; // register if tasflags have been modified on this frame
@@ -420,19 +422,19 @@ void* launchGame(void* arg)
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         //isidle = 0;
                         context.tasflags.running = 0;
-                        ui->update(true);
+                        ui.update(true);
                         context.tasflags_modified = true;
                         ar_ticks = 0; // Activate auto-repeat
                     }
                     if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
                         context.tasflags.running = !context.tasflags.running;
-                        ui->update(true);
+                        ui.update(true);
                         context.tasflags_modified = true;
                         //isidle = !context.tasflags.running;
                     }
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 1;
-                        ui->update(true);
+                        ui.update(true);
                         context.tasflags_modified = true;
                     }
                     if (ks == config.hotkeys[HOTKEY_SAVESTATE]){
@@ -476,7 +478,7 @@ void* launchGame(void* arg)
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 0;
-                        ui->update(true);
+                        ui.update(true);
                         context.tasflags_modified = true;
                     }
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
@@ -582,7 +584,7 @@ void* launchGame(void* arg)
     close(socket_fd);
 
     context.status = Context::INACTIVE;
-    ui->update_status();
+    ui.update_status();
 
     return nullptr;
 }
