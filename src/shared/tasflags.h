@@ -28,13 +28,15 @@ struct TasFlags {
 
     /* By how much is the speed reduced */
     int speed_divisor;
-    
-    /* Are the input recorded or played back
-     * -1: no movie file
-     *  0: inputs are played back
-     *  1: inputs are recorded
-     */
-    int recording;
+
+    /* Recording status */
+    enum RecStatus {
+        NO_RECORDING,
+        RECORDING_WRITE,
+        RECORDING_READ_WRITE, // Read until end of movie or toggle
+        RECORDING_READ_ONLY // Always read, toggle deactivated
+    };
+    RecStatus recording;
 
     /* Is fastforward enabled */
     int fastforward;
@@ -61,4 +63,3 @@ struct TasFlags {
 extern struct TasFlags tasflags;
 
 #endif
-

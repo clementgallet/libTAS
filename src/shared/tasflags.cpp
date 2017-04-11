@@ -22,12 +22,11 @@
 struct TasFlags tasflags = {
     running        : 0,
     speed_divisor  : 1,
-    recording      : -1,
+    recording      : TasFlags::NO_RECORDING,
     fastforward    : 0,
     includeFlags   : LCF_ERROR,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,
     framerate      : 60,
     numControllers : 1
-}; 
-
+};

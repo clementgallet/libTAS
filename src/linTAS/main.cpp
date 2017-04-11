@@ -105,7 +105,7 @@ int main(int argc, char **argv)
                 abspath = realpath(optarg, buf);
                 if (abspath) {
                     context.moviefile = abspath;
-                    context.tasflags.recording = (c == 'r')?0:1;
+                    context.tasflags.recording = (c == 'r')?TasFlags::RECORDING_READ_WRITE:TasFlags::RECORDING_WRITE;
                 }
                 break;
             case 'd':
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     /* Fill a movie name if empty */
     if ( (!context.gamepath.empty()) && context.moviefile.empty()) {
         context.moviefile = context.gamepath + ".ltm";
-        context.tasflags.recording = 1;
+        context.tasflags.recording = TasFlags::RECORDING_WRITE;
     }
 
     /* Game arguments */
@@ -447,11 +447,15 @@ void* launchGame(void* arg)
                         savestate.load(game_pid);
                     }
                     if (ks == config.hotkeys[HOTKEY_READWRITE]){
-                        /* TODO: Use enum instead of values */
-                        if (context.tasflags.recording >= 0)
-                            context.tasflags.recording = !context.tasflags.recording;
-                        if (context.tasflags.recording == 1)
-                            truncateRecording(fp);
+                        switch (context.tasflags.recording) {
+                            case TasFlags::RECORDING_WRITE:
+                                context.tasflags.recording = TasFlags::RECORDING_READ_WRITE;
+                                break;
+                            case TasFlags::RECORDING_READ_WRITE:
+                                context.tasflags.recording = TasFlags::RECORDING_WRITE;
+                                truncateRecording(fp);
+                                break;
+                        }
                         context.tasflags_modified = true;
                     }
                 }
@@ -510,56 +514,47 @@ void* launchGame(void* arg)
 
         AllInputs ai;
 
-        if (context.tasflags.recording == -1) {
-            /* Get keyboard inputs */
-            XQueryKeymap(display, keyboard_state);
+        /* Record inputs or get inputs from movie file */
+        switch (context.tasflags.recording) {
+            case TasFlags::NO_RECORDING:
+            case TasFlags::RECORDING_WRITE:
 
-            /* Format the keyboard state and save it in the AllInputs struct */
-            buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
+                /* Get keyboard inputs */
+                XQueryKeymap(display, keyboard_state);
 
-            /* Get the pointer position and mask */
-            if (gameWindow) {
-                Window w;
-                int i;
-                Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-                if (!onScreen) {
-                    ai.pointer_x = -1;
-                    ai.pointer_y = -1;
+                /* Format the keyboard state and save it in the AllInputs struct */
+                buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
+
+                /* Get the pointer position and mask */
+                if (gameWindow) {
+                    Window w;
+                    int i;
+                    Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                    if (!onScreen) {
+                        ai.pointer_x = -1;
+                        ai.pointer_y = -1;
+                    }
                 }
-            }
-        }
 
-        if (context.tasflags.recording == 1) {
-            /* Get keyboard inputs */
-            XQueryKeymap(display, keyboard_state);
+                if (context.tasflags.recording == TasFlags::NO_RECORDING)
+                    break;
 
-            /* Format the keyboard state and save it in the AllInputs struct */
-            buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
-
-            /* Get the pointer position and mask */
-            if (gameWindow) {
-                Window w;
-                int i;
-                Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-                if (!onScreen) {
-                    ai.pointer_x = -1;
-                    ai.pointer_y = -1;
+                /* Save inputs to file */
+                if (!writeFrame(fp, context.framecount, ai)) {
+                    /* Writing failed, returning to no recording mode */
+                    context.tasflags.recording = TasFlags::NO_RECORDING;
                 }
-            }
 
-            /* Save inputs to file */
-            if (!writeFrame(fp, context.framecount, ai)) {
-                /* Writing failed, returning to no recording mode */
-                context.tasflags.recording = -1;
-            }
-        }
+                break;
 
-        if (context.tasflags.recording == 0) {
-            /* Save inputs to file */
-            if (!readFrame(fp, context.framecount, &ai)) {
-                /* Writing failed, returning to no recording mode */
-                context.tasflags.recording = -1;
-            }
+            case TasFlags::RECORDING_READ_WRITE:
+            case TasFlags::RECORDING_READ_ONLY:
+                /* Save inputs to file */
+                if (!readFrame(fp, context.framecount, &ai)) {
+                    /* Writing failed, returning to no recording mode */
+                    context.tasflags.recording = TasFlags::NO_RECORDING;
+                }
+                break;
         }
 
         /* Send tasflags if modified */
