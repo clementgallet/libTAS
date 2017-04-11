@@ -30,6 +30,8 @@
 #include <FL/Fl_Check_Button.H>
 #include <Fl/Fl_Menu_Bar.H>
 #include <Fl/Fl_Menu_Item.H>
+#include <Fl/Fl_Pack.H>
+#include <Fl/Fl_Radio_Round_Button.H>
 #include <thread>
 
 #include "../Context.h"
@@ -56,6 +58,7 @@ class MainWindow {
         static Fl_Menu_Item menu_items[];
 
         Fl_Button *launch;
+
         Fl_Output *gamepath;
         Fl_Button *browsegamepath;
         Fl_Native_File_Chooser *gamepathchooser;
@@ -63,6 +66,12 @@ class MainWindow {
         Fl_Output *moviepath;
         Fl_Button *browsemoviepath;
         Fl_Native_File_Chooser *moviepathchooser;
+
+        Fl_Pack *moviepack;
+        Fl_Radio_Round_Button *movie_norec;
+        Fl_Radio_Round_Button *movie_w;
+        Fl_Radio_Round_Button *movie_rw;
+        Fl_Radio_Round_Button *movie_ro;
 
         Fl_Int_Input *logicalfps;
 
@@ -84,5 +93,6 @@ void browse_moviepath_cb(Fl_Widget*, void*);
 void set_fps_cb(Fl_Widget*, void*);
 void pause_cb(Fl_Widget*, void*);
 void fastforward_cb(Fl_Widget*, void*);
+void recording_cb(Fl_Widget*, void*);
 
 #endif

@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     /* Fill a movie name if empty */
     if ( (!context.gamepath.empty()) && context.moviefile.empty()) {
         context.moviefile = context.gamepath + ".ltm";
-        context.tasflags.recording = TasFlags::RECORDING_WRITE;
+        context.tasflags.recording = TasFlags::NO_RECORDING;
     }
 
     /* Game arguments */

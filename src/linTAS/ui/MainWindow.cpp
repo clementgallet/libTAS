@@ -35,15 +35,15 @@ void MainWindow::build(Context* c)
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->value(context->gamepath.c_str());
 
+    browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
+    browsegamepath->callback((Fl_Callback*) browse_gamepath_cb);
+
     gamepathchooser = new Fl_Native_File_Chooser();
     gamepathchooser->title("Game path");
     gamepathchooser->preset_file(context->gamepath.c_str());
 
-    browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
-    browsegamepath->callback((Fl_Callback*) browse_gamepath_cb);
-
     /* Movie File */
-    moviepath = new Fl_Output(10, 80, 500, 30, "Movie File");
+    moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
     moviepath->value(context->moviefile.c_str());
 
@@ -52,8 +52,36 @@ void MainWindow::build(Context* c)
     moviepathchooser->filter("libTAS movie file \t*.ltm\n");
     moviepathchooser->preset_file(context->moviefile.c_str());
 
-    browsemoviepath = new Fl_Button(520, 80, 70, 30, "Browse...");
+    browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
     browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb);
+
+    /* Movie File Status */
+    moviepack = new Fl_Pack(10, 90, main_window->w()-10, 30);
+    moviepack->type(Fl_Pack::HORIZONTAL);
+    moviepack->box(FL_ENGRAVED_FRAME);
+    movie_norec = new Fl_Radio_Round_Button(0, 0, 130, 0, "No recording");
+    movie_norec->callback((Fl_Callback*) recording_cb);
+    movie_w = new Fl_Radio_Round_Button(0, 0, 130, 0, "Overwrite");
+    movie_w->callback((Fl_Callback*) recording_cb);
+    movie_rw = new Fl_Radio_Round_Button(0, 0, 130, 0, "Read/Write");
+    movie_rw->callback((Fl_Callback*) recording_cb);
+    movie_ro = new Fl_Radio_Round_Button(0, 0, 130, 0, "Read Only");
+    movie_ro->callback((Fl_Callback*) recording_cb);
+    moviepack->end();
+    switch (context->tasflags.recording) {
+      case TasFlags::NO_RECORDING:
+          movie_norec->setonly();
+          break;
+      case TasFlags::RECORDING_WRITE:
+          movie_w->setonly();
+          break;
+      case TasFlags::RECORDING_READ_WRITE:
+          movie_rw->setonly();
+          break;
+      case TasFlags::RECORDING_READ_ONLY:
+          movie_ro->setonly();
+          break;
+    }
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 200, 40, 30, "Frames per second");
@@ -63,7 +91,7 @@ void MainWindow::build(Context* c)
 
     /* Pause/FF */
     pausecheck = new Fl_Check_Button(240, 140, 20, 20, "Pause");
-    pausecheck->callback((Fl_Callback*) pause_cb, this);
+    pausecheck->callback((Fl_Callback*) pause_cb);
     fastforwardcheck = new Fl_Check_Button(240, 180, 20, 20, "Fast-forward");
     fastforwardcheck->callback((Fl_Callback*) fastforward_cb);
 
@@ -237,4 +265,17 @@ void fastforward_cb(Fl_Widget* w, void*)
     int cb_val = (int)cb->value();
     mw.context->tasflags.fastforward = cb_val;
     mw.context->tasflags_modified = true;
+}
+
+void recording_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    if (mw.movie_norec->value() == 1)
+        mw.context->tasflags.recording = TasFlags::NO_RECORDING;
+    if (mw.movie_w->value() == 1)
+        mw.context->tasflags.recording = TasFlags::RECORDING_WRITE;
+    if (mw.movie_rw->value() == 1)
+        mw.context->tasflags.recording = TasFlags::RECORDING_READ_WRITE;
+    if (mw.movie_ro->value() == 1)
+        mw.context->tasflags.recording = TasFlags::RECORDING_READ_ONLY;
 }
