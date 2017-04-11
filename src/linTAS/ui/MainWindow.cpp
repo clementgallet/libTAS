@@ -35,8 +35,9 @@ void MainWindow::build(Context* c)
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->value(context->gamepath.c_str());
 
-    gamepathchooser = new Fl_File_Chooser(context->gamepath.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Game path");
-    gamepathchooser->preview(0);
+    gamepathchooser = new Fl_Native_File_Chooser();
+    gamepathchooser->title("Game path");
+    gamepathchooser->preset_file(context->gamepath.c_str());
 
     browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
     browsegamepath->callback((Fl_Callback*) browse_gamepath_cb);
@@ -46,8 +47,10 @@ void MainWindow::build(Context* c)
     moviepath->align(FL_ALIGN_TOP_LEFT);
     moviepath->value(context->moviefile.c_str());
 
-    moviepathchooser = new Fl_File_Chooser(context->moviefile.c_str(), nullptr, Fl_File_Chooser::SINGLE, "Choose a movie file");
-    moviepathchooser->preview(0);
+    moviepathchooser = new Fl_Native_File_Chooser();
+    moviepathchooser->title("Choose a movie file");
+    moviepathchooser->filter("libTAS movie file \t*.ltm\n");
+    moviepathchooser->preset_file(context->moviefile.c_str());
 
     browsemoviepath = new Fl_Button(520, 80, 70, 30, "Browse...");
     browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb);
@@ -179,21 +182,14 @@ void launch_cb(Fl_Widget* w, void* v)
 void browse_gamepath_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    mw.gamepathchooser->show();
-    /* This is not pretty, but the Fl_File_Chooser callback
-       is called when click on a file, not when you hit "Ok"
-       This is a workaround.
-     */
-    while (mw.gamepathchooser->shown()) {
-        Fl::wait();
-    }
+    int ret = mw.gamepathchooser->show();
 
-    const char* filename = mw.gamepathchooser->value(1);
+    const char* filename = mw.gamepathchooser->filename();
 
-    /* If the user hit "Cancel", the returned value is null */
-    if (filename) {
-        mw.gamepath->value(mw.gamepathchooser->value(1));
-        mw.context->gamepath = std::string(mw.gamepathchooser->value(1));
+    /* If the user picked a file */
+    if (ret == 0) {
+        mw.gamepath->value(filename);
+        mw.context->gamepath = std::string(filename);
 
         /* Change the movie file also */
         mw.context->moviefile = mw.context->gamepath;
@@ -206,21 +202,14 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
 {
     // TODO: Almost duplicate of browse_gamepath_cb...
     MainWindow& mw = MainWindow::getInstance();
-    mw.moviepathchooser->show();
-    /* This is not pretty, but the Fl_File_Chooser callback
-       is called when click on a file, not when you hit "Ok"
-       This is a workaround.
-     */
-    while (mw.moviepathchooser->shown()) {
-        Fl::wait();
-    }
+    int ret = mw.moviepathchooser->show();
 
-    const char* filename = mw.moviepathchooser->value(1);
+    const char* filename = mw.moviepathchooser->filename();
 
-    /* If the user hit "Cancel", the returned value is null */
-    if (filename) {
-        mw.moviepath->value(mw.moviepathchooser->value(1));
-        mw.context->moviefile = std::string(mw.moviepathchooser->value(1));
+    /* If the user picked a file */
+    if (ret == 0) {
+        mw.moviepath->value(filename);
+        mw.context->moviefile = std::string(filename);
     }
 }
 

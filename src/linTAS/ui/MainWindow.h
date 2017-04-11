@@ -25,7 +25,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Int_Input.H>
-#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Check_Button.H>
 #include <Fl/Fl_Menu_Bar.H>
@@ -58,11 +58,11 @@ class MainWindow {
         Fl_Button *launch;
         Fl_Output *gamepath;
         Fl_Button *browsegamepath;
-        Fl_File_Chooser *gamepathchooser;
+        Fl_Native_File_Chooser *gamepathchooser;
 
         Fl_Output *moviepath;
         Fl_Button *browsemoviepath;
-        Fl_File_Chooser *moviepathchooser;
+        Fl_Native_File_Chooser *moviepathchooser;
 
         Fl_Int_Input *logicalfps;
 
