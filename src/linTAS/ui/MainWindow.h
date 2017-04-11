@@ -56,11 +56,11 @@ class MainWindow {
         static Fl_Menu_Item menu_items[];
 
         Fl_Button *launch;
-        Fl_Input *gamepath;
+        Fl_Output *gamepath;
         Fl_Button *browsegamepath;
         Fl_File_Chooser *gamepathchooser;
 
-        Fl_Input *moviepath;
+        Fl_Output *moviepath;
         Fl_Button *browsemoviepath;
         Fl_File_Chooser *moviepathchooser;
 

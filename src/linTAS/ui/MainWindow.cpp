@@ -31,7 +31,7 @@ void MainWindow::build(Context* c)
     menu_bar->menu(menu_items);
 
     /* Game Executable */
-    gamepath = new Fl_Input(10, 300, 500, 30, "Game Executable");
+    gamepath = new Fl_Output(10, 300, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->value(context->gamepath.c_str());
 
@@ -42,7 +42,7 @@ void MainWindow::build(Context* c)
     browsegamepath->callback((Fl_Callback*) browse_gamepath_cb);
 
     /* Movie File */
-    moviepath = new Fl_Input(10, 80, 500, 30, "Movie File");
+    moviepath = new Fl_Output(10, 80, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
     moviepath->value(context->moviefile.c_str());
 

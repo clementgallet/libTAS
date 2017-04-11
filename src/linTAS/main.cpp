@@ -372,17 +372,19 @@ void* launchGame(void* arg)
         /* Update frame count in the UI */
         ui.update(false);
 
-        //int isidle = !context.tasflags.running;
         //int tasflagsmod = 0; // register if tasflags have been modified on this frame
 
         char keyboard_state[32];
+
+        /* Flag to trigger a frame advance even if the game is on pause */
+        bool advance_frame = false;
 
         /* We are at a frame boundary */
         do {
 
             /* If we did not yet receive the game window id, just make the game running */
             if (! gameWindow ) {
-              break;
+                break;
             }
 
             XQueryKeymap(display, keyboard_state);
@@ -392,7 +394,7 @@ void* launchGame(void* arg)
                 ar_ticks++;
                 if ((ar_ticks > ar_delay) && !(ar_ticks % ar_freq))
                     /* Trigger auto-repeat */
-                    context.tasflags.running = 1;
+                    advance_frame = true;
             }
 
             while( XPending( display ) ) {
@@ -420,17 +422,18 @@ void* launchGame(void* arg)
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
-                        //isidle = 0;
-                        context.tasflags.running = 0;
-                        ui.update(true);
-                        context.tasflags_modified = true;
-                        ar_ticks = 0; // Activate auto-repeat
+                        if (context.tasflags.running == 1) {
+                            context.tasflags.running = 0;
+                            ui.update(true);
+                            context.tasflags_modified = true;
+                        }
+                        //ar_ticks = 0; // Activate auto-repeat
+                        advance_frame = true; // Advance one frame
                     }
                     if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
                         context.tasflags.running = !context.tasflags.running;
                         ui.update(true);
                         context.tasflags_modified = true;
-                        //isidle = !context.tasflags.running;
                     }
                     if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 1;
@@ -483,6 +486,10 @@ void* launchGame(void* arg)
                     }
                     if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
                         ar_ticks = -1; // Deactivate auto-repeat
+                        /* FIXME: If the game window looses focus,
+                         * the key release event is never sent,
+                         * so the auto-repeat is still activated
+                         */
                     }
                 }
             }
@@ -493,13 +500,13 @@ void* launchGame(void* arg)
 //            }
 
             /* Sleep a bit to not surcharge the processor */
-            if (!context.tasflags.running) {
+            if (!context.tasflags.running && !advance_frame) {
                 tim.tv_sec  = 0;
                 tim.tv_nsec = 10000000L;
                 nanosleep(&tim, NULL);
             }
 
-        } while (!context.tasflags.running);
+        } while (!context.tasflags.running && !advance_frame);
 
         AllInputs ai;
 
