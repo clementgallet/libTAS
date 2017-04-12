@@ -107,7 +107,8 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Movie...", 0, browse_moviepath_cb},
         {nullptr},
     {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Encode...", 0, encode_cb},
+        {"Configure encode...", 0, config_encode_cb},
+        {"Start encode", 0, toggle_encode_cb},
         {nullptr},
     {nullptr}
 };
@@ -291,7 +292,7 @@ void recording_cb(Fl_Widget* w, void*)
         mw.context->tasflags.recording = TasFlags::RECORDING_READ_ONLY;
 }
 
-void encode_cb(Fl_Widget* w, void*)
+void config_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.encode_window->window->show();
@@ -299,4 +300,24 @@ void encode_cb(Fl_Widget* w, void*)
     while (mw.encode_window->window->shown()) {
         Fl::wait();
     }
+}
+
+void toggle_encode_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    /* Set encode status */
+    Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+
+    if (mw.context->tasflags.av_dumping == 0) {
+        mw.context->tasflags.av_dumping = 1;
+        mw.context->tasflags_modified = true;
+        mw.context->dumpfile_modified = true;
+        encode_item->label("Stop encode");
+    }
+    else {
+        mw.context->tasflags.av_dumping = 0;
+        mw.context->tasflags_modified = true;
+        encode_item->label("Start encode");
+    }
+
 }

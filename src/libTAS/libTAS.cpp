@@ -37,9 +37,9 @@
 #include "hook.h"
 #include "inputs/inputs.h"
 #include "ThreadManager.h"
-#ifdef LIBTAS_ENABLE_AVDUMPING
-#include "avdumping.h"
-#endif
+//#ifdef LIBTAS_ENABLE_AVDUMPING
+//#include "avdumping.h"
+//#endif
 
 /* Did we call our constructor? */
 bool libTAS_init = false;
@@ -112,7 +112,7 @@ void __attribute__((constructor)) init(void)
         }
         receiveData(&message, sizeof(int));
     }
-    
+
     ai.emptyInputs();
     old_ai.emptyInputs();
     game_ai.emptyInputs();
@@ -153,7 +153,7 @@ void __attribute__((destructor)) term(void)
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
      * so we put the rest of relevent code in the SubSystem function.
-     * 
+     *
      * ...well, this is in theory. If on SDL2 we call SDL_Init(), it
      * does not call our SDL_InitSubSystem() function. Maybe it has to do with
      * some compiler optimization, because the real SDL_Init() function looks
@@ -253,14 +253,13 @@ void __attribute__((destructor)) term(void)
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* SDL 1.2 does not have a destroy window function,
      * because there is only one window,
-     * so we close the av dumping here instead
+     * so we close the av dumping here instead.
+     * However, the dumping will be closed at the
+     * end of program because, so maybe we don't need this.
      */
-    if (tasflags.av_dumping && (SDLver == 1))
-        closeAVDumping();
+    //avencoder.reset(nullptr);
 #endif
 
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();
 }
-
-

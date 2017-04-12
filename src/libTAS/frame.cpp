@@ -27,7 +27,7 @@
 #include "socket.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
-#include "avdumping.h"
+#include "AVEncoder.h"
 #include "EventQueue.h"
 #include "sdlwindows.h"
 #include "sdlevents.h"
@@ -106,12 +106,28 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Dumping audio and video */
     if (tasflags.av_dumping) {
+
+        /* First, create the AVEncoder is needed */
+        if (!avencoder) {
+            debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
+            avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
+        }
+
         /* Write the current frame */
-        int enc = encodeOneFrame(frame_counter);
+        int enc = avencoder->encodeOneFrame(frame_counter);
         if (enc != 0) {
             /* Encode failed, disable AV dumping */
-            closeAVDumping();
+            avencoder.reset(nullptr);
             tasflags.av_dumping = 0;
+        }
+    }
+    else {
+        /* If there is still an encoder object, it means we just stopped
+         * encoding, so we must delete the encoder object.
+         */
+        if (avencoder) {
+            debuglog(LCF_DUMP, "Stop AV dumping");
+            avencoder.reset(nullptr);
         }
     }
 #endif
@@ -174,6 +190,17 @@ void proceed_commands(void)
 
             case MSGN_TASFLAGS:
                 receiveData(&tasflags, sizeof(struct TasFlags));
+                break;
+
+            case MSGN_DUMP_FILE:
+                debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
+                size_t dump_len;
+                receiveData(&dump_len, sizeof(size_t));
+                /* TODO: Put all this in TasFlags class methods */
+                av_filename = static_cast<char*>(malloc(dump_len+1));
+                receiveData(av_filename, dump_len);
+                av_filename[dump_len] = '\0';
+                debuglog(LCF_SOCKET | LCF_FRAME, "File ", av_filename);
                 break;
 
             case MSGN_END_FRAMEBOUNDARY:

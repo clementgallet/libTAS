@@ -286,7 +286,7 @@ void* launchGame(void* arg)
     send(socket_fd, &message, sizeof(int), 0);
     send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
 
-    /* Send dump file */
+    /* Send dump file if dumping from the beginning */
     if (context.tasflags.av_dumping) {
         message = MSGN_DUMP_FILE;
         send(socket_fd, &message, sizeof(int), 0);
@@ -568,6 +568,16 @@ void* launchGame(void* arg)
             send(socket_fd, &message, sizeof(int), 0);
             send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
             context.tasflags_modified = false;
+        }
+
+        /* Send dump file if modified */
+        if (context.dumpfile_modified) {
+            message = MSGN_DUMP_FILE;
+            send(socket_fd, &message, sizeof(int), 0);
+            size_t dumpfile_size = context.dumpfile.size();
+            send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
+            send(socket_fd, context.dumpfile.c_str(), dumpfile_size, 0);
+            context.dumpfile_modified = false;
         }
 
         /* Send inputs and end of frame */

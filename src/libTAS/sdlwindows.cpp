@@ -29,9 +29,8 @@
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
 #include "ThreadState.h"
-#include "avdumping.h"
 
-/* 
+/*
  * Store the game window pointer
  * We assume the game never open multiple windows at a time
  */
@@ -40,7 +39,10 @@ SDL_Window* gameWindow = nullptr;
 /* Has the game window pointer be sent to the program? */
 bool gw_sent = 0;
 
-/* Does the game use openGL? */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+std::unique_ptr<AVEncoder> avencoder;
+#endif
+
 bool video_opengl = false;
 
 /* Path of the dump file */
@@ -135,7 +137,7 @@ int sendXid(void)
 {
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
-    /* 
+    /*
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
      */
@@ -174,14 +176,14 @@ static int swapInterval = 0;
 
     /* We save the interval if the game wants it later */
     swapInterval = interval;
-   
+
     /* When using non deterministic timer, we let the game set vsync */
     if (tasflags.framerate > 0)
         return orig::SDL_GL_SetSwapInterval(interval);
-    
+
     return 0; // Success
 }
-    
+
 /* Override */ int SDL_GL_GetSwapInterval(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
@@ -211,22 +213,10 @@ std::string origIcon;
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    /* Initializing the video dump */
-    if (tasflags.av_dumping) {
-        if (flags & SDL_WINDOW_OPENGL)
-            video_opengl = true;
-        else
-            video_opengl = false;
-
-        debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
-        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
-        if (av != 0) {
-            /* Init failed, disable AV dumping */
-            tasflags.av_dumping = 0;
-        }
-    }
-#endif
+    if (flags & SDL_WINDOW_OPENGL)
+        video_opengl = true;
+    else
+        video_opengl = false;
 
     return gameWindow;
 }
@@ -239,8 +229,9 @@ std::string origIcon;
     if (gameWindow == window)
         gameWindow = NULL;
 #ifdef LIBTAS_ENABLE_AVDUMPING
-    if (tasflags.av_dumping)
-        closeAVDumping();
+    /* Destroy the AVEncoder object */
+    if (avencoder)
+        avencoder.reset(nullptr);
 #endif
 }
 
@@ -336,18 +327,7 @@ void updateTitle(float fps, float lfps)
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    /* Initializing the video dump */
-    if (tasflags.av_dumping) {
-
-        debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
-        int av = openAVDumping(gameWindow, false, av_filename, frame_counter);
-        if (av != 0) {
-            /* Init failed, disable AV dumping */
-            tasflags.av_dumping = 0;
-        }
-    }
-#endif
+    video_opengl = false;
 
     return ret;
 }
@@ -356,7 +336,7 @@ void updateTitle(float fps, float lfps)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
-    /* 
+    /*
      * We need to pass the game window identifier to the program
      * so that it can capture inputs
      */
@@ -384,12 +364,7 @@ void updateTitle(float fps, float lfps)
 #ifdef LIBTAS_ENABLE_AVDUMPING
     if (tasflags.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        closeAVDumping();
-        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
-        if (av != 0) {
-            /* Init failed, disable AV dumping */
-            tasflags.av_dumping = 0;
-        }
+        avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
     }
 #endif
 }
@@ -413,14 +388,6 @@ void updateTitle(float fps, float lfps)
         video_opengl = true;
     else
         video_opengl = false;
-
-    if (tasflags.av_dumping) {
-        int av = openAVDumping(gameWindow, video_opengl, av_filename, frame_counter);
-        if (av != 0) {
-            /* Init failed, disable AV dumping */
-            tasflags.av_dumping = 0;
-        }
-    }
 #endif
 
     return surf;
@@ -514,4 +481,3 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
 #endif
 }
-

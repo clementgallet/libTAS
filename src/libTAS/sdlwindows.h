@@ -22,13 +22,21 @@
 
 #include "global.h"
 #include "../external/SDL.h"
+#include "AVEncoder.h"
 #include <string>
+#include <memory>
 #include <X11/X.h>
 
 typedef void SDL_Window;
 typedef void SDL_Renderer;
 
 extern SDL_Window* gameWindow;
+#ifdef LIBTAS_ENABLE_AVDUMPING
+extern std::unique_ptr<AVEncoder> avencoder; // making extern a unique_ptr is stupid?
+#endif
+
+/* Does the game use openGL? */
+extern bool video_opengl;
 
 namespace orig {
     extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
@@ -239,21 +247,21 @@ OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
  * Otherwise, in 8-bit mode, SDL_SetColors() may not be able to set all
  * of the colors exactly the way they are requested, and you should look
  * at the video surface structure to determine the actual palette.
- * If SDL cannot guarantee that the colors you request can be set, 
+ * If SDL cannot guarantee that the colors you request can be set,
  * i.e. if the colormap is shared, then the video surface may be created
  * under emulation in system memory, overriding the SDL_HWSURFACE flag.
  *
  * If SDL_FULLSCREEN is set in 'flags', the SDL library will try to set
  * a fullscreen video mode.  The default is to create a windowed mode
  * if the current graphics system has a window manager.
- * If the SDL library is able to set a fullscreen video mode, this flag 
+ * If the SDL library is able to set a fullscreen video mode, this flag
  * will be set in the surface that is returned.
  *
  * If SDL_DOUBLEBUF is set in 'flags', the SDL library will try to set up
- * two surfaces in video memory and swap between them when you call 
+ * two surfaces in video memory and swap between them when you call
  * SDL_Flip().  This is usually slower than the normal single-buffering
- * scheme, but prevents "tearing" artifacts caused by modifying video 
- * memory while the monitor is refreshing.  It should only be used by 
+ * scheme, but prevents "tearing" artifacts caused by modifying video
+ * memory while the monitor is refreshing.  It should only be used by
  * applications that redraw the entire screen on every update.
  *
  * If SDL_RESIZABLE is set in 'flags', the SDL library will allow the
@@ -315,4 +323,3 @@ OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
 
 
 #endif
-

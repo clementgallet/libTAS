@@ -50,7 +50,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     audiochoice->align(FL_ALIGN_TOP_LEFT);
     audiochoice->menu(audio_items);
 
-    start = new Fl_Button(400, 120, 70, 30, "Start");
+    start = new Fl_Button(400, 120, 70, 30, "Ok");
     start->callback((Fl_Callback*) start_cb, this);
 
     cancel = new Fl_Button(500, 120, 70, 30, "Cancel");
@@ -79,14 +79,11 @@ void start_cb(Fl_Widget* w, void* v)
     EncodeWindow* ew = (EncodeWindow*) v;
 
     /* Fill encode filename */
-    const char* filename = ew->encodepathchooser->filename();
+    const char* filename = ew->encodepath->value();
     std::string ext = EncodeWindow::container_items[ew->containerchoice->value()].label();
     ew->context->dumpfile = std::string(filename) + ext;
 
     /* TODO: Set video and audio codec */
-
-    /* Set encode status */
-    ew->context->tasflags.av_dumping = 1;
 
     /* Close window */
     ew->window->hide();

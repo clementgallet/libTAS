@@ -61,6 +61,9 @@ struct Context {
     /* Absolute path of the dump file */
     std::string dumpfile;
 
+    /* Was the dump file modified */
+    bool dumpfile_modified;
+
     /* Path of the libraries used by the game */
     std::string libdir;
 

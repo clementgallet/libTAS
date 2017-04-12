@@ -98,5 +98,7 @@ void pause_cb(Fl_Widget*, void*);
 void fastforward_cb(Fl_Widget*, void*);
 void recording_cb(Fl_Widget*, void*);
 void encode_cb(Fl_Widget*, void*);
+void config_encode_cb(Fl_Widget*, void*);
+void toggle_encode_cb(Fl_Widget*, void*);
 
 #endif

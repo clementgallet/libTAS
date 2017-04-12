@@ -17,16 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "avdumping.h"
+#include "AVEncoder.h"
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/opt.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-}
 #include "hook.h"
 #include "logging.h"
 #include "videocapture.h"
@@ -34,26 +27,13 @@ extern "C" {
 #include "../shared/tasflags.h"
 #include "ThreadState.h"
 
-
-AVFrame* video_frame;
-AVFrame* audio_frame;
-struct SwsContext *toYUVctx = NULL;
-AVOutputFormat *outputFormat = NULL;
-AVFormatContext *formatContext = NULL;
-AVStream* video_st;
-AVStream* audio_st;
-
-/* We save the frame when the dumping begins */
-int start_frame = -1;
-
-/* The accumulated number of audio samples */
-uint64_t accum_samples;
-
-int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
+AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned long sf) {
+    error = 0;
 
     if (tasflags.framerate <= 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Not supporting non deterministic timer");
-        return 1;
+        error = 1;
+        return;
     }
 
     start_frame = sf;
@@ -63,7 +43,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     AVPixelFormat pixfmt = initVideoCapture(window, video_opengl, &width, &height);
     if (pixfmt == AV_PIX_FMT_NONE) {
         debuglog(LCF_DUMP | LCF_ERROR, "Unable to initialize video capture");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Initialize AVCodec and AVFormat libraries */
@@ -73,7 +54,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     outputFormat = av_guess_format(NULL, dumpfile, NULL);
     if (!outputFormat) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not find suitable output format for file ", dumpfile);
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Initialize AVFormatContext */
@@ -81,7 +63,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     formatContext = avformat_alloc_context();
     if (!formatContext) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize AVFormatContext");
-        return 1;
+        error = 1;
+        return;
     }
     formatContext->oformat = outputFormat;
 
@@ -95,7 +78,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     video_codec = avcodec_find_encoder(codec_id);
     if (!video_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
-        return 1;
+        error = 1;
+        return;
     }
     outputFormat->video_codec = codec_id;
 
@@ -104,7 +88,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     video_st = avformat_new_stream(formatContext, video_codec);
     if (!video_st) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Fill video stream parameters */
@@ -132,9 +117,10 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     /* Open the codec */
     if (avcodec_open2(video_st->codec, video_codec, NULL) < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video codec");
-        return 1;
+        error = 1;
+        return;
     }
-    
+
     /*** Create audio stream ***/
 
     /* Initialize audio AVCodec */
@@ -145,7 +131,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     audio_codec = avcodec_find_encoder(audio_codec_id);
     if (!audio_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Initialize audio stream */
@@ -153,7 +140,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     audio_st = avformat_new_stream(formatContext, audio_codec);
     if (!audio_st) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Fill audio stream parameters */
@@ -166,7 +154,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
         audio_st->codec->sample_fmt = AV_SAMPLE_FMT_S16;
     else {
         debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
-        return 1;
+        error = 1;
+        return;
     }
     audio_st->codec->bit_rate = 64000;
     audio_st->codec->sample_rate = audiocontext.outFrequency;
@@ -180,7 +169,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     /* Open the codec */
     if (avcodec_open2(audio_st->codec, audio_codec, NULL) < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open audio codec");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Initialize video AVFrame */
@@ -188,7 +178,8 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     video_frame = av_frame_alloc();
     if (!video_frame) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate AVFrame");
-        return 1;
+        error = 1;
+        return;
     }
     video_frame->format = video_st->codec->pix_fmt;
     video_frame->width  = video_st->codec->width;
@@ -202,54 +193,56 @@ int openAVDumping(void* window, bool video_opengl, char* dumpfile, int sf) {
     int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
-        return 1;
+        error = 1;
+        return;
     }
 
 
     /* Initialize swscale context for pixel format conversion */
 
-    toYUVctx = sws_getContext(video_frame->width, video_frame->height,  
+    toYUVctx = sws_getContext(video_frame->width, video_frame->height,
                               pixfmt,
-                              video_frame->width, video_frame->height, 
+                              video_frame->width, video_frame->height,
                               AV_PIX_FMT_YUV420P,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
     if (toYUVctx == NULL) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate swscale context");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Print informations on input and output streams */
     threadState.setOwnCode(true); // We protect the following code because it performs IO that we hook
     av_dump_format(formatContext, 0, dumpfile, 1);
-    
+
     /* Set up output file */
     if (avio_open(&formatContext->pb, dumpfile, AVIO_FLAG_WRITE) < 0) {
         threadState.setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
-        return 1;
+        error = 1;
+        return;
     }
 
     /* Write header */
     if (avformat_write_header(formatContext, NULL) < 0) {
         threadState.setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not write header");
-        return 1;
+        error = 1;
+        return;
     }
 
     threadState.setOwnCode(false);
-    return 0;
 }
 
 /*
  * Encode one frame and send it to the muxer
  * Returns 0 if no error was encountered
  */
+int AVEncoder::encodeOneFrame(unsigned long fcounter) {
 
-int encodeOneFrame(unsigned long fcounter) {
-
-    /* Check if the encode was inited */
-    if (start_frame == -1)
+    /* Check if there was an error during the init */
+    if (error)
         return 0;
 
     /*** Video ***/
@@ -268,7 +261,7 @@ int encodeOneFrame(unsigned long fcounter) {
     av_init_packet(&vpkt);
 
     /* Change pixel format to YUV420p and copy it into the AVframe */
-    int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0, 
+    int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0,
                 video_frame->height, video_frame->data, video_frame->linesize);
     if (rets != video_frame->height) {
         debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",rets," rows");
@@ -347,8 +340,11 @@ int encodeOneFrame(unsigned long fcounter) {
     return 0;
 }
 
+AVEncoder::~AVEncoder() {
+    /* Check if there was an error during the init */
+    if (error)
+        return;
 
-int closeAVDumping(void) {
     /* Encode the remaining frames */
     int got_video = 1;
     int got_audio = 1;
@@ -363,7 +359,7 @@ int closeAVDumping(void) {
         int ret = avcodec_encode_video2(video_st->codec, &vpkt, NULL, &got_video);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
-            return 1;
+            return;
         }
 
         if (got_video) {
@@ -373,7 +369,7 @@ int closeAVDumping(void) {
             vpkt.stream_index = video_st->index;
             if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-                return 1;
+                return;
             }
             av_free_packet(&vpkt);
         }
@@ -386,7 +382,7 @@ int closeAVDumping(void) {
         ret = avcodec_encode_audio2(audio_st->codec, &apkt, NULL, &got_audio);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
-            return 1;
+            return;
         }
 
         if (got_audio) {
@@ -397,7 +393,7 @@ int closeAVDumping(void) {
             apkt.stream_index = audio_st->index;
             if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-                return 1;
+                return;
             }
             av_free_packet(&apkt);
         }
@@ -416,10 +412,6 @@ int closeAVDumping(void) {
     av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
-
-    start_frame = -1;
-    return 0;
 }
 
 #endif
-
