@@ -21,7 +21,7 @@
 #define LINTAS_MAINWINDOW_H_INCLUDED
 
 #include <FL/Fl.H>
-#include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Int_Input.H>
@@ -35,6 +35,7 @@
 #include <thread>
 
 #include "../Context.h"
+#include "EncodeWindow.h"
 
 class MainWindow {
     public:
@@ -52,10 +53,12 @@ class MainWindow {
 
         std::thread game_thread;
         Context *context;
-        Fl_Window *main_window;
+        Fl_Double_Window *window;
 
         Fl_Menu_Bar *menu_bar;
         static Fl_Menu_Item menu_items[];
+
+        EncodeWindow* encode_window;
 
         Fl_Button *launch;
 
@@ -94,5 +97,6 @@ void set_fps_cb(Fl_Widget*, void*);
 void pause_cb(Fl_Widget*, void*);
 void fastforward_cb(Fl_Widget*, void*);
 void recording_cb(Fl_Widget*, void*);
+void encode_cb(Fl_Widget*, void*);
 
 #endif

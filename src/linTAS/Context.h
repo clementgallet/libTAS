@@ -26,11 +26,13 @@
 
 struct Context {
     /* Execution status */
-    int status;
-    const static int INACTIVE = 0;
-    const static int STARTING = 1;
-    const static int ACTIVE = 2;
-    const static int QUITTING = 3;
+    enum RunStatus {
+        INACTIVE,
+        STARTING,
+        ACTIVE,
+        QUITTING
+    };
+    RunStatus status;
 
     /* frame count */
     unsigned long int framecount = 0;

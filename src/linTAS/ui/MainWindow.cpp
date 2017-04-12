@@ -24,10 +24,10 @@
 void MainWindow::build(Context* c)
 {
     context = c;
-    main_window = new Fl_Window(600, 400);
+    window = new Fl_Double_Window(600, 400);
 
     /* Menu */
-    menu_bar = new Fl_Menu_Bar(0, 0, main_window->w(), 30);
+    menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);
     menu_bar->menu(menu_items);
 
     /* Game Executable */
@@ -58,7 +58,7 @@ void MainWindow::build(Context* c)
     browsemoviepath->callback((Fl_Callback*) browse_moviepath_cb);
 
     /* Movie File Status */
-    moviepack = new Fl_Pack(10, 90, main_window->w()-10, 30);
+    moviepack = new Fl_Pack(10, 90, window->w()-10, 30);
     moviepack->type(Fl_Pack::HORIZONTAL);
     moviepack->box(FL_ENGRAVED_FRAME);
     movie_norec = new Fl_Radio_Round_Button(0, 0, 130, 0, "No recording");
@@ -94,14 +94,20 @@ void MainWindow::build(Context* c)
 
     update(true);
 
-    main_window->end();
-    main_window->show();
+    window->end();
+
+    encode_window = new EncodeWindow(c);
+
+    window->show();
 }
 
 Fl_Menu_Item MainWindow::menu_items[] = {
     {"File", 0, nullptr, nullptr, FL_SUBMENU},
         {"Open Executable...", 0, browse_gamepath_cb},
         {"Open Movie...", 0, browse_moviepath_cb},
+        {nullptr},
+    {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Encode...", 0, encode_cb},
         {nullptr},
     {nullptr}
 };
@@ -117,7 +123,6 @@ void MainWindow::update_status()
         case Context::INACTIVE:
             launch->label("Start");
             launch->activate();
-            //launch->redraw();
             moviepath->activate();
             browsemoviepath->activate();
             gamepath->activate();
@@ -127,7 +132,6 @@ void MainWindow::update_status()
             break;
         case Context::STARTING:
             launch->deactivate();
-            //launch->redraw();
             moviepath->deactivate();
             browsemoviepath->deactivate();
             gamepath->deactivate();
@@ -138,11 +142,9 @@ void MainWindow::update_status()
         case Context::ACTIVE:
             launch->activate();
             launch->label("Stop");
-            //launch->redraw();
             break;
         case Context::QUITTING:
             launch->deactivate();
-            //launch->redraw();
             break;
         default:
             break;
@@ -287,4 +289,14 @@ void recording_cb(Fl_Widget* w, void*)
         mw.context->tasflags.recording = TasFlags::RECORDING_READ_WRITE;
     if (mw.movie_ro->value() == 1)
         mw.context->tasflags.recording = TasFlags::RECORDING_READ_ONLY;
+}
+
+void encode_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.encode_window->window->show();
+
+    while (mw.encode_window->window->shown()) {
+        Fl::wait();
+    }
 }
