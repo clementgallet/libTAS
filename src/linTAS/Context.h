@@ -21,6 +21,7 @@
 #define LINTAS_CONTEXT_H_INCLUDED
 
 #include <string>
+#include "KeyMapping.h"
 #include "../shared/tasflags.h"
 
 struct Context {
@@ -36,6 +37,9 @@ struct Context {
 
     /* tas flags */
     TasFlags tasflags;
+
+    /* key mapping */
+    KeyMapping km;
 
     /* was the tasflags modified */
     bool tasflags_modified;

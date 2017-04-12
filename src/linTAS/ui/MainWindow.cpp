@@ -33,6 +33,7 @@ void MainWindow::build(Context* c)
     /* Game Executable */
     gamepath = new Fl_Output(10, 300, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
+    gamepath->color(FL_LIGHT1);
     gamepath->value(context->gamepath.c_str());
 
     browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
@@ -45,6 +46,7 @@ void MainWindow::build(Context* c)
     /* Movie File */
     moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
+    moviepath->color(FL_LIGHT1);
     moviepath->value(context->moviefile.c_str());
 
     moviepathchooser = new Fl_Native_File_Chooser();
@@ -85,6 +87,7 @@ void MainWindow::build(Context* c)
     framecount = new Fl_Output(80, 140, 60, 30, "Frames:");
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
+    framecount->color(FL_LIGHT1);
 
     launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback((Fl_Callback*) launch_cb);

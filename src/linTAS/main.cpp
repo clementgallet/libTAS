@@ -30,7 +30,6 @@
 #include <X11/XKBlib.h>
 #include "../shared/tasflags.h"
 #include "../shared/messages.h"
-#include "keymapping.h"
 #include "recording.h"
 #include "SaveState.h"
 #include <vector>
@@ -175,8 +174,6 @@ int main(int argc, char **argv)
         context.gameargs += argv[i];
         context.gameargs += " ";
     }
-
-    config.default_hotkeys();
 
     /* Starts the user interface */
     MainWindow& ui = MainWindow::getInstance();
@@ -421,7 +418,7 @@ void* launchGame(void* arg)
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
-                    if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
+                    if (ks == context.km.hotkeys[HOTKEY_FRAMEADVANCE]){
                         if (context.tasflags.running == 1) {
                             context.tasflags.running = 0;
                             ui.update(true);
@@ -430,23 +427,23 @@ void* launchGame(void* arg)
                         //ar_ticks = 0; // Activate auto-repeat
                         advance_frame = true; // Advance one frame
                     }
-                    if (ks == config.hotkeys[HOTKEY_PLAYPAUSE]){
+                    if (ks == context.km.hotkeys[HOTKEY_PLAYPAUSE]){
                         context.tasflags.running = !context.tasflags.running;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
+                    if (ks == context.km.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 1;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (ks == config.hotkeys[HOTKEY_SAVESTATE]){
+                    if (ks == context.km.hotkeys[HOTKEY_SAVESTATE]){
                         savestate.save(game_pid);
                     }
-                    if (ks == config.hotkeys[HOTKEY_LOADSTATE]){
+                    if (ks == context.km.hotkeys[HOTKEY_LOADSTATE]){
                         savestate.load(game_pid);
                     }
-                    if (ks == config.hotkeys[HOTKEY_READWRITE]){
+                    if (ks == context.km.hotkeys[HOTKEY_READWRITE]){
                         switch (context.tasflags.recording) {
                             case TasFlags::RECORDING_WRITE:
                                 context.tasflags.recording = TasFlags::RECORDING_READ_WRITE;
@@ -486,12 +483,12 @@ void* launchGame(void* arg)
 #endif
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-                    if (ks == config.hotkeys[HOTKEY_FASTFORWARD]){
+                    if (ks == context.km.hotkeys[HOTKEY_FASTFORWARD]){
                         context.tasflags.fastforward = 0;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (ks == config.hotkeys[HOTKEY_FRAMEADVANCE]){
+                    if (ks == context.km.hotkeys[HOTKEY_FRAMEADVANCE]){
                         ar_ticks = -1; // Deactivate auto-repeat
                         /* FIXME: If the game window looses focus,
                          * the key release event is never sent,
@@ -526,7 +523,7 @@ void* launchGame(void* arg)
                 XQueryKeymap(display, keyboard_state);
 
                 /* Format the keyboard state and save it in the AllInputs struct */
-                buildAllInputs(&ai, display, keyboard_state, config.hotkeys);
+                context.km.buildAllInputs(ai, display, keyboard_state);
 
                 /* Get the pointer position and mask */
                 if (gameWindow) {
