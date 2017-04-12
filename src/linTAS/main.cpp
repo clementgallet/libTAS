@@ -317,7 +317,7 @@ void* launchGame(void* arg)
     nanosleep(&tim, NULL);
 
     FILE* fp;
-    if (context.tasflags.recording >= 0){
+    if (context.tasflags.recording != TasFlags::NO_RECORDING){
         fp = openRecording(context.moviefile.c_str(), context.tasflags.recording);
     }
 
@@ -450,13 +450,16 @@ void* launchGame(void* arg)
                         switch (context.tasflags.recording) {
                             case TasFlags::RECORDING_WRITE:
                                 context.tasflags.recording = TasFlags::RECORDING_READ_WRITE;
+                                context.tasflags_modified = true;
+                                ui.update(true);
                                 break;
                             case TasFlags::RECORDING_READ_WRITE:
                                 context.tasflags.recording = TasFlags::RECORDING_WRITE;
+                                context.tasflags_modified = true;
+                                ui.update(true);
                                 truncateRecording(fp);
                                 break;
                         }
-                        context.tasflags_modified = true;
                     }
                 }
                 if (event.type == KeyRelease)
@@ -543,16 +546,21 @@ void* launchGame(void* arg)
                 if (!writeFrame(fp, context.framecount, ai)) {
                     /* Writing failed, returning to no recording mode */
                     context.tasflags.recording = TasFlags::NO_RECORDING;
+                    closeRecording(fp);
+                    ui.update(true);
                 }
 
                 break;
 
             case TasFlags::RECORDING_READ_WRITE:
             case TasFlags::RECORDING_READ_ONLY:
-                /* Save inputs to file */
+                /* Read inputs from file */
                 if (!readFrame(fp, context.framecount, &ai)) {
-                    /* Writing failed, returning to no recording mode */
+                    /* Reading failed, returning to no recording mode */
+                    std::cout << "Reading failed" << std::endl;
+                    closeRecording(fp);
                     context.tasflags.recording = TasFlags::NO_RECORDING;
+                    ui.update(true);
                 }
                 break;
         }
@@ -580,7 +588,7 @@ void* launchGame(void* arg)
 
     }
 
-    if (context.tasflags.recording >= 0){
+    if (context.tasflags.recording != TasFlags::NO_RECORDING){
         closeRecording(fp);
     }
     close(socket_fd);

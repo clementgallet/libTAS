@@ -19,19 +19,24 @@
 
 #include "recording.h"
 
-FILE* openRecording(const char* filename, int recording)
+FILE* openRecording(const char* filename, TasFlags::RecStatus recording)
 {
     FILE* fp;
 
-    if (recording) {
-        fp = fopen(filename, "wb");
-        writeHeader(fp);
+    switch(recording) {
+        case TasFlags::RECORDING_WRITE:
+            fp = fopen(filename, "wb");
+            writeHeader(fp);
+            break;
+        case TasFlags::RECORDING_READ_WRITE:
+            fp = fopen(filename, "r+b");
+            readHeader(fp);
+            break;
+        case TasFlags::RECORDING_READ_ONLY:
+            fp = fopen(filename, "rb");
+            readHeader(fp);
+            break;
     }
-    else {
-        fp = fopen(filename, "r+b");
-        readHeader(fp);
-    }
-
     return fp;
 }
 
@@ -104,4 +109,4 @@ void closeRecording(FILE* fp)
     /* TODO: Write some stuff in the header */
 
     fclose(fp);
-} 
+}

@@ -68,20 +68,6 @@ void MainWindow::build(Context* c)
     movie_ro = new Fl_Radio_Round_Button(0, 0, 130, 0, "Read Only");
     movie_ro->callback((Fl_Callback*) recording_cb);
     moviepack->end();
-    switch (context->tasflags.recording) {
-      case TasFlags::NO_RECORDING:
-          movie_norec->setonly();
-          break;
-      case TasFlags::RECORDING_WRITE:
-          movie_w->setonly();
-          break;
-      case TasFlags::RECORDING_READ_WRITE:
-          movie_rw->setonly();
-          break;
-      case TasFlags::RECORDING_READ_ONLY:
-          movie_ro->setonly();
-          break;
-    }
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 200, 40, 30, "Frames per second");
@@ -134,6 +120,7 @@ void MainWindow::update_status()
             gamepath->activate();
             browsegamepath->activate();
             logicalfps->activate();
+            moviepack->activate();
             break;
         case Context::STARTING:
             launch->deactivate();
@@ -143,6 +130,7 @@ void MainWindow::update_status()
             gamepath->deactivate();
             browsegamepath->deactivate();
             logicalfps->deactivate();
+            moviepack->deactivate();
             break;
         case Context::ACTIVE:
             launch->activate();
@@ -169,7 +157,6 @@ void MainWindow::update(bool status)
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
-    //framecount->redraw();
 
     if (status) {
         /* Update pause status */
@@ -177,7 +164,26 @@ void MainWindow::update(bool status)
 
         /* Update fastforward status */
         fastforwardcheck->value(context->tasflags.fastforward);
+
+        /* Update recording state */
+        switch (context->tasflags.recording) {
+          case TasFlags::NO_RECORDING:
+              movie_norec->setonly();
+              break;
+          case TasFlags::RECORDING_WRITE:
+              movie_w->setonly();
+              break;
+          case TasFlags::RECORDING_READ_WRITE:
+              movie_rw->setonly();
+              break;
+          case TasFlags::RECORDING_READ_ONLY:
+              movie_ro->setonly();
+              break;
+        }
+
     }
+
+
     Fl::unlock();
     Fl::awake();
 }
