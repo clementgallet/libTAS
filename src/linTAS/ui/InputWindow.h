@@ -24,7 +24,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Multi_Browser.H>
-
+#include <X11/Xlib.h>
 #include "../Context.h"
 
 class InputWindow {
@@ -32,17 +32,28 @@ class InputWindow {
         InputWindow(Context *c);
         Context *context;
 
+        Display *display;
+
         Fl_Double_Window *window;
 
         Fl_Multi_Browser *hotkey_browser;
         Fl_Multi_Browser *input_browser;
 
-        // Fl_Button *start;
-        // Fl_Button *cancel;
+        Fl_Button *assign;
+        Fl_Button *disable;
 
+        Fl_Button *save;
+        Fl_Button *cancel;
+
+        void update();
 };
 
-// void start_cb(Fl_Widget*, void*);
-// void cancel_cb(Fl_Widget*, void*);
+static KeySym get_next_keypressed(Display* display);
+
+static void select_cb(Fl_Widget*, void*);
+static void assign_cb(Fl_Widget*, void*);
+static void disable_cb(Fl_Widget*, void*);
+static void save_cb(Fl_Widget*, void*);
+static void cancel_cb(Fl_Widget*, void*);
 
 #endif

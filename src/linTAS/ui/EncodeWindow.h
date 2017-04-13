@@ -58,8 +58,8 @@ class EncodeWindow {
 
 };
 
-void start_cb(Fl_Widget*, void*);
-void cancel_cb(Fl_Widget*, void*);
-void browse_encodepath_cb(Fl_Widget*, void*);
+static void start_cb(Fl_Widget*, void*);
+static void cancel_cb(Fl_Widget*, void*);
+static void browse_encodepath_cb(Fl_Widget*, void*);
 
 #endif

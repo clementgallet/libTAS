@@ -58,7 +58,8 @@ KeyMapping::KeyMapping()
         si.description = XKeysymToString(ks);
         input_list.push_back(si);
 
-        input_mapping[ks].type = IT_ID;
+        input_mapping[ks].type = IT_KEYBOARD;
+        input_mapping[ks].value = static_cast<int>(ks);
     }
 
     /* Add controller mapping */
@@ -191,12 +192,6 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                 if (si.type == IT_NONE) {
                     /* Key is mapped to nothing */
                     continue;
-                }
-
-                if (si.type == IT_ID) {
-                    /* Key is mapped to itself */
-                    si.type = IT_KEYBOARD;
-                    si.value = ks;
                 }
 
                 if (si.type == IT_KEYBOARD) {

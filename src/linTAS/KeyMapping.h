@@ -41,8 +41,7 @@ enum
 /* Some structures to represent single inputs */
 typedef int InputType; enum {
     IT_NONE = -1, /* No input */
-    IT_ID = 0, /* Same input */
-    IT_HOTKEY, /* Hotkey */
+    IT_HOTKEY = 0, /* Hotkey */
     IT_KEYBOARD, /* Keyboard */
 
     /* SDL Controller 1 */

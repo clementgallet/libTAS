@@ -20,17 +20,29 @@
 #include "InputWindow.h"
 //#include "../main.h"
 #include <iostream>
+#include <X11/XKBlib.h>
 
 InputWindow::InputWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(600, 500);
+    window = new Fl_Double_Window(800, 500);
+
+    /* We need to open a connection to the X server to access to key pressed */
+    display = XOpenDisplay(NULL);
+    if (display == NULL)
+    {
+        /* TODO: Deal with the error */
+        std::cerr << "Cannot open display" << std::endl;
+    }
 
     /* Browsers */
-    hotkey_browser = new Fl_Multi_Browser(10, 10, 250, 400, "Hotkeys");
-    input_browser = new Fl_Multi_Browser(300, 10, 250, 400, "Inputs");
+    hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
+    hotkey_browser->callback((Fl_Callback*) select_cb, this);
+
+    input_browser = new Fl_Multi_Browser(400, 10, 350, 400, "Inputs");
+    input_browser->callback((Fl_Callback*) select_cb, this);
 
     /* Set two columns */
-    static int col_width[] = {150, 100, 0};
+    static int col_width[] = {220, 130, 0};
     hotkey_browser->column_widths(col_width);
     hotkey_browser->column_char('\t');
     input_browser->column_widths(col_width);
@@ -39,6 +51,39 @@ InputWindow::InputWindow(Context* c) : context(c)
     /* Fill hotkey list */
     for (auto iter : context->km.hotkey_list) {
         std::string linestr(iter.description);
+        /* Add the line in the browser */
+        hotkey_browser->add(linestr.c_str());
+    }
+
+    /* Fill input list */
+    for (auto iter : context->km.input_list) {
+        std::string linestr(iter.description);
+        /* Add the line in the browser */
+        input_browser->add(linestr.c_str());
+    }
+
+    update();
+
+    assign = new Fl_Button(400, 420, 70, 30, "Assign");
+    assign->callback((Fl_Callback*) assign_cb, this);
+
+
+    save = new Fl_Button(600, 460, 70, 30, "Ok");
+    save->callback((Fl_Callback*) save_cb, this);
+
+    cancel = new Fl_Button(700, 460, 70, 30, "Cancel");
+    cancel->callback((Fl_Callback*) cancel_cb, this);
+
+    window->end();
+}
+
+void InputWindow::update()
+{
+    /* Update hotkey list */
+    int index = 1;
+    for (auto iter : context->km.hotkey_list) {
+        std::string linestr(iter.description);
+
         /* Check if a key is mapped to this hotkey */
         for (auto itermap : context->km.hotkey_mapping) {
             if (itermap.second == iter) {
@@ -47,38 +92,166 @@ InputWindow::InputWindow(Context* c) : context(c)
                 break;
             }
         }
-        /* Add the line in the browser */
-        hotkey_browser->add(linestr.c_str());
+
+        /* Modify the text in the browser */
+        hotkey_browser->text(index, linestr.c_str());
+        index++;
     }
 
-    // start = new Fl_Button(400, 120, 70, 30, "Ok");
-    // start->callback((Fl_Callback*) start_cb, this);
-    //
-    // cancel = new Fl_Button(500, 120, 70, 30, "Cancel");
-    // cancel->callback((Fl_Callback*) cancel_cb, this);
+    /* Update input list */
+    index = 1;
+    for (auto iter : context->km.input_list) {
+        std::string linestr(iter.description);
 
-    window->end();
+        /* Check if a key is mapped to this input */
+        for (auto itermap : context->km.input_mapping) {
+            if (itermap.second == iter) {
+                linestr += '\t';
+                /* Special case for visibility:
+                 * if mapped to itself print <self> */
+                if ((iter.type == IT_KEYBOARD) && (iter.value == itermap.first))
+                    linestr += "<self>";
+                else
+                    linestr += XKeysymToString(itermap.first);
+                break;
+            }
+        }
+
+        /* Modify the text in the browser */
+        input_browser->text(index, linestr.c_str());
+        index++;
+    }
 }
 
-// void start_cb(Fl_Widget* w, void* v)
-// {
-//     EncodeWindow* ew = (EncodeWindow*) v;
-//
-//     /* Fill encode filename */
-//     const char* filename = ew->encodepath->value();
-//     std::string ext = EncodeWindow::container_items[ew->containerchoice->value()].label();
-//     ew->context->dumpfile = std::string(filename) + ext;
-//
-//     /* TODO: Set video and audio codec */
-//
-//     /* Close window */
-//     ew->window->hide();
-// }
-//
-// void cancel_cb(Fl_Widget* w, void* v)
-// {
-//     EncodeWindow* ew = (EncodeWindow*) v;
-//
-//     /* Close window */
-//     ew->window->hide();
-// }
+KeySym get_next_keypressed(Display* display)
+{
+    Window window;
+    XEvent event;
+    int revert;
+    XGetInputFocus(display, &window, &revert);
+    XSelectInput(display, window, KeyPressMask | KeyReleaseMask);
+
+    /* Empty event queue */
+    while (XPending (display)) {
+        XNextEvent(display, &event);
+    }
+
+    while (1) {
+        XNextEvent(display, &event);
+        if (event.type == KeyPress)
+        {
+            //ui_print("KeyPress event");
+            KeyCode kc = event.xkey.keycode;
+            //ui_print("KeyCode is %d", kc);
+            KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+            return ks;
+        }
+    }
+    return 0;
+}
+
+void select_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+    Fl_Multi_Browser* cur_browser;
+
+    /* Deselect the other browser */
+    if (iw->input_browser->changed()) {
+        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
+        // iw->hotkey_browser->value(0);
+        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
+        iw->hotkey_browser->deselect();
+        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
+        /* I don't know why, but deselect does not set value to 0... */
+        cur_browser = iw->input_browser;
+    }
+    if (iw->hotkey_browser->changed()) {
+        //iw->input_browser->value(0);
+        iw->input_browser->deselect();
+        cur_browser = iw->hotkey_browser;
+    }
+
+    /* Count how many lines are selected */
+    int count = 0;
+    for (int i = 1; i <= cur_browser->size(); i++) {
+        count += cur_browser->selected(i);
+    }
+
+    /* Enable/disable the assign button */
+    if (count == 1) {
+        iw->assign->activate();
+    }
+    else {
+        iw->assign->deactivate();
+    }
+}
+
+void assign_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+
+    KeySym ks = get_next_keypressed(iw->display);
+
+    /* Check if the selected item is in the hotkey browser.
+     * We cannot use value() function only, it is supposed to return 0 if
+     * no item is selected, but after calling deselect(), it actually returns
+     * the index of the last element. So we check if this element is selected.
+     */
+    int sel_hotkey = iw->hotkey_browser->value();
+    if (iw->hotkey_browser->selected(sel_hotkey)) {
+        /* Hotkey selected */
+        SingleInput si = iw->context->km.hotkey_list[sel_hotkey-1];
+
+        /* Remove previous mapping from this key */
+        for (auto iter : iw->context->km.hotkey_mapping) {
+            if (iter.second == si) {
+                iw->context->km.hotkey_mapping.erase(iter.first);
+                break;
+            }
+        }
+
+        iw->context->km.hotkey_mapping[ks] = si;
+    }
+
+    int sel_input = iw->input_browser->value();
+    if (iw->input_browser->selected(sel_input)) {
+        /* Input selected */
+        SingleInput si = iw->context->km.input_list[sel_input-1];
+
+        /* Remove previous mapping from this key */
+        for (auto iter : iw->context->km.input_mapping) {
+            if (iter.second == si) {
+                iw->context->km.input_mapping.erase(iter.first);
+                break;
+            }
+        }
+        iw->context->km.input_mapping[ks] = si;
+    }
+
+    iw->update();
+}
+
+void disable_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+
+}
+
+
+void save_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+
+    /* TODO: Save mappings */
+
+    /* Close window */
+    iw->window->hide();
+}
+
+void cancel_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+
+    /* Close window */
+    iw->window->hide();
+}
