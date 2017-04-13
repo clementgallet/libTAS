@@ -78,9 +78,9 @@ void MainWindow::build(Context* c)
     logicalfps->callback((Fl_Callback*) set_fps_cb);
 
     /* Pause/FF */
-    pausecheck = new Fl_Check_Button(240, 140, 20, 20, "Pause");
+    pausecheck = new Fl_Check_Button(240, 140, 80, 20, "Pause");
     pausecheck->callback((Fl_Callback*) pause_cb);
-    fastforwardcheck = new Fl_Check_Button(240, 180, 20, 20, "Fast-forward");
+    fastforwardcheck = new Fl_Check_Button(240, 180, 80, 20, "Fast-forward");
     fastforwardcheck->callback((Fl_Callback*) fastforward_cb);
 
     /* Frame count */
@@ -97,6 +97,7 @@ void MainWindow::build(Context* c)
     window->end();
 
     encode_window = new EncodeWindow(c);
+    input_window = new InputWindow(c);
 
     window->show();
 }
@@ -109,6 +110,9 @@ Fl_Menu_Item MainWindow::menu_items[] = {
     {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure encode...", 0, config_encode_cb},
         {"Start encode", 0, toggle_encode_cb},
+        {nullptr},
+    {"Input", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Configure mapping...", 0, config_input_cb},
         {nullptr},
     {nullptr}
 };
@@ -319,5 +323,14 @@ void toggle_encode_cb(Fl_Widget* w, void*)
         mw.context->tasflags_modified = true;
         encode_item->label("Start encode");
     }
+}
 
+void config_input_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.input_window->window->show();
+
+    while (mw.input_window->window->shown()) {
+        Fl::wait();
+    }
 }

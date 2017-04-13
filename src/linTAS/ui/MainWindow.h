@@ -36,6 +36,7 @@
 
 #include "../Context.h"
 #include "EncodeWindow.h"
+#include "InputWindow.h"
 
 class MainWindow {
     public:
@@ -59,6 +60,7 @@ class MainWindow {
         static Fl_Menu_Item menu_items[];
 
         EncodeWindow* encode_window;
+        InputWindow* input_window;
 
         Fl_Button *launch;
 
@@ -100,5 +102,6 @@ void recording_cb(Fl_Widget*, void*);
 void encode_cb(Fl_Widget*, void*);
 void config_encode_cb(Fl_Widget*, void*);
 void toggle_encode_cb(Fl_Widget*, void*);
+void config_input_cb(Fl_Widget*, void*);
 
 #endif

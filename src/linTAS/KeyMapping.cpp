@@ -22,13 +22,21 @@
 
 KeyMapping::KeyMapping()
 {
+    /* Fill hotkey list */
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_PLAYPAUSE, "Play/Pause"});
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_FRAMEADVANCE, "Frame Advance"});
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_FASTFORWARD, "Fast-forward"});
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_SAVESTATE, "Save State"});
+    hotkey_list.push_back({IT_HOTKEY, HOTKEY_LOADSTATE, "Load State"});
+
     /* Set default hotkeys */
-    hotkeys[HOTKEY_PLAYPAUSE] = XK_Pause;
-    hotkeys[HOTKEY_FRAMEADVANCE] = XK_v;
-    hotkeys[HOTKEY_FASTFORWARD] = XK_Tab;
-    hotkeys[HOTKEY_READWRITE] = XK_p;
-    hotkeys[HOTKEY_SAVESTATE] = XK_s;
-    hotkeys[HOTKEY_LOADSTATE] = XK_m;
+    hotkey_mapping[XK_Pause].type = IT_HOTKEY;
+    hotkey_mapping[XK_Pause].value = HOTKEY_PLAYPAUSE;
+    hotkey_mapping[XK_v].type = IT_HOTKEY;
+    hotkey_mapping[XK_v].value = HOTKEY_FRAMEADVANCE;
+    hotkey_mapping[XK_Tab].type = IT_HOTKEY;
+    hotkey_mapping[XK_Tab].value = HOTKEY_FASTFORWARD;
 
     /* Gather the list of valid X11 KeyCode values */
     int min_keycodes_return, max_keycodes_return;
@@ -170,14 +178,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                 /* Translating to keysym */
                 KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
-                for (k=0; k<HOTKEY_LEN; k++) {
-                    if (hotkeys[k] == ks) {
-                        /* The pressed key was in fact a hotkey. */
-                        break;
-                    }
-                }
-
-                if (k < HOTKEY_LEN) {
+                if (hotkey_mapping.find(ks) != hotkey_mapping.end()) {
                     /* Dealing with a hotkey, skipping */
                     continue;
                 }

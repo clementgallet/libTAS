@@ -42,6 +42,7 @@ enum
 typedef int InputType; enum {
     IT_NONE = -1, /* No input */
     IT_ID = 0, /* Same input */
+    IT_HOTKEY, /* Hotkey */
     IT_KEYBOARD, /* Keyboard */
 
     /* SDL Controller 1 */
@@ -164,6 +165,14 @@ class KeyMapping {
 
         /* List of inputs that can be mapped to a single key */
         std::vector<SingleInput> input_list;
+
+        /* Map keyboard KeySym to a hotkey */
+        std::map<KeySym,SingleInput> hotkey_mapping;
+
+        /* List of hotkeys */
+        std::vector<SingleInput> hotkey_list;
+
+
 
         /* Mapping of hotkeys */
         KeySym hotkeys[HOTKEY_LEN];
