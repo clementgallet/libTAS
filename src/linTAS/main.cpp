@@ -413,7 +413,7 @@ void* launchGame(void* arg)
                     XUngrabKeyboard(display, CurrentTime);
                 }
 #endif
-                struct SingleInput si = {IT_NONE,0};
+                struct HotKey hk;
 
                 if ((event.type == KeyPress) || (event.type == KeyRelease)) {
                     /* Check if the key pressed/released is a hotkey */
@@ -421,7 +421,7 @@ void* launchGame(void* arg)
                     KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
                     if (context.km.hotkey_mapping.find(ks) != context.km.hotkey_mapping.end())
-                        si = context.km.hotkey_mapping[ks];
+                        hk = context.km.hotkey_mapping[ks];
                     else
                         /* This input is not a hotkey, skipping to the next */
                         continue;
@@ -429,7 +429,7 @@ void* launchGame(void* arg)
 
                 if (event.type == KeyPress)
                 {
-                    if (si.value == HOTKEY_FRAMEADVANCE){
+                    if (hk.type == HOTKEY_FRAMEADVANCE){
                         if (context.tasflags.running == 1) {
                             context.tasflags.running = 0;
                             ui.update(true);
@@ -438,23 +438,23 @@ void* launchGame(void* arg)
                         //ar_ticks = 0; // Activate auto-repeat
                         advance_frame = true; // Advance one frame
                     }
-                    if (si.value == HOTKEY_PLAYPAUSE){
+                    if (hk.type == HOTKEY_PLAYPAUSE){
                         context.tasflags.running = !context.tasflags.running;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (si.value == HOTKEY_FASTFORWARD){
+                    if (hk.type == HOTKEY_FASTFORWARD){
                         context.tasflags.fastforward = 1;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (si.value == HOTKEY_SAVESTATE){
+                    if (hk.type == HOTKEY_SAVESTATE){
                         savestate.save(game_pid);
                     }
-                    if (si.value == HOTKEY_LOADSTATE){
+                    if (hk.type == HOTKEY_LOADSTATE){
                         savestate.load(game_pid);
                     }
-                    if (si.value == HOTKEY_READWRITE){
+                    if (hk.type == HOTKEY_READWRITE){
                         switch (context.tasflags.recording) {
                             case TasFlags::RECORDING_WRITE:
                                 context.tasflags.recording = TasFlags::RECORDING_READ_WRITE;
@@ -492,12 +492,12 @@ void* launchGame(void* arg)
                         }
                     }
 #endif
-                    if (si.value == HOTKEY_FASTFORWARD){
+                    if (hk.type == HOTKEY_FASTFORWARD){
                         context.tasflags.fastforward = 0;
                         ui.update(true);
                         context.tasflags_modified = true;
                     }
-                    if (si.value == HOTKEY_FRAMEADVANCE){
+                    if (hk.type == HOTKEY_FRAMEADVANCE){
                         ar_ticks = -1; // Deactivate auto-repeat
                         /* FIXME: If the game window looses focus,
                          * the key release event is never sent,

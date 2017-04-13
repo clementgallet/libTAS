@@ -157,16 +157,10 @@ void select_cb(Fl_Widget* w, void* v)
 
     /* Deselect the other browser */
     if (iw->input_browser->changed()) {
-        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
-        // iw->hotkey_browser->value(0);
-        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
         iw->hotkey_browser->deselect();
-        // std::cout << "vaue is: " << iw->hotkey_browser->value() << std::endl;
-        /* I don't know why, but deselect does not set value to 0... */
         cur_browser = iw->input_browser;
     }
     if (iw->hotkey_browser->changed()) {
-        //iw->input_browser->value(0);
         iw->input_browser->deselect();
         cur_browser = iw->hotkey_browser;
     }
@@ -199,33 +193,12 @@ void assign_cb(Fl_Widget* w, void* v)
      */
     int sel_hotkey = iw->hotkey_browser->value();
     if (iw->hotkey_browser->selected(sel_hotkey)) {
-        /* Hotkey selected */
-        SingleInput si = iw->context->km.hotkey_list[sel_hotkey-1];
-
-        /* Remove previous mapping from this key */
-        for (auto iter : iw->context->km.hotkey_mapping) {
-            if (iter.second == si) {
-                iw->context->km.hotkey_mapping.erase(iter.first);
-                break;
-            }
-        }
-
-        iw->context->km.hotkey_mapping[ks] = si;
+        iw->context->km.reassign_hotkey(sel_hotkey-1, ks);
     }
 
     int sel_input = iw->input_browser->value();
     if (iw->input_browser->selected(sel_input)) {
-        /* Input selected */
-        SingleInput si = iw->context->km.input_list[sel_input-1];
-
-        /* Remove previous mapping from this key */
-        for (auto iter : iw->context->km.input_mapping) {
-            if (iter.second == si) {
-                iw->context->km.input_mapping.erase(iter.first);
-                break;
-            }
-        }
-        iw->context->km.input_mapping[ks] = si;
+        iw->context->km.reassign_input(sel_input-1, ks);
     }
 
     iw->update();
@@ -234,7 +207,6 @@ void assign_cb(Fl_Widget* w, void* v)
 void disable_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
-
 }
 
 

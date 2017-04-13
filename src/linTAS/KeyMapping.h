@@ -27,22 +27,10 @@
 #include <vector>
 #include <string>
 
-enum
-{
-    HOTKEY_PLAYPAUSE, // Switch from play to pause of the game
-    HOTKEY_FRAMEADVANCE, // Advance one frame, also pause the game if playing
-    HOTKEY_FASTFORWARD, // Enable fastforward when pressed
-    HOTKEY_READWRITE, // Switch from read-only recording to write
-    HOTKEY_SAVESTATE, // Save the entire state of the game
-    HOTKEY_LOADSTATE, // Load the entire state of the game
-    HOTKEY_LEN
-};
-
 /* Some structures to represent single inputs */
 typedef int InputType; enum {
     IT_NONE = -1, /* No input */
-    IT_HOTKEY = 0, /* Hotkey */
-    IT_KEYBOARD, /* Keyboard */
+    IT_KEYBOARD = 0, /* Keyboard */
 
     /* SDL Controller 1 */
     /* WARNING: Changing the values can break the code
@@ -154,6 +142,31 @@ struct SingleInput {
     }
 };
 
+typedef int HotKeyType; enum
+{
+    HOTKEY_PLAYPAUSE, // Switch from play to pause of the game
+    HOTKEY_FRAMEADVANCE, // Advance one frame, also pause the game if playing
+    HOTKEY_FASTFORWARD, // Enable fastforward when pressed
+    HOTKEY_READWRITE, // Switch from read-only recording to write
+    HOTKEY_SAVESTATE, // Save the entire state of the game
+    HOTKEY_LOADSTATE, // Load the entire state of the game
+    HOTKEY_LEN
+};
+
+struct HotKey {
+    SingleInput default_input;
+    HotKeyType type;
+    std::string description;
+
+    bool operator==( const HotKey &hk ) const {
+        return type == hk.type;
+    }
+
+    bool operator<( const HotKey &hk ) const {
+        return type < hk.type;
+    }
+};
+
 class KeyMapping {
     public:
         /* Initialize hotkeys and mapping list */
@@ -166,16 +179,31 @@ class KeyMapping {
         std::vector<SingleInput> input_list;
 
         /* Map keyboard KeySym to a hotkey */
-        std::map<KeySym,SingleInput> hotkey_mapping;
+        std::map<KeySym,HotKey> hotkey_mapping;
 
         /* List of hotkeys */
-        std::vector<SingleInput> hotkey_list;
+        std::vector<HotKey> hotkey_list;
 
+        /* Set hotkeys to default values */
+        void default_hotkeys();
 
+        /* Set hotkeys to default values */
+        void default_inputs();
 
-        /* Mapping of hotkeys */
-        KeySym hotkeys[HOTKEY_LEN];
+        /* Assign a new key to the hotkey */
+        void reassign_hotkey(int hotkey_index, KeySym ks);
 
+        /* Assign a new key to the input */
+        void reassign_input(int input_index, KeySym ks);
+
+        /*
+         * We are building the whole AllInputs structure,
+         * that will be passed to the game and saved.
+         * We will be doing the following steps:
+         * - Convert keyboard keycodes (physical keys) to keysyms (key meaning)
+         * - Check if the keysym is mapped to a hotkey. If so, we skip it
+         * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
+         */
         void buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[]);
 };
 

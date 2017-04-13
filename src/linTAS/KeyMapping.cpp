@@ -23,20 +23,15 @@
 KeyMapping::KeyMapping()
 {
     /* Fill hotkey list */
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_PLAYPAUSE, "Play/Pause"});
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_FRAMEADVANCE, "Frame Advance"});
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_FASTFORWARD, "Fast-forward"});
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_SAVESTATE, "Save State"});
-    hotkey_list.push_back({IT_HOTKEY, HOTKEY_LOADSTATE, "Load State"});
+    hotkey_list.push_back({{IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
+    hotkey_list.push_back({{IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
+    hotkey_list.push_back({{IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE, "Save State"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE, "Load State"});
 
     /* Set default hotkeys */
-    hotkey_mapping[XK_Pause].type = IT_HOTKEY;
-    hotkey_mapping[XK_Pause].value = HOTKEY_PLAYPAUSE;
-    hotkey_mapping[XK_v].type = IT_HOTKEY;
-    hotkey_mapping[XK_v].value = HOTKEY_FRAMEADVANCE;
-    hotkey_mapping[XK_Tab].type = IT_HOTKEY;
-    hotkey_mapping[XK_Tab].value = HOTKEY_FASTFORWARD;
+    default_hotkeys();
 
     /* Gather the list of valid X11 KeyCode values */
     int min_keycodes_return, max_keycodes_return;
@@ -57,9 +52,6 @@ KeyMapping::KeyMapping()
         si.value = static_cast<int>(ks);
         si.description = XKeysymToString(ks);
         input_list.push_back(si);
-
-        input_mapping[ks].type = IT_KEYBOARD;
-        input_mapping[ks].value = static_cast<int>(ks);
     }
 
     /* Add controller mapping */
@@ -127,6 +119,9 @@ KeyMapping::KeyMapping()
     input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Controller 4 - Dpad Left"});
     input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Controller 4 - Dpad Right"});
 
+    /* Set default inputs */
+    default_inputs();
+
     /* Filling some custom mapping to controller buttons.
      * This is for testing, it will be removed when the controller mapping
      * interface will be implemented.
@@ -149,18 +144,60 @@ KeyMapping::KeyMapping()
     input_mapping[XK_j].value = 1;
     input_mapping[XK_l].type = IT_CONTROLLER1_BUTTON_DPAD_RIGHT;
     input_mapping[XK_l].value = 1;
-
 }
 
+void KeyMapping::default_hotkeys()
+{
+    hotkey_mapping.clear();
+    for (auto iter : hotkey_list) {
+        if (iter.default_input.type == IT_KEYBOARD) {
+            hotkey_mapping[iter.default_input.value] = iter;
+        }
+    }
+}
 
-/*
- * We are building the whole AllInputs structure,
- * that will be passed to the game and saved.
- * We will be doing the following steps:
- * - Convert keyboard keycodes (physical keys) to keysyms (key meaning)
- * - Check if the keysym is mapped to a hotkey. If so, we skip it
- * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
- */
+void KeyMapping::default_inputs()
+{
+    input_mapping.clear();
+    for (auto iter : input_list) {
+        if (iter.type == IT_KEYBOARD) {
+            input_mapping[iter.value] = iter;
+        }
+    }
+}
+
+void KeyMapping::reassign_hotkey(int hotkey_index, KeySym ks)
+{
+    /* Hotkey selected */
+    HotKey hk = hotkey_list[hotkey_index];
+
+    /* Remove previous mapping from this key */
+    for (auto iter : hotkey_mapping) {
+        if (iter.second == hk) {
+            hotkey_mapping.erase(iter.first);
+            break;
+        }
+    }
+
+    hotkey_mapping[ks] = hk;
+}
+
+void KeyMapping::reassign_input(int input_index, KeySym ks)
+{
+    /* Input selected */
+    SingleInput si = input_list[input_index];
+
+    /* Remove previous mapping from this key */
+    for (auto iter : input_mapping) {
+        if (iter.second == si) {
+            input_mapping.erase(iter.first);
+            break;
+        }
+    }
+
+    input_mapping[ks] = si;
+}
+
 
 void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[]){
     int i,j,k;
