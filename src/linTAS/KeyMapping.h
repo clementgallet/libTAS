@@ -190,6 +190,12 @@ class KeyMapping {
         /* Set hotkeys to default values */
         void default_inputs();
 
+        /* Set a hotkey to default value */
+        void default_hotkey(int hotkey_index);
+
+        /* Set input to default value */
+        void default_input(int input_index);
+
         /* Assign a new key to the hotkey */
         void reassign_hotkey(int hotkey_index, KeySym ks);
 

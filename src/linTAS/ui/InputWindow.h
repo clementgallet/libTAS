@@ -39,11 +39,12 @@ class InputWindow {
         Fl_Multi_Browser *hotkey_browser;
         Fl_Multi_Browser *input_browser;
 
-        Fl_Button *assign;
-        Fl_Button *disable;
+        Fl_Button *assign_button;
+        Fl_Button *default_button;
+        Fl_Button *disable_button;
 
-        Fl_Button *save;
-        Fl_Button *cancel;
+        Fl_Button *save_button;
+        Fl_Button *cancel_button;
 
         void update();
 };
@@ -52,6 +53,7 @@ static KeySym get_next_keypressed(Display* display);
 
 static void select_cb(Fl_Widget*, void*);
 static void assign_cb(Fl_Widget*, void*);
+static void default_cb(Fl_Widget*, void*);
 static void disable_cb(Fl_Widget*, void*);
 static void save_cb(Fl_Widget*, void*);
 static void cancel_cb(Fl_Widget*, void*);

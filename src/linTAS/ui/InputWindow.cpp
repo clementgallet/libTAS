@@ -64,15 +64,23 @@ InputWindow::InputWindow(Context* c) : context(c)
 
     update();
 
-    assign = new Fl_Button(400, 420, 70, 30, "Assign");
-    assign->callback((Fl_Callback*) assign_cb, this);
+    assign_button = new Fl_Button(250, 420, 90, 30, "Assign");
+    assign_button->callback((Fl_Callback*) assign_cb, this);
+    assign_button->deactivate();
 
+    default_button = new Fl_Button(350, 420, 90, 30, "Default");
+    default_button->callback((Fl_Callback*) default_cb, this);
+    default_button->deactivate();
 
-    save = new Fl_Button(600, 460, 70, 30, "Ok");
-    save->callback((Fl_Callback*) save_cb, this);
+    disable_button = new Fl_Button(450, 420, 90, 30, "Disable");
+    disable_button->callback((Fl_Callback*) disable_cb, this);
+    disable_button->deactivate();
 
-    cancel = new Fl_Button(700, 460, 70, 30, "Cancel");
-    cancel->callback((Fl_Callback*) cancel_cb, this);
+    save_button = new Fl_Button(600, 460, 70, 30, "Ok");
+    save_button->callback((Fl_Callback*) save_cb, this);
+
+    cancel_button = new Fl_Button(700, 460, 70, 30, "Cancel");
+    cancel_button->callback((Fl_Callback*) cancel_cb, this);
 
     window->end();
 }
@@ -172,11 +180,20 @@ void select_cb(Fl_Widget* w, void* v)
     }
 
     /* Enable/disable the assign button */
-    if (count == 1) {
-        iw->assign->activate();
+    if (count >= 1) {
+        if (count == 1) {
+            iw->assign_button->activate();
+        }
+        else {
+            iw->assign_button->deactivate();
+        }
+        iw->default_button->activate();
+        iw->disable_button->activate();
     }
     else {
-        iw->assign->deactivate();
+        iw->assign_button->deactivate();
+        iw->default_button->deactivate();
+        iw->disable_button->deactivate();
     }
 }
 
@@ -184,7 +201,12 @@ void assign_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
+    iw->assign_button->label("Press key...");
+    iw->assign_button->deactivate();
+    Fl::flush();
     KeySym ks = get_next_keypressed(iw->display);
+    iw->assign_button->label("Assign");
+    iw->assign_button->activate();
 
     /* Check if the selected item is in the hotkey browser.
      * We cannot use value() function only, it is supposed to return 0 if
@@ -204,11 +226,65 @@ void assign_cb(Fl_Widget* w, void* v)
     iw->update();
 }
 
+void default_cb(Fl_Widget* w, void* v)
+{
+    InputWindow* iw = (InputWindow*) v;
+
+    /* Check if the selected item is in the hotkey browser.
+     * We cannot use value() function only, it is supposed to return 0 if
+     * no item is selected, but after calling deselect(), it actually returns
+     * the index of the last element. So we check if this element is selected.
+     */
+    int sel_hotkey = iw->hotkey_browser->value();
+    if (iw->hotkey_browser->selected(sel_hotkey)) {
+        for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
+            if (iw->hotkey_browser->selected(i)) {
+                iw->context->km.default_hotkey(i-1);
+            }
+        }
+    }
+
+    int sel_input = iw->input_browser->value();
+    if (iw->input_browser->selected(sel_input)) {
+        for (int i = 1; i <= iw->input_browser->size(); i++) {
+            if (iw->input_browser->selected(i)) {
+                iw->context->km.default_input(i-1);
+            }
+        }
+    }
+
+    iw->update();
+}
+
 void disable_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
-}
 
+    /* Check if the selected item is in the hotkey browser.
+     * We cannot use value() function only, it is supposed to return 0 if
+     * no item is selected, but after calling deselect(), it actually returns
+     * the index of the last element. So we check if this element is selected.
+     */
+    int sel_hotkey = iw->hotkey_browser->value();
+    if (iw->hotkey_browser->selected(sel_hotkey)) {
+        for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
+            if (iw->hotkey_browser->selected(i)) {
+                iw->context->km.reassign_hotkey(i-1, 0);
+            }
+        }
+    }
+
+    int sel_input = iw->input_browser->value();
+    if (iw->input_browser->selected(sel_input)) {
+        for (int i = 1; i <= iw->input_browser->size(); i++) {
+            if (iw->input_browser->selected(i)) {
+                iw->context->km.reassign_input(i-1, 0);
+            }
+        }
+    }
+
+    iw->update();
+}
 
 void save_cb(Fl_Widget* w, void* v)
 {

@@ -166,6 +166,41 @@ void KeyMapping::default_inputs()
     }
 }
 
+void KeyMapping::default_hotkey(int hotkey_index)
+{
+    /* Hotkey selected */
+    HotKey hk = hotkey_list[hotkey_index];
+
+    /* Remove previous mapping from this key */
+    for (auto iter : hotkey_mapping) {
+        if (iter.second == hk) {
+            hotkey_mapping.erase(iter.first);
+            break;
+        }
+    }
+
+    if (hk.default_input.type == IT_KEYBOARD)
+        hotkey_mapping[hk.default_input.value] = hk;
+
+}
+
+void KeyMapping::default_input(int input_index)
+{
+    /* Input selected */
+    SingleInput si = input_list[input_index];
+
+    /* Remove previous mapping from this key */
+    for (auto iter : input_mapping) {
+        if (iter.second == si) {
+            input_mapping.erase(iter.first);
+            break;
+        }
+    }
+
+    if (si.type == IT_KEYBOARD)
+        input_mapping[si.value] = si;
+}
+
 void KeyMapping::reassign_hotkey(int hotkey_index, KeySym ks)
 {
     /* Hotkey selected */
@@ -179,7 +214,8 @@ void KeyMapping::reassign_hotkey(int hotkey_index, KeySym ks)
         }
     }
 
-    hotkey_mapping[ks] = hk;
+    if (ks)
+        hotkey_mapping[ks] = hk;
 }
 
 void KeyMapping::reassign_input(int input_index, KeySym ks)
@@ -195,7 +231,8 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         }
     }
 
-    input_mapping[ks] = si;
+    if (ks)
+        input_mapping[ks] = si;
 }
 
 
