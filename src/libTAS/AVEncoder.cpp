@@ -307,76 +307,74 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     }
 
     /*** Audio ***/
-    debuglog(LCF_DUMP | LCF_FRAME, "Encode an audio frame");
+    debuglog(LCF_DUMP | LCF_FRAME, "Encode audio frames");
 
-    /* Initialize AVPacket */
-    AVPacket apkt;
-    apkt.data = NULL;
-    apkt.size = 0;
-    av_init_packet(&apkt);
+    /* Append input buffer to our delayed buffer */
+    delayed_buffer.insert(delayed_buffer.end(), &audiocontext.outSamples[0], &audiocontext.outSamples[audiocontext.outBytes]);
 
     int frame_size;
     if (audio_st->codec->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
         frame_size = audiocontext.outNbSamples;
     else {
         frame_size = audio_st->codec->frame_size;
-        if (frame_size > audiocontext.outNbSamples) {
-            debuglog(LCF_DUMP | LCF_FRAME | LCF_ERROR, "This is bad...");
-            frame_size = audiocontext.outNbSamples;
-        }
     }
-
     audio_frame->nb_samples = frame_size;
-    audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
-    accum_samples += frame_size;
 
-    /* If necessary, convert the audio stream to the new sample format */
-    if (audio_fmt_ctx) {
-        debuglog(LCF_DUMP | LCF_FRAME, "Resample the audio buffer");
+    /* Encode loop for every audio frame, until we don't have enough samples */
+    while (static_cast<int>(delayed_buffer.size()) >= frame_size*audiocontext.outAlignSize) {
 
-        int line_size;
-        int buf_size = av_samples_get_buffer_size(&line_size, audio_st->codec->channels, audio_frame->nb_samples, audio_st->codec->sample_fmt, 1);
-        temp_audio.resize(buf_size);
-        debuglog(LCF_DUMP | LCF_FRAME, "Sampe nb: ", audio_frame->nb_samples);
-        debuglog(LCF_DUMP | LCF_FRAME, "Output Buffer size: ", buf_size);
-        debuglog(LCF_DUMP | LCF_FRAME, "Input Buffer size: ", frame_size*audiocontext.outAlignSize);
+        /* Initialize AVPacket */
+        AVPacket apkt;
+        apkt.data = NULL;
+        apkt.size = 0;
+        av_init_packet(&apkt);
 
-        /* Build the lines array for planar sample format */
-        int lines_nb = av_sample_fmt_is_planar(audio_st->codec->sample_fmt)?audio_st->codec->channels:1;
-        std::vector<uint8_t*> lines;
-        lines.resize(lines_nb);
-        for (int c=0; c<lines_nb; c++)
-            lines[c] = temp_audio.data() + c*line_size;
-        uint8_t* in_pt = audiocontext.outSamples.data();
+        audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
+        accum_samples += frame_size;
 
-        int convOutSamples = swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
-        debuglog(LCF_DUMP | LCF_FRAME, "Fill the audio frame");
-        avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
-                                                 lines[0], buf_size, 1);
-    }
-    else {
-        avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
-                                             &audiocontext.outSamples[0], frame_size*audiocontext.outAlignSize, 1);
-    }
+        /* If necessary, convert the audio stream to the new sample format */
+        if (audio_fmt_ctx) {
+            int line_size;
+            int buf_size = av_samples_get_buffer_size(&line_size, audio_st->codec->channels, audio_frame->nb_samples, audio_st->codec->sample_fmt, 1);
+            temp_audio.resize(buf_size);
 
-    debuglog(LCF_DUMP | LCF_FRAME, "Encode the audio buffer");
-    ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
-        return 1;
-    }
+            /* Build the lines array for planar sample format */
+            int lines_nb = av_sample_fmt_is_planar(audio_st->codec->sample_fmt)?audio_st->codec->channels:1;
+            std::vector<uint8_t*> lines;
+            lines.resize(lines_nb);
+            for (int c=0; c<lines_nb; c++)
+                lines[c] = temp_audio.data() + c*line_size;
+            uint8_t* in_pt = delayed_buffer.data();
 
-    if (got_output) {
-        /* We have an encoder output to write */
-        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
-        apkt.stream_index = audio_st->index;
-        if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+            swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
+            avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
+                                                     lines[0], buf_size, 1);
+        }
+        else {
+            avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
+                                                 delayed_buffer.data(), frame_size*audiocontext.outAlignSize, 1);
+        }
+
+        ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
+        if (ret < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
             return 1;
         }
-        av_free_packet(&apkt);
+
+        if (got_output) {
+            /* We have an encoder output to write */
+            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
+            apkt.stream_index = audio_st->index;
+            if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
+                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+                return 1;
+            }
+            av_free_packet(&apkt);
+        }
+
+        delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+frame_size*audiocontext.outAlignSize);
     }
 
     return 0;

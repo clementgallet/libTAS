@@ -74,6 +74,11 @@ class AVEncoder {
         AVStream* audio_st;
         std::vector<uint8_t> temp_audio;
 
+        /* Audio samples that could not be encoded because of the
+         * audio frame size constraint.
+         */
+        std::vector<uint8_t> delayed_buffer;
+
         /* We save the frame when the dumping begins */
         unsigned long start_frame = -1;
 
