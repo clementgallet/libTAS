@@ -53,7 +53,7 @@ AudioContext::AudioContext(void)
 int AudioContext::createBuffer(void)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    
+
     if ((! buffers.empty()) && buffers.front()->id >= MAXBUFFERS)
         return -1;
 
@@ -76,7 +76,7 @@ int AudioContext::createBuffer(void)
 void AudioContext::deleteBuffer(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    
+
     buffers.remove_if([id](AudioBuffer* const& buffer)
         {
             if (buffer->id == id) {
@@ -110,7 +110,7 @@ AudioBuffer* AudioContext::getBuffer(int id)
 int AudioContext::createSource(void)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    
+
     if ((! sources.empty()) && sources.front()->id >= MAXSOURCES)
         return -1;
 
@@ -133,7 +133,7 @@ int AudioContext::createSource(void)
 void AudioContext::deleteSource(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    
+
     sources.remove_if([id](AudioSource* const& source)
         {
             if (source->id == id) {
@@ -195,4 +195,3 @@ void AudioContext::mixAllSources(struct timespec ticks)
     audioplayer.play(*this);
 #endif
 }
-

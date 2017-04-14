@@ -74,7 +74,8 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
 
     AVCodec *video_codec = NULL;
     // AVCodecID codec_id = AV_CODEC_ID_MPEG4;
-    AVCodecID codec_id = AV_CODEC_ID_H264;
+    //AVCodecID codec_id = AV_CODEC_ID_H264;
+    AVCodecID codec_id = AV_CODEC_ID_FFV1;
     video_codec = avcodec_find_encoder(codec_id);
     if (!video_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
@@ -104,7 +105,10 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     video_st->codec->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
-    video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
+    if (codec_id == AV_CODEC_ID_H264)
+        video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
+    if (codec_id == AV_CODEC_ID_FFV1)
+        video_st->codec->pix_fmt = AV_PIX_FMT_YUV444P10LE;
 
     /* Some formats want stream headers to be separate. */
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
@@ -127,7 +131,9 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
 
     AVCodec *audio_codec = NULL;
     //AVCodecID audio_codec_id = AV_CODEC_ID_PCM_S16LE;
-    AVCodecID audio_codec_id = AV_CODEC_ID_VORBIS;
+    //AVCodecID audio_codec_id = AV_CODEC_ID_VORBIS;
+    //AVCodecID audio_codec_id = AV_CODEC_ID_OPUS;
+    AVCodecID audio_codec_id = AV_CODEC_ID_FLAC;
     audio_codec = avcodec_find_encoder(audio_codec_id);
     if (!audio_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
@@ -150,12 +156,20 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     audio_st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
 
     AVSampleFormat in_fmt = (audiocontext.outBitDepth == 8)?AV_SAMPLE_FMT_U8:AV_SAMPLE_FMT_S16;
-    if (audio_codec_id == AV_CODEC_ID_VORBIS)
-        audio_st->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
-    else {
-        debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
-        error = 1;
-        return;
+
+    switch (audio_codec_id) {
+        case AV_CODEC_ID_VORBIS:
+            audio_st->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
+            break;
+        case AV_CODEC_ID_OPUS:
+        case AV_CODEC_ID_PCM_S16LE:
+        case AV_CODEC_ID_FLAC:
+            audio_st->codec->sample_fmt = AV_SAMPLE_FMT_S16;
+            break;
+        default:
+            debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
+            error = 1;
+            return;
     }
     audio_st->codec->bit_rate = 64000;
     audio_st->codec->sample_rate = audiocontext.outFrequency;
@@ -195,16 +209,12 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
         return;
     }
 
-    /* Initialize audio AVFrame */
-
-    audio_frame = av_frame_alloc();
-
     /* Initialize swscale context for pixel format conversion */
 
     toYUVctx = sws_getContext(video_frame->width, video_frame->height,
                               pixfmt,
                               video_frame->width, video_frame->height,
-                              AV_PIX_FMT_YUV420P,
+                              video_st->codec->pix_fmt,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
     if (toYUVctx == NULL) {
@@ -212,6 +222,10 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
         error = 1;
         return;
     }
+
+    /* Initialize audio AVFrame */
+
+    audio_frame = av_frame_alloc();
 
     /* Initialize swscale context for audio format conversion */
 
@@ -312,16 +326,14 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     /* Append input buffer to our delayed buffer */
     delayed_buffer.insert(delayed_buffer.end(), &audiocontext.outSamples[0], &audiocontext.outSamples[audiocontext.outBytes]);
 
-    int frame_size;
     if (audio_st->codec->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
-        frame_size = audiocontext.outNbSamples;
+        audio_frame->nb_samples = audiocontext.outNbSamples;
     else {
-        frame_size = audio_st->codec->frame_size;
+        audio_frame->nb_samples = audio_st->codec->frame_size;
     }
-    audio_frame->nb_samples = frame_size;
 
     /* Encode loop for every audio frame, until we don't have enough samples */
-    while (static_cast<int>(delayed_buffer.size()) >= frame_size*audiocontext.outAlignSize) {
+    while (static_cast<int>(delayed_buffer.size()) >= audio_frame->nb_samples*audiocontext.outAlignSize) {
 
         /* Initialize AVPacket */
         AVPacket apkt;
@@ -330,7 +342,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
         av_init_packet(&apkt);
 
         audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
-        accum_samples += frame_size;
+        accum_samples += audio_frame->nb_samples;
 
         /* If necessary, convert the audio stream to the new sample format */
         if (audio_fmt_ctx) {
@@ -352,7 +364,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
         }
         else {
             avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
-                                                 delayed_buffer.data(), frame_size*audiocontext.outAlignSize, 1);
+                                                 delayed_buffer.data(), audio_frame->nb_samples*audiocontext.outAlignSize, 1);
         }
 
         ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
@@ -374,7 +386,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
             av_free_packet(&apkt);
         }
 
-        delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+frame_size*audiocontext.outAlignSize);
+        delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
     }
 
     return 0;
