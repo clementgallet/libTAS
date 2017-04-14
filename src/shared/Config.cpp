@@ -22,5 +22,8 @@
 Config config = {
     hud_framecount : true,
     hud_inputs : true,
-    prevent_savefiles : true
+    prevent_savefiles : true,
+    audio_bitdepth : 16,
+    audio_channels : 2,
+    audio_frequency : 44100
 };

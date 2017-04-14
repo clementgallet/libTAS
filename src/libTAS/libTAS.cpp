@@ -33,6 +33,7 @@
 #include "DeterministicTimer.h"
 #include "../shared/messages.h"
 #include "../shared/tasflags.h"
+#include "../shared/Config.h"
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs/inputs.h"
@@ -88,6 +89,10 @@ void __attribute__((constructor)) init(void)
             case MSGN_TASFLAGS:
                 debuglog(LCF_SOCKET, "Receiving tas flags");
                 receiveData(&tasflags, sizeof(struct TasFlags));
+                break;
+            case MSGN_CONFIG:
+                debuglog(LCF_SOCKET, "Receiving config");
+                receiveData(&config, sizeof(struct Config));
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");

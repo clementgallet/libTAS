@@ -20,10 +20,6 @@
 #ifndef LIBTAS_CONFIG_H_INCLUDED
 #define LIBTAS_CONFIG_H_INCLUDED
 
-#include <map>
-#include <vector>
-#include <string>
-
 /* Structure holding program configuration that is saved in a file */
 
 class Config {
@@ -36,6 +32,18 @@ class Config {
 
         /* Prevent the game to write into savefiles */
         bool prevent_savefiles;
+
+        /** Sound config **/
+        /* Bit depth of the buffer (usually 8 or 16) */
+        int audio_bitdepth;
+
+        /* Number of channels of the buffer */
+        int audio_channels;
+
+        /* Frequency of buffer in Hz */
+        int audio_frequency;
+
+
 
         void save_config();
 

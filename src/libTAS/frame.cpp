@@ -192,6 +192,10 @@ void proceed_commands(void)
                 receiveData(&tasflags, sizeof(struct TasFlags));
                 break;
 
+            case MSGN_CONFIG:
+                receiveData(&config, sizeof(struct Config));
+                break;
+
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
                 size_t dump_len;

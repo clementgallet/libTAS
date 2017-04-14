@@ -22,14 +22,14 @@
 
 /* List of message identification values that is sent from/to the game */
 enum {
-    /* 
+    /*
      * The game notices the program that he reached a frame boundary.
      * Then he sends the frame number
      * Argument: unsigned long
      */
     MSGB_START_FRAMEBOUNDARY,
 
-    /* 
+    /*
      * Send all inputs to the game
      * Argument: struct AllInputs
      */
@@ -40,6 +40,12 @@ enum {
      * Argument: struct TasFlags
      */
     MSGN_TASFLAGS,
+
+    /*
+     * Send config
+     * Argument: struct Config
+     */
+    MSGN_CONFIG,
 
     /*
      * The programs tells the game to end the frame boundary
@@ -97,4 +103,3 @@ enum {
 };
 
 #endif
-

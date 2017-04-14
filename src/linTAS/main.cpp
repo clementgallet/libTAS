@@ -41,7 +41,6 @@
 #include "Context.h"
 // #include "ui.h"
 #include "ui/MainWindow.h"
-#include "../shared/Config.h"
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 
@@ -83,7 +82,9 @@ void print_usage(void)
 
 int main(int argc, char **argv)
 {
+    /* TODO: this is weird, remove the extern for default values */
     context.tasflags = tasflags; // To get the default values.
+    context.config = config; // To get the default values.
 
     /* Parsing arguments */
     int c;
@@ -181,11 +182,8 @@ int main(int argc, char **argv)
 
     /* Start the threaded environnment */
     Fl::lock();
-    return Fl::run();
 
-    // ui_init();
-    // ui_update_nogame(context);
-    // return 0;
+    return Fl::run();
 }
 
 void* launchGame(void* arg)
@@ -285,6 +283,11 @@ void* launchGame(void* arg)
     message = MSGN_TASFLAGS;
     send(socket_fd, &message, sizeof(int), 0);
     send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
+
+    /* Send config */
+    message = MSGN_CONFIG;
+    send(socket_fd, &message, sizeof(int), 0);
+    send(socket_fd, &context.config, sizeof(struct Config), 0);
 
     /* Send dump file if dumping from the beginning */
     if (context.tasflags.av_dumping) {
@@ -577,6 +580,14 @@ void* launchGame(void* arg)
             send(socket_fd, &message, sizeof(int), 0);
             send(socket_fd, &context.tasflags, sizeof(struct TasFlags), 0);
             context.tasflags_modified = false;
+        }
+
+        /* Send config if modified */
+        if (context.config_modified) {
+            /* Send config */
+            message = MSGN_CONFIG;
+            send(socket_fd, &message, sizeof(int), 0);
+            send(socket_fd, &context.config, sizeof(struct Config), 0);
         }
 
         /* Send dump file if modified */

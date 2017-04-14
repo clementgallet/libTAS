@@ -23,6 +23,7 @@
 #include <string>
 #include "KeyMapping.h"
 #include "../shared/tasflags.h"
+#include "../shared/Config.h"
 
 struct Context {
     /* Execution status */
@@ -40,11 +41,17 @@ struct Context {
     /* tas flags */
     TasFlags tasflags;
 
+    /* was the tasflags modified */
+    bool tasflags_modified;
+
     /* key mapping */
     KeyMapping km;
 
-    /* was the tasflags modified */
-    bool tasflags_modified;
+    /* config */
+    Config config;
+
+    /* was the config modified */
+    bool config_modified;
 
     /* Absolute path of libTAS.so */
     std::string libtaspath;

@@ -20,6 +20,7 @@
 #include "../logging.h"
 #include "AudioContext.h"
 #include "AudioPlayer.h"
+#include "../../shared/Config.h"
 
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112
@@ -44,10 +45,10 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 AudioContext::AudioContext(void)
 {
     outVolume = 1.0f;
-    outBitDepth = 16;
-    outNbChannels = 2;
-    outAlignSize = 4;
-    outFrequency = 44100;
+    outBitDepth = config.audio_bitdepth;
+    outNbChannels = config.audio_channels;
+    outFrequency = config.audio_frequency;
+    outAlignSize = outNbChannels * outBitDepth / 8;
 }
 
 int AudioContext::createBuffer(void)
