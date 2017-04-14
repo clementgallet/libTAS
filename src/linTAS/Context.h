@@ -32,7 +32,7 @@ struct Context {
         ACTIVE,
         QUITTING
     };
-    RunStatus status;
+    RunStatus status = INACTIVE;
 
     /* frame count */
     unsigned long int framecount = 0;

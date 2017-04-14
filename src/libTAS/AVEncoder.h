@@ -23,12 +23,14 @@
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
 #include <string>
+#include <vector>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
 }
 
 class AVEncoder {
@@ -65,10 +67,12 @@ class AVEncoder {
         AVFrame* video_frame;
         AVFrame* audio_frame;
         struct SwsContext *toYUVctx = NULL;
+        SwrContext *audio_fmt_ctx = NULL;
         AVOutputFormat *outputFormat = NULL;
         AVFormatContext *formatContext = NULL;
         AVStream* video_st;
         AVStream* audio_st;
+        std::vector<uint8_t> temp_audio;
 
         /* We save the frame when the dumping begins */
         unsigned long start_frame = -1;

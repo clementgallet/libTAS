@@ -37,6 +37,7 @@
 #include "hook.h"
 #include "inputs/inputs.h"
 #include "ThreadManager.h"
+#include <fstream>
 //#ifdef LIBTAS_ENABLE_AVDUMPING
 //#include "avdumping.h"
 //#endif
@@ -56,6 +57,8 @@ namespace orig {
 
 void __attribute__((constructor)) init(void)
 {
+    //std::ofstream err("log.txt");
+    //std::cerr.rdbuf(err.rdbuf()); //redirect std::cerr to log.txt!
     bool didConnect = initSocket();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
