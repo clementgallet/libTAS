@@ -36,10 +36,10 @@ InputWindow::InputWindow(Context* c) : context(c)
 
     /* Browsers */
     hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
-    hotkey_browser->callback((Fl_Callback*) select_cb, this);
+    hotkey_browser->callback(select_cb, this);
 
     input_browser = new Fl_Multi_Browser(400, 10, 350, 400, "Inputs");
-    input_browser->callback((Fl_Callback*) select_cb, this);
+    input_browser->callback(select_cb, this);
 
     /* Set two columns */
     static int col_width[] = {220, 130, 0};
@@ -65,22 +65,22 @@ InputWindow::InputWindow(Context* c) : context(c)
     update();
 
     assign_button = new Fl_Button(250, 420, 90, 30, "Assign");
-    assign_button->callback((Fl_Callback*) assign_cb, this);
+    assign_button->callback(assign_cb, this);
     assign_button->deactivate();
 
     default_button = new Fl_Button(350, 420, 90, 30, "Default");
-    default_button->callback((Fl_Callback*) default_cb, this);
+    default_button->callback(default_cb, this);
     default_button->deactivate();
 
     disable_button = new Fl_Button(450, 420, 90, 30, "Disable");
-    disable_button->callback((Fl_Callback*) disable_cb, this);
+    disable_button->callback(disable_cb, this);
     disable_button->deactivate();
 
     save_button = new Fl_Button(600, 460, 70, 30, "Ok");
-    save_button->callback((Fl_Callback*) save_cb, this);
+    save_button->callback(save_cb, this);
 
     cancel_button = new Fl_Button(700, 460, 70, 30, "Cancel");
-    cancel_button->callback((Fl_Callback*) cancel_cb, this);
+    cancel_button->callback(cancel_cb, this);
 
     window->end();
 }

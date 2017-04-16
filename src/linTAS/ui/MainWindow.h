@@ -92,16 +92,20 @@ class MainWindow {
         MainWindow() {}
 };
 
-void launch_cb(Fl_Widget*, void*);
-void browse_gamepath_cb(Fl_Widget*, void*);
-void browse_moviepath_cb(Fl_Widget*, void*);
-void set_fps_cb(Fl_Widget*, void*);
-void pause_cb(Fl_Widget*, void*);
-void fastforward_cb(Fl_Widget*, void*);
-void recording_cb(Fl_Widget*, void*);
-void encode_cb(Fl_Widget*, void*);
-void config_encode_cb(Fl_Widget*, void*);
-void toggle_encode_cb(Fl_Widget*, void*);
-void config_input_cb(Fl_Widget*, void*);
+static Fl_Callback0 launch_cb;
+static Fl_Callback browse_gamepath_cb;
+static Fl_Callback browse_moviepath_cb;
+static Fl_Callback0 set_fps_cb;
+static Fl_Callback0 pause_cb;
+static Fl_Callback0 fastforward_cb;
+static Fl_Callback0 recording_cb;
+static Fl_Callback0 encode_cb;
+static Fl_Callback config_encode_cb;
+static Fl_Callback toggle_encode_cb;
+static Fl_Callback config_input_cb;
+static Fl_Callback sound_frequency_cb;
+static Fl_Callback sound_bitdepth_cb;
+static Fl_Callback sound_channel_cb;
+static Fl_Callback mute_sound_cb;
 
 #endif

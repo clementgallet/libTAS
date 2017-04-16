@@ -51,11 +51,11 @@ class InputWindow {
 
 static KeySym get_next_keypressed(Display* display);
 
-static void select_cb(Fl_Widget*, void*);
-static void assign_cb(Fl_Widget*, void*);
-static void default_cb(Fl_Widget*, void*);
-static void disable_cb(Fl_Widget*, void*);
-static void save_cb(Fl_Widget*, void*);
-static void cancel_cb(Fl_Widget*, void*);
+static Fl_Callback select_cb;
+static Fl_Callback assign_cb;
+static Fl_Callback default_cb;
+static Fl_Callback disable_cb;
+static Fl_Callback save_cb;
+static Fl_Callback cancel_cb;
 
 #endif

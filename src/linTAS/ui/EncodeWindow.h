@@ -60,10 +60,10 @@ class EncodeWindow {
 
 };
 
-static void start_cb(Fl_Widget*, void*);
-static void cancel_cb(Fl_Widget*, void*);
-static void browse_encodepath_cb(Fl_Widget*, void*);
-static void vcodec_cb(Fl_Widget*, void*);
-static void acodec_cb(Fl_Widget*, void*);
+static Fl_Callback start_cb;
+static Fl_Callback cancel_cb;
+static Fl_Callback browse_encodepath_cb;
+static Fl_Callback vcodec_cb;
+static Fl_Callback acodec_cb;
 
 #endif

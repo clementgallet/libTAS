@@ -64,6 +64,9 @@ class AudioContext
         /* Size of the mixed buffer in bytes */
         int outBytes;
 
+        /* Init parameters from the config */
+        void init(void);
+
         /* Create a new buffer object and return an id of the buffer or -1 if it failed */
         int createBuffer(void);
 
@@ -102,5 +105,3 @@ class AudioContext
 extern AudioContext audiocontext;
 
 #endif
-
-

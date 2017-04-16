@@ -289,6 +289,7 @@ void* launchGame(void* arg)
     send(socket_fd, &message, sizeof(int), 0);
     send(socket_fd, &context.config, sizeof(struct Config), 0);
 
+
     /* Send dump file if dumping from the beginning */
     if (context.tasflags.av_dumping) {
         message = MSGN_DUMP_FILE;
@@ -588,6 +589,7 @@ void* launchGame(void* arg)
             message = MSGN_CONFIG;
             send(socket_fd, &message, sizeof(int), 0);
             send(socket_fd, &context.config, sizeof(struct Config), 0);
+            context.config_modified = false;
         }
 
         /* Send dump file if modified */

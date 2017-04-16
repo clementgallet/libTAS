@@ -51,6 +51,14 @@ AudioContext::AudioContext(void)
     outAlignSize = outNbChannels * outBitDepth / 8;
 }
 
+void AudioContext::init(void)
+{
+    outBitDepth = config.audio_bitdepth;
+    outNbChannels = config.audio_channels;
+    outFrequency = config.audio_frequency;
+    outAlignSize = outNbChannels * outBitDepth / 8;
+}
+
 int AudioContext::createBuffer(void)
 {
     std::lock_guard<std::mutex> lock(mutex);

@@ -39,6 +39,7 @@
 #include "inputs/inputs.h"
 #include "ThreadManager.h"
 #include <fstream>
+#include "audio/AudioContext.h"
 //#ifdef LIBTAS_ENABLE_AVDUMPING
 //#include "avdumping.h"
 //#endif
@@ -134,6 +135,9 @@ void __attribute__((constructor)) init(void)
     /* Initialize timers */
     nonDetTimer.initialize();
     detTimer.initialize();
+
+    /* Initialize sound parameters */
+    audiocontext.init();
 
     libTAS_init = true;
 
