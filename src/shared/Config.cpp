@@ -25,5 +25,9 @@ Config config = {
     prevent_savefiles : true,
     audio_bitdepth : 16,
     audio_channels : 2,
-    audio_frequency : 44100
+    audio_frequency : 44100,
+    video_codec : AV_CODEC_ID_H264,
+    video_bitrate : 400000,
+    audio_codec : AV_CODEC_ID_VORBIS,
+    audio_bitrate : 128000
 };

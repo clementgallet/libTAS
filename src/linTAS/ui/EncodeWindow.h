@@ -52,14 +52,18 @@ class EncodeWindow {
 
         Fl_Choice *videochoice;
         static Fl_Menu_Item video_items[];
+        Fl_Input *videobitrate;
 
         Fl_Choice *audiochoice;
         static Fl_Menu_Item audio_items[];
+        Fl_Input *audiobitrate;
 
 };
 
 static void start_cb(Fl_Widget*, void*);
 static void cancel_cb(Fl_Widget*, void*);
 static void browse_encodepath_cb(Fl_Widget*, void*);
+static void vcodec_cb(Fl_Widget*, void*);
+static void acodec_cb(Fl_Widget*, void*);
 
 #endif

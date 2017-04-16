@@ -20,6 +20,10 @@
 #ifndef LIBTAS_CONFIG_H_INCLUDED
 #define LIBTAS_CONFIG_H_INCLUDED
 
+extern "C" {
+#include <libavcodec/avcodec.h> // for AVCodecID struct
+}
+
 /* Structure holding program configuration that is saved in a file */
 
 class Config {
@@ -43,7 +47,11 @@ class Config {
         /* Frequency of buffer in Hz */
         int audio_frequency;
 
-
+        /* Encode config */
+        AVCodecID video_codec;
+        int video_bitrate;
+        AVCodecID audio_codec;
+        int audio_bitrate;
 
         void save_config();
 

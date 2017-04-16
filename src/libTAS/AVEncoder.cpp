@@ -25,6 +25,7 @@
 #include "videocapture.h"
 #include "audio/AudioContext.h"
 #include "../shared/tasflags.h"
+#include "../shared/Config.h"
 #include "ThreadState.h"
 
 AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned long sf) {
@@ -73,9 +74,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     /* Initialize video AVCodec */
 
     AVCodec *video_codec = NULL;
-    // AVCodecID codec_id = AV_CODEC_ID_MPEG4;
-    //AVCodecID codec_id = AV_CODEC_ID_H264;
-    AVCodecID codec_id = AV_CODEC_ID_FFV1;
+    AVCodecID codec_id = config.video_codec;
     video_codec = avcodec_find_encoder(codec_id);
     if (!video_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
@@ -98,7 +97,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     video_st->codec->codec_id = codec_id;
 
-    video_st->codec->bit_rate = 400000;
+    video_st->codec->bit_rate = config.video_bitrate;
     video_st->codec->width = width;
     video_st->codec->height = height;
     video_st->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
@@ -109,6 +108,8 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
         video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
     if (codec_id == AV_CODEC_ID_FFV1)
         video_st->codec->pix_fmt = AV_PIX_FMT_YUV444P10LE;
+    if (codec_id == AV_CODEC_ID_RAWVIDEO)
+        video_st->codec->pix_fmt = pixfmt;
 
     /* Some formats want stream headers to be separate. */
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
@@ -130,10 +131,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     /* Initialize audio AVCodec */
 
     AVCodec *audio_codec = NULL;
-    //AVCodecID audio_codec_id = AV_CODEC_ID_PCM_S16LE;
-    //AVCodecID audio_codec_id = AV_CODEC_ID_VORBIS;
-    //AVCodecID audio_codec_id = AV_CODEC_ID_OPUS;
-    AVCodecID audio_codec_id = AV_CODEC_ID_FLAC;
+    AVCodecID audio_codec_id = config.audio_codec;
     audio_codec = avcodec_find_encoder(audio_codec_id);
     if (!audio_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
@@ -171,7 +169,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
             error = 1;
             return;
     }
-    audio_st->codec->bit_rate = 64000;
+    audio_st->codec->bit_rate = config.audio_bitrate;
     audio_st->codec->sample_rate = audiocontext.outFrequency;
     audio_st->codec->channels = audiocontext.outNbChannels;
     audio_st->codec->channel_layout = av_get_default_channel_layout( audio_st->codec->channels );
