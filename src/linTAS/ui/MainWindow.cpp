@@ -232,8 +232,8 @@ void MainWindow::update_status()
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
             if (context->tasflags.av_dumping) {
-                Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Tools/Stop encode"));
-                Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Tools/Configure encode..."));
+                Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
+                Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
                 context->tasflags.av_dumping = 0;
                 if (encode_item) encode_item->label("Start encode");
                 if (config_item) config_item->activate();
@@ -417,7 +417,7 @@ void toggle_encode_cb(Fl_Widget* w, void*)
     MainWindow& mw = MainWindow::getInstance();
     /* Set encode status */
     Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
-    Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item("Tools/Configure encode..."));
+    Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(config_encode_cb));
 
     if (mw.context->tasflags.av_dumping == 0) {
         mw.context->tasflags.av_dumping = 1;
@@ -468,7 +468,7 @@ void sound_channel_cb(Fl_Widget* w, void* v)
 void mute_sound_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* mute_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item("Sound/Mute Sound"));
+    Fl_Menu_Item* mute_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(mute_sound_cb));
 
     if (mw.context->config.audio_mute) {
         if (mute_item) mute_item->clear();

@@ -202,9 +202,19 @@ void* launchGame(void* arg)
         cmd << "export LD_LIBRARY_PATH=\"" << context.libdir << ":$LD_LIBRARY_PATH\" && ";
     if (!context.rundir.empty())
         cmd << "cd " << context.rundir << " && ";
-    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " " << context.gameargs << " > log.txt 2>&1 &";
 
-    //std::cout << "Execute: " << cmd.str() << std::endl;
+    std::string logstr = "";
+    if (context.tasflags.logging_status == TasFlags::NO_LOGGING)
+        logstr += "2> /dev/null";
+    else if (context.tasflags.logging_status == TasFlags::LOGGING_TO_FILE) {
+        logstr += "2>";
+        logstr += context.gamepath;
+        logstr += ".log";
+    }
+
+    cmd << "LD_PRELOAD=" << context.libtaspath << " " << context.gamepath << " " << context.gameargs << logstr << " &";
+
+    // std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
 
     /* Get the shared libs of the game executable */
