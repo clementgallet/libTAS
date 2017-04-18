@@ -41,6 +41,15 @@ struct TasFlags {
     /* Is fastforward enabled */
     int fastforward;
 
+    /* Log status */
+    enum LogStatus {
+        NO_LOGGING,
+        LOGGING_TO_CONSOLE,
+        LOGGING_TO_FILE
+    };
+
+    LogStatus logging_status;
+
     /* Which flags trigger a debug message */
     LogCategoryFlag includeFlags;
 

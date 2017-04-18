@@ -129,6 +129,77 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {nullptr},
         {"Mute Sound", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE},
         {nullptr},
+    {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::NO_LOGGING), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
+            {"Log to file", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::LOGGING_TO_FILE), FL_MENU_RADIO | FL_MENU_DIVIDER},
+            {"Print Categories", 0, nullptr, nullptr, FL_SUBMENU},
+                {"Untested", 0, logging_print_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
+                {"Desync", 0, logging_print_cb, reinterpret_cast<void*>(LCF_DESYNC), FL_MENU_TOGGLE},
+                {"Frequent", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FREQUENT), FL_MENU_TOGGLE},
+                {"Error", 0, logging_print_cb, reinterpret_cast<void*>(LCF_ERROR), FL_MENU_TOGGLE},
+                {"ToDo", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
+                {"Frame", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
+                {"Hook", 0, logging_print_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
+                {"Time", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMEFUNC), FL_MENU_TOGGLE},
+                {"Time Set", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
+                {"Time Get", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
+                {"Wait", 0, logging_print_cb, reinterpret_cast<void*>(LCF_WAIT), FL_MENU_TOGGLE},
+                {"Sleep", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SLEEP), FL_MENU_TOGGLE},
+                {"Socket", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SOCKET), FL_MENU_TOGGLE},
+                {"OpenGL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_OGL), FL_MENU_TOGGLE},
+                {"AV Dumping", 0, logging_print_cb, reinterpret_cast<void*>(LCF_DUMP), FL_MENU_TOGGLE},
+                {"SDL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SDL), FL_MENU_TOGGLE},
+                {"Memory", 0, logging_print_cb, reinterpret_cast<void*>(LCF_MEMORY), FL_MENU_TOGGLE},
+                {"Keyboard", 0, logging_print_cb, reinterpret_cast<void*>(LCF_KEYBOARD), FL_MENU_TOGGLE},
+                {"Mouse", 0, logging_print_cb, reinterpret_cast<void*>(LCF_MOUSE), FL_MENU_TOGGLE},
+                {"Joystick", 0, logging_print_cb, reinterpret_cast<void*>(LCF_JOYSTICK), FL_MENU_TOGGLE},
+                {"OpenAL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_OPENAL), FL_MENU_TOGGLE},
+                {"Sound", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SOUND), FL_MENU_TOGGLE},
+                {"Events", 0, logging_print_cb, reinterpret_cast<void*>(LCF_EVENTS), FL_MENU_TOGGLE},
+                {"Windows", 0, logging_print_cb, reinterpret_cast<void*>(LCF_WINDOW), FL_MENU_TOGGLE},
+                {"File IO", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FILEIO), FL_MENU_TOGGLE},
+                {"Steam", 0, logging_print_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
+                {"Threads", 0, logging_print_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
+                {"Timers", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
+                {"All", 0, logging_print_cb, reinterpret_cast<void*>(-1)},
+                {"None", 0, logging_print_cb, reinterpret_cast<void*>(0)},
+                {nullptr},
+            {"Exclude Categories", 0, nullptr, nullptr, FL_SUBMENU},
+                {"Untested", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
+                {"Desync", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_DESYNC), FL_MENU_TOGGLE},
+                {"Frequent", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FREQUENT), FL_MENU_TOGGLE},
+                {"Error", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_ERROR), FL_MENU_TOGGLE},
+                {"ToDo", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
+                {"Frame", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
+                {"Hook", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
+                {"Time", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMEFUNC), FL_MENU_TOGGLE},
+                {"Time Set", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
+                {"Time Get", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
+                {"Wait", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_WAIT), FL_MENU_TOGGLE},
+                {"Sleep", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SLEEP), FL_MENU_TOGGLE},
+                {"Socket", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SOCKET), FL_MENU_TOGGLE},
+                {"OpenGL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_OGL), FL_MENU_TOGGLE},
+                {"AV Dumping", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_DUMP), FL_MENU_TOGGLE},
+                {"SDL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SDL), FL_MENU_TOGGLE},
+                {"Memory", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_MEMORY), FL_MENU_TOGGLE},
+                {"Keyboard", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_KEYBOARD), FL_MENU_TOGGLE},
+                {"Mouse", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_MOUSE), FL_MENU_TOGGLE},
+                {"Joystick", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_JOYSTICK), FL_MENU_TOGGLE},
+                {"OpenAL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_OPENAL), FL_MENU_TOGGLE},
+                {"Sound", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SOUND), FL_MENU_TOGGLE},
+                {"Events", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_EVENTS), FL_MENU_TOGGLE},
+                {"Windows", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_WINDOW), FL_MENU_TOGGLE},
+                {"File IO", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FILEIO), FL_MENU_TOGGLE},
+                {"Steam", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
+                {"Threads", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
+                {"Timers", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
+                {"All", 0, logging_exclude_cb, reinterpret_cast<void*>(-1)},
+                {"None", 0, logging_exclude_cb, reinterpret_cast<void*>(0)},
+                {nullptr},
+            {nullptr},
+        {nullptr},
     {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure encode...", 0, config_encode_cb},
         {"Start encode", 0, toggle_encode_cb},
@@ -410,4 +481,65 @@ void mute_sound_cb(Fl_Widget* w, void* v)
         mw.context->config_modified = true;
     }
     mw.mutecheck->value(mw.context->config.audio_mute);
+}
+
+void logging_status_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    TasFlags::LogStatus logstatus = static_cast<TasFlags::LogStatus>(reinterpret_cast<intptr_t>(v));
+    mw.context->tasflags.logging_status = logstatus;
+}
+
+void logging_print_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    LogCategoryFlag logcat = static_cast<LogCategoryFlag>(reinterpret_cast<intptr_t>(v));
+    if (logcat == LCF_ALL) {
+        /* Get the first item of the log categories */
+        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_print_cb));
+        while (log_item->argument() != LCF_ALL) {
+            log_item->set();
+            log_item = log_item->next();
+        }
+        mw.context->tasflags.includeFlags = LCF_ALL;
+    }
+    else if (logcat == LCF_NONE) {
+        /* Get the first item of the log categories */
+        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_print_cb));
+        while (log_item->argument() != LCF_ALL) {
+            log_item->clear();
+            log_item = log_item->next();
+        }
+        mw.context->tasflags.includeFlags = LCF_NONE;
+    }
+    else {
+        mw.context->tasflags.includeFlags ^= logcat;
+    }
+}
+
+void logging_exclude_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    LogCategoryFlag logcat = static_cast<LogCategoryFlag>(reinterpret_cast<intptr_t>(v));
+    if (logcat == LCF_ALL) {
+        /* Get the first item of the log categories */
+        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_exclude_cb));
+        while (log_item->argument() != LCF_ALL) {
+            log_item->set();
+            log_item = log_item->next();
+        }
+        mw.context->tasflags.includeFlags = LCF_ALL;
+    }
+    else if (logcat == LCF_NONE) {
+        /* Get the first item of the log categories */
+        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_exclude_cb));
+        while (log_item->argument() != LCF_ALL) {
+            log_item->clear();
+            log_item = log_item->next();
+        }
+        mw.context->tasflags.includeFlags = LCF_NONE;
+    }
+    else {
+        mw.context->tasflags.includeFlags ^= logcat;
+    }
 }

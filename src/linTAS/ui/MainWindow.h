@@ -109,5 +109,8 @@ static Fl_Callback sound_frequency_cb;
 static Fl_Callback sound_bitdepth_cb;
 static Fl_Callback sound_channel_cb;
 static Fl_Callback mute_sound_cb;
+static Fl_Callback logging_status_cb;
+static Fl_Callback logging_print_cb;
+static Fl_Callback logging_exclude_cb;
 
 #endif

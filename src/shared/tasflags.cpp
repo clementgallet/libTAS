@@ -24,6 +24,7 @@ struct TasFlags tasflags = {
     speed_divisor  : 1,
     recording      : TasFlags::NO_RECORDING,
     fastforward    : 0,
+    logging_status : TasFlags::NO_LOGGING,
     includeFlags   : LCF_DUMP,
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,
