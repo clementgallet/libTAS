@@ -21,6 +21,8 @@
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::copy
 #include "../logging.h"
+#include "../../shared/Config.h"
+#include "../../shared/tasflags.h"
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
     #include <libavutil/opt.h>
@@ -102,7 +104,7 @@ int AudioSource::getPosition()
 
 void AudioSource::setPosition(int pos)
 {
-    
+
     if (looping) {
         pos %= queueSize();
     }
@@ -135,60 +137,62 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     AudioBuffer* curBuf = buffer_queue[queue_index];
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-    /* Get the sample format */
-    AVSampleFormat inFormat, outFormat;
-    switch (curBuf->format) {
-        case SAMPLE_FMT_U8:
-            inFormat = AV_SAMPLE_FMT_U8;
-            break;
-        case SAMPLE_FMT_S16:
-        case SAMPLE_FMT_MSADPCM:
-            inFormat = AV_SAMPLE_FMT_S16;
-            break;
-        case SAMPLE_FMT_S32:
-            inFormat = AV_SAMPLE_FMT_S32;
-            break;
-        case SAMPLE_FMT_FLT:
-            inFormat = AV_SAMPLE_FMT_FLT;
-            break;
-        case SAMPLE_FMT_DBL:
-            inFormat = AV_SAMPLE_FMT_DBL;
-            break;
-        default:
-            debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Unknown sample format");
-            break;
-    }
-    if (outBitDepth == 8)
-        outFormat = AV_SAMPLE_FMT_U8;
-    if (outBitDepth == 16)
-        outFormat = AV_SAMPLE_FMT_S16;
+    if (!config.audio_mute || tasflags.av_dumping) {
+        /* Check if SWR context is initialized.
+         * If not, set parameters and init it
+         */
+        if (! swr_is_initialized(swr)) {
+            /* Get the sample format */
+            AVSampleFormat inFormat, outFormat;
+            switch (curBuf->format) {
+                case SAMPLE_FMT_U8:
+                    inFormat = AV_SAMPLE_FMT_U8;
+                    break;
+                case SAMPLE_FMT_S16:
+                case SAMPLE_FMT_MSADPCM:
+                    inFormat = AV_SAMPLE_FMT_S16;
+                    break;
+                case SAMPLE_FMT_S32:
+                    inFormat = AV_SAMPLE_FMT_S32;
+                    break;
+                case SAMPLE_FMT_FLT:
+                    inFormat = AV_SAMPLE_FMT_FLT;
+                    break;
+                case SAMPLE_FMT_DBL:
+                    inFormat = AV_SAMPLE_FMT_DBL;
+                    break;
+                default:
+                    debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Unknown sample format");
+                    break;
+            }
+            if (outBitDepth == 8)
+                outFormat = AV_SAMPLE_FMT_U8;
+            if (outBitDepth == 16)
+                outFormat = AV_SAMPLE_FMT_S16;
 
-    /* Check if SWR context is initialized.
-     * If not, set parameters and init it
-     */
-    if (! swr_is_initialized(swr)) {
-        /* Set channel layout */
-        if (curBuf->nbChannels == 1)
-            av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0);
-        if (curBuf->nbChannels == 2)
-            av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-        if (outNbChannels == 1)
-            av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
-        if (outNbChannels == 2)
-            av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
+            /* Set channel layout */
+            if (curBuf->nbChannels == 1)
+                av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0);
+            if (curBuf->nbChannels == 2)
+                av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
+            if (outNbChannels == 1)
+                av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
+            if (outNbChannels == 2)
+                av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
 
-        /* Set sample format */
-        av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0);
-        av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0);
+            /* Set sample format */
+            av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0);
+            av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0);
 
-        /* Set sampling frequency */
-        av_opt_set_int(swr, "in_sample_rate", curBuf->frequency, 0);
-        av_opt_set_int(swr, "out_sample_rate", outFrequency, 0);
+            /* Set sampling frequency */
+            av_opt_set_int(swr, "in_sample_rate", curBuf->frequency, 0);
+            av_opt_set_int(swr, "out_sample_rate", outFrequency, 0);
 
-        /* Open the context */
-        if (swr_init(swr) < 0) {
-            debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Error initializing swr context");
-            return 0;
+            /* Open the context */
+            if (swr_init(swr) < 0) {
+                debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Error initializing swr context");
+                return 0;
+            }
         }
     }
 #endif
@@ -227,15 +231,19 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        convOutSamples = swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
+        if (!config.audio_mute || tasflags.av_dumping) {
+            convOutSamples = swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
+        }
 #endif
     }
     else {
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        if (availableSamples > 0)
-            swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+        if (!config.audio_mute || tasflags.av_dumping) {
+            if (availableSamples > 0)
+                swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+        }
 #endif
 
         int remainingSamples = inNbSamples - availableSamples;
@@ -254,7 +262,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+                if (!config.audio_mute || tasflags.av_dumping) {
                     swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                }
 #endif
                 debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read again from 0 to ", availableSamples);
                 if (remainingSamples == availableSamples)
@@ -263,8 +273,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-            /* Get the mixed samples */
-            convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+            if (!config.audio_mute || tasflags.av_dumping) {
+                /* Get the mixed samples */
+                convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+            }
 #endif
         }
         else {
@@ -279,7 +291,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    if (!config.audio_mute || tasflags.av_dumping) {
+                        swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    }
 #endif
                     if (remainingSamples == availableSamples) {
                         finalIndex = i;
@@ -294,7 +308,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    if (!config.audio_mute || tasflags.av_dumping) {
+                        swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    }
 #endif
                     if (remainingSamples == availableSamples) {
                         finalIndex = i;
@@ -305,8 +321,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-            /* Get the mixed samples */
-            convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+            if (!config.audio_mute || tasflags.av_dumping) {
+                /* Get the mixed samples */
+                convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+            }
 #endif
 
             if (remainingSamples > 0) {
@@ -325,38 +343,39 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+    if (!config.audio_mute || tasflags.av_dumping) {
+        #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
-#define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
+        /* Add mixed source to the output buffer */
+        if (outBitDepth == 8) {
+            for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
+                int myL = mixedSamples[s];
+                int otherL = outSamples[s];
+                int sumL = otherL + ((myL * lvas) >> 16) - 256;
+                outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
 
-    /* Add mixed source to the output buffer */
-    if (outBitDepth == 8) {
-        for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-            int myL = mixedSamples[s];
-            int otherL = outSamples[s];
-            int sumL = otherL + ((myL * lvas) >> 16) - 256;
-            outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
-
-            if (outNbChannels == 2) {
-                int myR = mixedSamples[s+1];
-                int otherR = outSamples[s+1];
-                int sumR = otherR + ((myR * rvas) >> 16);
-                outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
+                if (outNbChannels == 2) {
+                    int myR = mixedSamples[s+1];
+                    int otherR = outSamples[s+1];
+                    int sumR = otherR + ((myR * rvas) >> 16);
+                    outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
+                }
             }
         }
-    }
 
-    if (outBitDepth == 16) {
-        for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-            int myL = reinterpret_cast<int16_t*>(mixedSamples.data())[s];
-            int otherL = reinterpret_cast<int16_t*>(outSamples)[s];
-            int sumL = otherL + ((myL * lvas) >> 16);
-            reinterpret_cast<int16_t*>(outSamples)[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
+        if (outBitDepth == 16) {
+            for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
+                int myL = reinterpret_cast<int16_t*>(mixedSamples.data())[s];
+                int otherL = reinterpret_cast<int16_t*>(outSamples)[s];
+                int sumL = otherL + ((myL * lvas) >> 16);
+                reinterpret_cast<int16_t*>(outSamples)[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
 
-            if (outNbChannels == 2) {
-                int myR = reinterpret_cast<int16_t*>(mixedSamples.data())[s+1];
-                int otherR = reinterpret_cast<int16_t*>(outSamples)[s+1];
-                int sumR = otherR + ((myR * rvas) >> 16);
-                reinterpret_cast<int16_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
+                if (outNbChannels == 2) {
+                    int myR = reinterpret_cast<int16_t*>(mixedSamples.data())[s+1];
+                    int otherR = reinterpret_cast<int16_t*>(outSamples)[s+1];
+                    int sumR = otherR + ((myR * rvas) >> 16);
+                    reinterpret_cast<int16_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
+                }
             }
         }
     }
@@ -364,4 +383,3 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     return convOutSamples;
 }
-

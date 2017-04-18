@@ -47,6 +47,9 @@ class Config {
         /* Frequency of buffer in Hz */
         int audio_frequency;
 
+        /* Mute audio */
+        bool audio_mute;
+
         /* Encode config */
         AVCodecID video_codec;
         int video_bitrate;

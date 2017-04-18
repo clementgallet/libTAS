@@ -83,6 +83,8 @@ class MainWindow {
         Fl_Check_Button *pausecheck;
         Fl_Check_Button *fastforwardcheck;
 
+        Fl_Check_Button *mutecheck;
+
         Fl_Output *framecount;
 
         void update_status();

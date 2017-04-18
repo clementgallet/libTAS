@@ -184,8 +184,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
     }
 
     outBytes = ticksToBytes(ticks, outAlignSize, outFrequency);
-	/* Save the actual number of samples and size */
-	outNbSamples = outBytes / outAlignSize;
+  	/* Save the actual number of samples and size */
+  	outNbSamples = outBytes / outAlignSize;
 
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outNbSamples, " samples");
 
@@ -200,7 +200,9 @@ void AudioContext::mixAllSources(struct timespec ticks)
     }
 
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-    /* Play the music */
-    audioplayer.play(*this);
+    if (!config.audio_mute) {
+        /* Play the music */
+        audioplayer.play(*this);
+    }
 #endif
 }

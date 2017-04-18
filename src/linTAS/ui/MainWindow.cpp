@@ -83,6 +83,10 @@ void MainWindow::build(Context* c)
     fastforwardcheck = new Fl_Check_Button(240, 180, 80, 20, "Fast-forward");
     fastforwardcheck->callback(fastforward_cb);
 
+    /* Mute */
+    mutecheck = new Fl_Check_Button(240, 220, 80, 20, "Mute");
+    mutecheck->callback(mute_sound_cb);
+
     /* Frame count */
     framecount = new Fl_Output(80, 140, 60, 30, "Frames:");
     std::string framestr = std::to_string(context->framecount);
@@ -386,6 +390,17 @@ void sound_channel_cb(Fl_Widget* w, void* v)
 void mute_sound_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    int channel = reinterpret_cast<intptr_t>(v);
-    mw.context->config.audio_channels = channel;
+    Fl_Menu_Item* mute_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item("Sound/Mute Sound"));
+
+    if (mw.context->config.audio_mute) {
+        if (mute_item) mute_item->clear();
+        mw.context->config.audio_mute = false;
+        mw.context->config_modified = true;
+    }
+    else {
+        if (mute_item) mute_item->set();
+        mw.context->config.audio_mute = true;
+        mw.context->config_modified = true;
+    }
+    mw.mutecheck->value(mw.context->config.audio_mute);
 }
