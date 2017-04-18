@@ -160,6 +160,13 @@ void MainWindow::update_status()
             moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
+            if (context->tasflags.av_dumping) {
+                Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Tools/Stop encode"));
+                Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Tools/Configure encode..."));
+                context->tasflags.av_dumping = 0;
+                if (encode_item) encode_item->label("Start encode");
+                if (config_item) config_item->activate();
+            }
             break;
         case Context::STARTING:
             launch->deactivate();
