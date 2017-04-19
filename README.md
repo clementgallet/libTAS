@@ -10,7 +10,7 @@ Compiling is done using cmake. From the root directory just type:
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`.
+The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`
 
 To enable audio and video dumping, you will need:
 
@@ -123,5 +123,3 @@ libTAS is distributed under the terms of the GNU General Public License v3.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-
