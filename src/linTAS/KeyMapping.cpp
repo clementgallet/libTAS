@@ -283,26 +283,25 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                     ai.keyboard[keysym_i++] = si.value;
                 }
 
-                if (si.type >= IT_CONTROLLER1_AXIS_LEFTX) {
+                if (si.type & IT_CONTROLLER_ID_MASK) {
                     /* Key is mapped to a game controller */
 
                     /* Getting Controller id
                      * Arithmetic on enums is bad, no?
                      */
-                    int controller_i = si.type / IT_CONTROLLER1_AXIS_LEFTX - 1;
+                    int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
 
                     /* Check if we support this joystick */
                     if (controller_i >= tasflags.numControllers)
                         continue;
 
-                    int controller_type = si.type % IT_CONTROLLER1_AXIS_LEFTX;
-                    int button_start = IT_CONTROLLER1_BUTTON_A % IT_CONTROLLER1_AXIS_LEFTX;
-                    if (controller_type < button_start) {
+                    int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;
+                    int controller_type = si.type & IT_CONTROLLER_TYPE_MASK;
+                    if (controller_axis) {
                         ai.controller_axes[controller_i][controller_type] = static_cast<short>(si.value);
                     }
                     else {
-                        int button_type = controller_type - button_start;
-                        ai.controller_buttons[controller_i] |= (si.value & 0x1) << button_type;
+                        ai.controller_buttons[controller_i] |= (si.value & 0x1) << controller_type;
                     }
                 }
             }
