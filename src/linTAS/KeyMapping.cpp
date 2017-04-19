@@ -236,7 +236,7 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
 }
 
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[]){
+void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], TasFlags& tasflags){
     int i,j,k;
     int keysym_i = 0;
 
@@ -269,6 +269,9 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                 }
 
                 if (si.type == IT_KEYBOARD) {
+                    /* Check if we support keyboard */
+                    if (!tasflags.keyboard_support)
+                        continue;
 
                     /* Checking the current number of keys */
                     if (keysym_i >= AllInputs::MAXKEYS) {
@@ -287,6 +290,11 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                      * Arithmetic on enums is bad, no?
                      */
                     int controller_i = si.type / IT_CONTROLLER1_AXIS_LEFTX - 1;
+
+                    /* Check if we support this joystick */
+                    if (controller_i >= tasflags.numControllers)
+                        continue;
+
                     int controller_type = si.type % IT_CONTROLLER1_AXIS_LEFTX;
                     int button_start = IT_CONTROLLER1_BUTTON_A % IT_CONTROLLER1_AXIS_LEFTX;
                     if (controller_type < button_start) {

@@ -65,6 +65,12 @@ struct TasFlags {
      */
     unsigned int framerate;
 
+    /* Are we recording and sending keyboard inputs to the game? */
+    bool keyboard_support;
+
+    /* Are we recording and sending mouse inputs to the game? */
+    bool mouse_support;
+
     /* Number of SDL controllers to (virtually) plug in */
     int numControllers;
 };

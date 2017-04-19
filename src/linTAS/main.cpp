@@ -546,10 +546,10 @@ void* launchGame(void* arg)
                 XQueryKeymap(display, keyboard_state);
 
                 /* Format the keyboard state and save it in the AllInputs struct */
-                context.km.buildAllInputs(ai, display, keyboard_state);
+                context.km.buildAllInputs(ai, display, keyboard_state, context.tasflags);
 
                 /* Get the pointer position and mask */
-                if (gameWindow) {
+                if (context.tasflags.mouse_support && gameWindow) {
                     Window w;
                     int i;
                     Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);

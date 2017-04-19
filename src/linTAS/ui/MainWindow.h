@@ -112,5 +112,8 @@ static Fl_Callback mute_sound_cb;
 static Fl_Callback logging_status_cb;
 static Fl_Callback logging_print_cb;
 static Fl_Callback logging_exclude_cb;
+static Fl_Callback input_keyboard_cb;
+static Fl_Callback input_mouse_cb;
+static Fl_Callback input_joy_cb;
 
 #endif

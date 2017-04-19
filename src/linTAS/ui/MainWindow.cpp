@@ -205,7 +205,16 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Start encode", 0, toggle_encode_cb},
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Configure mapping...", 0, config_input_cb},
+        {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
+        {"Keyboard support", 0, input_keyboard_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
+        {"Mouse support", 0, input_mouse_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
+        {"Joystick support", 0, nullptr, nullptr, FL_SUBMENU},
+            {"None", 0, input_joy_cb, reinterpret_cast<void*>(0), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"1", 0, input_joy_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
+            {"2", 0, input_joy_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
+            {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
+            {"4", 0, input_joy_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
+            {nullptr},
         {nullptr},
     {nullptr}
 };
@@ -542,4 +551,38 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
     else {
         mw.context->tasflags.includeFlags ^= logcat;
     }
+}
+
+void input_keyboard_cb(Fl_Widget*, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    Fl_Menu_Item* keyboard_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+
+    if (keyboard_item && (keyboard_item->value() == 0)) {
+        mw.context->tasflags.keyboard_support = false;
+    }
+    else {
+        mw.context->tasflags.keyboard_support = true;
+    }
+}
+
+void input_mouse_cb(Fl_Widget*, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    Fl_Menu_Item* mouse_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+
+    if (mouse_item && (mouse_item->value() == 0)) {
+        mw.context->tasflags.mouse_support = false;
+    }
+    else {
+        mw.context->tasflags.mouse_support = true;
+    }
+}
+
+void input_joy_cb(Fl_Widget*, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
+
+    mw.context->tasflags.numControllers = nb_joy;
 }

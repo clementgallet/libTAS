@@ -29,5 +29,7 @@ struct TasFlags tasflags = {
     excludeFlags   : LCF_NONE,
     av_dumping     : 0,
     framerate      : 60,
-    numControllers : 1
+    keyboard_support : true,
+    mouse_support : true,
+    numControllers : 0
 };
