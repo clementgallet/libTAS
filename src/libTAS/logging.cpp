@@ -20,7 +20,7 @@
 #include "logging.h"
 #include <stdlib.h>
 #include "threads.h"
-#include "../shared/tasflags.h"
+#include "../shared/SharedConfig.h"
 #include "unistd.h" // For isatty
 #include <cstdarg>
 #include <cstring>
@@ -29,8 +29,7 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
 {
     std::ostringstream oss;
 
-    /* Use the extern variable tasflags */
-    if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
+    if ( (lcf & shared_config.includeFlags) && !(lcf & shared_config.excludeFlags) ) {
         /* We only print colors if displayed on a terminal */
         bool isTerm = isatty(/*cerr*/ 2);
         if (isTerm) {
@@ -83,8 +82,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     char s[2048] = {'\0'};
     int size = 0;
 
-    /* Use the extern variable tasflags */
-    if ( (lcf & tasflags.includeFlags) && !(lcf & tasflags.excludeFlags) ) {
+    if ( (lcf & shared_config.includeFlags) && !(lcf & shared_config.excludeFlags) ) {
         /* We only print colors if displayed on a terminal */
         bool isTerm = isatty(/*cerr*/ 2);
         if (isTerm) {

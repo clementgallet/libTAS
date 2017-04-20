@@ -23,14 +23,14 @@
 #include "../hook.h"
 #include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/tasflags.h"
+#include "../../shared/SharedConfig.h"
 #include <stdlib.h>
 
 /* Override */ int SDL_NumJoysticks(void)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
     /* For now, we declare one joystick */
-    return tasflags.numControllers;
+    return shared_config.numControllers;
 }
 
 const char* joyname = "Microsoft X-Box 360 pad";
@@ -38,7 +38,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
 /* Override */ const char *SDL_JoystickNameForIndex(int device_index)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-    if (device_index < tasflags.numControllers)
+    if (device_index < shared_config.numControllers)
         return joyname;
     return NULL;
 }
@@ -47,7 +47,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
     /* Do not use joystick argument unless you know what you are doing.
-     * Because SDL 1.2 can call this function, but the argument is 
+     * Because SDL 1.2 can call this function, but the argument is
      * of type int.
      */
     return joyname;
@@ -61,7 +61,7 @@ static bool isIdValid(SDL_Joystick* joy)
 {
     if (joy == NULL)
         return false;
-    if ((*joy < 0) || (*joy >= MAX_SDLJOYS) || (*joy >= tasflags.numControllers))
+    if ((*joy < 0) || (*joy >= MAX_SDLJOYS) || (*joy >= shared_config.numControllers))
         return false;
     return true;
 }
@@ -81,7 +81,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return NULL;
-    if (device_index >= tasflags.numControllers)
+    if (device_index >= shared_config.numControllers)
         return NULL;
     if (joyids[device_index] != -1)
         /* Device already opened */
@@ -98,12 +98,12 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
     if ((joyid < 0) || (joyid >= MAX_SDLJOYS))
         return NULL;
-    if (joyid >= tasflags.numControllers)
+    if (joyid >= shared_config.numControllers)
         return NULL;
     if (joyids[joyid] == -1)
         /* Device not opened */
         return NULL;
-    
+
     return &joyids[joyid];
 }
 
@@ -114,7 +114,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 /* Override */ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with device ", device_index);
-    if (device_index >= tasflags.numControllers)
+    if (device_index >= shared_config.numControllers)
 	    return nullGUID;
 
     return xinputGUID;
@@ -202,7 +202,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
 
-    for (int j=0; j<tasflags.numControllers; j++) {
+    for (int j=0; j<shared_config.numControllers; j++) {
         for (int a=0; a<AllInputs::MAXAXES; a++)
             game_ai.controller_axes[j][a] = ai.controller_axes[j][a];
         game_ai.controller_buttons[j] = ai.controller_buttons[j];
@@ -332,4 +332,3 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
 	return SDL_JOYSTICK_POWER_WIRED;
 }
-

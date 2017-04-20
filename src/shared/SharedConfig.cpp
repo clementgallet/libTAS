@@ -17,18 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Config.h"
+#include "SharedConfig.h"
 
-Config config = {
-    hud_framecount : true,
-    hud_inputs : true,
-    prevent_savefiles : true,
-    audio_bitdepth : 16,
-    audio_channels : 2,
-    audio_frequency : 44100,
-    audio_mute : false,
-    video_codec : AV_CODEC_ID_H264,
-    video_bitrate : 400000,
-    audio_codec : AV_CODEC_ID_VORBIS,
-    audio_bitrate : 128000
-};
+SharedConfig::SharedConfig() :
+    running(false), speed_divisor(1),
+    fastforward(false), logging_status(SharedConfig::NO_LOGGING),
+    includeFlags(LCF_DUMP), excludeFlags(LCF_NONE),
+    av_dumping(false), framerate(60), keyboard_support(true),
+    mouse_support(true), numControllers(0),
+    hud_framecount(true), hud_inputs(true), prevent_savefiles(true),
+    audio_bitdepth(16), audio_channels(2),
+    audio_frequency(44100), audio_mute(false),
+    video_codec(AV_CODEC_ID_H264), video_bitrate(400000),
+    audio_codec(AV_CODEC_ID_VORBIS), audio_bitrate(128000)
+    {}
+
+SharedConfig shared_config;

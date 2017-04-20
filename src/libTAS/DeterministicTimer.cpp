@@ -20,7 +20,7 @@
 #include "DeterministicTimer.h"
 #include "NonDeterministicTimer.h"
 #include "logging.h"
-#include "../shared/tasflags.h"
+#include "../shared/SharedConfig.h"
 #include "threads.h"
 #include "frame.h"
 #include "time.h" // orig::clock_gettime
@@ -43,7 +43,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
         return realtime;
     }
 
-    if(tasflags.framerate == 0) {
+    if(shared_config.framerate == 0) {
         return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
@@ -86,7 +86,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
             altGetTimes[type]++;
 
             if(altGetTimes[type] > altGetTimeLimits[type]) {
-                /* 
+                /*
                  * We reached the limit of the number of calls.
                  * We advance the deterministic timer by some value
                  */
@@ -120,7 +120,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     //std::lock_guard<std::mutex> lock(mutex);
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
-    if(tasflags.framerate == 0) // 0 framerate means disable deterministic timer
+    if(shared_config.framerate == 0) // 0 framerate means disable deterministic timer
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
@@ -140,7 +140,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     ticks += delayTicks;
     forceAdvancedTicks += delayTicks;
 
-    if(!tasflags.fastforward)
+    if(!shared_config.fastforward)
     {
         /* Sleep, because the caller would have yielded at least a little */
         struct timespec nosleep = {0, 0};
@@ -176,7 +176,7 @@ void DeterministicTimer::exitFrameBoundary()
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
         altGetTimes[i] = 0;
 
-    if(tasflags.framerate == 0)
+    if(shared_config.framerate == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
 
     getTimes = 0;
@@ -195,7 +195,7 @@ void DeterministicTimer::enterFrameBoundary()
     //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
 
-    if(tasflags.framerate == 0)
+    if(shared_config.framerate == 0)
         return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
 
     /*** First we update the state of the internal timer ***/
@@ -203,17 +203,17 @@ void DeterministicTimer::enterFrameBoundary()
     /* We compute by how much we should advance the timer
      * to run exactly as the indicated framerate
      */
-    unsigned int integer_increment = 1000000000 / tasflags.framerate;
-    unsigned int fractional_increment = 1000000000 % tasflags.framerate;
+    unsigned int integer_increment = 1000000000 / shared_config.framerate;
+    unsigned int fractional_increment = 1000000000 % shared_config.framerate;
 
     timeIncrement.tv_sec = 0;
     timeIncrement.tv_nsec = integer_increment;
 
     fractional_part += fractional_increment;
-    if (fractional_part >= tasflags.framerate)
+    if (fractional_part >= shared_config.framerate)
     {
         timeIncrement.tv_nsec++;
-        fractional_part -= tasflags.framerate;
+        fractional_part -= shared_config.framerate;
     }
 
     /* Subtract out ticks that were made when calling GetTicks() */
@@ -228,7 +228,7 @@ void DeterministicTimer::enterFrameBoundary()
         forceAdvancedTicks.tv_nsec = 0;
     }
 
-    /* 
+    /*
      * Did we already have advanced more ticks that the length of a frame?
      * If not, we add the remaining ticks
      */
@@ -256,7 +256,7 @@ void DeterministicTimer::enterFrameBoundary()
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
-    if (!tasflags.fastforward && lastEnterValid) {
+    if (!shared_config.fastforward && lastEnterValid) {
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
@@ -264,7 +264,7 @@ void DeterministicTimer::enterFrameBoundary()
         }
     }
 
-    /* 
+    /*
      * WARNING: This time update is not done in Hourglass,
      * maybe intentionally (the author does not remember).
      */
@@ -304,4 +304,3 @@ void DeterministicTimer::initialize(void)
 }
 
 DeterministicTimer detTimer;
-

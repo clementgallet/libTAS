@@ -78,10 +78,10 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
         }
 
         SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
-        
+
         pixelSize = surf->format->BytesPerPixel;
         pixfmt = AV_PIX_FMT_RGBA; // TODO
-        
+
         *pwidth = surf->w;
         *pheight = surf->h;
     }
@@ -98,7 +98,7 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
             }
 
             orig::SDL_GL_GetDrawableSize(window, pwidth, pheight);
-            pixfmt = AV_PIX_FMT_BGRA;
+            pixfmt = AV_PIX_FMT_RGBA;
             pixelSize = 4;
         }
         else {
@@ -278,4 +278,3 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 }
 
 #endif
-

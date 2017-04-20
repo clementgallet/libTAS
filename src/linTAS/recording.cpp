@@ -19,20 +19,20 @@
 
 #include "recording.h"
 
-FILE* openRecording(const char* filename, TasFlags::RecStatus recording)
+FILE* openRecording(const char* filename, Context::RecStatus recording)
 {
     FILE* fp;
 
     switch(recording) {
-        case TasFlags::RECORDING_WRITE:
+        case Context::RECORDING_WRITE:
             fp = fopen(filename, "wb");
             writeHeader(fp);
             break;
-        case TasFlags::RECORDING_READ_WRITE:
+        case Context::RECORDING_READ_WRITE:
             fp = fopen(filename, "r+b");
             readHeader(fp);
             break;
-        case TasFlags::RECORDING_READ_ONLY:
+        case Context::RECORDING_READ_ONLY:
             fp = fopen(filename, "rb");
             readHeader(fp);
             break;

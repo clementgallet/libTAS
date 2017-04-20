@@ -22,7 +22,7 @@
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/tasflags.h"
+#include "../../shared/SharedConfig.h"
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
@@ -78,7 +78,7 @@ void generateSDLKeyUpEvents(void)
                 event1.key.keysym = keysym;
 
                 sdlEventQueue.insert(&event1);
-                
+
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
@@ -161,7 +161,7 @@ void generateSDLControllerAdded(void)
     threadState.setOwnCode(false);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (int i = 0; i < tasflags.numControllers; i++) {
+    for (int i = 0; i < shared_config.numControllers; i++) {
         SDL_Event ev;
         ev.type = SDL_CONTROLLERDEVICEADDED;
         ev.cdevice.timestamp = timestamp;
@@ -182,9 +182,9 @@ void generateSDLControllerEvents(void)
     threadState.setOwnCode(false);
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (int ji=0; ji<tasflags.numControllers; ji++) {
+    for (int ji=0; ji<shared_config.numControllers; ji++) {
 
-        /* Check if we need to generate any joystick events for that 
+        /* Check if we need to generate any joystick events for that
          * particular joystick. If not, we {continue;} here because
          * we must not update the joystick state (game_ai) as specified
          * in the SDL documentation. The game must then call
@@ -251,7 +251,7 @@ void generateSDLControllerEvents(void)
 
         /* Update game_ai buttons */
         game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
-        
+
         /* Check for button change */
         unsigned short buttons = ai.controller_buttons[ji];
         unsigned short old_buttons = old_ai.controller_buttons[ji];
@@ -514,5 +514,3 @@ void generateSDLMouseButtonEvents(void)
         }
     }
 }
-
-

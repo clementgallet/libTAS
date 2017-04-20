@@ -20,7 +20,7 @@
 #include "../logging.h"
 #include "AudioContext.h"
 #include "AudioPlayer.h"
-#include "../../shared/Config.h"
+#include "../../shared/SharedConfig.h"
 
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112
@@ -45,17 +45,17 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 AudioContext::AudioContext(void)
 {
     outVolume = 1.0f;
-    outBitDepth = config.audio_bitdepth;
-    outNbChannels = config.audio_channels;
-    outFrequency = config.audio_frequency;
+    outBitDepth = shared_config.audio_bitdepth;
+    outNbChannels = shared_config.audio_channels;
+    outFrequency = shared_config.audio_frequency;
     outAlignSize = outNbChannels * outBitDepth / 8;
 }
 
 void AudioContext::init(void)
 {
-    outBitDepth = config.audio_bitdepth;
-    outNbChannels = config.audio_channels;
-    outFrequency = config.audio_frequency;
+    outBitDepth = shared_config.audio_bitdepth;
+    outNbChannels = shared_config.audio_channels;
+    outFrequency = shared_config.audio_frequency;
     outAlignSize = outNbChannels * outBitDepth / 8;
 }
 
@@ -200,7 +200,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     }
 
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-    if (!config.audio_mute) {
+    if (!shared_config.audio_mute) {
         /* Play the music */
         audioplayer.play(*this);
     }

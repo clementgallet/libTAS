@@ -24,7 +24,7 @@
 #include "../hook.h"
 #include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/tasflags.h"
+#include "../../shared/SharedConfig.h"
 #include <cstring>
 #include "../ThreadState.h"
 
@@ -34,7 +34,7 @@ const char joy_name[] = "XInput Controller";
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    if (joystick_index >= 0 && joystick_index < tasflags.numControllers)
+    if (joystick_index >= 0 && joystick_index < shared_config.numControllers)
         return SDL_TRUE;
     return SDL_FALSE;
 
@@ -43,7 +43,7 @@ const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    if (joystick_index < 0 || joystick_index >= tasflags.numControllers)
+    if (joystick_index < 0 || joystick_index >= shared_config.numControllers)
         return NULL;
 
     /* Save the opening of the game controller */
@@ -61,7 +61,7 @@ const char joy_name[] = "XInput Controller";
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
-    
+
     if (!gamecontroller)
         return NULL;
 
@@ -79,7 +79,7 @@ const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joy);
-    if (joy < 0 || joy >= tasflags.numControllers)
+    if (joy < 0 || joy >= shared_config.numControllers)
         return NULL;
     if (gcids[joy] != -1)
         return NULL;
@@ -106,7 +106,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
 
-    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
         return NULL;
 
     /* Check if controller is available */
@@ -114,7 +114,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return NULL;
 
     /* Return the mapping of my own xbox 360 controller.
-     * The game is supposed to free the char*, so we must 
+     * The game is supposed to free the char*, so we must
      * allocate it. */
     int mapsize = strlen(xbox360Mapping);
     char* mapping = static_cast<char*>(malloc(mapsize+1));
@@ -125,7 +125,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
-    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
         return SDL_FALSE;
     if (gcids[*gamecontroller] == -1)
         return SDL_FALSE;
@@ -179,7 +179,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1, " and axis ", axis);
 
-    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
         return 0;
 
     /* Check if controller is available */
@@ -200,7 +200,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1, " and button ", button);
 
-    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
         return 0;
 
     /* Check if controller is available */
@@ -220,9 +220,8 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
 
-    if (*gamecontroller < 0 || *gamecontroller >= tasflags.numControllers)
+    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
         return;
 
     gcids[*gamecontroller] = -1;
 }
-

@@ -18,10 +18,9 @@
  */
 
 #include "frame.h"
-#include "../shared/tasflags.h"
 #include "../shared/AllInputs.h"
 #include "../shared/messages.h"
-#include "../shared/Config.h"
+#include "../shared/SharedConfig.h"
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/sdlinputevents.h"
 #include "socket.h"
@@ -79,7 +78,7 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
 static bool skipDraw(void)
 {
     static int skipCounter = 0;
-    if (tasflags.fastforward) {
+    if (shared_config.fastforward) {
         if (skipCounter++ > 10)
             skipCounter = 0;
     }
@@ -105,7 +104,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Audio mixing is done above, so encode must be called after */
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Dumping audio and video */
-    if (tasflags.av_dumping) {
+    if (shared_config.av_dumping) {
 
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
@@ -118,7 +117,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         if (enc != 0) {
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
-            tasflags.av_dumping = 0;
+            shared_config.av_dumping = false;
         }
     }
     else {
@@ -133,9 +132,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (config.hud_framecount)
+    if (shared_config.hud_framecount)
         hud.renderFrame(frame_counter);
-    if (config.hud_inputs)
+    if (shared_config.hud_inputs)
         hud.renderInputs(ai);
 #endif
 
@@ -188,12 +187,8 @@ void proceed_commands(void)
                 pushQuitEvent();
                 break;
 
-            case MSGN_TASFLAGS:
-                receiveData(&tasflags, sizeof(struct TasFlags));
-                break;
-
             case MSGN_CONFIG:
-                receiveData(&config, sizeof(struct Config));
+                receiveData(&shared_config, sizeof(struct SharedConfig));
                 break;
 
             case MSGN_DUMP_FILE:

@@ -47,12 +47,12 @@ void MainWindow::build(Context* c)
     moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
     moviepath->color(FL_LIGHT1);
-    moviepath->value(context->moviefile.c_str());
+    moviepath->value(context->config.moviefile.c_str());
 
     moviepathchooser = new Fl_Native_File_Chooser();
     moviepathchooser->title("Choose a movie file");
     moviepathchooser->filter("libTAS movie file \t*.ltm\n");
-    moviepathchooser->preset_file(context->moviefile.c_str());
+    moviepathchooser->preset_file(context->config.moviefile.c_str());
 
     browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
     browsemoviepath->callback(browse_moviepath_cb);
@@ -73,7 +73,7 @@ void MainWindow::build(Context* c)
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 200, 40, 30, "Frames per second");
-    std::string fpsstr = std::to_string(context->tasflags.framerate);
+    std::string fpsstr = std::to_string(context->config.sc.framerate);
     logicalfps->value(fpsstr.c_str());
     logicalfps->callback(set_fps_cb);
 
@@ -131,9 +131,9 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {nullptr},
     {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::NO_LOGGING), FL_MENU_VALUE | FL_MENU_RADIO},
-            {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
-            {"Log to file", 0, logging_status_cb, reinterpret_cast<void*>(TasFlags::LOGGING_TO_FILE), FL_MENU_RADIO | FL_MENU_DIVIDER},
+            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
+            {"Log to file", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_FILE), FL_MENU_RADIO | FL_MENU_DIVIDER},
             {"Print Categories", 0, nullptr, nullptr, FL_SUBMENU},
                 {"Untested", 0, logging_print_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
                 {"Desync", 0, logging_print_cb, reinterpret_cast<void*>(LCF_DESYNC), FL_MENU_TOGGLE},
@@ -240,10 +240,10 @@ void MainWindow::update_status()
             moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
-            if (context->tasflags.av_dumping) {
+            if (context->config.sc.av_dumping) {
                 Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
                 Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
-                context->tasflags.av_dumping = 0;
+                context->config.sc.av_dumping = false;
                 if (encode_item) encode_item->label("Start encode");
                 if (config_item) config_item->activate();
             }
@@ -285,29 +285,27 @@ void MainWindow::update(bool status)
 
     if (status) {
         /* Update pause status */
-        pausecheck->value(!context->tasflags.running);
+        pausecheck->value(!context->config.sc.running);
 
         /* Update fastforward status */
-        fastforwardcheck->value(context->tasflags.fastforward);
+        fastforwardcheck->value(context->config.sc.fastforward);
 
         /* Update recording state */
-        switch (context->tasflags.recording) {
-          case TasFlags::NO_RECORDING:
+        switch (context->recording) {
+          case Context::NO_RECORDING:
               movie_norec->setonly();
               break;
-          case TasFlags::RECORDING_WRITE:
+          case Context::RECORDING_WRITE:
               movie_w->setonly();
               break;
-          case TasFlags::RECORDING_READ_WRITE:
+          case Context::RECORDING_READ_WRITE:
               movie_rw->setonly();
               break;
-          case TasFlags::RECORDING_READ_ONLY:
+          case Context::RECORDING_READ_ONLY:
               movie_ro->setonly();
               break;
         }
-
     }
-
 
     Fl::unlock();
     Fl::awake();
@@ -351,9 +349,9 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         mw.context->gamepath = std::string(filename);
 
         /* Change the movie file also */
-        mw.context->moviefile = mw.context->gamepath;
-        mw.context->moviefile += ".ltm";
-        mw.moviepath->value(mw.context->moviefile.c_str());
+        mw.context->config.moviefile = mw.context->gamepath;
+        mw.context->config.moviefile += ".ltm";
+        mw.moviepath->value(mw.context->config.moviefile.c_str());
     }
 }
 
@@ -368,7 +366,7 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
     /* If the user picked a file */
     if (ret == 0) {
         mw.moviepath->value(filename);
-        mw.context->moviefile = std::string(filename);
+        mw.context->config.moviefile = std::string(filename);
     }
 }
 
@@ -377,7 +375,7 @@ void set_fps_cb(Fl_Widget* w)
     MainWindow& mw = MainWindow::getInstance();
     Fl_Int_Input *ii = (Fl_Int_Input*) w;
     std::string fpsstr = ii->value();
-    mw.context->tasflags.framerate = std::stoi(fpsstr);
+    mw.context->config.sc.framerate = std::stoi(fpsstr);
 }
 
 void pause_cb(Fl_Widget* w)
@@ -385,8 +383,8 @@ void pause_cb(Fl_Widget* w)
     MainWindow& mw = MainWindow::getInstance();
     Fl_Check_Button *cb = (Fl_Check_Button*) w;
     int cb_val = static_cast<int>(cb->value());
-    mw.context->tasflags.running = !cb_val;
-    mw.context->tasflags_modified = true;
+    mw.context->config.sc.running = !cb_val;
+    mw.context->config.sc_modified = true;
 }
 
 void fastforward_cb(Fl_Widget* w)
@@ -394,21 +392,21 @@ void fastforward_cb(Fl_Widget* w)
     MainWindow& mw = MainWindow::getInstance();
     Fl_Check_Button *cb = (Fl_Check_Button*) w;
     int cb_val = static_cast<int>(cb->value());
-    mw.context->tasflags.fastforward = cb_val;
-    mw.context->tasflags_modified = true;
+    mw.context->config.sc.fastforward = cb_val;
+    mw.context->config.sc_modified = true;
 }
 
 void recording_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
     if (mw.movie_norec->value() == 1)
-        mw.context->tasflags.recording = TasFlags::NO_RECORDING;
+        mw.context->recording = Context::NO_RECORDING;
     if (mw.movie_w->value() == 1)
-        mw.context->tasflags.recording = TasFlags::RECORDING_WRITE;
+        mw.context->recording = Context::RECORDING_WRITE;
     if (mw.movie_rw->value() == 1)
-        mw.context->tasflags.recording = TasFlags::RECORDING_READ_WRITE;
+        mw.context->recording = Context::RECORDING_READ_WRITE;
     if (mw.movie_ro->value() == 1)
-        mw.context->tasflags.recording = TasFlags::RECORDING_READ_ONLY;
+        mw.context->recording = Context::RECORDING_READ_ONLY;
 }
 
 void config_encode_cb(Fl_Widget* w, void*)
@@ -428,16 +426,16 @@ void toggle_encode_cb(Fl_Widget* w, void*)
     Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
     Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(config_encode_cb));
 
-    if (mw.context->tasflags.av_dumping == 0) {
-        mw.context->tasflags.av_dumping = 1;
-        mw.context->tasflags_modified = true;
-        mw.context->dumpfile_modified = true;
+    if (!mw.context->config.sc.av_dumping) {
+        mw.context->config.sc.av_dumping = true;
+        mw.context->config.sc_modified = true;
+        mw.context->config.dumpfile_modified = true;
         encode_item->label("Stop encode");
         if (config_item) config_item->deactivate();
     }
     else {
-        mw.context->tasflags.av_dumping = 0;
-        mw.context->tasflags_modified = true;
+        mw.context->config.sc.av_dumping = false;
+        mw.context->config.sc_modified = true;
         encode_item->label("Start encode");
         if (config_item) config_item->activate();
     }
@@ -457,21 +455,21 @@ void sound_frequency_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
     int frequency = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.audio_frequency = frequency;
+    mw.context->config.sc.audio_frequency = frequency;
 }
 
 void sound_bitdepth_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
     int bitdepth = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.audio_bitdepth = bitdepth;
+    mw.context->config.sc.audio_bitdepth = bitdepth;
 }
 
 void sound_channel_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
     int channel = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.audio_channels = channel;
+    mw.context->config.sc.audio_channels = channel;
 }
 
 void mute_sound_cb(Fl_Widget* w, void* v)
@@ -479,24 +477,24 @@ void mute_sound_cb(Fl_Widget* w, void* v)
     MainWindow& mw = MainWindow::getInstance();
     Fl_Menu_Item* mute_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(mute_sound_cb));
 
-    if (mw.context->config.audio_mute) {
+    if (mw.context->config.sc.audio_mute) {
         if (mute_item) mute_item->clear();
-        mw.context->config.audio_mute = false;
-        mw.context->config_modified = true;
+        mw.context->config.sc.audio_mute = false;
+        mw.context->config.sc_modified = true;
     }
     else {
         if (mute_item) mute_item->set();
-        mw.context->config.audio_mute = true;
-        mw.context->config_modified = true;
+        mw.context->config.sc.audio_mute = true;
+        mw.context->config.sc_modified = true;
     }
-    mw.mutecheck->value(mw.context->config.audio_mute);
+    mw.mutecheck->value(mw.context->config.sc.audio_mute);
 }
 
 void logging_status_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    TasFlags::LogStatus logstatus = static_cast<TasFlags::LogStatus>(reinterpret_cast<intptr_t>(v));
-    mw.context->tasflags.logging_status = logstatus;
+    SharedConfig::LogStatus logstatus = static_cast<SharedConfig::LogStatus>(reinterpret_cast<intptr_t>(v));
+    mw.context->config.sc.logging_status = logstatus;
 }
 
 void logging_print_cb(Fl_Widget* w, void* v)
@@ -510,7 +508,7 @@ void logging_print_cb(Fl_Widget* w, void* v)
             log_item->set();
             log_item = log_item->next();
         }
-        mw.context->tasflags.includeFlags = LCF_ALL;
+        mw.context->config.sc.includeFlags = LCF_ALL;
     }
     else if (logcat == LCF_NONE) {
         /* Get the first item of the log categories */
@@ -519,10 +517,10 @@ void logging_print_cb(Fl_Widget* w, void* v)
             log_item->clear();
             log_item = log_item->next();
         }
-        mw.context->tasflags.includeFlags = LCF_NONE;
+        mw.context->config.sc.includeFlags = LCF_NONE;
     }
     else {
-        mw.context->tasflags.includeFlags ^= logcat;
+        mw.context->config.sc.includeFlags ^= logcat;
     }
 }
 
@@ -537,7 +535,7 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
             log_item->set();
             log_item = log_item->next();
         }
-        mw.context->tasflags.includeFlags = LCF_ALL;
+        mw.context->config.sc.includeFlags = LCF_ALL;
     }
     else if (logcat == LCF_NONE) {
         /* Get the first item of the log categories */
@@ -546,10 +544,10 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
             log_item->clear();
             log_item = log_item->next();
         }
-        mw.context->tasflags.includeFlags = LCF_NONE;
+        mw.context->config.sc.includeFlags = LCF_NONE;
     }
     else {
-        mw.context->tasflags.includeFlags ^= logcat;
+        mw.context->config.sc.includeFlags ^= logcat;
     }
 }
 
@@ -559,10 +557,10 @@ void input_keyboard_cb(Fl_Widget*, void*)
     Fl_Menu_Item* keyboard_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
 
     if (keyboard_item && (keyboard_item->value() == 0)) {
-        mw.context->tasflags.keyboard_support = false;
+        mw.context->config.sc.keyboard_support = false;
     }
     else {
-        mw.context->tasflags.keyboard_support = true;
+        mw.context->config.sc.keyboard_support = true;
     }
 }
 
@@ -572,10 +570,10 @@ void input_mouse_cb(Fl_Widget*, void*)
     Fl_Menu_Item* mouse_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
 
     if (mouse_item && (mouse_item->value() == 0)) {
-        mw.context->tasflags.mouse_support = false;
+        mw.context->config.sc.mouse_support = false;
     }
     else {
-        mw.context->tasflags.mouse_support = true;
+        mw.context->config.sc.mouse_support = true;
     }
 }
 
@@ -584,5 +582,5 @@ void input_joy_cb(Fl_Widget*, void* v)
     MainWindow& mw = MainWindow::getInstance();
     int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
 
-    mw.context->tasflags.numControllers = nb_joy;
+    mw.context->config.sc.numControllers = nb_joy;
 }

@@ -21,7 +21,7 @@
 #define KEYMAPPING_H_INCLUDED
 
 #include "../shared/AllInputs.h"
-#include "../shared/tasflags.h"
+#include "../shared/SharedConfig.h"
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <map>
@@ -213,7 +213,7 @@ class KeyMapping {
          * - Check if the keysym is mapped to a hotkey. If so, we skip it
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          */
-        void buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], TasFlags& tasflags);
+        void buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED

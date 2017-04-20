@@ -36,14 +36,8 @@ enum {
     MSGN_ALL_INPUTS,
 
     /*
-     * Send tasflags
-     * Argument: struct TasFlags
-     */
-    MSGN_TASFLAGS,
-
-    /*
      * Send config
-     * Argument: struct Config
+     * Argument: struct SharedConfig
      */
     MSGN_CONFIG,
 

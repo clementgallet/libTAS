@@ -236,7 +236,7 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
 }
 
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], TasFlags& tasflags){
+void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], SharedConfig& sc){
     int i,j,k;
     int keysym_i = 0;
 
@@ -270,7 +270,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
 
                 if (si.type == IT_KEYBOARD) {
                     /* Check if we support keyboard */
-                    if (!tasflags.keyboard_support)
+                    if (!sc.keyboard_support)
                         continue;
 
                     /* Checking the current number of keys */
@@ -292,7 +292,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                     int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
 
                     /* Check if we support this joystick */
-                    if (controller_i >= tasflags.numControllers)
+                    if (controller_i >= sc.numControllers)
                         continue;
 
                     int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;

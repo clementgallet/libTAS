@@ -20,7 +20,7 @@
 #include "NonDeterministicTimer.h"
 #include "logging.h"
 #include "frame.h"
-#include "../shared/tasflags.h"
+#include "../shared/SharedConfig.h"
 #include "time.h" // orig::clock_gettime
 #include "sleep.h" // orig::nanosleep
 #include "audio/AudioContext.h"
@@ -57,7 +57,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
         /* Compute the difference from the last call */
         TimeHolder delta = realtime - lasttime;
 
-        if(tasflags.fastforward) { // fast-forward
+        if(shared_config.fastforward) { // fast-forward
             delta = delta * 3; // arbitrary
         }
 
@@ -111,13 +111,12 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
 {
     DEBUGLOGCALL(LCF_SLEEP | LCF_FREQUENT);
 
-    if (tasflags.fastforward) {
+    if (shared_config.fastforward) {
         delayTicks.tv_sec = 0;
         delayTicks.tv_nsec = 0;
     }
-    
+
     orig::nanosleep(&delayTicks, NULL);
 }
 
 NonDeterministicTimer nonDetTimer;
-

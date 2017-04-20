@@ -22,7 +22,7 @@
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
 
 #include "../logging.h"
-#include "../../shared/tasflags.h"
+#include "../../shared/SharedConfig.h"
 #include "../ThreadState.h"
 
 AudioPlayer audioplayer;
@@ -73,7 +73,7 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
         return false;
     }
 
-    snd_pcm_uframes_t buffer_size = 2 * frequency / ((tasflags.framerate>0)?tasflags.framerate:30);
+    snd_pcm_uframes_t buffer_size = 2 * frequency / ((shared_config.framerate>0)?shared_config.framerate:30);
     debuglog(LCF_SOUND, "  Buffer size is ", buffer_size);
     if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
         debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
@@ -113,7 +113,7 @@ bool AudioPlayer::play(AudioContext& ac)
         inited = true;
     }
 
-    if (tasflags.fastforward)
+    if (shared_config.fastforward)
         return true;
 
     debuglog(LCF_SOUND, "Play an audio frame");
@@ -146,4 +146,3 @@ bool AudioPlayer::play(AudioContext& ac)
 }
 
 #endif
-

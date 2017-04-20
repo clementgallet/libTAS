@@ -23,11 +23,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "../shared/AllInputs.h"
-#include "../shared/tasflags.h"
+#include "Context.h"
 
 #define HEADER_SIZE 256
 
-FILE* openRecording(const char* filename, TasFlags::RecStatus recording);
+FILE* openRecording(const char* filename, Context::RecStatus recording);
 void writeHeader(FILE* fp);
 void readHeader(FILE* fp);
 int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs);

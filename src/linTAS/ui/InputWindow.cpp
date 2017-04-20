@@ -49,14 +49,14 @@ InputWindow::InputWindow(Context* c) : context(c)
     input_browser->column_char('\t');
 
     /* Fill hotkey list */
-    for (auto iter : context->km.hotkey_list) {
+    for (auto iter : context->config.km.hotkey_list) {
         std::string linestr(iter.description);
         /* Add the line in the browser */
         hotkey_browser->add(linestr.c_str());
     }
 
     /* Fill input list */
-    for (auto iter : context->km.input_list) {
+    for (auto iter : context->config.km.input_list) {
         std::string linestr(iter.description);
         /* Add the line in the browser */
         input_browser->add(linestr.c_str());
@@ -89,11 +89,11 @@ void InputWindow::update()
 {
     /* Update hotkey list */
     int index = 1;
-    for (auto iter : context->km.hotkey_list) {
+    for (auto iter : context->config.km.hotkey_list) {
         std::string linestr(iter.description);
 
         /* Check if a key is mapped to this hotkey */
-        for (auto itermap : context->km.hotkey_mapping) {
+        for (auto itermap : context->config.km.hotkey_mapping) {
             if (itermap.second == iter) {
                 linestr += '\t';
                 linestr += XKeysymToString(itermap.first);
@@ -108,11 +108,11 @@ void InputWindow::update()
 
     /* Update input list */
     index = 1;
-    for (auto iter : context->km.input_list) {
+    for (auto iter : context->config.km.input_list) {
         std::string linestr(iter.description);
 
         /* Check if a key is mapped to this input */
-        for (auto itermap : context->km.input_mapping) {
+        for (auto itermap : context->config.km.input_mapping) {
             if (itermap.second == iter) {
                 linestr += '\t';
                 /* Special case for visibility:
@@ -215,12 +215,12 @@ void assign_cb(Fl_Widget* w, void* v)
      */
     int sel_hotkey = iw->hotkey_browser->value();
     if (iw->hotkey_browser->selected(sel_hotkey)) {
-        iw->context->km.reassign_hotkey(sel_hotkey-1, ks);
+        iw->context->config.km.reassign_hotkey(sel_hotkey-1, ks);
     }
 
     int sel_input = iw->input_browser->value();
     if (iw->input_browser->selected(sel_input)) {
-        iw->context->km.reassign_input(sel_input-1, ks);
+        iw->context->config.km.reassign_input(sel_input-1, ks);
     }
 
     iw->update();
@@ -239,7 +239,7 @@ void default_cb(Fl_Widget* w, void* v)
     if (iw->hotkey_browser->selected(sel_hotkey)) {
         for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
             if (iw->hotkey_browser->selected(i)) {
-                iw->context->km.default_hotkey(i-1);
+                iw->context->config.km.default_hotkey(i-1);
             }
         }
     }
@@ -248,7 +248,7 @@ void default_cb(Fl_Widget* w, void* v)
     if (iw->input_browser->selected(sel_input)) {
         for (int i = 1; i <= iw->input_browser->size(); i++) {
             if (iw->input_browser->selected(i)) {
-                iw->context->km.default_input(i-1);
+                iw->context->config.km.default_input(i-1);
             }
         }
     }
@@ -269,7 +269,7 @@ void disable_cb(Fl_Widget* w, void* v)
     if (iw->hotkey_browser->selected(sel_hotkey)) {
         for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
             if (iw->hotkey_browser->selected(i)) {
-                iw->context->km.reassign_hotkey(i-1, 0);
+                iw->context->config.km.reassign_hotkey(i-1, 0);
             }
         }
     }
@@ -278,7 +278,7 @@ void disable_cb(Fl_Widget* w, void* v)
     if (iw->input_browser->selected(sel_input)) {
         for (int i = 1; i <= iw->input_browser->size(); i++) {
             if (iw->input_browser->selected(i)) {
-                iw->context->km.reassign_input(i-1, 0);
+                iw->context->config.km.reassign_input(i-1, 0);
             }
         }
     }

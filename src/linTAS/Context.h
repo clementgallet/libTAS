@@ -21,9 +21,7 @@
 #define LINTAS_CONTEXT_H_INCLUDED
 
 #include <string>
-#include "KeyMapping.h"
-#include "../shared/tasflags.h"
-#include "../shared/Config.h"
+#include "Config.h"
 
 struct Context {
     /* Execution status */
@@ -38,38 +36,23 @@ struct Context {
     /* frame count */
     unsigned long int framecount = 0;
 
-    /* tas flags */
-    TasFlags tasflags;
-
-    /* was the tasflags modified */
-    bool tasflags_modified;
-
-    /* key mapping */
-    KeyMapping km;
+    /* Recording status */
+    enum RecStatus {
+        NO_RECORDING,
+        RECORDING_WRITE,
+        RECORDING_READ_WRITE, // Read until end of movie or toggle
+        RECORDING_READ_ONLY // Always read, toggle deactivated
+    };
+    RecStatus recording = NO_RECORDING;
 
     /* config */
     Config config;
-
-    /* was the config modified */
-    bool config_modified;
 
     /* Absolute path of libTAS.so */
     std::string libtaspath;
 
     /* Absolute path of the game executable */
     std::string gamepath;
-
-    /* Arguments passed to the game */
-    std::string gameargs;
-
-    /* Absolute path of the movie file */
-    std::string moviefile;
-
-    /* Absolute path of the dump file */
-    std::string dumpfile;
-
-    /* Was the dump file modified */
-    bool dumpfile_modified;
 
     /* Path of the libraries used by the game */
     std::string libdir;

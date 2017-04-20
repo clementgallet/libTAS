@@ -17,19 +17,4 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tasflags.h"
-
-struct TasFlags tasflags = {
-    running        : 0,
-    speed_divisor  : 1,
-    recording      : TasFlags::NO_RECORDING,
-    fastforward    : 0,
-    logging_status : TasFlags::NO_LOGGING,
-    includeFlags   : LCF_DUMP,
-    excludeFlags   : LCF_NONE,
-    av_dumping     : 0,
-    framerate      : 60,
-    keyboard_support : true,
-    mouse_support : true,
-    numControllers : 0
-};
+#include "Config.h"

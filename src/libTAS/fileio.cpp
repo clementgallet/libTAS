@@ -23,7 +23,7 @@
 
 #include "logging.h"
 #include "hook.h"
-#include "../shared/Config.h"
+#include "../shared/SharedConfig.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -82,7 +82,7 @@ static bool isWriteable(const char *modes)
 /* Detect save files (excluding the writeable flag), basically if the file is regular */
 static bool isSaveFile(const char *file)
 {
-    if (!config.prevent_savefiles)
+    if (!shared_config.prevent_savefiles)
         return false;
 
     if (!file)
@@ -120,7 +120,7 @@ static bool isSaveFile(const char *file, const char *modes)
 {
     static bool inited = 0;
     if (!inited) {
-        /* 
+        /*
          * Normally, we shouldn't have to clear the savefiles set,
          * as it is clearly during creation. However, games break without
          * clearing it. I suppose it is because we are using the set
@@ -272,7 +272,7 @@ static bool isSaveFile(const char *file, int oflag)
 {
     static bool inited = 0;
     if (!inited) {
-        /* 
+        /*
          * Normally, we shouldn't have to clear the savefiles set,
          * as it is clearly during creation. However, games break without
          * clearing it. I suppose it is because we are using the set
@@ -464,4 +464,3 @@ int close (int fd)
 }
 
 #endif
-

@@ -24,14 +24,13 @@
 #include "logging.h"
 #include "videocapture.h"
 #include "audio/AudioContext.h"
-#include "../shared/tasflags.h"
-#include "../shared/Config.h"
+#include "../shared/SharedConfig.h"
 #include "ThreadState.h"
 
 AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned long sf) {
     error = 0;
 
-    if (tasflags.framerate <= 0) {
+    if (shared_config.framerate <= 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Not supporting non deterministic timer");
         error = 1;
         return;
@@ -74,7 +73,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     /* Initialize video AVCodec */
 
     AVCodec *video_codec = NULL;
-    AVCodecID codec_id = config.video_codec;
+    AVCodecID codec_id = shared_config.video_codec;
     video_codec = avcodec_find_encoder(codec_id);
     if (!video_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
@@ -97,11 +96,11 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     video_st->codec->codec_id = codec_id;
 
-    video_st->codec->bit_rate = config.video_bitrate;
+    video_st->codec->bit_rate = shared_config.video_bitrate;
     video_st->codec->width = width;
     video_st->codec->height = height;
-    video_st->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
-    video_st->codec->time_base = (AVRational){1,static_cast<int>(tasflags.framerate)};
+    video_st->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
+    video_st->codec->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
     video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
     video_st->codec->max_b_frames = 1;
     if (codec_id == AV_CODEC_ID_H264)
@@ -131,7 +130,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     /* Initialize audio AVCodec */
 
     AVCodec *audio_codec = NULL;
-    AVCodecID audio_codec_id = config.audio_codec;
+    AVCodecID audio_codec_id = shared_config.audio_codec;
     audio_codec = avcodec_find_encoder(audio_codec_id);
     if (!audio_codec) {
         debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
@@ -169,7 +168,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
             error = 1;
             return;
     }
-    audio_st->codec->bit_rate = config.audio_bitrate;
+    audio_st->codec->bit_rate = shared_config.audio_bitrate;
     audio_st->codec->sample_rate = audiocontext.outFrequency;
     audio_st->codec->channels = audiocontext.outNbChannels;
     audio_st->codec->channel_layout = av_get_default_channel_layout( audio_st->codec->channels );

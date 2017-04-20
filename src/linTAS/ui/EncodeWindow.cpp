@@ -50,7 +50,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
 
     videobitrate = new Fl_Output(10, 160, 100, 30, "Video bitrate");
     videobitrate->align(FL_ALIGN_TOP_LEFT);
-    std::string vbstr = std::to_string(context->config.video_bitrate);
+    std::string vbstr = std::to_string(context->config.sc.video_bitrate);
     videobitrate->value(vbstr.c_str());
 
     audiochoice = new Fl_Choice(150, 100, 100, 30, "Audio codec");
@@ -60,7 +60,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
 
     audiobitrate = new Fl_Output(150, 160, 100, 30, "Audio bitrate");
     audiobitrate->align(FL_ALIGN_TOP_LEFT);
-    std::string abstr = std::to_string(context->config.audio_bitrate);
+    std::string abstr = std::to_string(context->config.sc.audio_bitrate);
     audiobitrate->value(abstr.c_str());
 
     start = new Fl_Button(400, 160, 70, 30, "Ok");
@@ -100,47 +100,47 @@ void start_cb(Fl_Widget* w, void* v)
     /* Fill encode filename */
     const char* filename = ew->encodepath->value();
     std::string ext = EncodeWindow::container_items[ew->containerchoice->value()].label();
-    ew->context->dumpfile = std::string(filename) + ext;
+    ew->context->config.dumpfile = std::string(filename) + ext;
 
     /* Set video codec and bitrate */
     /* TODO: this switch/case is ugly, we should put them in userdata
      * of each choice item */
     switch(ew->videochoice->value()) {
         case 0:
-            ew->context->config.video_codec = AV_CODEC_ID_H264;
+            ew->context->config.sc.video_codec = AV_CODEC_ID_H264;
             break;
         case 1:
-            ew->context->config.video_codec = AV_CODEC_ID_FFV1;
+            ew->context->config.sc.video_codec = AV_CODEC_ID_FFV1;
             break;
         case 2:
-            ew->context->config.video_codec = AV_CODEC_ID_RAWVIDEO;
+            ew->context->config.sc.video_codec = AV_CODEC_ID_RAWVIDEO;
             break;
         default:
-            ew->context->config.video_codec = AV_CODEC_ID_H264;
+            ew->context->config.sc.video_codec = AV_CODEC_ID_H264;
     }
 
-    ew->context->config.video_bitrate = std::stoi(ew->videobitrate->value());
+    ew->context->config.sc.video_bitrate = std::stoi(ew->videobitrate->value());
 
     /* Set audio codec and bitrate */
     switch(ew->audiochoice->value()) {
         case 0:
-            ew->context->config.audio_codec = AV_CODEC_ID_VORBIS;
+            ew->context->config.sc.audio_codec = AV_CODEC_ID_VORBIS;
             break;
         case 1:
-            ew->context->config.audio_codec = AV_CODEC_ID_OPUS;
+            ew->context->config.sc.audio_codec = AV_CODEC_ID_OPUS;
             break;
         case 2:
-            ew->context->config.audio_codec = AV_CODEC_ID_FLAC;
+            ew->context->config.sc.audio_codec = AV_CODEC_ID_FLAC;
             break;
         case 3:
-            ew->context->config.audio_codec = AV_CODEC_ID_PCM_S16LE;
+            ew->context->config.sc.audio_codec = AV_CODEC_ID_PCM_S16LE;
             break;
         default:
-            ew->context->config.audio_codec = AV_CODEC_ID_VORBIS;
+            ew->context->config.sc.audio_codec = AV_CODEC_ID_VORBIS;
     }
 
-    ew->context->config.audio_bitrate = std::stoi(ew->audiobitrate->value());
-    ew->context->config_modified = true;
+    ew->context->config.sc.audio_bitrate = std::stoi(ew->audiobitrate->value());
+    ew->context->config.sc_modified = true;
 
     /* Close window */
     ew->window->hide();
@@ -201,12 +201,12 @@ void acodec_cb(Fl_Widget* w, void* v)
 
     if (ew->audiochoice->value() == 1) {
         /* For Opus codec, only some frequencies are supported */
-        int freq = ew->context->config.audio_frequency;
+        int freq = ew->context->config.sc.audio_frequency;
         if ((freq % 4000) || (freq == 32000)) {
             /* If we are not runnning, change the frequency */
             if (ew->context->status == Context::INACTIVE) {
                 fl_alert("The sound frequency %d Hz is not compatible with Opus. It is changed to 48000 Hz", freq);
-                ew->context->config.audio_frequency = 48000;
+                ew->context->config.sc.audio_frequency = 48000;
                 MainWindow& mw = MainWindow::getInstance();
                 Fl_Menu_Item* freq_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item("Sound/Format/48000 Hz"));
                 if (freq_item) freq_item->setonly();

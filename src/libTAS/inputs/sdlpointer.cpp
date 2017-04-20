@@ -22,7 +22,6 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/tasflags.h"
 #include "../sdlwindows.h" // gameWindow
 #include "../DeterministicTimer.h" // detTimer
 #include <X11/X.h>
@@ -61,7 +60,7 @@ Uint32 SDL_GetGlobalMouseState(int *x, int *y)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
     /* We don't support global mouse state. We consider that the window
-     * is located at the bottom left of the screen and just output the 
+     * is located at the bottom left of the screen and just output the
      * same result as SDL_GetMouseState().
      * Hopefully games won't use this function anyway.
      */
@@ -221,6 +220,3 @@ int SDL_ShowCursor(int toggle)
         showCursor = toggle;
     return showCursor;
 }
-
-
-

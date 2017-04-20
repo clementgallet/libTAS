@@ -22,7 +22,7 @@
 #include "logging.h"
 #include "socket.h"
 #include "../shared/messages.h"
-#include "../shared/tasflags.h"
+#include "../shared/SharedConfig.h"
 #include "frame.h"
 //#include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
@@ -163,7 +163,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* We override this function just to disable vsync,
      * except when using non deterministic timer.
      */
-    if (tasflags.framerate > 0)
+    if (shared_config.framerate > 0)
         orig::SDL_GL_SetSwapInterval(0);
     return context;
 }
@@ -178,7 +178,7 @@ static int swapInterval = 0;
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
-    if (tasflags.framerate > 0)
+    if (shared_config.framerate > 0)
         return orig::SDL_GL_SetSwapInterval(interval);
 
     return 0; // Success
@@ -362,7 +362,7 @@ void updateTitle(float fps, float lfps)
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
-    if (tasflags.av_dumping) {
+    if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
         avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
     }
