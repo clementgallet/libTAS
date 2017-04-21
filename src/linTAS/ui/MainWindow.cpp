@@ -351,9 +351,14 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         /* Try to load the game-specific pref file */
         mw.context->config.init(mw.context->gamepath);
 
+        /* Update the UI accordingly */
+        mw.encode_window->update_config();
+
         /* Change the movie file also */
-        mw.context->config.moviefile = mw.context->gamepath;
-        mw.context->config.moviefile += ".ltm";
+        if (mw.context->config.moviefile.empty()) {
+            mw.context->config.moviefile = mw.context->gamepath;
+            mw.context->config.moviefile += ".ltm";
+        }
         mw.moviepath->value(mw.context->config.moviefile.c_str());
     }
 }

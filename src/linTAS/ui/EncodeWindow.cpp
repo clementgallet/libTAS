@@ -19,7 +19,6 @@
 
 #include "EncodeWindow.h"
 #include "MainWindow.h"
-//#include "../main.h"
 #include <iostream>
 
 EncodeWindow::EncodeWindow(Context* c) : context(c)
@@ -30,14 +29,12 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     encodepath = new Fl_Output(10, 30, 400, 30, "Encode file path");
     encodepath->align(FL_ALIGN_TOP_LEFT);
     encodepath->color(FL_LIGHT1);
-    encodepath->value(context->gamepath.c_str());
 
     browseencodepath = new Fl_Button(520, 30, 70, 30, "Browse...");
     browseencodepath->callback(browse_encodepath_cb, this);
 
     encodepathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
     encodepathchooser->title("Choose an encode filename");
-    encodepathchooser->preset_file(encodepath->value());
     encodepathchooser->options(Fl_Native_File_Chooser::SAVEAS_CONFIRM);
 
     containerchoice = new Fl_Choice(420, 30, 80, 30);
@@ -48,20 +45,16 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     videochoice->menu(video_items);
     videochoice->callback(vcodec_cb, this);
 
-    videobitrate = new Fl_Output(10, 160, 100, 30, "Video bitrate");
+    videobitrate = new Fl_Input(10, 160, 100, 30, "Video bitrate");
     videobitrate->align(FL_ALIGN_TOP_LEFT);
-    std::string vbstr = std::to_string(context->config.sc.video_bitrate);
-    videobitrate->value(vbstr.c_str());
 
     audiochoice = new Fl_Choice(150, 100, 100, 30, "Audio codec");
     audiochoice->align(FL_ALIGN_TOP_LEFT);
     audiochoice->menu(audio_items);
     audiochoice->callback(acodec_cb, this);
 
-    audiobitrate = new Fl_Output(150, 160, 100, 30, "Audio bitrate");
+    audiobitrate = new Fl_Input(150, 160, 100, 30, "Audio bitrate");
     audiobitrate->align(FL_ALIGN_TOP_LEFT);
-    std::string abstr = std::to_string(context->config.sc.audio_bitrate);
-    audiobitrate->value(abstr.c_str());
 
     start = new Fl_Button(400, 160, 70, 30, "Ok");
     start->callback(start_cb, this);
@@ -69,6 +62,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     cancel = new Fl_Button(500, 160, 70, 30, "Cancel");
     cancel->callback(cancel_cb, this);
 
+    update_config();
     window->end();
 }
 
@@ -79,19 +73,84 @@ Fl_Menu_Item EncodeWindow::container_items[] = {
 };
 
 Fl_Menu_Item EncodeWindow::video_items[] = {
-    {"h264"},
-    {"ffv1"},
-    {"raw"},
+    {"h264", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_H264)},
+    {"ffv1", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_FFV1)},
+    {"raw", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_RAWVIDEO)},
     {nullptr}
 };
 
 Fl_Menu_Item EncodeWindow::audio_items[] = {
-    {"vorbis"},
-    {"opus"},
-    {"flac"},
-    {"pcm"},
+    {"vorbis", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_VORBIS)},
+    {"opus", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_OPUS)},
+    {"flac", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_FLAC)},
+    {"pcm", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_PCM_S16LE)},
     {nullptr}
 };
+
+void EncodeWindow::update_config()
+{
+    if (context->config.dumpfile.empty()) {
+        encodepath->value(context->gamepath.c_str());
+    }
+    else {
+        encodepath->value(context->config.dumpfile.c_str());
+    }
+    encodepathchooser->preset_file(encodepath->value());
+
+    /* Browse the list of video codecs and select the item that matches
+     * the value in the config using the item's user data.
+     */
+    const Fl_Menu_Item* vcodec_item = videochoice->mvalue();
+    vcodec_item = vcodec_item->first();
+    while (vcodec_item) {
+        if (static_cast<AVCodecID>(vcodec_item->argument()) == context->config.sc.video_codec) {
+            videochoice->value(vcodec_item);
+            break;
+        }
+        vcodec_item = vcodec_item->next();
+    }
+
+    /* Enable/disable video bitrate */
+    switch(context->config.sc.video_codec) {
+        case AV_CODEC_ID_FFV1:
+        case AV_CODEC_ID_RAWVIDEO:
+            videobitrate->deactivate();
+            break;
+        case AV_CODEC_ID_H264:
+        default:
+            videobitrate->activate();
+    }
+
+    /* Set video bitrate */
+    std::string vbstr = std::to_string(context->config.sc.video_bitrate);
+    videobitrate->value(vbstr.c_str());
+
+    /* Same for audio codec and bitrate */
+    const Fl_Menu_Item* acodec_item = audiochoice->mvalue();
+    acodec_item = acodec_item->first();
+    while (acodec_item) {
+        if (static_cast<AVCodecID>(acodec_item->argument()) == context->config.sc.audio_codec) {
+            audiochoice->value(acodec_item);
+            break;
+        }
+        acodec_item = acodec_item->next();
+    }
+
+    /* Enable/disable audio bitrate */
+    switch(context->config.sc.audio_codec) {
+        case AV_CODEC_ID_FLAC:
+        case AV_CODEC_ID_PCM_S16LE:
+            audiobitrate->deactivate();
+            break;
+        case AV_CODEC_ID_VORBIS:
+        case AV_CODEC_ID_OPUS:
+        default:
+            audiobitrate->activate();
+    }
+
+    std::string abstr = std::to_string(context->config.sc.audio_bitrate);
+    audiobitrate->value(abstr.c_str());
+}
 
 void start_cb(Fl_Widget* w, void* v)
 {
@@ -99,47 +158,28 @@ void start_cb(Fl_Widget* w, void* v)
 
     /* Fill encode filename */
     const char* filename = ew->encodepath->value();
-    std::string ext = EncodeWindow::container_items[ew->containerchoice->value()].label();
-    ew->context->config.dumpfile = std::string(filename) + ext;
+    std::string ext = ew->containerchoice->mvalue()->label();
 
-    /* Set video codec and bitrate */
-    /* TODO: this switch/case is ugly, we should put them in userdata
-     * of each choice item */
-    switch(ew->videochoice->value()) {
-        case 0:
-            ew->context->config.sc.video_codec = AV_CODEC_ID_H264;
-            break;
-        case 1:
-            ew->context->config.sc.video_codec = AV_CODEC_ID_FFV1;
-            break;
-        case 2:
-            ew->context->config.sc.video_codec = AV_CODEC_ID_RAWVIDEO;
-            break;
-        default:
-            ew->context->config.sc.video_codec = AV_CODEC_ID_H264;
+    /* Check if the extension is already in the filename. If not, append it. */
+    std::string filenameext = filename;
+    size_t sep = filenameext.find_last_of(".");
+    if ((sep != std::string::npos) && (filenameext.compare(sep, std::string::npos, ext) == 0)) {
+        ew->context->config.dumpfile = filename;
+    }
+    else {
+        ew->context->config.dumpfile = std::string(filename) + ext;
     }
 
+    /* Set video codec and bitrate */
+    const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
+    ew->context->config.sc.video_codec = static_cast<AVCodecID>(vcodec_item->argument());
     ew->context->config.sc.video_bitrate = std::stoi(ew->videobitrate->value());
 
     /* Set audio codec and bitrate */
-    switch(ew->audiochoice->value()) {
-        case 0:
-            ew->context->config.sc.audio_codec = AV_CODEC_ID_VORBIS;
-            break;
-        case 1:
-            ew->context->config.sc.audio_codec = AV_CODEC_ID_OPUS;
-            break;
-        case 2:
-            ew->context->config.sc.audio_codec = AV_CODEC_ID_FLAC;
-            break;
-        case 3:
-            ew->context->config.sc.audio_codec = AV_CODEC_ID_PCM_S16LE;
-            break;
-        default:
-            ew->context->config.sc.audio_codec = AV_CODEC_ID_VORBIS;
-    }
-
+    const Fl_Menu_Item* acodec_item = ew->audiochoice->mvalue();
+    ew->context->config.sc.audio_codec = static_cast<AVCodecID>(acodec_item->argument());
     ew->context->config.sc.audio_bitrate = std::stoi(ew->audiobitrate->value());
+
     ew->context->config.sc_modified = true;
 
     /* Close window */
@@ -170,14 +210,15 @@ void browse_encodepath_cb(Fl_Widget* w, void* v)
 void vcodec_cb(Fl_Widget* w, void* v)
 {
     EncodeWindow* ew = (EncodeWindow*) v;
+    const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
 
     /* Enable/disable video bitrate */
-    switch(ew->videochoice->value()) {
-        case 1:
-        case 2:
+    switch(vcodec_item->argument()) {
+        case AV_CODEC_ID_FFV1:
+        case AV_CODEC_ID_RAWVIDEO:
             ew->videobitrate->deactivate();
             break;
-        case 0:
+        case AV_CODEC_ID_H264:
         default:
             ew->videobitrate->activate();
     }
@@ -186,20 +227,21 @@ void vcodec_cb(Fl_Widget* w, void* v)
 void acodec_cb(Fl_Widget* w, void* v)
 {
     EncodeWindow* ew = (EncodeWindow*) v;
+    const Fl_Menu_Item* acodec_item = ew->audiochoice->mvalue();
 
-    /* Enable/disable video bitrate */
-    switch(ew->audiochoice->value()) {
-        case 2:
-        case 3:
+    /* Enable/disable audio bitrate */
+    switch(acodec_item->argument()) {
+        case AV_CODEC_ID_FLAC:
+        case AV_CODEC_ID_PCM_S16LE:
             ew->audiobitrate->deactivate();
             break;
-        case 0:
-        case 1:
+        case AV_CODEC_ID_VORBIS:
+        case AV_CODEC_ID_OPUS:
         default:
             ew->audiobitrate->activate();
     }
 
-    if (ew->audiochoice->value() == 1) {
+    if (acodec_item->argument() == AV_CODEC_ID_OPUS) {
         /* For Opus codec, only some frequencies are supported */
         int freq = ew->context->config.sc.audio_frequency;
         if ((freq % 4000) || (freq == 32000)) {

@@ -36,6 +36,10 @@
 class EncodeWindow {
     public:
         EncodeWindow(Context *c);
+
+        /* Update UI elements when the config has changed */
+        void update_config();
+
         Context *context;
 
         Fl_Double_Window *window;
