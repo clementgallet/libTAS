@@ -20,37 +20,52 @@
 #ifndef LIBTAS_CONFIG_H_INCLUDED
 #define LIBTAS_CONFIG_H_INCLUDED
 
+#include <string>
+#include <memory>
 #include "../shared/SharedConfig.h"
 #include "KeyMapping.h"
+#include <FL/Fl_Preferences.H>
 
-/* Structure holding program configuration that is saved in a file */
+/* Structure holding program configuration that is saved in a file.
+ * We use FLTK preferences system for that, which basically stores preferences
+ * in a key/value way in a plain text file. Each game (determined by its
+ * executable name) gets its own preferences.
+ */
 
 class Config {
-    public:
-        /* Set of the config that is sent to the game */
-        SharedConfig sc;
+private:
+    std::unique_ptr<Fl_Preferences> prefs;
 
-        /* Do we need to resend the config ?*/
-        bool sc_modified = false;
+public:
+    /* Building a specific config for a game */
+    void init(std::string gamepath);
 
-        /* key mapping */
-        KeyMapping km;
+    ~Config();
 
-        /* Arguments passed to the game */
-        std::string gameargs;
+    /* Set of the config that is sent to the game */
+    SharedConfig sc;
 
-        /* Absolute path of the movie file */
-        std::string moviefile;
+    /* Do we need to resend the config ?*/
+    bool sc_modified = false;
 
-        /* Absolute path of the dump file */
-        std::string dumpfile;
+    /* key mapping */
+    KeyMapping km;
 
-        /* Was the dump file modified */
-        bool dumpfile_modified;
+    /* Arguments passed to the game */
+    std::string gameargs;
 
-        void save_config();
+    /* Absolute path of the movie file */
+    std::string moviefile;
 
-        void load_config();
+    /* Absolute path of the dump file */
+    std::string dumpfile;
+
+    /* Was the dump file modified */
+    bool dumpfile_modified;
+
+    void save();
+
+    void load();
 
 };
 

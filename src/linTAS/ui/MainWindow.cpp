@@ -348,6 +348,9 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         mw.gamepath->value(filename);
         mw.context->gamepath = std::string(filename);
 
+        /* Try to load the game-specific pref file */
+        mw.context->config.init(mw.context->gamepath);
+
         /* Change the movie file also */
         mw.context->config.moviefile = mw.context->gamepath;
         mw.context->config.moviefile += ".ltm";

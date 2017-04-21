@@ -19,6 +19,35 @@
 
 #include "KeyMapping.h"
 #include <X11/XKBlib.h>
+#include <cstring>
+
+void SingleInput::pack(char* data)
+{
+    const void* type_data = const_cast<const void*>(static_cast<void*>(&type));
+    memcpy(static_cast<void*>(data), type_data, sizeof(InputType));
+    const void* value_data = const_cast<const void*>(static_cast<void*>(&value));
+    memcpy(static_cast<void*>(data+sizeof(InputType)), value_data, sizeof(int));
+}
+
+void SingleInput::unpack(const char* data)
+{
+    void* type_data = static_cast<void*>(&type);
+    memcpy(type_data, static_cast<const void*>(data), sizeof(InputType));
+    void* value_data = static_cast<void*>(&value);
+    memcpy(value_data, static_cast<const void*>(data+sizeof(InputType)), sizeof(int));
+}
+
+void HotKey::pack(char* data)
+{
+    const void* type_data = const_cast<const void*>(static_cast<void*>(&type));
+    memcpy(static_cast<void*>(data), type_data, sizeof(HotKeyType));
+}
+
+void HotKey::unpack(const char* data)
+{
+    void* type_data = static_cast<void*>(&type);
+    memcpy(type_data, static_cast<const void*>(data), sizeof(HotKeyType));
+}
 
 KeyMapping::KeyMapping()
 {

@@ -161,6 +161,10 @@ int main(int argc, char **argv)
         context.gamepath = abspath;
     }
 
+    /* Init the a game-specific config, loading a pref file if any */
+    if (!context.gamepath.empty())
+        context.config.init(context.gamepath);
+
     /* Fill a movie name if empty */
     if ( (!context.gamepath.empty()) && context.config.moviefile.empty()) {
         context.config.moviefile = context.gamepath + ".ltm";

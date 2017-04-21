@@ -131,7 +131,8 @@ typedef int InputType; enum {
     IT_CONTROLLER4_AXIS_TRIGGERRIGHT,
 };
 
-struct SingleInput {
+class SingleInput {
+public:
     InputType type;
     int value;
     std::string description;
@@ -143,6 +144,12 @@ struct SingleInput {
     bool operator<( const SingleInput &si ) const {
         return ((type < si.type) || ((type == si.type) && (value < si.value)));
     }
+
+    /* Pack the content of the struct into the data array */
+    void pack(char* data);
+
+    /* Unpack data the content of the struct into the data array */
+    void unpack(const char* data);
 };
 
 typedef int HotKeyType; enum
@@ -168,6 +175,12 @@ struct HotKey {
     bool operator<( const HotKey &hk ) const {
         return type < hk.type;
     }
+
+    /* Pack the content of the struct into the data array */
+    void pack(char* data);
+
+    /* Unpack data the content of the struct into the data array */
+    void unpack(const char* data);
 };
 
 class KeyMapping {
