@@ -392,6 +392,7 @@ void* launchGame(void* arg)
             }
 
             XQueryKeymap(context.display, keyboard_state);
+            KeySym modifiers = build_modifiers(keyboard_state, context.display);
 
             /* Implement frame-advance auto-repeat */
             if (ar_ticks >= 0) {
@@ -423,10 +424,18 @@ void* launchGame(void* arg)
                 struct HotKey hk;
 
                 if ((event.type == KeyPress) || (event.type == KeyRelease)) {
-                    /* Check if the key pressed/released is a hotkey */
+                    /* Get the actual pressed/released key */
                     KeyCode kc = event.xkey.keycode;
                     KeySym ks = XkbKeycodeToKeysym(context.display, kc, 0, 0);
 
+                    /* If the key is a modifier, skip it */
+                    if (is_modifier(ks))
+                        continue;
+
+                    /* Build the KeySym value with modifiers */
+                    ks |= modifiers;
+
+                    /* Check if this KeySym is mapped to a hotkey */
                     if (context.config.km.hotkey_mapping.find(ks) != context.config.km.hotkey_mapping.end())
                         hk = context.config.km.hotkey_mapping[ks];
                     else

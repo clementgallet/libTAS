@@ -49,6 +49,35 @@ void HotKey::unpack(const char* data)
     memcpy(type_data, static_cast<const void*>(data), sizeof(HotKeyType));
 }
 
+bool is_modifier(KeySym ks)
+{
+    for (ModifierKey modifier : modifier_list) {
+        if (modifier.ks == ks)
+            return true;
+    }
+    return false;
+}
+
+KeySym build_modifiers(char *keyboard_state, Display *display)
+{
+    KeySym modifiers = 0;
+    for (int i=0; i<256; i++) {
+        if (keyboard_state[i/8] & (1 << (i % 8))) {
+            KeySym ks = XkbKeycodeToKeysym(display, i, 0, 0);
+            for (ModifierKey modifier : modifier_list) {
+                if (modifier.ks == ks) {
+                    modifiers |= modifier.flag;
+                    break;
+                }
+            }
+        }
+    }
+
+    return modifiers;
+}
+
+
+
 KeyMapping::KeyMapping()
 {
     /* Fill hotkey list */
@@ -271,6 +300,8 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
 
     ai.emptyInputs();
 
+    KeySym modifiers = build_modifiers(keyboard_state, display);
+
     for (i=0; i<32; i++) {
         if (keyboard_state[i] == 0)
             continue;
@@ -282,7 +313,9 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char key
                 /* Translating to keysym */
                 KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
 
-                if (hotkey_mapping.find(ks) != hotkey_mapping.end()) {
+                /* Check if we are dealing with a hotkey */
+                KeySym ksm = ks | modifiers;
+                if (hotkey_mapping.find(ksm) != hotkey_mapping.end()) {
                     /* Dealing with a hotkey, skipping */
                     continue;
                 }

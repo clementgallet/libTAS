@@ -18,7 +18,6 @@
  */
 
 #include "InputWindow.h"
-//#include "../main.h"
 #include <iostream>
 #include <X11/XKBlib.h>
 
@@ -96,7 +95,18 @@ void InputWindow::update()
         for (auto itermap : context->config.km.hotkey_mapping) {
             if (itermap.second == iter) {
                 linestr += '\t';
-                linestr += XKeysymToString(itermap.first);
+
+                /* Build the key string with modifiers */
+                KeySym ks = itermap.first;
+                for (ModifierKey modifier : modifier_list) {
+                    if (ks & modifier.flag) {
+                        linestr += modifier.description;
+                        linestr += "+";
+                        ks ^= modifier.flag;
+                    }
+                }
+
+                linestr += XKeysymToString(ks);
                 break;
             }
         }
@@ -131,7 +141,7 @@ void InputWindow::update()
     }
 }
 
-KeySym get_next_keypressed(Display* display)
+KeySym get_next_keypressed(Display* display, bool with_modifiers)
 {
     Window window;
     XEvent event;
@@ -148,11 +158,15 @@ KeySym get_next_keypressed(Display* display)
         XNextEvent(display, &event);
         if (event.type == KeyPress)
         {
-            //ui_print("KeyPress event");
             KeyCode kc = event.xkey.keycode;
-            //ui_print("KeyCode is %d", kc);
             KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-            return ks;
+            if (!is_modifier(ks)) {
+                std::array<char,32> keyboard_state;
+                XQueryKeymap(display, keyboard_state.data());
+                KeySym modifiers = build_modifiers(keyboard_state.data(), display);
+
+                return ks | modifiers;
+            }
         }
     }
     return 0;
@@ -201,25 +215,26 @@ void assign_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
-    iw->assign_button->label("Press key...");
-    iw->assign_button->deactivate();
-    Fl::flush();
-    KeySym ks = get_next_keypressed(iw->display);
-    iw->assign_button->label("Assign");
-    iw->assign_button->activate();
-
     /* Check if the selected item is in the hotkey browser.
      * We cannot use value() function only, it is supposed to return 0 if
      * no item is selected, but after calling deselect(), it actually returns
      * the index of the last element. So we check if this element is selected.
      */
     int sel_hotkey = iw->hotkey_browser->value();
-    if (iw->hotkey_browser->selected(sel_hotkey)) {
+    bool is_hotkey = iw->hotkey_browser->selected(sel_hotkey);
+
+    iw->assign_button->label("Press key...");
+    iw->assign_button->deactivate();
+    Fl::flush();
+    KeySym ks = get_next_keypressed(iw->display, is_hotkey);
+    iw->assign_button->label("Assign");
+    iw->assign_button->activate();
+
+    if (is_hotkey) {
         iw->context->config.km.reassign_hotkey(sel_hotkey-1, ks);
     }
-
-    int sel_input = iw->input_browser->value();
-    if (iw->input_browser->selected(sel_input)) {
+    else {
+        int sel_input = iw->input_browser->value();
         iw->context->config.km.reassign_input(sel_input-1, ks);
     }
 

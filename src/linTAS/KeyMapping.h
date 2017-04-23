@@ -26,6 +26,7 @@
 #include <X11/keysym.h>
 #include <map>
 #include <vector>
+#include <array>
 #include <string>
 
 #define IT_CONTROLLER_TYPE_MASK  0x7F
@@ -182,6 +183,27 @@ struct HotKey {
     /* Unpack data the content of the struct into the data array */
     void unpack(const char* data);
 };
+
+struct ModifierKey {
+    KeySym ks;
+    KeySym flag;
+    std::string description;
+};
+
+static std::array<ModifierKey, 8> modifier_list {{
+    {XK_Shift_L, 0x010000, "Shift_L"},
+    {XK_Shift_R, 0x020000, "Shift_R"},
+    {XK_Control_L, 0x040000, "Control_L"},
+    {XK_Control_R, 0x080000, "Control_R"},
+    {XK_Meta_L, 0x100000, "Meta_L"},
+    {XK_Meta_R, 0x200000, "Meta_R"},
+    {XK_Alt_L, 0x400000, "Alt_L"},
+    {XK_Alt_R, 0x800000, "Alt_R"},
+}};
+
+bool is_modifier(KeySym ks);
+
+KeySym build_modifiers(char *keyboard_state, Display *display);
 
 class KeyMapping {
     public:
