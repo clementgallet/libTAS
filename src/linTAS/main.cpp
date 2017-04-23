@@ -177,6 +177,14 @@ int main(int argc, char **argv)
         context.config.gameargs += " ";
     }
 
+    /* Open connection with the server */
+    context.display = XOpenDisplay(NULL);
+    if (context.display == NULL)
+    {
+        // ui_print("Cannot open display\n");
+        return 1;
+    }
+
     /* Starts the user interface */
     MainWindow& ui = MainWindow::getInstance();
     ui.build(&context);
@@ -240,14 +248,6 @@ void* launchGame(void* arg)
     struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
-
-    /* open connection with the server */
-    context.display = XOpenDisplay(NULL);
-    if (context.display == NULL)
-    {
-        // ui_print("Cannot open display\n");
-        return nullptr;
-    }
 
     const int MAX_RETRIES = 3;
     int retry = 0;
@@ -353,6 +353,7 @@ void* launchGame(void* arg)
                 int revert;
                 XGetInputFocus(context.display, &context.game_window, &revert);
             }
+            /* FIXME: Don't do this if the ui option is unchecked  */
             XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
 #if 0
             int iError = XGrabKeyboard(display, context.game_window, 0,
@@ -376,9 +377,7 @@ void* launchGame(void* arg)
         /* Update frame count in the UI */
         ui.update(false);
 
-        //int tasflagsmod = 0; // register if tasflags have been modified on this frame
-
-        char keyboard_state[32];
+        std::array<char, 32> keyboard_state;
 
         /* Flag to trigger a frame advance even if the game is on pause */
         bool advance_frame = false;
@@ -391,7 +390,7 @@ void* launchGame(void* arg)
                 break;
             }
 
-            XQueryKeymap(context.display, keyboard_state);
+            XQueryKeymap(context.display, keyboard_state.data());
             KeySym modifiers = build_modifiers(keyboard_state, context.display);
 
             /* Implement frame-advance auto-repeat */
@@ -543,7 +542,7 @@ void* launchGame(void* arg)
             case Context::RECORDING_WRITE:
 
                 /* Get keyboard inputs */
-                XQueryKeymap(context.display, keyboard_state);
+                XQueryKeymap(context.display, keyboard_state.data());
 
                 /* Format the keyboard state and save it in the AllInputs struct */
                 context.config.km.buildAllInputs(ai, context.display, keyboard_state, context.config.sc);

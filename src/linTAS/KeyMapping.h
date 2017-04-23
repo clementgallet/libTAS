@@ -203,7 +203,7 @@ static std::array<ModifierKey, 8> modifier_list {{
 
 bool is_modifier(KeySym ks);
 
-KeySym build_modifiers(char *keyboard_state, Display *display);
+KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display);
 
 class KeyMapping {
     public:
@@ -248,7 +248,7 @@ class KeyMapping {
          * - Check if the keysym is mapped to a hotkey. If so, we skip it
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          */
-        void buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], SharedConfig& sc);
+        void buildAllInputs(struct AllInputs& ai, Display *display, std::array<char,32> &keyboard_state, SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED

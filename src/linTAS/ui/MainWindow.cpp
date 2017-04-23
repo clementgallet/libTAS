@@ -601,6 +601,11 @@ void input_joy_cb(Fl_Widget*, void* v)
 void input_focus_game_cb(Fl_Widget*, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
+
+    /* If the game was not launched, don't do anything */
+    // TODO: We could save this in the context
+    if (! mw.context->game_window ) return;
+
     Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
 
     if (focus_item->value()) {

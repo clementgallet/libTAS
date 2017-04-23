@@ -163,7 +163,7 @@ KeySym get_next_keypressed(Display* display, bool with_modifiers)
             if (!is_modifier(ks)) {
                 std::array<char,32> keyboard_state;
                 XQueryKeymap(display, keyboard_state.data());
-                KeySym modifiers = build_modifiers(keyboard_state.data(), display);
+                KeySym modifiers = build_modifiers(keyboard_state, display);
 
                 return ks | modifiers;
             }

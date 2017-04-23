@@ -58,7 +58,7 @@ bool is_modifier(KeySym ks)
     return false;
 }
 
-KeySym build_modifiers(char *keyboard_state, Display *display)
+KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display)
 {
     KeySym modifiers = 0;
     for (int i=0; i<256; i++) {
@@ -294,7 +294,7 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
 }
 
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, char keyboard_state[], SharedConfig& sc){
+void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, std::array<char,32> &keyboard_state, SharedConfig& sc){
     int i,j,k;
     int keysym_i = 0;
 
