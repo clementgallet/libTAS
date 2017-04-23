@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "../main.h"
 #include <iostream>
+#include <FL/x.H>
 
 void MainWindow::build(Context* c)
 {
@@ -208,12 +209,16 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
         {"Keyboard support", 0, input_keyboard_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
         {"Mouse support", 0, input_mouse_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
-        {"Joystick support", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Joystick support", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_DIVIDER},
             {"None", 0, input_joy_cb, reinterpret_cast<void*>(0), FL_MENU_VALUE | FL_MENU_RADIO},
             {"1", 0, input_joy_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"2", 0, input_joy_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
             {"4", 0, input_joy_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
+            {nullptr},
+        {"Enable inputs when", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Game has focus", 0, input_focus_game_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
+            {"UI has focus", 0, input_focus_ui_cb, nullptr, FL_MENU_TOGGLE},
             {nullptr},
         {nullptr},
     {nullptr}
@@ -591,4 +596,32 @@ void input_joy_cb(Fl_Widget*, void* v)
     int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
 
     mw.context->config.sc.numControllers = nb_joy;
+}
+
+void input_focus_game_cb(Fl_Widget*, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+
+    if (focus_item->value()) {
+        XSelectInput(mw.context->display, mw.context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+    }
+    else {
+        XSelectInput(mw.context->display, mw.context->game_window, FocusChangeMask);
+    }
+}
+
+void input_focus_ui_cb(Fl_Widget*, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+
+    Window main_ui = fl_xid(mw.window);
+
+    if (focus_item->value()) {
+        XSelectInput(mw.context->display, main_ui, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+    }
+    else {
+        XSelectInput(mw.context->display, main_ui, FocusChangeMask);
+    }
 }

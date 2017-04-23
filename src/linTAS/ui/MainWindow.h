@@ -115,5 +115,7 @@ static Fl_Callback logging_exclude_cb;
 static Fl_Callback input_keyboard_cb;
 static Fl_Callback input_mouse_cb;
 static Fl_Callback input_joy_cb;
+static Fl_Callback input_focus_game_cb;
+static Fl_Callback input_focus_ui_cb;
 
 #endif

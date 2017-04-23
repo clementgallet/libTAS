@@ -235,17 +235,15 @@ void* launchGame(void* arg)
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
-    Display *display;
     XEvent event;
-    // Find the window which has the current keyboard focus
-    Window gameWindow = 0;
+
     struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
 
     /* open connection with the server */
-    display = XOpenDisplay(NULL);
-    if (display == NULL)
+    context.display = XOpenDisplay(NULL);
+    if (context.display == NULL)
     {
         // ui_print("Cannot open display\n");
         return nullptr;
@@ -348,16 +346,16 @@ void* launchGame(void* arg)
         }
 
         if (message == MSGB_WINDOW_ID) {
-            recv(socket_fd, &gameWindow, sizeof(Window), 0);
-            if (gameWindow == 0) {
+            recv(socket_fd, &context.game_window, sizeof(Window), 0);
+            if (context.game_window == 0) {
                 /* libTAS could not get the window id
                  * Let's get the active window */
                 int revert;
-                XGetInputFocus(display, &gameWindow, &revert);
+                XGetInputFocus(context.display, &context.game_window, &revert);
             }
-            XSelectInput(display, gameWindow, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+            XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
 #if 0
-            int iError = XGrabKeyboard(display, gameWindow, 0,
+            int iError = XGrabKeyboard(display, context.game_window, 0,
                     GrabModeAsync, GrabModeAsync, CurrentTime);
             if (iError != GrabSuccess && iError == AlreadyGrabbed) {
                 XUngrabPointer(display, CurrentTime);
@@ -389,11 +387,11 @@ void* launchGame(void* arg)
         do {
 
             /* If we did not yet receive the game window id, just make the game running */
-            if (! gameWindow ) {
+            if (! context.game_window ) {
                 break;
             }
 
-            XQueryKeymap(display, keyboard_state);
+            XQueryKeymap(context.display, keyboard_state);
 
             /* Implement frame-advance auto-repeat */
             if (ar_ticks >= 0) {
@@ -403,13 +401,13 @@ void* launchGame(void* arg)
                     advance_frame = true;
             }
 
-            while( XPending( display ) ) {
+            while( XPending( context.display ) ) {
 
-                XNextEvent(display, &event);
+                XNextEvent(context.display, &event);
 #if 0
                 if (event.type == FocusIn) {
                     fprintf(stderr, "Grabbing window\n");
-                    int iError = XGrabKeyboard(display, gameWindow, 0,
+                    int iError = XGrabKeyboard(display, context.game_window, 0,
                             GrabModeAsync, GrabModeAsync, CurrentTime);
                     if (iError != GrabSuccess && iError == AlreadyGrabbed) {
                         XUngrabPointer(display, CurrentTime);
@@ -427,7 +425,7 @@ void* launchGame(void* arg)
                 if ((event.type == KeyPress) || (event.type == KeyRelease)) {
                     /* Check if the key pressed/released is a hotkey */
                     KeyCode kc = event.xkey.keycode;
-                    KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                    KeySym ks = XkbKeycodeToKeysym(context.display, kc, 0, 0);
 
                     if (context.config.km.hotkey_mapping.find(ks) != context.config.km.hotkey_mapping.end())
                         hk = context.config.km.hotkey_mapping[ks];
@@ -536,16 +534,16 @@ void* launchGame(void* arg)
             case Context::RECORDING_WRITE:
 
                 /* Get keyboard inputs */
-                XQueryKeymap(display, keyboard_state);
+                XQueryKeymap(context.display, keyboard_state);
 
                 /* Format the keyboard state and save it in the AllInputs struct */
-                context.config.km.buildAllInputs(ai, display, keyboard_state, context.config.sc);
+                context.config.km.buildAllInputs(ai, context.display, keyboard_state, context.config.sc);
 
                 /* Get the pointer position and mask */
-                if (context.config.sc.mouse_support && gameWindow) {
+                if (context.config.sc.mouse_support && context.game_window) {
                     Window w;
                     int i;
-                    Bool onScreen = XQueryPointer(display, gameWindow, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                    Bool onScreen = XQueryPointer(context.display, context.game_window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
                     if (!onScreen) {
                         ai.pointer_x = -1;
                         ai.pointer_y = -1;

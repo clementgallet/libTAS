@@ -22,6 +22,7 @@
 
 #include <string>
 #include "Config.h"
+#include <X11/Xlib.h>
 
 struct Context {
     /* Execution status */
@@ -32,6 +33,12 @@ struct Context {
         QUITTING
     };
     RunStatus status = INACTIVE;
+
+    /* Connection to the X server */
+    Display *display;
+
+    /* Game window */
+    Window game_window = 0;
 
     /* frame count */
     unsigned long int framecount = 0;
