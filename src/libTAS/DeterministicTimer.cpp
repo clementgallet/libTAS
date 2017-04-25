@@ -247,9 +247,8 @@ void DeterministicTimer::enterFrameBoundary()
     TimeHolder currentTime;
     orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
 
-    /* calculate the target time we wanted to be at now */
-    /* TODO: This is where we would implement slowdown */
-    TimeHolder desiredTime = lastEnterTime + timeIncrement;
+    /* Calculate the target time we wanted to be at now */
+    TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
 
     TimeHolder deltaTime = desiredTime - currentTime;
 

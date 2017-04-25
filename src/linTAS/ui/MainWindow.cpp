@@ -203,7 +203,13 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {nullptr},
     {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure encode...", 0, config_encode_cb},
-        {"Start encode", 0, toggle_encode_cb},
+        {"Start encode", 0, toggle_encode_cb, nullptr, FL_MENU_DIVIDER},
+        {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU},
+            {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"50%", 0, slowmo_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
+            {"25%", 0, slowmo_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
+            {"12%", 0, slowmo_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
+            {nullptr},
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
@@ -629,4 +635,13 @@ void input_focus_ui_cb(Fl_Widget*, void* v)
     else {
         XSelectInput(mw.context->display, main_ui, FocusChangeMask);
     }
+}
+
+void slowmo_cb(Fl_Widget*, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int spdiv = static_cast<int>(reinterpret_cast<intptr_t>(v));
+
+    mw.context->config.sc.speed_divisor = spdiv;
+    mw.context->config.sc_modified = true;
 }
