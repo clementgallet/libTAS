@@ -431,11 +431,10 @@ void* launchGame(void* arg)
                     if (is_modifier(ks))
                         continue;
 
-                    /* Build the KeySym value with modifiers */
-                    ks |= modifiers;
-
-                    /* Check if this KeySym is mapped to a hotkey */
-                    if (context.config.km.hotkey_mapping.find(ks) != context.config.km.hotkey_mapping.end())
+                    /* Check if this KeySym with or without modifiers is mapped to a hotkey */
+                    if (context.config.km.hotkey_mapping.find(ks | modifiers) != context.config.km.hotkey_mapping.end())
+                        hk = context.config.km.hotkey_mapping[ks | modifiers];
+                    else if (context.config.km.hotkey_mapping.find(ks) != context.config.km.hotkey_mapping.end())
                         hk = context.config.km.hotkey_mapping[ks];
                     else
                         /* This input is not a hotkey, skipping to the next */
