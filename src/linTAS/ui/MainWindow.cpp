@@ -35,25 +35,21 @@ void MainWindow::build(Context* c)
     gamepath = new Fl_Output(10, 300, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->color(FL_LIGHT1);
-    gamepath->value(context->gamepath.c_str());
 
     browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
     browsegamepath->callback(browse_gamepath_cb);
 
     gamepathchooser = new Fl_Native_File_Chooser();
     gamepathchooser->title("Game path");
-    gamepathchooser->preset_file(context->gamepath.c_str());
 
     /* Movie File */
     moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
     moviepath->color(FL_LIGHT1);
-    moviepath->value(context->config.moviefile.c_str());
 
     moviepathchooser = new Fl_Native_File_Chooser();
     moviepathchooser->title("Choose a movie file");
     moviepathchooser->filter("libTAS movie file \t*.ltm\n");
-    moviepathchooser->preset_file(context->config.moviefile.c_str());
 
     browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
     browsemoviepath->callback(browse_moviepath_cb);
@@ -74,8 +70,6 @@ void MainWindow::build(Context* c)
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 200, 40, 30, "Frames per second");
-    std::string fpsstr = std::to_string(context->config.sc.framerate);
-    logicalfps->value(fpsstr.c_str());
     logicalfps->callback(set_fps_cb);
 
     /* Pause/FF */
@@ -98,6 +92,7 @@ void MainWindow::build(Context* c)
     launch->callback(launch_cb);
 
     update(true);
+    update_config();
 
     window->end();
 
@@ -121,18 +116,18 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {"22050 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(22050), FL_MENU_RADIO},
             {"24000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(24000), FL_MENU_RADIO},
             {"32000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(32000), FL_MENU_RADIO},
-            {"44100 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(44100), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"44100 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(44100), FL_MENU_RADIO},
             {"48000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(48000), FL_MENU_RADIO | FL_MENU_DIVIDER},
             {"8 bit", 0, sound_bitdepth_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
-            {"16 bit", 0, sound_bitdepth_cb, reinterpret_cast<void*>(16), FL_MENU_VALUE | FL_MENU_RADIO | FL_MENU_DIVIDER},
+            {"16 bit", 0, sound_bitdepth_cb, reinterpret_cast<void*>(16), FL_MENU_RADIO | FL_MENU_DIVIDER},
             {"Mono", 0, sound_channel_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
-            {"Stereo", 0, sound_channel_cb, reinterpret_cast<void*>(2), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"Stereo", 0, sound_channel_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {nullptr},
         {"Mute Sound", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE},
         {nullptr},
     {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_RADIO},
             {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
             {"Log to file", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_FILE), FL_MENU_RADIO | FL_MENU_DIVIDER},
             {"Print Categories", 0, nullptr, nullptr, FL_SUBMENU},
@@ -164,8 +159,8 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {"Steam", 0, logging_print_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
                 {"Threads", 0, logging_print_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
                 {"Timers", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"All", 0, logging_print_cb, reinterpret_cast<void*>(-1)},
-                {"None", 0, logging_print_cb, reinterpret_cast<void*>(0)},
+                {"All", 0, logging_print_cb, reinterpret_cast<void*>(LCF_ALL)},
+                {"None", 0, logging_print_cb, reinterpret_cast<void*>(LCF_NONE)},
                 {nullptr},
             {"Exclude Categories", 0, nullptr, nullptr, FL_SUBMENU},
                 {"Untested", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
@@ -196,8 +191,8 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {"Steam", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
                 {"Threads", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
                 {"Timers", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"All", 0, logging_exclude_cb, reinterpret_cast<void*>(-1)},
-                {"None", 0, logging_exclude_cb, reinterpret_cast<void*>(0)},
+                {"All", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_ALL)},
+                {"None", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_NONE)},
                 {nullptr},
             {nullptr},
         {nullptr},
@@ -205,7 +200,7 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Configure encode...", 0, config_encode_cb},
         {"Start encode", 0, toggle_encode_cb, nullptr, FL_MENU_DIVIDER},
         {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU},
-            {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"50%", 0, slowmo_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {"25%", 0, slowmo_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
             {"12%", 0, slowmo_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
@@ -213,10 +208,10 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
-        {"Keyboard support", 0, input_keyboard_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
-        {"Mouse support", 0, input_mouse_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
+        {"Keyboard support", 0, input_keyboard_cb, nullptr, FL_MENU_TOGGLE},
+        {"Mouse support", 0, input_mouse_cb, nullptr, FL_MENU_TOGGLE},
         {"Joystick support", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_DIVIDER},
-            {"None", 0, input_joy_cb, reinterpret_cast<void*>(0), FL_MENU_VALUE | FL_MENU_RADIO},
+            {"None", 0, input_joy_cb, reinterpret_cast<void*>(0), FL_MENU_RADIO},
             {"1", 0, input_joy_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"2", 0, input_joy_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
@@ -322,6 +317,106 @@ void MainWindow::update(bool status)
     Fl::awake();
 }
 
+void MainWindow::update_config()
+{
+    gamepath->value(context->gamepath.c_str());
+    gamepathchooser->preset_file(context->gamepath.c_str());
+    moviepath->value(context->config.moviefile.c_str());
+    moviepathchooser->preset_file(context->config.moviefile.c_str());
+    std::string fpsstr = std::to_string(context->config.sc.framerate);
+    logicalfps->value(fpsstr.c_str());
+
+    Fl_Menu_Item* sound_freq_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_frequency_cb));
+    while (sound_freq_item) {
+        if (sound_freq_item->argument() == context->config.sc.audio_frequency) {
+            sound_freq_item->setonly();
+            break;
+        }
+        sound_freq_item = sound_freq_item->next();
+    }
+
+    Fl_Menu_Item* sound_bitdepth_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_bitdepth_cb));
+    while (sound_bitdepth_item) {
+        if (sound_bitdepth_item->argument() == context->config.sc.audio_bitdepth) {
+            sound_bitdepth_item->setonly();
+            break;
+        }
+        sound_bitdepth_item = sound_bitdepth_item->next();
+    }
+
+    Fl_Menu_Item* sound_channel_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_channel_cb));
+    while (sound_channel_item) {
+        if (sound_channel_item->argument() == context->config.sc.audio_channels) {
+            sound_channel_item->setonly();
+            break;
+        }
+        sound_channel_item = sound_channel_item->next();
+    }
+
+    Fl_Menu_Item* sound_mute_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
+    if (context->config.sc.audio_mute)
+        sound_mute_item->set();
+    else
+        sound_mute_item->clear();
+
+    Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
+    while (logging_status_item) {
+        if (static_cast<SharedConfig::LogStatus>(logging_status_item->argument()) == context->config.sc.logging_status) {
+            logging_status_item->setonly();
+            break;
+        }
+        logging_status_item = logging_status_item->next();
+    }
+
+    Fl_Menu_Item* logging_print_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_print_cb));
+    while (logging_print_item && (logging_print_item->argument() != LCF_ALL)) {
+        if (logging_print_item->argument() & context->config.sc.includeFlags)
+            logging_print_item->set();
+        else
+            logging_print_item->clear();
+      logging_print_item = logging_print_item->next();
+    }
+
+    Fl_Menu_Item* logging_exclude_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_exclude_cb));
+    while (logging_exclude_item && (logging_exclude_item->argument() != LCF_ALL)) {
+        if (logging_exclude_item->argument() & context->config.sc.excludeFlags)
+            logging_exclude_item->set();
+        else
+            logging_exclude_item->clear();
+      logging_exclude_item = logging_exclude_item->next();
+    }
+
+    Fl_Menu_Item* speed_divisor_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(slowmo_cb));
+    while (speed_divisor_item) {
+      if (speed_divisor_item->argument() == context->config.sc.speed_divisor) {
+          speed_divisor_item->setonly();
+          break;
+      }
+      speed_divisor_item = speed_divisor_item->next();
+    }
+
+    Fl_Menu_Item* input_keyboard_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_keyboard_cb));
+    if (context->config.sc.keyboard_support)
+        input_keyboard_item->set();
+    else
+        input_keyboard_item->clear();
+
+    Fl_Menu_Item* input_mouse_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_mouse_cb));
+    if (context->config.sc.mouse_support)
+        input_mouse_item->set();
+    else
+        input_mouse_item->clear();
+
+    Fl_Menu_Item* input_joy_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_joy_cb));
+    while (input_joy_item) {
+        if (input_joy_item->argument() == context->config.sc.numControllers) {
+            input_joy_item->setonly();
+            break;
+        }
+        input_joy_item = input_joy_item->next();
+    }
+}
+
 void launch_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
@@ -362,15 +457,15 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         /* Try to load the game-specific pref file */
         mw.context->config.init(mw.context->gamepath);
 
-        /* Update the UI accordingly */
-        mw.encode_window->update_config();
-
-        /* Change the movie file also */
+        /* Set a default movie file if any */
         if (mw.context->config.moviefile.empty()) {
             mw.context->config.moviefile = mw.context->gamepath;
             mw.context->config.moviefile += ".ltm";
         }
-        mw.moviepath->value(mw.context->config.moviefile.c_str());
+
+        /* Update the UI accordingly */
+        mw.update_config();
+        mw.encode_window->update_config();
     }
 }
 
@@ -554,7 +649,7 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
             log_item->set();
             log_item = log_item->next();
         }
-        mw.context->config.sc.includeFlags = LCF_ALL;
+        mw.context->config.sc.excludeFlags = LCF_ALL;
     }
     else if (logcat == LCF_NONE) {
         /* Get the first item of the log categories */
@@ -563,10 +658,10 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
             log_item->clear();
             log_item = log_item->next();
         }
-        mw.context->config.sc.includeFlags = LCF_NONE;
+        mw.context->config.sc.excludeFlags = LCF_NONE;
     }
     else {
-        mw.context->config.sc.includeFlags ^= logcat;
+        mw.context->config.sc.excludeFlags ^= logcat;
     }
 }
 

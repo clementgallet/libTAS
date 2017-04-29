@@ -87,8 +87,16 @@ class MainWindow {
 
         Fl_Output *framecount;
 
+        /* Update UI elements (mainly enable/disable) depending on
+         * the game status (running/stopped)
+         */
         void update_status();
+
+        /* Update UI elements when the game is running (frame counter, etc.) */
         void update(bool status);
+
+        /* Update UI elements when the config has changed */
+        void update_config();
 
     private:
         MainWindow() {}

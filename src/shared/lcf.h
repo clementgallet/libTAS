@@ -63,7 +63,7 @@ typedef int LogCategoryFlag; enum
 	LCF_STEAM    = 1 << 29, // Steam API
 	LCF_THREAD   = 1 << 30,
 	LCF_TIMERS   = 1 << 31, // as in async timer objects
-  LCF_ALL = -1,
+  	LCF_ALL = -1,
 };
 
 #endif
