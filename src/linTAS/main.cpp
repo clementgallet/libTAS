@@ -30,7 +30,7 @@
 #include <X11/XKBlib.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
-#include "recording.h"
+#include "MovieFile.h"
 #include "SaveState.h"
 #include <vector>
 #include <string>
@@ -55,6 +55,7 @@ std::vector<std::string> shared_libs;
 std::string libname;
 
 Context context;
+MovieFile moviefile;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -320,9 +321,8 @@ void* launchGame(void* arg)
 
     nanosleep(&tim, NULL);
 
-    FILE* fp;
-    if (context.recording != Context::NO_RECORDING){
-        fp = openRecording(context.config.moviefile.c_str(), context.recording);
+    if (context.recording != Context::NO_RECORDING) {
+        moviefile.open(context.config.moviefile.c_str(), &context);
     }
 
     /*
@@ -477,7 +477,7 @@ void* launchGame(void* arg)
                             case Context::RECORDING_READ_WRITE:
                                 context.recording = Context::RECORDING_WRITE;
                                 ui.update(true);
-                                truncateRecording(fp);
+                                moviefile.truncate();
                                 break;
                         }
                     }
@@ -561,22 +561,21 @@ void* launchGame(void* arg)
                     break;
 
                 /* Save inputs to file */
-                if (!writeFrame(fp, context.framecount, ai)) {
+                if (!moviefile.writeFrame(context.framecount, ai)) {
                     /* Writing failed, returning to no recording mode */
                     context.recording = Context::NO_RECORDING;
-                    closeRecording(fp);
+                    moviefile.close();
                     ui.update(true);
                 }
-
                 break;
 
             case Context::RECORDING_READ_WRITE:
             case Context::RECORDING_READ_ONLY:
                 /* Read inputs from file */
-                if (!readFrame(fp, context.framecount, &ai)) {
+                if (!moviefile.readFrame(context.framecount, ai)) {
                     /* Reading failed, returning to no recording mode */
                     std::cout << "Reading failed" << std::endl;
-                    closeRecording(fp);
+                    moviefile.close();
                     context.recording = Context::NO_RECORDING;
                     ui.update(true);
                 }
@@ -618,7 +617,7 @@ void* launchGame(void* arg)
     }
 
     if (context.recording != Context::NO_RECORDING){
-        closeRecording(fp);
+        moviefile.close();
     }
     close(socket_fd);
 

@@ -17,22 +17,28 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RECORDING_H_INCLUDED
-#define RECORDING_H_INCLUDED
+#ifndef MOVIEFILE_H_INCLUDED
+#define MOVIEFILE_H_INCLUDED
 
-#include <stdio.h>
-#include <unistd.h>
+//#include <stdio.h>
+//#include <unistd.h>
 #include "../shared/AllInputs.h"
 #include "Context.h"
+#include <fstream>
+#include <string>
 
-#define HEADER_SIZE 256
-
-FILE* openRecording(const char* filename, Context::RecStatus recording);
-void writeHeader(FILE* fp);
-void readHeader(FILE* fp);
-int writeFrame(FILE* fp, unsigned long frame, struct AllInputs inputs);
-int readFrame(FILE* fp, unsigned long frame, struct AllInputs* inputs);
-void truncateRecording(FILE* fp);
-void closeRecording(FILE* fp);
+class MovieFile {
+public:
+    void open(const char* filename, Context* c);
+    void writeHeader();
+    void readHeader();
+    int writeFrame(unsigned long frame, AllInputs inputs);
+    int readFrame(unsigned long frame, AllInputs& inputs);
+    void truncate();
+    void close();
+private:
+    Context* context;
+    std::fstream movie_stream;
+};
 
 #endif
