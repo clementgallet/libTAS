@@ -206,7 +206,7 @@ void proceed_commands(void)
                 return;
 
             case MSGN_ALL_INPUTS:
-                receiveData(&ai, sizeof(struct AllInputs));
+                receiveData(&ai, sizeof(AllInputs));
                 break;
 
         }

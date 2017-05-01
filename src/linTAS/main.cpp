@@ -587,7 +587,7 @@ void* launchGame(void* arg)
             /* Send config */
             message = MSGN_CONFIG;
             send(socket_fd, &message, sizeof(int), 0);
-            send(socket_fd, &context.config.sc, sizeof(struct SharedConfig), 0);
+            send(socket_fd, &context.config.sc, sizeof(SharedConfig), 0);
             context.config.sc_modified = false;
         }
 
@@ -604,7 +604,7 @@ void* launchGame(void* arg)
         /* Send inputs and end of frame */
         message = MSGN_ALL_INPUTS;
         send(socket_fd, &message, sizeof(int), 0);
-        send(socket_fd, &ai, sizeof(struct AllInputs), 0);
+        send(socket_fd, &ai, sizeof(AllInputs), 0);
 
         if (context.status == Context::QUITTING) {
             message = MSGN_USERQUIT;

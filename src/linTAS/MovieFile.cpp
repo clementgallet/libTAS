@@ -20,6 +20,7 @@
 #include "MovieFile.h"
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 void MovieFile::open(const char* filename, Context* c)
 {
@@ -34,7 +35,7 @@ void MovieFile::open(const char* filename, Context* c)
             readHeader();
             break;
         case Context::RECORDING_READ_ONLY:
-            movie_stream.open(filename, std::fstream::out);
+            movie_stream.open(filename, std::fstream::in);
             readHeader();
             break;
     }
@@ -103,8 +104,12 @@ int MovieFile::writeFrame(unsigned long frame, AllInputs inputs)
 
 int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
 {
+    inputs.emptyInputs();
+
     std::string line;
     std::getline(movie_stream, line);
+    if (!movie_stream)
+        return 0;
     std::istringstream input_string(line);
     char d;
     input_string.get(d);
@@ -112,6 +117,8 @@ int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
     /* Find the first line starting with '|' */
     while (d != '|') {
         std::getline(movie_stream, line);
+        if (!movie_stream)
+            return 0;
         input_string.str(line);
         input_string.get(d);
     }
