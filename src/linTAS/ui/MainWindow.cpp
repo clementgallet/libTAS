@@ -354,10 +354,14 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* sound_mute_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
-    if (context->config.sc.audio_mute)
+    if (context->config.sc.audio_mute) {
         sound_mute_item->set();
-    else
+        mutecheck->set();
+    }
+    else {
         sound_mute_item->clear();
+        mutecheck->clear();
+    }
 
     Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
     while (logging_status_item) {

@@ -24,6 +24,7 @@
 #include <iostream>
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
+#include <zlib.h>
 
 void MovieFile::open(Context* c)
 {
@@ -53,10 +54,13 @@ void MovieFile::open(Context* c)
     }
 }
 
+tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
+	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
+
 void MovieFile::importMovie()
 {
     TAR *tar;
-    tar_open(&tar, context->config.moviefile.c_str(), NULL, O_RDONLY, 0644, 0);
+    tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
@@ -66,7 +70,7 @@ void MovieFile::exportMovie()
 {
     input_stream.flush();
     TAR *tar;
-    tar_open(&tar, context->config.moviefile.c_str(), NULL, O_WRONLY | O_CREAT, 0644, 0);
+    tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
     /* I would like to use tar_append_tree but it saves files with their path */
     //tar_append_tree(tar, md, save_dir);

@@ -38,6 +38,11 @@ target_link_libraries (TAS ${X11_X11_LIB})
 find_package(FLTK REQUIRED)
 target_link_libraries(linTAS ${FLTK_LIBRARIES})
 
+# Add zlib library
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries(linTAS ${ZLIB_LIBRARIES})
+
 # Add optional features
 find_package(PkgConfig REQUIRED)
 
