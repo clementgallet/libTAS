@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOVIEFILE_H_INCLUDED
-#define MOVIEFILE_H_INCLUDED
+#ifndef LINTAS_MOVIEFILE_H_INCLUDED
+#define LINTAS_MOVIEFILE_H_INCLUDED
 
 //#include <stdio.h>
 //#include <unistd.h>
@@ -29,7 +29,9 @@
 
 class MovieFile {
 public:
-    void open(const char* filename, Context* c);
+    void open(Context* c);
+    void importMovie();
+    void exportMovie();
     void writeHeader();
     void readHeader();
     int writeFrame(unsigned long frame, AllInputs inputs);
@@ -38,7 +40,8 @@ public:
     void close();
 private:
     Context* context;
-    std::fstream movie_stream;
+    std::string movie_dir;
+    std::fstream input_stream;
 };
 
 #endif

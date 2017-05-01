@@ -24,8 +24,8 @@ target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 # Common flags
 target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter)
 
-# For shared memory functions
-target_link_libraries (linTAS -lrt -lpthread)
+# Add some libs manually
+target_link_libraries (linTAS -lrt -lpthread -ltar)
 target_link_libraries (TAS -lrt -rdynamic)
 
 # Add X11 library

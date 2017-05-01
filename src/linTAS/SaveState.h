@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SAVESTATE_H_INCLUDED
-#define LIBTAS_SAVESTATE_H_INCLUDED
+#ifndef LINTAS_SAVESTATE_H_INCLUDED
+#define LINTAS_SAVESTATE_H_INCLUDED
 
 #include "StateSection.h"
 #include "ThreadInfo.h"
@@ -49,4 +49,3 @@ class SaveState {
 };
 
 #endif
-

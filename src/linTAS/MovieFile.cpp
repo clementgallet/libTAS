@@ -18,28 +18,67 @@
  */
 
 #include "MovieFile.h"
+#include "utils.h"
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <libtar.h>
+#include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 
-void MovieFile::open(const char* filename, Context* c)
+void MovieFile::open(Context* c)
 {
     context = c;
+
+    movie_dir = getenv("HOME");
+    movie_dir += "/.libtas";
+    if (create_dir(movie_dir))
+        return;
+    movie_dir += "/movie";
+    if (create_dir(movie_dir))
+        return;
+
+    std::string input_file = movie_dir + "/inputs";
+
     switch(context->recording) {
         case Context::RECORDING_WRITE:
-            movie_stream.open(filename, std::fstream::in | std::fstream::out | std::fstream::trunc);
+            input_stream.open(input_file, std::fstream::in | std::fstream::out | std::fstream::trunc);
             writeHeader();
             break;
         case Context::RECORDING_READ_WRITE:
-            movie_stream.open(filename, std::fstream::in | std::fstream::out);
-            readHeader();
-            break;
         case Context::RECORDING_READ_ONLY:
-            movie_stream.open(filename, std::fstream::in);
+            importMovie();
+            input_stream.open(input_file, std::fstream::in);
             readHeader();
             break;
     }
 }
+
+void MovieFile::importMovie()
+{
+    TAR *tar;
+    tar_open(&tar, context->config.moviefile.c_str(), NULL, O_RDONLY, 0644, 0);
+    char* md = const_cast<char*>(movie_dir.c_str());
+    tar_extract_all(tar, md);
+    tar_close(tar);
+}
+
+void MovieFile::exportMovie()
+{
+    input_stream.flush();
+    TAR *tar;
+    tar_open(&tar, context->config.moviefile.c_str(), NULL, O_WRONLY | O_CREAT, 0644, 0);
+    char* md = const_cast<char*>(movie_dir.c_str());
+    /* I would like to use tar_append_tree but it saves files with their path */
+    //tar_append_tree(tar, md, save_dir);
+    std::string input_file = movie_dir + "/inputs";
+    char* input_ptr = const_cast<char*>(input_file.c_str());
+    char savename[7] = "inputs";
+    tar_append_file(tar, input_ptr, savename);
+
+    tar_append_eof(tar);
+    tar_close(tar);
+}
+
 
 void MovieFile::writeHeader()
 {
@@ -53,51 +92,51 @@ int MovieFile::writeFrame(unsigned long frame, AllInputs inputs)
 {
     /* Write keyboard inputs */
     if (context->config.sc.keyboard_support) {
-        movie_stream.put('|');
-        movie_stream << std::hex;
+        input_stream.put('|');
+        input_stream << std::hex;
         for (int k=0; k<AllInputs::MAXKEYS; k++) {
             if (inputs.keyboard[k] == XK_VoidSymbol) break;
-            movie_stream << (k>0?":":"") << inputs.keyboard[k];
+            input_stream << (k>0?":":"") << inputs.keyboard[k];
         }
     }
 
     /* Write mouse inputs */
     if (context->config.sc.mouse_support) {
-        movie_stream.put('|');
-        movie_stream << std::hex;
-        movie_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
-        movie_stream.put((inputs.pointer_mask&Button1Mask)?'1':'.');
-        movie_stream.put((inputs.pointer_mask&Button2Mask)?'2':'.');
-        movie_stream.put((inputs.pointer_mask&Button3Mask)?'3':'.');
-        movie_stream.put((inputs.pointer_mask&Button4Mask)?'4':'.');
-        movie_stream.put((inputs.pointer_mask&Button5Mask)?'5':'.');
+        input_stream.put('|');
+        input_stream << std::hex;
+        input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
+        input_stream.put((inputs.pointer_mask&Button1Mask)?'1':'.');
+        input_stream.put((inputs.pointer_mask&Button2Mask)?'2':'.');
+        input_stream.put((inputs.pointer_mask&Button3Mask)?'3':'.');
+        input_stream.put((inputs.pointer_mask&Button4Mask)?'4':'.');
+        input_stream.put((inputs.pointer_mask&Button5Mask)?'5':'.');
     }
 
     /* Write controller inputs */
     for (int joy=0; joy<context->config.sc.numControllers; joy++) {
-        movie_stream.put('|');
-        movie_stream << std::hex;
+        input_stream.put('|');
+        input_stream << std::hex;
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-            movie_stream << inputs.controller_axes[joy][axis] << ':';
+            input_stream << inputs.controller_axes[joy][axis] << ':';
         }
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<0))?'A':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<1))?'B':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<2))?'X':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<3))?'Y':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<4))?'b':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<5))?'g':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<6))?'s':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<7))?'(':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<8))?')':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<9))?'[':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<10))?']':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<11))?'u':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<12))?'d':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<13))?'l':'.');
-        movie_stream.put((inputs.controller_buttons[joy]&(1<<14))?'r':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<0))?'A':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<1))?'B':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<2))?'X':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<3))?'Y':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<4))?'b':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<5))?'g':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<6))?'s':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<7))?'(':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<8))?')':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<9))?'[':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<10))?']':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<11))?'u':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<12))?'d':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<13))?'l':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<14))?'r':'.');
     }
 
-    movie_stream << '|' << std::endl;
+    input_stream << '|' << std::endl;
 
     return 1;
 }
@@ -107,8 +146,8 @@ int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
     inputs.emptyInputs();
 
     std::string line;
-    std::getline(movie_stream, line);
-    if (!movie_stream)
+    std::getline(input_stream, line);
+    if (!input_stream)
         return 0;
     std::istringstream input_string(line);
     char d;
@@ -116,8 +155,8 @@ int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
 
     /* Find the first line starting with '|' */
     while (d != '|') {
-        std::getline(movie_stream, line);
-        if (!movie_stream)
+        std::getline(input_stream, line);
+        if (!input_stream)
             return 0;
         input_string.str(line);
         input_string.get(d);
@@ -181,5 +220,6 @@ void MovieFile::truncate()
 
 void MovieFile::close()
 {
-    movie_stream.close();
+    input_stream.close();
+    exportMovie();
 }

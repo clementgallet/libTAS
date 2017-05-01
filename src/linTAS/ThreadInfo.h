@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_THREADINFO_H_INCLUDED
-#define LIBTAS_THREADINFO_H_INCLUDED
+#ifndef LINTAS_THREADINFO_H_INCLUDED
+#define LINTAS_THREADINFO_H_INCLUDED
 
 #include <sys/types.h>
 #include <sys/user.h>
@@ -35,4 +35,3 @@ class ThreadInfo {
 };
 
 #endif
-

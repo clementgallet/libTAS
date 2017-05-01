@@ -322,7 +322,7 @@ void* launchGame(void* arg)
     nanosleep(&tim, NULL);
 
     if (context.recording != Context::NO_RECORDING) {
-        moviefile.open(context.config.moviefile.c_str(), &context);
+        moviefile.open(&context);
     }
 
     /*

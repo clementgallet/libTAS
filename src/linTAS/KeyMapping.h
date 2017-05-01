@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEYMAPPING_H_INCLUDED
-#define KEYMAPPING_H_INCLUDED
+#ifndef LINTAS_KEYMAPPING_H_INCLUDED
+#define LINTAS_KEYMAPPING_H_INCLUDED
 
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"

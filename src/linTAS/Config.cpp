@@ -18,9 +18,8 @@
  */
 
 #include "Config.h"
-#include <sys/stat.h>
-#include <cerrno>
-#include <iostream>
+#include "utils.h"
+//#include <sys/stat.h>
 
 void Config::init(std::string gamepath) {
 
@@ -30,30 +29,11 @@ void Config::init(std::string gamepath) {
         gamepath = gamepath.substr(sep + 1);
 
     /* Check if our preferences directory exists, and create it if not */
-    char* home = getenv("HOME");
-    std::string prefs_dir = home;
+    std::string prefs_dir = getenv("HOME");
     prefs_dir += "/.libtas";
 
-    struct stat sb;
-    if (stat(prefs_dir.c_str(), &sb) == -1) {
-        if (errno == ENOENT) {
-            /* The directory does not exist, try to create it */
-            int dir_err = mkdir(prefs_dir.c_str(), S_IRWXU);
-            if (dir_err == -1) {
-                std::cerr << "Error creating directory " << prefs_dir << ": " << strerror(errno) << std::endl;
-                exit(1);
-            }
-        }
-        else {
-            std::cerr << "Error accessing directory " << prefs_dir << ": " << strerror(errno) << std::endl;
-            exit(1);
-        }
-    }
-    else if (!S_ISDIR(sb.st_mode))
-    {
-        std::cerr << "Something has the same name as our prefs directory " << prefs_dir << std::endl;
-        exit(1);
-    }
+    if (create_dir(prefs_dir))
+        return;
 
     /* Open the preferences for the game */
     prefs.reset(new Fl_Preferences(prefs_dir.c_str(), "libtas", gamepath.c_str()));

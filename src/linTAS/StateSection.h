@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STATESECTION_H_INCLUDED
-#define LIBTAS_STATESECTION_H_INCLUDED
+#ifndef LINTAS_STATESECTION_H_INCLUDED
+#define LINTAS_STATESECTION_H_INCLUDED
 
 #include <sys/uio.h>
 #include <string>
@@ -51,4 +51,3 @@ class StateSection {
 };
 
 #endif
-
