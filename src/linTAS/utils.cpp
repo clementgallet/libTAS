@@ -66,7 +66,7 @@ int gzopen_wrapper(const char *pathname, int oflags, int mode)
 		gzoflags = "wb1";
 		break;
 	case O_RDONLY:
-		gzoflags = "rb1";
+		gzoflags = "rb";
 		break;
 	default:
 		errno = EINVAL;

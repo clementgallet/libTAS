@@ -50,7 +50,7 @@ bool link_function(void** function, const char* source, const char* library, con
      */
 
     if (library != nullptr) {
-        safe::string libpath = find_lib(library);
+        std::string libpath = find_lib(library);
 
         if (! libpath.empty()) {
 
@@ -115,4 +115,3 @@ int get_sdlversion(void)
 
     return 1;
 }
-

@@ -81,10 +81,10 @@ void __attribute__((constructor)) init(void)
     /* Receive information from the program */
     int message;
     receiveData(&message, sizeof(int));
-    libraries = new safe::vector<safe::string>;
+    libraries = new std::vector<std::string>;
     while (message != MSGN_END_INIT) {
         std::vector<char> buf;
-        safe::string libstring;
+        std::string libstring;
         switch (message) {
             case MSGN_CONFIG:
                 debuglog(LCF_SOCKET, "Receiving config");

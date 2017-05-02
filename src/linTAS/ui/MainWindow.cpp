@@ -19,6 +19,7 @@
 
 #include "MainWindow.h"
 #include "../main.h"
+#include "../MovieFile.h"
 #include <iostream>
 #include <FL/x.H>
 
@@ -84,9 +85,14 @@ void MainWindow::build(Context* c)
 
     /* Frame count */
     framecount = new Fl_Output(80, 140, 60, 30, "Frames:");
-    std::string framestr = std::to_string(context->framecount);
-    framecount->value(framestr.c_str());
+    framecount->value("0");
     framecount->color(FL_LIGHT1);
+
+    totalframecount = new Fl_Output(140, 140, 60, 30);
+    totalframecount->color(FL_LIGHT1);
+    MovieFile movie;
+    std::string totalframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+    totalframecount->value(totalframestr.c_str());
 
     launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback(launch_cb);
@@ -288,6 +294,10 @@ void MainWindow::update(bool status)
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
+    if (context->recording == Context::RECORDING_WRITE) {
+        std::string totalframestr = std::to_string(context->framecount - 1);
+        totalframecount->value(totalframestr.c_str());
+    }
 
     if (status) {
         /* Update pause status */
@@ -485,6 +495,9 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
     if (ret == 0) {
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
+        MovieFile movie;
+        std::string totalframestr = std::to_string(movie.nbFrames(mw.context->config.moviefile));
+        mw.totalframecount->value(totalframestr.c_str());
     }
 }
 

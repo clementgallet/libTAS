@@ -133,8 +133,8 @@ void RenderHUD::renderInputs(AllInputs& ai)
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
     std::string text = oss.str();
-    renderText(text.c_str(), fg_color, bg_color, 2, 400);
+    if (!text.empty())
+        renderText(text.c_str(), fg_color, bg_color, 2, 400);
 }
 
 #endif
-

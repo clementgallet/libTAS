@@ -40,15 +40,15 @@ static int depth;
 void dlenter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
 void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
 
-safe::vector<safe::string>* libraries;
+std::vector<std::string>* libraries;
 
-safe::string find_lib(const char* library)
+std::string find_lib(const char* library)
 {
     for (auto itr = libraries->begin(); itr != libraries->end(); ++itr)
-        if (itr->find(library) != safe::string::npos)
+        if (itr->find(library) != std::string::npos)
             return (*itr);
 
-    safe::string emptystring;
+    std::string emptystring;
     return emptystring;
 }
 
@@ -152,4 +152,3 @@ void dlhook_end(void)
 {
     _dlfcn_hook = old_dlfcn_hook;
 }
-

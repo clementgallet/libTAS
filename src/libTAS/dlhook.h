@@ -23,7 +23,6 @@
 #include <dlfcn.h>
 #include <string>
 #include <vector>
-#include "memory/ManagedAllocator.h"
 
 /* There are two ways a program can link to a shared library:
  * either it was compiled with an include of the library header foo.h
@@ -78,15 +77,15 @@ extern struct dlfcn_hook {
 /* Set of libraries that are loaded by the game,
  * either at startup (link time) or using the dl functions.
  */
-extern safe::vector<safe::string> *libraries;
+extern std::vector<std::string> *libraries;
 
 /* Add a library in the above set */
-void add_lib(safe::string library);
+void add_lib(std::string library);
 
 /* Locate a library path in the above set from a substring,
  * and returns the first match.
  */
-safe::string find_lib(const char* library);
+std::string find_lib(const char* library);
 
 /* Functions used to call the original dl functions.
  * Use like this:
@@ -122,4 +121,3 @@ void dlhook_init(void);
 void dlhook_end(void);
 
 #endif
-

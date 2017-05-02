@@ -31,9 +31,11 @@ class MovieFile {
 public:
     void open(Context* c);
     void importMovie();
+    void importMovie(std::string& moviefile);
     void exportMovie();
     void writeHeader();
     void readHeader();
+    int nbFrames(std::string& moviefile);
     int writeFrame(unsigned long frame, AllInputs inputs);
     int readFrame(unsigned long frame, AllInputs& inputs);
     void truncate();

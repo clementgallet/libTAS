@@ -86,6 +86,7 @@ class MainWindow {
         Fl_Check_Button *mutecheck;
 
         Fl_Output *framecount;
+        Fl_Output *totalframecount;
 
         /* Update UI elements (mainly enable/disable) depending on
          * the game status (running/stopped)

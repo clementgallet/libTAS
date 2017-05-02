@@ -57,13 +57,18 @@ void MovieFile::open(Context* c)
 tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
 
-void MovieFile::importMovie()
+void MovieFile::importMovie(std::string& moviefile)
 {
     TAR *tar;
-    tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
+    tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
+}
+
+void MovieFile::importMovie()
+{
+    importMovie(context->config.moviefile);
 }
 
 void MovieFile::exportMovie()
@@ -216,6 +221,38 @@ int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
     }
 
     return 1;
+}
+
+int MovieFile::nbFrames(std::string& moviefile)
+{
+    /* Check if movie exists, otherwise return 0 */
+    struct stat sb;
+    if (stat(moviefile.c_str(), &sb) == -1)
+        return 0;
+
+    /* Extract file into our temp directory */
+    movie_dir = getenv("HOME");
+    movie_dir += "/.libtas";
+    if (create_dir(movie_dir))
+        return 0;
+    movie_dir += "/movie";
+    if (create_dir(movie_dir))
+        return 0;
+
+    importMovie(moviefile);
+
+    /* Read the input file and count the lines starting with '|' */
+    std::string input_file = movie_dir + "/inputs";
+    std::ifstream inputs(input_file);
+    std::size_t frame_count = 0;
+    std::string line;
+    char d;
+    while (std::getline(inputs, line))
+        if (!line.empty() && (line[0] == '|'))
+            ++frame_count;
+
+    inputs.close();
+    return frame_count;
 }
 
 void MovieFile::truncate()

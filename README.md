@@ -10,24 +10,13 @@ Compiling is done using cmake. From the root directory just type:
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`
+The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`
 
-To enable audio and video dumping, you will need:
+To enable audio and video dumping, you will need `libavcodec`, `libavformat`, `libavutil`, `libswscale`, `libswresample`.
 
-- libavcodec
-- libavformat
-- libavutil
-- libswscale
-- libswresample
+To enable audio playback, you will also need `libswresample`, `libasound`
 
-To enable audio playback, you will also need:
-
-- libswresample
-- libasound
-
-To enable HUD on the game screen, you will need:
-
-- libfreetype
+To enable HUD on the game screen, you will need `libfreetype`
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
@@ -44,19 +33,17 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 To run this program, just type:
 
-    ./linTAS game_executable_path [game_cmdline_arguments]
+    ./linTAS [game_executable_path [game_cmdline_arguments]]
 
 You can type `./linTAS -h` to have a description of the program options.
 
-The program prompts a text-based user interface where you can start the game or change several options.
+The program prompts a graphical user interface where you can start the game or change several options.
 
 Here are the default controls when the game has started:
 
 - frame advancing, using the `V` key
 - pause/play, using the `pause` key
 - fast forward, using the `tab` key
-- record and playback inputs
-- dump the audio/video
 
 Note: the game starts up **paused**.
 
