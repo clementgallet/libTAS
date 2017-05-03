@@ -169,9 +169,8 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ void SDL_GameControllerUpdate(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-    threadState.setNoLog(true);
+    ThreadNoLog tnl;
     SDL_JoystickUpdate();
-    threadState.setNoLog(false);
 }
 
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,

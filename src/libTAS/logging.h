@@ -68,7 +68,7 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string& outstr);
  * be visible by files that #include it, so the compiler knows for which
  * types it has to build a function.
  *
- * I'm not sure if it is the right choice, as it rapidly populates with 
+ * I'm not sure if it is the right choice, as it rapidly populates with
  * hundred of symbols and takes hundreds of kB in memory.
  * However, I think removing the -g debugger flag does save lot of memory.
  */
@@ -101,19 +101,18 @@ template<typename ...Args>
 inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
     /* Not printing anything if thread state is set to NOLOG */
-    if (threadState.isNoLog())
+    if (ThreadState::isNoLog())
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
      * in the following code
      */
-    threadState.setNoLog(true);
+    ThreadNoLog tnl;
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
     std::string outstr;
     debuglogverbose(lcf, oss.str(), outstr);
     std::cerr << outstr;
-    threadState.setNoLog(false);
 }
 
 /* Print the debug message using stdio functions */
@@ -123,4 +122,3 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 #define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")
 
 #endif
-

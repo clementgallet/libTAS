@@ -247,9 +247,9 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_VideoQuit(void)
 {
     DEBUGLOGCALL(LCF_SDL);
-    threadState.setNative(true);
+    // threadState.setNative(true);
     orig::SDL_VideoQuit();
-    threadState.setNative(false);
+    // threadState.setNative(false);
 }
 
 /* Override */ void SDL_Quit(){

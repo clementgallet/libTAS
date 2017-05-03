@@ -97,7 +97,7 @@ void fillBufferCallback(AudioBuffer* ab)
 
     if (desired->callback != NULL) {
         /* We are using the callback mechanism.
-         * When the buffer is depleted, we are supposed to call the 
+         * When the buffer is depleted, we are supposed to call the
          * callback function so that it fills the buffer again.
          * We will use a single AudioSource and a single AudioBuffer for this.
          * When the source plays the buffer until the end,
@@ -136,7 +136,7 @@ void fillBufferCallback(AudioBuffer* ab)
         buffer->size = desired->samples * buffer->alignSize;
         buffer->update(); // Yes, a second time, to fill sampleSize based on size.
         buffer->samples.resize(buffer->size);
-   
+
         /* Push buffers in a source */
         int sourceId = audiocontext.createSource();
         sourceSDL = audiocontext.getSource(sourceId);
@@ -193,7 +193,7 @@ const char* dummySDLDevice = "libTAS device";
         return 0;
 
     SDL_OpenAudio(const_cast<SDL_AudioSpec*>(desired), obtained); // TODO: cast probably not good
-    return 2;    
+    return 2;
 }
 
 /* Override */ SDL_AudioStatus SDL_GetAudioStatus(void)
@@ -226,7 +226,7 @@ const char* dummySDLDevice = "libTAS device";
         sourceSDL->state = SOURCE_PLAYING;
     else
         sourceSDL->state = SOURCE_PAUSED;
-    
+
 }
 
 /* Override */ void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on)
@@ -244,7 +244,7 @@ const char* dummySDLDevice = "libTAS device";
         return -1;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source*/
     AudioBuffer *ab;
@@ -340,4 +340,3 @@ const char* dummySDLDevice = "libTAS device";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 }
-

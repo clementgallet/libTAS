@@ -77,7 +77,7 @@ namespace orig {
     }
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     //printBacktrace();
-    if (threadState.isNative()) {
+    if (ThreadState::isNative()) {
         orig::clock_gettime(clock_id, tp);
     }
     else {
@@ -93,7 +93,7 @@ namespace orig {
     struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - returning ", msec);
-    
+
     return msec;
 }
 
@@ -117,4 +117,3 @@ void link_time(void)
 {
     LINK_NAMESPACE(clock_gettime, nullptr);
 }
-

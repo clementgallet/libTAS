@@ -117,23 +117,27 @@ bool AudioPlayer::play(AudioContext& ac)
         return true;
 
     debuglog(LCF_SOUND, "Play an audio frame");
-    threadState.setOwnCode(true);
-    int err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
-    threadState.setOwnCode(false);
+    int err;
+    {
+        ThreadOwnCode toc;
+        err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
+    }
 	if (err < 0) {
 		if (err == -EPIPE) {
 			debuglog(LCF_SOUND, "  Underrun");
-            threadState.setOwnCode(true);
-			err = snd_pcm_prepare(phandle);
-            threadState.setOwnCode(false);
+            {
+                ThreadOwnCode toc;
+	            err = snd_pcm_prepare(phandle);
+            }
 			if (err < 0) {
 				debuglog(LCF_SOUND | LCF_ERROR, "  Can't recovery from underrun, prepare failed: ", snd_strerror(err));
 			    return false;
             }
             else {
-                threadState.setOwnCode(true);
-                snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
-                threadState.setOwnCode(false);
+                {
+                    ThreadOwnCode toc;
+                    snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
+                }
             }
 		}
 		else {

@@ -19,62 +19,77 @@
 
 #include "ThreadState.h"
 
-thread_local ThreadState threadState;
+thread_local int ThreadState::native = 0;
+thread_local int ThreadState::owncode = 0;
+thread_local int ThreadState::nolog = 0;
 
 void ThreadState::setNative(bool state)
 {
-    static int callcount = 0;
-    if (state) {
-        if (!callcount++)
-            stateMask |= NATIVE;
-    }
-    else {
-        if (!--callcount)
-            stateMask &= ~NATIVE;
-    }
+    if (state)
+        native++;
+    else
+        native--;
     setOwnCode(state);
 }
 
 bool ThreadState::isNative()
 {
-    return (stateMask & NATIVE);
+    return (native > 0);
 }
 
 void ThreadState::setOwnCode(bool state)
 {
-    static int callcount = 0;
-    if (state) {
-        if (!callcount++)
-            stateMask |= OWNCODE;
-    }
-    else {
-        if (!--callcount)
-            stateMask &= ~OWNCODE;
-    }
+    if (state)
+        owncode++;
+    else
+        owncode--;
     setNoLog(state);
 }
 
 bool ThreadState::isOwnCode()
 {
-    return (stateMask & OWNCODE);
+    return (owncode > 0);
 }
 
 void ThreadState::setNoLog(bool state)
 {
-    static int callcount = 0;
-    if (state) {
-        if (!callcount++)
-            stateMask |= NOLOG;
-    }
-    else {
-        if (!--callcount)
-            stateMask &= ~NOLOG;
-    }
+    if (state)
+        nolog++;
+    else
+        nolog--;
 }
 
 bool ThreadState::isNoLog()
 {
-    return (stateMask & NOLOG);
+    return (nolog > 0);
 }
 
+ThreadNative::ThreadNative()
+{
+    ThreadState::setNative(true);
+}
 
+ThreadNative::~ThreadNative()
+{
+    ThreadState::setNative(false);
+}
+
+ThreadOwnCode::ThreadOwnCode()
+{
+    ThreadState::setOwnCode(true);
+}
+
+ThreadOwnCode::~ThreadOwnCode()
+{
+    ThreadState::setOwnCode(false);
+}
+
+ThreadNoLog::ThreadNoLog()
+{
+    ThreadState::setNoLog(true);
+}
+
+ThreadNoLog::~ThreadNoLog()
+{
+    ThreadState::setNoLog(false);
+}

@@ -43,7 +43,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (sleep && mainT && !threadState.isNative()) {
+    if (sleep && mainT && !ThreadState::isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -66,7 +66,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (usec && mainT && !threadState.isNative()) {
+    if (usec && mainT && !ThreadState::isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -86,7 +86,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (mainT && !threadState.isNative()) {
+    if (mainT && !ThreadState::isNative()) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, remaining);
@@ -118,7 +118,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (mainT && !threadState.isNative()) {
+    if (mainT && !ThreadState::isNative()) {
         detTimer.addDelay(sleeptime);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, rem);
@@ -131,4 +131,3 @@ void link_sleep(void)
 {
     LINK_NAMESPACE(nanosleep, nullptr);
 }
-

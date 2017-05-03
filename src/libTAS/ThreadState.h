@@ -43,50 +43,61 @@ class ThreadState
          * This function and all other set* functions have a call count,
          * meaning we must call set*(false) by the same number as set*(true)
          * to disable the flag */
-        void setNative(bool state);
+        static void setNative(bool state);
 
         /* Check the NATIVE flag */
-        bool isNative(void);
+        static bool isNative(void);
 
         /* Add or remove the OWNCODE and NOLOG flags. */
-        void setOwnCode(bool state);
+        static void setOwnCode(bool state);
         /* Check the OWNCODE flag */
-        bool isOwnCode(void);
+        static bool isOwnCode(void);
 
         /* Add or remove the NOLOG flag. */
-        void setNoLog(bool state);
+        static void setNoLog(bool state);
         /* Check the NOLOG flag */
-        bool isNoLog(void);
+        static bool isNoLog(void);
 
     private:
 
-        /* State flags that compose the state of the thread.
-         * flags are tested in descending order: NATIVE -> OWNCODE -> NOLOG
+        /* When NATIVE flag is on, we ask each hooked function to act
+         * as closely as possible as the real function. This disable
+         * any log message, side effects, etc.
          */
-        enum {
-            /* When NATIVE flag is on, we ask each hooked function to act
-             * as closely as possible as the real function. This disable 
-             * any log message, side effects, etc.
-             */
-            NATIVE = 0x01,
+        static thread_local int native;
 
-            /* When OWNCODE flag is on, we indicate each hooked function that
-             * the caller was our own code and not the game code. This usually
-             * make the code closer to the original function, although it is not
-             * as strong as NATIVE.
-             */
-            OWNCODE = 0x02,
+        /* When OWNCODE flag is on, we indicate each hooked function that
+         * the caller was our own code and not the game code. This usually
+         * make the code closer to the original function, although it is not
+         * as strong as NATIVE.
+         */
+        static thread_local int owncode;
 
-            /* When NOLOG flag is on, we ask each hooked function to not generate
-             * any log message.
-             */
-            NOLOG  = 0x04
-        };
-
-        int stateMask = 0;
+        /* When NOLOG flag is on, we ask each hooked function to not generate
+         * any log message.
+         */
+        static thread_local int nolog;
 };
 
-extern thread_local ThreadState threadState;
+class ThreadNative
+{
+public:
+    ThreadNative();
+    ~ThreadNative();
+};
+
+class ThreadOwnCode
+{
+public:
+    ThreadOwnCode();
+    ~ThreadOwnCode();
+};
+
+class ThreadNoLog
+{
+public:
+    ThreadNoLog();
+    ~ThreadNoLog();
+};
 
 #endif
-

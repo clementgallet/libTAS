@@ -69,13 +69,13 @@ void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string &outstr)
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
     /* Not printing anything if thread state is set to NOLOG */
-    if (threadState.isNoLog())
+    if (ThreadState::isNoLog())
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
      * in the following code
      */
-    threadState.setNoLog(true);
+     ThreadNoLog tnl;
 
     /* Build main log string */
     int maxsize = 2048;
@@ -122,8 +122,6 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
         fprintf(stderr, s);
     }
-
-    threadState.setNoLog(false);
 }
 
 /* Print long integers as string for shorter ids. Use base64 */

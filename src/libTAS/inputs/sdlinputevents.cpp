@@ -35,9 +35,11 @@
 void generateSDLKeyUpEvents(void)
 {
     int i, j;
-    threadState.setOwnCode(true);
-    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    threadState.setOwnCode(false);
+    struct timespec time;
+    {
+        ThreadOwnCode toc;
+        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    }
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -93,10 +95,11 @@ void generateSDLKeyUpEvents(void)
 void generateSDLKeyDownEvents(void)
 {
     int i,j,k;
-    threadState.setOwnCode(true);
-	struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    threadState.setOwnCode(false);
-
+    struct timespec time;
+    {
+        ThreadOwnCode toc;
+    	time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    }
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -155,10 +158,11 @@ void generateSDLControllerAdded(void)
 {
     if (SDLver == 1)
         return;
-
-    threadState.setOwnCode(true);
-    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    threadState.setOwnCode(false);
+    struct timespec time;
+    {
+        ThreadOwnCode toc;
+        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    }
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < shared_config.numControllers; i++) {
@@ -177,9 +181,11 @@ void generateSDLControllerAdded(void)
 
 void generateSDLControllerEvents(void)
 {
-    threadState.setOwnCode(true);
-    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    threadState.setOwnCode(false);
+    struct timespec time;
+    {
+        ThreadOwnCode toc;
+        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    }
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<shared_config.numControllers; ji++) {
@@ -190,12 +196,14 @@ void generateSDLControllerEvents(void)
          * in the SDL documentation. The game must then call
          * SDL_[Joystick/GameController]Update to update the joystick state.
          */
-        threadState.setOwnCode(true);
-        bool genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
-        //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
-        /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
-        bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(&ji) || SDL_GameControllerGetAttached(&ji));
-        threadState.setOwnCode(false);
+        bool genGC, genJoy;
+        {
+            ThreadOwnCode toc;
+            genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
+            //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
+            /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
+            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(&ji) || SDL_GameControllerGetAttached(&ji));
+        }
         if (!genGC && !genJoy)
             continue;
 
@@ -388,9 +396,11 @@ void generateSDLMouseMotionEvents(void)
     if (SDLver == 2) {
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
-        threadState.setOwnCode(true);
-        struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-        threadState.setOwnCode(false);
+        struct timespec time;
+        {
+            ThreadOwnCode toc;
+            time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        }
         event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
         event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
@@ -449,9 +459,11 @@ void generateSDLMouseMotionEvents(void)
 
 void generateSDLMouseButtonEvents(void)
 {
-    threadState.setOwnCode(true);
-    struct timespec time = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    threadState.setOwnCode(false);
+    struct timespec time;
+    {
+        ThreadOwnCode toc;
+        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    }
 
     static int xbuttons[] = {Button1Mask,
         Button2Mask, Button3Mask,

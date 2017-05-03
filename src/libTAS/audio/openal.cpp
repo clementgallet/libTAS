@@ -40,7 +40,7 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
         int id = audiocontext.createBuffer();
         if (id > 0)
             buffers[i] = (ALuint) id;
-        /* TODO: else generate an error */ 
+        /* TODO: else generate an error */
     }
 }
 
@@ -54,7 +54,7 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
             return;
         }
     }
-    for (int i=0; i<n; i++) {        
+    for (int i=0; i<n; i++) {
         audiocontext.deleteBuffer(buffers[i]);
     }
 }
@@ -74,8 +74,8 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
         return;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-    
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     /* Fill the buffer informations */
     ab->size = size;
     ab->frequency = freq;
@@ -170,7 +170,7 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     switch(param) {
         case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
@@ -208,7 +208,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
     if (value == nullptr) {
         return;
     }
-        
+
 	AudioBuffer* ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
@@ -245,11 +245,11 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    
+
     if (values == nullptr) {
         return;
     }
-        
+
     switch(pname) {
         case AL_FREQUENCY:
         case AL_BITS:
@@ -273,7 +273,7 @@ void alGenSources(ALsizei n, ALuint *sources)
 		if (id > 0) {
 			sources[i] = (ALuint) id;
         }
-		/* TODO: else generate an error */ 
+		/* TODO: else generate an error */
 	}
 }
 
@@ -300,7 +300,7 @@ ALboolean alIsSource(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
 	return audiocontext.isSource(source);
-} 
+}
 
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
@@ -385,7 +385,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     AudioBuffer* bindab;
     switch(param) {
@@ -467,7 +467,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
     if (value == nullptr) {
         return;
     }
-        
+
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr)
         return;
@@ -542,7 +542,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
     if (value == nullptr) {
         return;
     }
-        
+
     AudioSource* as = audiocontext.getSource(source);
     if (as == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
@@ -730,7 +730,7 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     if (as == nullptr)
         return;
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Check if the source has a static buffer attached */
     if (as->source == SOURCE_STATIC) {
@@ -770,8 +770,8 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     }
 
     debuglog(LCF_OPENAL, "Unqueueing ", n, " buffers out of ", as->nbQueue());
-    
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Save the id of the unqueued buffers */
     for (int i=0; i<n; i++) {
@@ -869,5 +869,3 @@ void alGetListeneriv(ALenum param, ALint *values)
     DEBUGLOGCALL(LCF_OPENAL);
     debuglog(LCF_OPENAL, "Operation not supported");
 }
-
-

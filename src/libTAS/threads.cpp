@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <atomic>
+#include <memory>
 #include "ThreadManager.h"
 
 /* Original function pointers */
@@ -67,9 +68,9 @@ void setMainThread(void)
         mainThread = orig::pthread_self();
 }
 
-/* 
+/*
  * We will often want to know if we are running on the main thread
- * Because only it can advance the deterministic timer, and other stuff 
+ * Because only it can advance the deterministic timer, and other stuff
  */
 int isMainThread(void)
 {
@@ -108,7 +109,7 @@ typedef struct arg_t {
     pthread_t *tid;
     void *(*start)(void *);
     void *arg;
-    std::atomic<int> *go;
+    std::shared_ptr<std::atomic<bool>> go;
 } arg_t;
 
 void *wrapper(void *arg);
@@ -125,8 +126,12 @@ void *wrapper(void *arg)
     sleep(1);
 #endif
     // Wait for main thread to be ready to sleep
-    while (!*go)
+
+    debuglog(LCF_THREAD, "Try locking");
+    while(!*go)
         ;
+    debuglog(LCF_THREAD, "Did locking");
+
     void *ret = start(routine_arg);
     debuglog(LCF_THREAD, "WE ARE DONE ", start);
     return ret;
@@ -144,12 +149,12 @@ void *wrapper(void *arg)
     // 'go' is a small barrier to synchronize the main thread with the thread created
     // Avoids issues when the created thread is so fast that it's detached
     // before the main thread goes to sleep (ie: starvation => program blocked)
-    std::atomic<int> go(0);
+    std::shared_ptr<std::atomic<bool>> go(new std::atomic<bool>(false));
     arg_t args;
     args.start = start_routine;
     args.arg = arg;
     args.tid = thread;
-    args.go = &go;
+    args.go = go;
     int ret = orig::pthread_create(thread, attr, wrapper, &args);
     tm.start(*thread, __builtin_return_address(0), (void*)start_routine);
     orig::pthread_getname_np(*thread, name, 16);
@@ -161,7 +166,9 @@ void *wrapper(void *arg)
     debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
 
     // Say to thread created that it can go!
-    go = 1;
+    debuglog(LCF_THREAD, "  Reeasing ock ");
+    *go = true;
+
     //Check and suspend main thread if needed
     tm.suspend(*thread);
     return ret;
@@ -226,4 +233,3 @@ void link_sdlthreads(void)
     LINK_NAMESPACE_SDLX(SDL_CreateThread);
     LINK_NAMESPACE_SDLX(SDL_WaitThread);
 }
-

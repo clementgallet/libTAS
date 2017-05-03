@@ -207,9 +207,9 @@ std::string origIcon;
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
-    threadState.setNative(true);
+    // threadState.setNative(true);
     gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
-    threadState.setNative(false);
+    // threadState.setNative(false);
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 

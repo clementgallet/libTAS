@@ -138,10 +138,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         hud.renderInputs(ai);
 #endif
 
-    threadState.setNative(true);
-    if (!skipDraw())
-        draw();
-    threadState.setNative(false);
+    {
+        ThreadNative tn;
+        if (!skipDraw())
+            draw();
+    }
 
     sendMessage(MSGB_START_FRAMEBOUNDARY);
     sendData(&frame_counter, sizeof(unsigned long));

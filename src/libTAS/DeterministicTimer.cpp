@@ -37,7 +37,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     /* If we are in the native thread state, just return the real time */
-    if (threadState.isNative()) {
+    if (ThreadState::isNative()) {
         struct timespec realtime;
         orig::clock_gettime(CLOCK_REALTIME, &realtime);
         return realtime;
@@ -50,7 +50,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     bool isFrameThread = isMainThread();
 
     /* If it is our own code calling this, we don't need to track the call */
-    if (threadState.isOwnCode())
+    if (ThreadState::isOwnCode())
         type = TIMETYPE_UNTRACKED;
 
     /* Only the main thread can modify the timer */
@@ -124,7 +124,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
-    if (threadState.isOwnCode())
+    if (ThreadState::isOwnCode())
         return;
 
     /* Deferring as much of the delay as possible

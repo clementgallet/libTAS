@@ -239,12 +239,12 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
     }
 
     /* Print informations on input and output streams */
-    threadState.setOwnCode(true); // We protect the following code because it performs IO that we hook
+    ThreadState::setOwnCode(true); // We protect the following code because it performs IO that we hook
     av_dump_format(formatContext, 0, dumpfile, 1);
 
     /* Set up output file */
     if (avio_open(&formatContext->pb, dumpfile, AVIO_FLAG_WRITE) < 0) {
-        threadState.setOwnCode(false);
+        ThreadState::setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
         error = 1;
         return;
@@ -252,13 +252,13 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned l
 
     /* Write header */
     if (avformat_write_header(formatContext, NULL) < 0) {
-        threadState.setOwnCode(false);
+        ThreadState::setOwnCode(false);
         debuglog(LCF_DUMP | LCF_ERROR, "Could not write header");
         error = 1;
         return;
     }
 
-    threadState.setOwnCode(false);
+    ThreadState::setOwnCode(false);
 }
 
 /*
