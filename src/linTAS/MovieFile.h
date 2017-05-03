@@ -30,26 +30,50 @@
 
 class MovieFile {
 public:
-
+    /* Prepare a movie file from the context */
     void open(Context* c);
-    void importMovie();
-    void importMovie(std::string& moviefile);
-    void exportMovie();
-    void writeHeader();
-    void readHeader();
+
+    /* Extract a moviefile and import the inputs into a list */
+    void loadMovie();
+    void loadMovie(std::string& moviefile);
+
+    /* Write the inputs into a file and compress to the whole moviefile */
+    void saveMovie();
+
+    /* Get the number of frames from a moviefile (needs to load it) */
     int nbFrames(std::string& moviefile);
-    int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
-    int readFrame(std::string& line, AllInputs& inputs);
-    void setFrame(const AllInputs& inputs);
-    int getFrame(AllInputs& inputs);
-    void truncate();
+
+    /* Set inputs in the current frame */
+    int setInputs(const AllInputs& inputs);
+
+    /* Load inputs from the current frame */
+    int getInputs(AllInputs& inputs);
+
+    /* Save and close the moviefile */
     void close();
 
 private:
+    // void writeHeader();
+    // void readHeader();
+
+    /* Write a single frame of inputs into the input stream */
+    int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
+
+    /* Read a single frame of inputs from the line of inputs */
+    int readFrame(std::string& line, AllInputs& inputs);
+
     Context* context;
+    /* Directory containing the different movie files */
     std::string movie_dir;
+
+    /* The list of inputs */
     std::list<AllInputs> input_list;
+
+    /* An iterator to the current frame in the input list */
     std::list<AllInputs>::iterator input_it;
+
+    /* The index of the iterator */
+    unsigned int it_index;
 };
 
 #endif

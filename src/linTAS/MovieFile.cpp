@@ -40,21 +40,25 @@ void MovieFile::open(Context* c)
 
     switch(context->recording) {
         case Context::RECORDING_WRITE:
-            writeHeader();
+            //writeHeader();
             input_list.clear();
             break;
         case Context::RECORDING_READ_WRITE:
         case Context::RECORDING_READ_ONLY:
-            importMovie();
-            readHeader();
+            loadMovie();
+            //readHeader();
             break;
     }
+
+    input_it = input_list.begin();
+    it_index = 0;
+
 }
 
 tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
 
-void MovieFile::importMovie(std::string& moviefile)
+void MovieFile::loadMovie(std::string& moviefile)
 {
     TAR *tar;
     tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
@@ -77,16 +81,15 @@ void MovieFile::importMovie(std::string& moviefile)
         }
     }
 
-    input_it = input_list.begin();
     input_stream.close();
 }
 
-void MovieFile::importMovie()
+void MovieFile::loadMovie()
 {
-    importMovie(context->config.moviefile);
+    loadMovie(context->config.moviefile);
 }
 
-void MovieFile::exportMovie()
+void MovieFile::saveMovie()
 {
     std::string input_file = movie_dir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
@@ -110,13 +113,13 @@ void MovieFile::exportMovie()
 }
 
 
-void MovieFile::writeHeader()
-{
-}
-
-void MovieFile::readHeader()
-{
-}
+// void MovieFile::writeHeader()
+// {
+// }
+//
+// void MovieFile::readHeader()
+// {
+// }
 
 int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
 {
@@ -196,7 +199,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
         input_string.unget();
     }
 
-    /* Write mouse inputs in text */
+    /* Read mouse inputs */
     if (context->config.sc.mouse_support) {
         input_string >> d;
         input_string >> std::hex;
@@ -213,6 +216,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
         if (d != '.') inputs.pointer_mask |= Button5Mask;
     }
 
+    /* Read controller inputs */
     for (int joy=0; joy<context->config.sc.numControllers; joy++) {
         input_string >> d;
         input_string >> std::hex;
@@ -244,30 +248,61 @@ int MovieFile::nbFrames(std::string& moviefile)
     if (create_dir(movie_dir))
         return 0;
 
-    importMovie(moviefile);
+    loadMovie(moviefile);
 
     return input_list.size();
 }
 
-void MovieFile::setFrame(const AllInputs& inputs)
+int MovieFile::setInputs(const AllInputs& inputs)
 {
-    input_list.push_back(inputs);
+    /* Check that we are writing to the next frame */
+    if (context->framecount == input_list.size()) {
+        input_list.push_back(inputs);
+        return 0;
+    }
+    else if (context->framecount < input_list.size()) {
+        /* Writing to a frame that is before the last one. We resize the input
+         * list accordingly and append the frame at the end.
+         */
+        std::cout << "Writing to a frame lower than the current list." << std::endl;
+        input_list.resize(context->framecount);
+        input_list.push_back(inputs);
+        return 0;
+    }
+    else {
+        std::cerr << "Writing to a frame higher than the current list!" << std::endl;
+        return 1;
+    }
 }
 
-int MovieFile::getFrame(AllInputs& inputs)
+int MovieFile::getInputs(AllInputs& inputs)
 {
-    if (input_it == input_list.end())
+    if (context->framecount > input_list.size()) {
+        std::cout << "Reading a frame after the last frame of the input list." << std::endl;
+        return 1;
+    }
+
+    if (context->framecount != it_index) {
+        /* We loaded another position in the movie, update the iterator */
+        std::cout << "Reading another frame of the input list." << std::endl;
+        input_it = input_list.begin();
+        std::advance(input_it, context->framecount);
+        it_index = context->framecount;
+    }
+
+    if (input_it == input_list.end()) {
+        /* We reached the end of the movie */
+        std::cout << "End of movie" << std::endl;
         return 0;
+    }
+
     inputs = *input_it;
     input_it++;
+    it_index++;
     return 1;
-}
-
-void MovieFile::truncate()
-{
 }
 
 void MovieFile::close()
 {
-    exportMovie();
+    saveMovie();
 }

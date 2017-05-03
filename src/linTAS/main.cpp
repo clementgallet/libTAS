@@ -470,16 +470,14 @@ void* launchGame(void* arg)
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context.recording) {
-                            case Context::RECORDING_WRITE:
-                                context.recording = Context::RECORDING_READ_WRITE;
-                                ui.update(true);
-                                break;
-                            case Context::RECORDING_READ_WRITE:
-                                context.recording = Context::RECORDING_WRITE;
-                                ui.update(true);
-                                movie.truncate();
-                                break;
+                        case Context::RECORDING_WRITE:
+                            context.recording = Context::RECORDING_READ_WRITE;
+                            break;
+                        case Context::RECORDING_READ_WRITE:
+                            context.recording = Context::RECORDING_WRITE;
+                            break;
                         }
+                        ui.update(true);
                     }
                 }
                 if (event.type == KeyRelease)
@@ -561,13 +559,13 @@ void* launchGame(void* arg)
                     break;
 
                 /* Save inputs to file */
-                movie.setFrame(ai);
+                movie.setInputs(ai);
                 break;
 
             case Context::RECORDING_READ_WRITE:
             case Context::RECORDING_READ_ONLY:
                 /* Read inputs from file */
-                if (!movie.getFrame(ai)) {
+                if (!movie.getInputs(ai)) {
                     /* Reading failed, returning to no recording mode */
                     std::cout << "Reading failed" << std::endl;
                     movie.close();
