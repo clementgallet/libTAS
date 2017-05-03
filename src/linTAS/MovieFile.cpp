@@ -38,17 +38,14 @@ void MovieFile::open(Context* c)
     if (create_dir(movie_dir))
         return;
 
-    std::string input_file = movie_dir + "/inputs";
-
     switch(context->recording) {
         case Context::RECORDING_WRITE:
-            input_stream.open(input_file, std::fstream::in | std::fstream::out | std::fstream::trunc);
             writeHeader();
+            input_list.clear();
             break;
         case Context::RECORDING_READ_WRITE:
         case Context::RECORDING_READ_ONLY:
             importMovie();
-            input_stream.open(input_file, std::fstream::in);
             readHeader();
             break;
     }
@@ -64,6 +61,24 @@ void MovieFile::importMovie(std::string& moviefile)
     char* md = const_cast<char*>(movie_dir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
+
+    std::string input_file = movie_dir + "/inputs";
+    std::ifstream input_stream(input_file);
+    std::string line;
+
+    input_list.clear();
+
+    int f = 0;
+    while (std::getline(input_stream, line)) {
+        if (!line.empty() && (line[0] == '|')) {
+            AllInputs ai;
+            readFrame(line, ai);
+            input_list.push_back(ai);
+        }
+    }
+
+    input_it = input_list.begin();
+    input_stream.close();
 }
 
 void MovieFile::importMovie()
@@ -73,13 +88,19 @@ void MovieFile::importMovie()
 
 void MovieFile::exportMovie()
 {
-    input_stream.flush();
+    std::string input_file = movie_dir + "/inputs";
+    std::ofstream input_stream(input_file, std::ofstream::trunc);
+
+    for (auto const& ai : input_list) {
+        writeFrame(input_stream, ai);
+    }
+    input_stream.close();
+
     TAR *tar;
     tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
     /* I would like to use tar_append_tree but it saves files with their path */
     //tar_append_tree(tar, md, save_dir);
-    std::string input_file = movie_dir + "/inputs";
     char* input_ptr = const_cast<char*>(input_file.c_str());
     char savename[7] = "inputs";
     tar_append_file(tar, input_ptr, savename);
@@ -97,7 +118,7 @@ void MovieFile::readHeader()
 {
 }
 
-int MovieFile::writeFrame(unsigned long frame, AllInputs inputs)
+int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
 {
     /* Write keyboard inputs */
     if (context->config.sc.keyboard_support) {
@@ -150,28 +171,12 @@ int MovieFile::writeFrame(unsigned long frame, AllInputs inputs)
     return 1;
 }
 
-int MovieFile::readFrame(unsigned long frame, AllInputs& inputs)
+int MovieFile::readFrame(std::string& line, AllInputs& inputs)
 {
     inputs.emptyInputs();
 
-    std::string line;
-    std::getline(input_stream, line);
-    if (!input_stream)
-        return 0;
     std::istringstream input_string(line);
     char d;
-    input_string.get(d);
-
-    /* Find the first line starting with '|' */
-    while (d != '|') {
-        std::getline(input_stream, line);
-        if (!input_stream)
-            return 0;
-        input_string.str(line);
-        input_string.get(d);
-    }
-
-    input_string.unget();
 
     /* Read keyboard inputs */
     if (context->config.sc.keyboard_support) {
@@ -241,18 +246,21 @@ int MovieFile::nbFrames(std::string& moviefile)
 
     importMovie(moviefile);
 
-    /* Read the input file and count the lines starting with '|' */
-    std::string input_file = movie_dir + "/inputs";
-    std::ifstream inputs(input_file);
-    std::size_t frame_count = 0;
-    std::string line;
-    char d;
-    while (std::getline(inputs, line))
-        if (!line.empty() && (line[0] == '|'))
-            ++frame_count;
+    return input_list.size();
+}
 
-    inputs.close();
-    return frame_count;
+void MovieFile::setFrame(const AllInputs& inputs)
+{
+    input_list.push_back(inputs);
+}
+
+int MovieFile::getFrame(AllInputs& inputs)
+{
+    if (input_it == input_list.end())
+        return 0;
+    inputs = *input_it;
+    input_it++;
+    return 1;
 }
 
 void MovieFile::truncate()
@@ -261,6 +269,5 @@ void MovieFile::truncate()
 
 void MovieFile::close()
 {
-    input_stream.close();
     exportMovie();
 }

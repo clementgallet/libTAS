@@ -561,18 +561,13 @@ void* launchGame(void* arg)
                     break;
 
                 /* Save inputs to file */
-                if (!movie.writeFrame(context.framecount, ai)) {
-                    /* Writing failed, returning to no recording mode */
-                    context.recording = Context::NO_RECORDING;
-                    movie.close();
-                    ui.update(true);
-                }
+                movie.setFrame(ai);
                 break;
 
             case Context::RECORDING_READ_WRITE:
             case Context::RECORDING_READ_ONLY:
                 /* Read inputs from file */
-                if (!movie.readFrame(context.framecount, ai)) {
+                if (!movie.getFrame(ai)) {
                     /* Reading failed, returning to no recording mode */
                     std::cout << "Reading failed" << std::endl;
                     movie.close();

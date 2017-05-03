@@ -26,9 +26,11 @@
 #include "Context.h"
 #include <fstream>
 #include <string>
+#include <list>
 
 class MovieFile {
 public:
+
     void open(Context* c);
     void importMovie();
     void importMovie(std::string& moviefile);
@@ -36,14 +38,18 @@ public:
     void writeHeader();
     void readHeader();
     int nbFrames(std::string& moviefile);
-    int writeFrame(unsigned long frame, AllInputs inputs);
-    int readFrame(unsigned long frame, AllInputs& inputs);
+    int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
+    int readFrame(std::string& line, AllInputs& inputs);
+    void setFrame(const AllInputs& inputs);
+    int getFrame(AllInputs& inputs);
     void truncate();
     void close();
+
 private:
     Context* context;
     std::string movie_dir;
-    std::fstream input_stream;
+    std::list<AllInputs> input_list;
+    std::list<AllInputs>::iterator input_it;
 };
 
 #endif
