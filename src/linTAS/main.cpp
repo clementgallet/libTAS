@@ -228,6 +228,7 @@ void* launchGame(void* arg)
     system(cmd.str().c_str());
 
     /* Get the shared libs of the game executable */
+    std::vector<std::string> linked_libs;
     std::ostringstream libcmd;
     libcmd << "ldd " << context.gamepath << "  | awk '/=>/{print $(NF-1)}'";
     FILE *libstr;
@@ -236,10 +237,11 @@ void* launchGame(void* arg)
     if (libstr != NULL) {
         char buf[1000];
         while (fgets(buf, sizeof buf, libstr) != 0) {
-            shared_libs.push_back(std::string(buf));
+            linked_libs.push_back(std::string(buf));
         }
         pclose(libstr);
     }
+    linked_libs.insert(linked_libs.end(), shared_libs.begin(), shared_libs.end());
 
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -292,7 +294,7 @@ void* launchGame(void* arg)
     /* Send shared config */
     message = MSGN_CONFIG;
     send(socket_fd, &message, sizeof(int), 0);
-    send(socket_fd, &context.config.sc, sizeof(struct SharedConfig), 0);
+    send(socket_fd, &context.config.sc, sizeof(SharedConfig), 0);
 
     /* Send dump file if dumping from the beginning */
     if (context.config.sc.av_dumping) {
@@ -304,7 +306,7 @@ void* launchGame(void* arg)
     }
 
     /* Send shared library names */
-    for (auto &name : shared_libs) {
+    for (auto &name : linked_libs) {
         message = MSGN_LIB_FILE;
         send(socket_fd, &message, sizeof(int), 0);
         size_t name_size = name.size();
@@ -333,6 +335,9 @@ void* launchGame(void* arg)
     int ar_ticks = -1;
     int ar_delay = 50;
     int ar_freq = context.config.sc.fastforward ? 8 : 2;
+
+    /* Unvalidate the game window id */
+    context.game_window = 0;
 
     while (1)
     {

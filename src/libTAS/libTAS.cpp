@@ -58,8 +58,6 @@ namespace orig {
 
 void __attribute__((constructor)) init(void)
 {
-    //std::ofstream err("log.txt");
-    //std::cerr.rdbuf(err.rdbuf()); //redirect std::cerr to log.txt!
     bool didConnect = initSocket();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
@@ -88,7 +86,7 @@ void __attribute__((constructor)) init(void)
         switch (message) {
             case MSGN_CONFIG:
                 debuglog(LCF_SOCKET, "Receiving config");
-                receiveData(&shared_config, sizeof(struct SharedConfig));
+                receiveData(&shared_config, sizeof(SharedConfig));
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");

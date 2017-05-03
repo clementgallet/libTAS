@@ -27,16 +27,14 @@ extern "C" {
 
 class SharedConfig {
     public:
-        SharedConfig();
-
         /* Is the game running or on pause */
-        bool running;
+        bool running = false;
 
         /* By how much is the speed reduced */
-        int speed_divisor;
+        int speed_divisor = 1;
 
         /* Is fastforward enabled */
-        bool fastforward;
+        bool fastforward = false;
 
         /* Log status */
         enum LogStatus {
@@ -45,60 +43,59 @@ class SharedConfig {
             LOGGING_TO_FILE
         };
 
-        LogStatus logging_status;
+        LogStatus logging_status = LOGGING_TO_CONSOLE;
 
         /* Which flags trigger a debug message */
-        LogCategoryFlag includeFlags;
+        LogCategoryFlag includeFlags = LCF_ALL;
 
         /* Which flags prevent triggering a debug message */
-        LogCategoryFlag excludeFlags;
+        LogCategoryFlag excludeFlags = LCF_NONE;
 
         /* Are we dumping audio and video? */
-        bool av_dumping;
+        bool av_dumping = false;
 
         /* Framerate at which the game is running.
          * Set to 0 to use the nondeterministic timer
          * In that case, AV dumping is disabled.
          */
-        unsigned int framerate;
+        unsigned int framerate = 60;
 
         /* Are we recording and sending keyboard inputs to the game? */
-        bool keyboard_support;
+        bool keyboard_support = true;
 
         /* Are we recording and sending mouse inputs to the game? */
-        bool mouse_support;
+        bool mouse_support = true;
 
         /* Number of SDL controllers to (virtually) plug in */
-        int numControllers;
+        int numControllers = 0;
 
         /* Display frame count in the HUD */
-        bool hud_framecount;
+        bool hud_framecount = true;
 
         /* Display inputs in the HUD */
-        bool hud_inputs;
+        bool hud_inputs = true;
 
         /* Prevent the game to write into savefiles */
-        bool prevent_savefiles;
+        bool prevent_savefiles = true;
 
         /** Sound config **/
         /* Bit depth of the buffer (usually 8 or 16) */
-        int audio_bitdepth;
+        int audio_bitdepth = 16;
 
         /* Number of channels of the buffer */
-        int audio_channels;
+        int audio_channels = 2;
 
         /* Frequency of buffer in Hz */
-        int audio_frequency;
+        int audio_frequency = 44100;
 
         /* Mute audio */
-        bool audio_mute;
+        bool audio_mute = false;
 
         /* Encode config */
-        AVCodecID video_codec;
-        int video_bitrate;
-        AVCodecID audio_codec;
-        int audio_bitrate;
-
+        AVCodecID video_codec = AV_CODEC_ID_H264;
+        int video_bitrate = 4000000;
+        AVCodecID audio_codec = AV_CODEC_ID_VORBIS;
+        int audio_bitrate = 128000;
 };
 
 extern SharedConfig shared_config;

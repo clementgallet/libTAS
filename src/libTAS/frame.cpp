@@ -188,7 +188,7 @@ void proceed_commands(void)
                 break;
 
             case MSGN_CONFIG:
-                receiveData(&shared_config, sizeof(struct SharedConfig));
+                receiveData(&shared_config, sizeof(SharedConfig));
                 break;
 
             case MSGN_DUMP_FILE:
