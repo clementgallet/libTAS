@@ -22,6 +22,7 @@
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
+#include "../sdlwindows.h" // gameWindow
 
 Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
 Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
@@ -49,3 +50,8 @@ Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     return SDL1_keyboard;
 }
 
+/* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
+{
+    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
+    return gameWindow;
+}
