@@ -101,6 +101,7 @@ class MainWindow {
 
     private:
         MainWindow() {}
+        ~MainWindow();
 };
 
 static Fl_Callback0 launch_cb;

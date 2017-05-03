@@ -23,6 +23,15 @@
 #include <iostream>
 #include <FL/x.H>
 
+MainWindow::~MainWindow()
+{
+    /* Stop and detach the game thread */
+    if (context)
+        context->status = Context::QUITTING;
+    if (game_thread.joinable())
+        game_thread.detach();
+}
+
 void MainWindow::build(Context* c)
 {
     context = c;

@@ -22,7 +22,6 @@
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
-#include "../sdlwindows.h" // gameWindow
 
 Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
 Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
