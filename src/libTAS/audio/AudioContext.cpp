@@ -66,7 +66,7 @@ int AudioContext::createBuffer(void)
     if ((! buffers.empty()) && buffers.front()->id >= MAXBUFFERS)
         return -1;
 
-    AudioBuffer* newab = new AudioBuffer;
+    auto newab = std::make_shared<AudioBuffer>();
 
     if (buffers.empty()) {
         newab->id = 1;
@@ -86,13 +86,9 @@ void AudioContext::deleteBuffer(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    buffers.remove_if([id](AudioBuffer* const& buffer)
+    buffers.remove_if([id](std::shared_ptr<AudioBuffer> const& buffer)
         {
-            if (buffer->id == id) {
-                delete buffer;
-                return true;
-            }
-            return false;
+            return (buffer->id == id);
         });
 }
 
@@ -100,7 +96,7 @@ bool AudioContext::isBuffer(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    for (auto& buffer : buffers) {
+    for (auto const& buffer : buffers) {
         if (buffer->id == id)
             return true;
     }
@@ -108,7 +104,7 @@ bool AudioContext::isBuffer(int id)
     return false;
 }
 
-AudioBuffer* AudioContext::getBuffer(int id)
+std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -127,7 +123,7 @@ int AudioContext::createSource(void)
     if ((! sources.empty()) && sources.front()->id >= MAXSOURCES)
         return -1;
 
-    AudioSource* newas = new AudioSource;
+    auto newas = std::make_shared<AudioSource>();
 
     if (sources.empty()) {
         newas->id = 1;
@@ -147,13 +143,9 @@ void AudioContext::deleteSource(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    sources.remove_if([id](AudioSource* const& source)
+    sources.remove_if([id](std::shared_ptr<AudioSource> const& source)
         {
-            if (source->id == id) {
-                delete source;
-                return true;
-            }
-            return false;
+            return (source->id == id);
         });
 }
 
@@ -169,7 +161,7 @@ bool AudioContext::isSource(int id)
     return false;
 }
 
-AudioSource* AudioContext::getSource(int id)
+std::shared_ptr<AudioSource> AudioContext::getSource(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 

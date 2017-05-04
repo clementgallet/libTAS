@@ -68,7 +68,7 @@ ALboolean alIsBuffer(ALuint buffer)
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
 {
     debuglog(LCF_OPENAL, __func__, " call - copy buffer data of format ", format, ", size ", size, " and frequency ", freq, " into buffer ", buffer);
-	AudioBuffer* ab = audiocontext.getBuffer(buffer);
+	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
@@ -164,7 +164,7 @@ void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
 void alBufferi(ALuint buffer, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioBuffer* ab = audiocontext.getBuffer(buffer);
+    auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
@@ -209,7 +209,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
         return;
     }
 
-	AudioBuffer* ab = audiocontext.getBuffer(buffer);
+	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
@@ -289,7 +289,7 @@ void alDeleteSources(ALsizei n, ALuint *sources)
     }
 	for (int i=0; i<n; i++) {
         /* If the source is deleted when playing, the source must be stopped first */
-        AudioSource* as = audiocontext.getSource(sources[i]);
+        auto as = audiocontext.getSource(sources[i]);
         if (as->state == SOURCE_PLAYING)
             as->state = SOURCE_STOPPED;
 		audiocontext.deleteSource(sources[i]);
@@ -305,13 +305,13 @@ ALboolean alIsSource(ALuint source)
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr) {
+    auto as = audiocontext.getSource(source);
+    if (!as) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
 
-    AudioBuffer* ab;
+    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_GAIN:
             as->volume = value;
@@ -379,15 +379,15 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr) {
+    auto as = audiocontext.getSource(source);
+    if (!as) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
 
     // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
-    AudioBuffer* bindab;
+    std::shared_ptr<AudioBuffer> bindab;
     switch(param) {
         case AL_LOOPING:
             debuglog(LCF_OPENAL, "  Set looping of ", value);
@@ -416,7 +416,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             }
             else {
                 bindab = audiocontext.getBuffer(value);
-                if (bindab == nullptr) {
+                if (!bindab) {
                     ALSETERROR(AL_INVALID_VALUE);
                     return;
                 }
@@ -468,11 +468,11 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         return;
     }
 
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
-    AudioBuffer* ab;
+    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_GAIN:
             *value = as->volume;
@@ -543,8 +543,8 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         return;
     }
 
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr) {
+    auto as = audiocontext.getSource(source);
+    if (!as) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
@@ -640,8 +640,8 @@ void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 void alSourcePlay(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     if (as->state == SOURCE_PLAYING) {
@@ -661,8 +661,8 @@ void alSourcePlayv(ALsizei n, ALuint *sources)
 void alSourcePause(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     if (as->state != SOURCE_PLAYING) {
@@ -682,8 +682,8 @@ void alSourcePausev(ALsizei n, ALuint *sources)
 void alSourceStop(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     if ((as->state == SOURCE_INITIAL) || (as->state == SOURCE_STOPPED)) {
@@ -704,8 +704,8 @@ void alSourceStopv(ALsizei n, ALuint *sources)
 void alSourceRewind(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     if (as->state == SOURCE_INITIAL) {
@@ -726,8 +726,8 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     debuglog(LCF_OPENAL, "Pushing ", n, " buffers in the queue of source ", source);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     // std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -742,8 +742,8 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     /* TODO: Check that all buffers have the same format */
     for (int i=0; i<n; i++) {
-        AudioBuffer* queue_ab = audiocontext.getBuffer(buffers[i]);
-        if (queue_ab == nullptr)
+        auto queue_ab = audiocontext.getBuffer(buffers[i]);
+        if (!queue_ab)
             return;
 
         as->buffer_queue.push_back(queue_ab);
@@ -754,8 +754,8 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    AudioSource* as = audiocontext.getSource(source);
-    if (as == nullptr)
+    auto as = audiocontext.getSource(source);
+    if (!as)
         return;
 
     /* Check if we can unqueue that number of buffers */

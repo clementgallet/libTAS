@@ -21,6 +21,7 @@
 #define LIBTAS_AUDIOSOURCE_H_INCL
 
 #include <vector>
+#include <memory>
 #include "AudioBuffer.h"
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
@@ -96,7 +97,7 @@ class AudioSource
         SourceState state;
 
         /* A queue of buffers to play */
-        std::vector<AudioBuffer*> buffer_queue;
+        std::vector<std::shared_ptr<AudioBuffer>> buffer_queue;
 
         /* Indicate the current position in the buffer queue */
         int queue_index;
@@ -112,7 +113,7 @@ class AudioSource
         /* In case of callback type, callback function.
          * We send as an argument a pointer to the buffer to refill.
          */
-        void (*callback)(AudioBuffer*);
+        void (*callback)(AudioBuffer&);
 
         /* Helper function to convert ticks into a number of samples
          * in the audio buffer
@@ -156,4 +157,3 @@ class AudioSource
 };
 
 #endif
-

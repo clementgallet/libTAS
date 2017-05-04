@@ -80,15 +80,15 @@ SDL_AudioCallback audioCallback;
 void* callbackArg;
 Uint16 bufferSamplesSize;
 
-AudioSource* sourceSDL;
+std::shared_ptr<AudioSource> sourceSDL;
 
 /* Function that is called by an AudioSource when the played sound buffer
  * is empty
  */
-void fillBufferCallback(AudioBuffer* ab);
-void fillBufferCallback(AudioBuffer* ab)
+void fillBufferCallback(AudioBuffer& ab);
+void fillBufferCallback(AudioBuffer& ab)
 {
-    audioCallback(callbackArg, &ab->samples[0], ab->size);
+    audioCallback(callbackArg, ab.samples.data(), ab.size);
 }
 
 /* Override */ int SDL_OpenAudio(SDL_AudioSpec * desired, SDL_AudioSpec * obtained)
@@ -105,7 +105,7 @@ void fillBufferCallback(AudioBuffer* ab)
          */
 
         int bufferId = audiocontext.createBuffer();
-        AudioBuffer *buffer = audiocontext.getBuffer(bufferId);
+        auto buffer = audiocontext.getBuffer(bufferId);
 
         buffer->frequency = desired->freq;
 
@@ -247,7 +247,7 @@ const char* dummySDLDevice = "libTAS device";
     // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source*/
-    AudioBuffer *ab;
+    std::shared_ptr<AudioBuffer> ab;
     if (sourceSDL->nbQueueProcessed() > 0) {
         /* Removing first buffer */
         ab = sourceSDL->buffer_queue[0];
@@ -265,7 +265,7 @@ const char* dummySDLDevice = "libTAS device";
             return -1;
         }
 
-        AudioBuffer *ref = sourceSDL->buffer_queue[0];
+        auto ref = sourceSDL->buffer_queue[0];
         ab->format = ref->format;
         ab->bitDepth = ref->bitDepth;
         ab->nbChannels = ref->nbChannels;

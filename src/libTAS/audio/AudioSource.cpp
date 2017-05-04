@@ -103,13 +103,12 @@ int AudioSource::getPosition()
 
 void AudioSource::setPosition(int pos)
 {
-
     if (looping) {
         pos %= queueSize();
     }
 
     for (int i=0; i<buffer_queue.size(); i++) {
-        AudioBuffer* ab = buffer_queue[i];
+        std::shared_ptr<AudioBuffer> ab = buffer_queue[i];
         if (pos < ab->sampleSize) {
             /* We set the position in this buffer */
             position = pos;
@@ -133,7 +132,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing source ", id);
 
-    AudioBuffer* curBuf = buffer_queue[queue_index];
+    std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     if (!shared_config.audio_mute || shared_config.av_dumping) {
@@ -257,7 +256,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int64_t extraTicks = static_cast<int64_t>(1000000000) * (-remainingSamples);
                 extraTicks /= curBuf->frequency;
                 detTimer.fakeAdvanceTimer({extraTicks / 1000000000, extraTicks % 1000000000});
-                callback(curBuf);
+                callback(*curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
@@ -286,7 +285,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             /* Our for loop conditions are different if we are looping or not */
             if (looping) {
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
-                    AudioBuffer* loopbuf = buffer_queue[i];
+                    std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
@@ -303,7 +302,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
             else {
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
-                    AudioBuffer* loopbuf = buffer_queue[i];
+                    std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)

@@ -21,6 +21,7 @@
 #define LIBTAS_AUDIOCONTEXT_H_INCL
 
 #include <vector>
+#include <memory>
 #include <forward_list>
 #include <mutex>
 #include "AudioBuffer.h"
@@ -77,7 +78,7 @@ class AudioContext
         bool isBuffer(int id);
 
         /* Return the buffer of requested id, or nullptr if not exists */
-        AudioBuffer* getBuffer(int id);
+        std::shared_ptr<AudioBuffer> getBuffer(int id);
 
         /* Create a new source object and return an id of the source or -1 if it failed */
         int createSource(void);
@@ -89,7 +90,7 @@ class AudioContext
         bool isSource(int id);
 
         /* Return the source of requested id, or nullptr if not exists */
-        AudioSource* getSource(int id);
+        std::shared_ptr<AudioSource> getSource(int id);
 
         /* Mix all source that are playing */
         void mixAllSources(struct timespec ticks);
@@ -98,8 +99,8 @@ class AudioContext
         std::mutex mutex;
 
     private:
-        std::forward_list<AudioBuffer*> buffers;
-        std::forward_list<AudioSource*> sources;
+        std::forward_list<std::shared_ptr<AudioBuffer>> buffers;
+        std::forward_list<std::shared_ptr<AudioSource>> sources;
 };
 
 extern AudioContext audiocontext;
