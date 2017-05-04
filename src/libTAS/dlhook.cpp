@@ -44,9 +44,9 @@ std::vector<std::string>* libraries;
 
 std::string find_lib(const char* library)
 {
-    for (auto itr = libraries->begin(); itr != libraries->end(); ++itr)
-        if (itr->find(library) != std::string::npos)
-            return (*itr);
+    for (auto const& itr : *libraries)
+        if (itr.find(library) != std::string::npos)
+            return itr;
 
     std::string emptystring;
     return emptystring;

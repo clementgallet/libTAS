@@ -29,6 +29,7 @@
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
 #include "ThreadState.h"
+#include "time.h"
 
 /*
  * Store the game window pointer

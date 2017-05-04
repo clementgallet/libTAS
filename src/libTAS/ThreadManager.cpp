@@ -22,12 +22,10 @@
 #include <utility>
 #include <csignal>
 #include "ThreadManager.h"
-
-using namespace std;
-
+#include "time.h" // orig::clock_gettime
 
 ThreadManager ThreadManager::instance_ = ThreadManager();
-atomic<int> ThreadManager::spin(0);
+std::atomic<int> ThreadManager::spin(0);
 
 ThreadManager::ThreadManager()
 {
@@ -37,7 +35,7 @@ ThreadManager::ThreadManager()
     //refTable_.insert(282080);
     //refTable_.insert(140008597117578);
     //FIXME some dirty hardcoded values for FEZ
-    refTable_.insert(-557);
+    // refTable_.insert(-557);
 
     // Registering a sighandler enable us to suspend the main thread from any thread !
     struct sigaction sigusr1;
@@ -88,15 +86,15 @@ void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
         return;
     }
     ptrdiff_t diff = (char *)start_routine - (char *)from;
-    set<pthread_t> &all = threadMap_[diff];
+    std::set<pthread_t> &all = threadMap_[diff];
     all.insert(tid);
     // Register the current thread id -> routine association
     // The same tid can be reused with a different routine, but different routines
     // cannot be running at the same time with the same tid.
     currentAssociation_[tid] = diff;
     debuglog(LCF_THREAD, "Register starting ", stringify(tid)," with entrydiff ",  diff, ".");
-    timespec t;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    TimeHolder t;
+    orig::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
     //There may be multiple call to start...
     startTime_[tid].push_back(t);
 }
@@ -104,7 +102,7 @@ void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
 void ThreadManager::end(pthread_t tid)
 {
     debuglog(LCF_THREAD, "Register ending ", stringify(tid), ".");
-    timespec t;
+    TimeHolder t;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
     //There may be multiple call to end...
     endTime_[tid].push_back(t);
@@ -118,21 +116,6 @@ void ThreadManager::resume()
     }
 }
 
-timespec timediff(timespec &start, timespec &end);
-//FIXME pretty this
-timespec timediff(timespec &start, timespec &end)
-{
-    timespec retVal;
-    if ((end.tv_nsec - start.tv_nsec) < 0) {
-        retVal.tv_sec = end.tv_sec - start.tv_sec - 1;
-        retVal.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
-    } else {
-        retVal.tv_sec = end.tv_sec - start.tv_sec;
-        retVal.tv_nsec = end.tv_nsec - start.tv_nsec;
-    }
-    return retVal;
-}
-
 bool ThreadManager::waitFor(pthread_t tid)
 {
     // Lookup the entry point corresponding to this tid, and check if it's
@@ -141,25 +124,25 @@ bool ThreadManager::waitFor(pthread_t tid)
     return init_ && refTable_.count(diff);
 }
 
-string ThreadManager::summary()
+std::string ThreadManager::summary()
 {
-    ostringstream oss;
+    std::ostringstream oss;
     for (auto elem : threadMap_) {
         oss << "\nRecord for entry point : " << elem.first;
-        set<pthread_t> &allThread = elem.second;
+        std::set<pthread_t> &allThread = elem.second;
         for (pthread_t t : allThread) {
             oss << "\n  - " << stringify(t);
             //FIXME using find would permit to add the const qualifier to this member
-            vector<timespec> &starts = startTime_[t];
+            std::vector<TimeHolder> &starts = startTime_[t];
             if (starts.empty())
                 continue;
-            vector<timespec> &ends = endTime_[t];
+            std::vector<TimeHolder> &ends = endTime_[t];
             for (unsigned int i = 0; i < starts.size(); i++) {
                 oss << "\n    1: Started";
-                timespec start = starts[i];
+                TimeHolder start = starts[i];
                 if (i < ends.size()) {
-                    timespec end = ends[i];
-                    timespec diff = timediff(start, end);
+                    TimeHolder end = ends[i];
+                    TimeHolder diff = end - start;
                     oss << " and lasted " << diff.tv_sec << " seconds and " << diff.tv_nsec << " nsec.";
                 }
             }

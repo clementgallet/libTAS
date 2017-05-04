@@ -27,7 +27,7 @@
 #include "../shared/SharedConfig.h"
 #include "ThreadState.h"
 
-AVEncoder::AVEncoder(void* window, bool video_opengl, char* dumpfile, unsigned long sf) {
+AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsigned long sf) {
     error = 0;
 
     if (shared_config.framerate <= 0) {

@@ -80,7 +80,7 @@ extern struct dlfcn_hook {
 extern std::vector<std::string> *libraries;
 
 /* Add a library in the above set */
-void add_lib(std::string library);
+// void add_lib(std::string library);
 
 /* Locate a library path in the above set from a substring,
  * and returns the first match.

@@ -79,7 +79,6 @@ bool initSocket(void)
 void closeSocket(void)
 {
     close(socket_fd);
-
 }
 
 void sendData(void* elem, size_t size)
@@ -96,4 +95,3 @@ void receiveData(void* elem, size_t size)
 {
     recv(socket_fd, elem, size, 0);
 }
-

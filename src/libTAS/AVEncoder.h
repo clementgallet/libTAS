@@ -48,7 +48,7 @@ class AVEncoder {
          * @param start_frame   Frame when init is done. Does matter if dumping is not
          *                      done from the beginning.
          */
-        AVEncoder(void* window, bool video_opengl, char* filename, unsigned long start_frame);
+        AVEncoder(void* window, bool video_opengl, const char* filename, unsigned long start_frame);
 
         /* Encode a video and audio frame.
          * @param fconter       Frame counter

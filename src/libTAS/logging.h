@@ -21,12 +21,11 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
+#include "../shared/SharedConfig.h"
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "hook.h" // For pthread_self_real
-#include "time.h" // For frame_counter
 #include "ThreadState.h"
 #include <cstdio>
 
@@ -61,7 +60,7 @@ std::string stringify(unsigned long int id);
 /* Main function to print the debug message str (or not), and additional
  * information, based on the LogCategoryFlag value
  */
-void debuglogverbose(LogCategoryFlag lcf, std::string str, std::string& outstr);
+void debuglogverbose(LogCategoryFlag lcf, const std::string& str, std::string& outstr);
 
 /* Helper functions to concatenate different arguments arbitrary types into
  * a string stream. Because it uses variadic templates, its definition must
@@ -102,6 +101,9 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
     /* Not printing anything if thread state is set to NOLOG */
     if (ThreadState::isNoLog())
+        return;
+
+    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags) )
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog

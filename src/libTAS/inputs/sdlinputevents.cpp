@@ -21,6 +21,7 @@
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
+#include "../hook.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <X11/keysym.h>

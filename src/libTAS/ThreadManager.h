@@ -22,6 +22,7 @@
 #ifndef LIBTAS_THREAD_MANAGER_H
 #define LIBTAS_THREAD_MANAGER_H
 #include "logging.h"
+#include "TimeHolder.h"
 #include <set>
 #include <map>
 #include <vector>
@@ -34,8 +35,8 @@
 class ThreadManager {
     //Private constructor
     ThreadManager();
-    std::map<pthread_t, std::vector<timespec>> startTime_;
-    std::map<pthread_t, std::vector<timespec>> endTime_;
+    std::map<pthread_t, std::vector<TimeHolder>> startTime_;
+    std::map<pthread_t, std::vector<TimeHolder>> endTime_;
     //This will register every pthread created for each start_routine
     std::map<std::ptrdiff_t, std::set<pthread_t>> threadMap_;
     std::map<pthread_t, std::ptrdiff_t> currentAssociation_;

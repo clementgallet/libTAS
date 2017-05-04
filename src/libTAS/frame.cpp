@@ -33,6 +33,7 @@
 #include <mutex>
 #include <iomanip>
 #include "libTAS.h"
+#include "time.h"
 
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
