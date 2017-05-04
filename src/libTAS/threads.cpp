@@ -109,13 +109,13 @@ typedef struct arg_t {
     pthread_t *tid;
     void *(*start)(void *);
     void *arg;
-    std::shared_ptr<std::atomic<bool>> go;
+    std::atomic<bool>* go;
 } arg_t;
 
 void *wrapper(void *arg);
 void *wrapper(void *arg)
 {
-    arg_t *args = (arg_t *)arg;
+    arg_t *args = static_cast<arg_t*>(arg);
     auto start = args->start;
     auto routine_arg = args->arg;
     auto go = args->go;
@@ -125,12 +125,14 @@ void *wrapper(void *arg)
     debuglog(LCF_THREAD, "WAITING for 2 sec");
     sleep(1);
 #endif
-    // Wait for main thread to be ready to sleep
-
-    debuglog(LCF_THREAD, "Try locking");
+    /* Wait for main thread to be ready to sleep */
     while(!*go)
         ;
-    debuglog(LCF_THREAD, "Did locking");
+
+    /* Tell the main thread that it can continue. This is needed because ̀go`
+     * belongs to the main thread, thus we need to access it before it goes
+     * out of scope */
+    *go = false;
 
     void *ret = start(routine_arg);
     debuglog(LCF_THREAD, "WE ARE DONE ", start);
@@ -149,12 +151,12 @@ void *wrapper(void *arg)
     // 'go' is a small barrier to synchronize the main thread with the thread created
     // Avoids issues when the created thread is so fast that it's detached
     // before the main thread goes to sleep (ie: starvation => program blocked)
-    std::shared_ptr<std::atomic<bool>> go(new std::atomic<bool>(false));
+    std::atomic<bool> go(false);
     arg_t args;
     args.start = start_routine;
     args.arg = arg;
     args.tid = thread;
-    args.go = go;
+    args.go = &go;
     int ret = orig::pthread_create(thread, attr, wrapper, &args);
     tm.start(*thread, __builtin_return_address(0), (void*)start_routine);
     orig::pthread_getname_np(*thread, name, 16);
@@ -165,12 +167,19 @@ void *wrapper(void *arg)
         debuglog(LCF_THREAD, "Thread ", thstr, " was created.");
     debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
 
-    // Say to thread created that it can go!
-    debuglog(LCF_THREAD, "  Reeasing ock ");
-    *go = true;
+    /* Say to thread created that it can go! */
+    go = true;
+
+    /* We wait here that the thread goes past the spinlock, otherwise, we
+     * may end this function and the spinlock goes out of scope. Thus, the
+     * thread crashes by accessing the spinlock.
+     */
+    while(go)
+        ;
 
     //Check and suspend main thread if needed
     tm.suspend(*thread);
+
     return ret;
 }
 
