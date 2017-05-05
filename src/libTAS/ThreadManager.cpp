@@ -30,8 +30,8 @@ std::atomic<int> ThreadManager::spin(0);
 ThreadManager::ThreadManager()
 {
     //FIXME some dirty hardcoded values for SMB
-    //refTable_.insert(71616);
-    //refTable_.insert(222832);
+    // refTable_.insert(-222864);
+    // refTable_.insert(-1187600);
     //refTable_.insert(282080);
     //refTable_.insert(140008597117578);
     //FIXME some dirty hardcoded values for FEZ
@@ -67,13 +67,11 @@ void ThreadManager::suspend(pthread_t from_tid)
     //  - from_tid is main (which means it asks for it)
     //  - from_tid is one of the registered threads we want to wait for
     if (from_tid == main_ || waitFor(from_tid)) {
-        if (init_) {
-            debuglog(LCF_THREAD, "Suspending main (", stringify(main_), ") because of ", stringify(from_tid));
-            spin = 1;
-            // This doesn't actually kill the thread, it send SIGUSR1 to the main
-            // thread, which make it spins until resume
-            pthread_kill(main_, SIGUSR1);
-        }
+        debuglog(LCF_THREAD, "Suspending main (", stringify(main_), ") because of ", stringify(from_tid));
+        spin = 1;
+        // This doesn't actually kill the thread, it send SIGUSR1 to the main
+        // thread, which make it spins until resume
+        pthread_kill(main_, SIGUSR1);
     } else {
         debuglog(LCF_THREAD, "Not suspending because of ", stringify(from_tid));
     }
@@ -96,20 +94,23 @@ void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
     TimeHolder t;
     orig::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
     //There may be multiple call to start...
-    startTime_[tid].push_back(t);
+
+    startTime_[diff][tid].push_back(t);
 }
 
 void ThreadManager::end(pthread_t tid)
 {
     debuglog(LCF_THREAD, "Register ending ", stringify(tid), ".");
     TimeHolder t;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
-    //There may be multiple call to end...
-    endTime_[tid].push_back(t);
+    orig::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    ptrdiff_t diff = currentAssociation_[tid];
+    endTime_[diff][tid].push_back(t);
 }
 
-void ThreadManager::resume()
+void ThreadManager::resume(pthread_t tid)
 {
+    if (!waitFor(tid))
+        return;
     if (spin) {
         spin = 0;
         debuglog(LCF_THREAD, "Released main.");
@@ -133,10 +134,10 @@ std::string ThreadManager::summary()
         for (pthread_t t : allThread) {
             oss << "\n  - " << stringify(t);
             //FIXME using find would permit to add the const qualifier to this member
-            std::vector<TimeHolder> &starts = startTime_[t];
+            std::vector<TimeHolder> &starts = startTime_[elem.first][t];
             if (starts.empty())
                 continue;
-            std::vector<TimeHolder> &ends = endTime_[t];
+            std::vector<TimeHolder> &ends = endTime_[elem.first][t];
             for (unsigned int i = 0; i < starts.size(); i++) {
                 oss << "\n    1: Started";
                 TimeHolder start = starts[i];

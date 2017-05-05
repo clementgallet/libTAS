@@ -118,6 +118,7 @@ void *wrapper(void *arg)
     arg_t *args = static_cast<arg_t*>(arg);
     auto start = args->start;
     auto routine_arg = args->arg;
+    auto tid = *args->tid;
     auto go = args->go;
 
 #if 0
@@ -136,6 +137,9 @@ void *wrapper(void *arg)
 
     void *ret = start(routine_arg);
     debuglog(LCF_THREAD, "WE ARE DONE ", start);
+    ThreadManager &tm = ThreadManager::get();
+    tm.resume(tid);
+    tm.end(tid);
     return ret;
 }
 
@@ -187,6 +191,10 @@ void *wrapper(void *arg)
 {
     link_pthread();
     debuglog(LCF_THREAD, "Thread has exited.");
+    ThreadManager &tm = ThreadManager::get();
+    pthread_t tid = getThreadId();
+    tm.resume(tid);
+    tm.end(tid);
     orig::pthread_exit(retval);
 }
 
@@ -196,7 +204,7 @@ void *wrapper(void *arg)
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
     int retVal = orig::pthread_join(thread, thread_return);
-    ThreadManager::get().end(thread);
+    // ThreadManager::get().end(thread);
     return retVal;
 }
 
@@ -205,7 +213,7 @@ void *wrapper(void *arg)
     link_pthread();
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
-    ThreadManager::get().resume();
+    ThreadManager::get().resume(thread);
     return orig::pthread_detach(thread);
 }
 

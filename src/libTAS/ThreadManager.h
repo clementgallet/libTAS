@@ -35,8 +35,9 @@
 class ThreadManager {
     //Private constructor
     ThreadManager();
-    std::map<pthread_t, std::vector<TimeHolder>> startTime_;
-    std::map<pthread_t, std::vector<TimeHolder>> endTime_;
+    /* Register start and end time for each routine and each thread. */
+    std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> startTime_;
+    std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> endTime_;
     //This will register every pthread created for each start_routine
     std::map<std::ptrdiff_t, std::set<pthread_t>> threadMap_;
     std::map<pthread_t, std::ptrdiff_t> currentAssociation_;
@@ -64,7 +65,7 @@ public:
     // Attempt to suspend main thread
     void suspend(pthread_t from_tid);
     // Resumes main thread
-    void resume();
+    void resume(pthread_t tid);
 
     pthread_t main() { return main_; };
     // Display a summary of the current execution (which pthread_t for which entry point)
