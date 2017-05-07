@@ -160,6 +160,8 @@ KeySym get_next_keypressed(Display* display, bool with_modifiers)
         {
             KeyCode kc = event.xkey.keycode;
             KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+            if (!with_modifiers)
+                return ks;
             if (!is_modifier(ks)) {
                 std::array<char,32> keyboard_state;
                 XQueryKeymap(display, keyboard_state.data());
