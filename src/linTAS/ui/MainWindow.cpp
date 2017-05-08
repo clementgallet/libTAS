@@ -489,6 +489,7 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         /* Update the UI accordingly */
         mw.update_config();
         mw.encode_window->update_config();
+        mw.input_window->update();
     }
 }
 

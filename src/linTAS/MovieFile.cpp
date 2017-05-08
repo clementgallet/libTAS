@@ -25,6 +25,7 @@
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
+#include "ui/MainWindow.h"
 
 void MovieFile::open(Context* c)
 {
@@ -40,13 +41,11 @@ void MovieFile::open(Context* c)
 
     switch(context->recording) {
         case Context::RECORDING_WRITE:
-            //writeHeader();
             input_list.clear();
             break;
         case Context::RECORDING_READ_WRITE:
         case Context::RECORDING_READ_ONLY:
             loadMovie();
-            //readHeader();
             break;
     }
 
@@ -60,12 +59,30 @@ tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 
 void MovieFile::loadMovie(std::string& moviefile)
 {
+    /* Uncompress the movie file into out temp directory */
     TAR *tar;
     tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
 
+    /* Load the config file into the context struct */
+    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    int val = static_cast<int>(context->config.sc.keyboard_support);
+    config_prefs.get("keyboard_support", val, val);
+    context->config.sc.keyboard_support = static_cast<bool>(val);
+
+    val = static_cast<int>(context->config.sc.mouse_support);
+    config_prefs.get("mouse_support", val, val);
+    context->config.sc.mouse_support = static_cast<bool>(val);
+
+    config_prefs.get("numControllers", context->config.sc.numControllers, context->config.sc.numControllers);
+
+    /* Update the UI accordingly */
+    MainWindow& mw = MainWindow::getInstance();
+    mw.update_config();
+
+    /* Open the input file and parse each line to fill our input list */
     std::string input_file = movie_dir + "/inputs";
     std::ifstream input_stream(input_file);
     std::string line;
@@ -91,6 +108,7 @@ void MovieFile::loadMovie()
 
 void MovieFile::saveMovie()
 {
+    /* Format and write input frames into the input file */
     std::string input_file = movie_dir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
 
@@ -99,6 +117,13 @@ void MovieFile::saveMovie()
     }
     input_stream.close();
 
+    /* Save some parameters into the config file */
+    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
+    config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
+    config_prefs.set("numControllers", context->config.sc.numControllers);
+
+    /* Compress the files into the final movie file */
     TAR *tar;
     tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
     char* md = const_cast<char*>(movie_dir.c_str());
@@ -107,19 +132,14 @@ void MovieFile::saveMovie()
     char* input_ptr = const_cast<char*>(input_file.c_str());
     char savename[7] = "inputs";
     tar_append_file(tar, input_ptr, savename);
+    std::string config_file = movie_dir + "/config.prefs";
+    char* config_ptr = const_cast<char*>(config_file.c_str());
+    char savename2[13] = "config.prefs";
+    tar_append_file(tar, config_ptr, savename2);
 
     tar_append_eof(tar);
     tar_close(tar);
 }
-
-
-// void MovieFile::writeHeader()
-// {
-// }
-//
-// void MovieFile::readHeader()
-// {
-// }
 
 int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
 {

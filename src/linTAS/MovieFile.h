@@ -53,9 +53,6 @@ public:
     void close();
 
 private:
-    // void writeHeader();
-    // void readHeader();
-
     /* Write a single frame of inputs into the input stream */
     int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
 
