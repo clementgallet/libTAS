@@ -23,6 +23,7 @@
 #include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
 #include "sleep.h"
+#include "ThreadState.h"
 
 /* Pointers to original functions */
 namespace orig {
@@ -32,6 +33,11 @@ namespace orig {
 
 void pushNativeEvents(void)
 {
+    /* SDL_PumpEvents may call SDL_GetTicks() a lot, and we don't want to
+     * advance the timer because of that, so we make it untrack
+     */
+    ThreadOwnCode toc;
+
     orig::SDL_PumpEvents();
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
@@ -48,9 +54,10 @@ void pushNativeEvents(void)
 
     if (SDLver == 2) {
         SDL_Event ev;
-        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
+        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
+        }
     }
 }
 
@@ -318,6 +325,10 @@ bool filterSDL2Event(SDL_Event *event)
     switch(event->type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEWHEEL:
         case SDL_JOYAXISMOTION:
         case SDL_JOYBALLMOTION:
         case SDL_JOYHATMOTION:
