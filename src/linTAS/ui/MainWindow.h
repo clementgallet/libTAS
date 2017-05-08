@@ -129,4 +129,6 @@ static Fl_Callback input_focus_game_cb;
 static Fl_Callback input_focus_ui_cb;
 static Fl_Callback slowmo_cb;
 
+void error_dialog(void* error_msg);
+
 #endif

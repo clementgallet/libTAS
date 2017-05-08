@@ -31,7 +31,7 @@ void closeSocket(void);
 /* Send data over the socket. Data is stored at the beginning of
  * pointer elem, and has the specified size in bytes.
  */
-void sendData(void* elem, size_t size);
+void sendData(const void* elem, size_t size);
 
 /* Helper function to send a message over the socket */
 void sendMessage(int message);
@@ -40,4 +40,3 @@ void sendMessage(int message);
 void receiveData(void* elem, size_t size);
 
 #endif
-

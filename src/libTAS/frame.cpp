@@ -145,6 +145,16 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
             draw();
     }
 
+    /* Send error messages */
+    std::string error;
+    while (getErrorMsg(error)) {
+        sendMessage(MSGB_ERROR_MSG);
+        size_t error_size = error.length()+1;
+        sendData(&error_size, sizeof(size_t));
+        sendData(error.c_str(), error.length()+1);
+        // debuglog(LCF_ERROR | LCF_FRAME, "Sent error message: ", error);
+    }
+
     sendMessage(MSGB_START_FRAMEBOUNDARY);
     sendData(&frame_counter, sizeof(unsigned long));
 

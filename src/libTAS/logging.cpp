@@ -25,44 +25,52 @@
 #include <cstring>
 #include "hook.h" // For pthread_self_real
 #include "time.h" // For frame_counter
+#include <mutex>
+#include <list>
 
-void debuglogverbose(LogCategoryFlag lcf, const std::string& str, std::string &outstr)
+void debuglogverbose(LogCategoryFlag lcf, const std::string& str)
 {
-    std::ostringstream oss;
+    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) {
+        std::ostringstream oss;
 
-    /* We only print colors if displayed on a terminal */
-    bool isTerm = isatty(/*cerr*/ 2);
-    if (isTerm) {
-        if (lcf & LCF_ERROR)
-            /* Write the header text in red */
-            oss << ANSI_COLOR_RED;
-        else if (lcf & LCF_TODO)
-            /* Write the header text in light red */
-            oss << ANSI_COLOR_LIGHT_RED;
+        /* We only print colors if displayed on a terminal */
+        bool isTerm = isatty(/*cerr*/ 2);
+        if (isTerm) {
+            if (lcf & LCF_ERROR)
+                /* Write the header text in red */
+                oss << ANSI_COLOR_RED;
+            else if (lcf & LCF_TODO)
+                /* Write the header text in light red */
+                oss << ANSI_COLOR_LIGHT_RED;
+            else
+                /* Write the header text in white */
+                oss << ANSI_COLOR_LIGHT_GRAY;
+        }
+        oss << "[libTAS f:" << frame_counter << "] ";
+
+        std::string thstr = stringify(getThreadId());
+        if (isMainThread())
+            oss << "Thread " << thstr << " (main) ";
         else
-            /* Write the header text in white */
-            oss << ANSI_COLOR_LIGHT_GRAY;
+            oss << "Thread " << thstr << "        ";
+
+        if (isTerm) {
+            /* Reset color change */
+            oss << ANSI_COLOR_RESET;
+        }
+
+        if (lcf & LCF_ERROR)
+            oss << "ERROR: ";
+
+        /* Output arguments */
+        oss << str << std::endl;
+
+        std::cerr << oss.str();
     }
-    oss << "[libTAS f:" << frame_counter << "] ";
 
-    std::string thstr = stringify(getThreadId());
-    if (isMainThread())
-        oss << "Thread " << thstr << " (main) ";
-    else
-        oss << "Thread " << thstr << "        ";
-
-    if (isTerm) {
-        /* Reset color change */
-        oss << ANSI_COLOR_RESET;
+    if (lcf & LCF_ERROR) {
+        setErrorMsg(str);
     }
-
-    if (lcf & LCF_ERROR)
-        oss << "ERROR: ";
-
-    /* Output arguments */
-    oss << str << std::endl;
-
-    outstr = oss.str();
 }
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
@@ -71,7 +79,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     if (ThreadState::isNoLog())
         return;
 
-    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags) )
+    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags))
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
@@ -112,7 +120,6 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
         strncat(s, "ERROR: ", maxsize-size-1);
         size = strlen(s);
     }
-
     va_list args;
     va_start(args, fmt);
     vsnprintf(s + size, maxsize-size-1, fmt, args);
@@ -139,4 +146,23 @@ std::string stringify(unsigned long int id)
         id /= 64;
     }
     return oss.str();
+}
+
+static std::list<std::string> error_messages;
+static std::mutex mutex;
+
+void setErrorMsg(const std::string& error)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    error_messages.push_back(error);
+}
+
+bool getErrorMsg(std::string& error)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    if (error_messages.empty())
+        return false;
+    error = error_messages.front();
+    error_messages.pop_front();
+    return true;
 }

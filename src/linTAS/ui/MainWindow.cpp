@@ -767,3 +767,9 @@ void slowmo_cb(Fl_Widget*, void* v)
     mw.context->config.sc.speed_divisor = spdiv;
     mw.context->config.sc_modified = true;
 }
+
+void error_dialog(void* error_msg)
+{
+    fl_alert(static_cast<char*>(error_msg));
+    free(error_msg);
+}

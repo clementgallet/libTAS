@@ -94,6 +94,12 @@ enum {
      * Argument: int
      */
     MSGB_WINDOW_ID,
+
+    /*
+     * Send an error message to be prompted by the program
+     * Arguments: size_t (string length) then char[len]
+     */
+    MSGB_ERROR_MSG
 };
 
 #endif

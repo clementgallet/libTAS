@@ -345,37 +345,47 @@ void* launchGame(void* arg)
         /* Wait for frame boundary */
         recv(socket_fd, &message, sizeof(int), 0);
 
-        if (message == MSGB_QUIT) {
-            // ui_print("Game has quit. Exiting\n");
-            break;
-        }
+        while ((message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
+            void* error_msg;
+            switch (message) {
+            case MSGB_WINDOW_ID:
+                recv(socket_fd, &context.game_window, sizeof(Window), 0);
+                if (context.game_window == 0) {
+                    /* libTAS could not get the window id
+                     * Let's get the active window */
+                    int revert;
+                    XGetInputFocus(context.display, &context.game_window, &revert);
+                }
+                /* FIXME: Don't do this if the ui option is unchecked  */
+                XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+    #if 0
+                int iError = XGrabKeyboard(display, context.game_window, 0,
+                        GrabModeAsync, GrabModeAsync, CurrentTime);
+                if (iError != GrabSuccess && iError == AlreadyGrabbed) {
+                    XUngrabPointer(display, CurrentTime);
+                    XFlush(display);
+                    fprintf(stderr, "Keyboard is already grabbed\n");
+                }
+    #endif
+                break;
 
-        if (message == MSGB_WINDOW_ID) {
-            recv(socket_fd, &context.game_window, sizeof(Window), 0);
-            if (context.game_window == 0) {
-                /* libTAS could not get the window id
-                 * Let's get the active window */
-                int revert;
-                XGetInputFocus(context.display, &context.game_window, &revert);
+            case MSGB_ERROR_MSG:
+                size_t error_len;
+                recv(socket_fd, &error_len, sizeof(size_t), 0);
+                error_msg = malloc(error_len);
+                recv(socket_fd, error_msg, error_len, 0);
+                Fl::awake(error_dialog, error_msg);
+                /* The error_dialog function frees error_msg */
+                break;
+            default:
+                std::cout << "Got unknown message!!!" << std::endl;
+                return nullptr;
             }
-            /* FIXME: Don't do this if the ui option is unchecked  */
-            XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-#if 0
-            int iError = XGrabKeyboard(display, context.game_window, 0,
-                    GrabModeAsync, GrabModeAsync, CurrentTime);
-            if (iError != GrabSuccess && iError == AlreadyGrabbed) {
-                XUngrabPointer(display, CurrentTime);
-                XFlush(display);
-                fprintf(stderr, "Keyboard is already grabbed\n");
-            }
-#endif
             recv(socket_fd, &message, sizeof(int), 0);
         }
 
-        if (message != MSGB_START_FRAMEBOUNDARY) {
-            std::cout << "Got unknown message!!!" << std::endl;
-            // ui_print("Error in msg socket, waiting for frame boundary\n");
-            return nullptr;
+        if (message == MSGB_QUIT) {
+            break;
         }
 
         recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);

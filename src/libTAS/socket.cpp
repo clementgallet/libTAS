@@ -81,7 +81,7 @@ void closeSocket(void)
     close(socket_fd);
 }
 
-void sendData(void* elem, size_t size)
+void sendData(const void* elem, size_t size)
 {
     send(socket_fd, elem, size, 0);
 }

@@ -60,7 +60,7 @@ std::string stringify(unsigned long int id);
 /* Main function to print the debug message str (or not), and additional
  * information, based on the LogCategoryFlag value
  */
-void debuglogverbose(LogCategoryFlag lcf, const std::string& str, std::string& outstr);
+void debuglogverbose(LogCategoryFlag lcf, const std::string& str);
 
 /* Helper functions to concatenate different arguments arbitrary types into
  * a string stream. Because it uses variadic templates, its definition must
@@ -103,7 +103,7 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     if (ThreadState::isNoLog())
         return;
 
-    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags) )
+    if ( (!(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) && !(lcf & LCF_ERROR))
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
@@ -112,9 +112,7 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     ThreadNoLog tnl;
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
-    std::string outstr;
-    debuglogverbose(lcf, oss.str(), outstr);
-    std::cerr << outstr;
+    debuglogverbose(lcf, oss.str());
 }
 
 /* Print the debug message using stdio functions */
@@ -122,5 +120,13 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 
 /* If we only want to print the function name... */
 #define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")
+
+/* We want to store and send error messages to the program so that they can be
+ * shown on a dialog box. We also need some synchronization to access the set
+ * of error messages.
+ */
+ void setErrorMsg(const std::string& error);
+ bool getErrorMsg(std::string& error);
+
 
 #endif
