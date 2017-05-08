@@ -229,7 +229,26 @@ void pushQuitEvent(void)
     }
 }
 
-void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
+/* Override */ int SDL_PushEvent(SDL_Event * event)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (SDLver == 1) {
+        SDL1::SDL_Event* ev1 = reinterpret_cast<SDL1::SDL_Event*>(event);
+        sdlEventQueue.insert(ev1);
+        /* TODO: Support event queue full */
+        return 0; // success
+    }
+
+    if (filterSDL2Event(event))
+        return 0;
+
+    sdlEventQueue.insert(event);
+    /* TODO: Support event queue full */
+    return 1; // success
+}
+
+/* Override */ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
@@ -239,7 +258,7 @@ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
         sdlEventQueue.setFilter(filter, userdata);
 }
 
-void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
+/* Override */ void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     if (SDLver == 1)
@@ -253,25 +272,25 @@ void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
     return NULL;
 }
 
-void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     sdlEventQueue.addWatch(filter, userdata);
 }
 
-void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     sdlEventQueue.delWatch(filter, userdata);
 }
 
-void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     sdlEventQueue.applyFilter(filter, userdata);
 }
 
-Uint8 SDL_EventState(Uint32 type, int state)
+/* Override */ Uint8 SDL_EventState(Uint32 type, int state)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     int previousState = sdlEventQueue.isEnabled(type) ? SDL_ENABLE : SDL_DISABLE;
@@ -288,7 +307,7 @@ Uint8 SDL_EventState(Uint32 type, int state)
     return state;
 }
 
-Uint32 SDL_RegisterEvents(int numevents)
+/* Override */ Uint32 SDL_RegisterEvents(int numevents)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
     return SDL_USEREVENT;

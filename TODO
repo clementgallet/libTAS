@@ -9,12 +9,13 @@
 ### Features
 
 - Add a memory watch/search module
-- Add an interface (ncurses?)
-- Add config file for hotkeys and key remapping (libconfig?)
+- Add fake-savestating (saving inputs and reset/fastforward/pause)
 
 ### Fixes
 
 - Make the code thread safe
+- Awake the game window to prevent the server for considering it as frozen
+- Remove as much X events to process as possible to avoid using SDL_PumpEvents, because they are just hidden inputs. Also, they call SDL_Ticks(), which is bad
 
 ## Partially done
 
@@ -26,20 +27,24 @@
 - Support savestates (good luck)
 -- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
 -- Disable openAL sound, remove one error
--- Now got:
-    [xcb] Unknown sequence number while processing queue
-    [xcb] Most likely this is a multi-threaded client and XInitThreads has not been called
-    [xcb] Aborting, sorry about that.
-    SuperMeatBoy: ../../src/xcb_io.c:274: poll_for_event: Assertion `!xcb_xlib_threads_sequence_lost' failed.
+-- Output the game into a dummy X server (xvfb) and show this server on the real one
+-- Hook low-level memory allocation functions (brk/mmap) instead of malloc
+-- look at DMTCP (http://dmtcp.sourceforge.net/)
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
-- Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
+-- Hook pulse audio (shovel knight?)
+- Add an interface (fltk)
+-- Add HUD options
+-- Enable/disable time-advance hack for child threads
+- Record inputs and support playback
+-- Write extra (sync) informations in the movie file
 
 ## Done
 
+- Add config file for hotkeys and key remapping
+- Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
 - Don't send keys that correspond to hotkeys
-- Record inputs and support playback
 - Write a better compile script
 - Support fast-forward (some desyncs if done at the very beginning of the game)
 - Inject keyboard inputs to the game

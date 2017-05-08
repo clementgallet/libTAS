@@ -101,6 +101,16 @@ OVERRIDE int SDL_WaitEvent(SDL_Event * event);
  */
 OVERRIDE int SDL_WaitEventTimeout(SDL_Event * event, int timeout);
 
+/**
+ *  \brief Add an event to the event queue.
+ *
+ *  \return (SDL2) 1 on success, 0 if the event was filtered, or -1 if the
+ *          event queue was full or there was some other error.
+ *          (SDL1) This function returns 0 on success, or -1 if the event queue
+ *          was full or there was some other error.
+ */
+OVERRIDE int SDL_PushEvent(SDL_Event * event);
+
 typedef int (* SDL_EventFilter) (void *userdata, SDL_Event * event);
 
 /**
