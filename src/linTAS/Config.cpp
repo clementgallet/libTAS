@@ -99,7 +99,6 @@ void Config::load(const std::string& gamepath) {
 
     /* Open the preferences for the game */
     prefs.reset(new Fl_Preferences(prefs_dir.c_str(), "libtas", gamename.c_str()));
-
     char* text;
     if (prefs->get("gameargs", text, gameargs.c_str()))
         gameargs = text;
@@ -124,13 +123,14 @@ void Config::load(const std::string& gamepath) {
         int n_entries = prefs_km_hotkeys.entries();
         for (int i=0; i<n_entries; i++) {
             const char* key = prefs_km_hotkeys.entry(i);
-            void *vdata;
-            prefs_km_hotkeys.get(key, vdata, vdata, sizeof(HotKeyType));
-
-            HotKey hk;
-            hk.unpack(static_cast<char*>(vdata));
-            std::string key_str(key);
-            km.hotkey_mapping[static_cast<KeySym>(std::stoi(key_str))] = hk;
+            const char def_data[sizeof(HotKeyType)] = {};
+            void* vdata;
+            if (prefs_km_hotkeys.get(key, vdata, def_data, sizeof(HotKeyType))) {
+                HotKey hk;
+                hk.unpack(static_cast<char*>(vdata));
+                std::string key_str(key);
+                km.hotkey_mapping[static_cast<KeySym>(std::stoi(key_str))] = hk;
+            }
             free(vdata);
         }
     }
@@ -143,13 +143,14 @@ void Config::load(const std::string& gamepath) {
         int n_entries = prefs_km_inputs.entries();
         for (int i=0; i<n_entries; i++) {
             const char* key = prefs_km_inputs.entry(i);
-            void *vdata;
-            prefs_km_inputs.get(key, vdata, vdata, sizeof(InputType) + sizeof(int));
-
-            SingleInput si;
-            si.unpack(static_cast<char*>(vdata));
-            std::string key_str(key);
-            km.input_mapping[static_cast<KeySym>(std::stoi(key_str))] = si;
+            const char def_data[sizeof(InputType) + sizeof(int)] = {};
+            void* vdata;
+            if (prefs_km_inputs.get(key, vdata, def_data, sizeof(InputType) + sizeof(int))) {
+                SingleInput si;
+                si.unpack(static_cast<char*>(vdata));
+                std::string key_str(key);
+                km.input_mapping[static_cast<KeySym>(std::stoi(key_str))] = si;
+            }
             free(vdata);
         }
     }

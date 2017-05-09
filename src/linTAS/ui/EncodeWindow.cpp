@@ -100,8 +100,8 @@ void EncodeWindow::update_config()
     /* Browse the list of video codecs and select the item that matches
      * the value in the config using the item's user data.
      */
-    const Fl_Menu_Item* vcodec_item = videochoice->mvalue();
-    vcodec_item = vcodec_item->first();
+    const Fl_Menu_Item* vcodec_item = videochoice->menu();
+    // vcodec_item = vcodec_item->first();
     while (vcodec_item) {
         if (static_cast<AVCodecID>(vcodec_item->argument()) == context->config.sc.video_codec) {
             videochoice->value(vcodec_item);
@@ -126,7 +126,7 @@ void EncodeWindow::update_config()
     videobitrate->value(vbstr.c_str());
 
     /* Same for audio codec and bitrate */
-    const Fl_Menu_Item* acodec_item = audiochoice->mvalue();
+    const Fl_Menu_Item* acodec_item = audiochoice->menu();
     acodec_item = acodec_item->first();
     while (acodec_item) {
         if (static_cast<AVCodecID>(acodec_item->argument()) == context->config.sc.audio_codec) {
