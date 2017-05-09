@@ -24,6 +24,8 @@
 #include "../hook.h"
 #include <sstream>
 #include <X11/Xlib.h> // For the KeySym type
+#include "../../shared/SharedConfig.h"
+
 
 const char* fontpath = "/home/clement/libTAS/src/external/GenBkBasR.ttf";
 
@@ -95,29 +97,33 @@ void RenderHUD::renderInputs(AllInputs& ai)
     std::ostringstream oss;
 
     /* Keyboard */
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
-        if (ai.keyboard[i] != XK_VoidSymbol) {
-            oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
+    if (shared_config.keyboard_support) {
+        for (int i=0; i<AllInputs::MAXKEYS; i++) {
+            if (ai.keyboard[i] != XK_VoidSymbol) {
+                oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
+            }
         }
     }
 
     /* Mouse */
-    if (ai.pointer_x != -1) {
-        oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << "] ";
+    if (shared_config.mouse_support) {
+        if (ai.pointer_x != -1) {
+            oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << "] ";
+        }
+        if (ai.pointer_mask & Button1Mask)
+            oss << "[M b1] ";
+        if (ai.pointer_mask & Button2Mask)
+            oss << "[M b2] ";
+        if (ai.pointer_mask & Button3Mask)
+            oss << "[M b3] ";
+        if (ai.pointer_mask & Button4Mask)
+            oss << "[M b4] ";
+        if (ai.pointer_mask & Button5Mask)
+            oss << "[M b5] ";
     }
-    if (ai.pointer_mask & Button1Mask)
-        oss << "[M b1] ";
-    if (ai.pointer_mask & Button2Mask)
-        oss << "[M b2] ";
-    if (ai.pointer_mask & Button3Mask)
-        oss << "[M b3] ";
-    if (ai.pointer_mask & Button4Mask)
-        oss << "[M b4] ";
-    if (ai.pointer_mask & Button5Mask)
-        oss << "[M b5] ";
 
     /* Joystick */
-    for (int i=0; i<AllInputs::MAXJOYS; i++) {
+    for (int i=0; i<shared_config.numControllers; i++) {
         for (int j=0; j<AllInputs::MAXAXES; j++) {
             if (ai.controller_axes[i][j] != 0)
                 oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";

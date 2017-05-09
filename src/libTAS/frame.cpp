@@ -102,6 +102,15 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     detTimer.enterFrameBoundary();
 
+#ifdef LIBTAS_ENABLE_HUD
+    if (shared_config.hud_encode) {
+        if (shared_config.hud_framecount)
+            hud.renderFrame(frame_counter);
+        if (shared_config.hud_inputs)
+            hud.renderInputs(ai);
+    }
+#endif
+
     /* Audio mixing is done above, so encode must be called after */
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Dumping audio and video */
@@ -133,10 +142,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (shared_config.hud_framecount)
-        hud.renderFrame(frame_counter);
-    if (shared_config.hud_inputs)
-        hud.renderInputs(ai);
+    if (!shared_config.hud_encode) {
+        if (shared_config.hud_framecount)
+            hud.renderFrame(frame_counter);
+        if (shared_config.hud_inputs)
+            hud.renderInputs(ai);
+    }
 #endif
 
     {

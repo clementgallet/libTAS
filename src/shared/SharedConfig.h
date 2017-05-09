@@ -75,6 +75,9 @@ class SharedConfig {
         /* Display inputs in the HUD */
         bool hud_inputs = true;
 
+        /* Display HUD in the video encode */
+        bool hud_encode = false;
+
         /* Prevent the game to write into savefiles */
         bool prevent_savefiles = true;
 

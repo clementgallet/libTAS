@@ -122,6 +122,17 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Executable...", 0, browse_gamepath_cb},
         {"Open Movie...", 0, browse_moviepath_cb},
         {nullptr},
+    {"Video", 0, nullptr, nullptr, FL_SUBMENU},
+        {"OSD", 0, nullptr, nullptr, FL_SUBMENU
+        #ifndef LIBTAS_ENABLE_HUD
+        | FL_MENU_INACTIVE
+        #endif
+    },
+            {"Frame Count", 0, osd_frame_cb, nullptr, FL_MENU_TOGGLE},
+            {"Inputs", 0, osd_inputs_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_DIVIDER},
+            {"OSD on video encode", 0, osd_encode_cb, nullptr, FL_MENU_TOGGLE},
+            {nullptr},
+        {nullptr},
     {"Sound", 0, nullptr, nullptr, FL_SUBMENU},
         {"Format", 0, nullptr, nullptr, FL_SUBMENU},
             {"8000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(8000), FL_MENU_RADIO},
@@ -438,6 +449,24 @@ void MainWindow::update_config()
         }
         input_joy_item = input_joy_item->next();
     }
+
+    Fl_Menu_Item* osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_frame_cb));
+    if (context->config.sc.hud_framecount)
+        osd_item->set();
+    else
+        osd_item->clear();
+
+    osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_inputs_cb));
+    if (context->config.sc.hud_inputs)
+        osd_item->set();
+    else
+        osd_item->clear();
+
+    osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_encode_cb));
+    if (context->config.sc.hud_encode)
+        osd_item->set();
+    else
+        osd_item->clear();
 }
 
 void launch_cb(Fl_Widget* w)
@@ -688,7 +717,7 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
 void input_keyboard_cb(Fl_Widget*, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* keyboard_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+    const Fl_Menu_Item* keyboard_item = mw.menu_bar->mvalue();
 
     if (keyboard_item && (keyboard_item->value() == 0)) {
         mw.context->config.sc.keyboard_support = false;
@@ -696,12 +725,13 @@ void input_keyboard_cb(Fl_Widget*, void*)
     else {
         mw.context->config.sc.keyboard_support = true;
     }
+    mw.context->config.sc_modified = true;
 }
 
 void input_mouse_cb(Fl_Widget*, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* mouse_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+    const Fl_Menu_Item* mouse_item = mw.menu_bar->mvalue();
 
     if (mouse_item && (mouse_item->value() == 0)) {
         mw.context->config.sc.mouse_support = false;
@@ -709,6 +739,7 @@ void input_mouse_cb(Fl_Widget*, void*)
     else {
         mw.context->config.sc.mouse_support = true;
     }
+    mw.context->config.sc_modified = true;
 }
 
 void input_joy_cb(Fl_Widget*, void* v)
@@ -717,6 +748,7 @@ void input_joy_cb(Fl_Widget*, void* v)
     int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
 
     mw.context->config.sc.numControllers = nb_joy;
+    mw.context->config.sc_modified = true;
 }
 
 void input_focus_game_cb(Fl_Widget*, void* v)
@@ -727,7 +759,7 @@ void input_focus_game_cb(Fl_Widget*, void* v)
     // TODO: We could save this in the context
     if (! mw.context->game_window ) return;
 
-    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+    const Fl_Menu_Item* focus_item = mw.menu_bar->mvalue();
 
     if (focus_item->value()) {
         XSelectInput(mw.context->display, mw.context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
@@ -740,7 +772,7 @@ void input_focus_game_cb(Fl_Widget*, void* v)
 void input_focus_ui_cb(Fl_Widget*, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
+    const Fl_Menu_Item* focus_item = mw.menu_bar->mvalue();
 
     Window main_ui = fl_xid(mw.window);
 
@@ -758,6 +790,33 @@ void slowmo_cb(Fl_Widget*, void* v)
     int spdiv = static_cast<int>(reinterpret_cast<intptr_t>(v));
 
     mw.context->config.sc.speed_divisor = spdiv;
+    mw.context->config.sc_modified = true;
+}
+
+void osd_frame_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
+
+    mw.context->config.sc.hud_framecount = osd_item->value();
+    mw.context->config.sc_modified = true;
+}
+
+void osd_inputs_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
+
+    mw.context->config.sc.hud_inputs = osd_item->value();
+    mw.context->config.sc_modified = true;
+}
+
+void osd_encode_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
+
+    mw.context->config.sc.hud_encode = osd_item->value();
     mw.context->config.sc_modified = true;
 }
 

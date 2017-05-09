@@ -69,6 +69,7 @@ void Config::save() {
     prefs_shared.set("numControllers", sc.numControllers);
     prefs_shared.set("hud_framecount", static_cast<int>(sc.hud_framecount));
     prefs_shared.set("hud_inputs", static_cast<int>(sc.hud_inputs));
+    prefs_shared.set("hud_encode", static_cast<int>(sc.hud_encode));
     prefs_shared.set("prevent_savefiles", static_cast<int>(sc.prevent_savefiles));
     prefs_shared.set("audio_bitdepth", sc.audio_bitdepth);
     prefs_shared.set("audio_channels", sc.audio_channels);
@@ -191,6 +192,10 @@ void Config::load(const std::string& gamepath) {
     val = static_cast<int>(sc.hud_inputs);
     prefs_shared.get("hud_inputs", val, val);
     sc.hud_inputs = static_cast<bool>(val);
+
+    val = static_cast<int>(sc.hud_encode);
+    prefs_shared.get("hud_encode", val, val);
+    sc.hud_encode = static_cast<bool>(val);
 
     val = static_cast<int>(sc.prevent_savefiles);
     prefs_shared.get("prevent_savefiles", val, val);
