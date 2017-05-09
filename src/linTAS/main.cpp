@@ -164,13 +164,7 @@ int main(int argc, char **argv)
 
     /* Init the a game-specific config, loading a pref file if any */
     if (!context.gamepath.empty())
-        context.config.init(context.gamepath);
-
-    /* Fill a movie name if empty */
-    if ( (!context.gamepath.empty()) && context.config.moviefile.empty()) {
-        context.config.moviefile = context.gamepath + ".ltm";
-        context.recording = Context::NO_RECORDING;
-    }
+        context.config.load(context.gamepath);
 
     /* Game arguments */
     for (int i = optind+1; i < argc; i++) {

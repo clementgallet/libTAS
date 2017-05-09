@@ -478,13 +478,7 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         mw.context->gamepath = std::string(filename);
 
         /* Try to load the game-specific pref file */
-        mw.context->config.init(mw.context->gamepath);
-
-        /* Set a default movie file if any */
-        if (mw.context->config.moviefile.empty()) {
-            mw.context->config.moviefile = mw.context->gamepath;
-            mw.context->config.moviefile += ".ltm";
-        }
+        mw.context->config.load(mw.context->gamepath);
 
         /* Update the UI accordingly */
         mw.update_config();
@@ -495,7 +489,6 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
 
 void browse_moviepath_cb(Fl_Widget* w, void*)
 {
-    // TODO: Almost duplicate of browse_gamepath_cb...
     MainWindow& mw = MainWindow::getInstance();
     int ret = mw.moviepathchooser->show();
 

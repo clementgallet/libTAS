@@ -5,6 +5,7 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 ## Compile
 
 Compiling is done using cmake. From the root directory just type:
+
     mkdir build
     cd build
     cmake ..

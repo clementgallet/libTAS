@@ -37,9 +37,6 @@ private:
     std::unique_ptr<Fl_Preferences> prefs;
 
 public:
-    /* Building a specific config for a game */
-    void init(std::string gamepath);
-
     ~Config();
 
     /* Set of the config that is sent to the game */
@@ -63,9 +60,11 @@ public:
     /* Was the dump file modified */
     bool dumpfile_modified;
 
+    /* Save the config into the config file */
     void save();
 
-    void load();
+    /* Load a game-specific config from the config file */
+    void load(const std::string& gamepath);
 
 };
 

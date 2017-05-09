@@ -41,7 +41,7 @@ public:
     void saveMovie();
 
     /* Get the number of frames from a moviefile (needs to load it) */
-    int nbFrames(std::string& moviefile);
+    int nbFrames(const std::string& moviefile);
 
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);

@@ -119,9 +119,11 @@ void MovieFile::saveMovie()
 
     /* Save some parameters into the config file */
     Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    config_prefs.set("frame_count", static_cast<int>(context->framecount));
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
     config_prefs.set("numControllers", context->config.sc.numControllers);
+    config_prefs.flush();
 
     /* Compress the files into the final movie file */
     TAR *tar;
@@ -252,7 +254,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-int MovieFile::nbFrames(std::string& moviefile)
+int MovieFile::nbFrames(const std::string& moviefile)
 {
     /* Check if movie exists, otherwise return 0 */
     struct stat sb;
@@ -268,9 +270,19 @@ int MovieFile::nbFrames(std::string& moviefile)
     if (create_dir(movie_dir))
         return 0;
 
-    loadMovie(moviefile);
+    /* Uncompress the movie file into our temp directory */
+    TAR *tar;
+    tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
+    char* md = const_cast<char*>(movie_dir.c_str());
+    tar_extract_all(tar, md);
+    tar_close(tar);
 
-    return input_list.size();
+    /* Load the config file into the context struct */
+    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    int frame_count;
+    config_prefs.get("frame_count", frame_count, 0);
+
+    return frame_count;
 }
 
 int MovieFile::setInputs(const AllInputs& inputs)

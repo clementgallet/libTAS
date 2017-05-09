@@ -30,7 +30,7 @@
 
 void debuglogverbose(LogCategoryFlag lcf, const std::string& str)
 {
-    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) {
+    if ( (lcf & shared_config.includeFlags) && !(lcf & shared_config.excludeFlags)) {
         std::ostringstream oss;
 
         /* We only print colors if displayed on a terminal */

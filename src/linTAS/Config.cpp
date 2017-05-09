@@ -19,27 +19,8 @@
 
 #include "Config.h"
 #include "utils.h"
+#include <iostream>
 //#include <sys/stat.h>
-
-void Config::init(std::string gamepath) {
-
-    /* Get the game executable name from path */
-    size_t sep = gamepath.find_last_of("/");
-    if (sep != std::string::npos)
-        gamepath = gamepath.substr(sep + 1);
-
-    /* Check if our preferences directory exists, and create it if not */
-    std::string prefs_dir = getenv("HOME");
-    prefs_dir += "/.libtas";
-
-    if (create_dir(prefs_dir))
-        return;
-
-    /* Open the preferences for the game */
-    prefs.reset(new Fl_Preferences(prefs_dir.c_str(), "libtas", gamepath.c_str()));
-
-    load();
-}
 
 Config::~Config() {
     save();
@@ -99,16 +80,34 @@ void Config::save() {
     prefs_shared.set("audio_bitrate", sc.audio_bitrate);
 }
 
-void Config::load() {
-    if (!prefs) return;
+void Config::load(const std::string& gamepath) {
+
+    /* Get the game executable name from path */
+    size_t sep = gamepath.find_last_of("/");
+    std::string gamename;
+    if (sep != std::string::npos)
+        gamename = gamepath.substr(sep + 1);
+    else
+        gamename = gamepath;
+
+    /* Check if our preferences directory exists, and create it if not */
+    std::string prefs_dir = getenv("HOME");
+    prefs_dir += "/.libtas";
+
+    if (create_dir(prefs_dir))
+        return;
+
+    /* Open the preferences for the game */
+    prefs.reset(new Fl_Preferences(prefs_dir.c_str(), "libtas", gamename.c_str()));
 
     char* text;
     if (prefs->get("gameargs", text, gameargs.c_str()))
         gameargs = text;
     free(text);
 
-    if (prefs->get("moviefile", text, moviefile.c_str()))
-        moviefile = text;
+    std::string default_moviefile = gamepath + ".ltm";
+    prefs->get("moviefile", text, default_moviefile.c_str());
+    moviefile = text;
     free(text);
 
     if (prefs->get("dumpfile", text, dumpfile.c_str()))
