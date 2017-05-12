@@ -45,10 +45,7 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 AudioContext::AudioContext(void)
 {
     outVolume = 1.0f;
-    outBitDepth = shared_config.audio_bitdepth;
-    outNbChannels = shared_config.audio_channels;
-    outFrequency = shared_config.audio_frequency;
-    outAlignSize = outNbChannels * outBitDepth / 8;
+    init();
 }
 
 void AudioContext::init(void)
@@ -63,22 +60,23 @@ int AudioContext::createBuffer(void)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    if ((! buffers.empty()) && buffers.front()->id >= MAXBUFFERS)
+    if (buffers.size() >= MAXBUFFERS)
         return -1;
 
+    /* Check if we can recycle a deleted buffer */
+    if (!buffers_pool.empty()) {
+        buffers.push_front(buffers_pool.front());
+        buffers_pool.pop_front();
+        return buffers.front()->id;
+    }
+
+    /* If not, we create a new buffer.
+     * The next available id equals the size of the buffer list + 1
+     * (ids must start by 1, because 0 is reserved for no buffer)
+     */
     auto newab = std::make_shared<AudioBuffer>();
-
-    if (buffers.empty()) {
-        newab->id = 1;
-    }
-    else {
-        /* Get the id of the last AudioBuffer
-         * (situated at the beginning of the list) */
-        int last_id = buffers.front()->id;
-        newab->id = last_id + 1;
-    }
+    newab->id = buffers.size() + 1;
     buffers.push_front(newab);
-
     return newab->id;
 }
 
@@ -86,9 +84,14 @@ void AudioContext::deleteBuffer(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    buffers.remove_if([id](std::shared_ptr<AudioBuffer> const& buffer)
+    buffers.remove_if([id,this](std::shared_ptr<AudioBuffer> const& buffer)
         {
-            return (buffer->id == id);
+            if (buffer->id == id) {
+                /* Push the deleted buffer into the pool */
+                buffers_pool.push_front(buffer);
+                return true;
+            }
+            return false;
         });
 }
 
@@ -120,22 +123,23 @@ int AudioContext::createSource(void)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    if ((! sources.empty()) && sources.front()->id >= MAXSOURCES)
+    if (sources.size() >= MAXSOURCES)
         return -1;
 
+    /* Check if we can recycle a deleted source */
+    if (!sources_pool.empty()) {
+        sources.push_front(sources_pool.front());
+        sources_pool.pop_front();
+        return sources.front()->id;
+    }
+
+    /* If not, we create a new source.
+     * The next available id equals the size of the source list + 1
+     * (ids must start by 1, because 0 is reserved for no source)
+     */
     auto newas = std::make_shared<AudioSource>();
-
-    if (sources.empty()) {
-        newas->id = 1;
-    }
-    else {
-        /* Get the id of the last AudioSource
-         * (situated at the beginning of the list) */
-        int last_id = sources.front()->id;
-        newas->id = last_id + 1;
-    }
+    newas->id = sources.size() + 1;
     sources.push_front(newas);
-
     return newas->id;
 }
 
@@ -143,9 +147,14 @@ void AudioContext::deleteSource(int id)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    sources.remove_if([id](std::shared_ptr<AudioSource> const& source)
+    sources.remove_if([id,this](std::shared_ptr<AudioSource> const& source)
         {
-            return (source->id == id);
+            if (source->id == id) {
+                /* Push the deleted buffer into the pool */
+                sources_pool.push_front(source);
+                return true;
+            }
+            return false;
         });
 }
 

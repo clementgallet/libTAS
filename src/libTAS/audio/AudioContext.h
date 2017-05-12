@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <memory>
-#include <forward_list>
+#include <list>
 #include <mutex>
 #include "AudioBuffer.h"
 #include "AudioSource.h"
@@ -99,8 +99,12 @@ class AudioContext
         std::mutex mutex;
 
     private:
-        std::forward_list<std::shared_ptr<AudioBuffer>> buffers;
-        std::forward_list<std::shared_ptr<AudioSource>> sources;
+        std::list<std::shared_ptr<AudioBuffer>> buffers;
+        std::list<std::shared_ptr<AudioSource>> sources;
+
+        /* Extra buffers and sources that have been deleted and can be recycled */
+        std::list<std::shared_ptr<AudioBuffer>> buffers_pool;
+        std::list<std::shared_ptr<AudioSource>> sources_pool;
 };
 
 extern AudioContext audiocontext;

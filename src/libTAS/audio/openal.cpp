@@ -409,9 +409,6 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             if (value == 0) {
                 /* Unbind buffer from source */
                 as->init();
-                as->buffer_queue.clear();
-                as->source = SOURCE_UNDETERMINED;
-                as->state = SOURCE_INITIAL;
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
@@ -421,10 +418,8 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                     return;
                 }
                 as->init();
-                as->buffer_queue.clear();
                 as->buffer_queue.push_back(bindab);
                 as->source = SOURCE_STATIC;
-                as->state = SOURCE_INITIAL;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;
@@ -690,7 +685,7 @@ void alSourceStop(ALuint source)
         /* Illegal operation. */
         return;
     }
-    as->init();
+    as->rewind();
     as->state = SOURCE_STOPPED;
 }
 

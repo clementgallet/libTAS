@@ -46,21 +46,24 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 
 AudioSource::AudioSource(void)
 {
-    id = 0;
-    position = 0;
-    samples_frac = 0;
-    volume = 1.0f;
-    source = SOURCE_UNDETERMINED;
-    looping = false;
-    state = SOURCE_INITIAL;
-    queue_index = 0;
-
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     swr = swr_alloc();
 #endif
+
+    volume = 1.0f;
+    init();
 }
 
 void AudioSource::init(void)
+{
+    looping = false;
+    source = SOURCE_UNDETERMINED;
+    state = SOURCE_INITIAL;
+    buffer_queue.clear();
+    rewind();
+}
+
+void AudioSource::rewind(void)
 {
     position = 0;
     samples_frac = 0;
@@ -107,9 +110,8 @@ void AudioSource::setPosition(int pos)
         pos %= queueSize();
     }
 
-    for (int i=0; i<buffer_queue.size(); i++) {
-        std::shared_ptr<AudioBuffer> ab = buffer_queue[i];
-        if (pos < ab->sampleSize) {
+    for (auto& buffer : buffer_queue) {
+        if (pos < buffer->sampleSize) {
             /* We set the position in this buffer */
             position = pos;
             samples_frac = 0;
@@ -117,7 +119,7 @@ void AudioSource::setPosition(int pos)
         }
         else {
             /* We traverse the buffer */
-            pos -= ab->sampleSize;
+            pos -= buffer->sampleSize;
         }
     }
 }
@@ -327,7 +329,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (remainingSamples > 0) {
                 /* We reached the end of the buffer queue */
-                init();
+                rewind();
                 state = SOURCE_STOPPED;
                 debuglog(LCF_SOUND | LCF_FRAME, "  End of the queue reached");
             }
@@ -351,28 +353,38 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int otherL = outSamples[s];
                 int sumL = otherL + ((myL * lvas) >> 16) - 256;
                 outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
+                if ((sumL < 0) || (sumL > UINT8_MAX))
+                    debuglog(LCF_SOUND, "Saturation during mixing");
 
                 if (outNbChannels == 2) {
                     int myR = mixedSamples[s+1];
                     int otherR = outSamples[s+1];
-                    int sumR = otherR + ((myR * rvas) >> 16);
+                    int sumR = otherR + ((myR * rvas) >> 16) - 256;
                     outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
+                    if ((sumR < 0) || (sumR > UINT8_MAX))
+                        debuglog(LCF_SOUND, "Saturation during mixing");
                 }
             }
         }
 
         if (outBitDepth == 16) {
+            int16_t* mixedSamples16 = reinterpret_cast<int16_t*>(mixedSamples.data());
+            int16_t* outSamples16 = reinterpret_cast<int16_t*>(outSamples);
             for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-                int myL = reinterpret_cast<int16_t*>(mixedSamples.data())[s];
-                int otherL = reinterpret_cast<int16_t*>(outSamples)[s];
+                int myL = mixedSamples16[s];
+                int otherL = outSamples16[s];
                 int sumL = otherL + ((myL * lvas) >> 16);
-                reinterpret_cast<int16_t*>(outSamples)[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
+                outSamples16[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
+                if ((sumL < INT16_MIN) || (sumL > INT16_MAX))
+                    debuglog(LCF_SOUND, "Saturation during mixing");
 
                 if (outNbChannels == 2) {
-                    int myR = reinterpret_cast<int16_t*>(mixedSamples.data())[s+1];
-                    int otherR = reinterpret_cast<int16_t*>(outSamples)[s+1];
+                    int myR = mixedSamples16[s+1];
+                    int otherR = outSamples16[s+1];
                     int sumR = otherR + ((myR * rvas) >> 16);
-                    reinterpret_cast<int16_t*>(outSamples)[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
+                    outSamples16[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
+                    if ((sumR < INT16_MIN) || (sumR > INT16_MAX))
+                        debuglog(LCF_SOUND, "Saturation during mixing");
                 }
             }
         }

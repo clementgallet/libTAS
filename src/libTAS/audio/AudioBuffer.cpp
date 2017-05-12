@@ -69,7 +69,7 @@ void AudioBuffer::update(void)
             sampleSize = size / alignSize;
             break;
         case SAMPLE_FMT_MSADPCM:
-            
+
             /* Number of bytes of a block */
             blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
 
@@ -151,6 +151,3 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
     }
     return 0;
 }
-
-
-

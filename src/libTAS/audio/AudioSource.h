@@ -123,6 +123,9 @@ class AudioSource
         /* Init parameters */
         void init();
 
+        /* Rewind source to the beginning of the first buffer */
+        void rewind();
+
         /* Returns the number of buffers in its queue */
         int nbQueue();
 
