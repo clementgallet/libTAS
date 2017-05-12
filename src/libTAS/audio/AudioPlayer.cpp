@@ -25,25 +25,20 @@
 #include "../../shared/SharedConfig.h"
 #include "../ThreadState.h"
 
-AudioPlayer audioplayer;
-
-AudioPlayer::AudioPlayer(void)
-{
-    if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
-        debuglog(LCF_SOUND, "  Cannot open default audio device");
-    }
-
-    inited = false;
-}
+snd_pcm_t *AudioPlayer::phandle;
 
 AudioPlayer::~AudioPlayer(void)
 {
-    snd_pcm_close(phandle);
+    // snd_pcm_close(phandle);
 }
 
 bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
 {
     debuglog(LCF_SOUND, "Init audio player");
+
+    if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
+        debuglog(LCF_SOUND, "  Cannot open default audio device");
+    }
 
     snd_pcm_hw_params_t *hw_params;
 
@@ -102,6 +97,7 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 
 bool AudioPlayer::play(AudioContext& ac)
 {
+    static bool inited = false;
     if (!inited) {
         snd_pcm_format_t format;
         if (ac.outBitDepth == 8)

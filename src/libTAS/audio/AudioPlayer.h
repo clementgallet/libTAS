@@ -29,26 +29,20 @@
 class AudioPlayer
 {
     public:
-        AudioPlayer();
+        // AudioPlayer();
         ~AudioPlayer();
-		
-		/* Store if the connection was inited */
-		bool inited;
 
         /* Connection to the sound system */
-        snd_pcm_t *phandle;
+        static snd_pcm_t *phandle;
 
         /* Init the connection to the server.
          * Return if the connection was successful
          */
-		bool init(snd_pcm_format_t format, int nbChannels, unsigned int frequency);
+		static bool init(snd_pcm_format_t format, int nbChannels, unsigned int frequency);
 
         /* Play the audio buffer stored in the audio context */
-		bool play(AudioContext& ac);
+		static bool play(AudioContext& ac);
 };
 
-extern AudioPlayer audioplayer;
-
 #endif
 #endif
-

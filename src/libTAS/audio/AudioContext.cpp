@@ -211,7 +211,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     if (!shared_config.audio_mute) {
         /* Play the music */
-        audioplayer.play(*this);
+        AudioPlayer::play(*this);
     }
 #endif
 }
