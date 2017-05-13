@@ -169,6 +169,7 @@ void start_cb(Fl_Widget* w, void* v)
     else {
         ew->context->config.dumpfile = std::string(filename) + ext;
     }
+    ew->context->config.dumpfile_modified = true;
 
     /* Set video codec and bitrate */
     const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
