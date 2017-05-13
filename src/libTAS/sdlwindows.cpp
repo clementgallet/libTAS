@@ -179,7 +179,7 @@ static int swapInterval = 0;
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
-    if (shared_config.framerate > 0)
+    if (shared_config.framerate == 0)
         return orig::SDL_GL_SetSwapInterval(interval);
 
     return 0; // Success
