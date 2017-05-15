@@ -95,6 +95,8 @@ void RenderHUD::init(const char* path)
     TTF_SetFontOutline(bg_font, outline_size);
 }
 
+void RenderHUD::size(int& width, int& height) {}
+
 std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
 {
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
@@ -161,8 +163,12 @@ void RenderHUD::renderInputs(AllInputs& ai)
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
     std::string text = oss.str();
-    if (!text.empty())
-        renderText(text.c_str(), fg_color, bg_color, 2, 400);
+    if (!text.empty()) {
+        /* Get size of the window */
+        int width, height;
+        size(width, height);
+        renderText(text.c_str(), fg_color, bg_color, 2, height-25);
+    }
 }
 
 #endif

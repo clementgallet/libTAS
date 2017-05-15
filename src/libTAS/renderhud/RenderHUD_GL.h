@@ -31,6 +31,7 @@ class RenderHUD_GL : public RenderHUD
     public:
         ~RenderHUD_GL();
         void init(void);
+        void size(int& width, int& height);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 
     private:
@@ -47,4 +48,3 @@ class RenderHUD_GL : public RenderHUD
 
 #endif
 #endif
-

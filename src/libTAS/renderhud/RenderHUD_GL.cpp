@@ -83,6 +83,14 @@ void RenderHUD_GL::init()
     LINK_NAMESPACE(glUseProgram, "libGL");
 }
 
+void RenderHUD_GL::size(int& width, int& height)
+{
+    GLint viewport[4];
+    orig::glGetIntegerv(GL_VIEWPORT, viewport);
+    width = viewport[2];
+    height = viewport[3];
+}
+
 void RenderHUD_GL::enterRender(void)
 {
     orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);
@@ -174,7 +182,6 @@ void RenderHUD_GL::exitRender(void)
     orig::glPopMatrix();
 
     orig::glUseProgram(oldProgram);
-} 
+}
 
 #endif
-

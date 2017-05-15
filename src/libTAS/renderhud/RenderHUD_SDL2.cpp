@@ -30,6 +30,7 @@ namespace orig {
             Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
     static int (*SDL_RenderCopy)(SDL_Renderer* renderer, void* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
     static void* (*SDL_CreateTextureFromSurface)(SDL_Renderer* renderer, SDL_Surface*  surface);
+    static int (*SDL_GetRendererOutputSize)(SDL_Renderer* renderer, int* w, int* h);
 }
 
 RenderHUD_SDL2::~RenderHUD_SDL2()
@@ -41,12 +42,18 @@ void RenderHUD_SDL2::init(void)
     LINK_NAMESPACE_SDL2(SDL_RenderCopy);
     LINK_NAMESPACE_SDL2(SDL_CreateTextureFromSurface);
     LINK_NAMESPACE_SDL2(SDL_CreateRGBSurfaceFrom);
+    LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
     RenderHUD::init();
 }
 
 void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
 {
     renderer = r;
+}
+
+void RenderHUD_SDL2::size(int& width, int& height)
+{
+    orig::SDL_GetRendererOutputSize(renderer, &width, &height);
 }
 
 void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
@@ -66,4 +73,3 @@ void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color
 }
 
 #endif
-

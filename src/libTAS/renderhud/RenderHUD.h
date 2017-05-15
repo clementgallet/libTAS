@@ -29,10 +29,10 @@
 #include <memory>
 
 /* This class handles the display of some text over the game screen (HUD).
- * 
+ *
  * Because games have different methods of rendering, this class
  * should be derived for each rendering method. The subclass must
- * define the renderText() function.
+ * define the renderText() and size() functions
  *
  * As a helper, this class provide a method to create a surface from
  * a text, based on the sdl_ttf library. This library was modified so
@@ -53,6 +53,9 @@ class RenderHUD
 
         /* Initialize the font located at the given path */
         virtual void init(const char* path);
+
+        /* Get the size of the game window */
+        virtual void size(int& width, int& height);
 
         /* Main function to render some text on the screen.
          * This function does nothing in this class and must be overridden.
@@ -84,4 +87,3 @@ class RenderHUD
 
 #endif
 #endif
-
