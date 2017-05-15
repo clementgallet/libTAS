@@ -25,9 +25,7 @@
 #include <sstream>
 #include <X11/Xlib.h> // For the KeySym type
 #include "../../shared/SharedConfig.h"
-
-
-const char* fontpath = "/home/clement/libTAS/src/external/GenBkBasR.ttf";
+#include <fontconfig/fontconfig.h>
 
 RenderHUD::RenderHUD()
 {
@@ -47,11 +45,35 @@ RenderHUD::~RenderHUD()
 
 void RenderHUD::init()
 {
-    init(fontpath);
+    /* Code taken from http://stackoverflow.com/questions/10542832 */
+    FcConfig* config = FcInitLoadConfigAndFonts();
+    FcPattern* pat = FcPatternCreate();
+    FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
+    FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
+    FcFontSet* fs = FcFontList(config, pat, os);
+    // debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
+    for (int i=0; fs && i < fs->nfont; ++i) {
+        FcPattern* font = fs->fonts[i];
+        FcChar8 *file, *family;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
+            FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch) {
+            if (FcStrStr(file, reinterpret_cast<const FcChar8*>(".ttf"))) {
+                debuglog(LCF_WINDOW, "Picking font: ", file, " (family ", family, ")");
+                init(reinterpret_cast<char*>(file));
+                if (fs) FcFontSetDestroy(fs);
+                return;
+            }
+        }
+    }
+
+    debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+    if (fs) FcFontSetDestroy(fs);
 }
 
 void RenderHUD::init(const char* path)
 {
+    debuglog(LCF_WINDOW, "Try opening font ", path);
+
     /* Initialize SDL TTF */
     if(TTF_Init() == -1) {
         debuglog(LCF_ERROR, "Couldn't init SDL TTF.");
