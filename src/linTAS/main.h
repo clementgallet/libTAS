@@ -21,6 +21,6 @@
 #define LINTAS_MAIN_H_INCLUDED
 
 void print_usage(void);
-void* launchGame(void* arg);
+void launchGame();
 
 #endif

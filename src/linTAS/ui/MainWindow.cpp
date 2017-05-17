@@ -482,7 +482,7 @@ void launch_cb(Fl_Widget* w)
             /* Start game */
             mw.context->status = Context::STARTING;
             mw.update_status();
-            mw.game_thread = std::thread{launchGame, nullptr};
+            mw.game_thread = std::thread{launchGame};
             break;
         case Context::ACTIVE:
             mw.context->status = Context::QUITTING;

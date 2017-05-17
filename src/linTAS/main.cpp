@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     return Fl::run();
 }
 
-void* launchGame(void* arg)
+void launchGame()
 {
     context.status = Context::ACTIVE;
     MainWindow& ui = MainWindow::getInstance();
@@ -245,6 +245,7 @@ void* launchGame(void* arg)
     struct timespec tim;
 
     XSetErrorHandler(MyErrorHandler);
+    XAutoRepeatOff(context.display);
 
     const int MAX_RETRIES = 3;
     int retry = 0;
@@ -258,7 +259,7 @@ void* launchGame(void* arg)
             // ui_print("Retrying in 2s\n");
             sleep(2);
         } else {
-            return nullptr;
+            return;
         }
     }
 
@@ -278,7 +279,7 @@ void* launchGame(void* arg)
 
             default:
                 // ui_print("Message init: unknown message\n");
-                return nullptr;
+                return;
         }
         recv(socket_fd, &message, sizeof(int), 0);
     }
@@ -352,6 +353,7 @@ void* launchGame(void* arg)
                 }
                 /* FIXME: Don't do this if the ui option is unchecked  */
                 XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+                // XSelectInput(context.display, context.game_window, KeyPressMask);
     #if 0
                 int iError = XGrabKeyboard(display, context.game_window, 0,
                         GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -373,7 +375,7 @@ void* launchGame(void* arg)
                 break;
             default:
                 std::cout << "Got unknown message!!!" << std::endl;
-                return nullptr;
+                return;
             }
             recv(socket_fd, &message, sizeof(int), 0);
         }
@@ -413,23 +415,12 @@ void* launchGame(void* arg)
             while( XPending( context.display ) ) {
 
                 XNextEvent(context.display, &event);
-#if 0
-                if (event.type == FocusIn) {
-                    fprintf(stderr, "Grabbing window\n");
-                    int iError = XGrabKeyboard(display, context.game_window, 0,
-                            GrabModeAsync, GrabModeAsync, CurrentTime);
-                    if (iError != GrabSuccess && iError == AlreadyGrabbed) {
-                        XUngrabPointer(display, CurrentTime);
-                        XFlush(display);
-                        fprintf(stderr, "Keyboard is already grabbed\n");
-                    }
-                }
-                if (event.type == FocusOut) {
-                    fprintf(stderr, "Ungrabbing window\n");
-                    XUngrabKeyboard(display, CurrentTime);
-                }
-#endif
+
                 struct HotKey hk;
+
+                if (event.type == FocusOut) {
+                    ar_ticks = -1; // Deactivate auto-repeat
+                }
 
                 if ((event.type == KeyPress) || (event.type == KeyRelease)) {
                     /* Get the actual pressed/released key */
@@ -458,7 +449,7 @@ void* launchGame(void* arg)
                             ui.update(true);
                             context.config.sc_modified = true;
                         }
-                        //ar_ticks = 0; // Activate auto-repeat
+                        ar_ticks = 0; // Activate auto-repeat
                         advance_frame = true; // Advance one frame
                     }
                     if (hk.type == HOTKEY_PLAYPAUSE){
@@ -492,25 +483,30 @@ void* launchGame(void* arg)
                 if (event.type == KeyRelease)
                 {
                     /*
-                     * Detect AutoRepeat key (KeyRelease followed by KeyPress) and skip both
+                     * TODO: The following code was supposed to detect the Xlib
+                     * AutoRepeat and remove the generated events. Actually,
+                     * I can't use it because for some reason, when I press a
+                     * key, a KeyRelease is generated at the same time as the
+                     * KeyPress event. For this reason, I disable Xlib
+                     * AutoRepeat and I use this code to delete the extra
+                     * KeyRelease event...
                      * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
                      */
-#if 0
-                    if (XEventsQueued(display, QueuedAfterReading))
+                    if (XEventsQueued(context.display, QueuedAfterReading))
                     {
                         XEvent nev;
-                        XPeekEvent(display, &nev);
+                        XPeekEvent(context.display, &nev);
 
                         if ((nev.type == KeyPress) && (nev.xkey.time == event.xkey.time) &&
                                 (nev.xkey.keycode == event.xkey.keycode))
                         {
                             /* delete retriggered KeyPress event */
-                            XNextEvent (display, &event);
+                            // XNextEvent (display, &event);
                             /* Skip current KeyRelease event */
                             continue;
                         }
                     }
-#endif
+
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context.config.sc.fastforward = false;
                         ui.update(true);
@@ -518,18 +514,9 @@ void* launchGame(void* arg)
                     }
                     if (hk.type == HOTKEY_FRAMEADVANCE){
                         ar_ticks = -1; // Deactivate auto-repeat
-                        /* FIXME: If the game window looses focus,
-                         * the key release event is never sent,
-                         * so the auto-repeat is still activated
-                         */
                     }
                 }
             }
-
-
-//            if (context.tasflags_modified) {
-                /* Show the new flags to the UI */
-//            }
 
             /* Sleep a bit to not surcharge the processor */
             if (!context.config.sc.running && !advance_frame) {
@@ -626,5 +613,7 @@ void* launchGame(void* arg)
     context.status = Context::INACTIVE;
     ui.update_status();
 
-    return nullptr;
+    XAutoRepeatOn(context.display);
+
+    return;
 }
