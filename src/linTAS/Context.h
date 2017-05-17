@@ -60,12 +60,6 @@ struct Context {
 
     /* Absolute path of the game executable */
     std::string gamepath;
-
-    /* Path of the libraries used by the game */
-    std::string libdir;
-
-    /* Path where the game needs to run */
-    std::string rundir;
 };
 
 #endif

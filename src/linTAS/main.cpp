@@ -129,14 +129,14 @@ int main(int argc, char **argv)
                 /* run directory */
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.rundir = abspath;
+                    context.config.rundir = abspath;
                 }
                 break;
             case 'L':
                 /* Shared library directory */
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.libdir = abspath;
+                    context.config.libdir = abspath;
                 }
                 break;
             case '?':
@@ -203,10 +203,10 @@ void launchGame()
     /* Build the system command for calling the game */
     std::ostringstream cmd;
 
-    if (!context.libdir.empty())
-        cmd << "export LD_LIBRARY_PATH=\"" << context.libdir << ":$LD_LIBRARY_PATH\" && ";
-    if (!context.rundir.empty())
-        cmd << "cd " << context.rundir << " && ";
+    if (!context.config.libdir.empty())
+        cmd << "export LD_LIBRARY_PATH=\"" << context.config.libdir << ":$LD_LIBRARY_PATH\" && ";
+    if (!context.config.rundir.empty())
+        cmd << "cd " << context.config.rundir << " && ";
 
     std::string logstr = "";
     if (context.config.sc.logging_status == SharedConfig::NO_LOGGING)

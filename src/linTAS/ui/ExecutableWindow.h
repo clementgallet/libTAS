@@ -17,24 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_ENCODEWINDOW_H_INCLUDED
-#define LINTAS_ENCODEWINDOW_H_INCLUDED
+#ifndef LINTAS_EXECUTABLEWINDOW_H_INCLUDED
+#define LINTAS_EXECUTABLEWINDOW_H_INCLUDED
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
-//#include <FL/Fl_Input.H>
-//#include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Output.H>
-#include <Fl/Fl_Menu_Item.H>
-#include <Fl/Fl_Choice.H>
 
 #include "../Context.h"
 
-class EncodeWindow {
+class ExecutableWindow {
     public:
-        EncodeWindow(Context *c);
+        ExecutableWindow(Context *c);
 
         /* Update UI elements when the config has changed */
         void update_config();
@@ -43,30 +39,21 @@ class EncodeWindow {
 
         Fl_Double_Window *window;
 
-        Fl_Button *start;
+        Fl_Button *confirm;
         Fl_Button *cancel;
 
-        Fl_Output *encodepath;
-        Fl_Button *browseencodepath;
-        Fl_Native_File_Chooser *encodepathchooser;
+        Fl_Output *runpath;
+        Fl_Button *browserunpath;
+        Fl_Native_File_Chooser *runpathchooser;
 
-        Fl_Choice *containerchoice;
-        static Fl_Menu_Item container_items[];
-
-        Fl_Choice *videochoice;
-        static Fl_Menu_Item video_items[];
-        Fl_Input *videobitrate;
-
-        Fl_Choice *audiochoice;
-        static Fl_Menu_Item audio_items[];
-        Fl_Input *audiobitrate;
-
+        Fl_Output *libpath;
+        Fl_Button *browselibpath;
+        Fl_Native_File_Chooser *libpathchooser;
 };
 
-static Fl_Callback start_cb;
+static Fl_Callback confirm_cb;
 static Fl_Callback cancel_cb;
-static Fl_Callback browse_encodepath_cb;
-static Fl_Callback vcodec_cb;
-static Fl_Callback acodec_cb;
+static Fl_Callback browse_runpath_cb;
+static Fl_Callback browse_libpath_cb;
 
 #endif

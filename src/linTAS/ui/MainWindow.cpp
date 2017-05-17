@@ -113,6 +113,7 @@ void MainWindow::build(Context* c)
 
     encode_window = new EncodeWindow(c);
     input_window = new InputWindow(c);
+    executable_window = new ExecutableWindow(c);
 
     window->show();
 }
@@ -120,6 +121,7 @@ void MainWindow::build(Context* c)
 Fl_Menu_Item MainWindow::menu_items[] = {
     {"File", 0, nullptr, nullptr, FL_SUBMENU},
         {"Open Executable...", 0, browse_gamepath_cb},
+        {"Executable Options...", 0, config_executable_cb},
         {"Open Movie...", 0, browse_moviepath_cb},
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
@@ -512,6 +514,7 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         /* Update the UI accordingly */
         mw.update_config();
         mw.encode_window->update_config();
+        mw.executable_window->update_config();
         mw.input_window->update();
     }
 }
@@ -575,9 +578,21 @@ void recording_cb(Fl_Widget* w)
 void config_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
+    mw.encode_window->update_config();
     mw.encode_window->window->show();
 
     while (mw.encode_window->window->shown()) {
+        Fl::wait();
+    }
+}
+
+void config_executable_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.executable_window->update_config();
+    mw.executable_window->window->show();
+
+    while (mw.executable_window->window->shown()) {
         Fl::wait();
     }
 }
@@ -607,6 +622,7 @@ void toggle_encode_cb(Fl_Widget* w, void*)
 void config_input_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
+    mw.input_window->update();
     mw.input_window->window->show();
 
     while (mw.input_window->window->shown()) {

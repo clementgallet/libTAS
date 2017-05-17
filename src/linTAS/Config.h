@@ -60,6 +60,12 @@ public:
     /* Was the dump file modified */
     bool dumpfile_modified;
 
+    /* Path of the libraries used by the game */
+    std::string libdir;
+
+    /* Path where the game needs to run */
+    std::string rundir;
+
     /* Save the config into the config file */
     void save();
 

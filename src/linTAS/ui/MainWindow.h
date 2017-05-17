@@ -36,6 +36,7 @@
 
 #include "../Context.h"
 #include "EncodeWindow.h"
+#include "ExecutableWindow.h"
 #include "InputWindow.h"
 
 class MainWindow {
@@ -61,6 +62,7 @@ class MainWindow {
 
         EncodeWindow* encode_window;
         InputWindow* input_window;
+        ExecutableWindow* executable_window;
 
         Fl_Button *launch;
 
@@ -115,6 +117,7 @@ static Fl_Callback0 encode_cb;
 static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
 static Fl_Callback config_input_cb;
+static Fl_Callback config_executable_cb;
 static Fl_Callback sound_frequency_cb;
 static Fl_Callback sound_bitdepth_cb;
 static Fl_Callback sound_channel_cb;

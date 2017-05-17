@@ -32,6 +32,8 @@ void Config::save() {
     prefs->set("gameargs", gameargs.c_str());
     prefs->set("moviefile", moviefile.c_str());
     prefs->set("dumpfile", dumpfile.c_str());
+    prefs->set("libdir", libdir.c_str());
+    prefs->set("rundir", rundir.c_str());
 
     Fl_Preferences prefs_km(*prefs, "keymapping");
 
@@ -112,6 +114,14 @@ void Config::load(const std::string& gamepath) {
 
     if (prefs->get("dumpfile", text, dumpfile.c_str()))
         dumpfile = text;
+    free(text);
+
+    if (prefs->get("libdir", text, libdir.c_str()))
+        libdir = text;
+    free(text);
+
+    if (prefs->get("rundir", text, rundir.c_str()))
+        rundir = text;
     free(text);
 
     Fl_Preferences prefs_km(*prefs, "keymapping");
