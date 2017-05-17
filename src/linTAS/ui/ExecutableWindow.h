@@ -51,9 +51,4 @@ class ExecutableWindow {
         Fl_Native_File_Chooser *libpathchooser;
 };
 
-static Fl_Callback confirm_cb;
-static Fl_Callback cancel_cb;
-static Fl_Callback browse_runpath_cb;
-static Fl_Callback browse_libpath_cb;
-
 #endif

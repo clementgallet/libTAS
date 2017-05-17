@@ -106,35 +106,6 @@ class MainWindow {
         ~MainWindow();
 };
 
-static Fl_Callback0 launch_cb;
-static Fl_Callback browse_gamepath_cb;
-static Fl_Callback browse_moviepath_cb;
-static Fl_Callback0 set_fps_cb;
-static Fl_Callback0 pause_cb;
-static Fl_Callback0 fastforward_cb;
-static Fl_Callback0 recording_cb;
-static Fl_Callback0 encode_cb;
-static Fl_Callback config_encode_cb;
-static Fl_Callback toggle_encode_cb;
-static Fl_Callback config_input_cb;
-static Fl_Callback config_executable_cb;
-static Fl_Callback sound_frequency_cb;
-static Fl_Callback sound_bitdepth_cb;
-static Fl_Callback sound_channel_cb;
-static Fl_Callback mute_sound_cb;
-static Fl_Callback logging_status_cb;
-static Fl_Callback logging_print_cb;
-static Fl_Callback logging_exclude_cb;
-static Fl_Callback input_keyboard_cb;
-static Fl_Callback input_mouse_cb;
-static Fl_Callback input_joy_cb;
-static Fl_Callback input_focus_game_cb;
-static Fl_Callback input_focus_ui_cb;
-static Fl_Callback slowmo_cb;
-static Fl_Callback osd_frame_cb;
-static Fl_Callback osd_inputs_cb;
-static Fl_Callback osd_encode_cb;
-
 void error_dialog(void* error_msg);
 
 #endif

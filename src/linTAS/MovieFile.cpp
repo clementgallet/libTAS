@@ -47,6 +47,8 @@ void MovieFile::open(Context* c)
         case Context::RECORDING_READ_ONLY:
             loadMovie();
             break;
+        default:
+            return;
     }
 
     input_it = input_list.begin();
@@ -89,7 +91,6 @@ void MovieFile::loadMovie(std::string& moviefile)
 
     input_list.clear();
 
-    int f = 0;
     while (std::getline(input_stream, line)) {
         if (!line.empty() && (line[0] == '|')) {
             AllInputs ai;
@@ -128,7 +129,6 @@ void MovieFile::saveMovie()
     /* Compress the files into the final movie file */
     TAR *tar;
     tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
-    char* md = const_cast<char*>(movie_dir.c_str());
     /* I would like to use tar_append_tree but it saves files with their path */
     //tar_append_tree(tar, md, save_dir);
     char* input_ptr = const_cast<char*>(input_file.c_str());

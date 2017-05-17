@@ -21,6 +21,11 @@
 #include "MainWindow.h"
 #include <iostream>
 
+static Fl_Callback confirm_cb;
+static Fl_Callback cancel_cb;
+static Fl_Callback browse_runpath_cb;
+static Fl_Callback browse_libpath_cb;
+
 ExecutableWindow::ExecutableWindow(Context* c) : context(c)
 {
     window = new Fl_Double_Window(600, 160);

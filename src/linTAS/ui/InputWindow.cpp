@@ -21,6 +21,14 @@
 #include <iostream>
 #include <X11/XKBlib.h>
 
+static KeySym get_next_keypressed(Display* display, bool with_modifiers);
+static Fl_Callback select_cb;
+static Fl_Callback assign_cb;
+static Fl_Callback default_cb;
+static Fl_Callback disable_cb;
+static Fl_Callback save_cb;
+static Fl_Callback cancel_cb;
+
 InputWindow::InputWindow(Context* c) : context(c)
 {
     window = new Fl_Double_Window(800, 500);
@@ -141,7 +149,7 @@ void InputWindow::update()
     }
 }
 
-KeySym get_next_keypressed(Display* display, bool with_modifiers)
+static KeySym get_next_keypressed(Display* display, bool with_modifiers)
 {
     Window window;
     XEvent event;
@@ -174,7 +182,7 @@ KeySym get_next_keypressed(Display* display, bool with_modifiers)
     return 0;
 }
 
-void select_cb(Fl_Widget* w, void* v)
+static void select_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
     Fl_Multi_Browser* cur_browser;
@@ -213,7 +221,7 @@ void select_cb(Fl_Widget* w, void* v)
     }
 }
 
-void assign_cb(Fl_Widget* w, void* v)
+static void assign_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
@@ -243,7 +251,7 @@ void assign_cb(Fl_Widget* w, void* v)
     iw->update();
 }
 
-void default_cb(Fl_Widget* w, void* v)
+static void default_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
@@ -273,7 +281,7 @@ void default_cb(Fl_Widget* w, void* v)
     iw->update();
 }
 
-void disable_cb(Fl_Widget* w, void* v)
+static void disable_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
@@ -303,7 +311,7 @@ void disable_cb(Fl_Widget* w, void* v)
     iw->update();
 }
 
-void save_cb(Fl_Widget* w, void* v)
+static void save_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 
@@ -313,7 +321,7 @@ void save_cb(Fl_Widget* w, void* v)
     iw->window->hide();
 }
 
-void cancel_cb(Fl_Widget* w, void* v)
+static void cancel_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
 

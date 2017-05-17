@@ -49,13 +49,4 @@ class InputWindow {
         void update();
 };
 
-static KeySym get_next_keypressed(Display* display);
-
-static Fl_Callback select_cb;
-static Fl_Callback assign_cb;
-static Fl_Callback default_cb;
-static Fl_Callback disable_cb;
-static Fl_Callback save_cb;
-static Fl_Callback cancel_cb;
-
 #endif

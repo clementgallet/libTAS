@@ -112,7 +112,7 @@ void SaveState::fillSections(pid_t game_pid)
     }
 
     /* Now iterate until end-of-file. */
-    intptr_t total_size = 0;
+    total_size = 0;
 
     std::string line;
     while (std::getline(mapsfile, line)) {
@@ -136,7 +136,7 @@ void SaveState::fillSections(pid_t game_pid)
          *     are done with our memory manager
          * - copy the stack of each thread
          */
-        if ( (total_size == 0) || 
+        if ( (total_size == 0) ||
              //(section->filename.find("heap") != std::string::npos) ||
              (section->filename.find("stack") != std::string::npos) ) {
 
@@ -168,7 +168,7 @@ void SaveState::fillRegisters(pid_t game_pid)
 
     std::vector<pid_t> tids;
     gettids(game_pid, tids);
- 
+
     for (auto tid: tids) {
         ThreadInfo ti;
         ti.tid = tid;
@@ -242,7 +242,7 @@ bool SaveState::save(pid_t game_pid)
 bool SaveState::load(pid_t game_pid)
 {
     /* Attach to the game process */
-    /* 
+    /*
      * Actually, we don't need this, just the signal to freeze the game, I guess.
      * TODO: leaving it for now.
      */
@@ -302,4 +302,3 @@ bool SaveState::load(pid_t game_pid)
     detachToGame(game_pid);
     return true;
 }
-

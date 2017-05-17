@@ -21,6 +21,12 @@
 #include "MainWindow.h"
 #include <iostream>
 
+static Fl_Callback start_cb;
+static Fl_Callback cancel_cb;
+static Fl_Callback browse_encodepath_cb;
+static Fl_Callback vcodec_cb;
+static Fl_Callback acodec_cb;
+
 EncodeWindow::EncodeWindow(Context* c) : context(c)
 {
     window = new Fl_Double_Window(600, 200);

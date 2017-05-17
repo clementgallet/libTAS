@@ -78,6 +78,8 @@ void AudioBuffer::update(void)
                 /* We have an incomplete block */
                 sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
             break;
+        default:
+            break;
     }
 }
 
@@ -92,6 +94,8 @@ bool AudioBuffer::checkSize(void)
             return (size % alignSize) == 0;
         case SAMPLE_FMT_MSADPCM:
             return (size % nbChannels) == 0;
+        default:
+            break;
     }
     return true;
 }
@@ -99,6 +103,8 @@ bool AudioBuffer::checkSize(void)
 int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
 {
     switch (format) {
+        case SAMPLE_FMT_NB:
+            break;
         case SAMPLE_FMT_U8:
         case SAMPLE_FMT_S16:
         case SAMPLE_FMT_S32:

@@ -270,9 +270,8 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         input_mapping[ks] = si;
 }
 
-
 void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, std::array<char,32> &keyboard_state, SharedConfig& sc){
-    int i,j,k;
+    int i,j;
     int keysym_i = 0;
 
     ai.emptyInputs();

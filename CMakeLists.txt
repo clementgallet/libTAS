@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 project(libTAS)
 # From here : http://stackoverflow.com/questions/28250081/when-should-i-rerun-cmake
@@ -21,12 +21,20 @@ add_library(TAS SHARED ${lib_sources} ${shared_sources} ${external_sources})
 target_compile_features(TAS PRIVATE cxx_auto_type cxx_nullptr cxx_range_for cxx_variadic_templates)
 target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 
-# Common flags
-target_compile_options(TAS PUBLIC -g -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter)
+# Common debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
 
-# Add some libs manually
-target_link_libraries (linTAS -lrt -lpthread -ltar)
-target_link_libraries (TAS -lrt -rdynamic)
+# Add librt for shm_open
+find_library(RT_LIB rt)
+target_link_libraries (linTAS ${RT_LIB})
+
+# Add TAR lib
+find_library(TAR_LIB tar)
+target_link_libraries (linTAS ${TAR_LIB})
+
+# Add pthread
+find_package(Threads REQUIRED)
+target_link_libraries(linTAS Threads::Threads)
 
 # Add X11 library
 find_package(X11 REQUIRED)
@@ -80,7 +88,7 @@ endif()
 # HUD
 option(ENABLE_HUD "Enable HUD" OFF)
 
-pkg_check_modules(FREETYPE freetype2)
+pkg_check_modules(FREETYPE freetype2 fontconfig)
 if (ENABLE_HUD AND FREETYPE_FOUND)
     # Enable HUD
     message(STATUS "HUD is enabled")
