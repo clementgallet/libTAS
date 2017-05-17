@@ -187,7 +187,8 @@ int main(int argc, char **argv)
     /* Start the threaded environnment */
     Fl::lock();
 
-    return Fl::run();
+    Fl::run();
+    XCloseDisplay(context.display);
 }
 
 void launchGame()
@@ -614,6 +615,7 @@ void launchGame()
     ui.update_status();
 
     XAutoRepeatOn(context.display);
+    XFlush(context.display);
 
     return;
 }
