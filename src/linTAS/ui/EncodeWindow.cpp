@@ -68,6 +68,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
 
 Fl_Menu_Item EncodeWindow::container_items[] = {
     {".mkv"},
+    {".mp4"},
     {".avi"},
     {nullptr}
 };
