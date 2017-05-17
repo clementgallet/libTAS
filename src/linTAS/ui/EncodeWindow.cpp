@@ -87,6 +87,8 @@ Fl_Menu_Item EncodeWindow::video_items[] = {
 };
 
 Fl_Menu_Item EncodeWindow::audio_items[] = {
+    {"mp3", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_MP3)},
+    {"aac", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_AAC)},
     {"vorbis", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_VORBIS)},
     {"opus", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_OPUS)},
     {"flac", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_FLAC)},

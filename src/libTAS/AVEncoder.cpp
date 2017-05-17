@@ -155,6 +155,8 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
     AVSampleFormat in_fmt = (audiocontext.outBitDepth == 8)?AV_SAMPLE_FMT_U8:AV_SAMPLE_FMT_S16;
 
     switch (audio_codec_id) {
+        case AV_CODEC_ID_MP3:
+        case AV_CODEC_ID_AAC:
         case AV_CODEC_ID_VORBIS:
             audio_st->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
             break;
