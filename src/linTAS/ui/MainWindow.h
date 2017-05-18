@@ -106,6 +106,11 @@ class MainWindow {
         ~MainWindow();
 };
 
+/* The launch callback is exposed because the other thread may want to
+ * trigger a game restart using this callback in case of PseudoSaveState
+ */
+Fl_Callback0 launch_cb;
+
 void error_dialog(void* error_msg);
 
 #endif

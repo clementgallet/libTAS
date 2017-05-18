@@ -30,7 +30,8 @@ struct Context {
         INACTIVE,
         STARTING,
         ACTIVE,
-        QUITTING
+        QUITTING,
+        RESTARTING
     };
     RunStatus status = INACTIVE;
 

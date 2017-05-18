@@ -23,7 +23,6 @@
 #include <iostream>
 #include <FL/x.H>
 
-static Fl_Callback0 launch_cb;
 static Fl_Callback browse_gamepath_cb;
 static Fl_Callback browse_moviepath_cb;
 static Fl_Callback0 set_fps_cb;
@@ -518,6 +517,12 @@ void launch_cb(Fl_Widget* w)
             mw.context->status = Context::QUITTING;
             mw.update_status();
             mw.game_thread.detach();
+            break;
+        case Context::RESTARTING:
+            mw.game_thread.join();
+            mw.context->status = Context::STARTING;
+            mw.update_status();
+            mw.game_thread = std::thread{launchGame};
             break;
         default:
             break;

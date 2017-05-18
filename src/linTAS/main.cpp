@@ -30,7 +30,7 @@
 #include <X11/XKBlib.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
-#include "SaveState.h"
+#include "PseudoSaveState.h"
 #include <vector>
 #include <string>
 #include <sstream>
@@ -48,7 +48,7 @@
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
-SaveState savestate;
+PseudoSaveState savestate;
 
 pid_t game_pid;
 
@@ -242,8 +242,6 @@ void launchGame()
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
-    XEvent event;
-
     struct timespec tim = {1, 0L};
 
     XSetErrorHandler(MyErrorHandler);
@@ -332,7 +330,7 @@ void launchGame()
      */
     int ar_ticks = -1;
     int ar_delay = 50;
-    int ar_freq = context.config.sc.fastforward ? 8 : 2;
+    int ar_freq = 2;
 
     /* Unvalidate the game window id */
     context.game_window = 0;
@@ -386,6 +384,30 @@ void launchGame()
         /* Update frame count in the UI */
         ui.update(false);
 
+        /* Check if we are loading a pseudo savestate */
+        if (savestate.loading) {
+            /* When we approach the frame to pause, we disable fastforward so
+             * that we draw all the frames.
+             */
+            if (context.framecount > (savestate.framecount - 30)) {
+                context.config.sc.fastforward = false;
+                context.config.sc_modified = true;
+                ui.update(true);
+            }
+
+            if (savestate.framecount == context.framecount) {
+                /* We are back to our savestate frame, we pause the game, disable
+                 * fastforward and recover the movie recording mode.
+                 */
+                savestate.loading = false;
+                context.config.sc.running = false;
+                context.config.sc.fastforward = false;
+                context.config.sc_modified = true;
+                context.recording = savestate.recording;
+                ui.update(true);
+            }
+        }
+
         std::array<char, 32> keyboard_state;
 
         /* Flag to trigger a frame advance even if the game is on pause */
@@ -412,6 +434,7 @@ void launchGame()
 
             while( XPending( context.display ) ) {
 
+                XEvent event;
                 XNextEvent(context.display, &event);
 
                 struct HotKey hk;
@@ -461,10 +484,23 @@ void launchGame()
                         context.config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_SAVESTATE){
-                        savestate.save(game_pid);
+                        savestate.framecount = context.framecount;
                     }
                     if (hk.type == HOTKEY_LOADSTATE){
-                        savestate.load(game_pid);
+                        if (savestate.framecount > 0 && (
+                            context.recording == Context::RECORDING_READ_WRITE ||
+                            context.recording == Context::RECORDING_WRITE)) {
+                            savestate.loading = true;
+                            context.config.sc.running = true;
+                            context.config.sc.fastforward = true;
+                            context.config.sc_modified = true;
+                            savestate.recording = context.recording;
+                            context.recording = Context::RECORDING_READ_WRITE;
+                            context.status = Context::QUITTING;
+                            ui.update(true);
+                            ui.update_status();
+                            break;
+                        }
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context.recording) {
@@ -601,13 +637,22 @@ void launchGame()
 
     }
 
-    if (context.recording != Context::NO_RECORDING){
-        movie.close();
-    }
+    movie.close();
     close(socket_fd);
 
-    context.status = Context::INACTIVE;
-    ui.update_status();
+    if (savestate.loading) {
+        /* We a loading a pseudo savestate, we need to restart the game */
+        context.status = Context::RESTARTING;
+        /* Ask the main (UI) thread to call launch_cb, restarting the game */
+        Fl::awake(reinterpret_cast<Fl_Awake_Handler>(&launch_cb)); // FIXME: not a good cast
+    }
+    else {
+        /* Unvalidate the pseudo savestate */
+        savestate.framecount = 0;
+
+        context.status = Context::INACTIVE;
+        ui.update_status();
+    }
 
     XAutoRepeatOn(context.display);
     XFlush(context.display);
