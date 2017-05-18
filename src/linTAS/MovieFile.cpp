@@ -41,19 +41,17 @@ void MovieFile::open(Context* c)
 
     switch(context->recording) {
         case Context::RECORDING_WRITE:
+        case Context::NO_RECORDING:
             input_list.clear();
             break;
         case Context::RECORDING_READ_WRITE:
         case Context::RECORDING_READ_ONLY:
             loadMovie();
             break;
-        default:
-            return;
     }
 
     input_it = input_list.begin();
     it_index = 0;
-
 }
 
 tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
@@ -311,6 +309,7 @@ int MovieFile::getInputs(AllInputs& inputs)
 {
     if (context->framecount > input_list.size()) {
         std::cout << "Reading a frame after the last frame of the input list." << std::endl;
+        inputs.emptyInputs();
         return 1;
     }
 
@@ -336,5 +335,6 @@ int MovieFile::getInputs(AllInputs& inputs)
 
 void MovieFile::close()
 {
-    saveMovie();
+    if (context->recording != Context::NO_RECORDING)
+        saveMovie();
 }

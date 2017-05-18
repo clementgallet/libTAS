@@ -17,7 +17,7 @@ To enable audio and video dumping, you will need `libavcodec`, `libavformat`, `l
 
 To enable audio playback, you will also need `libswresample`, `libasound`
 
-To enable HUD on the game screen, you will need `libfreetype`
+To enable HUD on the game screen, you will need `libfreetype`, `libfontconfig`
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:

@@ -43,6 +43,7 @@
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 #include "MovieFile.h"
+#include <cerrno>
 
 #define MAGIC_NUMBER 42
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -243,7 +244,7 @@ void launchGame()
 
     XEvent event;
 
-    struct timespec tim;
+    struct timespec tim = {1, 0L};
 
     XSetErrorHandler(MyErrorHandler);
     XAutoRepeatOff(context.display);
@@ -252,13 +253,14 @@ void launchGame()
     int retry = 0;
     // ui_print("Connecting to libTAS...\n");
 
+    nanosleep(&tim, NULL);
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
                 sizeof(struct sockaddr_un))) {
         // ui_print("Attempt #%i: Couldn't connect to socket.\n", retry + 1);
         retry++;
         if (retry < MAX_RETRIES) {
             // ui_print("Retrying in 2s\n");
-            sleep(2);
+            nanosleep(&tim, NULL);
         } else {
             return;
         }
@@ -314,19 +316,19 @@ void launchGame()
     message = MSGN_END_INIT;
     send(socket_fd, &message, sizeof(int), 0);
 
-    tim.tv_sec  = 1;
-    tim.tv_nsec = 0L;
-
     nanosleep(&tim, NULL);
 
-    if (context.recording != Context::NO_RECORDING) {
-        movie.open(&context);
-    }
+    /* Opening a movie, which imports the inputs and parameters if in read mode,
+     * or prepare a movie if in write mode. Even if we are in NO_RECORDING mode,
+     * we still open a movie to store the input list.
+     */
+    movie.open(&context);
 
     /*
      * Frame advance auto-repeat variables.
-     * If ar_ticks is >= 0 (auto-repeat activated), it increases by one every iteration of the do loop
-     * If ar_ticks > ar_delay and ar_ticks % ar_freq == 0 then trigger frame advance
+     * If ar_ticks is >= 0 (auto-repeat activated), it increases by one every
+     * iteration of the do loop.
+     * If ar_ticks > ar_delay and ar_ticks % ar_freq == 0: trigger frame advance
      */
     int ar_ticks = -1;
     int ar_delay = 50;
@@ -337,11 +339,10 @@ void launchGame()
 
     while (1)
     {
-
         /* Wait for frame boundary */
-        recv(socket_fd, &message, sizeof(int), 0);
+        ssize_t ret = recv(socket_fd, &message, sizeof(int), 0);
 
-        while ((message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
+        while ((ret > 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
             void* error_msg;
             switch (message) {
             case MSGB_WINDOW_ID:
@@ -354,16 +355,6 @@ void launchGame()
                 }
                 /* FIXME: Don't do this if the ui option is unchecked  */
                 XSelectInput(context.display, context.game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-                // XSelectInput(context.display, context.game_window, KeyPressMask);
-    #if 0
-                int iError = XGrabKeyboard(display, context.game_window, 0,
-                        GrabModeAsync, GrabModeAsync, CurrentTime);
-                if (iError != GrabSuccess && iError == AlreadyGrabbed) {
-                    XUngrabPointer(display, CurrentTime);
-                    XFlush(display);
-                    fprintf(stderr, "Keyboard is already grabbed\n");
-                }
-    #endif
                 break;
 
             case MSGB_ERROR_MSG:
@@ -375,16 +366,22 @@ void launchGame()
                 /* The error_dialog function frees error_msg */
                 break;
             default:
-                std::cout << "Got unknown message!!!" << std::endl;
+                std::cerr << "Got unknown message!!!" << std::endl;
                 return;
             }
-            recv(socket_fd, &message, sizeof(int), 0);
+            ret = recv(socket_fd, &message, sizeof(int), 0);
+        }
+
+        if (ret == -1) {
+            std::cerr << "Got a socket error: " << strerror(errno) << std::endl;
+            break;
         }
 
         if (message == MSGB_QUIT) {
             break;
         }
 
+        /* message was MSGB_START_FRAMEBOUNDARY, gathering the frame count */
         recv(socket_fd, &context.framecount, sizeof(unsigned long), 0);
         /* Update frame count in the UI */
         ui.update(false);
@@ -477,6 +474,8 @@ void launchGame()
                         case Context::RECORDING_READ_WRITE:
                             context.recording = Context::RECORDING_WRITE;
                             break;
+                        default:
+                            break;
                         }
                         ui.update(true);
                     }
@@ -552,10 +551,7 @@ void launchGame()
                     }
                 }
 
-                if (context.recording == Context::NO_RECORDING)
-                    break;
-
-                /* Save inputs to file */
+                /* Save inputs to moviefile */
                 movie.setInputs(ai);
                 break;
 
@@ -563,11 +559,10 @@ void launchGame()
             case Context::RECORDING_READ_ONLY:
                 /* Read inputs from file */
                 if (!movie.getInputs(ai)) {
-                    /* Reading failed, returning to no recording mode */
-                    std::cout << "Reading failed" << std::endl;
-                    movie.close();
-                    context.recording = Context::NO_RECORDING;
-                    ui.update(true);
+                    /* TODO: Add an option to decide what to do when movie ends */
+                    // movie.saveMovie();
+                    // context.recording = Context::NO_RECORDING;
+                    // ui.update(true);
                 }
                 break;
         }
