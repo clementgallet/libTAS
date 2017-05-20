@@ -151,6 +151,8 @@ void EncodeWindow::update_config()
         case AV_CODEC_ID_PCM_S16LE:
             audiobitrate->deactivate();
             break;
+        case AV_CODEC_ID_MP3:
+        case AV_CODEC_ID_AAC:
         case AV_CODEC_ID_VORBIS:
         case AV_CODEC_ID_OPUS:
         default:
@@ -245,6 +247,8 @@ void acodec_cb(Fl_Widget* w, void* v)
         case AV_CODEC_ID_PCM_S16LE:
             ew->audiobitrate->deactivate();
             break;
+        case AV_CODEC_ID_MP3:
+        case AV_CODEC_ID_AAC:
         case AV_CODEC_ID_VORBIS:
         case AV_CODEC_ID_OPUS:
         default:

@@ -55,7 +55,7 @@ typedef int LogCategoryFlag; enum
 	LCF_JOYSTICK = 1 << 21, // for both SDL_Joystick and SDL_GameController
 	LCF_OPENAL   = 1 << 22, // call to openAL functions
 	LCF_SOUND    = 1 << 23,
-	//LCF_UDEV     = 1 << 24,
+	LCF_RANDOM   = 1 << 24,
 	//LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.
 	LCF_EVENTS   = 1 << 26, // processing SDL events
 	LCF_WINDOW   = 1 << 27,
