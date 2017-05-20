@@ -17,10 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_MAIN_H_INCLUDED
-#define LINTAS_MAIN_H_INCLUDED
+#ifndef LINTAS_GAME_H_INCLUDED
+#define LINTAS_GAME_H_INCLUDED
 
-void print_usage(void);
-void launchGame();
+#include "Context.h"
+
+void launchGame(Context* context);
 
 #endif

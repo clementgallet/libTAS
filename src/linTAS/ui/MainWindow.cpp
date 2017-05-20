@@ -18,7 +18,7 @@
  */
 
 #include "MainWindow.h"
-#include "../main.h"
+#include "../game.h"
 #include "../MovieFile.h"
 #include <iostream>
 #include <FL/x.H>
@@ -511,7 +511,7 @@ void launch_cb(Fl_Widget* w)
             /* Start game */
             mw.context->status = Context::STARTING;
             mw.update_status();
-            mw.game_thread = std::thread{launchGame};
+            mw.game_thread = std::thread{launchGame, mw.context};
             break;
         case Context::ACTIVE:
             mw.context->status = Context::QUITTING;
@@ -522,7 +522,7 @@ void launch_cb(Fl_Widget* w)
             mw.game_thread.join();
             mw.context->status = Context::STARTING;
             mw.update_status();
-            mw.game_thread = std::thread{launchGame};
+            mw.game_thread = std::thread{launchGame, mw.context};
             break;
         default:
             break;
