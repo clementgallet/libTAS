@@ -194,7 +194,10 @@ void pushQuitEvent(void)
     struct timespec mssleep = {0, 1000000};
     if (event) {
         while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
-            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            {
+                ThreadNative tn;
+                nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            }
             pushNativeEvents();
         }
         return 1;
@@ -202,7 +205,10 @@ void pushQuitEvent(void)
     else {
         SDL_Event ev;
         while (! sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false)) {
-            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            {
+                ThreadNative tn;
+                nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            }
             pushNativeEvents();
         }
         return 1;
@@ -219,7 +225,10 @@ void pushQuitEvent(void)
         for (t=0; t<timeout; t++) {
             if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
                 break;
-            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            {
+                ThreadNative tn;
+                nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            }
             pushNativeEvents();
         }
         return (t<timeout);
@@ -229,7 +238,10 @@ void pushQuitEvent(void)
         for (t=0; t<timeout; t++) {
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
-            orig::nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            {
+                ThreadNative tn;
+                nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
+            }
             pushNativeEvents();
         }
         return (t<timeout);

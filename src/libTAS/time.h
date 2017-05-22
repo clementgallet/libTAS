@@ -29,11 +29,6 @@
 
 extern unsigned long frame_counter;
 
-namespace orig {
-    /* We need at least one function to get the real clock time */
-    extern int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
-}
-
 /* Time used by the program so far (user time + system time).
    The result / CLOCKS_PER_SECOND is program time in seconds.  */
 OVERRIDE clock_t clock (void);
@@ -67,7 +62,5 @@ OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
  * \brief Get the current value of the high resolution counter
  */
 OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
-
-void link_time(void);
 
 #endif

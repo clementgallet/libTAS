@@ -31,7 +31,7 @@ unsigned long frame_counter = 0;
 
 /*** Functions that access time ***/
 namespace orig {
-    int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
+    static int (*clock_gettime) (clockid_t clock_id, struct timespec *tp);
 }
 
 /* Override */ time_t time(time_t* t)
@@ -47,8 +47,7 @@ namespace orig {
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(TIMETYPE_UNTRACKED);
-    //struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
 
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
@@ -67,21 +66,12 @@ namespace orig {
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    if (!orig::clock_gettime) {
-        /* Some libraries can call this *very* early, and trying to link
-         * results in a crash.
-         */
-        tp->tv_sec = 0;
-        tp->tv_nsec = 0;
-        return 0;
-    }
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    //printBacktrace();
     if (ThreadState::isNative()) {
+        LINK_NAMESPACE(clock_gettime, nullptr);
         orig::clock_gettime(clock_id, tp);
     }
     else {
-        //*tp = detTimer.getTicks(TIMETYPE_UNTRACKED);
         *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
     }
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
@@ -111,9 +101,4 @@ namespace orig {
 
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "  returning ", counter);
     return counter;
-}
-
-void link_time(void)
-{
-    LINK_NAMESPACE(clock_gettime, nullptr);
 }

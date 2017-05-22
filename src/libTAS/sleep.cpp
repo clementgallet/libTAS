@@ -26,7 +26,7 @@
 #include "hook.h"
 
 namespace orig {
-    int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
+    static int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
 }
 
 /* Override */ void SDL_Delay(unsigned int sleep)
@@ -49,6 +49,7 @@ namespace orig {
         ts.tv_nsec = 0;
     }
 
+    LINK_NAMESPACE(nanosleep, nullptr);
     orig::nanosleep(&ts, NULL);
 }
 
@@ -72,6 +73,7 @@ namespace orig {
         ts.tv_nsec = 0;
     }
 
+    LINK_NAMESPACE(nanosleep, nullptr);
     orig::nanosleep(&ts, NULL);
     return 0;
 }
@@ -86,6 +88,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
+    LINK_NAMESPACE(nanosleep, nullptr);
     if (mainT && !ThreadState::isNative()) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
@@ -118,6 +121,7 @@ namespace orig {
      * transfer the wait to the timer and
      * do not actually wait
      */
+    LINK_NAMESPACE(nanosleep, nullptr);
     if (mainT && !ThreadState::isNative()) {
         detTimer.addDelay(sleeptime);
         struct timespec owntime = {0, 0};
@@ -125,9 +129,4 @@ namespace orig {
     }
 
     return orig::nanosleep(&sleeptime, rem);
-}
-
-void link_sleep(void)
-{
-    LINK_NAMESPACE(nanosleep, nullptr);
 }

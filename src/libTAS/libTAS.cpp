@@ -20,7 +20,7 @@
 #include "libTAS.h"
 #include <vector>
 #include <string>
-#include "time.h"
+// #include "time.h"
 #include "timer.h"
 #include "sleep.h"
 #include "sdlwindows.h"
@@ -119,11 +119,6 @@ void __attribute__((constructor)) init(void)
     old_ai.emptyInputs();
     game_ai.emptyInputs();
 
-    /* We initialize our dl functions hooking, and link some functions */
-    link_time();
-    link_sleep();
-    link_sdltimer();
-
     /* Initialize timers */
     nonDetTimer.initialize();
     detTimer.initialize();
@@ -145,9 +140,8 @@ void __attribute__((destructor)) term(void)
 }
 
 /* Override */ void SDL_Init(unsigned int flags){
-    debuglog(LCF_SDL, __func__, " call.");
-    debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
-    ThreadManager::get().init(pthread_self());
+    DEBUGLOGCALL(LCF_SDL);
+
     /* Get which sdl version we are using.
      * Stores it in an extern variable.
      */
@@ -175,7 +169,10 @@ void __attribute__((destructor)) term(void)
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
-    debuglog(LCF_SDL, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL);
+
+    debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
+    ThreadManager::get().init();
 
     /* Get which sdl version we are using.
      * Stores it in an extern variable.
@@ -183,7 +180,6 @@ void __attribute__((destructor)) term(void)
     get_sdlversion();
 
     /* Link function pointers to SDL functions */
-    LINK_NAMESPACE_SDLX(SDL_Init);
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
     if (SDLver == 1)
         link_function((void**)&orig::SDL1_VideoInit, "SDL_VideoInit", "libSDL-1.2");
@@ -195,6 +191,7 @@ void __attribute__((destructor)) term(void)
     link_sdlwindows();
     link_sdlevents();
     link_sdlthreads();
+    link_sdltimer();
 
     /* The thread calling this is probably the main thread */
     setMainThread();
@@ -254,15 +251,6 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
     debuglog(LCF_THREAD, ThreadManager::get().summary());
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    /* SDL 1.2 does not have a destroy window function,
-     * because there is only one window,
-     * so we close the av dumping here instead.
-     * However, the dumping will be closed at the
-     * end of program because, so maybe we don't need this.
-     */
-    //avencoder.reset(nullptr);
-#endif
 
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();

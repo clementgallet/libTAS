@@ -22,7 +22,7 @@
 #include <utility>
 #include <csignal>
 #include "ThreadManager.h"
-#include "time.h" // orig::clock_gettime
+#include "time.h" // clock_gettime
 
 ThreadManager ThreadManager::instance_ = ThreadManager();
 std::atomic<int> ThreadManager::spin(0);
@@ -55,10 +55,10 @@ void ThreadManager::sigspin(int sig)
         ;
 }
 
-void ThreadManager::init(pthread_t tid)
+void ThreadManager::init()
 {
     init_ = true;
-    main_ = tid;
+    main_ = getThreadId();
 }
 
 void ThreadManager::suspend(pthread_t from_tid)
@@ -92,7 +92,10 @@ void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
     currentAssociation_[tid] = diff;
     debuglog(LCF_THREAD, "Register starting ", stringify(tid)," with entrydiff ",  diff, ".");
     TimeHolder t;
-    orig::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    }
     //There may be multiple call to start...
 
     startTime_[diff][tid].push_back(t);
@@ -102,7 +105,10 @@ void ThreadManager::end(pthread_t tid)
 {
     debuglog(LCF_THREAD, "Register ending ", stringify(tid), ".");
     TimeHolder t;
-    orig::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    }
     ptrdiff_t diff = currentAssociation_[tid];
     endTime_[diff][tid].push_back(t);
 }

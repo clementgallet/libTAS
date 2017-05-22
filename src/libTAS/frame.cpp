@@ -51,7 +51,10 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
         computeCounter = 0;
 
         TimeHolder currentTime;
-        orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
+        {
+            ThreadNative tn;
+            clock_gettime(CLOCK_MONOTONIC, &currentTime);
+        }
 
         struct timespec tsTicks = detTimer.getTicks(TIMETYPE_UNTRACKED);
         TimeHolder currentTicks;

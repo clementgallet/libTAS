@@ -25,11 +25,6 @@
 #include "../external/SDL.h"
 #include "global.h"
 
-namespace orig {
-    /* We need at least one function to make a sleep */
-    extern int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
-}
-
 /* Sleep USECONDS microseconds, or until a signal arrives that is not blocked
    or ignored.
 
@@ -52,7 +47,5 @@ OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
  * \brief Wait a specified number of milliseconds before returning.
  */
 OVERRIDE void SDL_Delay(Uint32 sleep);
-
-void link_sleep(void);
 
 #endif

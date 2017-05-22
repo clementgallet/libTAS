@@ -21,8 +21,8 @@
 #include "logging.h"
 #include "frame.h"
 #include "../shared/SharedConfig.h"
-#include "time.h" // orig::clock_gettime
-#include "sleep.h" // orig::nanosleep
+#include "time.h" // clock_gettime
+#include "sleep.h" // nanosleep
 #include "audio/AudioContext.h"
 
 void NonDeterministicTimer::initialize(void)
@@ -30,7 +30,10 @@ void NonDeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     lastEnterTicks = ticks;
-    orig::clock_gettime(CLOCK_MONOTONIC, &lasttime);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &lasttime);
+    }
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;
@@ -52,7 +55,10 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
         /* Get the real clock time */
         TimeHolder realtime;
-        orig::clock_gettime(CLOCK_MONOTONIC, &realtime);
+        {
+            ThreadNative tn;
+            clock_gettime(CLOCK_MONOTONIC, &realtime);
+        }
 
         /* Compute the difference from the last call */
         TimeHolder delta = realtime - lasttime;
@@ -91,8 +97,10 @@ void NonDeterministicTimer::enterFrameBoundary()
     getTicks();
     inFB = true;
 
-    orig::clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
-
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
+    }
     /* Doing the audio mixing here */
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
     audiocontext.mixAllSources(elapsedTicks);
@@ -103,7 +111,10 @@ void NonDeterministicTimer::enterFrameBoundary()
 void NonDeterministicTimer::exitFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    orig::clock_gettime(CLOCK_MONOTONIC, &lastExitTime);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &lastExitTime);
+    }
     inFB = false;
 }
 
@@ -116,7 +127,9 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
         delayTicks.tv_nsec = 0;
     }
 
-    orig::nanosleep(&delayTicks, NULL);
+    /* Call the real nanosleep function */
+    ThreadNative tn;
+    nanosleep(&delayTicks, NULL);
 }
 
 NonDeterministicTimer nonDetTimer;

@@ -23,8 +23,8 @@
 #include "../shared/SharedConfig.h"
 #include "threads.h"
 #include "frame.h"
-#include "time.h" // orig::clock_gettime
-#include "sleep.h" // orig::nanosleep
+#include "time.h" // clock_gettime
+#include "sleep.h" // nanosleep
 #include "audio/AudioContext.h"
 #include "ThreadState.h"
 #include "renderhud/RenderHUD.h"
@@ -39,7 +39,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     /* If we are in the native thread state, just return the real time */
     if (ThreadState::isNative()) {
         struct timespec realtime;
-        orig::clock_gettime(CLOCK_REALTIME, &realtime);
+        clock_gettime(CLOCK_REALTIME, &realtime);
         return realtime;
     }
 
@@ -47,14 +47,15 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
         return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
-    bool isFrameThread = isMainThread();
+    bool mainT = isMainThread();
+    bool frameT = mainT;
 
     /* If it is our own code calling this, we don't need to track the call */
     if (ThreadState::isOwnCode())
         type = TIMETYPE_UNTRACKED;
 
     /* Only the main thread can modify the timer */
-    if(!isFrameThread) {
+    if(!frameT) {
         if(type != TIMETYPE_UNTRACKED) {
 
             /* Well, actually, if another thread get the time too many times,
@@ -66,13 +67,13 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
             {
                 if(getTimes == MAX_NONFRAME_GETTIMES)
                     debuglog(LCF_TIMEGET | LCF_DESYNC, "Temporarily assuming main thread");
-                isFrameThread = true;
+                frameT = true;
             }
             getTimes++;
         }
     }
 
-    if (isFrameThread)
+    if (frameT)
     {
         /* Only do this in the main thread so as to not dirty the timer with nondeterministic values
          * (not to mention it would be extremely multithreading-unsafe without using sync primitives otherwise)
@@ -114,7 +115,6 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     return fakeTicks;
 }
 
-
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
     //std::lock_guard<std::mutex> lock(mutex);
@@ -144,7 +144,9 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     {
         /* Sleep, because the caller would have yielded at least a little */
         struct timespec nosleep = {0, 0};
-        orig::nanosleep(&nosleep, NULL);
+        /* Call the real nanosleep function */
+        ThreadNative tn;
+        nanosleep(&nosleep, NULL);
     }
 
     while(addedDelay > maxDeferredDelay)
@@ -245,7 +247,10 @@ void DeterministicTimer::enterFrameBoundary()
 
     /* Get the current actual time */
     TimeHolder currentTime;
-    orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &currentTime);
+    }
 
     /* Calculate the target time we wanted to be at now */
     TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
@@ -259,7 +264,9 @@ void DeterministicTimer::enterFrameBoundary()
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
-            orig::nanosleep(&deltaTime, NULL);
+            /* Call the real nanosleep function */
+            ThreadNative tn;
+            nanosleep(&deltaTime, NULL);
         }
     }
 
@@ -267,7 +274,10 @@ void DeterministicTimer::enterFrameBoundary()
      * WARNING: This time update is not done in Hourglass,
      * maybe intentionally (the author does not remember).
      */
-    orig::clock_gettime(CLOCK_MONOTONIC, &currentTime);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &currentTime);
+    }
 
     lastEnterTime = currentTime;
 
@@ -285,7 +295,10 @@ void DeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     fractional_part = 0;
-    orig::clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
+    {
+        ThreadNative tn;
+        clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
+    }
     lastEnterTicks = ticks;
 
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)

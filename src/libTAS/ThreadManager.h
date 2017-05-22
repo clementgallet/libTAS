@@ -29,7 +29,7 @@
 #include <string>
 #include <atomic>
 #include <cstddef>
-#include <pthread.h>
+#include "threads.h"
 
 
 class ThreadManager {
@@ -52,7 +52,7 @@ public:
     static ThreadManager &get() { return instance_; };
 
     // Called from SDL_init, assumed to be main thread
-    void init(pthread_t tid);
+    void init();
     // Register the start of a new thread
     // It uses the ptrdiff between the start_routine and the calling function
     // ('from'), which is assumed to be a possible invariant
