@@ -128,8 +128,22 @@ OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
    __THROW.  */
 OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
+/* Set cancelability state of current thread to STATE, returning old
+   state in *OLDSTATE if OLDSTATE is not NULL.  */
+OVERRIDE int pthread_setcancelstate (int state, int *oldstate);
+
+/* Set cancellation state of current thread to TYPE, returning the old
+   type in *OLDTYPE if OLDTYPE is not NULL.  */
+OVERRIDE int pthread_setcanceltype (int type, int *oldtype);
+
+/* Cancel THREAD immediately or at the next possibility.  */
+OVERRIDE int pthread_cancel (pthread_t th);
+
+/* Test for pending cancellation for the current thread and terminate
+   the thread as per pthread_exit(PTHREAD_CANCELED) if it has been
+   cancelled.  */
+OVERRIDE void pthread_testcancel (void);
+
 void link_sdlthreads(void);
-void link_pthread(void);
 
 #endif
-

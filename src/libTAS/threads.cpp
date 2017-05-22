@@ -45,6 +45,10 @@ namespace orig {
     static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
     static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
     static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
+    static int (*pthread_setcancelstate)(int state, int *oldstate) = nullptr;
+    static int (*pthread_setcanceltype)(int type, int *oldtype) = nullptr;
+    static int (*pthread_cancel)(pthread_t th) = nullptr;
+    static void (*pthread_testcancel)(void) = nullptr;
 }
 
 /* We keep the identifier of the main thread */
@@ -53,9 +57,14 @@ pthread_t mainThread = 0;
 /* Get the current thread id */
 pthread_t getThreadId(void)
 {
+    LINK_NAMESPACE(pthread_self, "pthread");
     if (orig::pthread_self != nullptr)
         return orig::pthread_self();
-    return 0;
+
+    /* We couldn't link to pthread, meaning threading should be off.
+     * We must return a value so that isMainThread() returns true.
+     */
+    return mainThread;
 }
 
 /* Indicate that we are running on the main thread */
@@ -64,8 +73,7 @@ void setMainThread(void)
     if (mainThread != 0)
         /* Main thread was already set */
         return;
-    if (orig::pthread_self != nullptr)
-        mainThread = orig::pthread_self();
+    mainThread = getThreadId();
 }
 
 /*
@@ -74,11 +82,8 @@ void setMainThread(void)
  */
 int isMainThread(void)
 {
-    if (orig::pthread_self != nullptr)
-        return (orig::pthread_self() == mainThread);
-
-    /* If pthread library is not loaded, it is likely that the game is single threaded */
-    return 1;
+    /* If threading is off, this will return true */
+    return (getThreadId() == mainThread);
 }
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
@@ -91,18 +96,6 @@ int isMainThread(void)
 {
     DEBUGLOGCALL(LCF_THREAD);
     orig::SDL_WaitThread(thread, status);
-}
-
-void link_pthread(void)
-{
-    LINK_NAMESPACE(pthread_create, "pthread");
-    LINK_NAMESPACE(pthread_exit, "pthread");
-    LINK_NAMESPACE(pthread_join, "pthread");
-    LINK_NAMESPACE(pthread_detach, "pthread");
-    LINK_NAMESPACE(pthread_getname_np, "pthread");
-    LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
-    LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
-    LINK_NAMESPACE(pthread_self, "pthread");
 }
 
 typedef struct arg_t {
@@ -146,9 +139,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
-    // FIXME: here the "correct" way to do that is to have "if (!orig) link;" in
-    // every pthread entry point (to initialize the function on demand)
-    link_pthread();
+    LINK_NAMESPACE(pthread_create, "pthread");
     ThreadManager &tm = ThreadManager::get();
     char name[16];
     name[0] = '\0';
@@ -163,6 +154,8 @@ void *wrapper(void *arg)
     args.go = &go;
     int ret = orig::pthread_create(thread, attr, wrapper, &args);
     tm.start(*thread, __builtin_return_address(0), (void*)start_routine);
+
+    LINK_NAMESPACE(pthread_getname_np, "pthread");
     orig::pthread_getname_np(*thread, name, 16);
     std::string thstr = stringify(*thread);
     if (name[0])
@@ -189,7 +182,7 @@ void *wrapper(void *arg)
 
 /* Override */ void pthread_exit (void *retval)
 {
-    link_pthread();
+    LINK_NAMESPACE(pthread_exit, "pthread");
     debuglog(LCF_THREAD, "Thread has exited.");
     ThreadManager &tm = ThreadManager::get();
     pthread_t tid = getThreadId();
@@ -200,7 +193,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_join (pthread_t thread, void **thread_return)
 {
-    link_pthread();
+    LINK_NAMESPACE(pthread_join, "pthread");
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
     int retVal = orig::pthread_join(thread, thread_return);
@@ -210,7 +203,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_detach (pthread_t thread) throw()
 {
-    link_pthread();
+    LINK_NAMESPACE(pthread_detach, "pthread");
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
     ThreadManager::get().resume(thread);
@@ -219,6 +212,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval) throw()
 {
+    LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Try to join thread ", thstr);
     int ret = orig::pthread_tryjoin_np(thread, retval);
@@ -233,6 +227,7 @@ void *wrapper(void *arg)
 
 /* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime)
 {
+    LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Try to join thread ", thstr, " in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
     int ret = orig::pthread_timedjoin_np(thread, retval, abstime);
@@ -243,6 +238,38 @@ void *wrapper(void *arg)
         debuglog(LCF_THREAD, "Call timed out before thread ", thstr, " terminated.");
     }
     return ret;
+}
+
+/* Override */ int pthread_setcancelstate (int state, int *oldstate)
+{
+    LINK_NAMESPACE(pthread_setcancelstate, "pthread");
+    DEBUGLOGCALL(LCF_THREAD);
+    return orig::pthread_setcancelstate(state, oldstate);
+}
+
+/* Override */ int pthread_setcanceltype (int type, int *oldtype)
+{
+    LINK_NAMESPACE(pthread_setcanceltype, "pthread");
+    DEBUGLOGCALL(LCF_THREAD);
+    return orig::pthread_setcanceltype(type, oldtype);
+}
+
+/* Override */ int pthread_cancel (pthread_t th)
+{
+    LINK_NAMESPACE(pthread_cancel, "pthread");
+    std::string thstr = stringify(th);
+    debuglog(LCF_THREAD, "Cancel thread ", thstr);
+    ThreadManager &tm = ThreadManager::get();
+    tm.resume(th);
+    tm.end(th);
+    return orig::pthread_cancel(th);
+}
+
+/* Override */ void pthread_testcancel (void)
+{
+    LINK_NAMESPACE(pthread_testcancel, "pthread");
+    DEBUGLOGCALL(LCF_THREAD);
+    return orig::pthread_testcancel();
 }
 
 void link_sdlthreads(void)

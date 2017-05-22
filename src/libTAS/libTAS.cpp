@@ -26,7 +26,7 @@
 #include "sdlwindows.h"
 #include "dlhook.h"
 #include "sdlevents.h"
-#include "threads.h"
+// #include "threads.h"
 #include "socket.h"
 #include "logging.h"
 #include "NonDeterministicTimer.h"
@@ -123,7 +123,6 @@ void __attribute__((constructor)) init(void)
     link_time();
     link_sleep();
     link_sdltimer();
-    link_pthread();
 
     /* Initialize timers */
     nonDetTimer.initialize();
