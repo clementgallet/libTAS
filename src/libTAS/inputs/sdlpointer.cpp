@@ -114,11 +114,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     /* We have to generate an MOUSEMOTION event. */
     SDL_Event event2;
     event2.type = SDL_MOUSEMOTION;
-    struct timespec time;
-    {
-        ThreadOwnCode toc;
-        time = detTimer.getTicks();
-    }
+    struct timespec time = detTimer.getTicks();
     event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
     event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...

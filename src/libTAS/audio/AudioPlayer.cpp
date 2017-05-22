@@ -23,7 +23,7 @@
 
 #include "../logging.h"
 #include "../../shared/SharedConfig.h"
-#include "../ThreadState.h"
+#include "../GlobalState.h"
 
 snd_pcm_t *AudioPlayer::phandle;
 
@@ -115,14 +115,14 @@ bool AudioPlayer::play(AudioContext& ac)
     debuglog(LCF_SOUND, "Play an audio frame");
     int err;
     {
-        ThreadOwnCode toc;
+        GlobalOwnCode toc;
         err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
     }
 	if (err < 0) {
 		if (err == -EPIPE) {
 			debuglog(LCF_SOUND, "  Underrun");
             {
-                ThreadOwnCode toc;
+                GlobalOwnCode toc;
 	            err = snd_pcm_prepare(phandle);
             }
 			if (err < 0) {
@@ -131,7 +131,7 @@ bool AudioPlayer::play(AudioContext& ac)
             }
             else {
                 {
-                    ThreadOwnCode toc;
+                    GlobalOwnCode toc;
                     snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
                 }
             }

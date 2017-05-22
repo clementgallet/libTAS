@@ -35,7 +35,7 @@ ThreadManager::ThreadManager()
     //refTable_.insert(282080);
     //refTable_.insert(140008597117578);
     //FIXME some dirty hardcoded values for FEZ
-    // refTable_.insert(-557);
+    refTable_.insert(-557);
 
     // Registering a sighandler enable us to suspend the main thread from any thread !
     struct sigaction sigusr1;
@@ -93,7 +93,7 @@ void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
     debuglog(LCF_THREAD, "Register starting ", stringify(tid)," with entrydiff ",  diff, ".");
     TimeHolder t;
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
     }
     //There may be multiple call to start...
@@ -106,7 +106,7 @@ void ThreadManager::end(pthread_t tid)
     debuglog(LCF_THREAD, "Register ending ", stringify(tid), ".");
     TimeHolder t;
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
     }
     ptrdiff_t diff = currentAssociation_[tid];

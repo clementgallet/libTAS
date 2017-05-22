@@ -26,7 +26,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "ThreadState.h"
+#include "GlobalState.h"
 #include <cstdio>
 
 /* Color printing
@@ -99,8 +99,8 @@ void debuglog(LogCategoryFlag lcf, Args ...args);
 template<typename ...Args>
 inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
-    /* Not printing anything if thread state is set to NOLOG */
-    if (ThreadState::isNoLog())
+    /* Not printing anything if global state is set to NOLOG */
+    if (GlobalState::isNoLog())
         return;
 
     if ( (!(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) && !(lcf & LCF_ERROR))
@@ -109,7 +109,7 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
      * in the following code
      */
-    ThreadNoLog tnl;
+    GlobalNoLog tnl;
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
     debuglogverbose(lcf, oss.str());

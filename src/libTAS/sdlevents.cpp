@@ -23,7 +23,7 @@
 #include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
 #include "sleep.h"
-#include "ThreadState.h"
+#include "GlobalState.h"
 
 /* Pointers to original functions */
 namespace orig {
@@ -36,7 +36,7 @@ void pushNativeEvents(void)
     /* SDL_PumpEvents may call SDL_GetTicks() a lot, and we don't want to
      * advance the timer because of that, so we make it untrack
      */
-    ThreadOwnCode toc;
+    GlobalOwnCode toc;
 
     orig::SDL_PumpEvents();
 
@@ -195,7 +195,7 @@ void pushQuitEvent(void)
     if (event) {
         while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
             {
-                ThreadNative tn;
+                GlobalNative tn;
                 nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             }
             pushNativeEvents();
@@ -206,7 +206,7 @@ void pushQuitEvent(void)
         SDL_Event ev;
         while (! sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false)) {
             {
-                ThreadNative tn;
+                GlobalNative tn;
                 nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             }
             pushNativeEvents();
@@ -226,7 +226,7 @@ void pushQuitEvent(void)
             if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
                 break;
             {
-                ThreadNative tn;
+                GlobalNative tn;
                 nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             }
             pushNativeEvents();
@@ -239,7 +239,7 @@ void pushQuitEvent(void)
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
             {
-                ThreadNative tn;
+                GlobalNative tn;
                 nanosleep(&mssleep, NULL); // Wait 1 ms before trying again
             }
             pushNativeEvents();

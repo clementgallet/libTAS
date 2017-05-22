@@ -25,7 +25,7 @@
 #include "time.h" // clock_gettime
 #include "sleep.h" // nanosleep
 #include "audio/AudioContext.h"
-#include "ThreadState.h"
+#include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
 
 struct timespec DeterministicTimer::getTicks()
@@ -37,8 +37,8 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
-    /* If we are in the native thread state, just return the real time */
-    if (ThreadState::isNative()) {
+    /* If we are in the native global state, just return the real time */
+    if (GlobalState::isNative()) {
         struct timespec realtime;
         clock_gettime(CLOCK_REALTIME, &realtime);
         return realtime;
@@ -51,7 +51,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     bool mainT = isMainThread();
 
     /* If it is our own code calling this, we don't need to track the call */
-    if (ThreadState::isOwnCode())
+    if (GlobalState::isOwnCode())
         type = SharedConfig::TIMETYPE_UNTRACKED;
 
     /* Update the count of time query calls, and advance time if reached the
@@ -109,7 +109,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
-    if (ThreadState::isOwnCode())
+    if (GlobalState::isOwnCode())
         return;
 
     /* Deferring as much of the delay as possible
@@ -130,7 +130,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         /* Sleep, because the caller would have yielded at least a little */
         struct timespec nosleep = {0, 0};
         /* Call the real nanosleep function */
-        ThreadNative tn;
+        GlobalNative tn;
         nanosleep(&nosleep, NULL);
     }
 
@@ -239,7 +239,7 @@ void DeterministicTimer::enterFrameBoundary()
     /* Get the current actual time */
     TimeHolder currentTime;
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &currentTime);
     }
 
@@ -256,7 +256,7 @@ void DeterministicTimer::enterFrameBoundary()
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
             /* Call the real nanosleep function */
-            ThreadNative tn;
+            GlobalNative tn;
             nanosleep(&deltaTime, NULL);
         }
     }
@@ -266,7 +266,7 @@ void DeterministicTimer::enterFrameBoundary()
      * maybe intentionally (the author does not remember).
      */
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &currentTime);
     }
 
@@ -287,7 +287,7 @@ void DeterministicTimer::initialize(void)
     ticks.tv_nsec = 0;
     fractional_part = 0;
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
     }
     lastEnterTicks = ticks;

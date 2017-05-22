@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ThreadState.h"
+#include "GlobalState.h"
 
-thread_local int ThreadState::native = 0;
-thread_local int ThreadState::owncode = 0;
-thread_local int ThreadState::nolog = 0;
+thread_local int GlobalState::native = 0;
+thread_local int GlobalState::owncode = 0;
+thread_local int GlobalState::nolog = 0;
 
-void ThreadState::setNative(bool state)
+void GlobalState::setNative(bool state)
 {
     if (state)
         native++;
@@ -32,12 +32,12 @@ void ThreadState::setNative(bool state)
     setOwnCode(state);
 }
 
-bool ThreadState::isNative()
+bool GlobalState::isNative()
 {
     return (native > 0);
 }
 
-void ThreadState::setOwnCode(bool state)
+void GlobalState::setOwnCode(bool state)
 {
     if (state)
         owncode++;
@@ -46,12 +46,12 @@ void ThreadState::setOwnCode(bool state)
     setNoLog(state);
 }
 
-bool ThreadState::isOwnCode()
+bool GlobalState::isOwnCode()
 {
     return (owncode > 0);
 }
 
-void ThreadState::setNoLog(bool state)
+void GlobalState::setNoLog(bool state)
 {
     if (state)
         nolog++;
@@ -59,37 +59,37 @@ void ThreadState::setNoLog(bool state)
         nolog--;
 }
 
-bool ThreadState::isNoLog()
+bool GlobalState::isNoLog()
 {
     return (nolog > 0);
 }
 
-ThreadNative::ThreadNative()
+GlobalNative::GlobalNative()
 {
-    ThreadState::setNative(true);
+    GlobalState::setNative(true);
 }
 
-ThreadNative::~ThreadNative()
+GlobalNative::~GlobalNative()
 {
-    ThreadState::setNative(false);
+    GlobalState::setNative(false);
 }
 
-ThreadOwnCode::ThreadOwnCode()
+GlobalOwnCode::GlobalOwnCode()
 {
-    ThreadState::setOwnCode(true);
+    GlobalState::setOwnCode(true);
 }
 
-ThreadOwnCode::~ThreadOwnCode()
+GlobalOwnCode::~GlobalOwnCode()
 {
-    ThreadState::setOwnCode(false);
+    GlobalState::setOwnCode(false);
 }
 
-ThreadNoLog::ThreadNoLog()
+GlobalNoLog::GlobalNoLog()
 {
-    ThreadState::setNoLog(true);
+    GlobalState::setNoLog(true);
 }
 
-ThreadNoLog::~ThreadNoLog()
+GlobalNoLog::~GlobalNoLog()
 {
-    ThreadState::setNoLog(false);
+    GlobalState::setNoLog(false);
 }

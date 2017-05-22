@@ -33,10 +33,10 @@
  * using c++11 thread_local.
  */
 
-#ifndef LIBTAS_THREADSTATE_H_INCLUDED
-#define LIBTAS_THREADSTATE_H_INCLUDED
+#ifndef LIBTAS_GLOBALSTATE_H_INCLUDED
+#define LIBTAS_GLOBALSTATE_H_INCLUDED
 
-class ThreadState
+class GlobalState
 {
     public:
         /* Add or remove the NATIVE, OWNCODE and NOLOG flags.
@@ -79,25 +79,25 @@ class ThreadState
         static thread_local int nolog;
 };
 
-class ThreadNative
+class GlobalNative
 {
 public:
-    ThreadNative();
-    ~ThreadNative();
+    GlobalNative();
+    ~GlobalNative();
 };
 
-class ThreadOwnCode
+class GlobalOwnCode
 {
 public:
-    ThreadOwnCode();
-    ~ThreadOwnCode();
+    GlobalOwnCode();
+    ~GlobalOwnCode();
 };
 
-class ThreadNoLog
+class GlobalNoLog
 {
 public:
-    ThreadNoLog();
-    ~ThreadNoLog();
+    GlobalNoLog();
+    ~GlobalNoLog();
 };
 
 #endif

@@ -20,7 +20,6 @@
 #include "timer.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
-#include "ThreadState.h"
 #include "hook.h"
 
 namespace orig {
@@ -46,5 +45,3 @@ void link_sdltimer(void)
     LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
     /* TODO: Add SDL 1.2 SetTimer */
 }
-
-

@@ -51,7 +51,7 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
 
         TimeHolder currentTime;
         {
-            ThreadNative tn;
+            GlobalNative tn;
             clock_gettime(CLOCK_MONOTONIC, &currentTime);
         }
 
@@ -155,7 +155,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     {
-        ThreadNative tn;
+        GlobalNative tn;
         if (!skipDraw())
             draw();
     }

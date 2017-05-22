@@ -18,7 +18,6 @@
  */
 
 #include "backtrace.h"
-#include "ThreadState.h"
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <memory>
@@ -83,4 +82,3 @@ void printBacktrace(void)
     //threadState.setNoLog(false);
     recurs = 0;
 }
-

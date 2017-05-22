@@ -22,7 +22,7 @@
 #include "threads.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
-#include "ThreadState.h"
+#include "GlobalState.h"
 #include "hook.h"
 
 namespace orig {
@@ -39,11 +39,11 @@ namespace orig {
     ts.tv_nsec = (sleep % 1000) * 1000000;
 
     /* If the function was called from the main thread
-     * and we are not in the native thread state,
+     * and we are not in the native state,
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (sleep && mainT && !ThreadState::isNative()) {
+    if (sleep && mainT && !GlobalState::isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -63,11 +63,11 @@ namespace orig {
     ts.tv_nsec = (usec % 1000000) * 1000;
 
     /* If the function was called from the main thread
-     * and we are not in the native thread state,
+     * and we are not in the native state,
      * transfer the wait to the timer and
      * do not actually wait
      */
-    if (usec && mainT && !ThreadState::isNative()) {
+    if (usec && mainT && !GlobalState::isNative()) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
@@ -84,12 +84,12 @@ namespace orig {
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
 
     /* If the function was called from the main thread
-     * and we are not in the native thread state,
+     * and we are not in the native state,
      * transfer the wait to the timer and
      * do not actually wait
      */
     LINK_NAMESPACE(nanosleep, nullptr);
-    if (mainT && !ThreadState::isNative()) {
+    if (mainT && !GlobalState::isNative()) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, remaining);
@@ -117,12 +117,12 @@ namespace orig {
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleeptime.tv_sec * 1000000000 + sleeptime.tv_nsec, " nsec");
 
     /* If the function was called from the main thread
-     * and we are not in the native thread state,
+     * and we are not in the native state,
      * transfer the wait to the timer and
      * do not actually wait
      */
     LINK_NAMESPACE(nanosleep, nullptr);
-    if (mainT && !ThreadState::isNative()) {
+    if (mainT && !GlobalState::isNative()) {
         detTimer.addDelay(sleeptime);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, rem);

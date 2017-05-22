@@ -31,7 +31,7 @@ void NonDeterministicTimer::initialize(void)
     ticks.tv_nsec = 0;
     lastEnterTicks = ticks;
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &lasttime);
     }
     inFB = false;
@@ -56,7 +56,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
         /* Get the real clock time */
         TimeHolder realtime;
         {
-            ThreadNative tn;
+            GlobalNative tn;
             clock_gettime(CLOCK_MONOTONIC, &realtime);
         }
 
@@ -98,7 +98,7 @@ void NonDeterministicTimer::enterFrameBoundary()
     inFB = true;
 
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
     }
     /* Doing the audio mixing here */
@@ -112,7 +112,7 @@ void NonDeterministicTimer::exitFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
     {
-        ThreadNative tn;
+        GlobalNative tn;
         clock_gettime(CLOCK_MONOTONIC, &lastExitTime);
     }
     inFB = false;
@@ -128,7 +128,7 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
     }
 
     /* Call the real nanosleep function */
-    ThreadNative tn;
+    GlobalNative tn;
     nanosleep(&delayTicks, NULL);
 }
 

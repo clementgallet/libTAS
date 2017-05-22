@@ -24,11 +24,10 @@
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
 #include "frame.h"
-//#include "libTAS.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
-#include "ThreadState.h"
+// #include "GlobalState.h"
 #include "time.h"
 
 /*

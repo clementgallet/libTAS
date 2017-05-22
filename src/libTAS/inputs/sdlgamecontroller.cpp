@@ -26,7 +26,7 @@
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <cstring>
-#include "../ThreadState.h"
+#include "../GlobalState.h"
 
 SDL_GameController gcids[4] = {-1, -1, -1, -1};
 const char joy_name[] = "XInput Controller";
@@ -169,7 +169,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ void SDL_GameControllerUpdate(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-    ThreadNoLog tnl;
+    GlobalNoLog tnl;
     SDL_JoystickUpdate();
 }
 

@@ -75,8 +75,8 @@ void debuglogverbose(LogCategoryFlag lcf, const std::string& str)
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
-    /* Not printing anything if thread state is set to NOLOG */
-    if (ThreadState::isNoLog())
+    /* Not printing anything if global state is set to NOLOG */
+    if (GlobalState::isNoLog())
         return;
 
     if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags))
@@ -85,7 +85,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
      * in the following code
      */
-     ThreadNoLog tnl;
+     GlobalNoLog tnl;
 
     /* Build main log string */
     int maxsize = 2048;

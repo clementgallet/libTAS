@@ -24,7 +24,7 @@
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
 // #include "backtrace.h"
-#include "ThreadState.h"
+#include "GlobalState.h"
 #include "../shared/SharedConfig.h"
 
 /* Frame counter */
@@ -67,7 +67,7 @@ namespace orig {
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    if (ThreadState::isNative()) {
+    if (GlobalState::isNative()) {
         LINK_NAMESPACE(clock_gettime, nullptr);
         orig::clock_gettime(clock_id, tp);
     }
