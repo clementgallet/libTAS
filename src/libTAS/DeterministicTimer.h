@@ -107,7 +107,7 @@ private:
      */
     TimeHolder fakeExtraTicks;
 
-    /* 
+    /*
      * Real time of the last frame boundary enter.
      * Used for sleeping the right amount of time
      */
@@ -133,8 +133,8 @@ private:
     bool drawFB;
 
     /* Limit for each time-getting method before time auto-advances to avoid a freeze */
-    unsigned int altGetTimes [TIMETYPE_NUMTRACKEDTYPES];
-    unsigned int altGetTimeLimits [TIMETYPE_NUMTRACKEDTYPES];
+    int altGetTimes [TIMETYPE_NUMTRACKEDTYPES];
+    int altGetTimeLimits [TIMETYPE_NUMTRACKEDTYPES];
 
     /* Mutex to protect access to all audio objects */
     std::mutex mutex;
@@ -143,4 +143,3 @@ private:
 extern DeterministicTimer detTimer;
 
 #endif
-

@@ -27,13 +27,12 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "AVEncoder.h"
-#include "EventQueue.h"
 #include "sdlwindows.h"
 #include "sdlevents.h"
 #include <mutex>
 #include <iomanip>
-#include "libTAS.h"
-#include "time.h"
+#include "time.h" // clock_gettime
+#include "threads.h" // isMainThread()
 
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
@@ -100,8 +99,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
 void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 {
-    std::lock_guard<std::mutex> guard(frameMutex);
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
+
+    if (!isMainThread())
+        debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
 
     detTimer.enterFrameBoundary();
 

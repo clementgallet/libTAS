@@ -48,7 +48,6 @@ namespace orig {
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
-
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;

@@ -33,7 +33,6 @@
 
 struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKED)
 {
-    //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     /* If we are in the native thread state, just return the real time */
@@ -48,15 +47,16 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
     }
 
     bool mainT = isMainThread();
-    bool frameT = mainT;
 
     /* If it is our own code calling this, we don't need to track the call */
     if (ThreadState::isOwnCode())
         type = TIMETYPE_UNTRACKED;
 
     /* Only the main thread can modify the timer */
-    if(!frameT) {
+    if(!mainT) {
         if(type != TIMETYPE_UNTRACKED) {
+
+            std::lock_guard<std::mutex> lock(mutex);
 
             /* Well, actually, if another thread get the time too many times,
              * we temporarily consider it as the main thread.
@@ -67,13 +67,13 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
             {
                 if(getTimes == MAX_NONFRAME_GETTIMES)
                     debuglog(LCF_TIMEGET | LCF_DESYNC, "Temporarily assuming main thread");
-                frameT = true;
+                mainT = true;
             }
             getTimes++;
         }
     }
 
-    if (frameT)
+    if (mainT)
     {
         /* Only do this in the main thread so as to not dirty the timer with nondeterministic values
          * (not to mention it would be extremely multithreading-unsafe without using sync primitives otherwise)
@@ -81,8 +81,9 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
 
         int ticksExtra = 0;
 
-        if (type != TIMETYPE_UNTRACKED)
+        if (type != TIMETYPE_UNTRACKED && altGetTimeLimits[type] >= 0)
         {
+            std::lock_guard<std::mutex> lock(mutex);
             debuglog(LCF_TIMESET | LCF_FREQUENT, "subticks ", type, " increased");
             altGetTimes[type]++;
 
@@ -117,7 +118,7 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    //std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
     if(shared_config.framerate == 0) // 0 framerate means disable deterministic timer
@@ -149,23 +150,27 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         nanosleep(&nosleep, NULL);
     }
 
-    while(addedDelay > maxDeferredDelay)
-    {
-        /* Indicating that the following frame boundary is not
-         * a normal (draw) frame boundary.
-         */
-        drawFB = false;
+    /* We only allow the main thread to trigger a frame boundary! */
+    bool mainT = isMainThread();
 
-        /* We have built up too much delay. We must enter a frame boundary,
-         * to advance the time.
-         * This decrements addedDelay by (basically) how much it advances ticks
-         */
-#ifdef LIBTAS_ENABLE_HUD
-        static RenderHUD dummy;
-        frameBoundary(false, [] () {}, dummy);
-#else
-        frameBoundary(false, [] () {});
-#endif
+    if (mainT) {
+        while(addedDelay > maxDeferredDelay) {
+            /* Indicating that the following frame boundary is not
+             * a normal (draw) frame boundary.
+             */
+            drawFB = false;
+
+            /* We have built up too much delay. We must enter a frame boundary,
+             * to advance the time.
+             * This decrements addedDelay by (basically) how much it advances ticks
+             */
+    #ifdef LIBTAS_ENABLE_HUD
+            static RenderHUD dummy;
+            frameBoundary(false, [] () {}, dummy);
+    #else
+            frameBoundary(false, [] () {});
+    #endif
+        }
     }
 }
 
@@ -305,6 +310,7 @@ void DeterministicTimer::initialize(void)
         altGetTimes[i] = 0;
     for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
         altGetTimeLimits[i] = 20;
+    altGetTimeLimits[TIMETYPE_GETTIMEOFDAY] = -1;
 
     addedDelay.tv_sec = 0;
     addedDelay.tv_nsec = 0;
