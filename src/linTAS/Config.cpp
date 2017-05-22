@@ -81,6 +81,8 @@ void Config::save() {
     prefs_shared.set("video_bitrate", sc.video_bitrate);
     prefs_shared.set("audio_codec", static_cast<int>(sc.audio_codec));
     prefs_shared.set("audio_bitrate", sc.audio_bitrate);
+    prefs_shared.set("main_gettimes_threshold", static_cast<void*>(sc.main_gettimes_threshold), sizeof(sc.main_gettimes_threshold));
+    prefs_shared.set("sec_gettimes_threshold", static_cast<void*>(sc.sec_gettimes_threshold), sizeof(sc.sec_gettimes_threshold));
 }
 
 void Config::load(const std::string& gamepath) {
@@ -230,4 +232,20 @@ void Config::load(const std::string& gamepath) {
     sc.audio_codec = static_cast<AVCodecID>(val);
 
     prefs_shared.get("audio_bitrate", sc.audio_bitrate, sc.audio_bitrate);
+
+    const int def_data[SharedConfig::TIMETYPE_NUMTRACKEDTYPES] = {};
+    void* vdata;
+    if (prefs_shared.get("main_gettimes_threshold", vdata, def_data, sizeof(sc.main_gettimes_threshold))) {
+        int* tdata = static_cast<int*>(vdata);
+        for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++)
+            sc.main_gettimes_threshold[t] = tdata[t];
+    }
+    free(vdata);
+
+    if (prefs_shared.get("sec_gettimes_threshold", vdata, def_data, sizeof(sc.sec_gettimes_threshold))) {
+        int* tdata = static_cast<int*>(vdata);
+        for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++)
+            sc.sec_gettimes_threshold[t] = tdata[t];
+    }
+    free(vdata);
 }

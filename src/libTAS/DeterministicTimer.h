@@ -20,22 +20,9 @@
 #ifndef LIBTAS_DETERMINISTICTIMER_H_INCL
 #define LIBTAS_DETERMINISTICTIMER_H_INCL
 
-#include <time.h>
 #include "TimeHolder.h"
+#include "../shared/SharedConfig.h"
 #include <mutex>
-
-/* An enum indicating which time-getting function query the time */
-enum TimeCallType
-{
-    TIMETYPE_UNTRACKED = -1,
-    TIMETYPE_TIME = 0,
-    TIMETYPE_GETTIMEOFDAY,
-    TIMETYPE_CLOCK,
-    TIMETYPE_CLOCKGETTIME,
-    TIMETYPE_SDLGETTICKS,
-    TIMETYPE_SDLGETPERFORMANCECOUNTER,
-    TIMETYPE_NUMTRACKEDTYPES
-};
 
 /* A timer that gives deterministic values, at least in the main thread.
  *
@@ -64,7 +51,8 @@ public:
     void initialize(void);
 
     /* Update and return the time of the deterministic timer */
-    struct timespec getTicks(TimeCallType type);
+    struct timespec getTicks();
+    struct timespec getTicks(SharedConfig::TimeCallType type);
 
     /* Function called when entering a frame boundary */
     void enterFrameBoundary(void);
@@ -132,9 +120,11 @@ private:
      */
     bool drawFB;
 
-    /* Limit for each time-getting method before time auto-advances to avoid a freeze */
-    int altGetTimes [TIMETYPE_NUMTRACKEDTYPES];
-    int altGetTimeLimits [TIMETYPE_NUMTRACKEDTYPES];
+    /* Count for each time-getting method before time auto-advances to
+     * avoid a freeze. Distinguish between main and secondary threads.
+     */
+    int main_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
+    int sec_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
 
     /* Mutex to protect access to all audio objects */
     std::mutex mutex;

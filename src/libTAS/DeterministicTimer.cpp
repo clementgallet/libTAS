@@ -20,7 +20,6 @@
 #include "DeterministicTimer.h"
 #include "NonDeterministicTimer.h"
 #include "logging.h"
-#include "../shared/SharedConfig.h"
 #include "threads.h"
 #include "frame.h"
 #include "time.h" // clock_gettime
@@ -29,9 +28,12 @@
 #include "ThreadState.h"
 #include "renderhud/RenderHUD.h"
 
-#define MAX_NONFRAME_GETTIMES 4000
+struct timespec DeterministicTimer::getTicks()
+{
+    return getTicks(SharedConfig::TIMETYPE_UNTRACKED);
+}
 
-struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKED)
+struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
@@ -50,66 +52,48 @@ struct timespec DeterministicTimer::getTicks(TimeCallType type=TIMETYPE_UNTRACKE
 
     /* If it is our own code calling this, we don't need to track the call */
     if (ThreadState::isOwnCode())
-        type = TIMETYPE_UNTRACKED;
+        type = SharedConfig::TIMETYPE_UNTRACKED;
 
-    /* Only the main thread can modify the timer */
-    if(!mainT) {
-        if(type != TIMETYPE_UNTRACKED) {
+    /* Update the count of time query calls, and advance time if reached the
+     * limit. We use different counts for main and secondary threads because
+     * advancing time by secondary threads increases the timer with nondeterministic values
+     */
 
-            std::lock_guard<std::mutex> lock(mutex);
+    int ticksExtra = 0;
 
-            /* Well, actually, if another thread get the time too many times,
-             * we temporarily consider it as the main thread.
-             * This can lead to desyncs, but it avoids freeze in games that
-             * expect the time to advance in other threads.
+    int gettimes_threshold = mainT ? shared_config.main_gettimes_threshold[type]
+                          : shared_config.sec_gettimes_threshold[type];
+    if (type != SharedConfig::TIMETYPE_UNTRACKED && gettimes_threshold >= 0) {
+
+        /* We actually track this time call */
+        std::lock_guard<std::mutex> lock(mutex);
+        debuglog(LCF_TIMESET | LCF_FREQUENT, "subticks ", type, " increased");
+        int* gettimes_count = mainT ? &main_gettimes[type] : &sec_gettimes[type];
+        (*gettimes_count)++;
+
+        if(*gettimes_count > gettimes_threshold) {
+            /*
+             * We reached the limit of the number of calls.
+             * We advance the deterministic timer by some value
              */
-            if(getTimes >= MAX_NONFRAME_GETTIMES)
-            {
-                if(getTimes == MAX_NONFRAME_GETTIMES)
-                    debuglog(LCF_TIMEGET | LCF_DESYNC, "Temporarily assuming main thread");
-                mainT = true;
+            int tickDelta = 1;
+
+            debuglog(LCF_TIMESET | LCF_FREQUENT, "WARNING! force-advancing time of type ", type);
+
+            ticksExtra += tickDelta;
+
+            /* Reseting the number of calls from all functions */
+            for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
+                main_gettimes[i] = 0;
+                sec_gettimes[i] = 0;
             }
-            getTimes++;
         }
     }
 
-    if (mainT)
-    {
-        /* Only do this in the main thread so as to not dirty the timer with nondeterministic values
-         * (not to mention it would be extremely multithreading-unsafe without using sync primitives otherwise)
-         */
-
-        int ticksExtra = 0;
-
-        if (type != TIMETYPE_UNTRACKED && altGetTimeLimits[type] >= 0)
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            debuglog(LCF_TIMESET | LCF_FREQUENT, "subticks ", type, " increased");
-            altGetTimes[type]++;
-
-            if(altGetTimes[type] > altGetTimeLimits[type]) {
-                /*
-                 * We reached the limit of the number of calls.
-                 * We advance the deterministic timer by some value
-                 */
-                int tickDelta = 1;
-
-                debuglog(LCF_TIMESET | LCF_FREQUENT, "WARNING! force-advancing time of type ", type);
-
-                ticksExtra += tickDelta;
-
-                /* Reseting the number of calls from all functions */
-                for (int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
-                    altGetTimes[i] = 0;
-
-            }
-        }
-
-        if(ticksExtra) {
-            /* Delay by ticksExtra ms. Arbitrary */
-            struct timespec delay = {0, ticksExtra * 1000000};
-            addDelay(delay);
-        }
+    if(ticksExtra) {
+        /* Delay by ticksExtra ms. Arbitrary */
+        struct timespec delay = {0, ticksExtra * 1000000};
+        addDelay(delay);
     }
 
     TimeHolder fakeTicks = ticks + fakeExtraTicks;
@@ -180,8 +164,10 @@ void DeterministicTimer::exitFrameBoundary()
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
 
     /* Reset the counts of each time get function */
-    for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
-        altGetTimes[i] = 0;
+    for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
+        main_gettimes[i] = 0;
+        sec_gettimes[i] = 0;
+    }
 
     if(shared_config.framerate == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
@@ -306,18 +292,16 @@ void DeterministicTimer::initialize(void)
     }
     lastEnterTicks = ticks;
 
-    for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
-        altGetTimes[i] = 0;
-    for(int i = 0; i < TIMETYPE_NUMTRACKEDTYPES; i++)
-        altGetTimeLimits[i] = 20;
-    altGetTimeLimits[TIMETYPE_GETTIMEOFDAY] = -1;
+    for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
+        main_gettimes[i] = 0;
+        sec_gettimes[i] = 0;
+    }
 
     addedDelay.tv_sec = 0;
     addedDelay.tv_nsec = 0;
     forceAdvancedTicks = addedDelay;
     fakeExtraTicks = addedDelay;
     lastEnterValid = false;
-
     drawFB = true;
 }
 

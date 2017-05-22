@@ -39,7 +39,7 @@ void generateSDLKeyUpEvents(void)
     struct timespec time;
     {
         ThreadOwnCode toc;
-        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        time = detTimer.getTicks();
     }
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
@@ -99,7 +99,7 @@ void generateSDLKeyDownEvents(void)
     struct timespec time;
     {
         ThreadOwnCode toc;
-    	time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+    	time = detTimer.getTicks();
     }
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
@@ -162,7 +162,7 @@ void generateSDLControllerAdded(void)
     struct timespec time;
     {
         ThreadOwnCode toc;
-        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        time = detTimer.getTicks();
     }
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -185,7 +185,7 @@ void generateSDLControllerEvents(void)
     struct timespec time;
     {
         ThreadOwnCode toc;
-        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        time = detTimer.getTicks();
     }
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -400,7 +400,7 @@ void generateSDLMouseMotionEvents(void)
         struct timespec time;
         {
             ThreadOwnCode toc;
-            time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+            time = detTimer.getTicks();
         }
         event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
         event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
@@ -463,7 +463,7 @@ void generateSDLMouseButtonEvents(void)
     struct timespec time;
     {
         ThreadOwnCode toc;
-        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        time = detTimer.getTicks();
     }
 
     static int xbuttons[] = {Button1Mask,

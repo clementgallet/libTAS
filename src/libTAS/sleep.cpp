@@ -110,7 +110,7 @@ namespace orig {
     }
     else {
         /* time is absolute */
-        struct timespec curtime = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        struct timespec curtime = detTimer.getTicks();
         sleeptime -= curtime;
     }
 

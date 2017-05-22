@@ -55,7 +55,7 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
             clock_gettime(CLOCK_MONOTONIC, &currentTime);
         }
 
-        struct timespec tsTicks = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        struct timespec tsTicks = detTimer.getTicks();
         TimeHolder currentTicks;
         currentTicks = tsTicks;
 

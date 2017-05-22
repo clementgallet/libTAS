@@ -117,7 +117,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     struct timespec time;
     {
         ThreadOwnCode toc;
-        time = detTimer.getTicks(TIMETYPE_UNTRACKED);
+        time = detTimer.getTicks();
     }
     event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
     event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);

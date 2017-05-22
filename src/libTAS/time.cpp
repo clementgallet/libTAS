@@ -23,8 +23,9 @@
 #include "threads.h"
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
-#include "backtrace.h"
+// #include "backtrace.h"
 #include "ThreadState.h"
+#include "../shared/SharedConfig.h"
 
 /* Frame counter */
 unsigned long frame_counter = 0;
@@ -37,7 +38,7 @@ namespace orig {
 /* Override */ time_t time(time_t* t)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(TIMETYPE_TIME);
+    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_TIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec);
     if (t)
         *t = ts.tv_sec;
@@ -47,7 +48,7 @@ namespace orig {
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(TIMETYPE_GETTIMEOFDAY);
+    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
@@ -57,7 +58,7 @@ namespace orig {
 /* Override */ clock_t clock (void)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(TIMETYPE_CLOCK);
+    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
     clock_t clk = static_cast<clock_t>((static_cast<double>(ts.tv_sec) + static_cast<double>(ts.tv_nsec) / 1000000000.0) * CLOCKS_PER_SEC);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", clk);
     return clk;
@@ -71,7 +72,7 @@ namespace orig {
         orig::clock_gettime(clock_id, tp);
     }
     else {
-        *tp = detTimer.getTicks(TIMETYPE_CLOCKGETTIME);
+        *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     }
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;
@@ -79,7 +80,7 @@ namespace orig {
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
-    struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETTICKS);
+    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - returning ", msec);
 
@@ -95,7 +96,7 @@ namespace orig {
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET | LCF_FRAME);
-    struct timespec ts = detTimer.getTicks(TIMETYPE_SDLGETPERFORMANCECOUNTER);
+    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "  returning ", counter);

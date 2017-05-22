@@ -49,6 +49,8 @@ static Fl_Callback slowmo_cb;
 static Fl_Callback osd_frame_cb;
 static Fl_Callback osd_inputs_cb;
 static Fl_Callback osd_encode_cb;
+static Fl_Callback time_main_cb;
+static Fl_Callback time_sec_cb;
 
 MainWindow::~MainWindow()
 {
@@ -181,6 +183,24 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Mute Sound", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE},
         {nullptr},
     {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Time tracking", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Main thread", 0, nullptr, nullptr, FL_SUBMENU},
+                {"time()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_TIME), FL_MENU_TOGGLE},
+                {"gettimeofday()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_GETTIMEOFDAY), FL_MENU_TOGGLE},
+                {"clock()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCK), FL_MENU_TOGGLE},
+                {"clock_gettime()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCKGETTIME), FL_MENU_TOGGLE},
+                {"SDL_GetTicks()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETTICKS), FL_MENU_TOGGLE},
+                {"SDL_GetPerformanceCounter()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER), FL_MENU_TOGGLE},
+                {nullptr},
+            {"Secondary threads", 0, nullptr, nullptr, FL_SUBMENU},
+                {"time()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_TIME), FL_MENU_TOGGLE},
+                {"gettimeofday()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_GETTIMEOFDAY), FL_MENU_TOGGLE},
+                {"clock()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCK), FL_MENU_TOGGLE},
+                {"clock_gettime()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCKGETTIME), FL_MENU_TOGGLE},
+                {"SDL_GetTicks()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETTICKS), FL_MENU_TOGGLE},
+                {"SDL_GetPerformanceCounter()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER), FL_MENU_TOGGLE},
+                {nullptr},
+            {nullptr},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
             {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_RADIO},
             {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
@@ -388,7 +408,7 @@ void MainWindow::update_config()
     logicalfps->value(fpsstr.c_str());
 
     Fl_Menu_Item* sound_freq_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_frequency_cb));
-    while (sound_freq_item) {
+    while (sound_freq_item->flags) {
         if (sound_freq_item->argument() == context->config.sc.audio_frequency) {
             sound_freq_item->setonly();
             break;
@@ -397,7 +417,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* sound_bitdepth_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_bitdepth_cb));
-    while (sound_bitdepth_item) {
+    while (sound_bitdepth_item->flags) {
         if (sound_bitdepth_item->argument() == context->config.sc.audio_bitdepth) {
             sound_bitdepth_item->setonly();
             break;
@@ -406,7 +426,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* sound_channel_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_channel_cb));
-    while (sound_channel_item) {
+    while (sound_channel_item->flags) {
         if (sound_channel_item->argument() == context->config.sc.audio_channels) {
             sound_channel_item->setonly();
             break;
@@ -425,7 +445,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
-    while (logging_status_item) {
+    while (logging_status_item->flags) {
         if (static_cast<SharedConfig::LogStatus>(logging_status_item->argument()) == context->config.sc.logging_status) {
             logging_status_item->setonly();
             break;
@@ -434,7 +454,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* logging_print_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_print_cb));
-    while (logging_print_item && (logging_print_item->argument() != LCF_ALL)) {
+    while (logging_print_item->flags && (logging_print_item->argument() != LCF_ALL)) {
         if (logging_print_item->argument() & context->config.sc.includeFlags)
             logging_print_item->set();
         else
@@ -443,7 +463,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* logging_exclude_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_exclude_cb));
-    while (logging_exclude_item && (logging_exclude_item->argument() != LCF_ALL)) {
+    while (logging_exclude_item->flags && (logging_exclude_item->argument() != LCF_ALL)) {
         if (logging_exclude_item->argument() & context->config.sc.excludeFlags)
             logging_exclude_item->set();
         else
@@ -452,7 +472,7 @@ void MainWindow::update_config()
     }
 
     Fl_Menu_Item* speed_divisor_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(slowmo_cb));
-    while (speed_divisor_item) {
+    while (speed_divisor_item->flags) {
       if (speed_divisor_item->argument() == context->config.sc.speed_divisor) {
           speed_divisor_item->setonly();
           break;
@@ -473,7 +493,7 @@ void MainWindow::update_config()
         input_mouse_item->clear();
 
     Fl_Menu_Item* input_joy_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_joy_cb));
-    while (input_joy_item) {
+    while (input_joy_item->flags) {
         if (input_joy_item->argument() == context->config.sc.numControllers) {
             input_joy_item->setonly();
             break;
@@ -498,6 +518,24 @@ void MainWindow::update_config()
         osd_item->set();
     else
         osd_item->clear();
+
+    Fl_Menu_Item* time_main_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_main_cb));
+    while (time_main_item->flags) {
+        if (context->config.sc.main_gettimes_threshold[time_main_item->argument()] == -1)
+            time_main_item->clear();
+        else
+            time_main_item->set();
+        time_main_item = time_main_item->next();
+    }
+
+    Fl_Menu_Item* time_sec_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_sec_cb));
+    while (time_sec_item->flags) {
+        if (context->config.sc.sec_gettimes_threshold[time_sec_item->argument()] == -1)
+            time_sec_item->clear();
+        else
+            time_sec_item->set();
+      time_sec_item = time_sec_item->next();
+    }
 }
 
 void launch_cb(Fl_Widget* w)
@@ -868,6 +906,32 @@ void osd_encode_cb(Fl_Widget* w, void* v)
     const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
 
     mw.context->config.sc.hud_encode = osd_item->value();
+    mw.context->config.sc_modified = true;
+}
+
+void time_main_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int timetype = static_cast<int>(reinterpret_cast<intptr_t>(v));
+    const Fl_Menu_Item* timetype_item = mw.menu_bar->mvalue();
+
+    if (timetype_item->value())
+        mw.context->config.sc.main_gettimes_threshold[timetype] = 100; // TODO: Arbitrary
+    else
+        mw.context->config.sc.main_gettimes_threshold[timetype] = -1;
+    mw.context->config.sc_modified = true;
+}
+
+void time_sec_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int timetype = static_cast<int>(reinterpret_cast<intptr_t>(v));
+    const Fl_Menu_Item* timetype_item = mw.menu_bar->mvalue();
+
+    if (timetype_item->value())
+        mw.context->config.sc.sec_gettimes_threshold[timetype] = 1000; // TODO: Arbitrary
+    else
+        mw.context->config.sc.sec_gettimes_threshold[timetype] = -1;
     mw.context->config.sc_modified = true;
 }
 

@@ -99,6 +99,26 @@ class SharedConfig {
         int video_bitrate = 4000000;
         AVCodecID audio_codec = AV_CODEC_ID_VORBIS;
         int audio_bitrate = 128000;
+
+        /* An enum indicating which time-getting function query the time */
+        enum TimeCallType
+        {
+            TIMETYPE_UNTRACKED = -1,
+            TIMETYPE_TIME = 0,
+            TIMETYPE_GETTIMEOFDAY,
+            TIMETYPE_CLOCK,
+            TIMETYPE_CLOCKGETTIME,
+            TIMETYPE_SDLGETTICKS,
+            TIMETYPE_SDLGETPERFORMANCECOUNTER,
+            TIMETYPE_NUMTRACKEDTYPES
+        };
+
+        /* Limit for each time-getting method before time auto-advances to
+         * avoid a freeze. Distinguish between main and secondary threads.
+         */
+        int main_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
+        int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
+
 };
 
 extern SharedConfig shared_config;
