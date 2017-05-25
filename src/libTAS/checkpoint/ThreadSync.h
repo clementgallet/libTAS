@@ -19,32 +19,22 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
  */
 
-#ifndef LIBTAS_THREAD_INFO_H
-#define LIBTAS_THREAD_INFO_H
+#ifndef LIBTAS_THREAD_SYNC_H
+#define LIBTAS_THREAD_SYNC_H
 #include <atomic>
-#include "pthread.h" // pthread_t
+#include <pthread.h> // pthread_rwlock_t
 
-struct ThreadInfo {
+class ThreadSync {
+private:
+    static std::atomic<int> uninitializedThreadCount;
+    static pthread_rwlock_t wrapperExecutionLock;
+public:
+    static void waitForThreadsToFinishInitialization();
+    static void incrementUninitializedThreadCount();
+    static void decrementUninitializedThreadCount();
+    static void wrapperExecutionLockLock();
+    static void wrapperExecutionLockUnlock();
 
-    enum ThreadState {
-        ST_RUNNING,
-        ST_SIGNALED,
-        ST_SUSPINPROG,
-        ST_SUSPENDED,
-        ST_ZOMBIE,
-        ST_CKPNTHREAD
-    };
-
-    ThreadState state;
-    pthread_t *tid_p;
-    pthread_t tid;
-    void *(*start)(void *);
-    void *arg;
-    std::atomic<bool> go;
-    std::ptrdiff_t routine_id;
-
-    ThreadInfo *next;
-    ThreadInfo *prev;
 };
 
 #endif

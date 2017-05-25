@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
 
     Author : Philippe Virouleau <philippe.virouleau@imag.fr>
+    Part of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
  */
 #include <sstream>
 #include <utility>
@@ -25,6 +26,7 @@
 #include "ThreadManager.h"
 #include "../time.h" // clock_gettime
 #include "../threads.h" // getThreadId
+#include "../logging.h"
 
 std::atomic<int> ThreadManager::spin(0);
 ThreadInfo* ThreadManager::thread_list = nullptr;

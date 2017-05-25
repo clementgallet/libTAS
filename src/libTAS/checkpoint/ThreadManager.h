@@ -21,7 +21,6 @@
 
 #ifndef LIBTAS_THREAD_MANAGER_H
 #define LIBTAS_THREAD_MANAGER_H
-#include "../logging.h"
 #include "../TimeHolder.h"
 #include "ThreadInfo.h"
 #include <set>

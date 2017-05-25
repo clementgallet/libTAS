@@ -26,6 +26,7 @@
 #include <memory>
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
+#include "checkpoint/ThreadSync.h"
 
 /* Original function pointers */
 namespace orig {
@@ -99,7 +100,6 @@ int isMainThread(void)
     orig::SDL_WaitThread(thread, status);
 }
 
-// void *pthread_start(void *arg);
 static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
@@ -114,6 +114,7 @@ static void *pthread_start(void *arg)
     while(!thread->go)
         ;
 
+    ThreadSync::decrementUninitializedThreadCount();
     void *ret = thread->start(thread->arg);
     debuglog(LCF_THREAD, "WE ARE DONE");
     // ThreadManager::resume(tid);
@@ -127,6 +128,9 @@ static void *pthread_start(void *arg)
 {
     LINK_NAMESPACE(pthread_create, "pthread");
 
+    ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::incrementUninitializedThreadCount();
+
     /* Creating a new thread and filling some parameters.
      * The rest (like thread->tid) will be filled by the child thread.
      */
@@ -138,6 +142,7 @@ static void *pthread_start(void *arg)
 
     if (ret != 0) {
         /* Thread creation failed */
+        ThreadSync::decrementUninitializedThreadCount();
         ThreadManager::threadIsDead(thread);
         return ret;
     }
@@ -161,6 +166,7 @@ static void *pthread_start(void *arg)
     //Check and suspend main thread if needed
     // ThreadManager::suspend(*tid_p);
 
+    ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
@@ -168,7 +174,9 @@ static void *pthread_start(void *arg)
 {
     LINK_NAMESPACE(pthread_exit, "pthread");
     debuglog(LCF_THREAD, "Thread has exited.");
+    ThreadSync::wrapperExecutionLockLock();
     ThreadManager::threadExit();
+    ThreadSync::wrapperExecutionLockUnlock();
     // pthread_t tid = getThreadId();
     // ThreadManager::resume(tid);
     // ThreadManager::end(tid);
