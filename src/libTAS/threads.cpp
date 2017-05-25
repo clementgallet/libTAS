@@ -43,10 +43,10 @@ namespace orig {
     static int (*pthread_tryjoin_np)(unsigned long int thread, void **retval) = nullptr;
     static int (*pthread_timedjoin_np)(unsigned long int thread, void **retval, const struct timespec *abstime) = nullptr;
     static pthread_t (*pthread_self)(void) = nullptr;
-    static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
-    static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
-    static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
-    static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
+    // static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
+    // static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
+    // static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
+    // static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
     static int (*pthread_setcancelstate)(int state, int *oldstate) = nullptr;
     static int (*pthread_setcanceltype)(int type, int *oldtype) = nullptr;
     static int (*pthread_cancel)(pthread_t th) = nullptr;
@@ -189,6 +189,7 @@ static void *pthread_start(void *arg)
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
     int retVal = orig::pthread_join(thread, thread_return);
+    ThreadManager::threadDetach(thread);
     // ThreadManager::get().end(thread);
     return retVal;
 }
@@ -199,7 +200,9 @@ static void *pthread_start(void *arg)
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
     // ThreadManager::resume(thread);
-    return orig::pthread_detach(thread);
+    int ret = orig::pthread_detach(thread);
+    ThreadManager::threadDetach(thread);
+    return ret;
 }
 
 /* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval) throw()

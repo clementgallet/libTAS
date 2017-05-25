@@ -37,6 +37,13 @@ std::set<std::ptrdiff_t> ThreadManager::refTable;
 std::set<void *> ThreadManager::beforeSDL;
 bool ThreadManager::inited = false;
 pthread_t ThreadManager::main = 0;
+pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_rwlock_t ThreadManager::threadResumeLock = PTHREAD_RWLOCK_INITIALIZER;
+sem_t ThreadManager::semNotifyCkptThread;
+sem_t ThreadManager::semWaitForCkptThreadSignal;
+volatile bool ThreadManager::restoreInProgress = false;
+int ThreadManager::numThreads;
 
 void ThreadManager::sigspin(int sig)
 {
@@ -47,23 +54,40 @@ void ThreadManager::sigspin(int sig)
 
 void ThreadManager::init()
 {
+    /* Create a ThreadInfo struct for this thread */
+    ThreadInfo* thread = ThreadManager::getNewThread();
+    thread->state = ThreadInfo::ST_CKPNTHREAD;
+    thread->tid = getThreadId();
+    thread->detached = false;
+    current_thread = thread;
+    addToList(thread);
+
+    sem_init(&semNotifyCkptThread, 0, 0);
+
     // Registering a sighandler enable us to suspend the main thread from any thread !
+    // struct sigaction sigusr1;
+    // sigemptyset(&sigusr1.sa_mask);
+    // sigusr1.sa_flags = 0;
+    // sigusr1.sa_handler = ThreadManager::sigspin;
+    // int status = sigaction(SIGUSR1, &sigusr1, nullptr);
+    // if (status == -1)
+    //     perror("Error installing signal");
+
     struct sigaction sigusr1;
     sigemptyset(&sigusr1.sa_mask);
     sigusr1.sa_flags = 0;
-    sigusr1.sa_handler = ThreadManager::sigspin;
-    int status = sigaction(SIGUSR1, &sigusr1, nullptr);
-    if (status == -1)
-        perror("Error installing signal");
+    sigusr1.sa_handler = ThreadManager::stopThisThread;
+    MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+
     main = getThreadId();
     inited = true;
 }
 
 ThreadInfo* ThreadManager::getNewThread()
 {
-    // TODO: Must lock before accessing free_list.
     ThreadInfo* thread;
 
+    MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     /* Try to recycle a thread from the free list */
     if (free_list) {
         thread = free_list;
@@ -74,6 +98,8 @@ ThreadInfo* ThreadManager::getNewThread()
         thread = new ThreadInfo;
         debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
     }
+
+    MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
     return thread;
 }
 
@@ -91,6 +117,7 @@ void ThreadManager::initThread(ThreadInfo* thread, pthread_t * tid_p, void * (* 
     thread->go = false;
     thread->state = ThreadInfo::ST_RUNNING;
     thread->routine_id = (char *)start_routine - (char *)from;
+    thread->detached = false;
     thread->next = nullptr;
     thread->prev = nullptr;
 }
@@ -105,7 +132,7 @@ void ThreadManager::update(ThreadInfo* thread)
 
 void ThreadManager::addToList(ThreadInfo* thread)
 {
-    // TODO: Must lock before accessing thread_list.
+    MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
 
     /* Check for a thread with the same tid, and remove it */
     ThreadInfo* cur_thread;
@@ -126,6 +153,8 @@ void ThreadManager::addToList(ThreadInfo* thread)
         thread_list->prev = thread;
     }
     thread_list = thread;
+
+    MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
 void ThreadManager::threadIsDead(ThreadInfo *thread)
@@ -146,25 +175,282 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
     free_list = thread;
 }
 
+void ThreadManager::threadDetach(pthread_t tid)
+{
+    ThreadInfo* thread;
+
+    for (thread = thread_list; thread != nullptr; thread = thread->next) {
+        if (thread->tid == tid) {
+
+            MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
+            thread->detached = true;
+            if (thread->state == ThreadInfo::ST_ZOMBIE) {
+                debuglog(LCF_THREAD, "Zombie thread ", stringify(tid), " is detached");
+                threadIsDead(thread);
+            }
+            MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
+
+            break;
+        }
+    }
+}
+
 void ThreadManager::threadExit()
 {
-    current_thread->state = ThreadInfo::ST_ZOMBIE;
+    MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
+    MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING))
+    if (current_thread->detached) {
+        debuglog(LCF_THREAD, "Detached thread ", stringify(current_thread->tid), " exited");
+        threadIsDead(current_thread);
+    }
+    MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
 void ThreadManager::deallocateThreads()
 {
-    // TODO: Must lock before accessing thread_list.
+    MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     while (free_list != nullptr) {
         ThreadInfo *thread = free_list;
         free_list = free_list->next;
         free(thread);
     }
+    MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
+void ThreadManager::checkpoint()
+{
+    MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
+
+    restoreInProgress = false;
+
+    suspendThreads();
+
+    MYASSERT(getcontext(&current_thread->savctx) == 0)
+
+    /* All other threads halted in 'stopThisThread' routine (they are all
+     * in state ST_SUSPENDED).  It's safe to write checkpoint file now.
+     */
+
+    if (restoreInProgress) {
+        /* We are being restored.  Wait for all other threads to finish being
+         * restored before resuming.
+         */
+        debuglog(LCF_THREAD, "Waiting for other threads after restore");
+        waitForAllRestored(current_thread);
+        debuglog(LCF_THREAD, "Resuming after restore");
+    }
+    else {
+        resumeThreads();
+    }
+}
+
+void ThreadManager::restore()
+{
+    MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
+
+    restoreInProgress = false;
+
+    suspendThreads();
+
+    /* Here is where we load all the memory and stuff */
 
 
+    restoreInProgress = true;
 
+    /* Resume all other threads */
+    resumeThreads();
 
+    setcontext(&current_thread->savctx);
+    /* NOT REACHED */
+}
+
+bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)
+{
+    bool res = false;
+
+    MYASSERT(pthread_mutex_lock(&threadStateLock) == 0)
+    if (oldval == th->state) {
+        th->state = newval;
+        res = true;
+    }
+    MYASSERT(pthread_mutex_unlock(&threadStateLock) == 0)
+    return res;
+}
+
+void ThreadManager::suspendThreads()
+{
+    MYASSERT(pthread_rwlock_destroy(&threadResumeLock) == 0)
+    MYASSERT(pthread_rwlock_init(&threadResumeLock, NULL) == 0)
+    MYASSERT(pthread_rwlock_wrlock(&threadResumeLock) == 0)
+
+    /* Halt all other threads - force them to call stopthisthread
+    * If any have blocked checkpointing, wait for them to unblock before
+    * signalling
+    */
+    MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
+
+    bool needrescan = false;
+    do {
+        needrescan = false;
+        numThreads = 0;
+        ThreadInfo *next;
+        for (ThreadInfo *thread = thread_list; thread != nullptr; thread = next) {
+            next = thread->next;
+            int ret;
+
+            /* Do various things based on thread's state */
+            switch (thread->state) {
+            case ThreadInfo::ST_RUNNING:
+
+                /* Thread is running. Send it a signal so it will call stopthisthread.
+                * We will need to rescan (hopefully it will be suspended by then)
+                */
+                if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
+                    if (pthread_kill(thread->tid, SIGUSR1) != 0) {
+                        MYASSERT(errno == ESRCH)
+                        debuglog(LCF_THREAD, "Sending signal to thread ", stringify(thread->tid), " failed");
+                        threadIsDead(thread);
+                    }
+                    else {
+                        needrescan = true;
+                    }
+                }
+                break;
+
+            case ThreadInfo::ST_ZOMBIE:
+
+                /* Zombie threads should still exist because otherwise they would be
+                * removed from the list. We will still check using pthread_kill(tid, 0)
+                */
+                ret = pthread_kill(thread->tid, 0);
+                MYASSERT(ret == 0 || errno == ESRCH)
+                if (ret == -1 && errno == ESRCH) {
+                    debuglog(LCF_ERROR | LCF_THREAD, "Zombie thread ", stringify(thread->tid), " no longer exists");
+                    threadIsDead(thread);
+                }
+                break;
+
+            case ThreadInfo::ST_SIGNALED:
+                if (pthread_kill(thread->tid, 0) == -1 && errno == ESRCH) {
+                    debuglog(LCF_ERROR | LCF_THREAD, "Signalled thread ", stringify(thread->tid), " died");
+                    threadIsDead(thread);
+                } else {
+                    needrescan = true;
+                }
+                break;
+
+            case ThreadInfo::ST_SUSPINPROG:
+                numThreads++;
+                break;
+
+            case ThreadInfo::ST_SUSPENDED:
+                numThreads++;
+                break;
+
+            case ThreadInfo::ST_CKPNTHREAD:
+                break;
+
+            default:
+                debuglog(LCF_ERROR | LCF_THREAD, "Unknown thread state ", thread->state);
+            }
+        }
+        if (needrescan) {
+            struct timespec sleepTime = { 0, 10 * 1000 };
+            GlobalNative gn;
+            nanosleep(&sleepTime, NULL);
+        }
+    } while (needrescan);
+
+    MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
+
+    for (int i = 0; i < numThreads; i++) {
+        sem_wait(&semNotifyCkptThread);
+    }
+
+    debuglog(LCF_THREAD, numThreads, " threads were suspended");
+}
+
+/* Resume all threads. */
+void ThreadManager::resumeThreads()
+{
+    debuglog(LCF_THREAD, "Resuming all threads");
+    MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
+    debuglog(LCF_THREAD, "All threads resumed");
+}
+
+void ThreadManager::stopThisThread(int signum)
+{
+    if (current_thread->state == ThreadInfo::ST_CKPNTHREAD) {
+        return;
+    }
+
+    /* Make sure we don't get called twice for same thread */
+    if (updateState(current_thread, ThreadInfo::ST_SUSPINPROG, ThreadInfo::ST_SIGNALED)) {
+
+        /* Set up our restart point, ie, we get jumped to here after a restore */
+
+        // TLSInfo_SaveTLSState(&curThread->tlsInfo); // save thread local storage
+        MYASSERT(getcontext(&current_thread->savctx) == 0)
+        // save_sp(&curThread->saved_sp);
+
+        debuglog(LCF_THREAD, "Thread after getcontext (", __builtin_return_address(0), ")");
+
+        if (!restoreInProgress) {
+
+            /* We are a user thread and all context is saved.
+             * Wait for ckpt thread to write ckpt, and resume.
+             */
+
+            /* Tell the checkpoint thread that we're all saved away */
+            MYASSERT(updateState(current_thread, ThreadInfo::ST_SUSPENDED, ThreadInfo::ST_SUSPINPROG))
+            sem_post(&semNotifyCkptThread);
+
+            /* Then wait for the ckpt thread to write the ckpt file then wake us up */
+            debuglog(LCF_THREAD, "Thread suspended");
+
+            MYASSERT(pthread_rwlock_rdlock(&threadResumeLock) == 0)
+            MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
+
+            /* If when thread was suspended, we performed a restore,
+             * then we must resume execution using setcontext
+             */
+            if (restoreInProgress) {
+                setcontext(&current_thread->savctx);
+                /* NOT REACHED */
+            }
+            MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
+        }
+        else {
+            /* We successfully restored the thread. We wait for all other
+             * threads to restore before continuing
+             */
+            MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
+
+            /* Else restoreinprog >= 1;  This stuff executes to do a restart */
+            waitForAllRestored(current_thread);
+        }
+
+    debuglog(LCF_THREAD, "Thread returning to user code ", __builtin_return_address(0));
+    }
+}
+
+void ThreadManager::waitForAllRestored(ThreadInfo *thread)
+{
+    if (thread->state == ThreadInfo::ST_CKPNTHREAD) {
+        for (int i = 0; i < numThreads; i++) {
+            sem_wait(&semNotifyCkptThread);
+        }
+
+        /* If this was last of all, wake everyone up */
+        for (int i = 0; i < numThreads; i++) {
+            sem_post(&semWaitForCkptThreadSignal);
+        }
+    }
+    else {
+        sem_post(&semNotifyCkptThread);
+        sem_wait(&semWaitForCkptThreadSignal);
+    }
+}
 
 void ThreadManager::suspend(pthread_t from_tid)
 {

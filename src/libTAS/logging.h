@@ -121,6 +121,11 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 /* If we only want to print the function name... */
 #define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")
 
+/* Macro of an assert */
+#define MYASSERT(term) if ((term)) {} \
+    else {debuglog(LCF_ERROR, #term, " failed in ", __func__); \
+    exit(1);}
+
 /* We want to store and send error messages to the program so that they can be
  * shown on a dialog box. We also need some synchronization to access the set
  * of error messages.

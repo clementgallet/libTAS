@@ -22,7 +22,8 @@
 #ifndef LIBTAS_THREAD_INFO_H
 #define LIBTAS_THREAD_INFO_H
 #include <atomic>
-#include "pthread.h" // pthread_t
+#include <ucontext.h>
+#include <pthread.h> // pthread_t
 
 struct ThreadInfo {
 
@@ -34,14 +35,15 @@ struct ThreadInfo {
         ST_ZOMBIE,
         ST_CKPNTHREAD
     };
-
     ThreadState state;
     pthread_t *tid_p;
     pthread_t tid;
     void *(*start)(void *);
     void *arg;
     std::atomic<bool> go;
+    bool detached;
     std::ptrdiff_t routine_id;
+    ucontext_t savctx;
 
     ThreadInfo *next;
     ThreadInfo *prev;

@@ -30,6 +30,7 @@
 #include <atomic>
 #include <cstddef>
 #include <pthread.h>
+#include <semaphore.h>
 
 
 class ThreadManager {
@@ -49,6 +50,16 @@ class ThreadManager {
     static std::set<void *> beforeSDL;
     static bool inited;
     static pthread_t main;
+
+    static pthread_mutex_t threadStateLock;
+    static pthread_mutex_t threadListLock;
+    static pthread_rwlock_t threadResumeLock;
+    static sem_t semNotifyCkptThread;
+    static sem_t semWaitForCkptThreadSignal;
+
+    static volatile bool restoreInProgress;
+
+    static int numThreads;
 
 public:
 
@@ -70,12 +81,34 @@ public:
     /* Remove a thread from the list and add it to the free list */
     static void threadIsDead(ThreadInfo *thread);
 
+    /* Called when thread detach another thread */
+    static void threadDetach(pthread_t tid);
+
     /* Called when thread reaches the end (by return or pthread_exit) */
     static void threadExit();
 
     /* Deallocate all ThreadInfo structs from the free list */
     static void deallocateThreads();
 
+    /* Checkpoint */
+    static void checkpoint();
+
+    /* Restore */
+    static void restore();
+
+    /* Safely try to change a ThreadInfo state and return if done */
+    static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);
+
+    /* Send a signal to suspend all threads before checkpointing */
+    static void suspendThreads();
+
+    /* Resume all threads */
+    static void resumeThreads();
+
+    /* Function executed by all secondary threads using signal SIGUSR1 */
+    static void stopThisThread(int signum);
+
+    static void waitForAllRestored(ThreadInfo *thread);
 
 
     // Register the start of a new thread
