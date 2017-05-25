@@ -36,7 +36,7 @@
 #include "../shared/AllInputs.h"
 #include "hook.h"
 #include "inputs/inputs.h"
-#include "ThreadManager.h"
+#include "checkpoint/ThreadManager.h"
 #include <fstream>
 #include "audio/AudioContext.h"
 //#ifdef LIBTAS_ENABLE_AVDUMPING
@@ -172,7 +172,7 @@ void __attribute__((destructor)) term(void)
     DEBUGLOGCALL(LCF_SDL);
 
     debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
-    ThreadManager::get().init();
+    ThreadManager::init();
 
     /* Get which sdl version we are using.
      * Stores it in an extern variable.
@@ -250,8 +250,9 @@ void __attribute__((destructor)) term(void)
 
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
-    debuglog(LCF_THREAD, ThreadManager::get().summary());
-
+    // debuglog(LCF_THREAD, ThreadManager::get().summary());
+    ThreadManager::deallocateThreads();
+    
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();
 }

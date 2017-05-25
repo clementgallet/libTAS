@@ -22,8 +22,9 @@
 
 #include "hook.h"
 #include "global.h"
+#include "pthread.h" // pthread_t
 
-typedef unsigned long int pthread_t;
+// typedef unsigned long int pthread_t;
 
 typedef int (*SDL_ThreadFunction) (void *data);
 /* Opaque struct of a SDL thread */

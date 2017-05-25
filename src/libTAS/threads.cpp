@@ -24,7 +24,8 @@
 #include <cstring>
 #include <atomic>
 #include <memory>
-#include "ThreadManager.h"
+#include "checkpoint/ThreadInfo.h"
+#include "checkpoint/ThreadManager.h"
 
 /* Original function pointers */
 namespace orig {
@@ -98,21 +99,11 @@ int isMainThread(void)
     orig::SDL_WaitThread(thread, status);
 }
 
-typedef struct arg_t {
-    pthread_t *tid;
-    void *(*start)(void *);
-    void *arg;
-    std::atomic<bool>* go;
-} arg_t;
-
-void *wrapper(void *arg);
-void *wrapper(void *arg)
+// void *pthread_start(void *arg);
+static void *pthread_start(void *arg)
 {
-    arg_t *args = static_cast<arg_t*>(arg);
-    auto start = args->start;
-    auto routine_arg = args->arg;
-    auto tid = *args->tid;
-    auto go = args->go;
+    ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
+    ThreadManager::update(thread);
 
 #if 0
     // NOTE: turn this to '#if 1' to impose de-sync on every single thread
@@ -120,44 +111,44 @@ void *wrapper(void *arg)
     sleep(1);
 #endif
     /* Wait for main thread to be ready to sleep */
-    while(!*go)
+    while(!thread->go)
         ;
 
-    /* Tell the main thread that it can continue. This is needed because ̀go`
-     * belongs to the main thread, thus we need to access it before it goes
-     * out of scope */
-    *go = false;
-
-    void *ret = start(routine_arg);
-    debuglog(LCF_THREAD, "WE ARE DONE ", start);
-    ThreadManager &tm = ThreadManager::get();
-    tm.resume(tid);
-    tm.end(tid);
+    void *ret = thread->start(thread->arg);
+    debuglog(LCF_THREAD, "WE ARE DONE");
+    // ThreadManager::resume(tid);
+    ThreadManager::threadExit();
+    // ThreadManager::end(thread->tid);
     return ret;
 }
 
 
-/* Override */ int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
+/* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
     LINK_NAMESPACE(pthread_create, "pthread");
-    ThreadManager &tm = ThreadManager::get();
-    char name[16];
-    name[0] = '\0';
-    // 'go' is a small barrier to synchronize the main thread with the thread created
-    // Avoids issues when the created thread is so fast that it's detached
-    // before the main thread goes to sleep (ie: starvation => program blocked)
-    std::atomic<bool> go(false);
-    arg_t args;
-    args.start = start_routine;
-    args.arg = arg;
-    args.tid = thread;
-    args.go = &go;
-    int ret = orig::pthread_create(thread, attr, wrapper, &args);
-    tm.start(*thread, __builtin_return_address(0), (void*)start_routine);
+
+    /* Creating a new thread and filling some parameters.
+     * The rest (like thread->tid) will be filled by the child thread.
+     */
+    ThreadInfo* thread = ThreadManager::getNewThread();
+    ThreadManager::initThread(thread, tid_p, start_routine, arg, __builtin_return_address(0));
+
+    /* Call our wrapper function */
+    int ret = orig::pthread_create(tid_p, attr, pthread_start, thread);
+
+    if (ret != 0) {
+        /* Thread creation failed */
+        ThreadManager::threadIsDead(thread);
+        return ret;
+    }
+
+    // ThreadManager::start(*tid_p, __builtin_return_address(0), (void*)start_routine);
 
     LINK_NAMESPACE(pthread_getname_np, "pthread");
-    orig::pthread_getname_np(*thread, name, 16);
-    std::string thstr = stringify(*thread);
+    char name[16];
+    name[0] = '\0';
+    orig::pthread_getname_np(*tid_p, name, 16);
+    std::string thstr = stringify(*tid_p);
     if (name[0])
         debuglog(LCF_THREAD, "Thread ", thstr, " was created (", name, ").");
     else
@@ -165,17 +156,10 @@ void *wrapper(void *arg)
     debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
 
     /* Say to thread created that it can go! */
-    go = true;
-
-    /* We wait here that the thread goes past the spinlock, otherwise, we
-     * may end this function and the spinlock goes out of scope. Thus, the
-     * thread crashes by accessing the spinlock.
-     */
-    while(go)
-        ;
+    thread->go = true;
 
     //Check and suspend main thread if needed
-    tm.suspend(*thread);
+    // ThreadManager::suspend(*tid_p);
 
     return ret;
 }
@@ -184,10 +168,10 @@ void *wrapper(void *arg)
 {
     LINK_NAMESPACE(pthread_exit, "pthread");
     debuglog(LCF_THREAD, "Thread has exited.");
-    ThreadManager &tm = ThreadManager::get();
-    pthread_t tid = getThreadId();
-    tm.resume(tid);
-    tm.end(tid);
+    ThreadManager::threadExit();
+    // pthread_t tid = getThreadId();
+    // ThreadManager::resume(tid);
+    // ThreadManager::end(tid);
     orig::pthread_exit(retval);
 }
 
@@ -206,7 +190,7 @@ void *wrapper(void *arg)
     LINK_NAMESPACE(pthread_detach, "pthread");
     std::string thstr = stringify(thread);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
-    ThreadManager::get().resume(thread);
+    // ThreadManager::resume(thread);
     return orig::pthread_detach(thread);
 }
 
@@ -259,9 +243,8 @@ void *wrapper(void *arg)
     LINK_NAMESPACE(pthread_cancel, "pthread");
     std::string thstr = stringify(th);
     debuglog(LCF_THREAD, "Cancel thread ", thstr);
-    ThreadManager &tm = ThreadManager::get();
-    tm.resume(th);
-    tm.end(th);
+    // ThreadManager::resume(th);
+    // ThreadManager::end(th);
     return orig::pthread_cancel(th);
 }
 
