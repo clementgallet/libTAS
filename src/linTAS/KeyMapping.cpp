@@ -85,6 +85,8 @@ KeyMapping::KeyMapping()
     hotkey_list.push_back({{IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
     hotkey_list.push_back({{IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVEPSEUDOSTATE, "Save Pseudo State"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADPSEUDOSTATE, "Load Pseudo State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE, "Save State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE, "Load State"});
 

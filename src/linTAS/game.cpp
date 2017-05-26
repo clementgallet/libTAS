@@ -37,7 +37,7 @@
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
-PseudoSaveState savestate;
+PseudoSaveState pseudosavestate;
 
 static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
 {
@@ -243,25 +243,25 @@ void launchGame(Context* context)
         ui.update(false);
 
         /* Check if we are loading a pseudo savestate */
-        if (savestate.loading) {
+        if (pseudosavestate.loading) {
             /* When we approach the frame to pause, we disable fastforward so
              * that we draw all the frames.
              */
-            if (context->framecount > (savestate.framecount - 30)) {
+            if (context->framecount > (pseudosavestate.framecount - 30)) {
                 context->config.sc.fastforward = false;
                 context->config.sc_modified = true;
                 ui.update(true);
             }
 
-            if (savestate.framecount == context->framecount) {
-                /* We are back to our savestate frame, we pause the game, disable
+            if (pseudosavestate.framecount == context->framecount) {
+                /* We are back to our pseudosavestate frame, we pause the game, disable
                  * fastforward and recover the movie recording mode.
                  */
-                savestate.loading = false;
+                pseudosavestate.loading = false;
                 context->config.sc.running = false;
                 context->config.sc.fastforward = false;
                 context->config.sc_modified = true;
-                context->recording = savestate.recording;
+                context->recording = pseudosavestate.recording;
                 ui.update(true);
             }
         }
@@ -341,24 +341,32 @@ void launchGame(Context* context)
                         ui.update(true);
                         context->config.sc_modified = true;
                     }
-                    if (hk.type == HOTKEY_SAVESTATE){
-                        savestate.framecount = context->framecount;
+                    if (hk.type == HOTKEY_SAVEPSEUDOSTATE){
+                        pseudosavestate.framecount = context->framecount;
                     }
-                    if (hk.type == HOTKEY_LOADSTATE){
-                        if (savestate.framecount > 0 && (
+                    if (hk.type == HOTKEY_LOADPSEUDOSTATE){
+                        if (pseudosavestate.framecount > 0 && (
                             context->recording == Context::RECORDING_READ_WRITE ||
                             context->recording == Context::RECORDING_WRITE)) {
-                            savestate.loading = true;
+                            pseudosavestate.loading = true;
                             context->config.sc.running = true;
                             context->config.sc.fastforward = true;
                             context->config.sc_modified = true;
-                            savestate.recording = context->recording;
+                            pseudosavestate.recording = context->recording;
                             context->recording = Context::RECORDING_READ_WRITE;
                             context->status = Context::QUITTING;
                             ui.update(true);
                             ui.update_status();
                             break;
                         }
+                    }
+                    if (hk.type == HOTKEY_SAVESTATE){
+                        message = MSGN_SAVESTATE;
+                        send(socket_fd, &message, sizeof(int), 0);
+                    }
+                    if (hk.type == HOTKEY_LOADSTATE){
+                        message = MSGN_LOADSTATE;
+                        send(socket_fd, &message, sizeof(int), 0);
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->recording) {
@@ -498,7 +506,7 @@ void launchGame(Context* context)
     movie.close();
     close(socket_fd);
 
-    if (savestate.loading) {
+    if (pseudosavestate.loading) {
         /* We a loading a pseudo savestate, we need to restart the game */
         context->status = Context::RESTARTING;
         /* Ask the main (UI) thread to call launch_cb, restarting the game */
@@ -506,7 +514,7 @@ void launchGame(Context* context)
     }
     else {
         /* Unvalidate the pseudo savestate */
-        savestate.framecount = 0;
+        pseudosavestate.framecount = 0;
 
         context->status = Context::INACTIVE;
         ui.update_status();

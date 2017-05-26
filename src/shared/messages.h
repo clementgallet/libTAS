@@ -99,7 +99,19 @@ enum {
      * Send an error message to be prompted by the program
      * Arguments: size_t (string length) then char[len]
      */
-    MSGB_ERROR_MSG
+    MSGB_ERROR_MSG,
+
+    /*
+     * Ask the game to make a savestate
+     * Argument: none
+     */
+    MSGN_SAVESTATE,
+
+    /*
+     * Ask the game to load a savestate
+     * Argument: none
+     */
+    MSGN_LOADSTATE
 };
 
 #endif

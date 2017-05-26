@@ -29,10 +29,10 @@
 #include "AVEncoder.h"
 #include "sdlwindows.h"
 #include "sdlevents.h"
-#include <mutex>
 #include <iomanip>
 #include "time.h" // clock_gettime
 #include "threads.h" // isMainThread()
+#include "checkpoint/ThreadManager.h"
 
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
@@ -90,8 +90,6 @@ static bool skipDraw(void)
 
     return skipCounter;
 }
-
-std::mutex frameMutex;
 
 #ifdef LIBTAS_ENABLE_HUD
 void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
@@ -229,13 +227,24 @@ void proceed_commands(void)
                 debuglog(LCF_SOCKET | LCF_FRAME, "File ", av_filename);
                 break;
 
-            case MSGN_END_FRAMEBOUNDARY:
-                return;
-
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));
                 break;
 
+            case MSGN_SAVESTATE:
+                ThreadManager::checkpoint();
+                break;
+
+            case MSGN_LOADSTATE:
+                ThreadManager::restore();
+                break;
+
+            case MSGN_END_FRAMEBOUNDARY:
+                return;
+
+            default:
+                debuglog(LCF_ERROR | LCF_SOCKET | LCF_FRAME, "Unknown message received");
+                return;
         }
     }
 }
