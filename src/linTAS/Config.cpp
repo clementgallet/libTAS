@@ -77,10 +77,12 @@ void Config::save() {
     prefs_shared.set("audio_channels", sc.audio_channels);
     prefs_shared.set("audio_frequency", sc.audio_frequency);
     prefs_shared.set("audio_mute", static_cast<int>(sc.audio_mute));
+#ifdef LIBTAS_ENABLE_AVDUMPING
     prefs_shared.set("video_codec", static_cast<int>(sc.video_codec));
     prefs_shared.set("video_bitrate", sc.video_bitrate);
     prefs_shared.set("audio_codec", static_cast<int>(sc.audio_codec));
     prefs_shared.set("audio_bitrate", sc.audio_bitrate);
+#endif
     prefs_shared.set("main_gettimes_threshold", static_cast<void*>(sc.main_gettimes_threshold), sizeof(sc.main_gettimes_threshold));
     prefs_shared.set("sec_gettimes_threshold", static_cast<void*>(sc.sec_gettimes_threshold), sizeof(sc.sec_gettimes_threshold));
 }
@@ -221,6 +223,7 @@ void Config::load(const std::string& gamepath) {
     prefs_shared.get("audio_mute", val, val);
     sc.audio_mute = static_cast<bool>(val);
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
     val = static_cast<int>(sc.video_codec);
     prefs_shared.get("video_codec", val, val);
     sc.video_codec = static_cast<AVCodecID>(val);
@@ -232,6 +235,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_codec = static_cast<AVCodecID>(val);
 
     prefs_shared.get("audio_bitrate", sc.audio_bitrate, sc.audio_bitrate);
+#endif
 
     const int def_data[SharedConfig::TIMETYPE_NUMTRACKEDTYPES] = {};
     void* vdata;

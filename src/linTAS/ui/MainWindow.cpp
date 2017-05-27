@@ -29,8 +29,10 @@ static Fl_Callback0 set_fps_cb;
 static Fl_Callback0 pause_cb;
 static Fl_Callback0 fastforward_cb;
 static Fl_Callback0 recording_cb;
+#ifdef LIBTAS_ENABLE_AVDUMPING
 static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
+#endif
 static Fl_Callback config_input_cb;
 static Fl_Callback config_executable_cb;
 static Fl_Callback sound_frequency_cb;
@@ -120,6 +122,10 @@ void MainWindow::build(Context* c)
     /* Mute */
     mutecheck = new Fl_Check_Button(240, 220, 80, 20, "Mute");
     mutecheck->callback(mute_sound_cb);
+#ifndef LIBTAS_ENABLE_SOUNDPLAYBACK
+    mutecheck->label("Mute (disabled)");
+    mutecheck->deactivate();
+#endif
 
     /* Frame count */
     framecount = new Fl_Output(80, 140, 60, 30, "Frames:");
@@ -140,7 +146,9 @@ void MainWindow::build(Context* c)
 
     window->end();
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
     encode_window = new EncodeWindow(c);
+#endif
     input_window = new InputWindow(c);
     executable_window = new ExecutableWindow(c);
 
@@ -154,11 +162,11 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Movie...", 0, browse_moviepath_cb},
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
-        {"OSD", 0, nullptr, nullptr, FL_SUBMENU
-        #ifndef LIBTAS_ENABLE_HUD
-        | FL_MENU_INACTIVE
-        #endif
-    },
+#ifdef LIBTAS_ENABLE_HUD
+        {"OSD", 0, nullptr, nullptr, FL_SUBMENU},
+#else
+        {"OSD (disabled)", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_INACTIVE},
+#endif
             {"Frame Count", 0, osd_frame_cb, nullptr, FL_MENU_TOGGLE},
             {"Inputs", 0, osd_inputs_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_DIVIDER},
             {"OSD on video encode", 0, osd_encode_cb, nullptr, FL_MENU_TOGGLE},
@@ -180,7 +188,11 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {"Mono", 0, sound_channel_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"Stereo", 0, sound_channel_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {nullptr},
+#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
         {"Mute Sound", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE},
+#else
+        {"Mute Sound (disabled)", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_INACTIVE},
+#endif
         {nullptr},
     {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
         {"Time tracking", 0, nullptr, nullptr, FL_SUBMENU},
@@ -274,8 +286,13 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {nullptr},
         {nullptr},
     {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
+#ifdef LIBTAS_ENABLE_AVDUMPING
         {"Configure encode...", 0, config_encode_cb},
         {"Start encode", 0, toggle_encode_cb, nullptr, FL_MENU_DIVIDER},
+#else
+        {"Configure encode... (disabled)", 0, nullptr, nullptr, FL_MENU_INACTIVE},
+        {"Start encode (disabled)", 0, nullptr, nullptr, FL_MENU_DIVIDER | FL_MENU_INACTIVE},
+#endif
         {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU},
             {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"50%", 0, slowmo_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
@@ -323,6 +340,7 @@ void MainWindow::update_status()
             moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
+#ifdef LIBTAS_ENABLE_AVDUMPING
             if (context->config.sc.av_dumping) {
                 Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
                 Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
@@ -330,6 +348,7 @@ void MainWindow::update_status()
                 if (encode_item) encode_item->label("Start encode");
                 if (config_item) config_item->activate();
             }
+#endif
             break;
         case Context::STARTING:
             launch->deactivate();
@@ -586,7 +605,9 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
 
         /* Update the UI accordingly */
         mw.update_config();
+#ifdef LIBTAS_ENABLE_AVDUMPING
         mw.encode_window->update_config();
+#endif
         mw.executable_window->update_config();
         mw.input_window->update();
     }
@@ -648,6 +669,7 @@ void recording_cb(Fl_Widget* w)
         mw.context->recording = Context::RECORDING_READ_ONLY;
 }
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
 void config_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
@@ -658,6 +680,7 @@ void config_encode_cb(Fl_Widget* w, void*)
         Fl::wait();
     }
 }
+#endif
 
 void config_executable_cb(Fl_Widget* w, void*)
 {
@@ -670,6 +693,7 @@ void config_executable_cb(Fl_Widget* w, void*)
     }
 }
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
 void toggle_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
@@ -691,6 +715,7 @@ void toggle_encode_cb(Fl_Widget* w, void*)
         if (config_item) config_item->activate();
     }
 }
+#endif
 
 void config_input_cb(Fl_Widget* w, void*)
 {

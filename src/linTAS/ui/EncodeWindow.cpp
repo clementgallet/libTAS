@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
+
 #include "EncodeWindow.h"
 #include "MainWindow.h"
 #include <iostream>
@@ -274,3 +276,5 @@ void acodec_cb(Fl_Widget* w, void* v)
         }
     }
 }
+
+#endif

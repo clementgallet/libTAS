@@ -60,7 +60,9 @@ class MainWindow {
         Fl_Menu_Bar *menu_bar;
         static Fl_Menu_Item menu_items[];
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
         EncodeWindow* encode_window;
+#endif
         InputWindow* input_window;
         ExecutableWindow* executable_window;
 

@@ -21,9 +21,11 @@
 #define LIBTAS_SHAREDCONFIG_H_INCLUDED
 
 #include "lcf.h"
+#ifdef LIBTAS_ENABLE_AVDUMPING
 extern "C" {
 #include <libavcodec/avcodec.h> // for AVCodecID struct
 }
+#endif
 
 class SharedConfig {
     public:
@@ -94,11 +96,13 @@ class SharedConfig {
         /* Mute audio */
         bool audio_mute = false;
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
         /* Encode config */
         AVCodecID video_codec = AV_CODEC_ID_H264;
         int video_bitrate = 4000000;
         AVCodecID audio_codec = AV_CODEC_ID_VORBIS;
         int audio_bitrate = 128000;
+#endif
 
         /* An enum indicating which time-getting function query the time */
         enum TimeCallType

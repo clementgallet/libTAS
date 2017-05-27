@@ -20,6 +20,8 @@
 #ifndef LINTAS_ENCODEWINDOW_H_INCLUDED
 #define LINTAS_ENCODEWINDOW_H_INCLUDED
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -63,4 +65,5 @@ class EncodeWindow {
 
 };
 
+#endif
 #endif
