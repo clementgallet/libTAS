@@ -173,69 +173,34 @@ void Config::load(const std::string& gamepath) {
 
     prefs_shared.get("speed_divisor", sc.speed_divisor, sc.speed_divisor);
 
-    int val = static_cast<int>(sc.logging_status);
-    prefs_shared.get("logging_status", val, val);
-    sc.logging_status = static_cast<SharedConfig::LogStatus>(val);
+    int val;
+    #define GETWITHTYPE(member, type) \
+        val = static_cast<int>(sc.member); \
+        prefs_shared.get(#member, val, val); \
+        sc.member = static_cast<type>(val)
 
-    val = static_cast<int>(sc.includeFlags);
-    prefs_shared.get("includeFlags", val, val);
-    sc.includeFlags = static_cast<LogCategoryFlag>(val);
-
-    val = static_cast<int>(sc.excludeFlags);
-    prefs_shared.get("excludeFlags", val, val);
-    sc.excludeFlags = static_cast<LogCategoryFlag>(val);
-
-    val = static_cast<int>(sc.framerate);
-    prefs_shared.get("framerate", val, val);
-    sc.framerate = static_cast<unsigned int>(val);
-
-    val = static_cast<int>(sc.keyboard_support);
-    prefs_shared.get("keyboard_support", val, val);
-    sc.keyboard_support = static_cast<bool>(val);
-
-    val = static_cast<int>(sc.mouse_support);
-    prefs_shared.get("mouse_support", val, val);
-    sc.mouse_support = static_cast<bool>(val);
-
-    prefs_shared.get("numControllers", sc.numControllers, sc.numControllers);
-
-    val = static_cast<int>(sc.hud_framecount);
-    prefs_shared.get("hud_framecount", val, val);
-    sc.hud_framecount = static_cast<bool>(val);
-
-    val = static_cast<int>(sc.hud_inputs);
-    prefs_shared.get("hud_inputs", val, val);
-    sc.hud_inputs = static_cast<bool>(val);
-
-    val = static_cast<int>(sc.hud_encode);
-    prefs_shared.get("hud_encode", val, val);
-    sc.hud_encode = static_cast<bool>(val);
-
-    val = static_cast<int>(sc.prevent_savefiles);
-    prefs_shared.get("prevent_savefiles", val, val);
-    sc.prevent_savefiles = static_cast<bool>(val);
-
-    prefs_shared.get("audio_bitdepth", sc.audio_bitdepth, sc.audio_bitdepth);
-    prefs_shared.get("audio_channels", sc.audio_channels, sc.audio_channels);
-    prefs_shared.get("audio_frequency", sc.audio_frequency, sc.audio_frequency);
-
-    val = static_cast<int>(sc.audio_mute);
-    prefs_shared.get("audio_mute", val, val);
-    sc.audio_mute = static_cast<bool>(val);
-
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    val = static_cast<int>(sc.video_codec);
-    prefs_shared.get("video_codec", val, val);
-    sc.video_codec = static_cast<AVCodecID>(val);
-
-    prefs_shared.get("video_bitrate", sc.video_bitrate, sc.video_bitrate);
-
-    val = static_cast<int>(sc.audio_codec);
-    prefs_shared.get("audio_codec", val, val);
-    sc.audio_codec = static_cast<AVCodecID>(val);
-
-    prefs_shared.get("audio_bitrate", sc.audio_bitrate, sc.audio_bitrate);
-#endif
+    GETWITHTYPE(logging_status, SharedConfig::LogStatus);
+    GETWITHTYPE(includeFlags, LogCategoryFlag);
+    GETWITHTYPE(excludeFlags, LogCategoryFlag);
+    GETWITHTYPE(framerate, unsigned int);
+    GETWITHTYPE(keyboard_support, bool);
+    GETWITHTYPE(mouse_support, bool);
+    GETWITHTYPE(keyboard_support, bool);
+    GETWITHTYPE(numControllers, int);
+    GETWITHTYPE(hud_framecount, bool);
+    GETWITHTYPE(hud_inputs, bool);
+    GETWITHTYPE(hud_encode, bool);
+    GETWITHTYPE(prevent_savefiles, bool);
+    GETWITHTYPE(audio_bitdepth, int);
+    GETWITHTYPE(audio_channels, int);
+    GETWITHTYPE(audio_frequency, int);
+    GETWITHTYPE(audio_mute, bool);
+    #ifdef LIBTAS_ENABLE_AVDUMPING
+    GETWITHTYPE(video_codec, AVCodecID);
+    GETWITHTYPE(video_bitrate, int);
+    GETWITHTYPE(audio_codec, AVCodecID);
+    GETWITHTYPE(audio_bitrate, int);
+    #endif
 
     const int def_data[SharedConfig::TIMETYPE_NUMTRACKEDTYPES] = {};
     void* vdata;
