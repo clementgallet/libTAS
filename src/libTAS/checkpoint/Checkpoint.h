@@ -19,30 +19,17 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_PROCSELFMAPS_H
-#define LIBTAS_PROCSELFMAPS_H
+#ifndef LIBTAS_CHECKPOINT_H
+#define LIBTAS_CHECKPOINT_H
 
 #include "ProcMapsArea.h"
 
-class ProcSelfMaps
+class Checkpoint
 {
     public:
-        ProcSelfMaps();
-        ~ProcSelfMaps();
-
-        size_t getNumAreas() const { return numAreas; }
-
-        int getNextArea(Area *area);
-
+        void writeAllAreas();
     private:
-        unsigned long int readDec();
-        unsigned long int readHex();
-
-        char *data;
-        size_t dataIdx;
-        size_t numAreas;
-        size_t numBytes;
-        int fd;
+        void writeAnArea(int fd, Area* area);
 };
 
 #endif

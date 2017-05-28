@@ -31,11 +31,11 @@
 // #define MTCP_PAGE_OFFSET_MASK (MTCP_PAGE_SIZE - 1)
 // #define FILENAMESIZE          1024
 //
-// #ifndef HIGHEST_VA
+#ifndef HIGHEST_VA
 
 // If 32-bit process in 64-bit Linux, then Makefile overrides this address,
 // with correct address for that case.
-// # ifdef __x86_64__
+# ifdef __x86_64__
 
 /* There's a segment, 7fbfffb000-7fc0000000 rw-p 7fbfffb000 00:00 0;
  * What is it?  It's busy (EBUSY) when we try to unmap it.
@@ -43,11 +43,11 @@
 
 // #  define HIGHEST_VA ((VA)0xFFFFFF8000000000)
 // #  define HIGHEST_VA ((VA)0x8000000000)
-// #  define HIGHEST_VA ((VA)0x7f00000000)
-// # else // ifdef __x86_64__
-// #  define HIGHEST_VA ((VA)0xC0000000)
-// # endif // ifdef __x86_64__
-// #endif // ifndef HIGHEST_VA
+#  define HIGHEST_VA ((VA)0x7f00000000)
+# else // ifdef __x86_64__
+#  define HIGHEST_VA ((VA)0xC0000000)
+# endif // ifdef __x86_64__
+#endif // ifndef HIGHEST_VA
 
 // #define DELETED_FILE_SUFFIX " (deleted)"
 
@@ -55,12 +55,12 @@
 
 typedef char *VA;  /* VA = virtual address */
 
-// typedef enum ProcMapsAreaProperties {
-//   DMTCP_ZERO_PAGE = 0x0001,
-//   DMTCP_SKIP_WRITING_TEXT_SEGMENTS = 0x0002
-// } ProcMapsAreaProperties;
+enum ProcMapsAreaProperties {
+  // DMTCP_ZERO_PAGE = 0x0001,
+  DMTCP_SKIP_WRITING_TEXT_SEGMENTS = 0x0002
+};
 
-union ProcMapsArea {
+union Area {
     struct {
         VA addr;   // args required for mmap to restore memory area
         VA endAddr;   // args required for mmap to restore memory area

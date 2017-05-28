@@ -41,7 +41,7 @@ typedef int LogCategoryFlag; enum
 	LCF_TIMEFUNC = 1 << 7, // time-related functions
 	LCF_TIMESET  = 1 << 8, // notifications of setting the internal time
 	LCF_TIMEGET  = 1 << 9, // notifications of getting the internal time
-	//LCF_SYNCOBJ  = 1 << 10, // creating or modifying synchronization objects
+	LCF_CHECKPOINT  = 1 << 10, // savestates
 	LCF_WAIT     = 1 << 11, // waiting on synchronization objects
 	LCF_SLEEP    = 1 << 12, // calls on thread sleep
 	LCF_SOCKET   = 1 << 13, // sending messages over the socket

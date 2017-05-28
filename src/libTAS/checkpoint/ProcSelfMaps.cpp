@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include "Utils.h"
 
 ProcSelfMaps::ProcSelfMaps()
     : dataIdx(0),
@@ -39,7 +40,7 @@ ProcSelfMaps::ProcSelfMaps()
 
     // Get an approximation of the required buffer size.
     do {
-        numRead = read(fd, buf, sizeof(buf));
+        numRead = Utils::readAll(fd, buf, sizeof(buf));
         if (numRead > 0) {
             numBytes += numRead;
         }
@@ -49,18 +50,10 @@ ProcSelfMaps::ProcSelfMaps()
     // of /proc/self/maps, so we need to recalculate numBytes.
     size_t size = numBytes + 4096; // Add a one page buffer.
     data = (char *)malloc(size);
-    MYASSERT(lseek(fd, 0, SEEK_SET) == 0);
+    MYASSERT(lseek(fd, 0, SEEK_SET) == 0)
 
-    numRead = 0;
-    numBytes = 0;
-    do {
-        numRead = read(fd, data+numBytes, size-numBytes);
-        if (numRead > 0) {
-            numBytes += numRead;
-        }
-    } while (numRead > 0);
-
-    MYASSERT(numBytes > 0);
+    numBytes = Utils::readAll(fd, data, size);
+    MYASSERT(numBytes > 0)
 
     close(fd);
 
@@ -118,7 +111,7 @@ unsigned long int ProcSelfMaps::readHex()
     return v;
 }
 
-int ProcSelfMaps::getNextArea(ProcMapsArea *area)
+int ProcSelfMaps::getNextArea(Area *area)
 {
     char rflag, sflag, wflag, xflag;
 
@@ -127,40 +120,40 @@ int ProcSelfMaps::getNextArea(ProcMapsArea *area)
     }
 
     area->addr = (VA)readHex();
-    MYASSERT(area->addr != NULL);
+    MYASSERT(area->addr != NULL)
 
-    MYASSERT(data[dataIdx++] == '-');
+    MYASSERT(data[dataIdx++] == '-')
 
     area->endAddr = (VA)readHex();
-    MYASSERT(area->endAddr != NULL);
+    MYASSERT(area->endAddr != NULL)
 
-    MYASSERT(data[dataIdx++] == ' ');
+    MYASSERT(data[dataIdx++] == ' ')
 
-    MYASSERT(area->endAddr >= area->addr);
+    MYASSERT(area->endAddr >= area->addr)
     area->size = area->endAddr - area->addr;
 
     rflag = data[dataIdx++];
-    MYASSERT((rflag == 'r') || (rflag == '-'));
+    MYASSERT((rflag == 'r') || (rflag == '-'))
 
     wflag = data[dataIdx++];
-    MYASSERT((wflag == 'w') || (wflag == '-'));
+    MYASSERT((wflag == 'w') || (wflag == '-'))
 
     xflag = data[dataIdx++];
-    MYASSERT((xflag == 'x') || (xflag == '-'));
+    MYASSERT((xflag == 'x') || (xflag == '-'))
 
     sflag = data[dataIdx++];
-    MYASSERT((sflag == 's') || (sflag == 'p'));
+    MYASSERT((sflag == 's') || (sflag == 'p'))
 
-    MYASSERT(data[dataIdx++] == ' ');
+    MYASSERT(data[dataIdx++] == ' ')
 
     area->offset = readHex();
-    MYASSERT(data[dataIdx++] == ' ');
+    MYASSERT(data[dataIdx++] == ' ')
 
     area->devmajor = readHex();
-    MYASSERT(data[dataIdx++] == ':');
+    MYASSERT(data[dataIdx++] == ':')
 
     area->devminor = readHex();
-    MYASSERT(data[dataIdx++] == ' ');
+    MYASSERT(data[dataIdx++] == ' ')
 
     area->inodenum = readDec();
 
@@ -174,12 +167,12 @@ int ProcSelfMaps::getNextArea(ProcMapsArea *area)
         size_t i = 0;
         while (data[dataIdx] != '\n') {
             area->name[i++] = data[dataIdx++];
-            MYASSERT(i < sizeof(area->name));
+            MYASSERT(i < sizeof(area->name))
         }
         area->name[i] = '\0';
     }
 
-    MYASSERT(data[dataIdx++] == '\n');
+    MYASSERT(data[dataIdx++] == '\n')
 
     area->prot = 0;
     if (rflag == 'r') {

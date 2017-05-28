@@ -19,30 +19,16 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_PROCSELFMAPS_H
-#define LIBTAS_PROCSELFMAPS_H
+#ifndef LIBTAS_UTILS_H
+#define LIBTAS_UTILS_H
 
-#include "ProcMapsArea.h"
+#include <cstddef> // size_t
+#include <unistd.h> // ssize_t
 
-class ProcSelfMaps
+namespace Utils
 {
-    public:
-        ProcSelfMaps();
-        ~ProcSelfMaps();
-
-        size_t getNumAreas() const { return numAreas; }
-
-        int getNextArea(Area *area);
-
-    private:
-        unsigned long int readDec();
-        unsigned long int readHex();
-
-        char *data;
-        size_t dataIdx;
-        size_t numAreas;
-        size_t numBytes;
-        int fd;
-};
+    ssize_t writeAll(int fd, const void *buf, size_t count);
+    ssize_t readAll(int fd, void *buf, size_t count);
+}
 
 #endif
