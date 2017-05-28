@@ -48,6 +48,26 @@ static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
     return 0;
 }
 
+static bool haveFocus(Context* context)
+{
+    if (context->inputs_focus & Context::FOCUS_ALL)
+        return true;
+
+    Window window;
+    int revert;
+    XGetInputFocus(context->display, &window, &revert);
+
+    if ((context->inputs_focus & Context::FOCUS_GAME) &&
+        (window == context->game_window))
+        return true;
+
+    if ((context->inputs_focus & Context::FOCUS_UI) &&
+        (window == context->ui_window))
+        return true;
+
+    return false;
+}
+
 void launchGame(Context* context)
 {
     context->status = Context::ACTIVE;
@@ -430,26 +450,30 @@ void launchGame(Context* context)
         } while (!context->config.sc.running && !advance_frame);
 
         AllInputs ai;
+        ai.emptyInputs();
 
         /* Record inputs or get inputs from movie file */
         switch (context->recording) {
             case Context::NO_RECORDING:
             case Context::RECORDING_WRITE:
 
-                /* Get keyboard inputs */
-                XQueryKeymap(context->display, keyboard_state.data());
+                /* Get inputs if we have input focus */
+                if (haveFocus(context)) {
+                    /* Get keyboard inputs */
+                    XQueryKeymap(context->display, keyboard_state.data());
 
-                /* Format the keyboard state and save it in the AllInputs struct */
-                context->config.km.buildAllInputs(ai, context->display, keyboard_state, context->config.sc);
+                    /* Format the keyboard state and save it in the AllInputs struct */
+                    context->config.km.buildAllInputs(ai, context->display, keyboard_state, context->config.sc);
 
-                /* Get the pointer position and mask */
-                if (context->config.sc.mouse_support && context->game_window) {
-                    Window w;
-                    int i;
-                    Bool onScreen = XQueryPointer(context->display, context->game_window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-                    if (!onScreen) {
-                        ai.pointer_x = -1;
-                        ai.pointer_y = -1;
+                    /* Get the pointer position and mask */
+                    if (context->config.sc.mouse_support && context->game_window && haveFocus(context)) {
+                        Window w;
+                        int i;
+                        Bool onScreen = XQueryPointer(context->display, context->game_window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                        if (!onScreen) {
+                            ai.pointer_x = -1;
+                            ai.pointer_y = -1;
+                        }
                     }
                 }
 

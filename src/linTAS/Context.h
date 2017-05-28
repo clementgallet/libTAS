@@ -41,6 +41,20 @@ struct Context {
     /* Game window */
     Window game_window = 0;
 
+    /* Main UI window */
+    Window ui_window = 0;
+
+    /* Recording status */
+    enum FocusState {
+        FOCUS_GAME = 0x01,
+        FOCUS_UI = 0x02,
+        FOCUS_ALL = 0x04
+    };
+
+    /* When are hotkeys/inputs accepted */
+    int hotkeys_focus = FOCUS_GAME;
+    int inputs_focus = FOCUS_GAME;
+
     /* frame count */
     unsigned long int framecount = 0;
 

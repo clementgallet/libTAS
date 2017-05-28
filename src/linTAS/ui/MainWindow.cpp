@@ -45,8 +45,8 @@ static Fl_Callback logging_exclude_cb;
 static Fl_Callback input_keyboard_cb;
 static Fl_Callback input_mouse_cb;
 static Fl_Callback input_joy_cb;
-static Fl_Callback input_focus_game_cb;
-static Fl_Callback input_focus_ui_cb;
+static Fl_Callback hotkeys_focus_cb;
+static Fl_Callback inputs_focus_cb;
 static Fl_Callback slowmo_cb;
 static Fl_Callback osd_frame_cb;
 static Fl_Callback osd_inputs_cb;
@@ -153,6 +153,8 @@ void MainWindow::build(Context* c)
     executable_window = new ExecutableWindow(c);
 
     window->show();
+
+    context->ui_window = fl_xid(window);
 }
 
 Fl_Menu_Item MainWindow::menu_items[] = {
@@ -311,9 +313,15 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
             {"4", 0, input_joy_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
             {nullptr},
+        {"Enable hotkeys when", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Game has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_GAME), FL_MENU_TOGGLE},
+            {"UI has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_UI), FL_MENU_TOGGLE},
+            {"Always (not working)", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_ALL), FL_MENU_TOGGLE},
+            {nullptr},
         {"Enable inputs when", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Game has focus", 0, input_focus_game_cb, nullptr, FL_MENU_VALUE | FL_MENU_TOGGLE},
-            {"UI has focus", 0, input_focus_ui_cb, nullptr, FL_MENU_TOGGLE},
+            {"Game has focus", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_GAME), FL_MENU_TOGGLE},
+            {"UI has focus", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_UI), FL_MENU_TOGGLE},
+            {"Always", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_ALL), FL_MENU_TOGGLE},
             {nullptr},
         {nullptr},
     {nullptr}
@@ -554,6 +562,24 @@ void MainWindow::update_config()
         else
             time_sec_item->set();
       time_sec_item = time_sec_item->next();
+    }
+
+    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(hotkeys_focus_cb));
+    while (focus_item->flags) {
+        if (context->hotkeys_focus & focus_item->argument())
+            focus_item->set();
+        else
+            focus_item->clear();
+      focus_item = focus_item->next();
+    }
+
+    focus_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(inputs_focus_cb));
+    while (focus_item->flags) {
+        if (context->inputs_focus & focus_item->argument())
+            focus_item->set();
+        else
+            focus_item->clear();
+      focus_item = focus_item->next();
     }
 }
 
@@ -865,37 +891,44 @@ void input_joy_cb(Fl_Widget*, void* v)
     mw.context->config.sc_modified = true;
 }
 
-void input_focus_game_cb(Fl_Widget*, void* v)
+void hotkeys_focus_cb(Fl_Widget*, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
+    int focus_state = static_cast<int>(reinterpret_cast<intptr_t>(v));
+    mw.context->hotkeys_focus ^= focus_state;
 
-    /* If the game was not launched, don't do anything */
-    // TODO: We could save this in the context
-    if (! mw.context->game_window ) return;
+    switch (focus_state) {
+    case Context::FOCUS_GAME:
+        /* If the game was not launched, don't do anything */
+        if (! mw.context->game_window ) return;
 
-    const Fl_Menu_Item* focus_item = mw.menu_bar->mvalue();
+        if (mw.menu_bar->mvalue()->value())
+            XSelectInput(mw.context->display, mw.context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+        else
+            XSelectInput(mw.context->display, mw.context->game_window, FocusChangeMask);
+        break;
 
-    if (focus_item->value()) {
-        XSelectInput(mw.context->display, mw.context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-    }
-    else {
-        XSelectInput(mw.context->display, mw.context->game_window, FocusChangeMask);
+    case Context::FOCUS_UI:
+        if (mw.menu_bar->mvalue()->value())
+            XSelectInput(mw.context->display, mw.context->ui_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+        else
+            XSelectInput(mw.context->display, mw.context->ui_window, FocusChangeMask);
+        break;
+
+    case Context::FOCUS_ALL:
+        /* TODO */
+        break;
+
+    default:
+        break;
     }
 }
 
-void input_focus_ui_cb(Fl_Widget*, void* v)
+void inputs_focus_cb(Fl_Widget*, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* focus_item = mw.menu_bar->mvalue();
-
-    Window main_ui = fl_xid(mw.window);
-
-    if (focus_item->value()) {
-        XSelectInput(mw.context->display, main_ui, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-    }
-    else {
-        XSelectInput(mw.context->display, main_ui, FocusChangeMask);
-    }
+    int focus_state = static_cast<int>(reinterpret_cast<intptr_t>(v));
+    mw.context->inputs_focus ^= focus_state;
 }
 
 void slowmo_cb(Fl_Widget*, void* v)
