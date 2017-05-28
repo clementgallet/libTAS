@@ -34,7 +34,7 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     window = new Fl_Double_Window(600, 200);
 
     /* Game Executable */
-    encodepath = new Fl_Output(10, 30, 400, 30, "Encode file path");
+    encodepath = new Fl_Output(10, 30, 500, 30, "Encode file path");
     encodepath->align(FL_ALIGN_TOP_LEFT);
     encodepath->color(FL_LIGHT1);
 
@@ -44,9 +44,6 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     encodepathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
     encodepathchooser->title("Choose an encode filename");
     encodepathchooser->options(Fl_Native_File_Chooser::SAVEAS_CONFIRM);
-
-    containerchoice = new Fl_Choice(420, 30, 80, 30);
-    containerchoice->menu(container_items);
 
     videochoice = new Fl_Choice(10, 100, 100, 30, "Video codec");
     videochoice->align(FL_ALIGN_TOP_LEFT);
@@ -73,13 +70,6 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     update_config();
     window->end();
 }
-
-Fl_Menu_Item EncodeWindow::container_items[] = {
-    {".mkv"},
-    {".mp4"},
-    {".avi"},
-    {nullptr}
-};
 
 Fl_Menu_Item EncodeWindow::video_items[] = {
     {"h264", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_H264)},
@@ -113,7 +103,7 @@ void EncodeWindow::update_config()
      */
     const Fl_Menu_Item* vcodec_item = videochoice->menu();
     // vcodec_item = vcodec_item->first();
-    while (vcodec_item) {
+    while (vcodec_item) { // FIXME: This might loop if we don't find any matching value!
         if (static_cast<AVCodecID>(vcodec_item->argument()) == context->config.sc.video_codec) {
             videochoice->value(vcodec_item);
             break;
@@ -170,18 +160,7 @@ void start_cb(Fl_Widget* w, void* v)
     EncodeWindow* ew = (EncodeWindow*) v;
 
     /* Fill encode filename */
-    const char* filename = ew->encodepath->value();
-    std::string ext = ew->containerchoice->mvalue()->label();
-
-    /* Check if the extension is already in the filename. If not, append it. */
-    std::string filenameext = filename;
-    size_t sep = filenameext.find_last_of(".");
-    if ((sep != std::string::npos) && (filenameext.compare(sep, std::string::npos, ext) == 0)) {
-        ew->context->config.dumpfile = filename;
-    }
-    else {
-        ew->context->config.dumpfile = std::string(filename) + ext;
-    }
+    ew->context->config.dumpfile = ew->encodepath->value();
     ew->context->config.dumpfile_modified = true;
 
     /* Set video codec and bitrate */

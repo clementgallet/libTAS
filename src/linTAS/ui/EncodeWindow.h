@@ -52,9 +52,6 @@ class EncodeWindow {
         Fl_Button *browseencodepath;
         Fl_Native_File_Chooser *encodepathchooser;
 
-        Fl_Choice *containerchoice;
-        static Fl_Menu_Item container_items[];
-
         Fl_Choice *videochoice;
         static Fl_Menu_Item video_items[];
         Fl_Input *videobitrate;
