@@ -37,6 +37,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
     }
 
     start_frame = sf;
+    frame_counter = 0;
     accum_samples = 0;
 
     int width, height;
@@ -72,7 +73,6 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
 
     /* Initialize video AVCodec */
 
-    AVCodec *video_codec = NULL;
     AVCodecID codec_id = shared_config.video_codec;
     video_codec = avcodec_find_encoder(codec_id);
     if (!video_codec) {
@@ -90,38 +90,51 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
         error = 1;
         return;
     }
+    video_st->id = formatContext->nb_streams - 1;
+
+    /* Initialize video codec parameters */
+    video_codec_context = avcodec_alloc_context3(video_codec);
+    if (!video_codec_context) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not alloc an encoding context");
+        return;
+    }
 
     /* Fill video stream parameters */
-    video_st->id = formatContext->nb_streams - 1;
-    video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
-    video_st->codec->codec_id = codec_id;
-
-    video_st->codec->bit_rate = shared_config.video_bitrate;
-    video_st->codec->width = width;
-    video_st->codec->height = height;
+    // video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
+    video_codec_context->codec_id = codec_id;
+    video_codec_context->bit_rate = shared_config.video_bitrate;
+    video_codec_context->width = width;
+    video_codec_context->height = height;
     video_st->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
-    video_st->codec->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
-    video_st->codec->gop_size = 10; /* emit one intra frame every ten frames */
-    video_st->codec->max_b_frames = 1;
+    video_codec_context->time_base = video_st->time_base;
+    video_codec_context->gop_size = 10; /* emit one intra frame every ten frames */
+    // video_codec_context->max_b_frames = 1;
     if (codec_id == AV_CODEC_ID_H264)
-        video_st->codec->pix_fmt = AV_PIX_FMT_YUV420P;
+        video_codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
     if (codec_id == AV_CODEC_ID_FFV1)
-        video_st->codec->pix_fmt = AV_PIX_FMT_YUV444P10LE;
+        video_codec_context->pix_fmt = AV_PIX_FMT_YUV444P10LE;
     if (codec_id == AV_CODEC_ID_RAWVIDEO)
-        video_st->codec->pix_fmt = pixfmt;
+        video_codec_context->pix_fmt = pixfmt;
 
     /* Some formats want stream headers to be separate. */
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-        video_st->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        video_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
     /* Use a preset for h264 */
     if (codec_id == AV_CODEC_ID_H264)
-        av_opt_set(video_st->codec->priv_data, "preset", "slow", 0);
+        av_opt_set(video_codec_context->priv_data, "preset", "slow", 0);
 
     /* Open the codec */
-    if (avcodec_open2(video_st->codec, video_codec, NULL) < 0) {
+    if (avcodec_open2(video_codec_context, NULL, NULL) < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open video codec");
         error = 1;
+        return;
+    }
+
+    /* Copy the stream parameters to the muxer */
+    int ret = avcodec_parameters_from_context(video_st->codecpar, video_codec_context);
+    if (ret < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not copy the stream parameters");
         return;
     }
 
@@ -129,7 +142,6 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
 
     /* Initialize audio AVCodec */
 
-    AVCodec *audio_codec = NULL;
     AVCodecID audio_codec_id = shared_config.audio_codec;
     audio_codec = avcodec_find_encoder(audio_codec_id);
     if (!audio_codec) {
@@ -146,11 +158,18 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
         error = 1;
         return;
     }
+    audio_st->id = formatContext->nb_streams - 1;
+
+    /* Initialize audio codec parameters */
+    audio_codec_context = avcodec_alloc_context3(audio_codec);
+    if (!audio_codec_context) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not alloc an encoding context");
+        return;
+    }
 
     /* Fill audio stream parameters */
 
-    audio_st->id = formatContext->nb_streams - 1;
-    audio_st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
+    // audio_st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
 
     AVSampleFormat in_fmt = (audiocontext.outBitDepth == 8)?AV_SAMPLE_FMT_U8:AV_SAMPLE_FMT_S16;
 
@@ -158,32 +177,40 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
         case AV_CODEC_ID_MP3:
         case AV_CODEC_ID_AAC:
         case AV_CODEC_ID_VORBIS:
-            audio_st->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
+            audio_codec_context->sample_fmt = AV_SAMPLE_FMT_FLTP;
             break;
         case AV_CODEC_ID_OPUS:
         case AV_CODEC_ID_PCM_S16LE:
         case AV_CODEC_ID_FLAC:
-            audio_st->codec->sample_fmt = AV_SAMPLE_FMT_S16;
+            audio_codec_context->sample_fmt = AV_SAMPLE_FMT_S16;
             break;
         default:
             debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
             error = 1;
             return;
     }
-    audio_st->codec->bit_rate = shared_config.audio_bitrate;
-    audio_st->codec->sample_rate = audiocontext.outFrequency;
-    audio_st->codec->channels = audiocontext.outNbChannels;
-    audio_st->codec->channel_layout = av_get_default_channel_layout( audio_st->codec->channels );
+    audio_codec_context->bit_rate = shared_config.audio_bitrate;
+    audio_codec_context->sample_rate = audiocontext.outFrequency;
+    audio_codec_context->channels = audiocontext.outNbChannels;
+    audio_codec_context->channel_layout = av_get_default_channel_layout( audio_codec_context->channels );
+    audio_st->time_base = (AVRational){ 1, audio_codec_context->sample_rate };
 
     /* Some formats want stream headers to be separate. */
 
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-        audio_st->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        audio_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
     /* Open the codec */
-    if (avcodec_open2(audio_st->codec, audio_codec, NULL) < 0) {
+    if (avcodec_open2(audio_codec_context, NULL, NULL) < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not open audio codec");
         error = 1;
+        return;
+    }
+
+    /* Copy the stream parameters to the muxer */
+    ret = avcodec_parameters_from_context(audio_st->codecpar, audio_codec_context);
+    if (ret < 0) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not copy the stream parameters");
         return;
     }
 
@@ -195,13 +222,13 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
         error = 1;
         return;
     }
-    video_frame->format = video_st->codec->pix_fmt;
-    video_frame->width  = video_st->codec->width;
-    video_frame->height = video_st->codec->height;
+    video_frame->format = video_codec_context->pix_fmt;
+    video_frame->width  = video_codec_context->width;
+    video_frame->height = video_codec_context->height;
 
     /* Allocate the image buffer inside the AVFrame */
 
-    int ret = av_image_alloc(video_frame->data, video_frame->linesize, video_st->codec->width, video_st->codec->height, video_st->codec->pix_fmt, 32);
+    ret = av_image_alloc(video_frame->data, video_frame->linesize, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, 32);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
         error = 1;
@@ -213,7 +240,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
     toYUVctx = sws_getContext(video_frame->width, video_frame->height,
                               pixfmt,
                               video_frame->width, video_frame->height,
-                              video_st->codec->pix_fmt,
+                              video_codec_context->pix_fmt,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
     if (toYUVctx == NULL) {
@@ -228,14 +255,14 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
 
     /* Initialize swscale context for audio format conversion */
 
-    if (in_fmt != audio_st->codec->sample_fmt) {
+    if (in_fmt != audio_codec_context->sample_fmt) {
         audio_fmt_ctx = swr_alloc();
-        av_opt_set_int(audio_fmt_ctx, "in_channel_layout",  audio_st->codec->channel_layout, 0);
-        av_opt_set_int(audio_fmt_ctx, "out_channel_layout", audio_st->codec->channel_layout,  0);
-        av_opt_set_int(audio_fmt_ctx, "in_sample_rate",     audio_st->codec->sample_rate, 0);
-        av_opt_set_int(audio_fmt_ctx, "out_sample_rate",    audio_st->codec->sample_rate, 0);
+        av_opt_set_int(audio_fmt_ctx, "in_channel_layout",  audio_codec_context->channel_layout, 0);
+        av_opt_set_int(audio_fmt_ctx, "out_channel_layout", audio_codec_context->channel_layout,  0);
+        av_opt_set_int(audio_fmt_ctx, "in_sample_rate",     audio_codec_context->sample_rate, 0);
+        av_opt_set_int(audio_fmt_ctx, "out_sample_rate",    audio_codec_context->sample_rate, 0);
         av_opt_set_sample_fmt(audio_fmt_ctx, "in_sample_fmt",  in_fmt, 0);
-        av_opt_set_sample_fmt(audio_fmt_ctx, "out_sample_fmt", audio_st->codec->sample_fmt,  0);
+        av_opt_set_sample_fmt(audio_fmt_ctx, "out_sample_fmt", audio_codec_context->sample_fmt,  0);
         if (swr_init(audio_fmt_ctx) < 0)
             debuglog(LCF_DUMP | LCF_ERROR, "Error initializing swr context");
     }
@@ -282,12 +309,6 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     /* Access to the screen pixels */
     captureVideoFrame(orig_plane, orig_stride);
 
-    /* Initialize AVPacket */
-    AVPacket vpkt;
-    vpkt.data = NULL;
-    vpkt.size = 0;
-    av_init_packet(&vpkt);
-
     /* Change pixel format to YUV420p and copy it into the AVframe */
     int rets = sws_scale(toYUVctx, orig_plane, orig_stride, 0,
                 video_frame->height, video_frame->data, video_frame->linesize);
@@ -296,27 +317,34 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
         return 1;
     }
 
-    video_frame->pts = fcounter - start_frame;
+    video_frame->pts = frame_counter++;
 
     /* Encode the image */
-    int got_output;
-    int ret = avcodec_encode_video2(video_st->codec, &vpkt, video_frame, &got_output);
+    // int got_output;
+    int ret = avcodec_send_frame(video_codec_context, video_frame);
+    // int ret = avcodec_encode_video2(video_st->codec, &vpkt, video_frame, &got_output);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Error encoding video frame");
         return 1;
     }
 
-    if (got_output) {
+    /* Receive decoding frames */
+    AVPacket vpkt = { 0 };
+    // av_init_packet(&vpkt);
+
+    ret = avcodec_receive_packet(video_codec_context, &vpkt);
+    while (ret == 0) {
         /* Rescale output packet timestamp values from codec to stream timebase */
-        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
+        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        vpkt.duration = av_rescale_q(vpkt.duration, video_codec_context->time_base, video_st->time_base);
         vpkt.stream_index = video_st->index;
         if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
             return 1;
         }
-        av_free_packet(&vpkt);
+        ret = avcodec_receive_packet(video_codec_context, &vpkt);
+        // av_free_packet(&vpkt);
     }
 
     /*** Audio ***/
@@ -325,32 +353,26 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     /* Append input buffer to our delayed buffer */
     delayed_buffer.insert(delayed_buffer.end(), &audiocontext.outSamples[0], &audiocontext.outSamples[audiocontext.outBytes]);
 
-    if (audio_st->codec->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
+    if (audio_codec_context->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
         audio_frame->nb_samples = audiocontext.outNbSamples;
     else {
-        audio_frame->nb_samples = audio_st->codec->frame_size;
+        audio_frame->nb_samples = audio_codec_context->frame_size;
     }
 
     /* Encode loop for every audio frame, until we don't have enough samples */
     while (static_cast<int>(delayed_buffer.size()) >= audio_frame->nb_samples*audiocontext.outAlignSize) {
 
-        /* Initialize AVPacket */
-        AVPacket apkt;
-        apkt.data = NULL;
-        apkt.size = 0;
-        av_init_packet(&apkt);
-
-        audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_st->codec->sample_rate}, audio_st->codec->time_base);
+        audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_codec_context->sample_rate}, audio_codec_context->time_base);
         accum_samples += audio_frame->nb_samples;
 
         /* If necessary, convert the audio stream to the new sample format */
         if (audio_fmt_ctx) {
             int line_size;
-            int buf_size = av_samples_get_buffer_size(&line_size, audio_st->codec->channels, audio_frame->nb_samples, audio_st->codec->sample_fmt, 1);
+            int buf_size = av_samples_get_buffer_size(&line_size, audio_codec_context->channels, audio_frame->nb_samples, audio_codec_context->sample_fmt, 1);
             temp_audio.resize(buf_size);
 
             /* Build the lines array for planar sample format */
-            int lines_nb = av_sample_fmt_is_planar(audio_st->codec->sample_fmt)?audio_st->codec->channels:1;
+            int lines_nb = av_sample_fmt_is_planar(audio_codec_context->sample_fmt)?audio_codec_context->channels:1;
             std::vector<uint8_t*> lines;
             lines.resize(lines_nb);
             for (int c=0; c<lines_nb; c++)
@@ -358,34 +380,44 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
             uint8_t* in_pt = delayed_buffer.data();
 
             swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
-            avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
+            avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
                                                      lines[0], buf_size, 1);
         }
         else {
-            avcodec_fill_audio_frame(audio_frame, audio_st->codec->channels, audio_st->codec->sample_fmt,
+            avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
                                                  delayed_buffer.data(), audio_frame->nb_samples*audiocontext.outAlignSize, 1);
         }
 
-        ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
+        ret = avcodec_send_frame(audio_codec_context, audio_frame);
+        // ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
         if (ret < 0) {
             debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
             return 1;
         }
 
-        if (got_output) {
-            /* We have an encoder output to write */
-            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
-            apkt.stream_index = audio_st->index;
-            if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-                return 1;
-            }
-            av_free_packet(&apkt);
-        }
-
         delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
+    }
+
+    // apkt.data = NULL;
+    // apkt.size = 0;
+    // av_init_packet(&apkt);
+
+    /* Receive decoding frames */
+    AVPacket apkt = { 0 };
+    ret = avcodec_receive_packet(audio_codec_context, &apkt);
+
+    while (ret == 0) {
+        /* We have an encoder output to write */
+        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
+        apkt.stream_index = audio_st->index;
+        if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
+            return 1;
+        }
+        ret = avcodec_receive_packet(audio_codec_context, &apkt);
+        // av_free_packet(&apkt);
     }
 
     return 0;
@@ -396,71 +428,73 @@ AVEncoder::~AVEncoder() {
     if (error)
         return;
 
+    /* Tells the encoder to flush the streams */
+    avcodec_send_frame(video_codec_context, nullptr);
+    avcodec_send_frame(audio_codec_context, nullptr);
+
+    debuglog(LCF_DUMP, "Start getting flushed frames");
+
     /* Encode the remaining frames */
-    int got_video = 1;
-    int got_audio = 1;
-    for (; got_video || got_audio;) {
+    int vret = 0;
+    while (vret == 0) {
 
-        /* Initialize AVPacket */
-        AVPacket vpkt;
-        vpkt.data = NULL;
-        vpkt.size = 0;
-        av_init_packet(&vpkt);
+        AVPacket vpkt = { 0 };
+        vret = avcodec_receive_packet(video_codec_context, &vpkt);
 
-        int ret = avcodec_encode_video2(video_st->codec, &vpkt, NULL, &got_video);
-        if (ret < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding frame");
-            return;
-        }
-
-        if (got_video) {
-            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_st->codec->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            vpkt.duration = av_rescale_q(vpkt.duration, video_st->codec->time_base, video_st->time_base);
+        if (vret == 0) {
+            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            vpkt.duration = av_rescale_q(vpkt.duration, video_codec_context->time_base, video_st->time_base);
             vpkt.stream_index = video_st->index;
+            debuglog(LCF_DUMP, "Write a flushed video frame");
             if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
                 return;
             }
-            av_free_packet(&vpkt);
+            // av_free_packet(&vpkt);
         }
+    }
 
-        AVPacket apkt;
-        apkt.data = NULL;
-        apkt.size = 0;
-        av_init_packet(&apkt);
+    int aret = 0;
+    while (aret == 0) {
 
-        ret = avcodec_encode_audio2(audio_st->codec, &apkt, NULL, &got_audio);
-        if (ret < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
-            return;
-        }
+        AVPacket apkt = { 0 };
+        // apkt.data = NULL;
+        // apkt.size = 0;
+        // av_init_packet(&apkt);
 
-        if (got_audio) {
+        aret = avcodec_receive_packet(audio_codec_context, &apkt);
+
+        if (aret == 0) {
             /* We have an encoder output to write */
-            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_st->codec->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.duration = av_rescale_q(apkt.duration, audio_st->codec->time_base, audio_st->time_base);
+            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
             apkt.stream_index = audio_st->index;
+            debuglog(LCF_DUMP, "Write a flushed audio frame");
             if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
                 return;
             }
-            av_free_packet(&apkt);
+            // av_free_packet(&apkt);
         }
-
     }
+
+    /* Flush the interleaving queue, needed? */
+    av_interleaved_write_frame(formatContext, NULL);
 
     /* Write file trailer */
     av_write_trailer(formatContext);
 
     /* Free resources */
+    avcodec_free_context(&video_codec_context);
+    avcodec_free_context(&audio_codec_context);
     avio_close(formatContext->pb);
-    avcodec_close(video_st->codec);
-    avcodec_close(audio_st->codec);
+    // avcodec_close(video_codec);
+    // avcodec_close(audio_codec);
     avformat_free_context(formatContext);
     sws_freeContext(toYUVctx);
-    av_freep(&video_frame->data[0]);
+    // av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
 }

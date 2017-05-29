@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <cstring>
 
 #define SAVESTATEPATH "/tmp/savestate"
 

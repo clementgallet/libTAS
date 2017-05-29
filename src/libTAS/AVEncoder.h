@@ -70,6 +70,10 @@ class AVEncoder {
         SwrContext *audio_fmt_ctx = NULL;
         AVOutputFormat *outputFormat = NULL;
         AVFormatContext *formatContext = NULL;
+        AVCodec *audio_codec = NULL;
+        AVCodec *video_codec = NULL;
+        AVCodecContext *video_codec_context;
+        AVCodecContext *audio_codec_context;
         AVStream* video_st;
         AVStream* audio_st;
         std::vector<uint8_t> temp_audio;
@@ -81,6 +85,9 @@ class AVEncoder {
 
         /* We save the frame when the dumping begins */
         unsigned long start_frame = -1;
+
+        /* We save the frame when the dumping begins */
+        unsigned long frame_counter = -1;
 
         /* The accumulated number of audio samples */
         uint64_t accum_samples;
