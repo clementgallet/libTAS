@@ -28,7 +28,8 @@ namespace Checkpoint
 {
     void writeAllAreas();
     void writeAnArea(int fd, Area* area);
-    int readAnArea(int fd);
+    void readAllAreas();
+    int readAndCompAreas(int fd, Area *saved_area, Area *current_area);
 };
 
 #endif

@@ -73,6 +73,11 @@ ProcSelfMaps::~ProcSelfMaps()
     numBytes = 0;
 }
 
+void ProcSelfMaps::rewind()
+{
+    dataIdx = 0;
+}
+
 unsigned long int ProcSelfMaps::readDec()
 {
     unsigned long int v = 0;
@@ -111,12 +116,12 @@ unsigned long int ProcSelfMaps::readHex()
     return v;
 }
 
-int ProcSelfMaps::getNextArea(Area *area)
+bool ProcSelfMaps::getNextArea(Area *area)
 {
     char rflag, sflag, wflag, xflag;
 
     if (dataIdx >= numBytes || data[dataIdx] == 0) {
-        return 0;
+        return false;
     }
 
     area->addr = (VA)readHex();
@@ -198,5 +203,5 @@ int ProcSelfMaps::getNextArea(Area *area)
 
     area->properties = 0;
 
-    return 1;
+    return true;
 }

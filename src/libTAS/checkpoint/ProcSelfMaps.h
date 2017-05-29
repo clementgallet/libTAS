@@ -30,9 +30,10 @@ class ProcSelfMaps
         ProcSelfMaps();
         ~ProcSelfMaps();
 
+        void rewind();
         size_t getNumAreas() const { return numAreas; }
 
-        int getNextArea(Area *area);
+        bool getNextArea(Area *area);
 
     private:
         unsigned long int readDec();
