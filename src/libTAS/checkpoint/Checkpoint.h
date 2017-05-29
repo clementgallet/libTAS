@@ -24,12 +24,11 @@
 
 #include "ProcMapsArea.h"
 
-class Checkpoint
+namespace Checkpoint
 {
-    public:
-        void writeAllAreas();
-    private:
-        void writeAnArea(int fd, Area* area);
+    void writeAllAreas();
+    void writeAnArea(int fd, Area* area);
+    int readAnArea(int fd);
 };
 
 #endif

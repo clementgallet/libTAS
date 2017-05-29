@@ -30,7 +30,9 @@
 
 #define SAVESTATEPATH "/tmp/savestate"
 
-void Checkpoint::writeAllAreas()
+namespace Checkpoint {
+
+void writeAllAreas()
 {
     int fd = open(SAVESTATEPATH, O_WRONLY | O_TRUNC);
     Area area;
@@ -196,7 +198,7 @@ void Checkpoint::writeAllAreas()
     MYASSERT(close(fd) == 0);
 }
 
-void Checkpoint::writeAnArea(int fd, Area *area)
+void writeAnArea(int fd, Area *area)
 {
     void *addr = area->addr;
 
@@ -247,4 +249,159 @@ void Checkpoint::writeAnArea(int fd, Area *area)
             Utils::writeAll(fd, area->addr, area->size);
         }
     }
+}
+
+int readAnArea(int fd)
+{
+// int mtcp_sys_errno;
+// int imagefd;
+// int try_skipping_existing_segment = 0;
+
+/* Read header of memory area into area */
+Area area;
+
+Utils::readAll(fd, &area, sizeof area);
+if (area.size == -1) {
+  return -1;
+}
+
+// if (area.name[0] && strstr(area.name, "[heap]")
+//     && mtcp_sys_brk(NULL) != area.addr + area.size) {
+//   DPRINTF("WARNING: break (%p) not equal to end of heap (%p)\n",
+//           mtcp_sys_brk(NULL), area.addr + area.size);
+// }
+
+// We could have replaced MAP_SHARED with MAP_PRIVATE in writeckpt.cpp
+// instead of here. But we do it this way for debugging purposes. This way,
+// readdmtcp.sh will still be able to properly list the shared memory areas.
+if (area.flags & MAP_SHARED) {
+  area.flags = area.flags ^ MAP_SHARED;
+  area.flags = area.flags | MAP_PRIVATE | MAP_ANONYMOUS;
+}
+
+/* Now mmap the data of the area into memory. */
+
+/* CASE MAPPED AS ZERO PAGE: */
+// if ((area.properties & DMTCP_ZERO_PAGE) != 0) {
+//   DPRINTF("restoring non-rwx anonymous area, %p bytes at %p\n",
+//           area.size, area.addr);
+//   mmappedat = mtcp_sys_mmap(area.addr, area.size,
+//                             area.prot,
+//                             area.flags | MAP_FIXED, -1, 0);
+//
+//   if (mmappedat != area.addr) {
+//     DPRINTF("error %d mapping %p bytes at %p\n",
+//             mtcp_sys_errno, area.size, area.addr);
+//     mtcp_abort();
+//   }
+// }
+
+// #ifdef FAST_RST_VIA_MMAP
+  /* CASE MAP_ANONYMOUS with FAST_RST enabled
+   * We only want to do this in the MAP_ANONYMOUS case, since we don't want
+   *   any writes to RAM to be reflected back into the underlying file.
+   * Note that in order to map from a file (ckpt image), we must turn off
+   *   anonymous (~MAP_ANONYMOUS).  It's okay, since the fd
+   *   should have been opened with read permission, only.
+   */
+//   else if (area.flags & MAP_ANONYMOUS) {
+//     mmapfile (fd, area.addr, area.size, area.prot,
+//               area.flags & ~MAP_ANONYMOUS);
+//   }
+// #endif
+
+/* CASE MAP_ANONYMOUS (usually implies MAP_PRIVATE):
+ * For anonymous areas, the checkpoint file contains the memory contents
+ * directly.  So mmap an anonymous area and read the file into it.
+ * If file exists, turn off MAP_ANONYMOUS: standard private map
+ */
+/* else */if (area.flags & MAP_ANONYMOUS) {
+  /* If there is a filename there, though, pretend like we're mapping
+   * to it so a new /proc/self/maps will show a filename there like with
+   * original process.  We only need read-only access because we don't
+   * want to ever write the file.
+   */
+
+  int imagefd = -1;
+  if (area.name[0] == '/') { /* If not null string, not [stack] or [vdso] */
+    imagefd = open(area.name, O_RDONLY, 0);
+    if (imagefd >= 0) {
+      /* If the current file size is smaller than the original, we map the region
+       * as private anonymous. Note that with this we lose the name of the region
+       * but most applications may not care.
+       */
+      off_t curr_size = lseek(imagefd, 0, SEEK_END);
+      MYASSERT(curr_size != -1);
+      if (curr_size < area.offset + area.size) {
+        close(imagefd);
+        imagefd = -1;
+        area.offset = 0;
+      } else {
+        area.flags ^= MAP_ANONYMOUS;
+      }
+    }
+  }
+
+  if (area.flags & MAP_ANONYMOUS) {
+    debuglog(LCF_CHECKPOINT,"restoring anonymous area, ", area.size, " bytes at", area.addr);
+  } else {
+      debuglog(LCF_CHECKPOINT,"restoring to non-anonymous area from anonymous area, ", area.size, " bytes at", area.addr, " from ", area.name, " + ", area.offset);
+  }
+
+  /* Create the memory area */
+
+  /* POSIX says mmap would unmap old memory.  Munmap never fails if args
+   * are valid.  Can we unmap vdso and vsyscall in Linux?  Used to use
+   * mtcp_safemmap here to check for address conflicts.
+   */
+  void *mmappedat = mmap(area.addr, area.size, area.prot | PROT_WRITE,
+                            area.flags, imagefd, area.offset);
+
+  if (mmappedat == MAP_FAILED) {
+      debuglog(LCF_CHECKPOINT | LCF_ERROR, "Mapping ", area.size, " bytes at", area.addr, " failed");
+  }
+  if (mmappedat != area.addr) {
+    debuglog(LCF_CHECKPOINT | LCF_ERROR, "Area at ", area.addr, " got mmapped to ", mmappedat);
+    abort();
+  }
+
+ #if 0
+  /*
+   * The function is not used but is truer to maintaining the user's
+   * view of /proc/*/
+  maps.It can be enabled again in the future after
+  *we fix the logic to handle zero - sized files.
+  * /
+  if (imagefd >= 0) {
+    adjust_for_smaller_file_size(&area, imagefd);
+  }
+ #endif /* if 0 */
+
+  /* Close image file (fd only gets in the way) */
+  if (imagefd >= 0 && !(area.flags & MAP_ANONYMOUS)) {
+    close(imagefd);
+  }
+
+  if ((area.properties & DMTCP_SKIP_WRITING_TEXT_SEGMENTS) == 0) {
+    /* This mmapfile after prev. mmap is okay; use same args again.
+     *  Posix says prev. map will be munmapped.
+     */
+
+    /* ANALYZE THE CONDITION FOR DOING mmapfile MORE CAREFULLY. */
+    Utils::readAll(fd, area.addr, area.size);
+    if (!(area.prot & PROT_WRITE)) {
+      MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
+    }
+  }
+}
+/* CASE NOT MAP_ANONYMOUS:
+ * Otherwise, we mmap the original file contents to the area.
+ * This case is now delegated to DMTCP.  Nothing to do for MTCP.
+ */
+else { /* Internal error. */
+  MYASSERT(false)
+}
+return 0;
+}
+
 }
