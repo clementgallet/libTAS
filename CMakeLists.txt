@@ -58,7 +58,7 @@ find_package(PkgConfig REQUIRED)
 option(ENABLE_DUMPING "Enable AV dumping" ON)
 
 pkg_check_modules(SWRESAMPLE libswresample)
-pkg_check_modules(AVVIDEO libavcodec libswscale libavformat)
+pkg_check_modules(AVVIDEO libavcodec>=57.48.101 libswscale libavformat)
 if (ENABLE_DUMPING AND SWRESAMPLE_FOUND AND AVVIDEO_FOUND)
     # Enable av dumping
     message(STATUS "AV dumping is enabled")

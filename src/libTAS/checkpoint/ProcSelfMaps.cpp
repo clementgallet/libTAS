@@ -26,34 +26,20 @@
 #include <sys/mman.h>
 #include "Utils.h"
 
-ProcSelfMaps::ProcSelfMaps()
+ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
     : dataIdx(0),
     numAreas(0),
     numBytes(0),
     fd(-1)
 {
-    char buf[4096];
-
     fd = open("/proc/self/maps", O_RDONLY);
     MYASSERT(fd != -1);
-    ssize_t numRead = 0;
 
-    // Get an approximation of the required buffer size.
-    do {
-        numRead = Utils::readAll(fd, buf, sizeof(buf));
-        if (numRead > 0) {
-            numBytes += numRead;
-        }
-    } while (numRead > 0);
+    data = reinterpret_cast<char*>(restoreAddr);
 
-    // Now allocate a buffer. Note that this will most likely change the layout
-    // of /proc/self/maps, so we need to recalculate numBytes.
-    size_t size = numBytes + 4096; // Add a one page buffer.
-    data = (char *)malloc(size);
-    MYASSERT(lseek(fd, 0, SEEK_SET) == 0)
-
-    numBytes = Utils::readAll(fd, data, size);
+    numBytes = Utils::readAll(fd, data, restoreLength);
     MYASSERT(numBytes > 0)
+    MYASSERT(numBytes < restoreLength)
 
     close(fd);
 
@@ -66,21 +52,16 @@ ProcSelfMaps::ProcSelfMaps()
 
 ProcSelfMaps::~ProcSelfMaps()
 {
-    free(data);
+    // free(data);
     fd = -1;
     dataIdx = 0;
     numAreas = 0;
     numBytes = 0;
 }
 
-void ProcSelfMaps::rewind()
+intptr_t ProcSelfMaps::readDec()
 {
-    dataIdx = 0;
-}
-
-unsigned long int ProcSelfMaps::readDec()
-{
-    unsigned long int v = 0;
+    intptr_t v = 0;
 
     while (1) {
         char c = data[dataIdx];
@@ -95,9 +76,9 @@ unsigned long int ProcSelfMaps::readDec()
     return v;
 }
 
-unsigned long int ProcSelfMaps::readHex()
+intptr_t ProcSelfMaps::readHex()
 {
-    unsigned long int v = 0;
+    intptr_t v = 0;
 
     while (1) {
         char c = data[dataIdx];
@@ -118,35 +99,36 @@ unsigned long int ProcSelfMaps::readHex()
 
 bool ProcSelfMaps::getNextArea(Area *area)
 {
-    char rflag, sflag, wflag, xflag;
-
     if (dataIdx >= numBytes || data[dataIdx] == 0) {
+        area->size = -1;
         return false;
     }
 
-    area->addr = (VA)readHex();
-    MYASSERT(area->addr != NULL)
+    intptr_t addr = readHex();
+    MYASSERT(addr != 0)
+    area->addr = reinterpret_cast<VA>(addr);
 
     MYASSERT(data[dataIdx++] == '-')
 
-    area->endAddr = (VA)readHex();
-    MYASSERT(area->endAddr != NULL)
+    intptr_t endAddr = readHex();
+    MYASSERT(endAddr != 0)
+    area->endAddr = reinterpret_cast<VA>(endAddr);
 
     MYASSERT(data[dataIdx++] == ' ')
 
-    MYASSERT(area->endAddr >= area->addr)
-    area->size = area->endAddr - area->addr;
+    MYASSERT(endAddr >= addr)
+    area->size = static_cast<size_t>(endAddr - addr);
 
-    rflag = data[dataIdx++];
+    char rflag = data[dataIdx++];
     MYASSERT((rflag == 'r') || (rflag == '-'))
 
-    wflag = data[dataIdx++];
+    char wflag = data[dataIdx++];
     MYASSERT((wflag == 'w') || (wflag == '-'))
 
-    xflag = data[dataIdx++];
+    char xflag = data[dataIdx++];
     MYASSERT((xflag == 'x') || (xflag == '-'))
 
-    sflag = data[dataIdx++];
+    char sflag = data[dataIdx++];
     MYASSERT((sflag == 's') || (sflag == 'p'))
 
     MYASSERT(data[dataIdx++] == ' ')

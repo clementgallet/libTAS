@@ -23,7 +23,9 @@
 #include <utility>
 #include <csignal>
 #include <algorithm> // std::find
+#include <sys/mman.h>
 #include "ThreadManager.h"
+#include "Checkpoint.h"
 #include "../time.h" // clock_gettime
 #include "../threads.h" // getThreadId
 #include "../logging.h"
@@ -44,6 +46,8 @@ sem_t ThreadManager::semNotifyCkptThread;
 sem_t ThreadManager::semWaitForCkptThreadSignal;
 volatile bool ThreadManager::restoreInProgress = false;
 int ThreadManager::numThreads;
+intptr_t ThreadManager::restoreAddr;
+size_t ThreadManager::restoreLength;
 
 void ThreadManager::sigspin(int sig)
 {
@@ -63,6 +67,7 @@ void ThreadManager::init()
     addToList(thread);
 
     sem_init(&semNotifyCkptThread, 0, 0);
+    sem_init(&semWaitForCkptThreadSignal, 0, 0);
 
     // Registering a sighandler enable us to suspend the main thread from any thread !
     // struct sigaction sigusr1;
@@ -225,19 +230,20 @@ void ThreadManager::checkpoint()
 
     suspendThreads();
 
-    MYASSERT(getcontext(&current_thread->savctx) == 0)
-
     /* All other threads halted in 'stopThisThread' routine (they are all
      * in state ST_SUSPENDED).  It's safe to write checkpoint file now.
      */
+    Checkpoint::writeAllAreas();
+
+    MYASSERT(getcontext(&current_thread->savctx) == 0)
 
     if (restoreInProgress) {
         /* We are being restored.  Wait for all other threads to finish being
          * restored before resuming.
          */
-        debuglog(LCF_THREAD, "Waiting for other threads after restore");
+        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads after restore");
         waitForAllRestored(current_thread);
-        debuglog(LCF_THREAD, "Resuming after restore");
+        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming after restore");
     }
     else {
         resumeThreads();
@@ -253,15 +259,19 @@ void ThreadManager::restore()
     suspendThreads();
 
     /* Here is where we load all the memory and stuff */
+    Checkpoint::readAllAreas();
 
+    /* This will eventually call setcontext, so the remaining section
+     * of this code is never reached.
+     */
+}
 
+void ThreadManager::endRestore()
+{
+    /* Now set the restore flag and jump to the restart point */
     restoreInProgress = true;
-
-    /* Resume all other threads */
-    resumeThreads();
-
     setcontext(&current_thread->savctx);
-    /* NOT REACHED */
+    /* NOTREACHED */
 }
 
 bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)
@@ -308,7 +318,7 @@ void ThreadManager::suspendThreads()
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
                     if (pthread_kill(thread->tid, SIGUSR1) != 0) {
                         MYASSERT(errno == ESRCH)
-                        debuglog(LCF_THREAD, "Sending signal to thread ", stringify(thread->tid), " failed");
+                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Sending signal to thread ", stringify(thread->tid), " failed");
                         threadIsDead(thread);
                     }
                     else {
@@ -325,14 +335,14 @@ void ThreadManager::suspendThreads()
                 ret = pthread_kill(thread->tid, 0);
                 MYASSERT(ret == 0 || errno == ESRCH)
                 if (ret == -1 && errno == ESRCH) {
-                    debuglog(LCF_ERROR | LCF_THREAD, "Zombie thread ", stringify(thread->tid), " no longer exists");
+                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", stringify(thread->tid), " no longer exists");
                     threadIsDead(thread);
                 }
                 break;
 
             case ThreadInfo::ST_SIGNALED:
                 if (pthread_kill(thread->tid, 0) == -1 && errno == ESRCH) {
-                    debuglog(LCF_ERROR | LCF_THREAD, "Signalled thread ", stringify(thread->tid), " died");
+                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread ", stringify(thread->tid), " died");
                     threadIsDead(thread);
                 } else {
                     needrescan = true;
@@ -351,7 +361,7 @@ void ThreadManager::suspendThreads()
                 break;
 
             default:
-                debuglog(LCF_ERROR | LCF_THREAD, "Unknown thread state ", thread->state);
+                debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state ", thread->state);
             }
         }
         if (needrescan) {
@@ -367,15 +377,15 @@ void ThreadManager::suspendThreads()
         sem_wait(&semNotifyCkptThread);
     }
 
-    debuglog(LCF_THREAD, numThreads, " threads were suspended");
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, numThreads, " threads were suspended");
 }
 
 /* Resume all threads. */
 void ThreadManager::resumeThreads()
 {
-    debuglog(LCF_THREAD, "Resuming all threads");
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
     MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
-    debuglog(LCF_THREAD, "All threads resumed");
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
 }
 
 void ThreadManager::stopThisThread(int signum)
@@ -393,7 +403,7 @@ void ThreadManager::stopThisThread(int signum)
         MYASSERT(getcontext(&current_thread->savctx) == 0)
         // save_sp(&curThread->saved_sp);
 
-        debuglog(LCF_THREAD, "Thread after getcontext (", __builtin_return_address(0), ")");
+        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext (", __builtin_return_address(0), ")");
 
         if (!restoreInProgress) {
 
@@ -406,7 +416,7 @@ void ThreadManager::stopThisThread(int signum)
             sem_post(&semNotifyCkptThread);
 
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
-            debuglog(LCF_THREAD, "Thread suspended");
+            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
 
             MYASSERT(pthread_rwlock_rdlock(&threadResumeLock) == 0)
             MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
@@ -430,7 +440,7 @@ void ThreadManager::stopThisThread(int signum)
             waitForAllRestored(current_thread);
         }
 
-    debuglog(LCF_THREAD, "Thread returning to user code ", __builtin_return_address(0));
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code ", __builtin_return_address(0));
     }
 }
 

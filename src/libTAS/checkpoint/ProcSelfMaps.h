@@ -27,17 +27,16 @@
 class ProcSelfMaps
 {
     public:
-        ProcSelfMaps();
+        ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength);
         ~ProcSelfMaps();
 
-        void rewind();
-        size_t getNumAreas() const { return numAreas; }
+        // size_t getNumAreas() const { return numAreas; }
 
         bool getNextArea(Area *area);
 
     private:
-        unsigned long int readDec();
-        unsigned long int readHex();
+        intptr_t readDec();
+        intptr_t readHex();
 
         char *data;
         size_t dataIdx;

@@ -53,11 +53,11 @@
 
 #define FILENAMESIZE        1024
 
-typedef char *VA;  /* VA = virtual address */
+typedef void *VA;  /* VA = virtual address */
 
 enum ProcMapsAreaProperties {
   // DMTCP_ZERO_PAGE = 0x0001,
-  DMTCP_SKIP_WRITING_TEXT_SEGMENTS = 0x0002
+  SKIP = 0x0002
 };
 
 union Area {

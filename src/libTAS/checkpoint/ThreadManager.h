@@ -32,7 +32,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-
 class ThreadManager {
     /* Register start and end time for each routine and each thread. */
     // static std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> startTime_;
@@ -60,6 +59,7 @@ class ThreadManager {
     static volatile bool restoreInProgress;
 
     static int numThreads;
+
 
 public:
 
@@ -95,6 +95,9 @@ public:
 
     /* Restore */
     static void restore();
+
+    /* End of the restore, jumping to the restart point */
+    static void endRestore();
 
     /* Safely try to change a ThreadInfo state and return if done */
     static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);
