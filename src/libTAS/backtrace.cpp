@@ -39,7 +39,7 @@ static const char* demangle( const char* const symbol )
 
 void printBacktrace(void)
 {
-    static int recurs = 0;
+    thread_local static int recurs = 0;
     if (recurs)
         return;
     recurs = 1;

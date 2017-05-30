@@ -29,6 +29,7 @@
 #include "../time.h" // clock_gettime
 #include "../threads.h" // getThreadId
 #include "../logging.h"
+#include "../backtrace.h"
 
 std::atomic<int> ThreadManager::spin(0);
 ThreadInfo* ThreadManager::thread_list = nullptr;
@@ -399,7 +400,8 @@ void ThreadManager::stopThisThread(int signum)
         MYASSERT(getcontext(&current_thread->savctx) == 0)
         // save_sp(&curThread->saved_sp);
 
-        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext (", __builtin_return_address(0), ")");
+        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext");
+        printBacktrace();
 
         if (!restoreInProgress) {
 
@@ -436,7 +438,7 @@ void ThreadManager::stopThisThread(int signum)
             waitForAllRestored(current_thread);
         }
 
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code ", __builtin_return_address(0));
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
     }
 }
 

@@ -167,6 +167,17 @@ bool skipArea(Area *area)
         return true;
     }
 
+    /* Right now, skip if we don't have write permission */
+    if (!(area->prot & PROT_WRITE)) {
+        debuglogstdio(LCF_CHECKPOINT, "Skipping over no write permission");
+        return true;
+    }
+
+    /* Right now, skip for shared memory */
+    if (area->flags & MAP_SHARED) {
+        debuglogstdio(LCF_CHECKPOINT, "Skipping over shared memory");
+        return true;
+    }
 
     return false;
 }
@@ -185,12 +196,12 @@ void writeAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint.");
 
     /* Finally comes the memory contents */
-    ProcSelfMaps *procSelfMaps = new ProcSelfMaps(restoreAddr, restoreLength);
+    ProcSelfMaps procSelfMaps(restoreAddr, MB);
 
     int fd = creat(SAVESTATEPATH, 0644);
     MYASSERT(fd != -1)
 
-    while (procSelfMaps->getNextArea(&area)) {
+    while (procSelfMaps.getNextArea(&area)) {
 
         // if ((uint64_t)area.addr == ProcessInfo::instance().restoreBufAddr()) {
         //     JASSERT(area.size == ProcessInfo::instance().restoreBufLen())
@@ -270,13 +281,6 @@ void writeAllAreas()
         writeAnArea(fd, &area);
     }
 
-    // Release the memory.
-    delete procSelfMaps;
-    procSelfMaps = NULL;
-
-    /* It's now safe to do this, since we're done using writememoryarea() */
-    // remap_nscd_areas(*nscdAreas);
-
     area.addr = NULL; // End of data
     area.size = -1; // End of data
     write(fd, &area, sizeof(area));
@@ -324,13 +328,13 @@ void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps* procSelfMaps = new ProcSelfMaps(restoreAddr, restoreLength);
+    ProcSelfMaps procSelfMaps(restoreAddr, MB);
 
     /* Read the first saved area */
     Utils::readAll(fd, &saved_area, sizeof saved_area);
 
     /* Read the first current area */
-    bool not_eof = procSelfMaps->getNextArea(&current_area);
+    bool not_eof = procSelfMaps.getNextArea(&current_area);
 
     while ((saved_area.size != -1) || not_eof) {
 
@@ -339,24 +343,17 @@ void readAllAreas()
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
             Utils::readAll(fd, &saved_area, sizeof saved_area);
-            not_eof = procSelfMaps->getNextArea(&current_area);
+            not_eof = procSelfMaps.getNextArea(&current_area);
         }
         if (cmp > 0) {
             /* Saved area is greater, advance current area */
-            not_eof = procSelfMaps->getNextArea(&current_area);
+            not_eof = procSelfMaps.getNextArea(&current_area);
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
             Utils::readAll(fd, &saved_area, sizeof saved_area);
         }
     }
-
-    /* We loaded the entire memory, now we jump to the restart point */
-    /* We must manually free the resources because the end of this function
-     * is never reached.
-     */
-    delete procSelfMaps;
-    procSelfMaps = NULL;
 }
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
@@ -382,20 +379,6 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             if (!skipArea(current_area)) {
                 debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is skipped anymore !?");
             }
-            return 0;
-        }
-
-        /* Right now, skip if we don't have write permission */
-        if (!(saved_area->prot & PROT_WRITE)) {
-            debuglogstdio(LCF_CHECKPOINT, "Section does not have write permission, skipping");
-            lseek(fd, saved_area->size, SEEK_CUR);
-            return 0;
-        }
-
-        /* Right now, skip for shared memory */
-        if (saved_area->flags & MAP_SHARED) {
-            debuglogstdio(LCF_CHECKPOINT, "Section is shared memory, skipping");
-            lseek(fd, saved_area->size, SEEK_CUR);
             return 0;
         }
 
@@ -446,11 +429,6 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     /* Areas are not overlapping */
     if ((saved_area->size == -1) || (saved_area->addr > current_area->addr)) {
 
-        if (saved_area->properties & SKIP) {
-            debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
-            return 1;
-        }
-
         /* This current area must be deallocated */
         debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
         MYASSERT(munmap(current_area->addr, current_area->size) == 0)
@@ -459,9 +437,9 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
     if ((current_area->size == -1) || (saved_area->addr < current_area->addr)) {
 
-        if (skipArea(current_area)) {
+        if (saved_area->properties & SKIP) {
             debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
-            return 1;
+            return -1;
         }
 
         /* This saved area must be allocated */
