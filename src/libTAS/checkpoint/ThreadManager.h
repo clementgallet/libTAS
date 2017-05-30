@@ -56,12 +56,11 @@ class ThreadManager {
     static sem_t semNotifyCkptThread;
     static sem_t semWaitForCkptThreadSignal;
 
-    static volatile bool restoreInProgress;
-
     static int numThreads;
 
 
 public:
+    static volatile bool restoreInProgress;
 
     // Called from SDL_init, assumed to be main thread
     static void init();
@@ -95,9 +94,6 @@ public:
 
     /* Restore */
     static void restore();
-
-    /* End of the restore, jumping to the restart point */
-    static void endRestore();
 
     /* Safely try to change a ThreadInfo state and return if done */
     static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);

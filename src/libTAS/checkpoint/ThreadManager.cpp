@@ -46,8 +46,6 @@ sem_t ThreadManager::semNotifyCkptThread;
 sem_t ThreadManager::semWaitForCkptThreadSignal;
 volatile bool ThreadManager::restoreInProgress = false;
 int ThreadManager::numThreads;
-intptr_t ThreadManager::restoreAddr;
-size_t ThreadManager::restoreLength;
 
 void ThreadManager::sigspin(int sig)
 {
@@ -83,6 +81,8 @@ void ThreadManager::init()
     sigusr1.sa_flags = 0;
     sigusr1.sa_handler = ThreadManager::stopThisThread;
     MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+
+    Checkpoint::init();
 
     main = getThreadId();
     inited = true;
@@ -232,8 +232,9 @@ void ThreadManager::checkpoint()
 
     /* All other threads halted in 'stopThisThread' routine (they are all
      * in state ST_SUSPENDED).  It's safe to write checkpoint file now.
+     * We call the write function with a signal, so we can use an alternate stack.
      */
-    Checkpoint::writeAllAreas();
+    raise(SIGUSR2);
 
     MYASSERT(getcontext(&current_thread->savctx) == 0)
 
@@ -258,20 +259,15 @@ void ThreadManager::restore()
 
     suspendThreads();
 
+    restoreInProgress = true;
+
     /* Here is where we load all the memory and stuff */
-    Checkpoint::readAllAreas();
+    raise(SIGUSR2);
+    setcontext(&current_thread->savctx);
 
     /* This will eventually call setcontext, so the remaining section
      * of this code is never reached.
      */
-}
-
-void ThreadManager::endRestore()
-{
-    /* Now set the restore flag and jump to the restart point */
-    restoreInProgress = true;
-    setcontext(&current_thread->savctx);
-    /* NOTREACHED */
 }
 
 bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)

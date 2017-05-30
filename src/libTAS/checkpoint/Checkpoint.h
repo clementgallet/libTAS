@@ -26,6 +26,8 @@
 
 namespace Checkpoint
 {
+    void init();
+    void handler(int signum);
     void writeAllAreas();
     void writeAnArea(int fd, Area* area);
     void readAllAreas();

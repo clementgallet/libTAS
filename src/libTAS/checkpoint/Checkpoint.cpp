@@ -28,16 +28,55 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstring>
+#include <csignal>
 
 #define SAVESTATEPATH "/tmp/savestate"
 
-#define RESTORE_TOTAL_SIZE 5 * 1024 * 1024
 #define MB 1024 * 1024
+#define RESTORE_TOTAL_SIZE 5 * MB
 
 namespace Checkpoint {
 
 static intptr_t restoreAddr = 0;
 static size_t restoreLength = 0;
+
+void init()
+{
+    /* Create a special place to hold restore memory.
+     * will be used for the second stack we will switch to, as well as
+     * the ProcSelfMaps object that need some space.
+     */
+    if (restoreAddr == 0) {
+        restoreLength = RESTORE_TOTAL_SIZE;
+        void* addr = mmap(nullptr, restoreLength + (2 * 4096), PROT_NONE,
+            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        MYASSERT(addr != MAP_FAILED)
+        restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
+        MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
+    }
+
+    /* Setup an alternate signal stack using the above allocated memory */
+    stack_t ss;
+    ss.ss_sp = reinterpret_cast<void*>(restoreAddr + MB);
+    ss.ss_size = RESTORE_TOTAL_SIZE - MB;
+    ss.ss_flags = 0;
+    MYASSERT(sigaltstack(&ss, nullptr) == 0)
+
+    /* Register a signal so that we can switch stacks */
+    struct sigaction sigusr2;
+    sigemptyset(&sigusr2.sa_mask);
+    sigusr2.sa_flags = SA_ONSTACK;
+    sigusr2.sa_handler = handler;
+    MYASSERT(sigaction(SIGUSR2, &sigusr2, nullptr) == 0)
+}
+
+void handler(int signum)
+{
+    if (ThreadManager::restoreInProgress)
+        readAllAreas();
+    else
+        writeAllAreas();
+}
 
 bool skipArea(Area *area)
 {
@@ -135,16 +174,6 @@ bool skipArea(Area *area)
 void writeAllAreas()
 {
     Area area;
-
-    /* Create a special place to hold restore memory */
-    if (restoreAddr == 0) {
-        restoreLength = RESTORE_TOTAL_SIZE;
-        void* addr = mmap(nullptr, restoreLength + (2 * 4096), PROT_NONE,
-            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        MYASSERT(addr != MAP_FAILED)
-        restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
-        MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
-    }
 
     // DeviceInfo dev_info;
     // int stack_was_seen = 0;
@@ -303,7 +332,7 @@ void readAllAreas()
     /* Read the first current area */
     bool not_eof = procSelfMaps->getNextArea(&current_area);
 
-    while ((saved_area.size == -1) || not_eof) {
+    while ((saved_area.size != -1) || not_eof) {
 
         /* Check for matching areas */
         int cmp = readAndCompAreas(fd, &saved_area, &current_area);
@@ -328,8 +357,6 @@ void readAllAreas()
      */
     delete procSelfMaps;
     procSelfMaps = NULL;
-
-    ThreadManager::endRestore();
 }
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
