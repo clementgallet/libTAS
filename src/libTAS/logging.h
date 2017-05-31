@@ -55,12 +55,10 @@
  * recognize. In practice, it is base64 convertion.
  * Used by pthread ids.
  */
-std::string stringify(unsigned long int id);
+const char* stringify(unsigned long int id);
 
-/* Main function to print the debug message str (or not), and additional
- * information, based on the LogCategoryFlag value
- */
-void debuglogverbose(LogCategoryFlag lcf, const std::string& str);
+/* Print the debug message using stdio functions */
+void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 
 /* Helper functions to concatenate different arguments arbitrary types into
  * a string stream. Because it uses variadic templates, its definition must
@@ -91,7 +89,7 @@ inline void catlog (std::ostringstream &oss, First && first, Rest && ...rest)
  * It uses variadic templates so the above comment does apply here also.
  *
  * The content is kept as minimal as possible and everything that does not
- * depend on variadic templates is transfered to debuglogverbose(),
+ * depend on variadic templates is transfered to debuglogstdio(),
  * to keep increased size as low as possible.
  */
 template<typename ...Args>
@@ -99,31 +97,23 @@ void debuglog(LogCategoryFlag lcf, Args ...args);
 template<typename ...Args>
 inline void debuglog(LogCategoryFlag lcf, Args ...args)
 {
-    /* Not printing anything if global state is set to NOLOG */
-    if (GlobalState::isNoLog())
-        return;
-
+    /* We also check this in debuglogstdio(), but doing it here avoid building
+     * all strings, because as a fraction of these will be printed.
+     */
     if ( (!(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) && !(lcf & LCF_ERROR))
         return;
 
-    /* We avoid recursive loops by protecting eventual recursive calls to debuglog
-     * in the following code
-     */
-    GlobalNoLog tnl;
     std::ostringstream oss;
     catlog(oss, std::forward<Args>(args)...);
-    debuglogverbose(lcf, oss.str());
+    debuglogstdio(lcf, oss.str().c_str());
 }
 
-/* Print the debug message using stdio functions */
-void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
-
 /* If we only want to print the function name... */
-#define DEBUGLOGCALL(lcf) debuglog(lcf, __func__, " call.")
+#define DEBUGLOGCALL(lcf) debuglogstdio(lcf, "%s call.", __func__)
 
 /* Macro of an assert */
 #define MYASSERT(term) if ((term)) {} \
-    else {debuglog(LCF_ERROR, #term, " failed in ", __func__); \
+    else {debuglogstdio(LCF_ERROR, "%s failed in %s", #term, __func__); \
     exit(1);}
 
 /* We want to store and send error messages to the program so that they can be
@@ -132,6 +122,5 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
  */
  void setErrorMsg(const std::string& error);
  bool getErrorMsg(std::string& error);
-
 
 #endif

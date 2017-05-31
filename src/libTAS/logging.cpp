@@ -23,55 +23,10 @@
 #include "unistd.h" // For isatty
 #include <cstdarg>
 #include <cstring>
-#include "hook.h" // For pthread_self_real
+// #include "hook.h" // For pthread_self_real
 #include "time.h" // For frame_counter
 #include <mutex>
 #include <list>
-
-void debuglogverbose(LogCategoryFlag lcf, const std::string& str)
-{
-    if ( (lcf & shared_config.includeFlags) && !(lcf & shared_config.excludeFlags)) {
-        std::ostringstream oss;
-
-        /* We only print colors if displayed on a terminal */
-        bool isTerm = isatty(/*cerr*/ 2);
-        if (isTerm) {
-            if (lcf & LCF_ERROR)
-                /* Write the header text in red */
-                oss << ANSI_COLOR_RED;
-            else if (lcf & LCF_TODO)
-                /* Write the header text in light red */
-                oss << ANSI_COLOR_LIGHT_RED;
-            else
-                /* Write the header text in white */
-                oss << ANSI_COLOR_LIGHT_GRAY;
-        }
-        oss << "[libTAS f:" << frame_counter << "] ";
-
-        std::string thstr = stringify(getThreadId());
-        if (isMainThread())
-            oss << "Thread " << thstr << " (main) ";
-        else
-            oss << "Thread " << thstr << "        ";
-
-        if (isTerm) {
-            /* Reset color change */
-            oss << ANSI_COLOR_RESET;
-        }
-
-        if (lcf & LCF_ERROR)
-            oss << "ERROR: ";
-
-        /* Output arguments */
-        oss << str << std::endl;
-
-        std::cerr << oss.str();
-    }
-
-    if (lcf & LCF_ERROR) {
-        setErrorMsg(str);
-    }
-}
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
@@ -88,6 +43,10 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
      GlobalNoLog tnl;
 
     /* Build main log string */
+
+    /* We avoid any memory allocation here, because some parts of our code
+     * are critical about memory allocation, like checkpointing.
+     */
     int maxsize = 2048;
     char s[2048] = {'\0'};
     int size = 0;
@@ -110,6 +69,13 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
     size = strlen(s);
 
+    const char* thstr = stringify(getThreadId());
+    if (isMainThread())
+        snprintf(s + size, maxsize-size-1, "Thread %s (main) ", thstr);
+    else
+        snprintf(s + size, maxsize-size-1, "Thread %s        ", thstr);
+    size = strlen(s);
+
     if (isTerm) {
         /* Reset color change */
         strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
@@ -129,23 +95,30 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     strncat(s, "\n", maxsize-size-1);
 
     fprintf(stderr, s);
+
+    /* TODO: Put this back */
+    // if (lcf & LCF_ERROR) {
+    //     setErrorMsg(str);
+    // }
 }
 
 /* Print long integers as string for shorter ids. Use base64 */
-std::string stringify(unsigned long int id)
+const char* stringify(unsigned long int id)
 {
-    std::ostringstream oss;
-    while (id) {
+    static char string[17] = {0};
+    int idx = 0;
+    while (id && (idx<16)) {
         unsigned long digit = id % 64;
-        if (digit < 26) oss << static_cast<char>('A' + digit);
-        else if (digit < 52) oss << static_cast<char>('a' + (digit - 26));
-        else if (digit < 62) oss << static_cast<char>('0' + (digit - 52));
-        else if (digit == 62) oss << '+';
-        else oss << '/';
+        if (digit < 26) string[idx++] = static_cast<char>('A' + digit);
+        else if (digit < 52) string[idx++] = static_cast<char>('a' + (digit - 26));
+        else if (digit < 62) string[idx++] = static_cast<char>('0' + (digit - 52));
+        else if (digit == 62) string[idx++] = '+';
+        else string[idx++] = '/';
 
         id /= 64;
     }
-    return oss.str();
+    string[idx] = '\0';
+    return string;
 }
 
 static std::list<std::string> error_messages;
