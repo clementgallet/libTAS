@@ -25,6 +25,7 @@
 #include <algorithm> // std::find
 #include <sys/mman.h>
 #include "ThreadManager.h"
+#include "ThreadSync.h"
 #include "Checkpoint.h"
 #include "../time.h" // clock_gettime
 #include "../threads.h" // getThreadId
@@ -227,17 +228,20 @@ void ThreadManager::checkpoint()
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
 
+    ThreadSync::acquireLocks();
+
     restoreInProgress = false;
 
     suspendThreads();
 
     /* All other threads halted in 'stopThisThread' routine (they are all
      * in state ST_SUSPENDED).  It's safe to write checkpoint file now.
-     * We call the write function with a signal, so we can use an alternate stack.
+     * We call the write function with a signal, so we can use an alternate stack
+     * and safely writing to the original stack.
      */
     raise(SIGUSR2);
 
-    MYASSERT(getcontext(&current_thread->savctx) == 0)
+    resumeThreads();
 
     if (restoreInProgress) {
         /* We are being restored.  Wait for all other threads to finish being
@@ -247,14 +251,14 @@ void ThreadManager::checkpoint()
         waitForAllRestored(current_thread);
         debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming after restore");
     }
-    else {
-        resumeThreads();
-    }
+
+    ThreadSync::releaseLocks();
 }
 
 void ThreadManager::restore()
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
+    ThreadSync::acquireLocks();
 
     restoreInProgress = false;
 
@@ -264,11 +268,16 @@ void ThreadManager::restore()
 
     /* Here is where we load all the memory and stuff */
     raise(SIGUSR2);
-    setcontext(&current_thread->savctx);
 
-    /* This will eventually call setcontext, so the remaining section
-     * of this code is never reached.
+    /* It seems that when restoring the original stack at the end of the
+     * signal handler function, the program pulls from the stack the address
+     * to return to. Because we replace the stack memory with the checkpointed
+     * stack, we will return to after `raise(SIGUSR2)` call in
+     * ThreadManager::checkpoint(). We may even not have to use
+     * getcontext/setcontext for this thread!
      */
+
+    /* NOTREACHED */
 }
 
 bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)

@@ -126,8 +126,9 @@ void __attribute__((constructor)) init(void)
     /* Initialize sound parameters */
     audiocontext.init();
 
-    libTAS_init = true;
+    ThreadManager::init();
 
+    libTAS_init = true;
 }
 
 void __attribute__((destructor)) term(void)
@@ -172,7 +173,6 @@ void __attribute__((destructor)) term(void)
     DEBUGLOGCALL(LCF_SDL);
 
     debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
-    ThreadManager::init();
 
     /* Get which sdl version we are using.
      * Stores it in an extern variable.
@@ -252,7 +252,7 @@ void __attribute__((destructor)) term(void)
     DEBUGLOGCALL(LCF_SDL);
     // debuglog(LCF_THREAD, ThreadManager::get().summary());
     ThreadManager::deallocateThreads();
-    
+
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();
 }

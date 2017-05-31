@@ -72,10 +72,14 @@ void init()
 
 void handler(int signum)
 {
-    if (ThreadManager::restoreInProgress)
+    if (ThreadManager::restoreInProgress) {
         readAllAreas();
-    else
+        /* restoreInProgress was overwritten, putting the right value again */
+        ThreadManager::restoreInProgress = true;
+    }
+    else {
         writeAllAreas();
+    }
 }
 
 bool skipArea(Area *area)

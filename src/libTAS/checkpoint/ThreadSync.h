@@ -21,20 +21,15 @@
 
 #ifndef LIBTAS_THREAD_SYNC_H
 #define LIBTAS_THREAD_SYNC_H
-#include <atomic>
-#include <pthread.h> // pthread_rwlock_t
 
-class ThreadSync {
-private:
-    static std::atomic<int> uninitializedThreadCount;
-    static pthread_rwlock_t wrapperExecutionLock;
-public:
-    static void waitForThreadsToFinishInitialization();
-    static void incrementUninitializedThreadCount();
-    static void decrementUninitializedThreadCount();
-    static void wrapperExecutionLockLock();
-    static void wrapperExecutionLockUnlock();
-
+namespace ThreadSync {
+    void acquireLocks();
+    void releaseLocks();
+    void waitForThreadsToFinishInitialization();
+    void incrementUninitializedThreadCount();
+    void decrementUninitializedThreadCount();
+    void wrapperExecutionLockLock();
+    void wrapperExecutionLockUnlock();
 };
 
 #endif
