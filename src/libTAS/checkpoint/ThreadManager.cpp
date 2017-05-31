@@ -112,10 +112,9 @@ ThreadInfo* ThreadManager::getNewThread()
     return thread;
 }
 
-void ThreadManager::initThread(ThreadInfo* thread, pthread_t * tid_p, void * (* start_routine) (void *), void * arg, void * from)
+void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
-    thread->tid_p = tid_p;
     thread->tid = 0;
     thread->start = start_routine;
     thread->arg = arg;
@@ -133,8 +132,7 @@ void ThreadManager::initThread(ThreadInfo* thread, pthread_t * tid_p, void * (* 
 
 void ThreadManager::update(ThreadInfo* thread)
 {
-    debuglog(LCF_THREAD, "Update thread with pthread_t ", stringify(*thread->tid_p));
-    thread->tid = *thread->tid_p;
+    thread->tid = getThreadId();
     current_thread = thread;
     addToList(thread);
 }
@@ -324,6 +322,19 @@ void ThreadManager::suspendThreads()
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
+
+                    /* Check that the signal is not blocked, otherwise we
+                     * will loop forever...
+                     */
+                    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Check for mask of ", stringify(thread->tid));
+
+                    sigset_t mask;
+                    {
+                        GlobalOwnCode goc;
+                        MYASSERT(pthread_sigmask(0, nullptr, &mask) == 0)
+                        MYASSERT(sigismember(&mask, SIGUSR1) == 1)
+                    }
+
                     if (pthread_kill(thread->tid, SIGUSR1) != 0) {
                         MYASSERT(errno == ESRCH)
                         debuglog(LCF_THREAD | LCF_CHECKPOINT, "Sending signal to thread ", stringify(thread->tid), " failed");
@@ -398,6 +409,7 @@ void ThreadManager::resumeThreads()
 
 void ThreadManager::stopThisThread(int signum)
 {
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Received suspend signal!");
     if (current_thread->state == ThreadInfo::ST_CKPNTHREAD) {
         return;
     }

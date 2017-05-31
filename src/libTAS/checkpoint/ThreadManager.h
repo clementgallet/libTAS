@@ -69,7 +69,7 @@ public:
     static ThreadInfo* getNewThread();
 
     /* Init the ThreadInfo with values passed in pthread_create */
-    static void initThread(ThreadInfo* thread, pthread_t * tid_p, void * (* start_routine) (void *), void * arg, void * from);
+    static void initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 
     /* Update the ThreadInfo struct by the child thread */
     static void update(ThreadInfo* thread);

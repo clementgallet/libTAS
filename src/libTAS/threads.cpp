@@ -135,7 +135,7 @@ static void *pthread_start(void *arg)
      * The rest (like thread->tid) will be filled by the child thread.
      */
     ThreadInfo* thread = ThreadManager::getNewThread();
-    ThreadManager::initThread(thread, tid_p, start_routine, arg, __builtin_return_address(0));
+    ThreadManager::initThread(thread, start_routine, arg, __builtin_return_address(0));
 
     /* Call our wrapper function */
     int ret = orig::pthread_create(tid_p, attr, pthread_start, thread);

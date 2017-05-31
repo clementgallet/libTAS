@@ -36,7 +36,6 @@ struct ThreadInfo {
         ST_CKPNTHREAD
     };
     ThreadState state;
-    pthread_t *tid_p;
     pthread_t tid;
     void *(*start)(void *);
     void *arg;
