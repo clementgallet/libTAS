@@ -133,6 +133,7 @@ void __attribute__((constructor)) init(void)
 
 void __attribute__((destructor)) term(void)
 {
+    ThreadManager::deallocateThreads();
     dlhook_end();
 
     closeSocket();
@@ -251,7 +252,6 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
     // debuglog(LCF_THREAD, ThreadManager::get().summary());
-    ThreadManager::deallocateThreads();
 
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();

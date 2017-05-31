@@ -82,8 +82,10 @@ void ThreadManager::init()
     sigemptyset(&sigusr1.sa_mask);
     sigusr1.sa_flags = 0;
     sigusr1.sa_handler = ThreadManager::stopThisThread;
-    MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
-
+    {
+        GlobalOwnCode goc;
+        MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+    }
     Checkpoint::init();
 
     main = getThreadId();

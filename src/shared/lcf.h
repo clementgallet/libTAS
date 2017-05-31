@@ -56,7 +56,7 @@ typedef int LogCategoryFlag; enum
 	LCF_OPENAL   = 1 << 22, // call to openAL functions
 	LCF_SOUND    = 1 << 23,
 	LCF_RANDOM   = 1 << 24,
-	//LCF_MODULE   = 1 << 25, // DLL functions and COM object stuff too.
+	LCF_SIGNAL   = 1 << 25, // signals between processes/threads
 	LCF_EVENTS   = 1 << 26, // processing SDL events
 	LCF_WINDOW   = 1 << 27,
 	LCF_FILEIO   = 1 << 28,

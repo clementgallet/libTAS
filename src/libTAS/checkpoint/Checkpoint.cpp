@@ -67,7 +67,10 @@ void init()
     sigemptyset(&sigusr2.sa_mask);
     sigusr2.sa_flags = SA_ONSTACK;
     sigusr2.sa_handler = handler;
-    MYASSERT(sigaction(SIGUSR2, &sigusr2, nullptr) == 0)
+    {
+        GlobalOwnCode goc;
+        MYASSERT(sigaction(SIGUSR2, &sigusr2, nullptr) == 0)
+    }
 }
 
 void handler(int signum)
