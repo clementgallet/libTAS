@@ -481,3 +481,8 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
 #endif
 }
+
+// int _XEventsQueued(Display *display, int mode)
+// {
+//     return 0;
+// }

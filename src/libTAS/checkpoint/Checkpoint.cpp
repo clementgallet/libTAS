@@ -64,7 +64,7 @@ void init()
 
     /* Register a signal so that we can switch stacks */
     struct sigaction sigusr2;
-    sigemptyset(&sigusr2.sa_mask);
+    sigfillset(&sigusr2.sa_mask);
     sigusr2.sa_flags = SA_ONSTACK;
     sigusr2.sa_handler = handler;
     {
@@ -147,6 +147,10 @@ bool skipArea(Area *area)
         /* Deleted File */
         return true;
     }
+
+    // if (strstr(area->name, "i965_dri")) { // libX11.so
+    //     return true;
+    // }
 
     if (area->size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */

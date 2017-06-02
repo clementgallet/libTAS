@@ -321,5 +321,6 @@ void link_sdlwindows(void);
 
 OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
 
+// OVERRIDE int _XEventsQueued(Display *display, int mode);
 
 #endif

@@ -66,6 +66,15 @@ void ThreadManager::init()
     current_thread = thread;
     addToList(thread);
 
+    sigset_t mask;
+    sigaddset(&mask, SIGUSR2);
+    {
+        GlobalNative gn;
+        sigprocmask(SIG_UNBLOCK, &mask, nullptr);
+        // pthread_sigmask(SIG_UNBLOCK, &mask, nullptr);
+    }
+
+
     sem_init(&semNotifyCkptThread, 0, 0);
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
 
@@ -79,8 +88,8 @@ void ThreadManager::init()
     //     perror("Error installing signal");
 
     struct sigaction sigusr1;
-    sigemptyset(&sigusr1.sa_mask);
-    sigusr1.sa_flags = 0;
+    sigfillset(&sigusr1.sa_mask);
+    sigusr1.sa_flags = SA_RESTART;
     sigusr1.sa_handler = ThreadManager::stopThisThread;
     {
         GlobalOwnCode goc;
@@ -135,6 +144,13 @@ void ThreadManager::update(ThreadInfo* thread)
     thread->tid = getThreadId();
     current_thread = thread;
     addToList(thread);
+
+    sigset_t mask;
+    sigaddset(&mask, SIGUSR1);
+    {
+        GlobalNative gn;
+        pthread_sigmask(SIG_UNBLOCK, &mask, nullptr);
+    }
 }
 
 void ThreadManager::addToList(ThreadInfo* thread)
@@ -239,6 +255,16 @@ void ThreadManager::checkpoint()
      * We call the write function with a signal, so we can use an alternate stack
      * and safely writing to the original stack.
      */
+
+    // int ret;
+    // sigset_t mask;
+    // {
+    //     GlobalNative gn;
+    //     pthread_sigmask(0, nullptr, &mask);
+    //     ret = sigismember(&mask, SIGUSR2);
+    // }
+    // MYASSERT(ret == 0)
+
     raise(SIGUSR2);
 
     resumeThreads();
@@ -327,13 +353,6 @@ void ThreadManager::suspendThreads()
                      * will loop forever...
                      */
                     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Check for mask of ", stringify(thread->tid));
-
-                    sigset_t mask;
-                    {
-                        GlobalOwnCode goc;
-                        MYASSERT(pthread_sigmask(0, nullptr, &mask) == 0)
-                        MYASSERT(sigismember(&mask, SIGUSR1) == 1)
-                    }
 
                     if (pthread_kill(thread->tid, SIGUSR1) != 0) {
                         MYASSERT(errno == ESRCH)

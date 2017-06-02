@@ -124,6 +124,9 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigprocmask, nullptr);
 
+    if (GlobalState::isNative())
+        return orig::sigprocmask(how, set, oset);
+
     sigset_t newset;
     if (set) {
         sigset_t newset = *set;
@@ -221,6 +224,9 @@ static thread_local int origUsrMaskThread = 0;
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE(pthread_sigmask, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::pthread_sigmask(how, newmask, oldmask);
 
     if (newmask) {
         if (how == SIG_BLOCK)
