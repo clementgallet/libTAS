@@ -55,8 +55,7 @@ void waitForThreadsToFinishInitialization()
     while (uninitializedThreadCount != 0) {
         struct timespec sleepTime = { 0, 10 * 1000 * 1000 };
         debuglog(LCF_THREAD, "Sleeping ", sleepTime.tv_nsec, " ns for thread initialization");
-        GlobalNative gn;
-        nanosleep(&sleepTime, NULL);
+        NATIVECALL(nanosleep(&sleepTime, NULL));
     }
 }
 
@@ -79,8 +78,7 @@ void wrapperExecutionLockLock()
         int retVal = pthread_rwlock_tryrdlock(&wrapperExecutionLock);
         if (retVal != 0 && retVal == EBUSY) {
             struct timespec sleepTime = { 0, 100 * 1000 * 1000 };
-            GlobalNative gn;
-            nanosleep(&sleepTime, NULL);
+            NATIVECALL(nanosleep(&sleepTime, NULL));
             continue;
         }
         if (retVal != 0 && retVal != EDEADLK) {

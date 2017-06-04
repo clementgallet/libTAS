@@ -50,10 +50,7 @@ static bool computeFPS(bool drawFB, float& fps, float& lfps)
         computeCounter = 0;
 
         TimeHolder currentTime;
-        {
-            GlobalNative tn;
-            clock_gettime(CLOCK_MONOTONIC, &currentTime);
-        }
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
 
         struct timespec tsTicks = detTimer.getTicks();
         TimeHolder currentTicks;
@@ -152,11 +149,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 #endif
 
-    {
-        GlobalNative tn;
-        if (!skipDraw())
-            draw();
-    }
+    if (!skipDraw())
+        // NATIVECALL(draw());
+        draw();
 
     /* Send error messages */
     std::string error;

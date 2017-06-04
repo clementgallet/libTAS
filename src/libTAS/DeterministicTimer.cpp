@@ -130,8 +130,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         /* Sleep, because the caller would have yielded at least a little */
         struct timespec nosleep = {0, 0};
         /* Call the real nanosleep function */
-        GlobalNative tn;
-        nanosleep(&nosleep, NULL);
+        NATIVECALL(nanosleep(&nosleep, NULL));
     }
 
     /* We only allow the main thread to trigger a frame boundary! */
@@ -238,10 +237,7 @@ void DeterministicTimer::enterFrameBoundary()
 
     /* Get the current actual time */
     TimeHolder currentTime;
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &currentTime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
 
     /* Calculate the target time we wanted to be at now */
     TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
@@ -256,8 +252,7 @@ void DeterministicTimer::enterFrameBoundary()
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
             /* Call the real nanosleep function */
-            GlobalNative tn;
-            nanosleep(&deltaTime, NULL);
+            NATIVECALL(nanosleep(&deltaTime, NULL));
         }
     }
 
@@ -265,10 +260,7 @@ void DeterministicTimer::enterFrameBoundary()
      * WARNING: This time update is not done in Hourglass,
      * maybe intentionally (the author does not remember).
      */
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &currentTime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
 
     lastEnterTime = currentTime;
 
@@ -286,10 +278,7 @@ void DeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     fractional_part = 0;
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
     lastEnterTicks = ticks;
 
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {

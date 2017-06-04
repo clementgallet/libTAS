@@ -86,12 +86,16 @@ public:
     ~GlobalNative();
 };
 
+#define NATIVECALL(expr) do{GlobalNative gn; expr;} while (false)
+
 class GlobalOwnCode
 {
 public:
     GlobalOwnCode();
     ~GlobalOwnCode();
 };
+
+#define OWNCALL(expr) do{GlobalOwnCode gn; expr;} while (false)
 
 class GlobalNoLog
 {

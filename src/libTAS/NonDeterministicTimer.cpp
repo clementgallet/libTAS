@@ -30,10 +30,7 @@ void NonDeterministicTimer::initialize(void)
     ticks.tv_sec = 0;
     ticks.tv_nsec = 0;
     lastEnterTicks = ticks;
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &lasttime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lasttime));
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;
@@ -55,10 +52,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
         /* Get the real clock time */
         TimeHolder realtime;
-        {
-            GlobalNative tn;
-            clock_gettime(CLOCK_MONOTONIC, &realtime);
-        }
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &realtime));
 
         /* Compute the difference from the last call */
         TimeHolder delta = realtime - lasttime;
@@ -97,10 +91,8 @@ void NonDeterministicTimer::enterFrameBoundary()
     getTicks();
     inFB = true;
 
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &lastEnterTime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
+
     /* Doing the audio mixing here */
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
     audiocontext.mixAllSources(elapsedTicks);
@@ -111,10 +103,7 @@ void NonDeterministicTimer::enterFrameBoundary()
 void NonDeterministicTimer::exitFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
-    {
-        GlobalNative tn;
-        clock_gettime(CLOCK_MONOTONIC, &lastExitTime);
-    }
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastExitTime));
     inFB = false;
 }
 
@@ -128,8 +117,7 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
     }
 
     /* Call the real nanosleep function */
-    GlobalNative tn;
-    nanosleep(&delayTicks, NULL);
+    NATIVECALL(nanosleep(&delayTicks, NULL));
 }
 
 NonDeterministicTimer nonDetTimer;

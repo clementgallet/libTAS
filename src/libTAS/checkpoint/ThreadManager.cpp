@@ -67,13 +67,10 @@ void ThreadManager::init()
     addToList(thread);
 
     sigset_t mask;
+    sigemptyset(&mask);
     sigaddset(&mask, SIGUSR2);
-    {
-        GlobalNative gn;
-        sigprocmask(SIG_UNBLOCK, &mask, nullptr);
-        // pthread_sigmask(SIG_UNBLOCK, &mask, nullptr);
-    }
-
+    NATIVECALL(sigprocmask(SIG_UNBLOCK, &mask, nullptr));
+    NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 
     sem_init(&semNotifyCkptThread, 0, 0);
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
@@ -146,11 +143,9 @@ void ThreadManager::update(ThreadInfo* thread)
     addToList(thread);
 
     sigset_t mask;
+    sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
-    {
-        GlobalNative gn;
-        pthread_sigmask(SIG_UNBLOCK, &mask, nullptr);
-    }
+    NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 }
 
 void ThreadManager::addToList(ThreadInfo* thread)
@@ -404,8 +399,7 @@ void ThreadManager::suspendThreads()
         }
         if (needrescan) {
             struct timespec sleepTime = { 0, 10 * 1000 };
-            GlobalNative gn;
-            nanosleep(&sleepTime, NULL);
+            NATIVECALL(nanosleep(&sleepTime, NULL));
         }
     } while (needrescan);
 
