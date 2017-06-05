@@ -402,6 +402,18 @@ void launchGame(Context* context)
                         }
                         ui.update(true);
                     }
+                    if (hk.type == HOTKEY_TOGGLE_ENCODE) {
+                        if (!context->config.sc.av_dumping) {
+                            context->config.sc.av_dumping = true;
+                            context->config.sc_modified = true;
+                            context->config.dumpfile_modified = true;
+                        }
+                        else {
+                            context->config.sc.av_dumping = false;
+                            context->config.sc_modified = true;
+                        }
+                        ui.update(true);
+                    }
                 }
                 if (event.type == KeyRelease)
                 {

@@ -89,7 +89,8 @@ KeyMapping::KeyMapping()
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADPSEUDOSTATE, "Load Pseudo State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE, "Save State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE, "Load State"});
-
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
+    
     /* Set default hotkeys */
     default_hotkeys();
 

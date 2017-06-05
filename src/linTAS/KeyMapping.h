@@ -163,6 +163,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADPSEUDOSTATE, // Restart the game and playback inputs until frame
     HOTKEY_SAVESTATE, // Save the entire state of the game
     HOTKEY_LOADSTATE, // Load the entire state of the game
+    HOTKEY_TOGGLE_ENCODE, // Start/stop audio/video encoding
     HOTKEY_LEN
 };
 

@@ -423,6 +423,21 @@ void MainWindow::update(bool status)
               movie_ro->setonly();
               break;
         }
+
+        /* Update encode menus */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+        Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
+        Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
+        if (context->config.sc.av_dumping) {
+            if (encode_item) encode_item->label("Stop encode");
+            if (config_item) config_item->deactivate();
+        }
+        else {
+            if (encode_item) encode_item->label("Start encode");
+            if (config_item) config_item->activate();
+        }
+#endif
+
     }
 
     Fl::unlock();
