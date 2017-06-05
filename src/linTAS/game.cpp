@@ -96,7 +96,7 @@ void launchGame(Context* context)
 
     cmd << "LD_PRELOAD=" << context->libtaspath << " " << context->gamepath << " " << context->config.gameargs << logstr << " &";
 
-    // setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
+    setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
     // std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
 

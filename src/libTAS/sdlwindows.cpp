@@ -100,8 +100,26 @@ namespace orig {
 #endif
 }
 
-int sendXid(void);
-int sendXid(void)
+Display* getXDisplay(void)
+{
+    if (!gameWindow)
+        return nullptr;
+
+    /* Access the X Window identifier from the SDL_Window struct */
+    SDL_SysWMinfo info;
+    orig::SDL_GetVersion(&info.version);
+    if (orig::SDL_GetWindowWMInfo(gameWindow, &info) == SDL_FALSE) {
+        debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
+        return nullptr;
+    }
+    if (info.subsystem != SDL_SYSWM_X11) {
+        debuglog(LCF_SDL | LCF_ERROR, "SDL says we are not running on X11");
+        return nullptr;
+    }
+    return info.info.x11.display;
+}
+
+static int sendXid(void)
 {
     if (gameWindow != nullptr) {
         if (!gw_sent) {
@@ -481,8 +499,3 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
 #endif
 }
-
-// int _XEventsQueued(Display *display, int mode)
-// {
-//     return 0;
-// }

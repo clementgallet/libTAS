@@ -44,6 +44,9 @@ namespace orig {
 
 extern char* av_filename;
 
+/* Get the Xlib Display struct that is used by SDL */
+Display* getXDisplay(void);
+
 /* Update the window title with fps */
 void updateTitle(float fps, float lfps);
 
@@ -320,7 +323,5 @@ OVERRIDE SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
 void link_sdlwindows(void);
 
 OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
-
-// OVERRIDE int _XEventsQueued(Display *display, int mode);
 
 #endif

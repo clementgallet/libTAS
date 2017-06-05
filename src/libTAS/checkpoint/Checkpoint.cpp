@@ -29,6 +29,8 @@
 #include <sys/mman.h>
 #include <cstring>
 #include <csignal>
+#define XLIB_ILLEGAL_ACCESS
+#include "../sdlwindows.h"
 
 #define SAVESTATEPATH "/tmp/savestate"
 
@@ -75,10 +77,30 @@ void init()
 
 void handler(int signum)
 {
+
     if (ThreadManager::restoreInProgress) {
+        /* Before reading from the savestate, we must keep some values from
+         * the connection to the X server, because they are used for checking
+         * consistency of requests. We can store them in this (alternate) stack
+         * which will be preserved.
+         */
+
+        /* Access the X Window identifier from the SDL_Window struct */
+        Display *display = getXDisplay();
+        long int last_request_read, request;
+
+        if (display) {
+            last_request_read = display->last_request_read;
+            request = display->request;
+        }
+
         readAllAreas();
         /* restoreInProgress was overwritten, putting the right value again */
         ThreadManager::restoreInProgress = true;
+
+        /* Restoring the display values */
+        display->last_request_read = last_request_read;
+        display->request = request;
     }
     else {
         writeAllAreas();
@@ -154,7 +176,7 @@ bool skipArea(Area *area)
 
     if (area->size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */
-        debuglogstdio(LCF_CHECKPOINT, "skipping over empty segment");
+        // debuglogstdio(LCF_CHECKPOINT, "skipping over empty segment");
         return true;
     }
 
@@ -162,31 +184,31 @@ bool skipArea(Area *area)
     0 == strcmp(area->name, "[vectors]") ||
     0 == strcmp(area->name, "[vvar]") ||
     0 == strcmp(area->name, "[vdso]")) {
-        debuglogstdio(LCF_CHECKPOINT, "Skipping over memory special section");
+        // debuglogstdio(LCF_CHECKPOINT, "Skipping over memory special section");
         return true;
     }
 
     if (area->prot & PROT_EXEC) {
         // area->properties |= DMTCP_SKIP_WRITING_TEXT_SEGMENTS;
         // Utils::writeAll(fd, area, sizeof(*area));
-        debuglogstdio(LCF_CHECKPOINT, "Skipping over text segments");
+        // debuglogstdio(LCF_CHECKPOINT, "Skipping over text segments");
         return true;
     }
 
     if ((area->addr == reinterpret_cast<void*>(restoreAddr)) && (area->size == restoreLength)) {
-        debuglogstdio(LCF_CHECKPOINT, "Skipping over our reserved section");
+        // debuglogstdio(LCF_CHECKPOINT, "Skipping over our reserved section");
         return true;
     }
 
     /* Right now, skip if we don't have write permission */
     if (!(area->prot & PROT_WRITE)) {
-        debuglogstdio(LCF_CHECKPOINT, "Skipping over no write permission");
+        // debuglogstdio(LCF_CHECKPOINT, "Skipping over no write permission");
         return true;
     }
 
     /* Right now, skip for shared memory */
     if (area->flags & MAP_SHARED) {
-        debuglogstdio(LCF_CHECKPOINT, "Skipping over shared memory");
+        // debuglogstdio(LCF_CHECKPOINT, "Skipping over shared memory");
         return true;
     }
 
@@ -369,7 +391,7 @@ void readAllAreas()
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 {
-    if (saved_area->size != -1) {
+    if (saved_area->size != -1 && !(saved_area->properties & SKIP)) {
         if (!(saved_area->flags & MAP_ANONYMOUS)) {
             debuglogstdio(LCF_CHECKPOINT, "Restore region %p (%s) with size %d", (void*)saved_area->addr, saved_area->name, saved_area->size);
         } else if (saved_area->name[0] == '\0') {
@@ -386,7 +408,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
         /* Check if it is a skipped area */
         if (saved_area->properties & SKIP) {
-            debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
+            // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
             if (!skipArea(current_area)) {
                 debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is skipped anymore !?");
             }
@@ -449,7 +471,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     if ((current_area->size == -1) || (saved_area->addr < current_area->addr)) {
 
         if (saved_area->properties & SKIP) {
-            debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
+            // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
             return -1;
         }
 

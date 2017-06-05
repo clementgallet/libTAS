@@ -169,7 +169,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     proceed_commands();
 
     /* Push native SDL events into our emulated event queue */
-    //pushNativeEvents();
+    pushNativeEvents();
 
     /* Push generated events.
      * This must be done after getting the new inputs. */
