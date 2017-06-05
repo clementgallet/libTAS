@@ -21,6 +21,7 @@
 #include "logging.h"
 #include "GlobalState.h"
 #include "hook.h"
+#include <cstring>
 
 namespace orig {
     static sighandler_t (*signal) (int sig, sighandler_t handler) throw();

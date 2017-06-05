@@ -251,15 +251,6 @@ void ThreadManager::checkpoint()
      * and safely writing to the original stack.
      */
 
-    // int ret;
-    // sigset_t mask;
-    // {
-    //     GlobalNative gn;
-    //     pthread_sigmask(0, nullptr, &mask);
-    //     ret = sigismember(&mask, SIGUSR2);
-    // }
-    // MYASSERT(ret == 0)
-
     raise(SIGUSR2);
 
     resumeThreads();
@@ -298,7 +289,12 @@ void ThreadManager::restore()
      * getcontext/setcontext for this thread!
      */
 
-    /* NOTREACHED */
+    /* I don't know how compiler optimisation works on this, but if I remove
+     * this line (which is not reached btw), then after the end of the signal
+     * handler function, the program considers it has reached the end of this
+     * function and returns, instead of continuing in ThreadManager::checkpoint()
+     */
+    debuglog(LCF_ERROR, "NOTREACHED");
 }
 
 bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)

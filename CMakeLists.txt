@@ -23,6 +23,7 @@ target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 
 # Common debug flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
 # Add librt for shm_open
 find_library(RT_LIB rt)

@@ -29,7 +29,8 @@
 #include <sys/mman.h>
 #include <cstring>
 #include <csignal>
-#define XLIB_ILLEGAL_ACCESS
+#include <X11/Xlibint.h>
+// #define XLIB_ILLEGAL_ACCESS
 #include "../sdlwindows.h"
 
 #define SAVESTATEPATH "/tmp/savestate"
@@ -87,11 +88,11 @@ void handler(int signum)
 
         /* Access the X Window identifier from the SDL_Window struct */
         Display *display = getXDisplay();
-        long int last_request_read, request;
+        uint64_t last_request_read, request;
 
         if (display) {
-            last_request_read = display->last_request_read;
-            request = display->request;
+            last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
+            request = X_DPY_GET_REQUEST(display);
         }
 
         readAllAreas();
@@ -99,8 +100,10 @@ void handler(int signum)
         ThreadManager::restoreInProgress = true;
 
         /* Restoring the display values */
-        display->last_request_read = last_request_read;
-        display->request = request;
+        if (display) {
+            X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
+            X_DPY_SET_REQUEST(display, request);
+        }
     }
     else {
         writeAllAreas();
