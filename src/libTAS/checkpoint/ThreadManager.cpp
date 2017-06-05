@@ -69,7 +69,7 @@ void ThreadManager::init()
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR2);
-    NATIVECALL(sigprocmask(SIG_UNBLOCK, &mask, nullptr));
+    // NATIVECALL(sigprocmask(SIG_UNBLOCK, &mask, nullptr));
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 
     sem_init(&semNotifyCkptThread, 0, 0);

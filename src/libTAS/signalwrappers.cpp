@@ -246,12 +246,12 @@ static thread_local int origUsrMaskThread = 0;
 
     sigset_t tmpmask;
     if (newmask) {
-        sigset_t tmpmask = *newmask;
+        tmpmask = *newmask;
         sigdelset(&tmpmask, SIGUSR1);
         sigdelset(&tmpmask, SIGUSR2);
     }
 
-    int ret = orig::pthread_sigmask(how, newmask?&tmpmask:newmask, oldmask);
+    int ret = orig::pthread_sigmask(how, (newmask==nullptr)?nullptr:&tmpmask, oldmask);
 
     if (ret != -1) {
         if (oldmask) {
@@ -274,6 +274,7 @@ static thread_local int origUsrMaskThread = 0;
                 origUsrMaskThread = mask;
         }
     }
+
     return ret;
 }
 
