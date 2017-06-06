@@ -33,7 +33,7 @@ struct Context {
         QUITTING,
         RESTARTING
     };
-    RunStatus status = INACTIVE;
+    volatile RunStatus status = INACTIVE;
 
     /* Connection to the X server */
     Display *display;
@@ -75,6 +75,9 @@ struct Context {
 
     /* Absolute path of the game executable */
     std::string gamepath;
+
+    /* PID of the game */
+    pid_t game_pid;
 };
 
 #endif

@@ -26,6 +26,7 @@
 #include "ui/MainWindow.h"
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
+#include <signal.h> // kill
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
@@ -155,5 +156,31 @@ int main(int argc, char **argv)
     Fl::lock();
 
     Fl::run();
+
+    /* Check if the game is still running and try to close it softly */
+    if (context.status != Context::INACTIVE) {
+        context.status = Context::QUITTING;
+        if (!context.config.sc.running) {
+            context.config.sc.running = true;
+            context.config.sc_modified = true;
+        }
+    }
+
+    struct timespec tim = {0, 10000000L};
+    for (int i=0; i<20; i++) {
+        // context.config.sc.running = true;
+        // context.config.sc_modified = true;
+        std::cout << context.status << std::endl;
+        if (context.status == Context::INACTIVE)
+            break;
+        nanosleep(&tim, NULL);
+    }
+
+    if (context.status != Context::INACTIVE) {
+        std::cout << "Game is not responding, killing it" << std::endl;
+        /* The game didn't close. Kill it */
+        kill(context.game_pid, SIGKILL);
+    }
+
     XCloseDisplay(context.display);
 }

@@ -146,14 +146,13 @@ void launchGame(Context* context)
     /* Receive informations from the game */
 
     int message;
-    pid_t game_pid;
     recv(socket_fd, &message, sizeof(int), 0);
     while (message != MSGB_END_INIT) {
 
         switch (message) {
             /* Get the game process pid */
             case MSGB_PID:
-                recv(socket_fd, &game_pid, sizeof(pid_t), 0);
+                recv(socket_fd, &context->game_pid, sizeof(pid_t), 0);
                 break;
 
             default:
@@ -294,7 +293,6 @@ void launchGame(Context* context)
 
         /* We are at a frame boundary */
         do {
-
             /* If we did not yet receive the game window id, just make the game running */
             if (! context->game_window ) {
                 break;

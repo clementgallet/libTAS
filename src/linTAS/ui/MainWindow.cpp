@@ -56,9 +56,6 @@ static Fl_Callback time_sec_cb;
 
 MainWindow::~MainWindow()
 {
-    /* Stop and detach the game thread */
-    if (context)
-        context->status = Context::QUITTING;
     if (game_thread.joinable())
         game_thread.detach();
 }
@@ -619,6 +616,9 @@ void launch_cb(Fl_Widget* w)
             break;
         case Context::ACTIVE:
             mw.context->status = Context::QUITTING;
+            mw.context->config.sc.running = true;
+            mw.context->config.sc_modified = true;
+            mw.update(true);
             mw.update_status();
             mw.game_thread.detach();
             break;
