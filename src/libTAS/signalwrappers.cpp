@@ -109,8 +109,6 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(siggetmask, nullptr);
 
-    static const int bannedMask = sigmask(SIGUSR1) | sigmask(SIGUSR2);
-
     int oldmask = orig::siggetmask();
 
     /* Update which of our signals were blocked */
@@ -130,7 +128,7 @@ static thread_local int origUsrMaskThread = 0;
 
     sigset_t newset;
     if (set) {
-        sigset_t newset = *set;
+        newset = *set;
         sigdelset(&newset, SIGUSR1);
         sigdelset(&newset, SIGUSR2);
     }

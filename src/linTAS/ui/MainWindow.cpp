@@ -48,11 +48,14 @@ static Fl_Callback input_joy_cb;
 static Fl_Callback hotkeys_focus_cb;
 static Fl_Callback inputs_focus_cb;
 static Fl_Callback slowmo_cb;
+#ifdef LIBTAS_ENABLE_HUD
 static Fl_Callback osd_frame_cb;
 static Fl_Callback osd_inputs_cb;
 static Fl_Callback osd_encode_cb;
+#endif
 static Fl_Callback time_main_cb;
 static Fl_Callback time_sec_cb;
+static Fl_Callback render_soft_cb;
 
 MainWindow::~MainWindow()
 {
@@ -161,15 +164,16 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Movie...", 0, browse_moviepath_cb},
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Force software rendering", 0, render_soft_cb, nullptr, FL_MENU_TOGGLE},
 #ifdef LIBTAS_ENABLE_HUD
         {"OSD", 0, nullptr, nullptr, FL_SUBMENU},
-#else
-        {"OSD (disabled)", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_INACTIVE},
-#endif
             {"Frame Count", 0, osd_frame_cb, nullptr, FL_MENU_TOGGLE},
             {"Inputs", 0, osd_inputs_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_DIVIDER},
             {"OSD on video encode", 0, osd_encode_cb, nullptr, FL_MENU_TOGGLE},
             {nullptr},
+#else
+        {"OSD (disabled)", 0, nullptr, nullptr, FL_MENU_INACTIVE},
+#endif
         {nullptr},
     {"Sound", 0, nullptr, nullptr, FL_SUBMENU},
         {"Format", 0, nullptr, nullptr, FL_SUBMENU},
@@ -450,153 +454,99 @@ void MainWindow::update_config()
     std::string fpsstr = std::to_string(context->config.sc.framerate);
     logicalfps->value(fpsstr.c_str());
 
-    Fl_Menu_Item* sound_freq_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_frequency_cb));
-    while (sound_freq_item->flags) {
-        if (sound_freq_item->argument() == context->config.sc.audio_frequency) {
-            sound_freq_item->setonly();
-            break;
-        }
-        sound_freq_item = sound_freq_item->next();
-    }
+    /* Define some macros to help setting menu items */
+    Fl_Menu_Item* menu_item;
 
-    Fl_Menu_Item* sound_bitdepth_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_bitdepth_cb));
-    while (sound_bitdepth_item->flags) {
-        if (sound_bitdepth_item->argument() == context->config.sc.audio_bitdepth) {
-            sound_bitdepth_item->setonly();
-            break;
-        }
-        sound_bitdepth_item = sound_bitdepth_item->next();
-    }
+#define SET_TOGGLE_FROM_BOOL(cb, value) \
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
+    if (value) \
+        menu_item->set(); \
+    else \
+        menu_item->clear()
 
-    Fl_Menu_Item* sound_channel_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(sound_channel_cb));
-    while (sound_channel_item->flags) {
-        if (sound_channel_item->argument() == context->config.sc.audio_channels) {
-            sound_channel_item->setonly();
-            break;
-        }
-        sound_channel_item = sound_channel_item->next();
-    }
+#define SET_TOGGLES_FROM_MASK(cb, value) \
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
+    do { \
+        if ((value) & menu_item->argument()) \
+            menu_item->set(); \
+        else \
+            menu_item->clear(); \
+      menu_item = menu_item->next(); \
+    } while (menu_item->flags)
 
-    Fl_Menu_Item* sound_mute_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
+#define SET_RADIO_FROM_LIST(cb, value) \
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
+    do { \
+        if ((value) == menu_item->argument()) { \
+            menu_item->setonly(); \
+            break; \
+        } \
+        menu_item = menu_item->next(); \
+    } while (menu_item->flags)
+
+SET_RADIO_FROM_LIST(sound_frequency_cb, context->config.sc.audio_frequency);
+SET_RADIO_FROM_LIST(sound_bitdepth_cb, context->config.sc.audio_bitdepth);
+SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
+
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
     if (context->config.sc.audio_mute) {
-        sound_mute_item->set();
+        menu_item->set();
         mutecheck->set();
     }
     else {
-        sound_mute_item->clear();
+        menu_item->clear();
         mutecheck->clear();
     }
 
-    Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
-    while (logging_status_item->flags) {
-        if (static_cast<SharedConfig::LogStatus>(logging_status_item->argument()) == context->config.sc.logging_status) {
-            logging_status_item->setonly();
-            break;
-        }
-        logging_status_item = logging_status_item->next();
-    }
+    SET_RADIO_FROM_LIST(logging_status_cb, context->config.sc.logging_status);
+    // Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
+    // while (logging_status_item->flags) {
+    //     if (static_cast<SharedConfig::LogStatus>(logging_status_item->argument()) == context->config.sc.logging_status) {
+    //         logging_status_item->setonly();
+    //         break;
+    //     }
+    //     logging_status_item = logging_status_item->next();
+    // }
 
-    Fl_Menu_Item* logging_print_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_print_cb));
-    while (logging_print_item->flags && (logging_print_item->argument() != LCF_ALL)) {
-        if (logging_print_item->argument() & context->config.sc.includeFlags)
-            logging_print_item->set();
+    SET_TOGGLES_FROM_MASK(logging_print_cb, context->config.sc.includeFlags);
+    SET_TOGGLES_FROM_MASK(logging_exclude_cb, context->config.sc.excludeFlags);
+
+    SET_RADIO_FROM_LIST(slowmo_cb, context->config.sc.speed_divisor);
+
+    SET_TOGGLE_FROM_BOOL(input_keyboard_cb, context->config.sc.keyboard_support);
+    SET_TOGGLE_FROM_BOOL(input_mouse_cb, context->config.sc.mouse_support);
+
+    SET_RADIO_FROM_LIST(input_joy_cb, context->config.sc.numControllers);
+
+#ifdef LIBTAS_ENABLE_HUD
+    SET_TOGGLE_FROM_BOOL(osd_frame_cb, context->config.sc.hud_framecount);
+    SET_TOGGLE_FROM_BOOL(osd_inputs_cb, context->config.sc.hud_inputs);
+    SET_TOGGLE_FROM_BOOL(osd_encode_cb, context->config.sc.hud_encode);
+#endif
+
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_main_cb));
+    while (menu_item->flags) {
+        if (context->config.sc.main_gettimes_threshold[menu_item->argument()] == -1)
+            menu_item->clear();
         else
-            logging_print_item->clear();
-      logging_print_item = logging_print_item->next();
+            menu_item->set();
+        menu_item = menu_item->next();
     }
 
-    Fl_Menu_Item* logging_exclude_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_exclude_cb));
-    while (logging_exclude_item->flags && (logging_exclude_item->argument() != LCF_ALL)) {
-        if (logging_exclude_item->argument() & context->config.sc.excludeFlags)
-            logging_exclude_item->set();
+    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_sec_cb));
+    while (menu_item->flags) {
+        if (context->config.sc.sec_gettimes_threshold[menu_item->argument()] == -1)
+            menu_item->clear();
         else
-            logging_exclude_item->clear();
-      logging_exclude_item = logging_exclude_item->next();
+            menu_item->set();
+      menu_item = menu_item->next();
     }
 
-    Fl_Menu_Item* speed_divisor_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(slowmo_cb));
-    while (speed_divisor_item->flags) {
-      if (speed_divisor_item->argument() == context->config.sc.speed_divisor) {
-          speed_divisor_item->setonly();
-          break;
-      }
-      speed_divisor_item = speed_divisor_item->next();
-    }
+    SET_TOGGLES_FROM_MASK(hotkeys_focus_cb, context->hotkeys_focus);
+    SET_TOGGLES_FROM_MASK(inputs_focus_cb, context->inputs_focus);
 
-    Fl_Menu_Item* input_keyboard_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_keyboard_cb));
-    if (context->config.sc.keyboard_support)
-        input_keyboard_item->set();
-    else
-        input_keyboard_item->clear();
+    SET_TOGGLE_FROM_BOOL(render_soft_cb, context->config.opengl_soft);
 
-    Fl_Menu_Item* input_mouse_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_mouse_cb));
-    if (context->config.sc.mouse_support)
-        input_mouse_item->set();
-    else
-        input_mouse_item->clear();
-
-    Fl_Menu_Item* input_joy_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(input_joy_cb));
-    while (input_joy_item->flags) {
-        if (input_joy_item->argument() == context->config.sc.numControllers) {
-            input_joy_item->setonly();
-            break;
-        }
-        input_joy_item = input_joy_item->next();
-    }
-
-    Fl_Menu_Item* osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_frame_cb));
-    if (context->config.sc.hud_framecount)
-        osd_item->set();
-    else
-        osd_item->clear();
-
-    osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_inputs_cb));
-    if (context->config.sc.hud_inputs)
-        osd_item->set();
-    else
-        osd_item->clear();
-
-    osd_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(osd_encode_cb));
-    if (context->config.sc.hud_encode)
-        osd_item->set();
-    else
-        osd_item->clear();
-
-    Fl_Menu_Item* time_main_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_main_cb));
-    while (time_main_item->flags) {
-        if (context->config.sc.main_gettimes_threshold[time_main_item->argument()] == -1)
-            time_main_item->clear();
-        else
-            time_main_item->set();
-        time_main_item = time_main_item->next();
-    }
-
-    Fl_Menu_Item* time_sec_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_sec_cb));
-    while (time_sec_item->flags) {
-        if (context->config.sc.sec_gettimes_threshold[time_sec_item->argument()] == -1)
-            time_sec_item->clear();
-        else
-            time_sec_item->set();
-      time_sec_item = time_sec_item->next();
-    }
-
-    Fl_Menu_Item* focus_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(hotkeys_focus_cb));
-    while (focus_item->flags) {
-        if (context->hotkeys_focus & focus_item->argument())
-            focus_item->set();
-        else
-            focus_item->clear();
-      focus_item = focus_item->next();
-    }
-
-    focus_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(inputs_focus_cb));
-    while (focus_item->flags) {
-        if (context->inputs_focus & focus_item->argument())
-            focus_item->set();
-        else
-            focus_item->clear();
-      focus_item = focus_item->next();
-    }
 }
 
 void launch_cb(Fl_Widget* w)
@@ -959,6 +909,7 @@ void slowmo_cb(Fl_Widget*, void* v)
     mw.context->config.sc_modified = true;
 }
 
+#ifdef LIBTAS_ENABLE_HUD
 void osd_frame_cb(Fl_Widget* w, void* v)
 {
     MainWindow& mw = MainWindow::getInstance();
@@ -985,6 +936,7 @@ void osd_encode_cb(Fl_Widget* w, void* v)
     mw.context->config.sc.hud_encode = osd_item->value();
     mw.context->config.sc_modified = true;
 }
+#endif
 
 void time_main_cb(Fl_Widget* w, void* v)
 {
@@ -1011,6 +963,15 @@ void time_sec_cb(Fl_Widget* w, void* v)
         mw.context->config.sc.sec_gettimes_threshold[timetype] = -1;
     mw.context->config.sc_modified = true;
 }
+
+void render_soft_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    const Fl_Menu_Item* menu_item = mw.menu_bar->mvalue();
+
+    mw.context->config.opengl_soft = menu_item->value();
+}
+
 
 void error_dialog(void* error_msg)
 {

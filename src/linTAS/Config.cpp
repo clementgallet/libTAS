@@ -34,6 +34,7 @@ void Config::save() {
     prefs->set("dumpfile", dumpfile.c_str());
     prefs->set("libdir", libdir.c_str());
     prefs->set("rundir", rundir.c_str());
+    prefs->set("opengl_soft", opengl_soft);
 
     Fl_Preferences prefs_km(*prefs, "keymapping");
 
@@ -128,6 +129,14 @@ void Config::load(const std::string& gamepath) {
         rundir = text;
     free(text);
 
+    int val;
+
+    val = static_cast<int>(opengl_soft);
+    prefs->get("opengl_soft", val, val);
+    opengl_soft = static_cast<bool>(val);
+
+    /* Load key mapping */
+
     Fl_Preferences prefs_km(*prefs, "keymapping");
 
     if (prefs_km.groupExists("hotkeys")) {
@@ -169,16 +178,17 @@ void Config::load(const std::string& gamepath) {
             free(vdata);
         }
     }
+
+    /* Load shared config */
+
     Fl_Preferences prefs_shared(*prefs, "shared");
 
-    prefs_shared.get("speed_divisor", sc.speed_divisor, sc.speed_divisor);
-
-    int val;
     #define GETWITHTYPE(member, type) \
         val = static_cast<int>(sc.member); \
         prefs_shared.get(#member, val, val); \
         sc.member = static_cast<type>(val)
 
+    GETWITHTYPE(speed_divisor, int);
     GETWITHTYPE(logging_status, SharedConfig::LogStatus);
     GETWITHTYPE(includeFlags, LogCategoryFlag);
     GETWITHTYPE(excludeFlags, LogCategoryFlag);

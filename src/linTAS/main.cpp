@@ -164,22 +164,21 @@ int main(int argc, char **argv)
             context.config.sc.running = true;
             context.config.sc_modified = true;
         }
-    }
 
-    struct timespec tim = {0, 10000000L};
-    for (int i=0; i<20; i++) {
-        // context.config.sc.running = true;
-        // context.config.sc_modified = true;
-        std::cout << context.status << std::endl;
-        if (context.status == Context::INACTIVE)
-            break;
-        nanosleep(&tim, NULL);
-    }
+        struct timespec tim = {0, 10000000L};
+        for (int i=0; i<20; i++) {
+            // context.config.sc.running = true;
+            // context.config.sc_modified = true;
+            if (context.status == Context::INACTIVE)
+                break;
+            nanosleep(&tim, NULL);
+        }
 
-    if (context.status != Context::INACTIVE) {
-        std::cout << "Game is not responding, killing it" << std::endl;
-        /* The game didn't close. Kill it */
-        kill(context.game_pid, SIGKILL);
+        if (context.status != Context::INACTIVE) {
+            std::cout << "Game is not responding, killing it" << std::endl;
+            /* The game didn't close. Kill it */
+            kill(context.game_pid, SIGKILL);
+        }
     }
 
     XCloseDisplay(context.display);

@@ -66,6 +66,9 @@ public:
     /* Path where the game needs to run */
     std::string rundir;
 
+    /* Force Mesa software OpenGL driver */
+    bool opengl_soft = false;
+
     /* Save the config into the config file */
     void save();
 
