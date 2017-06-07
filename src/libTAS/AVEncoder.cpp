@@ -27,6 +27,13 @@
 #include "../shared/SharedConfig.h"
 #include "GlobalState.h"
 
+#define ASSERT_RETURN(ret, msg) do { \
+        if (ret < 0) { \
+            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame"); \
+            return ret; \
+        } \
+    } while (false)
+
 AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsigned long sf) {
     error = 0;
 
@@ -169,28 +176,58 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
 
     /* Fill audio stream parameters */
 
-    // audio_st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
-
     AVSampleFormat in_fmt = (audiocontext.outBitDepth == 8)?AV_SAMPLE_FMT_U8:AV_SAMPLE_FMT_S16;
+    audio_codec_context->sample_fmt = in_fmt;
 
-    switch (audio_codec_id) {
-        case AV_CODEC_ID_MP3:
-        case AV_CODEC_ID_AAC:
-        case AV_CODEC_ID_VORBIS:
-            audio_codec_context->sample_fmt = AV_SAMPLE_FMT_FLTP;
-            break;
-        case AV_CODEC_ID_OPUS:
-        case AV_CODEC_ID_PCM_S16LE:
-        case AV_CODEC_ID_FLAC:
-            audio_codec_context->sample_fmt = AV_SAMPLE_FMT_S16;
-            break;
-        default:
-            debuglog(LCF_DUMP | LCF_ERROR, "Unknown audio format");
-            error = 1;
-            return;
+    /* Checking if we can use the native sample format.
+     * If not, taking a sample format supported by the codec
+     */
+    if (audio_codec_context->codec->sample_fmts) {
+        int i;
+        for (i = 0; audio_codec_context->codec->sample_fmts[i] != AV_SAMPLE_FMT_NONE; i++) {
+            if (audio_codec_context->sample_fmt == audio_codec_context->codec->sample_fmts[i])
+                /* Our native format is accepted by the codec */
+                break;
+            if (audio_codec_context->channels == 1 &&
+            av_get_planar_sample_fmt(audio_codec_context->sample_fmt) == av_get_planar_sample_fmt(audio_codec_context->codec->sample_fmts[i])) {
+                /* If don't care about plannar status if we only have one channel. */
+                audio_codec_context->sample_fmt = audio_codec_context->codec->sample_fmts[i];
+                break;
+            }
+        }
+
+        if (audio_codec_context->codec->sample_fmts[i] == AV_SAMPLE_FMT_NONE) {
+            /* Our native sample format is not supported,
+             * taking the first supported one.
+             */
+            audio_codec_context->sample_fmt = audio_codec_context->codec->sample_fmts[0];
+            debuglog(LCF_DUMP, "Our native sample format is not supported. Choosing ", av_get_sample_fmt_name(audio_codec_context->sample_fmt));
+        }
     }
-    audio_codec_context->bit_rate = shared_config.audio_bitrate;
+
+    /* Checking if we can use the native sample rate.
+     * If not, taking a sample rate supported by the codec
+     */
     audio_codec_context->sample_rate = audiocontext.outFrequency;
+
+    if (audio_codec_context->codec->supported_samplerates) {
+        int i;
+        for (i = 0; audio_codec_context->codec->supported_samplerates[i] != 0; i++) {
+            if (audio_codec_context->sample_rate == audio_codec_context->codec->supported_samplerates[i])
+                /* Our native sample rate is accepted by the codec */
+                break;
+        }
+
+        if (audio_codec_context->codec->supported_samplerates[i] == 0) {
+            /* Our native sample rate is not supported,
+             * taking the first supported one.
+             */
+            audio_codec_context->sample_rate = audio_codec_context->codec->supported_samplerates[0];
+            debuglog(LCF_DUMP, "Our native sample rate is not supported. Choosing ", audio_codec_context->sample_rate);
+        }
+    }
+
+    audio_codec_context->bit_rate = shared_config.audio_bitrate;
     audio_codec_context->channels = audiocontext.outNbChannels;
     audio_codec_context->channel_layout = av_get_default_channel_layout( audio_codec_context->channels );
     audio_st->time_base = (AVRational){ 1, audio_codec_context->sample_rate };
@@ -254,12 +291,11 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
     audio_frame = av_frame_alloc();
 
     /* Initialize swscale context for audio format conversion */
-
-    if (in_fmt != audio_codec_context->sample_fmt) {
+    if ((in_fmt != audio_codec_context->sample_fmt) || (audio_codec_context->sample_rate != audiocontext.outFrequency)) {
         audio_fmt_ctx = swr_alloc();
         av_opt_set_int(audio_fmt_ctx, "in_channel_layout",  audio_codec_context->channel_layout, 0);
         av_opt_set_int(audio_fmt_ctx, "out_channel_layout", audio_codec_context->channel_layout,  0);
-        av_opt_set_int(audio_fmt_ctx, "in_sample_rate",     audio_codec_context->sample_rate, 0);
+        av_opt_set_int(audio_fmt_ctx, "in_sample_rate",     audiocontext.outFrequency, 0);
         av_opt_set_int(audio_fmt_ctx, "out_sample_rate",    audio_codec_context->sample_rate, 0);
         av_opt_set_sample_fmt(audio_fmt_ctx, "in_sample_fmt",  in_fmt, 0);
         av_opt_set_sample_fmt(audio_fmt_ctx, "out_sample_fmt", audio_codec_context->sample_fmt,  0);
@@ -292,13 +328,14 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
 
 /*
  * Encode one frame and send it to the muxer
- * Returns 0 if no error was encountered
+ * Returns 0 if no error was encountered, or a negative value if an error
+ * was encountered.
  */
 int AVEncoder::encodeOneFrame(unsigned long fcounter) {
 
     /* Check if there was an error during the init */
     if (error)
-        return 0;
+        return -1;
 
     /*** Video ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
@@ -314,7 +351,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
                 video_frame->height, video_frame->data, video_frame->linesize);
     if (rets != video_frame->height) {
         debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",rets," rows");
-        return 1;
+        return -1;
     }
 
     video_frame->pts = frame_counter++;
@@ -323,10 +360,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     // int got_output;
     int ret = avcodec_send_frame(video_codec_context, video_frame);
     // int ret = avcodec_encode_video2(video_st->codec, &vpkt, video_frame, &got_output);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Error encoding video frame");
-        return 1;
-    }
+    ASSERT_RETURN(ret, "Error encoding video frame");
 
     /* Receive decoding frames */
     AVPacket vpkt = { 0 };
@@ -339,12 +373,14 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
         vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
         vpkt.duration = av_rescale_q(vpkt.duration, video_codec_context->time_base, video_st->time_base);
         vpkt.stream_index = video_st->index;
-        if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-            return 1;
-        }
+        ret = av_interleaved_write_frame(formatContext, &vpkt);
+
         ret = avcodec_receive_packet(video_codec_context, &vpkt);
         // av_free_packet(&vpkt);
+    }
+
+    if (ret != AVERROR(EAGAIN)) {
+        ASSERT_RETURN(ret, "Error getting video paquet");
     }
 
     /*** Audio ***/
@@ -363,7 +399,6 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
     while (static_cast<int>(delayed_buffer.size()) >= audio_frame->nb_samples*audiocontext.outAlignSize) {
 
         audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_codec_context->sample_rate}, audio_codec_context->time_base);
-        accum_samples += audio_frame->nb_samples;
 
         /* If necessary, convert the audio stream to the new sample format */
         if (audio_fmt_ctx) {
@@ -379,45 +414,55 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter) {
                 lines[c] = temp_audio.data() + c*line_size;
             uint8_t* in_pt = delayed_buffer.data();
 
-            swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
-            avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
+            ret = swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
+
+            ASSERT_RETURN(ret, "Error scaling audio frame");
+
+            ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
                                                      lines[0], buf_size, 1);
         }
         else {
-            avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
+            ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
                                                  delayed_buffer.data(), audio_frame->nb_samples*audiocontext.outAlignSize, 1);
         }
 
+        ASSERT_RETURN(ret, "Error filling audio frame");
+
         ret = avcodec_send_frame(audio_codec_context, audio_frame);
-        // ret = avcodec_encode_audio2(audio_st->codec, &apkt, audio_frame, &got_output);
-        if (ret < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error encoding audio frame");
-            return 1;
+
+        if (ret == AVERROR(EAGAIN)) {
+            /* We cannot send more audio data because the internal buffer is full
+             * Don't touch our buffer.
+             */
+        }
+        else if (ret < 0) {
+            ASSERT_RETURN(ret, "Error encoding audio frame");
+        }
+        else {
+            accum_samples += audio_frame->nb_samples;
+            delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
         }
 
-        delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
-    }
+        /* Receive decoding frames */
 
-    // apkt.data = NULL;
-    // apkt.size = 0;
-    // av_init_packet(&apkt);
-
-    /* Receive decoding frames */
-    AVPacket apkt = { 0 };
-    ret = avcodec_receive_packet(audio_codec_context, &apkt);
-
-    while (ret == 0) {
-        /* We have an encoder output to write */
-        apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
-        apkt.stream_index = audio_st->index;
-        if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-            return 1;
-        }
+        AVPacket apkt = { 0 };
         ret = avcodec_receive_packet(audio_codec_context, &apkt);
-        // av_free_packet(&apkt);
+
+        while (ret == 0) {
+            /* We have an encoder output to write */
+            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
+            apkt.stream_index = audio_st->index;
+            ret = av_interleaved_write_frame(formatContext, &apkt);
+            ASSERT_RETURN(ret, "Error writing frame");
+
+            ret = avcodec_receive_packet(audio_codec_context, &apkt);
+        }
+
+        if (ret != AVERROR(EAGAIN)) {
+            ASSERT_RETURN(ret, "Error getting audio paquet");
+        }
     }
 
     return 0;

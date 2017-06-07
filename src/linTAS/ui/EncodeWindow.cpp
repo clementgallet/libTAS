@@ -235,25 +235,6 @@ void acodec_cb(Fl_Widget* w, void* v)
         default:
             ew->audiobitrate->activate();
     }
-
-    if (acodec_item->argument() == AV_CODEC_ID_OPUS) {
-        /* For Opus codec, only some frequencies are supported */
-        int freq = ew->context->config.sc.audio_frequency;
-        if ((freq % 4000) || (freq == 32000)) {
-            /* If we are not runnning, change the frequency */
-            if (ew->context->status == Context::INACTIVE) {
-                fl_alert("The sound frequency %d Hz is not compatible with Opus. It is changed to 48000 Hz", freq);
-                ew->context->config.sc.audio_frequency = 48000;
-                MainWindow& mw = MainWindow::getInstance();
-                Fl_Menu_Item* freq_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item("Sound/Format/48000 Hz"));
-                if (freq_item) freq_item->setonly();
-            }
-            else {
-                fl_alert("The sound frequency %d Hz is not compatible with Opus. You must quit the game and then change the frequency", freq);
-                ew->audiochoice->value(0);
-            }
-        }
-    }
 }
 
 #endif
