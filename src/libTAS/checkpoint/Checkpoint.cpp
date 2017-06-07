@@ -368,6 +368,8 @@ void writeAnArea(int fd, Area *area)
 void readAllAreas()
 {
     int fd = open(SAVESTATEPATH, O_RDONLY);
+    MYASSERT(fd != -1)
+
     Area current_area;
     Area saved_area;
 
@@ -404,7 +406,18 @@ void readAllAreas()
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 {
-    if (saved_area->addr != nullptr && !(saved_area->properties & SKIP)) {
+    /* Do Areas start on the same address? */
+    if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
+        (saved_area->addr == current_area->addr)) {
+
+        /* Check if it is a skipped area */
+        if (saved_area->properties & SKIP) {
+            if (!skipArea(current_area)) {
+                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is not skipped anymore !?");
+            }
+            return 0;
+        }
+
         if (!(saved_area->flags & MAP_ANONYMOUS)) {
             debuglogstdio(LCF_CHECKPOINT, "Restore region %p (%s) with size %d", (void*)saved_area->addr, saved_area->name, saved_area->size);
         } else if (saved_area->name[0] == '\0') {
@@ -412,73 +425,106 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         } else {
             debuglogstdio(LCF_CHECKPOINT, "Restore anonymous %p (%s) with size %d", saved_area->addr, saved_area->name, saved_area->size);
         }
-    }
 
-    /* Are areas overlapping? */
-    if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
-        (((saved_area->addr >= current_area->addr) && (saved_area->addr < current_area->endAddr)) ||
-        ((current_area->addr >= saved_area->addr) && (current_area->addr < saved_area->endAddr)))) {
+        size_t copy_size = (saved_area->size<current_area->size)?saved_area->size:current_area->size;
 
-        /* Check if it is a skipped area */
-        if (saved_area->properties & SKIP) {
-            // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
-            if (!skipArea(current_area)) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is skipped anymore !?");
-            }
-            return 0;
-        }
+        if (saved_area->size != current_area->size) {
 
-        /* Check if we need resizing */
-        if ((saved_area->addr != current_area->addr) || (saved_area->endAddr != current_area->endAddr)) {
+            /* Special case for stacks, always try to resize the Area */
+            if (strstr(saved_area->name, "[stack")) {
+                debuglogstdio(LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
+                void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
 
-            /* Try to resize the area using mremap */
-            void *newAddr;
-            if (saved_area->addr == current_area->addr) {
-                debuglogstdio(LCF_CHECKPOINT, "Changing size from %d to %d", current_area->size, saved_area->size);
-                newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
-            }
-            else {
-                debuglogstdio(LCF_CHECKPOINT, "Changing size and location from %p to %p", current_area->addr, saved_area->addr);
-                newAddr = mremap(current_area->addr, current_area->size, saved_area->size, MREMAP_FIXED, saved_area->addr);
+                if (newAddr == MAP_FAILED) {
+                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Resizing failed");
+                    lseek(fd, saved_area->size, SEEK_CUR);
+                    return 0;
+                }
+
+                if (newAddr != saved_area->addr) {
+                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
+                    lseek(fd, saved_area->size, SEEK_CUR);
+                    return 0;
+                }
+
+                copy_size = saved_area->size;
             }
 
-            if (newAddr == MAP_FAILED) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Resizing failed");
-                lseek(fd, saved_area->size, SEEK_CUR);
-                return 0;
-            }
+            /* Special case for heap, use brk instead */
+            if (strcmp(saved_area->name, "[heap]") == 0) {
+                debuglogstdio(LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
 
-            if (newAddr != saved_area->addr) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
-                lseek(fd, saved_area->size, SEEK_CUR);
-                return 0;
+                int ret = brk(saved_area->endAddr);
+
+                if (ret < 0) {
+                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "brk failed");
+                    lseek(fd, saved_area->size, SEEK_CUR);
+                    return 0;
+                }
+
+                copy_size = saved_area->size;
             }
         }
 
         /* Now copy the data */
         if (!(current_area->prot & PROT_WRITE)) {
             debuglogstdio(LCF_CHECKPOINT, "Current area lost its write permission");
-            MYASSERT(mprotect(saved_area->addr, saved_area->size, current_area->prot | PROT_WRITE) == 0)
+            MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot | PROT_WRITE) == 0)
         }
 
-        debuglogstdio(LCF_CHECKPOINT, "Writing to memory!");
-        Utils::readAll(fd, saved_area->addr, saved_area->size);
+        debuglogstdio(LCF_CHECKPOINT, "Writing %d bytes to memory!", copy_size);
+        Utils::readAll(fd, saved_area->addr, copy_size);
 
         if (!(current_area->prot & PROT_WRITE)) {
             debuglogstdio(LCF_CHECKPOINT, "Recover permission");
-            MYASSERT(mprotect(saved_area->addr, saved_area->size, current_area->prot) == 0)
+            MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot) == 0)
         }
 
-        return 0;
+        if ((saved_area->addr == current_area->addr) || (saved_area->name[0] == '[')) {
+            /* If the Areas have the same size, or it was a special section,
+             * we have nothing to do.
+             */
+            return 0;
+        }
+
+        if (saved_area->endAddr > current_area->endAddr) {
+            /* If there is still some memory in the savestate to write,
+             * we update the area
+             */
+            saved_area->addr = current_area->endAddr;
+            saved_area->size -= copy_size;
+            return 1;
+        }
+
+        if (saved_area->endAddr < current_area->endAddr) {
+            /* There is extra memory that we have to deal with */
+            current_area->addr = saved_area->endAddr;
+            current_area->size -= copy_size;
+            return -1;
+        }
     }
 
-    /* Areas are not overlapping */
     if ((saved_area->addr == nullptr) || (saved_area->addr > current_area->addr)) {
+        /* Our current area starts before the saved area */
 
-        /* This current area must be deallocated */
-        debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
-        MYASSERT(munmap(current_area->addr, current_area->size) == 0)
-        return 1;
+        if ((saved_area->addr != nullptr) && (current_area->endAddr > saved_area->addr)) {
+            /* Areas are overlapping, we only unmap the non-shared region */
+            ptrdiff_t unmap_size = reinterpret_cast<ptrdiff_t>(saved_area->addr) - reinterpret_cast<ptrdiff_t>(current_area->addr);
+
+            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, unmap_size);
+            MYASSERT(munmap(current_area->addr, unmap_size) == 0)
+
+            /* We call this function again with the rest of the area */
+            current_area->addr = saved_area->addr;
+            current_area->size -= unmap_size;
+            return readAndCompAreas(fd, saved_area, current_area);
+        }
+        else {
+            /* Areas are not overlapping, we unmap the whole area */
+            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+            MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+            return 1;
+        }
     }
 
     if ((current_area->addr == nullptr) || (saved_area->addr < current_area->addr)) {
@@ -488,63 +534,76 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             return -1;
         }
 
+        size_t map_size = saved_area->size;
+        if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
+            /* Areas are overlapping, we only map the non-shared region */
+            map_size = reinterpret_cast<ptrdiff_t>(current_area->addr) - reinterpret_cast<ptrdiff_t>(saved_area->addr);
+        }
+
         /* This saved area must be allocated */
-        debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
+        debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, map_size);
 
-        if (saved_area->flags & MAP_ANONYMOUS) {
+        saved_area->flags |= MAP_ANONYMOUS;
 
-            int imagefd = -1;
-            if (saved_area->name[0] == '/') { /* If not null string, not [stack] or [vdso] */
-                imagefd = open(saved_area->name, O_RDONLY, 0);
-                if (imagefd >= 0) {
-                    /* If the current file size is smaller than the original, we map the region
-                    * as private anonymous. Note that with this we lose the name of the region
-                    * but most applications may not care.
-                    */
-                    off_t curr_size = lseek(imagefd, 0, SEEK_END);
-                    MYASSERT(curr_size != -1);
-                    if (static_cast<size_t>(curr_size) < saved_area->offset + saved_area->size) {
-                        close(imagefd);
-                        imagefd = -1;
-                        saved_area->offset = 0;
-                    } else {
-                        saved_area->flags ^= MAP_ANONYMOUS;
-                    }
+        int imagefd = -1;
+        if (saved_area->name[0] == '/') { /* If not null string, not [stack] or [vdso] */
+            imagefd = open(saved_area->name, O_RDONLY, 0);
+            if (imagefd >= 0) {
+                /* If the current file size is smaller than the original, we map the region
+                * as private anonymous. Note that with this we lose the name of the region
+                * but most applications may not care.
+                */
+                off_t curr_size = lseek(imagefd, 0, SEEK_END);
+                MYASSERT(curr_size != -1);
+                if (static_cast<size_t>(curr_size) < saved_area->offset + map_size) {
+                    close(imagefd);
+                    imagefd = -1;
+                    saved_area->offset = 0;
+                } else {
+                    saved_area->flags ^= MAP_ANONYMOUS;
                 }
             }
-
-            if (saved_area->flags & MAP_ANONYMOUS) {
-                debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", saved_area->size, saved_area->addr);
-            } else {
-                debuglogstdio(LCF_CHECKPOINT, "Restoring to non-anonymous area from anonymous area, %d bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
-            }
-
-            /* Create the memory area */
-
-            void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot | PROT_WRITE,
-                saved_area->flags, imagefd, saved_area->offset);
-
-            if (mmappedat == MAP_FAILED) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Mapping %d bytes at %p failed", saved_area->size, saved_area->addr);
-                lseek(fd, saved_area->size, SEEK_CUR);
-                return -1;
-            }
-            if (mmappedat != saved_area->addr) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
-                lseek(fd, saved_area->size, SEEK_CUR);
-                return -1;
-            }
-
-            /* Close image file (fd only gets in the way) */
-            if (imagefd >= 0) {
-                close(imagefd);
-            }
-
-            Utils::readAll(fd, saved_area->addr, saved_area->size);
-            if (!(saved_area->prot & PROT_WRITE)) {
-                MYASSERT(mprotect(saved_area->addr, saved_area->size, saved_area->prot) == 0)
-            }
         }
+
+        if (saved_area->flags & MAP_ANONYMOUS) {
+            debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", map_size, saved_area->addr);
+        } else {
+            debuglogstdio(LCF_CHECKPOINT, "Restoring to non-anonymous area from anonymous area, %d bytes at %p from %s + %d", map_size, saved_area->addr, saved_area->name, saved_area->offset);
+        }
+
+        /* Create the memory area */
+
+        void *mmappedat = mmap(saved_area->addr, map_size, saved_area->prot | PROT_WRITE,
+            saved_area->flags, imagefd, saved_area->offset);
+
+        if (mmappedat == MAP_FAILED) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Mapping %d bytes at %p failed", saved_area->size, saved_area->addr);
+            lseek(fd, map_size, SEEK_CUR);
+            return -1;
+        }
+        if (mmappedat != saved_area->addr) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
+            lseek(fd, map_size, SEEK_CUR);
+            return -1;
+        }
+
+        /* Close image file (fd only gets in the way) */
+        if (imagefd >= 0) {
+            close(imagefd);
+        }
+
+        Utils::readAll(fd, saved_area->addr, map_size);
+        if (!(saved_area->prot & PROT_WRITE)) {
+            MYASSERT(mprotect(saved_area->addr, map_size, saved_area->prot) == 0)
+        }
+
+        if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
+            /* If areas were overlapping, we must deal with the rest of the area */
+            saved_area->addr = current_area->addr;
+            saved_area->size -= map_size;
+            return readAndCompAreas(fd, saved_area, current_area);
+        }
+
         return -1;
     }
 
