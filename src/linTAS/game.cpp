@@ -98,7 +98,9 @@ void launchGame(Context* context)
 
     if (context->config.opengl_soft)
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
-        
+    else
+        unsetenv("LIBGL_ALWAYS_SOFTWARE");
+
     // std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
 
@@ -242,6 +244,11 @@ void launchGame(Context* context)
                 recv(socket_fd, error_msg, error_len, 0);
                 Fl::awake(error_dialog, error_msg);
                 /* The error_dialog function frees error_msg */
+                break;
+            case MSGB_ENCODE_FAILED:
+                context->config.sc.av_dumping = false;
+                context->config.sc_modified = true;
+                ui.update(true);
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;

@@ -111,7 +111,14 @@ enum {
      * Ask the game to load a savestate
      * Argument: none
      */
-    MSGN_LOADSTATE
+    MSGN_LOADSTATE,
+
+    /*
+     * Notify the program that encoding failed
+     * Arguments: none
+     */
+    MSGB_ENCODE_FAILED
+
 };
 
 #endif

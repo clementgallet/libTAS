@@ -127,6 +127,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
             shared_config.av_dumping = false;
+            sendMessage(MSGB_ENCODE_FAILED);
         }
     }
     else {
@@ -159,7 +160,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         sendMessage(MSGB_ERROR_MSG);
         size_t error_size = error.length()+1;
         sendData(&error_size, sizeof(size_t));
-        sendData(error.c_str(), error.length()+1);
+        sendData(error.c_str(), error_size);
         // debuglog(LCF_ERROR | LCF_FRAME, "Sent error message: ", error);
     }
 
