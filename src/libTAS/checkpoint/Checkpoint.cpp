@@ -91,8 +91,13 @@ void handler(int signum)
         uint64_t last_request_read, request;
 
         if (display) {
+#ifdef X_DPY_GET_LAST_REQUEST_READ
             last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
             request = X_DPY_GET_REQUEST(display);
+#else
+            last_request_read = static_cast<uint64_t>(display->last_request_read);
+            request = static_cast<uint64_t>(display->request);
+#endif
         }
 
         readAllAreas();
@@ -101,8 +106,13 @@ void handler(int signum)
 
         /* Restoring the display values */
         if (display) {
+#ifdef X_DPY_SET_LAST_REQUEST_READ
             X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
             X_DPY_SET_REQUEST(display, request);
+#else
+            display->last_request_read = static_cast<unsigned long>(last_request_read);
+            display->request = static_cast<unsigned long>(request);
+#endif
         }
     }
     else {
@@ -110,7 +120,7 @@ void handler(int signum)
     }
 }
 
-bool skipArea(Area *area)
+static bool skipArea(Area *area)
 {
     /* If it's readable, but it's VDSO, it will be dangerous to restore it.
     * In 32-bit mode later Red Hat RHEL Linux 2.6.9 releases use 0xffffe000,
@@ -317,8 +327,8 @@ void writeAllAreas()
         writeAnArea(fd, &area);
     }
 
-    area.addr = NULL; // End of data
-    area.size = -1; // End of data
+    area.addr = nullptr; // End of data
+    area.size = 0; // End of data
     write(fd, &area, sizeof(area));
 
     /* That's all folks */
@@ -372,7 +382,7 @@ void readAllAreas()
     /* Read the first current area */
     bool not_eof = procSelfMaps.getNextArea(&current_area);
 
-    while ((saved_area.size != -1) || not_eof) {
+    while ((saved_area.addr != nullptr) || not_eof) {
 
         /* Check for matching areas */
         int cmp = readAndCompAreas(fd, &saved_area, &current_area);
@@ -394,7 +404,7 @@ void readAllAreas()
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 {
-    if (saved_area->size != -1 && !(saved_area->properties & SKIP)) {
+    if (saved_area->addr != nullptr && !(saved_area->properties & SKIP)) {
         if (!(saved_area->flags & MAP_ANONYMOUS)) {
             debuglogstdio(LCF_CHECKPOINT, "Restore region %p (%s) with size %d", (void*)saved_area->addr, saved_area->name, saved_area->size);
         } else if (saved_area->name[0] == '\0') {
@@ -405,7 +415,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     }
 
     /* Are areas overlapping? */
-    if ((saved_area->size != -1) && (current_area->size != -1) &&
+    if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
         (((saved_area->addr >= current_area->addr) && (saved_area->addr < current_area->endAddr)) ||
         ((current_area->addr >= saved_area->addr) && (current_area->addr < saved_area->endAddr)))) {
 
@@ -463,7 +473,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     }
 
     /* Areas are not overlapping */
-    if ((saved_area->size == -1) || (saved_area->addr > current_area->addr)) {
+    if ((saved_area->addr == nullptr) || (saved_area->addr > current_area->addr)) {
 
         /* This current area must be deallocated */
         debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
@@ -471,7 +481,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         return 1;
     }
 
-    if ((current_area->size == -1) || (saved_area->addr < current_area->addr)) {
+    if ((current_area->addr == nullptr) || (saved_area->addr < current_area->addr)) {
 
         if (saved_area->properties & SKIP) {
             // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
@@ -493,7 +503,7 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
                     */
                     off_t curr_size = lseek(imagefd, 0, SEEK_END);
                     MYASSERT(curr_size != -1);
-                    if (curr_size < saved_area->offset + saved_area->size) {
+                    if (static_cast<size_t>(curr_size) < saved_area->offset + saved_area->size) {
                         close(imagefd);
                         imagefd = -1;
                         saved_area->offset = 0;

@@ -100,7 +100,8 @@ intptr_t ProcSelfMaps::readHex()
 bool ProcSelfMaps::getNextArea(Area *area)
 {
     if (dataIdx >= numBytes || data[dataIdx] == 0) {
-        area->size = -1;
+        area->addr = nullptr;
+        area->size = 0;
         return false;
     }
 
