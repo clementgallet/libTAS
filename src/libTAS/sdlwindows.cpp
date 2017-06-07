@@ -285,7 +285,16 @@ void updateTitle(float fps, float lfps)
 {
     std::ostringstream out;
     out << " (fps: " << std::fixed << std::setprecision(1) << fps;
-    out << " - lfps: " << lfps << ")";
+    out << " - lfps: " << lfps << ") - status: ";
+    if (shared_config.running)
+        out << "running";
+    else
+        out << "paused";
+    if (shared_config.fastforward)
+        out << " fastforward";
+    if (shared_config.av_dumping)
+        out << " dumping";
+
     std::string newTitle = origTitle + out.str();
     if (SDLver == 1) {
         orig::SDL_WM_SetCaption(newTitle.c_str(), origIcon.c_str());

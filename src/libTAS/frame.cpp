@@ -185,11 +185,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     ++frame_counter;
 
     /* Print FPS */
-    float fps, lfps;
+    static float fps, lfps = 0;
     if (computeFPS(drawFB, fps, lfps)) {
         debuglog(LCF_TIMEFUNC | LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
-        updateTitle(fps, lfps);
     }
+    updateTitle(fps, lfps);
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_TIMEFUNC | LCF_FRAME, "Leave frame boundary");
