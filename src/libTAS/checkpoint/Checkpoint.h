@@ -30,6 +30,7 @@ namespace Checkpoint
     void handler(int signum);
     void writeAllAreas();
     void writeAnArea(int fd, Area* area);
+    void writeAnAreaWithZeroPages(int fd, Area *area);
     void readAllAreas();
     int readAndCompAreas(int fd, Area *saved_area, Area *current_area);
 };

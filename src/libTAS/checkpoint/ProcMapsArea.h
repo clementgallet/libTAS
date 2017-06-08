@@ -56,14 +56,14 @@
 typedef void *VA;  /* VA = virtual address */
 
 enum ProcMapsAreaProperties {
-  // DMTCP_ZERO_PAGE = 0x0001,
-  SKIP = 0x0002
+  ZERO_PAGE = 0x01,
+  SKIP = 0x02
 };
 
 union Area {
     struct {
-        VA addr;   // args required for mmap to restore memory area
-        VA endAddr;   // args required for mmap to restore memory area
+        VA addr;
+        VA endAddr;
         size_t size;
         off_t offset;
         int prot;
@@ -71,7 +71,7 @@ union Area {
         unsigned int long devmajor;
         unsigned int long devminor;
         ino_t inodenum;
-        uint64_t properties;
+        int properties;
         char name[FILENAMESIZE];
     };
     char _padding[4096];

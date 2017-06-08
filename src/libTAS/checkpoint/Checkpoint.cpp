@@ -35,8 +35,8 @@
 
 #define SAVESTATEPATH "/tmp/savestate"
 
-#define MB 1024 * 1024
-#define RESTORE_TOTAL_SIZE 5 * MB
+#define ONE_MB 1024 * 1024
+#define RESTORE_TOTAL_SIZE 5 * ONE_MB
 
 namespace Checkpoint {
 
@@ -60,8 +60,8 @@ void init()
 
     /* Setup an alternate signal stack using the above allocated memory */
     stack_t ss;
-    ss.ss_sp = reinterpret_cast<void*>(restoreAddr + MB);
-    ss.ss_size = RESTORE_TOTAL_SIZE - MB;
+    ss.ss_sp = reinterpret_cast<void*>(restoreAddr + ONE_MB);
+    ss.ss_size = RESTORE_TOTAL_SIZE - ONE_MB;
     ss.ss_flags = 0;
     MYASSERT(sigaltstack(&ss, nullptr) == 0)
 
@@ -232,79 +232,18 @@ void writeAllAreas()
 {
     Area area;
 
-    // DeviceInfo dev_info;
-    // int stack_was_seen = 0;
-
-    // if (getenv(ENV_VAR_SKIP_WRITING_TEXT_SEGMENTS) != NULL) {
-    //     skipWritingTextSegments = true;
-    // }
-
     debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint.");
 
-    /* Finally comes the memory contents */
-    ProcSelfMaps procSelfMaps(restoreAddr, MB);
+    /* Parse the content of /proc/self/maps into memory.
+     * We don't allocate memory here, we are using our special allocated
+     * memory section that won't be saved in the savestate.
+     */
+    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
 
     int fd = creat(SAVESTATEPATH, 0644);
     MYASSERT(fd != -1)
 
     while (procSelfMaps.getNextArea(&area)) {
-
-        // if ((uint64_t)area.addr == ProcessInfo::instance().restoreBufAddr()) {
-        //     JASSERT(area.size == ProcessInfo::instance().restoreBufLen())
-        //     ((void *)area.addr)
-        //     (area.size)
-        //     (ProcessInfo::instance().restoreBufLen());
-        //     continue;
-        // } else if (SharedData::isSharedDataRegion(area.addr)) {
-        //     continue;
-        // }
-
-
-
-        // if (Util::strStartsWith(area.name, DEV_ZERO_DELETED_STR) ||
-        // Util::strStartsWith(area.name, DEV_NULL_DELETED_STR)) {
-        //     /* If the process has an area labeled as "/dev/zero (deleted)", we mark
-        //     *   the area as Anonymous and save the contents to the ckpt image file.
-        //     * If this area has a MAP_SHARED attribute, it should be replaced with
-        //     *   MAP_PRIVATE and we won't do any harm because, the /dev/zero file is
-        //     *   an absolute source and sink. Anything written to it will be
-        //     *   discarded and anything read from it will be all zeros.
-        //     * The following call to mmap will create "/dev/zero (deleted)" area
-        //     *         mmap(addr, size, protection, MAP_SHARED | MAP_ANONYMOUS, 0, 0)
-        //     *
-        //     * The above explanation also applies to "/dev/null (deleted)"
-        //     */
-        //     JTRACE("saving area as Anonymous") (area.name);
-        //     area.flags = MAP_PRIVATE | MAP_ANONYMOUS;
-        //     area.name[0] = '\0';
-        // } else if (Util::isSysVShmArea(area)) {
-        //     JTRACE("saving area as Anonymous") (area.name);
-        //     area.flags = MAP_PRIVATE | MAP_ANONYMOUS;
-        //     area.name[0] = '\0';
-        // } else if (Util::isNscdArea(area)) {
-        //     /* Special Case Handling: nscd is enabled*/
-        //     area.prot = PROT_READ | PROT_WRITE;
-        //     area.properties |= DMTCP_ZERO_PAGE;
-        //     area.flags = MAP_PRIVATE | MAP_ANONYMOUS;
-        //     Util::writeAll(fd, &area, sizeof(area));
-        //     continue;
-        // } else if (Util::isIBShmArea(area)) {
-        //     // TODO: Don't checkpoint infiniband shared area for now.
-        //     continue;
-        // } else if (area.name[0] == '/' && strstr(&area.name[1], "/") != NULL) {
-        /* If an absolute pathname
-        * Posix and SysV shared memory segments can be mapped as /XYZ
-        */
-        // }
-
-        /* Force the anonymous flag if it's a private writeable section, as the
-        * data has probably changed from the contents of the original images.
-        */
-
-        /* We also do this for read-only private sections as it's possible
-        * to modify a page there, too (via mprotect).
-        */
-
 
         if (skipArea(&area)) {
             area.properties |= SKIP;
@@ -316,14 +255,6 @@ void writeAllAreas()
             area.flags |= MAP_ANONYMOUS;
         }
 
-        Utils::writeAll(fd, &area, sizeof(area));
-
-        /* Only write this image if it is not CS_RESTOREIMAGE.
-        * Skip any mapping for this image - it got saved as CS_RESTOREIMAGE
-        * at the beginning.
-        */
-
-        // the whole thing comes after the restore image
         writeAnArea(fd, &area);
     }
 
@@ -337,33 +268,92 @@ void writeAllAreas()
 
 void writeAnArea(int fd, Area *area)
 {
-    void *addr = area->addr;
-
     if (!(area->flags & MAP_ANONYMOUS)) {
-        debuglogstdio(LCF_CHECKPOINT, "Save region %p (%s) with size %d", addr, area->name, area->size);
+        debuglogstdio(LCF_CHECKPOINT, "Save region %p (%s) with size %d", area->addr, area->name, area->size);
     } else if (area->name[0] == '\0') {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p with size %d", addr, area->size);
+        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p with size %d", area->addr, area->size);
     } else {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p (%s) with size %d", addr, area->name, area->size);
+        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p (%s) with size %d", area->addr, area->name, area->size);
     }
-
-    // if ((area->name[0]) == '\0') {
-    //     char *brk = (char *)sbrk(0);
-    //     if (brk > area->addr && brk <= area->addr + area->size) {
-    //         strcpy(area->name, "[heap]");
-    //     }
-    // }
-
 
     if ((area->prot & PROT_READ) == 0) {
         MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
     }
+
+    if (area->name[0] == '\0') {
+        /* We look for zero pages in anonymous sections and skip saving them */
+        writeAnAreaWithZeroPages(fd, area);
+    }
+    else {
+        Utils::writeAll(fd, area, sizeof(*area));
         Utils::writeAll(fd, area->addr, area->size);
+    }
 
     if ((area->prot & PROT_READ) == 0) {
         MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
     }
 }
+
+/* This function returns a range of zero or non-zero pages. If the first page
+ * is non-zero, it searches for all contiguous non-zero pages and returns them.
+ * If the first page is all-zero, it searches for contiguous zero pages and
+ * returns them.
+ */
+ static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
+ {
+     static const size_t page_size = sysconf(_SC_PAGESIZE);
+
+     if (area.size < ONE_MB) {
+         size = area.size;
+         is_zero = false;
+         return;
+     }
+
+     intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
+
+     size = ONE_MB;
+     is_zero = Utils::areZeroPages(area.addr, ONE_MB / page_size);
+
+     // prevAddr = area.addr;
+     for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + ONE_MB;
+     curAddrInt < endAddrInt;
+     curAddrInt += ONE_MB) {
+
+         size_t minsize = ((endAddrInt-curAddrInt)<ONE_MB)?(endAddrInt-curAddrInt):ONE_MB;
+         if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
+             break;
+         }
+         size += minsize;
+     }
+ }
+
+ void writeAnAreaWithZeroPages(int fd, Area *orig_area)
+ {
+     Area area = *orig_area;
+
+     while (area.size > 0) {
+         size_t size;
+         bool is_zero;
+         Area a = area;
+         getNextPageRange(a, size, is_zero);
+
+         a.properties = is_zero ? ZERO_PAGE : 0;
+         a.size = size;
+         void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
+         a.endAddr = endAddr;
+
+         Utils::writeAll(fd, &a, sizeof(a));
+         if (!is_zero) {
+             Utils::writeAll(fd, a.addr, a.size);
+         }
+         else {
+             debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
+         }
+         area.addr = endAddr;
+         area.size -= size;
+     }
+ }
+
 
 void readAllAreas()
 {
@@ -376,7 +366,7 @@ void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(restoreAddr, MB);
+    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
 
     /* Read the first saved area */
     Utils::readAll(fd, &saved_area, sizeof saved_area);
@@ -472,15 +462,21 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot | PROT_WRITE) == 0)
         }
 
-        debuglogstdio(LCF_CHECKPOINT, "Writing %d bytes to memory!", copy_size);
-        Utils::readAll(fd, saved_area->addr, copy_size);
+        if (saved_area->properties & ZERO_PAGE) {
+            debuglogstdio(LCF_CHECKPOINT, "Writing %d zero bytes to memory!", copy_size);
+            memset(saved_area->addr, 0, copy_size);
+        }
+        else {
+            debuglogstdio(LCF_CHECKPOINT, "Writing %d bytes to memory!", copy_size);
+            Utils::readAll(fd, saved_area->addr, copy_size);
+        }
 
         if (!(current_area->prot & PROT_WRITE)) {
             debuglogstdio(LCF_CHECKPOINT, "Recover permission");
             MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot) == 0)
         }
 
-        if ((saved_area->addr == current_area->addr) || (saved_area->name[0] == '[')) {
+        if ((saved_area->endAddr == current_area->endAddr) || (saved_area->name[0] == '[')) {
             /* If the Areas have the same size, or it was a special section,
              * we have nothing to do.
              */
@@ -592,7 +588,13 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             close(imagefd);
         }
 
-        Utils::readAll(fd, saved_area->addr, map_size);
+        if (saved_area->properties & ZERO_PAGE) {
+            memset(saved_area->addr, 0, map_size);
+        }
+        else {
+            Utils::readAll(fd, saved_area->addr, map_size);
+        }
+
         if (!(saved_area->prot & PROT_WRITE)) {
             MYASSERT(mprotect(saved_area->addr, map_size, saved_area->prot) == 0)
         }

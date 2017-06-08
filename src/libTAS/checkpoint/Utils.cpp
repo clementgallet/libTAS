@@ -77,4 +77,28 @@ namespace Utils
         }
         return num_read;
     }
+
+    /* This function detects if the given pages are zero pages or not. There is
+     * scope of improving this function using some optimizations.
+     *
+     * TODO: One can use /proc/self/pagemap to detect if the page is backed by a
+     * shared zero page.
+     */
+     bool areZeroPages(void *addr, size_t numPages)
+     {
+         static const size_t page_size = sysconf(_SC_PAGESIZE);
+         long long *buf = (long long *)addr;
+         size_t end = numPages * page_size / sizeof(*buf);
+         long long res = 0;
+
+         for (size_t i = 0; i + 7 < end; i += 8) {
+             res = buf[i + 0] | buf[i + 1] | buf[i + 2] | buf[i + 3] |
+             buf[i + 4] | buf[i + 5] | buf[i + 6] | buf[i + 7];
+             if (res != 0) {
+                 break;
+             }
+         }
+         return res == 0;
+     }
+
 }

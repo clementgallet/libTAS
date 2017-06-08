@@ -340,11 +340,6 @@ void ThreadManager::suspendThreads()
                 */
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
 
-                    /* Check that the signal is not blocked, otherwise we
-                     * will loop forever...
-                     */
-                    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Check for mask of ", stringify(thread->tid));
-
                     if (pthread_kill(thread->tid, SIGUSR1) != 0) {
                         MYASSERT(errno == ESRCH)
                         debuglog(LCF_THREAD | LCF_CHECKPOINT, "Sending signal to thread ", stringify(thread->tid), " failed");
