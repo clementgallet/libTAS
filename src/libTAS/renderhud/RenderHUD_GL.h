@@ -23,7 +23,6 @@
 #define LIBTAS_RENDERHUD_GL_H_INCL
 
 #include "RenderHUD.h"
-#include "../../external/SDL.h"
 #include "../../external/gl.h"
 
 class RenderHUD_GL : public RenderHUD

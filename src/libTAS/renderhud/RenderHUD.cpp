@@ -23,7 +23,6 @@
 #include "../logging.h"
 #include "../hook.h"
 #include <sstream>
-#include <X11/Xlib.h> // For the KeySym type
 #include "../../shared/SharedConfig.h"
 #include <fontconfig/fontconfig.h>
 

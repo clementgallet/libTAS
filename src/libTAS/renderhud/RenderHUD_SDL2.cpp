@@ -20,7 +20,6 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "RenderHUD_SDL2.h"
-#include "../../external/SDL.h"
 #include "../logging.h"
 #include "../hook.h"
 

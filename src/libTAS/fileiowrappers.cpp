@@ -34,7 +34,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <errno.h>
-#include "ThreadState.h"
+#include "GlobalState.h"
 
 /*** Helper functions ***/
 
@@ -56,16 +56,15 @@ static std::string copyFile(const char* source)
     if (savefiles.find(sstr) != savefiles.end())
         return dest;
 
-    threadState.setOwnCode(true);
-    {
-        std::ifstream ss(source, std::ios::binary);
-        std::ofstream ds(dest, std::ios::binary);
+    GlobalOwnCode goc;
 
-        if (!ss.fail()) {
-            ds << ss.rdbuf();
-        }
+    std::ifstream ss(source, std::ios::binary);
+    std::ofstream ds(dest, std::ios::binary);
+
+    if (!ss.fail()) {
+        ds << ss.rdbuf();
     }
-    threadState.setOwnCode(false);
+
     savefiles.insert(sstr);
 
     return dest;
@@ -160,17 +159,13 @@ SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
 
     SDL_RWops* handle;
 
-    if (!threadState.isOwnCode() && isSaveFile(file, mode)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(file, mode)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
-        threadState.setNative(true);
-        handle = orig::SDL_RWFromFile(newfile.c_str(), mode);
-        threadState.setNative(false);
+        NATIVECALL(handle = orig::SDL_RWFromFile(newfile.c_str(), mode));
     }
     else {
-        threadState.setNative(true);
-        handle = orig::SDL_RWFromFile(file, mode);
-        threadState.setNative(false);
+        NATIVECALL(handle = orig::SDL_RWFromFile(file, mode));
     }
 
     return handle;
@@ -199,7 +194,7 @@ FILE *fopen (const char *filename, const char *modes)
 
     FILE* f;
 
-    if (!threadState.isOwnCode() && isSaveFile(filename, modes)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(filename);
         f = orig::fopen(newfile.c_str(), modes);
@@ -221,7 +216,7 @@ FILE *fopen64 (const char *filename, const char *modes)
 
     FILE* f;
 
-    if (!threadState.isOwnCode() && isSaveFile(filename, modes)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(filename);
         f = orig::fopen64(newfile.c_str(), modes);
@@ -300,10 +295,7 @@ static bool isSaveFile(const char *file, int oflag)
 int open (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open, nullptr);
-    if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
-    else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int fd;
     mode_t mode;
@@ -316,7 +308,7 @@ int open (const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
-    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         fd = orig::open(newfile.c_str(), oflag, mode);
@@ -330,10 +322,7 @@ int open (const char *file, int oflag, ...)
 int open64 (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open64, nullptr);
-    if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
-    else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int fd;
     mode_t mode;
@@ -346,7 +335,7 @@ int open64 (const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
-    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         fd = orig::open64(newfile.c_str(), oflag, mode);
@@ -360,10 +349,7 @@ int open64 (const char *file, int oflag, ...)
 int openat (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat, nullptr);
-    if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
-    else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int newfd;
     mode_t mode;
@@ -376,7 +362,7 @@ int openat (int fd, const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
-    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         newfd = orig::openat(fd, newfile.c_str(), oflag, mode);
@@ -390,10 +376,7 @@ int openat (int fd, const char *file, int oflag, ...)
 int openat64 (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat64, nullptr);
-    if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
-    else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename and flag %o", __func__, oflag);
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int newfd;
     mode_t mode;
@@ -406,7 +389,7 @@ int openat64 (int fd, const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
-    if (!threadState.isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         newfd = orig::openat64(fd, newfile.c_str(), oflag, mode);
@@ -424,7 +407,7 @@ int creat (const char *file, mode_t mode)
 
     int fd;
 
-    if (!threadState.isOwnCode() && file) {
+    if (!GlobalState::isOwnCode()) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         fd = orig::creat(newfile.c_str(), mode);
@@ -442,7 +425,7 @@ int creat64 (const char *file, mode_t mode)
 
     int fd;
 
-    if (!threadState.isOwnCode() && file) {
+    if (!GlobalState::isOwnCode()) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         std::string newfile = copyFile(file);
         fd = orig::creat64(newfile.c_str(), mode);

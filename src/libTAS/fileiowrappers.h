@@ -22,85 +22,10 @@
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
-#include "../external/SDL.h"
+#include "../external/SDL1.h"
+#include <SDL2/SDL.h>
 #include "global.h"
 #include <cstdio>
-
-/* RWops Types */
-#define SDL_RWOPS_UNKNOWN   0   /* Unknown stream type */
-#define SDL_RWOPS_WINFILE   1   /* Win32 file */
-#define SDL_RWOPS_STDFILE   2   /* Stdio file */
-#define SDL_RWOPS_JNIFILE   3   /* Android asset */
-#define SDL_RWOPS_MEMORY    4   /* Memory stream */
-#define SDL_RWOPS_MEMORY_RO 5   /* Read-Only memory stream */
-
-/**
- * This is the read/write operation structure -- very basic.
- */
-typedef struct SDL_RWops
-{
-    /**
-     *  Return the size of the file in this rwops, or -1 if unknown
-     */
-    Sint64 (*size) (struct SDL_RWops * context);
-
-    /**
-     *  Seek to \c offset relative to \c whence, one of stdio's whence values:
-     *  RW_SEEK_SET, RW_SEEK_CUR, RW_SEEK_END
-     *
-     *  \return the final offset in the data stream, or -1 on error.
-     */
-    Sint64 (*seek) (struct SDL_RWops * context, Sint64 offset,
-                             int whence);
-
-    /**
-     *  Read up to \c maxnum objects each of size \c size from the data
-     *  stream to the area pointed at by \c ptr.
-     *
-     *  \return the number of objects read, or 0 at error or end of file.
-     */
-    size_t (*read) (struct SDL_RWops * context, void *ptr,
-                             size_t size, size_t maxnum);
-
-    /**
-     *  Write exactly \c num objects each of size \c size from the area
-     *  pointed at by \c ptr to data stream.
-     *
-     *  \return the number of objects written, or 0 at error or end of file.
-     */
-    size_t (*write) (struct SDL_RWops * context, const void *ptr,
-                              size_t size, size_t num);
-
-    /**
-     *  Close and free an allocated SDL_RWops structure.
-     *
-     *  \return 0 if successful or -1 on write error when flushing data.
-     */
-    int (*close) (struct SDL_RWops * context);
-
-    Uint32 type;
-    union
-    {
-        struct
-        {
-            SDL_bool autoclose;
-            FILE *fp;
-        } stdio;
-        struct
-        {
-            Uint8 *base;
-            Uint8 *here;
-            Uint8 *stop;
-        } mem;
-        struct
-        {
-            void *data1;
-            void *data2;
-        } unknown;
-    } hidden;
-
-} SDL_RWops;
-
 
 /**
  *  \name RWFrom functions
@@ -145,4 +70,3 @@ OVERRIDE int close (int fd);
 
 #endif
 #endif
-

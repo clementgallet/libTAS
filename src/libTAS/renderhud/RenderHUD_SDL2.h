@@ -23,7 +23,7 @@
 #define LIBTAS_RENDERHUD_SDL2_H_INCL
 
 #include "RenderHUD.h"
-#include "../sdlwindows.h" // SDL_Renderer
+#include <SDL2/SDL.h> // SDL_Renderer
 
 class RenderHUD_SDL2 : public RenderHUD
 {
