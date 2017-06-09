@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "steam.h"
+#include "steamwrappers.h"
 #include "logging.h"
 
 bool SteamAPI_Init()
@@ -58,4 +58,3 @@ void SteamAPI_UnregisterCallback( void *pCallback )
 {
     debuglog(LCF_STEAM, __func__, " call.");
 }
-

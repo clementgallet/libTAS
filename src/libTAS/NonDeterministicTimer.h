@@ -22,7 +22,7 @@
 
 #include <time.h>
 #include "TimeHolder.h"
-#include "threads.h"
+#include "threadwrappers.h"
 
 /* A simple timer that directly uses the system timer,
  * but is somewhat affected by fast-forward and frame advance.
@@ -84,4 +84,3 @@ private:
 extern NonDeterministicTimer nonDetTimer;
 
 #endif
-

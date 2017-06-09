@@ -20,15 +20,14 @@
 #include "sdlwindows.h"
 #include "hook.h"
 #include "logging.h"
-#include "socket.h"
+#include "sockethelpers.h"
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
-// #include "GlobalState.h"
-#include "time.h"
+#include "timewrappers.h"
 
 /*
  * Store the game window pointer

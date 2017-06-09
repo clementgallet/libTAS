@@ -129,6 +129,4 @@ OVERRIDE int seed48_r (unsigned short int seed16v[3],
 OVERRIDE int lcong48_r (unsigned short int param[7],
               struct drand48_data *buffer) throw();
 
-void link_sdltimer(void);
-
 #endif

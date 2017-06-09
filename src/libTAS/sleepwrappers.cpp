@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sleep.h"
+#include "sleepwrappers.h"
 #include "logging.h"
-#include "threads.h"
+#include "threadwrappers.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
 #include "GlobalState.h"

@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "random.h"
+#include "randomwrappers.h"
 #include "logging.h"
 #include "hook.h"
 

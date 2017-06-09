@@ -22,7 +22,7 @@
 #include "hook.h"
 #include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
-#include "sleep.h"
+#include "sleepwrappers.h"
 #include "GlobalState.h"
 
 /* Pointers to original functions */

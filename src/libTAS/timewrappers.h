@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include "../external/SDL.h"
 #include "hook.h"
-#include "stdbool.h"
+// #include <stdbool.h>
 #include "global.h"
 
 extern unsigned long frame_counter;

@@ -17,10 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "socket.h"
+#include "sockethelpers.h"
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "../shared/lcf.h"
 #include <unistd.h>
 #include "logging.h"

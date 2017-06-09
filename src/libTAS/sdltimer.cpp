@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "timer.h"
+#include "sdltimer.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "hook.h"

@@ -19,12 +19,12 @@
 
 #include "logging.h"
 #include <stdlib.h>
-#include "threads.h"
-#include "unistd.h" // For isatty
+#include "threadwrappers.h"
+#include <unistd.h> // For isatty
 #include <cstdarg>
 #include <cstring>
 // #include "hook.h" // For pthread_self_real
-#include "time.h" // For frame_counter
+#include "timewrappers.h" // For frame_counter
 #include <mutex>
 #include <list>
 

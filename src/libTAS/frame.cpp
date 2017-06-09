@@ -23,15 +23,15 @@
 #include "../shared/SharedConfig.h"
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/sdlinputevents.h"
-#include "socket.h"
+#include "sockethelpers.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "AVEncoder.h"
 #include "sdlwindows.h"
 #include "sdlevents.h"
 #include <iomanip>
-#include "time.h" // clock_gettime
-#include "threads.h" // isMainThread()
+#include "timewrappers.h" // clock_gettime
+#include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
 
 /* Compute real and logical fps */

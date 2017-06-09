@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fileio.h"
+#include "fileiowrappers.h"
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 

@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "threads.h"
+#include "threadwrappers.h"
 #include "logging.h"
 #include <errno.h>
 #include <unistd.h>

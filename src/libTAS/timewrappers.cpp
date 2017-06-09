@@ -17,10 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "time.h"
+#include "timewrappers.h"
 #include "logging.h"
 #include "frame.h"
-#include "threads.h"
+#include "threadwrappers.h"
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
 // #include "backtrace.h"

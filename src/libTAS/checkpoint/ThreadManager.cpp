@@ -27,8 +27,8 @@
 #include "ThreadManager.h"
 #include "ThreadSync.h"
 #include "Checkpoint.h"
-#include "../time.h" // clock_gettime
-#include "../threads.h" // getThreadId
+#include "../timewrappers.h" // clock_gettime
+#include "../threadwrappers.h" // getThreadId
 #include "../logging.h"
 #include "../backtrace.h"
 

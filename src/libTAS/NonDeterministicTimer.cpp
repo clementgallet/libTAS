@@ -21,8 +21,8 @@
 #include "logging.h"
 #include "frame.h"
 #include "../shared/SharedConfig.h"
-#include "time.h" // clock_gettime
-#include "sleep.h" // nanosleep
+#include "timewrappers.h" // clock_gettime
+#include "sleepwrappers.h" // nanosleep
 #include "audio/AudioContext.h"
 
 void NonDeterministicTimer::initialize(void)
