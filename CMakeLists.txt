@@ -22,7 +22,8 @@ target_compile_features(TAS PRIVATE cxx_auto_type cxx_nullptr cxx_range_for cxx_
 target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 
 # Common debug flags
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fvisibility=hidden -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
+target_compile_options(TAS PUBLIC -fvisibility=hidden)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
 # Add librt for shm_open
@@ -36,6 +37,7 @@ target_link_libraries (linTAS ${TAR_LIB})
 # Add pthread
 find_package(Threads REQUIRED)
 target_link_libraries(linTAS Threads::Threads)
+target_link_libraries(TAS Threads::Threads)
 
 # Add X11 library
 find_package(X11 REQUIRED)
@@ -54,6 +56,10 @@ target_link_libraries(linTAS ${ZLIB_LIBRARIES})
 
 # Add optional features
 find_package(PkgConfig REQUIRED)
+
+# Check for SDL2 headers
+pkg_check_modules(SDL2 REQUIRED sdl2)
+target_include_directories(TAS PUBLIC ${SDL2_INCLUDE_DIRS})
 
 # AV dumping
 option(ENABLE_DUMPING "Enable AV dumping" ON)

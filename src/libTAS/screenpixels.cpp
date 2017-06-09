@@ -21,7 +21,7 @@
 
 #include "hook.h"
 #include "logging.h"
-#include "../external/gl.h" // glReadPixels enum arguments
+#include <GL/gl.h>
 #include "../external/SDL1.h" // SDL_Surface
 #include "sdlwindows.h"
 #include <vector>
@@ -49,9 +49,9 @@ namespace orig {
     static int (*SDL_RenderCopy)(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
     static void (*SDL_DestroyTexture)(SDL_Texture* texture);
 
-    static void (*glReadPixels)(int x, int y, int width, int height, unsigned int format, unsigned int type, void* data);
-    static void (*glDrawPixels)(int width, int height, unsigned int format, unsigned int type, const void* data);
-    static void (*glWindowPos2i)(int x, int y);
+    static void (*glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* data);
+    static void (*glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
+    static void (*glWindowPos2i)(GLint x, GLint y);
 }
 
 /* Video dimensions */
@@ -61,7 +61,7 @@ int size;
 SDL_Renderer* renderer;
 int pixelSize = 0;
 
-int initScreenPixels(SDL_Window* window, bool video_opengl, int *pwidth, int *pheight)
+int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
 {
     if (inited) {
         if (pwidth) *pwidth = width;
@@ -70,7 +70,7 @@ int initScreenPixels(SDL_Window* window, bool video_opengl, int *pwidth, int *ph
     }
 
     /* If the game uses openGL, the method to capture the screen will be different */
-    useGL = video_opengl;
+    useGL = opengl;
 
     /* Link the required functions, and get the window dimensions */
     if (SDLver == 1) {
@@ -322,7 +322,7 @@ int setScreenPixels(SDL_Window* window) {
 
     if (useGL) {
         orig::glWindowPos2i(0, 0);
-        orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const void*>(static_cast<void*>(glpixels.data())));
+        orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
         if (SDLver == 1) {
             NATIVECALL(SDL_GL_SwapBuffers());
         }
