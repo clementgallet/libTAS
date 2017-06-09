@@ -17,15 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_VIDEOCAPTURE_H_INCL
-#define LIBTAS_VIDEOCAPTURE_H_INCL
+#ifndef LIBTAS_SCREENPIXELS_H_INCL
+#define LIBTAS_SCREENPIXELS_H_INCL
 
 #include <stdint.h>
 
-/* Initiate the video capture and get the screen dimensions
+/* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
  */
-int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight);
+int initScreenPixels(void* window, bool video_opengl, int *pwidth, int *pheight);
+
+/* Called when screen is closed or resized */
+void finiScreenPixels();
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 #include <libavutil/pixfmt.h>
@@ -44,6 +47,9 @@ AVPixelFormat getPixelFormat(void* window);
  *                the first element contains width * (size of a pixel).
  * @return        0 if successful or -1 if an error occured
  */
-int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[]);
+int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[]);
+
+/* Set the screen pixels from our buffers */
+int setScreenPixels();
 
 #endif

@@ -22,7 +22,7 @@
 
 #include "hook.h"
 #include "logging.h"
-#include "videocapture.h"
+#include "screenpixels.h"
 #include "audio/AudioContext.h"
 #include "../shared/SharedConfig.h"
 #include "GlobalState.h"
@@ -47,7 +47,7 @@ AVEncoder::AVEncoder(void* window, bool video_opengl, const char* dumpfile, unsi
     accum_samples = 0;
 
     int width, height;
-    int ret = initVideoCapture(window, video_opengl, &width, &height);
+    int ret = initScreenPixels(window, video_opengl, &width, &height);
     if (ret < 0) {
         debuglog(LCF_DUMP | LCF_ERROR, "Unable to initialize video capture");
         error = -1;
@@ -356,7 +356,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
      * if not, we will capture the last drawn frame.
      */
     if (draw) {
-        captureVideoFrame(orig_plane, orig_stride);
+        getScreenPixels(orig_plane, orig_stride);
 
         /* Change pixel format to YUV420p and copy it into the AVframe */
         ret = sws_scale(toYUVctx, orig_plane, orig_stride, 0,
@@ -552,6 +552,8 @@ AVEncoder::~AVEncoder() {
     // av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
+
+    finiScreenPixels();
 }
 
 #endif

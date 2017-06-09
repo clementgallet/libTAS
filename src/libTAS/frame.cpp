@@ -33,6 +33,7 @@
 #include "timewrappers.h" // clock_gettime
 #include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
+#include "screenpixels.h"
 
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
@@ -150,9 +151,16 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 #endif
 
-    if (!skipDraw())
-        // NATIVECALL(draw());
+    if (!skipDraw()) {
+        if (shared_config.save_screenpixels) {
+            /* We must save the screen pixels just before drawing, in case we
+             * load a savestate here, so we can redraw the screen.
+             */
+            getScreenPixels(nullptr, nullptr);
+        }
+
         draw();
+    }
 
     /* Send error messages */
     std::string error;
@@ -229,6 +237,13 @@ void proceed_commands(void)
 
             case MSGN_SAVESTATE:
                 ThreadManager::checkpoint();
+                if (shared_config.save_screenpixels) {
+                    /* Refresh the screen. We don't know if we came here from
+                     * checkpoint() or restore() so we update the screen in both
+                     * cases.
+                     */
+                    setScreenPixels();
+                }
                 break;
 
             case MSGN_LOADSTATE:

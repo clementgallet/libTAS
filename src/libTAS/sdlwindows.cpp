@@ -28,6 +28,7 @@
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
 #include "timewrappers.h"
+#include "screenpixels.h"
 
 /*
  * Store the game window pointer
@@ -224,9 +225,8 @@ std::string origIcon;
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
-    // threadState.setNative(true);
     gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
-    // threadState.setNative(false);
+
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
@@ -235,21 +235,30 @@ std::string origIcon;
     else
         video_opengl = false;
 
+    /* If we are going to save the screen when savestating, we need to init
+     * our pixel access routine */
+    if (shared_config.save_screenpixels)
+        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+
     return gameWindow;
 }
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    //threadState.setNative(true);
+
     orig::SDL_DestroyWindow(window);
-    //threadState.setNative(false);
+
     if (gameWindow == window)
         gameWindow = NULL;
+
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Destroy the AVEncoder object */
     if (avencoder)
         avencoder.reset(nullptr);
 #endif
+
+    if (shared_config.save_screenpixels)
+        finiScreenPixels();
 }
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
@@ -345,15 +354,18 @@ void updateTitle(float fps, float lfps)
     /* Disable high DPI mode */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
-    //threadState.setNative(true);
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
-    //threadState.setNative(false);
     gameWindow = *window;
 
     /* A new window was created. It needs to be passed to the program */
     gw_sent = false;
 
     video_opengl = false;
+
+    /* If we are going to save the screen when savestating, we need to init
+     * our pixel access routine */
+    if (shared_config.save_screenpixels)
+        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
 
     return ret;
 }
@@ -386,6 +398,11 @@ void updateTitle(float fps, float lfps)
 
     orig::SDL_SetWindowSize(window, w, h);
 
+    if (shared_config.save_screenpixels) {
+        finiScreenPixels();
+        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    }
+
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
     if (shared_config.av_dumping) {
@@ -393,6 +410,7 @@ void updateTitle(float fps, float lfps)
         avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
     }
 #endif
+
 }
 
 /* SDL 1.2 */
@@ -404,9 +422,7 @@ void updateTitle(float fps, float lfps)
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
     /* Call real function, but do not return yet */
-    //threadState.setNative(true);
     SDL1::SDL_Surface *surf = orig::SDL_SetVideoMode(width, height, bpp, flags);
-    //threadState.setNative(false);
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Initializing the video dump */
@@ -415,6 +431,11 @@ void updateTitle(float fps, float lfps)
     else
         video_opengl = false;
 #endif
+
+    /* If we are going to save the screen when savestating, we need to init
+     * our pixel access routine */
+    if (shared_config.save_screenpixels)
+        initScreenPixels(nullptr, video_opengl, nullptr, nullptr);
 
     return surf;
 }
