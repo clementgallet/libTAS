@@ -75,6 +75,9 @@ namespace orig {
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
+    if (GlobalState::isNative())
+        return orig::SDL_GL_SwapBuffers();
+
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
     /* SDL 1.2 does only have one window,
@@ -154,6 +157,9 @@ static int sendXid(void)
 
 /* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
 {
+    if (GlobalState::isNative())
+        return orig::SDL_GL_SwapWindow(window);
+
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
     /*
@@ -373,6 +379,9 @@ void updateTitle(float fps, float lfps)
 
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
 {
+    if (GlobalState::isNative())
+        return orig::SDL_RenderPresent(renderer);
+
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
     /*
@@ -443,6 +452,9 @@ void updateTitle(float fps, float lfps)
 
 /* Override */ int SDL_Flip(SDL1::SDL_Surface *screen)
 {
+    if (GlobalState::isNative())
+        return orig::SDL_Flip(screen);
+
     debuglog(LCF_SDL | LCF_FRAME | LCF_WINDOW, __func__, " call.");
 
     /* SDL 1.2 does only have one window,

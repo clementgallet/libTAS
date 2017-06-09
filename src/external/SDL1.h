@@ -380,7 +380,7 @@ namespace SDL1 {
         SDLK_LAST
     } SDLKey;
 
-    typedef enum {
+    enum {
         SDL1_BUTTON_LEFT = 1,
         SDL1_BUTTON_MIDDLE = 2,
         SDL1_BUTTON_RIGHT = 3,

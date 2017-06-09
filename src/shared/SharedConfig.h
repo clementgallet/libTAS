@@ -123,7 +123,7 @@ class SharedConfig {
         int main_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
         int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
 
-        bool save_screenpixels = false;
+        bool save_screenpixels = true;
 };
 
 extern SharedConfig shared_config;

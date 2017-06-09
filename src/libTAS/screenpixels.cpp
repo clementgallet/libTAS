@@ -23,6 +23,7 @@
 #include "logging.h"
 #include "../external/gl.h" // glReadPixels enum arguments
 #include "../external/SDL1.h" // SDL_Surface
+#include "sdlwindows.h"
 #include <vector>
 #include <string.h> // memcpy
 
@@ -322,13 +323,19 @@ int setScreenPixels(SDL_Window* window) {
     if (useGL) {
         orig::glWindowPos2i(0, 0);
         orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const void*>(static_cast<void*>(glpixels.data())));
+        if (SDLver == 1) {
+            NATIVECALL(SDL_GL_SwapBuffers());
+        }
+        if (SDLver == 2) {
+            NATIVECALL(SDL_GL_SwapWindow(window));
+        }
     }
 
     else {
-        /* Not tested !! */
-        debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL_Surface pixels");
-
         if (SDLver == 1) {
+            /* Not tested !! */
+            debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL1_Surface pixels");
+
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
@@ -352,6 +359,8 @@ int setScreenPixels(SDL_Window* window) {
 
             /* Unlock surface */
             orig::SDL_UnlockSurface(surf1);
+
+            NATIVECALL(SDL_Flip(surf1));
         }
 
         if (SDLver == 2) {
@@ -368,10 +377,9 @@ int setScreenPixels(SDL_Window* window) {
             SDL_Texture* texture = orig::SDL_CreateTexture(renderer, sdlpixfmt,
                 SDL_TEXTUREACCESS_STREAMING, width, height);
             orig::SDL_UpdateTexture(texture, NULL, winpixels.data(), pitch);
-
             orig::SDL_RenderCopy(renderer, texture, NULL, NULL);
-
             orig::SDL_DestroyTexture(texture);
+            NATIVECALL(SDL_RenderPresent(renderer));
         }
     }
 
