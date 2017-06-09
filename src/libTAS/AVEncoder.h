@@ -51,14 +51,13 @@ class AVEncoder {
         AVEncoder(void* window, bool video_opengl, const char* filename, unsigned long start_frame);
 
         /* Encode a video and audio frame.
-         * @param fconter       Frame counter
-         * @param window        SDL Window* (needed for software rendering)
-         * @return              1 if error, 0 if not
+         * @param fcounter       Frame counter
+         * @param draw           Is this a draw frame?
+         * @return              -1 if error, 0 if not
          */
-        int encodeOneFrame(unsigned long fcounter);
+        int encodeOneFrame(unsigned long fcounter, bool draw);
 
-        /* Close all allocated objects at the end of a av dump
-         * @return              1 if error, 0 if not
+        /* Close all allocated objects at the end of an av dump
          */
         ~AVEncoder();
 
@@ -70,8 +69,6 @@ class AVEncoder {
         SwrContext *audio_fmt_ctx = NULL;
         AVOutputFormat *outputFormat = NULL;
         AVFormatContext *formatContext = NULL;
-        AVCodec *audio_codec = NULL;
-        AVCodec *video_codec = NULL;
         AVCodecContext *video_codec_context;
         AVCodecContext *audio_codec_context;
         AVStream* video_st;
@@ -85,9 +82,6 @@ class AVEncoder {
 
         /* We save the frame when the dumping begins */
         unsigned long start_frame = -1;
-
-        /* We save the frame when the dumping begins */
-        unsigned long frame_counter = -1;
 
         /* The accumulated number of audio samples */
         uint64_t accum_samples;

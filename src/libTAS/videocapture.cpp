@@ -19,8 +19,6 @@
 
 #include "videocapture.h"
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-
 #include "hook.h"
 #include "logging.h"
 #include "../external/gl.h" // glReadPixels enum arguments
@@ -53,13 +51,11 @@ int size;
 
 void* renderer;
 int pixelSize = 0;
-int glPixFmt;
 
-AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
+int initVideoCapture(void* window, bool video_opengl, int *pwidth, int *pheight)
 {
     /* If the game uses openGL, the method to capture the screen will be different */
     useGL = video_opengl;
-    AVPixelFormat pixfmt = AV_PIX_FMT_NONE;
 
     /* Link the required functions, and get the window dimensions */
     if (SDLver == 1) {
@@ -74,13 +70,12 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
         /* Get dimensions from the window surface */
         if (!orig::SDL_GetVideoSurface) {
             debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetVideoSurface.");
-            return AV_PIX_FMT_NONE;
+            return -1;
         }
 
         SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
 
         pixelSize = surf->format->BytesPerPixel;
-        pixfmt = AV_PIX_FMT_RGBA; // TODO
 
         *pwidth = surf->w;
         *pheight = surf->h;
@@ -94,11 +89,10 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
             /* Get information about the current screen */
             if (!orig::SDL_GL_GetDrawableSize) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GL_GetDrawableSize.");
-                return AV_PIX_FMT_NONE;
+                return -1;
             }
 
             orig::SDL_GL_GetDrawableSize(window, pwidth, pheight);
-            pixfmt = AV_PIX_FMT_RGBA;
             pixelSize = 4;
         }
         else {
@@ -108,58 +102,12 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
             LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
 
             Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
-            /* TODO: There are probably helper functions to build pixel
-             * format constants from channel masks
-             */
-            switch (sdlpixfmt) {
-                case SDL_PIXELFORMAT_RGBA8888:
-                    pixfmt = AV_PIX_FMT_BGRA;
-                    debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
-                    break;
-                case SDL_PIXELFORMAT_BGRA8888:
-                    pixfmt = AV_PIX_FMT_RGBA;
-                    debuglog(LCF_DUMP | LCF_SDL, "  BGRA");
-                    break;
-                case SDL_PIXELFORMAT_ARGB8888:
-                    pixfmt = AV_PIX_FMT_ABGR;
-                    debuglog(LCF_DUMP | LCF_SDL, "  ARGB");
-                    break;
-                case SDL_PIXELFORMAT_ABGR8888:
-                    pixfmt = AV_PIX_FMT_ARGB;
-                    debuglog(LCF_DUMP | LCF_SDL, "  ABGR");
-                    break;
-                case SDL_PIXELFORMAT_RGB24:
-                    pixfmt = AV_PIX_FMT_BGR24;
-                    debuglog(LCF_DUMP | LCF_SDL, "  RGB24");
-                    break;
-                case SDL_PIXELFORMAT_BGR24:
-                    pixfmt = AV_PIX_FMT_RGB24;
-                    debuglog(LCF_DUMP | LCF_SDL, "  BGR24");
-                    break;
-                case SDL_PIXELFORMAT_RGB888:
-                    pixfmt = AV_PIX_FMT_BGR0;
-                    debuglog(LCF_DUMP | LCF_SDL, "  RGB888");
-                    break;
-                case SDL_PIXELFORMAT_RGBX8888:
-                    pixfmt = AV_PIX_FMT_RGB0;
-                    debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
-                    break;
-                case SDL_PIXELFORMAT_BGR888:
-                    pixfmt = AV_PIX_FMT_0BGR;
-                    debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
-                    break;
-                case SDL_PIXELFORMAT_BGRX8888:
-                    pixfmt = AV_PIX_FMT_BGR0;
-                    break;
-                default:
-                    debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format");
-            }
             pixelSize = sdlpixfmt & 0xFF;
 
             /* Get surface from window */
             if (!orig::SDL_GetRendererOutputSize) {
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
-                return AV_PIX_FMT_NONE;
+                return -1;
             }
 
             renderer = orig::SDL_GetRenderer(window);
@@ -168,7 +116,7 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
     }
     else {
         debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Unknown SDL version.");
-        return AV_PIX_FMT_NONE;
+        return -1;
     }
 
     /* Save dimensions for later */
@@ -182,14 +130,14 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
         debuglog(LCF_DUMP | LCF_ERROR, "Screen dimensions must be a multiple of 2");
-        return AV_PIX_FMT_NONE;
+        return -1;
     }
 
     if (useGL) {
         /* Do we already have access to the glReadPixels function? */
         if (!orig::glReadPixels) {
             debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function glReadPixels.");
-            return AV_PIX_FMT_NONE;
+            return -1;
         }
 
         /* Allocate another pixels array,
@@ -198,8 +146,66 @@ AVPixelFormat initVideoCapture(void* window, bool video_opengl, int *pwidth, int
         glpixels.resize(size);
     }
 
-    return pixfmt;
+    return 0;
 }
+
+#ifdef LIBTAS_ENABLE_AVDUMPING
+
+AVPixelFormat getPixelFormat(void* window)
+{
+    if (useGL) {
+        return AV_PIX_FMT_RGBA;
+    }
+
+    if (SDLver == 1) {
+        // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
+        debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
+        return AV_PIX_FMT_RGBA; // TODO
+    }
+    else if (SDLver == 2) {
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
+        /* TODO: There are probably helper functions to build pixel
+         * format constants from channel masks
+         */
+        switch (sdlpixfmt) {
+            case SDL_PIXELFORMAT_RGBA8888:
+                debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
+                return AV_PIX_FMT_BGRA;
+            case SDL_PIXELFORMAT_BGRA8888:
+                debuglog(LCF_DUMP | LCF_SDL, "  BGRA");
+                return AV_PIX_FMT_RGBA;
+            case SDL_PIXELFORMAT_ARGB8888:
+                debuglog(LCF_DUMP | LCF_SDL, "  ARGB");
+                return AV_PIX_FMT_ABGR;
+            case SDL_PIXELFORMAT_ABGR8888:
+                debuglog(LCF_DUMP | LCF_SDL, "  ABGR");
+                return AV_PIX_FMT_ARGB;
+            case SDL_PIXELFORMAT_RGB24:
+                debuglog(LCF_DUMP | LCF_SDL, "  RGB24");
+                return AV_PIX_FMT_BGR24;
+            case SDL_PIXELFORMAT_BGR24:
+                debuglog(LCF_DUMP | LCF_SDL, "  BGR24");
+                return AV_PIX_FMT_RGB24;
+            case SDL_PIXELFORMAT_RGB888:
+                debuglog(LCF_DUMP | LCF_SDL, "  RGB888");
+                return AV_PIX_FMT_BGR0;
+            case SDL_PIXELFORMAT_RGBX8888:
+                debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
+                return AV_PIX_FMT_RGB0;
+            case SDL_PIXELFORMAT_BGR888:
+                debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
+                return AV_PIX_FMT_0BGR;
+            case SDL_PIXELFORMAT_BGRX8888:
+                return AV_PIX_FMT_BGR0;
+            default:
+                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format");
+        }
+    }
+
+    return AV_PIX_FMT_NONE;
+}
+
+#endif
 
 int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 {
@@ -241,14 +247,14 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
             int ch = surf1->h;
             if ((cw != width) || (ch != height)) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
-                return 1;
+                return -1;
             }
 
             /* We must lock the surface before accessing the raw pixels */
             int ret = orig::SDL_LockSurface(surf1);
             if (ret != 0) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
-                return 1;
+                return -1;
             }
 
             /* I know memcpy is not recommended for vectors... */
@@ -264,7 +270,7 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
             orig::SDL_GetRendererOutputSize(renderer, &cw, &ch);
             if ((cw != width) || (ch != height)) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
-                return 1;
+                return -1;
             }
 
             orig::SDL_RenderReadPixels(renderer, NULL, 0, winpixels.data(), pitch);
@@ -276,5 +282,3 @@ int captureVideoFrame(const uint8_t* orig_plane[], int orig_stride[])
 
     return 0;
 }
-
-#endif

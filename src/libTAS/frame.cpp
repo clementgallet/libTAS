@@ -122,7 +122,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         }
 
         /* Write the current frame */
-        int enc = avencoder->encodeOneFrame(frame_counter);
+        int enc = avencoder->encodeOneFrame(frame_counter, drawFB);
         if (enc < 0) {
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
