@@ -19,7 +19,6 @@
 
 #include "keyboard_helper.h"
 #include <string.h>
-#include <X11/XKBlib.h>
 #include <X11/Xlib.h>
 
 static const SDL_Keycode SDL_default_keymap[SDL_NUM_SCANCODES] = {
@@ -512,7 +511,7 @@ void X11_InitKeymap(void)
 	MISC_keymap[XK_KP_8&0xFF] = SDLK_KP_8;
 	MISC_keymap[XK_KP_9&0xFF] = SDLK_KP_9;
 	MISC_keymap[XK_KP_Insert&0xFF] = SDLK_KP_0;
-	MISC_keymap[XK_KP_End&0xFF] = SDLK_KP_1;	
+	MISC_keymap[XK_KP_End&0xFF] = SDLK_KP_1;
 	MISC_keymap[XK_KP_Down&0xFF] = SDLK_KP_2;
 	MISC_keymap[XK_KP_Page_Down&0xFF] = SDLK_KP_3;
 	MISC_keymap[XK_KP_Left&0xFF] = SDLK_KP_4;
@@ -605,7 +604,7 @@ void X11_InitKeymap(void)
 	MISC1_keymap[XK_KP_8&0xFF] = SDL1::SDLK_KP8;
 	MISC1_keymap[XK_KP_9&0xFF] = SDL1::SDLK_KP9;
 	MISC1_keymap[XK_KP_Insert&0xFF] = SDL1::SDLK_KP0;
-	MISC1_keymap[XK_KP_End&0xFF] = SDL1::SDLK_KP1;	
+	MISC1_keymap[XK_KP_End&0xFF] = SDL1::SDLK_KP1;
 	MISC1_keymap[XK_KP_Down&0xFF] = SDL1::SDLK_KP2;
 	MISC1_keymap[XK_KP_Page_Down&0xFF] = SDL1::SDLK_KP3;
 	MISC1_keymap[XK_KP_Left&0xFF] = SDL1::SDLK_KP4;
@@ -808,4 +807,3 @@ void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym) {
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unicode = 0;
 }
-

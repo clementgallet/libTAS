@@ -45,7 +45,7 @@ bool libTAS_init = false;
 
 /* Function pointers to real functions */
 namespace orig {
-    static void (*SDL_Init)(unsigned int flags) = nullptr;
+    static int (*SDL_Init)(Uint32 flags) = nullptr;
     static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
     static int (*SDL1_VideoInit)(const char* driver_name, Uint32 flags) = nullptr;
     static int (*SDL2_VideoInit)(const char* driver_name) = nullptr;
@@ -138,7 +138,7 @@ void __attribute__((destructor)) term(void)
     debuglog(LCF_SOCKET, "Exiting.");
 }
 
-/* Override */ void SDL_Init(unsigned int flags){
+/* Override */ int SDL_Init(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
 
     /* Get which sdl version we are using.
@@ -162,9 +162,10 @@ void __attribute__((destructor)) term(void)
      * ourselves our own SDL_InitSubSystem() function.
      */
     if (SDLver == 1)
-        orig::SDL_Init(flags);
+        return orig::SDL_Init(flags);
     if (SDLver == 2)
-        SDL_InitSubSystem(flags);
+        return SDL_InitSubSystem(flags);
+    return 0;
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
@@ -200,8 +201,6 @@ void __attribute__((destructor)) term(void)
         debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
     if (flags & SDL_INIT_VIDEO)
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
-    if (flags & SDL_INIT_CDROM)
-        debuglog(LCF_SDL, "    SDL_CDROM enabled.");
     if (flags & SDL_INIT_JOYSTICK)
         debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
     if (flags & SDL_INIT_HAPTIC)
@@ -221,29 +220,6 @@ void __attribute__((destructor)) term(void)
     flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
 
     return orig::SDL_InitSubSystem(flags);
-}
-
-/* Override */ int SDL_VideoInit(const char* driver_name, Uint32 flags)
-{
-    DEBUGLOGCALL(LCF_SDL);
-    int rv = 0;
-    //threadState.setNative(true);
-    if (SDLver == 1) {
-        rv = orig::SDL1_VideoInit(driver_name, flags);
-    }
-    if (SDLver == 2) {
-        rv = orig::SDL2_VideoInit(driver_name);
-    }
-    //threadState.setNative(false);
-    return rv;
-}
-
-/* Override */ void SDL_VideoQuit(void)
-{
-    DEBUGLOGCALL(LCF_SDL);
-    // threadState.setNative(true);
-    orig::SDL_VideoQuit();
-    // threadState.setNative(false);
 }
 
 /* Override */ void SDL_Quit(){

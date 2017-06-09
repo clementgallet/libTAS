@@ -265,18 +265,21 @@ void pushQuitEvent(void)
         sdlEventQueue.setFilter(filter, userdata);
 }
 
-/* Override */ void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
+/* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
-    if (SDLver == 1)
-        return reinterpret_cast<void*>(sdlEventQueue.getFilter());
+    if (SDLver == 1) {
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_ERROR, "Not supported yet for SDL1");
+        return SDL_FALSE;
+        // return reinterpret_cast<SDL_bool>(sdlEventQueue.getFilter());
+    }
     if (SDLver == 2) {
         if (sdlEventQueue.getFilter(filter, userdata))
-            return reinterpret_cast<void*>(SDL_TRUE);
-        return reinterpret_cast<void*>(SDL_FALSE);
+            return SDL_TRUE;
+        return SDL_FALSE;
     }
 
-    return NULL;
+    return SDL_FALSE;
 }
 
 /* Override */ void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
@@ -391,34 +394,6 @@ void logEvent(SDL_Event *event)
                     debuglog(LCF_SDL | LCF_EVENTS, "Window ", event->window.windowID, " closed.");
                     break;
                 default:
-                    break;
-            }
-            break;
-
-        case SDL_SYSWMEVENT:
-            debuglog(LCF_SDL | LCF_EVENTS, "Receiving a system specific event.");
-            switch (event->syswm.msg->subsystem) {
-                case SDL_SYSWM_UNKNOWN:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Unknown subsystem.");
-                    break;
-                case SDL_SYSWM_WINDOWS:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Windows subsystem.");
-                    break;
-                case SDL_SYSWM_X11:
-                    debuglog(LCF_SDL | LCF_EVENTS, "X subsystem.");
-                    debuglog(LCF_SDL | LCF_EVENTS, "Getting an X event of type ", event->syswm.msg->msg.x11.event.type);
-                    break;
-                case SDL_SYSWM_DIRECTFB:
-                    debuglog(LCF_SDL | LCF_EVENTS, "DirectFB subsystem.");
-                    break;
-                case SDL_SYSWM_COCOA:
-                    debuglog(LCF_SDL | LCF_EVENTS, "OSX subsystem.");
-                    break;
-                case SDL_SYSWM_UIKIT:
-                    debuglog(LCF_SDL | LCF_EVENTS, "iOS subsystem.");
-                    break;
-                default:
-                    debuglog(LCF_SDL | LCF_EVENTS, "Another subsystem.");
                     break;
             }
             break;

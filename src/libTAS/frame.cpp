@@ -242,7 +242,7 @@ void proceed_commands(void)
                      * checkpoint() or restore() so we update the screen in both
                      * cases.
                      */
-                    setScreenPixels();
+                    setScreenPixels(gameWindow);
                 }
                 break;
 

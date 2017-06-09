@@ -32,6 +32,8 @@
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdlpointer.h" // MASK constants
 #include "../EventQueue.h"
+#include <SDL2/SDL.h>
+#include "../../external/SDL1.h"
 
 void generateSDLKeyUpEvents(void)
 {
@@ -184,10 +186,10 @@ void generateSDLControllerEvents(void)
         bool genGC, genJoy;
         {
             GlobalOwnCode toc;
-            genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(&ji);
+            genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
             //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
             /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
-            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(&ji) || SDL_GameControllerGetAttached(&ji));
+            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji)) || SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji)));
         }
         if (!genGC && !genJoy)
             continue;
@@ -413,15 +415,15 @@ void generateSDLMouseMotionEvents(void)
         /* Build up mouse state */
         event1.motion.state = 0;
         if (ai.pointer_mask & Button1Mask)
-            event1.motion.state |= SDL1::SDL_BUTTON_LMASK;
+            event1.motion.state |= SDL1::SDL1_BUTTON_LMASK;
         if (ai.pointer_mask & Button2Mask)
-            event1.motion.state |= SDL1::SDL_BUTTON_MMASK;
+            event1.motion.state |= SDL1::SDL1_BUTTON_MMASK;
         if (ai.pointer_mask & Button3Mask)
-            event1.motion.state |= SDL1::SDL_BUTTON_RMASK;
+            event1.motion.state |= SDL1::SDL1_BUTTON_RMASK;
         if (ai.pointer_mask & Button4Mask)
-            event1.motion.state |= SDL1::SDL_BUTTON_X1MASK;
+            event1.motion.state |= SDL1::SDL1_BUTTON_X1MASK;
         if (ai.pointer_mask & Button5Mask)
-            event1.motion.state |= SDL1::SDL_BUTTON_X2MASK;
+            event1.motion.state |= SDL1::SDL1_BUTTON_X2MASK;
 
         event1.motion.xrel = (Sint16)(ai.pointer_x - old_ai.pointer_x);
         event1.motion.yrel = (Sint16)(ai.pointer_y - old_ai.pointer_y);
@@ -448,9 +450,9 @@ void generateSDLMouseButtonEvents(void)
     static int sdlbuttons[] = {SDL_BUTTON_LEFT,
         SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT,
         SDL_BUTTON_X1, SDL_BUTTON_X2};
-    static int sdl1buttons[] = {SDL1::SDL_BUTTON_LEFT,
-        SDL1::SDL_BUTTON_MIDDLE, SDL1::SDL_BUTTON_RIGHT,
-        SDL1::SDL_BUTTON_X1, SDL1::SDL_BUTTON_X2};
+    static int sdl1buttons[] = {SDL1::SDL1_BUTTON_LEFT,
+        SDL1::SDL1_BUTTON_MIDDLE, SDL1::SDL1_BUTTON_RIGHT,
+        SDL1::SDL1_BUTTON_X1, SDL1::SDL1_BUTTON_X2};
 
     for (int bi=0; bi<5; bi++) {
         if ((ai.pointer_mask & xbuttons[bi]) != (old_ai.pointer_mask & xbuttons[bi])) {

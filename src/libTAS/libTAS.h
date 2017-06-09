@@ -20,7 +20,7 @@
 #ifndef LIBTAS_LIBTAS_H_INCLUDED
 #define LIBTAS_LIBTAS_H_INCLUDED
 
-#include "../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "global.h"
 #include <string>
 
@@ -30,7 +30,7 @@ void __attribute__((destructor)) term(void);
 /**
  *  This function initializes the subsystems specified by \c flags
  */
-OVERRIDE void SDL_Init(unsigned int flags);
+OVERRIDE int SDL_Init(Uint32 flags);
 
 /**
  *  This function initializes specific SDL subsystems
@@ -43,9 +43,6 @@ OVERRIDE void SDL_Init(unsigned int flags);
  */
 OVERRIDE int SDL_InitSubSystem(Uint32 flags);
 
-OVERRIDE int SDL_VideoInit(const char* driver_name, Uint32 flags);
-OVERRIDE void SDL_VideoQuit(void);
-
 /**
  *  This function cleans up all initialized subsystems. You should
  *  call it upon all exit conditions.
@@ -53,4 +50,3 @@ OVERRIDE void SDL_VideoQuit(void);
 OVERRIDE void SDL_Quit(void);
 
 #endif
-

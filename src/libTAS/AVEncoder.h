@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <SDL2/SDL.h>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -48,7 +49,7 @@ class AVEncoder {
          * @param start_frame   Frame when init is done. Does matter if dumping is not
          *                      done from the beginning.
          */
-        AVEncoder(void* window, bool video_opengl, const char* filename, unsigned long start_frame);
+        AVEncoder(SDL_Window* window, bool video_opengl, const char* filename, unsigned long start_frame);
 
         /* Encode a video and audio frame.
          * @param fcounter       Frame counter

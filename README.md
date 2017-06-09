@@ -11,7 +11,7 @@ Compiling is done using cmake. From the root directory just type:
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`
+The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`
 
 To enable audio and video dumping, you will need `libavcodec`, `libavformat`, `libavutil`, `libswscale`, `libswresample`.
 

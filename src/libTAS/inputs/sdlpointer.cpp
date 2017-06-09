@@ -164,15 +164,15 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     /* Build up mouse state */
     event1.motion.state = 0;
     if (ai.pointer_mask & Button1Mask)
-        event1.motion.state |= SDL1::SDL_BUTTON_LMASK;
+        event1.motion.state |= SDL1::SDL1_BUTTON_LMASK;
     if (ai.pointer_mask & Button2Mask)
-        event1.motion.state |= SDL1::SDL_BUTTON_MMASK;
+        event1.motion.state |= SDL1::SDL1_BUTTON_MMASK;
     if (ai.pointer_mask & Button3Mask)
-        event1.motion.state |= SDL1::SDL_BUTTON_RMASK;
+        event1.motion.state |= SDL1::SDL1_BUTTON_RMASK;
     if (ai.pointer_mask & Button4Mask)
-        event1.motion.state |= SDL1::SDL_BUTTON_X1MASK;
+        event1.motion.state |= SDL1::SDL1_BUTTON_X1MASK;
     if (ai.pointer_mask & Button5Mask)
-        event1.motion.state |= SDL1::SDL_BUTTON_X2MASK;
+        event1.motion.state |= SDL1::SDL1_BUTTON_X2MASK;
 
     event1.motion.x = x;
     event1.motion.y = y;

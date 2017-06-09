@@ -22,10 +22,9 @@
 #include "hook.h"
 #include "logging.h"
 #include "../external/gl.h" // glReadPixels enum arguments
-#include "../external/SDL.h" // SDL_Surface
+#include "../external/SDL1.h" // SDL_Surface
 #include <vector>
 #include <string.h> // memcpy
-// #include <SDL2/SDL_render.h>
 
 bool useGL;
 bool inited = false;
@@ -36,14 +35,14 @@ std::vector<uint8_t> winpixels;
 
 /* Original function pointers */
 namespace orig {
-    static void (*SDL_GL_GetDrawableSize)(void* window, int* w, int* h);
+    static void (*SDL_GL_GetDrawableSize)(SDL_Window* window, int* w, int* h);
     static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
     static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
-    static int (*SDL_RenderReadPixels)(void*, const SDL_Rect*, Uint32, void*, int);
-    static Uint32 (*SDL_GetWindowPixelFormat)(void* window);
-    static void* (*SDL_GetRenderer)(void* window);
-    static int (*SDL_GetRendererOutputSize)(void* renderer, int* w, int* h);
+    static int (*SDL_RenderReadPixels)(SDL_Renderer*, const SDL_Rect*, Uint32, void*, int);
+    static Uint32 (*SDL_GetWindowPixelFormat)(SDL_Window* window);
+    static SDL_Renderer* (*SDL_GetRenderer)(SDL_Window* window);
+    static int (*SDL_GetRendererOutputSize)(SDL_Renderer* renderer, int* w, int* h);
     static SDL_Texture* (*SDL_CreateTexture)(SDL_Renderer* renderer, Uint32 format, int access, int w, int h);
     static int (*SDL_UpdateTexture)(SDL_Texture* texture, const SDL_Rect* rect, const void* pixels, int pitch);
     static int (*SDL_RenderCopy)(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
@@ -58,10 +57,10 @@ namespace orig {
 int width, height;
 int size;
 
-void* renderer;
+SDL_Renderer* renderer;
 int pixelSize = 0;
 
-int initScreenPixels(void* window, bool video_opengl, int *pwidth, int *pheight)
+int initScreenPixels(SDL_Window* window, bool video_opengl, int *pwidth, int *pheight)
 {
     if (inited) {
         if (pwidth) *pwidth = width;
@@ -177,7 +176,7 @@ void finiScreenPixels()
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
-AVPixelFormat getPixelFormat(void* window)
+AVPixelFormat getPixelFormat(SDL_Window* window)
 {
     MYASSERT(inited)
 
@@ -315,14 +314,14 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
     return 0;
 }
 
-int setScreenPixels(){
+int setScreenPixels(SDL_Window* window) {
     MYASSERT(inited)
 
     int pitch = pixelSize * width;
 
     if (useGL) {
         orig::glWindowPos2i(0, 0);
-        orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const void*>(glpixels.data()));
+        orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const void*>(static_cast<void*>(glpixels.data())));
     }
 
     else {

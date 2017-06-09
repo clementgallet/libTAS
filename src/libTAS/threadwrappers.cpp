@@ -30,10 +30,10 @@
 
 /* Original function pointers */
 namespace orig {
-    static void* (*SDL_CreateThread)(int(*fn)(void*),
+    static SDL_Thread* (*SDL_CreateThread)(SDL_ThreadFunction fn,
             const char*   name,
             void*         data);
-    static void (*SDL_WaitThread)(void* thread, int *status);
+    static void (*SDL_WaitThread)(SDL_Thread* thread, int *status);
 
     static int (*pthread_create) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
     static void __attribute__((__noreturn__)) (*pthread_exit) (void *retval) = nullptr;

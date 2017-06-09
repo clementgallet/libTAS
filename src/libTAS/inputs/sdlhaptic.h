@@ -20,11 +20,9 @@
 #ifndef LIBTAS_SDLHAPTIC_H_INCL
 #define LIBTAS_SDLHAPTIC_H_INCL
 
-#include "../../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "../global.h"
 #include "sdljoystick.h"
-
-typedef int SDL_Haptic;
 
 /**
  *  \brief Count the number of haptic devices attached to the system.
@@ -95,4 +93,3 @@ OVERRIDE SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick);
 OVERRIDE void SDL_HapticClose(SDL_Haptic * haptic);
 
 #endif
-

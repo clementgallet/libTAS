@@ -28,7 +28,7 @@
 #include <cstring>
 #include "../GlobalState.h"
 
-SDL_GameController gcids[4] = {-1, -1, -1, -1};
+int gcids[4] = {-1, -1, -1, -1};
 const char joy_name[] = "XInput Controller";
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
@@ -49,7 +49,7 @@ const char joy_name[] = "XInput Controller";
     /* Save the opening of the game controller */
     gcids[joystick_index] = joystick_index;
 
-    return &gcids[joystick_index];
+    return reinterpret_cast<SDL_GameController*>(&gcids[joystick_index]);
 }
 
 /* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index)
@@ -60,18 +60,20 @@ const char joy_name[] = "XInput Controller";
 
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return NULL;
 
-    debuglog(LCF_SDL | LCF_JOYSTICK, "  Id ", *gamecontroller);
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+    debuglog(LCF_SDL | LCF_JOYSTICK, "  Id ", *gcid);
     return joy_name;
 }
 
 /* Override */ SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+
     /* We simply return the same id */
     return reinterpret_cast<SDL_Joystick*>(gamecontroller);
 }
@@ -83,7 +85,7 @@ const char joy_name[] = "XInput Controller";
         return NULL;
     if (gcids[joy] != -1)
         return NULL;
-	return &gcids[joy];
+    return reinterpret_cast<SDL_GameController*>(&gcids[joy]);
 }
 
 const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller,a:b0,b:b1,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b8,leftshoulder:b4,leftstick:b9,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b10,righttrigger:a5,rightx:a3,righty:a4,start:b7,x:b2,y:b3,";
@@ -104,13 +106,15 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ char *SDL_GameControllerMapping( SDL_GameController * gamecontroller )
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
-    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+
+    if (*gcid < 0 || *gcid >= shared_config.numControllers)
         return NULL;
 
     /* Check if controller is available */
-    if (gcids[*gamecontroller] == -1)
+    if (gcids[*gcid] == -1)
         return NULL;
 
     /* Return the mapping of my own xbox 360 controller.
@@ -124,10 +128,13 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
-    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+
+    if (*gcid < 0 || *gcid >= shared_config.numControllers)
         return SDL_FALSE;
-    if (gcids[*gamecontroller] == -1)
+    if (gcids[*gcid] == -1)
         return SDL_FALSE;
 
     return SDL_TRUE;
@@ -176,13 +183,15 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                           SDL_GameControllerAxis axis)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1, " and axis ", axis);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, " and axis ", axis);
 
-    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+
+    if (*gcid < 0 || *gcid >= shared_config.numControllers)
         return 0;
 
     /* Check if controller is available */
-    if (gcids[*gamecontroller] == -1)
+    if (gcids[*gcid] == -1)
         return 0;
 
     /* Check if axis is valid */
@@ -190,20 +199,22 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return 0;
 
     /* Return axis value */
-    return game_ai.controller_axes[*gamecontroller][axis];
+    return game_ai.controller_axes[*gcid][axis];
 
 }
 
 /* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1, " and button ", button);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, " and button ", button);
 
-    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+
+    if (*gcid < 0 || *gcid >= shared_config.numControllers)
         return 0;
 
     /* Check if controller is available */
-    if (gcids[*gamecontroller] == -1)
+    if (gcids[*gcid] == -1)
         return 0;
 
     /* Check if button is valid */
@@ -211,16 +222,18 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return 0;
 
     /* Return button value */
-    return (game_ai.controller_buttons[*gamecontroller] >> button) & 0x1;
+    return (game_ai.controller_buttons[*gcid] >> button) & 0x1;
 
 }
 
 /* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*gamecontroller:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
-    if (*gamecontroller < 0 || *gamecontroller >= shared_config.numControllers)
+    int* gcid = reinterpret_cast<int*>(gamecontroller);
+
+    if (*gcid < 0 || *gcid >= shared_config.numControllers)
         return;
 
-    gcids[*gamecontroller] = -1;
+    gcids[*gcid] = -1;
 }

@@ -18,6 +18,7 @@
  */
 
 #include "sdlkeyboard.h"
+#include "../../external/SDL1.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
@@ -26,7 +27,7 @@
 Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
 Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
-/* Override */ Uint8* SDL_GetKeyboardState( int* numkeys)
+/* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
 

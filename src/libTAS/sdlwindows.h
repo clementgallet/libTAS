@@ -21,14 +21,13 @@
 #define LIBTAS_SDLWINDOWS_H_INCL
 
 #include "global.h"
-#include "../external/SDL.h"
+#include "../external/SDL1.h"
+#include <SDL2/SDL.h>
 #include "AVEncoder.h"
 #include <string>
 #include <memory>
 #include <X11/X.h>
-
-typedef void SDL_Window;
-typedef void SDL_Renderer;
+#include <X11/Xlib.h>
 
 extern SDL_Window* gameWindow;
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -174,20 +173,6 @@ OVERRIDE int SDL_GL_GetSwapInterval(void);
 OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 
 /**
- *  \brief Flags used when creating a rendering context
- */
-typedef enum
-{
-    SDL_RENDERER_SOFTWARE = 0x00000001,         /**< The renderer is a software fallback */
-    SDL_RENDERER_ACCELERATED = 0x00000002,      /**< The renderer uses hardware
-                                                     acceleration */
-    SDL_RENDERER_PRESENTVSYNC = 0x00000004,     /**< Present is synchronized
-                                                     with the refresh rate */
-    SDL_RENDERER_TARGETTEXTURE = 0x00000008     /**< The renderer supports
-                                                     rendering to texture */
-} SDL_RendererFlags;
-
-/**
  *  \brief Create a window and default renderer
  *
  *  \param width    The width of the window
@@ -291,13 +276,6 @@ OVERRIDE SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uin
  */
 OVERRIDE void SDL_GL_SwapBuffers(void);
 
-typedef enum {
-	SDL_GRAB_QUERY = -1,
-	SDL_GRAB_OFF = 0,
-	SDL_GRAB_ON = 1,
-	SDL_GRAB_FULLSCREEN	/**< Used internally */
-} SDL_GrabMode;
-
 /**
  * On hardware that supports double-buffering, this function sets up a flip
  * and returns.  The hardware will wait for vertical retrace, and then swap
@@ -318,7 +296,7 @@ OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
  * and nearly all keyboard input is passed directly to the application,
  * and not interpreted by a window manager, if any.
  */
-OVERRIDE SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
+OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
 
 void link_sdlwindows(void);
 

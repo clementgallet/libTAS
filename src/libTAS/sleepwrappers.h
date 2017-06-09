@@ -22,7 +22,8 @@
 
 #include <time.h>
 #include <unistd.h>
-#include "../external/SDL.h"
+// #include "../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "global.h"
 
 /* Sleep USECONDS microseconds, or until a signal arrives that is not blocked

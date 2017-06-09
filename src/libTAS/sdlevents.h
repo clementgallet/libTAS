@@ -21,7 +21,8 @@
 #define LIBTAS_SDLEVENTS_H_INCLUDED
 
 #include "global.h"
-#include "../external/SDL.h"
+#include "../external/SDL1.h"
+#include <SDL2/SDL.h>
 
 /* Pull all events from the SDL event queue and push them into our
  * emulated event queue, filtering unwanted events (input events mainly).
@@ -111,8 +112,6 @@ OVERRIDE int SDL_WaitEventTimeout(SDL_Event * event, int timeout);
  */
 OVERRIDE int SDL_PushEvent(SDL_Event * event);
 
-typedef int (* SDL_EventFilter) (void *userdata, SDL_Event * event);
-
 /**
  *  Sets up a filter to process all events before they change internal state and
  *  are posted to the internal event queue.
@@ -147,9 +146,9 @@ OVERRIDE void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata);
  *  including the return type. So we must declare a function compatible
  *  with both prototypes.
  */
-OVERRIDE void* SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata);
+OVERRIDE SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata);
 //SDL1::SDL_EventFilter SDL_GetEventFilter(void);
-//SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata);
+// SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata);
 
 /**
  *  Add a function which is called when an event is added to the queue.
@@ -166,12 +165,6 @@ OVERRIDE void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata);
  *  events for which the filter returns 0.
  */
 OVERRIDE void SDL_FilterEvents(SDL_EventFilter filter, void *userdata);
-
-/* @{ */
-#define SDL_QUERY   -1
-#define SDL_IGNORE   0
-#define SDL_DISABLE  0
-#define SDL_ENABLE   1
 
 /**
  *  This function allows you to set the state of processing certain events.

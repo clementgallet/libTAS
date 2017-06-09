@@ -20,15 +20,9 @@
 #ifndef LIBTAS_SDLJOYSTICK_H_INCL
 #define LIBTAS_SDLJOYSTICK_H_INCL
 
-#include "../../external/SDL.h"
+// #include "../../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "../global.h"
-
-typedef int SDL_Joystick;
-
-/* A structure that encodes the stable unique id for a joystick device */
-typedef struct {
-    Uint8 data[16];
-} SDL_JoystickGUID;
 
 /**
  *  Count the number of joysticks attached to the system right now
@@ -148,21 +142,6 @@ OVERRIDE int SDL_JoystickEventState(int state);
 OVERRIDE Sint16 SDL_JoystickGetAxis(SDL_Joystick * joystick, int axis);
 
 /**
- *  \name Hat positions
- */
-/* @{ */
-#define SDL_HAT_CENTERED    0x00
-#define SDL_HAT_UP          0x01
-#define SDL_HAT_RIGHT       0x02
-#define SDL_HAT_DOWN        0x04
-#define SDL_HAT_LEFT        0x08
-#define SDL_HAT_RIGHTUP     (SDL_HAT_RIGHT|SDL_HAT_UP)
-#define SDL_HAT_RIGHTDOWN   (SDL_HAT_RIGHT|SDL_HAT_DOWN)
-#define SDL_HAT_LEFTUP      (SDL_HAT_LEFT|SDL_HAT_UP)
-#define SDL_HAT_LEFTDOWN    (SDL_HAT_LEFT|SDL_HAT_DOWN)
-/* @} */
-
-/**
  *  Get the current state of a POV hat on a joystick.
  *
  *  The hat indices start at index 0.
@@ -201,22 +180,9 @@ OVERRIDE Uint8 SDL_JoystickGetButton(SDL_Joystick * joystick, int button);
  */
 OVERRIDE void SDL_JoystickClose(SDL_Joystick * joystick);
 
-
-typedef enum
-{
-    SDL_JOYSTICK_POWER_UNKNOWN = -1,
-    SDL_JOYSTICK_POWER_EMPTY,
-    SDL_JOYSTICK_POWER_LOW,
-    SDL_JOYSTICK_POWER_MEDIUM,
-    SDL_JOYSTICK_POWER_FULL,
-    SDL_JOYSTICK_POWER_WIRED,
-    SDL_JOYSTICK_POWER_MAX
-} SDL_JoystickPowerLevel;
-
 /**
  *  Return the battery level of this joystick
  */
 OVERRIDE SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick);
 
 #endif
-

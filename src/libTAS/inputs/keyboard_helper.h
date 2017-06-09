@@ -20,7 +20,9 @@
 #ifndef LIBTAS_KEYBOARDHELPER_H_INCLUDED
 #define LIBTAS_KEYBOARDHELPER_H_INCLUDED
 
-#include "../../external/SDL.h"
+#include "../../external/SDL1.h"
+#include <SDL2/SDL.h>
+#include <X11/XKBlib.h>
 #include <X11/keysym.h>
 
 /* Helper functions to translate from a Xlib KeySym to
@@ -48,4 +50,3 @@ void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym);
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym);
 
 #endif
-

@@ -22,10 +22,10 @@
 
 #include <time.h>
 #include <unistd.h>
-#include "../external/SDL.h"
+// #include "../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "global.h"
 
-typedef int SDL_TimerID;
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
 /**

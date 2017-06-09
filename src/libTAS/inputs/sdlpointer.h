@@ -20,7 +20,8 @@
 #ifndef LIBTAS_SDLPOINTER_H_INCL
 #define LIBTAS_SDLPOINTER_H_INCL
 
-#include "../../external/SDL.h"
+#include "../../external/SDL1.h"
+#include <SDL2/SDL.h>
 #include "inputs.h"
 #include "../global.h"
 #include "../sdlwindows.h" // SDL_Window
@@ -239,19 +240,4 @@ OVERRIDE int SDL_ShowCursor(int toggle);
  *   - Button 3:  Right mouse button
  */
 
-/* Enum instead */
-enum {
-    SDL_BUTTON_LEFT = 1,
-    SDL_BUTTON_MIDDLE = 2,
-    SDL_BUTTON_RIGHT = 3,
-    SDL_BUTTON_X1 = 4,
-    SDL_BUTTON_X2 = 5,
-    SDL_BUTTON_LMASK = (1 << ((1)-1)),
-    SDL_BUTTON_MMASK = (1 << ((2)-1)),
-    SDL_BUTTON_RMASK = (1 << ((3)-1)),
-    SDL_BUTTON_X1MASK = (1 << ((4)-1)),
-    SDL_BUTTON_X2MASK = (1 << ((5)-1)),
-};
-
 #endif
-

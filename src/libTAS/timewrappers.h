@@ -22,7 +22,8 @@
 
 #include <time.h>
 #include <unistd.h>
-#include "../external/SDL.h"
+// #include "../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "hook.h"
 // #include <stdbool.h>
 #include "global.h"

@@ -20,12 +20,12 @@
 #ifndef LIBTAS_SDLKEYBOARD_H_INCL
 #define LIBTAS_SDLKEYBOARD_H_INCL
 
-#include "../../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "../global.h"
 #include "../sdlwindows.h" // SDL_Window and gameWindow
 
 /* Keyboard functions */
-OVERRIDE Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
+OVERRIDE const Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
 OVERRIDE Uint8* SDL_GetKeyState(int* numkeys); // SDL 1
 OVERRIDE SDL_Window* SDL_GetKeyboardFocus(void);
 

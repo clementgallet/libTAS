@@ -54,14 +54,15 @@ const char* joyname = "Microsoft X-Box 360 pad";
 }
 
 #define MAX_SDLJOYS 4
-static SDL_Joystick joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
+static int joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
 
 /* Helper functions */
 static bool isIdValid(SDL_Joystick* joy)
 {
     if (joy == NULL)
         return false;
-    if ((*joy < 0) || (*joy >= MAX_SDLJOYS) || (*joy >= shared_config.numControllers))
+    int *joyid = reinterpret_cast<int*>(joy);
+    if ((*joyid < 0) || (*joyid >= MAX_SDLJOYS) || (*joyid >= shared_config.numControllers))
         return false;
     return true;
 }
@@ -70,7 +71,8 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 {
     if (!isIdValid(joy))
         return false;
-    if (joyids[*joy] == -1)
+    int *joyid = reinterpret_cast<int*>(joy);
+    if (joyids[*joyid] == -1)
         return false;
     return true;
 }
@@ -89,7 +91,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
     /* Opening the joystick device */
     joyids[device_index] = device_index;
-    return &joyids[device_index];
+    return reinterpret_cast<SDL_Joystick*>(&joyids[device_index]);
 }
 
 /* Override */ SDL_Joystick *SDL_JoystickFromInstanceID(SDL_JoystickID joyid)
@@ -104,7 +106,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
         /* Device not opened */
         return NULL;
 
-    return &joyids[joyid];
+    return reinterpret_cast<SDL_Joystick*>(&joyids[joyid]);
 }
 
 /* Xbox 360 GUID */
@@ -131,7 +133,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
 /* Override */ SDL_bool SDL_JoystickGetAttached(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*joystick:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return SDL_FALSE;
 
@@ -141,7 +143,7 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 /* Override */ int SDL_JoystickOpened(int device_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
-    if (!isIdValidOpen(&device_index))
+    if (!isIdValidOpen(reinterpret_cast<SDL_Joystick*>(&device_index)))
         return 0;
 
     return 1;
@@ -149,21 +151,21 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
 /* Override */ SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*joystick:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValid(joystick))
         return -1;
 
     /* This function can be called without the joystick been opened... */
-    return static_cast<SDL_JoystickID>(*joystick);
+    return static_cast<SDL_JoystickID>(*reinterpret_cast<int*>(joystick));
 }
 
 int SDL_JoystickIndex(SDL_Joystick *joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*joystick:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return -1;
 
-    return static_cast<int>(*joystick);
+    return *reinterpret_cast<int*>(joystick);
 }
 
 /* Override */ int SDL_JoystickNumAxes(SDL_Joystick* joystick)
@@ -273,7 +275,9 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     if (axis >= 6)
         return 0;
 
-    return game_ai.controller_axes[*joystick][axis];
+    int *joyid = reinterpret_cast<int*>(joystick);
+
+    return game_ai.controller_axes[*joyid][axis];
 }
 
 /* Override */ Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat)
@@ -286,14 +290,16 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     if (hat > 0)
         return 0;
 
+    int *joyid = reinterpret_cast<int*>(joystick);
+
     Uint8 hatState = SDL_HAT_CENTERED;
-    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
+    if (game_ai.controller_buttons[*joyid] & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
         hatState |= SDL_HAT_UP;
-    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+    if (game_ai.controller_buttons[*joyid] & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
         hatState |= SDL_HAT_DOWN;
-    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+    if (game_ai.controller_buttons[*joyid] & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
         hatState |= SDL_HAT_LEFT;
-    if (game_ai.controller_buttons[*joystick] & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+    if (game_ai.controller_buttons[*joyid] & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
         hatState |= SDL_HAT_RIGHT;
 
     return hatState;
@@ -315,16 +321,20 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     if (button >= 11)
         return 0;
 
-    return (game_ai.controller_buttons[*joystick] >> button) & 0x1;
+    int *joyid = reinterpret_cast<int*>(joystick);
+
+    return (game_ai.controller_buttons[*joyid] >> button) & 0x1;
 }
 
 /* Override */ void SDL_JoystickClose(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*joystick:-1);
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return;
 
-    joyids[*joystick] = -1;
+    int *joyid = reinterpret_cast<int*>(joystick);
+
+    joyids[*joyid] = -1;
 }
 
 /* Override */ SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick)

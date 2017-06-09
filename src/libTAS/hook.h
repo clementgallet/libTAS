@@ -20,7 +20,7 @@
 #ifndef LIBTAS_HOOK_H_INCLUDED
 #define LIBTAS_HOOK_H_INCLUDED
 
-#include "../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "dlhook.h"
 
 /* Version of the SDL library */
@@ -53,4 +53,3 @@ bool link_function(void** function, const char* source, const char* library, con
 int get_sdlversion(void);
 
 #endif
-

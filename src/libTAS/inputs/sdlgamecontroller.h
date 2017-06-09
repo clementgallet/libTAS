@@ -21,19 +21,8 @@
 #define LIBTAS_SDLGAMECONTROLLER_H_INCL
 
 #include "sdljoystick.h"
-#include "../../external/SDL.h"
+#include <SDL2/SDL.h>
 #include "../global.h"
-
-/* 
- * Declaring SDL_GameController structs
- * to be simply an int containing the controller id.
- * This struct is normally internal struct that is not
- * revealed by the API, so members of the struct won't be used
- * by the games.
- * The downside is that we have to implement all functions that
- * use this struct, otherwise we will probably get a crash.
- */
-typedef int SDL_GameController;
 
 /**
  *  Is the joystick on this index supported by the game controller interface?
@@ -141,4 +130,3 @@ OVERRIDE void SDL_GameControllerClose(SDL_GameController *gamecontroller);
 // const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button);
 
 #endif
-

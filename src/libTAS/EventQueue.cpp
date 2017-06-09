@@ -21,7 +21,7 @@
 #include "logging.h"
 #include "string.h"
 #include "hook.h"
-#include "../external/SDL.h"
+// #include "../external/SDL.h"
 
 EventQueue sdlEventQueue;
 
@@ -84,7 +84,7 @@ void EventQueue::insert(SDL_Event* event)
         watch.first(watch.second, event);
     }
 
-    /* 4. Check the size of the queue */    
+    /* 4. Check the size of the queue */
     if (eventQueue.size() > 1024)
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
 
@@ -138,7 +138,7 @@ int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, 
 
         /* Check if event match the filter */
         if ((ev->type >= minType) && (ev->type <= maxType)) {
-    
+
             /* Copy the event in the array */
             memcpy(&events[evi], ev, sizeof(SDL_Event));
             evi++;
@@ -177,8 +177,8 @@ int EventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
         SDL1::SDL_Event* ev = static_cast<SDL1::SDL_Event*>(*it);
 
         /* Check if event match the filter */
-        if (mask & SDL_EVENTMASK(ev->type)) {
-    
+        if (mask & SDL1_EVENTMASK(ev->type)) {
+
             /* Copy the event in the array */
             memcpy(&events[evi], ev, sizeof(SDL1::SDL_Event));
             evi++;
@@ -230,7 +230,7 @@ void EventQueue::flush(Uint32 mask)
         SDL1::SDL_Event* ev = static_cast<SDL1::SDL_Event*>(*it);
 
         /* Check if event match the filter */
-        if (mask & SDL_EVENTMASK(ev->type)) {
+        if (mask & SDL1_EVENTMASK(ev->type)) {
             /* Deleting the object and removing it from the list */
             delete ev;
             it = eventQueue.erase(it);
@@ -296,7 +296,3 @@ void EventQueue::delWatch(SDL_EventFilter filter, void* userdata)
     if (it != watches.end())
         watches.erase(it);
 }
-
-
-
-

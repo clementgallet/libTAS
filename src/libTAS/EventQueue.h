@@ -22,7 +22,8 @@
 
 #include <list>
 #include <set>
-#include "../external/SDL.h"
+#include "../external/SDL1.h"
+#include <SDL2/SDL.h>
 #include "sdlevents.h" // SDL_EventFilter
 
 /* This is a replacement of the SDL event queue.
@@ -101,4 +102,3 @@ class EventQueue
 extern EventQueue sdlEventQueue;
 
 #endif
-

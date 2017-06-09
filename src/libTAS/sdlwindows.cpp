@@ -29,6 +29,7 @@
 #include "renderhud/RenderHUD_SDL2.h"
 #include "timewrappers.h"
 #include "screenpixels.h"
+#include <SDL2/SDL_syswm.h>
 
 /*
  * Store the game window pointer
@@ -470,11 +471,11 @@ void updateTitle(float fps, float lfps)
     return 0;
 }
 
-/* Override */ SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode)
+/* Override */ SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, __func__, " call with mode ", mode);
-    static SDL_GrabMode fakeGrab = SDL_GRAB_OFF;
-    if (mode != SDL_GRAB_QUERY)
+    static SDL1::SDL_GrabMode fakeGrab = SDL1::SDL_GRAB_OFF;
+    if (mode != SDL1::SDL_GRAB_QUERY)
         fakeGrab = mode;
     return fakeGrab;
 }

@@ -21,11 +21,12 @@
 #define LIBTAS_SCREENPIXELS_H_INCL
 
 #include <stdint.h>
+#include <SDL2/SDL.h>
 
 /* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
  */
-int initScreenPixels(void* window, bool video_opengl, int *pwidth, int *pheight);
+int initScreenPixels(SDL_Window* window, bool video_opengl, int *pwidth, int *pheight);
 
 /* Called when screen is closed or resized */
 void finiScreenPixels();
@@ -34,7 +35,7 @@ void finiScreenPixels();
 #include <libavutil/pixfmt.h>
 
 /* Get the pixel format as an enum used by ffmpeg library. */
-AVPixelFormat getPixelFormat(void* window);
+AVPixelFormat getPixelFormat(SDL_Window* window);
 
 #endif
 
@@ -50,6 +51,6 @@ AVPixelFormat getPixelFormat(void* window);
 int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[]);
 
 /* Set the screen pixels from our buffers */
-int setScreenPixels();
+int setScreenPixels(SDL_Window* window);
 
 #endif

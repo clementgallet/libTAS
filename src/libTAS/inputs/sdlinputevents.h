@@ -20,7 +20,6 @@
 #ifndef LIBTAS_SDLINPUTEVENTS_H_INCL
 #define LIBTAS_SDLINPUTEVENTS_H_INCL
 
-#include "../../external/SDL.h"
 #include "../global.h"
 
 /* Generate events of type SDL_KEYUP, store them in our emulated event queue */
@@ -42,4 +41,3 @@ void generateSDLMouseMotionEvents(void);
 void generateSDLMouseButtonEvents(void);
 
 #endif
-
