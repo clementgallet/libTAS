@@ -56,6 +56,7 @@ static Fl_Callback osd_encode_cb;
 static Fl_Callback time_main_cb;
 static Fl_Callback time_sec_cb;
 static Fl_Callback render_soft_cb;
+static Fl_Callback savestate_screen_cb;
 
 MainWindow::~MainWindow()
 {
@@ -215,6 +216,9 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {"SDL_GetTicks()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETTICKS), FL_MENU_TOGGLE},
                 {"SDL_GetPerformanceCounter()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER), FL_MENU_TOGGLE},
                 {nullptr},
+            {nullptr},
+        {"Savestates", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Save screen in savestates", 0, savestate_screen_cb, nullptr, FL_MENU_TOGGLE},
             {nullptr},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
             {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_RADIO},
@@ -484,9 +488,9 @@ void MainWindow::update_config()
         menu_item = menu_item->next(); \
     } while (menu_item->flags)
 
-SET_RADIO_FROM_LIST(sound_frequency_cb, context->config.sc.audio_frequency);
-SET_RADIO_FROM_LIST(sound_bitdepth_cb, context->config.sc.audio_bitdepth);
-SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
+    SET_RADIO_FROM_LIST(sound_frequency_cb, context->config.sc.audio_frequency);
+    SET_RADIO_FROM_LIST(sound_bitdepth_cb, context->config.sc.audio_bitdepth);
+    SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
 
     menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
     if (context->config.sc.audio_mute) {
@@ -499,14 +503,6 @@ SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
     }
 
     SET_RADIO_FROM_LIST(logging_status_cb, context->config.sc.logging_status);
-    // Fl_Menu_Item* logging_status_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(logging_status_cb));
-    // while (logging_status_item->flags) {
-    //     if (static_cast<SharedConfig::LogStatus>(logging_status_item->argument()) == context->config.sc.logging_status) {
-    //         logging_status_item->setonly();
-    //         break;
-    //     }
-    //     logging_status_item = logging_status_item->next();
-    // }
 
     SET_TOGGLES_FROM_MASK(logging_print_cb, context->config.sc.includeFlags);
     SET_TOGGLES_FROM_MASK(logging_exclude_cb, context->config.sc.excludeFlags);
@@ -546,6 +542,7 @@ SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
     SET_TOGGLES_FROM_MASK(inputs_focus_cb, context->inputs_focus);
 
     SET_TOGGLE_FROM_BOOL(render_soft_cb, context->config.opengl_soft);
+    SET_TOGGLE_FROM_BOOL(savestate_screen_cb, context->config.sc.save_screenpixels);
 
 }
 
@@ -971,6 +968,16 @@ void render_soft_cb(Fl_Widget* w, void* v)
 
     mw.context->config.opengl_soft = menu_item->value();
 }
+
+void savestate_screen_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    const Fl_Menu_Item* menu_item = mw.menu_bar->mvalue();
+
+    mw.context->config.sc.save_screenpixels = menu_item->value();
+    mw.context->config.sc_modified = true;
+}
+
 
 
 void error_dialog(void* error_msg)

@@ -395,6 +395,11 @@ void launchGame(Context* context)
                     if (hk.type == HOTKEY_LOADSTATE){
                         message = MSGN_LOADSTATE;
                         send(socket_fd, &message, sizeof(int), 0);
+                        /* The copy of SharedConfig that the game stores may not
+                         * be the same as this one due to memory loading, so we
+                         * send it.
+                         */
+                        context->config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->recording) {

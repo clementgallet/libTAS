@@ -86,6 +86,7 @@ void Config::save() {
 #endif
     prefs_shared.set("main_gettimes_threshold", static_cast<void*>(sc.main_gettimes_threshold), sizeof(sc.main_gettimes_threshold));
     prefs_shared.set("sec_gettimes_threshold", static_cast<void*>(sc.sec_gettimes_threshold), sizeof(sc.sec_gettimes_threshold));
+    prefs_shared.set("save_screenpixels", static_cast<int>(sc.save_screenpixels));
 }
 
 void Config::load(const std::string& gamepath) {
@@ -211,6 +212,7 @@ void Config::load(const std::string& gamepath) {
     GETWITHTYPE(audio_codec, AVCodecID);
     GETWITHTYPE(audio_bitrate, int);
     #endif
+    GETWITHTYPE(save_screenpixels, bool);
 
     const int def_data[SharedConfig::TIMETYPE_NUMTRACKEDTYPES] = {};
     void* vdata;

@@ -98,6 +98,7 @@ void handler(int signum)
             last_request_read = static_cast<uint64_t>(display->last_request_read);
             request = static_cast<uint64_t>(display->request);
 #endif
+        // Save also dpy->xcb->last_flushed ?
         }
 
         readAllAreas();
