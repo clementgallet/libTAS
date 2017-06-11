@@ -39,7 +39,6 @@ class ThreadManager {
     //This will register every pthread created for each start_routine
     // static std::map<std::ptrdiff_t, std::set<pthread_t>> threadMap_;
 
-    static ThreadInfo* thread_list;
     static ThreadInfo* free_list;
     static thread_local ThreadInfo* current_thread;
 
@@ -60,6 +59,8 @@ class ThreadManager {
 
 
 public:
+    static ThreadInfo* thread_list;
+
     static volatile bool restoreInProgress;
 
     // Called from SDL_init, assumed to be main thread

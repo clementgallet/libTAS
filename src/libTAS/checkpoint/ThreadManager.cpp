@@ -289,12 +289,12 @@ void ThreadManager::restore()
      * getcontext/setcontext for this thread!
      */
 
-    /* I don't know how compiler optimisation works on this, but if I remove
-     * this line (which is not reached btw), then after the end of the signal
-     * handler function, the program considers it has reached the end of this
-     * function and returns, instead of continuing in ThreadManager::checkpoint()
-     */
-    debuglog(LCF_ERROR, "NOTREACHED");
+     /* If restore was not done, we return here */
+     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
+     resumeThreads();
+     waitForAllRestored(current_thread);
+
+     ThreadSync::releaseLocks();
 }
 
 bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval)

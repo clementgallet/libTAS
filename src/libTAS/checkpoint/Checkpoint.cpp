@@ -23,6 +23,7 @@
 #include "ThreadManager.h"
 #include "../logging.h"
 #include "ProcSelfMaps.h"
+#include "StateHeader.h"
 #include "Utils.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -231,9 +232,19 @@ static bool skipArea(Area *area)
 
 void writeAllAreas()
 {
-    Area area;
+    int fd = creat(SAVESTATEPATH, 0644);
+    MYASSERT(fd != -1)
 
     debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint.");
+
+    /* Saving the savestate header */
+    StateHeader sh;
+    int n=0;
+    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+        sh.thread_tids[n++] = thread->tid;
+    }
+    sh.thread_count = n;
+    Utils::writeAll(fd, &sh, sizeof(sh));
 
     /* Parse the content of /proc/self/maps into memory.
      * We don't allocate memory here, we are using our special allocated
@@ -241,9 +252,7 @@ void writeAllAreas()
      */
     ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
 
-    int fd = creat(SAVESTATEPATH, 0644);
-    MYASSERT(fd != -1)
-
+    Area area;
     while (procSelfMaps.getNextArea(&area)) {
 
         if (skipArea(&area)) {
@@ -361,6 +370,27 @@ void readAllAreas()
     int fd = open(SAVESTATEPATH, O_RDONLY);
     MYASSERT(fd != -1)
 
+    /* Read the savestate header */
+    StateHeader sh;
+    Utils::readAll(fd, &sh, sizeof(sh));
+
+    /* Check that the thread list is identical */
+    int n=0;
+    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+        for (int t=0; t<sh.thread_count; t++) {
+            if (sh.thread_tids[t] == thread->tid) {
+                n++;
+                break;
+            }
+        }
+    }
+
+    if (n != sh.thread_count) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
+        MYASSERT(close(fd) == 0);
+        return;
+    }
+
     Area current_area;
     Area saved_area;
 
@@ -393,6 +423,9 @@ void readAllAreas()
             Utils::readAll(fd, &saved_area, sizeof saved_area);
         }
     }
+
+    /* That's all folks */
+    MYASSERT(close(fd) == 0);
 }
 
 int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
