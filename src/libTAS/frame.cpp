@@ -172,8 +172,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         // debuglog(LCF_ERROR | LCF_FRAME, "Sent error message: ", error);
     }
 
-    sendMessage(MSGB_START_FRAMEBOUNDARY);
+    sendMessage(MSGB_FRAMECOUNT);
     sendData(&frame_counter, sizeof(unsigned long));
+
+    sendMessage(MSGB_START_FRAMEBOUNDARY);
 
     proceed_commands();
 
@@ -237,17 +239,37 @@ void proceed_commands(void)
 
             case MSGN_SAVESTATE:
                 ThreadManager::checkpoint();
-                if (shared_config.save_screenpixels) {
-                    /* Refresh the screen. We don't know if we came here from
-                     * checkpoint() or restore() so we update the screen in both
-                     * cases.
+                /* Don't forget that when we load a savestate, the game continues
+                 * from here and not from ThreadManager::restore() under.
+                 * To check if we did restored or returned from a checkpoint,
+                 * we look at variable ThreadManager::restoreInProgress.
+                 */
+
+                if (ThreadManager::restoreInProgress) {
+                    if (shared_config.save_screenpixels) {
+                        /* If we restored from a savestate, refresh the screen */
+                        setScreenPixels(gameWindow);
+                    }
+
+                    /* We must send again the frame count because it probably has
+                     * changed.
                      */
-                    setScreenPixels(gameWindow);
+                    sendMessage(MSGB_FRAMECOUNT);
+                    sendData(&frame_counter, sizeof(unsigned long));
                 }
+
                 break;
 
             case MSGN_LOADSTATE:
                 ThreadManager::restore();
+
+                /* If restoring failed, we return here. We must still send the
+                 * frame count because the program does not know that restore
+                 * failed.
+                 */
+                sendMessage(MSGB_FRAMECOUNT);
+                sendData(&frame_counter, sizeof(unsigned long));
+
                 break;
 
             case MSGN_END_FRAMEBOUNDARY:

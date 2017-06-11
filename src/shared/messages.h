@@ -24,10 +24,15 @@
 enum {
     /*
      * The game notices the program that he reached a frame boundary.
-     * Then he sends the frame number
-     * Argument: unsigned long
+     * Argument: none
      */
     MSGB_START_FRAMEBOUNDARY,
+
+    /*
+     * The game sends the frame number
+     * Argument: unsigned long
+     */
+    MSGB_FRAMECOUNT,
 
     /*
      * Send all inputs to the game

@@ -250,6 +250,10 @@ void launchGame(Context* context)
                 context->config.sc_modified = true;
                 ui.update(true);
                 break;
+            case MSGB_FRAMECOUNT:
+                recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
+                ui.update(false);
+                break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
                 return;
@@ -265,11 +269,6 @@ void launchGame(Context* context)
         if (message == MSGB_QUIT) {
             break;
         }
-
-        /* message was MSGB_START_FRAMEBOUNDARY, gathering the frame count */
-        recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
-        /* Update frame count in the UI */
-        ui.update(false);
 
         /* Check if we are loading a pseudo savestate */
         if (pseudosavestate.loading) {
@@ -400,6 +399,15 @@ void launchGame(Context* context)
                          * send it.
                          */
                         context->config.sc_modified = true;
+
+                        /* The frame count has changed, we must get the new one */
+                        recv(socket_fd, &message, sizeof(int), 0);
+                        if (message != MSGB_FRAMECOUNT) {
+                            std::cerr << "Got wrong message after state loading" << std::endl;
+                            return;
+                        }
+                        recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
+
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->recording) {
