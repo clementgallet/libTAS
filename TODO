@@ -9,7 +9,6 @@
 ### Features
 
 - Add a memory watch/search module
-- Add fake-savestating (saving inputs and reset/fastforward/pause)
 
 ### Fixes
 
@@ -25,23 +24,19 @@
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates (good luck)
--- Implement alternate ways to save/load the game memory (direct read into /proc/pid/mem and ptrace calls, or criu)
--- Disable openAL sound, remove one error
--- Output the game into a dummy X server (xvfb) and show this server on the real one
--- Hook low-level memory allocation functions (brk/mmap) instead of malloc
--- look at DMTCP (http://dmtcp.sourceforge.net/)
+-- Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
--- Hook pulse audio (shovel knight?)
+-- Hook pulse audio (shovel knight? superhexagon)
 - Add an interface (fltk)
--- Add HUD options
--- Enable/disable time-advance hack for child threads
+-- Add game commandline options
 - Record inputs and support playback
 -- Write extra (sync) informations in the movie file
 
 ## Done
 
+- Add fake-savestating (saving inputs and reset/fastforward/pause)
 - Add config file for hotkeys and key remapping
 - Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)
 - Don't send keys that correspond to hotkeys
@@ -62,4 +57,3 @@
 - Memory manager
 - Support software rendering
 - Add inputs into the game screen
-

@@ -57,6 +57,7 @@ static Fl_Callback time_main_cb;
 static Fl_Callback time_sec_cb;
 static Fl_Callback render_soft_cb;
 static Fl_Callback savestate_screen_cb;
+static Fl_Callback0 cmdoptions_cb;
 
 MainWindow::~MainWindow()
 {
@@ -74,15 +75,21 @@ void MainWindow::build(Context* c)
     menu_bar->menu(menu_items);
 
     /* Game Executable */
-    gamepath = new Fl_Output(10, 300, 500, 30, "Game Executable");
+    gamepath = new Fl_Output(10, 240, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->color(FL_LIGHT1);
 
-    browsegamepath = new Fl_Button(520, 300, 70, 30, "Browse...");
+    browsegamepath = new Fl_Button(520, 240, 70, 30, "Browse...");
     browsegamepath->callback(browse_gamepath_cb);
 
     gamepathchooser = new Fl_Native_File_Chooser();
     gamepathchooser->title("Game path");
+
+    /* Command-line options */
+    cmdoptions = new Fl_Input(10, 300, 500, 30, "Command-line options");
+    cmdoptions->align(FL_ALIGN_TOP_LEFT);
+    cmdoptions->callback(cmdoptions_cb);
+    // cmdoptions->color(FL_LIGHT1);
 
     /* Movie File */
     moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
@@ -111,17 +118,17 @@ void MainWindow::build(Context* c)
     moviepack->end();
 
     /* Frames per second */
-    logicalfps = new Fl_Int_Input(160, 200, 40, 30, "Frames per second");
+    logicalfps = new Fl_Int_Input(160, 180, 40, 30, "Frames per second");
     logicalfps->callback(set_fps_cb);
 
     /* Pause/FF */
     pausecheck = new Fl_Check_Button(240, 140, 80, 20, "Pause");
     pausecheck->callback(pause_cb);
-    fastforwardcheck = new Fl_Check_Button(240, 180, 80, 20, "Fast-forward");
+    fastforwardcheck = new Fl_Check_Button(240, 170, 80, 20, "Fast-forward");
     fastforwardcheck->callback(fastforward_cb);
 
     /* Mute */
-    mutecheck = new Fl_Check_Button(240, 220, 80, 20, "Mute");
+    mutecheck = new Fl_Check_Button(240, 200, 80, 20, "Mute");
     mutecheck->callback(mute_sound_cb);
 #ifndef LIBTAS_ENABLE_SOUNDPLAYBACK
     mutecheck->label("Mute (disabled)");
@@ -453,6 +460,7 @@ void MainWindow::update_config()
 {
     gamepath->value(context->gamepath.c_str());
     gamepathchooser->preset_file(context->gamepath.c_str());
+    cmdoptions->value(context->config.gameargs.c_str());
     moviepath->value(context->config.moviefile.c_str());
     moviepathchooser->preset_file(context->config.moviefile.c_str());
     std::string fpsstr = std::to_string(context->config.sc.framerate);
@@ -978,7 +986,11 @@ void savestate_screen_cb(Fl_Widget* w, void* v)
     mw.context->config.sc_modified = true;
 }
 
-
+void cmdoptions_cb(Fl_Widget*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.context->config.gameargs = mw.cmdoptions->value();
+}
 
 void error_dialog(void* error_msg)
 {

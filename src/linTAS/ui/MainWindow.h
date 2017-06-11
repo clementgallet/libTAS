@@ -71,6 +71,7 @@ class MainWindow {
         Fl_Output *gamepath;
         Fl_Button *browsegamepath;
         Fl_Native_File_Chooser *gamepathchooser;
+        Fl_Input *cmdoptions;
 
         Fl_Output *moviepath;
         Fl_Button *browsemoviepath;
