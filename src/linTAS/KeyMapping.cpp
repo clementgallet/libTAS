@@ -87,10 +87,26 @@ KeyMapping::KeyMapping()
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVEPSEUDOSTATE, "Save Pseudo State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADPSEUDOSTATE, "Load Pseudo State"});
-    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE, "Save State"});
-    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE, "Load State"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE1, "Save State 1"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE2, "Save State 2"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE3, "Save State 3"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE4, "Save State 4"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE5, "Save State 5"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE6, "Save State 6"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE7, "Save State 7"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE8, "Save State 8"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVESTATE9, "Save State 9"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE1, "Load State 1"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE2, "Load State 2"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE3, "Load State 3"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE4, "Load State 4"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE5, "Load State 5"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE6, "Load State 6"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE7, "Load State 7"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE8, "Load State 8"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADSTATE9, "Load State 9"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
-    
+
     /* Set default hotkeys */
     default_hotkeys();
 

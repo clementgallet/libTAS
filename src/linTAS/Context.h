@@ -76,6 +76,9 @@ struct Context {
     /* Absolute path of the game executable */
     std::string gamepath;
 
+    /* Name of the game executable */
+    std::string gamename;
+
     /* PID of the game */
     pid_t game_pid;
 };

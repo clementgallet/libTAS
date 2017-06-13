@@ -91,10 +91,10 @@ public:
     static void deallocateThreads();
 
     /* Checkpoint */
-    static void checkpoint();
+    static void checkpoint(const char* savestatepath);
 
     /* Restore */
-    static void restore();
+    static void restore(const char* savestatepath);
 
     /* Safely try to change a ThreadInfo state and return if done */
     static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);

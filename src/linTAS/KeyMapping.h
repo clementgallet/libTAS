@@ -161,8 +161,24 @@ typedef int HotKeyType; enum
     HOTKEY_READWRITE, // Switch from read-only recording to write
     HOTKEY_SAVEPSEUDOSTATE, // Save the current frame
     HOTKEY_LOADPSEUDOSTATE, // Restart the game and playback inputs until frame
-    HOTKEY_SAVESTATE, // Save the entire state of the game
-    HOTKEY_LOADSTATE, // Load the entire state of the game
+    HOTKEY_SAVESTATE1, // Save the entire state of the game
+    HOTKEY_SAVESTATE2,
+    HOTKEY_SAVESTATE3,
+    HOTKEY_SAVESTATE4,
+    HOTKEY_SAVESTATE5,
+    HOTKEY_SAVESTATE6,
+    HOTKEY_SAVESTATE7,
+    HOTKEY_SAVESTATE8,
+    HOTKEY_SAVESTATE9,
+    HOTKEY_LOADSTATE1, // Load the entire state of the game
+    HOTKEY_LOADSTATE2,
+    HOTKEY_LOADSTATE3,
+    HOTKEY_LOADSTATE4,
+    HOTKEY_LOADSTATE5,
+    HOTKEY_LOADSTATE6,
+    HOTKEY_LOADSTATE7,
+    HOTKEY_LOADSTATE8,
+    HOTKEY_LOADSTATE9,
     HOTKEY_TOGGLE_ENCODE, // Start/stop audio/video encoding
     HOTKEY_LEN
 };

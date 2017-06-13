@@ -235,11 +235,14 @@ void ThreadManager::deallocateThreads()
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
-void ThreadManager::checkpoint()
+void ThreadManager::checkpoint(const char* savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
+    // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Checkpo fi ", savestatepath);
 
     ThreadSync::acquireLocks();
+
+    Checkpoint::setSavestatePath(savestatepath);
 
     restoreInProgress = false;
 
@@ -267,10 +270,19 @@ void ThreadManager::checkpoint()
     ThreadSync::releaseLocks();
 }
 
-void ThreadManager::restore()
+void ThreadManager::restore(const char* savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
     ThreadSync::acquireLocks();
+    // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restore fi ", savestatepath);
+
+    Checkpoint::setSavestatePath(savestatepath);
+
+    /* Perform a series of checks before attempting to restore */
+    if (!Checkpoint::checkRestore()) {
+        ThreadSync::releaseLocks();
+        return;
+    }
 
     restoreInProgress = false;
 
@@ -428,7 +440,7 @@ void ThreadManager::stopThisThread(int signum)
         // save_sp(&curThread->saved_sp);
 
         debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext");
-        printBacktrace();
+        // printBacktrace();
 
         if (!restoreInProgress) {
 

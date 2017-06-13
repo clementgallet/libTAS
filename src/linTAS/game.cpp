@@ -32,10 +32,11 @@
 #include "MovieFile.h"
 #include <cerrno>
 
-#define SOCKET_FILENAME "/tmp/libTAS.socket"
-
 PseudoSaveState pseudosavestate;
 
+/* Determine if we are allowed to send inputs to the game, based on which
+ * window has focus and our settings
+ */
 static bool haveFocus(Context* context)
 {
     if (context->inputs_focus & Context::FOCUS_ALL)
@@ -58,6 +59,16 @@ static bool haveFocus(Context* context)
 
 void launchGame(Context* context)
 {
+    /* Unvalidate the game window id */
+    context->game_window = 0;
+
+    /* Extract the game executable name from the game executable path */
+    size_t sep = context->gamepath.find_last_of("/");
+    if (sep != std::string::npos)
+        context->gamename = context->gamepath.substr(sep + 1);
+    else
+        context->gamename = context->gamepath;
+
     context->status = Context::ACTIVE;
     MainWindow& ui = MainWindow::getInstance();
     ui.update_status();
@@ -168,9 +179,6 @@ void launchGame(Context* context)
     int ar_ticks = -1;
     int ar_delay = 50;
     int ar_freq = 2;
-
-    /* Unvalidate the game window id */
-    context->game_window = 0;
 
     while (1)
     {
@@ -340,11 +348,25 @@ void launchGame(Context* context)
                             break;
                         }
                     }
-                    if (hk.type == HOTKEY_SAVESTATE){
+                    if (hk.type >= HOTKEY_SAVESTATE1 && hk.type <= HOTKEY_SAVESTATE9){
+                        /* Building the savestate path */
+                        int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
+                        std::string savestatepath = context->config.savestatedir + '/';
+                        savestatepath += context->gamename;
+                        savestatepath += ".state" + std::to_string(statei);
+
                         sendMessage(MSGN_SAVESTATE);
+                        sendString(savestatepath);
                     }
-                    if (hk.type == HOTKEY_LOADSTATE){
+                    if (hk.type >= HOTKEY_LOADSTATE1 && hk.type <= HOTKEY_LOADSTATE9){
+                        /* Building the savestate path */
+                        int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
+                        std::string savestatepath = context->config.savestatedir + '/';
+                        savestatepath += context->gamename;
+                        savestatepath += ".state" + std::to_string(statei);
+
                         sendMessage(MSGN_LOADSTATE);
+                        sendString(savestatepath);
 
                         /* The copy of SharedConfig that the game stores may not
                          * be the same as this one due to memory loading, so we

@@ -144,3 +144,11 @@ std::string receiveString()
     std::string str(buf.data(), str_size);
     return str;
 }
+
+void receiveCString(char* str)
+{
+    size_t str_size;
+    receiveData(&str_size, sizeof(size_t));
+    receiveData(str, str_size);
+    str[str_size] = '\0';
+}

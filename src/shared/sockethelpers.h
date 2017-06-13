@@ -57,5 +57,8 @@ int receiveMessage();
 /* Receive a string object from the socket. */
 std::string receiveString();
 
+/* Receive a char array from the socket. */
+void receiveCString(char* str);
+
 
 #endif

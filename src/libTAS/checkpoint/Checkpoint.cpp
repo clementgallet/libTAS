@@ -22,29 +22,28 @@
 #include "Checkpoint.h"
 #include "ThreadManager.h"
 #include "../logging.h"
+#include "ProcMapsArea.h"
 #include "ProcSelfMaps.h"
 #include "StateHeader.h"
 #include "Utils.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstring>
 #include <csignal>
 #include <X11/Xlibint.h>
-// #define XLIB_ILLEGAL_ACCESS
 #include "../sdlwindows.h"
-
-#define SAVESTATEPATH "/tmp/savestate"
 
 #define ONE_MB 1024 * 1024
 #define RESTORE_TOTAL_SIZE 5 * ONE_MB
 
-namespace Checkpoint {
-
 static intptr_t restoreAddr = 0;
 static size_t restoreLength = 0;
 
-void init()
+static const char* savestatepath;
+
+void Checkpoint::init()
 {
     /* Create a special place to hold restore memory.
      * will be used for the second stack we will switch to, as well as
@@ -77,49 +76,46 @@ void init()
     }
 }
 
-void handler(int signum)
+void Checkpoint::setSavestatePath(const char* filepath)
 {
+    /* We want to avoid any allocated memory here, so using char array */
+    savestatepath = filepath;
+}
 
-    if (ThreadManager::restoreInProgress) {
-        /* Before reading from the savestate, we must keep some values from
-         * the connection to the X server, because they are used for checking
-         * consistency of requests. We can store them in this (alternate) stack
-         * which will be preserved.
-         */
+bool Checkpoint::checkRestore()
+{
+    /* Check that the savestate file exists */
+    struct stat sb;
+    if (stat(savestatepath, &sb) == -1)
+        return false;
 
-        /* Access the X Window identifier from the SDL_Window struct */
-        Display *display = getXDisplay();
-        uint64_t last_request_read, request;
+    int fd;
+    OWNCALL(fd = open(savestatepath, O_RDONLY));
+    if (fd == -1)
+        return false;
 
-        if (display) {
-#ifdef X_DPY_GET_LAST_REQUEST_READ
-            last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
-            request = X_DPY_GET_REQUEST(display);
-#else
-            last_request_read = static_cast<uint64_t>(display->last_request_read);
-            request = static_cast<uint64_t>(display->request);
-#endif
-        // Save also dpy->xcb->last_flushed ?
-        }
+    /* Read the savestate header */
+    StateHeader sh;
+    Utils::readAll(fd, &sh, sizeof(sh));
+    close(fd);
 
-        readAllAreas();
-        /* restoreInProgress was overwritten, putting the right value again */
-        ThreadManager::restoreInProgress = true;
-
-        /* Restoring the display values */
-        if (display) {
-#ifdef X_DPY_SET_LAST_REQUEST_READ
-            X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
-            X_DPY_SET_REQUEST(display, request);
-#else
-            display->last_request_read = static_cast<unsigned long>(last_request_read);
-            display->request = static_cast<unsigned long>(request);
-#endif
+    /* Check that the thread list is identical */
+    int n=0;
+    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+        for (int t=0; t<sh.thread_count; t++) {
+            if (sh.thread_tids[t] == thread->tid) {
+                n++;
+                break;
+            }
         }
     }
-    else {
-        writeAllAreas();
+
+    if (n != sh.thread_count) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
+        return false;
     }
+
+    return true;
 }
 
 static bool skipArea(Area *area)
@@ -230,12 +226,102 @@ static bool skipArea(Area *area)
     return false;
 }
 
-void writeAllAreas()
-{
-    int fd = creat(SAVESTATEPATH, 0644);
-    MYASSERT(fd != -1)
 
-    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint.");
+/* This function returns a range of zero or non-zero pages. If the first page
+ * is non-zero, it searches for all contiguous non-zero pages and returns them.
+ * If the first page is all-zero, it searches for contiguous zero pages and
+ * returns them.
+ */
+static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
+{
+    static const size_t page_size = sysconf(_SC_PAGESIZE);
+
+    if (area.size < ONE_MB) {
+        size = area.size;
+        is_zero = false;
+        return;
+    }
+
+    intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
+
+    size = ONE_MB;
+    is_zero = Utils::areZeroPages(area.addr, ONE_MB / page_size);
+
+    // prevAddr = area.addr;
+    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + ONE_MB;
+    curAddrInt < endAddrInt;
+    curAddrInt += ONE_MB) {
+
+        size_t minsize = ((endAddrInt-curAddrInt)<ONE_MB)?(endAddrInt-curAddrInt):ONE_MB;
+        if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
+            break;
+        }
+        size += minsize;
+    }
+}
+
+static void writeAnAreaWithZeroPages(int fd, Area *orig_area)
+{
+    Area area = *orig_area;
+
+    while (area.size > 0) {
+        size_t size;
+        bool is_zero;
+        Area a = area;
+        getNextPageRange(a, size, is_zero);
+
+        a.properties = is_zero ? ZERO_PAGE : 0;
+        a.size = size;
+        void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
+        a.endAddr = endAddr;
+
+        Utils::writeAll(fd, &a, sizeof(a));
+        if (!is_zero) {
+            debuglogstdio(LCF_CHECKPOINT, "Found non zero pages starting %p of size %d", a.addr, a.size);
+            Utils::writeAll(fd, a.addr, a.size);
+        }
+        else {
+            debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
+        }
+        area.addr = endAddr;
+        area.size -= size;
+    }
+}
+
+static void writeAnArea(int fd, Area *area)
+{
+    if (!(area->flags & MAP_ANONYMOUS)) {
+        debuglogstdio(LCF_CHECKPOINT, "Save region %p (%s) with size %d", area->addr, area->name, area->size);
+    } else if (area->name[0] == '\0') {
+        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p with size %d", area->addr, area->size);
+    } else {
+        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p (%s) with size %d", area->addr, area->name, area->size);
+    }
+
+    if ((area->prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
+    }
+
+    if (area->name[0] == '\0') {
+        /* We look for zero pages in anonymous sections and skip saving them */
+        writeAnAreaWithZeroPages(fd, area);
+    }
+    else {
+        Utils::writeAll(fd, area, sizeof(*area));
+        Utils::writeAll(fd, area->addr, area->size);
+    }
+
+    if ((area->prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
+    }
+}
+
+static void writeAllAreas()
+{
+    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", savestatepath);
+    int fd;
+    OWNCALL(fd = creat(savestatepath, 0644));
+    MYASSERT(fd != -1)
 
     /* Saving the savestate header */
     StateHeader sh;
@@ -276,159 +362,8 @@ void writeAllAreas()
     MYASSERT(close(fd) == 0);
 }
 
-void writeAnArea(int fd, Area *area)
-{
-    if (!(area->flags & MAP_ANONYMOUS)) {
-        debuglogstdio(LCF_CHECKPOINT, "Save region %p (%s) with size %d", area->addr, area->name, area->size);
-    } else if (area->name[0] == '\0') {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p with size %d", area->addr, area->size);
-    } else {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p (%s) with size %d", area->addr, area->name, area->size);
-    }
 
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
-    }
-
-    if (area->name[0] == '\0') {
-        /* We look for zero pages in anonymous sections and skip saving them */
-        writeAnAreaWithZeroPages(fd, area);
-    }
-    else {
-        Utils::writeAll(fd, area, sizeof(*area));
-        Utils::writeAll(fd, area->addr, area->size);
-    }
-
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
-    }
-}
-
-/* This function returns a range of zero or non-zero pages. If the first page
- * is non-zero, it searches for all contiguous non-zero pages and returns them.
- * If the first page is all-zero, it searches for contiguous zero pages and
- * returns them.
- */
- static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
- {
-     static const size_t page_size = sysconf(_SC_PAGESIZE);
-
-     if (area.size < ONE_MB) {
-         size = area.size;
-         is_zero = false;
-         return;
-     }
-
-     intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
-
-     size = ONE_MB;
-     is_zero = Utils::areZeroPages(area.addr, ONE_MB / page_size);
-
-     // prevAddr = area.addr;
-     for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + ONE_MB;
-     curAddrInt < endAddrInt;
-     curAddrInt += ONE_MB) {
-
-         size_t minsize = ((endAddrInt-curAddrInt)<ONE_MB)?(endAddrInt-curAddrInt):ONE_MB;
-         if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
-             break;
-         }
-         size += minsize;
-     }
- }
-
- void writeAnAreaWithZeroPages(int fd, Area *orig_area)
- {
-     Area area = *orig_area;
-
-     while (area.size > 0) {
-         size_t size;
-         bool is_zero;
-         Area a = area;
-         getNextPageRange(a, size, is_zero);
-
-         a.properties = is_zero ? ZERO_PAGE : 0;
-         a.size = size;
-         void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
-         a.endAddr = endAddr;
-
-         Utils::writeAll(fd, &a, sizeof(a));
-         if (!is_zero) {
-             Utils::writeAll(fd, a.addr, a.size);
-         }
-         else {
-             debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
-         }
-         area.addr = endAddr;
-         area.size -= size;
-     }
- }
-
-
-void readAllAreas()
-{
-    int fd = open(SAVESTATEPATH, O_RDONLY);
-    MYASSERT(fd != -1)
-
-    /* Read the savestate header */
-    StateHeader sh;
-    Utils::readAll(fd, &sh, sizeof(sh));
-
-    /* Check that the thread list is identical */
-    int n=0;
-    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        for (int t=0; t<sh.thread_count; t++) {
-            if (sh.thread_tids[t] == thread->tid) {
-                n++;
-                break;
-            }
-        }
-    }
-
-    if (n != sh.thread_count) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
-        MYASSERT(close(fd) == 0);
-        return;
-    }
-
-    Area current_area;
-    Area saved_area;
-
-    debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
-
-    /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
-
-    /* Read the first saved area */
-    Utils::readAll(fd, &saved_area, sizeof saved_area);
-
-    /* Read the first current area */
-    bool not_eof = procSelfMaps.getNextArea(&current_area);
-
-    while ((saved_area.addr != nullptr) || not_eof) {
-
-        /* Check for matching areas */
-        int cmp = readAndCompAreas(fd, &saved_area, &current_area);
-        if (cmp == 0) {
-            /* Areas matched, we advance both areas */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
-            not_eof = procSelfMaps.getNextArea(&current_area);
-        }
-        if (cmp > 0) {
-            /* Saved area is greater, advance current area */
-            not_eof = procSelfMaps.getNextArea(&current_area);
-        }
-        if (cmp < 0) {
-            /* Saved area is smaller, advance saved area */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
-        }
-    }
-
-    /* That's all folks */
-    MYASSERT(close(fd) == 0);
-}
-
-int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
+static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 {
     /* Do Areas start on the same address? */
     if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
@@ -541,8 +476,11 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             /* Areas are overlapping, we only unmap the non-shared region */
             ptrdiff_t unmap_size = reinterpret_cast<ptrdiff_t>(saved_area->addr) - reinterpret_cast<ptrdiff_t>(current_area->addr);
 
-            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, unmap_size);
-            MYASSERT(munmap(current_area->addr, unmap_size) == 0)
+            /* We only deallocate this section if we are interested in it */
+            if (!skipArea(current_area)) {
+                debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, unmap_size);
+                MYASSERT(munmap(current_area->addr, unmap_size) == 0)
+            }
 
             /* We call this function again with the rest of the area */
             current_area->addr = saved_area->addr;
@@ -551,8 +489,11 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         }
         else {
             /* Areas are not overlapping, we unmap the whole area */
-            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
-            MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+            /* We only deallocate this section if we are interested in it */
+            if (!skipArea(current_area)) {
+                debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+                MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+            }
             return 1;
         }
     }
@@ -647,4 +588,95 @@ int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     return 0;
 }
 
+
+static void readAllAreas()
+{
+    int fd;
+    OWNCALL(fd = open(savestatepath, O_RDONLY));
+    MYASSERT(fd != -1)
+
+    /* Read the savestate header */
+    StateHeader sh;
+    Utils::readAll(fd, &sh, sizeof(sh));
+
+    Area current_area;
+    Area saved_area;
+
+    debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
+
+    /* Read the memory mapping */
+    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
+
+    /* Read the first saved area */
+    Utils::readAll(fd, &saved_area, sizeof saved_area);
+
+    /* Read the first current area */
+    bool not_eof = procSelfMaps.getNextArea(&current_area);
+
+    while ((saved_area.addr != nullptr) || not_eof) {
+
+        /* Check for matching areas */
+        int cmp = readAndCompAreas(fd, &saved_area, &current_area);
+        if (cmp == 0) {
+            /* Areas matched, we advance both areas */
+            Utils::readAll(fd, &saved_area, sizeof saved_area);
+            not_eof = procSelfMaps.getNextArea(&current_area);
+        }
+        if (cmp > 0) {
+            /* Saved area is greater, advance current area */
+            not_eof = procSelfMaps.getNextArea(&current_area);
+        }
+        if (cmp < 0) {
+            /* Saved area is smaller, advance saved area */
+            Utils::readAll(fd, &saved_area, sizeof saved_area);
+        }
+    }
+
+    /* That's all folks */
+    MYASSERT(close(fd) == 0);
+}
+
+void Checkpoint::handler(int signum)
+{
+
+    if (ThreadManager::restoreInProgress) {
+        /* Before reading from the savestate, we must keep some values from
+         * the connection to the X server, because they are used for checking
+         * consistency of requests. We can store them in this (alternate) stack
+         * which will be preserved.
+         */
+
+        /* Access the X Window identifier from the SDL_Window struct */
+        Display *display = getXDisplay();
+        uint64_t last_request_read, request;
+
+        if (display) {
+#ifdef X_DPY_GET_LAST_REQUEST_READ
+            last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
+            request = X_DPY_GET_REQUEST(display);
+#else
+            last_request_read = static_cast<uint64_t>(display->last_request_read);
+            request = static_cast<uint64_t>(display->request);
+#endif
+        // Save also dpy->xcb->last_flushed ?
+        }
+
+        readAllAreas();
+        /* restoreInProgress was overwritten, putting the right value again */
+        ThreadManager::restoreInProgress = true;
+
+        /* Restoring the display values */
+        if (display) {
+#ifdef X_DPY_SET_LAST_REQUEST_READ
+            X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
+            X_DPY_SET_REQUEST(display, request);
+#else
+            display->last_request_read = static_cast<unsigned long>(last_request_read);
+            display->request = static_cast<unsigned long>(request);
+#endif
+        }
+    }
+    else {
+        writeAllAreas();
+    }
 }

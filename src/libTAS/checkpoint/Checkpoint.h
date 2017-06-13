@@ -22,17 +22,14 @@
 #ifndef LIBTAS_CHECKPOINT_H
 #define LIBTAS_CHECKPOINT_H
 
-#include "ProcMapsArea.h"
+#include <iostream>
 
 namespace Checkpoint
 {
     void init();
+    void setSavestatePath(const char* savestatepath);
+    bool checkRestore();
     void handler(int signum);
-    void writeAllAreas();
-    void writeAnArea(int fd, Area* area);
-    void writeAnAreaWithZeroPages(int fd, Area *area);
-    void readAllAreas();
-    int readAndCompAreas(int fd, Area *saved_area, Area *current_area);
 };
 
 #endif

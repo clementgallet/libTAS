@@ -35,6 +35,9 @@
 #include "checkpoint/ThreadManager.h"
 #include "screenpixels.h"
 
+#define SAVESTATE_FILESIZE 1024
+static char savestatepath[SAVESTATE_FILESIZE];
+
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
 {
@@ -236,7 +239,10 @@ void proceed_commands(void)
                 break;
 
             case MSGN_SAVESTATE:
-                ThreadManager::checkpoint();
+                /* Get the savestate path */
+                receiveCString(savestatepath);
+
+                ThreadManager::checkpoint(savestatepath);
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from ThreadManager::restore() under.
                  * To check if we did restored or returned from a checkpoint,
@@ -259,7 +265,10 @@ void proceed_commands(void)
                 break;
 
             case MSGN_LOADSTATE:
-                ThreadManager::restore();
+                /* Get the savestate path */
+                receiveCString(savestatepath);
+
+                ThreadManager::restore(savestatepath);
 
                 /* If restoring failed, we return here. We must still send the
                  * frame count because the program does not know that restore
