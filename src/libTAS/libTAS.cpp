@@ -24,7 +24,7 @@
 #include "sdlwindows.h"
 #include "dlhook.h"
 #include "sdlevents.h"
-#include "sockethelpers.h"
+#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
@@ -55,7 +55,7 @@ namespace orig {
 
 void __attribute__((constructor)) init(void)
 {
-    bool didConnect = initSocket();
+    bool didConnect = initSocketGame();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
      */
@@ -97,11 +97,7 @@ void __attribute__((constructor)) init(void)
                 break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
-                size_t lib_len;
-                receiveData(&lib_len, sizeof(size_t));
-                buf.resize(lib_len, 0x00);
-                receiveData(&(buf[0]), lib_len);
-                libstring.assign(&(buf[0]), buf.size());
+                libstring = receiveString();
                 libraries->push_back(libstring);
                 debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;

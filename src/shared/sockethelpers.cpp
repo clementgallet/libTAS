@@ -21,17 +21,47 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <cstdlib>
-#include "../shared/lcf.h"
 #include <unistd.h>
-#include "logging.h"
 #include <sys/un.h>
+#include <iostream>
+#include <vector>
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
-/* Socket to communicate to the program */
+/* Socket to communicate between the program and the game */
 static int socket_fd = 0;
 
-bool initSocket(void)
+void removeSocket(void){
+    unlink(SOCKET_FILENAME);
+}
+
+bool initSocketProgram(void)
+{
+    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
+    socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    struct timespec tim = {0, 100000000L};
+
+    const int MAX_RETRIES = 10;
+    int retry = 0;
+
+    nanosleep(&tim, NULL);
+    while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
+                sizeof(struct sockaddr_un))) {
+        std::cout << "Attempt " << retry + 1 << ": Couldn't connect to socket." << std::endl;
+        retry++;
+        if (retry < MAX_RETRIES) {
+            nanosleep(&tim, NULL);
+        } else {
+            return false;
+        }
+    }
+    std::cout << "Attempt " << retry + 1 << ": Connected." << std::endl;
+
+    return true;
+}
+
+bool initSocketGame(void)
 {
     /* Check if socket file already exists. If so, it is probably because
      * the link is already done in another process of the game.
@@ -42,37 +72,27 @@ bool initSocket(void)
     if (result == 0)
         return false;
 
-    /* Connect using a Unix socket */
-    if (!unlink(SOCKET_FILENAME))
-        debuglog(LCF_SOCKET, "Removed stall socket.");
-
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't bind client socket.");
+        std::cerr << "Couldn't bind client socket." << std::endl;
         exit(-1);
     }
 
     if (listen(tmp_fd, 1))
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't listen on client socket.");
-        exit(1);
+        std::cerr << "Couldn't listen on client socket." << std::endl;
+        exit(-1);
     }
-
-    debuglog(LCF_SOCKET, "Loading complete, awaiting client connection...");
 
     if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
     {
-        debuglog(LCF_ERROR | LCF_SOCKET, "Couldn't accept client connection.");
-        exit(1);
+        std::cerr << "Couldn't accept client connection." << std::endl;
+        exit(-1);
     }
 
-    debuglog(LCF_SOCKET, "Client connected.");
-
     close(tmp_fd);
-    //unlink(SOCKET_FILENAME);
-
     return true;
 }
 
@@ -91,7 +111,36 @@ void sendMessage(int message)
     sendData(&message, sizeof(int));
 }
 
-void receiveData(void* elem, size_t size)
+void sendString(const std::string& str)
 {
-    recv(socket_fd, elem, size, 0);
+    size_t str_size = str.size();
+    sendData(&str_size, sizeof(size_t));
+    sendData(str.c_str(), str_size);
+}
+
+int receiveData(void* elem, size_t size)
+{
+    return recv(socket_fd, elem, size, 0);
+}
+
+int receiveMessage()
+{
+    int msg;
+    int ret = receiveData(&msg, sizeof(int));
+    if (ret < 0)
+        return ret;
+    return msg;
+}
+
+std::string receiveString()
+{
+    size_t str_size;
+    receiveData(&str_size, sizeof(size_t));
+
+    /* TODO: There might be a better way to do this...? */
+    std::vector<char> buf(str_size, 0x00);
+    receiveData(buf.data(), str_size);
+
+    std::string str(buf.data(), str_size);
+    return str;
 }

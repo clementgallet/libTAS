@@ -18,9 +18,7 @@
  */
 
 #include "game.h"
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/un.h>
+#include "../shared/sockethelpers.h"
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
@@ -30,7 +28,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <signal.h>
 #include "ui/MainWindow.h"
 #include "MovieFile.h"
 #include <cerrno>
@@ -66,7 +63,7 @@ void launchGame(Context* context)
     ui.update_status();
 
     /* Remove the file socket */
-    system("rm -f /tmp/libTAS.socket");
+    removeSocket();
 
     /* Build the system command for calling the game */
     std::ostringstream cmd;
@@ -111,79 +108,49 @@ void launchGame(Context* context)
     }
     // linked_libs.insert(linked_libs.end(), shared_libs.begin(), shared_libs.end());
 
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
-    int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-
-    struct timespec tim = {0, 100000000L};
+    /* Connect to the socket between the program and the game */
+    initSocketProgram();
 
     XAutoRepeatOff(context->display);
 
-    const int MAX_RETRIES = 10;
-    int retry = 0;
-    // ui_print("Connecting to libTAS...\n");
-
-    nanosleep(&tim, NULL);
-    while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
-                sizeof(struct sockaddr_un))) {
-        std::cout << "Attempt " << retry + 1 << ": Couldn't connect to socket." << std::endl;
-        retry++;
-        if (retry < MAX_RETRIES) {
-            nanosleep(&tim, NULL);
-        } else {
-            return;
-        }
-    }
-    std::cout << "Attempt " << retry + 1 << ": Connected." << std::endl;
-
     /* Receive informations from the game */
 
-    int message;
-    recv(socket_fd, &message, sizeof(int), 0);
+    int message = receiveMessage();
     while (message != MSGB_END_INIT) {
 
         switch (message) {
             /* Get the game process pid */
             case MSGB_PID:
-                recv(socket_fd, &context->game_pid, sizeof(pid_t), 0);
+                receiveData(&context->game_pid, sizeof(pid_t));
                 break;
 
             default:
                 // ui_print("Message init: unknown message\n");
                 return;
         }
-        recv(socket_fd, &message, sizeof(int), 0);
+        message = receiveMessage();
     }
 
     /* Send informations to the game */
 
     /* Send shared config */
-    message = MSGN_CONFIG;
-    send(socket_fd, &message, sizeof(int), 0);
-    send(socket_fd, &context->config.sc, sizeof(SharedConfig), 0);
+    sendMessage(MSGN_CONFIG);
+    sendData(&context->config.sc, sizeof(SharedConfig));
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {
-        message = MSGN_DUMP_FILE;
-        send(socket_fd, &message, sizeof(int), 0);
-        size_t dumpfile_size = context->config.dumpfile.size();
-        send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
-        send(socket_fd, context->config.dumpfile.c_str(), dumpfile_size, 0);
+        sendMessage(MSGN_DUMP_FILE);
+        sendString(context->config.dumpfile);
     }
 
     /* Send shared library names */
     for (auto &name : linked_libs) {
-        message = MSGN_LIB_FILE;
-        send(socket_fd, &message, sizeof(int), 0);
-        size_t name_size = name.size();
-        send(socket_fd, &name_size, sizeof(size_t), 0);
-        send(socket_fd, name.c_str(), name_size, 0);
+        sendMessage(MSGN_LIB_FILE);
+        sendString(name);
     }
 
     /* End message */
-    message = MSGN_END_INIT;
-    send(socket_fd, &message, sizeof(int), 0);
-
-    nanosleep(&tim, NULL);
+    sendMessage(MSGN_END_INIT);
 
     /* Opening a movie, which imports the inputs and parameters if in read mode,
      * or prepare a movie if in write mode. Even if we are in NO_RECORDING mode,
@@ -208,13 +175,14 @@ void launchGame(Context* context)
     while (1)
     {
         /* Wait for frame boundary */
-        ssize_t ret = recv(socket_fd, &message, sizeof(int), 0);
+        message = receiveMessage();
 
-        while ((ret > 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
+        while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
             void* error_msg;
+            std::string error_str;
             switch (message) {
             case MSGB_WINDOW_ID:
-                recv(socket_fd, &context->game_window, sizeof(Window), 0);
+                receiveData(&context->game_window, sizeof(Window));
                 if (context->game_window == 0) {
                     /* libTAS could not get the window id
                      * Let's get the active window */
@@ -226,12 +194,9 @@ void launchGame(Context* context)
                 break;
 
             case MSGB_ERROR_MSG:
-                size_t error_len;
-                recv(socket_fd, &error_len, sizeof(size_t), 0);
-                error_msg = malloc(error_len);
-                recv(socket_fd, error_msg, error_len, 0);
-                Fl::awake(error_dialog, error_msg);
-                /* The error_dialog function frees error_msg */
+                error_str = receiveString();
+                /* TODO: Send cleanly the string to UI thread */
+                // Fl::awake(error_dialog, error_str);
                 break;
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;
@@ -239,17 +204,17 @@ void launchGame(Context* context)
                 ui.update_ui();
                 break;
             case MSGB_FRAMECOUNT:
-                recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
+                receiveData(&context->framecount, sizeof(unsigned long));
                 ui.update_framecount();
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
                 return;
             }
-            ret = recv(socket_fd, &message, sizeof(int), 0);
+            message = receiveMessage();
         }
 
-        if (ret == -1) {
+        if (message == -1) {
             std::cerr << "Got a socket error: " << strerror(errno) << std::endl;
             break;
         }
@@ -376,12 +341,11 @@ void launchGame(Context* context)
                         }
                     }
                     if (hk.type == HOTKEY_SAVESTATE){
-                        message = MSGN_SAVESTATE;
-                        send(socket_fd, &message, sizeof(int), 0);
+                        sendMessage(MSGN_SAVESTATE);
                     }
                     if (hk.type == HOTKEY_LOADSTATE){
-                        message = MSGN_LOADSTATE;
-                        send(socket_fd, &message, sizeof(int), 0);
+                        sendMessage(MSGN_LOADSTATE);
+
                         /* The copy of SharedConfig that the game stores may not
                          * be the same as this one due to memory loading, so we
                          * send it.
@@ -389,12 +353,12 @@ void launchGame(Context* context)
                         context->config.sc_modified = true;
 
                         /* The frame count has changed, we must get the new one */
-                        recv(socket_fd, &message, sizeof(int), 0);
+                        message = receiveMessage();
                         if (message != MSGB_FRAMECOUNT) {
                             std::cerr << "Got wrong message after state loading" << std::endl;
                             return;
                         }
-                        recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
+                        receiveData(&context->framecount, sizeof(unsigned long));
 
                     }
                     if (hk.type == HOTKEY_READWRITE){
@@ -463,8 +427,7 @@ void launchGame(Context* context)
 
             /* Sleep a bit to not surcharge the processor */
             if (!context->config.sc.running && !advance_frame) {
-                tim.tv_sec  = 0;
-                tim.tv_nsec = 10000000L;
+                struct timespec tim = {0, 10000000L};
                 nanosleep(&tim, NULL);
             }
 
@@ -517,39 +480,31 @@ void launchGame(Context* context)
         /* Send shared config if modified */
         if (context->config.sc_modified) {
             /* Send config */
-            message = MSGN_CONFIG;
-            send(socket_fd, &message, sizeof(int), 0);
-            send(socket_fd, &context->config.sc, sizeof(SharedConfig), 0);
+            sendMessage(MSGN_CONFIG);
+            sendData(&context->config.sc, sizeof(SharedConfig));
             context->config.sc_modified = false;
         }
 
         /* Send dump file if modified */
         if (context->config.dumpfile_modified) {
-            message = MSGN_DUMP_FILE;
-            send(socket_fd, &message, sizeof(int), 0);
-            size_t dumpfile_size = context->config.dumpfile.size();
-            send(socket_fd, &dumpfile_size, sizeof(size_t), 0);
-            send(socket_fd, context->config.dumpfile.c_str(), dumpfile_size, 0);
+            sendMessage(MSGN_DUMP_FILE);
+            sendString(context->config.dumpfile);
             context->config.dumpfile_modified = false;
         }
 
         /* Send inputs and end of frame */
-        message = MSGN_ALL_INPUTS;
-        send(socket_fd, &message, sizeof(int), 0);
-        send(socket_fd, &ai, sizeof(AllInputs), 0);
+        sendMessage(MSGN_ALL_INPUTS);
+        sendData(&ai, sizeof(AllInputs));
 
         if (context->status == Context::QUITTING) {
-            message = MSGN_USERQUIT;
-            send(socket_fd, &message, sizeof(int), 0);
+            sendMessage(MSGN_USERQUIT);
         }
 
-        message = MSGN_END_FRAMEBOUNDARY;
-        send(socket_fd, &message, sizeof(int), 0);
-
+        sendMessage(MSGN_END_FRAMEBOUNDARY);
     }
 
     movie.close();
-    close(socket_fd);
+    closeSocket();
 
     if (pseudosavestate.loading) {
         /* We a loading a pseudo savestate, we need to restart the game */

@@ -23,7 +23,7 @@
 #include "../shared/SharedConfig.h"
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/sdlinputevents.h"
-#include "sockethelpers.h"
+#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "AVEncoder.h"
@@ -166,10 +166,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     std::string error;
     while (getErrorMsg(error)) {
         sendMessage(MSGB_ERROR_MSG);
-        size_t error_size = error.length()+1;
-        sendData(&error_size, sizeof(size_t));
-        sendData(error.c_str(), error_size);
-        // debuglog(LCF_ERROR | LCF_FRAME, "Sent error message: ", error);
+        sendString(error);
     }
 
     sendMessage(MSGB_FRAMECOUNT);
@@ -224,6 +221,7 @@ void proceed_commands(void)
 
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
+                /* FIXME: Memory leak! */
                 size_t dump_len;
                 receiveData(&dump_len, sizeof(size_t));
                 /* TODO: Put all this in TasFlags class methods */

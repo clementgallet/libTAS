@@ -20,7 +20,7 @@
 #include "sdlwindows.h"
 #include "hook.h"
 #include "logging.h"
-#include "sockethelpers.h"
+#include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
 #include "frame.h"

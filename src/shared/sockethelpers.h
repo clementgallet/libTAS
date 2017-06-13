@@ -17,13 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SOCKET_H_INCL
-#define LIBTAS_SOCKET_H_INCL
+#ifndef LIBTAS_SOCKETHELPERS_H_INCL
+#define LIBTAS_SOCKETHELPERS_H_INCL
 
-#include <stddef.h>
+#include <cstddef>
+#include <string>
+
+/* Remove the socker file */
+void removeSocket();
+
+/* Initiate a socket connection with libTAS */
+bool initSocketProgram(void);
 
 /* Initiate a socket connection with linTAS */
-bool initSocket(void);
+bool initSocketGame(void);
 
 /* Close the socket connection */
 void closeSocket(void);
@@ -33,10 +40,22 @@ void closeSocket(void);
  */
 void sendData(const void* elem, size_t size);
 
+/* Send a string object through the socket. It first sends the string lenght,
+ * followed by the char array.
+ */
+void sendString(const std::string& str);
+
 /* Helper function to send a message over the socket */
 void sendMessage(int message);
 
 /* Receive data from the socket. Same arguments as sendData() */
-void receiveData(void* elem, size_t size);
+int receiveData(void* elem, size_t size);
+
+/* Receive a message */
+int receiveMessage();
+
+/* Receive a string object from the socket. */
+std::string receiveString();
+
 
 #endif
