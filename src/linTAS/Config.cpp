@@ -18,7 +18,6 @@
  */
 
 #include "Config.h"
-#include "utils.h"
 #include <iostream>
 //#include <sys/stat.h>
 
@@ -99,15 +98,8 @@ void Config::load(const std::string& gamepath) {
     else
         gamename = gamepath;
 
-    /* Check if our preferences directory exists, and create it if not */
-    std::string prefs_dir = getenv("HOME");
-    prefs_dir += "/.libtas";
-
-    if (create_dir(prefs_dir))
-        return;
-
     /* Open the preferences for the game */
-    prefs.reset(new Fl_Preferences(prefs_dir.c_str(), "libtas", gamename.c_str()));
+    prefs.reset(new Fl_Preferences(configdir.c_str(), "libtas", gamename.c_str()));
     char* text;
     if (prefs->get("gameargs", text, gameargs.c_str()))
         gameargs = text;

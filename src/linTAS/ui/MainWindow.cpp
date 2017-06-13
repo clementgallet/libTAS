@@ -143,7 +143,7 @@ void MainWindow::build(Context* c)
     totalframecount = new Fl_Output(140, 140, 60, 30);
     totalframecount->color(FL_LIGHT1);
     MovieFile movie;
-    std::string totalframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+    std::string totalframestr = std::to_string(movie.nbFrames(*context, context->config.moviefile));
     totalframecount->value(totalframestr.c_str());
 
     launch = new Fl_Button(10, 350, 70, 40, "Start");
@@ -625,7 +625,7 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
         MovieFile movie;
-        std::string totalframestr = std::to_string(movie.nbFrames(mw.context->config.moviefile));
+        std::string totalframestr = std::to_string(movie.nbFrames(*mw.context, mw.context->config.moviefile));
         mw.totalframecount->value(totalframestr.c_str());
     }
 }

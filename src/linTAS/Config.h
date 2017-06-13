@@ -69,6 +69,15 @@ public:
     /* Force Mesa software OpenGL driver */
     bool opengl_soft = false;
 
+    /* Directory holding our config files */
+    std::string configdir;
+
+    /* Directory holding temporary files for building movies */
+    std::string tempmoviedir;
+
+    /* Directory holding savestates and savestate movies */
+    std::string savestatedir;
+
     /* Save the config into the config file */
     void save();
 

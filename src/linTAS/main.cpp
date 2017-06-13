@@ -24,6 +24,7 @@
 #include <iostream>
 #include "Context.h"
 #include "ui/MainWindow.h"
+#include "utils.h" // create_dir
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 #include <signal.h> // kill
@@ -113,7 +114,7 @@ int main(int argc, char **argv)
                 print_usage();
                 return 0;
             default:
-                return 1;
+                return -1;
         }
 
     /* libTAS.so path */
@@ -130,9 +131,43 @@ int main(int argc, char **argv)
         context.gamepath = abspath;
     }
 
-    /* Init the a game-specific config, loading a pref file if any */
+    /* Create the working directories */
+    std::string base_dir = getenv("HOME");
+    base_dir += "/.libtas";
+    if (create_dir(base_dir) < 0) {
+        std::cerr << "Cannot create dir " << base_dir << std::endl;
+        return -1;
+    }
+
+    context.config.configdir = base_dir + "/config";
+    if (create_dir(context.config.configdir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.configdir << std::endl;
+        return -1;
+    }
+
+    /* Now that we have the config dir, we load the game-specific config */
     if (!context.gamepath.empty())
         context.config.load(context.gamepath);
+
+    /* If the config file set custom directories for the remaining working dir,
+     * we create these directories (if not already created).
+     * Otherwise, we set and create the default ones. */
+    if (context.config.tempmoviedir.empty()) {
+        context.config.tempmoviedir = base_dir + "/movie";
+    }
+    std::cout << context.config.tempmoviedir << std::endl;
+    if (create_dir(context.config.tempmoviedir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.tempmoviedir << std::endl;
+        return -1;
+    }
+
+    if (context.config.savestatedir.empty()) {
+        context.config.savestatedir = base_dir + "/states";
+    }
+    if (create_dir(context.config.savestatedir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.savestatedir << std::endl;
+        return -1;
+    }
 
     /* Game arguments */
     for (int i = optind+1; i < argc; i++) {
@@ -144,8 +179,8 @@ int main(int argc, char **argv)
     context.display = XOpenDisplay(NULL);
     if (context.display == NULL)
     {
-        // ui_print("Cannot open display\n");
-        return 1;
+        std::cerr << "Cannot open display" << std::endl;
+        return -1;
     }
 
     /* Starts the user interface */

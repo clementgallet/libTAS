@@ -31,14 +31,6 @@ void MovieFile::open(Context* c)
 {
     context = c;
 
-    movie_dir = getenv("HOME");
-    movie_dir += "/.libtas";
-    if (create_dir(movie_dir))
-        return;
-    movie_dir += "/movie";
-    if (create_dir(movie_dir))
-        return;
-
     switch(context->recording) {
         case Context::RECORDING_WRITE:
         case Context::NO_RECORDING:
@@ -62,12 +54,12 @@ void MovieFile::loadMovie(std::string& moviefile)
     /* Uncompress the movie file into out temp directory */
     TAR *tar;
     tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-    char* md = const_cast<char*>(movie_dir.c_str());
+    char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
 
     /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
     int val = static_cast<int>(context->config.sc.keyboard_support);
     config_prefs.get("keyboard_support", val, val);
     context->config.sc.keyboard_support = static_cast<bool>(val);
@@ -83,7 +75,7 @@ void MovieFile::loadMovie(std::string& moviefile)
     mw.update_config();
 
     /* Open the input file and parse each line to fill our input list */
-    std::string input_file = movie_dir + "/inputs";
+    std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ifstream input_stream(input_file);
     std::string line;
 
@@ -108,7 +100,7 @@ void MovieFile::loadMovie()
 void MovieFile::saveMovie()
 {
     /* Format and write input frames into the input file */
-    std::string input_file = movie_dir + "/inputs";
+    std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
 
     for (auto const& ai : input_list) {
@@ -117,7 +109,7 @@ void MovieFile::saveMovie()
     input_stream.close();
 
     /* Save some parameters into the config file */
-    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
     config_prefs.set("frame_count", static_cast<int>(context->framecount));
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
@@ -132,7 +124,7 @@ void MovieFile::saveMovie()
     char* input_ptr = const_cast<char*>(input_file.c_str());
     char savename[7] = "inputs";
     tar_append_file(tar, input_ptr, savename);
-    std::string config_file = movie_dir + "/config.prefs";
+    std::string config_file = context->config.tempmoviedir + "/config.prefs";
     char* config_ptr = const_cast<char*>(config_file.c_str());
     char savename2[13] = "config.prefs";
     tar_append_file(tar, config_ptr, savename2);
@@ -252,31 +244,22 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-int MovieFile::nbFrames(const std::string& moviefile)
+int MovieFile::nbFrames(const Context& c, const std::string& moviefile)
 {
     /* Check if movie exists, otherwise return 0 */
     struct stat sb;
     if (stat(moviefile.c_str(), &sb) == -1)
         return 0;
 
-    /* Extract file into our temp directory */
-    movie_dir = getenv("HOME");
-    movie_dir += "/.libtas";
-    if (create_dir(movie_dir))
-        return 0;
-    movie_dir += "/movie";
-    if (create_dir(movie_dir))
-        return 0;
-
     /* Uncompress the movie file into our temp directory */
     TAR *tar;
     tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-    char* md = const_cast<char*>(movie_dir.c_str());
+    char* md = const_cast<char*>(c.config.tempmoviedir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
 
     /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(movie_dir.c_str(), "movie", "config");
+    Fl_Preferences config_prefs(c.config.tempmoviedir.c_str(), "movie", "config");
     int frame_count;
     config_prefs.get("frame_count", frame_count, 0);
 

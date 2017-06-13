@@ -41,7 +41,7 @@ public:
     void saveMovie();
 
     /* Get the number of frames from a moviefile (needs to load it) */
-    int nbFrames(const std::string& moviefile);
+    int nbFrames(const Context& c, const std::string& moviefile);
 
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);
@@ -60,8 +60,6 @@ private:
     int readFrame(std::string& line, AllInputs& inputs);
 
     Context* context;
-    /* Directory containing the different movie files */
-    std::string movie_dir;
 
     /* The list of inputs */
     std::list<AllInputs> input_list;
