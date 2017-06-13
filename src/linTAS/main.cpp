@@ -155,7 +155,6 @@ int main(int argc, char **argv)
     if (context.config.tempmoviedir.empty()) {
         context.config.tempmoviedir = base_dir + "/movie";
     }
-    std::cout << context.config.tempmoviedir << std::endl;
     if (create_dir(context.config.tempmoviedir) < 0) {
         std::cerr << "Cannot create dir " << context.config.tempmoviedir << std::endl;
         return -1;

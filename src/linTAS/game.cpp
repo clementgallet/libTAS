@@ -39,15 +39,6 @@
 
 PseudoSaveState pseudosavestate;
 
-static int MyErrorHandler(Display *display, XErrorEvent *theEvent)
-{
-    // (void) ui_print("Ignoring Xlib error: error code %d request code %d\n",
-    //         theEvent->error_code,
-    //         theEvent->request_code);
-
-    return 0;
-}
-
 static bool haveFocus(Context* context)
 {
     if (context->inputs_focus & Context::FOCUS_ALL)
@@ -123,29 +114,26 @@ void launchGame(Context* context)
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
-    struct timespec tim = {1, 0L};
+    struct timespec tim = {0, 100000000L};
 
-    XSetErrorHandler(MyErrorHandler);
     XAutoRepeatOff(context->display);
 
-    const int MAX_RETRIES = 3;
+    const int MAX_RETRIES = 10;
     int retry = 0;
     // ui_print("Connecting to libTAS...\n");
 
     nanosleep(&tim, NULL);
     while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
                 sizeof(struct sockaddr_un))) {
-        // ui_print("Attempt #%i: Couldn't connect to socket.\n", retry + 1);
+        std::cout << "Attempt " << retry + 1 << ": Couldn't connect to socket." << std::endl;
         retry++;
         if (retry < MAX_RETRIES) {
-            // ui_print("Retrying in 2s\n");
             nanosleep(&tim, NULL);
         } else {
             return;
         }
     }
-
-    // ui_print("Attempt #%i: Connected.\n", retry + 1);
+    std::cout << "Attempt " << retry + 1 << ": Connected." << std::endl;
 
     /* Receive informations from the game */
 
@@ -248,11 +236,11 @@ void launchGame(Context* context)
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;
                 context->config.sc_modified = true;
-                ui.update(true);
+                ui.update_ui();
                 break;
             case MSGB_FRAMECOUNT:
                 recv(socket_fd, &context->framecount, sizeof(unsigned long), 0);
-                ui.update(false);
+                ui.update_framecount();
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
@@ -278,7 +266,7 @@ void launchGame(Context* context)
             if (context->framecount > (pseudosavestate.framecount - 30)) {
                 context->config.sc.fastforward = false;
                 context->config.sc_modified = true;
-                ui.update(true);
+                ui.update_ui();
             }
 
             if (pseudosavestate.framecount == context->framecount) {
@@ -290,7 +278,7 @@ void launchGame(Context* context)
                 context->config.sc.fastforward = false;
                 context->config.sc_modified = true;
                 context->recording = pseudosavestate.recording;
-                ui.update(true);
+                ui.update_ui();
             }
         }
 
@@ -352,7 +340,7 @@ void launchGame(Context* context)
                     if (hk.type == HOTKEY_FRAMEADVANCE){
                         if (context->config.sc.running) {
                             context->config.sc.running = false;
-                            ui.update(true);
+                            ui.update_ui();
                             context->config.sc_modified = true;
                         }
                         ar_ticks = 0; // Activate auto-repeat
@@ -360,12 +348,12 @@ void launchGame(Context* context)
                     }
                     if (hk.type == HOTKEY_PLAYPAUSE){
                         context->config.sc.running = !context->config.sc.running;
-                        ui.update(true);
+                        ui.update_ui();
                         context->config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = true;
-                        ui.update(true);
+                        ui.update_ui();
                         context->config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_SAVEPSEUDOSTATE){
@@ -382,7 +370,7 @@ void launchGame(Context* context)
                             pseudosavestate.recording = context->recording;
                             context->recording = Context::RECORDING_READ_WRITE;
                             context->status = Context::QUITTING;
-                            ui.update(true);
+                            ui.update_ui();
                             ui.update_status();
                             break;
                         }
@@ -420,7 +408,7 @@ void launchGame(Context* context)
                         default:
                             break;
                         }
-                        ui.update(true);
+                        ui.update_ui();
                     }
                     if (hk.type == HOTKEY_TOGGLE_ENCODE) {
                         if (!context->config.sc.av_dumping) {
@@ -432,7 +420,7 @@ void launchGame(Context* context)
                             context->config.sc.av_dumping = false;
                             context->config.sc_modified = true;
                         }
-                        ui.update(true);
+                        ui.update_ui();
                     }
                 }
                 if (event.type == KeyRelease)
@@ -464,7 +452,7 @@ void launchGame(Context* context)
 
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;
-                        ui.update(true);
+                        ui.update_ui();
                         context->config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_FRAMEADVANCE){

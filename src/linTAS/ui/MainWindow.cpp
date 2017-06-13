@@ -149,7 +149,7 @@ void MainWindow::build(Context* c)
     launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback(launch_cb);
 
-    update(true);
+    update_ui();
     update_config();
 
     window->end();
@@ -360,6 +360,7 @@ void MainWindow::update_status()
             browsemoviepath->activate();
             gamepath->activate();
             browsegamepath->activate();
+            cmdoptions->activate();
             logicalfps->activate();
             moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
@@ -380,6 +381,7 @@ void MainWindow::update_status()
             browsemoviepath->deactivate();
             gamepath->deactivate();
             browsegamepath->deactivate();
+            cmdoptions->deactivate();
             logicalfps->deactivate();
             moviepack->deactivate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
@@ -400,7 +402,52 @@ void MainWindow::update_status()
     Fl::awake();
 }
 
-void MainWindow::update(bool status)
+void MainWindow::update_ui()
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    /* Update pause status */
+    pausecheck->value(!context->config.sc.running);
+
+    /* Update fastforward status */
+    fastforwardcheck->value(context->config.sc.fastforward);
+
+    /* Update recording state */
+    switch (context->recording) {
+      case Context::NO_RECORDING:
+          movie_norec->setonly();
+          break;
+      case Context::RECORDING_WRITE:
+          movie_w->setonly();
+          break;
+      case Context::RECORDING_READ_WRITE:
+          movie_rw->setonly();
+          break;
+      case Context::RECORDING_READ_ONLY:
+          movie_ro->setonly();
+          break;
+    }
+
+    /* Update encode menus */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+    Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
+    Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
+    if (context->config.sc.av_dumping) {
+        if (encode_item) encode_item->label("Stop encode");
+        if (config_item) config_item->deactivate();
+    }
+    else {
+        if (encode_item) encode_item->label("Start encode");
+        if (config_item) config_item->activate();
+    }
+#endif
+
+    Fl::unlock();
+    Fl::awake();
+}
+
+void MainWindow::update_framecount()
 {
     /* This function is called by another thread */
     Fl::lock();
@@ -408,48 +455,9 @@ void MainWindow::update(bool status)
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
-    if (context->recording == Context::RECORDING_WRITE) {
+    if ((context->recording == Context::RECORDING_WRITE) && (context->framecount > 0)) {
         std::string totalframestr = std::to_string(context->framecount - 1);
         totalframecount->value(totalframestr.c_str());
-    }
-
-    if (status) {
-        /* Update pause status */
-        pausecheck->value(!context->config.sc.running);
-
-        /* Update fastforward status */
-        fastforwardcheck->value(context->config.sc.fastforward);
-
-        /* Update recording state */
-        switch (context->recording) {
-          case Context::NO_RECORDING:
-              movie_norec->setonly();
-              break;
-          case Context::RECORDING_WRITE:
-              movie_w->setonly();
-              break;
-          case Context::RECORDING_READ_WRITE:
-              movie_rw->setonly();
-              break;
-          case Context::RECORDING_READ_ONLY:
-              movie_ro->setonly();
-              break;
-        }
-
-        /* Update encode menus */
-#ifdef LIBTAS_ENABLE_AVDUMPING
-        Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
-        Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
-        if (context->config.sc.av_dumping) {
-            if (encode_item) encode_item->label("Stop encode");
-            if (config_item) config_item->deactivate();
-        }
-        else {
-            if (encode_item) encode_item->label("Start encode");
-            if (config_item) config_item->activate();
-        }
-#endif
-
     }
 
     Fl::unlock();
@@ -573,7 +581,7 @@ void launch_cb(Fl_Widget* w)
             mw.context->status = Context::QUITTING;
             mw.context->config.sc.running = true;
             mw.context->config.sc_modified = true;
-            mw.update(true);
+            mw.update_ui();
             mw.update_status();
             mw.game_thread.detach();
             break;

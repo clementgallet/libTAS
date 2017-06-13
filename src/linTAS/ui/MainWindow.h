@@ -94,14 +94,20 @@ class MainWindow {
         Fl_Output *totalframecount;
 
         /* Update UI elements (mainly enable/disable) depending on
-         * the game status (running/stopped)
+         * the game status (running/stopped), to prevent modifying values that
+         * are not supposed to be modified when the game is running.
          */
         void update_status();
 
-        /* Update UI elements when the game is running (frame counter, etc.) */
-        void update(bool status);
+        /* Update UI elements, when the game is running, that may have been
+         * modified by hotkeys or messages from the game.
+         */
+        void update_ui();
 
-        /* Update UI elements when the config has changed */
+        /* Update frame count */
+        void update_framecount();
+
+        /* Update UI elements when a config file is loaded */
         void update_config();
 
     private:
