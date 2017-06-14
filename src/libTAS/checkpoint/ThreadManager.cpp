@@ -118,6 +118,15 @@ ThreadInfo* ThreadManager::getNewThread()
     return thread;
 }
 
+ThreadInfo* ThreadManager::getThread(pthread_t tid)
+{
+    for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next)
+        if (thread->tid == tid)
+            return thread;
+
+    return nullptr;
+}
+
 void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
@@ -351,14 +360,15 @@ void ThreadManager::suspendThreads()
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
+                    ret = pthread_kill(thread->tid, SIGUSR1);
 
-                    if (pthread_kill(thread->tid, SIGUSR1) != 0) {
-                        MYASSERT(errno == ESRCH)
-                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Sending signal to thread ", stringify(thread->tid), " failed");
-                        threadIsDead(thread);
+                    if (ret == 0) {
+                        needrescan = true;
                     }
                     else {
-                        needrescan = true;
+                        MYASSERT(ret == ESRCH)
+                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread", stringify(thread->tid), "has died since");
+                        threadIsDead(thread);
                     }
                 }
                 break;
@@ -369,19 +379,24 @@ void ThreadManager::suspendThreads()
                 * removed from the list. We will still check using pthread_kill(tid, 0)
                 */
                 ret = pthread_kill(thread->tid, 0);
-                MYASSERT(ret == 0 || errno == ESRCH)
-                if (ret == -1 && errno == ESRCH) {
+
+                MYASSERT(ret == 0 || ret == ESRCH)
+                if (ret == ESRCH) {
                     debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", stringify(thread->tid), " no longer exists");
                     threadIsDead(thread);
                 }
                 break;
 
             case ThreadInfo::ST_SIGNALED:
-                if (pthread_kill(thread->tid, 0) == -1 && errno == ESRCH) {
+                ret = pthread_kill(thread->tid, 0);
+
+                if (ret == 0) {
+                    needrescan = true;
+                }
+                else {
+                    MYASSERT(ret == ESRCH)
                     debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread ", stringify(thread->tid), " died");
                     threadIsDead(thread);
-                } else {
-                    needrescan = true;
                 }
                 break;
 

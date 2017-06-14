@@ -25,7 +25,7 @@
 #include "../external/SDL1.h" // SDL_Surface
 #include "sdlwindows.h"
 #include <vector>
-#include <string.h> // memcpy
+#include <cstring> // memcpy
 
 bool useGL;
 bool inited = false;
@@ -56,7 +56,7 @@ namespace orig {
 
 /* Video dimensions */
 int width, height;
-int size;
+unsigned int size;
 
 SDL_Renderer* renderer;
 int pixelSize = 0;
@@ -139,9 +139,10 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
     if (pwidth) *pwidth = width;
     if (pheight) *pheight = height;
 
-    /* Allocate an array of pixels */
+    /* We don't allocate the array of pixels here, we are doing a lazy
+     * allocation when we will need it.
+     */
     size = width * height * pixelSize;
-    winpixels.resize(size);
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
@@ -159,11 +160,6 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
             debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
             return -1;
         }
-
-        /* Allocate another pixels array,
-         * because the image will need to be flipped.
-         */
-        glpixels.resize(size);
     }
 
     inited = true;
@@ -239,9 +235,19 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
 {
     MYASSERT(inited)
 
+    /* Lazy allocations */
+    if (winpixels.size() != size)
+        winpixels.resize(size);
+
     int pitch = pixelSize * width;
 
     if (useGL) {
+        /* Allocate another pixels array,
+         * because the image will need to be flipped.
+         */
+            if (glpixels.size() != size)
+                glpixels.resize(size);
+
         /* TODO: Check that the openGL dimensions did not change in between */
 
         /* We access to the image pixels directly using glReadPixels */
@@ -257,9 +263,7 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
 
         for (int line = 0; line < height; line++) {
             int pos = line * pitch;
-            for (int p=0; p<pitch; p++) {
-                winpixels[pos + p] = glpixels[(size-pos)-pitch + p];
-            }
+            memcpy(&winpixels[pos], &glpixels[(size-pos)-pitch], pitch);
         }
 
     }

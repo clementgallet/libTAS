@@ -181,9 +181,7 @@ static int sendXid(void)
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
-    //threadState.setNative(true);
     void* context = orig::SDL_GL_CreateContext(window);
-    //threadState.setNative(false);
 
     /* We override this function just to disable vsync,
      * except when using non deterministic timer.
@@ -242,10 +240,7 @@ std::string origIcon;
     else
         video_opengl = false;
 
-    /* If we are going to save the screen when savestating, we need to init
-     * our pixel access routine */
-    if (shared_config.save_screenpixels)
-        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
 
     return gameWindow;
 }
@@ -264,8 +259,7 @@ std::string origIcon;
         avencoder.reset(nullptr);
 #endif
 
-    if (shared_config.save_screenpixels)
-        finiScreenPixels();
+    finiScreenPixels();
 }
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
@@ -371,8 +365,7 @@ void updateTitle(float fps, float lfps)
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    if (shared_config.save_screenpixels)
-        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
 
     return ret;
 }
@@ -444,8 +437,7 @@ void updateTitle(float fps, float lfps)
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    if (shared_config.save_screenpixels)
-        initScreenPixels(nullptr, video_opengl, nullptr, nullptr);
+    initScreenPixels(nullptr, video_opengl, nullptr, nullptr);
 
     return surf;
 }

@@ -69,6 +69,9 @@ public:
     /* Create a new ThreadInfo struct from the parent thread*/
     static ThreadInfo* getNewThread();
 
+    /* Get the ThreadInfo struct from the thread id, or null if not there */
+    static ThreadInfo* getThread(pthread_t tid);
+
     /* Init the ThreadInfo with values passed in pthread_create */
     static void initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 

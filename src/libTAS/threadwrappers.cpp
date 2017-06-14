@@ -183,25 +183,47 @@ static void *pthread_start(void *arg)
     orig::pthread_exit(retval);
 }
 
-/* Override */ int pthread_join (pthread_t thread, void **thread_return)
+/* Override */ int pthread_join (pthread_t tid, void **thread_return)
 {
     LINK_NAMESPACE(pthread_join, "pthread");
-    std::string thstr = stringify(thread);
+    std::string thstr = stringify(tid);
     debuglog(LCF_THREAD, "Joining thread ", thstr);
-    int retVal = orig::pthread_join(thread, thread_return);
-    ThreadManager::threadDetach(thread);
+
+    /* We may have a problem with zombie threads and savestates here.
+     * Suppose we have:
+     * thread returns -> savestate -> thread is detached -> loadstate
+     * (allowed because the set of running threads is the same) |
+     *                                                          |
+     *                        /---------------------------------/
+     *                        |
+     *                        V    -> thread is detached (again!)
+     * So we will check if we are detaching/joining a zombie thread. If so,
+     * we always return that it succeeded.
+     */
+
+    int ret = orig::pthread_join(tid, thread_return);
+    ThreadInfo* thread = ThreadManager::getThread(tid);
+    if (thread && thread->state == ThreadInfo::ST_ZOMBIE)
+        ret = 0;
+    ThreadManager::threadDetach(tid);
     // ThreadManager::get().end(thread);
-    return retVal;
+    return ret;
 }
 
-/* Override */ int pthread_detach (pthread_t thread) throw()
+/* Override */ int pthread_detach (pthread_t tid) throw()
 {
     LINK_NAMESPACE(pthread_detach, "pthread");
-    std::string thstr = stringify(thread);
+    std::string thstr = stringify(tid);
     debuglog(LCF_THREAD, "Detaching thread ", thstr);
     // ThreadManager::resume(thread);
-    int ret = orig::pthread_detach(thread);
-    ThreadManager::threadDetach(thread);
+    int ret = orig::pthread_detach(tid);
+
+    /* Same comment as above */
+    ThreadInfo* thread = ThreadManager::getThread(tid);
+    if (thread && thread->state == ThreadInfo::ST_ZOMBIE)
+        ret = 0;
+
+    ThreadManager::threadDetach(tid);
     return ret;
 }
 

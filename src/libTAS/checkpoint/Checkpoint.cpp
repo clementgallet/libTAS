@@ -102,11 +102,21 @@ bool Checkpoint::checkRestore()
     /* Check that the thread list is identical */
     int n=0;
     for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        for (int t=0; t<sh.thread_count; t++) {
+        if (thread->state != ThreadInfo::ST_RUNNING)
+            continue;
+
+        int t;
+        for (t=0; t<sh.thread_count; t++) {
             if (sh.thread_tids[t] == thread->tid) {
                 n++;
                 break;
             }
+        }
+
+        if (t == sh.thread_count) {
+            /* We didn't find a match */
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
+            return false;
         }
     }
 
@@ -327,7 +337,8 @@ static void writeAllAreas()
     StateHeader sh;
     int n=0;
     for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        sh.thread_tids[n++] = thread->tid;
+        if (thread->state == ThreadInfo::ST_SUSPENDED)
+            sh.thread_tids[n++] = thread->tid;
     }
     sh.thread_count = n;
     Utils::writeAll(fd, &sh, sizeof(sh));

@@ -552,9 +552,6 @@ AVEncoder::~AVEncoder() {
     // av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
-
-    if (!shared_config.save_screenpixels)
-        finiScreenPixels();
 }
 
 #endif
