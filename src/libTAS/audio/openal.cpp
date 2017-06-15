@@ -23,6 +23,8 @@
 #include "AudioSource.h"
 #include "AudioContext.h"
 
+namespace libtas {
+
 ALenum alError;
 #define ALSETERROR(error) if(alError==AL_NO_ERROR) alError = error
 
@@ -81,45 +83,45 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     ab->frequency = freq;
     switch(format) {
         case AL_FORMAT_MONO8:
-            ab->format = SAMPLE_FMT_U8;
+            ab->format = AudioBuffer::SAMPLE_FMT_U8;
             ab->nbChannels = 1;
             break;
         case AL_FORMAT_MONO16:
-            ab->format = SAMPLE_FMT_S16;
+            ab->format = AudioBuffer::SAMPLE_FMT_S16;
             ab->nbChannels = 1;
             break;
         case AL_FORMAT_STEREO8:
-            ab->format = SAMPLE_FMT_U8;
+            ab->format = AudioBuffer::SAMPLE_FMT_U8;
             ab->nbChannels = 2;
             break;
         case AL_FORMAT_STEREO16:
-            ab->format = SAMPLE_FMT_S16;
+            ab->format = AudioBuffer::SAMPLE_FMT_S16;
             ab->nbChannels = 2;
             break;
         case AL_FORMAT_MONO_FLOAT32:
-            ab->format = SAMPLE_FMT_FLT;
+            ab->format = AudioBuffer::SAMPLE_FMT_FLT;
             ab->nbChannels = 1;
             break;
         case AL_FORMAT_STEREO_FLOAT32:
-            ab->format = SAMPLE_FMT_FLT;
+            ab->format = AudioBuffer::SAMPLE_FMT_FLT;
             ab->nbChannels = 2;
             break;
         case AL_FORMAT_MONO_DOUBLE_EXT:
-            ab->format = SAMPLE_FMT_DBL;
+            ab->format = AudioBuffer::SAMPLE_FMT_DBL;
             ab->nbChannels = 1;
             break;
         case AL_FORMAT_STEREO_DOUBLE_EXT:
-            ab->format = SAMPLE_FMT_DBL;
+            ab->format = AudioBuffer::SAMPLE_FMT_DBL;
             ab->nbChannels = 2;
             break;
         case AL_FORMAT_MONO_MSADPCM_SOFT:
-            ab->format = SAMPLE_FMT_MSADPCM;
+            ab->format = AudioBuffer::SAMPLE_FMT_MSADPCM;
             ab->nbChannels = 1;
             if (ab->blockSamples == 0)
                 ab->blockSamples = 64;
             break;
         case AL_FORMAT_STEREO_MSADPCM_SOFT:
-            ab->format = SAMPLE_FMT_MSADPCM;
+            ab->format = AudioBuffer::SAMPLE_FMT_MSADPCM;
             ab->nbChannels = 2;
             if (ab->blockSamples == 0)
                 ab->blockSamples = 64;
@@ -290,8 +292,8 @@ void alDeleteSources(ALsizei n, ALuint *sources)
 	for (int i=0; i<n; i++) {
         /* If the source is deleted when playing, the source must be stopped first */
         auto as = audiocontext.getSource(sources[i]);
-        if (as->state == SOURCE_PLAYING)
-            as->state = SOURCE_STOPPED;
+        if (as->state == AudioSource::SOURCE_PLAYING)
+            as->state = AudioSource::SOURCE_STOPPED;
 		audiocontext.deleteSource(sources[i]);
 	}
 }
@@ -401,7 +403,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         case AL_BUFFER:
             /* Bind a buffer to the source */
 
-            if ((as->state == SOURCE_PLAYING) || (as->state == SOURCE_PAUSED)) {
+            if ((as->state == AudioSource::SOURCE_PLAYING) || (as->state == AudioSource::SOURCE_PAUSED)) {
                 ALSETERROR(AL_INVALID_OPERATION);
                 return;
             }
@@ -419,7 +421,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 }
                 as->init();
                 as->buffer_queue.push_back(bindab);
-                as->source = SOURCE_STATIC;
+                as->source = AudioSource::SOURCE_STATIC;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
             break;
@@ -554,19 +556,19 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             break;
         case AL_SOURCE_STATE:
             switch(as->state) {
-                case SOURCE_INITIAL:
+                case AudioSource::SOURCE_INITIAL:
                     *value = AL_INITIAL;
                     debuglog(LCF_OPENAL, "  Get source state INITIAL");
                     break;
-                case SOURCE_PLAYING:
+                case AudioSource::SOURCE_PLAYING:
                     *value = AL_PLAYING;
                     debuglog(LCF_OPENAL, "  Get source state PLAYING");
                     break;
-                case SOURCE_PAUSED:
+                case AudioSource::SOURCE_PAUSED:
                     *value = AL_PAUSED;
                     debuglog(LCF_OPENAL, "  Get source state PAUSED");
                     break;
-                case SOURCE_STOPPED:
+                case AudioSource::SOURCE_STOPPED:
                     *value = AL_STOPPED;
                     debuglog(LCF_OPENAL, "  Get source state STOPPED");
                     break;
@@ -574,15 +576,15 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             break;
         case AL_SOURCE_TYPE:
             switch(as->source) {
-                case SOURCE_UNDETERMINED:
+                case AudioSource::SOURCE_UNDETERMINED:
                     *value = AL_UNDETERMINED;
                     debuglog(LCF_OPENAL, "  Get source type UNDETERMINED");
                     break;
-                case SOURCE_STATIC:
+                case AudioSource::SOURCE_STATIC:
                     *value = AL_STATIC;
                     debuglog(LCF_OPENAL, "  Get source type STATIC");
                     break;
-                case SOURCE_STREAMING:
+                case AudioSource::SOURCE_STREAMING:
                     *value = AL_STREAMING;
                     debuglog(LCF_OPENAL, "  Get source type STREAMING");
                     break;
@@ -599,9 +601,9 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             debuglog(LCF_OPENAL, "  Get number of queued buffers of ", *value);
             break;
         case AL_BUFFERS_PROCESSED:
-            if (as->state == SOURCE_STOPPED)
+            if (as->state == AudioSource::SOURCE_STOPPED)
                 *value = as->nbQueue();
-            else if (as->state == SOURCE_INITIAL)
+            else if (as->state == AudioSource::SOURCE_INITIAL)
                 *value = 0;
             else
                 *value = as->nbQueueProcessed();
@@ -639,11 +641,11 @@ void alSourcePlay(ALuint source)
     if (!as)
         return;
 
-    if (as->state == SOURCE_PLAYING) {
+    if (as->state == AudioSource::SOURCE_PLAYING) {
         /* Restart the play from the beginning */
         as->setPosition(0);
     }
-    as->state = SOURCE_PLAYING;
+    as->state = AudioSource::SOURCE_PLAYING;
 }
 
 void alSourcePlayv(ALsizei n, ALuint *sources)
@@ -660,11 +662,11 @@ void alSourcePause(ALuint source)
     if (!as)
         return;
 
-    if (as->state != SOURCE_PLAYING) {
+    if (as->state != AudioSource::SOURCE_PLAYING) {
         /* Illegal operation. */
         return;
     }
-    as->state = SOURCE_PAUSED;
+    as->state = AudioSource::SOURCE_PAUSED;
 }
 
 void alSourcePausev(ALsizei n, ALuint *sources)
@@ -681,12 +683,12 @@ void alSourceStop(ALuint source)
     if (!as)
         return;
 
-    if ((as->state == SOURCE_INITIAL) || (as->state == SOURCE_STOPPED)) {
+    if ((as->state == AudioSource::SOURCE_INITIAL) || (as->state == AudioSource::SOURCE_STOPPED)) {
         /* Illegal operation. */
         return;
     }
     as->rewind();
-    as->state = SOURCE_STOPPED;
+    as->state = AudioSource::SOURCE_STOPPED;
 }
 
 void alSourceStopv(ALsizei n, ALuint *sources)
@@ -703,12 +705,12 @@ void alSourceRewind(ALuint source)
     if (!as)
         return;
 
-    if (as->state == SOURCE_INITIAL) {
+    if (as->state == AudioSource::SOURCE_INITIAL) {
         /* Illegal operation. */
         return;
     }
     as->setPosition(0);
-    as->state = SOURCE_INITIAL;
+    as->state = AudioSource::SOURCE_INITIAL;
 }
 
 void alSourceRewindv(ALsizei n, ALuint *sources)
@@ -728,12 +730,12 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Check if the source has a static buffer attached */
-    if (as->source == SOURCE_STATIC) {
+    if (as->source == AudioSource::SOURCE_STATIC) {
         ALSETERROR(AL_INVALID_OPERATION);
         return;
     }
 
-    as->source = SOURCE_STREAMING;
+    as->source = AudioSource::SOURCE_STREAMING;
 
     /* TODO: Check that all buffers have the same format */
     for (int i=0; i<n; i++) {
@@ -755,7 +757,7 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     /* Check if we can unqueue that number of buffers */
     int processedBuffers;
-    if (as->state == SOURCE_STOPPED)
+    if (as->state == AudioSource::SOURCE_STOPPED)
         processedBuffers = as->nbQueue();
     else
         processedBuffers = as->nbQueueProcessed();
@@ -777,7 +779,7 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
      * TODO: This is slow on a vector, maybe use forward_list?
      */
     as->buffer_queue.erase(as->buffer_queue.begin(), as->buffer_queue.begin()+n);
-    if (as->state != SOURCE_STOPPED)
+    if (as->state != AudioSource::SOURCE_STOPPED)
         as->queue_index -= n;
 }
 
@@ -863,4 +865,6 @@ void alGetListeneriv(ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     debuglog(LCF_OPENAL, "Operation not supported");
+}
+
 }

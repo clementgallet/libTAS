@@ -21,6 +21,8 @@
 #include "logging.h"
 #include "hook.h"
 
+namespace libtas {
+
 namespace orig {
     static long int (*random) (void) throw();
     static void (*srandom) (unsigned int seed) throw();
@@ -270,4 +272,6 @@ namespace orig {
     DEBUGLOGCALL(LCF_RANDOM);
     LINK_NAMESPACE(lcong48_r, nullptr);
     return orig::lcong48_r(param, buffer);
+}
+
 }

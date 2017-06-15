@@ -27,12 +27,14 @@
 #include <vector>
 #include <cstring> // memcpy
 
-bool useGL;
-bool inited = false;
+namespace libtas {
+
+static bool useGL;
+static bool inited = false;
 
 /* Temporary pixel arrays */
-std::vector<uint8_t> glpixels;
-std::vector<uint8_t> winpixels;
+static std::vector<uint8_t> glpixels;
+static std::vector<uint8_t> winpixels;
 
 /* Original function pointers */
 namespace orig {
@@ -55,11 +57,11 @@ namespace orig {
 }
 
 /* Video dimensions */
-int width, height;
-unsigned int size;
+static int width, height, pitch;
+static unsigned int size;
+static int pixelSize;
 
-SDL_Renderer* renderer;
-int pixelSize = 0;
+static SDL_Renderer* renderer;
 
 int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
 {
@@ -143,6 +145,7 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
      * allocation when we will need it.
      */
     size = width * height * pixelSize;
+    pitch = pixelSize * width;
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
@@ -239,8 +242,6 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
     if (winpixels.size() != size)
         winpixels.resize(size);
 
-    int pitch = pixelSize * width;
-
     if (useGL) {
         /* Allocate another pixels array,
          * because the image will need to be flipped.
@@ -254,18 +255,19 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
         /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
 
-        /*
-         * Flip image horizontally
-         * This is because OpenGL has a different reference point
-         * Code taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
-         * TODO: Could this be done without allocating another array ?
-         */
 
-        for (int line = 0; line < height; line++) {
-            int pos = line * pitch;
-            memcpy(&winpixels[pos], &glpixels[(size-pos)-pitch], pitch);
+        if (orig_plane) {
+            /*
+             * Flip image horizontally
+             * This is because OpenGL has a different reference point
+             * Code taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
+             */
+
+            for (int line = 0; line < height; line++) {
+                int pos = line * pitch;
+                memcpy(&winpixels[pos], &glpixels[(size-pos)-pitch], pitch);
+            }
         }
-
     }
 
     else {
@@ -321,8 +323,6 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
 
 int setScreenPixels(SDL_Window* window) {
     MYASSERT(inited)
-
-    int pitch = pixelSize * width;
 
     if (useGL) {
         orig::glWindowPos2i(0, 0);
@@ -388,4 +388,6 @@ int setScreenPixels(SDL_Window* window) {
     }
 
     return 0;
+}
+
 }

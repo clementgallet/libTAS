@@ -27,6 +27,8 @@
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
 
+namespace libtas {
+
 /* Frame counter */
 unsigned long frame_counter = 0;
 
@@ -101,4 +103,6 @@ namespace orig {
 
     debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "  returning ", counter);
     return counter;
+}
+
 }

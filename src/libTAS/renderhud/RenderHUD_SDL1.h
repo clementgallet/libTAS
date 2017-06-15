@@ -24,6 +24,7 @@
 
 #include "RenderHUD.h"
 
+namespace libtas {
 class RenderHUD_SDL1 : public RenderHUD
 {
     public:
@@ -32,6 +33,7 @@ class RenderHUD_SDL1 : public RenderHUD
         void size(int& width, int& height);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 };
+}
 
 #endif
 #endif

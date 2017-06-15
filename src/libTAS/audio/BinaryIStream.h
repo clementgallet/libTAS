@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <vector>
 
+namespace libtas {
 class BinaryIStream
 {
     private:
@@ -87,6 +88,6 @@ class BinaryIStream
             return stream;
         }
 };
+}
 
 #endif
-

@@ -23,6 +23,8 @@
 #include <functional>
 #include "renderhud/RenderHUD.h"
 
+namespace libtas {
+
 /* Called to initiate a frame boundary.
  * Does several things like:
  * - Advancing timers
@@ -41,5 +43,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw);
 
 /* Process messages that are received from linTAS */
 void proceed_commands(void);
+
+}
 
 #endif

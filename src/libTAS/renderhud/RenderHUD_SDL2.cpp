@@ -23,6 +23,8 @@
 #include "../logging.h"
 #include "../hook.h"
 
+namespace libtas {
+
 namespace orig {
     static SDL_Surface *(*SDL_CreateRGBSurfaceFrom)(void *pixels,
             int width, int height, int depth, int pitch,
@@ -69,6 +71,8 @@ void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color
 
     SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
     orig::SDL_RenderCopy(renderer, tex, NULL, &rect);
+}
+
 }
 
 #endif

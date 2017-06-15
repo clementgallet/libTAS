@@ -24,6 +24,8 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
+namespace libtas {
+
 OVERRIDE int XQueryKeymap( Display*, char [32]);
 OVERRIDE Bool XQueryPointer(
         Display*    /* display */,
@@ -37,5 +39,6 @@ OVERRIDE Bool XQueryPointer(
         unsigned int*  /* mask_return */
         );
 
-#endif
+}
 
+#endif

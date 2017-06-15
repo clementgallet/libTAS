@@ -25,6 +25,7 @@
 #include <ucontext.h>
 #include <pthread.h> // pthread_t
 
+namespace libtas {
 struct ThreadInfo {
 
     enum ThreadState {
@@ -47,5 +48,6 @@ struct ThreadInfo {
     ThreadInfo *next;
     ThreadInfo *prev;
 };
+}
 
 #endif

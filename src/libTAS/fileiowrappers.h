@@ -27,6 +27,8 @@
 #include "global.h"
 #include <cstdio>
 
+namespace libtas {
+
 /**
  *  \name RWFrom functions
  *
@@ -67,6 +69,8 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 
 /* Close the file descriptor FD. */
 OVERRIDE int close (int fd);
+
+}
 
 #endif
 #endif

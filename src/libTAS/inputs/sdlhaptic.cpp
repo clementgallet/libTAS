@@ -20,6 +20,8 @@
 #include "sdlhaptic.h"
 #include "../logging.h"
 
+namespace libtas {
+
 int SDL_NumHaptics(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
@@ -49,3 +51,4 @@ void SDL_HapticClose(SDL_Haptic * haptic)
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
 }
 
+}

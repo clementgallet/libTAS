@@ -29,34 +29,7 @@ extern "C" {
 }
 #endif
 
-enum SourceType {
-    SOURCE_UNDETERMINED,
-
-    /* Source does only store one audio buffer, and stops at the end
-     * of it, or loop back.
-     */
-    SOURCE_STATIC,
-
-    /* Source stores a queue of buffers and read the next one when the
-     * current one is finish reading.
-     * The game can pull buffers from the queue that have been read
-     * entirely, and push more buffers
-     */
-    SOURCE_STREAMING,
-
-    /* Source stores only one audio buffer. When it is finished reading,
-     * it calls a callback function that refills the audio buffer
-     */
-    SOURCE_CALLBACK,
-};
-
-enum SourceState {
-    SOURCE_INITIAL,
-    SOURCE_PLAYING,
-    SOURCE_STOPPED,
-    SOURCE_PAUSED,
-};
-
+namespace libtas {
 /* Class storing an audio source, whose role is to control the playback
  * of an audio buffer or a queue of audio buffers.
  * It is also in charge of eventually resample the buffer(s) and mix them
@@ -88,12 +61,38 @@ class AudioSource
         /* Is it a static source (we got the entire buffer at once)
          * or a streaming source (we continuously get buffers)
          */
+        enum SourceType {
+            SOURCE_UNDETERMINED,
+
+            /* Source does only store one audio buffer, and stops at the end
+            * of it, or loop back.
+            */
+            SOURCE_STATIC,
+
+            /* Source stores a queue of buffers and read the next one when the
+            * current one is finish reading.
+            * The game can pull buffers from the queue that have been read
+            * entirely, and push more buffers
+            */
+            SOURCE_STREAMING,
+
+            /* Source stores only one audio buffer. When it is finished reading,
+            * it calls a callback function that refills the audio buffer
+            */
+            SOURCE_CALLBACK,
+        };
         SourceType source;
 
         /* Is the audio buffer looping? */
         bool looping;
 
         /* Is the source playing? */
+        enum SourceState {
+            SOURCE_INITIAL,
+            SOURCE_PLAYING,
+            SOURCE_STOPPED,
+            SOURCE_PAUSED,
+        };
         SourceState state;
 
         /* A queue of buffers to play */
@@ -158,5 +157,6 @@ class AudioSource
          */
         int mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
 };
+}
 
 #endif

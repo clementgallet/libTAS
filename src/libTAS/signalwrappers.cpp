@@ -23,6 +23,8 @@
 #include "hook.h"
 #include <cstring>
 
+namespace libtas {
+
 namespace orig {
     static sighandler_t (*signal) (int sig, sighandler_t handler) throw();
     static int (*sigblock) (int mask) throw();
@@ -290,4 +292,6 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE(pthread_sigqueue, nullptr);
     return orig::pthread_sigqueue(threadid, signo, value);
+}
+
 }

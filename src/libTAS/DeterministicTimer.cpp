@@ -28,6 +28,8 @@
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
 
+namespace libtas {
+
 struct timespec DeterministicTimer::getTicks()
 {
     return getTicks(SharedConfig::TIMETYPE_UNTRACKED);
@@ -295,3 +297,5 @@ void DeterministicTimer::initialize(void)
 }
 
 DeterministicTimer detTimer;
+
+}

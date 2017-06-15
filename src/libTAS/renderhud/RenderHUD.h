@@ -28,6 +28,7 @@
 #include "../../shared/AllInputs.h"
 #include <memory>
 
+namespace libtas {
 /* This class handles the display of some text over the game screen (HUD).
  *
  * Because games have different methods of rendering, this class
@@ -84,6 +85,7 @@ class RenderHUD
         TTF_Font* fg_font;
         TTF_Font* bg_font;
 };
+}
 
 #endif
 #endif

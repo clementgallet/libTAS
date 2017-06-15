@@ -22,6 +22,13 @@
 
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#ifdef LIBTAS_ENABLE_AVDUMPING
+extern "C" {
+#include <libavutil/pixfmt.h>
+}
+#endif
+
+namespace libtas {
 
 /* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
@@ -32,7 +39,6 @@ int initScreenPixels(SDL_Window* window, bool video_opengl, int *pwidth, int *ph
 void finiScreenPixels();
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
-#include <libavutil/pixfmt.h>
 
 /* Get the pixel format as an enum used by ffmpeg library. */
 AVPixelFormat getPixelFormat(SDL_Window* window);
@@ -52,5 +58,7 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[]);
 
 /* Set the screen pixels from our buffers */
 int setScreenPixels(SDL_Window* window);
+
+}
 
 #endif

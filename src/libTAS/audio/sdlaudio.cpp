@@ -24,13 +24,22 @@
 #include "AudioBuffer.h"
 #include <cstring> // strncpy
 
+namespace libtas {
+
+static const char* dummySDLDriver = "libtas";
+static SDL_AudioCallback audioCallback;
+static void* callbackArg;
+// static Uint16 bufferSamplesSize;
+
+static std::shared_ptr<AudioSource> sourceSDL;
+
+static const char* dummySDLDevice = "libTAS device";
+
 /* Override */ int SDL_GetNumAudioDrivers(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     return 1;
 }
-
-const char* dummySDLDriver = "libtas";
 
 /* Override */ const char *SDL_GetAudioDriver(int index)
 {
@@ -76,12 +85,6 @@ const char* curDriver = NULL;
     return curDriver;
 }
 
-SDL_AudioCallback audioCallback;
-void* callbackArg;
-Uint16 bufferSamplesSize;
-
-std::shared_ptr<AudioSource> sourceSDL;
-
 /* Function that is called by an AudioSource when the played sound buffer
  * is empty
  */
@@ -111,16 +114,16 @@ void fillBufferCallback(AudioBuffer& ab)
 
         switch(desired->format) {
             case AUDIO_U8:
-                buffer->format = SAMPLE_FMT_U8;
+                buffer->format = AudioBuffer::SAMPLE_FMT_U8;
                 break;
             case AUDIO_S16LSB:
-                buffer->format = SAMPLE_FMT_S16;
+                buffer->format = AudioBuffer::SAMPLE_FMT_S16;
                 break;
             case AUDIO_S32LSB:
-                buffer->format = SAMPLE_FMT_S32;
+                buffer->format = AudioBuffer::SAMPLE_FMT_S32;
                 break;
             case AUDIO_F32LSB:
-                buffer->format = SAMPLE_FMT_FLT;
+                buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
                 break;
             default:
                 debuglog(LCF_SDL | LCF_SOUND, "Unsupported audio format");
@@ -142,7 +145,7 @@ void fillBufferCallback(AudioBuffer& ab)
         sourceSDL = audiocontext.getSource(sourceId);
 
         sourceSDL->buffer_queue.push_back(buffer);
-        sourceSDL->source = SOURCE_CALLBACK;
+        sourceSDL->source = AudioSource::SOURCE_CALLBACK;
         sourceSDL->callback = fillBufferCallback;
         /* We simulate an empty buffer by setting the position at the end */
         sourceSDL->position = buffer->sampleSize;
@@ -151,7 +154,7 @@ void fillBufferCallback(AudioBuffer& ab)
         desired->size = buffer->size;
 
         /* Filling silence value. Not sure what to put here */
-        desired->silence = (buffer->format==SAMPLE_FMT_U8)?0x80:0x00;
+        desired->silence = (buffer->format==AudioBuffer::SAMPLE_FMT_U8)?0x80:0x00;
 
         audioCallback = desired->callback;
         callbackArg = desired->userdata;
@@ -171,8 +174,6 @@ void fillBufferCallback(AudioBuffer& ab)
         return 0;
     return 1;
 }
-
-const char* dummySDLDevice = "libTAS device";
 
 /* Override */ const char *SDL_GetAudioDeviceName(int index, int iscapture)
 {
@@ -200,12 +201,12 @@ const char* dummySDLDevice = "libTAS device";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     switch(sourceSDL->state) {
-        case SOURCE_INITIAL:
-        case SOURCE_STOPPED:
+        case AudioSource::SOURCE_INITIAL:
+        case AudioSource::SOURCE_STOPPED:
             return SDL_AUDIO_STOPPED;
-        case SOURCE_PLAYING:
+        case AudioSource::SOURCE_PLAYING:
             return SDL_AUDIO_PLAYING;
-        case SOURCE_PAUSED:
+        case AudioSource::SOURCE_PAUSED:
             return SDL_AUDIO_PAUSED;
         default:
             debuglog(LCF_SDL | LCF_SOUND | LCF_ERROR, "Unknown source state");
@@ -223,9 +224,9 @@ const char* dummySDLDevice = "libTAS device";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     if (pause_on == 0)
-        sourceSDL->state = SOURCE_PLAYING;
+        sourceSDL->state = AudioSource::SOURCE_PLAYING;
     else
-        sourceSDL->state = SOURCE_PAUSED;
+        sourceSDL->state = AudioSource::SOURCE_PAUSED;
 
 }
 
@@ -239,7 +240,7 @@ const char* dummySDLDevice = "libTAS device";
 {
     debuglog(LCF_SDL | LCF_SOUND, __func__, " call with ", len, " bytes of data");
 
-    if (sourceSDL->source == SOURCE_CALLBACK) {
+    if (sourceSDL->source == AudioSource::SOURCE_CALLBACK) {
         /* We cannot queue samples when using the callback mechanism */
         return -1;
     }
@@ -286,7 +287,7 @@ const char* dummySDLDevice = "libTAS device";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
-    if (sourceSDL->source == SOURCE_CALLBACK) {
+    if (sourceSDL->source == AudioSource::SOURCE_CALLBACK) {
         /* We cannot get queue samples when using the callback mechanism */
         return 0;
     }
@@ -300,7 +301,7 @@ const char* dummySDLDevice = "libTAS device";
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
-    if (sourceSDL->source == SOURCE_CALLBACK) {
+    if (sourceSDL->source == AudioSource::SOURCE_CALLBACK) {
         /* We cannot get queue samples when using the callback mechanism */
         return;
     }
@@ -339,4 +340,6 @@ const char* dummySDLDevice = "libTAS device";
 /* Override */ void SDL_CloseAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+}
+
 }

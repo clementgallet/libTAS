@@ -24,6 +24,8 @@
 #include "global.h"
 #include <string>
 
+namespace libtas {
+
 void __attribute__((constructor)) init(void);
 void __attribute__((destructor)) term(void);
 
@@ -48,5 +50,7 @@ OVERRIDE int SDL_InitSubSystem(Uint32 flags);
  *  call it upon all exit conditions.
  */
 OVERRIDE void SDL_Quit(void);
+
+}
 
 #endif

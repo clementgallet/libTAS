@@ -417,6 +417,7 @@ typedef void ALvoid;
 #define AL_FORMAT_BFORMAT3D_MULAW                0x10032
 
 /*** OpenAL functions ***/
+namespace libtas {
 
 OVERRIDE ALenum alGetError(ALvoid);
 
@@ -504,5 +505,6 @@ OVERRIDE void alGetListeneri(ALenum param, ALint *value);
 OVERRIDE void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3);
 OVERRIDE void alGetListeneriv(ALenum param, ALint *values);
 
-#endif
+}
 
+#endif

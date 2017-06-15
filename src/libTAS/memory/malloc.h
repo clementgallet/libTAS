@@ -24,6 +24,8 @@
 #include "../global.h"
 #include <cstdlib>
 
+namespace libtas {
+
 /* Allocate SIZE bytes of memory.  */
 OVERRIDE void *malloc (size_t size) throw();
 
@@ -53,6 +55,7 @@ OVERRIDE void *memalign (size_t alignment, size_t size) throw();
 /* Free a block allocated by `malloc', `realloc' or `calloc'.  */
 OVERRIDE void free (void *ptr) throw();
 
-#endif
-#endif
+}
 
+#endif
+#endif

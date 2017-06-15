@@ -25,6 +25,7 @@
 #include "RenderHUD.h"
 #include <GL/gl.h>
 
+namespace libtas {
 class RenderHUD_GL : public RenderHUD
 {
     public:
@@ -44,6 +45,7 @@ class RenderHUD_GL : public RenderHUD
         GLint oldBlendDst;
         GLint oldTex;
 };
+}
 
 #endif
 #endif

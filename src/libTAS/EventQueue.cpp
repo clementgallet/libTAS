@@ -23,6 +23,8 @@
 #include "hook.h"
 // #include "../external/SDL.h"
 
+namespace libtas {
+
 EventQueue sdlEventQueue;
 
 EventQueue::~EventQueue()
@@ -295,4 +297,6 @@ void EventQueue::delWatch(SDL_EventFilter filter, void* userdata)
     std::set<std::pair<SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
     if (it != watches.end())
         watches.erase(it);
+}
+
 }

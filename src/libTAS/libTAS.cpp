@@ -40,6 +40,8 @@
 //#include "avdumping.h"
 //#endif
 
+namespace libtas {
+
 /* Did we call our constructor? */
 bool libTAS_init = false;
 
@@ -224,4 +226,6 @@ void __attribute__((destructor)) term(void)
 
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();
+}
+
 }

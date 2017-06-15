@@ -35,6 +35,8 @@
 #include <SDL2/SDL.h>
 #include "../../external/SDL1.h"
 
+namespace libtas {
+
 void generateSDLKeyUpEvents(void)
 {
     int i, j;
@@ -504,4 +506,6 @@ void generateSDLMouseButtonEvents(void)
 
         }
     }
+}
+
 }

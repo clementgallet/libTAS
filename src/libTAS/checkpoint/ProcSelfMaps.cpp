@@ -26,6 +26,8 @@
 #include <sys/mman.h>
 #include "Utils.h"
 
+namespace libtas {
+
 ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
     : dataIdx(0),
     numAreas(0),
@@ -107,13 +109,13 @@ bool ProcSelfMaps::getNextArea(Area *area)
 
     intptr_t addr = readHex();
     MYASSERT(addr != 0)
-    area->addr = reinterpret_cast<VA>(addr);
+    area->addr = reinterpret_cast<void*>(addr);
 
     MYASSERT(data[dataIdx++] == '-')
 
     intptr_t endAddr = readHex();
     MYASSERT(endAddr != 0)
-    area->endAddr = reinterpret_cast<VA>(endAddr);
+    area->endAddr = reinterpret_cast<void*>(endAddr);
 
     MYASSERT(data[dataIdx++] == ' ')
 
@@ -187,4 +189,6 @@ bool ProcSelfMaps::getNextArea(Area *area)
     area->properties = 0;
 
     return true;
+}
+
 }

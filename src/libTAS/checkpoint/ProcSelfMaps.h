@@ -24,6 +24,7 @@
 
 #include "ProcMapsArea.h"
 
+namespace libtas {
 class ProcSelfMaps
 {
     public:
@@ -44,5 +45,6 @@ class ProcSelfMaps
         size_t numBytes;
         int fd;
 };
+}
 
 #endif

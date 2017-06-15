@@ -26,6 +26,8 @@
 #include "../../shared/SharedConfig.h"
 #include <fontconfig/fontconfig.h>
 
+namespace libtas {
+
 RenderHUD::RenderHUD()
 {
     outline_size = 1;
@@ -168,6 +170,8 @@ void RenderHUD::renderInputs(AllInputs& ai)
         size(width, height);
         renderText(text.c_str(), fg_color, bg_color, 2, height-25);
     }
+}
+
 }
 
 #endif

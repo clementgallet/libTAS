@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <vector>
 
+namespace libtas {
 /* Create a simple ARGB surface class that can be used by sdl_ttf,
  * instead of the SDL_Surface struct.
  * This allows to use sdl_ttf without needing any function
@@ -49,7 +50,7 @@ struct Color
     uint8_t r, g, b, a;
 };
 
+}
 
 #endif
 #endif
-

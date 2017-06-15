@@ -24,6 +24,8 @@
 // #include "../../external/SDL.h"
 #include <SDL2/SDL.h>
 
+namespace libtas {
+
 /**
  *  \name Driver discovery functions
  *
@@ -377,5 +379,7 @@ OVERRIDE void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev);
  */
 OVERRIDE void SDL_CloseAudio(void);
 OVERRIDE void SDL_CloseAudioDevice(SDL_AudioDeviceID dev);
+
+}
 
 #endif

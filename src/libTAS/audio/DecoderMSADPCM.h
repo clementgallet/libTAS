@@ -27,32 +27,29 @@
 #include <vector>
 #include "BinaryIStream.h"
 
-class DecoderMSADPCM
+namespace libtas {
+namespace DecoderMSADPCM
 {
-    public:
+    /**
+     * Decodes MSADPCM data to signed 16-bit PCM data.
+     * @param source     [in]  source stream containing the compressed samples
+     * @param nbChannels [in]  number of channels
+     * @param blockAlign [in]  size (in samples!) of a single ADPCM block
+     * @param pcmOut     [out] destination buffer
+     */
+    void toPCM(BinaryIStream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut);
 
-        /**
-         * Decodes MSADPCM data to signed 16-bit PCM data.
-         * @param source     [in]  source stream containing the compressed samples
-         * @param nbChannels [in]  number of channels
-         * @param blockAlign [in]  size (in samples!) of a single ADPCM block
-         * @param pcmOut     [out] destination buffer
-         */
-        static void toPCM(BinaryIStream &source, int nbChannels, int sampleAlign, std::vector<int16_t> &pcmOut);
-
-    private:
-        /**
-         * Calculates PCM samples based on previous samples and a nibble input.
-         * @param nibble A parsed MSADPCM sample
-         * @param predictor The predictor we get from the MSADPCM block's preamble
-         * @param sample_1 The first sample we use to predict the next sample
-         * @param sample_2 The second sample we use to predict the next sample
-         * @param delta Used to calculate the final sample
-         * @return The calculated PCM sample
-         */
-        static int16_t calculateSample(uint8_t nibble, uint8_t predictor, int16_t& sample1, int16_t& sample2, int16_t& delta);
-
+    /**
+     * Calculates PCM samples based on previous samples and a nibble input.
+     * @param nibble A parsed MSADPCM sample
+     * @param predictor The predictor we get from the MSADPCM block's preamble
+     * @param sample_1 The first sample we use to predict the next sample
+     * @param sample_2 The second sample we use to predict the next sample
+     * @param delta Used to calculate the final sample
+     * @return The calculated PCM sample
+     */
+    int16_t calculateSample(uint8_t nibble, uint8_t predictor, int16_t& sample1, int16_t& sample2, int16_t& delta);
 };
+}
 
 #endif
-

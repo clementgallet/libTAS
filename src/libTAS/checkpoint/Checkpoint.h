@@ -24,6 +24,7 @@
 
 #include <iostream>
 
+namespace libtas {
 namespace Checkpoint
 {
     void init();
@@ -31,5 +32,6 @@ namespace Checkpoint
     bool checkRestore();
     void handler(int signum);
 };
+}
 
 #endif

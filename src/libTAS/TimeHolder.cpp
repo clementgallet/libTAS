@@ -20,6 +20,8 @@
 #include "TimeHolder.h"
 #include <iostream>
 
+namespace libtas {
+
 TimeHolder TimeHolder::shiftadd(TimeHolder& pow, TimeHolder& mult, int m)
 {
     if (m == 0)
@@ -41,11 +43,12 @@ void TimeHolder::normalize()
         int sec = (-this->tv_nsec) / 1000000000 + 1;
         this->tv_nsec += 1000000000 * sec;
         this->tv_sec -= sec;
-    } 
+    }
     if (this->tv_nsec > 1000000000) {
         int sec = this->tv_nsec / 1000000000;
         this->tv_nsec -= 1000000000 * sec;
         this->tv_sec += sec;
-    } 
+    }
 }
 
+}

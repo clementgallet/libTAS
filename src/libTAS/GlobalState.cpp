@@ -19,6 +19,8 @@
 
 #include "GlobalState.h"
 
+namespace libtas {
+
 thread_local int GlobalState::native = 0;
 thread_local int GlobalState::owncode = 0;
 thread_local int GlobalState::nolog = 0;
@@ -92,4 +94,6 @@ GlobalNoLog::GlobalNoLog()
 GlobalNoLog::~GlobalNoLog()
 {
     GlobalState::setNoLog(false);
+}
+
 }

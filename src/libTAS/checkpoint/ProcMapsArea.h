@@ -25,14 +25,6 @@
 #include <cstdint>
 #include <sys/types.h>
 
-// MTCP_PAGE_SIZE must be page-aligned:  multiple of sysconf(_SC_PAGESIZE).
-// #define MTCP_PAGE_SIZE        4096
-// #define MTCP_PAGE_MASK        (~(MTCP_PAGE_SIZE - 1))
-// #define MTCP_PAGE_OFFSET_MASK (MTCP_PAGE_SIZE - 1)
-// #define FILENAMESIZE          1024
-//
-#ifndef HIGHEST_VA
-
 // If 32-bit process in 64-bit Linux, then Makefile overrides this address,
 // with correct address for that case.
 # ifdef __x86_64__
@@ -43,27 +35,26 @@
 
 // #  define HIGHEST_VA ((VA)0xFFFFFF8000000000)
 // #  define HIGHEST_VA ((VA)0x8000000000)
-#  define HIGHEST_VA ((VA)0x7f00000000)
+#  define HIGHEST_VA ((void*)0x7f00000000)
 # else // ifdef __x86_64__
-#  define HIGHEST_VA ((VA)0xC0000000)
+#  define HIGHEST_VA ((void*)0xC0000000)
 # endif // ifdef __x86_64__
-#endif // ifndef HIGHEST_VA
 
 // #define DELETED_FILE_SUFFIX " (deleted)"
 
 #define FILENAMESIZE        1024
 
-typedef void *VA;  /* VA = virtual address */
-
-enum ProcMapsAreaProperties {
-  ZERO_PAGE = 0x01,
-  SKIP = 0x02
-};
-
+namespace libtas {
 union Area {
+    enum ProcMapsAreaProperties {
+        NONE = 0x00,
+        ZERO_PAGE = 0x01,
+        SKIP = 0x02
+    };
+
     struct {
-        VA addr;
-        VA endAddr;
+        void* addr;
+        void* endAddr;
         size_t size;
         off_t offset;
         int prot;
@@ -76,5 +67,6 @@ union Area {
     };
     char _padding[4096];
 };
+}
 
 #endif

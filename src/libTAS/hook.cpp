@@ -21,6 +21,16 @@
 #include "logging.h"
 #include <string>
 
+namespace libtas {
+
+int SDLver = 0;
+
+namespace orig {
+    void (*SDL_GetVersion)(SDL_version* ver);
+    /* SDL 1.2 specific functions */
+    static SDL_version * (*SDL_Linked_Version)(void);
+}
+
 bool link_function(void** function, const char* source, const char* library, const char *version /*= nullptr*/)
 {
     /* Test if function is already linked */
@@ -75,14 +85,6 @@ bool link_function(void** function, const char* source, const char* library, con
     return false;
 }
 
-int SDLver = 0;
-
-namespace orig {
-    void (*SDL_GetVersion)(SDL_version* ver);
-    /* SDL 1.2 specific functions */
-    SDL_version * (*SDL_Linked_Version)(void);
-}
-
 int get_sdlversion(void)
 {
     if (SDLver != 0)
@@ -114,4 +116,6 @@ int get_sdlversion(void)
     }
 
     return 1;
+}
+
 }

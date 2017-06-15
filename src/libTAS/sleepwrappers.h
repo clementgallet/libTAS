@@ -26,6 +26,8 @@
 #include <SDL2/SDL.h>
 #include "global.h"
 
+namespace libtas {
+
 /* Sleep USECONDS microseconds, or until a signal arrives that is not blocked
    or ignored.
 
@@ -48,5 +50,7 @@ OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
  * \brief Wait a specified number of milliseconds before returning.
  */
 OVERRIDE void SDL_Delay(Uint32 sleep);
+
+}
 
 #endif

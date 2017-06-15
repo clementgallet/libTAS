@@ -24,6 +24,8 @@
 #include "../external/SDL1.h"
 #include <SDL2/SDL.h>
 
+namespace libtas {
+
 /* Pull all events from the SDL event queue and push them into our
  * emulated event queue, filtering unwanted events (input events mainly).
  */
@@ -32,6 +34,17 @@ void pushNativeEvents(void);
 /* Add a quit event in the event queue. */
 void pushQuitEvent(void);
 
+/* Return if the SDL 1 event must be passed to the game or be filtered */
+bool filterSDL1Event(SDL1::SDL_Event *event);
+
+/* Return if the SDL 2 event must be passed to the game or be filtered */
+bool filterSDL2Event(SDL_Event *event);
+
+/* Print which event type is it */
+void logEvent(SDL_Event *event);
+
+/* Link function pointers to real SDL functions */
+void link_sdlevents(void);
 
 OVERRIDE void SDL_PumpEvents(void);
 
@@ -187,16 +200,6 @@ OVERRIDE Uint8 SDL_EventState(Uint32 type, int state);
  */
 OVERRIDE Uint32 SDL_RegisterEvents(int numevents);
 
-/* Return if the SDL 1 event must be passed to the game or be filtered */
-bool filterSDL1Event(SDL1::SDL_Event *event);
-
-/* Return if the SDL 2 event must be passed to the game or be filtered */
-bool filterSDL2Event(SDL_Event *event);
-
-/* Print which event type is it */
-void logEvent(SDL_Event *event);
-
-/* Link function pointers to real SDL functions */
-void link_sdlevents(void);
+}
 
 #endif

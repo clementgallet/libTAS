@@ -31,6 +31,8 @@ extern "C" {
 #include <stdlib.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 
+namespace libtas {
+
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 {
@@ -145,20 +147,20 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             /* Get the sample format */
             AVSampleFormat inFormat, outFormat;
             switch (curBuf->format) {
-                case SAMPLE_FMT_U8:
+                case AudioBuffer::SAMPLE_FMT_U8:
                     inFormat = AV_SAMPLE_FMT_U8;
                     break;
-                case SAMPLE_FMT_S16:
-                case SAMPLE_FMT_MSADPCM:
+                case AudioBuffer::SAMPLE_FMT_S16:
+                case AudioBuffer::SAMPLE_FMT_MSADPCM:
                     inFormat = AV_SAMPLE_FMT_S16;
                     break;
-                case SAMPLE_FMT_S32:
+                case AudioBuffer::SAMPLE_FMT_S32:
                     inFormat = AV_SAMPLE_FMT_S32;
                     break;
-                case SAMPLE_FMT_FLT:
+                case AudioBuffer::SAMPLE_FMT_FLT:
                     inFormat = AV_SAMPLE_FMT_FLT;
                     break;
-                case SAMPLE_FMT_DBL:
+                case AudioBuffer::SAMPLE_FMT_DBL:
                     inFormat = AV_SAMPLE_FMT_DBL;
                     break;
                 default:
@@ -392,4 +394,6 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 #endif
 
     return convOutSamples;
+}
+
 }

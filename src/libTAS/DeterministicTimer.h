@@ -24,6 +24,7 @@
 #include "../shared/SharedConfig.h"
 #include <mutex>
 
+namespace libtas {
 /* A timer that gives deterministic values, at least in the main thread.
  *
  * Deterministic means that calling frameBoundary() and querying this timer
@@ -131,5 +132,7 @@ private:
 };
 
 extern DeterministicTimer detTimer;
+
+}
 
 #endif

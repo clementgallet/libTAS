@@ -20,6 +20,8 @@
 #include "steamwrappers.h"
 #include "logging.h"
 
+namespace libtas {
+
 bool SteamAPI_Init()
 {
     debuglog(LCF_STEAM, __func__, " call.");
@@ -57,4 +59,6 @@ void SteamAPI_RegisterCallback( void *pCallback, int iCallback )
 void SteamAPI_UnregisterCallback( void *pCallback )
 {
     debuglog(LCF_STEAM, __func__, " call.");
+}
+
 }

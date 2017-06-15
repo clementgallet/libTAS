@@ -28,6 +28,8 @@
 // #include <stdbool.h>
 #include "global.h"
 
+namespace libtas {
+
 extern unsigned long frame_counter;
 
 /* Time used by the program so far (user time + system time).
@@ -63,5 +65,7 @@ OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
  * \brief Get the current value of the high resolution counter
  */
 OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
+
+}
 
 #endif

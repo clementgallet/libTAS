@@ -36,6 +36,8 @@
 #include <errno.h>
 #include "GlobalState.h"
 
+namespace libtas {
+
 /*** Helper functions ***/
 
 static std::set<std::string> savefiles;
@@ -444,6 +446,8 @@ int close (int fd)
     int rv = orig::close(fd);
 
     return rv;
+}
+
 }
 
 #endif

@@ -28,11 +28,14 @@
     #define OVERRIDE extern "C"
 #endif
 
+namespace libtas {
+
 /* Some code may be executed before we ever have time to call our constructor,
  * so we keep track of this
  * Definition is in libTAS.cpp
  */
 extern bool libTAS_init;
 
-#endif
+}
 
+#endif

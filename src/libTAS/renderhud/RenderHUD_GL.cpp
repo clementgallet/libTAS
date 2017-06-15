@@ -23,6 +23,8 @@
 #include "../logging.h"
 #include "../hook.h"
 
+namespace libtas {
+
 namespace orig {
     static void (*glGenTextures)(int n, unsigned int* tex);
     static void (*glBindTexture)(int target, unsigned int tex);
@@ -182,6 +184,8 @@ void RenderHUD_GL::exitRender(void)
     orig::glPopMatrix();
 
     orig::glUseProgram(oldProgram);
+}
+
 }
 
 #endif

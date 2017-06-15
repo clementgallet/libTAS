@@ -25,6 +25,7 @@
 #include "AudioContext.h"
 #include <alsa/asoundlib.h>
 
+namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
@@ -43,6 +44,7 @@ class AudioPlayer
         /* Play the audio buffer stored in the audio context */
 		static bool play(AudioContext& ac);
 };
+}
 
 #endif
 #endif

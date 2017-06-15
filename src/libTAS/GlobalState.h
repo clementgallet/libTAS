@@ -36,6 +36,8 @@
 #ifndef LIBTAS_GLOBALSTATE_H_INCLUDED
 #define LIBTAS_GLOBALSTATE_H_INCLUDED
 
+namespace libtas {
+
 class GlobalState
 {
     public:
@@ -103,5 +105,7 @@ public:
     GlobalNoLog();
     ~GlobalNoLog();
 };
+
+}
 
 #endif

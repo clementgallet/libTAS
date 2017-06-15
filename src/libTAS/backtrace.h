@@ -20,7 +20,8 @@
 #ifndef LIBTAS_BACKTRACE_H_INCL
 #define LIBTAS_BACKTRACE_H_INCL
 
+namespace libtas {
 void printBacktrace(void);
+}
 
 #endif
-

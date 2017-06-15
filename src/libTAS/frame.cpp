@@ -35,6 +35,8 @@
 #include "checkpoint/ThreadManager.h"
 #include "screenpixels.h"
 
+namespace libtas {
+
 #define SAVESTATE_FILESIZE 1024
 static char savestatepath[SAVESTATE_FILESIZE];
 
@@ -287,4 +289,6 @@ void proceed_commands(void)
                 return;
         }
     }
+}
+
 }

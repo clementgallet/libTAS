@@ -25,6 +25,8 @@
 #include "sleepwrappers.h"
 #include "GlobalState.h"
 
+namespace libtas {
+
 /* Pointers to original functions */
 namespace orig {
     static void (*SDL_PumpEvents)(void);
@@ -531,4 +533,6 @@ void link_sdlevents(void)
 {
     LINK_NAMESPACE_SDLX(SDL_PumpEvents);
     LINK_NAMESPACE_SDLX(SDL_PeepEvents);
+}
+
 }

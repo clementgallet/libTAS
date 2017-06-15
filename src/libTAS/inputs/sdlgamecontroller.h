@@ -24,6 +24,8 @@
 #include <SDL2/SDL.h>
 #include "../global.h"
 
+namespace libtas {
+
 /**
  *  Is the joystick on this index supported by the game controller interface?
  */
@@ -128,5 +130,7 @@ OVERRIDE void SDL_GameControllerClose(SDL_GameController *gamecontroller);
 // const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis);
 // SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char *pchString);
 // const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button);
+
+}
 
 #endif

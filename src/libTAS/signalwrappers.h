@@ -23,6 +23,8 @@
 #include "global.h"
 #include "signal.h" // for all signal structs
 
+namespace libtas {
+
 /* Set the handler for the signal SIG to HANDLER, returning the old
    handler, or SIG_ERR on error.
    By default `signal' has the BSD semantic.  */
@@ -93,5 +95,6 @@ OVERRIDE int pthread_kill (pthread_t threadid, int signo) throw();
 OVERRIDE int pthread_sigqueue (pthread_t threadid, int signo,
                  const union sigval value) throw();
 
+}
 
 #endif

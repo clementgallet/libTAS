@@ -47,6 +47,8 @@
 #define UNICODE_BOM_NATIVE  0xFEFF
 #define UNICODE_BOM_SWAPPED 0xFFFE
 
+namespace libtas {
+
 /* This function tells the library whether UNICODE text is generally
    byteswapped.  A UNICODE BOM character in a string will override
    this setting for the remainder of that string.
@@ -179,6 +181,7 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t 
 
 #define TTF_SetError(MSG)    std::cerr << MSG << std::endl;
 
+}
+
 #endif
 #endif /* _SDL_TTF_H */
-

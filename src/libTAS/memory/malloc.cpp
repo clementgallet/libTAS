@@ -20,10 +20,9 @@
 #ifdef LIBTAS_ENABLE_CUSTOM_MALLOC
 #include "malloc.h"
 #include "../logging.h"
-#include "MemoryManager.h"
 #include "../dlhook.h"
-#include "../ThreadState.h"
-#include "../backtrace.h"
+
+namespace libtas {
 
 namespace orig {
     static void *(*malloc) (size_t size) throw();
@@ -42,12 +41,8 @@ void *malloc (size_t size) throw()
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     //printBacktrace();
     void* addr;
-    if (!threadState.isNative())
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
-    else {
-        LINK_NAMESPACE(malloc, nullptr);
-        addr = orig::malloc(size);
-    }
+    LINK_NAMESPACE(malloc, nullptr);
+    addr = orig::malloc(size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -61,32 +56,28 @@ void *calloc (size_t nmemb, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
     void* addr;
-    if (!threadState.isNative())
-        addr = memorymanager.allocate(nmemb * size, MemoryManager::ALLOC_WRITE | MemoryManager::ALLOC_ZEROINIT, 0);
-    else {
-        /*
-         * We must add a hack here, because to access to the original
-         * calloc function, we must call dlsym which calls calloc internally
-         * (actually, dlerror() is calling calloc).
-         * However, looking at the dlerror code, it seems we can safely return
-         * NULL for that specific call.
-         *
-         * So we set calloc with a NULL returning function before calling dlsym.
-         */
-        if (!orig::calloc) {
-            /* Next time calloc is called, it will return NULL */
-            orig::calloc = null_calloc;
+    /*
+     * We must add a hack here, because to access to the original
+     * calloc function, we must call dlsym which calls calloc internally
+     * (actually, dlerror() is calling calloc).
+     * However, looking at the dlerror code, it seems we can safely return
+     * NULL for that specific call.
+     *
+     * So we set calloc with a NULL returning function before calling dlsym.
+     */
+    if (!orig::calloc) {
+        /* Next time calloc is called, it will return NULL */
+        orig::calloc = null_calloc;
 
-            /* Code from link_function() */
-            dlhook_init();
-            dlenter();
-            /* calloc is called below, and returns NULL */
-            orig::calloc = reinterpret_cast<void*(*)(size_t, size_t)>(dlsym(RTLD_NEXT, "calloc"));
-            dlleave();
+        /* Code from link_function() */
+        dlhook_init();
+        dlenter();
+        /* calloc is called below, and returns NULL */
+        orig::calloc = reinterpret_cast<void*(*)(size_t, size_t)>(dlsym(RTLD_NEXT, "calloc"));
+        dlleave();
 
-        }
-        addr = orig::calloc(nmemb, size);
     }
+    addr = orig::calloc(nmemb, size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -94,12 +85,8 @@ void *calloc (size_t nmemb, size_t size) throw()
 void *realloc (void *ptr, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p and size %d", __func__, ptr, size);
-    void* addr;
-    addr = memorymanager.reallocate(ptr, size, MemoryManager::ALLOC_WRITE);
-    if (!addr) {
-        LINK_NAMESPACE(realloc, nullptr);
-        addr = orig::realloc(ptr, size);
-    }
+    LINK_NAMESPACE(realloc, nullptr);
+    void* addr = orig::realloc(ptr, size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -107,15 +94,8 @@ void *realloc (void *ptr, size_t size) throw()
 void *valloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
-    void* addr;
-    if (!threadState.isNative()) {
-        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
-    }
-    else {
-        LINK_NAMESPACE(valloc, nullptr);
-        addr = orig::valloc(size);
-    }
+    LINK_NAMESPACE(valloc, nullptr);
+    void* addr = orig::valloc(size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -123,15 +103,8 @@ void *valloc (size_t size) throw()
 void *pvalloc (size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with size %d", __func__, size);
-    void* addr;
-    if (!threadState.isNative()) {
-        debuglogstdio(LCF_MEMORY | LCF_ERROR, "Alignment not supported!");
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, 0);
-    }
-    else {
-        LINK_NAMESPACE(pvalloc, nullptr);
-        addr = orig::pvalloc(size);
-    }
+    LINK_NAMESPACE(pvalloc, nullptr);
+    void* addr = orig::pvalloc(size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -139,18 +112,8 @@ void *pvalloc (size_t size) throw()
 int posix_memalign (void **memptr, size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
-    void* addr;
-    int ret = 0;
-    if (!threadState.isNative()) {
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
-        if (!addr)
-            ret = ENOMEM;
-        *memptr = addr;
-    }
-    else {
-        LINK_NAMESPACE(posix_memalign, nullptr);
-        ret = orig::posix_memalign (memptr, alignment, size);
-    }
+    LINK_NAMESPACE(posix_memalign, nullptr);
+    int ret = orig::posix_memalign (memptr, alignment, size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", *memptr);
     return ret;
 }
@@ -158,14 +121,8 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) throw()
 void *aligned_alloc (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
-    void* addr;
-    if (!threadState.isNative()) {
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
-    }
-    else {
-        LINK_NAMESPACE(aligned_alloc, nullptr);
-        addr = orig::aligned_alloc(alignment, size);
-    }
+    LINK_NAMESPACE(aligned_alloc, nullptr);
+    void* addr = orig::aligned_alloc(alignment, size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -173,14 +130,8 @@ void *aligned_alloc (size_t alignment, size_t size) throw()
 void *memalign (size_t alignment, size_t size) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with alignment %d and size %d", __func__, alignment, size);
-    void* addr;
-    if (!threadState.isNative()) {
-        addr = memorymanager.allocate(size, MemoryManager::ALLOC_WRITE, alignment);
-    }
-    else {
-        LINK_NAMESPACE(memalign, nullptr);
-        addr = orig::memalign(alignment, size);
-    }
+    LINK_NAMESPACE(memalign, nullptr);
+    void* addr = orig::memalign(alignment, size);
     debuglogstdio(LCF_MEMORY, "  returns addr %p", addr);
     return addr;
 }
@@ -188,22 +139,11 @@ void *memalign (size_t alignment, size_t size) throw()
 void free (void *ptr) throw()
 {
     debuglogstdio(LCF_MEMORY, "%s call with ptr %p", __func__, ptr);
-    bool res = true;
-    res = memorymanager.deallocate(ptr);
-    if (!res) {
-        LINK_NAMESPACE(free, nullptr);
-        orig::free(ptr);
-    }
-    
-    if (!res && !threadState.isNative()) {
-        fprintf(stderr, "Native free was performed under non native thread state!\n");
-        printBacktrace();
-    }
-    if (res && threadState.isNative()) {
-        fprintf(stderr, "Non native free was performed under native thread state!\n");
-        printBacktrace();
-    }
-    
+    LINK_NAMESPACE(free, nullptr);
+    orig::free(ptr);
     debuglogstdio(LCF_MEMORY, "  returns");
 }
+
+}
+
 #endif

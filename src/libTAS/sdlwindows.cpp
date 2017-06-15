@@ -31,6 +31,8 @@
 #include "screenpixels.h"
 #include <SDL2/SDL_syswm.h>
 
+namespace libtas {
+
 /*
  * Store the game window pointer
  * We assume the game never open multiple windows at a time
@@ -532,4 +534,6 @@ void glXSwapBuffers( Display *dpy, XID drawable )
 #else
     frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
 #endif
+}
+
 }

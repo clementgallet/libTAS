@@ -22,12 +22,14 @@
 
 #include "global.h"
 
+namespace libtas {
+
 OVERRIDE void SteamAPI_Shutdown();
 
-// checks if a local Steam client is running 
+// checks if a local Steam client is running
 OVERRIDE bool SteamAPI_IsSteamRunning();
 
-// Detects if your executable was launched through the Steam client, and restarts your game through 
+// Detects if your executable was launched through the Steam client, and restarts your game through
 // the client if necessary. The Steam client will be started if it is not running.
 //
 // Returns: true if your executable was NOT launched through the Steam client. This function will
@@ -45,7 +47,7 @@ OVERRIDE bool SteamAPI_Init();
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 //	steam callback helper functions
 //
-//	The following classes/macros are used to be able to easily multiplex callbacks 
+//	The following classes/macros are used to be able to easily multiplex callbacks
 //	from the Steam API into various objects in the app in a thread-safe manner
 //
 //	These functors are triggered via the SteamAPI_RunCallbacks() function, mapping the callback
@@ -58,5 +60,6 @@ OVERRIDE void SteamAPI_RunCallbacks();
 OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
 OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 
-#endif
+}
 
+#endif

@@ -28,6 +28,8 @@
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
 
+namespace libtas {
+
 /* Original function pointers */
 namespace orig {
     static SDL_Thread* (*SDL_CreateThread)(SDL_ThreadFunction fn,
@@ -292,4 +294,6 @@ void link_sdlthreads(void)
 {
     LINK_NAMESPACE_SDLX(SDL_CreateThread);
     LINK_NAMESPACE_SDLX(SDL_WaitThread);
+}
+
 }

@@ -28,6 +28,8 @@
 #include <mutex>
 #include <list>
 
+namespace libtas {
+
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
     /* Not printing anything if global state is set to NOLOG */
@@ -138,4 +140,6 @@ bool getErrorMsg(std::string& error)
     error = error_messages.front();
     error_messages.pop_front();
     return true;
+}
+
 }

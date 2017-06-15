@@ -24,6 +24,8 @@
 #include <SDL2/SDL.h>
 #include "../global.h"
 
+namespace libtas {
+
 /**
  *  Count the number of joysticks attached to the system right now
  */
@@ -184,5 +186,7 @@ OVERRIDE void SDL_JoystickClose(SDL_Joystick * joystick);
  *  Return the battery level of this joystick
  */
 OVERRIDE SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick);
+
+}
 
 #endif

@@ -34,6 +34,8 @@
         } \
     } while (false)
 
+namespace libtas {
+
 AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile, unsigned long sf) {
     error = 0;
 
@@ -552,6 +554,8 @@ AVEncoder::~AVEncoder() {
     // av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
+}
+
 }
 
 #endif

@@ -24,6 +24,8 @@
 #include <cstdint>
 #include <cstddef>
 
+namespace libtas {
+
 /* These are the functions that actually do things.  The `random', `srandom',
    `initstate' and `setstate' functions are those from BSD Unices.
    The `rand' and `srand' functions are required by the ANSI standard.
@@ -128,5 +130,7 @@ OVERRIDE int seed48_r (unsigned short int seed16v[3],
 
 OVERRIDE int lcong48_r (unsigned short int param[7],
               struct drand48_data *buffer) throw();
+
+}
 
 #endif

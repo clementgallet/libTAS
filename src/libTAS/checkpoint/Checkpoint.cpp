@@ -38,6 +38,8 @@
 #define ONE_MB 1024 * 1024
 #define RESTORE_TOTAL_SIZE 5 * ONE_MB
 
+namespace libtas {
+
 static intptr_t restoreAddr = 0;
 static size_t restoreLength = 0;
 
@@ -135,7 +137,7 @@ static bool skipArea(Area *area)
     * the last page of virtual memory.  Note 0xffffe000 >= HIGHEST_VA
     * implies we're in 32-bit mode.
     */
-    if (area->addr >= HIGHEST_VA && area->addr == (VA)0xffffe000) {
+    if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffe000) {
         return true;
     }
     #ifdef __x86_64__
@@ -143,7 +145,7 @@ static bool skipArea(Area *area)
     /* And in 64-bit mode later Red Hat RHEL Linux 2.6.9 releases
     * use 0xffffffffff600000 for VDSO.
     */
-    if (area->addr >= HIGHEST_VA && area->addr == (VA)0xffffffffff600000) {
+    if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffffffff600000) {
         return true;
     }
     #endif // ifdef __x86_64__
@@ -280,7 +282,7 @@ static void writeAnAreaWithZeroPages(int fd, Area *orig_area)
         Area a = area;
         getNextPageRange(a, size, is_zero);
 
-        a.properties = is_zero ? ZERO_PAGE : 0;
+        a.properties = is_zero ? Area::ZERO_PAGE : Area::NONE;
         a.size = size;
         void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
         a.endAddr = endAddr;
@@ -353,7 +355,7 @@ static void writeAllAreas()
     while (procSelfMaps.getNextArea(&area)) {
 
         if (skipArea(&area)) {
-            area.properties |= SKIP;
+            area.properties |= Area::SKIP;
             Utils::writeAll(fd, &area, sizeof(area));
             continue;
         }
@@ -381,7 +383,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         (saved_area->addr == current_area->addr)) {
 
         /* Check if it is a skipped area */
-        if (saved_area->properties & SKIP) {
+        if (saved_area->properties & Area::SKIP) {
             if (!skipArea(current_area)) {
                 debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is not skipped anymore !?");
             }
@@ -442,7 +444,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot | PROT_WRITE) == 0)
         }
 
-        if (saved_area->properties & ZERO_PAGE) {
+        if (saved_area->properties & Area::ZERO_PAGE) {
             debuglogstdio(LCF_CHECKPOINT, "Writing %d zero bytes to memory!", copy_size);
             memset(saved_area->addr, 0, copy_size);
         }
@@ -511,7 +513,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
     if ((current_area->addr == nullptr) || (saved_area->addr < current_area->addr)) {
 
-        if (saved_area->properties & SKIP) {
+        if (saved_area->properties & Area::SKIP) {
             // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
             return -1;
         }
@@ -574,7 +576,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             close(imagefd);
         }
 
-        if (saved_area->properties & ZERO_PAGE) {
+        if (saved_area->properties & Area::ZERO_PAGE) {
             memset(saved_area->addr, 0, map_size);
         }
         else {
@@ -690,4 +692,6 @@ void Checkpoint::handler(int signum)
     else {
         writeAllAreas();
     }
+}
+
 }

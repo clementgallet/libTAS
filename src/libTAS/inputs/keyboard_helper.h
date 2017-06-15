@@ -25,6 +25,8 @@
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
 
+namespace libtas {
+
 /* Helper functions to translate from a Xlib KeySym to
  * a SDL 1 SDLKey or a SDL 2 Keycode
  */
@@ -48,5 +50,7 @@ void xkeyboardToSDL1keyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard);
 /* Fill the SDL 1 or SDL 2 full key struct based on a Xlib KeySym */
 void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym);
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym);
+
+}
 
 #endif

@@ -24,6 +24,8 @@
 #include "TimeHolder.h"
 #include "threadwrappers.h"
 
+namespace libtas {
+
 /* A simple timer that directly uses the system timer,
  * but is somewhat affected by fast-forward and frame advance.
  * It is not deterministic, but can be a good reference for
@@ -82,5 +84,7 @@ private:
 };
 
 extern NonDeterministicTimer nonDetTimer;
+
+}
 
 #endif

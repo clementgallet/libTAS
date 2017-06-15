@@ -21,6 +21,8 @@
 #include <string.h>
 #include <X11/Xlib.h>
 
+namespace libtas {
+
 static const SDL_Keycode SDL_default_keymap[SDL_NUM_SCANCODES] = {
     0, 0, 0, 0,
     'a',
@@ -806,4 +808,6 @@ void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym) {
     keysym->scancode = GetScanFromKey1(keysym->sym);
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unicode = 0;
+}
+
 }

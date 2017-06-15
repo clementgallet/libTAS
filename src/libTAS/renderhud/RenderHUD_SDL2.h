@@ -25,6 +25,7 @@
 #include "RenderHUD.h"
 #include <SDL2/SDL.h> // SDL_Renderer
 
+namespace libtas {
 class RenderHUD_SDL2 : public RenderHUD
 {
     public:
@@ -37,6 +38,7 @@ class RenderHUD_SDL2 : public RenderHUD
     private:
         SDL_Renderer* renderer;
 };
+}
 
 #endif
 #endif

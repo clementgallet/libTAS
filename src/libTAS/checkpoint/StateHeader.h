@@ -26,6 +26,7 @@
 
 #define STATEMAXTHREADS 100
 
+namespace libtas {
 union StateHeader {
     struct {
         int thread_count;
@@ -33,5 +34,6 @@ union StateHeader {
     };
     char _padding[4096];
 };
+}
 
 #endif

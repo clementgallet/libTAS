@@ -20,9 +20,11 @@
 #include "DecoderMSADPCM.h"
 #include "../logging.h"
 
+namespace libtas {
+
 int16_t DecoderMSADPCM::calculateSample(uint8_t nibble, uint8_t predictor, int16_t& sample1, int16_t& sample2, int16_t& delta)
 {
-    /* 
+    /*
      * Get a signed number out of the nibble. We need to retain the
      * original nibble value for when we access AdaptionTable[].
      */
@@ -137,3 +139,4 @@ void DecoderMSADPCM::toPCM(BinaryIStream &source, int nbChannels, int sampleAlig
     }
 }
 
+}

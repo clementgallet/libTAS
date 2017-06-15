@@ -27,6 +27,8 @@
 #include <X11/X.h>
 #include "../EventQueue.h"
 
+namespace libtas {
+
 SDL_Window *SDL_GetMouseFocus(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
@@ -217,4 +219,6 @@ int SDL_ShowCursor(int toggle)
     if (toggle != -1)
         showCursor = toggle;
     return showCursor;
+}
+
 }

@@ -22,6 +22,7 @@
 #ifndef LIBTAS_THREAD_SYNC_H
 #define LIBTAS_THREAD_SYNC_H
 
+namespace libtas {
 namespace ThreadSync {
     void acquireLocks();
     void releaseLocks();
@@ -30,6 +31,7 @@ namespace ThreadSync {
     void decrementUninitializedThreadCount();
     void wrapperExecutionLockLock();
     void wrapperExecutionLockUnlock();
-};
+}
+}
 
 #endif

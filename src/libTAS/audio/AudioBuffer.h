@@ -24,21 +24,7 @@
 #include <stdint.h>
 #include <istream>
 
-/* Method to build an istream from a uint8_t array without any copy
- * Taken from http://stackoverflow.com/a/13059195
- */
-
-enum SampleFormat {
-    SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
-    SAMPLE_FMT_S16, /* Signed 16-bit samples */ 
-    SAMPLE_FMT_S32, /* Signed 32-bit samples */ 
-    SAMPLE_FMT_FLT, /* 32-bit floating point samples */ 
-    SAMPLE_FMT_DBL, /* 64-bit floating point samples */ 
-
-    SAMPLE_FMT_MSADPCM, /* Compressed MS-ADPCM format */ 
-    SAMPLE_FMT_NB
-};
-
+namespace libtas {
 /* Class storing samples of an audio buffer, and all the related information
  * like sample format, frequency, channels, etc.
  */
@@ -64,6 +50,16 @@ class AudioBuffer
         int id;
 
         /* Sample format */
+        enum SampleFormat {
+            SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
+            SAMPLE_FMT_S16, /* Signed 16-bit samples */
+            SAMPLE_FMT_S32, /* Signed 32-bit samples */
+            SAMPLE_FMT_FLT, /* 32-bit floating point samples */
+            SAMPLE_FMT_DBL, /* 64-bit floating point samples */
+
+            SAMPLE_FMT_MSADPCM, /* Compressed MS-ADPCM format */
+            SAMPLE_FMT_NB
+        };
         SampleFormat format;
 
         /* Number of channels of the buffer */
@@ -102,8 +98,7 @@ class AudioBuffer
          * Computed from blockSamples and format.
         */
         int blockSize;
-
 };
+}
 
 #endif
-

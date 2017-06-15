@@ -50,6 +50,8 @@
 
 #define ANSI_COLOR_RESET         "\x1b[0m"
 
+namespace libtas {
+
 /* Convert an integer into a short string to allow meaningless ints
  * to be printed in a shorter representation and be easier to
  * recognize. In practice, it is base64 convertion.
@@ -120,7 +122,9 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
  * shown on a dialog box. We also need some synchronization to access the set
  * of error messages.
  */
- void setErrorMsg(const std::string& error);
- bool getErrorMsg(std::string& error);
+void setErrorMsg(const std::string& error);
+bool getErrorMsg(std::string& error);
+
+}
 
 #endif

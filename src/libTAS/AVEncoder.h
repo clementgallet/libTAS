@@ -34,6 +34,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+namespace libtas {
 class AVEncoder {
     public:
         /* The constructor sets up the AV dumping into a file.
@@ -88,6 +89,7 @@ class AVEncoder {
         uint64_t accum_samples;
 
 };
+}
 
 #endif
 #endif

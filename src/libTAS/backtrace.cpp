@@ -23,6 +23,8 @@
 #include <memory>
 #include <cstdio>
 
+namespace libtas {
+
 /* Code taken from http://stackoverflow.com/a/19190421 */
 static const char* demangle( const char* const symbol )
 {
@@ -81,4 +83,6 @@ void printBacktrace(void)
     free(symbols);
     //threadState.setNoLog(false);
     recurs = 0;
+}
+
 }

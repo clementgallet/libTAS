@@ -24,6 +24,8 @@
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
 
+namespace libtas {
+
 int XQueryKeymap( Display* display, char keymap[32])
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
@@ -58,3 +60,4 @@ int XQueryKeymap( Display* display, char keymap[32])
     return 1;
 }
 
+}

@@ -25,6 +25,8 @@
 #include "sleepwrappers.h" // nanosleep
 #include "audio/AudioContext.h"
 
+namespace libtas {
+
 void NonDeterministicTimer::initialize(void)
 {
     ticks.tv_sec = 0;
@@ -121,3 +123,5 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
 }
 
 NonDeterministicTimer nonDetTimer;
+
+}

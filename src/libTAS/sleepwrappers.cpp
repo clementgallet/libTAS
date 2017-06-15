@@ -25,6 +25,8 @@
 #include "GlobalState.h"
 #include "hook.h"
 
+namespace libtas {
+
 namespace orig {
     static int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
 }
@@ -129,4 +131,6 @@ namespace orig {
     }
 
     return orig::nanosleep(&sleeptime, rem);
+}
+
 }

@@ -26,6 +26,7 @@
 #include <SDL2/SDL.h>
 #include "sdlevents.h" // SDL_EventFilter
 
+namespace libtas {
 /* This is a replacement of the SDL event queue.
  * It allows us to perform our own filtering, for exemple
  * to remove the original input events.
@@ -100,5 +101,7 @@ class EventQueue
 };
 
 extern EventQueue sdlEventQueue;
+
+}
 
 #endif

@@ -22,6 +22,8 @@
 #include "BinaryIStream.h"
 #include "../logging.h"
 
+namespace libtas {
+
 AudioBuffer::AudioBuffer(void)
 {
     id = 0;
@@ -156,4 +158,6 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
             return totSamples;
     }
     return 0;
+}
+
 }

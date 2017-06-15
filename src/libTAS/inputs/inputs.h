@@ -24,17 +24,20 @@
 
 #include "../../shared/AllInputs.h"
 
+namespace libtas {
+
 /* Inputs that are sent from linTAS */
-extern struct AllInputs ai;
+extern AllInputs ai;
 
 /* Last state of the inputs, used to generate events */
-extern struct AllInputs old_ai;
+extern AllInputs old_ai;
 
 /* Fake state of the inputs that is seen by the game.
  * This struct is used when the game want to set inputs, such as
  * Warping the cursor position.
  */
-extern struct AllInputs game_ai;
+extern AllInputs game_ai;
+
+}
 
 #endif
-

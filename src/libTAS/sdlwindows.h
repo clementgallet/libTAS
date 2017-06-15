@@ -29,6 +29,8 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
+namespace libtas {
+
 extern SDL_Window* gameWindow;
 #ifdef LIBTAS_ENABLE_AVDUMPING
 extern std::unique_ptr<AVEncoder> avencoder; // making extern a unique_ptr is stupid?
@@ -301,5 +303,7 @@ OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
 void link_sdlwindows(void);
 
 OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
+
+}
 
 #endif

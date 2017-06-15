@@ -27,6 +27,7 @@
 #include "AudioBuffer.h"
 #include "AudioSource.h"
 
+namespace libtas {
 /* This class stores a set of audio sources and audio buffers, and
  * is in charge of creating or deleting them.
  * It makes the mixing of all sources that are playing, and
@@ -108,5 +109,7 @@ class AudioContext
 };
 
 extern AudioContext audiocontext;
+
+}
 
 #endif

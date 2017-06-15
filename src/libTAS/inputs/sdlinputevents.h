@@ -22,6 +22,8 @@
 
 #include "../global.h"
 
+namespace libtas {
+
 /* Generate events of type SDL_KEYUP, store them in our emulated event queue */
 void generateSDLKeyUpEvents(void);
 
@@ -39,5 +41,7 @@ void generateSDLMouseMotionEvents(void);
 
 /* Same as above with the MouseButton event */
 void generateSDLMouseButtonEvents(void);
+
+}
 
 #endif

@@ -24,6 +24,24 @@
 #include <string>
 #include <vector>
 
+/* Internal struct of pointers to dl functions that is used
+ * specifically by glibc
+ */
+extern struct dlfcn_hook {
+    void *(*dlopen)(const char *, int, void *);
+    int (*dlclose)(void *);
+    void *(*dlsym)(void *, const char *, void *);
+    void *(*dlvsym)(void *, const char *, const char *, void *);
+    char *(*dlerror)(void);
+    int (*dladdr)(const void *, Dl_info *);
+    int (*dladdr1)(const void *, Dl_info *, void **, int);
+    int (*dlinfo)(void *, int, void *, void *);
+    void *(*dlmopen)(Lmid_t, const char *, int, void *);
+    void *pad[4];
+} *_dlfcn_hook;
+
+namespace libtas {
+
 /* There are two ways a program can link to a shared library:
  * either it was compiled with an include of the library header foo.h
  * and using the library as an argument (-lfoo)
@@ -58,22 +76,6 @@
  * the internal struct of dl functions
  */
 
-/* Internal struct of pointers to dl functions that is used
- * specifically by glibc
- */
-extern struct dlfcn_hook {
-    void *(*dlopen)(const char *, int, void *);
-    int (*dlclose)(void *);
-    void *(*dlsym)(void *, const char *, void *);
-    void *(*dlvsym)(void *, const char *, const char *, void *);
-    char *(*dlerror)(void);
-    int (*dladdr)(const void *, Dl_info *);
-    int (*dladdr1)(const void *, Dl_info *, void **, int);
-    int (*dlinfo)(void *, int, void *, void *);
-    void *(*dlmopen)(Lmid_t, const char *, int, void *);
-    void *pad[4];
-} *_dlfcn_hook;
-
 /* Set of libraries that are loaded by the game,
  * either at startup (link time) or using the dl functions.
  */
@@ -99,17 +101,6 @@ std::string find_lib(const char* library);
 void dlenter(void);
 void dlleave(void);
 
-/* Custom version of each dl function */
-void *my_dlopen(const char *file, int mode, void *dl_caller);
-int my_dlclose(void *handle);
-void *my_dlsym(void *handle, const char *name, void *dl_caller);
-void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller);
-char *my_dlerror(void);
-int my_dladdr(const void *address, Dl_info *info);
-int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags);
-int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
-void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
-
 /* Set up the our function pointers to replace the internal function pointers
  * of the dl library.
  * We *must* call the init function as early as possible, before the game or
@@ -119,5 +110,7 @@ void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
  */
 void dlhook_init(void);
 void dlhook_end(void);
+
+}
 
 #endif

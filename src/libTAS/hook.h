@@ -23,6 +23,8 @@
 #include <SDL2/SDL.h>
 #include "dlhook.h"
 
+namespace libtas {
+
 /* Version of the SDL library */
 extern int SDLver;
 
@@ -51,5 +53,7 @@ bool link_function(void** function, const char* source, const char* library, con
 
 /* Returns the major version of the SDL library used in the game */
 int get_sdlversion(void);
+
+}
 
 #endif

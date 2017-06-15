@@ -22,6 +22,8 @@
 #include "SurfaceARGB.h"
 #include "../logging.h"
 
+namespace libtas {
+
 SurfaceARGB::SurfaceARGB(int width, int height)
 {
     w = width;
@@ -102,6 +104,6 @@ void SurfaceARGB::blit(SurfaceARGB* src, int x, int y)
     }
 }
 
+}
 
 #endif
-

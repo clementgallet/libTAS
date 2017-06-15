@@ -22,6 +22,8 @@
 #include "DeterministicTimer.h"
 #include "hook.h"
 
+namespace libtas {
+
 namespace orig {
     static SDL_TimerID (*SDL_AddTimer)(Uint32 interval, SDL_NewTimerCallback callback, void *param);
     static SDL_bool (*SDL_RemoveTimer)(SDL_TimerID id);
@@ -44,4 +46,6 @@ void link_sdltimer(void)
     LINK_NAMESPACE_SDLX(SDL_AddTimer);
     LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
     /* TODO: Add SDL 1.2 SetTimer */
+}
+
 }

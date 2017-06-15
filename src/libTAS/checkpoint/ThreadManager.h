@@ -32,6 +32,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+namespace libtas {
 class ThreadManager {
     /* Register start and end time for each routine and each thread. */
     // static std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> startTime_;
@@ -135,5 +136,6 @@ public:
     static void sigspin(int sig);
     static std::atomic<int> spin;
 };
+}
 
 #endif

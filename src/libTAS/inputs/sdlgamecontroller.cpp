@@ -28,8 +28,10 @@
 #include <cstring>
 #include "../GlobalState.h"
 
-int gcids[4] = {-1, -1, -1, -1};
-const char joy_name[] = "XInput Controller";
+namespace libtas {
+
+static int gcids[4] = {-1, -1, -1, -1};
+static const char joy_name[] = "XInput Controller";
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
@@ -236,4 +238,6 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return;
 
     gcids[*gcid] = -1;
+}
+
 }

@@ -25,6 +25,8 @@
 #include "../../shared/SharedConfig.h"
 #include "../GlobalState.h"
 
+namespace libtas {
+
 snd_pcm_t *AudioPlayer::phandle;
 
 AudioPlayer::~AudioPlayer(void)
@@ -143,6 +145,8 @@ bool AudioPlayer::play(AudioContext& ac)
 	}
 
     return true;
+}
+
 }
 
 #endif

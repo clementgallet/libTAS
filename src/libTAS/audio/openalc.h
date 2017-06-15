@@ -157,6 +157,8 @@ typedef void ALCvoid;
 typedef int ALCdevice;
 typedef int ALCcontext;
 
+namespace libtas {
+
 /** Device management. */
 OVERRIDE ALCdevice* alcOpenDevice(const ALCchar* devicename);
 OVERRIDE ALCboolean alcCloseDevice(ALCdevice* deviceHandle);
@@ -191,5 +193,6 @@ OVERRIDE ALCenum    alcGetEnumValue(ALCdevice *device, const ALCchar *enumname);
 OVERRIDE const ALCchar* alcGetString(ALCdevice *device, ALCenum param);
 OVERRIDE void           alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values);
 
-#endif
+}
 
+#endif

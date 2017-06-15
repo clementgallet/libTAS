@@ -21,11 +21,13 @@
 #include "../logging.h"
 #include <iostream>
 
-ALCdevice dummyDevice = 0;
-ALCcontext dummyContext = -1;
-ALCcontext currentContext = -1;
+namespace libtas {
 
-ALCenum alcError = ALC_NO_ERROR;
+static ALCdevice dummyDevice = 0;
+static ALCcontext dummyContext = -1;
+static ALCcontext currentContext = -1;
+
+static ALCenum alcError = ALC_NO_ERROR;
 #define ALCSETERROR(error) if(alcError==ALC_NO_ERROR) alcError = error
 
 /* Override */ ALCenum alcGetError(ALCdevice *device)
@@ -146,7 +148,7 @@ ALCenum alcError = ALC_NO_ERROR;
         ALCSETERROR(ALC_INVALID_VALUE);
         return NULL;
     }
-    
+
     debuglog(LCF_OPENAL | LCF_ERROR, "Requesting function ", funcname);
     return NULL;
 }
@@ -158,22 +160,22 @@ ALCenum alcError = ALC_NO_ERROR;
         ALCSETERROR(ALC_INVALID_VALUE);
         return 0;
     }
-    
+
     debuglog(LCF_OPENAL | LCF_ERROR, "Requesting enum ", enumname);
     return 0;
 }
 
-const ALCchar* alcNoErrorStr = "No error";
-const ALCchar* alcInvalidDeviceStr = "Invalid device";
-const ALCchar* alcInvalidContextStr = "Invalid context";
-const ALCchar* alcInvalidEnumStr = "Invalid enum";
-const ALCchar* alcInvalidValueStr = "Invalid value";
-const ALCchar* alcOutOfMemoryStr = "Out of memory";
-const ALCchar* alcExtensionsStr = ""; // extensions strings separated by space
-const ALCchar* alcDeviceListStr = "libTAS device\0"; // must be double null-terminated
-const ALCchar* alcDeviceStr = "libTAS device";
-const ALCchar* alcCaptureListStr = "\0"; // must be double null-terminated
-const ALCchar* alcDefault = "";
+static const ALCchar* alcNoErrorStr = "No error";
+static const ALCchar* alcInvalidDeviceStr = "Invalid device";
+static const ALCchar* alcInvalidContextStr = "Invalid context";
+static const ALCchar* alcInvalidEnumStr = "Invalid enum";
+static const ALCchar* alcInvalidValueStr = "Invalid value";
+static const ALCchar* alcOutOfMemoryStr = "Out of memory";
+static const ALCchar* alcExtensionsStr = ""; // extensions strings separated by space
+static const ALCchar* alcDeviceListStr = "libTAS device\0"; // must be double null-terminated
+static const ALCchar* alcDeviceStr = "libTAS device";
+static const ALCchar* alcCaptureListStr = "\0"; // must be double null-terminated
+static const ALCchar* alcDefault = "";
 
 /* Override */ const ALCchar* alcGetString(ALCdevice *device, ALCenum param)
 {
@@ -288,3 +290,4 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
     }
 }
 
+}

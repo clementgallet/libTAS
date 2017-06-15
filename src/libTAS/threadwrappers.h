@@ -25,6 +25,8 @@
 #include "pthread.h" // pthread_t
 #include <SDL2/SDL.h> // SDL_Thread, SDL_ThreadFunction
 
+namespace libtas {
+
 /* Get the id of the own pthread, if available */
 pthread_t getThreadId(void);
 
@@ -141,5 +143,7 @@ OVERRIDE int pthread_cancel (pthread_t th);
 OVERRIDE void pthread_testcancel (void);
 
 void link_sdlthreads(void);
+
+}
 
 #endif

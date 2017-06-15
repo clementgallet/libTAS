@@ -29,6 +29,7 @@
  * casting.
  */
 
+namespace libtas {
 class TimeHolder : public timespec
 {
     public:
@@ -97,6 +98,6 @@ class TimeHolder : public timespec
         /* Bring the tv_nsec value inside the range [0,999999999] */
         void normalize();
 };
+}
 
 #endif
-

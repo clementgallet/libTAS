@@ -25,6 +25,8 @@
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112
 
+namespace libtas {
+
 AudioContext audiocontext;
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
@@ -214,4 +216,6 @@ void AudioContext::mixAllSources(struct timespec ticks)
         AudioPlayer::play(*this);
     }
 #endif
+}
+
 }

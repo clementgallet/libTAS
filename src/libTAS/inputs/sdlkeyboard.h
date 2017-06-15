@@ -24,9 +24,13 @@
 #include "../global.h"
 #include "../sdlwindows.h" // SDL_Window and gameWindow
 
+namespace libtas {
+
 /* Keyboard functions */
 OVERRIDE const Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
 OVERRIDE Uint8* SDL_GetKeyState(int* numkeys); // SDL 1
 OVERRIDE SDL_Window* SDL_GetKeyboardFocus(void);
+
+}
 
 #endif

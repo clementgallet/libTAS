@@ -26,6 +26,8 @@
 #include "../../shared/SharedConfig.h"
 #include <stdlib.h>
 
+namespace libtas {
+
 /* Override */ int SDL_NumJoysticks(void)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
@@ -341,4 +343,6 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
 	return SDL_JOYSTICK_POWER_WIRED;
+}
+
 }

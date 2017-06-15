@@ -51,6 +51,8 @@
 #define CACHED_BITMAP   0x01
 #define CACHED_PIXMAP   0x02
 
+namespace libtas {
+
 /* Cached glyph information */
 typedef struct cached_glyph {
     int stored;
@@ -1732,5 +1734,6 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t 
     return (delta.x >> 6);
 }
 
-#endif
+}
 
+#endif

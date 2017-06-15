@@ -26,14 +26,13 @@
 #include <atomic>
 #include <pthread.h> // pthread_rwlock_t
 
+namespace libtas {
 
 static std::atomic<int> uninitializedThreadCount(0);
 static pthread_rwlock_t wrapperExecutionLock =
     PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
 
-namespace ThreadSync {
-
-void acquireLocks()
+void ThreadSync::acquireLocks()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to exit wrappers");
     MYASSERT(pthread_rwlock_wrlock(&wrapperExecutionLock) == 0)
@@ -44,13 +43,13 @@ void acquireLocks()
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Done acquiring all locks");
 }
 
-void releaseLocks()
+void ThreadSync::releaseLocks()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Releasing ThreadSync locks");
     MYASSERT(pthread_rwlock_unlock(&wrapperExecutionLock) == 0)
 }
 
-void waitForThreadsToFinishInitialization()
+void ThreadSync::waitForThreadsToFinishInitialization()
 {
     while (uninitializedThreadCount != 0) {
         struct timespec sleepTime = { 0, 10 * 1000 * 1000 };
@@ -59,12 +58,12 @@ void waitForThreadsToFinishInitialization()
     }
 }
 
-void incrementUninitializedThreadCount()
+void ThreadSync::incrementUninitializedThreadCount()
 {
     uninitializedThreadCount++;
 }
 
-void decrementUninitializedThreadCount()
+void ThreadSync::decrementUninitializedThreadCount()
 {
     if (uninitializedThreadCount <= 0) {
         debuglog(LCF_ERROR | LCF_THREAD, "uninitializedThreadCount is negative!");
@@ -72,7 +71,7 @@ void decrementUninitializedThreadCount()
     uninitializedThreadCount--;
 }
 
-void wrapperExecutionLockLock()
+void ThreadSync::wrapperExecutionLockLock()
 {
     while (1) {
         int retVal = pthread_rwlock_tryrdlock(&wrapperExecutionLock);
@@ -89,7 +88,7 @@ void wrapperExecutionLockLock()
     }
 }
 
-void wrapperExecutionLockUnlock()
+void ThreadSync::wrapperExecutionLockUnlock()
 {
     if (pthread_rwlock_unlock(&wrapperExecutionLock) != 0) {
         debuglog(LCF_ERROR | LCF_THREAD, "Failed to release lock!");

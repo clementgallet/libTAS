@@ -26,6 +26,8 @@
 #include "../global.h"
 #include "../sdlwindows.h" // SDL_Window
 
+namespace libtas {
+
 //typedef SDL_Cursor int;   /* Implementation dependent */
 
 /**
@@ -239,5 +241,7 @@ OVERRIDE int SDL_ShowCursor(int toggle);
  *   - Button 2:  Middle mouse button
  *   - Button 3:  Right mouse button
  */
+
+}
 
 #endif

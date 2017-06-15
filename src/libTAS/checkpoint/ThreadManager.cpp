@@ -32,6 +32,8 @@
 #include "../logging.h"
 #include "../backtrace.h"
 
+namespace libtas {
+
 std::atomic<int> ThreadManager::spin(0);
 ThreadInfo* ThreadManager::thread_list = nullptr;
 ThreadInfo* ThreadManager::free_list = nullptr;
@@ -614,3 +616,5 @@ bool ThreadManager::waitFor(pthread_t tid)
 //     }
 //     return oss.str();
 // }
+
+}

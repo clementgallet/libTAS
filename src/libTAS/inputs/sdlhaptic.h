@@ -24,6 +24,8 @@
 #include "../global.h"
 #include "sdljoystick.h"
 
+namespace libtas {
+
 /**
  *  \brief Count the number of haptic devices attached to the system.
  *
@@ -91,5 +93,7 @@ OVERRIDE SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick);
  *  \param haptic Haptic device to close.
  */
 OVERRIDE void SDL_HapticClose(SDL_Haptic * haptic);
+
+}
 
 #endif
