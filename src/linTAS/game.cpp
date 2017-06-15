@@ -32,7 +32,7 @@
 #include "MovieFile.h"
 #include <cerrno>
 
-PseudoSaveState pseudosavestate;
+static PseudoSaveState pseudosavestate;
 
 /* Determine if we are allowed to send inputs to the game, based on which
  * window has focus and our settings
@@ -169,6 +169,11 @@ void launchGame(Context* context)
      */
     MovieFile movie;
     movie.open(context);
+
+    /* Keep track of the last savestate loaded. This will save us from loading
+     * a moviefile if we don't have to.
+     */
+    int last_savestate_slot = -1;
 
     /*
      * Frame advance auto-repeat variables.
@@ -349,8 +354,20 @@ void launchGame(Context* context)
                         }
                     }
                     if (hk.type >= HOTKEY_SAVESTATE1 && hk.type <= HOTKEY_SAVESTATE9){
-                        /* Building the savestate path */
+
+                        /* Slot number */
                         int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
+                        last_savestate_slot = statei;
+
+                        /* Building the movie path */
+                        std::string moviepath = context->config.savestatedir + '/';
+                        moviepath += context->gamename;
+                        moviepath += ".movie" + std::to_string(statei) + ".ltm";
+
+                        /* Save the movie file */
+                        movie.saveMovie(moviepath);
+
+                        /* Building the savestate path */
                         std::string savestatepath = context->config.savestatedir + '/';
                         savestatepath += context->gamename;
                         savestatepath += ".state" + std::to_string(statei);
@@ -359,8 +376,23 @@ void launchGame(Context* context)
                         sendString(savestatepath);
                     }
                     if (hk.type >= HOTKEY_LOADSTATE1 && hk.type <= HOTKEY_LOADSTATE9){
-                        /* Building the savestate path */
+                        /* Slot number */
                         int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
+
+                        /* Check if we are loading the same state we just saved.
+                         * If so, we don't need to load the movie.
+                         */
+                        if (last_savestate_slot != statei) {
+                            /* Building the movie path */
+                            std::string moviepath = context->config.savestatedir + '/';
+                            moviepath += context->gamename;
+                            moviepath += ".movie" + std::to_string(statei) + ".ltm";
+
+                            /* Load the movie file */
+                            movie.loadMovie(moviepath);
+                        }
+
+                        /* Building the savestate path */
                         std::string savestatepath = context->config.savestatedir + '/';
                         savestatepath += context->gamename;
                         savestatepath += ".state" + std::to_string(statei);

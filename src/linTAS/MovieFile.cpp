@@ -41,15 +41,12 @@ void MovieFile::open(Context* c)
             loadMovie();
             break;
     }
-
-    input_it = input_list.begin();
-    it_index = 0;
 }
 
 tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
 
-void MovieFile::loadMovie(std::string& moviefile)
+void MovieFile::loadMovie(const std::string& moviefile)
 {
     /* Uncompress the movie file into out temp directory */
     TAR *tar;
@@ -97,7 +94,7 @@ void MovieFile::loadMovie()
     loadMovie(context->config.moviefile);
 }
 
-void MovieFile::saveMovie()
+void MovieFile::saveMovie(const std::string& moviefile)
 {
     /* Format and write input frames into the input file */
     std::string input_file = context->config.tempmoviedir + "/inputs";
@@ -118,7 +115,7 @@ void MovieFile::saveMovie()
 
     /* Compress the files into the final movie file */
     TAR *tar;
-    tar_open(&tar, context->config.moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
+    tar_open(&tar, moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
     /* I would like to use tar_append_tree but it saves files with their path */
     //tar_append_tree(tar, md, save_dir);
     char* input_ptr = const_cast<char*>(input_file.c_str());
@@ -131,6 +128,11 @@ void MovieFile::saveMovie()
 
     tar_append_eof(tar);
     tar_close(tar);
+}
+
+void MovieFile::saveMovie()
+{
+    saveMovie(context->config.moviefile);
 }
 
 int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
@@ -277,7 +279,6 @@ int MovieFile::setInputs(const AllInputs& inputs)
         /* Writing to a frame that is before the last one. We resize the input
          * list accordingly and append the frame at the end.
          */
-        std::cout << "Writing to a frame lower than the current list." << std::endl;
         input_list.resize(context->framecount);
         input_list.push_back(inputs);
         return 0;
@@ -291,28 +292,18 @@ int MovieFile::setInputs(const AllInputs& inputs)
 int MovieFile::getInputs(AllInputs& inputs)
 {
     if (context->framecount > input_list.size()) {
-        std::cout << "Reading a frame after the last frame of the input list." << std::endl;
         inputs.emptyInputs();
         return 1;
     }
 
-    if (context->framecount != it_index) {
-        /* We loaded another position in the movie, update the iterator */
-        std::cout << "Reading another frame of the input list." << std::endl;
-        input_it = input_list.begin();
-        std::advance(input_it, context->framecount);
-        it_index = context->framecount;
-    }
-
-    if (input_it == input_list.end()) {
+    if (context->framecount == input_list.size()) {
         /* We reached the end of the movie */
         std::cout << "End of movie" << std::endl;
+        inputs.emptyInputs();
         return 0;
     }
 
-    inputs = *input_it;
-    input_it++;
-    it_index++;
+    inputs = input_list[context->framecount];
     return 1;
 }
 

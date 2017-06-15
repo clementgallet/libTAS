@@ -26,7 +26,7 @@
 #include "Context.h"
 #include <fstream>
 #include <string>
-#include <list>
+#include <vector>
 
 class MovieFile {
 public:
@@ -35,10 +35,11 @@ public:
 
     /* Extract a moviefile and import the inputs into a list */
     void loadMovie();
-    void loadMovie(std::string& moviefile);
+    void loadMovie(const std::string& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     void saveMovie();
+    void saveMovie(const std::string& moviefile);
 
     /* Get the number of frames from a moviefile (needs to load it) */
     int nbFrames(const Context& c, const std::string& moviefile);
@@ -62,13 +63,7 @@ private:
     Context* context;
 
     /* The list of inputs */
-    std::list<AllInputs> input_list;
-
-    /* An iterator to the current frame in the input list */
-    std::list<AllInputs>::iterator input_it;
-
-    /* The index of the iterator */
-    unsigned int it_index;
+    std::vector<AllInputs> input_list;
 };
 
 #endif
