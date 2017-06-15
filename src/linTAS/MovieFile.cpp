@@ -27,20 +27,8 @@
 #include <zlib.h>
 #include "ui/MainWindow.h"
 
-void MovieFile::open(Context* c)
+MovieFile::MovieFile(Context* c) : context(c)
 {
-    context = c;
-
-    switch(context->recording) {
-        case Context::RECORDING_WRITE:
-        case Context::NO_RECORDING:
-            input_list.clear();
-            break;
-        case Context::RECORDING_READ_WRITE:
-        case Context::RECORDING_READ_ONLY:
-            loadMovie();
-            break;
-    }
 }
 
 tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
@@ -246,7 +234,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-int MovieFile::nbFrames(const Context& c, const std::string& moviefile)
+int MovieFile::nbFrames(const std::string& moviefile)
 {
     /* Check if movie exists, otherwise return 0 */
     struct stat sb;
@@ -256,12 +244,12 @@ int MovieFile::nbFrames(const Context& c, const std::string& moviefile)
     /* Uncompress the movie file into our temp directory */
     TAR *tar;
     tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-    char* md = const_cast<char*>(c.config.tempmoviedir.c_str());
+    char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
     tar_extract_all(tar, md);
     tar_close(tar);
 
     /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(c.config.tempmoviedir.c_str(), "movie", "config");
+    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
     int frame_count;
     config_prefs.get("frame_count", frame_count, 0);
 
@@ -311,4 +299,13 @@ void MovieFile::close()
 {
     if (context->recording != Context::NO_RECORDING)
         saveMovie();
+}
+
+bool MovieFile::isPrefix(const MovieFile& movie)
+{
+    /* Not a prefix if the size is greater */
+    if (movie.input_list.size() > input_list.size())
+        return false;
+
+    return std::equal(movie.input_list.begin(), movie.input_list.end(), input_list.begin());
 }

@@ -30,8 +30,13 @@
 
 class MovieFile {
 public:
+    /* The list of inputs. We need this to be public because a movie may
+     * check if another movie is a prefix
+     */
+    std::vector<AllInputs> input_list;
+
     /* Prepare a movie file from the context */
-    void open(Context* c);
+    MovieFile(Context* c);
 
     /* Extract a moviefile and import the inputs into a list */
     void loadMovie();
@@ -42,7 +47,7 @@ public:
     void saveMovie(const std::string& moviefile);
 
     /* Get the number of frames from a moviefile (needs to load it) */
-    int nbFrames(const Context& c, const std::string& moviefile);
+    int nbFrames(const std::string& moviefile);
 
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);
@@ -53,6 +58,9 @@ public:
     /* Save and close the moviefile */
     void close();
 
+    /* Check if another movie starts with the same inputs as this movie */
+    bool isPrefix(const MovieFile& movie);
+
 private:
     /* Write a single frame of inputs into the input stream */
     int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
@@ -62,8 +70,6 @@ private:
 
     Context* context;
 
-    /* The list of inputs */
-    std::vector<AllInputs> input_list;
 };
 
 #endif

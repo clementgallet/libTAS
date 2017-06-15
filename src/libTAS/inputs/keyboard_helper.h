@@ -24,6 +24,7 @@
 #include <SDL2/SDL.h>
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
+#include "../../shared/AllInputs.h"
 
 namespace libtas {
 
@@ -44,8 +45,8 @@ void X11_InitKeymap(void);
 /* Fill the keyboard array that SDL functions are expected,
  * based on the KeySym set we get from our AllInputs struct.
  */
-void xkeyboardToSDLkeyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard);
-void xkeyboardToSDL1keyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard);
+void xkeyboardToSDLkeyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
+void xkeyboardToSDL1keyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
 
 /* Fill the SDL 1 or SDL 2 full key struct based on a Xlib KeySym */
 void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym);

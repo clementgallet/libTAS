@@ -22,6 +22,7 @@
 
 #include <X11/Xlib.h> // For the KeySym type
 #include <X11/keysym.h>
+#include <array>
 
 /* Input structure that is filled by linTAS and send to libTAS every frame
  * Structure is inspired by SDL.
@@ -38,16 +39,16 @@ class AllInputs {
          * not the physical key itself, so it can contain misc or non-latin symbols
          * for example. It should work well with computers with
          * different keyboard layouts.
-         * 
+         *
          * We choose a set of keys of a fixed size, instead of a bitmap of all
-         * keys. The drawback is that we are limited by the number of 
+         * keys. The drawback is that we are limited by the number of
          * simultaneous pressed keys, but the size is much smaller:
          * - Set: 16 keys * 4 bytes = 64 bytes
          * - Bitmap: ~2400 different KeySym / 8 = 300 bytes
          * and there would be a highly non-trivial translation between bitmap
          * position and equivalent KeySym.
          */
-        KeySym keyboard[MAXKEYS];
+        std::array<KeySym,MAXKEYS> keyboard;
 
         /* Pointer coordinates relative to the origin of the game window */
         int pointer_x;
@@ -61,19 +62,29 @@ class AllInputs {
          * Maybe we should use our own enum and translate to SDL enum, in case
          * we must support other joystick libraries like plain joydev.
          */
-        short controller_axes[MAXJOYS][MAXAXES];
+        std::array<std::array<short, MAXAXES>,MAXJOYS> controller_axes;
 
         /* controller_buttons[i] stores the bitmap state of buttons of
          * controller i. Bit j set means that button j is pressed.
          * We use a 2-byte integer here, meaning we can have at most
          * 16 buttons in a controller.
-         * Again, the list of buttons is taken from SDL GameController. 
+         * Again, the list of buttons is taken from SDL GameController.
          */
-        unsigned short controller_buttons[MAXJOYS];
+        std::array<unsigned short,MAXJOYS> controller_buttons;
+
+        /* Operator needed for comparing movies */
+        inline bool operator==(const AllInputs& other) const
+        {
+            return ((keyboard == other.keyboard) &&
+                (pointer_x == other.pointer_x) &&
+                (pointer_y == other.pointer_y) &&
+                (pointer_mask == other.pointer_mask) &&
+                (controller_axes == other.controller_axes) &&
+                (controller_buttons == other.controller_buttons));
+        }
 
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 };
 
 #endif
-

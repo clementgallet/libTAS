@@ -776,9 +776,9 @@ SDL_Scancode GetScanFromKey1(SDL1::SDLKey key){
 }
 
 
-void xkeyboardToSDLkeyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard) {
+void xkeyboardToSDLkeyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL_NUM_SCANCODES);
-    for (int i=0; i<16; i++) {
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i] != XK_VoidSymbol) {
             SDL_Scancode sc = GetScanFromKey(X11_TranslateKeysym(Xkeyboard[i]));
             SDLkeyboard[sc] = 1;
@@ -786,9 +786,9 @@ void xkeyboardToSDLkeyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard) {
     }
 }
 
-void xkeyboardToSDL1keyboard(KeySym Xkeyboard[], Uint8* SDLkeyboard) {
+void xkeyboardToSDL1keyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL1::SDLK_LAST);
-    for (int i=0; i<16; i++) {
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i] != XK_VoidSymbol) {
             SDL1::SDLKey key = X11_Translate1Keysym(Xkeyboard[i]);
             SDLkeyboard[key] = 1;
