@@ -651,6 +651,9 @@ static void readAllAreas()
 
 void Checkpoint::handler(int signum)
 {
+    /* Access the X Window identifier from the SDL_Window struct */
+    Display *display = getXDisplay();
+    XSync(display, false);
 
     if (ThreadManager::restoreInProgress) {
         /* Before reading from the savestate, we must keep some values from
@@ -659,8 +662,6 @@ void Checkpoint::handler(int signum)
          * which will be preserved.
          */
 
-        /* Access the X Window identifier from the SDL_Window struct */
-        Display *display = getXDisplay();
         uint64_t last_request_read, request;
 
         if (display) {

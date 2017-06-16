@@ -85,7 +85,7 @@ static bool skipDraw(void)
 {
     static int skipCounter = 0;
     if (shared_config.fastforward) {
-        if (skipCounter++ > 10)
+        if (skipCounter++ > 10) // TODO: Tweak this value based on fps
             skipCounter = 0;
     }
     else
@@ -157,7 +157,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     if (!skipDraw()) {
-        if (shared_config.save_screenpixels) {
+        if (drawFB && shared_config.save_screenpixels) {
             /* We must save the screen pixels just before drawing, in case we
              * load a savestate here, so we can redraw the screen.
              */
