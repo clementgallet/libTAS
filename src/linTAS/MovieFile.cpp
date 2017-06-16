@@ -27,12 +27,10 @@
 #include <zlib.h>
 #include "ui/MainWindow.h"
 
-MovieFile::MovieFile(Context* c) : context(c)
-{
-}
-
-tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
+static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
+
+MovieFile::MovieFile(Context* c) : context(c) {}
 
 void MovieFile::loadMovie(const std::string& moviefile)
 {

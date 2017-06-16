@@ -362,13 +362,15 @@ void launchGame(Context* context)
                         int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
                         last_savestate_slot = statei;
 
-                        /* Building the movie path */
-                        std::string moviepath = context->config.savestatedir + '/';
-                        moviepath += context->gamename;
-                        moviepath += ".movie" + std::to_string(statei) + ".ltm";
+                        if (context->recording != Context::NO_RECORDING) {
+                            /* Building the movie path */
+                            std::string moviepath = context->config.savestatedir + '/';
+                            moviepath += context->gamename;
+                            moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-                        /* Save the movie file */
-                        movie.saveMovie(moviepath);
+                            /* Save the movie file */
+                            movie.saveMovie(moviepath);
+                        }
 
                         /* Building the savestate path */
                         std::string savestatepath = context->config.savestatedir + '/';
@@ -394,6 +396,7 @@ void launchGame(Context* context)
                          */
                         switch (context->recording) {
                         case Context::NO_RECORDING:
+                            break;
                         case Context::RECORDING_WRITE:
                             /* When in writing move, we load the movie associated
                              * with the savestate.
@@ -545,8 +548,10 @@ void launchGame(Context* context)
                     }
                 }
 
-                /* Save inputs to moviefile */
-                movie.setInputs(ai);
+                if (context->recording == Context::RECORDING_WRITE) {
+                    /* Save inputs to moviefile */
+                    movie.setInputs(ai);
+                }
                 break;
 
             case Context::RECORDING_READ_WRITE:
