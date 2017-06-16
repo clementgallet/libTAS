@@ -400,6 +400,9 @@ void ThreadManager::suspendThreads()
             case ThreadInfo::ST_CKPNTHREAD:
                 break;
 
+            case ThreadInfo::ST_FAKEZOMBIE:
+                break;
+
             default:
                 debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state ", thread->state);
             }
