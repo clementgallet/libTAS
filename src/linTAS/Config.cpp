@@ -110,8 +110,9 @@ void Config::load(const std::string& gamepath) {
     moviefile = text;
     free(text);
 
-    if (prefs->get("dumpfile", text, dumpfile.c_str()))
-        dumpfile = text;
+    std::string default_dumpfile = gamepath + ".mkv";
+    prefs->get("dumpfile", text, default_dumpfile.c_str());
+    dumpfile = text;
     free(text);
 
     if (prefs->get("libdir", text, libdir.c_str()))

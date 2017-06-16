@@ -76,9 +76,7 @@ KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display)
     return modifiers;
 }
 
-
-
-KeyMapping::KeyMapping()
+void KeyMapping::init(Display* display)
 {
     /* Fill hotkey list */
     hotkey_list.push_back({{IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
@@ -112,9 +110,6 @@ KeyMapping::KeyMapping()
 
     /* Gather the list of valid X11 KeyCode values */
     int min_keycodes_return, max_keycodes_return;
-    Display *display = XOpenDisplay(NULL);
-    if (display == NULL)
-        return;
     XDisplayKeycodes(display, &min_keycodes_return, &max_keycodes_return);
 
     /* Build the list of KeySym values to be mapped based on valid KeyCodes.
@@ -130,6 +125,7 @@ KeyMapping::KeyMapping()
         si.description = XKeysymToString(ks);
         input_list.push_back(si);
     }
+
 
     /* Add controller mapping */
     input_list.push_back({IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});

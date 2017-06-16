@@ -33,14 +33,6 @@ InputWindow::InputWindow(Context* c) : context(c)
 {
     window = new Fl_Double_Window(800, 500);
 
-    /* We need to open a connection to the X server to access to key pressed */
-    display = XOpenDisplay(NULL);
-    if (display == NULL)
-    {
-        /* TODO: Deal with the error */
-        std::cerr << "Cannot open display" << std::endl;
-    }
-
     /* Browsers */
     hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
     hotkey_browser->callback(select_cb, this);
@@ -236,7 +228,7 @@ static void assign_cb(Fl_Widget* w, void* v)
     iw->assign_button->label("Press key...");
     iw->assign_button->deactivate();
     Fl::flush();
-    KeySym ks = get_next_keypressed(iw->display, is_hotkey);
+    KeySym ks = get_next_keypressed(iw->context->display, is_hotkey);
     iw->assign_button->label("Assign");
     iw->assign_button->activate();
 

@@ -227,7 +227,7 @@ KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display);
 class KeyMapping {
     public:
         /* Initialize hotkeys and mapping list */
-        KeyMapping();
+        void init(Display* display);
 
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<KeySym,SingleInput> input_mapping;

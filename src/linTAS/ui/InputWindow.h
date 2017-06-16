@@ -32,8 +32,6 @@ class InputWindow {
         InputWindow(Context *c);
         Context *context;
 
-        Display *display;
-
         Fl_Double_Window *window;
 
         Fl_Multi_Browser *hotkey_browser;
