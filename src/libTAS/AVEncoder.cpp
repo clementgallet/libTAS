@@ -355,9 +355,9 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
     static int orig_stride[4] = {0};
 
     /* Access to the screen pixels if the current frame is a draw frame
-     * if not, we will capture the last drawn frame.
+     * or if we never drew. If not, we will capture the last drawn frame.
      */
-    if (draw) {
+    if (draw || (orig_stride[0] == 0)) {
         getScreenPixels(orig_plane, orig_stride);
 
         /* Change pixel format to YUV420p and copy it into the AVframe */
@@ -367,13 +367,13 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
             debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",ret," rows");
             return -1;
         }
-
-        video_frame->pts = fcounter - start_frame;
-
-        /* Encode the image */
-        ret = avcodec_send_frame(video_codec_context, video_frame);
-        ASSERT_RETURN(ret, "Error encoding video frame");
     }
+
+    video_frame->pts = fcounter - start_frame;
+
+    /* Encode the image */
+    ret = avcodec_send_frame(video_codec_context, video_frame);
+    ASSERT_RETURN(ret, "Error encoding video frame");
 
     /* Receive decoding frames */
     AVPacket vpkt = { 0 };
