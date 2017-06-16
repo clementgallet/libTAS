@@ -117,6 +117,20 @@ int main(int argc, char **argv)
                 return -1;
         }
 
+    /* Open connection with the server */
+    XInitThreads();
+    context.display = XOpenDisplay(NULL);
+    if (context.display == NULL)
+    {
+        std::cerr << "Cannot open display" << std::endl;
+        return -1;
+    }
+
+    /* Init keymapping. This uses the X connection to get the list of KeyCodes,
+     * so it must be called after opening it.
+     */
+    context.config.km.init(context.display);
+
     /* libTAS.so path */
     /* TODO: Not portable! */
     ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
@@ -173,20 +187,6 @@ int main(int argc, char **argv)
         context.config.gameargs += argv[i];
         context.config.gameargs += " ";
     }
-
-    /* Open connection with the server */
-    XInitThreads();
-    context.display = XOpenDisplay(NULL);
-    if (context.display == NULL)
-    {
-        std::cerr << "Cannot open display" << std::endl;
-        return -1;
-    }
-
-    /* Init keymapping. This uses the X connection to get the list of KeyCodes,
-     * so it must be called after opening it.
-     */
-    context.config.km.init(context.display);
 
     /* Starts the user interface */
     MainWindow& ui = MainWindow::getInstance();
