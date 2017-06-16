@@ -23,14 +23,20 @@
 - Dump video
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
-- Support savestates (good luck)
+- Support savestates
 -- Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
+-- Delete savestates at the beginning (or the end?)
+-- Alert the user when a state loading is not allowed
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
 -- Hook pulse audio (shovel knight? superhexagon)
 - Add an interface (fltk)
--- Add game commandline options
+-- Check for validity of encoding parameters
+-- Double click to assign key mappings
+-- Allow the user to set the working directories
+-- Allow the user to delete savestates
+-- Add more alert windows
 - Record inputs and support playback
 -- Write extra (sync) informations in the movie file
 

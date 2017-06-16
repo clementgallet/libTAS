@@ -164,16 +164,9 @@ void ThreadManager::addToList(ThreadInfo* thread)
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
 
     /* Check for a thread with the same tid, and remove it */
-    ThreadInfo* cur_thread;
-    ThreadInfo* next_thread;
-    for (cur_thread = thread_list; cur_thread != nullptr; cur_thread = next_thread) {
-        next_thread = cur_thread->next;
-
-        if (cur_thread->tid == thread->tid) {
-            threadIsDead(cur_thread);
-            continue;
-        }
-    }
+    ThreadInfo* cur_thread = getThread(thread->tid);
+    if (cur_thread)
+        threadIsDead(cur_thread);
 
     /* Add the new thread to the list */
     thread->next = thread_list;
@@ -206,21 +199,16 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
 
 void ThreadManager::threadDetach(pthread_t tid)
 {
-    ThreadInfo* thread;
+    ThreadInfo* thread = getThread(tid);
 
-    for (thread = thread_list; thread != nullptr; thread = thread->next) {
-        if (thread->tid == tid) {
-
-            MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
-            thread->detached = true;
-            if (thread->state == ThreadInfo::ST_ZOMBIE) {
-                debuglog(LCF_THREAD, "Zombie thread ", stringify(tid), " is detached");
-                threadIsDead(thread);
-            }
-            MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
-
-            break;
+    if (thread) {
+        MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
+        thread->detached = true;
+        if (thread->state == ThreadInfo::ST_ZOMBIE) {
+            debuglog(LCF_THREAD, "Zombie thread ", stringify(tid), " is detached");
+            threadIsDead(thread);
         }
+        MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
     }
 }
 
@@ -351,6 +339,7 @@ void ThreadManager::suspendThreads()
         numThreads = 0;
         ThreadInfo *next;
         for (ThreadInfo *thread = thread_list; thread != nullptr; thread = next) {
+            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread ", stringify(thread->tid));
             next = thread->next;
             int ret;
 
@@ -377,16 +366,14 @@ void ThreadManager::suspendThreads()
 
             case ThreadInfo::ST_ZOMBIE:
 
-                /* Zombie threads should still exist because otherwise they would be
-                * removed from the list. We will still check using pthread_kill(tid, 0)
-                */
-                ret = pthread_kill(thread->tid, 0);
+                /* Zombie threads are detached here, to avoid getting leaking
+                 * threads after state loading or other kinds of errors.
+                 * We have to get the return value if the game wants it later
+                 */
 
-                MYASSERT(ret == 0 || ret == ESRCH)
-                if (ret == ESRCH) {
-                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", stringify(thread->tid), " no longer exists");
-                    threadIsDead(thread);
-                }
+                debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", stringify(thread->tid), " is joined");
+                updateState(thread, ThreadInfo::ST_FAKEZOMBIE, ThreadInfo::ST_ZOMBIE);
+                NATIVECALL(pthread_join(thread->tid, &thread->retval));
                 break;
 
             case ThreadInfo::ST_SIGNALED:

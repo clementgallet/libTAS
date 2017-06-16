@@ -34,6 +34,7 @@ struct ThreadInfo {
         ST_SUSPINPROG,
         ST_SUSPENDED,
         ST_ZOMBIE,
+        ST_FAKEZOMBIE,
         ST_CKPNTHREAD
     };
     ThreadState state;
@@ -44,6 +45,7 @@ struct ThreadInfo {
     bool detached;
     std::ptrdiff_t routine_id;
     ucontext_t savctx;
+    void* retval;
 
     ThreadInfo *next;
     ThreadInfo *prev;
