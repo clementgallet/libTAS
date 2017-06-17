@@ -135,7 +135,7 @@ typedef int InputType; enum {
 class SingleInput {
 public:
     InputType type;
-    int value;
+    unsigned int value;
     std::string description;
 
     bool operator==( const SingleInput &si ) const {

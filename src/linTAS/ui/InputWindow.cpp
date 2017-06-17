@@ -18,8 +18,10 @@
  */
 
 #include "InputWindow.h"
+#include "MainWindow.h"
 #include <iostream>
 #include <X11/XKBlib.h>
+#include <FL/names.h>
 
 static KeySym get_next_keypressed(Display* display, bool with_modifiers);
 static Fl_Callback select_cb;
@@ -160,15 +162,17 @@ static KeySym get_next_keypressed(Display* display, bool with_modifiers)
         {
             KeyCode kc = event.xkey.keycode;
             KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
-            if (!with_modifiers)
-                return ks;
-            if (!is_modifier(ks)) {
+            if (with_modifiers) {
+                if (is_modifier(ks)) {
+                    continue;
+                }
+
                 std::array<char,32> keyboard_state;
                 XQueryKeymap(display, keyboard_state.data());
                 KeySym modifiers = build_modifiers(keyboard_state, display);
-
-                return ks | modifiers;
+                ks |= modifiers;
             }
+            return ks;
         }
     }
     return 0;
@@ -211,10 +215,32 @@ static void select_cb(Fl_Widget* w, void* v)
         iw->default_button->deactivate();
         iw->disable_button->deactivate();
     }
+
+    /* Check if we had a double-click with a single line selected, and
+     * trigger the assignment if so */
+
+    if ((count == 1) && (Fl::event_clicks() != 0)) {
+        Fl::event_clicks(0); // Prevent from triggering this again
+        iw->assign_button->do_callback(iw->assign_button, v);
+    }
 }
 
 static void assign_cb(Fl_Widget* w, void* v)
 {
+    /* We need to ignore calls that arrive just after another one, this means
+     * that the user queued multiple events that trigger this callback.
+     * Unfortunately, I didn't manage to ignore or delete mouse events, either
+     * in FLTK or Xlib level, so this is a fallback, using system time... sorry.
+     */
+    static timespec lastassign = {0, 0};
+    timespec thisassign;
+    clock_gettime(CLOCK_MONOTONIC, &thisassign);
+
+    if ( ((thisassign.tv_sec - lastassign.tv_sec) <= 1) && // This first check is necessary for 32-bit arch
+        (1000L*1000L*1000L*(thisassign.tv_sec - lastassign.tv_sec) +
+        thisassign.tv_nsec - lastassign.tv_nsec) < 10L*1000L*1000L )
+        return;
+
     InputWindow* iw = (InputWindow*) v;
 
     /* Check if the selected item is in the hotkey browser.
@@ -240,6 +266,7 @@ static void assign_cb(Fl_Widget* w, void* v)
         iw->context->config.km.reassign_input(sel_input-1, ks);
     }
 
+    clock_gettime(CLOCK_MONOTONIC, &lastassign);
     iw->update();
 }
 
