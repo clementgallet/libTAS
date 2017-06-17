@@ -120,6 +120,6 @@ class MainWindow {
  */
 Fl_Callback0 launch_cb;
 
-void error_dialog(void* error_msg);
+void alert_dialog(void* alert_msg);
 
 #endif

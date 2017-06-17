@@ -9,6 +9,7 @@
 ### Features
 
 - Add a memory watch/search module
+- Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
 
 ### Fixes
 
@@ -24,7 +25,6 @@
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates
--- Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
 -- Delete savestates at the beginning (or the end?)
 -- Alert the user when a state loading is not allowed
 - Dump audio
@@ -39,6 +39,7 @@
 -- Add more alert windows
 - Record inputs and support playback
 -- Write extra (sync) informations in the movie file
+- Add options to speedup software rendering
 
 ## Done
 

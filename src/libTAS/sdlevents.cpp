@@ -213,7 +213,7 @@ void pushQuitEvent(void)
 
 /* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
 {
-    debuglog(LCF_SDL | LCF_EVENTS | LCF_TIMEFUNC | LCF_TODO, __func__, " call with timeout ", timeout);
+    debuglog(LCF_SDL | LCF_EVENTS | LCF_TODO, __func__, " call with timeout ", timeout);
 
     int t;
     struct timespec mssleep = {0, 1000000};

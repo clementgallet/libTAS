@@ -239,7 +239,6 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {"ToDo", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
                 {"Frame", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
                 {"Hook", 0, logging_print_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
-                {"Time", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMEFUNC), FL_MENU_TOGGLE},
                 {"Time Set", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
                 {"Time Get", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
                 {"Checkpoint", 0, logging_print_cb, reinterpret_cast<void*>(LCF_CHECKPOINT), FL_MENU_TOGGLE},
@@ -274,7 +273,6 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {"ToDo", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
                 {"Frame", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
                 {"Hook", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
-                {"Time", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMEFUNC), FL_MENU_TOGGLE},
                 {"Time Set", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
                 {"Time Get", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
                 {"Checkpoint", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_CHECKPOINT), FL_MENU_TOGGLE},
@@ -1000,8 +998,8 @@ void cmdoptions_cb(Fl_Widget*)
     mw.context->config.gameargs = mw.cmdoptions->value();
 }
 
-void error_dialog(void* error_msg)
+void alert_dialog(void* alert_msg)
 {
-    fl_alert(static_cast<char*>(error_msg));
-    free(error_msg);
+    fl_alert(static_cast<char*>(alert_msg));
+    // free(alert_msg);
 }

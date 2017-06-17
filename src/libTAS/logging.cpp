@@ -36,7 +36,9 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     if (GlobalState::isNoLog())
         return;
 
-    if ( !(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags))
+    if ((!(lcf & shared_config.includeFlags)  ||
+          (lcf & shared_config.excludeFlags)) &&
+         !(lcf & LCF_ALERT))
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
@@ -92,16 +94,19 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     va_start(args, fmt);
     vsnprintf(s + size, maxsize-size-1, fmt, args);
     va_end(args);
+
+    /* If we must send the string to the program for displaying to the user,
+     * we only send the actual message */
+    if (lcf & LCF_ALERT) {
+        setAlertMsg(s+size, strlen(s)-size);
+    }
+
     size = strlen(s);
 
     strncat(s, "\n", maxsize-size-1);
 
     fprintf(stderr, s);
 
-    /* TODO: Put this back */
-    // if (lcf & LCF_ERROR) {
-    //     setErrorMsg(str);
-    // }
 }
 
 /* Print long integers as string for shorter ids. Use base64 */
@@ -123,22 +128,22 @@ const char* stringify(unsigned long int id)
     return string;
 }
 
-static std::list<std::string> error_messages;
+static std::list<std::string> alert_messages;
 static std::mutex mutex;
 
-void setErrorMsg(const std::string& error)
+void setAlertMsg(const char* alert, int size)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    error_messages.push_back(error);
+    alert_messages.push_back(std::string(alert, size));
 }
 
-bool getErrorMsg(std::string& error)
+bool getAlertMsg(std::string& alert)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    if (error_messages.empty())
+    if (alert_messages.empty())
         return false;
-    error = error_messages.front();
-    error_messages.pop_front();
+    alert = alert_messages.front();
+    alert_messages.pop_front();
     return true;
 }
 

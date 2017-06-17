@@ -102,7 +102,9 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     /* We also check this in debuglogstdio(), but doing it here avoid building
      * all strings, because as a fraction of these will be printed.
      */
-    if ( (!(lcf & shared_config.includeFlags) || (lcf & shared_config.excludeFlags)) && !(lcf & LCF_ERROR))
+    if ((!(lcf & shared_config.includeFlags) ||
+          (lcf & shared_config.excludeFlags)) &&
+         !(lcf & LCF_ALERT))
         return;
 
     std::ostringstream oss;
@@ -122,8 +124,8 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
  * shown on a dialog box. We also need some synchronization to access the set
  * of error messages.
  */
-void setErrorMsg(const std::string& error);
-bool getErrorMsg(std::string& error);
+void setAlertMsg(const char* alert, int size);
+bool getAlertMsg(std::string& alert);
 
 }
 

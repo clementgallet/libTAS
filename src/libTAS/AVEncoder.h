@@ -52,6 +52,9 @@ class AVEncoder {
          */
         AVEncoder(SDL_Window* window, bool video_opengl, const char* filename, unsigned long start_frame);
 
+        /* If an error occured during init or encoding, return the error string */
+        std::string getErrorMsg();
+
         /* Encode a video and audio frame.
          * @param fcounter       Frame counter
          * @param draw           Is this a draw frame?

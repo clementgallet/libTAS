@@ -31,13 +31,13 @@ namespace orig {
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
-    debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
+    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
     return orig::SDL_AddTimer(interval, callback, param);
 }
 
 /* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
-    debuglog(LCF_TIMEFUNC | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
+    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     return orig::SDL_RemoveTimer(id);
 }
 

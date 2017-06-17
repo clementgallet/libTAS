@@ -40,6 +40,8 @@ namespace libtas {
 #define SAVESTATE_FILESIZE 1024
 static char savestatepath[SAVESTATE_FILESIZE];
 
+static void proceed_commands(void);
+
 /* Compute real and logical fps */
 static bool computeFPS(bool drawFB, float& fps, float& lfps)
 {
@@ -100,7 +102,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
 void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 {
-    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Enter frame boundary");
+    debuglog(LCF_FRAME, "Enter frame boundary");
 
     if (!isMainThread())
         debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
@@ -132,6 +134,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         if (enc < 0) {
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
+            debuglog(LCF_ALERT, "Encoding to ", av_filename, " failed because:\n", avencoder->getErrorMsg());
             shared_config.av_dumping = false;
             sendMessage(MSGB_ENCODE_FAILED);
         }
@@ -168,10 +171,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 
     /* Send error messages */
-    std::string error;
-    while (getErrorMsg(error)) {
-        sendMessage(MSGB_ERROR_MSG);
-        sendString(error);
+    std::string alert;
+    while (getAlertMsg(alert)) {
+        sendMessage(MSGB_ALERT_MSG);
+        sendString(alert);
     }
 
     sendMessage(MSGB_FRAMECOUNT);
@@ -199,15 +202,15 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Print FPS */
     static float fps, lfps = 0;
     if (computeFPS(drawFB, fps, lfps)) {
-        debuglog(LCF_TIMEFUNC | LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
+        debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
     updateTitle(fps, lfps);
 
     detTimer.exitFrameBoundary();
-    debuglog(LCF_TIMEFUNC | LCF_FRAME, "Leave frame boundary");
+    debuglog(LCF_FRAME, "Leave frame boundary");
 }
 
-void proceed_commands(void)
+static void proceed_commands(void)
 {
     int message;
     while (1)

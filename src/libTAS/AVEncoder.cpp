@@ -27,61 +27,53 @@
 #include "../shared/SharedConfig.h"
 #include "GlobalState.h"
 
+#define ASSERT_RETURN_VOID(expr, msg) do { \
+        if (!(expr)) { \
+            error_msg = msg; \
+            debuglog(LCF_DUMP | LCF_ERROR, msg); \
+            error = -1; \
+            return; \
+        } \
+    } while (false)
+
 #define ASSERT_RETURN(ret, msg) do { \
         if (ret < 0) { \
-            debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame"); \
+            error_msg = msg; \
+            debuglog(LCF_DUMP | LCF_ERROR, msg); \
             return ret; \
         } \
     } while (false)
 
 namespace libtas {
 
+static std::string error_msg;
+
 AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile, unsigned long sf) {
     error = 0;
 
-    if (shared_config.framerate <= 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Not supporting non deterministic timer");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(shared_config.framerate > 0, "Not supporting non deterministic timer");
 
     start_frame = sf;
     accum_samples = 0;
 
     int width, height;
     int ret = initScreenPixels(window, video_opengl, &width, &height);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Unable to initialize video capture");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(ret >= 0, "Unable to initialize video capture");
 
     AVPixelFormat pixfmt = getPixelFormat(window);
-    if (pixfmt == AV_PIX_FMT_NONE) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Unable to get pixel format");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(pixfmt != AV_PIX_FMT_NONE, "Unable to get pixel format");
 
     /* Initialize AVCodec and AVFormat libraries */
     av_register_all();
 
     /* Initialize AVOutputFormat */
     outputFormat = av_guess_format(NULL, dumpfile, NULL);
-    if (!outputFormat) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not find suitable output format for file ", dumpfile);
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(outputFormat, "Could not find suitable output format");
 
     /* Initialize AVFormatContext */
 
     formatContext = avformat_alloc_context();
-    if (!formatContext) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize AVFormatContext");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(formatContext, "Could not initialize AVFormatContext");
     formatContext->oformat = outputFormat;
 
     /*** Create video stream ***/
@@ -90,29 +82,18 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
 
     AVCodecID codec_id = shared_config.video_codec;
     AVCodec *video_codec = avcodec_find_encoder(codec_id);
-    if (!video_codec) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Video codec not found");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(video_codec, "Video codec not found");
     outputFormat->video_codec = codec_id;
 
     /* Initialize video stream */
 
     video_st = avformat_new_stream(formatContext, video_codec);
-    if (!video_st) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(video_st, "Could not initialize video AVStream");
     video_st->id = formatContext->nb_streams - 1;
 
     /* Initialize video codec parameters */
     video_codec_context = avcodec_alloc_context3(video_codec);
-    if (!video_codec_context) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not alloc an encoding context");
-        return;
-    }
+    ASSERT_RETURN_VOID(video_codec_context, "Could not alloc an encoding context");
 
     /* Fill video stream parameters */
     // video_st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
@@ -140,19 +121,13 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
         av_opt_set(video_codec_context->priv_data, "preset", "slow", 0);
 
     /* Open the codec */
-    if (avcodec_open2(video_codec_context, NULL, NULL) < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not open video codec");
-        error = -1;
-        return;
-    }
+
+    ret = avcodec_open2(video_codec_context, NULL, NULL);
+    ASSERT_RETURN_VOID(ret >= 0, "Could not open video codec");
 
     /* Copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(video_st->codecpar, video_codec_context);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not copy the stream parameters");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(ret >= 0, "Could not copy the stream parameters");
 
     /*** Create audio stream ***/
 
@@ -160,28 +135,17 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
 
     AVCodecID audio_codec_id = shared_config.audio_codec;
     AVCodec *audio_codec = avcodec_find_encoder(audio_codec_id);
-    if (!audio_codec) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Audio codec not found");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(audio_codec, "Audio codec not found");
 
     /* Initialize audio stream */
 
     audio_st = avformat_new_stream(formatContext, audio_codec);
-    if (!audio_st) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not initialize video AVStream");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(audio_st, "Could not initialize video AVStream");
     audio_st->id = formatContext->nb_streams - 1;
 
     /* Initialize audio codec parameters */
     audio_codec_context = avcodec_alloc_context3(audio_codec);
-    if (!audio_codec_context) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not alloc an encoding context");
-        return;
-    }
+    ASSERT_RETURN_VOID(audio_codec_context, "Could not alloc an encoding context");
 
     /* Fill audio stream parameters */
 
@@ -247,28 +211,18 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
         audio_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
     /* Open the codec */
-    if (avcodec_open2(audio_codec_context, NULL, NULL) < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not open audio codec");
-        error = -1;
-        return;
-    }
+    ret = avcodec_open2(audio_codec_context, NULL, NULL);
+    ASSERT_RETURN_VOID(ret >= 0, "Could not open audio codec");
 
     /* Copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(audio_st->codecpar, audio_codec_context);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not copy the stream parameters");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(ret >= 0, "Could not copy the stream parameters");
 
     /* Initialize video AVFrame */
 
     video_frame = av_frame_alloc();
-    if (!video_frame) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate AVFrame");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(video_frame, "Could not allocate AVFrame");
+
     video_frame->format = video_codec_context->pix_fmt;
     video_frame->width  = video_codec_context->width;
     video_frame->height = video_codec_context->height;
@@ -276,11 +230,7 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     /* Allocate the image buffer inside the AVFrame */
 
     ret = av_image_alloc(video_frame->data, video_frame->linesize, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, 32);
-    if (ret < 0) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate raw picture buffer");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(ret >= 0, "Could not allocate raw picture buffer");
 
     /* Initialize swscale context for pixel format conversion */
 
@@ -290,11 +240,7 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
                               video_codec_context->pix_fmt,
                               SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
-    if (toYUVctx == NULL) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not allocate swscale context");
-        error = -1;
-        return;
-    }
+    ASSERT_RETURN_VOID(toYUVctx, "Could not allocate swscale context");
 
     /* Initialize audio AVFrame */
 
@@ -309,8 +255,9 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
         av_opt_set_int(audio_fmt_ctx, "out_sample_rate",    audio_codec_context->sample_rate, 0);
         av_opt_set_sample_fmt(audio_fmt_ctx, "in_sample_fmt",  in_fmt, 0);
         av_opt_set_sample_fmt(audio_fmt_ctx, "out_sample_fmt", audio_codec_context->sample_fmt,  0);
-        if (swr_init(audio_fmt_ctx) < 0)
-            debuglog(LCF_DUMP | LCF_ERROR, "Error initializing swr context");
+
+        ret = swr_init(audio_fmt_ctx);
+        ASSERT_RETURN_VOID(ret >= 0, "Error initializing swr context");
     }
 
     /* Print informations on input and output streams */
@@ -320,7 +267,8 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     /* Set up output file */
     if (avio_open(&formatContext->pb, dumpfile, AVIO_FLAG_WRITE) < 0) {
         GlobalState::setOwnCode(false);
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not open video file");
+        error_msg = "Could not open video file";
+        debuglog(LCF_DUMP | LCF_ERROR, error_msg);
         error = -1;
         return;
     }
@@ -328,12 +276,17 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     /* Write header */
     if (avformat_write_header(formatContext, NULL) < 0) {
         GlobalState::setOwnCode(false);
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not write header");
+        error_msg = "Could not write header";
+        debuglog(LCF_DUMP | LCF_ERROR, error_msg);
         error = -1;
         return;
     }
 
     GlobalState::setOwnCode(false);
+}
+
+std::string AVEncoder::getErrorMsg() {
+    return error_msg;
 }
 
 /*
@@ -364,7 +317,8 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
         ret = sws_scale(toYUVctx, orig_plane, orig_stride, 0,
                     video_frame->height, video_frame->data, video_frame->linesize);
         if (ret != video_frame->height) {
-            debuglog(LCF_DUMP | LCF_ERROR, "We could only convert ",ret," rows");
+            error_msg = "We could not rescale the video frame";
+            debuglog(LCF_DUMP | LCF_ERROR, error_msg);
             return -1;
         }
     }

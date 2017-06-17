@@ -41,9 +41,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud);
 void frameBoundary(bool drawFB, std::function<void()> draw);
 #endif
 
-/* Process messages that are received from linTAS */
-void proceed_commands(void);
-
 }
 
 #endif

@@ -194,8 +194,8 @@ void launchGame(Context* context)
         message = receiveMessage();
 
         while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
-            void* error_msg;
-            std::string error_str;
+            void* alert_msg;
+            std::string alert_str;
             switch (message) {
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
@@ -209,10 +209,11 @@ void launchGame(Context* context)
                 XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
                 break;
 
-            case MSGB_ERROR_MSG:
-                error_str = receiveString();
+            case MSGB_ALERT_MSG:
+                alert_str = receiveString();
                 /* TODO: Send cleanly the string to UI thread */
-                // Fl::awake(error_dialog, error_str);
+                alert_msg = const_cast<char*>(alert_str.c_str());
+                Fl::awake(alert_dialog, alert_msg);
                 break;
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;

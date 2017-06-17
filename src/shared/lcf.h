@@ -26,7 +26,6 @@
 typedef int LogCategoryFlag; enum
 {
 	LCF_NONE     = 0,
-	LCF_UNKNOWN  = LCF_NONE,
 
     /* Log status, should be combined with a log category */
 	LCF_UNTESTED = 1 << 0, // things that have significant but not-yet-tested implementations.
@@ -38,7 +37,7 @@ typedef int LogCategoryFlag; enum
 
     /* Log category */
 	LCF_HOOK     = 1 << 6, // hooking notifications
-	LCF_TIMEFUNC = 1 << 7, // time-related functions
+	LCF_ALERT    = 1 << 7, // messages that must be shown to the user
 	LCF_TIMESET  = 1 << 8, // notifications of setting the internal time
 	LCF_TIMEGET  = 1 << 9, // notifications of getting the internal time
 	LCF_CHECKPOINT  = 1 << 10, // savestates
