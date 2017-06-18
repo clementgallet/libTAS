@@ -117,13 +117,13 @@ bool Checkpoint::checkRestore()
 
         if (t == sh.thread_count) {
             /* We didn't find a match */
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
             return false;
         }
     }
 
     if (n != sh.thread_count) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread list has changed since the savestate.");
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
         return false;
     }
 
