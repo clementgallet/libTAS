@@ -194,8 +194,8 @@ void launchGame(Context* context)
         message = receiveMessage();
 
         while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
-            void* alert_msg;
-            std::string alert_str;
+            // void* alert_msg;
+            std::string* alert_str;
             switch (message) {
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
@@ -210,10 +210,14 @@ void launchGame(Context* context)
                 break;
 
             case MSGB_ALERT_MSG:
-                alert_str = receiveString();
-                /* TODO: Send cleanly the string to UI thread */
-                alert_msg = const_cast<char*>(alert_str.c_str());
-                Fl::awake(alert_dialog, alert_msg);
+                /* Ask the UI thread to display the alert */
+                alert_str = new std::string;
+                *alert_str = receiveString();
+                Fl::awake(alert_dialog, alert_str);
+
+                /* Pause the game */
+                context->config.sc.running = false;
+                context->config.sc_modified = true;
                 break;
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;

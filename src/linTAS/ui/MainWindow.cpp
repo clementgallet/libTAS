@@ -999,7 +999,25 @@ void cmdoptions_cb(Fl_Widget*)
 }
 
 void alert_dialog(void* alert_msg)
-{
-    fl_alert(static_cast<char*>(alert_msg));
-    // free(alert_msg);
+{    
+    /* Bring FLTK to foreground
+     * taken from https://stackoverflow.com/a/28404920
+     */
+    MainWindow& mw = MainWindow::getInstance();
+
+    XEvent event = {0};
+    event.xclient.type = ClientMessage;
+    event.xclient.serial = 0;
+    event.xclient.send_event = True;
+    event.xclient.message_type = XInternAtom(mw.context->display, "_NET_ACTIVE_WINDOW", False);
+    event.xclient.window = mw.context->ui_window;
+    event.xclient.format = 32;
+
+    XSendEvent(mw.context->display, DefaultRootWindow(mw.context->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+    XMapRaised(mw.context->display, mw.context->ui_window);
+
+    /* Show alert window */
+    std::string* alert_str = static_cast<std::string*>(alert_msg);
+    fl_alert(alert_str->c_str());
+    free(alert_str);
 }
