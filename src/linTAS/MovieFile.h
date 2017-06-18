@@ -38,9 +38,10 @@ public:
     /* Prepare a movie file from the context */
     MovieFile(Context* c);
 
-    /* Extract a moviefile and import the inputs into a list */
-    void loadMovie();
-    void loadMovie(const std::string& moviefile);
+    /* Extract a moviefile and import the inputs into a list.
+     * Returns 0 if no error, or a negative value if an error occured */
+    int loadMovie();
+    int loadMovie(const std::string& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     void saveMovie();

@@ -999,12 +999,16 @@ void cmdoptions_cb(Fl_Widget*)
 }
 
 void alert_dialog(void* alert_msg)
-{    
+{
+    MainWindow& mw = MainWindow::getInstance();
+
+    /* Pause the game */
+    mw.context->config.sc.running = false;
+    mw.context->config.sc_modified = true;
+
     /* Bring FLTK to foreground
      * taken from https://stackoverflow.com/a/28404920
      */
-    MainWindow& mw = MainWindow::getInstance();
-
     XEvent event = {0};
     event.xclient.type = ClientMessage;
     event.xclient.serial = 0;

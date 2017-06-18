@@ -119,6 +119,12 @@ enum {
     MSGN_LOADSTATE,
 
     /*
+     * Tells the program that the loading succeeded
+     * Argument: none
+     */
+    MSGB_LOADING_SUCCEEDED,
+
+    /*
      * Notify the program that encoding failed
      * Arguments: none
      */

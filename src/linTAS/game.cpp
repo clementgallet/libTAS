@@ -214,14 +214,12 @@ void launchGame(Context* context)
                 break;
 
             case MSGB_ALERT_MSG:
-                /* Ask the UI thread to display the alert */
+                /* Ask the UI thread to display the alert. He is in charge of
+                 * freeing the string.
+                 */
                 alert_str = new std::string;
                 *alert_str = receiveString();
                 Fl::awake(alert_dialog, alert_str);
-
-                /* Pause the game */
-                context->config.sc.running = false;
-                context->config.sc_modified = true;
                 break;
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;
@@ -406,36 +404,37 @@ void launchGame(Context* context)
                         /* Slot number */
                         int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
 
+                        /* Building the savestate path */
+                        std::string savestatepath = context->config.savestatedir + '/';
+                        savestatepath += context->gamename;
+                        savestatepath += ".state" + std::to_string(statei);
+
+                        /* Check that the savestate exists */
+                        struct stat sb;
+                        if (stat(savestatepath.c_str(), &sb) == -1) {
+                            std::string* alert_str = new std::string("There is no savestate to load in this slot");
+                            Fl::awake(alert_dialog, alert_str);
+                            continue;
+                        }
+
                         /* Building the movie path */
                         std::string moviepath = context->config.savestatedir + '/';
                         moviepath += context->gamename;
                         moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-                        /* The behaviour of state loading depends on the
-                         * recording state regarding movies.
-                         */
-                        switch (context->recording) {
-                        case Context::NO_RECORDING:
-                            break;
-                        case Context::RECORDING_WRITE:
-                            /* When in writing move, we load the movie associated
-                             * with the savestate.
-                             * Check if we are loading the same state we just saved.
-                             * If so, we can keep the same movie.
-                             */
-                            if (last_savestate_slot != statei) {
-                                /* Load the movie file */
-                                movie.loadMovie(moviepath);
-                            }
-                            break;
-                        case Context::RECORDING_READ_WRITE:
-                        case Context::RECORDING_READ_ONLY:
-                            /* When loading in read mode, we keep our moviefile,
-                             * but we must check that the moviefile associated
-                             * with the savestate is a prefix of our moviefile
+                        if ((context->recording == Context::RECORDING_READ_WRITE) ||
+                            (context->recording == Context::RECORDING_READ_ONLY)) {
+                            /* When loading in read mode, we must check that
+                             * the moviefile associated with the savestate is
+                             * a prefix of our moviefile.
                              */
                             MovieFile savedmovie(context);
-                            savedmovie.loadMovie(moviepath);
+                            int ret = savedmovie.loadMovie(moviepath);
+                            if (ret < 0) {
+                                std::string* alert_str = new std::string("Could not load the moviefile associated with the savestate");
+                                Fl::awake(alert_dialog, alert_str);
+                                continue;
+                            }
 
                             if (!movie.isPrefix(savedmovie)) {
                                 /* Not a prefix, we don't allow loading */
@@ -443,25 +442,38 @@ void launchGame(Context* context)
                                 Fl::awake(alert_dialog, alert_str);
                                 continue;
                             }
-                            break;
                         }
-
-                        /* Building the savestate path */
-                        std::string savestatepath = context->config.savestatedir + '/';
-                        savestatepath += context->gamename;
-                        savestatepath += ".state" + std::to_string(statei);
 
                         sendMessage(MSGN_LOADSTATE);
                         sendString(savestatepath);
 
-                        /* The copy of SharedConfig that the game stores may not
-                         * be the same as this one due to memory loading, so we
-                         * send it.
+                        message = receiveMessage();
+                        /* Loading is not assured to succeed, the following must
+                         * only be done if it's the case.
                          */
-                        context->config.sc_modified = true;
+                        if (message == MSGB_LOADING_SUCCEEDED) {
+                            /* The copy of SharedConfig that the game stores may not
+                             * be the same as this one due to memory loading, so we
+                             * send it.
+                             */
+                            context->config.sc_modified = true;
+
+                            if (context->recording == Context::RECORDING_WRITE) {
+                                /* When in writing move, we load the movie associated
+                                 * with the savestate.
+                                 * Check if we are loading the same state we just saved.
+                                 * If so, we can keep the same movie.
+                                 */
+                                if (last_savestate_slot != statei) {
+                                    /* Load the movie file */
+                                    movie.loadMovie(moviepath);
+                                }
+                            }
+
+                            message = receiveMessage();
+                        }
 
                         /* The frame count has changed, we must get the new one */
-                        message = receiveMessage();
                         if (message != MSGB_FRAMECOUNT) {
                             std::cerr << "Got wrong message after state loading" << std::endl;
                             return;

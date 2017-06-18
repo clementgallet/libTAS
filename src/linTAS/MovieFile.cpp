@@ -32,14 +32,24 @@ static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_w
 
 MovieFile::MovieFile(Context* c) : context(c) {}
 
-void MovieFile::loadMovie(const std::string& moviefile)
+int MovieFile::loadMovie(const std::string& moviefile)
 {
+	/* Check that the moviefile exists */
+	struct stat sb;
+	if (stat(moviefile.c_str(), &sb) == -1)
+		return -1;
+
     /* Uncompress the movie file into out temp directory */
     TAR *tar;
-    tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
+    int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
+	if (ret == -1) return -1;
+
     char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
-    tar_extract_all(tar, md);
-    tar_close(tar);
+    ret = tar_extract_all(tar, md);
+	if (ret == -1) return -1;
+
+    ret = tar_close(tar);
+	if (ret == -1) return -1;
 
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
@@ -73,11 +83,12 @@ void MovieFile::loadMovie(const std::string& moviefile)
     }
 
     input_stream.close();
+	return 0;
 }
 
-void MovieFile::loadMovie()
+int MovieFile::loadMovie()
 {
-    loadMovie(context->config.moviefile);
+    return loadMovie(context->config.moviefile);
 }
 
 void MovieFile::saveMovie(const std::string& moviefile)

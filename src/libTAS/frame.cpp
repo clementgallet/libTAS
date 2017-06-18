@@ -248,13 +248,16 @@ static void proceed_commands(void)
                 receiveCString(savestatepath);
 
                 ThreadManager::checkpoint(savestatepath);
+
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from ThreadManager::restore() under.
                  * To check if we did restored or returned from a checkpoint,
                  * we look at variable ThreadManager::restoreInProgress.
                  */
-
                 if (ThreadManager::restoreInProgress) {
+                    /* Tell the program that the loading succeeded */
+                    sendMessage(MSGB_LOADING_SUCCEEDED);
+
                     if (shared_config.save_screenpixels) {
                         /* If we restored from a savestate, refresh the screen */
                         setScreenPixels(gameWindow);
@@ -275,9 +278,9 @@ static void proceed_commands(void)
 
                 ThreadManager::restore(savestatepath);
 
-                /* If restoring failed, we return here. We must still send the
-                 * frame count because the program does not know that restore
-                 * failed.
+                /* If restoring failed, we return here. We still send the
+                 * frame count because the program will pull a message in
+                 * either case.
                  */
                 sendMessage(MSGB_FRAMECOUNT);
                 sendData(&frame_counter, sizeof(unsigned long));
