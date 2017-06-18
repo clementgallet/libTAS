@@ -149,6 +149,11 @@ static KeySym get_next_keypressed(Display* display, bool with_modifiers)
     XEvent event;
     int revert;
     XGetInputFocus(display, &window, &revert);
+
+    /* We prevent the thread that process hotkeys from getting events until
+     * we got our keypress.
+     */
+    XLockDisplay(display);
     XSelectInput(display, window, KeyPressMask | KeyReleaseMask);
 
     /* Empty event queue */
@@ -172,6 +177,10 @@ static KeySym get_next_keypressed(Display* display, bool with_modifiers)
                 KeySym modifiers = build_modifiers(keyboard_state, display);
                 ks |= modifiers;
             }
+
+            /* Disable keyboard events */
+            XSelectInput(display, window, 0);
+            XUnlockDisplay(display);
             return ks;
         }
     }
