@@ -78,6 +78,9 @@ public:
     /* Directory holding savestates and savestate movies */
     std::string savestatedir;
 
+    /* Directory holding savestates and savestate movies */
+    std::string llvm_perf;
+
     /* Save the config into the config file */
     void save();
 

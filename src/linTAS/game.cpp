@@ -104,6 +104,11 @@ void launchGame(Context* context)
     else
         unsetenv("LIBGL_ALWAYS_SOFTWARE");
 
+    if (!context->config.llvm_perf.empty())
+        setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
+    else
+        unsetenv("LP_PERF");
+
     // std::cout << "Execute: " << cmd.str() << std::endl;
     system(cmd.str().c_str());
 

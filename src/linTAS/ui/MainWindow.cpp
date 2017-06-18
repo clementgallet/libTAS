@@ -58,6 +58,7 @@ static Fl_Callback time_sec_cb;
 static Fl_Callback render_soft_cb;
 static Fl_Callback savestate_screen_cb;
 static Fl_Callback0 cmdoptions_cb;
+static Fl_Callback llvm_perf_cb;
 
 MainWindow::~MainWindow()
 {
@@ -173,6 +174,16 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
         {"Force software rendering", 0, render_soft_cb, nullptr, FL_MENU_TOGGLE},
+        {"Add performance flags to software rendering", 0, nullptr, nullptr, FL_SUBMENU},
+            {"texmem", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* minimize texture cache footprint */
+            {"no_mipmap", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* MIP_FILTER_NONE always */
+            {"no_linear", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* FILTER_NEAREST always */
+            {"no_mip_linear", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* MIP_FILTER_LINEAR ==> _NEAREST */
+            {"no_tex", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* sample white always */
+            {"no_blend", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable blending */
+            {"no_depth", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable depth buffering entirely */
+            {"no_alphatest", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable alpha testing */
+            {nullptr},
 #ifdef LIBTAS_ENABLE_HUD
         {"OSD", 0, nullptr, nullptr, FL_SUBMENU},
             {"Frame Count", 0, osd_frame_cb, nullptr, FL_MENU_TOGGLE},
@@ -996,6 +1007,23 @@ void cmdoptions_cb(Fl_Widget*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.context->config.gameargs = mw.cmdoptions->value();
+}
+
+void llvm_perf_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+
+    mw.context->config.llvm_perf = "";
+
+    Fl_Menu_Item* menu_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(llvm_perf_cb));
+    for (;menu_item->flags;menu_item = menu_item->next()) {
+        if (menu_item->value()) {
+            mw.context->config.llvm_perf += menu_item->label();
+            mw.context->config.llvm_perf.push_back(',');
+        }
+    }
+    /* Remove the trailing comma */
+    mw.context->config.llvm_perf.pop_back();
 }
 
 void alert_dialog(void* alert_msg)
