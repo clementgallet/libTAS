@@ -31,6 +31,7 @@
 #include "ui/MainWindow.h"
 #include "MovieFile.h"
 #include <cerrno>
+#include "utils.h"
 
 static PseudoSaveState pseudosavestate;
 
@@ -72,6 +73,9 @@ void launchGame(Context* context)
     context->status = Context::ACTIVE;
     MainWindow& ui = MainWindow::getInstance();
     ui.update_status();
+
+    /* Remove savestates again in case we did not exist cleanly the previous time */
+    remove_savestates(context);
 
     /* Remove the file socket */
     removeSocket();
@@ -362,6 +366,12 @@ void launchGame(Context* context)
                         }
                     }
                     if (hk.type >= HOTKEY_SAVESTATE1 && hk.type <= HOTKEY_SAVESTATE9){
+                        /* Saving is not allowed if currently encoding */
+                        if (context->config.sc.av_dumping) {
+                            std::string* alert_str = new std::string("Saving is not allowed when in the middle of video encoding");
+                            Fl::awake(alert_dialog, alert_str);
+                            continue;
+                        }
 
                         /* Slot number */
                         int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
@@ -386,10 +396,15 @@ void launchGame(Context* context)
                         sendString(savestatepath);
                     }
                     if (hk.type >= HOTKEY_LOADSTATE1 && hk.type <= HOTKEY_LOADSTATE9){
+                        /* Loading is not allowed if currently encoding */
+                        if (context->config.sc.av_dumping) {
+                            std::string* alert_str = new std::string("Loading is not allowed when in the middle of video encoding");
+                            Fl::awake(alert_dialog, alert_str);
+                            continue;
+                        }
+
                         /* Slot number */
                         int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
-
-                        bool doload = true;
 
                         /* Building the movie path */
                         std::string moviepath = context->config.savestatedir + '/';
@@ -424,34 +439,34 @@ void launchGame(Context* context)
 
                             if (!movie.isPrefix(savedmovie)) {
                                 /* Not a prefix, we don't allow loading */
-                                doload = false;
+                                std::string* alert_str = new std::string("Trying to load a state in read-only but the inputs mismatch");
+                                Fl::awake(alert_dialog, alert_str);
+                                continue;
                             }
                             break;
                         }
 
-                        if (doload) {
-                            /* Building the savestate path */
-                            std::string savestatepath = context->config.savestatedir + '/';
-                            savestatepath += context->gamename;
-                            savestatepath += ".state" + std::to_string(statei);
+                        /* Building the savestate path */
+                        std::string savestatepath = context->config.savestatedir + '/';
+                        savestatepath += context->gamename;
+                        savestatepath += ".state" + std::to_string(statei);
 
-                            sendMessage(MSGN_LOADSTATE);
-                            sendString(savestatepath);
+                        sendMessage(MSGN_LOADSTATE);
+                        sendString(savestatepath);
 
-                            /* The copy of SharedConfig that the game stores may not
-                             * be the same as this one due to memory loading, so we
-                             * send it.
-                             */
-                            context->config.sc_modified = true;
+                        /* The copy of SharedConfig that the game stores may not
+                         * be the same as this one due to memory loading, so we
+                         * send it.
+                         */
+                        context->config.sc_modified = true;
 
-                            /* The frame count has changed, we must get the new one */
-                            message = receiveMessage();
-                            if (message != MSGB_FRAMECOUNT) {
-                                std::cerr << "Got wrong message after state loading" << std::endl;
-                                return;
-                            }
-                            receiveData(&context->framecount, sizeof(unsigned long));
+                        /* The frame count has changed, we must get the new one */
+                        message = receiveMessage();
+                        if (message != MSGB_FRAMECOUNT) {
+                            std::cerr << "Got wrong message after state loading" << std::endl;
+                            return;
                         }
+                        receiveData(&context->framecount, sizeof(unsigned long));
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->recording) {
@@ -599,6 +614,9 @@ void launchGame(Context* context)
 
     movie.close();
     closeSocket();
+
+    /* Remove savestates because they are invalid on future instances of the game */
+    remove_savestates(context);
 
     if (pseudosavestate.loading) {
         /* We a loading a pseudo savestate, we need to restart the game */

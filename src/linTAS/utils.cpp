@@ -105,3 +105,15 @@ int gzclose_wrapper(int)
 {
     return gzclose(gzf);
 }
+
+void remove_savestates(Context* context)
+{
+    std::string savestateprefix = context->config.savestatedir + '/';
+    savestateprefix += context->gamename;
+    for (int i=1; i<=9; i++) {
+        std::string savestatepath = savestateprefix + ".state" + std::to_string(i);
+        unlink(savestatepath.c_str());
+        std::string moviepath = savestateprefix + ".movie" + std::to_string(i) + ".ltm";
+        unlink(moviepath.c_str());
+    }
+}
