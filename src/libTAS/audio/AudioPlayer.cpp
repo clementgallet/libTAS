@@ -28,11 +28,12 @@
 namespace libtas {
 
 snd_pcm_t *AudioPlayer::phandle;
+bool AudioPlayer::inited = false;
 
-AudioPlayer::~AudioPlayer(void)
-{
+// AudioPlayer::~AudioPlayer(void)
+// {
     // snd_pcm_close(phandle);
-}
+// }
 
 bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
 {
@@ -99,7 +100,6 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 
 bool AudioPlayer::play(AudioContext& ac)
 {
-    static bool inited = false;
     if (!inited) {
         snd_pcm_format_t format;
         if (ac.outBitDepth == 8)
@@ -145,6 +145,14 @@ bool AudioPlayer::play(AudioContext& ac)
 	}
 
     return true;
+}
+
+void AudioPlayer::close()
+{
+    if (inited) {
+        MYASSERT(snd_pcm_close(phandle) == 0)
+        inited = false;
+    }
 }
 
 }

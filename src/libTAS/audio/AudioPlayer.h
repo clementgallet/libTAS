@@ -29,12 +29,14 @@ namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
+    static bool inited;
+
+    /* Connection to the sound system */
+    static snd_pcm_t *phandle;
+
     public:
         // AudioPlayer();
-        ~AudioPlayer();
-
-        /* Connection to the sound system */
-        static snd_pcm_t *phandle;
+        // ~AudioPlayer();
 
         /* Init the connection to the server.
          * Return if the connection was successful
@@ -43,6 +45,9 @@ class AudioPlayer
 
         /* Play the audio buffer stored in the audio context */
 		static bool play(AudioContext& ac);
+
+        /* Close the connection to the server */
+        static void close();
 };
 }
 

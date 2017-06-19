@@ -30,7 +30,8 @@
 #include "../timewrappers.h" // clock_gettime
 #include "../threadwrappers.h" // getThreadId
 #include "../logging.h"
-#include "../backtrace.h"
+// #include "../backtrace.h"
+#include "../audio/AudioPlayer.h"
 
 namespace libtas {
 
@@ -245,6 +246,11 @@ void ThreadManager::checkpoint(const char* savestatepath)
 
     restoreInProgress = false;
 
+    /* We must close the connection to the sound device. This must be done
+     * BEFORE suspending threads.
+     */
+    AudioPlayer::close();
+
     suspendThreads();
 
     /* All other threads halted in 'stopThisThread' routine (they are all
@@ -276,6 +282,11 @@ void ThreadManager::restore(const char* savestatepath)
     // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restore fi ", savestatepath);
 
     Checkpoint::setSavestatePath(savestatepath);
+
+    /* We must close the connection to the sound device. This must be done
+     * BEFORE suspending threads.
+     */
+    AudioPlayer::close();
 
     /* Perform a series of checks before attempting to restore */
     if (!Checkpoint::checkRestore()) {
