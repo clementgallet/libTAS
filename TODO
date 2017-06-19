@@ -39,10 +39,10 @@
 -- Add more alert windows
 - Record inputs and support playback
 -- Write extra (sync) informations in the movie file
-- Add options to speedup software rendering
 
 ## Done
 
+- Add options to speedup software rendering
 - Add fake-savestating (saving inputs and reset/fastforward/pause)
 - Add config file for hotkeys and key remapping
 - Add a thread local flag saying if calls are made by the game or by our code (callerisunstrusted in Hourglass)

@@ -29,9 +29,6 @@ class ProcSelfMaps
 {
     public:
         ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength);
-        ~ProcSelfMaps();
-
-        // size_t getNumAreas() const { return numAreas; }
 
         bool getNextArea(Area *area);
 
@@ -43,7 +40,6 @@ class ProcSelfMaps
         size_t dataIdx;
         size_t numAreas;
         size_t numBytes;
-        int fd;
 };
 }
 

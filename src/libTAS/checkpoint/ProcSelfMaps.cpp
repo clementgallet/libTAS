@@ -31,10 +31,9 @@ namespace libtas {
 ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
     : dataIdx(0),
     numAreas(0),
-    numBytes(0),
-    fd(-1)
+    numBytes(0)
 {
-    fd = open("/proc/self/maps", O_RDONLY);
+    int fd = open("/proc/self/maps", O_RDONLY);
     MYASSERT(fd != -1);
 
     data = reinterpret_cast<char*>(restoreAddr);
@@ -50,15 +49,6 @@ ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
             numAreas++;
         }
     }
-}
-
-ProcSelfMaps::~ProcSelfMaps()
-{
-    // free(data);
-    fd = -1;
-    dataIdx = 0;
-    numAreas = 0;
-    numBytes = 0;
 }
 
 intptr_t ProcSelfMaps::readDec()

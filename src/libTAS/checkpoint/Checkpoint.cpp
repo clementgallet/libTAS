@@ -247,8 +247,9 @@ static bool skipArea(Area *area)
 static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
 {
     static const size_t page_size = sysconf(_SC_PAGESIZE);
+    static const size_t block_size = 25 * page_size; // Arbitrary, about 100 KB
 
-    if (area.size < ONE_MB) {
+    if (area.size < block_size) {
         size = area.size;
         is_zero = false;
         return;
@@ -256,15 +257,15 @@ static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
 
     intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
 
-    size = ONE_MB;
-    is_zero = Utils::areZeroPages(area.addr, ONE_MB / page_size);
+    size = block_size;
+    is_zero = Utils::areZeroPages(area.addr, block_size / page_size);
 
     // prevAddr = area.addr;
-    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + ONE_MB;
+    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + block_size;
     curAddrInt < endAddrInt;
-    curAddrInt += ONE_MB) {
+    curAddrInt += block_size) {
 
-        size_t minsize = ((endAddrInt-curAddrInt)<ONE_MB)?(endAddrInt-curAddrInt):ONE_MB;
+        size_t minsize = ((endAddrInt-curAddrInt)<block_size)?(endAddrInt-curAddrInt):block_size;
         if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
             break;
         }
@@ -332,6 +333,7 @@ static void writeAllAreas()
 {
     debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", savestatepath);
     int fd;
+    unlink(savestatepath);
     OWNCALL(fd = creat(savestatepath, 0644));
     MYASSERT(fd != -1)
 
