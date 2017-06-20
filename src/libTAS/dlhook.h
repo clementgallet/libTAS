@@ -22,7 +22,6 @@
 
 #include <dlfcn.h>
 #include <string>
-#include <vector>
 
 /* Internal struct of pointers to dl functions that is used
  * specifically by glibc
