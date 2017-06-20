@@ -551,11 +551,11 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             }
         }
 
-        if (saved_area->flags & MAP_ANONYMOUS) {
-            debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", map_size, saved_area->addr);
-        } else {
-            debuglogstdio(LCF_CHECKPOINT, "Restoring to non-anonymous area from anonymous area, %d bytes at %p from %s + %d", map_size, saved_area->addr, saved_area->name, saved_area->offset);
-        }
+        // if (saved_area->flags & MAP_ANONYMOUS) {
+        //     debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", map_size, saved_area->addr);
+        // } else {
+        //     debuglogstdio(LCF_CHECKPOINT, "Restoring to non-anonymous area from anonymous area, %d bytes at %p from %s + %d", map_size, saved_area->addr, saved_area->name, saved_area->offset);
+        // }
 
         /* Create the memory area */
 
@@ -695,6 +695,7 @@ void Checkpoint::handler(int signum)
     else {
         writeAllAreas();
     }
+    debuglogstdio(LCF_CHECKPOINT, "End restore.");
 }
 
 }

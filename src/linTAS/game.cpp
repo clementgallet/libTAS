@@ -97,6 +97,7 @@ void launchGame(Context* context)
         logstr += ".log";
     }
 
+    // cmd << "LD_PRELOAD=" << context->libtaspath << " valgrind --track-origins=yes " << context->gamepath << " " << context->config.gameargs << logstr << " &";
     cmd << "LD_PRELOAD=" << context->libtaspath << " " << context->gamepath << " " << context->config.gameargs << logstr << " &";
 
     if (context->config.opengl_soft)
@@ -116,13 +117,17 @@ void launchGame(Context* context)
     std::vector<std::string> linked_libs;
     std::ostringstream libcmd;
     libcmd << "ldd " << context->gamepath << "  | awk '/=>/{print $(NF-1)}'";
-    FILE *libstr;
     //std::cout << "Execute: " << libcmd.str() << std::endl;
-    libstr = popen(libcmd.str().c_str(), "r");
+
+    FILE *libstr = popen(libcmd.str().c_str(), "r");
     if (libstr != NULL) {
-        char buf[1000];
-        while (fgets(buf, sizeof buf, libstr) != 0) {
-            linked_libs.push_back(std::string(buf));
+        std::array<char,1000> buf;
+        while (fgets(buf.data(), buf.size(), libstr) != 0) {
+            std::string lib(buf.data());
+            /* Remove trailing newline if any */
+            if (lib.back() == '\n')
+                lib.pop_back();
+            linked_libs.push_back(lib);
         }
         pclose(libstr);
     }

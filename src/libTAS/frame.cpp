@@ -212,7 +212,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
 static void proceed_commands(void)
 {
-    int message;
+    int message = -1;
     while (1)
     {
         receiveData(&message, sizeof(int));

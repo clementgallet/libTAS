@@ -174,15 +174,13 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigaction, nullptr);
     if (act != nullptr) {
-        debuglog(LCF_SIGNAL, "    Setting handler ", act->sa_sigaction?
-                reinterpret_cast<void*>(act->sa_sigaction):
-                reinterpret_cast<void*>(act->sa_handler),
+        debuglog(LCF_SIGNAL, "    Setting handler ",
+                reinterpret_cast<void*>(act->sa_sigaction),
             " for signal ", sig, " (", strsignal(sig), ")");
     }
     else if (oact != nullptr) {
-        debuglog(LCF_SIGNAL, "    Getting handler ", oact->sa_sigaction?
-                reinterpret_cast<void*>(oact->sa_sigaction):
-                reinterpret_cast<void*>(oact->sa_handler),
+        debuglog(LCF_SIGNAL, "    Getting handler ",
+            reinterpret_cast<void*>(oact->sa_sigaction),
             " for signal ", sig, " (", strsignal(sig), ")");
     }
     if (!GlobalState::isOwnCode() && ((sig == SIGUSR1) || (sig == SIGUSR2))) {

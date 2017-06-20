@@ -78,9 +78,7 @@ void __attribute__((constructor)) init(void)
     /* Receive information from the program */
     int message;
     receiveData(&message, sizeof(int));
-    libraries = new std::vector<std::string>;
     while (message != MSGN_END_INIT) {
-        std::vector<char> buf;
         std::string libstring;
         switch (message) {
             case MSGN_CONFIG:
@@ -100,7 +98,7 @@ void __attribute__((constructor)) init(void)
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
                 libstring = receiveString();
-                libraries->push_back(libstring);
+                add_lib(libstring);
                 debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;
             default:

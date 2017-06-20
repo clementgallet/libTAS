@@ -23,11 +23,22 @@
 
 namespace libtas {
 
-std::vector<std::string>* libraries;
+/* Set of libraries that are loaded by the game,
+ * either at startup (link time) or using the dl functions.
+ */
+static std::vector<std::string> libraries;
+
+void add_lib(std::string library)
+{
+    libraries.push_back(library);
+    debuglog(LCF_HOOK, "Lib vect content:");
+    for (auto const& itr : libraries)
+        debuglog(LCF_HOOK, itr);
+}
 
 std::string find_lib(const char* library)
 {
-    for (auto const& itr : *libraries)
+    for (auto const& itr : libraries)
         if (itr.find(library) != std::string::npos)
             return itr;
 
@@ -41,8 +52,12 @@ static void *my_dlopen(const char *file, int mode, void *dl_caller) {
     dlenter();
     result = dlopen(file, mode);
     dlleave();
-    if (result)
-        libraries->push_back((file)?file:"");
+    debuglog(LCF_HOOK, "Lib vect content:");
+    for (auto const& itr : libraries)
+        debuglog(LCF_HOOK, itr);
+
+    if (result && (file != nullptr))
+        libraries.push_back(std::string(file));
     return result;
 }
 

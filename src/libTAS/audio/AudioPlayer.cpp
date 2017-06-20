@@ -65,7 +65,7 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
         return false;
     }
 
-    int dir;
+    int dir = 0;
     if (snd_pcm_hw_params_set_rate_near(phandle, hw_params, &frequency, &dir) < 0) {
         debuglog(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
         return false;
