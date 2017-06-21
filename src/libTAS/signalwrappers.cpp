@@ -41,6 +41,8 @@ namespace orig {
                 siginfo_t *info);
     static int (*sigtimedwait) (const sigset_t *set,
                  siginfo_t *info, const struct timespec *timeout);
+    static int (*sigaltstack) (const struct sigaltstack *ss,
+     			struct sigaltstack *oss) throw();
     static int (*pthread_sigmask) (int how, const sigset_t *newmask,
                  sigset_t *oldmask) throw();
     static int (*pthread_kill) (pthread_t threadid, int signo) throw();
@@ -174,13 +176,15 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigaction, nullptr);
     if (act != nullptr) {
-        debuglog(LCF_SIGNAL, "    Setting handler ",
-                reinterpret_cast<void*>(act->sa_sigaction),
+        debuglog(LCF_SIGNAL, "    Setting handler ", (act->sa_flags & SA_SIGINFO)?
+                reinterpret_cast<void*>(act->sa_sigaction):
+                reinterpret_cast<void*>(act->sa_handler),
             " for signal ", sig, " (", strsignal(sig), ")");
     }
     else if (oact != nullptr) {
-        debuglog(LCF_SIGNAL, "    Getting handler ",
-            reinterpret_cast<void*>(oact->sa_sigaction),
+        debuglog(LCF_SIGNAL, "    Getting handler ", (oact->sa_flags & SA_SIGINFO)?
+            reinterpret_cast<void*>(oact->sa_sigaction):
+            reinterpret_cast<void*>(oact->sa_handler),
             " for signal ", sig, " (", strsignal(sig), ")");
     }
     if (!GlobalState::isOwnCode() && ((sig == SIGUSR1) || (sig == SIGUSR2))) {
@@ -216,6 +220,14 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE(sigtimedwait, nullptr);
     return orig::sigtimedwait(set, info, timeout);
+}
+
+/* Override */ int sigaltstack (const struct sigaltstack *ss,
+			struct sigaltstack *oss) throw()
+{
+    DEBUGLOGCALL(LCF_SIGNAL);
+    LINK_NAMESPACE(sigaltstack, nullptr);
+    return orig::sigaltstack(ss, oss);
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,

@@ -28,7 +28,7 @@ namespace libtas {
 class ProcSelfMaps
 {
     public:
-        ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength);
+        ProcSelfMaps(void* restoreAddr, size_t restoreLength);
 
         bool getNextArea(Area *area);
 

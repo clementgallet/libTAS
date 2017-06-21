@@ -19,16 +19,14 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#ifndef LIBTAS_ALTSTACK_H
+#define LIBTAS_ALTSTACK_H
 
 namespace libtas {
-namespace Checkpoint
+namespace AltStack
 {
-    void init();
-    void setSavestatePath(const char* savestatepath);
-    bool checkRestore();
-    void handler(int signum);
+    void prepareStack();
+    void restoreStack();
 };
 }
 

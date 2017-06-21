@@ -19,17 +19,18 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#ifndef LIBTAS_RESERVEDMEMORY_H
+#define LIBTAS_RESERVEDMEMORY_H
+
+#include <cstdint> // intptr_t
+#include <cstddef> // size_t
 
 namespace libtas {
-namespace Checkpoint
-{
+namespace ReservedMemory {
     void init();
-    void setSavestatePath(const char* savestatepath);
-    bool checkRestore();
-    void handler(int signum);
-};
+    void* getAddr(intptr_t offset);
+    size_t getSize();
+}
 }
 
 #endif

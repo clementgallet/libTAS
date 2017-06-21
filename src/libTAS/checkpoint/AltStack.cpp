@@ -19,17 +19,31 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#include "AltStack.h"
+#include "ReservedMemory.h"
+#include "../logging.h"
+#include <csignal>
+
+#define ONE_MB 1024 * 1024
 
 namespace libtas {
-namespace Checkpoint
+
+static stack_t oss;
+
+void AltStack::prepareStack()
 {
-    void init();
-    void setSavestatePath(const char* savestatepath);
-    bool checkRestore();
-    void handler(int signum);
-};
+    /* Setup an alternate signal stack using our reserved memory */
+    stack_t ss;
+    ss.ss_sp = ReservedMemory::getAddr(ONE_MB);
+    ss.ss_size = ReservedMemory::getSize() - ONE_MB;
+    ss.ss_flags = 0;
+    MYASSERT(sigaltstack(&ss, &oss) == 0)
 }
 
-#endif
+void AltStack::restoreStack()
+{
+    /* Restore the game altstack if any */
+    MYASSERT(sigaltstack(&oss, nullptr) == 0)
+}
+
+}

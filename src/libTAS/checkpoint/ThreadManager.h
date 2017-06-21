@@ -34,19 +34,9 @@
 
 namespace libtas {
 class ThreadManager {
-    /* Register start and end time for each routine and each thread. */
-    // static std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> startTime_;
-    // static std::map<std::ptrdiff_t, std::map<pthread_t, std::vector<TimeHolder>>> endTime_;
-    //This will register every pthread created for each start_routine
-    // static std::map<std::ptrdiff_t, std::set<pthread_t>> threadMap_;
-
     static ThreadInfo* free_list;
     static thread_local ThreadInfo* current_thread;
 
-    static std::map<pthread_t, std::ptrdiff_t> currentAssociation;
-
-    static std::set<std::ptrdiff_t> refTable;
-    static std::set<void *> beforeSDL;
     static bool inited;
     static pthread_t main;
 
@@ -57,7 +47,6 @@ class ThreadManager {
     static sem_t semWaitForCkptThreadSignal;
 
     static int numThreads;
-
 
 public:
     static ThreadInfo* thread_list;
@@ -113,28 +102,6 @@ public:
     static void stopThisThread(int signum);
 
     static void waitForAllRestored(ThreadInfo *thread);
-
-
-    // Register the start of a new thread
-    // It uses the ptrdiff between the start_routine and the calling function
-    // ('from'), which is assumed to be a possible invariant
-    static void start(pthread_t tid, void *from, void *start_routine);
-    // Register the end of a thread
-    static void end(pthread_t tid);
-    // Should we wait for this entry point ?
-    static bool waitFor(pthread_t tid);
-
-    // Attempt to suspend main thread
-    static void suspend(pthread_t from_tid);
-    // Resumes main thread
-    static void resume(pthread_t tid);
-
-    // Display a summary of the current execution (which pthread_t for which entry point)
-    // static std::string summary();
-
-    // Sig handler for suspending/resuming thread
-    static void sigspin(int sig);
-    static std::atomic<int> spin;
 };
 }
 

@@ -34,39 +34,16 @@
 #include <csignal>
 #include <X11/Xlibint.h>
 #include "../sdlwindows.h"
+#include "ReservedMemory.h"
 
 #define ONE_MB 1024 * 1024
-#define RESTORE_TOTAL_SIZE 5 * ONE_MB
 
 namespace libtas {
-
-static intptr_t restoreAddr = 0;
-static size_t restoreLength = 0;
 
 static const char* savestatepath;
 
 void Checkpoint::init()
 {
-    /* Create a special place to hold restore memory.
-     * will be used for the second stack we will switch to, as well as
-     * the ProcSelfMaps object that need some space.
-     */
-    if (restoreAddr == 0) {
-        restoreLength = RESTORE_TOTAL_SIZE;
-        void* addr = mmap(nullptr, restoreLength + (2 * 4096), PROT_NONE,
-            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        MYASSERT(addr != MAP_FAILED)
-        restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
-        MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
-    }
-
-    /* Setup an alternate signal stack using the above allocated memory */
-    stack_t ss;
-    ss.ss_sp = reinterpret_cast<void*>(restoreAddr + ONE_MB);
-    ss.ss_size = RESTORE_TOTAL_SIZE - ONE_MB;
-    ss.ss_flags = 0;
-    MYASSERT(sigaltstack(&ss, nullptr) == 0)
-
     /* Register a signal so that we can switch stacks */
     struct sigaction sigusr2;
     sigfillset(&sigusr2.sa_mask);
@@ -218,7 +195,7 @@ static bool skipArea(Area *area)
         return true;
     }
 
-    if ((area->addr == reinterpret_cast<void*>(restoreAddr)) && (area->size == restoreLength)) {
+    if ((area->addr == ReservedMemory::getAddr(0)) && (area->size == ReservedMemory::getSize())) {
         // debuglogstdio(LCF_CHECKPOINT, "Skipping over our reserved section");
         return true;
     }
@@ -351,7 +328,7 @@ static void writeAllAreas()
      * We don't allocate memory here, we are using our special allocated
      * memory section that won't be saved in the savestate.
      */
-    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
 
     Area area;
     while (procSelfMaps.getNextArea(&area)) {
@@ -620,7 +597,7 @@ static void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(restoreAddr, ONE_MB);
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
 
     /* Read the first saved area */
     Utils::readAll(fd, &saved_area, sizeof saved_area);
@@ -655,6 +632,16 @@ void Checkpoint::handler(int signum)
 {
     /* Access the X Window identifier from the SDL_Window struct */
     Display *display = getXDisplay();
+
+    /* Check that we are using our alternate stack by looking at the address
+     * of this local variable.
+     */
+    if ((&display < ReservedMemory::getAddr(0)) ||
+        (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
+        return;
+    }
+
     XSync(display, false);
 
     if (ThreadManager::restoreInProgress) {

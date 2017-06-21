@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
+ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
     : dataIdx(0),
     numAreas(0),
     numBytes(0)
@@ -36,7 +36,7 @@ ProcSelfMaps::ProcSelfMaps(intptr_t restoreAddr, size_t restoreLength)
     int fd = open("/proc/self/maps", O_RDONLY);
     MYASSERT(fd != -1);
 
-    data = reinterpret_cast<char*>(restoreAddr);
+    data = static_cast<char*>(restoreAddr);
 
     numBytes = Utils::readAll(fd, data, restoreLength);
     MYASSERT(numBytes > 0)

@@ -32,16 +32,14 @@
 #include "../logging.h"
 // #include "../backtrace.h"
 #include "../audio/AudioPlayer.h"
+#include "AltStack.h"
+#include "ReservedMemory.h"
 
 namespace libtas {
 
-std::atomic<int> ThreadManager::spin(0);
 ThreadInfo* ThreadManager::thread_list = nullptr;
 ThreadInfo* ThreadManager::free_list = nullptr;
 thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
-std::map<pthread_t, std::ptrdiff_t> ThreadManager::currentAssociation;
-std::set<std::ptrdiff_t> ThreadManager::refTable;
-std::set<void *> ThreadManager::beforeSDL;
 bool ThreadManager::inited = false;
 pthread_t ThreadManager::main = 0;
 pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
@@ -51,13 +49,6 @@ sem_t ThreadManager::semNotifyCkptThread;
 sem_t ThreadManager::semWaitForCkptThreadSignal;
 volatile bool ThreadManager::restoreInProgress = false;
 int ThreadManager::numThreads;
-
-void ThreadManager::sigspin(int sig)
-{
-    debuglog(LCF_THREAD, "Waiting, sig = ", sig);
-    while (spin)
-        ;
-}
 
 void ThreadManager::init()
 {
@@ -78,15 +69,6 @@ void ThreadManager::init()
     sem_init(&semNotifyCkptThread, 0, 0);
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
 
-    // Registering a sighandler enable us to suspend the main thread from any thread !
-    // struct sigaction sigusr1;
-    // sigemptyset(&sigusr1.sa_mask);
-    // sigusr1.sa_flags = 0;
-    // sigusr1.sa_handler = ThreadManager::sigspin;
-    // int status = sigaction(SIGUSR1, &sigusr1, nullptr);
-    // if (status == -1)
-    //     perror("Error installing signal");
-
     struct sigaction sigusr1;
     sigfillset(&sigusr1.sa_mask);
     sigusr1.sa_flags = SA_RESTART;
@@ -96,6 +78,7 @@ void ThreadManager::init()
         MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
     }
     Checkpoint::init();
+    ReservedMemory::init();
 
     main = getThreadId();
     inited = true;
@@ -253,6 +236,12 @@ void ThreadManager::checkpoint(const char* savestatepath)
 
     suspendThreads();
 
+    /* We set the alternate stack to our reserved memory. The game might
+     * register its own alternate stack, so we set our own just before the
+     * checkpoint and we restore the game's alternate stack just after.
+     */
+    AltStack::prepareStack();
+
     /* All other threads halted in 'stopThisThread' routine (they are all
      * in state ST_SUSPENDED).  It's safe to write checkpoint file now.
      * We call the write function with a signal, so we can use an alternate stack
@@ -260,6 +249,9 @@ void ThreadManager::checkpoint(const char* savestatepath)
      */
 
     raise(SIGUSR2);
+
+    /* Restoring the game alternate stack (if any) */
+    AltStack::restoreStack();
 
     resumeThreads();
 
@@ -300,6 +292,12 @@ void ThreadManager::restore(const char* savestatepath)
 
     restoreInProgress = true;
 
+    /* We set the alternate stack to our reserved memory. The game might
+     * register its own alternate stack, so we set our own just before the
+     * checkpoint and we restore the game's alternate stack just after.
+     */
+    AltStack::prepareStack();
+
     /* Here is where we load all the memory and stuff */
     raise(SIGUSR2);
 
@@ -313,6 +311,10 @@ void ThreadManager::restore(const char* savestatepath)
 
      /* If restore was not done, we return here */
      debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
+
+     /* Restoring the game alternate stack (if any) */
+     AltStack::restoreStack();
+
      resumeThreads();
      waitForAllRestored(current_thread);
 
@@ -516,106 +518,5 @@ void ThreadManager::waitForAllRestored(ThreadInfo *thread)
         sem_wait(&semWaitForCkptThreadSignal);
     }
 }
-
-void ThreadManager::suspend(pthread_t from_tid)
-{
-    // We want to suspend main if:
-    //  - from_tid is main (which means it asks for it)
-    //  - from_tid is one of the registered threads we want to wait for
-    if (from_tid == main || waitFor(from_tid)) {
-        debuglog(LCF_THREAD, "Suspending main (", stringify(main), ") because of ", stringify(from_tid));
-        spin = 1;
-        // This doesn't actually kill the thread, it send SIGUSR1 to the main
-        // thread, which make it spins until resume
-        pthread_kill(main, SIGUSR1);
-    } else {
-        debuglog(LCF_THREAD, "Not suspending because of ", stringify(from_tid));
-    }
-}
-
-void ThreadManager::start(pthread_t tid, void *from, void *start_routine)
-{
-    if (!inited) {
-        beforeSDL.insert(start_routine);
-        return;
-    }
-    ptrdiff_t diff = (char *)start_routine - (char *)from;
-    // std::set<pthread_t> &all = threadMap_[diff];
-    // all.insert(tid);
-    // Register the current thread id -> routine association
-    // The same tid can be reused with a different routine, but different routines
-    // cannot be running at the same time with the same tid.
-    currentAssociation[tid] = diff;
-    debuglog(LCF_THREAD, "Register starting ", stringify(tid)," with entrydiff ",  diff, ".");
-    // TimeHolder t;
-    // {
-    //     GlobalNative tn;
-    //     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
-    // }
-    //There may be multiple call to start...
-
-    // startTime_[diff][tid].push_back(t);
-}
-
-void ThreadManager::end(pthread_t tid)
-{
-    debuglog(LCF_THREAD, "Register ending ", stringify(tid), ".");
-    // TimeHolder t;
-    // {
-    //     GlobalNative tn;
-    //     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
-    // }
-    // ptrdiff_t diff = currentAssociation[tid];
-    // endTime_[diff][tid].push_back(t);
-}
-
-void ThreadManager::resume(pthread_t tid)
-{
-    if (!waitFor(tid))
-        return;
-    if (spin) {
-        spin = 0;
-        debuglog(LCF_THREAD, "Released main.");
-    }
-}
-
-bool ThreadManager::waitFor(pthread_t tid)
-{
-    // Lookup the entry point corresponding to this tid, and check if it's
-    // in the reference table
-    ptrdiff_t diff = currentAssociation[tid];
-    return inited && refTable.count(diff);
-}
-
-// std::string ThreadManager::summary()
-// {
-//     std::ostringstream oss;
-//     for (auto elem : threadMap_) {
-//         oss << "\nRecord for entry point : " << elem.first;
-//         std::set<pthread_t> &allThread = elem.second;
-//         for (pthread_t t : allThread) {
-//             oss << "\n  - " << stringify(t);
-//             //FIXME using find would permit to add the const qualifier to this member
-//             std::vector<TimeHolder> &starts = startTime_[elem.first][t];
-//             if (starts.empty())
-//                 continue;
-//             std::vector<TimeHolder> &ends = endTime_[elem.first][t];
-//             for (unsigned int i = 0; i < starts.size(); i++) {
-//                 oss << "\n    1: Started";
-//                 TimeHolder start = starts[i];
-//                 if (i < ends.size()) {
-//                     TimeHolder end = ends[i];
-//                     TimeHolder diff = end - start;
-//                     oss << " and lasted " << diff.tv_sec << " seconds and " << diff.tv_nsec << " nsec.";
-//                 }
-//             }
-//         }
-//     }
-//     oss << "\nThese threads started before SDL init and can't be waited for :\n";
-//     for (auto elem : beforeSDL_) {
-//         oss <<  elem << "\n";
-//     }
-//     return oss.str();
-// }
 
 }

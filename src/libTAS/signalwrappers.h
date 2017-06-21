@@ -83,6 +83,11 @@ OVERRIDE int sigwaitinfo (const sigset_t *set,
 OVERRIDE int sigtimedwait (const sigset_t *set,
              siginfo_t *info, const struct timespec *timeout);
 
+/* Alternate signal handler stack interface.
+    This interface should always be preferred over `sigstack'.  */
+OVERRIDE int sigaltstack (const struct sigaltstack *ss,
+			struct sigaltstack *oss) throw();
+
 /* Modify the signal mask for the calling thread.  The arguments have
    the same meaning as for sigprocmask(2). */
 OVERRIDE int pthread_sigmask (int how, const sigset_t *newmask,
