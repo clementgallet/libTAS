@@ -105,7 +105,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
     strncat(s, "\n", maxsize-size-1);
 
-    fprintf(stderr, s);
+    fputs(s, stderr);
 
 }
 

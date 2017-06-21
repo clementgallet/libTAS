@@ -1050,6 +1050,6 @@ void alert_dialog(void* alert_msg)
 
     /* Show alert window */
     std::string* alert_str = static_cast<std::string*>(alert_msg);
-    fl_alert(alert_str->c_str());
+    fl_alert("%s", alert_str->c_str());
     free(alert_str);
 }
