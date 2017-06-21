@@ -66,6 +66,8 @@ union Area {
         char name[FILENAMESIZE];
     };
     char _padding[4096];
+
+    void print(const char* prefix);
 };
 }
 

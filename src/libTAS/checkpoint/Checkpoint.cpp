@@ -248,6 +248,12 @@ static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
         }
         size += minsize;
     }
+
+    /* If we are near the end and processing non-zero memory, we can return
+     * the entire section.
+     */
+    if (((area.size - size) < block_size) && !is_zero)
+        size = area.size;
 }
 
 static void writeAnAreaWithZeroPages(int fd, Area *orig_area)
@@ -280,13 +286,7 @@ static void writeAnAreaWithZeroPages(int fd, Area *orig_area)
 
 static void writeAnArea(int fd, Area *area)
 {
-    if (!(area->flags & MAP_ANONYMOUS)) {
-        debuglogstdio(LCF_CHECKPOINT, "Save region %p (%s) with size %d", area->addr, area->name, area->size);
-    } else if (area->name[0] == '\0') {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p with size %d", area->addr, area->size);
-    } else {
-        debuglogstdio(LCF_CHECKPOINT, "Save anonymous %p (%s) with size %d", area->addr, area->name, area->size);
-    }
+    area->print("Save");
 
     if ((area->prot & PROT_READ) == 0) {
         MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
@@ -365,17 +365,13 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         if (saved_area->properties & Area::SKIP) {
             if (!skipArea(current_area)) {
                 debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is not skipped anymore !?");
+                saved_area->print("Saved");
+                current_area->print("Current");
             }
             return 0;
         }
 
-        if (!(saved_area->flags & MAP_ANONYMOUS)) {
-            debuglogstdio(LCF_CHECKPOINT, "Restore region %p (%s) with size %d", (void*)saved_area->addr, saved_area->name, saved_area->size);
-        } else if (saved_area->name[0] == '\0') {
-            debuglogstdio(LCF_CHECKPOINT, "Restore anonymous %p with size %d", saved_area->addr, saved_area->size);
-        } else {
-            debuglogstdio(LCF_CHECKPOINT, "Restore anonymous %p (%s) with size %d", saved_area->addr, saved_area->name, saved_area->size);
-        }
+        saved_area->print("Restore");
 
         size_t copy_size = (saved_area->size<current_area->size)?saved_area->size:current_area->size;
 
@@ -483,7 +479,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             /* Areas are not overlapping, we unmap the whole area */
             /* We only deallocate this section if we are interested in it */
             if (!skipArea(current_area)) {
-                debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+                current_area->print("Deallocating");
                 MYASSERT(munmap(current_area->addr, current_area->size) == 0)
             }
             return 1;
