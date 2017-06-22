@@ -228,8 +228,7 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     video_frame->height = video_codec_context->height;
 
     /* Allocate the image buffer inside the AVFrame */
-
-    ret = av_image_alloc(video_frame->data, video_frame->linesize, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, 32);
+    ret = av_frame_get_buffer(video_frame, 32);
     ASSERT_RETURN_VOID(ret >= 0, "Could not allocate raw picture buffer");
 
     /* Initialize swscale context for pixel format conversion */
@@ -501,10 +500,10 @@ AVEncoder::~AVEncoder() {
     avcodec_free_context(&video_codec_context);
     avcodec_free_context(&audio_codec_context);
     avio_close(formatContext->pb);
-    // avcodec_close(video_codec);
-    // avcodec_close(audio_codec);
     avformat_free_context(formatContext);
     sws_freeContext(toYUVctx);
+    if (audio_fmt_ctx)
+        swr_free(&audio_fmt_ctx);
     // av_freep(&video_frame->data[0]);
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
