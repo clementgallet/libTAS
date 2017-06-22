@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include "Utils.h"
+#include <cstring>
 
 namespace libtas {
 
@@ -177,6 +178,27 @@ bool ProcSelfMaps::getNextArea(Area *area)
     }
 
     area->properties = 0;
+
+    /* Somtetimes the [heap] is split into several contiguous segments, such as
+     * after a dumping was made (but why...?). This can screw up our code for
+     * loading and remapping the [heap] using brk, so we always read the [heap]
+     * as one single segment.
+     */
+    if (strcmp(area->name, "[heap]") == 0) {
+        Area next_area;
+        size_t curDataIdx = dataIdx;
+        bool valid = getNextArea(&next_area); // recursive call
+        if (valid && (strcmp(next_area.name, "[heap]") == 0)) {
+            MYASSERT(area->endAddr == next_area.addr)
+            MYASSERT(area->prot == next_area.prot)
+            MYASSERT(area->flags == next_area.flags)
+            area->endAddr = next_area.endAddr;
+            area->size += next_area.size;
+        }
+        else {
+            dataIdx = curDataIdx;
+        }
+    }
 
     return true;
 }

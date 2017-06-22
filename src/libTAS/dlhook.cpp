@@ -33,9 +33,6 @@ static std::set<std::string> libraries;
 void add_lib(std::string library)
 {
     libraries.insert(library);
-    debuglog(LCF_HOOK, "Lib vect content:");
-    for (auto const& itr : libraries)
-        debuglog(LCF_HOOK, itr);
 }
 
 std::string find_lib(const char* library)

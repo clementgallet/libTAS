@@ -28,6 +28,10 @@
 
 namespace libtas {
 
+/* We keep track of the alternate stack that the game is using. Indeed some
+ * games do create an alternate stack such as FNA games (Towerfall, FEZ, etc.)
+ * We switch to our own alternate stack just before checkpoint/restore.
+ */
 static stack_t oss;
 
 void AltStack::prepareStack()
