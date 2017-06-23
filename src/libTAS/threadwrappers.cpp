@@ -119,9 +119,7 @@ static void *pthread_start(void *arg)
     ThreadSync::decrementUninitializedThreadCount();
     void *ret = thread->start(thread->arg);
     debuglog(LCF_THREAD, "WE ARE DONE");
-    // ThreadManager::resume(tid);
     ThreadManager::threadExit();
-    // ThreadManager::end(thread->tid);
     return ret;
 }
 
@@ -189,6 +187,7 @@ static void *pthread_start(void *arg)
     if (GlobalState::isNative())
         return orig::pthread_join(tid, thread_return);
 
+    ThreadSync::wrapperExecutionLockLock();
     debuglog(LCF_THREAD, "Joining thread ", stringify(tid));
 
     /* Because we detach zombie threads before saving or loading a state,
@@ -203,11 +202,13 @@ static void *pthread_start(void *arg)
           */
          *thread_return = thread->retval;
          ThreadManager::threadIsDead(thread);
+         ThreadSync::wrapperExecutionLockUnlock();
          return 0;
      }
 
     int ret = orig::pthread_join(tid, thread_return);
     ThreadManager::threadDetach(tid);
+    ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
@@ -219,6 +220,7 @@ static void *pthread_start(void *arg)
         return orig::pthread_detach(tid);
 
     /* Same comment as above */
+    ThreadSync::wrapperExecutionLockLock();
     debuglog(LCF_THREAD, "Detaching thread ", stringify(tid));
     ThreadInfo* thread = ThreadManager::getThread(tid);
     if (thread->state == ThreadInfo::ST_FAKEZOMBIE) {
@@ -226,11 +228,13 @@ static void *pthread_start(void *arg)
          * our list.
          */
         ThreadManager::threadIsDead(thread);
+        ThreadSync::wrapperExecutionLockUnlock();
         return 0;
     }
 
     int ret = orig::pthread_detach(tid);
     ThreadManager::threadDetach(tid);
+    ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
