@@ -127,56 +127,12 @@ static bool skipArea(Area *area)
     }
     #endif // ifdef __x86_64__
 
-    /* Skip anything that has no read or execute permission.  This occurs
-    * on one page in a Linux 2.6.9 installation.  No idea why.  This code
-    * would also take care of kernel sections since we don't have read/execute
-    * permission there.
-    *
-    * EDIT: We should only skip the "---p" section for the shared libraries.
-    * Anonymous memory areas with no rwx permission should be saved regardless
-    * as the process might have removed the permissions temporarily and might
-    * want to use it later.
-    *
-    * This happens, for example, with libpthread where the pthread library
-    * tries to recycle thread stacks. When a thread exits, libpthread will
-    * remove the access permissions from the thread stack and later, when a
-    * new thread is created, it will provide the proper permission to this
-    * area and use it as the thread stack.
-    *
-    * If we do not restore this area on restart, the area might be returned by
-    * some mmap() call. Later on, when pthread wants to use this area, it will
-    * just try to use this area which now belongs to some other object. Even
-    * worse, the other object can then call munmap() on that area after
-    * libpthread started using it as thread stack causing the parts of thread
-    * stack getting munmap()'d from the memory resulting in a SIGSEGV.
-    *
-    * We suspect that libpthread is using mmap() instead of mprotect to change
-    * the permission from "---p" to "rw-p".
-    *
-    * Also, on SUSE 12, if this region was part of heap, the protected region
-    * may have the label "[heap]".  So, we also save the memory region if it
-    * has label "[heap]", "[stack]", or  "[stack:XXX]".
-    */
-
-    if (!((area->prot & PROT_READ) || (area->prot & PROT_WRITE)) &&
-    (area->name[0] != '\0') &&
-    strcmp(area->name, "[heap]") &&
-    strncmp(area->name, "[stack", 6)) {
-        return true;
-    }
-
     if (strstr(area->name, "(deleted)")) {
-        /* Deleted File */
         return true;
     }
-
-    // if (strstr(area->name, "i965_dri")) { // libX11.so
-    //     return true;
-    // }
 
     if (area->size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */
-        // debuglogstdio(LCF_CHECKPOINT, "skipping over empty segment");
         return true;
     }
 
@@ -184,37 +140,37 @@ static bool skipArea(Area *area)
     0 == strcmp(area->name, "[vectors]") ||
     0 == strcmp(area->name, "[vvar]") ||
     0 == strcmp(area->name, "[vdso]")) {
-        // debuglogstdio(LCF_CHECKPOINT, "Skipping over memory special section");
-        return true;
-    }
-
-    if (area->prot & PROT_EXEC) {
-        // area->properties |= DMTCP_SKIP_WRITING_TEXT_SEGMENTS;
-        // Utils::writeAll(fd, area, sizeof(*area));
-        // debuglogstdio(LCF_CHECKPOINT, "Skipping over text segments");
         return true;
     }
 
     if ((area->addr == ReservedMemory::getAddr(0)) && (area->size == ReservedMemory::getSize())) {
-        // debuglogstdio(LCF_CHECKPOINT, "Skipping over our reserved section");
         return true;
     }
 
-    /* Right now, skip if we don't have write permission */
-    if (!(area->prot & PROT_WRITE)) {
-        // debuglogstdio(LCF_CHECKPOINT, "Skipping over no write permission");
+    /* Start of user-configurable skips */
+
+    if ((shared_config.ignore_sections & SharedConfig::IGNORE_NON_WRITEABLE) &&
+        !(area->prot & PROT_WRITE)) {
         return true;
     }
 
-    /* Right now, skip for shared memory */
-    if (area->flags & MAP_SHARED) {
-        // debuglogstdio(LCF_CHECKPOINT, "Skipping over shared memory");
+    if ((shared_config.ignore_sections & SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE) &&
+        !(area->prot & PROT_WRITE) && !(area->flags & MAP_ANONYMOUS)) {
+        return true;
+    }
+
+    if ((shared_config.ignore_sections & SharedConfig::IGNORE_EXEC) &&
+        (area->prot & PROT_EXEC)) {
+        return true;
+    }
+
+    if ((shared_config.ignore_sections & SharedConfig::IGNORE_SHARED) &&
+        (area->flags & MAP_SHARED)) {
         return true;
     }
 
     return false;
 }
-
 
 /* This function returns a range of zero or non-zero pages. If the first page
  * is non-zero, it searches for all contiguous non-zero pages and returns them.
@@ -292,7 +248,7 @@ static void writeAnArea(int fd, Area *area)
         MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
     }
 
-    if (area->name[0] == '\0') {
+    if (area->flags & MAP_ANONYMOUS) {
         /* We look for zero pages in anonymous sections and skip saving them */
         writeAnAreaWithZeroPages(fd, area);
     }
@@ -337,10 +293,6 @@ static void writeAllAreas()
             area.properties |= Area::SKIP;
             Utils::writeAll(fd, &area, sizeof(area));
             continue;
-        }
-
-        if ((area.flags & MAP_PRIVATE) /*&& (area.prot & PROT_WRITE)*/) {
-            area.flags |= MAP_ANONYMOUS;
         }
 
         writeAnArea(fd, &area);
@@ -502,10 +454,11 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         /* This saved area must be allocated */
         debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, map_size);
 
-        saved_area->flags |= MAP_ANONYMOUS;
-
         int imagefd = -1;
-        if (saved_area->name[0] == '/') { /* If not null string, not [stack] or [vdso] */
+        if (!(saved_area->flags & MAP_ANONYMOUS)) {
+            /* We shouldn't be creating any special section such as [heap] or [stack] */
+            MYASSERT(saved_area->name[0] == '/')
+
             imagefd = open(saved_area->name, O_RDONLY, 0);
             if (imagefd >= 0) {
                 /* If the current file size is smaller than the original, we map the region
@@ -518,17 +471,20 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
                     close(imagefd);
                     imagefd = -1;
                     saved_area->offset = 0;
-                } else {
-                    saved_area->flags ^= MAP_ANONYMOUS;
+                    saved_area->flags |= MAP_ANONYMOUS;
                 }
+            }
+            else {
+                /* We could not open the file, map the section as anonymous */
+                saved_area->flags |= MAP_ANONYMOUS;
             }
         }
 
-        // if (saved_area->flags & MAP_ANONYMOUS) {
-        //     debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", map_size, saved_area->addr);
-        // } else {
-        //     debuglogstdio(LCF_CHECKPOINT, "Restoring to non-anonymous area from anonymous area, %d bytes at %p from %s + %d", map_size, saved_area->addr, saved_area->name, saved_area->offset);
-        // }
+        if (saved_area->flags & MAP_ANONYMOUS) {
+            debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", map_size, saved_area->addr);
+        } else {
+            debuglogstdio(LCF_CHECKPOINT, "Restoring non-anonymous area, %d bytes at %p from %s + %d", map_size, saved_area->addr, saved_area->name, saved_area->offset);
+        }
 
         /* Create the memory area */
 

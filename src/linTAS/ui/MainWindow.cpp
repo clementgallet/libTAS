@@ -59,6 +59,7 @@ static Fl_Callback render_soft_cb;
 static Fl_Callback savestate_screen_cb;
 static Fl_Callback0 cmdoptions_cb;
 static Fl_Callback llvm_perf_cb;
+static Fl_Callback ignore_memory_cb;
 
 MainWindow::~MainWindow()
 {
@@ -236,6 +237,12 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {nullptr},
             {nullptr},
         {"Savestates", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Don't save memory segments", 0, nullptr, nullptr, FL_SUBMENU},
+                {"non-writeable segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_NON_WRITEABLE), FL_MENU_TOGGLE},
+                {"non-writeable non-anonymous segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE), FL_MENU_TOGGLE},
+                {"exec segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_EXEC), FL_MENU_TOGGLE},
+                {"shared segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_SHARED), FL_MENU_TOGGLE},
+                {nullptr},
             {"Save screen in savestates", 0, savestate_screen_cb, nullptr, FL_MENU_TOGGLE},
             {nullptr},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
@@ -569,6 +576,7 @@ void MainWindow::update_config()
     SET_TOGGLE_FROM_BOOL(render_soft_cb, context->config.opengl_soft);
     SET_TOGGLE_FROM_BOOL(savestate_screen_cb, context->config.sc.save_screenpixels);
 
+    SET_TOGGLES_FROM_MASK(ignore_memory_cb, context->config.sc.ignore_sections);
 }
 
 void launch_cb(Fl_Widget* w)
@@ -1024,6 +1032,15 @@ void llvm_perf_cb(Fl_Widget* w, void* v)
     }
     /* Remove the trailing comma */
     mw.context->config.llvm_perf.pop_back();
+}
+
+void ignore_memory_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int ignore = static_cast<int>(reinterpret_cast<intptr_t>(v));
+
+    mw.context->config.sc.ignore_sections ^= ignore;
+    mw.context->config.sc_modified = true;
 }
 
 void alert_dialog(void* alert_msg)

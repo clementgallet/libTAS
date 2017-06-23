@@ -124,6 +124,16 @@ class SharedConfig {
         int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
 
         bool save_screenpixels = true;
+
+        /* Log status */
+        enum IgnoreMemorySection {
+            IGNORE_NON_WRITEABLE = 0x01,
+            IGNORE_NON_ANONYMOUS_NON_WRITEABLE = 0x02,
+            IGNORE_EXEC = 0x04,
+            IGNORE_SHARED = 0x08
+        };
+
+        int ignore_sections = IGNORE_EXEC | IGNORE_SHARED | IGNORE_NON_ANONYMOUS_NON_WRITEABLE;
 };
 
 extern SharedConfig shared_config;
