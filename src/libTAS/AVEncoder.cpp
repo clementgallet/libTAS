@@ -101,8 +101,7 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     video_codec_context->bit_rate = shared_config.video_bitrate;
     video_codec_context->width = width;
     video_codec_context->height = height;
-    video_st->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
-    video_codec_context->time_base = video_st->time_base;
+    video_codec_context->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
     video_codec_context->gop_size = 10; /* emit one intra frame every ten frames */
     // video_codec_context->max_b_frames = 1;
     if (codec_id == AV_CODEC_ID_H264)
@@ -203,7 +202,8 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile
     audio_codec_context->bit_rate = shared_config.audio_bitrate;
     audio_codec_context->channels = audiocontext.outNbChannels;
     audio_codec_context->channel_layout = av_get_default_channel_layout( audio_codec_context->channels );
-    audio_st->time_base = (AVRational){ 1, audio_codec_context->sample_rate };
+    audio_codec_context->time_base = (AVRational){ 1, audio_codec_context->sample_rate };
+    // audio_st->time_base = (AVRational){ 1, audio_codec_context->sample_rate };
 
     /* Some formats want stream headers to be separate. */
 
@@ -329,24 +329,8 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
     ASSERT_RETURN(ret, "Error encoding video frame");
 
     /* Receive decoding frames */
-    AVPacket vpkt = { 0 };
-
-    ret = avcodec_receive_packet(video_codec_context, &vpkt);
-    while (ret == 0) {
-        /* Rescale output packet timestamp values from codec to stream timebase */
-        vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-        vpkt.duration = av_rescale_q(vpkt.duration, video_codec_context->time_base, video_st->time_base);
-        vpkt.stream_index = video_st->index;
-        ret = av_interleaved_write_frame(formatContext, &vpkt);
-
-        ret = avcodec_receive_packet(video_codec_context, &vpkt);
-        // av_free_packet(&vpkt);
-    }
-
-    if (ret != AVERROR(EAGAIN)) {
-        ASSERT_RETURN(ret, "Error getting video paquet");
-    }
+    ret = receive_packet(video_codec_context, video_st);
+    if (ret < 0) return ret;
 
     /*** Audio ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode audio frames");
@@ -362,73 +346,88 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
     /* FIXME: If sample rate change by resampling, the following code is wrong */
     /* Encode loop for every audio frame, until we don't have enough samples */
     while (static_cast<int>(delayed_buffer.size()) >= audio_frame->nb_samples*audiocontext.outAlignSize) {
-
-        audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_codec_context->sample_rate}, audio_codec_context->time_base);
-
-        /* If necessary, convert the audio stream to the new sample format */
-        if (audio_fmt_ctx) {
-            int line_size;
-            int buf_size = av_samples_get_buffer_size(&line_size, audio_codec_context->channels, audio_frame->nb_samples, audio_codec_context->sample_fmt, 1);
-            temp_audio.resize(buf_size);
-
-            /* Build the lines array for planar sample format */
-            int lines_nb = av_sample_fmt_is_planar(audio_codec_context->sample_fmt)?audio_codec_context->channels:1;
-            std::vector<uint8_t*> lines;
-            lines.resize(lines_nb);
-            for (int c=0; c<lines_nb; c++)
-                lines[c] = temp_audio.data() + c*line_size;
-            uint8_t* in_pt = delayed_buffer.data();
-
-            ret = swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
-
-            ASSERT_RETURN(ret, "Error scaling audio frame");
-
-            ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
-                                                     lines[0], buf_size, 1);
-        }
-        else {
-            ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
-                                                 delayed_buffer.data(), audio_frame->nb_samples*audiocontext.outAlignSize, 1);
-        }
-
-        ASSERT_RETURN(ret, "Error filling audio frame");
-
-        ret = avcodec_send_frame(audio_codec_context, audio_frame);
-
-        if (ret == AVERROR(EAGAIN)) {
-            /* We cannot send more audio data because the internal buffer is full
-             * Don't touch our buffer.
-             */
-        }
-        else if (ret < 0) {
-            ASSERT_RETURN(ret, "Error encoding audio frame");
-        }
-        else {
-            accum_samples += audio_frame->nb_samples;
-            delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
-        }
+        ret = send_audio_frame();
+        if (ret < 0) return ret;
 
         /* Receive decoding frames */
-
-        AVPacket apkt = { 0 };
-        ret = avcodec_receive_packet(audio_codec_context, &apkt);
-
-        while (ret == 0) {
-            /* We have an encoder output to write */
-            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
-            apkt.stream_index = audio_st->index;
-            ret = av_interleaved_write_frame(formatContext, &apkt);
-            ASSERT_RETURN(ret, "Error writing frame");
-
-            ret = avcodec_receive_packet(audio_codec_context, &apkt);
-        }
-
-        if (ret != AVERROR(EAGAIN)) {
-            ASSERT_RETURN(ret, "Error getting audio paquet");
-        }
+        ret = receive_packet(audio_codec_context, audio_st);
+        if (ret < 0) return ret;
     }
+
+    return 0;
+}
+
+int AVEncoder::send_audio_frame()
+{
+    int ret;
+    audio_frame->pts = av_rescale_q(accum_samples, AVRational{1, audio_codec_context->sample_rate}, audio_codec_context->time_base);
+
+    /* If necessary, convert the audio stream to the new sample format */
+    if (audio_fmt_ctx) {
+        int line_size;
+        int buf_size = av_samples_get_buffer_size(&line_size, audio_codec_context->channels, audio_frame->nb_samples, audio_codec_context->sample_fmt, 1);
+        temp_audio.resize(buf_size);
+
+        /* Build the lines array for planar sample format */
+        int lines_nb = av_sample_fmt_is_planar(audio_codec_context->sample_fmt)?audio_codec_context->channels:1;
+        std::vector<uint8_t*> lines;
+        lines.resize(lines_nb);
+        for (int c=0; c<lines_nb; c++)
+            lines[c] = temp_audio.data() + c*line_size;
+        uint8_t* in_pt = delayed_buffer.data();
+
+        ret = swr_convert(audio_fmt_ctx, lines.data(), audio_frame->nb_samples, const_cast<const uint8_t**>(&in_pt), audio_frame->nb_samples);
+
+        ASSERT_RETURN(ret, "Error scaling audio frame");
+
+        ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
+                                                 lines[0], buf_size, 1);
+    }
+    else {
+        ret = avcodec_fill_audio_frame(audio_frame, audio_codec_context->channels, audio_codec_context->sample_fmt,
+                                             delayed_buffer.data(), audio_frame->nb_samples*audiocontext.outAlignSize, 1);
+    }
+
+    ASSERT_RETURN(ret, "Error filling audio frame");
+
+    ret = avcodec_send_frame(audio_codec_context, audio_frame);
+
+    if (ret == AVERROR(EAGAIN)) {
+        /* We cannot send more audio data because the internal buffer is full
+         * Don't touch our buffer.
+         */
+    }
+    else if (ret < 0) {
+        ASSERT_RETURN(ret, "Error encoding audio frame");
+    }
+    else {
+        accum_samples += audio_frame->nb_samples;
+        delayed_buffer.erase(delayed_buffer.begin(), delayed_buffer.begin()+audio_frame->nb_samples*audiocontext.outAlignSize);
+    }
+
+    return 0;
+}
+
+int AVEncoder::receive_packet(AVCodecContext *codec_context, AVStream* st)
+{
+    AVPacket pkt = { 0 };
+    int ret = avcodec_receive_packet(codec_context, &pkt);
+
+    while (ret == 0) {
+        /* We have an encoder output to write */
+        pkt.pts = av_rescale_q_rnd(pkt.pts, codec_context->time_base, st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        pkt.dts = av_rescale_q_rnd(pkt.dts, codec_context->time_base, st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        pkt.duration = av_rescale_q(pkt.duration, codec_context->time_base, st->time_base);
+        pkt.stream_index = st->index;
+        ret = av_interleaved_write_frame(formatContext, &pkt);
+        ASSERT_RETURN(ret, "Error writing frame");
+
+        ret = avcodec_receive_packet(codec_context, &pkt);
+    }
+
+    // if (ret != AVERROR(EAGAIN)) {
+    //     ASSERT_RETURN(ret, "Error getting paquet");
+    // }
 
     return 0;
 }
@@ -438,6 +437,10 @@ AVEncoder::~AVEncoder() {
     if (error)
         return;
 
+    /* Send the rest of audio samples */
+    audio_frame->nb_samples = delayed_buffer.size() / audiocontext.outAlignSize;
+    send_audio_frame();
+
     /* Tells the encoder to flush the streams */
     avcodec_send_frame(video_codec_context, nullptr);
     avcodec_send_frame(audio_codec_context, nullptr);
@@ -445,50 +448,8 @@ AVEncoder::~AVEncoder() {
     debuglog(LCF_DUMP, "Start getting flushed frames");
 
     /* Encode the remaining frames */
-    int vret = 0;
-    while (vret == 0) {
-
-        AVPacket vpkt = { 0 };
-        vret = avcodec_receive_packet(video_codec_context, &vpkt);
-
-        if (vret == 0) {
-            vpkt.pts = av_rescale_q_rnd(vpkt.pts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            vpkt.dts = av_rescale_q_rnd(vpkt.dts, video_codec_context->time_base, video_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            vpkt.duration = av_rescale_q(vpkt.duration, video_codec_context->time_base, video_st->time_base);
-            vpkt.stream_index = video_st->index;
-            debuglog(LCF_DUMP, "Write a flushed video frame");
-            if (av_interleaved_write_frame(formatContext, &vpkt) < 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-                return;
-            }
-            // av_free_packet(&vpkt);
-        }
-    }
-
-    int aret = 0;
-    while (aret == 0) {
-
-        AVPacket apkt = { 0 };
-        // apkt.data = NULL;
-        // apkt.size = 0;
-        // av_init_packet(&apkt);
-
-        aret = avcodec_receive_packet(audio_codec_context, &apkt);
-
-        if (aret == 0) {
-            /* We have an encoder output to write */
-            apkt.pts = av_rescale_q_rnd(apkt.pts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.dts = av_rescale_q_rnd(apkt.dts, audio_codec_context->time_base, audio_st->time_base, static_cast<AVRounding>(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            apkt.duration = av_rescale_q(apkt.duration, audio_codec_context->time_base, audio_st->time_base);
-            apkt.stream_index = audio_st->index;
-            debuglog(LCF_DUMP, "Write a flushed audio frame");
-            if (av_interleaved_write_frame(formatContext, &apkt) < 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Error writing frame");
-                return;
-            }
-            // av_free_packet(&apkt);
-        }
-    }
+    receive_packet(video_codec_context, video_st);
+    receive_packet(audio_codec_context, audio_st);
 
     /* Flush the interleaving queue, needed? */
     av_interleaved_write_frame(formatContext, NULL);

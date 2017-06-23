@@ -91,6 +91,12 @@ class AVEncoder {
         /* The accumulated number of audio samples */
         uint64_t accum_samples;
 
+        /* Send audio frame */
+        int send_audio_frame();
+
+        /* Receive packets and send them to the muxer */
+        int receive_packet(AVCodecContext *codec_context, AVStream* st);
+
 };
 }
 
