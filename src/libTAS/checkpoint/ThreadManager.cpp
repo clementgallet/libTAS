@@ -455,7 +455,7 @@ void ThreadManager::stopThisThread(int signum)
 
         /* Set up our restart point, ie, we get jumped to here after a restore */
 
-        // TLSInfo_SaveTLSState(&curThread->tlsInfo); // save thread local storage
+        ThreadLocalStorage::saveTLSState(&current_thread->tlsInfo); // save thread local storage
         MYASSERT(getcontext(&current_thread->savctx) == 0)
         // save_sp(&curThread->saved_sp);
 
@@ -491,6 +491,8 @@ void ThreadManager::stopThisThread(int signum)
             /* We successfully restored the thread. We wait for all other
              * threads to restore before continuing
              */
+            ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo); // restore thread local storage
+
             MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
 
             /* Else restoreinprog >= 1;  This stuff executes to do a restart */

@@ -17,40 +17,32 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
 
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
- */
+*/
 
-#ifndef LIBTAS_THREAD_INFO_H
-#define LIBTAS_THREAD_INFO_H
-#include <atomic>
-#include <ucontext.h>
-#include <pthread.h> // pthread_t
-#include "ThreadLocalStorage.h"
+#ifndef LIBTAS_THREADLOCALSTORAGE_H
+#define LIBTAS_THREADLOCALSTORAGE_H
+
+#ifdef __i386__
+#include <asm/ldt.h> // struct user_desc
+#endif
 
 namespace libtas {
 
-struct ThreadInfo {
-    enum ThreadState {
-        ST_RUNNING,
-        ST_SIGNALED,
-        ST_SUSPINPROG,
-        ST_SUSPENDED,
-        ST_ZOMBIE,
-        ST_FAKEZOMBIE,
-        ST_CKPNTHREAD
-    };
-    ThreadState state;
-    pthread_t tid;
-    void *(*start)(void *);
-    void *arg;
-    std::atomic<bool> go;
-    bool detached;
-    std::ptrdiff_t routine_id;
-    ucontext_t savctx;
-    ThreadTLSInfo tlsInfo;
-    void* retval;
+struct ThreadTLSInfo {
+#ifdef __i386__
+    unsigned short fs, gs;  // thread local storage pointers
+    struct user_desc gdtentrytls[1];
+#elif __x86_64__
+    unsigned long int fs, gs;  // thread local storage pointers
+#else
+#error "Unsupported arch"
+#endif
+};
 
-    ThreadInfo *next;
-    ThreadInfo *prev;
+namespace ThreadLocalStorage
+{
+    void saveTLSState(ThreadTLSInfo *tlsInfo);
+    void restoreTLSState(ThreadTLSInfo *tlsInfo);
 };
 }
 
