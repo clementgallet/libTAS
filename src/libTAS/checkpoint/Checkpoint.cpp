@@ -367,7 +367,6 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
         /* Now copy the data */
         if (!(current_area->prot & PROT_WRITE)) {
-            debuglogstdio(LCF_CHECKPOINT, "Current area lost its write permission");
             MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot | PROT_WRITE) == 0)
         }
 
@@ -381,7 +380,6 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
         }
 
         if (!(current_area->prot & PROT_WRITE)) {
-            debuglogstdio(LCF_CHECKPOINT, "Recover permission");
             MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot) == 0)
         }
 

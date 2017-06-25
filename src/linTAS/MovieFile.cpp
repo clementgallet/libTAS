@@ -147,7 +147,7 @@ int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
     /* Write mouse inputs */
     if (context->config.sc.mouse_support) {
         input_stream.put('|');
-        input_stream << std::hex;
+        input_stream << std::dec;
         input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
         input_stream.put((inputs.pointer_mask&Button1Mask)?'1':'.');
         input_stream.put((inputs.pointer_mask&Button2Mask)?'2':'.');
@@ -213,7 +213,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     /* Read mouse inputs */
     if (context->config.sc.mouse_support) {
         input_string >> d;
-        input_string >> std::hex;
+        input_string >> std::dec;
         input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
         input_string >> d;
         if (d != '.') inputs.pointer_mask |= Button1Mask;

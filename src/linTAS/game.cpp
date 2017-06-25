@@ -583,6 +583,8 @@ void launchGame(Context* context)
                         Window w;
                         int i;
                         Bool onScreen = XQueryPointer(context->display, context->game_window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+                        /* We only care about the five mouse buttons */
+                        ai.pointer_mask &= Button1Mask | Button2Mask | Button3Mask | Button4Mask | Button5Mask;
                         if (!onScreen) {
                             ai.pointer_x = -1;
                             ai.pointer_y = -1;
