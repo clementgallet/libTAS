@@ -43,43 +43,38 @@ static char savestatepath[SAVESTATE_FILESIZE];
 static void proceed_commands(void);
 
 /* Compute real and logical fps */
-static bool computeFPS(bool drawFB, float& fps, float& lfps)
+static void computeFPS(float& fps, float& lfps)
 {
+    static const int frame_segment_size = 60;
+
+    static std::array<TimeHolder, frame_segment_size> lastTimes;
+    static std::array<TimeHolder, frame_segment_size> lastTickss;
+
     static int computeCounter = 0;
-    static TimeHolder lastTime;
-    static TimeHolder lastTicks;
-    static int drawFrameCount = 0;
-    static int lastFrameCount = 0;
 
-    if (drawFB)
-        drawFrameCount++;
+    /* Update current time */
+    TimeHolder lastTime = lastTimes[computeCounter%60];
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[computeCounter%60]));
 
-    if (++computeCounter > 60) {
-        computeCounter = 0;
+    /* Update current ticks */
+    TimeHolder lastTicks = lastTickss[computeCounter%60];
+    struct timespec tsTicks = detTimer.getTicks();
+    lastTickss[computeCounter%60] = tsTicks;
 
-        TimeHolder currentTime;
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
 
-        struct timespec tsTicks = detTimer.getTicks();
-        TimeHolder currentTicks;
-        currentTicks = tsTicks;
+    /* Compute real fps (number of drawn screens per second) */
+    TimeHolder deltaTime = lastTimes[computeCounter%60] - lastTime;
 
-        /* Compute real fps (number of drawn screens per second) */
-        TimeHolder deltaTime = currentTime - lastTime;
-        fps = static_cast<float>(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+    /* Compute logical fps (number of drawn screens per timer second) */
+    TimeHolder deltaTicks = lastTickss[computeCounter%60] - lastTicks;
 
-        /* Compute logical fps (number of drawn screens per timer second) */
-        TimeHolder deltaTicks = currentTicks - lastTicks;
-        lfps = static_cast<float>(drawFrameCount - lastFrameCount) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+    computeCounter++;
 
-        lastTime = currentTime;
-        lastTicks = currentTicks;
-        lastFrameCount = drawFrameCount;
-
-        return true;
+    if (computeCounter >= 60) {
+        fps = static_cast<float>(frame_segment_size) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+        lfps = static_cast<float>(frame_segment_size) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
     }
 
-    return false;
 }
 
 /* Deciding if we actually draw the frame */
@@ -201,7 +196,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     /* Print FPS */
     static float fps, lfps = 0;
-    if (computeFPS(drawFB, fps, lfps)) {
+    if (drawFB) {
+        computeFPS(fps, lfps);
         debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
     updateTitle(fps, lfps);
