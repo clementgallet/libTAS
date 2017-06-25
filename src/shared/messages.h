@@ -128,7 +128,13 @@ enum {
      * Notify the program that encoding failed
      * Arguments: none
      */
-    MSGB_ENCODE_FAILED
+    MSGB_ENCODE_FAILED,
+
+    /*
+     * Notify the game that we must stop encoding
+     * Arguments: none
+     */
+    MSGN_STOP_ENCODE
 
 };
 

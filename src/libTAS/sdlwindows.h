@@ -48,7 +48,7 @@ extern char* av_filename;
 /* Get the Xlib Display struct that is used by SDL */
 Display* getXDisplay(void);
 
-/* Update the window title with fps */
+/* Update the window title with fps. If fps == -1, use the last value */
 void updateTitle(float fps, float lfps);
 
 /**

@@ -287,6 +287,18 @@ static void proceed_commands(void)
 
                 break;
 
+            case MSGN_STOP_ENCODE:
+#ifdef LIBTAS_ENABLE_AVDUMPING
+                if (avencoder) {
+                    debuglog(LCF_DUMP, "Stop AV dumping");
+                    avencoder.reset(nullptr);
+                    shared_config.av_dumping = false;
+
+                    /* Update title without changing fps */
+                    updateTitle(-1, -1);
+                }
+#endif
+                break;
             case MSGN_END_FRAMEBOUNDARY:
                 return;
 

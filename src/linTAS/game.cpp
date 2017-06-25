@@ -489,6 +489,7 @@ void launchGame(Context* context)
                             return;
                         }
                         receiveData(&context->framecount, sizeof(unsigned long));
+                        ui.update_framecount();
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->recording) {
@@ -504,6 +505,7 @@ void launchGame(Context* context)
                         ui.update_ui();
                     }
                     if (hk.type == HOTKEY_TOGGLE_ENCODE) {
+#ifdef LIBTAS_ENABLE_AVDUMPING
                         if (!context->config.sc.av_dumping) {
                             context->config.sc.av_dumping = true;
                             context->config.sc_modified = true;
@@ -512,8 +514,18 @@ void launchGame(Context* context)
                         else {
                             context->config.sc.av_dumping = false;
                             context->config.sc_modified = true;
+
+                            /* Tells the game to immediately stop the encode,
+                             * so we don't have to advance a frame. This also
+                             * allows to start a new encode on the same frame
+                             *
+                             * TODO: Stopping using the UI doesn't send this
+                             * message!
+                             */
+                            sendMessage(MSGN_STOP_ENCODE);
                         }
                         ui.update_ui();
+#endif
                     }
                 }
                 if (event.type == KeyRelease)

@@ -294,9 +294,13 @@ std::string origIcon;
 
 void updateTitle(float fps, float lfps)
 {
+    static float cur_fps, cur_lfps = 0;
+    if (fps > 0) cur_fps = fps;
+    if (lfps > 0) cur_lfps = lfps;
+
     std::ostringstream out;
-    out << " (fps: " << std::fixed << std::setprecision(1) << fps;
-    out << " - lfps: " << lfps << ") - status: ";
+    out << " (fps: " << std::fixed << std::setprecision(1) << cur_fps;
+    out << " - lfps: " << cur_lfps << ") - status: ";
     if (shared_config.running)
         out << "running";
     else
