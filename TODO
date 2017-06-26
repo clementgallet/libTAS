@@ -32,7 +32,6 @@
 -- Hook pulse audio (shovel knight? superhexagon)
 - Add an interface (fltk)
 -- Check for validity of encoding parameters
--- Double click to assign key mappings
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 -- Add more alert windows

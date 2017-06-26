@@ -209,15 +209,26 @@ struct ModifierKey {
     std::string description;
 };
 
+enum ModifierFlag {
+    XK_Shift_L_Flag = 0x010000,
+    XK_Shift_R_Flag = 0x020000,
+    XK_Control_L_Flag = 0x040000,
+    XK_Control_R_Flag = 0x080000,
+    XK_Meta_L_Flag = 0x100000,
+    XK_Meta_R_Flag = 0x200000,
+    XK_Alt_L_Flag = 0x400000,
+    XK_Alt_R_Flag = 0x800000
+};
+
 static std::array<ModifierKey, 8> modifier_list {{
-    {XK_Shift_L, 0x010000, "Shift_L"},
-    {XK_Shift_R, 0x020000, "Shift_R"},
-    {XK_Control_L, 0x040000, "Control_L"},
-    {XK_Control_R, 0x080000, "Control_R"},
-    {XK_Meta_L, 0x100000, "Meta_L"},
-    {XK_Meta_R, 0x200000, "Meta_R"},
-    {XK_Alt_L, 0x400000, "Alt_L"},
-    {XK_Alt_R, 0x800000, "Alt_R"},
+    {XK_Shift_L, XK_Shift_L_Flag, "Shift_L"},
+    {XK_Shift_R, XK_Shift_R_Flag, "Shift_R"},
+    {XK_Control_L, XK_Control_L_Flag, "Control_L"},
+    {XK_Control_R, XK_Control_R_Flag, "Control_R"},
+    {XK_Meta_L, XK_Meta_L_Flag, "Meta_L"},
+    {XK_Meta_R, XK_Meta_R_Flag, "Meta_R"},
+    {XK_Alt_L, XK_Alt_L_Flag, "Alt_L"},
+    {XK_Alt_R, XK_Alt_R_Flag, "Alt_R"},
 }};
 
 bool is_modifier(KeySym ks);

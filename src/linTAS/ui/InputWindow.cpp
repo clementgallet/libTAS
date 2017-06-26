@@ -190,16 +190,14 @@ static KeySym get_next_keypressed(Display* display, bool with_modifiers)
 static void select_cb(Fl_Widget* w, void* v)
 {
     InputWindow* iw = (InputWindow*) v;
-    Fl_Multi_Browser* cur_browser;
+    Fl_Multi_Browser* cur_browser = static_cast<Fl_Multi_Browser*>(w);
 
     /* Deselect the other browser */
-    if (iw->input_browser->changed()) {
+    if (cur_browser == iw->input_browser) {
         iw->hotkey_browser->deselect();
-        cur_browser = iw->input_browser;
     }
-    if (iw->hotkey_browser->changed()) {
+    else {
         iw->input_browser->deselect();
-        cur_browser = iw->hotkey_browser;
     }
 
     /* Count how many lines are selected */
@@ -258,12 +256,27 @@ static void assign_cb(Fl_Widget* w, void* v)
      * the index of the last element. So we check if this element is selected.
      */
     int sel_hotkey = iw->hotkey_browser->value();
+    int sel_input = iw->input_browser->value();
     bool is_hotkey = iw->hotkey_browser->selected(sel_hotkey);
 
     iw->assign_button->label("Press key...");
     iw->assign_button->deactivate();
+
+    std::string linestr = is_hotkey?iw->hotkey_browser->text(sel_hotkey):
+        iw->input_browser->text(sel_input);
+    size_t pos = linestr.find('\t');
+    if (pos != std::string::npos) {
+        linestr.resize(pos);
+    }
+    linestr.append("\t<press key>");
+    if (is_hotkey)
+        iw->hotkey_browser->text(sel_hotkey, linestr.c_str());
+    else
+        iw->input_browser->text(sel_input, linestr.c_str());
+
     Fl::flush();
     KeySym ks = get_next_keypressed(iw->context->display, is_hotkey);
+
     iw->assign_button->label("Assign");
     iw->assign_button->activate();
 
@@ -271,7 +284,6 @@ static void assign_cb(Fl_Widget* w, void* v)
         iw->context->config.km.reassign_hotkey(sel_hotkey-1, ks);
     }
     else {
-        int sel_input = iw->input_browser->value();
         iw->context->config.km.reassign_input(sel_input-1, ks);
     }
 
