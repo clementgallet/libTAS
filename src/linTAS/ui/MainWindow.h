@@ -67,6 +67,7 @@ class MainWindow {
         ExecutableWindow* executable_window;
 
         Fl_Button *launch;
+        Fl_Button *launch_gdb;
 
         Fl_Output *gamepath;
         Fl_Button *browsegamepath;

@@ -156,6 +156,16 @@ void launchGame(Context* context)
         message = receiveMessage();
     }
 
+    /* Attach gdb */
+    if (context->attach_gdb) {
+        std::string attach_gdb = getenv("TERM");
+        attach_gdb.append(" -e gdb -q -ex 'handle SIGUSR1 nostop noprint'");
+        attach_gdb.append(" -ex 'handle SIGUSR2 nostop noprint' -ex 'c' ");
+        attach_gdb.append(context->gamepath).append(" ");
+        attach_gdb.append(std::to_string(context->game_pid)).append(" &");
+        system(attach_gdb.c_str());
+    }
+
     /* Send informations to the game */
 
     /* Send shared config */

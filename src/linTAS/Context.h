@@ -81,6 +81,9 @@ struct Context {
 
     /* PID of the game */
     pid_t game_pid;
+
+    /* Attaching gdb? */
+    bool attach_gdb = false;
 };
 
 #endif

@@ -25,8 +25,7 @@
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates
--- Delete savestates at the beginning (or the end?)
--- Alert the user when a state loading is not allowed
+-- Store content of savefiles when savestating
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
@@ -37,8 +36,10 @@
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 -- Add more alert windows
+-- Add a confirm message when overwriting a existing movie file
+-- Add an input for setting the initial system file
 - Record inputs and support playback
--- Write extra (sync) informations in the movie file
+-- Write extra (sync) informations in the movie file (time advancing hack values, initial system time)
 
 ## Done
 

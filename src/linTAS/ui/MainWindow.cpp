@@ -151,6 +151,9 @@ void MainWindow::build(Context* c)
     launch = new Fl_Button(10, 350, 70, 40, "Start");
     launch->callback(launch_cb);
 
+    launch_gdb = new Fl_Button(400, 350, 180, 40, "Start and attack gdb");
+    launch_gdb->callback(launch_cb);
+
     update_ui();
     update_config();
 
@@ -372,6 +375,8 @@ void MainWindow::update_status()
         case Context::INACTIVE:
             launch->label("Start");
             launch->activate();
+            launch_gdb->label("Start and attack gdb");
+            launch_gdb->activate();
             moviepath->activate();
             browsemoviepath->activate();
             gamepath->activate();
@@ -393,6 +398,7 @@ void MainWindow::update_status()
             break;
         case Context::STARTING:
             launch->deactivate();
+            launch_gdb->deactivate();
             moviepath->deactivate();
             browsemoviepath->deactivate();
             gamepath->deactivate();
@@ -404,11 +410,18 @@ void MainWindow::update_status()
             if (item) item->deactivate();
             break;
         case Context::ACTIVE:
-            launch->activate();
-            launch->label("Stop");
+            if (context->attach_gdb) {
+                launch_gdb->activate();
+                launch_gdb->label("Stop");
+            }
+            else {
+                launch->activate();
+                launch->label("Stop");
+            }
             break;
         case Context::QUITTING:
             launch->deactivate();
+            launch_gdb->deactivate();
             break;
         default:
             break;
@@ -582,6 +595,7 @@ void MainWindow::update_config()
 void launch_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
+    mw.context->attach_gdb = (static_cast<Fl_Button*>(w) == mw.launch_gdb);
 
     switch (mw.context->status) {
         case Context::INACTIVE:
