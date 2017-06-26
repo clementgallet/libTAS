@@ -112,7 +112,9 @@ void __attribute__((constructor)) init(void)
     old_ai.emptyInputs();
     game_ai.emptyInputs();
 
-    /* Initialize timers */
+    /* Initialize timers. It uses the initial time set in the config object,
+     * so they must be initialized after receiving it.
+     */
     nonDetTimer.initialize();
     detTimer.initialize();
 

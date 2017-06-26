@@ -134,6 +134,8 @@ class SharedConfig {
         };
 
         int ignore_sections = IGNORE_EXEC | IGNORE_SHARED | IGNORE_NON_ANONYMOUS_NON_WRITEABLE;
+
+        struct timespec initial_time = {0, 0};
 };
 
 extern SharedConfig shared_config;

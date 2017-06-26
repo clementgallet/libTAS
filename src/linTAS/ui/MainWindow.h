@@ -94,6 +94,9 @@ class MainWindow {
         Fl_Output *framecount;
         Fl_Output *totalframecount;
 
+        Fl_Input *initial_time_sec;
+        Fl_Input *initial_time_nsec;
+
         /* Update UI elements (mainly enable/disable) depending on
          * the game status (running/stopped), to prevent modifying values that
          * are not supposed to be modified when the game is running.

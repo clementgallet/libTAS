@@ -60,6 +60,7 @@ static Fl_Callback savestate_screen_cb;
 static Fl_Callback0 cmdoptions_cb;
 static Fl_Callback llvm_perf_cb;
 static Fl_Callback ignore_memory_cb;
+static Fl_Callback0 initial_time_cb;
 
 MainWindow::~MainWindow()
 {
@@ -70,25 +71,25 @@ MainWindow::~MainWindow()
 void MainWindow::build(Context* c)
 {
     context = c;
-    window = new Fl_Double_Window(600, 400);
+    window = new Fl_Double_Window(600, 500);
 
     /* Menu */
     menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);
     menu_bar->menu(menu_items);
 
     /* Game Executable */
-    gamepath = new Fl_Output(10, 240, 500, 30, "Game Executable");
+    gamepath = new Fl_Output(10, 340, 500, 30, "Game Executable");
     gamepath->align(FL_ALIGN_TOP_LEFT);
     gamepath->color(FL_LIGHT1);
 
-    browsegamepath = new Fl_Button(520, 240, 70, 30, "Browse...");
+    browsegamepath = new Fl_Button(520, 340, 70, 30, "Browse...");
     browsegamepath->callback(browse_gamepath_cb);
 
     gamepathchooser = new Fl_Native_File_Chooser();
     gamepathchooser->title("Game path");
 
     /* Command-line options */
-    cmdoptions = new Fl_Input(10, 300, 500, 30, "Command-line options");
+    cmdoptions = new Fl_Input(10, 400, 500, 30, "Command-line options");
     cmdoptions->align(FL_ALIGN_TOP_LEFT);
     cmdoptions->callback(cmdoptions_cb);
     // cmdoptions->color(FL_LIGHT1);
@@ -148,10 +149,20 @@ void MainWindow::build(Context* c)
     std::string totalframestr = std::to_string(movie.nbFrames(context->config.moviefile));
     totalframecount->value(totalframestr.c_str());
 
-    launch = new Fl_Button(10, 350, 70, 40, "Start");
+    /* Initial time */
+    initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
+    initial_time_sec->align(FL_ALIGN_TOP_LEFT);
+    initial_time_sec->callback(initial_time_cb);
+
+    initial_time_nsec = new Fl_Int_Input(130, 260, 100, 30, " - ");
+    initial_time_nsec->align(FL_ALIGN_LEFT);
+    initial_time_nsec->callback(initial_time_cb);
+
+
+    launch = new Fl_Button(10, 450, 70, 40, "Start");
     launch->callback(launch_cb);
 
-    launch_gdb = new Fl_Button(400, 350, 180, 40, "Start and attack gdb");
+    launch_gdb = new Fl_Button(400, 450, 180, 40, "Start and attach gdb");
     launch_gdb->callback(launch_cb);
 
     update_ui();
@@ -375,7 +386,7 @@ void MainWindow::update_status()
         case Context::INACTIVE:
             launch->label("Start");
             launch->activate();
-            launch_gdb->label("Start and attack gdb");
+            launch_gdb->label("Start and attach gdb");
             launch_gdb->activate();
             moviepath->activate();
             browsemoviepath->activate();
@@ -386,6 +397,8 @@ void MainWindow::update_status()
             moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
+            initial_time_sec->activate();
+            initial_time_nsec->activate();
 #ifdef LIBTAS_ENABLE_AVDUMPING
             if (context->config.sc.av_dumping) {
                 Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
@@ -408,6 +421,8 @@ void MainWindow::update_status()
             moviepack->deactivate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->deactivate();
+            initial_time_sec->deactivate();
+            initial_time_nsec->deactivate();
             break;
         case Context::ACTIVE:
             if (context->attach_gdb) {
@@ -590,6 +605,12 @@ void MainWindow::update_config()
     SET_TOGGLE_FROM_BOOL(savestate_screen_cb, context->config.sc.save_screenpixels);
 
     SET_TOGGLES_FROM_MASK(ignore_memory_cb, context->config.sc.ignore_sections);
+
+    std::string secstr = std::to_string(context->config.sc.initial_time.tv_sec);
+    initial_time_sec->value(secstr.c_str());
+
+    std::string nsecstr = std::to_string(context->config.sc.initial_time.tv_nsec);
+    initial_time_nsec->value(nsecstr.c_str());
 }
 
 void launch_cb(Fl_Widget* w)
@@ -1055,6 +1076,16 @@ void ignore_memory_cb(Fl_Widget* w, void* v)
 
     mw.context->config.sc.ignore_sections ^= ignore;
     mw.context->config.sc_modified = true;
+}
+
+void initial_time_cb(Fl_Widget*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    std::string secstr = mw.initial_time_sec->value();
+    mw.context->config.sc.initial_time.tv_sec = std::stoi(secstr);
+
+    std::string nsecstr = mw.initial_time_nsec->value();
+    mw.context->config.sc.initial_time.tv_nsec = std::stoi(nsecstr);
 }
 
 void alert_dialog(void* alert_msg)

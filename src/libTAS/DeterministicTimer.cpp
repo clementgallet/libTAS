@@ -173,8 +173,6 @@ void DeterministicTimer::exitFrameBoundary()
     if(shared_config.framerate == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
 
-    getTimes = 0;
-
     if(addedDelay > timeIncrement)
         addedDelay -= timeIncrement;
     else {
@@ -233,6 +231,10 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* Doing the audio mixing here */
+    /* TODO: We advance audio by timeIncrement ticks, but our timer may have
+     * advance by more than that because of sleep or time hack. Is this a
+     * problem?
+     */
     audiocontext.mixAllSources(timeIncrement);
 
     /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
@@ -249,7 +251,7 @@ void DeterministicTimer::enterFrameBoundary()
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
-    if (!shared_config.fastforward && lastEnterValid) {
+    if (!shared_config.fastforward) {
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
@@ -267,7 +269,6 @@ void DeterministicTimer::enterFrameBoundary()
     lastEnterTime = currentTime;
 
     lastEnterTicks = ticks;
-    lastEnterValid = true;
 }
 
 void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
@@ -276,9 +277,7 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
 
 void DeterministicTimer::initialize(void)
 {
-    getTimes = 0;
-    ticks.tv_sec = 0;
-    ticks.tv_nsec = 0;
+    ticks = shared_config.initial_time;
     fractional_part = 0;
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
     lastEnterTicks = ticks;
@@ -288,11 +287,9 @@ void DeterministicTimer::initialize(void)
         sec_gettimes[i] = 0;
     }
 
-    addedDelay.tv_sec = 0;
-    addedDelay.tv_nsec = 0;
-    forceAdvancedTicks = addedDelay;
-    fakeExtraTicks = addedDelay;
-    lastEnterValid = false;
+    addedDelay = {0, 0};
+    forceAdvancedTicks = {0, 0};
+    fakeExtraTicks = {0, 0};
     drawFB = true;
 }
 

@@ -53,15 +53,37 @@ int MovieFile::loadMovie(const std::string& moviefile)
 
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-    int val = static_cast<int>(context->config.sc.keyboard_support);
-    config_prefs.get("keyboard_support", val, val);
-    context->config.sc.keyboard_support = static_cast<bool>(val);
 
-    val = static_cast<int>(context->config.sc.mouse_support);
-    config_prefs.get("mouse_support", val, val);
-    context->config.sc.mouse_support = static_cast<bool>(val);
+	int val;
 
-    config_prefs.get("numControllers", context->config.sc.numControllers, context->config.sc.numControllers);
+	#define GETWITHTYPE(prefs, key, member, type) \
+		val = static_cast<int>(context->config.sc.member); \
+		prefs.get(key, val, val); \
+		context->config.sc.member = static_cast<type>(val)
+
+	GETWITHTYPE(config_prefs, "keyboard_support", keyboard_support, bool);
+	GETWITHTYPE(config_prefs, "mouse_support", mouse_support, bool);
+	GETWITHTYPE(config_prefs, "numControllers", numControllers, int);
+	GETWITHTYPE(config_prefs, "initial_time_sec", initial_time.tv_sec, time_t);
+	GETWITHTYPE(config_prefs, "initial_time_nsec", initial_time.tv_nsec, time_t);
+
+	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
+
+	main_time_prefs.get("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	main_time_prefs.get("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	main_time_prefs.get("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	main_time_prefs.get("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	main_time_prefs.get("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	main_time_prefs.get("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+
+	Fl_Preferences sec_time_prefs(config_prefs, "secondarythread_timetrack");
+
+	sec_time_prefs.get("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	sec_time_prefs.get("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	sec_time_prefs.get("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	sec_time_prefs.get("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	sec_time_prefs.get("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	sec_time_prefs.get("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
 
     /* Update the UI accordingly */
     MainWindow& mw = MainWindow::getInstance();
@@ -108,6 +130,27 @@ void MovieFile::saveMovie(const std::string& moviefile)
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
     config_prefs.set("numControllers", context->config.sc.numControllers);
+	config_prefs.set("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
+	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
+
+	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
+
+	main_time_prefs.set("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	main_time_prefs.set("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	main_time_prefs.set("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	main_time_prefs.set("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	main_time_prefs.set("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	main_time_prefs.set("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+
+	Fl_Preferences sec_time_prefs(config_prefs, "secondarythread_timetrack");
+
+	sec_time_prefs.set("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	sec_time_prefs.set("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	sec_time_prefs.set("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	sec_time_prefs.set("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	sec_time_prefs.set("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	sec_time_prefs.set("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+
     config_prefs.flush();
 
     /* Compress the files into the final movie file */

@@ -75,9 +75,6 @@ public:
 
 private:
 
-    /* Number of getTicks calls of a non main thread */
-    unsigned int getTimes;
-
     /* By how much time did we increment the timer */
     TimeHolder timeIncrement;
 
@@ -102,16 +99,11 @@ private:
      */
     TimeHolder lastEnterTime;
 
-    /* Is the lastEnterTime value valid?
-     * True except on the first frame
-     */
-    bool lastEnterValid;
-
     /* Accumulated delay */
     TimeHolder addedDelay;
 
-    /* Some ticks that we are forced to advance.
-     * TODO: document this
+    /* Some ticks that we are forced to advance. This was used in hourglass but
+     * we are not using it here. TODO: document this
      */
     TimeHolder forceAdvancedTicks;
 
@@ -127,7 +119,7 @@ private:
     int main_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
     int sec_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
 
-    /* Mutex to protect access to all audio objects */
+    /* Mutex to protect access to the ticks value */
     std::mutex mutex;
 };
 
