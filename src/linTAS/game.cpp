@@ -188,13 +188,13 @@ void launchGame(Context* context)
     sendMessage(MSGN_END_INIT);
 
     /* Opening a movie, which imports the inputs and parameters if in read mode,
-     * or prepare a movie if in write mode. Even if we are in NO_RECORDING mode,
-     * we still open a movie to store the input list.
+     * or prepare a movie if in write mode.
      */
     MovieFile movie(context);
-    if ((context->recording == Context::RECORDING_READ_WRITE) ||
-        (context->recording == Context::RECORDING_READ_ONLY)) {
+    if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
+        (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
         movie.loadMovie();
+        context->config.sc.total_framecount = movie.nbFrames();
     }
 
     /* Keep track of the last savestate loaded. This will save us from loading
@@ -285,7 +285,7 @@ void launchGame(Context* context)
                 context->config.sc.running = false;
                 context->config.sc.fastforward = false;
                 context->config.sc_modified = true;
-                context->recording = pseudosavestate.recording;
+                context->config.sc.recording = pseudosavestate.recording;
                 ui.update_ui();
             }
         }
@@ -369,14 +369,14 @@ void launchGame(Context* context)
                     }
                     if (hk.type == HOTKEY_LOADPSEUDOSTATE){
                         if (pseudosavestate.framecount > 0 && (
-                            context->recording == Context::RECORDING_READ_WRITE ||
-                            context->recording == Context::RECORDING_WRITE)) {
+                            context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE ||
+                            context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
                             pseudosavestate.loading = true;
                             context->config.sc.running = true;
                             context->config.sc.fastforward = true;
                             context->config.sc_modified = true;
-                            pseudosavestate.recording = context->recording;
-                            context->recording = Context::RECORDING_READ_WRITE;
+                            pseudosavestate.recording = context->config.sc.recording;
+                            context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
                             context->status = Context::QUITTING;
                             ui.update_ui();
                             ui.update_status();
@@ -395,7 +395,7 @@ void launchGame(Context* context)
                         int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
                         last_savestate_slot = statei;
 
-                        if (context->recording != Context::NO_RECORDING) {
+                        if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
                             /* Building the movie path */
                             std::string moviepath = context->config.savestatedir + '/';
                             moviepath += context->gamename;
@@ -442,8 +442,8 @@ void launchGame(Context* context)
                         moviepath += context->gamename;
                         moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-                        if ((context->recording == Context::RECORDING_READ_WRITE) ||
-                            (context->recording == Context::RECORDING_READ_ONLY)) {
+                        if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
+                            (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
                             /* When loading in read mode, we must check that
                              * the moviefile associated with the savestate is
                              * a prefix of our moviefile.
@@ -476,9 +476,10 @@ void launchGame(Context* context)
                              * be the same as this one due to memory loading, so we
                              * send it.
                              */
-                            context->config.sc_modified = true;
+                            sendMessage(MSGN_CONFIG);
+                            sendData(&context->config.sc, sizeof(SharedConfig));
 
-                            if (context->recording == Context::RECORDING_WRITE) {
+                            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                                 /* When in writing move, we load the movie associated
                                  * with the savestate.
                                  * Check if we are loading the same state we just saved.
@@ -502,16 +503,18 @@ void launchGame(Context* context)
                         ui.update_framecount();
                     }
                     if (hk.type == HOTKEY_READWRITE){
-                        switch (context->recording) {
-                        case Context::RECORDING_WRITE:
-                            context->recording = Context::RECORDING_READ_WRITE;
+                        switch (context->config.sc.recording) {
+                        case SharedConfig::RECORDING_WRITE:
+                            context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+                            context->config.sc.total_framecount = movie.nbFrames()-1;
                             break;
-                        case Context::RECORDING_READ_WRITE:
-                            context->recording = Context::RECORDING_WRITE;
+                        case SharedConfig::RECORDING_READ_WRITE:
+                            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
                             break;
                         default:
                             break;
                         }
+                        context->config.sc_modified = true;
                         ui.update_ui();
                     }
                     if (hk.type == HOTKEY_TOGGLE_ENCODE) {
@@ -588,9 +591,9 @@ void launchGame(Context* context)
         ai.emptyInputs();
 
         /* Record inputs or get inputs from movie file */
-        switch (context->recording) {
-            case Context::NO_RECORDING:
-            case Context::RECORDING_WRITE:
+        switch (context->config.sc.recording) {
+            case SharedConfig::NO_RECORDING:
+            case SharedConfig::RECORDING_WRITE:
 
                 /* Get inputs if we have input focus */
                 if (haveFocus(context)) {
@@ -614,14 +617,14 @@ void launchGame(Context* context)
                     }
                 }
 
-                if (context->recording == Context::RECORDING_WRITE) {
+                if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                     /* Save inputs to moviefile */
                     movie.setInputs(ai);
                 }
                 break;
 
-            case Context::RECORDING_READ_WRITE:
-            case Context::RECORDING_READ_ONLY:
+            case SharedConfig::RECORDING_READ_WRITE:
+            case SharedConfig::RECORDING_READ_ONLY:
                 /* Read inputs from file */
                 if (!movie.getInputs(ai)) {
                     /* TODO: Add an option to decide what to do when movie ends */

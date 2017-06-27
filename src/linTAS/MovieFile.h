@@ -50,6 +50,9 @@ public:
     /* Get the number of frames from a moviefile (needs to load it) */
     int nbFrames(const std::string& moviefile);
 
+    /* Get the number of frames of the current movie */
+    int nbFrames();
+
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);
 

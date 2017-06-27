@@ -40,7 +40,11 @@ namespace libtas {
 #define SAVESTATE_FILESIZE 1024
 static char savestatepath[SAVESTATE_FILESIZE];
 
-static void proceed_commands(void);
+#ifdef LIBTAS_ENABLE_HUD
+static void receive_messages(std::function<void()> draw, RenderHUD& hud);
+#else
+static void receive_messages(std::function<void()> draw);
+#endif
 
 /* Compute real and logical fps */
 static void computeFPS(float& fps, float& lfps)
@@ -104,6 +108,22 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     detTimer.enterFrameBoundary();
 
+    /* Decide if we skip drawing to the screen because of fastforward. We must
+     * call it once per frame boundary, because it raises an internal counter.
+     */
+    bool skipping_draw = skipDraw();
+
+    /* We must save the screen pixels before drawing, in case we
+     * load a savestate here, so we can redraw the screen. Also, we save
+     * before rendering the HUD, so that we can render another HUD after state
+     * loading.
+     */
+    if (!skipping_draw) {
+        if (drawFB && shared_config.save_screenpixels) {
+            getScreenPixels(nullptr, nullptr);
+        }
+    }
+
 #ifdef LIBTAS_ENABLE_HUD
     if (shared_config.hud_encode) {
         if (shared_config.hud_framecount)
@@ -154,14 +174,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 #endif
 
-    if (!skipDraw()) {
-        if (drawFB && shared_config.save_screenpixels) {
-            /* We must save the screen pixels just before drawing, in case we
-             * load a savestate here, so we can redraw the screen.
-             */
-            getScreenPixels(nullptr, nullptr);
-        }
-
+    if (!skipping_draw) {
         draw();
     }
 
@@ -177,7 +190,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
-    proceed_commands();
+#ifdef LIBTAS_ENABLE_HUD
+    receive_messages(draw, hud);
+#else
+    receive_messages(draw);
+#endif
 
     /* Push native SDL events into our emulated event queue */
     pushNativeEvents();
@@ -206,12 +223,15 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     debuglog(LCF_FRAME, "Leave frame boundary");
 }
 
-static void proceed_commands(void)
+#ifdef LIBTAS_ENABLE_HUD
+static void receive_messages(std::function<void()> draw, RenderHUD& hud)
+#else
+static void receive_messages(std::function<void()> draw)
+#endif
 {
-    int message = -1;
     while (1)
     {
-        receiveData(&message, sizeof(int));
+        int message = receiveMessage();
 
         switch (message)
         {
@@ -254,16 +274,38 @@ static void proceed_commands(void)
                     /* Tell the program that the loading succeeded */
                     sendMessage(MSGB_LOADING_SUCCEEDED);
 
-                    if (shared_config.save_screenpixels) {
-                        /* If we restored from a savestate, refresh the screen */
-                        setScreenPixels(gameWindow);
-                    }
+                    /* After loading, the game and the program no longer store
+                     * the same information, so they must communicate to be
+                     * synced again.
+                     */
 
-                    /* We must send again the frame count because it probably has
-                     * changed.
+                    /* We receive the shared config struct */
+                    message = receiveMessage();
+                    MYASSERT(message == MSGN_CONFIG)
+                    receiveData(&shared_config, sizeof(SharedConfig));
+
+                    /* We must send again the frame count because it probably
+                     * has changed.
                      */
                     sendMessage(MSGB_FRAMECOUNT);
                     sendData(&frame_counter, sizeof(unsigned long));
+
+
+                    if (shared_config.save_screenpixels) {
+                        /* If we restored from a savestate, refresh the screen */
+
+                        setScreenPixels(gameWindow);
+
+#ifdef LIBTAS_ENABLE_HUD
+                        if (shared_config.hud_framecount)
+                            hud.renderFrame(frame_counter);
+                        if (shared_config.hud_inputs)
+                            hud.renderInputs(ai);
+#endif
+
+                        draw();
+                    }
+
                 }
 
                 break;

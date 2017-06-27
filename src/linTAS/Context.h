@@ -58,15 +58,6 @@ struct Context {
     /* frame count */
     unsigned long int framecount = 0;
 
-    /* Recording status */
-    enum RecStatus {
-        NO_RECORDING,
-        RECORDING_WRITE,
-        RECORDING_READ_WRITE, // Read until end of movie or toggle
-        RECORDING_READ_ONLY // Always read, toggle deactivated
-    };
-    RecStatus recording = NO_RECORDING;
-
     /* config */
     Config config;
 

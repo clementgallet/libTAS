@@ -23,7 +23,6 @@
 #include "logging.h"
 #include <GL/gl.h>
 #include "../external/SDL1.h" // SDL_Surface
-#include "sdlwindows.h"
 #include <vector>
 #include <cstring> // memcpy
 
@@ -327,12 +326,6 @@ int setScreenPixels(SDL_Window* window) {
     if (useGL) {
         orig::glWindowPos2i(0, 0);
         orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
-        if (SDLver == 1) {
-            NATIVECALL(SDL_GL_SwapBuffers());
-        }
-        if (SDLver == 2) {
-            NATIVECALL(SDL_GL_SwapWindow(window));
-        }
     }
 
     else {
@@ -363,8 +356,6 @@ int setScreenPixels(SDL_Window* window) {
 
             /* Unlock surface */
             orig::SDL_UnlockSurface(surf1);
-
-            NATIVECALL(SDL_Flip(surf1));
         }
 
         if (SDLver == 2) {
@@ -383,7 +374,6 @@ int setScreenPixels(SDL_Window* window) {
             orig::SDL_UpdateTexture(texture, NULL, winpixels.data(), pitch);
             orig::SDL_RenderCopy(renderer, texture, NULL, NULL);
             orig::SDL_DestroyTexture(texture);
-            NATIVECALL(SDL_RenderPresent(renderer));
         }
     }
 

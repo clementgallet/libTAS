@@ -308,6 +308,11 @@ int MovieFile::nbFrames(const std::string& moviefile)
     return frame_count;
 }
 
+int MovieFile::nbFrames()
+{
+	return input_list.size();
+}
+
 int MovieFile::setInputs(const AllInputs& inputs)
 {
     /* Check that we are writing to the next frame */
@@ -349,7 +354,7 @@ int MovieFile::getInputs(AllInputs& inputs)
 
 void MovieFile::close()
 {
-    if (context->recording != Context::NO_RECORDING)
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING)
         saveMovie();
 }
 

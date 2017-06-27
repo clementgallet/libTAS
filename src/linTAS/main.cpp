@@ -72,7 +72,7 @@ int main(int argc, char **argv)
                 abspath = realpath(optarg, buf);
                 if (abspath) {
                     context.config.moviefile = abspath;
-                    context.recording = (c == 'r')?Context::RECORDING_READ_WRITE:Context::RECORDING_WRITE;
+                    context.config.sc.recording = (c == 'r')?SharedConfig::RECORDING_READ_WRITE:SharedConfig::RECORDING_WRITE;
                 }
                 break;
             case 'd':

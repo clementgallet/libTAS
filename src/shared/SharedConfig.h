@@ -38,6 +38,17 @@ class SharedConfig {
         /* Is fastforward enabled */
         bool fastforward = false;
 
+        /* Recording status */
+        enum RecStatus {
+            NO_RECORDING,
+            RECORDING_WRITE,
+            RECORDING_READ_WRITE, // Read until end of movie or toggle
+            RECORDING_READ_ONLY // Always read, toggle deactivated
+        };
+        RecStatus recording = NO_RECORDING;
+
+        int total_framecount = 0;
+
         /* Log status */
         enum LogStatus {
             NO_LOGGING,

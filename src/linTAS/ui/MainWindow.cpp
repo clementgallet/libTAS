@@ -458,17 +458,17 @@ void MainWindow::update_ui()
     fastforwardcheck->value(context->config.sc.fastforward);
 
     /* Update recording state */
-    switch (context->recording) {
-      case Context::NO_RECORDING:
+    switch (context->config.sc.recording) {
+      case SharedConfig::NO_RECORDING:
           movie_norec->setonly();
           break;
-      case Context::RECORDING_WRITE:
+      case SharedConfig::RECORDING_WRITE:
           movie_w->setonly();
           break;
-      case Context::RECORDING_READ_WRITE:
+      case SharedConfig::RECORDING_READ_WRITE:
           movie_rw->setonly();
           break;
-      case Context::RECORDING_READ_ONLY:
+      case SharedConfig::RECORDING_READ_ONLY:
           movie_ro->setonly();
           break;
     }
@@ -499,7 +499,7 @@ void MainWindow::update_framecount()
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
-    if ((context->recording == Context::RECORDING_WRITE) && (context->framecount > 0)) {
+    if ((context->config.sc.recording == SharedConfig::RECORDING_WRITE) && (context->framecount > 0)) {
         std::string totalframestr = std::to_string(context->framecount - 1);
         totalframecount->value(totalframestr.c_str());
     }
@@ -720,13 +720,13 @@ void recording_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
     if (mw.movie_norec->value() == 1)
-        mw.context->recording = Context::NO_RECORDING;
+        mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
     if (mw.movie_w->value() == 1)
-        mw.context->recording = Context::RECORDING_WRITE;
+        mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
     if (mw.movie_rw->value() == 1)
-        mw.context->recording = Context::RECORDING_READ_WRITE;
+        mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
     if (mw.movie_ro->value() == 1)
-        mw.context->recording = Context::RECORDING_READ_ONLY;
+        mw.context->config.sc.recording = SharedConfig::RECORDING_READ_ONLY;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING

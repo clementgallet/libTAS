@@ -114,6 +114,16 @@ void RenderHUD::renderFrame(int framecount)
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
     std::string text = std::to_string(framecount);
+    switch (shared_config.recording) {
+    case SharedConfig::RECORDING_READ_WRITE:
+    case SharedConfig::RECORDING_READ_ONLY:
+        text.append("/").append(std::to_string(shared_config.total_framecount));
+        break;
+    case SharedConfig::RECORDING_WRITE:
+    case SharedConfig::NO_RECORDING:
+    default:
+        break;
+    }
     renderText(text.c_str(), fg_color, bg_color, 2, 2);
 }
 

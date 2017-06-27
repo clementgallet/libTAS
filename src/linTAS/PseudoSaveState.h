@@ -20,12 +20,12 @@
 #ifndef LINTAS_PSEUDOSAVESTATE_H_INCLUDED
 #define LINTAS_PSEUDOSAVESTATE_H_INCLUDED
 
-#include "Context.h"
+#include "../shared/SharedConfig.h"
 
 struct PseudoSaveState {
     unsigned long int framecount = 0;
     bool loading = false;
-    Context::RecStatus recording;
+    SharedConfig::RecStatus recording;
 };
 
 #endif
