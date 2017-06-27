@@ -491,6 +491,7 @@ void launchGame(Context* context)
                                 }
                             }
 
+                            last_savestate_slot = statei;
                             message = receiveMessage();
                         }
 
