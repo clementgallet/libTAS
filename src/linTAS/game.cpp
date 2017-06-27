@@ -510,7 +510,14 @@ void launchGame(Context* context)
                             context->config.sc.total_framecount = movie.nbFrames()-1;
                             break;
                         case SharedConfig::RECORDING_READ_WRITE:
-                            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+                            /* Check if we reached the end of the movie already. */
+                            if (context->framecount > (context->config.sc.total_framecount + 1)) {
+                                std::string* alert_str = new std::string("Cannot write to a movie after its end");
+                                Fl::awake(alert_dialog, alert_str);
+                            }
+                            else {
+                                context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+                            }
                             break;
                         default:
                             break;

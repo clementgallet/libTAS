@@ -47,7 +47,7 @@ class SharedConfig {
         };
         RecStatus recording = NO_RECORDING;
 
-        int total_framecount = 0;
+        unsigned long int total_framecount = 0;
 
         /* Log status */
         enum LogStatus {
