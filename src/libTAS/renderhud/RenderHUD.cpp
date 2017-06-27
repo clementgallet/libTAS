@@ -109,22 +109,30 @@ std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Colo
     return bg_surf;
 }
 
-void RenderHUD::renderFrame(int framecount)
+void RenderHUD::renderFrame(unsigned long int framecount)
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
-    std::string text = std::to_string(framecount);
+    std::string framestr = std::to_string(framecount);
     switch (shared_config.recording) {
     case SharedConfig::RECORDING_READ_WRITE:
     case SharedConfig::RECORDING_READ_ONLY:
-        text.append("/").append(std::to_string(shared_config.total_framecount));
+        framestr.append("/").append(std::to_string(shared_config.total_framecount));
         break;
     case SharedConfig::RECORDING_WRITE:
     case SharedConfig::NO_RECORDING:
     default:
         break;
     }
-    renderText(text.c_str(), fg_color, bg_color, 2, 2);
+    renderText(framestr.c_str(), fg_color, bg_color, 2, 2);
+}
+
+void RenderHUD::renderNonDrawFrame(unsigned long int nondraw_framecount)
+{
+    Color red_color = {255, 0, 0, 0};
+    Color bg_color = {0, 0, 0, 0};
+    std::string nondraw_framestr = std::to_string(nondraw_framecount);
+    renderText(nondraw_framestr.c_str(), red_color, bg_color, 2, 30);
 }
 
 void RenderHUD::renderInputs(AllInputs& ai)

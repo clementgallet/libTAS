@@ -40,6 +40,9 @@ namespace libtas {
 #define SAVESTATE_FILESIZE 1024
 static char savestatepath[SAVESTATE_FILESIZE];
 
+/* Store the number of nondraw frames */
+static unsigned int nondraw_frame_counter = 0;
+
 #ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
 #else
@@ -103,6 +106,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 {
     debuglog(LCF_FRAME, "Enter frame boundary");
 
+    if (!drawFB)
+        nondraw_frame_counter++;
+
     if (!isMainThread())
         debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
 
@@ -126,8 +132,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (shared_config.hud_encode) {
-        if (shared_config.hud_framecount)
+        if (shared_config.hud_framecount) {
             hud.renderFrame(frame_counter);
+            hud.renderNonDrawFrame(nondraw_frame_counter);
+        }
         if (shared_config.hud_inputs)
             hud.renderInputs(ai);
     }
@@ -167,8 +175,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!shared_config.hud_encode) {
-        if (shared_config.hud_framecount)
+        if (shared_config.hud_framecount) {
             hud.renderFrame(frame_counter);
+            hud.renderNonDrawFrame(nondraw_frame_counter);
+        }
         if (shared_config.hud_inputs)
             hud.renderInputs(ai);
     }
@@ -297,8 +307,10 @@ static void receive_messages(std::function<void()> draw)
                         setScreenPixels(gameWindow);
 
 #ifdef LIBTAS_ENABLE_HUD
-                        if (shared_config.hud_framecount)
+                        if (shared_config.hud_framecount) {
                             hud.renderFrame(frame_counter);
+                            hud.renderNonDrawFrame(nondraw_frame_counter);
+                        }
                         if (shared_config.hud_inputs)
                             hud.renderInputs(ai);
 #endif

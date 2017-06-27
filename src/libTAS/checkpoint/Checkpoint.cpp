@@ -33,6 +33,8 @@
 #include <cstring>
 #include <csignal>
 #include <X11/Xlibint.h>
+#include <X11/Xlib-xcb.h>
+#include "../../external/xcbint.h"
 #include "../sdlwindows.h"
 #include "ReservedMemory.h"
 
@@ -582,6 +584,11 @@ void Checkpoint::handler(int signum)
 {
     /* Access the X Window identifier from the SDL_Window struct */
     Display *display = getXDisplay();
+    if (!display) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Could not access connection to X11");
+        return;
+    }
+
 
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
@@ -601,33 +608,34 @@ void Checkpoint::handler(int signum)
          * which will be preserved.
          */
 
-        uint64_t last_request_read, request;
-
-        if (display) {
 #ifdef X_DPY_GET_LAST_REQUEST_READ
-            last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
-            request = X_DPY_GET_REQUEST(display);
+        uint64_t last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
+        uint64_t request = X_DPY_GET_REQUEST(display);
 #else
-            last_request_read = static_cast<uint64_t>(display->last_request_read);
-            request = static_cast<uint64_t>(display->request);
+        uint64_t last_request_read = static_cast<uint64_t>(display->last_request_read);
+        uint64_t request = static_cast<uint64_t>(display->request);
 #endif
-        // Save also dpy->xcb->last_flushed ?
-        }
+
+        /* Copy the entire xcb connection struct */
+        xcb_connection_t xcb_conn;
+        xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
+        memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
 
         readAllAreas();
         /* restoreInProgress was overwritten, putting the right value again */
         ThreadManager::restoreInProgress = true;
 
         /* Restoring the display values */
-        if (display) {
 #ifdef X_DPY_SET_LAST_REQUEST_READ
-            X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
-            X_DPY_SET_REQUEST(display, request);
+        X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
+        X_DPY_SET_REQUEST(display, request);
 #else
-            display->last_request_read = static_cast<unsigned long>(last_request_read);
-            display->request = static_cast<unsigned long>(request);
+        display->last_request_read = static_cast<unsigned long>(last_request_read);
+        display->request = static_cast<unsigned long>(request);
 #endif
-        }
+
+        /* Restore the entire xcb connection struct */
+        memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
     }
     else {
         writeAllAreas();
