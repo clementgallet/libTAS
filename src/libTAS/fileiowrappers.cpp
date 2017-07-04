@@ -30,7 +30,7 @@
 #include <fstream>
 #include <iostream>
 #include <fcntl.h>
-#include <set>
+#include <map>
 #include <string>
 #include <sys/stat.h>
 #include <errno.h>
@@ -40,36 +40,80 @@ namespace libtas {
 
 /*** Helper functions ***/
 
-static std::set<std::string> savefiles;
+static std::map<std::string,std::pair<char*,size_t>> savefile_buffers;
 
 /*
- * Copy the file detected as a savefile in another file if not done already,
- * and returns the name of the new file.
+ * Create a memory stream with a copy of the content of the file using
+ * open_memstream. Save the base pointer and size into a map because we may
+ * need them again if the game open the file again in read or write mode.
+ * If we already opened this file, don't copy the original content of the file
+ * but the content of the old memory buffer.
  */
-static std::string copyFile(const char* source)
+static FILE* get_memstream(const char* source, const char* modes)
 {
     std::string sstr(source);
-    std::string dest = sstr + ".libTAS";
+    FILE* memstream;
+
+    /* Do we need to overwrite the content of the file ? */
+    bool overwrite = (strstr(modes, "w") != nullptr);
 
     /*
-     * If we already register the savefile, we already have
-     * copied once, so we don't want to do it again.
+     * If we already register the savefile, we must copy the content of the
+     * old buffer to the new stream.
      */
-    if (savefiles.find(sstr) != savefiles.end())
-        return dest;
+    if (savefile_buffers.find(sstr) != savefile_buffers.end()) {
 
-    GlobalOwnCode goc;
+        /* Open a new memory stream using pointers to the previous memory buffer
+         * and size. Pointers are not updated until fflush or fclose, so we
+         * still have access to the old buffer.
+         */
+        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
 
-    std::ifstream ss(source, std::ios::binary);
-    std::ofstream ds(dest, std::ios::binary);
+        if (!overwrite) {
+            /* Append the content of the old buffer to the stream */
+            fwrite(savefile_buffers[sstr].first, 1, savefile_buffers[sstr].second, memstream);
+        }
 
-    if (!ss.fail()) {
-        ds << ss.rdbuf();
+        /* Free the old buffer */
+        free(savefile_buffers[sstr].first);
+
+    }
+    else {
+        /* Create an entry in our map */
+        savefile_buffers[sstr].first = 0;
+        savefile_buffers[sstr].second = 0;
+
+        /* Open a new memory stream using pointers to these entries */
+        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
+
+        if (!overwrite) {
+            /* Append the content of the file to the stream if the file exists */
+            struct stat filestat;
+            int rv = stat(source, &filestat);
+
+            if (rv == 0) {
+                /* The file exists, copying the content to the stream */
+                GlobalNative gn;
+
+                FILE* f = fopen(source, "rb");
+
+                if (f != nullptr) {
+                    char tmp_buf[4096];
+                    size_t s;
+                    do {
+                        s = fread(tmp_buf, 1, 4096, f);
+                        fwrite(tmp_buf, 1, s, memstream);
+                    } while(s != 0);
+                }
+            }
+        }
     }
 
-    savefiles.insert(sstr);
+    /* If not in append mode, seek to the beginning of the stream */
+    if (strstr(modes, "a") == nullptr)
+        fseek(memstream, 0, SEEK_SET);
 
-    return dest;
+    return memstream;
 }
 
 /* Check if the file open permission allows for write operation */
@@ -128,15 +172,15 @@ static bool isSaveFile(const char *file, const char *modes)
          * before it had time to initialize, and it seems clearing it
          * is enough to make it usable.
          */
-        savefiles.clear();
+        savefile_buffers.clear();
         inited = 1;
     }
 
-    /* If the file has already been registered as a savefile, open the duplicate file,
-     * even if the open is read-only.
+    /* If the file has already been registered as a savefile, open our memory
+     * buffer, even if the open is read-only.
      */
     std::string sstr(file);
-    if (savefiles.find(sstr) != savefiles.end())
+    if (savefile_buffers.find(sstr) != savefile_buffers.end())
         return true;
 
     /* If the file was not registered, check if the opening is writeable. */
@@ -162,13 +206,9 @@ SDL_RWops *SDL_RWFromFile(const char *file, const char *mode)
     SDL_RWops* handle;
 
     if (!GlobalState::isOwnCode() && isSaveFile(file, mode)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        NATIVECALL(handle = orig::SDL_RWFromFile(newfile.c_str(), mode));
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected (not supported)");
     }
-    else {
-        NATIVECALL(handle = orig::SDL_RWFromFile(file, mode));
-    }
+    NATIVECALL(handle = orig::SDL_RWFromFile(file, mode));
 
     return handle;
 }
@@ -185,6 +225,9 @@ FILE *fopen (const char *filename, const char *modes)
 {
     LINK_NAMESPACE(fopen, nullptr);
 
+    if (GlobalState::isNative())
+        return orig::fopen(filename, modes);
+
     /* iostream functions are banned inside this function, I'm not sure why.
      * This is the case for every open function.
      * Generating debug message using stdio.
@@ -198,8 +241,7 @@ FILE *fopen (const char *filename, const char *modes)
 
     if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(filename);
-        f = orig::fopen(newfile.c_str(), modes);
+        f = get_memstream(filename, modes);
     }
     else
         f = orig::fopen(filename, modes);
@@ -211,6 +253,9 @@ FILE *fopen64 (const char *filename, const char *modes)
 {
     LINK_NAMESPACE(fopen64, nullptr);
 
+    if (GlobalState::isNative())
+        return orig::fopen64(filename, modes);
+
     if (filename)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
     else
@@ -220,8 +265,7 @@ FILE *fopen64 (const char *filename, const char *modes)
 
     if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(filename);
-        f = orig::fopen64(newfile.c_str(), modes);
+        f = get_memstream(filename, modes);
     }
     else
         f = orig::fopen64(filename, modes);
@@ -232,6 +276,10 @@ FILE *fopen64 (const char *filename, const char *modes)
 int fclose (FILE *stream)
 {
     LINK_NAMESPACE(fclose, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::fclose(stream);
+
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     int rv = orig::fclose(stream);
@@ -267,8 +315,8 @@ static bool isWriteable(int oflag)
 
 static bool isSaveFile(const char *file, int oflag)
 {
-    static bool inited = 0;
-    if (!inited) {
+    // static bool inited = 0;
+    // if (!inited) {
         /*
          * Normally, we shouldn't have to clear the savefiles set,
          * as it is clearly during creation. However, games break without
@@ -276,15 +324,15 @@ static bool isSaveFile(const char *file, int oflag)
          * before it had time to initialize, and it seems clearing it
          * is enough to make it usable.
          */
-        savefiles.clear();
-        inited = 1;
-    }
+    //     savefiles.clear();
+    //     inited = 1;
+    // }
 
     /* If the file has already been registered as a savefile, open the duplicate file,
      * even if the open is read-only.
      */
     std::string sstr(file);
-    if (savefiles.find(sstr) != savefiles.end())
+    if (savefile_buffers.find(sstr) != savefile_buffers.end())
         return true;
 
     /* Check if file is writeable */
@@ -297,9 +345,7 @@ static bool isSaveFile(const char *file, int oflag)
 int open (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    int fd;
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -310,13 +356,18 @@ int open (const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
+    if (GlobalState::isNative())
+        return orig::open(file, oflag, mode);
+
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    int fd;
+
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        fd = orig::open(newfile.c_str(), oflag, mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        fd = orig::open(file, oflag, mode);
+
+    fd = orig::open(file, oflag, mode);
 
     return fd;
 }
@@ -324,9 +375,7 @@ int open (const char *file, int oflag, ...)
 int open64 (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(open64, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    int fd;
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -337,13 +386,18 @@ int open64 (const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
+    if (GlobalState::isNative())
+        return orig::open64(file, oflag, mode);
+
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    int fd;
+
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        fd = orig::open64(newfile.c_str(), oflag, mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        fd = orig::open64(file, oflag, mode);
+
+    fd = orig::open64(file, oflag, mode);
 
     return fd;
 }
@@ -351,9 +405,7 @@ int open64 (const char *file, int oflag, ...)
 int openat (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    int newfd;
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -364,13 +416,18 @@ int openat (int fd, const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
+    if (GlobalState::isNative())
+        return orig::openat(fd, file, oflag, mode);
+
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    int newfd;
+
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        newfd = orig::openat(fd, newfile.c_str(), oflag, mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        newfd = orig::openat(fd, file, oflag, mode);
+
+    newfd = orig::openat(fd, file, oflag, mode);
 
     return newfd;
 }
@@ -378,9 +435,7 @@ int openat (int fd, const char *file, int oflag, ...)
 int openat64 (int fd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat64, nullptr);
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    int newfd;
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
@@ -391,13 +446,18 @@ int openat64 (int fd, const char *file, int oflag, ...)
         va_end(arg_list);
     }
 
+    if (GlobalState::isNative())
+        return orig::openat64(fd, file, oflag, mode);
+
+    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    int newfd;
+
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        newfd = orig::openat64(fd, newfile.c_str(), oflag, mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        newfd = orig::openat64(fd, file, oflag, mode);
+
+    newfd = orig::openat64(fd, file, oflag, mode);
 
     return newfd;
 }
@@ -405,17 +465,19 @@ int openat64 (int fd, const char *file, int oflag, ...)
 int creat (const char *file, mode_t mode)
 {
     LINK_NAMESPACE(creat, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::creat(file, mode);
+
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd;
 
     if (!GlobalState::isOwnCode()) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        fd = orig::creat(newfile.c_str(), mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        fd = orig::creat(file, mode);
+
+    fd = orig::creat(file, mode);
 
     return fd;
 }
@@ -423,17 +485,19 @@ int creat (const char *file, mode_t mode)
 int creat64 (const char *file, mode_t mode)
 {
     LINK_NAMESPACE(creat64, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::creat64(file, mode);
+
     debuglog(LCF_FILEIO, __func__, " call with file ", file);
 
     int fd;
 
     if (!GlobalState::isOwnCode()) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
-        std::string newfile = copyFile(file);
-        fd = orig::creat64(newfile.c_str(), mode);
+        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
     }
-    else
-        fd = orig::creat64(file, mode);
+
+    fd = orig::creat64(file, mode);
 
     return fd;
 }
@@ -441,6 +505,10 @@ int creat64 (const char *file, mode_t mode)
 int close (int fd)
 {
     LINK_NAMESPACE(close, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::close(fd);
+
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     int rv = orig::close(fd);
