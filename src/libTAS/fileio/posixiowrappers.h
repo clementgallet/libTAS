@@ -17,34 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_FILEIO_H_INCLUDED
-#define LIBTAS_FILEIO_H_INCLUDED
+#ifndef LIBTAS_POSIXIO_H_INCLUDED
+#define LIBTAS_POSIXIO_H_INCLUDED
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
-#include "../external/SDL1.h"
-#include <SDL2/SDL.h>
-#include "global.h"
-#include <cstdio>
+#include "../global.h"
+#include <sys/types.h> // mode_t
 
 namespace libtas {
-
-/**
- *  \name RWFrom functions
- *
- *  Functions to create SDL_RWops structures from various data streams.
- */
-/* @{ */
-
-OVERRIDE SDL_RWops *SDL_RWFromFile(const char *file, const char *mode);
-
-
-/* Open a file and create a new stream for it. */
-OVERRIDE FILE *fopen (const char *filename, const char *modes);
-OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
-
-/* Close STREAM. */
-OVERRIDE int fclose (FILE *stream);
 
 /* Open FILE and return a new file descriptor for it, or -1 on error.
    OFLAG determines the type of access used.  If O_CREAT or O_TMPFILE is set

@@ -25,7 +25,6 @@
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates
--- Store content of savefiles when savestating
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
