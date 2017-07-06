@@ -25,6 +25,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 namespace libtas {
 

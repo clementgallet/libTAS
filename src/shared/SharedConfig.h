@@ -21,6 +21,7 @@
 #define LIBTAS_SHAREDCONFIG_H_INCLUDED
 
 #include "lcf.h"
+#include <time.h>
 #ifdef LIBTAS_ENABLE_AVDUMPING
 extern "C" {
 #include <libavcodec/avcodec.h> // for AVCodecID struct
