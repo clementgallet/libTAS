@@ -173,6 +173,7 @@ void launchGame(Context* context)
     if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
         (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
         movie.loadMovie();
+        context->config.sc.movie_framecount = movie.nbFrames();
     }
 
     /* Send informations to the game */

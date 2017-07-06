@@ -57,16 +57,17 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	int val;
 
 	#define GETWITHTYPE(prefs, key, member, type) \
-		val = static_cast<int>(context->config.sc.member); \
+		val = static_cast<int>(member); \
 		prefs.get(key, val, val); \
-		context->config.sc.member = static_cast<type>(val)
+		member = static_cast<type>(val)
 
+	unsigned long int movie_framecount = 0;
 	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned long int);
-	GETWITHTYPE(config_prefs, "keyboard_support", keyboard_support, bool);
-	GETWITHTYPE(config_prefs, "mouse_support", mouse_support, bool);
-	GETWITHTYPE(config_prefs, "numControllers", numControllers, int);
-	GETWITHTYPE(config_prefs, "initial_time_sec", initial_time.tv_sec, time_t);
-	GETWITHTYPE(config_prefs, "initial_time_nsec", initial_time.tv_nsec, time_t);
+	GETWITHTYPE(config_prefs, "keyboard_support", context->config.sc.keyboard_support, bool);
+	GETWITHTYPE(config_prefs, "mouse_support", context->config.sc.mouse_support, bool);
+	GETWITHTYPE(config_prefs, "numControllers", context->config.sc.numControllers, int);
+	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
+	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
 
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
 
@@ -105,9 +106,9 @@ int MovieFile::loadMovie(const std::string& moviefile)
         }
     }
 
-	if (context->config.sc.movie_framecount != input_list.size()) {
+	if (movie_framecount != input_list.size()) {
 		std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
-		context->config.sc.movie_framecount = input_list.size();
+		movie_framecount = input_list.size();
 	}
 
     input_stream.close();
