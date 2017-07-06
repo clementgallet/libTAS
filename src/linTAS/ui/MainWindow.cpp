@@ -144,11 +144,11 @@ void MainWindow::build(Context* c)
     framecount->value("0");
     framecount->color(FL_LIGHT1);
 
-    totalframecount = new Fl_Output(140, 140, 60, 30);
-    totalframecount->color(FL_LIGHT1);
+    movie_framecount = new Fl_Output(140, 140, 60, 30);
+    movie_framecount->color(FL_LIGHT1);
     MovieFile movie(context);
-    std::string totalframestr = std::to_string(movie.nbFrames(context->config.moviefile));
-    totalframecount->value(totalframestr.c_str());
+    std::string movieframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+    movie_framecount->value(movieframestr.c_str());
 
     /* Initial time */
     initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
@@ -410,6 +410,12 @@ void MainWindow::update_status()
                 if (config_item) config_item->activate();
             }
 #endif
+            {
+                MovieFile movie(context);
+                std::string movieframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+                movie_framecount->value(movieframestr.c_str());
+                movie_framecount->activate();
+            }
             break;
         case Context::STARTING:
             launch->deactivate();
@@ -425,6 +431,10 @@ void MainWindow::update_status()
             if (item) item->deactivate();
             initial_time_sec->deactivate();
             initial_time_nsec->deactivate();
+            if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
+                (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
+                movie_framecount->deactivate();
+            }
             break;
         case Context::ACTIVE:
             if (context->attach_gdb) {
@@ -501,10 +511,6 @@ void MainWindow::update_framecount()
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
-    if ((context->config.sc.recording == SharedConfig::RECORDING_WRITE) && (context->framecount > 0)) {
-        std::string totalframestr = std::to_string(context->framecount - 1);
-        totalframecount->value(totalframestr.c_str());
-    }
 
     Fl::unlock();
     Fl::awake();
@@ -689,8 +695,8 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
         MovieFile movie(mw.context);
-        std::string totalframestr = std::to_string(movie.nbFrames(mw.context->config.moviefile));
-        mw.totalframecount->value(totalframestr.c_str());
+        std::string movieframestr = std::to_string(movie.nbFrames(mw.context->config.moviefile));
+        mw.movie_framecount->value(movieframestr.c_str());
     }
 }
 

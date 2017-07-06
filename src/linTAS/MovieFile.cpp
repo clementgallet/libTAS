@@ -61,6 +61,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 		prefs.get(key, val, val); \
 		context->config.sc.member = static_cast<type>(val)
 
+	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned long int);
 	GETWITHTYPE(config_prefs, "keyboard_support", keyboard_support, bool);
 	GETWITHTYPE(config_prefs, "mouse_support", mouse_support, bool);
 	GETWITHTYPE(config_prefs, "numControllers", numControllers, int);
@@ -104,6 +105,11 @@ int MovieFile::loadMovie(const std::string& moviefile)
         }
     }
 
+	if (context->config.sc.movie_framecount != input_list.size()) {
+		std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
+		context->config.sc.movie_framecount = input_list.size();
+	}
+
     input_stream.close();
 	return 0;
 }
@@ -126,7 +132,7 @@ void MovieFile::saveMovie(const std::string& moviefile)
 
     /* Save some parameters into the config file */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-    config_prefs.set("frame_count", static_cast<int>(context->framecount));
+    config_prefs.set("frame_count", static_cast<int>(input_list.size()));
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
     config_prefs.set("numControllers", context->config.sc.numControllers);

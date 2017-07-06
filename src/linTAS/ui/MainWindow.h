@@ -92,7 +92,7 @@ class MainWindow {
         Fl_Check_Button *mutecheck;
 
         Fl_Output *framecount;
-        Fl_Output *totalframecount;
+        Fl_Output *movie_framecount;
 
         Fl_Input *initial_time_sec;
         Fl_Input *initial_time_nsec;

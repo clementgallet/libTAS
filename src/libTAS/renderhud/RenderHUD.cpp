@@ -117,7 +117,7 @@ void RenderHUD::renderFrame(unsigned long int framecount)
     switch (shared_config.recording) {
     case SharedConfig::RECORDING_READ_WRITE:
     case SharedConfig::RECORDING_READ_ONLY:
-        framestr.append("/").append(std::to_string(shared_config.total_framecount));
+        framestr.append("/").append(std::to_string(shared_config.movie_framecount));
         break;
     case SharedConfig::RECORDING_WRITE:
     case SharedConfig::NO_RECORDING:

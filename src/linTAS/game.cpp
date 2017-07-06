@@ -166,6 +166,15 @@ void launchGame(Context* context)
         system(attach_gdb.c_str());
     }
 
+    /* Opening a movie, which imports the inputs and parameters if in read mode,
+     * or prepare a movie if in write mode.
+     */
+    MovieFile movie(context);
+    if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
+        (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
+        movie.loadMovie();
+    }
+
     /* Send informations to the game */
 
     /* Send shared config */
@@ -186,16 +195,6 @@ void launchGame(Context* context)
 
     /* End message */
     sendMessage(MSGN_END_INIT);
-
-    /* Opening a movie, which imports the inputs and parameters if in read mode,
-     * or prepare a movie if in write mode.
-     */
-    MovieFile movie(context);
-    if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
-        (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
-        movie.loadMovie();
-        context->config.sc.total_framecount = movie.nbFrames();
-    }
 
     /* Keep track of the last savestate loaded. This will save us from loading
      * a moviefile if we don't have to.
@@ -507,11 +506,11 @@ void launchGame(Context* context)
                         switch (context->config.sc.recording) {
                         case SharedConfig::RECORDING_WRITE:
                             context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
-                            context->config.sc.total_framecount = movie.nbFrames()-1;
+                            context->config.sc.movie_framecount = movie.nbFrames();
                             break;
                         case SharedConfig::RECORDING_READ_WRITE:
                             /* Check if we reached the end of the movie already. */
-                            if (context->framecount > (context->config.sc.total_framecount + 1)) {
+                            if (context->framecount > context->config.sc.movie_framecount) {
                                 std::string* alert_str = new std::string("Cannot write to a movie after its end");
                                 Fl::awake(alert_dialog, alert_str);
                             }
