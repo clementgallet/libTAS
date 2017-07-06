@@ -61,13 +61,20 @@ int MovieFile::loadMovie(const std::string& moviefile)
 		prefs.get(key, val, val); \
 		member = static_cast<type>(val)
 
-	unsigned long int movie_framecount = 0;
-	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned long int);
+	unsigned int movie_framecount = 0;
+	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned int);
 	GETWITHTYPE(config_prefs, "keyboard_support", context->config.sc.keyboard_support, bool);
 	GETWITHTYPE(config_prefs, "mouse_support", context->config.sc.mouse_support, bool);
 	GETWITHTYPE(config_prefs, "numControllers", context->config.sc.numControllers, int);
 	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
 	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
+
+	/* We must load the rerecord count only when this is the initial movie
+	 * loading (not a loading of a savestate movie)
+	 */
+	if (context->rerecord_count == 0) {
+		GETWITHTYPE(config_prefs, "rerecord_count", context->rerecord_count, unsigned int);
+	}
 
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
 
@@ -139,6 +146,7 @@ void MovieFile::saveMovie(const std::string& moviefile)
     config_prefs.set("numControllers", context->config.sc.numControllers);
 	config_prefs.set("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
 	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
+	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
 
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
 

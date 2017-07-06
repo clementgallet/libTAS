@@ -23,7 +23,7 @@
 #include "../shared/SharedConfig.h"
 
 struct PseudoSaveState {
-    unsigned long int framecount = 0;
+    unsigned int framecount = 0;
     bool loading = false;
     SharedConfig::RecStatus recording;
 };

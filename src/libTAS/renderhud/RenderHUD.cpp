@@ -109,7 +109,7 @@ std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Colo
     return bg_surf;
 }
 
-void RenderHUD::renderFrame(unsigned long int framecount)
+void RenderHUD::renderFrame(unsigned int framecount)
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -127,7 +127,7 @@ void RenderHUD::renderFrame(unsigned long int framecount)
     renderText(framestr.c_str(), fg_color, bg_color, 2, 2);
 }
 
-void RenderHUD::renderNonDrawFrame(unsigned long int nondraw_framecount)
+void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
 {
     Color red_color = {255, 0, 0, 0};
     Color bg_color = {0, 0, 0, 0};

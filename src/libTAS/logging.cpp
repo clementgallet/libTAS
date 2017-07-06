@@ -110,7 +110,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 }
 
 /* Print long integers as string for shorter ids. Use base64 */
-const char* stringify(unsigned long int id)
+const char* stringify(pthread_t id)
 {
     static char string[17] = {0};
     int idx = 0;

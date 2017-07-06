@@ -63,6 +63,9 @@ void launchGame(Context* context)
     /* Unvalidate the game window id */
     context->game_window = 0;
 
+    /* Reset the rerecord count */
+    context->rerecord_count = 0;
+
     /* Extract the game executable name from the game executable path */
     size_t sep = context->gamepath.find_last_of("/");
     if (sep != std::string::npos)
@@ -489,6 +492,9 @@ void launchGame(Context* context)
                                     /* Load the movie file */
                                     movie.loadMovie(moviepath);
                                 }
+
+                                /* Increment rerecord count */
+                                context->rerecord_count++;
                             }
 
                             last_savestate_slot = statei;

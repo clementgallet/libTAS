@@ -57,7 +57,7 @@ namespace libtas {
  * recognize. In practice, it is base64 convertion.
  * Used by pthread ids.
  */
-const char* stringify(unsigned long int id);
+const char* stringify(pthread_t id);
 
 /* Print the debug message using stdio functions */
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);

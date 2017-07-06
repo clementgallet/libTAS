@@ -56,7 +56,7 @@ struct Context {
     int inputs_focus = FOCUS_GAME;
 
     /* frame count */
-    unsigned long int framecount = 0;
+    unsigned int framecount = 0;
 
     /* config */
     Config config;
@@ -75,6 +75,9 @@ struct Context {
 
     /* Attaching gdb? */
     bool attach_gdb = false;
+
+    /* Rerecord count */
+    unsigned int rerecord_count = 0;
 };
 
 #endif

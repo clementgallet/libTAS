@@ -69,10 +69,10 @@ class RenderHUD
         virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {};
 
         /* Display the frame count on screen */
-        void renderFrame(unsigned long int framecount);
+        void renderFrame(unsigned int framecount);
 
         /* Display nondraw frame count on screen */
-        void renderNonDrawFrame(unsigned long int nondraw_framecount);
+        void renderNonDrawFrame(unsigned int nondraw_framecount);
 
         /* Display the inputs on screen */
         void renderInputs(AllInputs& ai);
