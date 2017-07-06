@@ -32,7 +32,7 @@ static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_w
 
 MovieFile::MovieFile(Context* c) : context(c) {}
 
-int MovieFile::loadMovie(const std::string& moviefile)
+int MovieFile::extractMovie(const std::string& moviefile)
 {
 	/* Check that the moviefile exists */
 	struct stat sb;
@@ -50,6 +50,21 @@ int MovieFile::loadMovie(const std::string& moviefile)
 
     ret = tar_close(tar);
 	if (ret == -1) return -1;
+
+	return 0;
+}
+
+int MovieFile::extractMovie()
+{
+	return extractMovie(context->config.moviefile);
+}
+
+int MovieFile::loadMovie(const std::string& moviefile)
+{
+	/* Extract the moviefile in the temp directory */
+	int ret = extractMovie(moviefile);
+	if (ret < 0)
+		return ret;
 
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
@@ -301,19 +316,9 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-int MovieFile::nbFrames(const std::string& moviefile)
+unsigned int MovieFile::nbFramesConfig()
 {
-    /* Check if movie exists, otherwise return 0 */
-    struct stat sb;
-    if (stat(moviefile.c_str(), &sb) == -1)
-        return 0;
-
-    /* Uncompress the movie file into our temp directory */
-    TAR *tar;
-    tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-    char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
-    tar_extract_all(tar, md);
-    tar_close(tar);
+	extractMovie();
 
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
@@ -323,9 +328,21 @@ int MovieFile::nbFrames(const std::string& moviefile)
     return frame_count;
 }
 
-int MovieFile::nbFrames()
+unsigned int MovieFile::nbFrames()
 {
 	return input_list.size();
+}
+
+unsigned int MovieFile::nbRerecords()
+{
+	extractMovie();
+
+    /* Load the config file into the context struct */
+    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
+    int rerecord_count;
+    config_prefs.get("rerecord_count", rerecord_count, 0);
+
+    return rerecord_count;
 }
 
 int MovieFile::setInputs(const AllInputs& inputs)

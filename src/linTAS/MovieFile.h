@@ -38,7 +38,12 @@ public:
     /* Prepare a movie file from the context */
     MovieFile(Context* c);
 
-    /* Extract a moviefile and import the inputs into a list.
+    /* Extract a moviefile into the temp directory
+     * Returns 0 if no error, or a negative value if an error occured */
+    int extractMovie();
+    int extractMovie(const std::string& moviefile);
+
+    /* Import the inputs into a list.
      * Returns 0 if no error, or a negative value if an error occured */
     int loadMovie();
     int loadMovie(const std::string& moviefile);
@@ -47,11 +52,14 @@ public:
     void saveMovie();
     void saveMovie(const std::string& moviefile);
 
-    /* Get the number of frames from a moviefile (needs to load it) */
-    int nbFrames(const std::string& moviefile);
+    /* Get the number of frames from a moviefile config. It must be extracted first */
+    unsigned int nbFramesConfig();
 
     /* Get the number of frames of the current movie */
-    int nbFrames();
+    unsigned int nbFrames();
+
+    /* Get the number of rerecords from a moviefile */
+    unsigned int nbRerecords();
 
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);

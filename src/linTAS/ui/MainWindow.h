@@ -93,6 +93,7 @@ class MainWindow {
 
         Fl_Output *framecount;
         Fl_Output *movie_framecount;
+        Fl_Output *rerecord_count;
 
         Fl_Input *initial_time_sec;
         Fl_Input *initial_time_nsec;
@@ -110,6 +111,9 @@ class MainWindow {
 
         /* Update frame count */
         void update_framecount();
+
+        /* Update rerecord count */
+        void update_rerecordcount();
 
         /* Update UI elements when a config file is loaded */
         void update_config();

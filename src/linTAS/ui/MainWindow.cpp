@@ -126,13 +126,13 @@ void MainWindow::build(Context* c)
     logicalfps->callback(set_fps_cb);
 
     /* Pause/FF */
-    pausecheck = new Fl_Check_Button(240, 140, 80, 20, "Pause");
+    pausecheck = new Fl_Check_Button(440, 140, 80, 20, "Pause");
     pausecheck->callback(pause_cb);
-    fastforwardcheck = new Fl_Check_Button(240, 170, 80, 20, "Fast-forward");
+    fastforwardcheck = new Fl_Check_Button(440, 170, 80, 20, "Fast-forward");
     fastforwardcheck->callback(fastforward_cb);
 
     /* Mute */
-    mutecheck = new Fl_Check_Button(240, 200, 80, 20, "Mute");
+    mutecheck = new Fl_Check_Button(440, 200, 80, 20, "Mute");
     mutecheck->callback(mute_sound_cb);
 #ifndef LIBTAS_ENABLE_SOUNDPLAYBACK
     mutecheck->label("Mute (disabled)");
@@ -140,15 +140,22 @@ void MainWindow::build(Context* c)
 #endif
 
     /* Frame count */
-    framecount = new Fl_Output(80, 140, 60, 30, "Frames:");
+    framecount = new Fl_Output(80, 140, 80, 30, "Frames:");
     framecount->value("0");
     framecount->color(FL_LIGHT1);
 
-    movie_framecount = new Fl_Output(140, 140, 60, 30);
+    movie_framecount = new Fl_Output(180, 140, 80, 30, " / ");
     movie_framecount->color(FL_LIGHT1);
     MovieFile movie(context);
-    std::string movieframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+    movie.extractMovie();
+    std::string movieframestr = std::to_string(movie.nbFramesConfig());
     movie_framecount->value(movieframestr.c_str());
+
+    rerecord_count = new Fl_Output(280, 180, 80, 30, "Rerecord count:");
+    rerecord_count->align(FL_ALIGN_TOP_LEFT);
+    rerecord_count->color(FL_LIGHT1);
+    std::string rerecordstr = std::to_string(movie.nbRerecords());
+    rerecord_count->value(rerecordstr.c_str());
 
     /* Initial time */
     initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
@@ -412,7 +419,8 @@ void MainWindow::update_status()
 #endif
             {
                 MovieFile movie(context);
-                std::string movieframestr = std::to_string(movie.nbFrames(context->config.moviefile));
+                movie.extractMovie();
+                std::string movieframestr = std::to_string(movie.nbFramesConfig());
                 movie_framecount->value(movieframestr.c_str());
                 movie_framecount->activate();
             }
@@ -511,6 +519,19 @@ void MainWindow::update_framecount()
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
+
+    Fl::unlock();
+    Fl::awake();
+}
+
+void MainWindow::update_rerecordcount()
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    /* Update frame count */
+    std::string rerecordstr = std::to_string(context->rerecord_count);
+    rerecord_count->value(rerecordstr.c_str());
 
     Fl::unlock();
     Fl::awake();
@@ -695,8 +716,11 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
         MovieFile movie(mw.context);
-        std::string movieframestr = std::to_string(movie.nbFrames(mw.context->config.moviefile));
+        movie.extractMovie();
+        std::string movieframestr = std::to_string(movie.nbFramesConfig());
         mw.movie_framecount->value(movieframestr.c_str());
+        std::string rerecordstr = std::to_string(movie.nbRerecords());
+        mw.rerecord_count->value(rerecordstr.c_str());
     }
 }
 

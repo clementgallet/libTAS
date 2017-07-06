@@ -178,6 +178,7 @@ void launchGame(Context* context)
         movie.loadMovie();
         context->config.sc.movie_framecount = movie.nbFrames();
     }
+    ui.update_rerecordcount();
 
     /* Send informations to the game */
 
@@ -495,6 +496,7 @@ void launchGame(Context* context)
 
                                 /* Increment rerecord count */
                                 context->rerecord_count++;
+                                ui.update_rerecordcount();
                             }
 
                             last_savestate_slot = statei;
