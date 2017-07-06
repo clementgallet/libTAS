@@ -83,6 +83,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	GETWITHTYPE(config_prefs, "numControllers", context->config.sc.numControllers, int);
 	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
 	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
+	GETWITHTYPE(config_prefs, "framerate", context->config.sc.framerate, unsigned int);
 
 	/* We must load the rerecord count only when this is the initial movie
 	 * loading (not a loading of a savestate movie)
@@ -161,6 +162,7 @@ void MovieFile::saveMovie(const std::string& moviefile)
     config_prefs.set("numControllers", context->config.sc.numControllers);
 	config_prefs.set("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
 	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
+	config_prefs.set("framerate", static_cast<int>(context->config.sc.framerate));
 	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
 
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
