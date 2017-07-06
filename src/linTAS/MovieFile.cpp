@@ -336,20 +336,19 @@ int MovieFile::setInputs(const AllInputs& inputs)
 
 int MovieFile::getInputs(AllInputs& inputs)
 {
-    if (context->framecount > input_list.size()) {
-        inputs.emptyInputs();
-        return 1;
-    }
-
-    if (context->framecount == input_list.size()) {
-        /* We reached the end of the movie */
-        std::cout << "End of movie" << std::endl;
+    if (context->framecount >= input_list.size()) {
         inputs.emptyInputs();
         return 0;
     }
 
-    inputs = input_list[context->framecount];
-    return 1;
+	inputs = input_list[context->framecount];
+
+    if ((context->framecount + 1) == input_list.size()) {
+        /* We are reading the last frame of the movie, notify the caller */
+        return 1;
+    }
+
+    return 0;
 }
 
 void MovieFile::close()

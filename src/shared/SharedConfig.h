@@ -91,7 +91,8 @@ class SharedConfig {
         /* Display HUD in the video encode */
         bool hud_encode = false;
 
-        /* Prevent the game to write into savefiles */
+        /* Use a backup of savefiles in memory, which leaves the original
+         * savefiles unmodified and save the content in savestates */
         bool prevent_savefiles = true;
 
         /** Sound config **/

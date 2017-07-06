@@ -108,7 +108,7 @@ else()
 endif()
 
 # FILEIO HOOKING
-option(ENABLE_FILEIO_HOOKING "Enable file IO hooking" OFF)
+option(ENABLE_FILEIO_HOOKING "Enable file IO hooking" ON)
 if (ENABLE_FILEIO_HOOKING)
     # Enable file IO hooking
     message(STATUS "File IO hooking is enabled")

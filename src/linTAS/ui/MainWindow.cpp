@@ -61,6 +61,7 @@ static Fl_Callback0 cmdoptions_cb;
 static Fl_Callback llvm_perf_cb;
 static Fl_Callback ignore_memory_cb;
 static Fl_Callback0 initial_time_cb;
+static Fl_Callback prevent_savefiles_cb;
 
 MainWindow::~MainWindow()
 {
@@ -259,6 +260,7 @@ Fl_Menu_Item MainWindow::menu_items[] = {
                 {nullptr},
             {"Save screen in savestates", 0, savestate_screen_cb, nullptr, FL_MENU_TOGGLE},
             {nullptr},
+        {"Backup savestates in memory", 0, prevent_savefiles_cb, nullptr, FL_MENU_TOGGLE},
         {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
             {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_RADIO},
             {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
@@ -611,6 +613,8 @@ void MainWindow::update_config()
 
     std::string nsecstr = std::to_string(context->config.sc.initial_time.tv_nsec);
     initial_time_nsec->value(nsecstr.c_str());
+
+    SET_TOGGLE_FROM_BOOL(prevent_savefiles_cb, context->config.sc.prevent_savefiles);
 }
 
 void launch_cb(Fl_Widget* w)
@@ -1086,6 +1090,15 @@ void initial_time_cb(Fl_Widget*)
 
     std::string nsecstr = mw.initial_time_nsec->value();
     mw.context->config.sc.initial_time.tv_nsec = std::stoi(nsecstr);
+}
+
+void prevent_savefiles_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    Fl_Menu_Item* menu_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(llvm_perf_cb));
+
+    mw.context->config.sc.prevent_savefiles = menu_item->value();
+    mw.context->config.sc_modified = true;
 }
 
 void alert_dialog(void* alert_msg)

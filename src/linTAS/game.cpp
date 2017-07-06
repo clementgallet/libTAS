@@ -634,11 +634,12 @@ void launchGame(Context* context)
             case SharedConfig::RECORDING_READ_WRITE:
             case SharedConfig::RECORDING_READ_ONLY:
                 /* Read inputs from file */
-                if (!movie.getInputs(ai)) {
+                if (movie.getInputs(ai) == 1) {
+                    /* We are reading the last frame of the movie */
                     /* TODO: Add an option to decide what to do when movie ends */
-                    // movie.saveMovie();
-                    // context->recording = Context::NO_RECORDING;
-                    // ui.update(true);
+                    context->config.sc.running = false;
+                    ui.update_ui();
+                    // context->config.sc_modified = true;
                 }
                 break;
         }
