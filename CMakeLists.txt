@@ -14,6 +14,16 @@ set(EXECUTABLE_OUTPUT_PATH ./)
 set(LIBRARY_OUTPUT_PATH ./)
 #set(CMAKE_CXX_STANDARD 11)
 
+# Include FLTK path
+set(FLTK_SKIP_OPENGL TRUE)
+set(FLTK_SKIP_FORMS TRUE)
+set(FLTK_SKIP_IMAGES TRUE)
+set(FLTK_SKIP_FLUID TRUE)
+find_package(FLTK REQUIRED NO_MODULE)
+include_directories(${FLTK_INCLUDE_DIRS})
+
+link_directories("/usr/local/lib/")
+
 add_executable(linTAS ${lin_sources} ${shared_sources} ${external_sources})
 add_library(TAS SHARED ${lib_sources} ${shared_sources} ${external_sources})
 
@@ -46,8 +56,7 @@ target_link_libraries (linTAS ${X11_X11_LIB})
 target_link_libraries (TAS ${X11_X11_LIB})
 
 # Add FLTK library
-find_package(FLTK REQUIRED)
-target_link_libraries(linTAS ${FLTK_LIBRARIES})
+target_link_libraries(linTAS fltk)
 
 # Add zlib library
 find_package(ZLIB REQUIRED)
@@ -65,7 +74,7 @@ target_include_directories(TAS PUBLIC ${SDL2_INCLUDE_DIRS})
 option(ENABLE_DUMPING "Enable AV dumping" ON)
 
 pkg_check_modules(SWRESAMPLE libswresample)
-pkg_check_modules(AVVIDEO libavcodec>=57.48.101 libswscale libavformat)
+pkg_check_modules(AVVIDEO libavcodec>=57.48.101 libswscale libavformat libavutil)
 if (ENABLE_DUMPING AND SWRESAMPLE_FOUND AND AVVIDEO_FOUND)
     # Enable av dumping
     message(STATUS "AV dumping is enabled")
