@@ -1,6 +1,6 @@
 ## libTAS
 
-GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser).
+GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86` (not much tested).
 
 ## Compile
 
@@ -13,11 +13,11 @@ Compiling is done using cmake. From the root directory just type:
 
 The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`
 
-To enable audio and video dumping, you will need `libavcodec`, `libavformat`, `libavutil`, `libswscale`, `libswresample`.
+To enable audio and video dumping, you will need `libavcodec-dev`, `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, `libswresample-dev`.
 
-To enable audio playback, you will also need `libswresample`, `libasound`
+To enable audio playback, you will also need `libswresample-dev`, `libasound2-dev`
 
-To enable HUD on the game screen, you will need `libfreetype`, `libfontconfig`
+To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
@@ -25,8 +25,8 @@ If you want to manually enable/disable a feature, you must add just after the `c
 - `-DENABLE_DUMPING=ON/OFF`: enable/disable video and audio dumping
 - `-DENABLE_SOUND=ON/OFF`: enable/disable audio playback
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
-- `-DENABLE_CUSTOM_MALLOC=ON/OFF`: enable/disable custom dynamic memory management
-- `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file writing control to disable savefiles
+- `-DENABLE_CUSTOM_MALLOC=ON/OFF`: enable/disable malloc hooks (unused)
+- `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file opening/closing hooks to handle savefiles
 
 Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`
 
@@ -89,10 +89,7 @@ else
 fi
 ```
 
-In this exemple, for a `x86_64` arch, you must run:
-
-    linTAS -L /pathtogame/x86_64 -R /pathtogame /pathtogame/x86_64/vvvvvv.x86_64
-
+In this exemple, for a `x86_64` arch, under `File>Executable Options...`, you must set `Run path` to `/pathtogame` and `Lib path` to `/pathtogame/x86_64`
 
 ## License
 

@@ -42,10 +42,6 @@ static void print_usage(void)
     std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
     std::cout << "  -w, --write MOVIE   Record game inputs into the specified MOVIE file" << std::endl;
     // std::cout << "  -l, --lib     PATH  Manually import a library" << std::endl;
-    std::cout << "  -L, --libpath PATH  Indicate a path to additional libraries the game" << std::endl;
-    std::cout << "                      will want to import." << std::endl;
-    std::cout << "  -R, --runpath PATH  From which directory the game must be launched." << std::endl;
-    std::cout << "                      Set to the executable directory by default." << std::endl;
     std::cout << "  -h, --help          Show this message" << std::endl;
 }
 
@@ -58,7 +54,7 @@ int main(int argc, char **argv)
     char* abspath;
     std::ofstream o;
     // std::string libname;
-    while ((c = getopt (argc, argv, "+r:w:d:l:L:R:h")) != -1)
+    while ((c = getopt (argc, argv, "+r:w:d:l:h")) != -1)
         switch (c) {
             case 'r':
             case 'w':
@@ -94,20 +90,6 @@ int main(int argc, char **argv)
             //         shared_libs.push_back(libname);
             //     }
             //     break;
-            case 'R':
-                /* run directory */
-                abspath = realpath(optarg, buf);
-                if (abspath) {
-                    context.config.rundir = abspath;
-                }
-                break;
-            case 'L':
-                /* Shared library directory */
-                abspath = realpath(optarg, buf);
-                if (abspath) {
-                    context.config.libdir = abspath;
-                }
-                break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
             case 'h':
