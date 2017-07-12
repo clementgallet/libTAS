@@ -25,10 +25,12 @@ static Fl_Callback confirm_cb;
 static Fl_Callback cancel_cb;
 static Fl_Callback browse_runpath_cb;
 static Fl_Callback browse_libpath_cb;
+static Fl_Callback clear_runpath_cb;
+static Fl_Callback clear_libpath_cb;
 
 ExecutableWindow::ExecutableWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(600, 160);
+    window = new Fl_Double_Window(680, 160);
 
     /* Run path */
     runpath = new Fl_Output(10, 30, 500, 30, "Run path");
@@ -41,6 +43,9 @@ ExecutableWindow::ExecutableWindow(Context* c) : context(c)
     runpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
     runpathchooser->title("Choose an run directory");
 
+    clear_runpath = new Fl_Button(600, 30, 70, 30, "Clear");
+    clear_runpath->callback(clear_runpath_cb, this);
+
     /* Lib path */
     libpath = new Fl_Output(10, 80, 500, 30, "Library path");
     libpath->align(FL_ALIGN_TOP_LEFT);
@@ -51,6 +56,9 @@ ExecutableWindow::ExecutableWindow(Context* c) : context(c)
 
     libpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
     libpathchooser->title("Choose an lib directory");
+
+    clear_libpath = new Fl_Button(600, 80, 70, 30, "Clear");
+    clear_libpath->callback(clear_libpath_cb, this);
 
     /* Buttons */
 
@@ -122,4 +130,16 @@ void browse_libpath_cb(Fl_Widget* w, void* v)
     if (ret == 0) {
         ew->libpath->value(filename);
     }
+}
+
+void clear_runpath_cb(Fl_Widget* w, void* v)
+{
+    ExecutableWindow* ew = (ExecutableWindow*) v;
+    ew->runpath->value("");
+}
+
+void clear_libpath_cb(Fl_Widget* w, void* v)
+{
+    ExecutableWindow* ew = (ExecutableWindow*) v;
+    ew->libpath->value("");
 }

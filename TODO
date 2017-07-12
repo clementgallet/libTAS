@@ -34,6 +34,9 @@
 -- Allow the user to delete savestates
 -- Add more alert windows
 -- Add a confirm message when overwriting a existing movie file
+- Refont the movie system
+-- Make read mode the default for existing movies
+-- Fix the movie frame count display
 
 ## Done
 

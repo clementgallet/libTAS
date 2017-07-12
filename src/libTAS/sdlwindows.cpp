@@ -407,10 +407,8 @@ void updateTitle(float fps, float lfps)
 
     orig::SDL_SetWindowSize(window, w, h);
 
-    if (shared_config.save_screenpixels) {
-        finiScreenPixels();
-        initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
-    }
+    finiScreenPixels();
+    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING

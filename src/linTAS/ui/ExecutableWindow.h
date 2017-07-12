@@ -45,10 +45,12 @@ class ExecutableWindow {
         Fl_Output *runpath;
         Fl_Button *browserunpath;
         Fl_Native_File_Chooser *runpathchooser;
+        Fl_Button *clear_runpath;
 
         Fl_Output *libpath;
         Fl_Button *browselibpath;
         Fl_Native_File_Chooser *libpathchooser;
+        Fl_Button *clear_libpath;
 };
 
 #endif
