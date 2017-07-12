@@ -28,7 +28,7 @@ static Fl_Callback browse_moviepath_cb;
 static Fl_Callback0 set_fps_cb;
 static Fl_Callback0 pause_cb;
 static Fl_Callback0 fastforward_cb;
-static Fl_Callback0 recording_cb;
+static Fl_Callback0 movie_recording_cb;
 #ifdef LIBTAS_ENABLE_AVDUMPING
 static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
@@ -107,19 +107,12 @@ void MainWindow::build(Context* c)
     browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
     browsemoviepath->callback(browse_moviepath_cb);
 
-    /* Movie File Status */
-    moviepack = new Fl_Pack(10, 90, window->w()-10, 30);
-    moviepack->type(Fl_Pack::HORIZONTAL);
-    moviepack->box(FL_ENGRAVED_FRAME);
-    movie_norec = new Fl_Radio_Round_Button(0, 0, 130, 0, "No recording");
-    movie_norec->callback(recording_cb);
-    movie_w = new Fl_Radio_Round_Button(0, 0, 130, 0, "Overwrite");
-    movie_w->callback(recording_cb);
-    movie_rw = new Fl_Radio_Round_Button(0, 0, 130, 0, "Read/Write");
-    movie_rw->callback(recording_cb);
-    movie_ro = new Fl_Radio_Round_Button(0, 0, 130, 0, "Read Only");
-    movie_ro->callback(recording_cb);
-    moviepack->end();
+    movie_recording = new Fl_Check_Button(10, 90, 160, 20, "Record Inputs");
+    movie_recording->callback(movie_recording_cb);
+    movie_recording->set();
+
+    movie_read_only = new Fl_Check_Button(200, 90, 160, 20, "Read Only");
+    movie_read_only->callback(movie_recording_cb);
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 180, 40, 30, "Frames per second");
@@ -146,17 +139,18 @@ void MainWindow::build(Context* c)
 
     movie_framecount = new Fl_Output(180, 140, 80, 30, " / ");
     movie_framecount->color(FL_LIGHT1);
-    MovieFile movie(context);
-    movie.extractMovie();
-    std::string movieframestr = std::to_string(movie.nbFramesConfig());
-    movie_framecount->value(movieframestr.c_str());
 
     rerecord_count = new Fl_Output(280, 180, 80, 30, "Rerecord count:");
     rerecord_count->align(FL_ALIGN_TOP_LEFT);
     rerecord_count->color(FL_LIGHT1);
-    std::string rerecordstr = std::to_string(movie.nbRerecords());
-    rerecord_count->value(rerecordstr.c_str());
 
+    MovieFile movie(context);
+    if (movie.extractMovie() == 0) {
+        std::string movieframestr = std::to_string(movie.nbFramesConfig());
+        movie_framecount->value(movieframestr.c_str());
+        std::string rerecordstr = std::to_string(movie.nbRerecords());
+        rerecord_count->value(rerecordstr.c_str());
+    }
     /* Initial time */
     initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
     initial_time_sec->align(FL_ALIGN_TOP_LEFT);
@@ -165,7 +159,6 @@ void MainWindow::build(Context* c)
     initial_time_nsec = new Fl_Int_Input(130, 260, 100, 30, " - ");
     initial_time_nsec->align(FL_ALIGN_LEFT);
     initial_time_nsec->callback(initial_time_cb);
-
 
     launch = new Fl_Button(10, 450, 70, 40, "Start");
     launch->callback(launch_cb);
@@ -403,7 +396,6 @@ void MainWindow::update_status()
             browsegamepath->activate();
             cmdoptions->activate();
             logicalfps->activate();
-            moviepack->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
             initial_time_sec->activate();
@@ -417,12 +409,15 @@ void MainWindow::update_status()
                 if (config_item) config_item->activate();
             }
 #endif
+            movie_recording->activate();
             {
-                MovieFile movie(context);
-                movie.extractMovie();
-                std::string movieframestr = std::to_string(movie.nbFramesConfig());
-                movie_framecount->value(movieframestr.c_str());
                 movie_framecount->activate();
+                MovieFile movie(context);
+                /* Update the movie frame count if the movie file is valid */
+                if (movie.extractMovie() == 0) {
+                    std::string movieframestr = std::to_string(movie.nbFramesConfig());
+                    movie_framecount->value(movieframestr.c_str());
+                }
             }
             break;
         case Context::STARTING:
@@ -434,15 +429,16 @@ void MainWindow::update_status()
             browsegamepath->deactivate();
             cmdoptions->deactivate();
             logicalfps->deactivate();
-            moviepack->deactivate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->deactivate();
             initial_time_sec->deactivate();
             initial_time_nsec->deactivate();
             if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
+                movie_framecount->value("");
                 movie_framecount->deactivate();
             }
+            movie_recording->deactivate();
             break;
         case Context::ACTIVE:
             if (context->attach_gdb) {
@@ -478,19 +474,21 @@ void MainWindow::update_ui()
     fastforwardcheck->value(context->config.sc.fastforward);
 
     /* Update recording state */
+    std::string movieframestr;
     switch (context->config.sc.recording) {
-      case SharedConfig::NO_RECORDING:
-          movie_norec->setonly();
-          break;
-      case SharedConfig::RECORDING_WRITE:
-          movie_w->setonly();
-          break;
-      case SharedConfig::RECORDING_READ_WRITE:
-          movie_rw->setonly();
-          break;
-      case SharedConfig::RECORDING_READ_ONLY:
-          movie_ro->setonly();
-          break;
+        case SharedConfig::RECORDING_WRITE:
+            movie_read_only->clear();
+            movie_framecount->value("");
+            movie_framecount->deactivate();
+            break;
+        case SharedConfig::RECORDING_READ_WRITE:
+            movie_read_only->set();
+            movieframestr = std::to_string(context->config.sc.movie_framecount);
+            movie_framecount->value(movieframestr.c_str());
+            movie_framecount->activate();
+            break;
+        default:
+            break;
     }
 
     /* Update encode menus */
@@ -716,11 +714,27 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
         MovieFile movie(mw.context);
-        movie.extractMovie();
-        std::string movieframestr = std::to_string(movie.nbFramesConfig());
-        mw.movie_framecount->value(movieframestr.c_str());
-        std::string rerecordstr = std::to_string(movie.nbRerecords());
-        mw.rerecord_count->value(rerecordstr.c_str());
+        if (movie.extractMovie() == 0) {
+            /* If the moviefile is valid, update the frame and rerecord counts */
+            std::string movieframestr = std::to_string(movie.nbFramesConfig());
+            mw.movie_framecount->value(movieframestr.c_str());
+            std::string rerecordstr = std::to_string(movie.nbRerecords());
+            mw.rerecord_count->value(rerecordstr.c_str());
+
+            /* Also, by default, set the read-only mode */
+            mw.movie_read_only->set();
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+            mw.context->config.sc_modified = true;
+        }
+        else {
+            mw.movie_framecount->value("0");
+            mw.rerecord_count->value("0");
+
+            /* Also, by default, set the write mode */
+            mw.movie_read_only->clear();
+            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+            mw.context->config.sc_modified = true;
+        }
     }
 }
 
@@ -750,17 +764,31 @@ void fastforward_cb(Fl_Widget* w)
     mw.context->config.sc_modified = true;
 }
 
-void recording_cb(Fl_Widget* w)
+void movie_recording_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
-    if (mw.movie_norec->value() == 1)
+    if (mw.movie_recording->value() == 1) {
+        if (mw.movie_read_only->value() == 1) {
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+        }
+        else {
+            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+        }
+
+        /* Enable the other movie UI elements */
+        mw.movie_read_only->activate();
+        mw.moviepath->activate();
+        mw.browsemoviepath->activate();
+    }
+    else {
         mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
-    if (mw.movie_w->value() == 1)
-        mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-    if (mw.movie_rw->value() == 1)
-        mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
-    if (mw.movie_ro->value() == 1)
-        mw.context->config.sc.recording = SharedConfig::RECORDING_READ_ONLY;
+
+        /* Disable the other movie UI elements */
+        mw.movie_read_only->deactivate();
+        mw.moviepath->deactivate();
+        mw.browsemoviepath->deactivate();
+    }
+    mw.context->config.sc_modified = true;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
