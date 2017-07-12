@@ -115,8 +115,7 @@ void RenderHUD::renderFrame(unsigned int framecount)
     Color bg_color = {0, 0, 0, 0};
     std::string framestr = std::to_string(framecount);
     switch (shared_config.recording) {
-    case SharedConfig::RECORDING_READ_WRITE:
-    case SharedConfig::RECORDING_READ_ONLY:
+    case SharedConfig::RECORDING_READ:
         framestr.append("/").append(std::to_string(shared_config.movie_framecount));
         break;
     case SharedConfig::RECORDING_WRITE:

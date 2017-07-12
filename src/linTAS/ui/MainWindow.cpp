@@ -481,7 +481,7 @@ void MainWindow::update_ui()
             movie_framecount->value("");
             movie_framecount->deactivate();
             break;
-        case SharedConfig::RECORDING_READ_WRITE:
+        case SharedConfig::RECORDING_READ:
             movie_read_only->set();
             movieframestr = std::to_string(context->config.sc.movie_framecount);
             movie_framecount->value(movieframestr.c_str());
@@ -723,7 +723,7 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
 
             /* Also, by default, set the read-only mode */
             mw.movie_read_only->set();
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
             mw.context->config.sc_modified = true;
         }
         else {
@@ -769,7 +769,7 @@ void movie_recording_cb(Fl_Widget* w)
     MainWindow& mw = MainWindow::getInstance();
     if (mw.movie_recording->value() == 1) {
         if (mw.movie_read_only->value() == 1) {
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
         }
         else {
             mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;

@@ -82,7 +82,7 @@ void KeyMapping::init(Display* display)
     hotkey_list.push_back({{IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
     hotkey_list.push_back({{IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
     hotkey_list.push_back({{IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
-    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle ReadWrite/ReadOnly"});
+    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_SAVEPSEUDOSTATE, "Save Pseudo State"});
     hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_LOADPSEUDOSTATE, "Load Pseudo State"});
     hotkey_list.push_back({{IT_KEYBOARD, XK_F1 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});

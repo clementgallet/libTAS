@@ -173,8 +173,7 @@ void launchGame(Context* context)
      * or prepare a movie if in write mode.
      */
     MovieFile movie(context);
-    if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
-        (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
+    if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
         movie.loadMovie();
         context->config.sc.movie_framecount = movie.nbFrames();
     }
@@ -373,14 +372,14 @@ void launchGame(Context* context)
                     }
                     if (hk.type == HOTKEY_LOADPSEUDOSTATE){
                         if (pseudosavestate.framecount > 0 && (
-                            context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE ||
+                            context->config.sc.recording == SharedConfig::RECORDING_READ ||
                             context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
                             pseudosavestate.loading = true;
                             context->config.sc.running = true;
                             context->config.sc.fastforward = true;
                             context->config.sc_modified = true;
                             pseudosavestate.recording = context->config.sc.recording;
-                            context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+                            context->config.sc.recording = SharedConfig::RECORDING_READ;
                             context->status = Context::QUITTING;
                             ui.update_ui();
                             ui.update_status();
@@ -446,8 +445,7 @@ void launchGame(Context* context)
                         moviepath += context->gamename;
                         moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-                        if ((context->config.sc.recording == SharedConfig::RECORDING_READ_WRITE) ||
-                            (context->config.sc.recording == SharedConfig::RECORDING_READ_ONLY)) {
+                        if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
                             /* When loading in read mode, we must check that
                              * the moviefile associated with the savestate is
                              * a prefix of our moviefile.
@@ -514,10 +512,10 @@ void launchGame(Context* context)
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->config.sc.recording) {
                         case SharedConfig::RECORDING_WRITE:
-                            context->config.sc.recording = SharedConfig::RECORDING_READ_WRITE;
+                            context->config.sc.recording = SharedConfig::RECORDING_READ;
                             context->config.sc.movie_framecount = movie.nbFrames();
                             break;
-                        case SharedConfig::RECORDING_READ_WRITE:
+                        case SharedConfig::RECORDING_READ:
                             /* Check if we reached the end of the movie already. */
                             if (context->framecount > context->config.sc.movie_framecount) {
                                 std::string* alert_str = new std::string("Cannot write to a movie after its end");
@@ -639,8 +637,7 @@ void launchGame(Context* context)
                 }
                 break;
 
-            case SharedConfig::RECORDING_READ_WRITE:
-            case SharedConfig::RECORDING_READ_ONLY:
+            case SharedConfig::RECORDING_READ:
                 /* Read inputs from file */
                 if (movie.getInputs(ai) == 1) {
                     /* We are reading the last frame of the movie */

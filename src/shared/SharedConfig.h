@@ -43,8 +43,7 @@ class SharedConfig {
         enum RecStatus {
             NO_RECORDING,
             RECORDING_WRITE,
-            RECORDING_READ_WRITE, // Read until end of movie or toggle
-            RECORDING_READ_ONLY // Always read, toggle deactivated
+            RECORDING_READ // Read until end of movie or toggle
         };
         RecStatus recording = NO_RECORDING;
 
