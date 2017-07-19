@@ -22,6 +22,7 @@
 #include "../MovieFile.h"
 #include <iostream>
 #include <FL/x.H>
+#include <FL/fl_ask.H>
 
 static Fl_Callback browse_gamepath_cb;
 static Fl_Callback browse_moviepath_cb;
@@ -649,6 +650,16 @@ void launch_cb(Fl_Widget* w)
 
     switch (mw.context->status) {
         case Context::INACTIVE:
+            /* Prompt a confirmation message if overwriting a movie file */
+            if (mw.context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                struct stat sb;
+                if (stat(mw.context->config.moviefile.c_str(), &sb) == 0) {
+                    int choice = fl_choice("The movie file %s does exist. Do you want to overwrite it?", "Yes", "No", 0, mw.context->config.moviefile.c_str());
+                    if (choice == 1)
+                        break;
+                }
+            }
+
             /* Check that there might be a thread from a previous game execution */
             if (mw.game_thread.joinable())
                 mw.game_thread.join();
@@ -824,6 +835,18 @@ void toggle_encode_cb(Fl_Widget* w, void*)
     Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(config_encode_cb));
 
     if (!mw.context->config.sc.av_dumping) {
+        /* Prompt a confirmation message for overwriting an encode file */
+        struct stat sb;
+        if (stat(mw.context->config.dumpfile.c_str(), &sb) == 0) {
+            /* Pause the game during the choice */
+            mw.context->config.sc.running = false;
+            mw.context->config.sc_modified = true;
+
+            int choice = fl_choice("The encode file %s does exist. Do you want to overwrite it?", "Yes", "No", 0, mw.context->config.dumpfile.c_str());
+            if (choice == 1)
+                return;
+        }
+
         mw.context->config.sc.av_dumping = true;
         mw.context->config.sc_modified = true;
         mw.context->config.dumpfile_modified = true;
