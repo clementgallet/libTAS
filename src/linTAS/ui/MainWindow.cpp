@@ -151,7 +151,22 @@ void MainWindow::build(Context* c)
         movie_framecount->value(movieframestr.c_str());
         std::string rerecordstr = std::to_string(movie.nbRerecords());
         rerecord_count->value(rerecordstr.c_str());
+
+        /* Also, by default, set the read-only mode */
+        movie_read_only->set();
+        context->config.sc.recording = SharedConfig::RECORDING_READ;
+        context->config.sc_modified = true;
     }
+    else {
+        movie_framecount->value("0");
+        rerecord_count->value("0");
+
+        /* Also, by default, set the write mode */
+        movie_read_only->clear();
+        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+        context->config.sc_modified = true;
+    }
+    
     /* Initial time */
     initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
     initial_time_sec->align(FL_ALIGN_TOP_LEFT);
