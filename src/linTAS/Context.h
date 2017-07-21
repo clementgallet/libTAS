@@ -58,6 +58,9 @@ struct Context {
     /* frame count */
     unsigned int framecount = 0;
 
+    /* time */
+    struct timespec current_time;
+
     /* config */
     Config config;
 

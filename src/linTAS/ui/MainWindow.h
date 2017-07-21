@@ -106,8 +106,8 @@ class MainWindow {
          */
         void update_ui();
 
-        /* Update frame count */
-        void update_framecount();
+        /* Update frame count and time */
+        void update_framecount_time();
 
         /* Update rerecord count */
         void update_rerecordcount();

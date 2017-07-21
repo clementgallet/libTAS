@@ -249,9 +249,10 @@ void launchGame(Context* context)
                 context->config.sc_modified = true;
                 ui.update_ui();
                 break;
-            case MSGB_FRAMECOUNT:
+            case MSGB_FRAMECOUNT_TIME:
                 receiveData(&context->framecount, sizeof(unsigned long));
-                ui.update_framecount();
+                receiveData(&context->current_time, sizeof(struct timespec));
+                ui.update_framecount_time();
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
@@ -502,12 +503,13 @@ void launchGame(Context* context)
                         }
 
                         /* The frame count has changed, we must get the new one */
-                        if (message != MSGB_FRAMECOUNT) {
+                        if (message != MSGB_FRAMECOUNT_TIME) {
                             std::cerr << "Got wrong message after state loading" << std::endl;
                             return;
                         }
                         receiveData(&context->framecount, sizeof(unsigned long));
-                        ui.update_framecount();
+                        receiveData(&context->current_time, sizeof(struct timespec));
+                        ui.update_framecount_time();
                     }
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->config.sc.recording) {

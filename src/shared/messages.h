@@ -29,10 +29,10 @@ enum {
     MSGB_START_FRAMEBOUNDARY,
 
     /*
-     * The game sends the frame number
-     * Argument: unsigned long
+     * The game sends the frame number and time
+     * Argument: unsigned long, struct timespec
      */
-    MSGB_FRAMECOUNT,
+    MSGB_FRAMECOUNT_TIME,
 
     /*
      * Send all inputs to the game

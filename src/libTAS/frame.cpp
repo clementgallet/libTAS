@@ -195,8 +195,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         sendString(alert);
     }
 
-    sendMessage(MSGB_FRAMECOUNT);
+    sendMessage(MSGB_FRAMECOUNT_TIME);
     sendData(&frame_counter, sizeof(unsigned long));
+    struct timespec ticks = detTimer.getTicks();
+    sendData(&ticks, sizeof(struct timespec));
 
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
@@ -294,12 +296,13 @@ static void receive_messages(std::function<void()> draw)
                     MYASSERT(message == MSGN_CONFIG)
                     receiveData(&shared_config, sizeof(SharedConfig));
 
-                    /* We must send again the frame count because it probably
-                     * has changed.
+                    /* We must send again the frame count and time because it
+                     * probably has changed.
                      */
-                    sendMessage(MSGB_FRAMECOUNT);
+                    sendMessage(MSGB_FRAMECOUNT_TIME);
                     sendData(&frame_counter, sizeof(unsigned long));
-
+                    struct timespec ticks = detTimer.getTicks();
+                    sendData(&ticks, sizeof(struct timespec));
 
                     if (shared_config.save_screenpixels) {
                         /* If we restored from a savestate, refresh the screen */
@@ -329,11 +332,15 @@ static void receive_messages(std::function<void()> draw)
                 ThreadManager::restore(savestatepath);
 
                 /* If restoring failed, we return here. We still send the
-                 * frame count because the program will pull a message in
-                 * either case.
+                 * frame count and time because the program will pull a
+                 * message in either case.
                  */
-                sendMessage(MSGB_FRAMECOUNT);
+                sendMessage(MSGB_FRAMECOUNT_TIME);
                 sendData(&frame_counter, sizeof(unsigned long));
+                {
+                    struct timespec ticks = detTimer.getTicks();
+                    sendData(&ticks, sizeof(struct timespec));
+                }
 
                 break;
 

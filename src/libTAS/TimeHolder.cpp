@@ -44,7 +44,7 @@ void TimeHolder::normalize()
         this->tv_nsec += 1000000000 * sec;
         this->tv_sec -= sec;
     }
-    if (this->tv_nsec > 1000000000) {
+    if (this->tv_nsec >= 1000000000) {
         int sec = this->tv_nsec / 1000000000;
         this->tv_nsec -= 1000000000 * sec;
         this->tv_sec += sec;

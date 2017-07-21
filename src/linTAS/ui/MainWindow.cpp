@@ -384,6 +384,7 @@ void MainWindow::update_status()
     Fl::lock();
 
     Fl_Menu_Item *item;
+    std::string tmpstr;
 
     switch (context->status) {
         case Context::INACTIVE:
@@ -399,7 +400,11 @@ void MainWindow::update_status()
             logicalfps->activate();
             item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
             if (item) item->activate();
+            tmpstr = std::to_string(context->config.sc.initial_time.tv_sec);
+            initial_time_sec->value(tmpstr.c_str());
             initial_time_sec->activate();
+            tmpstr = std::to_string(context->config.sc.initial_time.tv_nsec);
+            initial_time_nsec->value(tmpstr.c_str());
             initial_time_nsec->activate();
 #ifdef LIBTAS_ENABLE_AVDUMPING
             if (context->config.sc.av_dumping) {
@@ -510,7 +515,7 @@ void MainWindow::update_ui()
     Fl::awake();
 }
 
-void MainWindow::update_framecount()
+void MainWindow::update_framecount_time()
 {
     /* This function is called by another thread */
     Fl::lock();
@@ -518,6 +523,12 @@ void MainWindow::update_framecount()
     /* Update frame count */
     std::string framestr = std::to_string(context->framecount);
     framecount->value(framestr.c_str());
+
+    /* Update time */
+    std::string secstr = std::to_string(context->current_time.tv_sec);
+    initial_time_sec->value(secstr.c_str());
+    std::string nsecstr = std::to_string(context->current_time.tv_nsec);
+    initial_time_nsec->value(nsecstr.c_str());
 
     Fl::unlock();
     Fl::awake();

@@ -33,9 +33,8 @@
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 -- Add more alert windows
--- Add a confirm message when overwriting a existing movie file
 - Refont the movie system
--- Make read mode the default for existing movies
+-- Make read mode the default for existing movies, when opening the tool
 -- Fix the movie frame count display
 
 ## Done
