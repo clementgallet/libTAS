@@ -285,11 +285,15 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, std::array<char,32> &keyboard_state, SharedConfig& sc){
+void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window window, SharedConfig& sc){
     int i,j;
     int keysym_i = 0;
+    std::array<char,32> keyboard_state;
 
     ai.emptyInputs();
+
+    /* Get keyboard inputs */
+    XQueryKeymap(display, keyboard_state.data());
 
     KeySym modifiers = build_modifiers(keyboard_state, display);
 
@@ -365,6 +369,20 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, std::arr
                     }
                 }
             }
+        }
+    }
+
+    /* Get the pointer position and mask */
+    if (sc.mouse_support && window) {
+        Window w;
+        Bool onScreen = XQueryPointer(display, window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+        /* We only care about the five mouse buttons */
+        ai.pointer_mask &= Button1Mask | Button2Mask | Button3Mask | Button4Mask | Button5Mask;
+
+        /* TODO: Do something with off-screen pointer */
+        if (!onScreen) {
+            ai.pointer_x = -1;
+            ai.pointer_y = -1;
         }
     }
 }

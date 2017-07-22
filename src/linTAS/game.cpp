@@ -294,8 +294,6 @@ void launchGame(Context* context)
             }
         }
 
-        std::array<char, 32> keyboard_state;
-
         /* Flag to trigger a frame advance even if the game is on pause */
         bool advance_frame = false;
 
@@ -306,6 +304,7 @@ void launchGame(Context* context)
                 break;
             }
 
+            std::array<char, 32> keyboard_state;
             XQueryKeymap(context->display, keyboard_state.data());
             KeySym modifiers = build_modifiers(keyboard_state, context->display);
 
@@ -613,24 +612,8 @@ void launchGame(Context* context)
 
                 /* Get inputs if we have input focus */
                 if (haveFocus(context)) {
-                    /* Get keyboard inputs */
-                    XQueryKeymap(context->display, keyboard_state.data());
-
-                    /* Format the keyboard state and save it in the AllInputs struct */
-                    context->config.km.buildAllInputs(ai, context->display, keyboard_state, context->config.sc);
-
-                    /* Get the pointer position and mask */
-                    if (context->config.sc.mouse_support && context->game_window && haveFocus(context)) {
-                        Window w;
-                        int i;
-                        Bool onScreen = XQueryPointer(context->display, context->game_window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-                        /* We only care about the five mouse buttons */
-                        ai.pointer_mask &= Button1Mask | Button2Mask | Button3Mask | Button4Mask | Button5Mask;
-                        if (!onScreen) {
-                            ai.pointer_x = -1;
-                            ai.pointer_y = -1;
-                        }
-                    }
+                    /* Format the keyboard and mouse state and save it in the AllInputs struct */
+                    context->config.km.buildAllInputs(ai, context->display, context->game_window, context->config.sc);
                 }
 
                 if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {

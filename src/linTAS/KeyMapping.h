@@ -274,11 +274,13 @@ class KeyMapping {
          * We are building the whole AllInputs structure,
          * that will be passed to the game and saved.
          * We will be doing the following steps:
+         * - Get the raw keyboard state using XQueryKeymap
          * - Convert keyboard keycodes (physical keys) to keysyms (key meaning)
          * - Check if the keysym is mapped to a hotkey. If so, we skip it
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
+         * - Get the mouse state
          */
-        void buildAllInputs(struct AllInputs& ai, Display *display, std::array<char,32> &keyboard_state, SharedConfig& sc);
+        void buildAllInputs(struct AllInputs& ai, Display *display, Window window, SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED
