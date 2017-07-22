@@ -165,6 +165,16 @@ void MovieFile::saveMovie(const std::string& moviefile)
 	config_prefs.set("framerate", static_cast<int>(context->config.sc.framerate));
 	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
 
+	/* Compute and save movie length */
+	time_t movie_length_sec = context->current_time.tv_sec - context->config.sc.initial_time.tv_sec;
+	time_t movie_length_nsec = context->current_time.tv_nsec - context->config.sc.initial_time.tv_nsec;
+	if (movie_length_nsec < 0) {
+		movie_length_nsec += 1000000000;
+		movie_length_sec--;
+	}
+	config_prefs.set("movie_length_sec", static_cast<int>(movie_length_sec));
+	config_prefs.set("movie_length_nsec", static_cast<int>(movie_length_nsec));
+
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
 
 	main_time_prefs.set("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
