@@ -348,6 +348,14 @@ bool filterSDL2Event(SDL_Event *event)
         case SDL_CONTROLLERDEVICEREMOVED:
         case SDL_CONTROLLERDEVICEREMAPPED:
             return true;
+        case SDL_WINDOWEVENT:
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL_WINDOWEVENT_FOCUS_LOST:
+                    return true;
+                default:
+                    return false;
+            }
         default:
             return false;
     }

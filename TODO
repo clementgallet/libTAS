@@ -34,7 +34,6 @@
 -- Allow the user to delete savestates
 -- Add more alert windows
 - Refont the movie system
--- Make read mode the default for existing movies, when opening the tool
 -- Fix the movie frame count display
 
 ## Done
