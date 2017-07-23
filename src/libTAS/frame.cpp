@@ -244,6 +244,7 @@ static void receive_messages(std::function<void()> draw)
     while (1)
     {
         int message = receiveMessage();
+        AllInputs preview_ai;
 
         switch (message)
         {
@@ -269,6 +270,26 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));
+                break;
+
+            case MSGN_PREVIEW_INPUTS:
+                receiveData(&preview_ai, sizeof(AllInputs));
+
+#ifdef LIBTAS_ENABLE_HUD
+                if (shared_config.hud_inputs) {
+                    setScreenPixels(gameWindow);
+
+                    if (shared_config.hud_framecount) {
+                        hud.renderFrame(frame_counter);
+                        hud.renderNonDrawFrame(nondraw_frame_counter);
+                    }
+                    hud.renderInputs(ai);
+                    hud.renderPreviewInputs(preview_ai);
+#endif
+
+                    draw();
+                }
+
                 break;
 
             case MSGN_SAVESTATE:

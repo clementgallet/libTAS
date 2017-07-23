@@ -41,6 +41,13 @@ enum {
     MSGN_ALL_INPUTS,
 
     /*
+     * Send all inputs to the game during a frame boundary, so that it can
+     * display the inputs in the HUD
+     * Argument: struct AllInputs
+     */
+    MSGN_PREVIEW_INPUTS,
+
+    /*
      * Send config
      * Argument: struct SharedConfig
      */

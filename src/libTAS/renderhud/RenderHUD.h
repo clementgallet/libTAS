@@ -77,11 +77,19 @@ class RenderHUD
         /* Display the inputs on screen */
         void renderInputs(AllInputs& ai);
 
+        /* Display the preview of inputs on screen */
+        void renderPreviewInputs(AllInputs& ai);
+
     protected:
         /* Create a texture from a text, using colors for the text and the outline */
         std::unique_ptr<SurfaceARGB> createTextSurface(const char* text, Color fg_color, Color bg_color);
 
     private:
+
+        /* Generic function to display inputs on screen, using fg_color as the
+         * text color and display the text at delta_y pixels from the bottom */
+        void renderInputs(AllInputs& ai, int delta_y, Color fg_color);
+
         int outline_size;
         int font_size;
 

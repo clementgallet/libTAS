@@ -594,10 +594,31 @@ void launchGame(Context* context)
                 }
             }
 
-            /* Sleep a bit to not surcharge the processor */
             if (!context->config.sc.running && !advance_frame) {
-                struct timespec tim = {0, 10000000L};
+
+                /* Sleep a bit to not surcharge the processor */
+                struct timespec tim = {0, 100L*1000L*1000L};
                 nanosleep(&tim, NULL);
+
+                /* Send a preview of inputs so that the game can display them
+                 * on the HUD */
+#ifdef LIBTAS_ENABLE_HUD
+                if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
+                    (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
+
+                    /* Get inputs if we have input focus */
+                    if (haveFocus(context)) {
+
+                        /* Format the keyboard and mouse state and save it in the AllInputs struct */
+                        AllInputs ai;
+                        context->config.km.buildAllInputs(ai, context->display, context->game_window, context->config.sc);
+
+                        /* Send inputs */
+                        sendMessage(MSGN_PREVIEW_INPUTS);
+                        sendData(&ai, sizeof(AllInputs));
+                    }
+                }
+#endif
             }
 
         } while (!context->config.sc.running && !advance_frame);
