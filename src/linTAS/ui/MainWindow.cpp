@@ -792,10 +792,7 @@ void set_fps_cb(Fl_Widget* w)
 void pause_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
-    Fl_Check_Button *cb = (Fl_Check_Button*) w;
-    int cb_val = static_cast<int>(cb->value());
-    mw.context->config.sc.running = !cb_val;
-    mw.context->config.sc_modified = true;
+    mw.context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
 }
 
 void fastforward_cb(Fl_Widget* w)

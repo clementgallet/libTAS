@@ -23,6 +23,7 @@
 #include <string>
 #include "Config.h"
 #include <X11/Xlib.h>
+#include "ConcurrentQueue.h"
 
 struct Context {
     /* Execution status */
@@ -81,6 +82,9 @@ struct Context {
 
     /* Rerecord count */
     unsigned int rerecord_count = 0;
+
+    /* Queue of hotkeys that where pushed by the UI, to process by the main thread */
+    ConcurrentQueue<HotKeyType> hotkey_queue;
 };
 
 #endif

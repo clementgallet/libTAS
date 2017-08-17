@@ -316,34 +316,42 @@ void launchGame(Context* context)
                     advance_frame = true;
             }
 
-            while( XPending( context->display ) ) {
+            while( XPending( context->display ) || !context->hotkey_queue.empty() ) {
 
                 XEvent event;
-                XNextEvent(context->display, &event);
-
                 struct HotKey hk;
 
-                if (event.type == FocusOut) {
-                    ar_ticks = -1; // Deactivate auto-repeat
+                if (!context->hotkey_queue.empty()) {
+                    /* Processing a hotkey pushed by the UI */
+                    context->hotkey_queue.pop(hk.type);
+                    event.type = KeyPress;
                 }
+                else {
+                    /* Processing a hotkey pressed by the user */
+                    XNextEvent(context->display, &event);
 
-                if ((event.type == KeyPress) || (event.type == KeyRelease)) {
-                    /* Get the actual pressed/released key */
-                    KeyCode kc = event.xkey.keycode;
-                    KeySym ks = XkbKeycodeToKeysym(context->display, kc, 0, 0);
+                    if (event.type == FocusOut) {
+                        ar_ticks = -1; // Deactivate auto-repeat
+                    }
 
-                    /* If the key is a modifier, skip it */
-                    if (is_modifier(ks))
-                        continue;
+                    if ((event.type == KeyPress) || (event.type == KeyRelease)) {
+                        /* Get the actual pressed/released key */
+                        KeyCode kc = event.xkey.keycode;
+                        KeySym ks = XkbKeycodeToKeysym(context->display, kc, 0, 0);
 
-                    /* Check if this KeySym with or without modifiers is mapped to a hotkey */
-                    if (context->config.km.hotkey_mapping.find(ks | modifiers) != context->config.km.hotkey_mapping.end())
-                        hk = context->config.km.hotkey_mapping[ks | modifiers];
-                    else if (context->config.km.hotkey_mapping.find(ks) != context->config.km.hotkey_mapping.end())
-                        hk = context->config.km.hotkey_mapping[ks];
-                    else
-                        /* This input is not a hotkey, skipping to the next */
-                        continue;
+                        /* If the key is a modifier, skip it */
+                        if (is_modifier(ks))
+                            continue;
+
+                        /* Check if this KeySym with or without modifiers is mapped to a hotkey */
+                        if (context->config.km.hotkey_mapping.find(ks | modifiers) != context->config.km.hotkey_mapping.end())
+                            hk = context->config.km.hotkey_mapping[ks | modifiers];
+                        else if (context->config.km.hotkey_mapping.find(ks) != context->config.km.hotkey_mapping.end())
+                            hk = context->config.km.hotkey_mapping[ks];
+                        else
+                            /* This input is not a hotkey, skipping to the next */
+                            continue;
+                    }
                 }
 
                 if (event.type == KeyPress)
