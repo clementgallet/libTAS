@@ -38,6 +38,7 @@
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
+#include "ControllerWindow.h"
 
 class MainWindow {
     public:
@@ -65,6 +66,7 @@ class MainWindow {
 #endif
         InputWindow* input_window;
         ExecutableWindow* executable_window;
+        ControllerWindow* controller_window;
 
         Fl_Button *launch;
         Fl_Button *launch_gdb;

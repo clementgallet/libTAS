@@ -597,7 +597,7 @@ void launchGame(Context* context)
             if (!context->config.sc.running && !advance_frame) {
 
                 /* Sleep a bit to not surcharge the processor */
-                struct timespec tim = {0, 100L*1000L*1000L};
+                struct timespec tim = {0, 10L*1000L*1000L};
                 nanosleep(&tim, NULL);
 
                 /* Send a preview of inputs so that the game can display them

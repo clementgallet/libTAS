@@ -63,6 +63,7 @@ static Fl_Callback llvm_perf_cb;
 static Fl_Callback ignore_memory_cb;
 static Fl_Callback0 initial_time_cb;
 static Fl_Callback prevent_savefiles_cb;
+static Fl_Callback controller_inputs_cb;
 
 MainWindow::~MainWindow()
 {
@@ -166,7 +167,7 @@ void MainWindow::build(Context* c)
         context->config.sc.recording = SharedConfig::RECORDING_WRITE;
         context->config.sc_modified = true;
     }
-    
+
     /* Initial time */
     initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
     initial_time_sec->align(FL_ALIGN_TOP_LEFT);
@@ -192,6 +193,7 @@ void MainWindow::build(Context* c)
 #endif
     input_window = new InputWindow(c);
     executable_window = new ExecutableWindow(c);
+    controller_window = new ControllerWindow(c);
 
     window->show();
 
@@ -377,6 +379,7 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
             {"4", 0, input_joy_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
             {nullptr},
+        {"Joystick inputs (dummy)", 0, controller_inputs_cb, nullptr, FL_MENU_DIVIDER},
         {"Enable hotkeys when", 0, nullptr, nullptr, FL_SUBMENU},
             {"Game has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_GAME), FL_MENU_TOGGLE},
             {"UI has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_UI), FL_MENU_TOGGLE},
@@ -898,6 +901,18 @@ void config_input_cb(Fl_Widget* w, void*)
         Fl::wait();
     }
 }
+
+void controller_inputs_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    // mw.controller_window->update();
+    mw.controller_window->window->show();
+
+    while (mw.controller_window->window->shown()) {
+        Fl::wait();
+    }
+}
+
 
 void sound_frequency_cb(Fl_Widget* w, void* v)
 {

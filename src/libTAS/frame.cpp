@@ -285,10 +285,10 @@ static void receive_messages(std::function<void()> draw)
                     }
                     hud.renderInputs(ai);
                     hud.renderPreviewInputs(preview_ai);
-#endif
 
                     draw();
                 }
+#endif
 
                 break;
 
