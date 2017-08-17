@@ -183,7 +183,9 @@ void MainWindow::build(Context* c)
     launch_gdb = new Fl_Button(400, 450, 180, 40, "Start and attach gdb");
     launch_gdb->callback(launch_cb);
 
-    update_ui();
+    pausecheck->value(!context->config.sc.running);
+    fastforwardcheck->value(context->config.sc.fastforward);
+
     update_config();
 
     window->end();
@@ -434,6 +436,7 @@ void MainWindow::update_status()
             }
 #endif
             movie_recording->activate();
+            framecount->value("0");
             {
                 movie_framecount->activate();
                 MovieFile movie(context);
@@ -817,8 +820,10 @@ void movie_recording_cb(Fl_Widget* w)
 
         /* Enable the other movie UI elements */
         mw.movie_read_only->activate();
-        mw.moviepath->activate();
-        mw.browsemoviepath->activate();
+        if (mw.context->status == Context::INACTIVE) {
+            mw.moviepath->activate();
+            mw.browsemoviepath->activate();
+        }
     }
     else {
         mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
