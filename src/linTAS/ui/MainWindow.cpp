@@ -30,6 +30,7 @@ static Fl_Callback0 set_fps_cb;
 static Fl_Callback0 pause_cb;
 static Fl_Callback0 fastforward_cb;
 static Fl_Callback0 movie_recording_cb;
+static Fl_Callback0 movie_toggle_rw_cb;
 #ifdef LIBTAS_ENABLE_AVDUMPING
 static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
@@ -114,7 +115,7 @@ void MainWindow::build(Context* c)
     movie_recording->set();
 
     movie_read_only = new Fl_Check_Button(200, 90, 160, 20, "Read Only");
-    movie_read_only->callback(movie_recording_cb);
+    movie_read_only->callback(movie_toggle_rw_cb);
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 180, 40, 30, "Frames per second");
@@ -792,7 +793,16 @@ void set_fps_cb(Fl_Widget* w)
 void pause_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
-    mw.context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
+    if (mw.context->status == Context::INACTIVE) {
+        /* If the game is inactive, set the value directly */
+        Fl_Check_Button *cb = (Fl_Check_Button*) w;
+        int cb_val = static_cast<int>(cb->value());
+        mw.context->config.sc.running = !cb_val;
+    }
+    else {
+        /* Else, let the game thread set the value */
+        mw.context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
+    }
 }
 
 void fastforward_cb(Fl_Widget* w)
@@ -817,10 +827,8 @@ void movie_recording_cb(Fl_Widget* w)
 
         /* Enable the other movie UI elements */
         mw.movie_read_only->activate();
-        if (mw.context->status == Context::INACTIVE) {
-            mw.moviepath->activate();
-            mw.browsemoviepath->activate();
-        }
+        mw.moviepath->activate();
+        mw.browsemoviepath->activate();
     }
     else {
         mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
@@ -831,6 +839,25 @@ void movie_recording_cb(Fl_Widget* w)
         mw.browsemoviepath->deactivate();
     }
     mw.context->config.sc_modified = true;
+}
+
+void movie_toggle_rw_cb(Fl_Widget* w)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    /* If the game is running, we let the main thread deal with movie toggling.
+     * Else, we set the recording mode.
+     */
+    if (mw.context->status == Context::INACTIVE) {
+        if (mw.movie_read_only->value() == 1) {
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
+        }
+        else {
+            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+        }
+    }
+    else {
+        mw.context->hotkey_queue.push(HOTKEY_READWRITE);
+    }
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
