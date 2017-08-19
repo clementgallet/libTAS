@@ -43,10 +43,14 @@ public:
     int extractMovie();
     int extractMovie(const std::string& moviefile);
 
-    /* Import the inputs into a list.
+    /* Import the inputs into a list, and all the parameters.
      * Returns 0 if no error, or a negative value if an error occured */
     int loadMovie();
     int loadMovie(const std::string& moviefile);
+
+    /* Import the inputs only. Used when loading movies attached to savestates.
+     * Returns 0 if no error, or a negative value if an error occured */
+    int loadInputs(const std::string& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     void saveMovie();

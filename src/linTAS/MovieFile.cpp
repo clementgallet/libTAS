@@ -84,12 +84,18 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
 	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
 	GETWITHTYPE(config_prefs, "framerate", context->config.sc.framerate, unsigned int);
+	GETWITHTYPE(config_prefs, "rerecord_count", context->rerecord_count, unsigned int);
 
-	/* We must load the rerecord count only when this is the initial movie
-	 * loading (not a loading of a savestate movie)
-	 */
-	if (context->rerecord_count == 0) {
-		GETWITHTYPE(config_prefs, "rerecord_count", context->rerecord_count, unsigned int);
+	/* Load the movie length and compute the movie end time using the initial time */
+	struct timespec movie_length;
+	GETWITHTYPE(config_prefs, "movie_length_sec", movie_length.tv_sec, time_t);
+	GETWITHTYPE(config_prefs, "movie_length_nsec", movie_length.tv_nsec, time_t);
+
+	context->movie_end_time.tv_sec = movie_length.tv_sec + context->config.sc.initial_time.tv_sec;
+	context->movie_end_time.tv_nsec = movie_length.tv_nsec + context->config.sc.initial_time.tv_nsec;
+	if (context->movie_end_time.tv_nsec >= 1000000000) {
+		context->movie_end_time.tv_nsec -= 1000000000;
+		context->movie_end_time.tv_sec++;
 	}
 
 	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
@@ -143,6 +149,33 @@ int MovieFile::loadMovie()
     return loadMovie(context->config.moviefile);
 }
 
+int MovieFile::loadInputs(const std::string& moviefile)
+{
+	/* Extract the moviefile in the temp directory */
+	int ret = extractMovie(moviefile);
+	if (ret < 0)
+		return ret;
+
+    /* Open the input file and parse each line to fill our input list */
+    std::string input_file = context->config.tempmoviedir + "/inputs";
+    std::ifstream input_stream(input_file);
+    std::string line;
+
+    input_list.clear();
+
+    while (std::getline(input_stream, line)) {
+        if (!line.empty() && (line[0] == '|')) {
+            AllInputs ai;
+            readFrame(line, ai);
+            input_list.push_back(ai);
+        }
+    }
+
+    input_stream.close();
+	return 0;
+}
+
+
 void MovieFile::saveMovie(const std::string& moviefile)
 {
     /* Format and write input frames into the input file */
@@ -166,8 +199,8 @@ void MovieFile::saveMovie(const std::string& moviefile)
 	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
 
 	/* Compute and save movie length */
-	time_t movie_length_sec = context->current_time.tv_sec - context->config.sc.initial_time.tv_sec;
-	time_t movie_length_nsec = context->current_time.tv_nsec - context->config.sc.initial_time.tv_nsec;
+	time_t movie_length_sec = context->movie_end_time.tv_sec - context->config.sc.initial_time.tv_sec;
+	time_t movie_length_nsec = context->movie_end_time.tv_nsec - context->config.sc.initial_time.tv_nsec;
 	if (movie_length_nsec < 0) {
 		movie_length_nsec += 1000000000;
 		movie_length_sec--;

@@ -59,8 +59,11 @@ struct Context {
     /* frame count */
     unsigned int framecount = 0;
 
-    /* time */
+    /* current time */
     struct timespec current_time;
+
+    /* time at the end of the loaded movie */
+    struct timespec movie_end_time;
 
     /* config */
     Config config;

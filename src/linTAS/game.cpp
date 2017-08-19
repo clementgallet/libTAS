@@ -459,7 +459,7 @@ void launchGame(Context* context)
                              * a prefix of our moviefile.
                              */
                             MovieFile savedmovie(context);
-                            int ret = savedmovie.loadMovie(moviepath);
+                            int ret = savedmovie.loadInputs(moviepath);
                             if (ret < 0) {
                                 std::string* alert_str = new std::string("Could not load the moviefile associated with the savestate");
                                 Fl::awake(alert_dialog, alert_str);
@@ -497,7 +497,7 @@ void launchGame(Context* context)
                                  */
                                 if (last_savestate_slot != statei) {
                                     /* Load the movie file */
-                                    movie.loadMovie(moviepath);
+                                    movie.loadInputs(moviepath);
                                 }
 
                                 /* Increment rerecord count */
@@ -647,6 +647,9 @@ void launchGame(Context* context)
                     /* Save inputs to moviefile */
                     movie.setInputs(ai);
                 }
+
+                /* Update the movie end time */
+                context->movie_end_time = context->current_time;
                 break;
 
             case SharedConfig::RECORDING_READ:
