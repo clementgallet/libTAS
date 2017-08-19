@@ -35,6 +35,8 @@
 -- Add more alert windows
 - Refont the movie system
 -- Fix the movie frame count display
+-- Add the total time in the movie
+-- Save a trunc movie when savestate in read-only
 
 ## Done
 

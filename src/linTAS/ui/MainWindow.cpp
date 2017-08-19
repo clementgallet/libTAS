@@ -888,12 +888,9 @@ void config_executable_cb(Fl_Widget* w, void*)
 void toggle_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
-    /* Set encode status */
-    Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->mvalue());
-    Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(config_encode_cb));
 
+    /* Prompt a confirmation message for overwriting an encode file */
     if (!mw.context->config.sc.av_dumping) {
-        /* Prompt a confirmation message for overwriting an encode file */
         struct stat sb;
         if (stat(mw.context->config.dumpfile.c_str(), &sb) == 0) {
             /* Pause the game during the choice */
@@ -904,19 +901,11 @@ void toggle_encode_cb(Fl_Widget* w, void*)
             if (choice == 1)
                 return;
         }
+    }
 
-        mw.context->config.sc.av_dumping = true;
-        mw.context->config.sc_modified = true;
-        mw.context->config.dumpfile_modified = true;
-        encode_item->label("Stop encode");
-        if (config_item) config_item->deactivate();
-    }
-    else {
-        mw.context->config.sc.av_dumping = false;
-        mw.context->config.sc_modified = true;
-        encode_item->label("Start encode");
-        if (config_item) config_item->activate();
-    }
+    /* TODO: Using directly the hotkey does not check for existing file */
+    mw.context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
+
 }
 #endif
 
@@ -1014,6 +1003,7 @@ void logging_print_cb(Fl_Widget* w, void* v)
     else {
         mw.context->config.sc.includeFlags ^= logcat;
     }
+    mw.context->config.sc_modified = true;
 }
 
 void logging_exclude_cb(Fl_Widget* w, void* v)
@@ -1041,6 +1031,7 @@ void logging_exclude_cb(Fl_Widget* w, void* v)
     else {
         mw.context->config.sc.excludeFlags ^= logcat;
     }
+    mw.context->config.sc_modified = true;
 }
 
 void input_keyboard_cb(Fl_Widget*, void*)
