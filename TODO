@@ -33,9 +33,6 @@
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 -- Add more alert windows
-- Refont the movie system
--- Fix the movie frame count display
--- Save a trunc movie when savestate in read-only
 
 ## Done
 

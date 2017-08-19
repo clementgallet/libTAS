@@ -356,6 +356,8 @@ void launchGame(Context* context)
 
                 if (event.type == KeyPress)
                 {
+
+                    /* Advance a frame */
                     if (hk.type == HOTKEY_FRAMEADVANCE){
                         if (context->config.sc.running) {
                             context->config.sc.running = false;
@@ -365,19 +367,34 @@ void launchGame(Context* context)
                         ar_ticks = 0; // Activate auto-repeat
                         advance_frame = true; // Advance one frame
                     }
+
+                    /* Toggle between play and pause */
                     if (hk.type == HOTKEY_PLAYPAUSE){
                         context->config.sc.running = !context->config.sc.running;
                         ui.update_ui();
                         context->config.sc_modified = true;
                     }
+
+                    /* Enable fastforward */
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = true;
                         ui.update_ui();
                         context->config.sc_modified = true;
                     }
+
+                    /* Save a pseudo-savestate (register position in the movie) */
                     if (hk.type == HOTKEY_SAVEPSEUDOSTATE){
                         pseudosavestate.framecount = context->framecount;
                     }
+
+                    /* Load a pseudo-savestate:
+                     * - trigger a game restart
+                     * - playback the movie in fastforward
+                     * - stop the movie at the registered frame
+                     * FIXME: was not tested when real savestates start to work,
+                     * so may not work anymore. I'm unsure if I should keep this
+                     * or not.
+                     */
                     if (hk.type == HOTKEY_LOADPSEUDOSTATE){
                         if (pseudosavestate.framecount > 0 && (
                             context->config.sc.recording == SharedConfig::RECORDING_READ ||
@@ -394,6 +411,11 @@ void launchGame(Context* context)
                             break;
                         }
                     }
+
+                    /* Perform a savestate:
+                     * - save the moviefile if we are recording
+                     * - tell the game to save its state
+                     */
                     if (hk.type >= HOTKEY_SAVESTATE1 && hk.type <= HOTKEY_SAVESTATE9){
                         /* Saving is not allowed if currently encoding */
                         if (context->config.sc.av_dumping) {
@@ -413,7 +435,7 @@ void launchGame(Context* context)
                             moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
                             /* Save the movie file */
-                            movie.saveMovie(moviepath);
+                            movie.saveMovie(moviepath, context->framecount);
                         }
 
                         /* Building the savestate path */
@@ -424,6 +446,18 @@ void launchGame(Context* context)
                         sendMessage(MSGN_SAVESTATE);
                         sendString(savestatepath);
                     }
+
+                    /* Load a savestate:
+                     * - check for an existing savestate in the slot
+                     * - if in read-only move, we must check that the movie
+                         associated with the savestate must be a prefix of the
+                         current movie
+                     * - tell the game to load its state
+                     * - if loading succeeded:
+                     * -- send the shared config
+                     * -- increment the rerecord count
+                     * -- receive the frame count and the current time
+                     */
                     if (hk.type >= HOTKEY_LOADSTATE1 && hk.type <= HOTKEY_LOADSTATE9){
                         /* Loading is not allowed if currently encoding */
                         if (context->config.sc.av_dumping) {
@@ -518,6 +552,8 @@ void launchGame(Context* context)
                         receiveData(&context->current_time, sizeof(struct timespec));
                         ui.update_framecount_time();
                     }
+
+                    /* Switch between movie write and read-only */
                     if (hk.type == HOTKEY_READWRITE){
                         switch (context->config.sc.recording) {
                         case SharedConfig::RECORDING_WRITE:
@@ -540,6 +576,8 @@ void launchGame(Context* context)
                         context->config.sc_modified = true;
                         ui.update_ui();
                     }
+
+                    /* Start or stop a video encode */
                     if (hk.type == HOTKEY_TOGGLE_ENCODE) {
 #ifdef LIBTAS_ENABLE_AVDUMPING
                         if (!context->config.sc.av_dumping) {

@@ -175,15 +175,14 @@ int MovieFile::loadInputs(const std::string& moviefile)
 	return 0;
 }
 
-
-void MovieFile::saveMovie(const std::string& moviefile)
+void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 {
     /* Format and write input frames into the input file */
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
 
-    for (auto const& ai : input_list) {
-        writeFrame(input_stream, ai);
+    for (auto it = input_list.begin(); it != input_list.begin() + nb_frames; ++it) {
+        writeFrame(input_stream, *it);
     }
     input_stream.close();
 
@@ -243,6 +242,11 @@ void MovieFile::saveMovie(const std::string& moviefile)
 
     tar_append_eof(tar);
     tar_close(tar);
+}
+
+void MovieFile::saveMovie(const std::string& moviefile)
+{
+	saveMovie(context->config.moviefile, input_list.size());
 }
 
 void MovieFile::saveMovie()
