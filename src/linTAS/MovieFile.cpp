@@ -188,7 +188,7 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
     /* Save some parameters into the config file */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-    config_prefs.set("frame_count", static_cast<int>(input_list.size()));
+    config_prefs.set("frame_count", static_cast<int>(nb_frames));
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
     config_prefs.set("numControllers", context->config.sc.numControllers);
@@ -246,7 +246,7 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
 void MovieFile::saveMovie(const std::string& moviefile)
 {
-	saveMovie(context->config.moviefile, input_list.size());
+	saveMovie(moviefile, input_list.size());
 }
 
 void MovieFile::saveMovie()
