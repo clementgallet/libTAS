@@ -208,25 +208,13 @@ void DeterministicTimer::enterFrameBoundary()
         fractional_part -= shared_config.framerate;
     }
 
-    /* Subtract out ticks that were made when calling GetTicks() */
-    /* Warning: adding forceAdvanceTicks or not can yield different results! */
-    TimeHolder takenTicks = (ticks - lastEnterTicks) /*+ forceAdvancedTicks*/;
-
-    /* If we enter the frame normally (with a screen draw),
-     * then reset the forceAdvancedTicks
+    /* If we have less delay than the length of a frame, we advance ticks by
+     * the length of a frame. Otherwise, we don't increment ticks, and
+     * addedDelay will be decremented at the end of the frame boundary.
      */
-    if (drawFB) {
-        forceAdvancedTicks.tv_sec = 0;
-        forceAdvancedTicks.tv_nsec = 0;
-    }
-
-    /*
-     * Did we already have advanced more ticks that the length of a frame?
-     * If not, we add the remaining ticks
-     */
-    if (timeIncrement > takenTicks) {
-        TimeHolder deltaTicks = timeIncrement - takenTicks;
-        ticks += deltaTicks;
+    if (timeIncrement > addedDelay) {
+        TimeHolder deltaTicks = lastEnterTicks + timeIncrement - ticks;
+        ticks = lastEnterTicks + timeIncrement;
         debuglog(LCF_TIMESET | LCF_FRAME, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
     }
 
