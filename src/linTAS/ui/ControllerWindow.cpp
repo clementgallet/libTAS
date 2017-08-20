@@ -17,8 +17,6 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-
 #include "ControllerWindow.h"
 #include "ControllerAxisWidget.h"
 // #include "MainWindow.h"
@@ -133,6 +131,3 @@ void axis_update_cb(Fl_Widget* w, void* v)
     cw->trigger_left_value->value(cw->trigger_left->value());
 
 }
-
-
-#endif
