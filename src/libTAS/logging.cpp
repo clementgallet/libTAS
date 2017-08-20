@@ -105,7 +105,14 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
     strncat(s, "\n", maxsize-size-1);
 
-    fputs(s, stderr);
+    /* We need to use a non-locking function here, because of the following
+     * situation (encountered in Towerfall):
+     * - Thread 1 starts printing a debug message and acquire the lock
+     * - Thread 2 sends a signal to thread 1, interrupting the printing
+     * - Thread 1 executes a function that is wrapped, and prints a debug message
+     * - Thread 1 wants to acquire the lock
+     */
+    fputs_unlocked(s, stderr);
 
 }
 

@@ -68,14 +68,13 @@ namespace orig {
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(clock_gettime, nullptr);
-        orig::clock_gettime(clock_id, tp);
+        return orig::clock_gettime(clock_id, tp);
     }
-    else {
-        *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
-    }
+
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
     return 0;
 }
