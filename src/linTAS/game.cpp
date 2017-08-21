@@ -32,6 +32,8 @@
 #include "MovieFile.h"
 #include <cerrno>
 #include "utils.h"
+#include <unistd.h> // fork()
+#include <fcntl.h> // O_RDWR, O_CREAT
 
 static PseudoSaveState pseudosavestate;
 
@@ -83,39 +85,6 @@ void launchGame(Context* context)
     /* Remove the file socket */
     removeSocket();
 
-    /* Build the system command for calling the game */
-    std::ostringstream cmd;
-
-    if (!context->config.libdir.empty())
-        cmd << "export LD_LIBRARY_PATH=\"" << context->config.libdir << ":$LD_LIBRARY_PATH\" && ";
-    if (!context->config.rundir.empty())
-        cmd << "cd " << context->config.rundir << " && ";
-
-    std::string logstr = "";
-    if (context->config.sc.logging_status == SharedConfig::NO_LOGGING)
-        logstr += "2> /dev/null";
-    else if (context->config.sc.logging_status == SharedConfig::LOGGING_TO_FILE) {
-        logstr += "2>";
-        logstr += context->gamepath;
-        logstr += ".log";
-    }
-
-    // cmd << "LD_PRELOAD=" << context->libtaspath << " valgrind --track-origins=yes " << context->gamepath << " " << context->config.gameargs << logstr << " &";
-    cmd << "LD_PRELOAD=" << context->libtaspath << " " << context->gamepath << " " << context->config.gameargs << logstr << " &";
-
-    if (context->config.opengl_soft)
-        setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
-    else
-        unsetenv("LIBGL_ALWAYS_SOFTWARE");
-
-    if (!context->config.llvm_perf.empty())
-        setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
-    else
-        unsetenv("LP_PERF");
-
-    // std::cout << "Execute: " << cmd.str() << std::endl;
-    system(cmd.str().c_str());
-
     /* Get the shared libs of the game executable */
     std::vector<std::string> linked_libs;
     std::ostringstream libcmd;
@@ -135,6 +104,84 @@ void launchGame(Context* context)
         pclose(libstr);
     }
     // linked_libs.insert(linked_libs.end(), shared_libs.begin(), shared_libs.end());
+
+    /* We fork here so that the child process calls the game */
+    int pid = fork();
+    if (pid == 0) {
+
+        /* Update the LD_LIBRARY_PATH environment variable if the user set one */
+        if (!context->config.libdir.empty()) {
+            char* oldlibpath = getenv("LD_LIBRARY_PATH");
+            std::string libpath = context->config.libdir;
+            if (oldlibpath) {
+                libpath.append(":");
+                libpath.append(oldlibpath);
+            }
+            setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
+        }
+
+        /* Change the working directory if the user set one */
+        if (!context->config.rundir.empty())
+            chdir(context->config.rundir.c_str());
+
+        /* Set where stderr of the game is redirected */
+        int fd;
+        std::string logfile = context->gamepath + ".log";
+        switch(context->config.sc.logging_status) {
+            case SharedConfig::NO_LOGGING:
+                fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);
+                dup2(fd, 2);
+                close(fd);
+                break;
+            case SharedConfig::LOGGING_TO_FILE:
+                fd = open(logfile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                dup2(fd, 2);
+                close(fd);
+                break;
+            case SharedConfig::LOGGING_TO_CONSOLE:
+            default:
+                break;
+        }
+
+        /* Set additional environment variables regarding Mesa configuration */
+        if (context->config.opengl_soft)
+            setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
+        else
+            unsetenv("LIBGL_ALWAYS_SOFTWARE");
+
+        if (!context->config.llvm_perf.empty())
+            setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
+        else
+            unsetenv("LP_PERF");
+
+        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
+        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+
+        /* Run the actual game */
+        if (context->attach_gdb) {
+            /* FIXME: Not working! */
+            // execl("/usr/bin/gdb", "gdb",
+                // "-ex 'handle SIGUSR1 nostop noprint'",
+                // "-ex 'handle SIGUSR2 nostop noprint'",
+                // "-ex 'run'", context->gamepath.c_str(), NULL);
+                // context->gamepath.c_str(), NULL);
+            execl("/usr/bin/gdb", "gdb", NULL);
+                // "-ex 'handle SIGUSR1 nostop noprint'",
+                // "-ex 'handle SIGUSR2 nostop noprint'",
+                // "-ex 'run'", context->gamepath.c_str(), NULL);
+                // NULL);
+
+            // cmd << "gdb -q -ex 'set environment LD_PRELOAD=" << context->libtaspath << "'";
+            // cmd << "gdb -q -ex \"set exec-wrapper env 'LD_PRELOAD=" << context->libtaspath << "'\"";
+            //  << context->gamepath << " " << context->config.gameargs << logstr << " &";
+            // cmd << " -ex 'handle SIGUSR1 nostop noprint'";
+            // cmd << " -ex 'handle SIGUSR2 nostop noprint' -ex 'run' ";
+            // cmd << context->gamepath << " &";
+        }
+        else {
+            execl(context->gamepath.c_str(), context->gamepath.c_str(), context->config.gameargs.c_str(), NULL);
+        }
+    }
 
     /* Connect to the socket between the program and the game */
     initSocketProgram();
@@ -157,43 +204,6 @@ void launchGame(Context* context)
                 return;
         }
         message = receiveMessage();
-    }
-
-    /* Attach gdb */
-    if (context->attach_gdb) {
-
-        /* Try to find a terminal emulator */
-        std::string attach_gdb;
-
-        /* Debian-based distributions provide a link to the preferred terminal */
-        struct stat sb;
-        if (stat("/etc/alternatives/x-terminal-emulator", &sb) == 0) {
-            attach_gdb = "/etc/alternatives/x-terminal-emulator";
-        }
-        else {
-            /* Find the terminal that launched the linTAS binary. The tree of
-             * processes should be:
-             * terminal -- shell -- linTAS -- sh (executed by popen)
-             * so extracting the ppid of the ppid of the ppid of the current process.
-             */
-            FILE *term = popen("ps -h -o comm -p $(ps -h -o ppid -p $(ps -h -o ppid -p $(ps -h -o ppid -p $$)))", "r");
-            std::array<char,1000> buf;
-            fgets(buf.data(), buf.size(), term);
-            attach_gdb = std::string(buf.data());
-            attach_gdb.pop_back(); // remove the newline char
-        }
-
-        /* If everything failed, just use xterm */
-        if (attach_gdb.empty()) {
-            attach_gdb = "xterm";
-        }
-
-        attach_gdb.append(" -e gdb -q -ex 'handle SIGUSR1 nostop noprint'");
-        attach_gdb.append(" -ex 'handle SIGUSR2 nostop noprint' -ex 'c' ");
-        attach_gdb.append(context->gamepath).append(" ");
-        attach_gdb.append(std::to_string(context->game_pid)).append(" &");
-        std::cout << "call: " << attach_gdb << std::endl;
-        system(attach_gdb.c_str());
     }
 
     /* Opening a movie, which imports the inputs and parameters if in read mode,
