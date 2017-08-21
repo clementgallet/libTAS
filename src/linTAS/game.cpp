@@ -161,11 +161,38 @@ void launchGame(Context* context)
 
     /* Attach gdb */
     if (context->attach_gdb) {
-        std::string attach_gdb = getenv("TERM");
+
+        /* Try to find a terminal emulator */
+        std::string attach_gdb;
+
+        /* Debian-based distributions provide a link to the preferred terminal */
+        struct stat sb;
+        if (stat("/etc/alternatives/x-terminal-emulator", &sb) == 0) {
+            attach_gdb = "/etc/alternatives/x-terminal-emulator";
+        }
+        else {
+            /* Find the terminal that launched the linTAS binary. The tree of
+             * processes should be:
+             * terminal -- shell -- linTAS -- sh (executed by popen)
+             * so extracting the ppid of the ppid of the ppid of the current process.
+             */
+            FILE *term = popen("ps -h -o comm -p $(ps -h -o ppid -p $(ps -h -o ppid -p $(ps -h -o ppid -p $$)))", "r");
+            std::array<char,1000> buf;
+            fgets(buf.data(), buf.size(), term);
+            attach_gdb = std::string(buf.data());
+            attach_gdb.pop_back(); // remove the newline char
+        }
+
+        /* If everything failed, just use xterm */
+        if (attach_gdb.empty()) {
+            attach_gdb = "xterm";
+        }
+
         attach_gdb.append(" -e gdb -q -ex 'handle SIGUSR1 nostop noprint'");
         attach_gdb.append(" -ex 'handle SIGUSR2 nostop noprint' -ex 'c' ");
         attach_gdb.append(context->gamepath).append(" ");
         attach_gdb.append(std::to_string(context->game_pid)).append(" &");
+        std::cout << "call: " << attach_gdb << std::endl;
         system(attach_gdb.c_str());
     }
 
