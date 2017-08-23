@@ -60,6 +60,85 @@ static bool haveFocus(Context* context)
     return false;
 }
 
+/* Set the different environment variables, then start the game executable with
+ * our library to be injected using the LD_PRELOAD trick.
+ * Because this function eventually calls execl, it does not return.
+ * So, it is called from a child process using fork().
+ */
+static void executeGame(Context* context)
+{
+    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
+    if (!context->config.libdir.empty()) {
+        char* oldlibpath = getenv("LD_LIBRARY_PATH");
+        std::string libpath = context->config.libdir;
+        if (oldlibpath) {
+            libpath.append(":");
+            libpath.append(oldlibpath);
+        }
+        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
+    }
+
+    /* Change the working directory if the user set one */
+    if (!context->config.rundir.empty())
+        chdir(context->config.rundir.c_str());
+
+    /* Set where stderr of the game is redirected */
+    int fd;
+    std::string logfile = context->gamepath + ".log";
+    switch(context->config.sc.logging_status) {
+        case SharedConfig::NO_LOGGING:
+            fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);
+            dup2(fd, 2);
+            close(fd);
+            break;
+        case SharedConfig::LOGGING_TO_FILE:
+            fd = open(logfile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            dup2(fd, 2);
+            close(fd);
+            break;
+        case SharedConfig::LOGGING_TO_CONSOLE:
+        default:
+            break;
+    }
+
+    /* Set additional environment variables regarding Mesa configuration */
+    if (context->config.opengl_soft)
+        setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
+    else
+        unsetenv("LIBGL_ALWAYS_SOFTWARE");
+
+    if (!context->config.llvm_perf.empty())
+        setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
+    else
+        unsetenv("LP_PERF");
+
+    /* Run the actual game */
+    if (context->attach_gdb) {
+        /* Call the game using gdb. The LD_PRELOAD must be set inside gdb,
+         * so building a command to be executed at the start of gdb.
+         */
+        std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
+        ldpreloadstr += context->libtaspath;
+        ldpreloadstr += "'";
+
+        execl("/usr/bin/gdb", "/usr/bin/gdb", "-q",
+            "-ex", ldpreloadstr.c_str(),
+            /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
+             * print and pause when one signal is sent */
+            "-ex", "handle SIGUSR1 nostop noprint",
+            "-ex", "handle SIGUSR2 nostop noprint",
+            "-ex", "run",
+            context->gamepath.c_str(),
+            (char*) NULL);
+    }
+    else {
+        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
+        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+
+        execl(context->gamepath.c_str(), context->gamepath.c_str(), context->config.gameargs.c_str(), NULL);
+    }
+}
+
 void launchGame(Context* context)
 {
     /* Unvalidate the game window id */
@@ -108,79 +187,7 @@ void launchGame(Context* context)
     /* We fork here so that the child process calls the game */
     int pid = fork();
     if (pid == 0) {
-
-        /* Update the LD_LIBRARY_PATH environment variable if the user set one */
-        if (!context->config.libdir.empty()) {
-            char* oldlibpath = getenv("LD_LIBRARY_PATH");
-            std::string libpath = context->config.libdir;
-            if (oldlibpath) {
-                libpath.append(":");
-                libpath.append(oldlibpath);
-            }
-            setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
-        }
-
-        /* Change the working directory if the user set one */
-        if (!context->config.rundir.empty())
-            chdir(context->config.rundir.c_str());
-
-        /* Set where stderr of the game is redirected */
-        int fd;
-        std::string logfile = context->gamepath + ".log";
-        switch(context->config.sc.logging_status) {
-            case SharedConfig::NO_LOGGING:
-                fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);
-                dup2(fd, 2);
-                close(fd);
-                break;
-            case SharedConfig::LOGGING_TO_FILE:
-                fd = open(logfile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-                dup2(fd, 2);
-                close(fd);
-                break;
-            case SharedConfig::LOGGING_TO_CONSOLE:
-            default:
-                break;
-        }
-
-        /* Set additional environment variables regarding Mesa configuration */
-        if (context->config.opengl_soft)
-            setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
-        else
-            unsetenv("LIBGL_ALWAYS_SOFTWARE");
-
-        if (!context->config.llvm_perf.empty())
-            setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
-        else
-            unsetenv("LP_PERF");
-
-        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
-        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
-
-        /* Run the actual game */
-        if (context->attach_gdb) {
-            /* FIXME: Not working! */
-            // execl("/usr/bin/gdb", "gdb",
-                // "-ex 'handle SIGUSR1 nostop noprint'",
-                // "-ex 'handle SIGUSR2 nostop noprint'",
-                // "-ex 'run'", context->gamepath.c_str(), NULL);
-                // context->gamepath.c_str(), NULL);
-            execl("/usr/bin/gdb", "gdb", NULL);
-                // "-ex 'handle SIGUSR1 nostop noprint'",
-                // "-ex 'handle SIGUSR2 nostop noprint'",
-                // "-ex 'run'", context->gamepath.c_str(), NULL);
-                // NULL);
-
-            // cmd << "gdb -q -ex 'set environment LD_PRELOAD=" << context->libtaspath << "'";
-            // cmd << "gdb -q -ex \"set exec-wrapper env 'LD_PRELOAD=" << context->libtaspath << "'\"";
-            //  << context->gamepath << " " << context->config.gameargs << logstr << " &";
-            // cmd << " -ex 'handle SIGUSR1 nostop noprint'";
-            // cmd << " -ex 'handle SIGUSR2 nostop noprint' -ex 'run' ";
-            // cmd << context->gamepath << " &";
-        }
-        else {
-            execl(context->gamepath.c_str(), context->gamepath.c_str(), context->config.gameargs.c_str(), NULL);
-        }
+        executeGame(context);
     }
 
     /* Connect to the socket between the program and the game */
