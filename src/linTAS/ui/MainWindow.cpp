@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "../game.h"
 #include "../MovieFile.h"
+#include "ErrorChecking.h"
 #include <iostream>
 #include <FL/x.H>
 #include <FL/fl_ask.H>
@@ -683,15 +684,9 @@ void launch_cb(Fl_Widget* w)
 
     switch (mw.context->status) {
         case Context::INACTIVE:
-            /* Prompt a confirmation message if overwriting a movie file */
-            if (mw.context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                struct stat sb;
-                if (stat(mw.context->config.moviefile.c_str(), &sb) == 0) {
-                    int choice = fl_choice("The movie file %s does exist. Do you want to overwrite it?", "Yes", "No", 0, mw.context->config.moviefile.c_str());
-                    if (choice == 1)
-                        break;
-                }
-            }
+            /* Perform all checks */
+            if (!ErrorChecking::allChecks(mw.context))
+                break;
 
             /* Check that there might be a thread from a previous game execution */
             if (mw.game_thread.joinable())

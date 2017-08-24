@@ -33,7 +33,6 @@
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 -- Add more alert windows
--- Check for writing permission in the path of the moviefile
 
 ## Done
 
