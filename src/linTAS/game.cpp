@@ -29,13 +29,14 @@
 #include <sstream>
 #include <iostream>
 #include "ui/MainWindow.h"
-#include "MovieFile.h"
 #include <cerrno>
 #include "utils.h"
 #include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
 
 static PseudoSaveState pseudosavestate;
+
+MovieFile movie;
 
 /* Determine if we are allowed to send inputs to the game, based on which
  * window has focus and our settings
@@ -216,7 +217,7 @@ void launchGame(Context* context)
     /* Opening a movie, which imports the inputs and parameters if in read mode,
      * or prepare a movie if in write mode.
      */
-    MovieFile movie(context);
+    movie = MovieFile(context);
     if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
         movie.loadMovie();
         context->config.sc.movie_framecount = movie.nbFrames();

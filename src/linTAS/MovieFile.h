@@ -35,6 +35,14 @@ public:
      */
     std::vector<AllInputs> input_list;
 
+    /* Flag storing if the movie has been modified since last save.
+     * Used for prompting a message when the game exits if the user wants
+     * to save.
+     */
+    bool modifiedSinceLastSave;
+
+    MovieFile() {};
+
     /* Prepare a movie file from the context */
     MovieFile(Context* c);
 

@@ -27,6 +27,8 @@
 
 static Fl_Callback browse_gamepath_cb;
 static Fl_Callback browse_moviepath_cb;
+static Fl_Callback save_movie_cb;
+static Fl_Callback export_movie_cb;
 static Fl_Callback0 set_fps_cb;
 static Fl_Callback0 pause_cb;
 static Fl_Callback0 fastforward_cb;
@@ -148,11 +150,11 @@ void MainWindow::build(Context* c)
     rerecord_count->align(FL_ALIGN_TOP_LEFT);
     rerecord_count->color(FL_LIGHT1);
 
-    MovieFile movie(context);
-    if (movie.extractMovie() == 0) {
-        std::string movieframestr = std::to_string(movie.nbFramesConfig());
+    MovieFile tempmovie(context);
+    if (tempmovie.extractMovie() == 0) {
+        std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
         movie_framecount->value(movieframestr.c_str());
-        std::string rerecordstr = std::to_string(movie.nbRerecords());
+        std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
         rerecord_count->value(rerecordstr.c_str());
 
         /* Also, by default, set the read-only mode */
@@ -209,6 +211,8 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Executable...", 0, browse_gamepath_cb},
         {"Executable Options...", 0, config_executable_cb},
         {"Open Movie...", 0, browse_moviepath_cb},
+        {"Save Movie", 0, save_movie_cb},
+        {"Export Movie...", 0, export_movie_cb},
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
         {"Force software rendering", 0, render_soft_cb, nullptr, FL_MENU_TOGGLE},
@@ -415,6 +419,10 @@ void MainWindow::update_status()
             launch_gdb->label("Start and attach gdb");
             launch_gdb->activate();
             moviepath->activate();
+            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
+            if (item) item->deactivate();
+            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
+            if (item) item->deactivate();
             browsemoviepath->activate();
             gamepath->activate();
             browsegamepath->activate();
@@ -441,10 +449,10 @@ void MainWindow::update_status()
             framecount->value("0");
             {
                 movie_framecount->activate();
-                MovieFile movie(context);
+                MovieFile tempmovie(context);
                 /* Update the movie frame count if the movie file is valid */
-                if (movie.extractMovie() == 0) {
-                    std::string movieframestr = std::to_string(movie.nbFramesConfig());
+                if (tempmovie.extractMovie() == 0) {
+                    std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
                     movie_framecount->value(movieframestr.c_str());
                 }
             }
@@ -477,6 +485,12 @@ void MainWindow::update_status()
             else {
                 launch->activate();
                 launch->label("Stop");
+            }
+            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+                item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
+                if (item) item->activate();
+                item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
+                if (item) item->activate();
             }
             break;
         case Context::QUITTING:
@@ -752,12 +766,12 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
     if (ret == 0) {
         mw.moviepath->value(filename);
         mw.context->config.moviefile = std::string(filename);
-        MovieFile movie(mw.context);
-        if (movie.extractMovie() == 0) {
+        MovieFile tempmovie(mw.context);
+        if (tempmovie.extractMovie() == 0) {
             /* If the moviefile is valid, update the frame and rerecord counts */
-            std::string movieframestr = std::to_string(movie.nbFramesConfig());
+            std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
             mw.movie_framecount->value(movieframestr.c_str());
-            std::string rerecordstr = std::to_string(movie.nbRerecords());
+            std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
             mw.rerecord_count->value(rerecordstr.c_str());
 
             /* Also, by default, set the read-only mode */
@@ -773,6 +787,27 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
             mw.movie_read_only->clear();
             mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             mw.context->config.sc_modified = true;
+        }
+    }
+}
+
+void save_movie_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    if (mw.context->config.sc.recording != SharedConfig::NO_RECORDING)
+        movie.saveMovie(); // TODO: game.h exports the movie object, bad...
+}
+
+void export_movie_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    if (mw.context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        int ret = mw.moviepathchooser->show();
+        const char* filename = mw.moviepathchooser->filename();
+
+        /* If the user picked a file */
+        if (ret == 0) {
+            movie.saveMovie(filename); // TODO: game.h exports the movie object, bad...
         }
     }
 }

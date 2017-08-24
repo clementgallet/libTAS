@@ -30,7 +30,7 @@
 static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
 
-MovieFile::MovieFile(Context* c) : context(c) {}
+MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), context(c) {}
 
 int MovieFile::extractMovie(const std::string& moviefile)
 {
@@ -252,6 +252,7 @@ void MovieFile::saveMovie(const std::string& moviefile)
 void MovieFile::saveMovie()
 {
     saveMovie(context->config.moviefile);
+	modifiedSinceLastSave = false;
 }
 
 int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
@@ -367,8 +368,6 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
 
 unsigned int MovieFile::nbFramesConfig()
 {
-	extractMovie();
-
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
     int frame_count;
@@ -384,8 +383,6 @@ unsigned int MovieFile::nbFrames()
 
 unsigned int MovieFile::nbRerecords()
 {
-	extractMovie();
-
     /* Load the config file into the context struct */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
     int rerecord_count;
@@ -399,6 +396,7 @@ int MovieFile::setInputs(const AllInputs& inputs)
     /* Check that we are writing to the next frame */
     if (context->framecount == input_list.size()) {
         input_list.push_back(inputs);
+		modifiedSinceLastSave = true;
         return 0;
     }
     else if (context->framecount < input_list.size()) {
@@ -407,6 +405,7 @@ int MovieFile::setInputs(const AllInputs& inputs)
          */
         input_list.resize(context->framecount);
         input_list.push_back(inputs);
+		modifiedSinceLastSave = true;
         return 0;
     }
     else {
@@ -434,8 +433,8 @@ int MovieFile::getInputs(AllInputs& inputs)
 
 void MovieFile::close()
 {
-    if (context->config.sc.recording != SharedConfig::NO_RECORDING)
-        saveMovie();
+    // if (context->config.sc.recording != SharedConfig::NO_RECORDING)
+    //     saveMovie();
 }
 
 bool MovieFile::isPrefix(const MovieFile& movie)

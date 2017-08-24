@@ -19,12 +19,11 @@
 
 ## Partially done
 
-- Standardize communication between game and program
--- Rewrite the socket sharing to assure that full information is send/receive (for arrays mainly)
 - Dump video
 -- Some muxers do not work (mp4)
 -- Must support or disable screen resizing
 - Support savestates
+-- Still some errors...
 - Dump audio
 -- Test SDL 2 Audio (push method)
 -- Crash in Dustforce: "Assertion 0 failed at libswresample/rematrix.c:414"
