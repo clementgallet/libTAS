@@ -33,7 +33,7 @@ static Fl_Callback cancel_cb;
 
 InputWindow::InputWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(800, 500);
+    window = new Fl_Double_Window(800, 500, "Input mapping");
 
     /* Browsers */
     hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");

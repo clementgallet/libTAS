@@ -27,7 +27,7 @@ static Fl_Callback axis_update_cb;
 
 ControllerWindow::ControllerWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(600, 200);
+    window = new Fl_Double_Window(600, 200, "Joystick inputs");
 
     button_a = new Fl_Check_Button(500, 170, 70, 30, "A");
     button_b = new Fl_Check_Button(540, 140, 70, 30, "B");

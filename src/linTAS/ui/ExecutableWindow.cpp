@@ -30,7 +30,7 @@ static Fl_Callback clear_libpath_cb;
 
 ExecutableWindow::ExecutableWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(680, 160);
+    window = new Fl_Double_Window(680, 160, "Executable Options");
 
     /* Run path */
     runpath = new Fl_Output(10, 30, 500, 30, "Run path");

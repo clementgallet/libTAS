@@ -31,7 +31,7 @@ static Fl_Callback acodec_cb;
 
 EncodeWindow::EncodeWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(600, 200);
+    window = new Fl_Double_Window(600, 200, "Encoding configuration");
 
     /* Game Executable */
     encodepath = new Fl_Output(10, 30, 500, 30, "Encode file path");

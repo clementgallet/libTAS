@@ -78,7 +78,7 @@ MainWindow::~MainWindow()
 void MainWindow::build(Context* c)
 {
     context = c;
-    window = new Fl_Double_Window(600, 500);
+    window = new Fl_Double_Window(600, 500, "libTAS");
 
     /* Menu */
     menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);
