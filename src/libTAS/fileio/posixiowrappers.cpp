@@ -93,6 +93,8 @@ static int get_memfd(const char* source, int flags)
                         s = fread(tmp_buf, 1, 4096, f);
                         write(fd, tmp_buf, s);
                     } while(s != 0);
+                    
+                    fclose(f);
                 }
             }
         }

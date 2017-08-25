@@ -97,6 +97,8 @@ static FILE* get_memstream(const char* source, const char* modes)
                         s = fread(tmp_buf, 1, 4096, f);
                         fwrite(tmp_buf, 1, s, memstream);
                     } while(s != 0);
+
+                    fclose(f);
                 }
             }
         }
