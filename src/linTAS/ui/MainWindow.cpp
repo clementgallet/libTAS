@@ -648,7 +648,7 @@ void MainWindow::update_config()
     SET_TOGGLE_FROM_BOOL(input_keyboard_cb, context->config.sc.keyboard_support);
     SET_TOGGLE_FROM_BOOL(input_mouse_cb, context->config.sc.mouse_support);
 
-    SET_RADIO_FROM_LIST(input_joy_cb, context->config.sc.numControllers);
+    SET_RADIO_FROM_LIST(input_joy_cb, context->config.sc.nb_controllers);
 
 #ifdef LIBTAS_ENABLE_HUD
     SET_TOGGLE_FROM_BOOL(osd_frame_cb, context->config.sc.hud_framecount);
@@ -1097,7 +1097,7 @@ void input_joy_cb(Fl_Widget*, void* v)
     MainWindow& mw = MainWindow::getInstance();
     int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
 
-    mw.context->config.sc.numControllers = nb_joy;
+    mw.context->config.sc.nb_controllers = nb_joy;
     mw.context->config.sc_modified = true;
 }
 

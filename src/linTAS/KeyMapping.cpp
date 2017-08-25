@@ -356,7 +356,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window w
                     int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
 
                     /* Check if we support this joystick */
-                    if (controller_i >= sc.numControllers)
+                    if (controller_i >= sc.nb_controllers)
                         continue;
 
                     int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;

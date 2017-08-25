@@ -68,7 +68,7 @@ void Config::save() {
     prefs_shared.set("framerate", static_cast<int>(sc.framerate));
     prefs_shared.set("keyboard_support", static_cast<int>(sc.keyboard_support));
     prefs_shared.set("mouse_support", static_cast<int>(sc.mouse_support));
-    prefs_shared.set("numControllers", sc.numControllers);
+    prefs_shared.set("nb_controllers", sc.nb_controllers);
     prefs_shared.set("hud_framecount", static_cast<int>(sc.hud_framecount));
     prefs_shared.set("hud_inputs", static_cast<int>(sc.hud_inputs));
     prefs_shared.set("hud_encode", static_cast<int>(sc.hud_encode));
@@ -191,7 +191,7 @@ void Config::load(const std::string& gamepath) {
     GETWITHTYPE(keyboard_support, bool);
     GETWITHTYPE(mouse_support, bool);
     GETWITHTYPE(keyboard_support, bool);
-    GETWITHTYPE(numControllers, int);
+    GETWITHTYPE(nb_controllers, int);
     GETWITHTYPE(hud_framecount, bool);
     GETWITHTYPE(hud_inputs, bool);
     GETWITHTYPE(hud_encode, bool);

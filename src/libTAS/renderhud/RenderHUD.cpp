@@ -176,7 +176,7 @@ void RenderHUD::renderInputs(AllInputs& ai, int y, Color fg_color)
     }
 
     /* Joystick */
-    for (int i=0; i<shared_config.numControllers; i++) {
+    for (int i=0; i<shared_config.nb_controllers; i++) {
         for (int j=0; j<AllInputs::MAXAXES; j++) {
             if (ai.controller_axes[i][j] != 0)
                 oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";

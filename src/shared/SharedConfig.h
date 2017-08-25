@@ -80,7 +80,7 @@ class SharedConfig {
         bool mouse_support = true;
 
         /* Number of SDL controllers to (virtually) plug in */
-        int numControllers = 0;
+        int nb_controllers = 0;
 
         /* Display frame count in the HUD */
         bool hud_framecount = true;

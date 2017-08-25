@@ -158,7 +158,7 @@ void generateSDLControllerAdded(void)
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (int i = 0; i < shared_config.numControllers; i++) {
+    for (int i = 0; i < shared_config.nb_controllers; i++) {
         SDL_Event ev;
         ev.type = SDL_CONTROLLERDEVICEADDED;
         ev.cdevice.timestamp = timestamp;
@@ -177,7 +177,7 @@ void generateSDLControllerEvents(void)
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (int ji=0; ji<shared_config.numControllers; ji++) {
+    for (int ji=0; ji<shared_config.nb_controllers; ji++) {
 
         /* Check if we need to generate any joystick events for that
          * particular joystick. If not, we {continue;} here because

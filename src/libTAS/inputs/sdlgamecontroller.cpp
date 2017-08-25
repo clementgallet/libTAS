@@ -36,7 +36,7 @@ static const char joy_name[] = "XInput Controller";
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    if (joystick_index >= 0 && joystick_index < shared_config.numControllers)
+    if (joystick_index >= 0 && joystick_index < shared_config.nb_controllers)
         return SDL_TRUE;
     return SDL_FALSE;
 
@@ -45,7 +45,7 @@ static const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joystick_index);
-    if (joystick_index < 0 || joystick_index >= shared_config.numControllers)
+    if (joystick_index < 0 || joystick_index >= shared_config.nb_controllers)
         return NULL;
 
     /* Save the opening of the game controller */
@@ -83,7 +83,7 @@ static const char joy_name[] = "XInput Controller";
 /* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", joy);
-    if (joy < 0 || joy >= shared_config.numControllers)
+    if (joy < 0 || joy >= shared_config.nb_controllers)
         return NULL;
     if (gcids[joy] != -1)
         return NULL;
@@ -112,7 +112,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
     int* gcid = reinterpret_cast<int*>(gamecontroller);
 
-    if (*gcid < 0 || *gcid >= shared_config.numControllers)
+    if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return NULL;
 
     /* Check if controller is available */
@@ -134,7 +134,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
     int* gcid = reinterpret_cast<int*>(gamecontroller);
 
-    if (*gcid < 0 || *gcid >= shared_config.numControllers)
+    if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return SDL_FALSE;
     if (gcids[*gcid] == -1)
         return SDL_FALSE;
@@ -189,7 +189,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
     int* gcid = reinterpret_cast<int*>(gamecontroller);
 
-    if (*gcid < 0 || *gcid >= shared_config.numControllers)
+    if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return 0;
 
     /* Check if controller is available */
@@ -212,7 +212,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
     int* gcid = reinterpret_cast<int*>(gamecontroller);
 
-    if (*gcid < 0 || *gcid >= shared_config.numControllers)
+    if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return 0;
 
     /* Check if controller is available */
@@ -234,7 +234,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
     int* gcid = reinterpret_cast<int*>(gamecontroller);
 
-    if (*gcid < 0 || *gcid >= shared_config.numControllers)
+    if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return;
 
     gcids[*gcid] = -1;

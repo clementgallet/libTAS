@@ -80,7 +80,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned int);
 	GETWITHTYPE(config_prefs, "keyboard_support", context->config.sc.keyboard_support, bool);
 	GETWITHTYPE(config_prefs, "mouse_support", context->config.sc.mouse_support, bool);
-	GETWITHTYPE(config_prefs, "numControllers", context->config.sc.numControllers, int);
+	GETWITHTYPE(config_prefs, "nb_controllers", context->config.sc.nb_controllers, int);
 	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
 	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
 	GETWITHTYPE(config_prefs, "framerate", context->config.sc.framerate, unsigned int);
@@ -188,10 +188,11 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
     /* Save some parameters into the config file */
     Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
+	config_prefs.set("game_name", context->gamename.c_str());
     config_prefs.set("frame_count", static_cast<int>(nb_frames));
     config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
     config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
-    config_prefs.set("numControllers", context->config.sc.numControllers);
+    config_prefs.set("nb_controllers", context->config.sc.nb_controllers);
 	config_prefs.set("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
 	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
 	config_prefs.set("framerate", static_cast<int>(context->config.sc.framerate));
@@ -280,9 +281,9 @@ int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
     }
 
     /* Write controller inputs */
-    for (int joy=0; joy<context->config.sc.numControllers; joy++) {
+    for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
         input_stream.put('|');
-        input_stream << std::hex;
+        input_stream << std::dec;
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             input_stream << inputs.controller_axes[joy][axis] << ':';
         }
@@ -351,7 +352,7 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     }
 
     /* Read controller inputs */
-    for (int joy=0; joy<context->config.sc.numControllers; joy++) {
+    for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
         input_string >> d;
         input_string >> std::hex;
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
