@@ -24,7 +24,7 @@
 #include "logging.h"
 #include "screenpixels.h"
 #include "audio/AudioContext.h"
-#include "../shared/SharedConfig.h"
+#include "global.h" // shared_config
 #include "GlobalState.h"
 
 #define ASSERT_RETURN_VOID(expr, msg) do { \

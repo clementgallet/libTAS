@@ -20,7 +20,7 @@
 #include "NonDeterministicTimer.h"
 #include "logging.h"
 #include "frame.h"
-#include "../shared/SharedConfig.h"
+#include "global.h" // shared_config
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
 #include "audio/AudioContext.h"

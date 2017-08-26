@@ -150,6 +150,4 @@ class SharedConfig {
         struct timespec initial_time = {0, 0};
 };
 
-extern SharedConfig shared_config;
-
 #endif

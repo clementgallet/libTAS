@@ -21,7 +21,7 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
-#include "../shared/SharedConfig.h"
+#include "global.h" // shared_config
 #include <string>
 #include <iostream>
 #include <iomanip>

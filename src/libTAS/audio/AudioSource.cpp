@@ -21,7 +21,7 @@
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::copy
 #include "../logging.h"
-#include "../../shared/SharedConfig.h"
+#include "../global.h" // shared_config
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
     #include <libavutil/opt.h>

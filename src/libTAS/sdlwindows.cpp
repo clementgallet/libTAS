@@ -19,6 +19,7 @@
 
 #include "sdlwindows.h"
 #include "hook.h"
+#include "sdlversion.h"
 #include "logging.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
@@ -311,6 +312,7 @@ void updateTitle(float fps, float lfps)
         out << " dumping";
 
     std::string newTitle = origTitle + out.str();
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         orig::SDL_WM_SetCaption(newTitle.c_str(), origIcon.c_str());
     }
@@ -490,6 +492,8 @@ void updateTitle(float fps, float lfps)
 
 void link_sdlwindows(void)
 {
+    int SDLver = get_sdlversion();
+
     if (SDLver == 1) {
         LINK_NAMESPACE_SDL1(SDL_GL_SwapBuffers);
         LINK_NAMESPACE_SDL1(SDL_SetVideoMode);

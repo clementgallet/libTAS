@@ -20,7 +20,7 @@
 #include "sdljoystick.h"
 #include "inputs.h"
 #include "../logging.h"
-#include "../hook.h"
+#include "../sdlversion.h"
 #include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
@@ -235,6 +235,8 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     };
 
     bool enabled = false;
+    int SDLver = get_sdlversion();
+
     switch (state) {
         case SDL_ENABLE:
             if (SDLver == 1)

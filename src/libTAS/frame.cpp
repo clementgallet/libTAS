@@ -20,7 +20,7 @@
 #include "frame.h"
 #include "../shared/AllInputs.h"
 #include "../shared/messages.h"
-#include "../shared/SharedConfig.h"
+#include "global.h" // shared_config
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/sdlinputevents.h"
 #include "../shared/sockethelpers.h"

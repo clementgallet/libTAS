@@ -27,6 +27,7 @@
 #include "audio/AudioContext.h"
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
+#include "global.h" // shared_config
 
 namespace libtas {
 

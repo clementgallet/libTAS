@@ -32,6 +32,7 @@
 #include "../shared/SharedConfig.h"
 #include "../shared/AllInputs.h"
 #include "hook.h"
+#include "sdlversion.h"
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
 #include <fstream>
@@ -41,9 +42,6 @@
 //#endif
 
 namespace libtas {
-
-/* Did we call our constructor? */
-bool libTAS_init = false;
 
 /* Function pointers to real functions */
 namespace orig {
@@ -122,8 +120,6 @@ void __attribute__((constructor)) init(void)
     audiocontext.init();
 
     ThreadManager::init();
-
-    libTAS_init = true;
 }
 
 void __attribute__((destructor)) term(void)
@@ -139,12 +135,11 @@ void __attribute__((destructor)) term(void)
 /* Override */ int SDL_Init(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
 
-    /* Get which sdl version we are using.
-     * Stores it in an extern variable.
-     */
-    get_sdlversion();
+    /* Get and remember which sdl version we are using. */
+    int SDLver = get_sdlversion();
 
     LINK_NAMESPACE_SDLX(SDL_Init);
+
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
      * so we put the rest of relevent code in the SubSystem function.
@@ -171,10 +166,8 @@ void __attribute__((destructor)) term(void)
 
     debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
 
-    /* Get which sdl version we are using.
-     * Stores it in an extern variable.
-     */
-    get_sdlversion();
+    /* Get which sdl version we are using. */
+    int SDLver = get_sdlversion();
 
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);

@@ -21,7 +21,7 @@
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
-#include "../../shared/SharedConfig.h"
+#include "../global.h" // shared_config
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>

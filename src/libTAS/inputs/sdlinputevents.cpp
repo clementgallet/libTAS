@@ -21,7 +21,7 @@
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
-#include "../hook.h"
+#include "../sdlversion.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <X11/keysym.h>
@@ -40,6 +40,8 @@ namespace libtas {
 void generateSDLKeyUpEvents(void)
 {
     int i, j;
+    int SDLver = get_sdlversion();
+
     struct timespec time = detTimer.getTicks();
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
@@ -96,6 +98,8 @@ void generateSDLKeyUpEvents(void)
 void generateSDLKeyDownEvents(void)
 {
     int i,j,k;
+    int SDLver = get_sdlversion();
+
     struct timespec time = detTimer.getTicks();
     for (i=0; i<16; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
@@ -153,6 +157,8 @@ void generateSDLKeyDownEvents(void)
 
 void generateSDLControllerAdded(void)
 {
+    int SDLver = get_sdlversion();
+
     if (SDLver == 1)
         return;
     struct timespec time = detTimer.getTicks();
@@ -176,6 +182,7 @@ void generateSDLControllerEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+    int SDLver = get_sdlversion();
 
     for (int ji=0; ji<shared_config.nb_controllers; ji++) {
 
@@ -382,6 +389,8 @@ void generateSDLMouseMotionEvents(void)
     /* Fill the event structure */
     /* TODO: Deal if pointer is out of screen */
 
+    int SDLver = get_sdlversion();
+
     if (SDLver == 2) {
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
@@ -445,6 +454,7 @@ void generateSDLMouseMotionEvents(void)
 void generateSDLMouseButtonEvents(void)
 {
     struct timespec time = detTimer.getTicks();
+    int SDLver = get_sdlversion();
 
     static int xbuttons[] = {Button1Mask,
         Button2Mask, Button3Mask,

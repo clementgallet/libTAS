@@ -22,7 +22,7 @@
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
 
 #include "../logging.h"
-#include "../../shared/SharedConfig.h"
+#include "../global.h" // shared_config
 #include "../GlobalState.h"
 
 namespace libtas {

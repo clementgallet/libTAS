@@ -23,7 +23,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include <sstream>
-#include "../../shared/SharedConfig.h"
+#include "../global.h" // shared_config
 #include <fontconfig/fontconfig.h>
 
 namespace libtas {

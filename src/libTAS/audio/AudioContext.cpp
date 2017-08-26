@@ -20,7 +20,7 @@
 #include "../logging.h"
 #include "AudioContext.h"
 #include "AudioPlayer.h"
-#include "../../shared/SharedConfig.h"
+#include "../global.h" // shared_config
 
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112

@@ -20,17 +20,9 @@
 #ifndef LIBTAS_HOOK_H_INCLUDED
 #define LIBTAS_HOOK_H_INCLUDED
 
-#include <SDL2/SDL.h>
-#include "dlhook.h"
+#include "sdlversion.h"
 
 namespace libtas {
-
-/* Version of the SDL library */
-extern int SDLver;
-
-namespace orig {
-    extern void (*SDL_GetVersion)(SDL_version* ver);
-}
 
 /* Get access to a function from a substring of the library name
  * For example, if we want to access to the SDL_Init() function:
@@ -49,10 +41,7 @@ bool link_function(void** function, const char* source, const char* library, con
 #define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, LIB, V)
 #define LINK_NAMESPACE_SDL1(FUNC) LINK_NAMESPACE(FUNC,"libSDL-1.2")
 #define LINK_NAMESPACE_SDL2(FUNC) LINK_NAMESPACE(FUNC,"libSDL2-2")
-#define LINK_NAMESPACE_SDLX(FUNC) (SDLver==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)
-
-/* Returns the major version of the SDL library used in the game */
-int get_sdlversion(void);
+#define LINK_NAMESPACE_SDLX(FUNC) (get_sdlversion()==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)
 
 }
 

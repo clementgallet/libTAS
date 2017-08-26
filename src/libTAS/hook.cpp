@@ -18,18 +18,11 @@
  */
 
 #include "hook.h"
+#include "dlhook.h"
 #include "logging.h"
 #include <string>
 
 namespace libtas {
-
-int SDLver = 0;
-
-namespace orig {
-    void (*SDL_GetVersion)(SDL_version* ver);
-    /* SDL 1.2 specific functions */
-    static SDL_version * (*SDL_Linked_Version)(void);
-}
 
 bool link_function(void** function, const char* source, const char* library, const char *version /*= nullptr*/)
 {
@@ -83,39 +76,6 @@ bool link_function(void** function, const char* source, const char* library, con
     *function = nullptr;
     dlleave();
     return false;
-}
-
-int get_sdlversion(void)
-{
-    if (SDLver != 0)
-        return 1;
-
-    LINK_NAMESPACE_SDL2(SDL_GetVersion);
-    if (orig::SDL_GetVersion == nullptr)
-        LINK_NAMESPACE_SDL1(SDL_Linked_Version);
-
-    /* Determine SDL version */
-    SDL_version ver = {0, 0, 0};
-    if (orig::SDL_GetVersion) {
-        orig::SDL_GetVersion(&ver);
-    }
-    else if (orig::SDL_Linked_Version) {
-        SDL_version *verp;
-        verp = orig::SDL_Linked_Version();
-        ver = *verp;
-    }
-
-    debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", static_cast<int>(ver.major), ".", static_cast<int>(ver.minor), ".", static_cast<int>(ver.patch));
-
-    /* We save the version major in an extern variable because we will use it elsewhere */
-    SDLver = ver.major;
-
-    if (ver.major == 0) {
-        debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not get SDL version...");
-        return 0;
-    }
-
-    return 1;
 }
 
 }

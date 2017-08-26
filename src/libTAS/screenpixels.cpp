@@ -20,6 +20,7 @@
 #include "screenpixels.h"
 
 #include "hook.h"
+#include "sdlversion.h"
 #include "logging.h"
 #include <GL/gl.h>
 #include "../external/SDL1.h" // SDL_Surface
@@ -74,6 +75,7 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
     useGL = opengl;
 
     /* Link the required functions, and get the window dimensions */
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         if (!useGL) {
@@ -183,6 +185,7 @@ AVPixelFormat getPixelFormat(SDL_Window* window)
         return AV_PIX_FMT_RGBA;
     }
 
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
         debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
@@ -273,6 +276,7 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
         /* Not tested !! */
         debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Access SDL_Surface pixels for video dump");
 
+        int SDLver = get_sdlversion();
         if (SDLver == 1) {
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
@@ -329,6 +333,7 @@ int setScreenPixels(SDL_Window* window) {
     }
 
     else {
+        int SDLver = get_sdlversion();
         if (SDLver == 1) {
             /* Not tested !! */
             debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL1_Surface pixels");

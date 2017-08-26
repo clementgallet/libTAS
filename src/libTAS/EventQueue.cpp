@@ -20,7 +20,7 @@
 #include "EventQueue.h"
 #include "logging.h"
 #include "string.h"
-#include "hook.h"
+#include "sdlversion.h"
 // #include "../external/SDL.h"
 
 namespace libtas {
@@ -29,6 +29,7 @@ EventQueue sdlEventQueue;
 
 EventQueue::~EventQueue()
 {
+    int SDLver = get_sdlversion();
     for (auto ev: eventQueue) {
         if (SDLver == 1)
             delete static_cast<SDL1::SDL_Event*>(ev);
@@ -39,6 +40,8 @@ EventQueue::~EventQueue()
 
 void EventQueue::init(void)
 {
+    int SDLver = get_sdlversion();
+
     if (SDLver == 2) {
         /* Insert default filters */
         droppedEvents.insert(SDL_TEXTINPUT);

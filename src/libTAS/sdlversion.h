@@ -17,6 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "SharedConfig.h"
+#ifndef LIBTAS_SDLVERSION_H_INCLUDED
+#define LIBTAS_SDLVERSION_H_INCLUDED
 
-SharedConfig shared_config;
+#include <SDL2/SDL.h> // SDL_version
+
+namespace libtas {
+
+namespace orig {
+    extern void (*SDL_GetVersion)(SDL_version* ver);
+}
+
+/* Returns the major version of the SDL library used in the game */
+int get_sdlversion(void);
+
+}
+
+#endif

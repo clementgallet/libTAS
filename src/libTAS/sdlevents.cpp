@@ -20,6 +20,7 @@
 #include "sdlevents.h"
 #include "logging.h"
 #include "hook.h"
+#include "sdlversion.h"
 #include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
 #include "sleepwrappers.h"
@@ -46,6 +47,7 @@ void pushNativeEvents(void)
      * as it is the native function of getting events.
      * i.e. all other functions call this function internally.
      */
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
         while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
@@ -66,6 +68,7 @@ void pushNativeEvents(void)
 
 void pushQuitEvent(void)
 {
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
         ev.type = SDL1::SDL_QUIT;
@@ -98,6 +101,7 @@ void pushQuitEvent(void)
     Uint32 mask;
     SDL1::SDL_Event* events1;
 
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         mask = minType;
         events1 = reinterpret_cast<SDL1::SDL_Event*>(events);
@@ -138,6 +142,7 @@ void pushQuitEvent(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
 
+    int SDLver = get_sdlversion();
     if (event) {
         /* Fetch one event with update using our helper function */
         if (SDLver == 1)
@@ -242,6 +247,7 @@ void pushQuitEvent(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event* ev1 = reinterpret_cast<SDL1::SDL_Event*>(event);
         sdlEventQueue.insert(ev1);
@@ -261,6 +267,7 @@ void pushQuitEvent(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
+    int SDLver = get_sdlversion();
     if (SDLver == 1)
         sdlEventQueue.setFilter(reinterpret_cast<SDL1::SDL_EventFilter>(filter));
     if (SDLver == 2)
@@ -270,6 +277,7 @@ void pushQuitEvent(void)
 /* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    int SDLver = get_sdlversion();
     if (SDLver == 1) {
         debuglog(LCF_SDL | LCF_EVENTS | LCF_ERROR, "Not supported yet for SDL1");
         return SDL_FALSE;

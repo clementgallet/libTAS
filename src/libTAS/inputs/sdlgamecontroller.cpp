@@ -24,7 +24,6 @@
 #include "../hook.h"
 #include "../EventQueue.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/SharedConfig.h"
 #include <cstring>
 #include "../GlobalState.h"
 

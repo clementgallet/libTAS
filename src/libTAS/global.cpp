@@ -17,23 +17,6 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_GLOBAL_H_INCL
-#define LIBTAS_GLOBAL_H_INCL
+#include "global.h"
 
-#include "../shared/SharedConfig.h"
-
-/* Include this file in every source code that override functions of the game */
-
-#if __GNUC__ >= 4
-    #define OVERRIDE extern "C" __attribute__ ((visibility ("default")))
-#else
-    #define OVERRIDE extern "C"
-#endif
-
-namespace libtas {
-
-    extern SharedConfig shared_config;
-
-}
-
-#endif
+SharedConfig libtas::shared_config;
