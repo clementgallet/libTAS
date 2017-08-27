@@ -21,6 +21,7 @@
 #define LIBTAS_GLOBAL_H_INCL
 
 #include "../shared/SharedConfig.h"
+#include "../shared/GameInfo.h"
 
 /* Include this file in every source code that override functions of the game */
 
@@ -33,6 +34,7 @@
 namespace libtas {
 
     extern SharedConfig shared_config;
+    extern GameInfo game_info;
 
 }
 

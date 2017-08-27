@@ -17,7 +17,31 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
+#ifndef LIBTAS_GAMEINFO_H_INCLUDED
+#define LIBTAS_GAMEINFO_H_INCLUDED
 
-SharedConfig libtas::shared_config;
-GameInfo libtas::game_info;
+#include <string>
+
+/*
+ * Structure that holds information about what the game uses for its engine,
+ * rendering, input devices, audio, etc, so that it can be collected and
+ * displayed in the UI.
+ */
+struct GameInfo {
+    bool tosend = false;
+
+    /* Recording status */
+    enum Flag {
+        UNKNOWN = 0,
+        SDL1 = 0x01,
+        SDL2 = 0x02,
+        NO_SDL = 0x04,
+        OPENAL = 0x08
+    };
+
+    int video = UNKNOWN;
+    int audio = UNKNOWN;
+    int joystick = UNKNOWN;
+};
+
+#endif

@@ -141,7 +141,13 @@ enum {
      * Notify the game that we must stop encoding
      * Arguments: none
      */
-    MSGN_STOP_ENCODE
+    MSGN_STOP_ENCODE,
+
+    /*
+     * Send game information to the program
+     * Arguments: 3 strings
+     */
+    MSGB_GAMEINFO,
 
 };
 

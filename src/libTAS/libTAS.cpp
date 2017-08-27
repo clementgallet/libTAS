@@ -47,9 +47,6 @@ namespace libtas {
 namespace orig {
     static int (*SDL_Init)(Uint32 flags) = nullptr;
     static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
-    static int (*SDL1_VideoInit)(const char* driver_name, Uint32 flags) = nullptr;
-    static int (*SDL2_VideoInit)(const char* driver_name) = nullptr;
-    static void (*SDL_VideoQuit)(void) = nullptr;
     static void (*SDL_Quit)(void) = nullptr;
 }
 
@@ -168,14 +165,10 @@ void __attribute__((destructor)) term(void)
 
     /* Get which sdl version we are using. */
     int SDLver = get_sdlversion();
+    GameInfo::Flag sdl_flag = (SDLver==2)?GameInfo::SDL2:((SDLver==1)?GameInfo::SDL1:GameInfo::NO_SDL);
 
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
-    if (SDLver == 1)
-        link_function((void**)&orig::SDL1_VideoInit, "SDL_VideoInit", "libSDL-1.2");
-    if (SDLver == 2)
-        link_function((void**)&orig::SDL2_VideoInit, "SDL_VideoInit", "libSDL2-2");
-    LINK_NAMESPACE_SDLX(SDL_VideoQuit);
     LINK_NAMESPACE_SDLX(SDL_Quit);
 
     link_sdlwindows();
@@ -188,18 +181,42 @@ void __attribute__((destructor)) term(void)
 
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
-    if (flags & SDL_INIT_AUDIO)
+
+    if (flags & SDL_INIT_AUDIO) {
         debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
-    if (flags & SDL_INIT_VIDEO)
+        game_info.audio |= sdl_flag;
+    }
+
+    if (flags & SDL_INIT_VIDEO) {
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
-    if (flags & SDL_INIT_JOYSTICK)
+        game_info.video |= sdl_flag;
+    }
+
+    if (flags & SDL_INIT_JOYSTICK) {
         debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
+        game_info.joystick |= sdl_flag;
+    }
+    else {
+        /* Store if joysticks are not enabled here */
+        game_info.joystick |= GameInfo::NO_SDL;
+    }
+
     if (flags & SDL_INIT_HAPTIC)
         debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
-    if (flags & SDL_INIT_GAMECONTROLLER)
+
+    if (flags & SDL_INIT_GAMECONTROLLER) {
         debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
+        game_info.joystick |= sdl_flag;
+    }
+    else {
+        /* Store if joysticks are not enabled here */
+        game_info.joystick |= GameInfo::NO_SDL;
+    }
+
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+
+    game_info.tosend = true;
 
     /* Disabling Joystick subsystem, we don't need any initialization from SDL */
     flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;

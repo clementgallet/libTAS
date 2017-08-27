@@ -24,6 +24,7 @@
 #include "Config.h"
 #include <X11/Xlib.h>
 #include "ConcurrentQueue.h"
+#include "../shared/GameInfo.h"
 
 struct Context {
     /* Execution status */
@@ -88,6 +89,10 @@ struct Context {
 
     /* Queue of hotkeys that where pushed by the UI, to process by the main thread */
     ConcurrentQueue<HotKeyType> hotkey_queue;
+
+    /* Store some game information sent by the game, that is shown in the UI */
+    GameInfo game_info;
+
 };
 
 #endif

@@ -41,6 +41,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    game_info.audio |= GameInfo::OPENAL;
+    game_info.tosend = true;
     return &dummyDevice;
 }
 

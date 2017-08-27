@@ -17,7 +17,30 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
+#ifndef LINTAS_GAMEINFOWINDOW_H_INCLUDED
+#define LINTAS_GAMEINFOWINDOW_H_INCLUDED
 
-SharedConfig libtas::shared_config;
-GameInfo libtas::game_info;
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Box.H>
+
+#include "../Context.h"
+
+class GameInfoWindow {
+    public:
+        GameInfoWindow(Context *c);
+
+        /* Update UI elements */
+        void update();
+
+        Context *context;
+
+        Fl_Double_Window *window;
+
+        Fl_Box *video_box;
+        Fl_Box *audio_box;
+        Fl_Box *joystick_box;
+
+};
+
+#endif

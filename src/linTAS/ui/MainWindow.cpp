@@ -68,6 +68,7 @@ static Fl_Callback ignore_memory_cb;
 static Fl_Callback0 initial_time_cb;
 static Fl_Callback prevent_savefiles_cb;
 static Fl_Callback controller_inputs_cb;
+static Fl_Callback game_info_cb;
 
 MainWindow::~MainWindow()
 {
@@ -200,6 +201,7 @@ void MainWindow::build(Context* c)
     input_window = new InputWindow(c);
     executable_window = new ExecutableWindow(c);
     controller_window = new ControllerWindow(c);
+    gameinfo_window = new GameInfoWindow(c);
 
     window->show();
 
@@ -369,12 +371,13 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Configure encode... (disabled)", 0, nullptr, nullptr, FL_MENU_INACTIVE},
         {"Start encode (disabled)", 0, nullptr, nullptr, FL_MENU_DIVIDER | FL_MENU_INACTIVE},
 #endif
-        {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU},
+        {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_DIVIDER},
             {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
             {"50%", 0, slowmo_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
             {"25%", 0, slowmo_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
             {"12%", 0, slowmo_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
             {nullptr},
+        {"Game information...", 0, game_info_cb},
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
@@ -1271,6 +1274,17 @@ void prevent_savefiles_cb(Fl_Widget* w, void* v)
 
     mw.context->config.sc.prevent_savefiles = menu_item->value();
     mw.context->config.sc_modified = true;
+}
+
+void game_info_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.gameinfo_window->update();
+    mw.gameinfo_window->window->show();
+
+    while (mw.gameinfo_window->window->shown()) {
+        Fl::wait();
+    }
 }
 
 void alert_dialog(void* alert_msg)

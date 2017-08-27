@@ -195,11 +195,22 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         sendString(alert);
     }
 
+    /* Send framecount and internal time */
     sendMessage(MSGB_FRAMECOUNT_TIME);
     sendData(&frame_counter, sizeof(unsigned long));
     struct timespec ticks = detTimer.getTicks();
     sendData(&ticks, sizeof(struct timespec));
 
+    /* Send GameInfo struct if needed */
+    if (game_info.tosend) {
+        sendMessage(MSGB_GAMEINFO);
+        sendData(&game_info.video, sizeof(int));
+        sendData(&game_info.audio, sizeof(int));
+        sendData(&game_info.joystick, sizeof(int));
+        game_info.tosend = false;
+    }
+
+    /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
 #ifdef LIBTAS_ENABLE_HUD
