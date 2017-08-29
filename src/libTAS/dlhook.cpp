@@ -70,10 +70,35 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
     void *result;
     debuglog(LCF_HOOK, __func__, " call with function ", name);
     dlenter();
+    /* FIXME: This design is not good enough.
+     * This idea is to link to our defined function when there is one, instead
+     * of the function inside the library that the game wants to load.
+     * However, there is a problem in this, encountered in Towerfall:
+     * This game bundles with libpng 1.5.10, and load this library dynamically.
+     * Also, the ffmpeg libraries that we use are usually compiled with png
+     * support, which means that we statically link to our libpng (1.6.28 for me)
+     * Thus, calling `dlsym(RTLD_DEFAULT, "png_xxx")` will return the function
+     * from our installed libpng library, which has no reason to be of the same
+     * version as the one bundled with the game.
+     *
+     * One solution would be to check if the symbol name is defined strictly
+     * in our library, excluding any shared library dependency.
+     * AFAIK, dlopen and dlsym always include all dependencies. Maybe by doing
+     * some arithmetic pointer shenanigan?
+     */
+
+    /* Correct way of using dlsym is with dlerror */
+    dlerror(); // Reseting the internal buffer
+
     /* Try to link to an already defined function first */
     result = dlsym(RTLD_DEFAULT, name);
-    if (result == NULL)
+    char* error = dlerror();
+    if (error != nullptr) {
+        /* We could not find a matching function in our symbols, returning the
+         * original call.
+         */
         result = dlsym(handle, name);
+    }
     dlleave();
     return result;
 }
