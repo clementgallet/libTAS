@@ -67,7 +67,7 @@ static int my_dlclose(void *handle) {
 }
 
 static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
-    void *result;
+    void *addr;
     debuglog(LCF_HOOK, __func__, " call with function ", name);
     dlenter();
     /* FIXME: This design is not good enough.
@@ -91,16 +91,29 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
     dlerror(); // Reseting the internal buffer
 
     /* Try to link to an already defined function first */
-    result = dlsym(RTLD_DEFAULT, name);
+    addr = dlsym(RTLD_DEFAULT, name);
     char* error = dlerror();
-    if (error != nullptr) {
-        /* We could not find a matching function in our symbols, returning the
-         * original call.
+    if (error == nullptr) {
+        /* We found a matching symbol. Now checking that this symbol comes
+         * from our library and not another linked library.
          */
-        result = dlsym(handle, name);
+         Dl_info info;
+         int res = dladdr(addr, &info);
+         if (res != 0) {
+             std::string libpath = info.dli_fname;
+             std::string libtasstr = "libTAS.so"; // bad!
+             if (libpath.length() >= libtasstr.length() &&
+                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
+                debuglog(LCF_HOOK, "   function ", name, " is overriden!");
+                dlleave();
+                return addr;
+            }
+        }
     }
+
+    addr = dlsym(handle, name);
     dlleave();
-    return result;
+    return addr;
 }
 
 static void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller) {
