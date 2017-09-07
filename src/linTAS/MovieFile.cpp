@@ -25,7 +25,6 @@
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
-#include "ui/MainWindow.h"
 
 static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
@@ -141,10 +140,6 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	sec_time_prefs.get("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
 	sec_time_prefs.get("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
 	sec_time_prefs.get("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
-
-    /* Update the UI accordingly */
-    MainWindow& mw = MainWindow::getInstance();
-    mw.update_config();
 
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";

@@ -1292,6 +1292,14 @@ void game_info_cb(Fl_Widget* w, void*)
     }
 }
 
+void alert_save(void*)
+{
+    int choice = fl_choice("Do you want to save the input file?", "Yes", "No", 0);
+    if (choice == 0) {
+        movie.saveMovie();
+    }
+}
+
 void alert_dialog(void* alert_msg)
 {
     MainWindow& mw = MainWindow::getInstance();

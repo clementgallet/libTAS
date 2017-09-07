@@ -129,6 +129,9 @@ class MainWindow {
  */
 Fl_Callback0 launch_cb;
 
+/* Prompt a message asking if movie must be saved */
+void alert_save(void*);
+
 void alert_dialog(void* alert_msg);
 
 #endif

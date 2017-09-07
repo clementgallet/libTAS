@@ -226,6 +226,9 @@ void launchGame(Context* context)
         }
         else {
             context->config.sc.movie_framecount = movie.nbFrames();
+
+            /* Update the UI accordingly */
+            ui.update_config();
         }
     }
     ui.update_rerecordcount();
@@ -782,6 +785,16 @@ void launchGame(Context* context)
         }
 
         sendMessage(MSGN_END_FRAMEBOUNDARY);
+    }
+
+    if (movie.modifiedSinceLastSave) {
+        Fl::awake(alert_save, nullptr);
+
+        /* Wait until the user answers */
+        while (movie.modifiedSinceLastSave) {
+            struct timespec tim = {0, 100L*1000L*1000L};
+            nanosleep(&tim, NULL);
+        }
     }
 
     movie.close();
