@@ -22,8 +22,9 @@
 #include <iostream>
 #include <X11/XKBlib.h>
 #include <FL/names.h>
+#include <FL/x.H>
 
-static KeySym get_next_keypressed(Display* display, bool with_modifiers);
+static KeySym get_next_keypressed(Display* display, Window window, bool with_modifiers);
 static Fl_Callback select_cb;
 static Fl_Callback assign_cb;
 static Fl_Callback default_cb;
@@ -143,26 +144,21 @@ void InputWindow::update()
     }
 }
 
-static KeySym get_next_keypressed(Display* display, bool with_modifiers)
+static KeySym get_next_keypressed(Display* display, Window window, bool with_modifiers)
 {
-    Window window;
-    XEvent event;
-    int revert;
-    XGetInputFocus(display, &window, &revert);
-
     /* We prevent the thread that process hotkeys from getting events until
      * we got our keypress.
      */
     XLockDisplay(display);
-    XSelectInput(display, window, KeyPressMask | KeyReleaseMask);
+    XSelectInput(display, window, KeyPressMask);
 
     /* Empty event queue */
-    while (XPending (display)) {
-        XNextEvent(display, &event);
+    XEvent event;
+    while (XCheckWindowEvent(display, window, KeyPressMask, &event)) {
     }
 
     while (1) {
-        XNextEvent(display, &event);
+        XWindowEvent(display, window, KeyPressMask, &event);
         if (event.type == KeyPress)
         {
             KeyCode kc = event.xkey.keycode;
@@ -179,7 +175,10 @@ static KeySym get_next_keypressed(Display* display, bool with_modifiers)
             }
 
             /* Disable keyboard events */
-            XSelectInput(display, window, 0);
+            /* TODO: The next command produces a BadWindow error when the next
+             * XCheckWindowEvent is called and the game is not launched
+             */
+            XSelectInput(display, window, NoEventMask);
             XUnlockDisplay(display);
             return ks;
         }
@@ -275,7 +274,7 @@ static void assign_cb(Fl_Widget* w, void* v)
         iw->input_browser->text(sel_input, linestr.c_str());
 
     Fl::flush();
-    KeySym ks = get_next_keypressed(iw->context->display, is_hotkey);
+    KeySym ks = get_next_keypressed(iw->context->display, fl_xid(iw->window), is_hotkey);
 
     iw->assign_button->label("Assign");
     iw->assign_button->activate();
