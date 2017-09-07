@@ -219,8 +219,14 @@ void launchGame(Context* context)
      */
     movie = MovieFile(context);
     if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-        movie.loadMovie();
-        context->config.sc.movie_framecount = movie.nbFrames();
+        int ret = movie.loadMovie();
+        if (ret < 0) {
+            Fl::awake(alert_dialog, new std::string(MovieFile::errorString(ret)));
+            context->config.sc.recording = SharedConfig::NO_RECORDING;
+        }
+        else {
+            context->config.sc.movie_framecount = movie.nbFrames();
+        }
     }
     ui.update_rerecordcount();
 

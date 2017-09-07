@@ -533,6 +533,11 @@ void MainWindow::update_ui()
             movie_framecount->value(movieframestr.c_str());
             movie_framecount->activate();
             break;
+        case SharedConfig::NO_RECORDING:
+            movie_recording->clear();
+            movie_read_only->deactivate();
+            moviepath->deactivate();
+            browsemoviepath->deactivate();
         default:
             break;
     }

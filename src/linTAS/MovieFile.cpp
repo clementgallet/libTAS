@@ -32,24 +32,50 @@ static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_w
 
 MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), context(c) {}
 
+const char* MovieFile::errorString(int error_code) {
+	switch (error_code) {
+		case ENOMOVIE:
+			return "Could not find the movie file";
+		case EBADARCHIVE:
+			return "The movie file could not be extracted";
+		case ENOINPUTS:
+			return "The movie file does not contain the inputs file";
+		case ENOCONFIG:
+			return "The movie file does not contain the config file";
+		default:
+			return "Unknown error";
+	}
+}
+
 int MovieFile::extractMovie(const std::string& moviefile)
 {
 	/* Check that the moviefile exists */
-	struct stat sb;
-	if (stat(moviefile.c_str(), &sb) == -1)
-		return -1;
+	if (access(moviefile.c_str(), F_OK) != 0)
+		return ENOMOVIE;
+
+	/* Empty the temp directory */
+	std::string configfile = context->config.tempmoviedir + "/config.prefs";
+	std::string inputfile = context->config.tempmoviedir + "/inputs";
+	unlink(configfile.c_str());
+	unlink(inputfile.c_str());
 
     /* Uncompress the movie file into out temp directory */
     TAR *tar;
     int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-	if (ret == -1) return -1;
+	if (ret == -1) return EBADARCHIVE;
 
     char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
     ret = tar_extract_all(tar, md);
-	if (ret == -1) return -1;
+	if (ret == -1) return EBADARCHIVE;
 
     ret = tar_close(tar);
-	if (ret == -1) return -1;
+	if (ret == -1) return EBADARCHIVE;
+
+	/* Check the presence of the inputs and config files */
+	if (access(configfile.c_str(), F_OK) != 0)
+		return ENOCONFIG;
+	if (access(inputfile.c_str(), F_OK) != 0)
+		return ENOINPUTS;
 
 	return 0;
 }

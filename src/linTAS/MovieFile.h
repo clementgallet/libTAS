@@ -30,6 +30,17 @@
 
 class MovieFile {
 public:
+    /* List of error codes */
+    enum Error {
+        ENOMOVIE = -1, // No movie file at the specified path
+        EBADARCHIVE = -2, // Could not extract movie file
+        ENOINPUTS = -3, // Movie file does not contain the input file
+        ENOCONFIG = -4, // Movie file does not contain the config file
+    };
+
+    /* Error string associated with an error code */
+    static const char* errorString(int error_code);
+
     /* The list of inputs. We need this to be public because a movie may
      * check if another movie is a prefix
      */
@@ -82,7 +93,7 @@ public:
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
 
-    /* Save and close the moviefile */
+    /* Close the moviefile */
     void close();
 
     /* Check if another movie starts with the same inputs as this movie */
