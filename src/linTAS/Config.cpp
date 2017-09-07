@@ -34,6 +34,7 @@ void Config::save() {
     prefs->set("libdir", libdir.c_str());
     prefs->set("rundir", rundir.c_str());
     prefs->set("opengl_soft", opengl_soft);
+    prefs->set("on_movie_end", on_movie_end);
 
     Fl_Preferences prefs_km(*prefs, "keymapping");
 
@@ -129,6 +130,8 @@ void Config::load(const std::string& gamepath) {
     val = static_cast<int>(opengl_soft);
     prefs->get("opengl_soft", val, val);
     opengl_soft = static_cast<bool>(val);
+
+    prefs->get("on_movie_end", on_movie_end, on_movie_end);
 
     /* Load key mapping */
 

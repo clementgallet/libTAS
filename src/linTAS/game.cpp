@@ -753,10 +753,20 @@ void launchGame(Context* context)
                 /* Read inputs from file */
                 if (movie.getInputs(ai) == 1) {
                     /* We are reading the last frame of the movie */
-                    /* TODO: Add an option to decide what to do when movie ends */
-                    context->config.sc.running = false;
-                    ui.update_ui();
-                    // context->config.sc_modified = true;
+                    switch(context->config.on_movie_end) {
+                        case Config::MOVIEEND_PAUSE:
+                            context->config.sc.running = false;
+                            //context->config.sc_modified = true;
+                            ui.update_ui();
+                            break;
+                        case Config::MOVIEEND_WRITE:
+                            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+                            context->config.sc_modified = true;
+                            ui.update_ui();
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 break;
         }

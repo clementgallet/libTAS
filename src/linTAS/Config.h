@@ -81,6 +81,14 @@ public:
     /* Directory holding savestates and savestate movies */
     std::string llvm_perf;
 
+    /* Flags when end of movie */
+    enum MovieEnd {
+        MOVIEEND_PAUSE = 0,
+        MOVIEEND_WRITE = 1,
+    };
+
+    int on_movie_end = MOVIEEND_PAUSE;
+
     /* Save the config into the config file */
     void save();
 

@@ -69,6 +69,7 @@ static Fl_Callback0 initial_time_cb;
 static Fl_Callback prevent_savefiles_cb;
 static Fl_Callback controller_inputs_cb;
 static Fl_Callback game_info_cb;
+static Fl_Callback movie_end_cb;
 
 MainWindow::~MainWindow()
 {
@@ -215,6 +216,10 @@ Fl_Menu_Item MainWindow::menu_items[] = {
         {"Open Movie...", 0, browse_moviepath_cb},
         {"Save Movie", 0, save_movie_cb},
         {"Export Movie...", 0, export_movie_cb},
+        {"On Movie End", 0, nullptr, nullptr, FL_SUBMENU},
+            {"Pause the Movie", 0, movie_end_cb, reinterpret_cast<void*>(Config::MOVIEEND_PAUSE), FL_MENU_RADIO},
+            {"Switch to Writing", 0, movie_end_cb, reinterpret_cast<void*>(Config::MOVIEEND_WRITE), FL_MENU_RADIO},
+            {nullptr},
         {nullptr},
     {"Video", 0, nullptr, nullptr, FL_SUBMENU},
         {"Force software rendering", 0, render_soft_cb, nullptr, FL_MENU_TOGGLE},
@@ -697,6 +702,8 @@ void MainWindow::update_config()
     initial_time_nsec->value(nsecstr.c_str());
 
     SET_TOGGLE_FROM_BOOL(prevent_savefiles_cb, context->config.sc.prevent_savefiles);
+
+    SET_RADIO_FROM_LIST(movie_end_cb, context->config.on_movie_end);
 }
 
 void launch_cb(Fl_Widget* w)
@@ -1290,6 +1297,13 @@ void game_info_cb(Fl_Widget* w, void*)
     while (mw.gameinfo_window->window->shown()) {
         Fl::wait();
     }
+}
+
+void movie_end_cb(Fl_Widget* w, void* v)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    int value = static_cast<int>(reinterpret_cast<intptr_t>(v));
+    mw.context->config.on_movie_end = value;
 }
 
 void alert_save(void*)
