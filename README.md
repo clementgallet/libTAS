@@ -69,6 +69,8 @@ framerate:60 ; number of frames per second
 movie_length_sec:2 ; number of seconds of the movie length
 movie_length_nsec:650000000 ; number of nanoseconds of the movie length
 game_name:FEZ.bin.x86_64 ; name of the game binary
+libtas_major_version:1
+libtas_minor_version:0
 
 ; The following values affect sync. These values are related to a time hack:
 ; Some game expects the time to advance, and wait in a loop, querying the time

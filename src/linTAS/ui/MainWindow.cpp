@@ -21,6 +21,7 @@
 #include "../game.h"
 #include "../MovieFile.h"
 #include "ErrorChecking.h"
+#include "../../shared/version.h"
 #include <iostream>
 #include <FL/x.H>
 #include <FL/fl_ask.H>
@@ -80,7 +81,12 @@ MainWindow::~MainWindow()
 void MainWindow::build(Context* c)
 {
     context = c;
-    window = new Fl_Double_Window(600, 500, "libTAS");
+    std::string title = "libTAS v";
+    title += std::to_string(MAJORVERSION);
+    title += ".";
+    title += std::to_string(MINORVERSION);
+
+    window = new Fl_Double_Window(600, 500, title.c_str());
 
     /* Menu */
     menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);

@@ -19,6 +19,7 @@
 
 #include "MovieFile.h"
 #include "utils.h"
+#include "../shared/version.h"
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -218,6 +219,8 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
 	config_prefs.set("framerate", static_cast<int>(context->config.sc.framerate));
 	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
+	config_prefs.set("libtas_major_version", MAJORVERSION);
+	config_prefs.set("libtas_minor_version", MINORVERSION);
 
 	/* Compute and save movie length */
 	time_t movie_length_sec = context->movie_end_time.tv_sec - context->config.sc.initial_time.tv_sec;
