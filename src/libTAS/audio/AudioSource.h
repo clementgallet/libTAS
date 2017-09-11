@@ -133,7 +133,7 @@ class AudioSource
          */
         int nbQueueProcessed();
 
-        /* Returns the sum of the sizes of each queued buffer */
+        /* Returns the sum of the sizes of each queued buffer (in samples) */
         int queueSize();
 
         /* Get the position of playback inside a queue of buffers (in samples).

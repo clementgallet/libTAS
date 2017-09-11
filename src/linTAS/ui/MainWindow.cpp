@@ -81,6 +81,7 @@ MainWindow::~MainWindow()
 void MainWindow::build(Context* c)
 {
     context = c;
+
     std::string title = "libTAS v";
     title += std::to_string(MAJORVERSION);
     title += ".";

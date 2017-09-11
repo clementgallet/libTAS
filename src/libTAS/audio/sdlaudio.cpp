@@ -268,9 +268,7 @@ void fillBufferCallback(AudioBuffer& ab)
 
         auto ref = sourceSDL->buffer_queue[0];
         ab->format = ref->format;
-        ab->bitDepth = ref->bitDepth;
         ab->nbChannels = ref->nbChannels;
-        ab->alignSize = ref->alignSize;
         ab->frequency = ref->frequency;
     }
 
@@ -278,6 +276,7 @@ void fillBufferCallback(AudioBuffer& ab)
     ab->samples.clear();
     ab->samples.insert(ab->samples.end(), static_cast<const uint8_t*>(data), &(static_cast<const uint8_t*>(data))[len]);
     ab->size = len;
+    ab->update();
     sourceSDL->buffer_queue.push_back(ab);
 
     return 0;
@@ -335,11 +334,27 @@ void fillBufferCallback(AudioBuffer& ab)
 /* Override */ void SDL_CloseAudio(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+
+    /* Remove the source from the audio context */
+    if (sourceSDL) {
+        audiocontext.deleteSource(sourceSDL->id);
+    }
+
+    /* Destroy the source object */
+    sourceSDL.reset();
 }
 
 /* Override */ void SDL_CloseAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+
+    /* Remove the source from the audio context */
+    if (sourceSDL) {
+        audiocontext.deleteSource(sourceSDL->id);
+    }
+
+    /* Destroy the source object */
+    sourceSDL.reset();
 }
 
 }

@@ -62,6 +62,9 @@ void GameInfoWindow::update()
     else if (context->game_info.audio & GameInfo::OPENAL) {
         audiostr += "yes (OpenAL)";
     }
+    else if (context->game_info.audio & GameInfo::PULSEAUDIO) {
+        audiostr += "yes (PulseAudio)";
+    }
     else {
         audiostr += "unknown";
     }

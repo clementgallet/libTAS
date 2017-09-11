@@ -36,7 +36,8 @@ struct GameInfo {
         SDL1 = 0x01,
         SDL2 = 0x02,
         NO_SDL = 0x04,
-        OPENAL = 0x08
+        OPENAL = 0x08,
+        PULSEAUDIO = 0x10
     };
 
     int video = UNKNOWN;
