@@ -55,7 +55,10 @@ namespace orig {
     static void (*pthread_testcancel)(void) = nullptr;
 }
 
-/* We keep the identifier of the main thread */
+/* We keep the identifier of the first thread */
+pthread_t firstThread = 0;
+
+/* We keep the identifier of the main thread (the one calling SDL_Init())*/
 pthread_t mainThread = 0;
 
 /* Get the current thread id */
@@ -68,7 +71,16 @@ pthread_t getThreadId(void)
     /* We couldn't link to pthread, meaning threading should be off.
      * We must return a value so that isMainThread() returns true.
      */
-    return mainThread;
+    return firstThread;
+}
+
+/* Indicate that we are running on the first thread */
+void setFirstThread(void)
+{
+    if (firstThread != 0)
+        /* First thread was already set */
+        return;
+    firstThread = getThreadId();
 }
 
 /* Indicate that we are running on the main thread */
@@ -86,8 +98,16 @@ void setMainThread(void)
  */
 int isMainThread(void)
 {
-    /* If threading is off, this will return true */
-    return (getThreadId() == mainThread);
+    /* Check if main thread has been set */
+    if (mainThread) {
+        return (getThreadId() == mainThread);
+    }
+
+    if (firstThread) {
+        return (getThreadId() == firstThread);
+    }
+
+    return true;
 }
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)

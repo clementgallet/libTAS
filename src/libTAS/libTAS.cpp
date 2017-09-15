@@ -37,6 +37,7 @@
 #include "checkpoint/ThreadManager.h"
 #include <fstream>
 #include "audio/AudioContext.h"
+#include "threadwrappers.h"
 //#ifdef LIBTAS_ENABLE_AVDUMPING
 //#include "avdumping.h"
 //#endif
@@ -58,6 +59,9 @@ void __attribute__((constructor)) init(void)
      */
     if (! didConnect)
         return;
+
+    /* We are the first thread */
+    setFirstThread();
 
     /* Send information to the program */
 
