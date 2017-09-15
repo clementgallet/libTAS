@@ -36,7 +36,7 @@ namespace orig {
 pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_context_new, "libpulse");
+        LINK_NAMESPACE(pa_context_new, "libpulse.so");
         return orig::pa_context_new(mainloop, name);
     }
 
@@ -47,7 +47,7 @@ pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name)
 void pa_context_unref(pa_context *c)
 {
     if (GlobalState::isNative() || !isMainThread()) {
-        LINK_NAMESPACE(pa_context_unref, "libpulse");
+        LINK_NAMESPACE(pa_context_unref, "libpulse.so");
         return orig::pa_context_unref(c);
     }
 
@@ -57,7 +57,7 @@ void pa_context_unref(pa_context *c)
 pa_context_state_t pa_context_get_state(pa_context *c)
 {
     if (GlobalState::isNative() || !isMainThread()) {
-        LINK_NAMESPACE(pa_context_get_state, "libpulse");
+        LINK_NAMESPACE(pa_context_get_state, "libpulse.so");
         return orig::pa_context_get_state(c);
     }
 
@@ -68,7 +68,7 @@ pa_context_state_t pa_context_get_state(pa_context *c)
 int pa_context_connect(pa_context *c, const char *server, pa_context_flags_t flags, /*const pa_spawn_api*/void *api)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_context_connect, "libpulse");
+        LINK_NAMESPACE(pa_context_connect, "libpulse.so");
         return orig::pa_context_connect(c, server, flags, api);
     }
 
@@ -79,7 +79,7 @@ int pa_context_connect(pa_context *c, const char *server, pa_context_flags_t fla
 void pa_context_disconnect(pa_context *c)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_context_disconnect, "libpulse");
+        LINK_NAMESPACE(pa_context_disconnect, "libpulse.so");
         return orig::pa_context_disconnect(c);
     }
 

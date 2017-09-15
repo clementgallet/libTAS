@@ -48,11 +48,11 @@ bool link_function(void** function, const char* source, const char* library, con
         return true;
     }
 
-    /* If it did not succeed, try to link using a matching library
-     * loaded by the game.
-     */
-
     if (library != nullptr) {
+
+        /* If it did not succeed, try to link using a matching library
+         * loaded by the game.
+         */
         std::string libpath = find_lib(library);
 
         if (! libpath.empty()) {
@@ -65,11 +65,25 @@ bool link_function(void** function, const char* source, const char* library, con
 
                 if (*function != nullptr) {
                     dlleave();
-                    debuglog(LCF_HOOK, "Imported from lib symbol ", source, " function : ", *function);
+                    debuglog(LCF_HOOK, "Imported from lib ", libpath, " symbol ", source, " function : ", *function);
                     return true;
                 }
             }
         }
+
+        /* If it did not succeed, try to link using the given library */
+        void* handle = dlopen(library, RTLD_LAZY);
+
+        if (handle != NULL) {
+            *function = dlsym(handle, source);
+
+            if (*function != nullptr) {
+                dlleave();
+                debuglog(LCF_HOOK, "Imported from lib ", library, " symbol ", source, " function : ", *function);
+                return true;
+            }
+        }
+
     }
     debuglogstdio(LCF_ERROR | LCF_HOOK, "Could not import symbol %s", source);
 

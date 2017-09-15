@@ -35,7 +35,7 @@ namespace orig {
 pa_mainloop *pa_mainloop_new(void)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_mainloop_new, "libpulse");
+        LINK_NAMESPACE(pa_mainloop_new, "libpulse.so");
         return orig::pa_mainloop_new();
     }
 
@@ -46,7 +46,7 @@ pa_mainloop *pa_mainloop_new(void)
 void pa_mainloop_free(pa_mainloop* m)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_mainloop_free, "libpulse");
+        LINK_NAMESPACE(pa_mainloop_free, "libpulse.so");
         return orig::pa_mainloop_free(m);
     }
 
@@ -60,7 +60,7 @@ int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval)
          * it means it is running on the PulseAudio thread, so that we must
          * call the original function.
          */
-        LINK_NAMESPACE(pa_mainloop_iterate, "libpulse");
+        LINK_NAMESPACE(pa_mainloop_iterate, "libpulse.so");
         return orig::pa_mainloop_iterate(m, block, retval);
     }
 
@@ -71,7 +71,7 @@ int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval)
 pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_mainloop_get_api, "libpulse");
+        LINK_NAMESPACE(pa_mainloop_get_api, "libpulse.so");
         return orig::pa_mainloop_get_api(m);
     }
 

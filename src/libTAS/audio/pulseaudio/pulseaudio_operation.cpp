@@ -33,7 +33,7 @@ namespace orig {
 void pa_operation_unref(pa_operation *o)
 {
     if (GlobalState::isNative() || !isMainThread()) {
-        LINK_NAMESPACE(pa_operation_unref, "libpulse");
+        LINK_NAMESPACE(pa_operation_unref, "libpulse.so");
         return orig::pa_operation_unref(o);
     }
 
@@ -43,7 +43,7 @@ void pa_operation_unref(pa_operation *o)
 pa_operation_state_t pa_operation_get_state(pa_operation *o)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_operation_get_state, "libpulse");
+        LINK_NAMESPACE(pa_operation_get_state, "libpulse.so");
         return orig::pa_operation_get_state(o);
     }
 

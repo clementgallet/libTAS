@@ -31,7 +31,7 @@ namespace orig {
 pa_channel_map* pa_channel_map_init_auto(pa_channel_map *m, unsigned channels, pa_channel_map_def_t def)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_channel_map_init_auto, "libpulse");
+        LINK_NAMESPACE(pa_channel_map_init_auto, "libpulse.so");
         return orig::pa_channel_map_init_auto(m, channels, def);
     }
 
