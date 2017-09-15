@@ -133,8 +133,8 @@ static void *pthread_start(void *arg)
     sleep(1);
 #endif
     /* Wait for main thread to be ready to sleep */
-    while(!thread->go)
-        ;
+    // while(!thread->go)
+    //     ;
 
     ThreadSync::decrementUninitializedThreadCount();
     void *ret = thread->start(thread->arg);
@@ -181,7 +181,7 @@ static void *pthread_start(void *arg)
     debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
 
     /* Say to thread created that it can go! */
-    thread->go = true;
+    //thread->go = true;
 
     //Check and suspend main thread if needed
     // ThreadManager::suspend(*tid_p);

@@ -30,27 +30,36 @@ namespace libtas {
 
 struct ThreadInfo {
     enum ThreadState {
-        ST_RUNNING,
-        ST_SIGNALED,
-        ST_SUSPINPROG,
-        ST_SUSPENDED,
-        ST_ZOMBIE,
-        ST_FAKEZOMBIE,
-        ST_CKPNTHREAD
+        ST_RUNNING, // thread is running normally
+        ST_SIGNALED, // a suspend signal has been sent to the thread
+        ST_SUSPINPROG, // thread is in the middle of being suspended
+        ST_SUSPENDED, // thread is suspended
+        ST_ZOMBIE, // thread has returned but is not yet joined or detached
+        ST_FAKEZOMBIE, // like ST_ZOMBIE except the actual thread no longer
+                       // exists. The thread has been joined by us during a
+                       // savestate, so we keep information including the
+                       // return value until the game does a join or detach.
+        ST_CKPNTHREAD // thread that does the checkpoint
     };
-    ThreadState state;
-    pthread_t tid;
-    void *(*start)(void *);
-    void *arg;
-    std::atomic<bool> go;
-    bool detached;
-    std::ptrdiff_t routine_id;
-    ucontext_t savctx;
-    ThreadTLSInfo tlsInfo;
-    void* retval;
 
-    ThreadInfo *next;
-    ThreadInfo *prev;
+    ThreadState state; // thread state
+    pthread_t tid; // tid of the thread
+    void *(*start)(void *); // original start function of the thread
+    void *arg; // original argument of the start function
+    //std::atomic<bool> go;
+    bool detached; // flag to keep track if the thread was detached
+    std::ptrdiff_t routine_id; // mostly unique identifier of a start function,
+                               // constant across instances of the game
+    ucontext_t savctx; // context of the thread (registers)
+    ThreadTLSInfo tlsInfo; // thread local storage information not stored in
+                           // memory (registers)
+    void* retval; // return value of the original start function
+    bool initial_native; // initial value of the global native state
+    bool initial_owncode; // initial value of the global owncode state
+    bool initial_nolog; // initial value of the global nolog state
+
+    ThreadInfo *next; // next thread info in the linked list
+    ThreadInfo *prev; // previous thread info in the linked list
 };
 }
 

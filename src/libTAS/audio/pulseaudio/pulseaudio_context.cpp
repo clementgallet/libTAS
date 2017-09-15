@@ -46,7 +46,7 @@ pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name)
 
 void pa_context_unref(pa_context *c)
 {
-    if (GlobalState::isNative() || !isMainThread()) {
+    if (GlobalState::isNative()) {
         LINK_NAMESPACE(pa_context_unref, "libpulse.so");
         return orig::pa_context_unref(c);
     }
@@ -56,7 +56,7 @@ void pa_context_unref(pa_context *c)
 
 pa_context_state_t pa_context_get_state(pa_context *c)
 {
-    if (GlobalState::isNative() || !isMainThread()) {
+    if (GlobalState::isNative()) {
         LINK_NAMESPACE(pa_context_get_state, "libpulse.so");
         return orig::pa_context_get_state(c);
     }

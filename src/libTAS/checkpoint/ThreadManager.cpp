@@ -123,10 +123,13 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
      * Avoids issues when the created thread is so fast that it's detached
      * before the main thread goes to sleep (ie: starvation => program blocked)
      */
-    thread->go = false;
+    //thread->go = false;
     thread->state = ThreadInfo::ST_RUNNING;
     thread->routine_id = (char *)start_routine - (char *)from;
     thread->detached = false;
+    thread->initial_native = GlobalState::isNative();
+    thread->initial_owncode = GlobalState::isOwnCode();
+    thread->initial_nolog = GlobalState::isNoLog();
     thread->next = nullptr;
     thread->prev = nullptr;
 }
@@ -134,6 +137,10 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
 void ThreadManager::update(ThreadInfo* thread)
 {
     thread->tid = getThreadId();
+    if (thread->initial_native) GlobalState::setNative(true);
+    if (thread->initial_owncode) GlobalState::setOwnCode(true);
+    if (thread->initial_nolog) GlobalState::setNoLog(true);
+
     current_thread = thread;
     addToList(thread);
 

@@ -55,11 +55,7 @@ void pa_mainloop_free(pa_mainloop* m)
 
 int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval)
 {
-    if (GlobalState::isNative() || !isMainThread()) {
-        /* Very hacky, but if this function is not called on the main thread,
-         * it means it is running on the PulseAudio thread, so that we must
-         * call the original function.
-         */
+    if (GlobalState::isNative()) {
         LINK_NAMESPACE(pa_mainloop_iterate, "libpulse.so");
         return orig::pa_mainloop_iterate(m, block, retval);
     }
