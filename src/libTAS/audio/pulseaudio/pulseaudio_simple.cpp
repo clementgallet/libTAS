@@ -17,18 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pulseaudiosimple.h"
-#include "../logging.h"
-#include "AudioContext.h"
-#include "AudioSource.h"
-#include "AudioBuffer.h"
+#include "pulseaudio_simple.h"
+#include "../../logging.h"
+#include "../AudioContext.h"
+#include "../AudioSource.h"
+#include "../AudioBuffer.h"
 #include <time.h> //nanosleep
 
 namespace libtas {
 
-    static std::shared_ptr<AudioSource> sourcePulse;
+static std::shared_ptr<AudioSource> sourcePulse;
 
-    /** Create a new connection to the server. */
 pa_simple* pa_simple_new(
     const char *,               /**< Server name, or NULL for default */
     const char *,               /**< A descriptive name for this client (application name, ...) */
@@ -99,7 +98,6 @@ pa_simple* pa_simple_new(
 
 }
 
-/** Close and free the connection to the server. The connection object becomes invalid when this is called. */
 void pa_simple_free(pa_simple *)
 {
     DEBUGLOGCALL(LCF_SOUND);
@@ -113,7 +111,6 @@ void pa_simple_free(pa_simple *)
     sourcePulse.reset();
 }
 
-/** Write some data to the server. */
 int pa_simple_write(pa_simple *, const void *data, size_t bytes, int *)
 {
     debuglog(LCF_SOUND, __func__, " call with ", bytes, " bytes written");
@@ -158,7 +155,6 @@ int pa_simple_write(pa_simple *, const void *data, size_t bytes, int *)
     return 0;
 }
 
-/** Wait until all data already written is played by the daemon. */
 int pa_simple_drain(pa_simple *, int *)
 {
     DEBUGLOGCALL(LCF_SOUND);
@@ -167,9 +163,6 @@ int pa_simple_drain(pa_simple *, int *)
     return 0;
 }
 
-/** Read some data from the server. This function blocks until \a bytes amount
- * of data has been received from the server, or until an error occurs.
- * Returns a negative value on failure. */
 int pa_simple_read(pa_simple *, void *, size_t , int *)
 {
     DEBUGLOGCALL(LCF_SOUND);
@@ -178,7 +171,6 @@ int pa_simple_read(pa_simple *, void *, size_t , int *)
     return 0;
 }
 
-/** Return the playback or record latency. */
 pa_usec_t pa_simple_get_latency(pa_simple *, int *error)
 {
     if (sourcePulse->buffer_queue.empty()) {
@@ -191,7 +183,6 @@ pa_usec_t pa_simple_get_latency(pa_simple *, int *error)
     return sample_latency * 1000000 / frequency;
 }
 
-/** Flush the playback or record buffer. This discards any audio in the buffer. */
 int pa_simple_flush(pa_simple *s, int *error)
 {
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);

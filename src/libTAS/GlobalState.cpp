@@ -31,7 +31,6 @@ void GlobalState::setNative(bool state)
         native++;
     else
         native--;
-    setOwnCode(state);
 }
 
 bool GlobalState::isNative()
@@ -45,7 +44,6 @@ void GlobalState::setOwnCode(bool state)
         owncode++;
     else
         owncode--;
-    setNoLog(state);
 }
 
 bool GlobalState::isOwnCode()

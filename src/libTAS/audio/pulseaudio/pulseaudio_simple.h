@@ -17,12 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_PULSEAUDIOSIMPLE_H_INCL
-#define LIBTAS_PULSEAUDIOSIMPLE_H_INCL
+#ifndef LIBTAS_PULSEAUDIO_SIMPLE_H_INCL
+#define LIBTAS_PULSEAUDIO_SIMPLE_H_INCL
 
-#include "../global.h"
+#include "../../global.h"
+#include "pulseaudio_channelmap.h"
 
-/*** OpenAL functions ***/
 namespace libtas {
 
 typedef uint64_t pa_usec_t;
@@ -40,64 +40,29 @@ typedef enum pa_stream_direction {
 /** Sample format */
 typedef enum pa_sample_format {
     PA_SAMPLE_U8,
-    /**< Unsigned 8 Bit PCM */
-
     PA_SAMPLE_ALAW,
-    /**< 8 Bit a-Law */
-
     PA_SAMPLE_ULAW,
-    /**< 8 Bit mu-Law */
-
     PA_SAMPLE_S16LE,
-    /**< Signed 16 Bit PCM, little endian (PC) */
-
     PA_SAMPLE_S16BE,
-    /**< Signed 16 Bit PCM, big endian */
-
     PA_SAMPLE_FLOAT32LE,
-    /**< 32 Bit IEEE floating point, little endian (PC), range -1.0 to 1.0 */
-
     PA_SAMPLE_FLOAT32BE,
-    /**< 32 Bit IEEE floating point, big endian, range -1.0 to 1.0 */
-
     PA_SAMPLE_S32LE,
-    /**< Signed 32 Bit PCM, little endian (PC) */
-
     PA_SAMPLE_S32BE,
-    /**< Signed 32 Bit PCM, big endian */
-
     PA_SAMPLE_S24LE,
-    /**< Signed 24 Bit PCM packed, little endian (PC). \since 0.9.15 */
-
     PA_SAMPLE_S24BE,
-    /**< Signed 24 Bit PCM packed, big endian. \since 0.9.15 */
-
     PA_SAMPLE_S24_32LE,
-    /**< Signed 24 Bit PCM in LSB of 32 Bit words, little endian (PC). \since 0.9.15 */
-
     PA_SAMPLE_S24_32BE,
-    /**< Signed 24 Bit PCM in LSB of 32 Bit words, big endian. \since 0.9.15 */
-
     PA_SAMPLE_MAX,
-    /**< Upper limit of valid sample types */
-
     PA_SAMPLE_INVALID = -1
-    /**< An invalid value */
 } pa_sample_format_t;
 
 /** A sample format and attribute specification */
 typedef struct pa_sample_spec {
-    pa_sample_format_t format;
-    /**< The sample format */
-
-    uint32_t rate;
-    /**< The sample rate. (e.g. 44100) */
-
-    uint8_t channels;
-    /**< Audio channels. (1 for mono, 2 for stereo, ...) */
+    pa_sample_format_t format; /**< The sample format */
+    uint32_t rate; /**< The sample rate. (e.g. 44100) */
+    uint8_t channels; /**< Audio channels. (1 for mono, 2 for stereo, ...) */
 } pa_sample_spec;
 
-typedef void pa_channel_map;
 typedef void pa_buffer_attr;
 
 /** Create a new connection to the server. */

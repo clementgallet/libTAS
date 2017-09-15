@@ -39,6 +39,8 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 {
     debuglog(LCF_SOUND, "Init audio player");
 
+    GlobalNative gn;
+
     if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
         debuglog(LCF_SOUND, "  Cannot open default audio device");
     }
@@ -117,14 +119,14 @@ bool AudioPlayer::play(AudioContext& ac)
     debuglog(LCF_SOUND, "Play an audio frame");
     int err;
     {
-        GlobalOwnCode toc;
+        GlobalNative gn;
         err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
     }
 	if (err < 0) {
 		if (err == -EPIPE) {
 			debuglog(LCF_SOUND, "  Underrun");
             {
-                GlobalOwnCode toc;
+                GlobalNative gn;
 	            err = snd_pcm_prepare(phandle);
             }
 			if (err < 0) {
@@ -133,7 +135,7 @@ bool AudioPlayer::play(AudioContext& ac)
             }
             else {
                 {
-                    GlobalOwnCode toc;
+                    GlobalNative gn;
                     snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
                 }
             }
