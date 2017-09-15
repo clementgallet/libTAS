@@ -30,8 +30,8 @@
 -- Check for validity of encoding parameters
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
+- Prevent game from redirecting stdout/stderr to a log file
 - Hook pulse audio
--- ShovelKnight freezes at shutdown, probably because of the blocking pulseaudio write call
 -- Must lock audiocontext when chaning the sources/buffers
 
 ## Done

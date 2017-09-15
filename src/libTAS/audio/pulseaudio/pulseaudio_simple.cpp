@@ -115,6 +115,14 @@ int pa_simple_write(pa_simple *, const void *data, size_t bytes, int *)
 {
     debuglog(LCF_SOUND, __func__, " call with ", bytes, " bytes written");
 
+    /* Blocking if latency is too high */
+    do {
+        struct timespec mssleep = {0, 10000000};
+        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 10 ms before trying again
+    } while (!is_exiting && pa_simple_get_latency(nullptr, nullptr) > 50000);
+
+    if (is_exiting) return 0;
+
     /* We try to reuse a buffer that has been processed from the source */
     std::shared_ptr<AudioBuffer> ab;
     if (sourcePulse->nbQueueProcessed() > 0) {
@@ -147,11 +155,6 @@ int pa_simple_write(pa_simple *, const void *data, size_t bytes, int *)
     ab->update();
     sourcePulse->buffer_queue.push_back(ab);
 
-    /* Blocking if latency is too high */
-    while (sourcePulse && pa_simple_get_latency(nullptr, nullptr) > 50000) {
-        struct timespec mssleep = {0, 10000000};
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 10 ms before trying again
-    }
     return 0;
 }
 

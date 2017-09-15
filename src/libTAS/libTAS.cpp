@@ -165,7 +165,7 @@ void __attribute__((destructor)) term(void)
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
 
-    debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
+    //debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
 
     /* Get which sdl version we are using. */
     int SDLver = get_sdlversion();
@@ -237,6 +237,8 @@ void __attribute__((destructor)) term(void)
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
     // debuglog(LCF_THREAD, ThreadManager::get().summary());
+
+    is_exiting = true;
 
     sendMessage(MSGB_QUIT);
     orig::SDL_Quit();

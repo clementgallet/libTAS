@@ -51,6 +51,9 @@ void pushNativeEvents(void)
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
         while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
+            if (ev.type == SDL1::SDL_QUIT) {
+                is_exiting = true;
+            }
             if (! filterSDL1Event(&ev))
                 sdlEventQueue.insert(&ev);
         }
@@ -59,6 +62,9 @@ void pushNativeEvents(void)
     if (SDLver == 2) {
         SDL_Event ev;
         while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+            if (ev.type == SDL_QUIT) {
+                is_exiting = true;
+            }
             if (! filterSDL2Event(&ev))
                 sdlEventQueue.insert(&ev);
         }
@@ -252,6 +258,11 @@ void pushQuitEvent(void)
         SDL1::SDL_Event* ev1 = reinterpret_cast<SDL1::SDL_Event*>(event);
         sdlEventQueue.insert(ev1);
         /* TODO: Support event queue full */
+
+        if (ev1->type == SDL1::SDL_QUIT) {
+            is_exiting = true;
+        }
+
         return 0; // success
     }
 
@@ -260,6 +271,11 @@ void pushQuitEvent(void)
 
     sdlEventQueue.insert(event);
     /* TODO: Support event queue full */
+
+    if (event->type == SDL_QUIT) {
+        is_exiting = true;
+    }
+
     return 1; // success
 }
 

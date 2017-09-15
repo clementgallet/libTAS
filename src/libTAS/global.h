@@ -35,6 +35,7 @@ namespace libtas {
 
     extern SharedConfig shared_config;
     extern GameInfo game_info;
+    extern volatile bool is_exiting;
 
 }
 
