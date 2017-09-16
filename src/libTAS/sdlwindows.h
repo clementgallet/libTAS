@@ -43,7 +43,7 @@ namespace orig {
     extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
 }
 
-extern char* av_filename;
+extern char av_filename[4096];
 
 /* Get the Xlib Display struct that is used by SDL */
 Display* getXDisplay(void);

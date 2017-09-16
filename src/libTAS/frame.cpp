@@ -273,13 +273,7 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
-                /* FIXME: Memory leak! */
-                size_t dump_len;
-                receiveData(&dump_len, sizeof(size_t));
-                /* TODO: Put all this in TasFlags class methods */
-                av_filename = static_cast<char*>(malloc(dump_len+1));
-                receiveData(av_filename, dump_len);
-                av_filename[dump_len] = '\0';
+                receiveCString(av_filename);
                 debuglog(LCF_SOCKET | LCF_FRAME, "File ", av_filename);
                 break;
 

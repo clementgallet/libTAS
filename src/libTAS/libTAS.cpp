@@ -20,10 +20,7 @@
 #include "libTAS.h"
 #include <vector>
 #include <string>
-#include "sdltimer.h"
-#include "sdlwindows.h"
 #include "dlhook.h"
-#include "sdlevents.h"
 #include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "NonDeterministicTimer.h"
@@ -31,25 +28,13 @@
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/AllInputs.h"
-#include "hook.h"
-#include "sdlversion.h"
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
-#include <fstream>
 #include "audio/AudioContext.h"
-#include "threadwrappers.h"
-//#ifdef LIBTAS_ENABLE_AVDUMPING
-//#include "avdumping.h"
-//#endif
+#include "sdlwindows.h" // av_filename TODO: change the extern to smt else!
+#include <unistd.h> // getpid()
 
 namespace libtas {
-
-/* Function pointers to real functions */
-namespace orig {
-    static int (*SDL_Init)(Uint32 flags) = nullptr;
-    static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
-    static void (*SDL_Quit)(void) = nullptr;
-}
 
 void __attribute__((constructor)) init(void)
 {
@@ -86,12 +71,7 @@ void __attribute__((constructor)) init(void)
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
-                size_t dump_len;
-                receiveData(&dump_len, sizeof(size_t));
-                /* TODO: Put all this in TasFlags class methods */
-                av_filename = static_cast<char*>(malloc(dump_len+1));
-                receiveData(av_filename, dump_len);
-                av_filename[dump_len] = '\0';
+                receiveCString(av_filename);
                 debuglog(LCF_SOCKET, "File ", av_filename);
                 break;
             case MSGN_LIB_FILE:
@@ -131,117 +111,6 @@ void __attribute__((destructor)) term(void)
     closeSocket();
 
     debuglog(LCF_SOCKET, "Exiting.");
-}
-
-/* Override */ int SDL_Init(Uint32 flags){
-    DEBUGLOGCALL(LCF_SDL);
-
-    /* Get and remember which sdl version we are using. */
-    int SDLver = get_sdlversion();
-
-    LINK_NAMESPACE_SDLX(SDL_Init);
-
-    /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
-     * but in SDL2, SDL_Init() can actually never be called by the game,
-     * so we put the rest of relevent code in the SubSystem function.
-     *
-     * ...well, this is in theory. If on SDL2 we call SDL_Init(), it
-     * does not call our SDL_InitSubSystem() function. Maybe it has to do with
-     * some compiler optimization, because the real SDL_Init() function looks
-     * like this:
-     *      int SDL_Init(Uint32 flags) {
-     *          return SDL_InitSubSystem(flags);
-     *      }
-     * So maybe the compiler is inlining stuff. To fix this, we call
-     * ourselves our own SDL_InitSubSystem() function.
-     */
-    if (SDLver == 1)
-        return orig::SDL_Init(flags);
-    if (SDLver == 2)
-        return SDL_InitSubSystem(flags);
-    return 0;
-}
-
-/* Override */ int SDL_InitSubSystem(Uint32 flags){
-    DEBUGLOGCALL(LCF_SDL);
-
-    //debuglog(LCF_SDL, "Return addr ", __builtin_return_address(0), ".");
-
-    /* Get which sdl version we are using. */
-    int SDLver = get_sdlversion();
-    GameInfo::Flag sdl_flag = (SDLver==2)?GameInfo::SDL2:((SDLver==1)?GameInfo::SDL1:GameInfo::NO_SDL);
-
-    /* Link function pointers to SDL functions */
-    LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
-    LINK_NAMESPACE_SDLX(SDL_Quit);
-
-    link_sdlwindows();
-    link_sdlevents();
-    link_sdlthreads();
-    link_sdltimer();
-
-    /* The thread calling this is probably the main thread */
-    setMainThread();
-
-    if (flags & SDL_INIT_TIMER)
-        debuglog(LCF_SDL, "    SDL_TIMER enabled.");
-
-    if (flags & SDL_INIT_AUDIO) {
-        debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
-        game_info.audio |= sdl_flag;
-    }
-
-    if (flags & SDL_INIT_VIDEO) {
-        debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
-        game_info.video |= sdl_flag;
-    }
-
-    if (flags & SDL_INIT_JOYSTICK) {
-        debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
-        game_info.joystick |= sdl_flag;
-    }
-    else {
-        /* Store if joysticks are not enabled here */
-        game_info.joystick |= GameInfo::NO_SDL;
-    }
-
-    if (flags & SDL_INIT_HAPTIC)
-        debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
-
-    if (flags & SDL_INIT_GAMECONTROLLER) {
-        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
-        game_info.joystick |= sdl_flag;
-    }
-    else {
-        /* Store if joysticks are not enabled here */
-        game_info.joystick |= GameInfo::NO_SDL;
-    }
-
-    if (flags & SDL_INIT_EVENTS)
-        debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
-
-    game_info.tosend = true;
-
-    /* Disabling Joystick subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;
-
-    /* Disabling GameController subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_GAMECONTROLLER;
-
-    /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
-
-    return orig::SDL_InitSubSystem(flags);
-}
-
-/* Override */ void SDL_Quit(){
-    DEBUGLOGCALL(LCF_SDL);
-    // debuglog(LCF_THREAD, ThreadManager::get().summary());
-
-    is_exiting = true;
-
-    sendMessage(MSGB_QUIT);
-    orig::SDL_Quit();
 }
 
 }

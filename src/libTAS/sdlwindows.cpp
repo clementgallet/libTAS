@@ -50,7 +50,7 @@ std::unique_ptr<AVEncoder> avencoder;
 bool video_opengl = false;
 
 /* Path of the dump file */
-char* av_filename = nullptr;
+char av_filename[4096] = {0};
 
 /* Original function pointers */
 namespace orig {
