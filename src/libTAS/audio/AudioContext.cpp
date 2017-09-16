@@ -60,8 +60,6 @@ void AudioContext::init(void)
 
 int AudioContext::createBuffer(void)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     if (buffers.size() >= MAXBUFFERS)
         return -1;
 
@@ -84,8 +82,6 @@ int AudioContext::createBuffer(void)
 
 void AudioContext::deleteBuffer(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     buffers.remove_if([id,this](std::shared_ptr<AudioBuffer> const& buffer)
         {
             if (buffer->id == id) {
@@ -99,8 +95,6 @@ void AudioContext::deleteBuffer(int id)
 
 bool AudioContext::isBuffer(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     for (auto const& buffer : buffers) {
         if (buffer->id == id)
             return true;
@@ -111,8 +105,6 @@ bool AudioContext::isBuffer(int id)
 
 std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     for (auto& buffer : buffers) {
         if (buffer->id == id)
             return buffer;
@@ -123,8 +115,6 @@ std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id)
 
 int AudioContext::createSource(void)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     if (sources.size() >= MAXSOURCES)
         return -1;
 
@@ -147,8 +137,6 @@ int AudioContext::createSource(void)
 
 void AudioContext::deleteSource(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     sources.remove_if([id,this](std::shared_ptr<AudioSource> const& source)
         {
             if (source->id == id) {
@@ -162,8 +150,6 @@ void AudioContext::deleteSource(int id)
 
 bool AudioContext::isSource(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     for (auto& source : sources) {
         if (source->id == id)
             return true;
@@ -174,8 +160,6 @@ bool AudioContext::isSource(int id)
 
 std::shared_ptr<AudioSource> AudioContext::getSource(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     for (auto& source : sources) {
         if (source->id == id)
             return source;
@@ -203,8 +187,6 @@ void AudioContext::mixAllSources(struct timespec ticks)
         outSamples.assign(outBytes, 0x80);
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
-
-    std::lock_guard<std::mutex> lock(mutex);
 
     for (auto& source : sources) {
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);

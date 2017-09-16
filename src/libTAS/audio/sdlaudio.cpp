@@ -98,6 +98,8 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     if (desired->callback != NULL) {
         /* We are using the callback mechanism.
          * When the buffer is depleted, we are supposed to call the
@@ -223,6 +225,7 @@ void fillBufferCallback(AudioBuffer& ab)
 /* Override */ void SDL_PauseAudio(int pause_on)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     if (pause_on == 0)
         sourceSDL->state = AudioSource::SOURCE_PLAYING;
     else
@@ -245,7 +248,7 @@ void fillBufferCallback(AudioBuffer& ab)
         return -1;
     }
 
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source*/
     std::shared_ptr<AudioBuffer> ab;
@@ -291,6 +294,7 @@ void fillBufferCallback(AudioBuffer& ab)
         return 0;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     Uint32 qsize = sourceSDL->queueSize() - sourceSDL->getPosition();
     debuglog(LCF_SDL | LCF_SOUND, "Returning ", qsize);
     return qsize;
@@ -305,6 +309,7 @@ void fillBufferCallback(AudioBuffer& ab)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     /* We simulate clearing the queue by setting the position to the end
      * of the queue.
      */
@@ -335,6 +340,7 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     /* Remove the source from the audio context */
     if (sourceSDL) {
         audiocontext.deleteSource(sourceSDL->id);
@@ -348,6 +354,7 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     /* Remove the source from the audio context */
     if (sourceSDL) {
         audiocontext.deleteSource(sourceSDL->id);

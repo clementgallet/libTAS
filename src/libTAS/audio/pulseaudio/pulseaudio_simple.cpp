@@ -48,6 +48,8 @@ pa_simple* pa_simple_new(
     game_info.audio |= GameInfo::PULSEAUDIO;
     game_info.tosend = true;
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     /* We create an empty buffer that holds the audio parameters. That way,
      * we can guess the parameters from a previous buffer when adding a new one.
      */
@@ -102,6 +104,8 @@ void pa_simple_free(pa_simple *)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
     /* Remove the source from the audio context */
     if (sourcePulse) {
         audiocontext.deleteSource(sourcePulse->id);
@@ -122,6 +126,8 @@ int pa_simple_write(pa_simple *, const void *data, size_t bytes, int *)
     } while (!is_exiting && pa_simple_get_latency(nullptr, nullptr) > 50000);
 
     if (is_exiting) return 0;
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source */
     std::shared_ptr<AudioBuffer> ab;
@@ -180,6 +186,8 @@ pa_usec_t pa_simple_get_latency(pa_simple *, int *error)
         /* Nothing is playing, return 0 latency */
         return 0;
     }
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     pa_usec_t frequency = static_cast<pa_usec_t>(sourcePulse->buffer_queue[0]->frequency);
     pa_usec_t sample_latency = static_cast<pa_usec_t>(sourcePulse->queueSize() - sourcePulse->getPosition());

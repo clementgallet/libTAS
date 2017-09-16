@@ -31,11 +31,10 @@
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
 - Prevent game from redirecting stdout/stderr to a log file
-- Hook pulse audio
--- Must lock audiocontext when chaning the sources/buffers
 
 ## Done
 
+- Hook pulse audio
 - Record inputs and support playback
 - Add options to speedup software rendering
 - Add fake-savestating (saving inputs and reset/fastforward/pause)

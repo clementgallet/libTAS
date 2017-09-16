@@ -38,6 +38,8 @@ ALenum alGetError(ALvoid)
 void alGenBuffers(ALsizei n, ALuint *buffers)
 {
     debuglog(LCF_OPENAL, __func__, " call - generate ", n, " buffers");
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++) {
         int id = audiocontext.createBuffer();
         if (id > 0)
@@ -49,6 +51,8 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
 void alDeleteBuffers(ALsizei n, ALuint *buffers)
 {
     debuglog(LCF_OPENAL, __func__, " call - delete ", n, " buffers");
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++) {
         /* Check if all buffers exist before removing any. */
         if (! audiocontext.isBuffer(buffers[i])) {
@@ -64,19 +68,21 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
 ALboolean alIsBuffer(ALuint buffer)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     return audiocontext.isBuffer(buffer);
 }
 
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
 {
     debuglog(LCF_OPENAL, __func__, " call - copy buffer data of format ", format, ", size ", size, " and frequency ", freq, " into buffer ", buffer);
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
 	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
-
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Fill the buffer informations */
     ab->size = size;
@@ -166,13 +172,12 @@ void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
 void alBufferi(ALuint buffer, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
-
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     switch(param) {
         case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
@@ -211,6 +216,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
         ALSETERROR(AL_INVALID_NAME);
@@ -252,6 +258,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     switch(pname) {
         case AL_FREQUENCY:
         case AL_BITS:
@@ -270,6 +277,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 void alGenSources(ALsizei n, ALuint *sources)
 {
     debuglog(LCF_OPENAL, __func__, " call - generate ", n, " sources");
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	for (int i=0; i<n; i++) {
 		int id = audiocontext.createSource();
 		if (id > 0) {
@@ -282,6 +290,7 @@ void alGenSources(ALsizei n, ALuint *sources)
 void alDeleteSources(ALsizei n, ALuint *sources)
 {
     debuglog(LCF_OPENAL, __func__, " call - delete ", n, " sources");
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	for (int i=0; i<n; i++) {
         /* Check if all sources exist before removing any. */
 	    if (! audiocontext.isSource(sources[i])) {
@@ -301,12 +310,14 @@ void alDeleteSources(ALsizei n, ALuint *sources)
 ALboolean alIsSource(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	return audiocontext.isSource(source);
 }
 
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
         ALSETERROR(AL_INVALID_NAME);
@@ -381,13 +392,12 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
         ALSETERROR(AL_INVALID_NAME);
         return;
     }
-
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     std::shared_ptr<AudioBuffer> bindab;
     switch(param) {
@@ -465,6 +475,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -540,6 +551,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
         ALSETERROR(AL_INVALID_NAME);
@@ -637,6 +649,7 @@ void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 void alSourcePlay(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -651,6 +664,7 @@ void alSourcePlay(ALuint source)
 void alSourcePlayv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourcePlay(sources[i]);
 }
@@ -658,6 +672,7 @@ void alSourcePlayv(ALsizei n, ALuint *sources)
 void alSourcePause(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -672,6 +687,7 @@ void alSourcePause(ALuint source)
 void alSourcePausev(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourcePause(sources[i]);
 }
@@ -679,6 +695,7 @@ void alSourcePausev(ALsizei n, ALuint *sources)
 void alSourceStop(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -694,6 +711,7 @@ void alSourceStop(ALuint source)
 void alSourceStopv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourceStop(sources[i]);
 }
@@ -701,6 +719,7 @@ void alSourceStopv(ALsizei n, ALuint *sources)
 void alSourceRewind(ALuint source)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -716,6 +735,7 @@ void alSourceRewind(ALuint source)
 void alSourceRewindv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourceRewind(sources[i]);
 }
@@ -723,11 +743,10 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     debuglog(LCF_OPENAL, "Pushing ", n, " buffers in the queue of source ", source);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
-
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Check if the source has a static buffer attached */
     if (as->source == AudioSource::SOURCE_STATIC) {
@@ -751,6 +770,7 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
         return;
@@ -767,8 +787,6 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     }
 
     debuglog(LCF_OPENAL, "Unqueueing ", n, " buffers out of ", as->nbQueue());
-
-    // std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Save the id of the unqueued buffers */
     for (int i=0; i<n; i++) {
