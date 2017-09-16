@@ -188,6 +188,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
 
+    std::lock_guard<std::mutex> lock(mutex);
     for (auto& source : sources) {
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }

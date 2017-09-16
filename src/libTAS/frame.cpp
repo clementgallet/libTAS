@@ -219,18 +219,22 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     receive_messages(draw);
 #endif
 
-    /* Push native SDL events into our emulated event queue */
-    pushNativeEvents();
+    int SDLver = get_sdlversion();
 
-    /* Push generated events.
-     * This must be done after getting the new inputs. */
-    generateSDLKeyUpEvents();
-    generateSDLKeyDownEvents();
-    if (frame_counter == 0)
-        generateSDLControllerAdded();
-    generateSDLControllerEvents();
-    generateSDLMouseMotionEvents();
-    generateSDLMouseButtonEvents();
+    if (SDLver > 0) {
+        /* Push native SDL events into our emulated event queue */
+        pushNativeEvents();
+
+        /* Push generated events.
+         * This must be done after getting the new inputs. */
+        generateSDLKeyUpEvents();
+        generateSDLKeyDownEvents();
+        if (frame_counter == 0)
+            generateSDLControllerAdded();
+        generateSDLControllerEvents();
+        generateSDLMouseMotionEvents();
+        generateSDLMouseButtonEvents();
+    }
 
     ++frame_counter;
 
