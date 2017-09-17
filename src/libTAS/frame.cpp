@@ -22,7 +22,7 @@
 #include "../shared/messages.h"
 #include "global.h" // shared_config
 #include "inputs/inputs.h" // AllInputs ai object
-#include "inputs/sdlinputevents.h"
+#include "inputs/inputevents.h"
 #include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
@@ -224,17 +224,17 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (SDLver > 0) {
         /* Push native SDL events into our emulated event queue */
         pushNativeEvents();
-
-        /* Push generated events.
-         * This must be done after getting the new inputs. */
-        generateSDLKeyUpEvents();
-        generateSDLKeyDownEvents();
-        if (frame_counter == 0)
-            generateSDLControllerAdded();
-        generateSDLControllerEvents();
-        generateSDLMouseMotionEvents();
-        generateSDLMouseButtonEvents();
     }
+
+    /* Push generated events.
+     * This must be done after getting the new inputs. */
+    generateKeyUpEvents();
+    generateKeyDownEvents();
+    if (frame_counter == 0)
+        generateSDLControllerAdded();
+    generateSDLControllerEvents();
+    generateMouseMotionEvents();
+    generateMouseButtonEvents();
 
     ++frame_counter;
 

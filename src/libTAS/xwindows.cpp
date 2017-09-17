@@ -29,24 +29,6 @@
 
 namespace libtas {
 
-/*
- * Store the game Window identifier
- * We assume the game never open multiple windows at a time
- */
-Window gameXWindow = 0;
-
-/* Has the game window pointer be sent to the program? */
-// static bool gw_sent = false;
-
-// #ifdef LIBTAS_ENABLE_AVDUMPING
-// std::unique_ptr<AVEncoder> avencoder;
-// #endif
-//
-// bool video_opengl = false;
-
-/* Path of the dump file */
-// char av_filename[4096] = {0};
-
 namespace orig {
     static void (*glXSwapBuffers)( Display *dpy, XID drawable );
     static Window (*XCreateWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
@@ -101,6 +83,7 @@ int XMapWindow(Display *display, Window w)
     sendData(&w, sizeof(Window));
     debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
 
+    gameDisplay = display;
     gameXWindow = w;
 
     return orig::XMapWindow(display, w);
@@ -115,6 +98,7 @@ int XMapRaised(Display *display, Window w)
     sendData(&w, sizeof(Window));
     debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
 
+    gameDisplay = display;
     gameXWindow = w;
 
     return orig::XMapRaised(display, w);

@@ -56,9 +56,6 @@ int get_sdlversion(void)
     if (ver.major > 0) {
         debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", static_cast<int>(ver.major), ".", static_cast<int>(ver.minor), ".", static_cast<int>(ver.patch));
     }
-    else {
-        debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not get SDL version...");
-    }
 
     /* We save the version major so that we can return it in a future calls */
     SDLver = ver.major;

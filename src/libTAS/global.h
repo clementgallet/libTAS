@@ -22,6 +22,8 @@
 
 #include "../shared/SharedConfig.h"
 #include "../shared/GameInfo.h"
+//#include <X11/X.h>
+#include <X11/Xlib.h>
 
 /* Include this file in every source code that override functions of the game */
 
@@ -36,6 +38,8 @@ namespace libtas {
     extern SharedConfig shared_config;
     extern GameInfo game_info;
     extern volatile bool is_exiting;
+    extern Display* gameDisplay;
+    extern Window gameXWindow;
 
 }
 

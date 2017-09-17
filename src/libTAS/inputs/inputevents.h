@@ -17,18 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SDLINPUTEVENTS_H_INCL
-#define LIBTAS_SDLINPUTEVENTS_H_INCL
+#ifndef LIBTAS_INPUTEVENTS_H_INCL
+#define LIBTAS_INPUTEVENTS_H_INCL
 
 #include "../global.h"
 
 namespace libtas {
 
-/* Generate events of type SDL_KEYUP, store them in our emulated event queue */
-void generateSDLKeyUpEvents(void);
+/* Generate events of type SDL_KEYUP or KeyRelease */
+void generateKeyUpEvents(void);
 
-/* Same as above but with events SDL_KEYDOWN */
-void generateSDLKeyDownEvents(void);
+/* Same as above but with events SDL_KEYDOWN or KeyPress */
+void generateKeyDownEvents(void);
 
 /* Generate events indicating that a controller was plugged in */
 void generateSDLControllerAdded(void);
@@ -37,10 +37,10 @@ void generateSDLControllerAdded(void);
 void generateSDLControllerEvents(void);
 
 /* Same as above with MouseMotion event */
-void generateSDLMouseMotionEvents(void);
+void generateMouseMotionEvents(void);
 
 /* Same as above with the MouseButton event */
-void generateSDLMouseButtonEvents(void);
+void generateMouseButtonEvents(void);
 
 }
 

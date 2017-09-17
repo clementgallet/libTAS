@@ -35,7 +35,7 @@
 #include <X11/Xlibint.h>
 #include <X11/Xlib-xcb.h>
 #include "../../external/xcbint.h"
-#include "../sdlwindows.h"
+//#include "../sdlwindows.h"
 #include "ReservedMemory.h"
 
 #define ONE_MB 1024 * 1024
@@ -583,12 +583,11 @@ static void readAllAreas()
 void Checkpoint::handler(int signum)
 {
     /* Access the X Window identifier from the SDL_Window struct */
-    Display *display = getXDisplay();
+    Display *display = gameDisplay;
     if (!display) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Could not access connection to X11");
         return;
     }
-
 
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.

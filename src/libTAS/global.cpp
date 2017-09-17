@@ -22,3 +22,5 @@
 SharedConfig libtas::shared_config;
 GameInfo libtas::game_info;
 volatile bool libtas::is_exiting = false;
+Display* libtas::gameDisplay = nullptr;
+Window libtas::gameXWindow = 0;

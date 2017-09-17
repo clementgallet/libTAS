@@ -48,7 +48,6 @@ namespace orig {
     static Uint32 (*SDL_GetWindowFlags)(SDL_Window*);
     static void (*SDL_SetWindowTitle)(void * window, const char *title);
     static void (*SDL_WM_SetCaption)(const char *title, const char *icon);
-    static SDL_bool (*SDL_GetWindowWMInfo)(SDL_Window* window, SDL_SysWMinfo* info);
     static void* (*SDL_GL_CreateContext)(SDL_Window *window);
     static int (*SDL_GL_SetSwapInterval)(int interval);
     static void (*SDL_DestroyWindow)(SDL_Window*);
@@ -78,25 +77,6 @@ namespace orig {
 #else
     frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();});
 #endif
-}
-
-Display* getXDisplay(void)
-{
-    if (!gameWindow)
-        return nullptr;
-
-    /* Access the X Window identifier from the SDL_Window struct */
-    SDL_SysWMinfo info;
-    orig::SDL_GetVersion(&info.version);
-    if (orig::SDL_GetWindowWMInfo(gameWindow, &info) == SDL_FALSE) {
-        debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
-        return nullptr;
-    }
-    if (info.subsystem != SDL_SYSWM_X11) {
-        debuglog(LCF_SDL | LCF_ERROR, "SDL says we are not running on X11");
-        return nullptr;
-    }
-    return info.info.x11.display;
 }
 
 /* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
@@ -408,7 +388,6 @@ void link_sdlwindows(void)
         LINK_NAMESPACE_SDL2(SDL_GetWindowID);
         LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
-        LINK_NAMESPACE_SDL2(SDL_GetWindowWMInfo);
         LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
         LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
         LINK_NAMESPACE_SDL2(SDL_RenderPresent);

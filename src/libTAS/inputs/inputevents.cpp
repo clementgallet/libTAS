@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sdlinputevents.h"
+#include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
@@ -37,23 +37,23 @@
 
 namespace libtas {
 
-void generateSDLKeyUpEvents(void)
+void generateKeyUpEvents(void)
 {
     int i, j;
     int SDLver = get_sdlversion();
 
     struct timespec time = detTimer.getTicks();
-    for (i=0; i<16; i++) { // TODO: Another magic number
+    for (i=0; i<AllInputs::MAXKEYS; i++) {
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
             continue;
         }
-        for (j=0; j<16; j++) {
+        for (j=0; j<AllInputs::MAXKEYS; j++) {
             if (old_ai.keyboard[i] == ai.keyboard[j]) {
                 /* Key was not released */
                 break;
             }
         }
-        if (j == 16) {
+        if (j == AllInputs::MAXKEYS) {
             /* Key was released. Generate event */
             if (SDLver == 2) {
                 SDL_Event event2;
@@ -87,6 +87,16 @@ void generateSDLKeyUpEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
+            if (SDLver == 0) {
+                XEvent event;
+                event.xkey.type = KeyRelease;
+                event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
+                event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]);
+                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+
+                debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode ", event.xkey.keycode);
+            }
+
             /* Update old keyboard state */
             old_ai.keyboard[i] = XK_VoidSymbol;
         }
@@ -95,23 +105,23 @@ void generateSDLKeyUpEvents(void)
 
 
 /* Generate pressed keyboard input events */
-void generateSDLKeyDownEvents(void)
+void generateKeyDownEvents(void)
 {
     int i,j,k;
     int SDLver = get_sdlversion();
 
     struct timespec time = detTimer.getTicks();
-    for (i=0; i<16; i++) { // TODO: Another magic number
+    for (i=0; i<AllInputs::MAXKEYS; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
         }
-        for (j=0; j<16; j++) {
+        for (j=0; j<AllInputs::MAXKEYS; j++) {
             if (ai.keyboard[i] == old_ai.keyboard[j]) {
                 /* Key was not pressed */
                 break;
             }
         }
-        if (j == 16) {
+        if (j == AllInputs::MAXKEYS) {
             /* Key was pressed. Generate event */
             if (SDLver == 2) {
                 SDL_Event event2;
@@ -144,8 +154,18 @@ void generateSDLKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
+            if (SDLver == 0) {
+                XEvent event;
+                event.xkey.type = KeyPress;
+                event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
+                event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]);
+                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+
+                debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
+            }
+
             /* Update old keyboard state */
-            for (k=0; k<16; k++)
+            for (k=0; k<AllInputs::MAXKEYS; k++)
                 if (old_ai.keyboard[k] == XK_VoidSymbol) {
                     /* We found an empty space to put our key*/
                     old_ai.keyboard[k] = ai.keyboard[i];
@@ -203,7 +223,7 @@ void generateSDLControllerEvents(void)
         if (!genGC && !genJoy)
             continue;
 
-        for (int axis=0; axis<6; axis++) {
+        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             /* Update game_ai axes */
             game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
 
@@ -375,7 +395,7 @@ void generateSDLControllerEvents(void)
     }
 }
 
-void generateSDLMouseMotionEvents(void)
+void generateMouseMotionEvents(void)
 {
     if ((ai.pointer_x == old_ai.pointer_x) && (ai.pointer_y == old_ai.pointer_y))
         return;
@@ -417,6 +437,8 @@ void generateSDLMouseMotionEvents(void)
         event2.motion.x = game_ai.pointer_x + event2.motion.xrel;
         event2.motion.y = game_ai.pointer_y + event2.motion.yrel;
         sdlEventQueue.insert(&event2);
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+
     }
     if (SDLver == 1) {
         SDL1::SDL_Event event1;
@@ -441,8 +463,20 @@ void generateSDLMouseMotionEvents(void)
         event1.motion.x = (Uint16) (game_ai.pointer_x + event1.motion.xrel);
         event1.motion.y = (Uint16) (game_ai.pointer_y + event1.motion.yrel);
         sdlEventQueue.insert(&event1);
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+
     }
-    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+    if (SDLver == 0) {
+        XEvent event;
+        event.xmotion.type = MotionNotify;
+        event.xmotion.state = ai.pointer_mask;
+        event.xmotion.x = game_ai.pointer_x + ai.pointer_x - old_ai.pointer_x;
+        event.xmotion.y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
+        event.xmotion.x_root = event.xmotion.x;
+        event.xmotion.y_root = event.xmotion.y;
+
+        XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+    }
 
     /* Upload the old AllInput struct */
     game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
@@ -451,12 +485,15 @@ void generateSDLMouseMotionEvents(void)
     old_ai.pointer_y = ai.pointer_y;
 }
 
-void generateSDLMouseButtonEvents(void)
+void generateMouseButtonEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int SDLver = get_sdlversion();
 
-    static int xbuttons[] = {Button1Mask,
+    static int xbuttons[] = {Button1,
+        Button2, Button3,
+        Button4, Button5};
+    static int xbuttonmasks[] = {Button1Mask,
         Button2Mask, Button3Mask,
         Button4Mask, Button5Mask};
     static int sdlbuttons[] = {SDL_BUTTON_LEFT,
@@ -467,13 +504,13 @@ void generateSDLMouseButtonEvents(void)
         SDL1::SDL1_BUTTON_X1, SDL1::SDL1_BUTTON_X2};
 
     for (int bi=0; bi<5; bi++) {
-        if ((ai.pointer_mask & xbuttons[bi]) != (old_ai.pointer_mask & xbuttons[bi])) {
+        if ((ai.pointer_mask & xbuttonmasks[bi]) != (old_ai.pointer_mask & xbuttonmasks[bi])) {
             /* We got a change in a button state */
 
             /* Fill the event structure */
             if (SDLver == 2) {
                 SDL_Event event2;
-                if (ai.pointer_mask & xbuttons[bi]) {
+                if (ai.pointer_mask & xbuttonmasks[bi]) {
                     event2.type = SDL_MOUSEBUTTONDOWN;
                     event2.button.state = SDL_PRESSED;
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdlbuttons[bi]);
@@ -488,13 +525,13 @@ void generateSDLMouseButtonEvents(void)
                 event2.button.which = 0; // TODO: Same as above...
                 event2.button.button = sdlbuttons[bi];
                 event2.button.clicks = 1;
-                event2.button.x = ai.pointer_x;
-                event2.button.y = ai.pointer_y;
+                event2.button.x = game_ai.pointer_x;
+                event2.button.y = game_ai.pointer_y;
                 sdlEventQueue.insert(&event2);
             }
             if (SDLver == 1) {
                 SDL1::SDL_Event event1;
-                if (ai.pointer_mask & xbuttons[bi]) {
+                if (ai.pointer_mask & xbuttonmasks[bi]) {
                     event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
                     event1.button.state = SDL_PRESSED;
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdl1buttons[bi]);
@@ -510,9 +547,25 @@ void generateSDLMouseButtonEvents(void)
                 event1.button.y = (Uint16) game_ai.pointer_y;
                 sdlEventQueue.insert(&event1);
             }
+            if (SDLver == 0) {
+                XEvent event;
+                if (ai.pointer_mask & xbuttonmasks[bi]) {
+                    event.xbutton.type = ButtonPress;
+                }
+                else {
+                    event.xbutton.type = ButtonRelease;
+                }
+                event.xbutton.state = ai.pointer_mask;
+                event.xbutton.x = game_ai.pointer_x;
+                event.xbutton.y = game_ai.pointer_y;
+                event.xbutton.x_root = event.xbutton.x;
+                event.xbutton.y_root = event.xbutton.y;
+                event.xbutton.button = xbuttons[bi];
 
+                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+            }
             /* Upload the old AllInput struct */
-            old_ai.pointer_mask ^= xbuttons[bi];
+            old_ai.pointer_mask ^= xbuttonmasks[bi];
 
         }
     }
