@@ -40,9 +40,6 @@ namespace libtas {
  */
 SDL_Window* gameWindow = nullptr;
 
-/* Has the game window pointer be sent to the program? */
-bool gw_sent = 0;
-
 #ifdef LIBTAS_ENABLE_AVDUMPING
 std::unique_ptr<AVEncoder> avencoder;
 #endif
@@ -83,21 +80,6 @@ namespace orig {
 
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
-    /* SDL 1.2 does only have one window,
-     * thus it does not provide any access to window identifiers.
-     * We need to pass a window id to linTAS so that it can capture inputs.
-     * In our case, let's just pass a dummy value indicating that
-     * we could not get access to it.
-     * It will have to guess it, probably by getting the active window
-     */
-    if (!gw_sent) {
-        Window w = 0;
-        sendMessage(MSGB_WINDOW_ID);
-        sendData(&w, sizeof(Window));
-        gw_sent = 1;
-        debuglog(LCF_SDL, "Send dummy X11 window id.");
-    }
-
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
@@ -126,51 +108,12 @@ Display* getXDisplay(void)
     return info.info.x11.display;
 }
 
-static int sendXid(void)
-{
-    if (gameWindow != nullptr) {
-        if (!gw_sent) {
-
-            /* Access the X Window identifier from the SDL_Window struct */
-            SDL_SysWMinfo info;
-            orig::SDL_GetVersion(&info.version);
-            if (orig::SDL_GetWindowWMInfo(gameWindow, &info) == SDL_FALSE) {
-                debuglog(LCF_SDL | LCF_ERROR, "Could not get the X11 window identifier");
-                return -1;
-            }
-            if (info.subsystem != SDL_SYSWM_X11) {
-                debuglog(LCF_SDL | LCF_ERROR, "SDL says we are not running on X11");
-                return -1;
-            }
-            Window xgw = info.info.x11.window;
-
-            /* Send the X Window identifier to the program */
-            sendMessage(MSGB_WINDOW_ID);
-            sendData(&xgw, sizeof(Window));
-            gw_sent = true;
-            debuglog(LCF_SDL, "Send X11 window id: ", xgw);
-        }
-    }
-    else {
-        debuglog(LCF_SDL | LCF_ERROR, "Window pointer is empty but the game wants to draw something.");
-        return -1;
-    }
-    return 0;
-}
-
 /* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
 {
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapWindow(window);
 
     debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
-
-    /*
-     * We need to pass the game window identifier to the program
-     * so that it can capture inputs
-     */
-    if (sendXid() != 0)
-        return;
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -234,9 +177,6 @@ std::string origIcon;
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
     gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
-
-    /* A new window was created. It needs to be passed to the program */
-    gw_sent = false;
 
     if (flags & SDL_WINDOW_OPENGL)
         video_opengl = true;
@@ -366,9 +306,6 @@ void updateTitle(float fps, float lfps)
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     gameWindow = *window;
 
-    /* A new window was created. It needs to be passed to the program */
-    gw_sent = false;
-
     video_opengl = false;
 
     /* If we are going to save the screen when savestating, we need to init
@@ -384,13 +321,6 @@ void updateTitle(float fps, float lfps)
         return orig::SDL_RenderPresent(renderer);
 
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-
-    /*
-     * We need to pass the game window identifier to the program
-     * so that it can capture inputs
-     */
-    if (sendXid() != 0)
-        return;
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -454,21 +384,6 @@ void updateTitle(float fps, float lfps)
         return orig::SDL_Flip(screen);
 
     debuglog(LCF_SDL | LCF_FRAME | LCF_WINDOW, __func__, " call.");
-
-    /* SDL 1.2 does only have one window,
-     * thus it does not provide any access to window identifiers.
-     * We need to pass a window id to linTAS so that it can capture inputs.
-     * In our case, let's just pass a dummy value indicating that
-     * we could not get access to it.
-     * It will have to guess it, probably by getting the active window
-     */
-    if (!gw_sent) {
-        Window w = 0;
-        sendMessage(MSGB_WINDOW_ID);
-        sendData(&w, sizeof(Window));
-        gw_sent = 1;
-        debuglog(LCF_SDL, "Send dummy X11 window id.");
-    }
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD

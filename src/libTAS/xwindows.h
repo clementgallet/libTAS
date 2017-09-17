@@ -39,6 +39,9 @@ OVERRIDE Window XCreateWindow(Display *display, Window parent, int x, int y, uns
 
 OVERRIDE Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background);
 
+OVERRIDE int XMapWindow(Display *display, Window w);
+
+OVERRIDE int XMapRaised(Display *display, Window w); 
 }
 
 #endif

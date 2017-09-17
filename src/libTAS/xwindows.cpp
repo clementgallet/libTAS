@@ -36,7 +36,7 @@ namespace libtas {
 Window gameXWindow = 0;
 
 /* Has the game window pointer be sent to the program? */
-static bool gw_sent = false;
+// static bool gw_sent = false;
 
 // #ifdef LIBTAS_ENABLE_AVDUMPING
 // std::unique_ptr<AVEncoder> avencoder;
@@ -51,6 +51,8 @@ namespace orig {
     static void (*glXSwapBuffers)( Display *dpy, XID drawable );
     static Window (*XCreateWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
     static Window (*XCreateSimpleWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background);
+    static int (*XMapWindow)(Display *display, Window w);
+    static int (*XMapRaised)(Display *display, Window w);
 }
 
 void glXSwapBuffers( Display *dpy, XID drawable )
@@ -72,14 +74,9 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XCreateWindow, nullptr);
 
-    gameXWindow = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
+    Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
 
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&gameXWindow, sizeof(Window));
-    gw_sent = true;
-    debuglog(LCF_WINDOW, "Sent X11 window id: ", gameXWindow);
-
-    return gameXWindow;
+    return w;
 }
 
 Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background)
@@ -87,14 +84,40 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XCreateSimpleWindow, nullptr);
 
-    gameXWindow = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
+    Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
+
+    return w;
+}
+
+int XMapWindow(Display *display, Window w)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE(XMapWindow, nullptr);
+
+    /* Only send the Window indentifier when the window is mapped, because
+     * SDL does create some unmapped windows at startup.
+     */
+    sendMessage(MSGB_WINDOW_ID);
+    sendData(&w, sizeof(Window));
+    debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
+
+    gameXWindow = w;
+
+    return orig::XMapWindow(display, w);
+}
+
+int XMapRaised(Display *display, Window w)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE(XMapRaised, nullptr);
 
     sendMessage(MSGB_WINDOW_ID);
-    sendData(&gameXWindow, sizeof(Window));
-    gw_sent = true;
-    debuglog(LCF_WINDOW, "Sent X11 window id: ", gameXWindow);
+    sendData(&w, sizeof(Window));
+    debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
 
-    return gameXWindow;
+    gameXWindow = w;
+
+    return orig::XMapRaised(display, w);
 }
 
 }
