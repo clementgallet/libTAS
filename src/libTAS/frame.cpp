@@ -148,8 +148,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
-            debuglog(LCF_DUMP, "Start AV dumping on file ", av_filename);
-            avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
+            debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
+            avencoder.reset(new AVEncoder(gameWindow, video_opengl, frame_counter));
         }
 
         /* Write the current frame */
@@ -157,7 +157,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         if (enc < 0) {
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
-            debuglog(LCF_ALERT, "Encoding to ", av_filename, " failed because:\n", avencoder->getErrorMsg());
+            debuglog(LCF_ALERT, "Encoding to ", AVEncoder::dumpfile, " failed because:\n", avencoder->getErrorMsg());
             shared_config.av_dumping = false;
             sendMessage(MSGB_ENCODE_FAILED);
         }
@@ -273,8 +273,8 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
-                receiveCString(av_filename);
-                debuglog(LCF_SOCKET | LCF_FRAME, "File ", av_filename);
+                receiveCString(AVEncoder::dumpfile);
+                debuglog(LCF_SOCKET | LCF_FRAME, "File ", AVEncoder::dumpfile);
                 break;
 
             case MSGN_ALL_INPUTS:

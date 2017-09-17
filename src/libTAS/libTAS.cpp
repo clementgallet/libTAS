@@ -71,8 +71,8 @@ void __attribute__((constructor)) init(void)
                 break;
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
-                receiveCString(av_filename);
-                debuglog(LCF_SOCKET, "File ", av_filename);
+                receiveCString(AVEncoder::dumpfile);
+                debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
                 break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");

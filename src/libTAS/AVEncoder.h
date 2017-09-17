@@ -33,6 +33,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 }
+#include <memory> // std::unique_ptr
 
 namespace libtas {
 class AVEncoder {
@@ -50,7 +51,7 @@ class AVEncoder {
          * @param start_frame   Frame when init is done. Does matter if dumping is not
          *                      done from the beginning.
          */
-        AVEncoder(SDL_Window* window, bool video_opengl, const char* filename, unsigned long start_frame);
+        AVEncoder(SDL_Window* window, bool video_opengl, unsigned long start_frame);
 
         /* If an error occured during init or encoding, return the error string */
         std::string getErrorMsg();
@@ -65,6 +66,12 @@ class AVEncoder {
         /* Close all allocated objects at the end of an av dump
          */
         ~AVEncoder();
+
+        /* Filename of the encode. We use a static array because it can be set
+         * very early in the game execution, before objects like std::string
+         * has a chance to call its constructor.
+         */
+        static char dumpfile[4096];
 
     private:
         int error;
@@ -98,6 +105,9 @@ class AVEncoder {
         int receive_packet(AVCodecContext *codec_context, AVStream* st);
 
 };
+
+extern std::unique_ptr<AVEncoder> avencoder;
+
 }
 
 #endif

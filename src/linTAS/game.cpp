@@ -275,17 +275,10 @@ void launchGame(Context* context)
         message = receiveMessage();
 
         while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
-            // void* alert_msg;
             std::string* alert_str;
             switch (message) {
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
-                if (context->game_window == 0) {
-                    /* libTAS could not get the window id
-                     * Let's get the active window */
-                    int revert;
-                    XGetInputFocus(context->display, &context->game_window, &revert);
-                }
                 /* FIXME: Don't do this if the ui option is unchecked  */
                 XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
                 break;

@@ -40,14 +40,7 @@ namespace libtas {
  */
 SDL_Window* gameWindow = nullptr;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-std::unique_ptr<AVEncoder> avencoder;
-#endif
-
 bool video_opengl = false;
-
-/* Path of the dump file */
-char av_filename[4096] = {0};
 
 /* Original function pointers */
 namespace orig {
@@ -346,7 +339,7 @@ void updateTitle(float fps, float lfps)
 #ifdef LIBTAS_ENABLE_AVDUMPING
     if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        avencoder.reset(new AVEncoder(gameWindow, video_opengl, av_filename, frame_counter));
+        avencoder.reset(new AVEncoder(gameWindow, video_opengl, frame_counter));
     }
 #endif
 

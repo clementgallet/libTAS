@@ -48,7 +48,7 @@ namespace libtas {
 
 static std::string error_msg;
 
-AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, const char* dumpfile, unsigned long sf) {
+AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, unsigned long sf) {
     error = 0;
 
     ASSERT_RETURN_VOID(shared_config.framerate > 0, "Not supporting non deterministic timer");
@@ -469,6 +469,10 @@ AVEncoder::~AVEncoder() {
     av_frame_free(&video_frame);
     av_frame_free(&audio_frame);
 }
+
+char AVEncoder::dumpfile[4096] = {0};
+
+std::unique_ptr<AVEncoder> avencoder;
 
 }
 

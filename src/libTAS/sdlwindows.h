@@ -25,15 +25,11 @@
 #include <SDL2/SDL.h>
 #include "AVEncoder.h"
 #include <string>
-#include <memory>
 #include <X11/Xlib.h> // Display
 
 namespace libtas {
 
 extern SDL_Window* gameWindow;
-#ifdef LIBTAS_ENABLE_AVDUMPING
-extern std::unique_ptr<AVEncoder> avencoder; // making extern a unique_ptr is stupid?
-#endif
 
 /* Does the game use openGL? */
 extern bool video_opengl;
@@ -41,8 +37,6 @@ extern bool video_opengl;
 namespace orig {
     extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
 }
-
-extern char av_filename[4096];
 
 /* Get the Xlib Display struct that is used by SDL */
 Display* getXDisplay(void);
