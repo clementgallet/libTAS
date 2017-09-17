@@ -26,8 +26,7 @@
 #include "AVEncoder.h"
 #include <string>
 #include <memory>
-#include <X11/X.h>
-#include <X11/Xlib.h>
+#include <X11/Xlib.h> // Display
 
 namespace libtas {
 
@@ -301,8 +300,6 @@ OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
 OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
 
 void link_sdlwindows(void);
-
-OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
 
 }
 

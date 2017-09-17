@@ -517,29 +517,4 @@ void link_sdlwindows(void)
     }
 }
 
-namespace orig {
-    static void (*glXSwapBuffers)( Display *dpy, XID drawable );
-}
-
-void glXSwapBuffers( Display *dpy, XID drawable )
-{
-    LINK_NAMESPACE(glXSwapBuffers, "libGL");
-    debuglog(LCF_FRAME | LCF_WINDOW, __func__, " call.");
-
-    if (!gw_sent) {
-        sendMessage(MSGB_WINDOW_ID);
-        sendData(&drawable, sizeof(Window));
-        gw_sent = 1;
-        debuglog(LCF_SDL, "Sent X11 window id: ", drawable);
-    }
-
-    /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
-    static RenderHUD_GL renderHUD;
-    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD);
-#else
-    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
-#endif
-}
-
 }
