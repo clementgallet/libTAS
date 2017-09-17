@@ -22,7 +22,7 @@
 
 #include "hook.h"
 #include "logging.h"
-#include "screenpixels.h"
+#include "ScreenCapture.h"
 #include "audio/AudioContext.h"
 #include "global.h" // shared_config
 #include "GlobalState.h"
@@ -48,7 +48,7 @@ namespace libtas {
 
 static std::string error_msg;
 
-AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, unsigned long sf) {
+AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     error = 0;
 
     ASSERT_RETURN_VOID(shared_config.framerate > 0, "Not supporting non deterministic timer");
@@ -57,10 +57,10 @@ AVEncoder::AVEncoder(SDL_Window* window, bool video_opengl, unsigned long sf) {
     accum_samples = 0;
 
     int width, height;
-    int ret = initScreenPixels(window, video_opengl, &width, &height);
+    int ret = ScreenCapture::init(window, &width, &height);
     ASSERT_RETURN_VOID(ret >= 0, "Unable to initialize video capture");
 
-    AVPixelFormat pixfmt = getPixelFormat(window);
+    AVPixelFormat pixfmt = ScreenCapture::getPixelFormat();
     ASSERT_RETURN_VOID(pixfmt != AV_PIX_FMT_NONE, "Unable to get pixel format");
 
     /* Initialize AVCodec and AVFormat libraries */
@@ -310,7 +310,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
      * or if we never drew. If not, we will capture the last drawn frame.
      */
     if (draw || (orig_stride[0] == 0)) {
-        getScreenPixels(orig_plane, orig_stride);
+        ScreenCapture::getPixels(orig_plane, orig_stride);
 
         /* Change pixel format to YUV420p and copy it into the AVframe */
         ret = sws_scale(toYUVctx, orig_plane, orig_stride, 0,

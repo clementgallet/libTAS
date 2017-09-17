@@ -51,7 +51,7 @@ class AVEncoder {
          * @param start_frame   Frame when init is done. Does matter if dumping is not
          *                      done from the beginning.
          */
-        AVEncoder(SDL_Window* window, bool video_opengl, unsigned long start_frame);
+        AVEncoder(SDL_Window* window, unsigned long start_frame);
 
         /* If an error occured during init or encoding, return the error string */
         std::string getErrorMsg();

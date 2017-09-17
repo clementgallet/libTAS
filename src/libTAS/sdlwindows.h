@@ -31,9 +31,6 @@ namespace libtas {
 
 extern SDL_Window* gameWindow;
 
-/* Does the game use openGL? */
-extern bool video_opengl;
-
 namespace orig {
     extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
 }

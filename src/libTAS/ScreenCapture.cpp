@@ -17,24 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screenpixels.h"
+#include "ScreenCapture.h"
 
 #include "hook.h"
 #include "sdlversion.h"
 #include "logging.h"
 #include <GL/gl.h>
 #include "../external/SDL1.h" // SDL_Surface
-#include <vector>
+#include "global.h"
 #include <cstring> // memcpy
 
 namespace libtas {
-
-static bool useGL;
-static bool inited = false;
-
-/* Temporary pixel arrays */
-static std::vector<uint8_t> glpixels;
-static std::vector<uint8_t> winpixels;
 
 /* Original function pointers */
 namespace orig {
@@ -56,14 +49,21 @@ namespace orig {
     static void (*glWindowPos2i)(GLint x, GLint y);
 }
 
+bool ScreenCapture::inited = false;
+
+/* Temporary pixel arrays */
+std::vector<uint8_t> ScreenCapture::glpixels;
+std::vector<uint8_t> ScreenCapture::winpixels;
+
 /* Video dimensions */
-static int width, height, pitch;
-static unsigned int size;
-static int pixelSize;
+int ScreenCapture::width, ScreenCapture::height, ScreenCapture::pitch;
+unsigned int ScreenCapture::size;
+int ScreenCapture::pixelSize;
 
-static SDL_Renderer* renderer;
+SDL_Window* ScreenCapture::sdl_window;
+SDL_Renderer* ScreenCapture::sdl_renderer;
 
-int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
+int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
 {
     if (inited) {
         if (pwidth) *pwidth = width;
@@ -71,14 +71,12 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
         return 0;
     }
 
-    /* If the game uses openGL, the method to capture the screen will be different */
-    useGL = opengl;
+    sdl_window = window;
 
     /* Link the required functions, and get the window dimensions */
-    int SDLver = get_sdlversion();
-    if (SDLver == 1) {
+    if (game_info.video & GameInfo::SDL1) {
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-        if (!useGL) {
+        if (!(game_info.video & GameInfo::OPENGL)) {
             LINK_NAMESPACE_SDL1(SDL_LockSurface);
             LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
         }
@@ -96,9 +94,9 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
         width = surf->w;
         height = surf->h;
     }
-    else if (SDLver == 2) {
+    else if (game_info.video & GameInfo::SDL2) {
 
-        if (useGL) {
+        if (game_info.video & GameInfo::OPENGL) {
             LINK_NAMESPACE_SDL2(SDL_GL_GetDrawableSize);
 
             /* Get information about the current screen */
@@ -107,7 +105,7 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
                 return -1;
             }
 
-            orig::SDL_GL_GetDrawableSize(window, &width, &height);
+            orig::SDL_GL_GetDrawableSize(sdl_window, &width, &height);
             pixelSize = 4;
         }
         else {
@@ -120,7 +118,7 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
             LINK_NAMESPACE_SDL2(SDL_RenderCopy);
             LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
 
-            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
+            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
             pixelSize = sdlpixfmt & 0xFF;
 
             /* Get surface from window */
@@ -129,13 +127,9 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
                 return -1;
             }
 
-            renderer = orig::SDL_GetRenderer(window);
-            orig::SDL_GetRendererOutputSize(renderer, &width, &height);
+            sdl_renderer = orig::SDL_GetRenderer(sdl_window);
+            orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
         }
-    }
-    else {
-        debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Unknown SDL version.");
-        return -1;
     }
 
     /* Output dimensions if asked */
@@ -154,7 +148,7 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
         return -1;
     }
 
-    if (useGL) {
+    if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glReadPixels, "libGL");
         LINK_NAMESPACE(glDrawPixels, "libGL");
         LINK_NAMESPACE(glWindowPos2i, "libGL");
@@ -170,29 +164,30 @@ int initScreenPixels(SDL_Window* window, bool opengl, int *pwidth, int *pheight)
     return 0;
 }
 
-void finiScreenPixels()
+void ScreenCapture::fini()
 {
+    winpixels.clear();
+    glpixels.clear();
     inited = false;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
-AVPixelFormat getPixelFormat(SDL_Window* window)
+AVPixelFormat ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
-    if (useGL) {
+    if (game_info.video & GameInfo::OPENGL) {
         return AV_PIX_FMT_RGBA;
     }
 
-    int SDLver = get_sdlversion();
-    if (SDLver == 1) {
+    if (game_info.video & GameInfo::SDL1) {
         // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
         debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
         return AV_PIX_FMT_RGBA; // TODO
     }
-    else if (SDLver == 2) {
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
+    else if (game_info.video & GameInfo::SDL2) {
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
         /* TODO: There are probably helper functions to build pixel
          * format constants from channel masks
          */
@@ -236,7 +231,7 @@ AVPixelFormat getPixelFormat(SDL_Window* window)
 
 #endif
 
-int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
+int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
 {
     MYASSERT(inited)
 
@@ -244,7 +239,7 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
     if (winpixels.size() != size)
         winpixels.resize(size);
 
-    if (useGL) {
+    if (game_info.video & GameInfo::OPENGL) {
         /* Allocate another pixels array,
          * because the image will need to be flipped.
          */
@@ -276,8 +271,7 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
         /* Not tested !! */
         debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Access SDL_Surface pixels for video dump");
 
-        int SDLver = get_sdlversion();
-        if (SDLver == 1) {
+        if (game_info.video & GameInfo::SDL1) {
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
@@ -303,16 +297,16 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
             orig::SDL_UnlockSurface(surf1);
         }
 
-        if (SDLver == 2) {
+        if (game_info.video & GameInfo::SDL2) {
             /* Checking for a size modification */
             int cw, ch;
-            orig::SDL_GetRendererOutputSize(renderer, &cw, &ch);
+            orig::SDL_GetRendererOutputSize(sdl_renderer, &cw, &ch);
             if ((cw != width) || (ch != height)) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
                 return -1;
             }
 
-            orig::SDL_RenderReadPixels(renderer, NULL, 0, winpixels.data(), pitch);
+            orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
         }
     }
 
@@ -324,17 +318,16 @@ int getScreenPixels(const uint8_t* orig_plane[], int orig_stride[])
     return 0;
 }
 
-int setScreenPixels(SDL_Window* window) {
+int ScreenCapture::setPixels() {
     MYASSERT(inited)
 
-    if (useGL) {
+    if (game_info.video & GameInfo::OPENGL) {
         orig::glWindowPos2i(0, 0);
         orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
     }
 
     else {
-        int SDLver = get_sdlversion();
-        if (SDLver == 1) {
+        if (game_info.video & GameInfo::SDL1) {
             /* Not tested !! */
             debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL1_Surface pixels");
 
@@ -363,21 +356,21 @@ int setScreenPixels(SDL_Window* window) {
             orig::SDL_UnlockSurface(surf1);
         }
 
-        if (SDLver == 2) {
+        if (game_info.video & GameInfo::SDL2) {
             /* Checking for a size modification */
             int cw, ch;
-            orig::SDL_GetRendererOutputSize(renderer, &cw, &ch);
+            orig::SDL_GetRendererOutputSize(sdl_renderer, &cw, &ch);
             if ((cw != width) || (ch != height)) {
                 debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
                 return -1;
             }
 
             /* We must set our pixels into an SDL texture before drawing on screen */
-            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(window);
-            SDL_Texture* texture = orig::SDL_CreateTexture(renderer, sdlpixfmt,
+            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
+            SDL_Texture* texture = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
                 SDL_TEXTUREACCESS_STREAMING, width, height);
             orig::SDL_UpdateTexture(texture, NULL, winpixels.data(), pitch);
-            orig::SDL_RenderCopy(renderer, texture, NULL, NULL);
+            orig::SDL_RenderCopy(sdl_renderer, texture, NULL, NULL);
             orig::SDL_DestroyTexture(texture);
         }
     }

@@ -29,7 +29,7 @@
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2.h"
 #include "timewrappers.h"
-#include "screenpixels.h"
+#include "ScreenCapture.h"
 #include <SDL2/SDL_syswm.h>
 
 namespace libtas {
@@ -39,8 +39,6 @@ namespace libtas {
  * We assume the game never open multiple windows at a time
  */
 SDL_Window* gameWindow = nullptr;
-
-bool video_opengl = false;
 
 /* Original function pointers */
 namespace orig {
@@ -171,12 +169,12 @@ std::string origIcon;
 
     gameWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
 
-    if (flags & SDL_WINDOW_OPENGL)
-        video_opengl = true;
-    else
-        video_opengl = false;
+    if (flags & SDL_WINDOW_OPENGL) {
+        game_info.video |= GameInfo::OPENGL;
+        game_info.tosend = true;
+    }
 
-    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    ScreenCapture::init(gameWindow, nullptr, nullptr);
 
     return gameWindow;
 }
@@ -195,7 +193,7 @@ std::string origIcon;
         avencoder.reset(nullptr);
 #endif
 
-    finiScreenPixels();
+    ScreenCapture::fini();
 }
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
@@ -299,11 +297,9 @@ void updateTitle(float fps, float lfps)
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     gameWindow = *window;
 
-    video_opengl = false;
-
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    ScreenCapture::init(gameWindow, nullptr, nullptr);
 
     return ret;
 }
@@ -332,14 +328,14 @@ void updateTitle(float fps, float lfps)
 
     orig::SDL_SetWindowSize(window, w, h);
 
-    finiScreenPixels();
-    initScreenPixels(gameWindow, video_opengl, nullptr, nullptr);
+    ScreenCapture::fini();
+    ScreenCapture::init(gameWindow, nullptr, nullptr);
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
     if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        avencoder.reset(new AVEncoder(gameWindow, video_opengl, frame_counter));
+        avencoder.reset(new AVEncoder(gameWindow, frame_counter));
     }
 #endif
 
@@ -356,17 +352,14 @@ void updateTitle(float fps, float lfps)
     /* Call real function, but do not return yet */
     SDL1::SDL_Surface *surf = orig::SDL_SetVideoMode(width, height, bpp, flags);
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    /* Initializing the video dump */
-    if (flags & /*SDL_OPENGL*/ 0x00000002)
-        video_opengl = true;
-    else
-        video_opengl = false;
-#endif
+    if (flags & /*SDL_OPENGL*/ 0x00000002) {
+        game_info.video |= GameInfo::OPENGL;
+        game_info.tosend = true;
+    }
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    initScreenPixels(nullptr, video_opengl, nullptr, nullptr);
+    ScreenCapture::init(nullptr, nullptr, nullptr);
 
     return surf;
 }

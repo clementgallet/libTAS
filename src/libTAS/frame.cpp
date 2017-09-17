@@ -33,7 +33,7 @@
 #include "timewrappers.h" // clock_gettime
 #include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
-#include "screenpixels.h"
+#include "ScreenCapture.h"
 
 namespace libtas {
 
@@ -126,7 +126,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     if (!skipping_draw) {
         if (drawFB && shared_config.save_screenpixels) {
-            getScreenPixels(nullptr, nullptr);
+            ScreenCapture::getPixels(nullptr, nullptr);
         }
     }
 
@@ -149,7 +149,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
             debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
-            avencoder.reset(new AVEncoder(gameWindow, video_opengl, frame_counter));
+            avencoder.reset(new AVEncoder(gameWindow, frame_counter));
         }
 
         /* Write the current frame */
@@ -286,7 +286,7 @@ static void receive_messages(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
                 if (shared_config.hud_inputs) {
-                    setScreenPixels(gameWindow);
+                    ScreenCapture::setPixels();
 
                     if (shared_config.hud_framecount) {
                         hud.renderFrame(frame_counter);
@@ -337,7 +337,7 @@ static void receive_messages(std::function<void()> draw)
                     if (shared_config.save_screenpixels) {
                         /* If we restored from a savestate, refresh the screen */
 
-                        setScreenPixels(gameWindow);
+                        ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD
                         if (shared_config.hud_framecount) {
