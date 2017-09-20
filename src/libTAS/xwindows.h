@@ -23,17 +23,31 @@
 #include "global.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#include <GL/glx.h>
 
 namespace libtas {
 
 extern Window gameXWindow;
 
-/* Does the game use openGL? */
-//extern bool video_opengl;
+OVERRIDE void* glXGetProcAddress (const GLubyte *procName);
+OVERRIDE void* glXGetProcAddressARB (const GLubyte *procName);
+OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
 
-//extern char av_filename[4096];
+/* Map the GLX context to the Display connection */
+OVERRIDE Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx );
 
-OVERRIDE void glXSwapBuffers( Display *dpy, XID drawable );
+/* Swap buffers */
+OVERRIDE void glXSwapBuffers( Display *dpy, GLXDrawable drawable );
+
+/* Set the VSync value */
+OVERRIDE void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval);
+OVERRIDE int glXSwapIntervalSGI (int interval);
+OVERRIDE int glXSwapIntervalMESA (unsigned int interval);
+
+OVERRIDE int glXGetSwapIntervalMESA(void);
+
+/* Returns an attribute assoicated with a GLX drawable */
+OVERRIDE int glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
 
 OVERRIDE Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
 
@@ -41,7 +55,7 @@ OVERRIDE Window XCreateSimpleWindow(Display *display, Window parent, int x, int 
 
 OVERRIDE int XMapWindow(Display *display, Window w);
 
-OVERRIDE int XMapRaised(Display *display, Window w); 
+OVERRIDE int XMapRaised(Display *display, Window w);
 }
 
 #endif
