@@ -34,6 +34,8 @@
 #include "../EventQueue.h"
 #include <SDL2/SDL.h>
 #include "../../external/SDL1.h"
+#include <linux/joystick.h>
+#include "jsdev.h"
 
 namespace libtas {
 
@@ -179,8 +181,9 @@ void generateSDLControllerAdded(void)
 {
     int SDLver = get_sdlversion();
 
-    if (SDLver == 1)
+    if (SDLver != 2)
         return;
+
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
@@ -198,7 +201,7 @@ void generateSDLControllerAdded(void)
     }
 }
 
-void generateSDLControllerEvents(void)
+void generateControllerEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -212,16 +215,18 @@ void generateSDLControllerEvents(void)
          * in the SDL documentation. The game must then call
          * SDL_[Joystick/GameController]Update to update the joystick state.
          */
-        bool genGC, genJoy;
-        {
+        bool genGC, genJoy = true;
+
+        if (SDLver != 0) {
             GlobalOwnCode toc;
             genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
             //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
             /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
             genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji)) || SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji)));
+
+            if (!genGC && !genJoy)
+                continue;
         }
-        if (!genGC && !genJoy)
-            continue;
 
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             /* Update game_ai axes */
@@ -232,8 +237,8 @@ void generateSDLControllerEvents(void)
                 /* We got a change in a controller axis value */
 
                 /* Fill the event structure */
-                if (genGC) {
-                    if (SDLver == 2) {
+                if (SDLver == 2) {
+                    if (genGC) {
                         SDL_Event event2;
                         event2.type = SDL_CONTROLLERAXISMOTION;
                         event2.caxis.timestamp = timestamp;
@@ -243,10 +248,7 @@ void generateSDLControllerEvents(void)
                         sdlEventQueue.insert(&event2);
                         debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis ", axis);
                     }
-                }
-
-                if (genJoy) {
-                    if (SDLver == 2) {
+                    if (genJoy) {
                         SDL_Event event2;
                         event2.type = SDL_JOYAXISMOTION;
                         event2.jaxis.timestamp = timestamp;
@@ -256,16 +258,26 @@ void generateSDLControllerEvents(void)
                         sdlEventQueue.insert(&event2);
                         debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis ", axis);
                     }
+                }
 
-                    if (SDLver == 1) {
-                        SDL1::SDL_Event event1;
-                        event1.type = SDL1::SDL_JOYAXISMOTION;
-                        event1.jaxis.which = ji;
-                        event1.jaxis.axis = axis;
-                        event1.jaxis.value = ai.controller_axes[ji][axis];
-                        sdlEventQueue.insert(&event1);
-                        debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis ", axis);
-                    }
+                if ((SDLver == 1) && genJoy) {
+                    SDL1::SDL_Event event1;
+                    event1.type = SDL1::SDL_JOYAXISMOTION;
+                    event1.jaxis.which = ji;
+                    event1.jaxis.axis = axis;
+                    event1.jaxis.value = ai.controller_axes[ji][axis];
+                    sdlEventQueue.insert(&event1);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis ", axis);
+                }
+
+                if (SDLver == 0) {
+                    struct js_event ev;
+                    ev.time = timestamp;
+                    ev.type = JS_EVENT_AXIS;
+                    ev.number = axis;
+                    ev.value = ai.controller_axes[ji][axis];
+                    write_jsdev(ev, ji);
+                    debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_AXIS with axis ", axis);
                 }
 
                 /* Upload the old AllInput struct */
@@ -288,8 +300,8 @@ void generateSDLControllerEvents(void)
                 /* We got a change in a button state */
 
                 /* Fill the event structure */
-                if (genGC) {
-                    if (SDLver == 2) {
+                if (SDLver == 2) {
+                    if (genGC) {
                         /* SDL2 controller button */
                         SDL_Event event2;
                         if ((buttons >> bi) & 0x1) {
@@ -307,11 +319,9 @@ void generateSDLControllerEvents(void)
                         event2.cbutton.button = bi;
                         sdlEventQueue.insert(&event2);
                     }
-                }
 
-                if (genJoy) {
-                    if (bi < 11) {
-                        if (SDLver == 2) {
+                    if (genJoy) {
+                        if (bi < 11) {
                             /* SDL2 joystick button */
                             SDL_Event event2;
                             if ((buttons >> bi) & 0x1) {
@@ -330,26 +340,56 @@ void generateSDLControllerEvents(void)
                             sdlEventQueue.insert(&event2);
                         }
 
-                        if (SDLver == 1) {
-                            /* SDL1 joystick button */
-                            SDL1::SDL_Event event1;
-                            if ((buttons >> bi) & 0x1) {
-                                event1.type = SDL1::SDL_JOYBUTTONDOWN;
-                                event1.jbutton.state = SDL_PRESSED;
-                                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button ", bi);
-                            }
-                            else {
-                                event1.type = SDL1::SDL_JOYBUTTONUP;
-                                event1.jbutton.state = SDL_RELEASED;
-                                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button ", bi);
-                            }
-                            event1.jbutton.which = ji;
-                            event1.jbutton.button = bi;
-                            sdlEventQueue.insert(&event1);
+                        else if (!hatGenerated) {
+                            hatGenerated = true;
+
+                            /* Fortunately, we use the fact that SDL_HAT_X constants
+                             * are the same in SDL 1 and SDL 2
+                             */
+                            Uint8 hatState = SDL_HAT_CENTERED;
+                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
+                                hatState |= SDL_HAT_UP;
+                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+                                hatState |= SDL_HAT_DOWN;
+                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+                                hatState |= SDL_HAT_LEFT;
+                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+                                hatState |= SDL_HAT_RIGHT;
+
+                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
+
+                            /* SDL2 joystick hat */
+                            SDL_Event event2;
+                            event2.type = SDL_JOYHATMOTION;
+                            event2.jhat.timestamp = timestamp;
+                            event2.jhat.which = ji;
+                            event2.jhat.hat = 0;
+                            event2.jhat.value = hatState;
+                            sdlEventQueue.insert(&event2);
                         }
                     }
+                }
 
-                    if ((!hatGenerated) && (bi >= 11)) {
+                if ((SDLver == 1) && genJoy) {
+                    if (bi < 11) {
+                        /* SDL1 joystick button */
+                        SDL1::SDL_Event event1;
+                        if ((buttons >> bi) & 0x1) {
+                            event1.type = SDL1::SDL_JOYBUTTONDOWN;
+                            event1.jbutton.state = SDL_PRESSED;
+                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button ", bi);
+                        }
+                        else {
+                            event1.type = SDL1::SDL_JOYBUTTONUP;
+                            event1.jbutton.state = SDL_RELEASED;
+                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button ", bi);
+                        }
+                        event1.jbutton.which = ji;
+                        event1.jbutton.button = bi;
+                        sdlEventQueue.insert(&event1);
+                    }
+
+                    else if (!hatGenerated) {
                         hatGenerated = true;
 
                         /* Fortunately, we use the fact that SDL_HAT_X constants
@@ -367,27 +407,26 @@ void generateSDLControllerEvents(void)
 
                         debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
 
-                        if (SDLver == 2) {
-                            /* SDL2 joystick hat */
-                            SDL_Event event2;
-                            event2.type = SDL_JOYHATMOTION;
-                            event2.jhat.timestamp = timestamp;
-                            event2.jhat.which = ji;
-                            event2.jhat.hat = 0;
-                            event2.jhat.value = hatState;
-                            sdlEventQueue.insert(&event2);
-                        }
-                        if (SDLver == 1) {
-                            /* SDL1 joystick hat */
-                            SDL1::SDL_Event event1;
-                            event1.type = SDL1::SDL_JOYHATMOTION;
-                            event1.jhat.which = ji;
-                            event1.jhat.hat = 0;
-                            event1.jhat.value = hatState;
-                            sdlEventQueue.insert(&event1);
-                        }
+                        /* SDL1 joystick hat */
+                        SDL1::SDL_Event event1;
+                        event1.type = SDL1::SDL_JOYHATMOTION;
+                        event1.jhat.which = ji;
+                        event1.jhat.hat = 0;
+                        event1.jhat.value = hatState;
+                        sdlEventQueue.insert(&event1);
                     }
                 }
+
+                if ((SDLver == 0) && (bi < 11)) {
+                    struct js_event ev;
+                    ev.time = timestamp;
+                    ev.type = JS_EVENT_BUTTON;
+                    ev.number = bi;
+                    ev.value = (buttons >> bi) & 0x1;
+                    debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button ", bi);
+                    write_jsdev(ev, ji);
+                }
+
                 /* Upload the old AllInput struct */
                 old_ai.controller_buttons[ji] ^= (1 << bi);
             }

@@ -20,10 +20,6 @@
 #include "ioctl_joy.h"
 #include "../logging.h"
 #include "../hook.h"
-//#include "inputs.h"
-//#include <X11/XKBlib.h>
-//#include <cstring> // memset
-#include "../../shared/AllInputs.h"
 #include <linux/joystick.h>
 
 namespace libtas {
@@ -34,7 +30,7 @@ namespace orig {
 
 int ioctl(int fd, unsigned long request, ...)
 {
-    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+//    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE(ioctl, nullptr);
 
     va_list arg_list;
@@ -45,7 +41,7 @@ int ioctl(int fd, unsigned long request, ...)
     va_end(arg_list);
 
     if (request == JSIOCGVERSION) {
-        debuglog(LCF_JOYSTICK, "    access to JSIOCGVERSION");
+        debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGVERSION on fd ", fd);
         int* version = static_cast<int*>(argp);
         *version = 0x20100; // version 2.1.0
         return 0;
@@ -58,31 +54,31 @@ int ioctl(int fd, unsigned long request, ...)
         _IOC_NR(request) == _IOC_NR(JSIOCGNAME(0))) {
         int len = _IOC_SIZE(request);
         char* name = static_cast<char*>(argp);
-        debuglog(LCF_JOYSTICK, "    access to JSIOCGNAME with len ", len);
+        debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGNAME with len ", len, " on fd ", fd);
         strncpy(name, "Microsoft X-Box 360 pad", len);
         return 0;
     }
 
     if (request == JSIOCGBUTTONS) {
-        debuglog(LCF_JOYSTICK, "    access to JSIOCGBUTTONS");
+        debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGBUTTONS on fd ", fd);
         int* buttons = static_cast<int*>(argp);
         *buttons = 11;
         return 0;
     }
 
     if (request == JSIOCGAXES) {
-        debuglog(LCF_JOYSTICK, "    access to JSIOCGAXES");
+        debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGAXES on fd ", fd);
         int* axes = static_cast<int*>(argp);
         *axes = 8;
         return 0;
     }
 
     if (request == JSIOCSCORR) {
-        debuglog(LCF_JOYSTICK | LCF_TODO, "    access to JSIOCSCORR (not supported!)");
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCSCORR (not supported!) on fd ", fd);
     }
 
     if (request == JSIOCGCORR) {
-        debuglog(LCF_JOYSTICK | LCF_TODO, "    access to JSIOCGCORR (not supported!)");
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCGCORR (not supported!) on fd ", fd);
     }
 
     return orig::ioctl(fd, request, argp);

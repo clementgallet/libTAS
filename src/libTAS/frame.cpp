@@ -232,7 +232,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     generateKeyDownEvents();
     if (frame_counter == 0)
         generateSDLControllerAdded();
-    generateSDLControllerEvents();
+    generateControllerEvents();
     generateMouseMotionEvents();
     generateMouseButtonEvents();
 

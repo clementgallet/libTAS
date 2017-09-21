@@ -34,7 +34,7 @@ void generateKeyDownEvents(void);
 void generateSDLControllerAdded(void);
 
 /* Same as KeyUp/KeyDown functions but with controller events */
-void generateSDLControllerEvents(void);
+void generateControllerEvents(void);
 
 /* Same as above with MouseMotion event */
 void generateMouseMotionEvents(void);

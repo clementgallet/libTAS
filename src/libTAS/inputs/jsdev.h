@@ -17,15 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IOCTL_JOY_H_INCL
-#define LIBTAS_IOCTL_JOY_H_INCL
+#ifndef LIBTAS_JSDEV_H_INCL
+#define LIBTAS_JSDEV_H_INCL
 
 #include "../global.h"
 #include <sys/ioctl.h>
+#include <linux/joystick.h>
 
 namespace libtas {
 
-OVERRIDE int ioctl(int fd, unsigned long request, ...);
+int open_jsdev(const char* source, int flags);
+void write_jsdev(struct js_event ev, int jsnum);
+void close_jsdev(int fd);
 
 }
 
