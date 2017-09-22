@@ -25,7 +25,7 @@
 //#include "../shared/SharedConfig.h"
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
-//#include "screenpixels.h"
+#include "ScreenCapture.h"
 
 namespace libtas {
 
@@ -113,13 +113,16 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(glXMakeCurrent, "libGL");
 
+    Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
+
     if (drawable != None) {
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;
+
+        /* Now that the context is created, we can init the screen capture */
+        ScreenCapture::init(nullptr, nullptr, nullptr);
     }
-
-    Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
-
+    
     /* Disable VSync */
     //LINK_NAMESPACE(glXGetProcAddressARB, "libGL");
     //orig::glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)orig::glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
@@ -176,7 +179,7 @@ int glXSwapIntervalMESA (unsigned int interval)
 
 int glXGetSwapIntervalMESA(void)
 {
-    DEBUGLOGCALL(LCF_WINDOW);    
+    DEBUGLOGCALL(LCF_WINDOW);
     return swapInterval;
 }
 

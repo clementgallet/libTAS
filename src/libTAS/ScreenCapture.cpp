@@ -91,7 +91,7 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
         /* Do we already have access to the glReadPixels function? */
         if (!orig::glGetIntegerv || !orig::glReadPixels ||
             !orig::glDrawPixels || !orig::glWindowPos2i) {
-            debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
+            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
             return -1;
         }
     }
@@ -103,7 +103,7 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
 
         /* Get dimensions from the window surface */
         if (!orig::SDL_GetVideoSurface) {
-            debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetVideoSurface.");
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "Need function SDL_GetVideoSurface.");
             return -1;
         }
 
@@ -129,7 +129,7 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
 
         /* Get surface from window */
         if (!orig::SDL_GetRendererOutputSize) {
-            debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
             return -1;
         }
 
@@ -149,9 +149,11 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Screen dimensions must be a multiple of 2");
+        debuglog(LCF_WINDOW | LCF_ERROR, "Screen dimensions must be a multiple of 2");
         return -1;
     }
+
+    debuglog(LCF_WINDOW, "Inited Screen Capture with dimensions (", width, ",", height, ")");
 
     inited = true;
     return 0;

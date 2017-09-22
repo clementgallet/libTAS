@@ -119,13 +119,15 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     bool skipping_draw = skipDraw();
 
-    /* We must save the screen pixels before drawing, in case we
-     * load a savestate here, so we can redraw the screen. Also, we save
-     * before rendering the HUD, so that we can render another HUD after state
-     * loading.
+    /* We must save the screen pixels before drawing for the following cases:
+     * - we set screen redraw when loading savestates
+     * - we show the inputs in the HUD, so that we can show preview inputs
+     * Also, we must take care of saving before rendering the HUD.
+     *
+     * TODO: What should we do for nondraw frames ???
      */
     if (!skipping_draw) {
-        if (drawFB && shared_config.save_screenpixels) {
+        if (drawFB && (shared_config.save_screenpixels || shared_config.hud_inputs)) {
             ScreenCapture::getPixels(nullptr, nullptr);
         }
     }

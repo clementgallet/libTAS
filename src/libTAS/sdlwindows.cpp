@@ -100,11 +100,15 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
     void* context = orig::SDL_GL_CreateContext(window);
 
-    /* We override this function just to disable vsync,
+    /* We override this function to disable vsync,
      * except when using non deterministic timer.
      */
     if (shared_config.framerate > 0)
         orig::SDL_GL_SetSwapInterval(0);
+
+    /* Now that the context is created, we can init the screen capture */
+    ScreenCapture::init(nullptr, nullptr, nullptr);
+
     return context;
 }
 
@@ -153,8 +157,12 @@ std::string origIcon;
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;
     }
-
-    ScreenCapture::init(gameWindow, nullptr, nullptr);
+    else {
+        /* We init the screen capture only when not in openGL here, because
+         * for openGL we wait until the context has been created to init it
+         */
+        ScreenCapture::init(gameWindow, nullptr, nullptr);
+    }
 
     return gameWindow;
 }
