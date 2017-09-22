@@ -21,7 +21,7 @@
 
 GameInfoWindow::GameInfoWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(300, 150, "Game information");
+    window = new Fl_Double_Window(300, 240, "Game information");
 
     video_box = new Fl_Box(10, 10, 200, 30);
     video_box->box(FL_NO_BOX);
@@ -31,7 +31,15 @@ GameInfoWindow::GameInfoWindow(Context* c) : context(c)
     audio_box->box(FL_NO_BOX);
     audio_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
-    joystick_box = new Fl_Box(10, 90, 200, 30);
+    keyboard_box = new Fl_Box(10, 90, 200, 30);
+    keyboard_box->box(FL_NO_BOX);
+    keyboard_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+
+    mouse_box = new Fl_Box(10, 130, 200, 30);
+    mouse_box->box(FL_NO_BOX);
+    mouse_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+
+    joystick_box = new Fl_Box(10, 170, 200, 30);
     joystick_box->box(FL_NO_BOX);
     joystick_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
@@ -70,6 +78,36 @@ void GameInfoWindow::update()
     }
     audio_box->copy_label(audiostr.c_str());
 
+    std::string keyboardstr = "Keyboard support: ";
+    if (context->game_info.keyboard & GameInfo::SDL1) {
+        keyboardstr += "yes (SDL 1)";
+    }
+    else if (context->game_info.keyboard & GameInfo::SDL2) {
+        keyboardstr += "yes (SDL 2)";
+    }
+    else if (context->game_info.keyboard & GameInfo::XEVENTS) {
+        keyboardstr += "default (xevents)";
+    }
+    else {
+        keyboardstr += "unknown";
+    }
+    keyboard_box->copy_label(keyboardstr.c_str());
+
+    std::string mousestr = "Mouse support: ";
+    if (context->game_info.mouse & GameInfo::SDL1) {
+        mousestr += "yes (SDL 1)";
+    }
+    else if (context->game_info.mouse & GameInfo::SDL2) {
+        mousestr += "yes (SDL 2)";
+    }
+    else if (context->game_info.mouse & GameInfo::XEVENTS) {
+        mousestr += "default (xevents)";
+    }
+    else {
+        mousestr += "unknown";
+    }
+    mouse_box->copy_label(mousestr.c_str());
+
     std::string joystickstr = "Joystick support: ";
     if (context->game_info.joystick & GameInfo::SDL1) {
         joystickstr += "yes (SDL 1)";
@@ -77,8 +115,8 @@ void GameInfoWindow::update()
     else if (context->game_info.joystick & GameInfo::SDL2) {
         joystickstr += "yes (SDL 2)";
     }
-    else if (context->game_info.joystick & GameInfo::NO_SDL) {
-        joystickstr += "no";
+    else if (context->game_info.joystick & GameInfo::JSDEV) {
+        joystickstr += "yes (jsdev)";
     }
     else {
         joystickstr += "unknown";

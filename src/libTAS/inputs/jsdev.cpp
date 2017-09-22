@@ -47,6 +47,10 @@ int open_jsdev(const char* source, int flags)
         debuglog(LCF_JOYSTICK | LCF_ERROR, "Warning, jsdev ", source, " opened multiple times!");
     }
 
+    /* Register that we use JSDEV for joystick inputs */
+    game_info.joystick = GameInfo::JSDEV;
+    game_info.tosend = true;
+
     /* Create an anonymous file and store its file descriptor using the
      * recent memfd_create syscall.
      */

@@ -71,7 +71,7 @@ namespace orig {
 
     /* Get which sdl version we are using. */
     int SDLver = get_sdlversion();
-    GameInfo::Flag sdl_flag = (SDLver==2)?GameInfo::SDL2:((SDLver==1)?GameInfo::SDL1:GameInfo::NO_SDL);
+    GameInfo::Flag sdl_flag = (SDLver==2)?GameInfo::SDL2:((SDLver==1)?GameInfo::SDL1:GameInfo::UNKNOWN);
 
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
@@ -90,7 +90,7 @@ namespace orig {
 
     if (flags & SDL_INIT_AUDIO) {
         debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
-        game_info.audio |= sdl_flag;
+        game_info.audio = sdl_flag;
     }
 
     if (flags & SDL_INIT_VIDEO) {
@@ -100,11 +100,7 @@ namespace orig {
 
     if (flags & SDL_INIT_JOYSTICK) {
         debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
-        game_info.joystick |= sdl_flag;
-    }
-    else {
-        /* Store if joysticks are not enabled here */
-        game_info.joystick |= GameInfo::NO_SDL;
+        game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_HAPTIC)
@@ -112,15 +108,14 @@ namespace orig {
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
         debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
-        game_info.joystick |= sdl_flag;
-    }
-    else {
-        /* Store if joysticks are not enabled here */
-        game_info.joystick |= GameInfo::NO_SDL;
+        game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+
+    game_info.keyboard = sdl_flag;
+    game_info.mouse = sdl_flag;
 
     game_info.tosend = true;
 

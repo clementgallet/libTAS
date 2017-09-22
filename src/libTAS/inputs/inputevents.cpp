@@ -21,7 +21,6 @@
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
-#include "../sdlversion.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <X11/keysym.h>
@@ -36,13 +35,13 @@
 #include "../../external/SDL1.h"
 #include <linux/joystick.h>
 #include "jsdev.h"
+#include "../global.h" // game_info
 
 namespace libtas {
 
 void generateKeyUpEvents(void)
 {
     int i, j;
-    int SDLver = get_sdlversion();
 
     struct timespec time = detTimer.getTicks();
     for (i=0; i<AllInputs::MAXKEYS; i++) {
@@ -57,7 +56,7 @@ void generateKeyUpEvents(void)
         }
         if (j == AllInputs::MAXKEYS) {
             /* Key was released. Generate event */
-            if (SDLver == 2) {
+            if (game_info.keyboard & GameInfo::SDL2) {
                 SDL_Event event2;
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
@@ -71,10 +70,9 @@ void generateKeyUpEvents(void)
                 sdlEventQueue.insert(&event2);
 
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key ", event2.key.keysym.sym);
-
             }
 
-            if (SDLver == 1) {
+            if (game_info.keyboard & GameInfo::SDL1) {
                 SDL1::SDL_Event event1;
                 event1.type = SDL1::SDL_KEYUP;
                 event1.key.which = 0; // FIXME: I don't know what is going here
@@ -89,7 +87,7 @@ void generateKeyUpEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
-            if (SDLver == 0) {
+            if (game_info.keyboard & GameInfo::XEVENTS) {
                 XEvent event;
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
@@ -110,7 +108,6 @@ void generateKeyUpEvents(void)
 void generateKeyDownEvents(void)
 {
     int i,j,k;
-    int SDLver = get_sdlversion();
 
     struct timespec time = detTimer.getTicks();
     for (i=0; i<AllInputs::MAXKEYS; i++) { // TODO: Another magic number
@@ -125,7 +122,7 @@ void generateKeyDownEvents(void)
         }
         if (j == AllInputs::MAXKEYS) {
             /* Key was pressed. Generate event */
-            if (SDLver == 2) {
+            if (game_info.keyboard & GameInfo::SDL2) {
                 SDL_Event event2;
                 event2.type = SDL_KEYDOWN;
                 event2.key.state = SDL_PRESSED;
@@ -141,7 +138,7 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", event2.key.keysym.sym);
             }
 
-            if (SDLver == 1) {
+            if (game_info.keyboard & GameInfo::SDL1) {
                 SDL1::SDL_Event event1;
                 event1.type = SDL1::SDL_KEYDOWN;
                 event1.key.which = 0; // FIXME: I don't know what is going here
@@ -156,7 +153,7 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
-            if (SDLver == 0) {
+            if (game_info.keyboard & GameInfo::XEVENTS) {
                 XEvent event;
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
@@ -177,11 +174,9 @@ void generateKeyDownEvents(void)
     }
 }
 
-void generateSDLControllerAdded(void)
+void generateControllerAdded(void)
 {
-    int SDLver = get_sdlversion();
-
-    if (SDLver != 2)
+    if (!(game_info.joystick & GameInfo::SDL2))
         return;
 
     struct timespec time = detTimer.getTicks();
@@ -205,7 +200,6 @@ void generateControllerEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-    int SDLver = get_sdlversion();
 
     for (int ji=0; ji<shared_config.nb_controllers; ji++) {
 
@@ -217,7 +211,7 @@ void generateControllerEvents(void)
          */
         bool genGC, genJoy = true;
 
-        if (SDLver != 0) {
+        if (game_info.keyboard & GameInfo::SDL2) {
             GlobalOwnCode toc;
             genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
             //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
@@ -225,6 +219,14 @@ void generateControllerEvents(void)
             genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji)) || SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji)));
 
             if (!genGC && !genJoy)
+                continue;
+        }
+
+        if (game_info.keyboard & GameInfo::SDL1) {
+            GlobalOwnCode toc;
+            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji));
+
+            if (!genJoy)
                 continue;
         }
 
@@ -236,8 +238,7 @@ void generateControllerEvents(void)
             if (ai.controller_axes[ji][axis] != old_ai.controller_axes[ji][axis]) {
                 /* We got a change in a controller axis value */
 
-                /* Fill the event structure */
-                if (SDLver == 2) {
+                if (game_info.joystick & GameInfo::SDL2) {
                     if (genGC) {
                         SDL_Event event2;
                         event2.type = SDL_CONTROLLERAXISMOTION;
@@ -260,7 +261,7 @@ void generateControllerEvents(void)
                     }
                 }
 
-                if ((SDLver == 1) && genJoy) {
+                if (game_info.joystick & GameInfo::SDL1) {
                     SDL1::SDL_Event event1;
                     event1.type = SDL1::SDL_JOYAXISMOTION;
                     event1.jaxis.which = ji;
@@ -270,7 +271,7 @@ void generateControllerEvents(void)
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis ", axis);
                 }
 
-                if (SDLver == 0) {
+                if (game_info.joystick & GameInfo::JSDEV) {
                     struct js_event ev;
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
@@ -292,15 +293,15 @@ void generateControllerEvents(void)
         unsigned short buttons = ai.controller_buttons[ji];
         unsigned short old_buttons = old_ai.controller_buttons[ji];
 
-        /* We take care of only generating the hat event once */
-        bool hatGenerated = false;
+        /* We generate the hat event separately from the buttons,
+         * but we still check here if hat has changed */
+        bool hatHasChanged = false;
 
         for (int bi=0; bi<16; bi++) {
             if (((buttons >> bi) & 0x1) != ((old_buttons >> bi) & 0x1)) {
                 /* We got a change in a button state */
 
-                /* Fill the event structure */
-                if (SDLver == 2) {
+                if (game_info.joystick & GameInfo::SDL2) {
                     if (genGC) {
                         /* SDL2 controller button */
                         SDL_Event event2;
@@ -340,37 +341,13 @@ void generateControllerEvents(void)
                             sdlEventQueue.insert(&event2);
                         }
 
-                        else if (!hatGenerated) {
-                            hatGenerated = true;
-
-                            /* Fortunately, we use the fact that SDL_HAT_X constants
-                             * are the same in SDL 1 and SDL 2
-                             */
-                            Uint8 hatState = SDL_HAT_CENTERED;
-                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
-                                hatState |= SDL_HAT_UP;
-                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
-                                hatState |= SDL_HAT_DOWN;
-                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
-                                hatState |= SDL_HAT_LEFT;
-                            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
-                                hatState |= SDL_HAT_RIGHT;
-
-                            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
-
-                            /* SDL2 joystick hat */
-                            SDL_Event event2;
-                            event2.type = SDL_JOYHATMOTION;
-                            event2.jhat.timestamp = timestamp;
-                            event2.jhat.which = ji;
-                            event2.jhat.hat = 0;
-                            event2.jhat.value = hatState;
-                            sdlEventQueue.insert(&event2);
+                        else {
+                            hatHasChanged = true;
                         }
                     }
                 }
 
-                if ((SDLver == 1) && genJoy) {
+                if (game_info.joystick & GameInfo::SDL1) {
                     if (bi < 11) {
                         /* SDL1 joystick button */
                         SDL1::SDL_Event event1;
@@ -388,47 +365,64 @@ void generateControllerEvents(void)
                         event1.jbutton.button = bi;
                         sdlEventQueue.insert(&event1);
                     }
-
-                    else if (!hatGenerated) {
-                        hatGenerated = true;
-
-                        /* Fortunately, we use the fact that SDL_HAT_X constants
-                         * are the same in SDL 1 and SDL 2
-                         */
-                        Uint8 hatState = SDL_HAT_CENTERED;
-                        if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
-                            hatState |= SDL_HAT_UP;
-                        if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
-                            hatState |= SDL_HAT_DOWN;
-                        if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
-                            hatState |= SDL_HAT_LEFT;
-                        if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
-                            hatState |= SDL_HAT_RIGHT;
-
-                        debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
-
-                        /* SDL1 joystick hat */
-                        SDL1::SDL_Event event1;
-                        event1.type = SDL1::SDL_JOYHATMOTION;
-                        event1.jhat.which = ji;
-                        event1.jhat.hat = 0;
-                        event1.jhat.value = hatState;
-                        sdlEventQueue.insert(&event1);
+                    else {
+                        hatHasChanged = true;
                     }
                 }
 
-                if ((SDLver == 0) && (bi < 11)) {
-                    struct js_event ev;
-                    ev.time = timestamp;
-                    ev.type = JS_EVENT_BUTTON;
-                    ev.number = bi;
-                    ev.value = (buttons >> bi) & 0x1;
-                    debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button ", bi);
-                    write_jsdev(ev, ji);
+                if (game_info.joystick & GameInfo::JSDEV) {
+                    if (bi < 11) { // JSDEV joystick only has 11 buttons
+                        struct js_event ev;
+                        ev.time = timestamp;
+                        ev.type = JS_EVENT_BUTTON;
+                        ev.number = bi;
+                        ev.value = (buttons >> bi) & 0x1;
+                        debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button ", bi);
+                        write_jsdev(ev, ji);
+                    }
                 }
 
                 /* Upload the old AllInput struct */
                 old_ai.controller_buttons[ji] ^= (1 << bi);
+            }
+        }
+
+        /* Generate hat state */
+        if (hatHasChanged) {
+
+            /* Fortunately, we use the fact that SDL_HAT_X constants
+             * are the same in SDL 1 and SDL 2
+             */
+            Uint8 hatState = SDL_HAT_CENTERED;
+            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
+                hatState |= SDL_HAT_UP;
+            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+                hatState |= SDL_HAT_DOWN;
+            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+                hatState |= SDL_HAT_LEFT;
+            if (buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+                hatState |= SDL_HAT_RIGHT;
+
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
+            if (game_info.joystick & GameInfo::SDL2) {
+                /* SDL2 joystick hat */
+                SDL_Event event2;
+                event2.type = SDL_JOYHATMOTION;
+                event2.jhat.timestamp = timestamp;
+                event2.jhat.which = ji;
+                event2.jhat.hat = 0;
+                event2.jhat.value = hatState;
+                sdlEventQueue.insert(&event2);
+            }
+
+            if (game_info.joystick & GameInfo::SDL1) {
+                /* SDL1 joystick hat */
+                SDL1::SDL_Event event1;
+                event1.type = SDL1::SDL_JOYHATMOTION;
+                event1.jhat.which = ji;
+                event1.jhat.hat = 0;
+                event1.jhat.value = hatState;
+                sdlEventQueue.insert(&event1);
             }
         }
     }
@@ -448,9 +442,7 @@ void generateMouseMotionEvents(void)
     /* Fill the event structure */
     /* TODO: Deal if pointer is out of screen */
 
-    int SDLver = get_sdlversion();
-
-    if (SDLver == 2) {
+    if (game_info.mouse & GameInfo::SDL2) {
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
         struct timespec time = detTimer.getTicks();
@@ -477,9 +469,9 @@ void generateMouseMotionEvents(void)
         event2.motion.y = game_ai.pointer_y + event2.motion.yrel;
         sdlEventQueue.insert(&event2);
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
-
     }
-    if (SDLver == 1) {
+
+    if (game_info.mouse & GameInfo::SDL1) {
         SDL1::SDL_Event event1;
         event1.type = SDL1::SDL_MOUSEMOTION;
         event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
@@ -503,9 +495,9 @@ void generateMouseMotionEvents(void)
         event1.motion.y = (Uint16) (game_ai.pointer_y + event1.motion.yrel);
         sdlEventQueue.insert(&event1);
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
-
     }
-    if (SDLver == 0) {
+
+    if (game_info.mouse & GameInfo::XEVENTS) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = ai.pointer_mask;
@@ -527,7 +519,6 @@ void generateMouseMotionEvents(void)
 void generateMouseButtonEvents(void)
 {
     struct timespec time = detTimer.getTicks();
-    int SDLver = get_sdlversion();
 
     static int xbuttons[] = {Button1,
         Button2, Button3,
@@ -547,7 +538,7 @@ void generateMouseButtonEvents(void)
             /* We got a change in a button state */
 
             /* Fill the event structure */
-            if (SDLver == 2) {
+            if (game_info.mouse & GameInfo::SDL2) {
                 SDL_Event event2;
                 if (ai.pointer_mask & xbuttonmasks[bi]) {
                     event2.type = SDL_MOUSEBUTTONDOWN;
@@ -568,7 +559,8 @@ void generateMouseButtonEvents(void)
                 event2.button.y = game_ai.pointer_y;
                 sdlEventQueue.insert(&event2);
             }
-            if (SDLver == 1) {
+
+            if (game_info.mouse & GameInfo::SDL1) {
                 SDL1::SDL_Event event1;
                 if (ai.pointer_mask & xbuttonmasks[bi]) {
                     event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
@@ -586,7 +578,8 @@ void generateMouseButtonEvents(void)
                 event1.button.y = (Uint16) game_ai.pointer_y;
                 sdlEventQueue.insert(&event1);
             }
-            if (SDLver == 0) {
+
+            if (game_info.mouse & GameInfo::XEVENTS) {
                 XEvent event;
                 if (ai.pointer_mask & xbuttonmasks[bi]) {
                     event.xbutton.type = ButtonPress;
@@ -603,9 +596,9 @@ void generateMouseButtonEvents(void)
 
                 XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
             }
+
             /* Upload the old AllInput struct */
             old_ai.pointer_mask ^= xbuttonmasks[bi];
-
         }
     }
 }

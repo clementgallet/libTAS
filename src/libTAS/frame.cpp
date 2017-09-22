@@ -204,9 +204,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Send GameInfo struct if needed */
     if (game_info.tosend) {
         sendMessage(MSGB_GAMEINFO);
-        sendData(&game_info.video, sizeof(int));
-        sendData(&game_info.audio, sizeof(int));
-        sendData(&game_info.joystick, sizeof(int));
+        sendData(&game_info, sizeof(game_info));
         game_info.tosend = false;
     }
 
@@ -231,7 +229,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     generateKeyUpEvents();
     generateKeyDownEvents();
     if (frame_counter == 0)
-        generateSDLControllerAdded();
+        generateControllerAdded();
     generateControllerEvents();
     generateMouseMotionEvents();
     generateMouseButtonEvents();

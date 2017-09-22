@@ -39,6 +39,8 @@ class GameInfoWindow {
 
         Fl_Box *video_box;
         Fl_Box *audio_box;
+        Fl_Box *keyboard_box;
+        Fl_Box *mouse_box;
         Fl_Box *joystick_box;
 
 };

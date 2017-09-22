@@ -30,19 +30,21 @@
 struct GameInfo {
     bool tosend = false;
 
-    /* Recording status */
     enum Flag {
         UNKNOWN = 0,
         SDL1 = 0x01,
         SDL2 = 0x02,
         OPENGL = 0x04,
-        NO_SDL = 0x08,
         OPENAL = 0x10,
-        PULSEAUDIO = 0x20
+        PULSEAUDIO = 0x20,
+        XEVENTS = 0x40,
+        JSDEV = 0x80
     };
 
     int video = UNKNOWN;
     int audio = UNKNOWN;
+    int keyboard = XEVENTS;
+    int mouse = XEVENTS;
     int joystick = UNKNOWN;
 };
 

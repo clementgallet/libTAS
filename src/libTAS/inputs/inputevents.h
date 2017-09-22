@@ -31,7 +31,7 @@ void generateKeyUpEvents(void);
 void generateKeyDownEvents(void);
 
 /* Generate events indicating that a controller was plugged in */
-void generateSDLControllerAdded(void);
+void generateControllerAdded(void);
 
 /* Same as KeyUp/KeyDown functions but with controller events */
 void generateControllerEvents(void);

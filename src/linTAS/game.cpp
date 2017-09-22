@@ -302,9 +302,7 @@ void launchGame(Context* context)
                 ui.update_framecount_time();
                 break;
             case MSGB_GAMEINFO:
-                receiveData(&context->game_info.video, sizeof(int));
-                receiveData(&context->game_info.audio, sizeof(int));
-                receiveData(&context->game_info.joystick, sizeof(int));
+                receiveData(&context->game_info, sizeof(context->game_info));
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
