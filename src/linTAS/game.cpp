@@ -691,7 +691,7 @@ void launchGame(Context* context)
             if (!context->config.sc.running && !advance_frame) {
 
                 /* Sleep a bit to not surcharge the processor */
-                struct timespec tim = {0, 10L*1000L*1000L};
+                struct timespec tim = {0, 17L*1000L*1000L};
                 nanosleep(&tim, NULL);
 
                 /* Send a preview of inputs so that the game can display them
@@ -704,12 +704,15 @@ void launchGame(Context* context)
                     if (haveFocus(context)) {
 
                         /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                        AllInputs ai;
-                        context->config.km.buildAllInputs(ai, context->display, context->game_window, context->config.sc);
+                        static AllInputs preview_ai, last_preview_ai;
+                        context->config.km.buildAllInputs(preview_ai, context->display, context->game_window, context->config.sc);
 
-                        /* Send inputs */
-                        sendMessage(MSGN_PREVIEW_INPUTS);
-                        sendData(&ai, sizeof(AllInputs));
+                        /* Send inputs if changed */
+                        if (!(preview_ai == last_preview_ai)) {
+                            sendMessage(MSGN_PREVIEW_INPUTS);
+                            sendData(&preview_ai, sizeof(AllInputs));
+                            last_preview_ai = preview_ai;
+                        }
                     }
                 }
 #endif
