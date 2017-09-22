@@ -31,7 +31,6 @@ namespace libtas {
 
 /* Original function pointers */
 namespace orig {
-    static void (*SDL_GL_GetDrawableSize)(SDL_Window* window, int* w, int* h);
     static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
     static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
@@ -44,6 +43,7 @@ namespace orig {
     static int (*SDL_RenderCopy)(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
     static void (*SDL_DestroyTexture)(SDL_Texture* texture);
 
+    static void (*glGetIntegerv)( int pname, GLint* data);
     static void (*glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* data);
     static void (*glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
     static void (*glWindowPos2i)(GLint x, GLint y);
@@ -74,12 +74,32 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
     sdl_window = window;
 
     /* Link the required functions, and get the window dimensions */
-    if (game_info.video & GameInfo::SDL1) {
-        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-        if (!(game_info.video & GameInfo::OPENGL)) {
-            LINK_NAMESPACE_SDL1(SDL_LockSurface);
-            LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
+    if (game_info.video & GameInfo::OPENGL) {
+        LINK_NAMESPACE(glGetIntegerv, "libGL");
+        LINK_NAMESPACE(glReadPixels, "libGL");
+        LINK_NAMESPACE(glDrawPixels, "libGL");
+        LINK_NAMESPACE(glWindowPos2i, "libGL");
+
+        GLint viewport[4];
+        orig::glGetIntegerv(GL_VIEWPORT, viewport);
+        width = viewport[2];
+        height = viewport[3];
+
+        /* TODO: Is this always 4 for OpenGL? */
+        pixelSize = 4;
+
+        /* Do we already have access to the glReadPixels function? */
+        if (!orig::glGetIntegerv || !orig::glReadPixels ||
+            !orig::glDrawPixels || !orig::glWindowPos2i) {
+            debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
+            return -1;
         }
+    }
+
+    else if (game_info.video & GameInfo::SDL1) {
+        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+        LINK_NAMESPACE_SDL1(SDL_LockSurface);
+        LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
 
         /* Get dimensions from the window surface */
         if (!orig::SDL_GetVideoSurface) {
@@ -90,46 +110,31 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
         SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
 
         pixelSize = surf->format->BytesPerPixel;
-
         width = surf->w;
         height = surf->h;
     }
+
     else if (game_info.video & GameInfo::SDL2) {
+        LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
+        LINK_NAMESPACE_SDL2(SDL_GetRenderer);
+        LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
+        LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
+        LINK_NAMESPACE_SDL2(SDL_CreateTexture);
+        LINK_NAMESPACE_SDL2(SDL_UpdateTexture);
+        LINK_NAMESPACE_SDL2(SDL_RenderCopy);
+        LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
 
-        if (game_info.video & GameInfo::OPENGL) {
-            LINK_NAMESPACE_SDL2(SDL_GL_GetDrawableSize);
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
+        pixelSize = sdlpixfmt & 0xFF;
 
-            /* Get information about the current screen */
-            if (!orig::SDL_GL_GetDrawableSize) {
-                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GL_GetDrawableSize.");
-                return -1;
-            }
-
-            orig::SDL_GL_GetDrawableSize(sdl_window, &width, &height);
-            pixelSize = 4;
+        /* Get surface from window */
+        if (!orig::SDL_GetRendererOutputSize) {
+            debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
+            return -1;
         }
-        else {
-            LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
-            LINK_NAMESPACE_SDL2(SDL_GetRenderer);
-            LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
-            LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-            LINK_NAMESPACE_SDL2(SDL_CreateTexture);
-            LINK_NAMESPACE_SDL2(SDL_UpdateTexture);
-            LINK_NAMESPACE_SDL2(SDL_RenderCopy);
-            LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
 
-            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
-            pixelSize = sdlpixfmt & 0xFF;
-
-            /* Get surface from window */
-            if (!orig::SDL_GetRendererOutputSize) {
-                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
-                return -1;
-            }
-
-            sdl_renderer = orig::SDL_GetRenderer(sdl_window);
-            orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
-        }
+        sdl_renderer = orig::SDL_GetRenderer(sdl_window);
+        orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
     }
 
     /* Output dimensions if asked */
@@ -146,18 +151,6 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
     if ((width % 1) || (height % 1)) {
         debuglog(LCF_DUMP | LCF_ERROR, "Screen dimensions must be a multiple of 2");
         return -1;
-    }
-
-    if (game_info.video & GameInfo::OPENGL) {
-        LINK_NAMESPACE(glReadPixels, "libGL");
-        LINK_NAMESPACE(glDrawPixels, "libGL");
-        LINK_NAMESPACE(glWindowPos2i, "libGL");
-
-        /* Do we already have access to the glReadPixels function? */
-        if (!orig::glReadPixels || !orig::glDrawPixels || !orig::glWindowPos2i) {
-            debuglog(LCF_DUMP | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
-            return -1;
-        }
     }
 
     inited = true;
@@ -186,7 +179,8 @@ AVPixelFormat ScreenCapture::getPixelFormat()
         debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
         return AV_PIX_FMT_RGBA; // TODO
     }
-    else if (game_info.video & GameInfo::SDL2) {
+
+    if (game_info.video & GameInfo::SDL2) {
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
         /* TODO: There are probably helper functions to build pixel
          * format constants from channel masks
@@ -243,15 +237,14 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         /* Allocate another pixels array,
          * because the image will need to be flipped.
          */
-            if (glpixels.size() != size)
-                glpixels.resize(size);
+        if (glpixels.size() != size)
+            glpixels.resize(size);
 
         /* TODO: Check that the openGL dimensions did not change in between */
 
         /* We access to the image pixels directly using glReadPixels */
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
         /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
-
 
         if (orig_plane) {
             /*
