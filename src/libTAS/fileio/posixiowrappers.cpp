@@ -151,6 +151,8 @@ namespace orig {
     static int (*creat) (const char *file, mode_t mode);
     static int (*creat64) (const char *file, mode_t mode);
     static int (*close) (int fd);
+    static int (*dup2) (int fd, int fd2) throw();
+
 }
 
 int open (const char *file, int oflag, ...)
@@ -332,6 +334,19 @@ int close (int fd)
     }
 
     return orig::close(fd);
+}
+
+int dup2 (int fd, int fd2) throw()
+{
+    debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
+    LINK_NAMESPACE(dup2, nullptr);
+
+    if (fd2 == 2) {
+        /* Prevent the game from redirecting stderr (2) to a file */
+        return 2;
+    }
+
+    return orig::dup2(fd, fd2);
 }
 
 }

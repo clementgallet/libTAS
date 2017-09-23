@@ -51,6 +51,9 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 /* Close the file descriptor FD. */
 OVERRIDE int close (int fd);
 
+/* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
+OVERRIDE int dup2 (int fd, int fd2) throw();
+
 }
 
 #endif

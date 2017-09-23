@@ -2,7 +2,7 @@
 
 ### Compatibility
 
-- Support non SDL stuff (Unity?)
+- Support non SDL stuff
 - Add dummy Steam API functions so that the game can be launched without it
 -- Headers: https://github.com/ValveSoftware/source-sdk-2013/tree/master/sp/src/public/steam
 
@@ -30,10 +30,12 @@
 -- Check for validity of encoding parameters
 -- Allow the user to set the working directories
 -- Allow the user to delete savestates
-- Prevent game from redirecting stdout/stderr to a log file
+- Support Unity
+-- Detect game exiting to stop audio buffering
 
 ## Done
 
+- Prevent game from redirecting stdout/stderr to a log file
 - Hook pulse audio
 - Record inputs and support playback
 - Add options to speedup software rendering
