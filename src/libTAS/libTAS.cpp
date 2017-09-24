@@ -69,11 +69,13 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving config");
                 receiveData(&shared_config, sizeof(SharedConfig));
                 break;
+#ifdef LIBTAS_ENABLE_AVDUMPING
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
                 break;
+#endif
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
                 libstring = receiveString();

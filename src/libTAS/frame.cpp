@@ -269,12 +269,13 @@ static void receive_messages(std::function<void()> draw)
                 receiveData(&shared_config, sizeof(SharedConfig));
                 break;
 
+#ifdef LIBTAS_ENABLE_AVDUMPING
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET | LCF_FRAME, "File ", AVEncoder::dumpfile);
                 break;
-
+#endif
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));
                 break;
