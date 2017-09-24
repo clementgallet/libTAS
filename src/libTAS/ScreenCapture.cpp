@@ -63,11 +63,9 @@ int ScreenCapture::pixelSize;
 SDL_Window* ScreenCapture::sdl_window;
 SDL_Renderer* ScreenCapture::sdl_renderer;
 
-int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
+int ScreenCapture::init(SDL_Window* window)
 {
     if (inited) {
-        if (pwidth) *pwidth = width;
-        if (pheight) *pheight = height;
         return 0;
     }
 
@@ -137,10 +135,6 @@ int ScreenCapture::init(SDL_Window* window, int *pwidth, int *pheight)
         orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
     }
 
-    /* Output dimensions if asked */
-    if (pwidth) *pwidth = width;
-    if (pheight) *pheight = height;
-
     /* We don't allocate the array of pixels here, we are doing a lazy
      * allocation when we will need it.
      */
@@ -164,6 +158,11 @@ void ScreenCapture::fini()
     winpixels.clear();
     glpixels.clear();
     inited = false;
+}
+
+void ScreenCapture::getDimensions(int& w, int& h) {
+    w = width;
+    h = height;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING

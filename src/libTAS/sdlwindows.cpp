@@ -107,7 +107,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
         orig::SDL_GL_SetSwapInterval(0);
 
     /* Now that the context is created, we can init the screen capture */
-    ScreenCapture::init(nullptr, nullptr, nullptr);
+    ScreenCapture::init(nullptr);
 
     return context;
 }
@@ -161,7 +161,7 @@ std::string origIcon;
         /* We init the screen capture only when not in openGL here, because
          * for openGL we wait until the context has been created to init it
          */
-        ScreenCapture::init(gameWindow, nullptr, nullptr);
+        ScreenCapture::init(gameWindow);
     }
 
     return gameWindow;
@@ -287,7 +287,7 @@ void updateTitle(float fps, float lfps)
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    ScreenCapture::init(gameWindow, nullptr, nullptr);
+    ScreenCapture::init(gameWindow);
 
     return ret;
 }
@@ -317,7 +317,7 @@ void updateTitle(float fps, float lfps)
     orig::SDL_SetWindowSize(window, w, h);
 
     ScreenCapture::fini();
-    ScreenCapture::init(gameWindow, nullptr, nullptr);
+    ScreenCapture::init(gameWindow);
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -347,7 +347,7 @@ void updateTitle(float fps, float lfps)
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
-    ScreenCapture::init(nullptr, nullptr, nullptr);
+    ScreenCapture::init(nullptr);
 
     return surf;
 }

@@ -56,9 +56,8 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     start_frame = sf;
     accum_samples = 0;
 
-    int width, height;
-    int ret = ScreenCapture::init(window, &width, &height);
-    ASSERT_RETURN_VOID(ret >= 0, "Unable to initialize video capture");
+    int width, height, ret;
+    ScreenCapture::getDimensions(width, height);
 
     AVPixelFormat pixfmt = ScreenCapture::getPixelFormat();
     ASSERT_RETURN_VOID(pixfmt != AV_PIX_FMT_NONE, "Unable to get pixel format");

@@ -121,7 +121,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
         game_info.tosend = true;
 
         /* Now that the context is created, we can init the screen capture */
-        ScreenCapture::init(nullptr, nullptr, nullptr);
+        ScreenCapture::init(nullptr);
     }
 
     /* Disable VSync */

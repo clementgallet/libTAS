@@ -37,10 +37,12 @@ public:
     /* Initiate the internal variables and buffers, and get the screen dimensions
      * @return 0 if successful or -1 if an error occured
      */
-    static int init(SDL_Window* window, int *pwidth, int *pheight);
+    static int init(SDL_Window* window);
 
     /* Called when screen is closed or resized */
     static void fini();
+
+    static void getDimensions(int& w, int& h);
 
     #ifdef LIBTAS_ENABLE_AVDUMPING
 
