@@ -42,6 +42,7 @@ namespace orig {
     static int (*glXQueryDrawable)(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
     static Window (*XCreateWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
     static Window (*XCreateSimpleWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background);
+    static int (*XDestroyWindow)(Display *display, Window w);
     static int (*XMapWindow)(Display *display, Window w);
     static int (*XMapRaised)(Display *display, Window w);
 }
@@ -122,7 +123,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
         /* Now that the context is created, we can init the screen capture */
         ScreenCapture::init(nullptr, nullptr, nullptr);
     }
-    
+
     /* Disable VSync */
     //LINK_NAMESPACE(glXGetProcAddressARB, "libGL");
     //orig::glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)orig::glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
@@ -218,6 +219,13 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
 
     return w;
+}
+
+int XDestroyWindow(Display *display, Window w)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE(XDestroyWindow, nullptr);
+    return orig::XDestroyWindow(display, w);
 }
 
 int XMapWindow(Display *display, Window w)

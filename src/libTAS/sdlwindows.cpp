@@ -231,11 +231,11 @@ void updateTitle(float fps, float lfps)
         out << " dumping";
 
     std::string newTitle = origTitle + out.str();
-    int SDLver = get_sdlversion();
-    if (SDLver == 1) {
+
+    if (game_info.video & GameInfo::SDL1) {
         orig::SDL_WM_SetCaption(newTitle.c_str(), origIcon.c_str());
     }
-    if (SDLver == 2) {
+    if (game_info.video & GameInfo::SDL2) {
         if (gameWindow)
             orig::SDL_SetWindowTitle(gameWindow, newTitle.c_str());
     }

@@ -219,9 +219,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     receive_messages(draw);
 #endif
 
-    int SDLver = get_sdlversion();
-
-    if (SDLver > 0) {
+    if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
         /* Push native SDL events into our emulated event queue */
         pushNativeEvents();
     }
