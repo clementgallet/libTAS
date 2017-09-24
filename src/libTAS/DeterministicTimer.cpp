@@ -122,7 +122,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
      * otherwise it could easily build up and make us freeze (in some games)
      */
 
-    TimeHolder maxDeferredDelay = timeIncrement * 6;
+    TimeHolder maxDeferredDelay = timeIncrement;
 
     addedDelay += delayTicks;
     ticks += delayTicks;

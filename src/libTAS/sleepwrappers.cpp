@@ -33,65 +33,74 @@ namespace orig {
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    bool mainT = isMainThread();
-    debuglog(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleep, " ms.");
+    LINK_NAMESPACE(nanosleep, nullptr);
 
     struct timespec ts;
     ts.tv_sec = sleep / 1000;
     ts.tv_nsec = (sleep % 1000) * 1000000;
 
-    /* If the function was called from the main thread
-     * and we are not in the native state,
-     * transfer the wait to the timer and
-     * do not actually wait
+    if (GlobalState::isNative()) {
+        orig::nanosleep(&ts, NULL);
+        return;
+    }
+
+    bool mainT = isMainThread();
+    debuglog(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleep, " ms.");
+
+    /* If the function was called from the main thread, transfer the wait to
+     * the timer and do not actually wait.
      */
-    if (sleep && mainT && !GlobalState::isNative()) {
+    if (sleep && mainT) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
     }
 
-    LINK_NAMESPACE(nanosleep, nullptr);
     orig::nanosleep(&ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
 {
-    bool mainT = isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", usec, " us.");
+    LINK_NAMESPACE(nanosleep, nullptr);
 
     struct timespec ts;
     ts.tv_sec = usec / 1000000;
     ts.tv_nsec = (usec % 1000000) * 1000;
 
-    /* If the function was called from the main thread
-     * and we are not in the native state,
-     * transfer the wait to the timer and
-     * do not actually wait
+    if (GlobalState::isNative())
+        return orig::nanosleep(&ts, NULL);
+
+    bool mainT = isMainThread();
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", usec, " us.");
+
+    /* If the function was called from the main thread, transfer the wait to
+     * the timer and do not actually wait.
      */
-    if (usec && mainT && !GlobalState::isNative()) {
+    if (usec && mainT) {
         detTimer.addDelay(ts);
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
     }
 
-    LINK_NAMESPACE(nanosleep, nullptr);
     orig::nanosleep(&ts, NULL);
     return 0;
 }
 
 /* Override */ int nanosleep (const struct timespec *requested_time, struct timespec *remaining)
 {
+    LINK_NAMESPACE(nanosleep, nullptr);
+
+    if (GlobalState::isNative()) {
+        return orig::nanosleep(requested_time, remaining);
+    }
+
     bool mainT = isMainThread();
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
 
-    /* If the function was called from the main thread
-     * and we are not in the native state,
-     * transfer the wait to the timer and
-     * do not actually wait
+    /* If the function was called from the main thread, transfer the wait to
+     * the timer and do not actually wait.
      */
-    LINK_NAMESPACE(nanosleep, nullptr);
-    if (mainT && !GlobalState::isNative()) {
+    if (mainT) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, remaining);
