@@ -27,6 +27,12 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "ScreenCapture.h"
 
+#define STORE_RETURN_SYMBOL(str) \
+    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
+        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+        return reinterpret_cast<void*>(str); \
+    }
+
 namespace libtas {
 
 namespace orig {
@@ -56,25 +62,14 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     if (!real_pointer || !symbol)
         return real_pointer;
 
-    if (!strcmp(reinterpret_cast<const char*>(symbol), "glXSwapIntervalEXT")) {
-        orig::glXSwapIntervalEXT = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(real_pointer);
-        return reinterpret_cast<void*>(glXSwapIntervalEXT);
-    }
-
-    if (!strcmp(reinterpret_cast<const char*>(symbol), "glXSwapIntervalSGI")) {
-        orig::glXSwapIntervalSGI = reinterpret_cast<PFNGLXSWAPINTERVALSGIPROC>(real_pointer);
-        return reinterpret_cast<void*>(glXSwapIntervalSGI);
-    }
-
-    if (!strcmp(reinterpret_cast<const char*>(symbol), "glXSwapIntervalMESA")) {
-        orig::glXSwapIntervalMESA = reinterpret_cast<PFNGLXSWAPINTERVALMESAPROC>(real_pointer);
-        return reinterpret_cast<void*>(glXSwapIntervalMESA);
-    }
-
-    if (!strcmp(reinterpret_cast<const char*>(symbol), "glXGetSwapIntervalMESA")) {
-        orig::glXGetSwapIntervalMESA = reinterpret_cast<PFNGLXGETSWAPINTERVALMESAPROC>(real_pointer);
-        return reinterpret_cast<void*>(glXGetSwapIntervalMESA);
-    }
+    STORE_RETURN_SYMBOL(glXMakeCurrent)
+    STORE_RETURN_SYMBOL(glXSwapBuffers)
+    STORE_RETURN_SYMBOL(glXQueryDrawable)
+    STORE_RETURN_SYMBOL(glXSwapIntervalEXT)
+    STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
+    STORE_RETURN_SYMBOL(glXSwapIntervalMESA)
+    STORE_RETURN_SYMBOL(glXGetSwapIntervalMESA)
+    STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
 
     return real_pointer;
 }
