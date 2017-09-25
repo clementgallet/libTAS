@@ -27,8 +27,6 @@
 
 namespace libtas {
 
-extern Window gameXWindow;
-
 OVERRIDE void* glXGetProcAddress (const GLubyte *procName);
 OVERRIDE void* glXGetProcAddressARB (const GLubyte *procName);
 OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);

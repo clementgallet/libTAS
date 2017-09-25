@@ -74,6 +74,10 @@ int XNextEvent(Display *display, XEvent *event_return)
         event_return->type = GenericEvent;
     }
 
+    if (filterXEvent(event_return)) {
+        /* Remove the send_event flag so the event looks normal */
+        event_return->xkey.send_event = false;
+    }
     return ret;
 }
 

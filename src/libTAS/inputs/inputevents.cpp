@@ -44,6 +44,8 @@ void generateKeyUpEvents(void)
     int i, j;
 
     struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
     for (i=0; i<AllInputs::MAXKEYS; i++) {
         if (old_ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -61,7 +63,7 @@ void generateKeyUpEvents(void)
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
                 event2.key.windowID = orig::SDL_GetWindowID(gameWindow);
-                event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+                event2.key.timestamp = timestamp;
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, old_ai.keyboard[i]);
@@ -92,6 +94,8 @@ void generateKeyUpEvents(void)
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
                 event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]);
+                event.xkey.window = gameXWindow;
+                event.xkey.time = timestamp;
                 XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode ", event.xkey.keycode);
@@ -110,6 +114,8 @@ void generateKeyDownEvents(void)
     int i,j,k;
 
     struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
     for (i=0; i<AllInputs::MAXKEYS; i++) { // TODO: Another magic number
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
@@ -158,6 +164,8 @@ void generateKeyDownEvents(void)
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
                 event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]);
+                event.xkey.window = gameXWindow;
+                event.xkey.time = timestamp;
                 XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
@@ -442,11 +450,13 @@ void generateMouseMotionEvents(void)
     /* Fill the event structure */
     /* TODO: Deal if pointer is out of screen */
 
+    struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
     if (game_info.mouse & GameInfo::SDL2) {
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
-        struct timespec time = detTimer.getTicks();
-        event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+        event2.motion.timestamp = timestamp;
         event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
@@ -505,6 +515,8 @@ void generateMouseMotionEvents(void)
         event.xmotion.y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
+        event.xmotion.window = gameXWindow;
+        event.xmotion.time = timestamp;
 
         XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
     }
