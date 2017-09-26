@@ -20,6 +20,8 @@
 #include "ioctl_joy.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "evdev.h" // get_ev_number
+#include "inputs.h" // game_ai
 #include <linux/joystick.h>
 #include <linux/input.h>
 
@@ -37,7 +39,7 @@ namespace orig {
 
 int ioctl(int fd, unsigned long request, ...)
 {
-    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+    //debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE(ioctl, nullptr);
 
     va_list arg_list;
@@ -185,6 +187,24 @@ int ioctl(int fd, unsigned long request, ...)
     if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGKEY(0)) &&
         _IOC_NR(request) == _IOC_NR(EVIOCGKEY(0))) {
         debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGKEY on fd ", fd);
+
+        /* Get the joystick number from the file descriptor */
+        int jsnum = get_ev_number(fd);
+        if (jsnum < 0) {
+            errno = ENOTTY;
+            return -1;
+        }
+
+        /* Get the buttons state */
+        unsigned short buttons = game_ai.controller_buttons[jsnum];
+
+        /* Set the corresponding bit in the key state */
+        int len = _IOC_SIZE(request);
+        uint8_t* bits = static_cast<uint8_t*>(argp);
+
+        for (int bi=0; bi<11; bi++) {
+            if (buttons & (1 << bi)) CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevButton(bi), bits, len);
+        }
         return 0;
         // int len = _IOC_SIZE(request);
         // int ret = orig::ioctl(fd, request, argp);
@@ -220,28 +240,18 @@ int ioctl(int fd, unsigned long request, ...)
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_KEY,0))) {
                 debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_KEY on fd ", fd);
-                CHECK_LEN_AND_SET_BIT(BTN_A, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_B, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_X, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_Y, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_TL, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_TR, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_SELECT, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_START, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_MODE, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_THUMBL, bits, len);
-                CHECK_LEN_AND_SET_BIT(BTN_THUMBR, bits, len);
+                for (int bi=0; bi<11; bi++) {
+                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevButton(bi), bits, len);
+                }
                 return 0;
             }
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_ABS,0))) {
                 debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_ABS on fd ", fd);
-                CHECK_LEN_AND_SET_BIT(ABS_X, bits, len);
-                CHECK_LEN_AND_SET_BIT(ABS_Y, bits, len);
-                CHECK_LEN_AND_SET_BIT(ABS_Z, bits, len);
-                CHECK_LEN_AND_SET_BIT(ABS_RX, bits, len);
-                CHECK_LEN_AND_SET_BIT(ABS_RY, bits, len);
-                CHECK_LEN_AND_SET_BIT(ABS_RZ, bits, len);
+                for (int ai=0; ai<AllInputs::MAXAXES; ai++) {
+                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevAxis(ai), bits, len);
+                }
+                /* Add the two hat axes because they are not considered as buttons */
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0X, bits, len);
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0Y, bits, len);
                 return 0;
@@ -249,12 +259,6 @@ int ioctl(int fd, unsigned long request, ...)
 
             debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event ", _IOC_NR(request), " on fd ", fd);
             return 0;
-            // int len = _IOC_SIZE(request);
-            // int ret = orig::ioctl(fd, request, argp);
-            // bits = static_cast<uint8_t*>(argp);
-            // for (int i=0; i<len; i++)
-            //     debuglog(LCF_JOYSTICK, "    return bits ", (void*)bits[i]);
-            // return ret;
         }
     }
 
@@ -268,12 +272,12 @@ int ioctl(int fd, unsigned long request, ...)
             debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGABS for axis ", _IOC_NR(request), " on fd ", fd);
             struct input_absinfo* absinfo = static_cast<struct input_absinfo*>(argp);
 
+            /* Write the axis parameters */
             switch (_IOC_NR(request)) {
                 case _IOC_NR(EVIOCGABS(ABS_X)):
                 case _IOC_NR(EVIOCGABS(ABS_Y)):
                 case _IOC_NR(EVIOCGABS(ABS_RX)):
                 case _IOC_NR(EVIOCGABS(ABS_RY)):
-                    absinfo->value = 0;
                     absinfo->minimum = -32768;
                     absinfo->maximum = 32767;
                     absinfo->fuzz = 16;
@@ -282,7 +286,6 @@ int ioctl(int fd, unsigned long request, ...)
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_Z)):
                 case _IOC_NR(EVIOCGABS(ABS_RZ)):
-                    absinfo->value = 0;
                     absinfo->minimum = 0;
                     absinfo->maximum = 255;
                     absinfo->fuzz = 0;
@@ -291,7 +294,6 @@ int ioctl(int fd, unsigned long request, ...)
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_HAT0X)):
                 case _IOC_NR(EVIOCGABS(ABS_HAT0Y)):
-                    absinfo->value = 0;
                     absinfo->minimum = -1;
                     absinfo->maximum = 1;
                     absinfo->fuzz = 0;
@@ -302,11 +304,65 @@ int ioctl(int fd, unsigned long request, ...)
                     errno = ENOTTY;
                     return -1;
             }
-            // debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGABS for axis ", _IOC_NR(request), " on fd ", fd);
-            // int ret = orig::ioctl(fd, request, argp);
-            // absinfo = static_cast<struct input_absinfo*>(argp);
-            // debuglog(LCF_JOYSTICK, "    return value ", absinfo->value, ", minimum ", absinfo->minimum, ", maximum ", absinfo->maximum, ", fuzz ", absinfo->fuzz, ", flat ", absinfo->flat, ", resolution ", absinfo->resolution);
-            // return ret;
+
+            /* Get the joystick number from the file descriptor */
+            int jsnum = get_ev_number(fd);
+            if (jsnum < 0) {
+                errno = ENOTTY;
+                return -1;
+            }
+
+            /* Get the axes and buttons state */
+            std::array<short, AllInputs::MAXAXES> axes = game_ai.controller_axes[jsnum];
+            unsigned short buttons = game_ai.controller_buttons[jsnum];
+
+            /* Write the axis value */
+            switch (_IOC_NR(request)) {
+                case _IOC_NR(EVIOCGABS(ABS_X)):
+                    absinfo->value = axes[AllInputs::AXIS_LEFTX];
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_Y)):
+                    absinfo->value = axes[AllInputs::AXIS_LEFTY];
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_RX)):
+                    absinfo->value = axes[AllInputs::AXIS_RIGHTX];
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_RY)):
+                    absinfo->value = axes[AllInputs::AXIS_RIGHTY];
+                    return 0;
+                /* TODO: Clamp values ! */
+                case _IOC_NR(EVIOCGABS(ABS_Z)):
+                    absinfo->value = axes[AllInputs::AXIS_TRIGGERLEFT];
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_RZ)):
+                    absinfo->value = axes[AllInputs::AXIS_TRIGGERRIGHT];
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_HAT0X)):
+                    if (buttons & (1 << AllInputs::BUTTON_DPAD_LEFT)) {
+                        absinfo->value = -1;
+                    }
+                    else if (buttons & (1 << AllInputs::BUTTON_DPAD_RIGHT)) {
+                        absinfo->value = 1;
+                    }
+                    else {
+                        absinfo->value = 0;
+                    }
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_HAT0Y)):
+                    if (buttons & (1 << AllInputs::BUTTON_DPAD_DOWN)) {
+                        absinfo->value = -1;
+                    }
+                    else if (buttons & (1 << AllInputs::BUTTON_DPAD_UP)) {
+                        absinfo->value = 1;
+                    }
+                    else {
+                        absinfo->value = 0;
+                    }
+                    return 0;
+                default:
+                    errno = ENOTTY;
+                    return -1;
+            }
         }
     }
 
@@ -337,6 +393,33 @@ int ioctl(int fd, unsigned long request, ...)
 
     if (request == EVIOCSKEYCODE_V2) {
         debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSKEYCODE_V2 (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCSFF) {
+        debuglog(LCF_JOYSTICK, "ioctl write with EVIOCSFF on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCRMFF) {
+        debuglog(LCF_JOYSTICK, "ioctl write with EVIOCSFF on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCGEFFECTS) {
+        debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGEFFECTS on fd ", fd);
+        int* ne = static_cast<int*>(argp);
+        *ne = 0;
+        return 0;
+    }
+
+    if (request == EVIOCGRAB) {
+        debuglog(LCF_JOYSTICK, "ioctl write with EVIOCGRAB on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCREVOKE) {
+        debuglog(LCF_JOYSTICK, "ioctl write with EVIOCREVOKE on fd ", fd);
         return 0;
     }
 

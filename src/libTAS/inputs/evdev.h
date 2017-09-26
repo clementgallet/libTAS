@@ -17,22 +17,25 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_JSDEV_H_INCL
-#define LIBTAS_JSDEV_H_INCL
+#ifndef LIBTAS_EVDEV_H_INCL
+#define LIBTAS_EVDEV_H_INCL
 
 #include "../global.h"
-#include <linux/joystick.h>
+#include <linux/input.h>
 
 namespace libtas {
 
-/* Open a fake jsdev file using SYS_memfd_create, and write the init data */
-int open_jsdev(const char* source, int flags);
+/* Open a fake dev file using SYS_memfd_create */
+int open_evdev(const char* source, int flags);
 
-/* Write an js event in the file */
-void write_jsdev(struct js_event ev, int jsnum);
+/* Write an input event in the file */
+void write_evdev(struct input_event ev, int jsnum);
+
+/* Get the joystick number from the file descriptor */
+int get_ev_number(int fd);
 
 /* Unregister the file descriptor when file is closed */
-void close_jsdev(int fd);
+void close_evdev(int fd);
 
 }
 

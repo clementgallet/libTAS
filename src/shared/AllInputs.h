@@ -107,6 +107,24 @@ class AllInputs {
 
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
+
+        /* Convert a AllInputs axis number to a SDL2 axis number */
+        static int toSDL2Axis(int axis);
+
+        /* Convert a AllInputs button number to a SDL2 button number */
+        static int toSDL2Button(int button);
+
+        /* Convert a AllInputs axis number to an jsdev axis number */
+        static int toJsdevAxis(int axis);
+
+        /* Convert a AllInputs button number to an jsdev button number */
+        static int toJsdevButton(int button);
+
+        /* Convert a AllInputs axis number to an evdev axis number */
+        static int toEvdevAxis(int axis);
+
+        /* Convert a AllInputs button number to an evdev button number */
+        static int toEvdevButton(int button);
 };
 
 #endif

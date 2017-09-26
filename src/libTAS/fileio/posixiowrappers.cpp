@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include "../GlobalState.h"
 #include "../inputs/jsdev.h"
+#include "../inputs/evdev.h"
 
 namespace libtas {
 
@@ -180,6 +181,12 @@ int open (const char *file, int oflag, ...)
         return open_jsdev(file, oflag);
     }
 
+    const char* evdevstr = "/dev/input/event";
+    if ((strlen(file) > strlen(evdevstr)) && (strncmp(evdevstr, file, strlen(evdevstr)) == 0)) {
+        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  event device detected");
+        return open_evdev(file, oflag);
+    }
+
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         return get_memfd(file, oflag);
@@ -211,6 +218,12 @@ int open64 (const char *file, int oflag, ...)
     if ((strlen(file) > strlen(jsdevstr)) && (strncmp(jsdevstr, file, strlen(jsdevstr)) == 0)) {
         debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  joystick device detected");
         return open_jsdev(file, oflag);
+    }
+
+    const char* evdevstr = "/dev/input/event";
+    if ((strlen(file) > strlen(evdevstr)) && (strncmp(evdevstr, file, strlen(evdevstr)) == 0)) {
+        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  event device detected");
+        return open_evdev(file, oflag);
     }
 
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
@@ -326,6 +339,7 @@ int close (int fd)
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     close_jsdev(fd);
+    close_evdev(fd);
 
     /* We don't close the file if it is an opened savefile */
     for (auto& savefile_fd : savefile_fds) {
