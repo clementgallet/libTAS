@@ -57,18 +57,40 @@ class AllInputs {
         /* Pointer buttons */
         unsigned int pointer_mask;
 
-        /* controller_axes[i][j] stores the state of axis j of controller i.
-         * List of axes is coming from SDL GameController.
-         * Maybe we should use our own enum and translate to SDL enum, in case
-         * we must support other joystick libraries like plain joydev.
-         */
+        enum {
+            AXIS_LEFTX,
+            AXIS_LEFTY,
+            AXIS_RIGHTX,
+            AXIS_RIGHTY,
+            AXIS_TRIGGERLEFT,
+            AXIS_TRIGGERRIGHT
+        };
+
+        /* controller_axes[i][j] stores the state of axis j of controller i */
         std::array<std::array<short, MAXAXES>,MAXJOYS> controller_axes;
+
+        enum {
+            BUTTON_A,
+            BUTTON_B,
+            BUTTON_X,
+            BUTTON_Y,
+            BUTTON_BACK,
+            BUTTON_GUIDE,
+            BUTTON_START,
+            BUTTON_LEFTSTICK,
+            BUTTON_RIGHTSTICK,
+            BUTTON_LEFTSHOULDER,
+            BUTTON_RIGHTSHOULDER,
+            BUTTON_DPAD_UP,
+            BUTTON_DPAD_DOWN,
+            BUTTON_DPAD_LEFT,
+            BUTTON_DPAD_RIGHT
+        };
 
         /* controller_buttons[i] stores the bitmap state of buttons of
          * controller i. Bit j set means that button j is pressed.
          * We use a 2-byte integer here, meaning we can have at most
          * 16 buttons in a controller.
-         * Again, the list of buttons is taken from SDL GameController.
          */
         std::array<unsigned short,MAXJOYS> controller_buttons;
 

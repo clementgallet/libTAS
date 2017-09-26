@@ -21,6 +21,13 @@
 #include "../logging.h"
 #include "../hook.h"
 #include <linux/joystick.h>
+#include <linux/input.h>
+
+#define CHECK_LEN_AND_SET_BIT(bit, bits, len) do {\
+    if (bit < (len*8))\
+        bits[bit/8] |= 1 << (bit % 8); \
+    } while (false)
+
 
 namespace libtas {
 
@@ -30,7 +37,7 @@ namespace orig {
 
 int ioctl(int fd, unsigned long request, ...)
 {
-//    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE(ioctl, nullptr);
 
     va_list arg_list;
@@ -75,10 +82,262 @@ int ioctl(int fd, unsigned long request, ...)
 
     if (request == JSIOCSCORR) {
         debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCSCORR (not supported!) on fd ", fd);
+        return 0;
     }
 
     if (request == JSIOCGCORR) {
         debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCGCORR (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCGVERSION) {
+        debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGVERSION on fd ", fd);
+        int* version = static_cast<int*>(argp);
+        *version = 0x10001;
+        return 0;
+
+        // int ret = orig::ioctl(fd, request, argp);
+        // int* version = static_cast<int*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return version ", *version);
+        // return ret;
+    }
+
+    if (request == EVIOCGID) {
+        debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGID on fd ", fd);
+
+        /* Returning a custom id, taken from my XBOX360 controller */
+        struct input_id* id = static_cast<struct input_id*>(argp);
+        id->bustype = 3;
+        id->vendor = 0x45e;
+        id->product = 0x28e;
+        id->version = 0x114;
+        return 0;
+
+        // int ret = orig::ioctl(fd, request, argp);
+        // struct input_id* id = static_cast<struct input_id*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return bustype ", id->bustype, ", vendor ", id->vendor, ", product ", id->product, ", version ", id->version);
+        // return ret;
+    }
+
+    /* EVIOCGNAME(len) request has variable number depending on the buffer
+     * length, so checking a match for both the type and nr
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGNAME(0)) &&
+        _IOC_NR(request) == _IOC_NR(EVIOCGNAME(0))) {
+        int len = _IOC_SIZE(request);
+        char* name = static_cast<char*>(argp);
+        debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len ", len, " on fd ", fd);
+        strncpy(name, "Microsoft X-Box 360 pad", len);
+        return 0;
+
+        // debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len ", len, " on fd ", fd);
+        // int ret = orig::ioctl(fd, request, argp);
+        // char* name = static_cast<char*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return name ", name);
+        // return ret;
+    }
+
+    /* EVIOCGPHYS(len) request has variable number depending on the buffer
+     * length, so checking a match for both the type and nr
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGPHYS(0)) &&
+        _IOC_NR(request) == _IOC_NR(EVIOCGPHYS(0))) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGPHYS (not supported) on fd ", fd);
+        return 0;
+        //int len = _IOC_SIZE(request);
+        // int ret = orig::ioctl(fd, request, argp);
+        // char* name = static_cast<char*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return phys ", name);
+        // return ret;
+    }
+
+    /* EVIOCGUNIQ(len) request has variable number depending on the buffer
+     * length, so checking a match for both the type and nr
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGUNIQ(0)) &&
+        _IOC_NR(request) == _IOC_NR(EVIOCGUNIQ(0))) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGUNIQ (not supported) on fd ", fd);
+        return 0;
+        //int len = _IOC_SIZE(request);
+        // int ret = orig::ioctl(fd, request, argp);
+        // char* name = static_cast<char*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return uniq ", name);
+        // return ret;
+    }
+
+    /* EVIOCGPROP(len) request has variable number depending on the buffer
+     * length, so checking a match for both the type and nr
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGPROP(0)) &&
+        _IOC_NR(request) == _IOC_NR(EVIOCGPROP(0))) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGPROP (not supported) on fd ", fd);
+        return 0;
+        //int len = _IOC_SIZE(request);
+        // int ret = orig::ioctl(fd, request, argp);
+        // char* name = static_cast<char*>(argp);
+        // debuglog(LCF_JOYSTICK, "    return prop ", name);
+        // return ret;
+    }
+
+    /* EVIOCGKEY(len) request has variable number depending on the buffer
+     * length, so checking a match for type
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGKEY(0)) &&
+        _IOC_NR(request) == _IOC_NR(EVIOCGKEY(0))) {
+        debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGKEY on fd ", fd);
+        return 0;
+        // int len = _IOC_SIZE(request);
+        // int ret = orig::ioctl(fd, request, argp);
+        // uint32_t* bits = static_cast<uint32_t*>(argp);
+        // for (int i=0; i<len/4; i++)
+        //     debuglog(LCF_JOYSTICK, "    return bits ", (void*)bits[i]);
+        // return ret;
+    }
+
+    /* EVIOCGBIT(ev,len) request has variable number depending on the buffer
+     * length and event type, so checking a match for type
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGBIT(0,0))) {
+        if (_IOC_NR(request) >= _IOC_NR(EVIOCGBIT(EV_SYN,0)) &&
+            _IOC_NR(request) < _IOC_NR(EVIOCGBIT(EV_MAX,0)) ) {
+
+            int len = _IOC_SIZE(request);
+            memset(argp, 0, len);
+
+            uint8_t* bits = static_cast<uint8_t*>(argp);
+
+            if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_SYN,0))) {
+                debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_SYN on fd ", fd);
+                CHECK_LEN_AND_SET_BIT(EV_SYN, bits, len);
+                CHECK_LEN_AND_SET_BIT(EV_KEY, bits, len);
+                CHECK_LEN_AND_SET_BIT(EV_ABS, bits, len);
+                /* XBOX360 pad has force-feedback, but we don't really want the
+                 * game to write on the dev file, so not enabling it.
+                 */
+                // CHECK_LEN_AND_SET_BIT(EV_FF, bits, len);
+                return 0;
+            }
+
+            if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_KEY,0))) {
+                debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_KEY on fd ", fd);
+                CHECK_LEN_AND_SET_BIT(BTN_A, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_B, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_X, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_Y, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_TL, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_TR, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_SELECT, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_START, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_MODE, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_THUMBL, bits, len);
+                CHECK_LEN_AND_SET_BIT(BTN_THUMBR, bits, len);
+                return 0;
+            }
+
+            if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_ABS,0))) {
+                debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_ABS on fd ", fd);
+                CHECK_LEN_AND_SET_BIT(ABS_X, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_Y, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_Z, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_RX, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_RY, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_RZ, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_HAT0X, bits, len);
+                CHECK_LEN_AND_SET_BIT(ABS_HAT0Y, bits, len);
+                return 0;
+            }
+
+            debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event ", _IOC_NR(request), " on fd ", fd);
+            return 0;
+            // int len = _IOC_SIZE(request);
+            // int ret = orig::ioctl(fd, request, argp);
+            // bits = static_cast<uint8_t*>(argp);
+            // for (int i=0; i<len; i++)
+            //     debuglog(LCF_JOYSTICK, "    return bits ", (void*)bits[i]);
+            // return ret;
+        }
+    }
+
+    /* EVIOCGABS(abs) request has variable number depending on the axis id,
+     * so checking a match for type.
+     */
+    if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGABS(0))) {
+        if (_IOC_NR(request) >= _IOC_NR(EVIOCGABS(ABS_X)) &&
+            _IOC_NR(request) < _IOC_NR(EVIOCGABS(ABS_MAX)) ) {
+
+            debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGABS for axis ", _IOC_NR(request), " on fd ", fd);
+            struct input_absinfo* absinfo = static_cast<struct input_absinfo*>(argp);
+
+            switch (_IOC_NR(request)) {
+                case _IOC_NR(EVIOCGABS(ABS_X)):
+                case _IOC_NR(EVIOCGABS(ABS_Y)):
+                case _IOC_NR(EVIOCGABS(ABS_RX)):
+                case _IOC_NR(EVIOCGABS(ABS_RY)):
+                    absinfo->value = 0;
+                    absinfo->minimum = -32768;
+                    absinfo->maximum = 32767;
+                    absinfo->fuzz = 16;
+                    absinfo->flat = 128;
+                    absinfo->resolution = 0;
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_Z)):
+                case _IOC_NR(EVIOCGABS(ABS_RZ)):
+                    absinfo->value = 0;
+                    absinfo->minimum = 0;
+                    absinfo->maximum = 255;
+                    absinfo->fuzz = 0;
+                    absinfo->flat = 0;
+                    absinfo->resolution = 0;
+                    return 0;
+                case _IOC_NR(EVIOCGABS(ABS_HAT0X)):
+                case _IOC_NR(EVIOCGABS(ABS_HAT0Y)):
+                    absinfo->value = 0;
+                    absinfo->minimum = -1;
+                    absinfo->maximum = 1;
+                    absinfo->fuzz = 0;
+                    absinfo->flat = 0;
+                    absinfo->resolution = 0;
+                    return 0;
+                default:
+                    errno = ENOTTY;
+                    return -1;
+            }
+            // debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGABS for axis ", _IOC_NR(request), " on fd ", fd);
+            // int ret = orig::ioctl(fd, request, argp);
+            // absinfo = static_cast<struct input_absinfo*>(argp);
+            // debuglog(LCF_JOYSTICK, "    return value ", absinfo->value, ", minimum ", absinfo->minimum, ", maximum ", absinfo->maximum, ", fuzz ", absinfo->fuzz, ", flat ", absinfo->flat, ", resolution ", absinfo->resolution);
+            // return ret;
+        }
+    }
+
+    if (request == EVIOCGREP) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGREP (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCSREP) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSREP (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCGKEYCODE) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGKEYCODE (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCGKEYCODE_V2) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGKEYCODE_V2 (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCSKEYCODE) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSKEYCODE (not supported!) on fd ", fd);
+        return 0;
+    }
+
+    if (request == EVIOCSKEYCODE_V2) {
+        debuglog(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSKEYCODE_V2 (not supported!) on fd ", fd);
+        return 0;
     }
 
     return orig::ioctl(fd, request, argp);
