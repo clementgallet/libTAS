@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_XKEYBOARD_H_INCL
-#define LIBTAS_XKEYBOARD_H_INCL
+#ifndef LIBTAS_XPOINTER_H_INCL
+#define LIBTAS_XPOINTER_H_INCL
 
 #include "../global.h"
 #include <X11/X.h>
@@ -26,38 +26,63 @@
 
 namespace libtas {
 
-OVERRIDE int XQueryKeymap( Display*, char [32]);
-
-OVERRIDE int XGrabKey(
-    Display*		/* display */,
-    int			/* keycode */,
-    unsigned int	/* modifiers */,
-    Window		/* grab_window */,
-    Bool		/* owner_events */,
-    int			/* pointer_mode */,
-    int			/* keyboard_mode */
+OVERRIDE Bool XQueryPointer(
+    Display*    /* display */,
+    Window      /* w */,
+    Window*     /* root_return */,
+    Window*     /* child_return */,
+    int*        /* root_x_return */,
+    int*        /* root_y_return */,
+    int*        /* win_x_return */,
+    int*        /* win_y_return */,
+    unsigned int*  /* mask_return */
 );
 
-OVERRIDE int XGrabKeyboard(
+OVERRIDE int XGrabPointer(
     Display*		/* display */,
     Window		/* grab_window */,
     Bool		/* owner_events */,
+    unsigned int	/* event_mask */,
     int			/* pointer_mode */,
     int			/* keyboard_mode */,
+    Window		/* confine_to */,
+    Cursor		/* cursor */,
     Time		/* time */
 );
 
-OVERRIDE int XUngrabKey(
+OVERRIDE int XUngrabPointer(
     Display*		/* display */,
-    int			/* keycode */,
+    Time		/* time */
+);
+
+OVERRIDE int XChangeActivePointerGrab(
+    Display*		/* display */,
+    unsigned int	/* event_mask */,
+    Cursor		/* cursor */,
+    Time		/* time */
+);
+
+OVERRIDE int XGrabButton(
+    Display*		/* display */,
+    unsigned int	/* button */,
+    unsigned int	/* modifiers */,
+    Window		/* grab_window */,
+    Bool		/* owner_events */,
+    unsigned int	/* event_mask */,
+    int			/* pointer_mode */,
+    int			/* keyboard_mode */,
+    Window		/* confine_to */,
+    Cursor		/* cursor */
+);
+
+OVERRIDE int XUngrabButton(
+    Display*		/* display */,
+    unsigned int	/* button */,
     unsigned int	/* modifiers */,
     Window		/* grab_window */
 );
 
-OVERRIDE int XUngrabKeyboard(
-    Display*		/* display */,
-    Time		/* time */
-);
+
 
 }
 

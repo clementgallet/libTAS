@@ -26,7 +26,7 @@
 
 namespace libtas {
 
-int XQueryKeymap( Display* display, char keymap[32])
+/* Override */ int XQueryKeymap( Display* display, char keymap[32])
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
 
@@ -34,7 +34,7 @@ int XQueryKeymap( Display* display, char keymap[32])
     for (int kc=0; kc<256; kc++) {
         KeySym ks = XkbKeycodeToKeysym(display, (KeyCode)kc, 0, 0);
         for (int i=0; i<AllInputs::MAXKEYS; i++) {
-            if (ks == ai.keyboard[i]) {
+            if (ks == game_ai.keyboard[i]) {
                 keymap[kc>>3] |= (1 << kc&0x7);
                 break;
             }
@@ -45,19 +45,28 @@ int XQueryKeymap( Display* display, char keymap[32])
     return 0;
 }
 
-/* Override */ Bool XQueryPointer( Display* display, Window w,
-        Window* root_return, Window* child_return,
-        int* root_x_return, int* root_y_return,
-        int* win_x_return, int* win_y_return,
-        unsigned int* mask_return)
+/* Override */ int XGrabKey(Display*, int, unsigned int, Window, Bool, int, int)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
-    *win_x_return = ai.pointer_x;
-    *win_y_return = ai.pointer_y;
-    *mask_return = ai.pointer_mask;
+    DEBUGLOGCALL(LCF_KEYBOARD);
+    return GrabSuccess;
+}
 
-    /* I don't know what it should return */
-    return 1;
+/* Override */ int XGrabKeyboard(Display*, Window, Bool, int, int, Time)
+{
+    DEBUGLOGCALL(LCF_KEYBOARD);
+    return GrabSuccess;
+}
+
+/* Override */ int XUngrabKey(Display*, int, unsigned int, Window)
+{
+    DEBUGLOGCALL(LCF_KEYBOARD);
+    return 0;
+}
+
+/* Override */ int XUngrabKeyboard(Display*, Time)
+{
+    DEBUGLOGCALL(LCF_KEYBOARD);
+    return 0;
 }
 
 }

@@ -718,6 +718,7 @@ void generateMouseButtonEvents(void)
             old_ai.pointer_mask ^= xbuttonmasks[bi];
         }
     }
+    game_ai.pointer_mask = ai.pointer_mask;
 }
 
 }
