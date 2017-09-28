@@ -80,7 +80,7 @@ namespace orig {
 /* Override */ char *initstate (unsigned int seed, char *statebuf,
             size_t statelen) throw()
 {
-    DEBUGLOGCALL(LCF_RANDOM);
+    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
     LINK_NAMESPACE(initstate, nullptr);
     return orig::initstate(seed, statebuf, statelen);
 }
@@ -102,7 +102,7 @@ namespace orig {
 
 /* Override */ int srandom_r (unsigned int seed, struct random_data *buf) throw()
 {
-    DEBUGLOGCALL(LCF_RANDOM);
+    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
     LINK_NAMESPACE(srandom_r, nullptr);
     return orig::srandom_r(seed, buf);
 }
@@ -110,7 +110,7 @@ namespace orig {
 /* Override */ int initstate_r (unsigned int seed, char *statebuf, size_t statelen,
             struct random_data *buf) throw()
 {
-    DEBUGLOGCALL(LCF_RANDOM);
+    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
     LINK_NAMESPACE(initstate_r, nullptr);
     return orig::initstate_r(seed, statebuf, statelen, buf);
 }

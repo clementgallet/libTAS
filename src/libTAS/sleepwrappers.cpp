@@ -100,7 +100,7 @@ namespace orig {
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
      */
-    if (mainT) {
+    if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
         detTimer.addDelay(*requested_time);
         struct timespec owntime = {0, 0};
         return orig::nanosleep(&owntime, remaining);
