@@ -31,9 +31,9 @@ namespace libtas {
         unsigned int* mask_return)
 {
     DEBUGLOGCALL(LCF_MOUSE);
-    *win_x_return = ai.pointer_x;
-    *win_y_return = ai.pointer_y;
-    *mask_return = ai.pointer_mask;
+    *win_x_return = game_ai.pointer_x;
+    *win_y_return = game_ai.pointer_y;
+    *mask_return = game_ai.pointer_mask;
 
     /* I don't know what it should return */
     return 1;

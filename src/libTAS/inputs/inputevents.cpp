@@ -118,7 +118,9 @@ void generateKeyDownEvents(void)
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (i=0; i<AllInputs::MAXKEYS; i++) { // TODO: Another magic number
+    for (i=0; i<AllInputs::MAXKEYS; i++) {
+        game_ai.keyboard[i] = ai.keyboard[i];
+
         if (ai.keyboard[i] == XK_VoidSymbol) {
             continue;
         }
