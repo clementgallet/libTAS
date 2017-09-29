@@ -215,16 +215,16 @@ static void *pthread_start(void *arg)
      * and don't detach/join if in fake zombie state. If so, we can return
      * the value that we stored when we joined the thread.
      */
-     ThreadInfo* thread = ThreadManager::getThread(tid);
-     if (thread->state == ThreadInfo::ST_FAKEZOMBIE) {
-         /* Thread is now officially joined, we can remove the thread from
-          * our list.
-          */
-         *thread_return = thread->retval;
-         ThreadManager::threadIsDead(thread);
-         ThreadSync::wrapperExecutionLockUnlock();
-         return 0;
-     }
+    ThreadInfo* thread = ThreadManager::getThread(tid);
+    if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
+        /* Thread is now officially joined, we can remove the thread from
+        * our list.
+        */
+        *thread_return = thread->retval;
+        ThreadManager::threadIsDead(thread);
+        ThreadSync::wrapperExecutionLockUnlock();
+        return 0;
+    }
 
     int ret = orig::pthread_join(tid, thread_return);
     ThreadManager::threadDetach(tid);
@@ -243,7 +243,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     debuglog(LCF_THREAD, "Detaching thread ", stringify(tid));
     ThreadInfo* thread = ThreadManager::getThread(tid);
-    if (thread->state == ThreadInfo::ST_FAKEZOMBIE) {
+    if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
         /* Thread is now officially detached, we can remove the thread from
          * our list.
          */

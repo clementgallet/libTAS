@@ -20,8 +20,7 @@
 #include "EventQueue.h"
 #include "logging.h"
 #include "string.h"
-#include "sdlversion.h"
-// #include "../external/SDL.h"
+#include "global.h" // game_info
 
 namespace libtas {
 
@@ -29,20 +28,17 @@ EventQueue sdlEventQueue;
 
 EventQueue::~EventQueue()
 {
-    int SDLver = get_sdlversion();
     for (auto ev: eventQueue) {
-        if (SDLver == 1)
+        if (game_info.video & GameInfo::SDL1)
             delete static_cast<SDL1::SDL_Event*>(ev);
-        if (SDLver == 2)
+        if (game_info.video & GameInfo::SDL2)
             delete static_cast<SDL_Event*>(ev);
     }
 }
 
 void EventQueue::init(void)
 {
-    int SDLver = get_sdlversion();
-
-    if (SDLver == 2) {
+    if (game_info.video & GameInfo::SDL2) {
         /* Insert default filters */
         droppedEvents.insert(SDL_TEXTINPUT);
         droppedEvents.insert(SDL_TEXTEDITING);
