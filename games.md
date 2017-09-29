@@ -2,14 +2,15 @@
 
 ### Super Meat Boy
 
+- 32 and 64-bit
 - Use SDL for inputs
 - Use SDL/OpenGL for rendering
 - Use OpenAL for music
 - Use pthread for thread creation
-- Use Vsync
 
 ### Volgarr
 
+- 32-bit
 - Use SDL for inputs
 - Use SDL/OpenGL for rendering
 - Waiting screen at the beginning, expecting increasing SDL GetTicks()
@@ -17,24 +18,25 @@
 
 ### Shovel Knight
 
+- 32 and 64-bit
 - Use SDL for threads
 - Enable Xlib events on SDL (what is it looking for?)
 - Use pulseaudio-simple for music
 
 ### Limbo
 
+- 32-bit
 - Loading screen with threading at the beginning
 - Get access to the real time using SDL GetPerformanceCounter and some other means...
 
 ### FEZ
 
+- 32 and 64-bit
 - Use a mono framework, see https://github.com/flibitijibibo/FNA-MGHistory/tree/fez-sdl2
 
 ### Towerfall
 
 - Same as FEZ
-- The game uses udev to look for game controllers instead of the SDL API
-- The game can run at any fps
 
 ### Braid
 
@@ -69,4 +71,12 @@
 ### Hotline Miami
 
 - Use openGL inside qt4
+- Look at /dev/input/jsX then open /dev/input/eventX using /proc/bus/input/devices for joysticks
+- Use XQueryPointer for mouse
+- Keyboard not yet hooked
+
+### SteamWorld Dig
+
+- Use XEvents for keyboard and inputs
+- Use /dev/input/eventX for joystick
 

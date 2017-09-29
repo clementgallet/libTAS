@@ -248,8 +248,8 @@ int ioctl(int fd, unsigned long request, ...)
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_ABS,0))) {
                 debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_ABS on fd ", fd);
-                for (int ai=0; ai<AllInputs::MAXAXES; ai++) {
-                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevAxis(ai), bits, len);
+                for (int axi=0; axi<AllInputs::MAXAXES; axi++) {
+                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevAxis(axi), bits, len);
                 }
                 /* Add the two hat axes because they are not considered as buttons */
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0X, bits, len);
@@ -283,7 +283,7 @@ int ioctl(int fd, unsigned long request, ...)
                     absinfo->fuzz = 16;
                     absinfo->flat = 128;
                     absinfo->resolution = 0;
-                    return 0;
+                    break;
                 case _IOC_NR(EVIOCGABS(ABS_Z)):
                 case _IOC_NR(EVIOCGABS(ABS_RZ)):
                     absinfo->minimum = 0;
@@ -291,7 +291,7 @@ int ioctl(int fd, unsigned long request, ...)
                     absinfo->fuzz = 0;
                     absinfo->flat = 0;
                     absinfo->resolution = 0;
-                    return 0;
+                    break;
                 case _IOC_NR(EVIOCGABS(ABS_HAT0X)):
                 case _IOC_NR(EVIOCGABS(ABS_HAT0Y)):
                     absinfo->minimum = -1;
@@ -299,7 +299,7 @@ int ioctl(int fd, unsigned long request, ...)
                     absinfo->fuzz = 0;
                     absinfo->flat = 0;
                     absinfo->resolution = 0;
-                    return 0;
+                    break;
                 default:
                     errno = ENOTTY;
                     return -1;
@@ -308,6 +308,7 @@ int ioctl(int fd, unsigned long request, ...)
             /* Get the joystick number from the file descriptor */
             int jsnum = get_ev_number(fd);
             if (jsnum < 0) {
+                debuglog(LCF_JOYSTICK, "   joystick not found!");
                 errno = ENOTTY;
                 return -1;
             }
