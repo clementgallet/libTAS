@@ -133,10 +133,6 @@ namespace orig {
 
 /* Override */ void SDL_Quit(){
     DEBUGLOGCALL(LCF_SDL);
-
-    is_exiting = true;
-
-    sendMessage(MSGB_QUIT);
     orig::SDL_Quit();
 }
 

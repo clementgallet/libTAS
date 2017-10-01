@@ -110,6 +110,8 @@ void __attribute__((destructor)) term(void)
     ThreadManager::deallocateThreads();
     dlhook_end();
 
+    sendMessage(MSGB_QUIT);
+
     closeSocket();
 
     debuglog(LCF_SOCKET, "Exiting.");
