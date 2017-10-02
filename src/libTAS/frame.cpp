@@ -187,6 +187,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     if (!skipping_draw) {
+        GlobalNative gn;
         draw();
     }
 

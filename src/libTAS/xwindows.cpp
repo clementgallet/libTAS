@@ -129,8 +129,12 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
 void glXSwapBuffers( Display *dpy, XID drawable )
 {
-    DEBUGLOGCALL(LCF_FRAME | LCF_WINDOW);
     LINK_NAMESPACE(glXSwapBuffers, "libGL");
+
+    if (GlobalState::isNative())
+        return orig::glXSwapBuffers(dpy, drawable);
+
+    DEBUGLOGCALL(LCF_FRAME | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
