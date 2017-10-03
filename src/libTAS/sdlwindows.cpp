@@ -31,6 +31,7 @@
 #include "timewrappers.h"
 #include "ScreenCapture.h"
 #include <SDL2/SDL_syswm.h>
+#include "WindowTitle.h"
 
 namespace libtas {
 
@@ -134,13 +135,10 @@ static int swapInterval = 0;
     return swapInterval;
 }
 
-std::string origTitle;
-std::string origIcon;
-
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
 
-    origTitle = title;
+    WindowTitle::setOriginalTitle(title);
 
     /* Disable fullscreen */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -163,6 +161,8 @@ std::string origIcon;
          */
         ScreenCapture::init(gameWindow);
     }
+
+    WindowTitle::setUpdateFunc([] (const char* t) {orig::SDL_SetWindowTitle(gameWindow, t);});
 
     return gameWindow;
 }
@@ -196,49 +196,20 @@ std::string origIcon;
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
-    if (title)
-        origTitle = title;
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+
+    WindowTitle::setOriginalTitle(title);
+    WindowTitle::setUpdateFunc([window] (const char* t) {orig::SDL_SetWindowTitle(window, t);});
+
     orig::SDL_SetWindowTitle(window, title);
 }
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title);
-    if (title)
-        origTitle = title;
-    if (icon)
-        origIcon = icon;
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+    WindowTitle::setOriginalTitle(title);
+    WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
     orig::SDL_WM_SetCaption(title, icon);
-}
-
-void updateTitle(float fps, float lfps)
-{
-    static float cur_fps, cur_lfps = 0;
-    if (fps > 0) cur_fps = fps;
-    if (lfps > 0) cur_lfps = lfps;
-
-    std::ostringstream out;
-    out << " (fps: " << std::fixed << std::setprecision(1) << cur_fps;
-    out << " - lfps: " << cur_lfps << ") - status: ";
-    if (shared_config.running)
-        out << "running";
-    else
-        out << "paused";
-    if (shared_config.fastforward)
-        out << " fastforward";
-    if (shared_config.av_dumping)
-        out << " dumping";
-
-    std::string newTitle = origTitle + out.str();
-
-    if (game_info.video & GameInfo::SDL1) {
-        orig::SDL_WM_SetCaption(newTitle.c_str(), origIcon.c_str());
-    }
-    if (game_info.video & GameInfo::SDL2) {
-        if (gameWindow)
-            orig::SDL_SetWindowTitle(gameWindow, newTitle.c_str());
-    }
 }
 
 /* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)

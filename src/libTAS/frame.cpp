@@ -34,6 +34,7 @@
 #include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
 #include "ScreenCapture.h"
+#include "WindowTitle.h"
 
 namespace libtas {
 
@@ -242,7 +243,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         computeFPS(fps, lfps);
         debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
-    updateTitle(fps, lfps);
+    WindowTitle::update(fps, lfps);
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_FRAME, "Leave frame boundary");
