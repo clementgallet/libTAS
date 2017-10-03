@@ -32,6 +32,11 @@
 -- Allow the user to delete savestates
 - Support Unity
 -- Detect game exiting to stop audio buffering
+-- Update window title
+-- Looks like hollowknight is using udev for joysticks
+-- Rendering is not done on the "main" thread (the first one). Decide what to do
+- Signals
+-- Register our signals only before a savestate, because some games do register SIGUSR1/2
 
 ## Done
 

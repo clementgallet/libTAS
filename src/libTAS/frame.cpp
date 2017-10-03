@@ -295,6 +295,7 @@ static void receive_messages(std::function<void()> draw)
                     hud.renderInputs(ai);
                     hud.renderPreviewInputs(preview_ai);
 
+                    GlobalNative gn;
                     draw();
                 }
 #endif
@@ -348,6 +349,7 @@ static void receive_messages(std::function<void()> draw)
                             hud.renderInputs(ai);
 #endif
 
+                        GlobalNative gn;
                         draw();
                     }
 
