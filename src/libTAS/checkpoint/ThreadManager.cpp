@@ -33,6 +33,7 @@
 // #include "../backtrace.h"
 #include "../audio/AudioPlayer.h"
 #include "AltStack.h"
+#include "CustomSignals.h"
 #include "ReservedMemory.h"
 
 namespace libtas {
@@ -69,15 +70,6 @@ void ThreadManager::init()
     sem_init(&semNotifyCkptThread, 0, 0);
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
 
-    struct sigaction sigusr1;
-    sigfillset(&sigusr1.sa_mask);
-    sigusr1.sa_flags = SA_RESTART;
-    sigusr1.sa_handler = ThreadManager::stopThisThread;
-    {
-        GlobalOwnCode goc;
-        MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
-    }
-    Checkpoint::init();
     ReservedMemory::init();
 
     main = getThreadId();
@@ -119,11 +111,6 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
     thread->tid = 0;
     thread->start = start_routine;
     thread->arg = arg;
-    /* 'go' is a small barrier to synchronize the parent thread with the child thread
-     * Avoids issues when the created thread is so fast that it's detached
-     * before the main thread goes to sleep (ie: starvation => program blocked)
-     */
-    //thread->go = false;
     thread->state = ThreadInfo::ST_RUNNING;
     thread->routine_id = (char *)start_routine - (char *)from;
     thread->detached = false;
@@ -137,6 +124,10 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
 void ThreadManager::update(ThreadInfo* thread)
 {
     thread->tid = getThreadId();
+
+    /* If a thread that is in native state is creating another thread, we
+     * consider that the entire new thread is in native mode (e.g. audio thread)
+     */
     if (thread->initial_native) GlobalState::setNative(true);
     if (thread->initial_owncode) GlobalState::setOwnCode(true);
     if (thread->initial_nolog) GlobalState::setNoLog(true);
@@ -228,7 +219,6 @@ void ThreadManager::deallocateThreads()
 void ThreadManager::checkpoint(const char* savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
-    // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Checkpo fi ", savestatepath);
 
     ThreadSync::acquireLocks();
 
@@ -243,6 +233,10 @@ void ThreadManager::checkpoint(const char* savestatepath)
     AudioPlayer::close();
 #endif
 
+    /* Before suspending threads, we must also register our signal handlers */
+    CustomSignals::registerHandlers();
+
+    /* Sending a suspend signal to all threads */
     suspendThreads();
 
     /* We set the alternate stack to our reserved memory. The game might
@@ -263,6 +257,9 @@ void ThreadManager::checkpoint(const char* savestatepath)
     AltStack::restoreStack();
 
     resumeThreads();
+
+    /* Restoring the original signal handlers */
+    CustomSignals::restoreHandlers();
 
     if (restoreInProgress) {
         /* We are being restored.  Wait for all other threads to finish being
@@ -297,6 +294,9 @@ void ThreadManager::restore(const char* savestatepath)
         return;
     }
 
+    /* Before suspending threads, we must also register our signal handlers */
+    CustomSignals::registerHandlers();
+
     restoreInProgress = false;
 
     suspendThreads();
@@ -327,6 +327,10 @@ void ThreadManager::restore(const char* savestatepath)
      AltStack::restoreStack();
 
      resumeThreads();
+
+     /* Restoring the original signal handlers */
+     CustomSignals::restoreHandlers();
+
      waitForAllRestored(current_thread);
 
      ThreadSync::releaseLocks();

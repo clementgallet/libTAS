@@ -44,19 +44,6 @@ namespace libtas {
 
 static const char* savestatepath;
 
-void Checkpoint::init()
-{
-    /* Register a signal so that we can switch stacks */
-    struct sigaction sigusr2;
-    sigfillset(&sigusr2.sa_mask);
-    sigusr2.sa_flags = SA_ONSTACK;
-    sigusr2.sa_handler = handler;
-    {
-        GlobalOwnCode goc;
-        MYASSERT(sigaction(SIGUSR2, &sigusr2, nullptr) == 0)
-    }
-}
-
 void Checkpoint::setSavestatePath(const char* filepath)
 {
     /* We want to avoid any allocated memory here, so using char array */

@@ -19,15 +19,14 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#ifndef LIBTAS_CUSTOMSIGNALS_H
+#define LIBTAS_CUSTOMSIGNALS_H
 
 namespace libtas {
-namespace Checkpoint
+namespace CustomSignals
 {
-    void setSavestatePath(const char* savestatepath);
-    bool checkRestore();
-    void handler(int signum);
+    void registerHandlers();
+    void restoreHandlers();
 };
 }
 

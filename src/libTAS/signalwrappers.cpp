@@ -173,8 +173,14 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigaction (int sig, const struct sigaction *act,
     struct sigaction *oact) throw()
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigaction, nullptr);
+
+    if (GlobalState::isNative()) {
+        return orig::sigaction(sig, act, oact);
+    }
+
+    DEBUGLOGCALL(LCF_SIGNAL);
+
     if (act != nullptr) {
         debuglog(LCF_SIGNAL, "    Setting handler ", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
@@ -186,9 +192,6 @@ static thread_local int origUsrMaskThread = 0;
             reinterpret_cast<void*>(oact->sa_sigaction):
             reinterpret_cast<void*>(oact->sa_handler),
             " for signal ", sig, " (", strsignal(sig), ")");
-    }
-    if (!GlobalState::isOwnCode() && ((sig == SIGUSR1) || (sig == SIGUSR2))) {
-        debuglog(LCF_SIGNAL | LCF_ERROR, "    The game registers a custom signal!");
     }
     return orig::sigaction(sig, act, oact);
 }

@@ -187,8 +187,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     if (!skipping_draw) {
-        GlobalNative gn;
-        draw();
+        NATIVECALL(draw());
     }
 
     /* Send error messages */
@@ -295,8 +294,7 @@ static void receive_messages(std::function<void()> draw)
                     hud.renderInputs(ai);
                     hud.renderPreviewInputs(preview_ai);
 
-                    GlobalNative gn;
-                    draw();
+                    NATIVECALL(draw());
                 }
 #endif
 
@@ -349,8 +347,7 @@ static void receive_messages(std::function<void()> draw)
                             hud.renderInputs(ai);
 #endif
 
-                        GlobalNative gn;
-                        draw();
+                        NATIVECALL(draw());
                     }
 
                 }
