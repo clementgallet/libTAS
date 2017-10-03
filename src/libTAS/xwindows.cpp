@@ -26,6 +26,7 @@
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "ScreenCapture.h"
+#include "WindowTitle.h"
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
@@ -51,6 +52,7 @@ namespace orig {
     static int (*XDestroyWindow)(Display *display, Window w);
     static int (*XMapWindow)(Display *display, Window w);
     static int (*XMapRaised)(Display *display, Window w);
+    static int (*XStoreName)(Display *display, Window w, const char *window_name);
 }
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
@@ -259,5 +261,17 @@ int XMapRaised(Display *display, Window w)
 
     return orig::XMapRaised(display, w);
 }
+
+int XStoreName(Display *display, Window w, const char *window_name)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE(XStoreName, nullptr);
+
+    WindowTitle::setOriginalTitle(window_name);
+    WindowTitle::setUpdateFunc([display, w] (const char* t) {orig::XStoreName(display, w, t);});
+
+    return orig::XStoreName(display, w, window_name);
+}
+
 
 }

@@ -43,6 +43,9 @@ void WindowTitle::setUpdateFunc(std::function<void(const char*)> func)
 
 void WindowTitle::update(float fps, float lfps)
 {
+    if (!set_title)
+        return;
+        
     static float cur_fps, cur_lfps = 0;
     if (fps > 0) cur_fps = fps;
     if (lfps > 0) cur_lfps = lfps;
