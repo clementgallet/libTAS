@@ -24,7 +24,6 @@
 #include <X11/XKBlib.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
-#include "PseudoSaveState.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -34,8 +33,6 @@
 #include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
-
-static PseudoSaveState pseudosavestate;
 
 MovieFile movie;
 
@@ -321,30 +318,6 @@ void launchGame(Context* context)
             break;
         }
 
-        /* Check if we are loading a pseudo savestate */
-        if (pseudosavestate.loading) {
-            /* When we approach the frame to pause, we disable fastforward so
-             * that we draw all the frames.
-             */
-            if (context->framecount > (pseudosavestate.framecount - 30)) {
-                context->config.sc.fastforward = false;
-                context->config.sc_modified = true;
-                ui.update_ui();
-            }
-
-            if (pseudosavestate.framecount == context->framecount) {
-                /* We are back to our pseudosavestate frame, we pause the game, disable
-                 * fastforward and recover the movie recording mode.
-                 */
-                pseudosavestate.loading = false;
-                context->config.sc.running = false;
-                context->config.sc.fastforward = false;
-                context->config.sc_modified = true;
-                context->config.sc.recording = pseudosavestate.recording;
-                ui.update_ui();
-            }
-        }
-
         /* Flag to trigger a frame advance even if the game is on pause */
         bool advance_frame = false;
 
@@ -431,36 +404,6 @@ void launchGame(Context* context)
                         context->config.sc.fastforward = true;
                         ui.update_ui();
                         context->config.sc_modified = true;
-                    }
-
-                    /* Save a pseudo-savestate (register position in the movie) */
-                    if (hk.type == HOTKEY_SAVEPSEUDOSTATE){
-                        pseudosavestate.framecount = context->framecount;
-                    }
-
-                    /* Load a pseudo-savestate:
-                     * - trigger a game restart
-                     * - playback the movie in fastforward
-                     * - stop the movie at the registered frame
-                     * FIXME: was not tested when real savestates start to work,
-                     * so may not work anymore. I'm unsure if I should keep this
-                     * or not.
-                     */
-                    if (hk.type == HOTKEY_LOADPSEUDOSTATE){
-                        if (pseudosavestate.framecount > 0 && (
-                            context->config.sc.recording == SharedConfig::RECORDING_READ ||
-                            context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
-                            pseudosavestate.loading = true;
-                            context->config.sc.running = true;
-                            context->config.sc.fastforward = true;
-                            context->config.sc_modified = true;
-                            pseudosavestate.recording = context->config.sc.recording;
-                            context->config.sc.recording = SharedConfig::RECORDING_READ;
-                            context->status = Context::QUITTING;
-                            ui.update_ui();
-                            ui.update_status();
-                            break;
-                        }
                     }
 
                     /* Perform a savestate:
@@ -813,19 +756,8 @@ void launchGame(Context* context)
     /* Remove savestates because they are invalid on future instances of the game */
     remove_savestates(context);
 
-    if (pseudosavestate.loading) {
-        /* We a loading a pseudo savestate, we need to restart the game */
-        context->status = Context::RESTARTING;
-        /* Ask the main (UI) thread to call launch_cb, restarting the game */
-        Fl::awake(reinterpret_cast<Fl_Awake_Handler>(&launch_cb)); // FIXME: not a good cast
-    }
-    else {
-        /* Unvalidate the pseudo savestate */
-        pseudosavestate.framecount = 0;
-
-        context->status = Context::INACTIVE;
-        ui.update_status();
-    }
+    context->status = Context::INACTIVE;
+    ui.update_status();
 
     XAutoRepeatOn(context->display);
     XFlush(context->display);

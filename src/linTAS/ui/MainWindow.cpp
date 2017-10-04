@@ -742,12 +742,6 @@ void launch_cb(Fl_Widget* w)
             mw.update_status();
             mw.game_thread.detach();
             break;
-        case Context::RESTARTING:
-            mw.game_thread.join();
-            mw.context->status = Context::STARTING;
-            mw.update_status();
-            mw.game_thread = std::thread{launchGame, mw.context};
-            break;
         default:
             break;
     }

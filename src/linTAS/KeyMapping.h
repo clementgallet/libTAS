@@ -159,8 +159,6 @@ typedef int HotKeyType; enum
     HOTKEY_FRAMEADVANCE, // Advance one frame, also pause the game if playing
     HOTKEY_FASTFORWARD, // Enable fastforward when pressed
     HOTKEY_READWRITE, // Switch from read-only recording to write
-    HOTKEY_SAVEPSEUDOSTATE, // Save the current frame
-    HOTKEY_LOADPSEUDOSTATE, // Restart the game and playback inputs until frame
     HOTKEY_SAVESTATE1, // Save the entire state of the game
     HOTKEY_SAVESTATE2,
     HOTKEY_SAVESTATE3,
