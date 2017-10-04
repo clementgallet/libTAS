@@ -25,6 +25,7 @@
 #include <iostream>
 #include <FL/x.H>
 #include <FL/fl_ask.H>
+#include <future>
 
 static Fl_Callback browse_gamepath_cb;
 static Fl_Callback browse_moviepath_cb;
@@ -1313,12 +1314,11 @@ void movie_end_cb(Fl_Widget* w, void* v)
     mw.context->config.on_movie_end = value;
 }
 
-void alert_save(void*)
+void alert_save(void* promise)
 {
+    std::promise<bool>* saveAnswer = static_cast<std::promise<bool>*>(promise);
     int choice = fl_choice("Do you want to save the input file?", "Yes", "No", 0);
-    if (choice == 0) {
-        movie.saveMovie();
-    }
+    saveAnswer->set_value(choice == 0);
 }
 
 void alert_dialog(void* alert_msg)

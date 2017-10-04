@@ -33,6 +33,7 @@
 #include "utils.h"
 #include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
+#include <future>
 
 static PseudoSaveState pseudosavestate;
 
@@ -792,12 +793,17 @@ void launchGame(Context* context)
     }
 
     if (movie.modifiedSinceLastSave) {
-        Fl::awake(alert_save, nullptr);
+        /* Ask the user if he wants to save the movie, and get the answer.
+         * Prompting a alert window must be done by the UI thread, so we are
+         * using std::future/std::promise mechanism.
+         */
+        std::promise<bool> saveAnswer;
+        std::future<bool> futureSave = saveAnswer.get_future();
+        Fl::awake(alert_save, &saveAnswer);
 
-        /* Wait until the user answers */
-        while (movie.modifiedSinceLastSave) {
-            struct timespec tim = {0, 100L*1000L*1000L};
-            nanosleep(&tim, NULL);
+        if (futureSave.get()) {
+            /* User answered yes */
+            movie.saveMovie();
         }
     }
 
