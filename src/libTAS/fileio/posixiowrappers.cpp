@@ -303,7 +303,7 @@ int creat (const char *file, mode_t mode)
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
         return get_memfd(file, oflag);
     }
 
@@ -322,7 +322,7 @@ int creat64 (const char *file, mode_t mode)
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO | LCF_TODO, "  savefile detected");
+        debuglogstdio(LCF_FILEIO, "  savefile detected");
         return get_memfd(file, oflag);
     }
 

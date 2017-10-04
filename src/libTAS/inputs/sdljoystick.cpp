@@ -343,7 +343,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK | LCF_TODO);
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
 	return SDL_JOYSTICK_POWER_WIRED;
 }
 

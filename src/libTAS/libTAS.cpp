@@ -31,7 +31,7 @@
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
 #include "audio/AudioContext.h"
-#include "sdlwindows.h" // av_filename TODO: change the extern to smt else!
+#include "AVEncoder.h"
 #include <unistd.h> // getpid()
 
 namespace libtas {

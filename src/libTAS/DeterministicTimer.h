@@ -102,14 +102,8 @@ private:
     /* Accumulated delay */
     TimeHolder addedDelay;
 
-    /* Some ticks that we are forced to advance. This was used in hourglass but
-     * we are not using it here. TODO: document this
-     */
-    TimeHolder forceAdvancedTicks;
-
     /* Store if we enter a frame boundary from a draw or
-     * from a sleep/wait.
-     * TODO: separate sleep and wait
+     * from a sleep.
      */
     bool drawFB;
 

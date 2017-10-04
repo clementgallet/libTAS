@@ -126,7 +126,6 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
     addedDelay += delayTicks;
     ticks += delayTicks;
-    forceAdvancedTicks += delayTicks;
 
     if(!shared_config.fastforward)
     {
@@ -277,7 +276,6 @@ void DeterministicTimer::initialize(void)
     }
 
     addedDelay = {0, 0};
-    forceAdvancedTicks = {0, 0};
     fakeExtraTicks = {0, 0};
     drawFB = true;
 }
