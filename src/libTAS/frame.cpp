@@ -382,7 +382,7 @@ static void receive_messages(std::function<void()> draw)
                     shared_config.av_dumping = false;
 
                     /* Update title without changing fps */
-                    updateTitle(-1, -1);
+                    WindowTitle::update(-1, -1);
                 }
 #endif
                 break;

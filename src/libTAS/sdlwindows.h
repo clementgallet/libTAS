@@ -35,9 +35,6 @@ namespace orig {
     extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
 }
 
-/* Update the window title with fps. If fps == -1, use the last value */
-void updateTitle(float fps, float lfps);
-
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.
