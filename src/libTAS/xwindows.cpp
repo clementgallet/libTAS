@@ -36,24 +36,22 @@
 
 namespace libtas {
 
-namespace orig {
-    static void* (*glXGetProcAddress) (const GLubyte *procName);
-    static void* (*glXGetProcAddressARB) (const GLubyte *procName);
-    static void* (*glXGetProcAddressEXT) (const GLubyte *procName);
-    static Bool (*glXMakeCurrent)( Display *dpy, GLXDrawable drawable, GLXContext ctx );
-    static void (*glXSwapBuffers)( Display *dpy, GLXDrawable drawable );
-    static void (*glXSwapIntervalEXT) (Display *dpy, GLXDrawable drawable, int interval);
-    static int (*glXSwapIntervalSGI) (int interval);
-    static int (*glXSwapIntervalMESA) (unsigned int interval);
-    static int (*glXGetSwapIntervalMESA) (void);
-    static int (*glXQueryDrawable)(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
-    static Window (*XCreateWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
-    static Window (*XCreateSimpleWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background);
-    static int (*XDestroyWindow)(Display *display, Window w);
-    static int (*XMapWindow)(Display *display, Window w);
-    static int (*XMapRaised)(Display *display, Window w);
-    static int (*XStoreName)(Display *display, Window w, const char *window_name);
-}
+DEFINE_ORIG_POINTER(glXGetProcAddress);
+DEFINE_ORIG_POINTER(glXGetProcAddressARB);
+DEFINE_ORIG_POINTER(glXGetProcAddressEXT);
+DEFINE_ORIG_POINTER(glXMakeCurrent);
+DEFINE_ORIG_POINTER(glXSwapBuffers);
+DEFINE_ORIG_POINTER(glXSwapIntervalEXT);
+DEFINE_ORIG_POINTER(glXSwapIntervalSGI);
+DEFINE_ORIG_POINTER(glXSwapIntervalMESA);
+DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
+DEFINE_ORIG_POINTER(glXQueryDrawable);
+DEFINE_ORIG_POINTER(XCreateWindow);
+DEFINE_ORIG_POINTER(XCreateSimpleWindow);
+DEFINE_ORIG_POINTER(XDestroyWindow);
+DEFINE_ORIG_POINTER(XMapWindow);
+DEFINE_ORIG_POINTER(XMapRaised);
+DEFINE_ORIG_POINTER(XStoreName);
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -205,7 +203,7 @@ int glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XCreateWindow, nullptr);
+    LINK_NAMESPACE_GLOBAL(XCreateWindow);
 
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
 

@@ -19,7 +19,7 @@
 
 #include "sdlmain.h"
 #include "sdltimer.h"
-#include "sdlwindows.h"
+//#include "sdlwindows.h"
 #include "sdlevents.h"
 #include "../shared/sockethelpers.h"
 #include "logging.h"
@@ -30,12 +30,9 @@
 
 namespace libtas {
 
-/* Function pointers to real functions */
-namespace orig {
-    static int (*SDL_Init)(Uint32 flags) = nullptr;
-    static int (*SDL_InitSubSystem)(Uint32 flags) = nullptr;
-    static void (*SDL_Quit)(void) = nullptr;
-}
+DEFINE_ORIG_POINTER(SDL_Init);
+DEFINE_ORIG_POINTER(SDL_InitSubSystem);
+DEFINE_ORIG_POINTER(SDL_Quit);
 
 /* Override */ int SDL_Init(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
@@ -77,7 +74,6 @@ namespace orig {
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
     LINK_NAMESPACE_SDLX(SDL_Quit);
 
-    link_sdlwindows();
     link_sdlevents();
     link_sdlthreads();
     link_sdltimer();

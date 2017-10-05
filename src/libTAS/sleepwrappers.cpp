@@ -27,9 +27,7 @@
 
 namespace libtas {
 
-namespace orig {
-    static int (*nanosleep) (const struct timespec *requested_time, struct timespec *remaining);
-}
+DEFINE_ORIG_POINTER(nanosleep);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {

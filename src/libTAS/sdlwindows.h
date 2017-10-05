@@ -31,10 +31,6 @@ namespace libtas {
 
 extern SDL_Window* gameWindow;
 
-namespace orig {
-    extern Uint32 (*SDL_GetWindowID)(SDL_Window*);
-}
-
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.
@@ -283,8 +279,6 @@ OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
  * and not interpreted by a window manager, if any.
  */
 OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
-
-void link_sdlwindows(void);
 
 }
 

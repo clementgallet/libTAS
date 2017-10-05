@@ -30,30 +30,25 @@
 
 namespace libtas {
 
-/* Original function pointers */
-namespace orig {
-    static SDL_Thread* (*SDL_CreateThread)(SDL_ThreadFunction fn,
-            const char*   name,
-            void*         data);
-    static void (*SDL_WaitThread)(SDL_Thread* thread, int *status);
+DEFINE_ORIG_POINTER(SDL_CreateThread);
+DEFINE_ORIG_POINTER(SDL_WaitThread);
 
-    static int (*pthread_create) (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) = nullptr;
-    static void __attribute__((__noreturn__)) (*pthread_exit) (void *retval) = nullptr;
-    static int (*pthread_join) (pthread_t thread, void **thread_return) = nullptr;
-    static int (*pthread_detach) (pthread_t thread) = nullptr;
-    static int (*pthread_getname_np)(pthread_t thread, char *name, size_t len) = nullptr;
-    static int (*pthread_tryjoin_np)(pthread_t thread, void **retval) = nullptr;
-    static int (*pthread_timedjoin_np)(pthread_t thread, void **retval, const struct timespec *abstime) = nullptr;
-    static pthread_t (*pthread_self)(void) = nullptr;
+DEFINE_ORIG_POINTER(pthread_create);
+DEFINE_ORIG_POINTER(pthread_exit);
+DEFINE_ORIG_POINTER(pthread_join);
+DEFINE_ORIG_POINTER(pthread_detach);
+DEFINE_ORIG_POINTER(pthread_getname_np);
+DEFINE_ORIG_POINTER(pthread_tryjoin_np);
+DEFINE_ORIG_POINTER(pthread_timedjoin_np);
+DEFINE_ORIG_POINTER(pthread_self);
     // static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
     // static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
     // static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
     // static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
-    static int (*pthread_setcancelstate)(int state, int *oldstate) = nullptr;
-    static int (*pthread_setcanceltype)(int type, int *oldtype) = nullptr;
-    static int (*pthread_cancel)(pthread_t th) = nullptr;
-    static void (*pthread_testcancel)(void) = nullptr;
-}
+DEFINE_ORIG_POINTER(pthread_setcancelstate);
+DEFINE_ORIG_POINTER(pthread_setcanceltype);
+DEFINE_ORIG_POINTER(pthread_cancel);
+DEFINE_ORIG_POINTER(pthread_testcancel);
 
 /* We keep the identifier of the first thread */
 pthread_t firstThread = 0;

@@ -29,6 +29,8 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(SDL_GetWindowID);
+
 SDL_Window *SDL_GetMouseFocus(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
@@ -118,6 +120,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     event2.type = SDL_MOUSEMOTION;
     struct timespec time = detTimer.getTicks();
     event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+    LINK_NAMESPACE_SDL2(SDL_GetWindowID);
     event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 

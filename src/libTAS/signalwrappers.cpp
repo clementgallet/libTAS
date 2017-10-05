@@ -25,31 +25,21 @@
 
 namespace libtas {
 
-namespace orig {
-    static sighandler_t (*signal) (int sig, sighandler_t handler) throw();
-    static int (*sigblock) (int mask) throw();
-    static int (*sigsetmask) (int mask) throw();
-    static int (*siggetmask) (void) throw();
-    static int (*sigprocmask) (int how, const sigset_t *set,
-                sigset_t *oset) throw();
-    static int (*sigsuspend) (const sigset_t *set);
-    static int (*sigaction) (int sig, const struct sigaction *act,
-                  struct sigaction *oact) throw();
-    static int (*sigpending) (sigset_t *set) throw();
-    static int (*sigwait) (const sigset_t *set, int *sig);
-    static int (*sigwaitinfo) (const sigset_t *set,
-                siginfo_t *info);
-    static int (*sigtimedwait) (const sigset_t *set,
-                 siginfo_t *info, const struct timespec *timeout);
-    static int (*sigaltstack) (const struct sigaltstack *ss,
-     			struct sigaltstack *oss) throw();
-    static int (*pthread_sigmask) (int how, const sigset_t *newmask,
-                 sigset_t *oldmask) throw();
-    static int (*pthread_kill) (pthread_t threadid, int signo) throw();
-    static int (*pthread_sigqueue) (pthread_t threadid, int signo,
-                  const union sigval value) throw();
-
-}
+DEFINE_ORIG_POINTER(signal);
+DEFINE_ORIG_POINTER(sigblock);
+DEFINE_ORIG_POINTER(sigsetmask);
+DEFINE_ORIG_POINTER(siggetmask);
+DEFINE_ORIG_POINTER(sigprocmask);
+DEFINE_ORIG_POINTER(sigsuspend);
+DEFINE_ORIG_POINTER(sigaction);
+DEFINE_ORIG_POINTER(sigpending);
+DEFINE_ORIG_POINTER(sigwait);
+DEFINE_ORIG_POINTER(sigwaitinfo);
+DEFINE_ORIG_POINTER(sigtimedwait);
+DEFINE_ORIG_POINTER(sigaltstack);
+DEFINE_ORIG_POINTER(pthread_sigmask);
+DEFINE_ORIG_POINTER(pthread_kill);
+DEFINE_ORIG_POINTER(pthread_sigqueue);
 
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;

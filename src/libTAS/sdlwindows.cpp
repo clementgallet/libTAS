@@ -41,31 +41,28 @@ namespace libtas {
  */
 SDL_Window* gameWindow = nullptr;
 
-/* Original function pointers */
-namespace orig {
-    static void(* SDL_GL_SwapWindow)(SDL_Window* window);
-    static SDL_Window*(* SDL_CreateWindow)(const char*, int, int, int, int, Uint32);
-    Uint32 (*SDL_GetWindowID)(SDL_Window*);
-    static Uint32 (*SDL_GetWindowFlags)(SDL_Window*);
-    static void (*SDL_SetWindowTitle)(void * window, const char *title);
-    static void (*SDL_WM_SetCaption)(const char *title, const char *icon);
-    static void* (*SDL_GL_CreateContext)(SDL_Window *window);
-    static int (*SDL_GL_SetSwapInterval)(int interval);
-    static void (*SDL_DestroyWindow)(SDL_Window*);
-    static void (*SDL_SetWindowSize)(SDL_Window* window, int w, int h);
-
-    static SDL_Renderer* (*SDL_CreateRenderer)(SDL_Window * window, int index, Uint32 flags);
-    static int (*SDL_CreateWindowAndRenderer)(int, int, Uint32, SDL_Window**, SDL_Renderer**);
-    static void (*SDL_RenderPresent)(SDL_Renderer * renderer);
-
-    static SDL1::SDL_Surface *(*SDL_SetVideoMode)(int width, int height, int bpp, Uint32 flags);
-    static void (*SDL_GL_SwapBuffers)(void);
-    static int (*SDL_Flip)(SDL1::SDL_Surface *screen);
-}
+DEFINE_ORIG_POINTER(SDL_GL_SwapWindow);
+DEFINE_ORIG_POINTER(SDL_CreateWindow);
+DEFINE_ORIG_POINTER(SDL_GetWindowID);
+DEFINE_ORIG_POINTER(SDL_GetWindowFlags);
+DEFINE_ORIG_POINTER(SDL_SetWindowTitle);
+DEFINE_ORIG_POINTER(SDL_WM_SetCaption);
+DEFINE_ORIG_POINTER(SDL_GL_CreateContext);
+DEFINE_ORIG_POINTER(SDL_GL_SetSwapInterval);
+DEFINE_ORIG_POINTER(SDL_DestroyWindow);
+DEFINE_ORIG_POINTER(SDL_SetWindowSize);
+DEFINE_ORIG_POINTER(SDL_CreateRenderer);
+DEFINE_ORIG_POINTER(SDL_CreateWindowAndRenderer);
+DEFINE_ORIG_POINTER(SDL_RenderPresent);
+DEFINE_ORIG_POINTER(SDL_SetVideoMode);
+DEFINE_ORIG_POINTER(SDL_GL_SwapBuffers);
+DEFINE_ORIG_POINTER(SDL_Flip);
 
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
+    LINK_NAMESPACE_SDL1(SDL_GL_SwapBuffers);
+
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapBuffers();
 
@@ -82,6 +79,8 @@ namespace orig {
 
 /* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
 {
+    LINK_NAMESPACE_SDL2(SDL_GL_SwapWindow);
+
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapWindow(window);
 
@@ -99,13 +98,17 @@ namespace orig {
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_GL_CreateContext);
+
     void* context = orig::SDL_GL_CreateContext(window);
 
     /* We override this function to disable vsync,
      * except when using non deterministic timer.
      */
-    if (shared_config.framerate > 0)
+    if (shared_config.framerate > 0) {
+        LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
+    }
 
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init(nullptr);
@@ -118,6 +121,7 @@ static int swapInterval = 0;
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call - setting to ", interval);
+    LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
 
     /* We save the interval if the game wants it later */
     swapInterval = interval;
@@ -137,6 +141,7 @@ static int swapInterval = 0;
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
+    LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
     WindowTitle::setOriginalTitle(title);
 
@@ -162,6 +167,7 @@ static int swapInterval = 0;
         ScreenCapture::init(gameWindow);
     }
 
+    LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
     WindowTitle::setUpdateFunc([] (const char* t) {orig::SDL_SetWindowTitle(gameWindow, t);});
 
     return gameWindow;
@@ -169,6 +175,7 @@ static int swapInterval = 0;
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_DestroyWindow);
 
     orig::SDL_DestroyWindow(window);
 
@@ -186,17 +193,20 @@ static int swapInterval = 0;
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_GetWindowID);
     return orig::SDL_GetWindowID(window);
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
     return orig::SDL_GetWindowFlags(window);
 }
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+    LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
 
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([window] (const char* t) {orig::SDL_SetWindowTitle(window, t);});
@@ -207,6 +217,7 @@ static int swapInterval = 0;
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+    LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
     orig::SDL_WM_SetCaption(title, icon);
@@ -227,6 +238,8 @@ static int swapInterval = 0;
 /* Override */ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
+
     if (flags & SDL_RENDERER_SOFTWARE)
         debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
     if (flags & SDL_RENDERER_ACCELERATED)
@@ -235,6 +248,7 @@ static int swapInterval = 0;
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
     if (flags & SDL_RENDERER_TARGETTEXTURE)
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
+
     return orig::SDL_CreateRenderer(window, index, flags);
 }
 
@@ -243,6 +257,7 @@ static int swapInterval = 0;
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "  size ", width, " x ", height);
+    LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
 
     /* Disable fullscreen */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -265,6 +280,8 @@ static int swapInterval = 0;
 
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
 {
+    LINK_NAMESPACE_SDL2(SDL_RenderPresent);
+
     if (GlobalState::isNative())
         return orig::SDL_RenderPresent(renderer);
 
@@ -284,6 +301,7 @@ static int swapInterval = 0;
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", w, " x ", h);
+    LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
 
     orig::SDL_SetWindowSize(window, w, h);
 
@@ -303,6 +321,8 @@ static int swapInterval = 0;
 /* SDL 1.2 */
 /* Override */ SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
+    LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
+
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
 
     /* Disable fullscreen */
@@ -325,6 +345,8 @@ static int swapInterval = 0;
 
 /* Override */ int SDL_Flip(SDL1::SDL_Surface *screen)
 {
+    LINK_NAMESPACE_SDL1(SDL_Flip);
+
     if (GlobalState::isNative())
         return orig::SDL_Flip(screen);
 
@@ -348,32 +370,6 @@ static int swapInterval = 0;
     if (mode != SDL1::SDL_GRAB_QUERY)
         fakeGrab = mode;
     return fakeGrab;
-}
-
-void link_sdlwindows(void)
-{
-    int SDLver = get_sdlversion();
-
-    if (SDLver == 1) {
-        LINK_NAMESPACE_SDL1(SDL_GL_SwapBuffers);
-        LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
-        LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
-        LINK_NAMESPACE_SDL1(SDL_Flip);
-    }
-    if (SDLver == 2) {
-        LINK_NAMESPACE_SDL2(SDL_GL_SwapWindow);
-        LINK_NAMESPACE_SDL2(SDL_CreateWindow);
-        LINK_NAMESPACE_SDL2(SDL_DestroyWindow);
-        LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-        LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
-        LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
-        LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
-        LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
-        LINK_NAMESPACE_SDL2(SDL_RenderPresent);
-        LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
-        LINK_NAMESPACE_SDL2(SDL_GL_CreateContext);
-        LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
-    }
 }
 
 }
