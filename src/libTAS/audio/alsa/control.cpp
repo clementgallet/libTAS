@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
-#if 0
+
 #include "control.h"
 #include "../../logging.h"
 #include "../../GlobalState.h"
@@ -61,4 +61,3 @@ char *snd_device_name_get_hint(const void *hint, const char *id)
 }
 
 }
-#endif

@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
-#if 0
+
 #include "pcm.h"
 #include "../../logging.h"
 //#include "../../GlobalState.h"
@@ -116,4 +116,3 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 }
 
 }
-#endif
