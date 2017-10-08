@@ -83,6 +83,8 @@ OVERRIDE snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_u
 
 OVERRIDE int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE size_t snd_pcm_hw_params_sizeof(void);
+OVERRIDE int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr);
+OVERRIDE void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj);
 OVERRIDE int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access);
 OVERRIDE int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
 OVERRIDE int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);

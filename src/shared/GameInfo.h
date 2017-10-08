@@ -39,7 +39,8 @@ struct GameInfo {
         PULSEAUDIO = 0x20,
         XEVENTS = 0x40,
         JSDEV = 0x80,
-        EVDEV = 0x100
+        EVDEV = 0x100,
+        ALSA = 0x200,
     };
 
     int video = UNKNOWN;

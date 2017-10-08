@@ -28,6 +28,9 @@ namespace libtas {
 int snd_device_name_hint(int card, const char *iface, void ***hints)
 {
     debuglog(LCF_SOUND, __func__, " call with card ", card, " and iface ", iface);
+    /* Mimicking an array with one device */
+    void* strs[2] = {reinterpret_cast<void*>(1), nullptr};
+    *hints = strs;
     return 0;
 }
 
@@ -43,21 +46,26 @@ char *snd_device_name_get_hint(const void *hint, const char *id)
     static char device_name[] = "libTAS dummy device name";
     static char device_desc[] = "libTAS dummy device description";
     static char device_io[] = "Output";
-    static char device_other[] = "";
 
     if (strcmp(id, "NAME") == 0) {
-        return device_name;
+        char* str = static_cast<char*>(malloc(sizeof(device_name)));
+        strcpy(str, device_name);
+        return str;
     }
 
     if (strcmp(id, "DESC") == 0) {
-        return device_desc;
+        char* str = static_cast<char*>(malloc(sizeof(device_desc)));
+        strcpy(str, device_desc);
+        return str;
     }
 
     if (strcmp(id, "IOID") == 0) {
-        return device_io;
+        char* str = static_cast<char*>(malloc(sizeof(device_io)));
+        strcpy(str, device_io);
+        return str;
     }
 
-    return device_other;
+    return nullptr;
 }
 
 }
