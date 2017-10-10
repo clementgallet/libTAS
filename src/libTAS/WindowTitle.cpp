@@ -26,7 +26,6 @@
 namespace libtas {
 
 static std::string orig_title;
-static std::string orig_icon;
 static std::function<void(const char*)> set_title;
 
 void WindowTitle::setOriginalTitle(const char* title)
@@ -45,7 +44,7 @@ void WindowTitle::update(float fps, float lfps)
 {
     if (!set_title)
         return;
-        
+
     static float cur_fps, cur_lfps = 0;
     if (fps > 0) cur_fps = fps;
     if (lfps > 0) cur_lfps = lfps;

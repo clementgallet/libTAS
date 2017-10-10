@@ -25,8 +25,16 @@
 namespace libtas {
 namespace WindowTitle {
 
+/* Store the original game window title */
 void setOriginalTitle(const char* title);
+
+/* Store the function (const char* -> void) which updates the game window title */
 void setUpdateFunc(std::function<void(const char*)> func);
+
+/* Update the window title to display various information including fps/lfps
+ * running state, dumping state, which is appended to the original title.
+ * If fps/lfps is 0, then use the previous value.
+ */
 void update(float fps, float lfps);
 
 }
