@@ -125,8 +125,9 @@ bool ErrorChecking::checkMovieWriteable(std::string moviepath)
  */
 static int extractFileArch(std::string path)
 {
-    std::string cmd = "file -b ";
+    std::string cmd = "file -b '";
     cmd += path;
+    cmd += "'";
 
     std::string outputstr("");
 

@@ -166,7 +166,7 @@ void launchGame(Context* context)
     /* Get the shared libs of the game executable */
     std::vector<std::string> linked_libs;
     std::ostringstream libcmd;
-    libcmd << "ldd " << context->gamepath << "  | awk '/=>/{print $(NF-1)}'";
+    libcmd << "ldd '" << context->gamepath << "' | awk '/=>/{print $(NF-1)}'";
     //std::cout << "Execute: " << libcmd.str() << std::endl;
 
     FILE *libstr = popen(libcmd.str().c_str(), "r");
