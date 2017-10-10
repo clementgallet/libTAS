@@ -52,6 +52,8 @@ DEFINE_ORIG_POINTER(XDestroyWindow);
 DEFINE_ORIG_POINTER(XMapWindow);
 DEFINE_ORIG_POINTER(XMapRaised);
 DEFINE_ORIG_POINTER(XStoreName);
+DEFINE_ORIG_POINTER(XSetWMName);
+DEFINE_ORIG_POINTER(XInternAtom);
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -269,6 +271,29 @@ int XStoreName(Display *display, Window w, const char *window_name)
     WindowTitle::setUpdateFunc([display, w] (const char* t) {orig::XStoreName(display, w, t);});
 
     return orig::XStoreName(display, w, window_name);
+}
+
+void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
+{
+    debuglog(LCF_WINDOW, __func__, " call with name ", text_prop->value, " and format ", text_prop->format);
+    LINK_NAMESPACE(XSetWMName, nullptr);
+    Atom encoding = text_prop->encoding;
+
+    WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
+    WindowTitle::setUpdateFunc([display, w, encoding] (const char* t) {
+        XTextProperty prop;
+        XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
+        orig::XSetWMName(display, w, &prop);
+    });
+
+    return orig::XSetWMName(display, w, text_prop);
+}
+
+Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
+{
+    debuglog(LCF_WINDOW, __func__, " call with atom ", atom_name);
+    LINK_NAMESPACE(XInternAtom, nullptr);
+    return orig::XInternAtom(display, atom_name, only_if_exists);
 }
 
 
