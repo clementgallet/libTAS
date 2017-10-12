@@ -18,12 +18,8 @@
  */
 
 #include "xevents.h"
-#include "../logging.h"
-#include "../hook.h"
-//#include "inputs.h"
-//#include <X11/XKBlib.h>
-//#include <cstring> // memset
-//#include "../../shared/AllInputs.h"
+#include "logging.h"
+#include "hook.h"
 
 namespace libtas {
 
@@ -47,6 +43,8 @@ static bool filteredXEvent(XEvent *event)
         case ButtonPress:
         case ButtonRelease:
         case MotionNotify:
+        case FocusIn:
+        case FocusOut:
             return true;
         default:
             return false;
