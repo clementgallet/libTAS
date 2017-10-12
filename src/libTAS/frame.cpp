@@ -107,6 +107,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 {
     debuglog(LCF_FRAME, "Enter frame boundary");
 
+    if (is_exiting) {
+        debuglog(LCF_FRAME, "Game is exiting: skipping frame boundary");
+        detTimer.flushDelay();
+        NATIVECALL(draw());
+        return;
+    }
+
     if (!drawFB)
         nondraw_frame_counter++;
 

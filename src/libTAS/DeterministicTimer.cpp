@@ -159,6 +159,11 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     }
 }
 
+void DeterministicTimer::flushDelay()
+{
+    addedDelay = {0, 0};
+}
+
 void DeterministicTimer::exitFrameBoundary()
 {
     //std::lock_guard<std::mutex> lock(mutex);

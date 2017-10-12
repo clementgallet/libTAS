@@ -64,6 +64,9 @@ public:
     /* Add a delay in the timer, and sleep */
 	void addDelay(struct timespec delayTicks);
 
+    /* Flush the accumulated timer delay. Used when game is exiting */
+	void flushDelay();
+
     /* In specific situations, we must fake advancing timer.
      * This function temporarily fake adding ticks to the timer.
      * To be used like this:

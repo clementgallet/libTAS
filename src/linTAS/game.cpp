@@ -33,6 +33,7 @@
 #include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
+#include <signal.h> // kill
 
 MovieFile movie;
 
@@ -125,7 +126,9 @@ static void executeGame(Context* context)
             /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
              * print and pause when one signal is sent */
             "-ex", "handle SIGUSR1 nostop noprint",
-            "-ex", "handle SIGUSR2 nostop noprint",
+            "-ex", "handle SIGUSR1 nostop noprint",
+            "-ex", "handle SIGPWR nostop noprint", // used a lot in some games
+            "-ex", "handle SIGXCPU nostop noprint", // used a lot in some games
             "-ex", "run",
             context->gamepath.c_str(),
             (char*) NULL);
@@ -271,6 +274,16 @@ void launchGame(Context* context)
     {
         /* Wait for frame boundary */
         message = receiveMessage();
+
+        /* Check if game is still running */
+        if (message != MSGB_QUIT) {
+            int ret = kill(context->game_pid, 0);
+            if (ret < 0 && errno == ESRCH) {
+                std::string* alert_str = new std::string("It seems the game has crashed...");
+                Fl::awake(alert_dialog, alert_str);
+                break;
+            }
+        }
 
         while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
             std::string* alert_str;
