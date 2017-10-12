@@ -102,7 +102,7 @@ void generateKeyUpEvents(void)
                 event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]);
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
-                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode ", event.xkey.keycode);
             }
@@ -175,7 +175,7 @@ void generateKeyDownEvents(void)
                 event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]);
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
-                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
             }
@@ -631,7 +631,7 @@ void generateMouseMotionEvents(void)
         event.xmotion.window = gameXWindow;
         event.xmotion.time = timestamp;
 
-        XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+        OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
     }
 
     /* Upload the old AllInput struct */
@@ -720,7 +720,7 @@ void generateMouseButtonEvents(void)
                 event.xbutton.y_root = event.xbutton.y;
                 event.xbutton.button = xbuttons[bi];
 
-                XSendEvent(gameDisplay, gameXWindow, False, 0, &event);
+                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
             }
 
             /* Upload the old AllInput struct */

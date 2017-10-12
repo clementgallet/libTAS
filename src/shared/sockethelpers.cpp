@@ -40,7 +40,7 @@ bool initSocketProgram(void)
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
     socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
-    struct timespec tim = {0, 100000000L};
+    struct timespec tim = {0, 500L*1000L*1000L};
 
     const int MAX_RETRIES = 10;
     int retry = 0;

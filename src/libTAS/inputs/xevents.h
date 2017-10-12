@@ -27,7 +27,15 @@
 namespace libtas {
 
 OVERRIDE int XNextEvent(Display *display, XEvent *event_return);
+OVERRIDE int XPeekEvent(Display *display, XEvent *event_return);
+OVERRIDE int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return);
+OVERRIDE Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return);
+OVERRIDE int XMaskEvent(Display *display, long event_mask, XEvent *event_return);
+OVERRIDE Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return);
+OVERRIDE Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return);
+OVERRIDE Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *event_return);
 OVERRIDE int XPending(Display *display);
+OVERRIDE Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
 
 }
 
