@@ -35,6 +35,7 @@
 #include "checkpoint/ThreadManager.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
+#include "EventQueue.h"
 
 namespace libtas {
 
@@ -254,6 +255,33 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_FRAME, "Leave frame boundary");
+}
+
+static void pushQuitEvent(void)
+{
+    if (game_info.video & GameInfo::SDL1) {
+        SDL1::SDL_Event ev;
+        ev.type = SDL1::SDL_QUIT;
+        sdlEventQueue.insert(&ev);
+    }
+
+    else if (game_info.video & GameInfo::SDL2) {
+        SDL_Event ev;
+        ev.type = SDL_QUIT;
+        sdlEventQueue.insert(&ev);
+    }
+
+    else {
+        GlobalNoLog gnl;
+        XEvent xev;
+        xev.xclient.type = ClientMessage;
+        xev.xclient.window = gameXWindow;
+        xev.xclient.message_type = XInternAtom(gameDisplay, "WM_PROTOCOLS", true);
+        xev.xclient.format = 32;
+        xev.xclient.data.l[0] = XInternAtom(gameDisplay, "WM_DELETE_WINDOW", False);
+        xev.xclient.data.l[1] = CurrentTime;
+        OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, NoEventMask, &xev));
+    }
 }
 
 #ifdef LIBTAS_ENABLE_HUD

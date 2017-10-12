@@ -31,9 +31,6 @@ namespace libtas {
  */
 void pushNativeEvents(void);
 
-/* Add a quit event in the event queue. */
-void pushQuitEvent(void);
-
 /* Return if the SDL 1 event must be passed to the game or be filtered */
 bool filterSDL1Event(SDL1::SDL_Event *event);
 

@@ -71,23 +71,6 @@ void pushNativeEvents(void)
     }
 }
 
-
-void pushQuitEvent(void)
-{
-    int SDLver = get_sdlversion();
-    if (SDLver == 1) {
-        SDL1::SDL_Event ev;
-        ev.type = SDL1::SDL_QUIT;
-        sdlEventQueue.insert(&ev);
-    }
-
-    if (SDLver == 2) {
-        SDL_Event ev;
-        ev.type = SDL_QUIT;
-        sdlEventQueue.insert(&ev);
-    }
-}
-
 /* Override */ void SDL_PumpEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
