@@ -41,6 +41,7 @@ static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
 #endif
 static Fl_Callback config_input_cb;
+static Fl_Callback ram_search_cb;
 static Fl_Callback config_executable_cb;
 static Fl_Callback sound_frequency_cb;
 static Fl_Callback sound_bitdepth_cb;
@@ -211,6 +212,7 @@ void MainWindow::build(Context* c)
     executable_window = new ExecutableWindow(c);
     controller_window = new ControllerWindow(c);
     gameinfo_window = new GameInfoWindow(c);
+    ramsearch_window = new RamSearchWindow(c);
 
     window->show();
 
@@ -391,6 +393,7 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {"12%", 0, slowmo_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
             {nullptr},
         {"Game information...", 0, game_info_cb},
+        {"Ram Search...", 0, ram_search_cb},
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
@@ -963,6 +966,16 @@ void config_input_cb(Fl_Widget* w, void*)
     mw.input_window->window->show();
 
     while (mw.input_window->window->shown()) {
+        Fl::wait();
+    }
+}
+
+void ram_search_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.ramsearch_window->window->show();
+
+    while (mw.ramsearch_window->window->shown()) {
         Fl::wait();
     }
 }

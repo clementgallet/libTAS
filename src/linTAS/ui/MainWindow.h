@@ -40,6 +40,7 @@
 #include "InputWindow.h"
 #include "ControllerWindow.h"
 #include "GameInfoWindow.h"
+#include "RamSearchWindow.h"
 
 class MainWindow {
     public:
@@ -69,6 +70,7 @@ class MainWindow {
         ExecutableWindow* executable_window;
         ControllerWindow* controller_window;
         GameInfoWindow* gameinfo_window;
+        RamSearchWindow* ramsearch_window;
 
         Fl_Button *launch;
         Fl_Button *launch_gdb;
