@@ -21,36 +21,27 @@
 #define LINTAS_RAMWATCH_H_INCLUDED
 
 #include "CompareEnums.h"
+#include "IRamWatch.h"
 #include <cstdint>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <cerrno>
 #include <iostream>
+#include <sstream>
 
 template <class T>
-class RamWatch {
+class RamWatch : public IRamWatch {
 public:
-
-    enum CompareType {
-        ComparePrevious,
-        CompareValue,
-    };
-
-    enum CompareOperator {
-        Equal,
-        NotEqual,
-        Less,
-        Greater,
-        LessEqual,
-        GreaterEqual,
-    };
-
-    uintptr_t address;
     T previous_value;
 
-    static ssize_t last_read;
-
-    static pid_t game_pid;
+    std::string get_line()
+    {
+        std::ostringstream oss;
+        oss << std::hex << address << '\t';
+        oss << std::dec << get_value() << '\t';
+        oss << previous_value;
+        return oss.str();
+    }
 
     T get_value()
     {
@@ -97,14 +88,19 @@ public:
         return false;
     }
 
-    bool search(CompareType compare_type, CompareOperator compare_operator, T compare_value)
+    bool search(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
     {
         T value = get_value(); // sets last_read == -1 if error
         if (last_read == -1)
             return true;
 
-        if (compare_type == CompareType::ComparePrevious) {
+        T compare_value;
+
+        if (compare_type == CompareType::Previous) {
             compare_value = previous_value;
+        }
+        if (compare_type == CompareType::Value) {
+            compare_value = static_cast<T>(compare_value_db);
         }
 
         switch(compare_operator) {
@@ -125,11 +121,11 @@ public:
                     return true;
                 break;
             case CompareOperator::LessEqual:
-                if (value >= compare_value)
+                if (value > compare_value)
                     return true;
                 break;
             case CompareOperator::GreaterEqual:
-                if (value <= compare_value)
+                if (value < compare_value)
                     return true;
                 break;
         }
@@ -138,8 +134,5 @@ public:
         return false;
     }
 };
-
-template <class T> ssize_t RamWatch<T>::last_read;
-template <class T> pid_t RamWatch<T>::game_pid;
 
 #endif

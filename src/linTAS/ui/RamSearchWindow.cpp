@@ -24,11 +24,10 @@
 // #include <X11/XKBlib.h>
 // #include <FL/names.h>
 // #include <FL/x.H>
+#include "../ramsearch/CompareEnums.h"
 
 static Fl_Callback new_cb;
 static Fl_Callback search_cb;
-template <class T>
-static void new_ram_watches(RamSearchWindow* rsw);
 
 RamSearchWindow::RamSearchWindow(Context* c) : context(c)
 {
@@ -128,46 +127,7 @@ static void new_cb(Fl_Widget* w, void* v)
 {
     RamSearchWindow* rsw = (RamSearchWindow*) v;
 
-    /* Build the RamSearch object using the type set by the user as template */
-    switch (rsw->type_choice->value()) {
-        case 0:
-            new_ram_watches<unsigned char>(rsw);
-            break;
-        case 1:
-            new_ram_watches<char>(rsw);
-            break;
-        case 2:
-            new_ram_watches<unsigned short>(rsw);
-            break;
-        case 3:
-            new_ram_watches<short>(rsw);
-            break;
-        case 4:
-            new_ram_watches<unsigned int>(rsw);
-            break;
-        case 5:
-            new_ram_watches<int>(rsw);
-            break;
-        case 6:
-            new_ram_watches<uint64_t>(rsw);
-            break;
-        case 7:
-            new_ram_watches<int64_t>(rsw);
-            break;
-        case 8:
-            new_ram_watches<float>(rsw);
-            break;
-        case 9:
-            new_ram_watches<double>(rsw);
-            break;
-    }
-}
-
-template <class T>
-static void new_ram_watches(RamSearchWindow* rsw)
-{
-    RamSearch<T> *typed_ram_search = new RamSearch<T>();
-
+    /* Build the memory region flag variable */
     int memregions = 0;
     if (rsw->mem_text->value())
         memregions |= MemSection::MemText;
@@ -190,24 +150,74 @@ static void new_ram_watches(RamSearchWindow* rsw)
     if (rsw->mem_special->value())
         memregions |= MemSection::MemSpecial;
 
-    typed_ram_search->new_watches(rsw->context->game_pid, memregions);
-
-    rsw->address_browser->clear();
-    for (auto &ramwatch : typed_ram_search->ramwatches) {
-        std::ostringstream oss;
-        oss << std::hex << ramwatch.address << '\t';
-        oss << std::dec << ramwatch.previous_value << '\t';
-        oss << ramwatch.previous_value << '\t';
-        rsw->address_browser->add(oss.str().c_str());
+    /* Call the RamSearch new function using the right type as template */
+    switch (rsw->type_choice->value()) {
+        case 0:
+            rsw->ram_search.new_watches<unsigned char>(rsw->context->game_pid, memregions);
+            break;
+        case 1:
+            rsw->ram_search.new_watches<char>(rsw->context->game_pid, memregions);
+            break;
+        case 2:
+            rsw->ram_search.new_watches<unsigned short>(rsw->context->game_pid, memregions);
+            break;
+        case 3:
+            rsw->ram_search.new_watches<short>(rsw->context->game_pid, memregions);
+            break;
+        case 4:
+            rsw->ram_search.new_watches<unsigned int>(rsw->context->game_pid, memregions);
+            break;
+        case 5:
+            rsw->ram_search.new_watches<int>(rsw->context->game_pid, memregions);
+            break;
+        case 6:
+            rsw->ram_search.new_watches<int64_t>(rsw->context->game_pid, memregions);
+            break;
+        case 7:
+            rsw->ram_search.new_watches<uint64_t>(rsw->context->game_pid, memregions);
+            break;
+        case 8:
+            rsw->ram_search.new_watches<float>(rsw->context->game_pid, memregions);
+            break;
+        case 9:
+            rsw->ram_search.new_watches<double>(rsw->context->game_pid, memregions);
+            break;
     }
 
-    rsw->ram_search.reset(typed_ram_search);
-}
+    rsw->address_browser->clear();
+    for (auto &ramwatch : rsw->ram_search.ramwatches) {
+        rsw->address_browser->add(ramwatch->get_line().c_str());
+    }
 
+}
 
 static void search_cb(Fl_Widget* w, void* v)
 {
     RamSearchWindow* rsw = (RamSearchWindow*) v;
+
+    CompareType compare_type = CompareType::Previous;
+    if (rsw->compare_value->value())
+        compare_type = CompareType::Value;
+
+    CompareOperator compare_operator = CompareOperator::Equal;
+    if (rsw->operator_not_equal->value())
+        compare_operator = CompareOperator::NotEqual;
+    if (rsw->operator_less->value())
+        compare_operator = CompareOperator::Less;
+    if (rsw->operator_greater->value())
+        compare_operator = CompareOperator::Greater;
+    if (rsw->operator_less_equal->value())
+        compare_operator = CompareOperator::LessEqual;
+    if (rsw->operator_greater_equal->value())
+        compare_operator = CompareOperator::GreaterEqual;
+
+    rsw->ram_search.search_watches(compare_type, compare_operator, 0);
+
+    rsw->address_browser->clear();
+    for (auto &ramwatch : rsw->ram_search.ramwatches) {
+        rsw->address_browser->add(ramwatch->get_line().c_str());
+    }
+
 }
 
 // void InputWindow::update()

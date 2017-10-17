@@ -17,21 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_COMPAREENUMS_H_INCLUDED
-#define LINTAS_COMPAREENUMS_H_INCLUDED
+#ifndef LINTAS_IRAMWATCH_H_INCLUDED
+#define LINTAS_IRAMWATCH_H_INCLUDED
 
-enum class CompareType {
-    Previous,
-    Value,
-};
+#include "CompareEnums.h"
+#include <cstdint>
+#include <sys/types.h>
+#include <string>
 
-enum class CompareOperator {
-    Equal,
-    NotEqual,
-    Less,
-    Greater,
-    LessEqual,
-    GreaterEqual,
+class IRamWatch {
+public:
+    virtual ~IRamWatch() = default;
+    virtual std::string get_line() = 0;
+    virtual bool search(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
+
+    uintptr_t address;
+    static ssize_t last_read;
+    static pid_t game_pid;
 };
 
 #endif

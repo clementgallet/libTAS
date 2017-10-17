@@ -31,7 +31,6 @@
 
 // #include <X11/Xlib.h>
 #include "../Context.h"
-#include "../ramsearch/IRamSearch.h"
 #include "../ramsearch/RamSearch.h"
 #include <memory>
 
@@ -39,7 +38,7 @@ class RamSearchWindow {
     public:
         RamSearchWindow(Context *c);
         Context *context;
-        std::unique_ptr<IRamSearch> ram_search;
+        RamSearch ram_search;
 
         Fl_Double_Window *window;
 

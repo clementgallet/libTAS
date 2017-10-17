@@ -17,25 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_IRAMSEARCH_H_INCLUDED
-#define LINTAS_IRAMSEARCH_H_INCLUDED
+#include "IRamWatch.h"
 
-// #include "../shared/RamWatch.h"
-
-// #include "../shared/AllInputs.h"
-// #include "../shared/SharedConfig.h"
-// #include <X11/Xlib.h>
-// #include <X11/keysym.h>
-// #include <map>
-// #include <vector>
-// #include <array>
-// #include <forward_list>
-
-class IRamSearch {
-
-public:
-   // virtual void new_watches(pid_t pid, int type_filter) = 0;
-   virtual ~IRamSearch() { }
-};
-
-#endif
+ssize_t IRamWatch::last_read;
+pid_t IRamWatch::game_pid;

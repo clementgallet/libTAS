@@ -20,8 +20,8 @@
 #ifndef LINTAS_RAMSEARCH_H_INCLUDED
 #define LINTAS_RAMSEARCH_H_INCLUDED
 
+#include "IRamWatch.h"
 #include "RamWatch.h"
-#include "IRamSearch.h"
 #include "CompareEnums.h"
 #include <sys/types.h>
 #include "MemSection.h"
@@ -34,60 +34,27 @@
 // #include <X11/keysym.h>
 // #include <map>
 // #include <vector>
-// #include <array>
+#include <memory>
 #include <forward_list>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <iostream>
 
-template <class T>
-class RamSearch : public IRamSearch {
+class RamSearch {
 
     public:
-        std::forward_list<RamWatch<T>> ramwatches;
+        std::forward_list<std::unique_ptr<IRamWatch>> ramwatches;
         pid_t game_pid;
 
-        void attach() {
-            /* Try to attach to the game process */
-            if (ptrace(PTRACE_ATTACH, game_pid, nullptr, nullptr) != 0)
-            {
-                /* if ptrace() gives EPERM, it might be because another process is already attached */
-                if (errno == EPERM)
-                {
-                    std::cerr << "Process is currently attached" << std::endl;
-                }
-                return;
-            }
+        void attach();
+        void detach();
 
-            int status = 0;
-            pid_t waitret = waitpid(game_pid, &status, 0);
-            if (waitret != game_pid)
-            {
-                std::cerr << "Function waitpid failed" << std::endl;
-                return;
-            }
-            if (!WIFSTOPPED(status))
-            {
-                std::cerr << "Unhandled status change: " << status << std::endl;
-                return;
-            }
-            if (WSTOPSIG(status) != SIGSTOP)
-            {
-                std::cerr << "Wrong stop signal: " << WSTOPSIG(status) << std::endl;
-                return;
-            }
-        }
-
-        void detach()
-        {
-            ptrace(PTRACE_DETACH, game_pid, nullptr, nullptr);
-        }
-
+        template <class T>
         void new_watches(pid_t pid, int type_filter)
         {
             game_pid = pid;
             ramwatches.clear();
-            RamWatch<T>::game_pid = pid;
+            IRamWatch::game_pid = pid;
 
             /* Compose the filename for the /proc memory map, and open it. */
             std::ostringstream oss;
@@ -106,7 +73,7 @@ class RamSearch : public IRamSearch {
                 MemSection section;
                 section.readMap(line);
 
-                std::cerr << "Found section at addr " <<  (void*)section.addr << " of type " << section.type << std::endl;
+                // std::cerr << "Found section at addr " <<  (void*)section.addr << " of type " << section.type << std::endl;
 
                 /* Filter based on type */
                 if (!(type_filter & section.type))
@@ -114,9 +81,9 @@ class RamSearch : public IRamSearch {
 
                 /* For now we only store aligned addresses */
                 for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T)) {
-                    RamWatch<T> watch;
-                    watch.address = addr;
-                    ramwatches.push_front(watch);
+                    std::unique_ptr<IRamWatch> watch(new RamWatch<T>);
+                    watch->address = addr;
+                    ramwatches.push_front(std::move(watch));
                 }
             }
 
@@ -125,19 +92,22 @@ class RamSearch : public IRamSearch {
             /* Update the previous_value attribute of each RamWatch object in the list,
              * and remove objects from the list where we couldn't access its address.
              */
-            ramwatches.remove_if([] (RamWatch<T> &watch) {return watch.update();});
+            ramwatches.remove_if([] (std::unique_ptr<IRamWatch> &watch) {return dynamic_cast<RamWatch<T>*>(watch.get())->update();});
+            // ramwatches.remove_if([] (auto &watch) {return dynamic_cast<RamWatch<T>&>(watch).update();});
+            // ramwatches.remove_if([] (IRamWatch &watch) {return watch.update();});
 
             detach();
         }
 
-        void search_watches(CompareType compare_type, CompareOperator compare_operator, T compare_value)
+        void search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value)
         {
             attach();
 
             /* Update the previous_value attribute of each RamWatch object in the list,
              * and remove objects from the list where we couldn't access its address.
              */
-            ramwatches.remove_if([compare_type, compare_operator, compare_value] (RamWatch<T> &watch) {return watch.search(compare_type, compare_operator, compare_value);});
+            // ramwatches.remove_if([compare_type, compare_operator, compare_value] (RamWatch<T> &watch) {return watch.search(compare_type, compare_operator, compare_value);});
+            ramwatches.remove_if([compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);});
 
             detach();
         }
