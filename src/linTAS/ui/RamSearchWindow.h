@@ -29,6 +29,7 @@
 #include <Fl/Fl_Choice.H>
 #include <Fl/Fl_Check_Button.H>
 #include <Fl/Fl_Box.H>
+#include <Fl/Fl_Float_Input.H>
 
 // #include <X11/Xlib.h>
 #include "../Context.h"
@@ -65,7 +66,9 @@ class RamSearchWindow {
 
         Fl_Pack *compare_pack;
         Fl_Radio_Round_Button *compare_previous;
+        // Fl_Pack *compare_value_pack;
         Fl_Radio_Round_Button *compare_value;
+        Fl_Float_Input *comparing_value;
 
         Fl_Pack *operator_pack;
         Fl_Radio_Round_Button *operator_equal;
@@ -75,8 +78,11 @@ class RamSearchWindow {
         Fl_Radio_Round_Button *operator_less_equal;
         Fl_Radio_Round_Button *operator_greater_equal;
 
+        Fl_Pack *type_pack;
         Fl_Choice *type_choice;
         static Fl_Menu_Item type_items[];
+        Fl_Choice *display_choice;
+        static Fl_Menu_Item display_items[];
 
         Fl_Button *new_button;
         Fl_Button *search_button;

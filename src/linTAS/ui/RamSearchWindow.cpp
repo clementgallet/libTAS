@@ -48,44 +48,53 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
 
     config_pack = new Fl_Pack(510, 50, 280, 680, "");
     config_pack->type(Fl_Pack::VERTICAL);
-    config_pack->spacing(50);
+    config_pack->spacing(30);
 
     mem_pack = new Fl_Pack(0, 0, 280, 160, "Included Memory Regions");
     mem_pack->type(Fl_Pack::HORIZONTAL);
+    mem_pack->box(FL_ENGRAVED_FRAME);
 
-    mem_col1 = new Fl_Pack(0, 0, 140, 160, "");
+    mem_col1 = new Fl_Pack(0, 0, 120, 160, "");
     mem_col1->type(Fl_Pack::VERTICAL);
 
-    mem_text = new Fl_Check_Button(0, 0, 140, 30, "Text");
-    mem_data_ro = new Fl_Check_Button(0, 0, 140, 30, "RO Data");
-    mem_data_rw = new Fl_Check_Button(0, 0, 140, 30, "RW Data");
-    mem_bss = new Fl_Check_Button(0, 0, 140, 30, "BSS");
-    mem_heap = new Fl_Check_Button(0, 0, 140, 30, "Heap");
+    mem_text = new Fl_Check_Button(0, 0, 120, 30, "Text");
+    mem_data_ro = new Fl_Check_Button(0, 0, 120, 30, "RO Data");
+    mem_data_rw = new Fl_Check_Button(0, 0, 120, 30, "RW Data");
+    mem_bss = new Fl_Check_Button(0, 0, 120, 30, "BSS");
+    mem_heap = new Fl_Check_Button(0, 0, 120, 30, "Heap");
 
     mem_col1->end();
-    mem_col2 = new Fl_Pack(0, 0, 140, 200, "");
+    mem_col2 = new Fl_Pack(0, 0, 155, 160, "");
     mem_col2->type(Fl_Pack::VERTICAL);
 
-    mem_file_mapping = new Fl_Check_Button(0, 0, 140, 30, "File Mapping");
-    mem_anonymous_mapping_ro = new Fl_Check_Button(0, 0, 140, 30, "Anon RO Mapping");
-    mem_anonymous_mapping_rw = new Fl_Check_Button(0, 0, 140, 30, "Anon RW Mapping");
-    mem_stack = new Fl_Check_Button(0, 0, 140, 30, "Stack");
-    mem_special = new Fl_Check_Button(0, 0, 140, 30, "Special");
+    mem_file_mapping = new Fl_Check_Button(0, 0, 155, 30, "File Mapping");
+    mem_anonymous_mapping_ro = new Fl_Check_Button(0, 0, 155, 30, "Anon RO Mapping");
+    mem_anonymous_mapping_rw = new Fl_Check_Button(0, 0, 155, 30, "Anon RW Mapping");
+    mem_stack = new Fl_Check_Button(0, 0, 155, 30, "Stack");
+    mem_special = new Fl_Check_Button(0, 0, 155, 30, "Special");
 
     mem_col2->end();
     mem_pack->end();
 
-    compare_pack = new Fl_Pack(0, 0, 280, 100, "Compare To / By");
+    compare_pack = new Fl_Pack(0, 0, 280, 100, "Compare To");
     compare_pack->type(Fl_Pack::VERTICAL);
+    compare_pack->box(FL_ENGRAVED_FRAME);
 
     compare_previous = new Fl_Radio_Round_Button(0, 0, 280, 30, "Previous Value");
     compare_previous->set();
-    compare_value = new Fl_Radio_Round_Button(0, 0, 280, 30, "Specific Value");
+
+    // compare_value_pack = new Fl_Pack(0, 0, 280, 30);
+    // compare_value_pack->type(Fl_Pack::HORIZONTAL);
+    compare_value = new Fl_Radio_Round_Button(0, 0, 280, 30, "Specific Value:");
+    comparing_value = new Fl_Float_Input(0, 0, 280, 30);
+    // compare_value_pack->end();
 
     compare_pack->end();
 
     operator_pack = new Fl_Pack(0, 0, 280, 200, "Comparison Operator");
     operator_pack->type(Fl_Pack::VERTICAL);
+    operator_pack->align(FL_ALIGN_TOP_LEFT);
+    operator_pack->box(FL_ENGRAVED_FRAME);
 
     operator_equal = new Fl_Radio_Round_Button(0, 0, 280, 30, "Equal To");
     operator_equal->set();
@@ -97,10 +106,18 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
 
     operator_pack->end();
 
-    type_choice = new Fl_Choice(0, 0, 280, 30, "Value Type");
+    type_pack = new Fl_Pack(0, 0, 280, 30);
+    type_pack->type(Fl_Pack::HORIZONTAL);
+
+    type_choice = new Fl_Choice(0, 0, 160, 30, "Type");
     type_choice->align(FL_ALIGN_TOP_LEFT);
     type_choice->menu(type_items);
-    // type_choice->callback(vcodec_cb, this);
+
+    display_choice = new Fl_Choice(0, 0, 120, 30, "Display");
+    display_choice->align(FL_ALIGN_TOP_LEFT);
+    display_choice->menu(display_items);
+
+    type_pack->end();
 
     config_pack->end();
 
@@ -127,14 +144,21 @@ Fl_Menu_Item RamSearchWindow::type_items[] = {
     {nullptr}
 };
 
+Fl_Menu_Item RamSearchWindow::display_items[] = {
+    {"Decimal"},
+    {"Hexadecimal"},
+    {nullptr}
+};
+
 void RamSearchWindow::update()
 {
     if (address_browser->size() > 1000)
         return;
 
     int i = 1;
+    bool hex = display_choice->value() == 1;
     for (auto &ramwatch : ram_search.ramwatches) {
-        address_browser->text(i++, ramwatch->get_line());
+        address_browser->text(i++, ramwatch->get_line(hex));
     }
 }
 
@@ -199,9 +223,10 @@ static void new_cb(Fl_Widget* w, void* v)
             break;
     }
 
+    bool hex = (rsw->display_choice->value() == 1);
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line_update());
+        rsw->address_browser->add(ramwatch->get_line_update(hex));
     }
 
     std::ostringstream oss;
@@ -219,8 +244,11 @@ static void search_cb(Fl_Widget* w, void* v)
     RamSearchWindow* rsw = (RamSearchWindow*) v;
 
     CompareType compare_type = CompareType::Previous;
-    if (rsw->compare_value->value())
+    double compvalue = 0;
+    if (rsw->compare_value->value()) {
         compare_type = CompareType::Value;
+        compvalue = strtod(rsw->comparing_value->value(), nullptr);
+    }
 
     CompareOperator compare_operator = CompareOperator::Equal;
     if (rsw->operator_not_equal->value())
@@ -234,11 +262,12 @@ static void search_cb(Fl_Widget* w, void* v)
     if (rsw->operator_greater_equal->value())
         compare_operator = CompareOperator::GreaterEqual;
 
-    rsw->ram_search.search_watches(compare_type, compare_operator, 0);
+    rsw->ram_search.search_watches(compare_type, compare_operator, compvalue);
 
+    bool hex = rsw->display_choice->value() == 1;
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line());
+        rsw->address_browser->add(ramwatch->get_line(hex));
     }
 
     std::ostringstream oss;

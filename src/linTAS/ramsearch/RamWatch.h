@@ -30,30 +30,30 @@
 #include <sstream>
 #include <inttypes.h>
 
-template <typename T> static inline const char* fmt_from_type() {return "%lx\t%d\t%d";}
-template <> inline const char* fmt_from_type<float>() {return "%lx\t%g\t%g";}
-template <> inline const char* fmt_from_type<double>() {return "%lx\t%g\t%g";}
-template <> inline const char* fmt_from_type<int64_t>() {return "%lx\t%" PRId64 "\t%" PRId64;}
-template <> inline const char* fmt_from_type<uint64_t>() {return "%lx\t%" PRIu64 "\t%" PRIu64;}
+template <typename T> static inline const char* fmt_from_type(bool hex) {return hex?("%" PRIxPTR "\t%x\t%x"):("%" PRIxPTR "\t%d\t%d");}
+template <> inline const char* fmt_from_type<float>(bool hex) {return hex?("%" PRIxPTR "\t%a\t%a"):("%" PRIxPTR "\t%g\t%g");}
+template <> inline const char* fmt_from_type<double>(bool hex) {return hex?("%" PRIxPTR "\t%a\t%a"):("%" PRIxPTR "\t%g\t%g");}
+template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?("%" PRIxPTR "\t%" PRIx64 "\t%" PRIx64):("%" PRIxPTR "\t%" PRId64 "\t%" PRId64);}
+template <> inline const char* fmt_from_type<uint64_t>(bool hex) {return hex?("%" PRIxPTR "\t%" PRIx64 "\t%" PRIx64):("%" PRIxPTR "\t%" PRIu64 "\t%" PRIu64);}
 
 template <class T>
 class RamWatch : public IRamWatch {
 public:
     T previous_value;
 
-    const char* get_line()
+    const char* get_line(bool hex)
     {
         static char line[128];
         /* Use snprintf instead of ostringstream for a good speedup */
-        snprintf(line, 128, fmt_from_type<T>(), address, get_value(), previous_value);
+        snprintf(line, 128, fmt_from_type<T>(hex), address, get_value(), previous_value);
         return line;
     }
 
-    const char* get_line_update()
+    const char* get_line_update(bool hex)
     {
         previous_value = get_value();
         static char line[128];
-        snprintf(line, 128, fmt_from_type<T>(), address, previous_value, previous_value);
+        snprintf(line, 128, fmt_from_type<T>(hex), address, previous_value, previous_value);
         return line;
     }
 
