@@ -28,29 +28,33 @@
 #include <cerrno>
 #include <iostream>
 #include <sstream>
+#include <inttypes.h>
+
+template <typename T> static const char* fmt_from_type() {return "%lx\t%d\t%d";}
+template <> const char* fmt_from_type<float>() {return "%lx\t%g\t%g";}
+template <> const char* fmt_from_type<double>() {return "%lx\t%g\t%g";}
+template <> const char* fmt_from_type<int64_t>() {return "%lx\t%" PRId64 "\t%" PRId64;}
+template <> const char* fmt_from_type<uint64_t>() {return "%lx\t%" PRIu64 "\t%" PRIu64;}
 
 template <class T>
 class RamWatch : public IRamWatch {
 public:
     T previous_value;
 
-    std::string get_line()
+    char* get_line()
     {
-        std::ostringstream oss;
-        oss << std::hex << address << '\t';
-        oss << std::dec << get_value() << '\t';
-        oss << previous_value;
-        return oss.str();
+        static char line[128];
+        /* Use snprintf instead of ostringstream for a good speedup */
+        snprintf(line, 128, fmt_from_type<T>(), address, get_value(), previous_value);
+        return line;
     }
 
-    std::string get_line_update()
+    char* get_line_update()
     {
         previous_value = get_value();
-        std::ostringstream oss;
-        oss << std::hex << address << '\t';
-        oss << std::dec << previous_value << '\t';
-        oss << previous_value;
-        return oss.str();
+        static char line[128];
+        snprintf(line, 128, fmt_from_type<T>(), address, previous_value, previous_value);
+        return line;
     }
 
     T get_value()

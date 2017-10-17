@@ -28,8 +28,8 @@
 class IRamWatch {
 public:
     virtual ~IRamWatch() = default;
-    virtual std::string get_line() = 0;
-    virtual std::string get_line_update() = 0;
+    virtual char* get_line() = 0;
+    virtual char* get_line_update() = 0;
     virtual bool search(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
 
     uintptr_t address;

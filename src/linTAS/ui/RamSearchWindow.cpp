@@ -134,7 +134,7 @@ void RamSearchWindow::update()
 
     int i = 1;
     for (auto &ramwatch : ram_search.ramwatches) {
-        address_browser->text(i++, ramwatch->get_line().c_str());
+        address_browser->text(i++, ramwatch->get_line());
     }
 }
 
@@ -201,7 +201,7 @@ static void new_cb(Fl_Widget* w, void* v)
 
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line_update().c_str());
+        rsw->address_browser->add(ramwatch->get_line_update());
     }
 
     std::ostringstream oss;
@@ -238,7 +238,7 @@ static void search_cb(Fl_Widget* w, void* v)
 
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line().c_str());
+        rsw->address_browser->add(ramwatch->get_line());
     }
 
     std::ostringstream oss;
