@@ -18,69 +18,12 @@
  */
 
 #include "RamSearch.h"
-// #include "CompareEnums.h"
-// #include <sys/types.h>
-// #include "MemSection.h"
-// #include <sstream>
-// #include <fstream>
-
-// #include "../shared/AllInputs.h"
-// #include "../shared/SharedConfig.h"
-// #include <X11/Xlib.h>
-// #include <X11/keysym.h>
-// #include <map>
-// #include <vector>
-// #include <array>
-// #include <forward_list>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
 #include <iostream>
-
-void RamSearch::attach() {
-    /* Try to attach to the game process */
-    if (ptrace(PTRACE_ATTACH, game_pid, nullptr, nullptr) != 0)
-    {
-        /* if ptrace() gives EPERM, it might be because another process is already attached */
-        if (errno == EPERM)
-        {
-            std::cerr << "Process is currently attached" << std::endl;
-        }
-        return;
-    }
-
-    int status = 0;
-    pid_t waitret = waitpid(game_pid, &status, 0);
-    if (waitret != game_pid)
-    {
-        std::cerr << "Function waitpid failed" << std::endl;
-        return;
-    }
-    if (!WIFSTOPPED(status))
-    {
-        std::cerr << "Unhandled status change: " << status << std::endl;
-        return;
-    }
-    if (WSTOPSIG(status) != SIGSTOP)
-    {
-        std::cerr << "Wrong stop signal: " << WSTOPSIG(status) << std::endl;
-        return;
-    }
-}
-
-void RamSearch::detach()
-{
-    ptrace(PTRACE_DETACH, game_pid, nullptr, nullptr);
-}
 
 void RamSearch::search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value)
 {
-    attach();
-
     /* Update the previous_value attribute of each RamWatch object in the list,
      * and remove objects from the list where we couldn't access its address.
      */
-    // ramwatches.remove_if([compare_type, compare_operator, compare_value] (RamWatch<T> &watch) {return watch.search(compare_type, compare_operator, compare_value);});
     ramwatches.remove_if([compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);});
-
-    detach();
 }

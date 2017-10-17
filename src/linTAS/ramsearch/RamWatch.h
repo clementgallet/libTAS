@@ -30,18 +30,18 @@
 #include <sstream>
 #include <inttypes.h>
 
-template <typename T> static const char* fmt_from_type() {return "%lx\t%d\t%d";}
-template <> const char* fmt_from_type<float>() {return "%lx\t%g\t%g";}
-template <> const char* fmt_from_type<double>() {return "%lx\t%g\t%g";}
-template <> const char* fmt_from_type<int64_t>() {return "%lx\t%" PRId64 "\t%" PRId64;}
-template <> const char* fmt_from_type<uint64_t>() {return "%lx\t%" PRIu64 "\t%" PRIu64;}
+template <typename T> static inline const char* fmt_from_type() {return "%lx\t%d\t%d";}
+template <> inline const char* fmt_from_type<float>() {return "%lx\t%g\t%g";}
+template <> inline const char* fmt_from_type<double>() {return "%lx\t%g\t%g";}
+template <> inline const char* fmt_from_type<int64_t>() {return "%lx\t%" PRId64 "\t%" PRId64;}
+template <> inline const char* fmt_from_type<uint64_t>() {return "%lx\t%" PRIu64 "\t%" PRIu64;}
 
 template <class T>
 class RamWatch : public IRamWatch {
 public:
     T previous_value;
 
-    char* get_line()
+    const char* get_line()
     {
         static char line[128];
         /* Use snprintf instead of ostringstream for a good speedup */
@@ -49,7 +49,7 @@ public:
         return line;
     }
 
-    char* get_line_update()
+    const char* get_line_update()
     {
         previous_value = get_value();
         static char line[128];
@@ -60,34 +60,13 @@ public:
     T get_value()
     {
         struct iovec local, remote;
-        uint64_t value = 0;
+        T value = 0;
         local.iov_base = static_cast<void*>(&value);
         local.iov_len = sizeof(T);
         remote.iov_base = reinterpret_cast<void*>(address);
         remote.iov_len = sizeof(T);
 
         last_read = process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
-
-        /* Checking for errors */
-        if (last_read == -1) {
-            // switch (errno) {
-            //     case EINVAL:
-            //         std::cerr << "The amount of bytes to read is too big!" << std::endl;
-            //         break;
-            //     case EFAULT:
-            //         std::cerr << "Bad address space of the game process or own process!" << std::endl;
-            //         break;
-            //     case ENOMEM:
-            //         std::cerr << "Could not allocate memory for internal copies of the iovec structures." << std::endl;
-            //         break;
-            //     case EPERM:
-            //         std::cerr << "Do not have permission to read the game process memory." << std::endl;
-            //         break;
-            //     case ESRCH:
-            //         std::cerr << "The game PID does not exist." << std::endl;
-            //         break;
-            // }
-        }
 
         return value;
     }

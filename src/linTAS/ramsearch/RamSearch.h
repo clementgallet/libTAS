@@ -46,9 +46,6 @@ class RamSearch {
         std::forward_list<std::unique_ptr<IRamWatch>> ramwatches;
         pid_t game_pid;
 
-        void attach();
-        void detach();
-
         template <class T>
         void new_watches(pid_t pid, int type_filter)
         {
@@ -86,17 +83,6 @@ class RamSearch {
                     ramwatches.push_front(std::move(watch));
                 }
             }
-
-            // attach();
-
-            /* Update the previous_value attribute of each RamWatch object in the list,
-             * and remove objects from the list where we couldn't access its address.
-             */
-            // ramwatches.remove_if([] (std::unique_ptr<IRamWatch> &watch) {return dynamic_cast<RamWatch<T>*>(watch.get())->update();});
-            // ramwatches.remove_if([] (auto &watch) {return dynamic_cast<RamWatch<T>&>(watch).update();});
-            // ramwatches.remove_if([] (IRamWatch &watch) {return watch.update();});
-
-            // detach();
         }
 
         void search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value);
