@@ -341,6 +341,8 @@ void launchGame(Context* context)
                 break;
             }
 
+            ui.update_ramsearch();
+
             std::array<char, 32> keyboard_state;
             XQueryKeymap(context->display, keyboard_state.data());
             KeySym modifiers = build_modifiers(keyboard_state, context->display);

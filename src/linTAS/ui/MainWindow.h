@@ -118,6 +118,9 @@ class MainWindow {
         /* Update rerecord count */
         void update_rerecordcount();
 
+        /* Update ramsearch values if window is shown */
+        void update_ramsearch();
+
         /* Update UI elements when a config file is loaded */
         void update_config();
 

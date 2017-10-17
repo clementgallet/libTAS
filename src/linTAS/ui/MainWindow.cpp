@@ -608,6 +608,19 @@ void MainWindow::update_rerecordcount()
     Fl::awake();
 }
 
+void MainWindow::update_ramsearch()
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    if (ramsearch_window->window->shown()) {
+        ramsearch_window->update();
+    }
+
+    Fl::unlock();
+    Fl::awake();
+}
+
 void MainWindow::update_config()
 {
     gamepath->value(context->gamepath.c_str());

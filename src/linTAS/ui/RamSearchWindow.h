@@ -28,6 +28,7 @@
 #include <FL/Fl_Pack.H>
 #include <Fl/Fl_Choice.H>
 #include <Fl/Fl_Check_Button.H>
+#include <Fl/Fl_Box.H>
 
 // #include <X11/Xlib.h>
 #include "../Context.h"
@@ -43,6 +44,7 @@ class RamSearchWindow {
         Fl_Double_Window *window;
 
         Fl_Multi_Browser *address_browser;
+        Fl_Box *watch_count;
 
         Fl_Pack *config_pack;
 

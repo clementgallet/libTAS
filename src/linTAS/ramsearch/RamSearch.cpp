@@ -71,3 +71,16 @@ void RamSearch::detach()
 {
     ptrace(PTRACE_DETACH, game_pid, nullptr, nullptr);
 }
+
+void RamSearch::search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value)
+{
+    attach();
+
+    /* Update the previous_value attribute of each RamWatch object in the list,
+     * and remove objects from the list where we couldn't access its address.
+     */
+    // ramwatches.remove_if([compare_type, compare_operator, compare_value] (RamWatch<T> &watch) {return watch.search(compare_type, compare_operator, compare_value);});
+    ramwatches.remove_if([compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);});
+
+    detach();
+}

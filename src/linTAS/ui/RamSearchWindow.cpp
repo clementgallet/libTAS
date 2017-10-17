@@ -34,13 +34,17 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     window = new Fl_Double_Window(800, 700, "Ram Search");
 
     /* Browsers */
-    address_browser = new Fl_Multi_Browser(10, 10, 480, 680, "");
+    address_browser = new Fl_Multi_Browser(10, 10, 480, 630, "");
     // address_browser->callback(select_cb, this);
 
     /* Set three columns */
     static int col_width[] = {160, 160, 160, 0};
     address_browser->column_widths(col_width);
     address_browser->column_char('\t');
+
+    watch_count = new Fl_Box(10, 640, 480, 30);
+    watch_count->box(FL_NO_BOX);
+    watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
     config_pack = new Fl_Pack(510, 50, 280, 680, "");
     config_pack->type(Fl_Pack::VERTICAL);
@@ -123,6 +127,17 @@ Fl_Menu_Item RamSearchWindow::type_items[] = {
     {nullptr}
 };
 
+void RamSearchWindow::update()
+{
+    if (address_browser->size() > 1000)
+        return;
+
+    int i = 1;
+    for (auto &ramwatch : ram_search.ramwatches) {
+        address_browser->text(i++, ramwatch->get_line().c_str());
+    }
+}
+
 static void new_cb(Fl_Widget* w, void* v)
 {
     RamSearchWindow* rsw = (RamSearchWindow*) v;
@@ -186,9 +201,17 @@ static void new_cb(Fl_Widget* w, void* v)
 
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line().c_str());
+        rsw->address_browser->add(ramwatch->get_line_update().c_str());
     }
 
+    std::ostringstream oss;
+    oss << rsw->address_browser->size();
+    oss << " results";
+    if (rsw->address_browser->size() > 1000) {
+        oss << " (not updating because too many entries)";
+    }
+
+    rsw->watch_count->copy_label(oss.str().c_str());
 }
 
 static void search_cb(Fl_Widget* w, void* v)
@@ -218,61 +241,13 @@ static void search_cb(Fl_Widget* w, void* v)
         rsw->address_browser->add(ramwatch->get_line().c_str());
     }
 
-}
+    std::ostringstream oss;
+    oss << "There are ";
+    oss << rsw->address_browser->size();
+    oss << " adresses";
+    if (rsw->address_browser->size() > 1000) {
+        oss << " (not updating because too many entries)";
+    }
 
-// void InputWindow::update()
-// {
-//     /* Update hotkey list */
-//     int index = 1;
-//     for (auto iter : context->config.km.hotkey_list) {
-//         std::string linestr(iter.description);
-//
-//         /* Check if a key is mapped to this hotkey */
-//         for (auto itermap : context->config.km.hotkey_mapping) {
-//             if (itermap.second == iter) {
-//                 linestr += '\t';
-//
-//                 /* Build the key string with modifiers */
-//                 KeySym ks = itermap.first;
-//                 for (ModifierKey modifier : modifier_list) {
-//                     if (ks & modifier.flag) {
-//                         linestr += modifier.description;
-//                         linestr += "+";
-//                         ks ^= modifier.flag;
-//                     }
-//                 }
-//
-//                 linestr += XKeysymToString(ks);
-//                 break;
-//             }
-//         }
-//
-//         /* Modify the text in the browser */
-//         hotkey_browser->text(index, linestr.c_str());
-//         index++;
-//     }
-//
-//     /* Update input list */
-//     index = 1;
-//     for (auto iter : context->config.km.input_list) {
-//         std::string linestr(iter.description);
-//
-//         /* Check if a key is mapped to this input */
-//         for (auto itermap : context->config.km.input_mapping) {
-//             if (itermap.second == iter) {
-//                 linestr += '\t';
-//                 /* Special case for visibility:
-//                  * if mapped to itself print <self> */
-//                 if ((iter.type == IT_KEYBOARD) && (iter.value == itermap.first))
-//                     linestr += "<self>";
-//                 else
-//                     linestr += XKeysymToString(itermap.first);
-//                 break;
-//             }
-//         }
-//
-//         /* Modify the text in the browser */
-//         input_browser->text(index, linestr.c_str());
-//         index++;
-//     }
-// }
+    rsw->watch_count->copy_label(oss.str().c_str());
+}

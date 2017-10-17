@@ -43,6 +43,16 @@ public:
         return oss.str();
     }
 
+    std::string get_line_update()
+    {
+        previous_value = get_value();
+        std::ostringstream oss;
+        oss << std::hex << address << '\t';
+        oss << std::dec << previous_value << '\t';
+        oss << previous_value;
+        return oss.str();
+    }
+
     T get_value()
     {
         struct iovec local, remote;
