@@ -28,6 +28,6 @@ void RamSearch::search_watches(CompareType compare_type, CompareOperator compare
      */
     ramwatches.erase(
         std::remove_if(ramwatches.begin(), ramwatches.end(),
-            [compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);}),
+            [compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->check_update(compare_type, compare_operator, compare_value);}),
         ramwatches.end());
 }

@@ -30,7 +30,8 @@ public:
     virtual ~IRamWatch() = default;
     virtual const char* tostring(bool hex) = 0;
     virtual const char* tostring_current(bool hex) = 0;
-    virtual bool search(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
+    virtual bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
+    virtual bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
     virtual bool query() = 0;
 
     uintptr_t address;

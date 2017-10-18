@@ -250,7 +250,11 @@ static void search_cb(Fl_Widget* w, void* v)
 
     rsw->ram_search.search_watches(compare_type, compare_operator, compvalue);
 
+    /* Update table parameters */
     rsw->address_table->hex = (rsw->display_choice->value() == 1);
+    rsw->address_table->compare_type = compare_type;
+    rsw->address_table->compare_operator = compare_operator;
+    rsw->address_table->compare_value_db = compvalue;
     rsw->address_table->rows(rsw->ram_search.ramwatches.size());
 
     /* Update address count */

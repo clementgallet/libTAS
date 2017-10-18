@@ -81,12 +81,8 @@ public:
         return false;
     }
 
-    bool search(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+    bool check(T value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
     {
-        T value = get_value(); // sets last_read == -1 if error
-        if (last_read == -1)
-            return true;
-
         T compare_value;
 
         if (compare_type == CompareType::Previous) {
@@ -123,8 +119,27 @@ public:
                 break;
         }
 
-        previous_value = value;
         return false;
+    }
+
+    bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+    {
+        T value = get_value(); // sets last_read == -1 if error
+        if (last_read == -1)
+            return true;
+
+        bool res = check(value, compare_type, compare_operator, compare_value_db);
+        previous_value = value;
+        return res;
+    }
+
+    bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+    {
+        T value = get_value(); // sets last_read == -1 if error
+        if (last_read == -1)
+            return true;
+
+        return check(value, compare_type, compare_operator, compare_value_db);
     }
 };
 
