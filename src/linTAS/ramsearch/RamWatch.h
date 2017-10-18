@@ -41,19 +41,19 @@ class RamWatch : public IRamWatch {
 public:
     T previous_value;
 
-    const char* get_line(bool hex)
+    const char* tostring(bool hex)
+    {
+        static char line[128];
+        /* Use snprintf instead of ostringstream for a good speedup */
+        snprintf(line, 128, fmt_from_type<T>(hex), address, previous_value, previous_value);
+        return line;
+    }
+
+    const char* tostring_current(bool hex)
     {
         static char line[128];
         /* Use snprintf instead of ostringstream for a good speedup */
         snprintf(line, 128, fmt_from_type<T>(hex), address, get_value(), previous_value);
-        return line;
-    }
-
-    const char* get_line_update(bool hex)
-    {
-        previous_value = get_value();
-        static char line[128];
-        snprintf(line, 128, fmt_from_type<T>(hex), address, previous_value, previous_value);
         return line;
     }
 
@@ -71,7 +71,7 @@ public:
         return value;
     }
 
-    bool update()
+    bool query()
     {
         T value = get_value(); // sets last_read == -1 if error
         if (last_read == -1)

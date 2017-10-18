@@ -41,6 +41,7 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     static int col_width[] = {160, 160, 160, 0};
     address_browser->column_widths(col_width);
     address_browser->column_char('\t');
+    address_browser->textfont(FL_COURIER);
 
     watch_count = new Fl_Box(10, 640, 480, 30);
     watch_count->box(FL_NO_BOX);
@@ -158,7 +159,7 @@ void RamSearchWindow::update()
     int i = 1;
     bool hex = display_choice->value() == 1;
     for (auto &ramwatch : ram_search.ramwatches) {
-        address_browser->text(i++, ramwatch->get_line(hex));
+        address_browser->text(i++, ramwatch->tostring_current(hex));
     }
 }
 
@@ -226,7 +227,8 @@ static void new_cb(Fl_Widget* w, void* v)
     bool hex = (rsw->display_choice->value() == 1);
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line_update(hex));
+        ramwatch->query();
+        rsw->address_browser->add(ramwatch->tostring(hex));
     }
 
     std::ostringstream oss;
@@ -267,7 +269,7 @@ static void search_cb(Fl_Widget* w, void* v)
     bool hex = rsw->display_choice->value() == 1;
     rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->get_line(hex));
+        rsw->address_browser->add(ramwatch->tostring(hex));
     }
 
     std::ostringstream oss;
