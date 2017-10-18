@@ -29,10 +29,11 @@
 #include <iostream>
 #include <sstream>
 #include <inttypes.h>
+#include <cmath> // std::isfinite
 
 template <typename T> static inline const char* fmt_from_type(bool hex) {return hex?"%x":"%d";}
 template <> inline const char* fmt_from_type<float>(bool hex) {return hex?"%a":"%g";}
-template <> inline const char* fmt_from_type<double>(bool hex) {return hex?"%a":"%g";}
+template <> inline const char* fmt_from_type<double>(bool hex) {return hex?"%la":"%lg";}
 template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?"%" PRIx64:"%" PRId64;}
 template <> inline const char* fmt_from_type<uint64_t>(bool hex) {return hex?"%" PRIx64:"%" PRIu64;}
 
@@ -83,6 +84,10 @@ public:
 
     bool check(T value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
     {
+        /* Check NaN/Inf for float/double */
+        if (!std::isfinite(value))
+            return true;
+
         T compare_value;
 
         if (compare_type == CompareType::Previous) {
