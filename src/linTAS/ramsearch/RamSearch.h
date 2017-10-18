@@ -35,7 +35,7 @@
 // #include <map>
 // #include <vector>
 #include <memory>
-#include <forward_list>
+#include <vector>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <iostream>
@@ -43,7 +43,7 @@
 class RamSearch {
 
     public:
-        std::forward_list<std::unique_ptr<IRamWatch>> ramwatches;
+        std::vector<std::unique_ptr<IRamWatch>> ramwatches;
         pid_t game_pid;
 
         template <class T>
@@ -80,7 +80,7 @@ class RamSearch {
                 for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T)) {
                     std::unique_ptr<IRamWatch> watch(new RamWatch<T>);
                     watch->address = addr;
-                    ramwatches.push_front(std::move(watch));
+                    ramwatches.push_back(std::move(watch));
                 }
             }
         }

@@ -24,12 +24,13 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/Fl_Button.H>
-#include <FL/Fl_Multi_Browser.H>
 #include <FL/Fl_Pack.H>
 #include <Fl/Fl_Choice.H>
 #include <Fl/Fl_Check_Button.H>
 #include <Fl/Fl_Box.H>
 #include <Fl/Fl_Float_Input.H>
+
+#include "RamSearchTable.h"
 
 // #include <X11/Xlib.h>
 #include "../Context.h"
@@ -44,7 +45,7 @@ class RamSearchWindow {
 
         Fl_Double_Window *window;
 
-        Fl_Multi_Browser *address_browser;
+        RamSearchTable *address_table;
         Fl_Box *watch_count;
 
         Fl_Pack *config_pack;

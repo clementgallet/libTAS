@@ -33,15 +33,8 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
 {
     window = new Fl_Double_Window(800, 700, "Ram Search");
 
-    /* Browsers */
-    address_browser = new Fl_Multi_Browser(10, 10, 480, 630, "");
-    // address_browser->callback(select_cb, this);
-
-    /* Set three columns */
-    static int col_width[] = {160, 160, 160, 0};
-    address_browser->column_widths(col_width);
-    address_browser->column_char('\t');
-    address_browser->textfont(FL_COURIER);
+    /* Table */
+    address_table = new RamSearchTable(&ram_search.ramwatches, 10, 10, 480, 630, "");
 
     watch_count = new Fl_Box(10, 640, 480, 30);
     watch_count->box(FL_NO_BOX);
@@ -153,14 +146,8 @@ Fl_Menu_Item RamSearchWindow::display_items[] = {
 
 void RamSearchWindow::update()
 {
-    if (address_browser->size() > 1000)
-        return;
-
-    int i = 1;
-    bool hex = display_choice->value() == 1;
-    for (auto &ramwatch : ram_search.ramwatches) {
-        address_browser->text(i++, ramwatch->tostring_current(hex));
-    }
+    /* This is just to trigger a table redraw */
+    address_table->cols(3);
 }
 
 static void new_cb(Fl_Widget* w, void* v)
@@ -224,20 +211,17 @@ static void new_cb(Fl_Widget* w, void* v)
             break;
     }
 
-    bool hex = (rsw->display_choice->value() == 1);
-    rsw->address_browser->clear();
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
         ramwatch->query();
-        rsw->address_browser->add(ramwatch->tostring(hex));
     }
 
+    rsw->address_table->hex = (rsw->display_choice->value() == 1);
+    rsw->address_table->rows(rsw->ram_search.ramwatches.size());
+
+    /* Update address count */
     std::ostringstream oss;
-    oss << rsw->address_browser->size();
-    oss << " results";
-    if (rsw->address_browser->size() > 1000) {
-        oss << " (not updating because too many entries)";
-    }
-
+    oss << rsw->ram_search.ramwatches.size();
+    oss << " addresses";
     rsw->watch_count->copy_label(oss.str().c_str());
 }
 
@@ -266,19 +250,12 @@ static void search_cb(Fl_Widget* w, void* v)
 
     rsw->ram_search.search_watches(compare_type, compare_operator, compvalue);
 
-    bool hex = rsw->display_choice->value() == 1;
-    rsw->address_browser->clear();
-    for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        rsw->address_browser->add(ramwatch->tostring(hex));
-    }
+    rsw->address_table->hex = (rsw->display_choice->value() == 1);
+    rsw->address_table->rows(rsw->ram_search.ramwatches.size());
 
+    /* Update address count */
     std::ostringstream oss;
-    oss << "There are ";
-    oss << rsw->address_browser->size();
+    oss << rsw->ram_search.ramwatches.size();
     oss << " adresses";
-    if (rsw->address_browser->size() > 1000) {
-        oss << " (not updating because too many entries)";
-    }
-
     rsw->watch_count->copy_label(oss.str().c_str());
 }

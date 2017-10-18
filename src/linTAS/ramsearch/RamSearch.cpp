@@ -18,12 +18,16 @@
  */
 
 #include "RamSearch.h"
-#include <iostream>
+// #include <iostream>
+#include <algorithm>
 
 void RamSearch::search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value)
 {
-    /* Update the previous_value attribute of each RamWatch object in the list,
-     * and remove objects from the list where we couldn't access its address.
+    /* Update the previous_value attribute of each RamWatch object in the vector,
+     * and remove objects from the vector where the search condition returns false.
      */
-    ramwatches.remove_if([compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);});
+    ramwatches.erase(
+        std::remove_if(ramwatches.begin(), ramwatches.end(),
+            [compare_type, compare_operator, compare_value] (std::unique_ptr<IRamWatch> &watch) {return watch->search(compare_type, compare_operator, compare_value);}),
+        ramwatches.end());
 }
