@@ -76,16 +76,15 @@ class RamSearch {
                 if (!(type_filter & section.type))
                     continue;
 
+                /* Reserve the vector space so we avoid multiple reallocations */
+                ramwatches.reserve(ramwatches.size() + section.size/sizeof(T));
+
                 /* For now we only store aligned addresses */
                 for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T)) {
-                    std::unique_ptr<IRamWatch> watch(new RamWatch<T>);
-                    watch->address = addr;
-                    ramwatches.push_back(std::move(watch));
+                    ramwatches.emplace_back(new RamWatch<T>(addr));
                 }
             }
         }
-
-        void search_watches(CompareType compare_type, CompareOperator compare_operator, double compare_value);
 };
 
 #endif

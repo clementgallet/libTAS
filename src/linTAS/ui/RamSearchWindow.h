@@ -29,6 +29,7 @@
 #include <Fl/Fl_Check_Button.H>
 #include <Fl/Fl_Box.H>
 #include <Fl/Fl_Float_Input.H>
+#include <Fl/Fl_Hor_Fill_Slider.H>
 
 #include "RamSearchTable.h"
 
@@ -47,6 +48,7 @@ class RamSearchWindow {
 
         RamSearchTable *address_table;
         Fl_Box *watch_count;
+        Fl_Hor_Fill_Slider *search_progress;
 
         Fl_Pack *config_pack;
 

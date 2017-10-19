@@ -21,6 +21,7 @@
 // #include "MainWindow.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm> // std::remove_if
 // #include <X11/XKBlib.h>
 // #include <FL/names.h>
 // #include <FL/x.H>
@@ -36,7 +37,14 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     /* Table */
     address_table = new RamSearchTable(&ram_search.ramwatches, 10, 10, 480, 630, "");
 
-    watch_count = new Fl_Box(10, 640, 480, 30);
+    /* Progress bar */
+    search_progress = new Fl_Hor_Fill_Slider(10, 650, 480, 10);
+    search_progress->hide();
+    search_progress->selection_color(FL_BLUE);
+    search_progress->box(FL_THIN_DOWN_FRAME);
+    search_progress->slider(FL_FLAT_BOX);
+
+    watch_count = new Fl_Box(10, 670, 480, 30);
     watch_count->box(FL_NO_BOX);
     watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
@@ -211,10 +219,19 @@ static void new_cb(Fl_Widget* w, void* v)
             break;
     }
 
+    rsw->search_progress->show();
+    rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
+
+    int num = 0;
     for (auto &ramwatch : rsw->ram_search.ramwatches) {
         ramwatch->query();
+        if (!(num++ & 0xfff)) {
+            rsw->search_progress->value(num);
+            Fl::flush();
+        }
     }
 
+    rsw->search_progress->hide();
     rsw->address_table->hex = (rsw->display_choice->value() == 1);
     rsw->address_table->rows(rsw->ram_search.ramwatches.size());
 
@@ -248,7 +265,25 @@ static void search_cb(Fl_Widget* w, void* v)
     if (rsw->operator_greater_equal->value())
         compare_operator = CompareOperator::GreaterEqual;
 
-    rsw->ram_search.search_watches(compare_type, compare_operator, compvalue);
+    rsw->search_progress->show();
+    rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
+
+    /* Update the previous_value attribute of each RamWatch object in the vector,
+     * and remove objects from the vector where the search condition returns false.
+     */
+    int num = 0;
+    rsw->ram_search.ramwatches.erase(
+        std::remove_if(rsw->ram_search.ramwatches.begin(), rsw->ram_search.ramwatches.end(),
+            [&compare_type, &compare_operator, &compvalue, &num, &rsw] (std::unique_ptr<IRamWatch> &watch) {
+                if (!(num++ & 0xfff)) {
+                    rsw->search_progress->value(num);
+                    Fl::flush();
+                }
+                return watch->check_update(compare_type, compare_operator, compvalue);
+            }),
+        rsw->ram_search.ramwatches.end());
+
+    rsw->search_progress->hide();
 
     /* Update table parameters */
     rsw->address_table->hex = (rsw->display_choice->value() == 1);

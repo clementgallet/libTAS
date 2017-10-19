@@ -42,6 +42,8 @@ class RamWatch : public IRamWatch {
 public:
     T previous_value;
 
+    RamWatch(uintptr_t addr) : IRamWatch(addr) {};
+
     const char* tostring(bool hex)
     {
         static char str[30];
