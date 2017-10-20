@@ -41,6 +41,7 @@
 #include "ControllerWindow.h"
 #include "GameInfoWindow.h"
 #include "RamSearchWindow.h"
+#include "RamWatchWindow.h"
 
 class MainWindow {
     public:
@@ -71,6 +72,7 @@ class MainWindow {
         ControllerWindow* controller_window;
         GameInfoWindow* gameinfo_window;
         RamSearchWindow* ramsearch_window;
+        RamWatchWindow* ramwatch_window;
 
         Fl_Button *launch;
         Fl_Button *launch_gdb;
@@ -120,6 +122,9 @@ class MainWindow {
 
         /* Update ramsearch values if window is shown */
         void update_ramsearch();
+
+        /* Update ramwatch values if window is shown */
+        void update_ramwatch();
 
         /* Update UI elements when a config file is loaded */
         void update_config();

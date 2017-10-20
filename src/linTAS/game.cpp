@@ -342,6 +342,7 @@ void launchGame(Context* context)
             }
 
             ui.update_ramsearch();
+            ui.update_ramwatch();
 
             std::array<char, 32> keyboard_state;
             XQueryKeymap(context->display, keyboard_state.data());

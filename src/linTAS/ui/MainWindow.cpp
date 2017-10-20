@@ -42,6 +42,7 @@ static Fl_Callback toggle_encode_cb;
 #endif
 static Fl_Callback config_input_cb;
 static Fl_Callback ram_search_cb;
+static Fl_Callback ram_watch_cb;
 static Fl_Callback config_executable_cb;
 static Fl_Callback sound_frequency_cb;
 static Fl_Callback sound_bitdepth_cb;
@@ -213,6 +214,7 @@ void MainWindow::build(Context* c)
     controller_window = new ControllerWindow(c);
     gameinfo_window = new GameInfoWindow(c);
     ramsearch_window = new RamSearchWindow(c);
+    ramwatch_window = new RamWatchWindow(c);
 
     window->show();
 
@@ -394,6 +396,7 @@ Fl_Menu_Item MainWindow::menu_items[] = {
             {nullptr},
         {"Game information...", 0, game_info_cb},
         {"Ram Search...", 0, ram_search_cb},
+        {"Ram Watch...", 0, ram_watch_cb},
         {nullptr},
     {"Input", 0, nullptr, nullptr, FL_SUBMENU},
         {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
@@ -615,6 +618,19 @@ void MainWindow::update_ramsearch()
 
     if (ramsearch_window->window->shown()) {
         ramsearch_window->update();
+    }
+
+    Fl::unlock();
+    Fl::awake();
+}
+
+void MainWindow::update_ramwatch()
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    if (ramwatch_window->window->shown()) {
+        ramwatch_window->update();
     }
 
     Fl::unlock();
@@ -989,6 +1005,16 @@ void ram_search_cb(Fl_Widget* w, void*)
     mw.ramsearch_window->window->show();
 
     while (mw.ramsearch_window->window->shown()) {
+        Fl::wait();
+    }
+}
+
+void ram_watch_cb(Fl_Widget* w, void*)
+{
+    MainWindow& mw = MainWindow::getInstance();
+    mw.ramwatch_window->window->show();
+
+    while (mw.ramwatch_window->window->shown()) {
         Fl::wait();
     }
 }

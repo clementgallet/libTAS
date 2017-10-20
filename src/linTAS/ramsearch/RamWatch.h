@@ -38,7 +38,7 @@ template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?"%" 
 template <> inline const char* fmt_from_type<uint64_t>(bool hex) {return hex?"%" PRIx64:"%" PRIu64;}
 
 template <class T>
-class RamWatch : public IRamWatch {
+class RamWatch : public virtual IRamWatch {
 public:
     T previous_value;
 
