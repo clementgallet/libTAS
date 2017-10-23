@@ -59,6 +59,7 @@ class RamWatchEditWindow {
         Fl_Button *save_button;
         Fl_Button *cancel_button;
 
+        void fill(std::unique_ptr<IRamWatchDetailed> &watch);
         void update();
 };
 

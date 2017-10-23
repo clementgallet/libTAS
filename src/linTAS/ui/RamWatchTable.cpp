@@ -21,8 +21,10 @@
 #include <FL/fl_draw.H>
 #include <inttypes.h> // PRIxPTR
 
-RamWatchTable::RamWatchTable(int X, int Y, int W, int H, const char *l) : Fl_Table(X, Y, W, H, l)
+RamWatchTable::RamWatchTable(int X, int Y, int W, int H, const char *l) : Fl_Table_Row(X, Y, W, H, l)
 {
+    selection_color(FL_DARK_BLUE);
+
     rows(1);
     row_header(0);
     row_height_all(20);
@@ -83,8 +85,8 @@ void RamWatchTable::draw_cell (TableContext context, int R, int C, int X, int Y,
             std::unique_ptr<IRamWatchDetailed> &watch = ramwatches.at(R);
 
             // BG COLOR
-            // fl_color( is_selected(R,C) ? selection_color() : FL_WHITE);
-            fl_color(FL_WHITE);
+            fl_color( row_selected(R) ? selection_color() : FL_WHITE);
+            //fl_color(FL_WHITE);
             fl_rectf(X, Y, W, H);
 
             // TEXT

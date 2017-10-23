@@ -51,6 +51,7 @@ class RamWatchWindow {
         RamWatchTable *watch_table;
 
         Fl_Button *add_watch;
+        Fl_Button *edit_watch;
         Fl_Button *remove_watch;
 
         void update();

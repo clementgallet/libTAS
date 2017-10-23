@@ -28,6 +28,7 @@
 // #include "../ramsearch/CompareEnums.h"
 
 static Fl_Callback add_cb;
+static Fl_Callback edit_cb;
 static Fl_Callback remove_cb;
 
 RamWatchWindow::RamWatchWindow(Context* c) : context(c)
@@ -37,21 +38,13 @@ RamWatchWindow::RamWatchWindow(Context* c) : context(c)
     /* Table */
     watch_table = new RamWatchTable(10, 10, 480, 630, "");
 
-    /* Progress bar */
-    // search_progress = new Fl_Hor_Fill_Slider(10, 650, 480, 10);
-    // search_progress->hide();
-    // search_progress->selection_color(FL_BLUE);
-    // search_progress->box(FL_THIN_DOWN_FRAME);
-    // search_progress->slider(FL_FLAT_BOX);
-    //
-    // watch_count = new Fl_Box(10, 670, 480, 30);
-    // watch_count->box(FL_NO_BOX);
-    // watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    add_watch = new Fl_Button(10, 650, 70, 30, "Add");
+    add_watch = new Fl_Button(10, 650, 120, 30, "Add Watch");
     add_watch->callback(add_cb, this);
 
-    remove_watch = new Fl_Button(100, 650, 70, 30, "Remove");
+    edit_watch = new Fl_Button(170, 650, 120, 30, "Edit Watch");
+    edit_watch->callback(edit_cb, this);
+
+    remove_watch = new Fl_Button(330, 650, 120, 30, "Remove Watch");
     remove_watch->callback(remove_cb, this);
 
     window->end();
@@ -76,10 +69,53 @@ void add_cb(Fl_Widget* w, void* v)
     if (rww->edit_window->ramwatch) {
         rww->edit_window->ramwatch->game_pid = rww->context->game_pid;
         rww->watch_table->ramwatches.push_back(std::move(rww->edit_window->ramwatch));
+        rww->watch_table->update();
     }
 }
 
+void edit_cb(Fl_Widget* w, void* v)
+{
+    RamWatchWindow* rww = static_cast<RamWatchWindow*>(v);
+
+    int r;
+    for (r=0; r<rww->watch_table->rows(); r++) {
+        if (rww->watch_table->row_selected(r)) {
+            /* Fill the watch edit window accordingly */
+            rww->edit_window->fill(rww->watch_table->ramwatches.at(r));
+            break;
+        }
+    }
+
+    /* If no watch was selected, return */
+    if (r == rww->watch_table->rows())
+        return;
+
+    rww->edit_window->window->show();
+
+    while (rww->edit_window->window->shown()) {
+        Fl::wait();
+    }
+
+    if (rww->edit_window->ramwatch) {
+        rww->edit_window->ramwatch->game_pid = rww->context->game_pid;
+        /* Replace the smart pointer object */
+        rww->watch_table->ramwatches[r] = std::move(rww->edit_window->ramwatch);
+
+//        selected_watch = rww->edit_window->ramwatch;
+        rww->watch_table->update();
+    }
+}
+
+
 void remove_cb(Fl_Widget* w, void* v)
 {
+    RamWatchWindow* rww = static_cast<RamWatchWindow*>(v);
 
+    for (int r=rww->watch_table->rows() - 1; r>=0; r--) {
+        if (rww->watch_table->row_selected(r)) {
+            rww->watch_table->ramwatches.erase(rww->watch_table->ramwatches.begin() + r);
+        }
+    }
+
+    rww->watch_table->select_all_rows(0);
 }

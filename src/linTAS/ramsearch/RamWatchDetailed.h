@@ -47,7 +47,18 @@ public:
     {
         std::ostringstream oss;
         if (hex) oss << std::hex;
-        oss << get_value();
+        /* Output char and unsigned char as integer values. There might be a
+         * more elegant solution.
+         */
+        if (std::is_same<T, char>::value) {
+            oss << static_cast<int>(get_value());
+        }
+        else if (std::is_same<T, unsigned char>::value) {
+            oss << static_cast<unsigned int>(get_value());
+        }
+        else {
+            oss << get_value();
+        }
         return oss.str();
     }
 };

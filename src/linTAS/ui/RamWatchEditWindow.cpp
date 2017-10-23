@@ -20,14 +20,7 @@
 #include "RamWatchEditWindow.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
-// #include "MainWindow.h"
-// #include <iostream>
-// #include <sstream>
-// #include <algorithm> // std::remove_if
-// #include <X11/XKBlib.h>
-// #include <FL/names.h>
-// #include <FL/x.H>
-// #include "../ramsearch/CompareEnums.h"
+#include <sstream>
 
 static Fl_Callback save_cb;
 static Fl_Callback cancel_cb;
@@ -90,11 +83,28 @@ Fl_Menu_Item RamWatchEditWindow::display_items[] = {
     {nullptr}
 };
 
+void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
+{
+    /* Fill address */
+    std::ostringstream oss;
+    oss << std::hex << watch->address;
+    address_input->value(oss.str().c_str());
+
+    /* Fill label */
+    label_input->value(watch->label.c_str());
+
+    /* Fill display */
+    if (watch->hex)
+        display_choice->value(1);
+    else
+        display_choice->value(0);
+}
+
 static void save_cb(Fl_Widget* w, void* v)
 {
     RamWatchEditWindow* rwew = static_cast<RamWatchEditWindow*>(v);
 
-    uintptr_t addr = strtoul(rwew->address_input->value(), nullptr, 0);
+    uintptr_t addr = strtoul(rwew->address_input->value(), nullptr, 16);
 
     /* Build the ram watch using the right type as template */
     switch (rwew->type_choice->value()) {
