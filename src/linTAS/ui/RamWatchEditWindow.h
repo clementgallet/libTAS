@@ -31,6 +31,7 @@
 
 // #include <X11/Xlib.h>
 // #include "../Context.h"
+#include "../ramsearch/IRamWatch.h"
 #include "../ramsearch/IRamWatchDetailed.h"
 #include <memory>
 
@@ -60,6 +61,7 @@ class RamWatchEditWindow {
         Fl_Button *cancel_button;
 
         void fill(std::unique_ptr<IRamWatchDetailed> &watch);
+        void fill(std::unique_ptr<IRamWatch> &watch);
         void update();
 };
 

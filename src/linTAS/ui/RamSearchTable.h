@@ -25,11 +25,11 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Table.H>
+#include <FL/Fl_Table_Row.H>
 #include <vector>
 #include <memory>
 
-class RamSearchTable : public Fl_Table {
+class RamSearchTable : public Fl_Table_Row {
     public:
         /* A reference to the vector of addresses to watch */
         std::vector<std::unique_ptr<IRamWatch>> *ramwatches;

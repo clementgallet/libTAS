@@ -23,9 +23,9 @@
 
 RamWatchTable::RamWatchTable(int X, int Y, int W, int H, const char *l) : Fl_Table_Row(X, Y, W, H, l)
 {
-    selection_color(FL_DARK_BLUE);
+    selection_color(FL_BLUE);
 
-    rows(1);
+    rows(0);
     row_header(0);
     row_height_all(20);
     row_resize(0);

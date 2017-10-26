@@ -18,27 +18,23 @@
  */
 
 #include "RamSearchTable.h"
-// #include "MainWindow.h"
-// #include <iostream>
-// #include <sstream>
-// #include <X11/XKBlib.h>
 #include <FL/fl_draw.H>
 #include <inttypes.h> // PRIxPTR
-// #include <FL/x.H>
-// #include "../ramsearch/CompareEnums.h"
 
-RamSearchTable::RamSearchTable(std::vector<std::unique_ptr<IRamWatch>> *rw, int X, int Y, int W, int H, const char *l) : Fl_Table(X, Y, W, H, l)
+RamSearchTable::RamSearchTable(std::vector<std::unique_ptr<IRamWatch>> *rw, int X, int Y, int W, int H, const char *l) : Fl_Table_Row(X, Y, W, H, l)
 {
     ramwatches = rw;
 
-    rows(1);
+    selection_color(FL_BLUE);
+
+    rows(0);
     row_header(0);
     row_height_all(20);
     row_resize(0);
 
     cols(3);
     col_header(1);
-    col_width(0, 120);
+    col_width(0, 110);
     col_width(1, 180);
     col_width(2, 180);
     col_resize(1);
@@ -91,8 +87,7 @@ void RamSearchTable::draw_cell (TableContext context, int R, int C, int X, int Y
             std::unique_ptr<IRamWatch> &watch = ramwatches->at(R);
 
             // BG COLOR
-            // fl_color( is_selected(R,C) ? selection_color() : FL_WHITE);
-            fl_color( watch->check_no_update(compare_type, compare_operator, compare_value_db) ? FL_RED : FL_WHITE);
+            fl_color( row_selected(R) ? selection_color() : watch->check_no_update(compare_type, compare_operator, compare_value_db) ? FL_RED : FL_WHITE);
             fl_rectf(X, Y, W, H);
 
             // TEXT

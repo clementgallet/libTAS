@@ -100,6 +100,14 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
         display_choice->value(0);
 }
 
+void RamWatchEditWindow::fill(std::unique_ptr<IRamWatch> &watch)
+{
+    /* Fill address */
+    std::ostringstream oss;
+    oss << std::hex << watch->address;
+    address_input->value(oss.str().c_str());
+}
+
 static void save_cb(Fl_Widget* w, void* v)
 {
     RamWatchEditWindow* rwew = static_cast<RamWatchEditWindow*>(v);

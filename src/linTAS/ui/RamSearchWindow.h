@@ -69,7 +69,6 @@ class RamSearchWindow {
 
         Fl_Pack *compare_pack;
         Fl_Radio_Round_Button *compare_previous;
-        // Fl_Pack *compare_value_pack;
         Fl_Radio_Round_Button *compare_value;
         Fl_Float_Input *comparing_value;
 
@@ -89,6 +88,7 @@ class RamSearchWindow {
 
         Fl_Button *new_button;
         Fl_Button *search_button;
+        Fl_Button *add_button;
 
         void update();
 };

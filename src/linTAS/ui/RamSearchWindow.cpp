@@ -18,7 +18,7 @@
  */
 
 #include "RamSearchWindow.h"
-// #include "MainWindow.h"
+#include "MainWindow.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm> // std::remove_if
@@ -29,6 +29,7 @@
 
 static Fl_Callback new_cb;
 static Fl_Callback search_cb;
+static Fl_Callback add_cb;
 
 RamSearchWindow::RamSearchWindow(Context* c) : context(c)
 {
@@ -85,11 +86,8 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     compare_previous = new Fl_Radio_Round_Button(0, 0, 280, 30, "Previous Value");
     compare_previous->set();
 
-    // compare_value_pack = new Fl_Pack(0, 0, 280, 30);
-    // compare_value_pack->type(Fl_Pack::HORIZONTAL);
     compare_value = new Fl_Radio_Round_Button(0, 0, 280, 30, "Specific Value:");
     comparing_value = new Fl_Float_Input(0, 0, 280, 30);
-    // compare_value_pack->end();
 
     compare_pack->end();
 
@@ -129,6 +127,9 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     search_button = new Fl_Button(600, 650, 70, 30, "Search");
     search_button->callback(search_cb, this);
 
+    add_button = new Fl_Button(690, 650, 90, 30, "Add Watch");
+    add_button->callback(add_cb, this);
+
     window->end();
 }
 
@@ -160,7 +161,7 @@ void RamSearchWindow::update()
 
 static void new_cb(Fl_Widget* w, void* v)
 {
-    RamSearchWindow* rsw = (RamSearchWindow*) v;
+    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
 
     /* Build the memory region flag variable */
     int memregions = 0;
@@ -244,7 +245,7 @@ static void new_cb(Fl_Widget* w, void* v)
 
 static void search_cb(Fl_Widget* w, void* v)
 {
-    RamSearchWindow* rsw = (RamSearchWindow*) v;
+    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
 
     CompareType compare_type = CompareType::Previous;
     double compvalue = 0;
@@ -297,4 +298,38 @@ static void search_cb(Fl_Widget* w, void* v)
     oss << rsw->ram_search.ramwatches.size();
     oss << " adresses";
     rsw->watch_count->copy_label(oss.str().c_str());
+}
+
+void add_cb(Fl_Widget* w, void* v)
+{
+    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
+
+    int r;
+    for (r=0; r<rsw->address_table->rows(); r++) {
+        if (rsw->address_table->row_selected(r)) {
+            /* Fill the watch edit window accordingly */
+            //rww->edit_window->fill(rww->watch_table->ramwatches.at(r));
+            break;
+        }
+    }
+
+    /* If no watch was selected, return */
+    if (r == rsw->address_table->rows())
+        return;
+
+    /* Fill the watch edit window with parameters from the selected watch */
+    MainWindow& mw = MainWindow::getInstance();
+    mw.ramwatch_window->edit_window->fill(rsw->ram_search.ramwatches.at(r));
+
+    mw.ramwatch_window->edit_window->window->show();
+
+    while (mw.ramwatch_window->edit_window->window->shown()) {
+        Fl::wait();
+    }
+
+    if (mw.ramwatch_window->edit_window->ramwatch) {
+        mw.ramwatch_window->edit_window->ramwatch->game_pid = rsw->context->game_pid;
+        mw.ramwatch_window->watch_table->ramwatches.push_back(std::move(mw.ramwatch_window->edit_window->ramwatch));
+        mw.ramwatch_window->watch_table->update();
+    }
 }
