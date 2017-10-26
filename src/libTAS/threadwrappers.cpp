@@ -40,7 +40,6 @@ DEFINE_ORIG_POINTER(pthread_detach);
 DEFINE_ORIG_POINTER(pthread_getname_np);
 DEFINE_ORIG_POINTER(pthread_tryjoin_np);
 DEFINE_ORIG_POINTER(pthread_timedjoin_np);
-DEFINE_ORIG_POINTER(pthread_self);
     // static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
     // static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
     // static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
@@ -49,61 +48,6 @@ DEFINE_ORIG_POINTER(pthread_setcancelstate);
 DEFINE_ORIG_POINTER(pthread_setcanceltype);
 DEFINE_ORIG_POINTER(pthread_cancel);
 DEFINE_ORIG_POINTER(pthread_testcancel);
-
-/* We keep the identifier of the first thread */
-pthread_t firstThread = 0;
-
-/* We keep the identifier of the main thread (the one calling SDL_Init())*/
-pthread_t mainThread = 0;
-
-/* Get the current thread id */
-pthread_t getThreadId(void)
-{
-    LINK_NAMESPACE(pthread_self, "pthread");
-    if (orig::pthread_self != nullptr)
-        return orig::pthread_self();
-
-    /* We couldn't link to pthread, meaning threading should be off.
-     * We must return a value so that isMainThread() returns true.
-     */
-    return firstThread;
-}
-
-/* Indicate that we are running on the first thread */
-void setFirstThread(void)
-{
-    if (firstThread != 0)
-        /* First thread was already set */
-        return;
-    firstThread = getThreadId();
-}
-
-/* Indicate that we are running on the main thread */
-void setMainThread(void)
-{
-    if (mainThread != 0)
-        /* Main thread was already set */
-        return;
-    mainThread = getThreadId();
-}
-
-/*
- * We will often want to know if we are running on the main thread
- * Because only it can advance the deterministic timer, and other stuff
- */
-int isMainThread(void)
-{
-    /* Check if main thread has been set */
-    if (mainThread) {
-        return (getThreadId() == mainThread);
-    }
-
-    if (firstThread) {
-        return (getThreadId() == firstThread);
-    }
-
-    return true;
-}
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {

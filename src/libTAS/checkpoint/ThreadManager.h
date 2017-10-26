@@ -37,8 +37,8 @@ class ThreadManager {
     static ThreadInfo* free_list;
     static thread_local ThreadInfo* current_thread;
 
-    static bool inited;
-    static pthread_t main;
+    // static bool inited;
+    static pthread_t main_tid;
 
     static pthread_mutex_t threadStateLock;
     static pthread_mutex_t threadListLock;
@@ -55,6 +55,15 @@ public:
 
     // Called from SDL_init, assumed to be main thread
     static void init();
+
+    /* Get the thread id */
+    static pthread_t getThreadId();
+
+    /* Set the main thread to this thread */
+    static void setMainThread();
+
+    /* Check if this thread is main thread */
+    static bool isMainThread();
 
     /* Create a new ThreadInfo struct from the parent thread*/
     static ThreadInfo* getNewThread();

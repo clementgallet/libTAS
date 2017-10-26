@@ -21,7 +21,6 @@
 #include "../../logging.h"
 #include "../../GlobalState.h"
 #include "../../hook.h"
-#include "../../threadwrappers.h" // isMainThread()
 
 namespace libtas {
 

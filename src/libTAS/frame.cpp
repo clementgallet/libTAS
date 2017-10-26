@@ -107,6 +107,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 {
     debuglog(LCF_FRAME, "Enter frame boundary");
+    ThreadManager::setMainThread();
 
     if (is_exiting) {
         debuglog(LCF_FRAME, "Game is exiting: skipping frame boundary");
@@ -118,8 +119,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (!drawFB)
         nondraw_frame_counter++;
 
-    if (!isMainThread())
-        debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
+    // if (!ThreadManager::isMainThread())
+    //     debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
 
     detTimer.enterFrameBoundary();
 

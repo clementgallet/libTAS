@@ -27,18 +27,6 @@
 
 namespace libtas {
 
-/* Get the id of the own pthread, if available */
-pthread_t getThreadId(void);
-
-/* Indicate that we are the first thread */
-void setFirstThread(void);
-
-/* Indicate that we are the main thread */
-void setMainThread(void);
-
-/* Check if we are the main thread */
-int isMainThread(void);
-
 /**
  *  Create a thread.
  */

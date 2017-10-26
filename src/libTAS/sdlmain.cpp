@@ -78,9 +78,6 @@ DEFINE_ORIG_POINTER(SDL_Quit);
     link_sdlthreads();
     link_sdltimer();
 
-    /* The thread calling this is probably the main thread */
-    setMainThread();
-
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
 

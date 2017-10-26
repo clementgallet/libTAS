@@ -19,7 +19,7 @@
 
 #include "logging.h"
 #include <stdlib.h>
-#include "threadwrappers.h"
+#include "checkpoint/ThreadManager.h" // isMainThread()
 #include <unistd.h> // For isatty
 #include <cstdarg>
 #include <cstring>
@@ -73,8 +73,8 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
     size = strlen(s);
 
-    const char* thstr = stringify(getThreadId());
-    if (isMainThread())
+    const char* thstr = stringify(ThreadManager::getThreadId());
+    if (ThreadManager::isMainThread())
         snprintf(s + size, maxsize-size-1, "Thread %s (main) ", thstr);
     else
         snprintf(s + size, maxsize-size-1, "Thread %s        ", thstr);

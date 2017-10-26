@@ -23,6 +23,7 @@
 #include "global.h" // shared_config
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
+#include "checkpoint/ThreadManager.h"
 #include "audio/AudioContext.h"
 
 namespace libtas {
@@ -46,7 +47,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     if (inFB)
         return ticks;
 
-    bool isFrameThread = isMainThread();
+    bool isFrameThread = ThreadManager::isMainThread();
 
     /* Only the main thread can modify the timer */
     /* Could this be a problem...? */

@@ -45,9 +45,6 @@ void __attribute__((constructor)) init(void)
     if (! didConnect)
         return;
 
-    /* We are the first thread */
-    setFirstThread();
-
     /* Send information to the program */
 
     /* Send game process pid */

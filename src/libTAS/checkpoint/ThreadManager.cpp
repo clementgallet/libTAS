@@ -41,8 +41,8 @@ namespace libtas {
 ThreadInfo* ThreadManager::thread_list = nullptr;
 ThreadInfo* ThreadManager::free_list = nullptr;
 thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
-bool ThreadManager::inited = false;
-pthread_t ThreadManager::main = 0;
+// bool ThreadManager::inited = false;
+pthread_t ThreadManager::main_tid = 0;
 pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_rwlock_t ThreadManager::threadResumeLock = PTHREAD_RWLOCK_INITIALIZER;
@@ -55,7 +55,7 @@ void ThreadManager::init()
 {
     /* Create a ThreadInfo struct for this thread */
     ThreadInfo* thread = ThreadManager::getNewThread();
-    thread->state = ThreadInfo::ST_CKPNTHREAD;
+    thread->state = ThreadInfo::ST_RUNNING;
     thread->tid = getThreadId();
     thread->detached = false;
     current_thread = thread;
@@ -72,8 +72,38 @@ void ThreadManager::init()
 
     ReservedMemory::init();
 
-    main = getThreadId();
-    inited = true;
+    setMainThread();
+    // inited = true;
+}
+
+DEFINE_ORIG_POINTER(pthread_self);
+
+pthread_t ThreadManager::getThreadId()
+{
+    LINK_NAMESPACE(pthread_self, "pthread");
+    if (orig::pthread_self != nullptr)
+        return orig::pthread_self();
+
+    /* We couldn't link to pthread, meaning threading should be off.
+     * We must return a value so that isMainThread() returns true.
+     */
+    return main_tid;
+}
+
+void ThreadManager::setMainThread()
+{
+    main_tid = getThreadId();
+    current_thread->state = ThreadInfo::ST_CKPNTHREAD;
+}
+
+bool ThreadManager::isMainThread()
+{
+    /* Check if main thread has been set */
+    if (main_tid) {
+        return (getThreadId() == main_tid);
+    }
+
+    return true;
 }
 
 ThreadInfo* ThreadManager::getNewThread()

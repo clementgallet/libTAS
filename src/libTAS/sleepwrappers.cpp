@@ -19,7 +19,7 @@
 
 #include "sleepwrappers.h"
 #include "logging.h"
-#include "threadwrappers.h"
+#include "checkpoint/ThreadManager.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
 #include "GlobalState.h"
@@ -42,7 +42,7 @@ DEFINE_ORIG_POINTER(nanosleep);
         return;
     }
 
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
     debuglog(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleep, " ms.");
 
     /* If the function was called from the main thread, transfer the wait to
@@ -68,7 +68,7 @@ DEFINE_ORIG_POINTER(nanosleep);
     if (GlobalState::isNative())
         return orig::nanosleep(&ts, NULL);
 
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", usec, " us.");
 
     /* If the function was called from the main thread, transfer the wait to
@@ -92,7 +92,7 @@ DEFINE_ORIG_POINTER(nanosleep);
         return orig::nanosleep(requested_time, remaining);
     }
 
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
     debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
 
     /* If the function was called from the main thread, transfer the wait to
@@ -111,7 +111,7 @@ DEFINE_ORIG_POINTER(nanosleep);
 			    const struct timespec *req,
 			    struct timespec *rem)
 {
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
     TimeHolder sleeptime;
     sleeptime = *req;
     if (flags == 0) {

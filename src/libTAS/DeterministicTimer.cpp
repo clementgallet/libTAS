@@ -20,7 +20,7 @@
 #include "DeterministicTimer.h"
 #include "NonDeterministicTimer.h"
 #include "logging.h"
-#include "threadwrappers.h"
+#include "checkpoint/ThreadManager.h"
 #include "frame.h"
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
@@ -51,7 +51,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
 
     /* If it is our own code calling this, we don't need to track the call */
     if (GlobalState::isOwnCode())
@@ -136,7 +136,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     }
 
     /* We only allow the main thread to trigger a frame boundary! */
-    bool mainT = isMainThread();
+    bool mainT = ThreadManager::isMainThread();
 
     if (mainT) {
         while(addedDelay > maxDeferredDelay) {
