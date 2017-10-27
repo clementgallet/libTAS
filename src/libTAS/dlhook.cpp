@@ -45,6 +45,17 @@ std::string find_lib(const char* library)
     return emptystring;
 }
 
+static void *my_dlopen(const char *file, int mode, void *dl_caller);
+static int my_dlclose(void *handle);
+static void *my_dlsym(void *handle, const char *name, void *dl_caller);
+static void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller);
+static char *my_dlerror(void);
+static int my_dladdr(const void *address, Dl_info *info);
+static int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags);
+static int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
+static void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
+
+
 static void *my_dlopen(const char *file, int mode, void *dl_caller) {
     void *result;
     debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
@@ -69,6 +80,30 @@ static int my_dlclose(void *handle) {
 static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
     void *addr;
     debuglog(LCF_HOOK, __func__, " call with function ", name);
+
+    /* Special cases when dlsym is called with dl* functions (yes, it happens...).
+     * Because our dl* functions have another name (my_dl*), the standard code
+     * won't work. So we manually return the correct function pointers.
+     */
+    if (strcmp(name, "dlopen") == 0)
+        return reinterpret_cast<void*>(my_dlopen);
+    if (strcmp(name, "dlclose") == 0)
+        return reinterpret_cast<void*>(my_dlclose);
+    if (strcmp(name, "dlsym") == 0)
+        return reinterpret_cast<void*>(my_dlsym);
+    if (strcmp(name, "dlvsym") == 0)
+        return reinterpret_cast<void*>(my_dlvsym);
+    if (strcmp(name, "dlerror") == 0)
+        return reinterpret_cast<void*>(my_dlerror);
+    if (strcmp(name, "dladdr") == 0)
+        return reinterpret_cast<void*>(my_dladdr);
+    if (strcmp(name, "dladdr1") == 0)
+        return reinterpret_cast<void*>(my_dladdr1);
+    if (strcmp(name, "dlinfo") == 0)
+        return reinterpret_cast<void*>(my_dlinfo);
+    if (strcmp(name, "dlmopen") == 0)
+        return reinterpret_cast<void*>(my_dlmopen);
+
     dlenter();
     /* FIXME: This design is not good enough.
      * This idea is to link to our defined function when there is one, instead
@@ -118,7 +153,7 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
 
 static void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller) {
     void *result;
-    DEBUGLOGCALL(LCF_HOOK);
+    debuglog(LCF_HOOK, __func__, " call with function ", name, " and version ", version);
     dlenter();
     result = dlvsym(handle, name, version);
     dlleave();
@@ -163,7 +198,7 @@ static int my_dlinfo(void *handle, int request, void *arg, void *dl_caller) {
 
 static void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
     void *result;
-    DEBUGLOGCALL(LCF_HOOK);
+    debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
     dlenter();
     result = dlmopen(nsid, file, mode);
     dlleave();
