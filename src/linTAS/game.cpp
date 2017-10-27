@@ -67,16 +67,16 @@ static bool haveFocus(Context* context)
  */
 static void executeGame(Context* context)
 {
-    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
-    if (!context->config.libdir.empty()) {
-        char* oldlibpath = getenv("LD_LIBRARY_PATH");
-        std::string libpath = context->config.libdir;
-        if (oldlibpath) {
-            libpath.append(":");
-            libpath.append(oldlibpath);
-        }
-        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
-    }
+    // /* Update the LD_LIBRARY_PATH environment variable if the user set one */
+    // if (!context->config.libdir.empty()) {
+    //     char* oldlibpath = getenv("LD_LIBRARY_PATH");
+    //     std::string libpath = context->config.libdir;
+    //     if (oldlibpath) {
+    //         libpath.append(":");
+    //         libpath.append(oldlibpath);
+    //     }
+    //     setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
+    // }
 
     /* Change the working directory if the user set one */
     if (!context->config.rundir.empty())
@@ -165,6 +165,17 @@ void launchGame(Context* context)
 
     /* Remove the file socket */
     removeSocket();
+
+    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
+    if (!context->config.libdir.empty()) {
+        char* oldlibpath = getenv("LD_LIBRARY_PATH");
+        std::string libpath = context->config.libdir;
+        if (oldlibpath) {
+            libpath.append(":");
+            libpath.append(oldlibpath);
+        }
+        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
+    }
 
     /* Get the shared libs of the game executable */
     std::vector<std::string> linked_libs;
