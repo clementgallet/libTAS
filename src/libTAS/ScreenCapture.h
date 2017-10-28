@@ -39,8 +39,11 @@ public:
      */
     static int init(SDL_Window* window);
 
-    /* Called when screen is closed or resized */
+    /* Called when screen is closed */
     static void fini();
+
+    /* Called when screen is resized */
+    static void reinit(SDL_Window* window);
 
     static void getDimensions(int& w, int& h);
 

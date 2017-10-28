@@ -305,8 +305,7 @@ static int swapInterval = 0;
 
     orig::SDL_SetWindowSize(window, w, h);
 
-    ScreenCapture::fini();
-    ScreenCapture::init(gameWindow);
+    ScreenCapture::reinit(gameWindow);
 
     /* We need to close the dumping if needed, and open a new one */
 #ifdef LIBTAS_ENABLE_AVDUMPING
