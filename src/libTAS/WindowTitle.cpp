@@ -36,8 +36,7 @@ void WindowTitle::setOriginalTitle(const char* title)
 
 void WindowTitle::setUpdateFunc(std::function<void(const char*)> func)
 {
-    if (!set_title)
-        set_title = func;
+    set_title = func;
 }
 
 void WindowTitle::update(float fps, float lfps)
