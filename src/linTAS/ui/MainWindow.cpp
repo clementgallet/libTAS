@@ -794,6 +794,21 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
         /* Try to load the game-specific pref file */
         mw.context->config.load(mw.context->gamepath);
 
+        /* Update the movie parameters */
+        MovieFile tempmovie(mw.context);
+        if (tempmovie.extractMovie() == 0) {
+            /* If the moviefile is valid, update the frame and rerecord counts */
+            std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
+            mw.movie_framecount->value(movieframestr.c_str());
+            std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
+            mw.rerecord_count->value(rerecordstr.c_str());
+
+            /* Also, by default, set the read-only mode */
+            mw.movie_read_only->set();
+            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
+            mw.context->config.sc_modified = true;
+        }
+
         /* Update the UI accordingly */
         mw.update_config();
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -801,6 +816,7 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
 #endif
         mw.executable_window->update_config();
         mw.input_window->update();
+
     }
 }
 
