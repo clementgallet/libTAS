@@ -22,8 +22,6 @@ set(FLTK_SKIP_FLUID TRUE)
 find_package(FLTK REQUIRED NO_MODULE)
 include_directories(${FLTK_INCLUDE_DIRS})
 
-link_directories("/usr/local/lib/")
-
 add_executable(linTAS ${lin_sources} ${shared_sources} ${external_sources})
 add_library(TAS SHARED ${lib_sources} ${shared_sources} ${external_sources})
 
@@ -34,7 +32,7 @@ target_compile_features(linTAS PRIVATE cxx_auto_type cxx_range_for)
 # Common debug flags
 target_compile_options(TAS PUBLIC -fvisibility=hidden)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
 # Add librt for shm_open
 find_library(RT_LIB rt)
@@ -48,6 +46,16 @@ target_link_libraries (linTAS ${TAR_LIB})
 find_package(Threads REQUIRED)
 target_link_libraries(linTAS Threads::Threads)
 target_link_libraries(TAS Threads::Threads)
+
+# Add XCB libraries
+find_package(ECM REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
+
+find_package(XCB COMPONENTS XCB KEYSYMS REQUIRED)
+include_directories(${XCB_INCLUDE_DIRS})
+target_link_libraries (linTAS ${XCB_LIBRARIES})
+MESSAGE( STATUS "XCB_INCLUDE:         " ${XCB_INCLUDE_DIRS} )
+MESSAGE( STATUS "XCB_LIBS:         " ${XCB_LIBRARIES} )
 
 # Add X11 library
 find_package(X11 REQUIRED)

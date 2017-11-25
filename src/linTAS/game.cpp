@@ -19,9 +19,12 @@
 
 #include "game.h"
 #include "../shared/sockethelpers.h"
-#include <X11/Xlib.h>
+// #include <X11/Xlib.h>
 #include <X11/keysym.h>
-#include <X11/XKBlib.h>
+// #include <X11/XKBlib.h>
+#include <xcb/xcb.h>
+#include <xcb/xproto.h>
+#include <xcb/xcb_keysyms.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
 #include <string>
@@ -34,6 +37,7 @@
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
 #include <signal.h> // kill
+#include <memory> // unique_ptr
 
 MovieFile movie;
 
@@ -45,9 +49,18 @@ static bool haveFocus(Context* context)
     if (context->inputs_focus & Context::FOCUS_ALL)
         return true;
 
-    Window window;
-    int revert;
-    XGetInputFocus(context->display, &window, &revert);
+    xcb_window_t window;
+
+    xcb_generic_error_t* error;
+    xcb_get_input_focus_cookie_t focus_cookie = xcb_get_input_focus(context->conn);
+    std::unique_ptr<xcb_get_input_focus_reply_t> focus_reply(xcb_get_input_focus_reply(context->conn, focus_cookie, &error));
+    if (error) {
+        std::cerr << "Could not get focussed window, X error" << error->error_code << std::endl;
+    }
+
+    window = focus_reply->focus;
+
+    // XGetInputFocus(context->display, &window, &revert);
 
     if ((context->inputs_focus & Context::FOCUS_GAME) &&
         (window == context->game_window))
@@ -206,7 +219,12 @@ void launchGame(Context* context)
     /* Connect to the socket between the program and the game */
     initSocketProgram();
 
-    XAutoRepeatOff(context->display);
+    /* Disable auto-repeat */
+    uint32_t mask_aroff = XCB_KB_AUTO_REPEAT_MODE;
+    uint32_t values_aroff[] = {XCB_AUTO_REPEAT_MODE_OFF, None};
+
+    xcb_change_keyboard_control(context->conn, mask_aroff, values_aroff);
+    // XAutoRepeatOff(context->display);
 
     /* Receive informations from the game */
 
@@ -302,7 +320,11 @@ void launchGame(Context* context)
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
                 /* FIXME: Don't do this if the ui option is unchecked  */
-                XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+                const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+                xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
+
+                // XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
+                std::cout << "Received window id " << context->game_window << std::endl;
                 break;
 
             case MSGB_ALERT_MSG:
@@ -355,10 +377,6 @@ void launchGame(Context* context)
             ui.update_ramsearch();
             ui.update_ramwatch();
 
-            std::array<char, 32> keyboard_state;
-            XQueryKeymap(context->display, keyboard_state.data());
-            KeySym modifiers = build_modifiers(keyboard_state, context->display);
-
             /* Implement frame-advance auto-repeat */
             if (ar_ticks >= 0) {
                 ar_ticks++;
@@ -367,32 +385,65 @@ void launchGame(Context* context)
                     advance_frame = true;
             }
 
-            while( XPending( context->display ) || !context->hotkey_queue.empty() ) {
+            xcb_generic_event_t *event;
 
-                XEvent event;
+            // std::cerr << "Will call XPending" << std::endl;
+            while( (event = xcb_poll_for_event (context->conn)) || !context->hotkey_queue.empty() ) {
+                // std::cerr << "Did call XPending" << std::endl;
+
+                // XEvent event;
                 struct HotKey hk;
 
-                if (!context->hotkey_queue.empty()) {
+                if (!event) {
                     /* Processing a hotkey pushed by the UI */
+                    event = static_cast<xcb_generic_event_t*>(malloc(sizeof(xcb_generic_event_t)));
                     context->hotkey_queue.pop(hk.type);
-                    event.type = KeyPress;
+                    event->response_type = XCB_KEY_PRESS;
                 }
                 else {
                     /* Processing a hotkey pressed by the user */
-                    XNextEvent(context->display, &event);
+                    // XNextEvent(context->display, &event);
 
-                    if (event.type == FocusOut) {
+                    if (event->response_type == XCB_FOCUS_OUT) {
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
 
-                    if ((event.type == KeyPress) || (event.type == KeyRelease)) {
+                    if ((event->response_type == XCB_KEY_PRESS) || (event->response_type == XCB_BUTTON_RELEASE)) {
                         /* Get the actual pressed/released key */
-                        KeyCode kc = event.xkey.keycode;
-                        KeySym ks = XkbKeycodeToKeysym(context->display, kc, 0, 0);
+                        xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event);
+
+                        xcb_keycode_t kc = key_event->detail;
+
+                        /* Get keysym from keycode */
+                        xcb_key_symbols_t *keysyms;
+                        if (!(keysyms = xcb_key_symbols_alloc(context->conn))) {
+                            std::cerr << "Could not allocate key symbols" << std::endl;
+                            return;
+                        }
+
+                        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
+                        xcb_key_symbols_free(keysyms);
+
+                        // KeySym ks = XkbKeycodeToKeysym(context->display, kc, 0, 0);
 
                         /* If the key is a modifier, skip it */
                         if (is_modifier(ks))
                             continue;
+
+                        /* Build the modifier value */
+                        xcb_generic_error_t* error;
+                        xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(context->conn);
+                        std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(context->conn, keymap_cookie, &error));
+
+                        // XQueryKeymap(context->display, keyboard_state.data());
+                        std::cerr << "Did call XQueryKeymap" << std::endl;
+                        xcb_keysym_t modifiers = 0;
+                        if (error) {
+                            std::cerr << "Could not get focussed window, X error" << error->error_code << std::endl;
+                        }
+                        else {
+                            modifiers = build_modifiers(keymap_reply->keys, context->conn);
+                        }
 
                         /* Check if this KeySym with or without modifiers is mapped to a hotkey */
                         if (context->config.km.hotkey_mapping.find(ks | modifiers) != context->config.km.hotkey_mapping.end())
@@ -405,7 +456,7 @@ void launchGame(Context* context)
                     }
                 }
 
-                if (event.type == KeyPress)
+                if (event->response_type == XCB_KEY_PRESS)
                 {
 
                     /* Advance a frame */
@@ -621,7 +672,7 @@ void launchGame(Context* context)
 #endif
                     }
                 }
-                if (event.type == KeyRelease)
+                if (event->response_type == XCB_BUTTON_RELEASE)
                 {
                     /*
                      * TODO: The following code was supposed to detect the Xlib
@@ -633,20 +684,20 @@ void launchGame(Context* context)
                      * KeyRelease event...
                      * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
                      */
-                    if (XEventsQueued(context->display, QueuedAfterReading))
-                    {
-                        XEvent nev;
-                        XPeekEvent(context->display, &nev);
-
-                        if ((nev.type == KeyPress) && (nev.xkey.time == event.xkey.time) &&
-                                (nev.xkey.keycode == event.xkey.keycode))
-                        {
-                            /* delete retriggered KeyPress event */
-                            // XNextEvent (display, &event);
-                            /* Skip current KeyRelease event */
-                            continue;
-                        }
-                    }
+                    // if (XEventsQueued(context->display, QueuedAfterReading))
+                    // {
+                    //     XEvent nev;
+                    //     XPeekEvent(context->display, &nev);
+                    //
+                    //     if ((nev.type == KeyPress) && (nev.xkey.time == event.xkey.time) &&
+                    //             (nev.xkey.keycode == event.xkey.keycode))
+                    //     {
+                    //         /* delete retriggered KeyPress event */
+                    //         // XNextEvent (display, &event);
+                    //         /* Skip current KeyRelease event */
+                    //         continue;
+                    //     }
+                    // }
 
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;
@@ -657,6 +708,8 @@ void launchGame(Context* context)
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
                 }
+
+                if (event) free (event);
             }
 
             if (!context->config.sc.running && !advance_frame) {
@@ -676,7 +729,7 @@ void launchGame(Context* context)
 
                         /* Format the keyboard and mouse state and save it in the AllInputs struct */
                         static AllInputs preview_ai, last_preview_ai;
-                        context->config.km.buildAllInputs(preview_ai, context->display, context->game_window, context->config.sc);
+                        context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, context->config.sc);
 
                         /* Send inputs if changed */
                         if (!(preview_ai == last_preview_ai)) {
@@ -702,7 +755,7 @@ void launchGame(Context* context)
                 /* Get inputs if we have input focus */
                 if (haveFocus(context)) {
                     /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                    context->config.km.buildAllInputs(ai, context->display, context->game_window, context->config.sc);
+                    context->config.km.buildAllInputs(ai, context->conn, context->game_window, context->config.sc);
                 }
 
                 if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
@@ -786,8 +839,14 @@ void launchGame(Context* context)
     context->status = Context::INACTIVE;
     ui.update_status();
 
-    XAutoRepeatOn(context->display);
-    XFlush(context->display);
+    /* Disable auto-repeat */
+    uint32_t mask_aron = XCB_KB_AUTO_REPEAT_MODE;
+    uint32_t values_aron[] = {XCB_AUTO_REPEAT_MODE_ON, None};
+
+    xcb_change_keyboard_control(context->conn, mask_aron, values_aron);
+    // XAutoRepeatOn(context->display);
+    xcb_flush(context->conn);
+    // XFlush(context->display);
 
     return;
 }

@@ -1197,17 +1197,25 @@ void hotkeys_focus_cb(Fl_Widget*, void* v)
         /* If the game was not launched, don't do anything */
         if (! mw.context->game_window ) return;
 
-        if (mw.menu_bar->mvalue()->value())
-            XSelectInput(mw.context->display, mw.context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-        else
-            XSelectInput(mw.context->display, mw.context->game_window, FocusChangeMask);
+        if (mw.menu_bar->mvalue()->value()) {
+            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+            xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
+        }
+        else {
+            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
+            xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
+        }
         break;
 
     case Context::FOCUS_UI:
-        if (mw.menu_bar->mvalue()->value())
-            XSelectInput(mw.context->display, mw.context->ui_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-        else
-            XSelectInput(mw.context->display, mw.context->ui_window, FocusChangeMask);
+        if (mw.menu_bar->mvalue()->value()) {
+            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+            xcb_change_window_attributes (mw.context->conn, mw.context->ui_window, XCB_CW_EVENT_MASK, values);
+        }
+        else {
+            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
+            xcb_change_window_attributes (mw.context->conn, mw.context->ui_window, XCB_CW_EVENT_MASK, values);
+        }
         break;
 
     case Context::FOCUS_ALL:
@@ -1394,16 +1402,20 @@ void alert_dialog(void* alert_msg)
     /* Bring FLTK to foreground
      * taken from https://stackoverflow.com/a/28404920
      */
-    XEvent event = {0};
-    event.xclient.type = ClientMessage;
-    event.xclient.serial = 0;
-    event.xclient.send_event = True;
-    event.xclient.message_type = XInternAtom(mw.context->display, "_NET_ACTIVE_WINDOW", False);
-    event.xclient.window = mw.context->ui_window;
-    event.xclient.format = 32;
+    // xcb_client_message_event_t event;
+    // event.response_type = XCB_CLIENT_MESSAGE;
+    // event.window = mw.context->ui_window;
+    // event.format = 32;
+    // event.type = XInternAtom(mw.context->display, "_NET_ACTIVE_WINDOW", False);
+    //
+    // xcb_intern_atom_cookie_t cookie = xcb_intern_atom (mw.context->conn, 0, 0, strlen(names[i]), names[i] );
+    //     /* get response */
+    // xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply (connection,
+    //                                                             cookie,
+    //                                                             NULL ); // normally a pointer to receive error, but we'll just ignore error handling
 
-    XSendEvent(mw.context->display, DefaultRootWindow(mw.context->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
-    XMapRaised(mw.context->display, mw.context->ui_window);
+    // XSendEvent(mw.context->display, DefaultRootWindow(mw.context->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+    // XMapRaised(mw.context->display, mw.context->ui_window);
 
     /* Show alert window */
     std::string* alert_str = static_cast<std::string*>(alert_msg);

@@ -28,6 +28,7 @@
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 #include <signal.h> // kill
+#include <xcb/xcb.h>
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
@@ -100,9 +101,9 @@ int main(int argc, char **argv)
         }
 
     /* Open connection with the server */
-    XInitThreads();
-    context.display = XOpenDisplay(NULL);
-    if (context.display == NULL)
+    // XInitThreads();
+    context.conn = xcb_connect(NULL,NULL);
+    if (xcb_connection_has_error(context.conn))
     {
         std::cerr << "Cannot open display" << std::endl;
         return -1;
@@ -111,7 +112,7 @@ int main(int argc, char **argv)
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.
      */
-    context.config.km.init(context.display);
+    context.config.km.init(context.conn);
 
     /* libTAS.so path */
     /* TODO: Not portable! */
@@ -203,5 +204,6 @@ int main(int argc, char **argv)
         }
     }
 
-    XCloseDisplay(context.display);
+    xcb_disconnect(context.conn);
+    return 0;
 }

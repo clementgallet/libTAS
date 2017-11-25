@@ -22,7 +22,8 @@
 
 #include <string>
 #include "Config.h"
-#include <X11/Xlib.h>
+// #include <X11/Xlib.h>
+#include <xcb/xcb.h>
 #include "ConcurrentQueue.h"
 #include "../shared/GameInfo.h"
 
@@ -37,13 +38,13 @@ struct Context {
     volatile RunStatus status = INACTIVE;
 
     /* Connection to the X server */
-    Display *display;
+    xcb_connection_t *conn;
 
     /* Game window */
-    Window game_window = 0;
+    xcb_window_t game_window = 0;
 
     /* Main UI window */
-    Window ui_window = 0;
+    xcb_window_t ui_window = 0;
 
     /* Recording status */
     enum FocusState {

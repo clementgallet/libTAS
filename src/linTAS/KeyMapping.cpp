@@ -18,8 +18,11 @@
  */
 
 #include "KeyMapping.h"
-#include <X11/XKBlib.h>
+// #include <X11/XKBlib.h>
+#include <xcb/xcb_keysyms.h>
+#include <X11/Xlib.h>
 #include <cstring>
+#include <memory> // unique_ptr
 
 void SingleInput::pack(char* data)
 {
@@ -49,7 +52,7 @@ void HotKey::unpack(const char* data)
     memcpy(type_data, static_cast<const void*>(data), sizeof(HotKeyType));
 }
 
-bool is_modifier(KeySym ks)
+bool is_modifier(xcb_keysym_t ks)
 {
     for (ModifierKey modifier : modifier_list) {
         if (modifier.ks == ks)
@@ -58,12 +61,19 @@ bool is_modifier(KeySym ks)
     return false;
 }
 
-KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display)
+xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_connection_t *conn)
 {
-    KeySym modifiers = 0;
+    xcb_keysym_t modifiers = 0;
+
+    xcb_key_symbols_t *keysyms;
+    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
+        //std::cerr << "Could not allocate key symbols" << std::endl;
+        return 0;
+    }
+
     for (int i=0; i<256; i++) {
         if (keyboard_state[i/8] & (1 << (i % 8))) {
-            KeySym ks = XkbKeycodeToKeysym(display, i, 0, 0);
+            xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, i, 0);
             for (ModifierKey modifier : modifier_list) {
                 if (modifier.ks == ks) {
                     modifiers |= modifier.flag;
@@ -73,10 +83,11 @@ KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display)
         }
     }
 
+    xcb_key_symbols_free(keysyms);
     return modifiers;
 }
 
-void KeyMapping::init(Display* display)
+void KeyMapping::init(xcb_connection_t* conn)
 {
     /* Fill hotkey list */
     hotkey_list.push_back({{IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
@@ -107,23 +118,31 @@ void KeyMapping::init(Display* display)
     default_hotkeys();
 
     /* Gather the list of valid X11 KeyCode values */
-    int min_keycodes_return, max_keycodes_return;
-    XDisplayKeycodes(display, &min_keycodes_return, &max_keycodes_return);
+    xcb_keycode_t min_keycode = xcb_get_setup(conn)->min_keycode;
+    xcb_keycode_t max_keycode = xcb_get_setup(conn)->max_keycode;
 
-    /* Build the list of KeySym values to be mapped based on valid KeyCodes.
+    /* Build the list of keysym values to be mapped based on valid keycodes.
      * This list is dependent on the keyboard layout.
      */
-    for (int k=min_keycodes_return; k<=max_keycodes_return; k++) {
-        KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
-        if (ks == NoSymbol) continue;
+    xcb_key_symbols_t *keysyms;
+    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
+        // std::cerr << "Could not allocate key symbols" << std::endl;
+        return;
+    }
+
+    for (xcb_keycode_t k=min_keycode; k<=max_keycode; k++) {
+        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
+        // KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
+        if (ks == XCB_NO_SYMBOL) continue;
 
         SingleInput si;
         si.type = IT_KEYBOARD;
         si.value = static_cast<int>(ks);
-        si.description = XKeysymToString(ks);
+        si.description = XKeysymToString(ks); // AFAIK there is no xcb counterpart to this...
         input_list.push_back(si);
     }
 
+    xcb_key_symbols_free(keysyms);
 
     /* Add controller mapping */
     input_list.push_back({IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});
@@ -283,17 +302,32 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window window, SharedConfig& sc){
+void KeyMapping::buildAllInputs(struct AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc){
     int i,j;
     int keysym_i = 0;
-    std::array<char,32> keyboard_state;
+    //std::array<char,32> keyboard_state;
 
     ai.emptyInputs();
 
     /* Get keyboard inputs */
-    XQueryKeymap(display, keyboard_state.data());
+    xcb_generic_error_t* error;
+    xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);
+    std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(conn, keymap_cookie, &error));
 
-    KeySym modifiers = build_modifiers(keyboard_state, display);
+    if (error) {
+        // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+        return;
+    }
+
+    unsigned char* keyboard_state = keymap_reply->keys;
+
+    xcb_keysym_t modifiers = build_modifiers(keyboard_state, conn);
+
+    xcb_key_symbols_t *keysyms;
+    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
+        // std::cerr << "Could not allocate key symbols" << std::endl;
+        return;
+    }
 
     for (i=0; i<32; i++) {
         if (keyboard_state[i] == 0)
@@ -302,9 +336,9 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window w
             if ((keyboard_state[i] >> j) & 0x1) {
 
                 /* We got a pressed keycode */
-                KeyCode kc = (i << 3) | j;
+                xcb_keycode_t kc = (i << 3) | j;
                 /* Translating to keysym */
-                KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+                xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
 
                 /* Check if we are dealing with a hotkey with or without modifiers */
                 if (hotkey_mapping.find(ks) != hotkey_mapping.end()) {
@@ -313,7 +347,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window w
                 }
 
                 if (modifiers) {
-                    KeySym ksm = ks | modifiers;
+                    xcb_keysym_t ksm = ks | modifiers;
                     if (hotkey_mapping.find(ksm) != hotkey_mapping.end()) {
                         /* Dealing with a hotkey, skipping */
                         continue;
@@ -370,17 +404,29 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, Display *display, Window w
         }
     }
 
-    /* Get the pointer position and mask */
+    xcb_key_symbols_free(keysyms);
+
     if (sc.mouse_support && window) {
-        Window w;
-        Bool onScreen = XQueryPointer(display, window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
-        /* We only care about the five mouse buttons */
-        ai.pointer_mask &= Button1Mask | Button2Mask | Button3Mask | Button4Mask | Button5Mask;
+        /* Get the pointer position and mask */
+        xcb_query_pointer_cookie_t pointer_cookie = xcb_query_pointer(conn, window);
+        std::unique_ptr<xcb_query_pointer_reply_t> pointer_reply(xcb_query_pointer_reply(conn, pointer_cookie, &error));
+
+        if (error) {
+            // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+            return;
+        }
+
+        ai.pointer_x = pointer_reply->win_x;
+        ai.pointer_y = pointer_reply->win_y;
+        /* We only care about the three mouse buttons */
+        ai.pointer_mask = pointer_reply->mask & (XCB_BUTTON_MASK_1 | XCB_BUTTON_MASK_2 | XCB_BUTTON_MASK_3);
+
+//        Bool onScreen = XQueryPointer(display, window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
 
         /* TODO: Do something with off-screen pointer */
-        if (!onScreen) {
-            ai.pointer_x = -1;
-            ai.pointer_y = -1;
-        }
+        // if (!onScreen) {
+        //     ai.pointer_x = -1;
+        //     ai.pointer_y = -1;
+        // }
     }
 }

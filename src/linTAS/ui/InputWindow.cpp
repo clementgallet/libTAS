@@ -20,11 +20,13 @@
 #include "InputWindow.h"
 #include "MainWindow.h"
 #include <iostream>
-#include <X11/XKBlib.h>
+// #include <X11/XKBlib.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 #include <FL/names.h>
 #include <FL/x.H>
 
-static KeySym get_next_keypressed(Display* display, Window window, bool with_modifiers);
+static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers);
 static Fl_Callback select_cb;
 static Fl_Callback assign_cb;
 static Fl_Callback default_cb;
@@ -100,7 +102,7 @@ void InputWindow::update()
                 linestr += '\t';
 
                 /* Build the key string with modifiers */
-                KeySym ks = itermap.first;
+                xcb_keysym_t ks = itermap.first;
                 for (ModifierKey modifier : modifier_list) {
                     if (ks & modifier.flag) {
                         linestr += modifier.description;
@@ -144,42 +146,59 @@ void InputWindow::update()
     }
 }
 
-static KeySym get_next_keypressed(Display* display, Window window, bool with_modifiers)
+static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers)
 {
-    /* We prevent the thread that process hotkeys from getting events until
-     * we got our keypress.
-     */
-    XLockDisplay(display);
-    XSelectInput(display, window, KeyPressMask);
-
-    /* Empty event queue */
-    XEvent event;
-    while (XCheckWindowEvent(display, window, KeyPressMask, &event)) {
+    xcb_connection_t* new_conn = xcb_connect(NULL,NULL);
+    if (xcb_connection_has_error(new_conn))
+    {
+        // std::cerr << "Cannot open display" << std::endl;
+        return 0;
     }
 
+    const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS };
+    xcb_change_window_attributes (new_conn, window, XCB_CW_EVENT_MASK, values);
+
+
+    // while (XCheckWindowEvent(display, window, KeyPressMask, &event)) {
+    // }
+
+    xcb_generic_error_t* error;
+
+    xcb_key_symbols_t *keysyms;
+    if (!(keysyms = xcb_key_symbols_alloc(new_conn))) {
+        // std::cerr << "Could not allocate key symbols" << std::endl;
+        return 0;
+    }
+
+    xcb_key_symbols_free(keysyms);
+
+
     while (1) {
-        XWindowEvent(display, window, KeyPressMask, &event);
-        if (event.type == KeyPress)
+        std::unique_ptr<xcb_key_press_event_t> key_event (reinterpret_cast<xcb_key_press_event_t*>(xcb_wait_for_event (new_conn)));
+        if (key_event->response_type == XCB_KEY_PRESS)
         {
-            KeyCode kc = event.xkey.keycode;
-            KeySym ks = XkbKeycodeToKeysym(display, kc, 0, 0);
+            xcb_keycode_t kc = key_event->detail;
+            xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
+
             if (with_modifiers) {
                 if (is_modifier(ks)) {
                     continue;
                 }
 
-                std::array<char,32> keyboard_state;
-                XQueryKeymap(display, keyboard_state.data());
-                KeySym modifiers = build_modifiers(keyboard_state, display);
+                /* Get keyboard inputs */
+                xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(new_conn);
+                std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(new_conn, keymap_cookie, &error));
+
+                if (error) {
+                    // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+                    return 0;
+                }
+
+                xcb_keysym_t modifiers = build_modifiers(keymap_reply->keys, new_conn);
                 ks |= modifiers;
             }
 
-            /* Disable keyboard events */
-            /* TODO: The next command produces a BadWindow error when the next
-             * XCheckWindowEvent is called and the game is not launched
-             */
-            XSelectInput(display, window, NoEventMask);
-            XUnlockDisplay(display);
+            xcb_disconnect(new_conn);
             return ks;
         }
     }
@@ -274,7 +293,7 @@ static void assign_cb(Fl_Widget* w, void* v)
         iw->input_browser->text(sel_input, linestr.c_str());
 
     Fl::flush();
-    KeySym ks = get_next_keypressed(iw->context->display, fl_xid(iw->window), is_hotkey);
+    KeySym ks = get_next_keypressed(iw->context->conn, fl_xid(iw->window), is_hotkey);
 
     iw->assign_button->label("Assign");
     iw->assign_button->activate();

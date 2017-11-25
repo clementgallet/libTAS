@@ -22,8 +22,9 @@
 
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
+#include <xcb/xcb.h>
+// #include <X11/Xlib.h>
+// #include <X11/keysym.h>
 #include <map>
 #include <vector>
 #include <array>
@@ -202,8 +203,8 @@ struct HotKey {
 };
 
 struct ModifierKey {
-    KeySym ks;
-    KeySym flag;
+    xcb_keysym_t ks;
+    xcb_keysym_t flag;
     std::string description;
 };
 
@@ -229,23 +230,23 @@ static std::array<ModifierKey, 8> modifier_list {{
     {XK_Alt_R, XK_Alt_R_Flag, "Alt_R"},
 }};
 
-bool is_modifier(KeySym ks);
+bool is_modifier(xcb_keysym_t ks);
 
-KeySym build_modifiers(std::array<char,32> &keyboard_state, Display *display);
+xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_connection_t *conn);
 
 class KeyMapping {
     public:
         /* Initialize hotkeys and mapping list */
-        void init(Display* display);
+        void init(xcb_connection_t* conn);
 
         /* Map keyboard KeySym to a single input of a keyboard or controller */
-        std::map<KeySym,SingleInput> input_mapping;
+        std::map<xcb_keysym_t,SingleInput> input_mapping;
 
         /* List of inputs that can be mapped to a single key */
         std::vector<SingleInput> input_list;
 
         /* Map keyboard KeySym to a hotkey */
-        std::map<KeySym,HotKey> hotkey_mapping;
+        std::map<xcb_keysym_t,HotKey> hotkey_mapping;
 
         /* List of hotkeys */
         std::vector<HotKey> hotkey_list;
@@ -278,7 +279,7 @@ class KeyMapping {
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          * - Get the mouse state
          */
-        void buildAllInputs(struct AllInputs& ai, Display *display, Window window, SharedConfig& sc);
+        void buildAllInputs(struct AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED
