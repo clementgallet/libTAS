@@ -108,6 +108,7 @@ int main(int argc, char **argv)
         std::cerr << "Cannot open display" << std::endl;
         return -1;
     }
+    std::cerr << "Open display" << std::endl;
 
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.

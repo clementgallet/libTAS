@@ -23,6 +23,7 @@
 #include <X11/Xlib.h>
 #include <cstring>
 #include <memory> // unique_ptr
+#include <iostream>
 
 void SingleInput::pack(char* data)
 {
@@ -130,7 +131,7 @@ void KeyMapping::init(xcb_connection_t* conn)
         return;
     }
 
-    for (xcb_keycode_t k=min_keycode; k<=max_keycode; k++) {
+    for (int k=min_keycode; k<=max_keycode; k++) {
         xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
         // KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
         if (ks == XCB_NO_SYMBOL) continue;

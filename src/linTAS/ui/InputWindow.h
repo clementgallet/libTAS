@@ -24,7 +24,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Multi_Browser.H>
-#include <X11/Xlib.h>
+// #include <X11/Xlib.h>
 #include "../Context.h"
 
 class InputWindow {

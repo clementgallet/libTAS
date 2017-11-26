@@ -293,7 +293,7 @@ static void assign_cb(Fl_Widget* w, void* v)
         iw->input_browser->text(sel_input, linestr.c_str());
 
     Fl::flush();
-    KeySym ks = get_next_keypressed(iw->context->conn, fl_xid(iw->window), is_hotkey);
+    xcb_keysym_t ks = get_next_keypressed(iw->context->conn, fl_xid(iw->window), is_hotkey);
 
     iw->assign_button->label("Assign");
     iw->assign_button->activate();

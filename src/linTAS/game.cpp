@@ -20,10 +20,9 @@
 #include "game.h"
 #include "../shared/sockethelpers.h"
 // #include <X11/Xlib.h>
-#include <X11/keysym.h>
+// #include <X11/keysym.h>
 // #include <X11/XKBlib.h>
 #include <xcb/xcb.h>
-#include <xcb/xproto.h>
 #include <xcb/xcb_keysyms.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
@@ -320,9 +319,14 @@ void launchGame(Context* context)
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
                 /* FIXME: Don't do this if the ui option is unchecked  */
-                const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
-                xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
-
+                {
+                    const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+                    xcb_void_cookie_t cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
+                    xcb_generic_error_t *error = xcb_request_check(context->conn, cwa_cookie);
+                    if (error) {
+                        std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
+                    }
+                }
                 // XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
                 std::cout << "Received window id " << context->game_window << std::endl;
                 break;
@@ -385,34 +389,66 @@ void launchGame(Context* context)
                     advance_frame = true;
             }
 
-            xcb_generic_event_t *event;
+            std::unique_ptr<xcb_generic_event_t> event;
 
-            // std::cerr << "Will call XPending" << std::endl;
-            while( (event = xcb_poll_for_event (context->conn)) || !context->hotkey_queue.empty() ) {
-                // std::cerr << "Did call XPending" << std::endl;
+            /* Will call xcb_poll_for_event at the beginning of the loop */
+            bool poll_event = true;
 
-                // XEvent event;
+            while(true) {
+                if (poll_event)
+                    event.reset(xcb_poll_for_event(context->conn));
+
+                if (!event && context->hotkey_queue.empty())
+                    break;
+
+                poll_event = true;
+
                 struct HotKey hk;
 
                 if (!event) {
                     /* Processing a hotkey pushed by the UI */
-                    event = static_cast<xcb_generic_event_t*>(malloc(sizeof(xcb_generic_event_t)));
+                    event.reset(new xcb_generic_event_t);
                     context->hotkey_queue.pop(hk.type);
                     event->response_type = XCB_KEY_PRESS;
                 }
                 else {
                     /* Processing a hotkey pressed by the user */
-                    // XNextEvent(context->display, &event);
-
                     if (event->response_type == XCB_FOCUS_OUT) {
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
 
-                    if ((event->response_type == XCB_KEY_PRESS) || (event->response_type == XCB_BUTTON_RELEASE)) {
+                    if ((event->response_type == XCB_KEY_PRESS) || (event->response_type == XCB_KEY_RELEASE)) {
                         /* Get the actual pressed/released key */
-                        xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event);
-
+                        xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event.get());
                         xcb_keycode_t kc = key_event->detail;
+
+                        /*
+                         * TODO: The following code was supposed to detect the X
+                         * AutoRepeat and remove the generated events. Actually,
+                         * I can't use it because for some reason, when I press a
+                         * key, a KeyRelease is generated at the same time as the
+                         * KeyPress event. For this reason, I disable X
+                         * AutoRepeat and I use this code to delete the extra
+                         * KeyRelease event...
+                         */
+                        if (event->response_type == XCB_KEY_RELEASE) {
+                            xcb_generic_event_t *next_event = xcb_poll_for_event (context->conn);
+
+                            if (next_event) {
+                                /* We got another event, so we replace the
+                                 * current one by this one and tells the next
+                                 * loop to not poll a new event. This is because
+                                 * XCB does not allow us to peek at the next event.
+                                 */
+                                event.reset(next_event);
+                                poll_event = false;
+
+                                if (next_event->sequence == event->sequence) {
+                                    /* This event must be discarded */
+                                    continue;
+                                }
+                            }
+                        }
 
                         /* Get keysym from keycode */
                         xcb_key_symbols_t *keysyms;
@@ -435,11 +471,9 @@ void launchGame(Context* context)
                         xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(context->conn);
                         std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(context->conn, keymap_cookie, &error));
 
-                        // XQueryKeymap(context->display, keyboard_state.data());
-                        std::cerr << "Did call XQueryKeymap" << std::endl;
                         xcb_keysym_t modifiers = 0;
                         if (error) {
-                            std::cerr << "Could not get focussed window, X error" << error->error_code << std::endl;
+                            std::cerr << "Could not get xcb_query_keymap, X error" << error->error_code << std::endl;
                         }
                         else {
                             modifiers = build_modifiers(keymap_reply->keys, context->conn);
@@ -458,7 +492,6 @@ void launchGame(Context* context)
 
                 if (event->response_type == XCB_KEY_PRESS)
                 {
-
                     /* Advance a frame */
                     if (hk.type == HOTKEY_FRAMEADVANCE){
                         if (context->config.sc.running) {
@@ -671,34 +704,10 @@ void launchGame(Context* context)
                         ui.update_ui();
 #endif
                     }
-                }
-                if (event->response_type == XCB_BUTTON_RELEASE)
-                {
-                    /*
-                     * TODO: The following code was supposed to detect the Xlib
-                     * AutoRepeat and remove the generated events. Actually,
-                     * I can't use it because for some reason, when I press a
-                     * key, a KeyRelease is generated at the same time as the
-                     * KeyPress event. For this reason, I disable Xlib
-                     * AutoRepeat and I use this code to delete the extra
-                     * KeyRelease event...
-                     * Taken from http://stackoverflow.com/questions/2100654/ignore-auto-repeat-in-x11-applications
-                     */
-                    // if (XEventsQueued(context->display, QueuedAfterReading))
-                    // {
-                    //     XEvent nev;
-                    //     XPeekEvent(context->display, &nev);
-                    //
-                    //     if ((nev.type == KeyPress) && (nev.xkey.time == event.xkey.time) &&
-                    //             (nev.xkey.keycode == event.xkey.keycode))
-                    //     {
-                    //         /* delete retriggered KeyPress event */
-                    //         // XNextEvent (display, &event);
-                    //         /* Skip current KeyRelease event */
-                    //         continue;
-                    //     }
-                    // }
+                } /* if (event->response_type == XCB_KEY_PRESS) */
 
+                if (event->response_type == XCB_KEY_RELEASE)
+                {
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;
                         ui.update_ui();
@@ -708,9 +717,7 @@ void launchGame(Context* context)
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
                 }
-
-                if (event) free (event);
-            }
+            } /* while( event || !context->hotkey_queue.empty() ) */
 
             if (!context->config.sc.running && !advance_frame) {
 
