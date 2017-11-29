@@ -11,11 +11,11 @@ Compiling is done using cmake. From the root directory just type:
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`
+The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libasound2-dev`
 
 To enable audio and video dumping, you will need `libavcodec-dev`, `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, `libswresample-dev`.
 
-To enable audio playback, you will also need `libswresample-dev`, `libasound2-dev`
+To enable audio playback, you will need `libswresample-dev` 
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 
