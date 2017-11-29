@@ -25,6 +25,7 @@
 #include <xcb/xcb_keysyms.h>
 #include <FL/names.h>
 #include <FL/x.H>
+#include <iostream>
 
 static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers);
 static Fl_Callback select_cb;
@@ -148,34 +149,23 @@ void InputWindow::update()
 
 static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers)
 {
-    xcb_connection_t* new_conn = xcb_connect(NULL,NULL);
-    if (xcb_connection_has_error(new_conn))
-    {
-        // std::cerr << "Cannot open display" << std::endl;
-        return 0;
-    }
+    /* Grab keyboard */
+    xcb_grab_keyboard_cookie_t grab_keyboard_cookie = xcb_grab_keyboard(conn, true, window, XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+    std::unique_ptr<xcb_grab_keyboard_reply_t> grab_keyboard_reply(xcb_grab_keyboard_reply(conn, grab_keyboard_cookie, nullptr));
 
-    const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS };
-    xcb_change_window_attributes (new_conn, window, XCB_CW_EVENT_MASK, values);
-
-
-    // while (XCheckWindowEvent(display, window, KeyPressMask, &event)) {
-    // }
+    if (grab_keyboard_reply && grab_keyboard_reply->status != XCB_GRAB_STATUS_SUCCESS)
+        std::cerr << "Could not grab keyboard" << std::endl;
 
     xcb_generic_error_t* error;
-
     xcb_key_symbols_t *keysyms;
-    if (!(keysyms = xcb_key_symbols_alloc(new_conn))) {
-        // std::cerr << "Could not allocate key symbols" << std::endl;
+    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
+        std::cerr << "Could not allocate key symbols" << std::endl;
         return 0;
     }
 
-    xcb_key_symbols_free(keysyms);
-
-
     while (1) {
-        std::unique_ptr<xcb_key_press_event_t> key_event (reinterpret_cast<xcb_key_press_event_t*>(xcb_wait_for_event (new_conn)));
-        if (key_event->response_type == XCB_KEY_PRESS)
+        std::unique_ptr<xcb_key_press_event_t> key_event (reinterpret_cast<xcb_key_press_event_t*>(xcb_wait_for_event (conn)));
+        if (key_event->response_type & ~0x80 == XCB_KEY_PRESS)
         {
             xcb_keycode_t kc = key_event->detail;
             xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
@@ -186,19 +176,24 @@ static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t win
                 }
 
                 /* Get keyboard inputs */
-                xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(new_conn);
-                std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(new_conn, keymap_cookie, &error));
+                xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);
+                std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(conn, keymap_cookie, &error));
 
                 if (error) {
-                    // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+                    std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
                     return 0;
                 }
 
-                xcb_keysym_t modifiers = build_modifiers(keymap_reply->keys, new_conn);
+                xcb_keysym_t modifiers = build_modifiers(keymap_reply->keys, conn);
                 ks |= modifiers;
             }
 
-            xcb_disconnect(new_conn);
+            xcb_key_symbols_free(keysyms);
+
+            /* Ungrab keyboard */
+            xcb_ungrab_keyboard(conn, XCB_CURRENT_TIME);
+
+            // xcb_disconnect(new_conn);
             return ks;
         }
     }

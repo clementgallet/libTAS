@@ -413,11 +413,11 @@ void launchGame(Context* context)
                 }
                 else {
                     /* Processing a hotkey pressed by the user */
-                    if (event->response_type == XCB_FOCUS_OUT) {
+                    if (event->response_type & ~0x80 == XCB_FOCUS_OUT) {
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
 
-                    if ((event->response_type == XCB_KEY_PRESS) || (event->response_type == XCB_KEY_RELEASE)) {
+                    if ((event->response_type & ~0x80 == XCB_KEY_PRESS) || (event->response_type & ~0x80 == XCB_KEY_RELEASE)) {
                         /* Get the actual pressed/released key */
                         xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event.get());
                         xcb_keycode_t kc = key_event->detail;
@@ -431,7 +431,7 @@ void launchGame(Context* context)
                          * AutoRepeat and I use this code to delete the extra
                          * KeyRelease event...
                          */
-                        if (event->response_type == XCB_KEY_RELEASE) {
+                        if (event->response_type & ~0x80 == XCB_KEY_RELEASE) {
                             xcb_generic_event_t *next_event = xcb_poll_for_event (context->conn);
 
                             if (next_event) {
@@ -490,7 +490,7 @@ void launchGame(Context* context)
                     }
                 }
 
-                if (event->response_type == XCB_KEY_PRESS)
+                if (event->response_type & ~0x80 == XCB_KEY_PRESS)
                 {
                     /* Advance a frame */
                     if (hk.type == HOTKEY_FRAMEADVANCE){
@@ -704,9 +704,9 @@ void launchGame(Context* context)
                         ui.update_ui();
 #endif
                     }
-                } /* if (event->response_type == XCB_KEY_PRESS) */
+                } /* if (event->response_type & ~0x80 == XCB_KEY_PRESS) */
 
-                if (event->response_type == XCB_KEY_RELEASE)
+                if (event->response_type & ~0x80 == XCB_KEY_RELEASE)
                 {
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;
