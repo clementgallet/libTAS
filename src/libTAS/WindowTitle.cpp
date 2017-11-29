@@ -44,13 +44,24 @@ void WindowTitle::update(float fps, float lfps)
     if (!set_title)
         return;
 
-    static float cur_fps, cur_lfps = 0;
-    if (fps > 0) cur_fps = fps;
-    if (lfps > 0) cur_lfps = lfps;
+    /* Updating the title is probably slow, so we only do it when parameters
+     * have changed.
+     */
+    static float last_fps, last_lfps = 0;
+    static bool last_running = false;
+    static bool last_fastforward = false;
+    static bool last_dumping = false;
+
+    if (last_running == shared_config.running
+     && last_fastforward == shared_config.fastforward
+     && last_dumping == shared_config.av_dumping
+     && abs(last_fps-fps) < 0.1
+     && abs(last_lfps-lfps) < 0.1)
+        return;
 
     std::ostringstream out;
-    out << " (fps: " << std::fixed << std::setprecision(1) << cur_fps;
-    out << " - lfps: " << cur_lfps << ") - status: ";
+    out << " (fps: " << std::fixed << std::setprecision(1) << fps;
+    out << " - lfps: " << lfps << ") - status: ";
     if (shared_config.running)
         out << "running";
     else
@@ -61,7 +72,13 @@ void WindowTitle::update(float fps, float lfps)
         out << " dumping";
 
     std::string new_title = orig_title + out.str();
-
     set_title(new_title.c_str());
+
+    /* Store updated values */
+    last_running = shared_config.running;
+    last_fastforward = shared_config.fastforward;
+    last_dumping = shared_config.av_dumping;
+    last_fps = fps;
+    last_lfps = lfps;
 }
 }

@@ -114,7 +114,6 @@ static bool skipDraw(float fps)
 
         if (++skip_counter >= skip_freq) {
             skip_counter = 0;
-            std::cerr << "fps: " << fps << " skip freq: " << skip_freq << std::endl;
             return false;
         }
 
