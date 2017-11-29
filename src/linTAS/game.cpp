@@ -223,7 +223,13 @@ void launchGame(Context* context)
     uint32_t values_aroff[] = {XCB_AUTO_REPEAT_MODE_OFF, None};
 
     xcb_change_keyboard_control(context->conn, mask_aroff, values_aroff);
-    // XAutoRepeatOff(context->display);
+
+    /* Get keyboard layout (for keycode -> keysym) */
+    std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms(xcb_key_symbols_alloc(context->conn), xcb_key_symbols_free);
+    if (!keysyms) {
+        std::cerr << "Could not allocate key symbols" << std::endl;
+        return;
+    }
 
     /* Receive informations from the game */
 
@@ -413,11 +419,11 @@ void launchGame(Context* context)
                 }
                 else {
                     /* Processing a hotkey pressed by the user */
-                    if (event->response_type & ~0x80 == XCB_FOCUS_OUT) {
+                    if ((event->response_type & ~0x80) == XCB_FOCUS_OUT) {
                         ar_ticks = -1; // Deactivate auto-repeat
                     }
 
-                    if ((event->response_type & ~0x80 == XCB_KEY_PRESS) || (event->response_type & ~0x80 == XCB_KEY_RELEASE)) {
+                    if (((event->response_type & ~0x80) == XCB_KEY_PRESS) || ((event->response_type & ~0x80) == XCB_KEY_RELEASE)) {
                         /* Get the actual pressed/released key */
                         xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event.get());
                         xcb_keycode_t kc = key_event->detail;
@@ -431,7 +437,7 @@ void launchGame(Context* context)
                          * AutoRepeat and I use this code to delete the extra
                          * KeyRelease event...
                          */
-                        if (event->response_type & ~0x80 == XCB_KEY_RELEASE) {
+                        if ((event->response_type & ~0x80) == XCB_KEY_RELEASE) {
                             xcb_generic_event_t *next_event = xcb_poll_for_event (context->conn);
 
                             if (next_event) {
@@ -451,16 +457,7 @@ void launchGame(Context* context)
                         }
 
                         /* Get keysym from keycode */
-                        xcb_key_symbols_t *keysyms;
-                        if (!(keysyms = xcb_key_symbols_alloc(context->conn))) {
-                            std::cerr << "Could not allocate key symbols" << std::endl;
-                            return;
-                        }
-
-                        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
-                        xcb_key_symbols_free(keysyms);
-
-                        // KeySym ks = XkbKeycodeToKeysym(context->display, kc, 0, 0);
+                        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms.get(), kc, 0);
 
                         /* If the key is a modifier, skip it */
                         if (is_modifier(ks))
@@ -490,7 +487,7 @@ void launchGame(Context* context)
                     }
                 }
 
-                if (event->response_type & ~0x80 == XCB_KEY_PRESS)
+                if ((event->response_type & ~0x80) == XCB_KEY_PRESS)
                 {
                     /* Advance a frame */
                     if (hk.type == HOTKEY_FRAMEADVANCE){
@@ -706,7 +703,7 @@ void launchGame(Context* context)
                     }
                 } /* if (event->response_type & ~0x80 == XCB_KEY_PRESS) */
 
-                if (event->response_type & ~0x80 == XCB_KEY_RELEASE)
+                if ((event->response_type & ~0x80) == XCB_KEY_RELEASE)
                 {
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;

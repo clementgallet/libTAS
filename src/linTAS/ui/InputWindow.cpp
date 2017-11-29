@@ -165,7 +165,7 @@ static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t win
 
     while (1) {
         std::unique_ptr<xcb_key_press_event_t> key_event (reinterpret_cast<xcb_key_press_event_t*>(xcb_wait_for_event (conn)));
-        if (key_event->response_type & ~0x80 == XCB_KEY_PRESS)
+        if ((key_event->response_type & ~0x80) == XCB_KEY_PRESS)
         {
             xcb_keycode_t kc = key_event->detail;
             xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, kc, 0);
