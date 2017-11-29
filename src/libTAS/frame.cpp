@@ -54,50 +54,74 @@ static void receive_messages(std::function<void()> draw);
 /* Compute real and logical fps */
 static void computeFPS(float& fps, float& lfps)
 {
-    static const int frame_segment_size = 60;
+    /* Frequency of FPS computing (every n frames) */
+    static const int fps_refresh_freq = 10;
 
-    static std::array<TimeHolder, frame_segment_size> lastTimes;
-    static std::array<TimeHolder, frame_segment_size> lastTickss;
+    /* Computations include values from past n calls */
+    static const int history_length = 10;
 
-    static int computeCounter = 0;
+    static std::array<TimeHolder, history_length> lastTimes;
+    static std::array<TimeHolder, history_length> lastTicks;
 
-    /* Update current time */
-    TimeHolder lastTime = lastTimes[computeCounter%60];
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[computeCounter%60]));
+    static int refresh_counter = 0;
+    static int compute_counter = 0;
 
-    /* Update current ticks */
-    TimeHolder lastTicks = lastTickss[computeCounter%60];
-    struct timespec tsTicks = detTimer.getTicks();
-    lastTickss[computeCounter%60] = tsTicks;
+    if (++refresh_counter >= fps_refresh_freq) {
+        refresh_counter = 0;
 
+        /* Update current time */
+        TimeHolder lastTime = lastTimes[compute_counter];
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[compute_counter]));
 
-    /* Compute real fps (number of drawn screens per second) */
-    TimeHolder deltaTime = lastTimes[computeCounter%60] - lastTime;
+        /* Update current ticks */
+        TimeHolder lastTick = lastTicks[compute_counter];
+        lastTicks[compute_counter] = detTimer.getTicks();
 
-    /* Compute logical fps (number of drawn screens per timer second) */
-    TimeHolder deltaTicks = lastTickss[computeCounter%60] - lastTicks;
+        /* Compute real fps (number of drawn screens per second) */
+        TimeHolder deltaTime = lastTimes[compute_counter] - lastTime;
 
-    computeCounter++;
+        /* Compute logical fps (number of drawn screens per timer second) */
+        TimeHolder deltaTicks = lastTicks[compute_counter] - lastTick;
 
-    if (computeCounter >= 60) {
-        fps = static_cast<float>(frame_segment_size) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
-        lfps = static_cast<float>(frame_segment_size) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+        if (++compute_counter >= history_length)
+            compute_counter = 0;
+
+        fps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+        lfps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
     }
-
 }
 
 /* Deciding if we actually draw the frame */
-static bool skipDraw(void)
+static bool skipDraw(float fps)
 {
-    static int skipCounter = 0;
+    static unsigned int skip_counter = 0;
     if (shared_config.fastforward) {
-        if (skipCounter++ > 10) // TODO: Tweak this value based on fps
-            skipCounter = 0;
-    }
-    else
-        skipCounter = 0;
+        unsigned int skip_freq = 1;
 
-    return skipCounter;
+        /* I want to display about 16 effective frames per second, so I divide
+         * the fps value by 16 to get the skip frequency.
+         * Moreover, it is better to have bands of the same skip frequency, so
+         * I take the next highest power of 2.
+         * Because the value is already in a float, I can use this neat trick from
+         * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+         */
+
+        if (fps > 1) {
+            fps--;
+            memcpy(&skip_freq, &fps, sizeof(int));
+            skip_freq = 1U << ((skip_freq >> 23) - 126 - 4);
+        }
+
+        if (++skip_counter >= skip_freq) {
+            skip_counter = 0;
+            std::cerr << "fps: " << fps << " skip freq: " << skip_freq << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 #ifdef LIBTAS_ENABLE_HUD
@@ -106,6 +130,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
 void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 {
+    static float fps, lfps = 0;
+
     debuglog(LCF_FRAME, "Enter frame boundary");
     ThreadManager::setMainThread();
 
@@ -127,7 +153,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Decide if we skip drawing to the screen because of fastforward. We must
      * call it once per frame boundary, because it raises an internal counter.
      */
-    bool skipping_draw = skipDraw();
+    bool skipping_draw = skipDraw(fps);
 
     /* We must save the screen pixels before drawing for the following cases:
      * - we set screen redraw when loading savestates
@@ -247,7 +273,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     ++frame_counter;
 
     /* Print FPS */
-    static float fps, lfps = 0;
     if (drawFB) {
         computeFPS(fps, lfps);
         debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
