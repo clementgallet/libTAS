@@ -138,7 +138,7 @@ static void executeGame(Context* context)
             /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
              * print and pause when one signal is sent */
             "-ex", "handle SIGUSR1 nostop noprint",
-            "-ex", "handle SIGUSR1 nostop noprint",
+            "-ex", "handle SIGUSR2 nostop noprint",
             "-ex", "handle SIGPWR nostop noprint", // used a lot in some games
             "-ex", "handle SIGXCPU nostop noprint", // used a lot in some games
             "-ex", "run",

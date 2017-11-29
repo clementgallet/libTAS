@@ -291,14 +291,10 @@ void ThreadManager::checkpoint(const char* savestatepath)
     /* Restoring the original signal handlers */
     CustomSignals::restoreHandlers();
 
-    if (restoreInProgress) {
-        /* We are being restored.  Wait for all other threads to finish being
-         * restored before resuming.
-         */
-        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads after restore");
-        waitForAllRestored(current_thread);
-        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming after restore");
-    }
+    /* Wait for all other threads to finish being restored before resuming */
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
+    waitForAllRestored(current_thread);
+    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming main thread");
 
     ThreadSync::releaseLocks();
 }
@@ -502,10 +498,8 @@ void ThreadManager::stopThisThread(int signum)
 
         ThreadLocalStorage::saveTLSState(&current_thread->tlsInfo); // save thread local storage
         MYASSERT(getcontext(&current_thread->savctx) == 0)
-        // save_sp(&curThread->saved_sp);
 
         debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext");
-        // printBacktrace();
 
         if (!restoreInProgress) {
 
@@ -530,21 +524,19 @@ void ThreadManager::stopThisThread(int signum)
                 setcontext(&current_thread->savctx);
                 /* NOT REACHED */
             }
-            MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
         }
         else {
-            /* We successfully restored the thread. We wait for all other
-             * threads to restore before continuing
-             */
             ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo); // restore thread local storage
-
-            MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
-
-            /* Else restoreinprog >= 1;  This stuff executes to do a restart */
-            waitForAllRestored(current_thread);
         }
 
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
+        MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
+
+        /* We successfully resumed the thread. We wait for all other
+         * threads to restore before continuing
+         */
+        waitForAllRestored(current_thread);
+
+        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
     }
 }
 
