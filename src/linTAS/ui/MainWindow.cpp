@@ -35,7 +35,6 @@ static Fl_Callback0 set_fps_cb;
 static Fl_Callback0 pause_cb;
 static Fl_Callback0 fastforward_cb;
 static Fl_Callback0 movie_recording_cb;
-static Fl_Callback0 movie_toggle_rw_cb;
 #ifdef LIBTAS_ENABLE_AVDUMPING
 static Fl_Callback config_encode_cb;
 static Fl_Callback toggle_encode_cb;
@@ -125,12 +124,21 @@ void MainWindow::build(Context* c)
     browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
     browsemoviepath->callback(browse_moviepath_cb);
 
-    movie_recording = new Fl_Check_Button(10, 90, 160, 20, "Record Inputs");
-    movie_recording->callback(movie_recording_cb);
-    movie_recording->set();
+    movie_pack = new Fl_Pack(10, 90, window->w(), 20);
+    movie_pack->type(Fl_Pack::HORIZONTAL);
+    // movie_pack->box(FL_ENGRAVED_FRAME);
 
-    movie_read_only = new Fl_Check_Button(200, 90, 160, 20, "Read Only");
-    movie_read_only->callback(movie_toggle_rw_cb);
+    movie_no = new Fl_Radio_Round_Button(0, 0, 160, 20, "No Movie");
+    movie_no->callback(movie_recording_cb);
+    movie_no->set();
+
+    movie_recording = new Fl_Radio_Round_Button(0, 0, 160, 20, "Recording");
+    movie_recording->callback(movie_recording_cb);
+
+    movie_playback = new Fl_Radio_Round_Button(0, 0, 160, 20, "Playback");
+    movie_playback->callback(movie_recording_cb);
+
+    movie_pack->end();
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(160, 180, 40, 30, "Frames per second");
@@ -170,17 +178,8 @@ void MainWindow::build(Context* c)
         rerecord_count->value(rerecordstr.c_str());
 
         /* Also, by default, set the read-only mode */
-        movie_read_only->set();
+        movie_playback->setonly();
         context->config.sc.recording = SharedConfig::RECORDING_READ;
-        context->config.sc_modified = true;
-    }
-    else {
-        movie_framecount->value("0");
-        rerecord_count->value("0");
-
-        /* Also, by default, set the write mode */
-        movie_read_only->clear();
-        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
         context->config.sc_modified = true;
     }
 
@@ -467,7 +466,9 @@ void MainWindow::update_status()
                 if (config_item) config_item->activate();
             }
 #endif
+            movie_no->activate();
             movie_recording->activate();
+            movie_playback->activate();
             framecount->value("0");
             {
                 movie_framecount->activate();
@@ -497,7 +498,13 @@ void MainWindow::update_status()
                 movie_framecount->value("");
                 movie_framecount->deactivate();
             }
-            movie_recording->deactivate();
+            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+                movie_recording->deactivate();
+                movie_playback->deactivate();
+            }
+            else {
+                movie_no->deactivate();
+            }
             break;
         case Context::ACTIVE:
             if (context->attach_gdb) {
@@ -542,19 +549,18 @@ void MainWindow::update_ui()
     std::string movieframestr;
     switch (context->config.sc.recording) {
         case SharedConfig::RECORDING_WRITE:
-            movie_read_only->clear();
+            movie_recording->setonly();
             movie_framecount->value("");
             movie_framecount->deactivate();
             break;
         case SharedConfig::RECORDING_READ:
-            movie_read_only->set();
+            movie_playback->setonly();
             movieframestr = std::to_string(context->config.sc.movie_framecount);
             movie_framecount->value(movieframestr.c_str());
             movie_framecount->activate();
             break;
         case SharedConfig::NO_RECORDING:
-            movie_recording->clear();
-            movie_read_only->deactivate();
+            movie_no->setonly();
             moviepath->deactivate();
             browsemoviepath->deactivate();
         default:
@@ -804,7 +810,7 @@ void browse_gamepath_cb(Fl_Widget* w, void*)
             mw.rerecord_count->value(rerecordstr.c_str());
 
             /* Also, by default, set the read-only mode */
-            mw.movie_read_only->set();
+            mw.movie_playback->setonly();
             mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
             mw.context->config.sc_modified = true;
         }
@@ -840,7 +846,7 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
             mw.rerecord_count->value(rerecordstr.c_str());
 
             /* Also, by default, set the read-only mode */
-            mw.movie_read_only->set();
+            mw.movie_playback->setonly();
             mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
             mw.context->config.sc_modified = true;
         }
@@ -849,7 +855,7 @@ void browse_moviepath_cb(Fl_Widget* w, void*)
             mw.rerecord_count->value("0");
 
             /* Also, by default, set the write mode */
-            mw.movie_read_only->clear();
+            mw.movie_recording->setonly();
             mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             mw.context->config.sc_modified = true;
         }
@@ -912,47 +918,34 @@ void fastforward_cb(Fl_Widget* w)
 void movie_recording_cb(Fl_Widget* w)
 {
     MainWindow& mw = MainWindow::getInstance();
-    if (mw.movie_recording->value() == 1) {
-        if (mw.movie_read_only->value() == 1) {
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
-        }
-        else {
-            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-        }
-
-        /* Enable the other movie UI elements */
-        mw.movie_read_only->activate();
-        mw.moviepath->activate();
-        mw.browsemoviepath->activate();
-    }
-    else {
+    if (mw.movie_no->value() == 1) {
         mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
 
         /* Disable the other movie UI elements */
-        mw.movie_read_only->deactivate();
         mw.moviepath->deactivate();
         mw.browsemoviepath->deactivate();
     }
-    mw.context->config.sc_modified = true;
-}
+    else {
+        /* If the game is running, we let the main thread deal with movie toggling.
+         * Else, we set the recording mode.
+         */
+        if (mw.context->status == Context::INACTIVE) {
+            if (mw.movie_recording->value() == 1) {
+                mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+            }
+            else {
+                mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
+            }
 
-void movie_toggle_rw_cb(Fl_Widget* w)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    /* If the game is running, we let the main thread deal with movie toggling.
-     * Else, we set the recording mode.
-     */
-    if (mw.context->status == Context::INACTIVE) {
-        if (mw.movie_read_only->value() == 1) {
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
+            /* Enable the other movie UI elements */
+            mw.moviepath->activate();
+            mw.browsemoviepath->activate();
         }
         else {
-            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+            mw.context->hotkey_queue.push(HOTKEY_READWRITE);
         }
     }
-    else {
-        mw.context->hotkey_queue.push(HOTKEY_READWRITE);
-    }
+    mw.context->config.sc_modified = true;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING

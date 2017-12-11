@@ -86,8 +86,10 @@ class MainWindow {
         Fl_Button *browsemoviepath;
         Fl_Native_File_Chooser *moviepathchooser;
 
-        Fl_Check_Button *movie_recording;
-        Fl_Check_Button *movie_read_only;
+        Fl_Pack *movie_pack;
+        Fl_Radio_Round_Button *movie_no;
+        Fl_Radio_Round_Button *movie_recording;
+        Fl_Radio_Round_Button *movie_playback;
 
         Fl_Int_Input *logicalfps;
 
