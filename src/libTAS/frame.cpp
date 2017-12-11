@@ -324,6 +324,7 @@ static void receive_messages(std::function<void()> draw)
         {
             case MSGN_USERQUIT:
                 pushQuitEvent();
+                is_exiting = true;
                 break;
 
             case MSGN_CONFIG:

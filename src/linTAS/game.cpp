@@ -334,7 +334,7 @@ void launchGame(Context* context)
                     }
                 }
                 // XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-                std::cout << "Received window id " << context->game_window << std::endl;
+                // std::cout << "Received window id " << context->game_window << std::endl;
                 break;
 
             case MSGB_ALERT_MSG:
@@ -365,7 +365,7 @@ void launchGame(Context* context)
             message = receiveMessage();
         }
 
-        if (message == -1) {
+        if (message < 0) {
             std::cerr << "Got a socket error: " << strerror(errno) << std::endl;
             break;
         }
