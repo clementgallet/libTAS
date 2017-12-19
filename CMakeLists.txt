@@ -13,6 +13,8 @@ file(GLOB external_sources src/external/*)
 set(EXECUTABLE_OUTPUT_PATH ./)
 set(LIBRARY_OUTPUT_PATH ./)
 #set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 # Include FLTK path
 set(FLTK_SKIP_OPENGL TRUE)
@@ -35,8 +37,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-inc
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
 # Add librt for shm_open
-find_library(RT_LIB rt)
-target_link_libraries (linTAS ${RT_LIB})
+#find_library(RT_LIB rt)
+#target_link_libraries (linTAS ${RT_LIB})
 
 # Add TAR lib
 find_library(TAR_LIB tar)
@@ -54,8 +56,6 @@ set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
 find_package(XCB COMPONENTS XCB KEYSYMS REQUIRED)
 include_directories(${XCB_INCLUDE_DIRS})
 target_link_libraries (linTAS ${XCB_LIBRARIES})
-MESSAGE( STATUS "XCB_INCLUDE:         " ${XCB_INCLUDE_DIRS} )
-MESSAGE( STATUS "XCB_LIBS:         " ${XCB_LIBRARIES} )
 
 # Add X11 library
 find_package(X11 REQUIRED)
@@ -134,11 +134,4 @@ else()
     message(WARNING "File IO hooking is disabled")
 endif()
 
-option(ENABLE_CUSTOM_MALLOC "Enable custom Memory Allocation" OFF)
-if (ENABLE_CUSTOM_MALLOC)
-    # Enable custom allocator
-    message(STATUS "Custom memory allocator is enabled")
-    add_definitions(-DLIBTAS_ENABLE_CUSTOM_MALLOC)
-else()
-    message(WARNING "Custom memory allocator is disabled")
-endif()
+install(TARGETS linTAS TAS DESTINATION bin)

@@ -8,7 +8,6 @@
 
 ### Features
 
-- Add a memory watch/search module
 - Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
 
 ### Fixes
@@ -37,6 +36,7 @@
 
 ## Done
 
+- Add a memory watch/search module
 - Prevent game from redirecting stdout/stderr to a log file
 - Hook pulse audio
 - Record inputs and support playback
