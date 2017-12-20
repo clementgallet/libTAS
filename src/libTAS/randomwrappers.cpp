@@ -23,51 +23,43 @@
 
 namespace libtas {
 
-namespace orig {
-    static long int (*random) (void) throw();
-    static void (*srandom) (unsigned int seed) throw();
-    static char *(*initstate) (unsigned int seed, char *statebuf,
-                size_t statelen) throw();
-    static char *(*setstate) (char *statebuf) throw();
-    static int (*random_r) (struct random_data *buf,
-                 int32_t *result) throw();
-    static int (*srandom_r) (unsigned int seed, struct random_data *buf) throw();
-    static int (*initstate_r) (unsigned int seed, char *statebuf, size_t statelen,
-                struct random_data *buf) throw();
-    static int (*setstate_r) (char *statebuf, struct random_data *buf) throw();
-    static int (*rand) (void) throw();
-    static void (*srand) (unsigned int __seed) throw();
-    static int (*rand_r) (unsigned int *seed) throw();
-    static double (*drand48) (void) throw();
-    static double (*erand48) (unsigned short int xsubi[3]) throw();
-    static long int (*lrand48) (void) throw();
-    static long int (*nrand48) (unsigned short int xsubi[3]) throw();
-    static long int (*mrand48) (void) throw();
-    static long int (*jrand48) (unsigned short int xsubi[3]) throw();
-    static void (*srand48) (long int seedval) throw();
-    static unsigned short int *(*seed48) (unsigned short int seed16v[3]) throw();
-    static void (*lcong48) (unsigned short int param[7]) throw();
-    static int (*drand48_r) (struct drand48_data *buffer, double *result) throw();
-    static int (*erand48_r) (unsigned short int xsubi[3],
-                  struct drand48_data *buffer, double *result) throw() ;
-    static int (*lrand48_r) (struct drand48_data *buffer, long int *result) throw();
-    static int (*nrand48_r) (unsigned short int xsubi[3],
-                  struct drand48_data *buffer, long int *result) throw();
-    static int (*mrand48_r) (struct drand48_data *buffer, long int *result) throw();
-    static int (*jrand48_r) (unsigned short int xsubi[3],
-                  struct drand48_data *buffer, long int *result) throw();
-    static int (*srand48_r) (long int seedval, struct drand48_data *buffer) throw();
-    static int (*seed48_r) (unsigned short int seed16v[3],
-                 struct drand48_data *buffer) throw();
-    static int (*lcong48_r) (unsigned short int param[7],
-                  struct drand48_data *buffer) throw();
-}
+DEFINE_ORIG_POINTER(random)
+DEFINE_ORIG_POINTER(srandom)
+DEFINE_ORIG_POINTER(initstate)
+DEFINE_ORIG_POINTER(setstate)
+DEFINE_ORIG_POINTER(random_r)
+DEFINE_ORIG_POINTER(srandom_r)
+DEFINE_ORIG_POINTER(initstate_r)
+DEFINE_ORIG_POINTER(setstate_r)
+DEFINE_ORIG_POINTER(rand)
+DEFINE_ORIG_POINTER(srand)
+DEFINE_ORIG_POINTER(rand_r)
+DEFINE_ORIG_POINTER(drand48)
+DEFINE_ORIG_POINTER(erand48)
+DEFINE_ORIG_POINTER(lrand48)
+DEFINE_ORIG_POINTER(nrand48)
+DEFINE_ORIG_POINTER(mrand48)
+DEFINE_ORIG_POINTER(jrand48)
+DEFINE_ORIG_POINTER(srand48)
+DEFINE_ORIG_POINTER(seed48)
+DEFINE_ORIG_POINTER(lcong48)
+DEFINE_ORIG_POINTER(drand48_r)
+DEFINE_ORIG_POINTER(erand48_r)
+DEFINE_ORIG_POINTER(lrand48_r)
+DEFINE_ORIG_POINTER(nrand48_r)
+DEFINE_ORIG_POINTER(mrand48_r)
+DEFINE_ORIG_POINTER(jrand48_r)
+DEFINE_ORIG_POINTER(srand48_r)
+DEFINE_ORIG_POINTER(seed48_r)
+DEFINE_ORIG_POINTER(lcong48_r)
 
 /* Override */ long int random (void) throw()
 {
-    DEBUGLOGCALL(LCF_RANDOM);
+    static int count = 0;
     LINK_NAMESPACE(random, nullptr);
-    return orig::random();
+    long int ret = orig::random();
+    debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
+    return ret;
 }
 
 /* Override */ void srandom (unsigned int seed) throw()
@@ -124,9 +116,11 @@ namespace orig {
 
 /* Override */ int rand (void) throw()
 {
-    DEBUGLOGCALL(LCF_RANDOM);
+    static int count = 0;
     LINK_NAMESPACE(rand, nullptr);
-    return orig::rand();
+    int ret = orig::rand();
+    debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
+    return ret;
 }
 
 /* Override */ void srand (unsigned int seed) throw()
