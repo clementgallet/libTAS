@@ -114,10 +114,13 @@ int main(int argc, char **argv)
      */
     context.config.km.init(context.conn);
 
-    /* libTAS.so path, relative to the executable directory, because we added
-     * $ORIGIN to the executable runpath.
-     */
-    context.libtaspath = "./libTAS.so"; // setting "libTAS.so" does not work, why !?
+    /* libTAS.so path */
+    /* TODO: Not portable! */
+    ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
+    std::string binpath = std::string( buf, (count > 0) ? count : 0 );
+    char* binpathptr = const_cast<char*>(binpath.c_str());
+    context.libtaspath = dirname(binpathptr);
+    context.libtaspath += "/libTAS.so";
 
     /* Game path */
     abspath = realpath(argv[optind], buf);

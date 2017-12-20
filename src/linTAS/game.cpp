@@ -18,24 +18,25 @@
  */
 
 #include "game.h"
+#include "utils.h"
+#include "AutoSave.h"
+
+#include "ui/MainWindow.h"
+
 #include "../shared/sockethelpers.h"
-// #include <X11/Xlib.h>
-// #include <X11/keysym.h>
-// #include <X11/XKBlib.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+
+#include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "ui/MainWindow.h"
 #include <cerrno>
-#include "utils.h"
 #include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
-#include <signal.h> // kill
+#include <csignal> // kill
 #include <memory> // unique_ptr
 
 MovieFile movie;
@@ -765,6 +766,7 @@ void launchGame(Context* context)
                 if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                     /* Save inputs to moviefile */
                     movie.setInputs(ai);
+                    AutoSave::update(context, movie);
                 }
 
                 /* Update the movie end time */
