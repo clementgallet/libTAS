@@ -280,6 +280,11 @@ OVERRIDE int SDL_Flip(SDL1::SDL_Surface *screen);
  */
 OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
 
+/**
+ *  \brief Set an OpenGL window attribute before window creation.
+ */
+OVERRIDE int SDL_GL_SetAttribute(SDL_GLattr attr, int value);
+
 }
 
 #endif

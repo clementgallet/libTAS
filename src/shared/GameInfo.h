@@ -48,6 +48,18 @@ struct GameInfo {
     int keyboard = XEVENTS;
     int mouse = XEVENTS;
     int joystick = UNKNOWN;
+
+    int opengl_major = 2;
+    int opengl_minor = 0;
+
+    enum Profile {
+        NONE,
+        CORE,
+        COMPATIBILITY,
+        ES
+    };
+    Profile opengl_profile = NONE;
+
 };
 
 #endif

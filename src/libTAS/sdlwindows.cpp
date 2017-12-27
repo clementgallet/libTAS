@@ -57,6 +57,7 @@ DEFINE_ORIG_POINTER(SDL_RenderPresent);
 DEFINE_ORIG_POINTER(SDL_SetVideoMode);
 DEFINE_ORIG_POINTER(SDL_GL_SwapBuffers);
 DEFINE_ORIG_POINTER(SDL_Flip);
+DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
 
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
@@ -369,6 +370,41 @@ static int swapInterval = 0;
     if (mode != SDL1::SDL_GRAB_QUERY)
         fakeGrab = mode;
     return fakeGrab;
+}
+
+
+/* Override */ int SDL_GL_SetAttribute(SDL_GLattr attr, int value)
+{
+    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call with attr ", attr, " and value ", value);
+    LINK_NAMESPACE_SDL2(SDL_GL_SetAttribute);
+
+    switch (attr) {
+    case SDL_GL_CONTEXT_MAJOR_VERSION:
+        game_info.opengl_major = value;
+        break;
+    case SDL_GL_CONTEXT_MINOR_VERSION:
+        game_info.opengl_minor = value;
+        break;
+    case SDL_GL_CONTEXT_PROFILE_MASK:
+        switch (value) {
+        case SDL_GL_CONTEXT_PROFILE_CORE:
+            game_info.opengl_profile = GameInfo::CORE;
+            break;
+        case SDL_GL_CONTEXT_PROFILE_COMPATIBILITY:
+            game_info.opengl_profile = GameInfo::COMPATIBILITY;
+            break;
+        case SDL_GL_CONTEXT_PROFILE_ES:
+            game_info.opengl_profile = GameInfo::ES;
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+
+    return orig::SDL_GL_SetAttribute(attr, value);
 }
 
 }

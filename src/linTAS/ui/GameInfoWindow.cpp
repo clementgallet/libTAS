@@ -18,6 +18,7 @@
  */
 
 #include "GameInfoWindow.h"
+#include <sstream>
 
 GameInfoWindow::GameInfoWindow(Context* c) : context(c)
 {
@@ -48,17 +49,39 @@ GameInfoWindow::GameInfoWindow(Context* c) : context(c)
 
 void GameInfoWindow::update()
 {
-    std::string videostr = "Video support: ";
+    std::ostringstream oss;
+    oss << "Video support: ";
     if (context->game_info.video & GameInfo::SDL1) {
-        videostr += "SDL 1";
+        oss << "SDL 1";
     }
     else if (context->game_info.video & GameInfo::SDL2) {
-        videostr += "SDL 2";
+        oss << "SDL 2";
     }
     else {
-        videostr += "unknown";
+        oss << "unknown";
     }
-    video_box->copy_label(videostr.c_str());
+
+    if (context->game_info.video & GameInfo::OPENGL) {
+        oss << " (OpenGL ";
+        oss << context->game_info.opengl_major;
+        oss << ".";
+        oss << context->game_info.opengl_minor;
+        switch(context->game_info.opengl_profile) {
+        case GameInfo::CORE:
+            oss << " Core profile";
+            break;
+        case GameInfo::COMPATIBILITY:
+            oss << " Compatibility profile";
+            break;
+        case GameInfo::ES:
+            oss << " ES profile";
+            break;
+        default:
+            break;
+        }
+        oss << ")";
+    }
+    video_box->copy_label(oss.str().c_str());
 
     std::string audiostr = "Audio support: ";
     if (context->game_info.audio & GameInfo::SDL1) {
