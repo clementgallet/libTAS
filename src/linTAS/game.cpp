@@ -327,7 +327,7 @@ void launchGame(Context* context)
                 receiveData(&context->game_window, sizeof(Window));
                 /* FIXME: Don't do this if the ui option is unchecked  */
                 {
-                    const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+                    const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE };
                     xcb_void_cookie_t cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
                     xcb_generic_error_t *error = xcb_request_check(context->conn, cwa_cookie);
                     if (error) {
@@ -420,8 +420,15 @@ void launchGame(Context* context)
                 }
                 else {
                     /* Processing a hotkey pressed by the user */
+
                     if ((event->response_type & ~0x80) == XCB_FOCUS_OUT) {
                         ar_ticks = -1; // Deactivate auto-repeat
+                    }
+
+                    if ((event->response_type & ~0x80) == XCB_EXPOSE) {
+                        /* Send an expose message to the game so that he can redrawn the screen */
+                        if (!context->config.sc.running)
+                            sendMessage(MSGN_EXPOSE);
                     }
 
                     if (((event->response_type & ~0x80) == XCB_KEY_PRESS) || ((event->response_type & ~0x80) == XCB_KEY_RELEASE)) {

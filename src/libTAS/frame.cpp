@@ -154,15 +154,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     bool skipping_draw = skipDraw(fps);
 
-    /* We must save the screen pixels before drawing for the following cases:
-     * - we set screen redraw when loading savestates
-     * - we show the inputs in the HUD, so that we can show preview inputs
-     * Also, we must take care of saving before rendering the HUD.
+    /* Saving the screen pixels before drawing. This is done before rendering
+     * the HUD, so that we can redraw with another HUD.
      *
      * TODO: What should we do for nondraw frames ???
      */
     if (!skipping_draw) {
-        if (drawFB && (shared_config.save_screenpixels || shared_config.hud_inputs)) {
+        if (drawFB && shared_config.save_screenpixels) {
             ScreenCapture::getPixels(nullptr, nullptr);
         }
     }
@@ -342,11 +340,18 @@ static void receive_messages(std::function<void()> draw)
                 receiveData(&ai, sizeof(AllInputs));
                 break;
 
+            case MSGN_EXPOSE:
+                if (shared_config.save_screenpixels) {
+                    ScreenCapture::setPixels();
+                    NATIVECALL(draw());
+                }
+                break;
+
             case MSGN_PREVIEW_INPUTS:
                 receiveData(&preview_ai, sizeof(AllInputs));
 
 #ifdef LIBTAS_ENABLE_HUD
-                if (shared_config.hud_inputs) {
+                if (shared_config.hud_inputs && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels();
 
                     if (shared_config.hud_framecount) {

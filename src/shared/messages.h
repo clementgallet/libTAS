@@ -149,6 +149,11 @@ enum {
      */
     MSGB_GAMEINFO,
 
+    /*
+     * Notify the game that it must redrawn the screen
+     * Arguments: none
+     */
+    MSGN_EXPOSE,
 };
 
 #endif

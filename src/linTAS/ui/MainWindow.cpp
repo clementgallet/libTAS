@@ -1191,11 +1191,11 @@ void hotkeys_focus_cb(Fl_Widget*, void* v)
         if (! mw.context->game_window ) return;
 
         if (mw.menu_bar->mvalue()->value()) {
-            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
             xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
         }
         else {
-            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
+            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
             xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
         }
         break;
