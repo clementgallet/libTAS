@@ -92,6 +92,7 @@ class MainWindow {
         Fl_Radio_Round_Button *movie_playback;
 
         Fl_Int_Input *logicalfps;
+        Fl_Box *fps_values;
 
         Fl_Check_Button *pausecheck;
         Fl_Check_Button *fastforwardcheck;
@@ -119,6 +120,9 @@ class MainWindow {
 
         /* Update rerecord count */
         void update_rerecordcount();
+
+        /* Update fps values */
+        void update_fps(float fps, float lfps);
 
         /* Update ramsearch values if window is shown */
         void update_ramsearch();

@@ -22,7 +22,10 @@
 #include "../MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
+
 #include <iostream>
+#include <iomanip> // setprecision
+#include <sstream> // ostringstream
 #include <FL/x.H>
 #include <FL/fl_ask.H>
 #include <future>
@@ -124,11 +127,11 @@ void MainWindow::build(Context* c)
     movie_pack->end();
 
     /* Frame count */
-    framecount = new Fl_Output(110, 140, 80, 30, "Frames: ");
+    framecount = new Fl_Output(110, 140, 90, 30, "Frames: ");
     framecount->value("0");
     framecount->color(FL_LIGHT1);
 
-    movie_framecount = new Fl_Output(210, 140, 80, 30, " / ");
+    movie_framecount = new Fl_Output(220, 140, 90, 30, " / ");
     movie_framecount->color(FL_LIGHT1);
 
     /* Pause/FF */
@@ -138,18 +141,22 @@ void MainWindow::build(Context* c)
     fastforwardcheck->callback(fastforward_cb);
 
     /* Frames per second */
-    logicalfps = new Fl_Int_Input(210, 180, 80, 30, "Frames per second: ");
+    logicalfps = new Fl_Int_Input(220, 180, 90, 30, "Frames per second: ");
     logicalfps->callback(set_fps_cb);
 
+    fps_values = new Fl_Box(340, 180, 240, 30, "Current FPS: - / -");
+    fps_values->box(FL_NO_BOX);
+    fps_values->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+
     /* Re-record count */
-    rerecord_count = new Fl_Output(210, 220, 80, 30, "Rerecord count: ");
+    rerecord_count = new Fl_Output(220, 220, 90, 30, "Rerecord count: ");
     rerecord_count->color(FL_LIGHT1);
 
     /* Initial time */
-    initial_time_sec = new Fl_Int_Input(110, 260, 80, 30, "System time: ");
+    initial_time_sec = new Fl_Int_Input(110, 260, 90, 30, "System time: ");
     initial_time_sec->callback(initial_time_cb);
 
-    initial_time_nsec = new Fl_Int_Input(210, 260, 80, 30, " . ");
+    initial_time_nsec = new Fl_Int_Input(220, 260, 90, 30, " . ");
     initial_time_nsec->align(FL_ALIGN_LEFT);
     initial_time_nsec->callback(initial_time_cb);
 
@@ -603,6 +610,27 @@ void MainWindow::update_rerecordcount()
     /* Update frame count */
     std::string rerecordstr = std::to_string(context->rerecord_count);
     rerecord_count->value(rerecordstr.c_str());
+
+    Fl::unlock();
+    Fl::awake();
+}
+
+void MainWindow::update_fps(float fps, float lfps)
+{
+    /* This function is called by another thread */
+    Fl::lock();
+
+    /* Update fps values */
+    std::ostringstream oss;
+    if ((fps > 0) || (lfps > 0)) {
+        oss << std::fixed << std::setprecision(1);
+        oss << "Current FPS: " << fps << " / " << lfps;
+    }
+    else {
+        oss << "Current FPS: - / -";
+    }
+
+    fps_values->copy_label(oss.str().c_str());
 
     Fl::unlock();
     Fl::awake();

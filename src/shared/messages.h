@@ -154,6 +154,12 @@ enum {
      * Arguments: none
      */
     MSGN_EXPOSE,
+
+    /*
+     * Send fps and logical fps values to the program
+     * Arguments: 2 floats
+     */
+    MSGB_FPS,
 };
 
 #endif

@@ -54,6 +54,9 @@ static void receive_messages(std::function<void()> draw);
 /* Compute real and logical fps */
 static void computeFPS(float& fps, float& lfps)
 {
+    /* Do We have enough values to compute fps? */
+    static bool can_output = false;
+
     /* Frequency of FPS computing (every n frames) */
     static const int fps_refresh_freq = 10;
 
@@ -83,11 +86,15 @@ static void computeFPS(float& fps, float& lfps)
         /* Compute logical fps (number of drawn screens per timer second) */
         TimeHolder deltaTicks = lastTicks[compute_counter] - lastTick;
 
-        if (++compute_counter >= history_length)
+        if (++compute_counter >= history_length) {
             compute_counter = 0;
+            can_output = true;
+        }
 
-        fps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
-        lfps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+        if (can_output) {
+            fps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+            lfps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+        }
     }
 }
 
@@ -242,6 +249,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         sendData(&game_info, sizeof(game_info));
         game_info.tosend = false;
     }
+
+    /* Send fps and lfps values */
+    sendMessage(MSGB_FPS);
+    sendData(&fps, sizeof(float));
+    sendData(&lfps, sizeof(float));
 
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);

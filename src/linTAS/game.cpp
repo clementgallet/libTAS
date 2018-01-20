@@ -322,6 +322,7 @@ void launchGame(Context* context)
 
         while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
             std::string* alert_str;
+            float fps, lfps;
             switch (message) {
             case MSGB_WINDOW_ID:
                 receiveData(&context->game_window, sizeof(Window));
@@ -358,6 +359,11 @@ void launchGame(Context* context)
                 break;
             case MSGB_GAMEINFO:
                 receiveData(&context->game_info, sizeof(context->game_info));
+                break;
+            case MSGB_FPS:
+                receiveData(&fps, sizeof(float));
+                receiveData(&lfps, sizeof(float));
+                ui.update_fps(fps, lfps);
                 break;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
