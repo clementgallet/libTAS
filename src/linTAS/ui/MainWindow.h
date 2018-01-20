@@ -96,8 +96,6 @@ class MainWindow {
         Fl_Check_Button *pausecheck;
         Fl_Check_Button *fastforwardcheck;
 
-        Fl_Check_Button *mutecheck;
-
         Fl_Output *framecount;
         Fl_Output *movie_framecount;
         Fl_Output *rerecord_count;

@@ -95,23 +95,6 @@ void MainWindow::build(Context* c)
     menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);
     menu_bar->menu(menu_items);
 
-    /* Game Executable */
-    gamepath = new Fl_Output(10, 340, 500, 30, "Game Executable");
-    gamepath->align(FL_ALIGN_TOP_LEFT);
-    gamepath->color(FL_LIGHT1);
-
-    browsegamepath = new Fl_Button(520, 340, 70, 30, "Browse...");
-    browsegamepath->callback(browse_gamepath_cb);
-
-    gamepathchooser = new Fl_Native_File_Chooser();
-    gamepathchooser->title("Game path");
-
-    /* Command-line options */
-    cmdoptions = new Fl_Input(10, 400, 500, 30, "Command-line options");
-    cmdoptions->align(FL_ALIGN_TOP_LEFT);
-    cmdoptions->callback(cmdoptions_cb);
-    // cmdoptions->color(FL_LIGHT1);
-
     /* Movie File */
     moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
     moviepath->align(FL_ALIGN_TOP_LEFT);
@@ -140,35 +123,58 @@ void MainWindow::build(Context* c)
 
     movie_pack->end();
 
-    /* Frames per second */
-    logicalfps = new Fl_Int_Input(160, 180, 40, 30, "Frames per second");
-    logicalfps->callback(set_fps_cb);
-
-    /* Pause/FF */
-    pausecheck = new Fl_Check_Button(440, 140, 80, 20, "Pause");
-    pausecheck->callback(pause_cb);
-    fastforwardcheck = new Fl_Check_Button(440, 170, 80, 20, "Fast-forward");
-    fastforwardcheck->callback(fastforward_cb);
-
-    /* Mute */
-    mutecheck = new Fl_Check_Button(440, 200, 80, 20, "Mute");
-    mutecheck->callback(mute_sound_cb);
-#ifndef LIBTAS_ENABLE_SOUNDPLAYBACK
-    mutecheck->label("Mute (disabled)");
-    mutecheck->deactivate();
-#endif
-
     /* Frame count */
-    framecount = new Fl_Output(80, 140, 80, 30, "Frames:");
+    framecount = new Fl_Output(110, 140, 80, 30, "Frames: ");
     framecount->value("0");
     framecount->color(FL_LIGHT1);
 
-    movie_framecount = new Fl_Output(180, 140, 80, 30, " / ");
+    movie_framecount = new Fl_Output(210, 140, 80, 30, " / ");
     movie_framecount->color(FL_LIGHT1);
 
-    rerecord_count = new Fl_Output(280, 180, 80, 30, "Rerecord count:");
-    rerecord_count->align(FL_ALIGN_TOP_LEFT);
+    /* Pause/FF */
+    pausecheck = new Fl_Check_Button(340, 140, 80, 20, "Pause");
+    pausecheck->callback(pause_cb);
+    fastforwardcheck = new Fl_Check_Button(440, 140, 80, 20, "Fast-forward");
+    fastforwardcheck->callback(fastforward_cb);
+
+    /* Frames per second */
+    logicalfps = new Fl_Int_Input(210, 180, 80, 30, "Frames per second: ");
+    logicalfps->callback(set_fps_cb);
+
+    /* Re-record count */
+    rerecord_count = new Fl_Output(210, 220, 80, 30, "Rerecord count: ");
     rerecord_count->color(FL_LIGHT1);
+
+    /* Initial time */
+    initial_time_sec = new Fl_Int_Input(110, 260, 80, 30, "System time: ");
+    initial_time_sec->callback(initial_time_cb);
+
+    initial_time_nsec = new Fl_Int_Input(210, 260, 80, 30, " . ");
+    initial_time_nsec->align(FL_ALIGN_LEFT);
+    initial_time_nsec->callback(initial_time_cb);
+
+    /* Command-line options */
+    cmdoptions = new Fl_Input(10, 400, 500, 30, "Command-line options");
+    cmdoptions->align(FL_ALIGN_TOP_LEFT);
+    cmdoptions->callback(cmdoptions_cb);
+    // cmdoptions->color(FL_LIGHT1);
+
+    /* Game Executable */
+    gamepath = new Fl_Output(10, 340, 500, 30, "Game Executable");
+    gamepath->align(FL_ALIGN_TOP_LEFT);
+    gamepath->color(FL_LIGHT1);
+
+    browsegamepath = new Fl_Button(520, 340, 70, 30, "Browse...");
+    browsegamepath->callback(browse_gamepath_cb);
+
+    gamepathchooser = new Fl_Native_File_Chooser();
+    gamepathchooser->title("Game path");
+
+    launch = new Fl_Button(10, 450, 70, 40, "Start");
+    launch->callback(launch_cb);
+
+    launch_gdb = new Fl_Button(400, 450, 180, 40, "Start and attach gdb");
+    launch_gdb->callback(launch_cb);
 
     MovieFile tempmovie(context);
     if (tempmovie.extractMovie() == 0) {
@@ -182,21 +188,6 @@ void MainWindow::build(Context* c)
         context->config.sc.recording = SharedConfig::RECORDING_READ;
         context->config.sc_modified = true;
     }
-
-    /* Initial time */
-    initial_time_sec = new Fl_Int_Input(10, 260, 100, 30, "Initial time (sec - nsec)");
-    initial_time_sec->align(FL_ALIGN_TOP_LEFT);
-    initial_time_sec->callback(initial_time_cb);
-
-    initial_time_nsec = new Fl_Int_Input(130, 260, 100, 30, " - ");
-    initial_time_nsec->align(FL_ALIGN_LEFT);
-    initial_time_nsec->callback(initial_time_cb);
-
-    launch = new Fl_Button(10, 450, 70, 40, "Start");
-    launch->callback(launch_cb);
-
-    launch_gdb = new Fl_Button(400, 450, 180, 40, "Start and attach gdb");
-    launch_gdb->callback(launch_cb);
 
     pausecheck->value(!context->config.sc.running);
     fastforwardcheck->value(context->config.sc.fastforward);
@@ -687,15 +678,7 @@ void MainWindow::update_config()
     SET_RADIO_FROM_LIST(sound_bitdepth_cb, context->config.sc.audio_bitdepth);
     SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
 
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(mute_sound_cb));
-    if (context->config.sc.audio_mute) {
-        menu_item->set();
-        mutecheck->set();
-    }
-    else {
-        menu_item->clear();
-        mutecheck->clear();
-    }
+    SET_TOGGLE_FROM_BOOL(mute_sound_cb, context->config.sc.audio_mute);
 
     SET_RADIO_FROM_LIST(logging_status_cb, context->config.sc.logging_status);
 
@@ -1076,7 +1059,6 @@ void mute_sound_cb(Fl_Widget* w, void* v)
         mw.context->config.sc.audio_mute = true;
         mw.context->config.sc_modified = true;
     }
-    mw.mutecheck->value(mw.context->config.sc.audio_mute);
 }
 
 void logging_status_cb(Fl_Widget* w, void* v)
