@@ -110,7 +110,7 @@ else()
 endif()
 
 # HUD
-option(ENABLE_HUD "Enable HUD" OFF)
+option(ENABLE_HUD "Enable HUD" ON)
 
 pkg_check_modules(FREETYPE freetype2 fontconfig)
 if (ENABLE_HUD AND FREETYPE_FOUND)

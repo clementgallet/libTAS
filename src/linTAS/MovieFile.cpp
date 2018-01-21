@@ -221,6 +221,7 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
 	config_prefs.set("libtas_major_version", MAJORVERSION);
 	config_prefs.set("libtas_minor_version", MINORVERSION);
+	config_prefs.set("libtas_patch_version", PATCHVERSION);
 
 	/* Compute and save movie length */
 	time_t movie_length_sec = context->movie_end_time.tv_sec - context->config.sc.initial_time.tv_sec;

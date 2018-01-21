@@ -91,6 +91,8 @@ void MainWindow::build(Context* c)
     title += std::to_string(MAJORVERSION);
     title += ".";
     title += std::to_string(MINORVERSION);
+    title += ".";
+    title += std::to_string(PATCHVERSION);
 
     window = new Fl_Double_Window(600, 500, title.c_str());
 

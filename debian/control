@@ -1,0 +1,12 @@
+Source: libtas
+Section: unknown
+Priority: optional
+Maintainer: Clement Gallet <clement.gallet@ens-lyon.org>
+Build-Depends: cmake, debhelper (>= 9), libx11-dev, libfltk1.3-dev, libtar-dev, zlib1g-dev, libsdl2-dev, extra-cmake-modules, libxcb1-dev, libxcb-keysyms1-dev, libasound2-dev, libavcodec-dev (>= 3.1.0), libavformat-dev, libavutil-dev, libswscale-dev, libswresample-dev, libfreetype6-dev, libfontconfig1-dev
+Standards-Version: 3.9.8
+Homepage: https://github.com/clementgallet/libTAS
+
+Package: libtas
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: A program to provide tool-assisted speedrun tools to Linux games
