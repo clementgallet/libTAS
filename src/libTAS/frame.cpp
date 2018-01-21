@@ -176,7 +176,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (shared_config.hud_encode) {
         if (shared_config.hud_framecount) {
             hud.renderFrame(frame_counter);
-            hud.renderNonDrawFrame(nondraw_frame_counter);
+            // hud.renderNonDrawFrame(nondraw_frame_counter);
         }
         if (shared_config.hud_inputs)
             hud.renderInputs(ai);
@@ -219,7 +219,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (!shared_config.hud_encode) {
         if (shared_config.hud_framecount) {
             hud.renderFrame(frame_counter);
-            hud.renderNonDrawFrame(nondraw_frame_counter);
+            // hud.renderNonDrawFrame(nondraw_frame_counter);
         }
         if (shared_config.hud_inputs)
             hud.renderInputs(ai);
@@ -368,7 +368,7 @@ static void receive_messages(std::function<void()> draw)
 
                     if (shared_config.hud_framecount) {
                         hud.renderFrame(frame_counter);
-                        hud.renderNonDrawFrame(nondraw_frame_counter);
+                        // hud.renderNonDrawFrame(nondraw_frame_counter);
                     }
                     hud.renderInputs(ai);
                     hud.renderPreviewInputs(preview_ai);
@@ -420,7 +420,7 @@ static void receive_messages(std::function<void()> draw)
 #ifdef LIBTAS_ENABLE_HUD
                         if (shared_config.hud_framecount) {
                             hud.renderFrame(frame_counter);
-                            hud.renderNonDrawFrame(nondraw_frame_counter);
+                            // hud.renderNonDrawFrame(nondraw_frame_counter);
                         }
                         if (shared_config.hud_inputs)
                             hud.renderInputs(ai);
