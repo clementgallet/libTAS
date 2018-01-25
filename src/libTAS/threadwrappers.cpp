@@ -40,10 +40,10 @@ DEFINE_ORIG_POINTER(pthread_detach);
 DEFINE_ORIG_POINTER(pthread_getname_np);
 DEFINE_ORIG_POINTER(pthread_tryjoin_np);
 DEFINE_ORIG_POINTER(pthread_timedjoin_np);
-    // static int (*pthread_cond_wait)(pthread_cond_t *cond, pthread_mutex_t *mutex) = nullptr;
-    // static int (*pthread_cond_timedwait)(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) = nullptr;
-    // static int (*pthread_cond_signal)(pthread_cond_t *cond) = nullptr;
-    // static int (*pthread_cond_broadcast)(pthread_cond_t *cond) = nullptr;
+DEFINE_ORIG_POINTER(pthread_cond_wait);
+DEFINE_ORIG_POINTER(pthread_cond_timedwait);
+DEFINE_ORIG_POINTER(pthread_cond_signal);
+DEFINE_ORIG_POINTER(pthread_cond_broadcast);
 DEFINE_ORIG_POINTER(pthread_setcancelstate);
 DEFINE_ORIG_POINTER(pthread_setcanceltype);
 DEFINE_ORIG_POINTER(pthread_cancel);
@@ -225,6 +225,34 @@ static void *pthread_start(void *arg)
         debuglog(LCF_THREAD | LCF_TODO, "Call timed out before thread ", thstr, " terminated.");
     }
     return ret;
+}
+
+/* Override */ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+    LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    return orig::pthread_cond_wait(cond, mutex);
+}
+
+/* Override */ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime)
+{
+    LINK_NAMESPACE_VERSION(pthread_cond_timedwait, "pthread", "GLIBC_2.3.2");
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    return orig::pthread_cond_timedwait(cond, mutex, abstime);
+}
+
+/* Override */ int pthread_cond_signal(pthread_cond_t *cond)
+{
+    LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    return orig::pthread_cond_signal(cond);
+}
+
+/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond)
+{
+    LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    return orig::pthread_cond_broadcast(cond);
 }
 
 /* Override */ int pthread_setcancelstate (int state, int *oldstate)

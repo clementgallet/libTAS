@@ -117,6 +117,28 @@ OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
    __THROW.  */
 OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
+/* Wake up one thread waiting for condition variable COND.  */
+OVERRIDE int pthread_cond_signal (pthread_cond_t *cond);
+
+/* Wake up all threads waiting for condition variables COND.  */
+OVERRIDE int pthread_cond_broadcast (pthread_cond_t *__cond);
+
+/* Wait for condition variable COND to be signaled or broadcast.
+   MUTEX is assumed to be locked before.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+OVERRIDE int pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
+
+/* Wait for condition variable COND to be signaled or broadcast until
+   ABSTIME.  MUTEX is assumed to be locked before.  ABSTIME is an
+   absolute time specification; zero is the beginning of the epoch
+   (00:00:00 GMT, January 1, 1970).
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+OVERRIDE int pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime);
+
 /* Set cancelability state of current thread to STATE, returning old
    state in *OLDSTATE if OLDSTATE is not NULL.  */
 OVERRIDE int pthread_setcancelstate (int state, int *oldstate);
