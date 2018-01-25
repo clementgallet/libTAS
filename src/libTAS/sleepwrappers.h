@@ -22,7 +22,7 @@
 
 #include <time.h>
 #include <unistd.h>
-// #include "../external/SDL.h"
+#include <sys/signal.h>
 #include <SDL2/SDL.h>
 #include "global.h"
 
@@ -45,6 +45,25 @@ OVERRIDE int nanosleep (const struct timespec *requested_time, struct timespec *
 OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
 			    const struct timespec *req,
 			    struct timespec *rem);
+
+/* Check the first NFDS descriptors each in READFDS (if not NULL) for read
+   readiness, in WRITEFDS (if not NULL) for write readiness, and in EXCEPTFDS
+   (if not NULL) for exceptional conditions.  If TIMEOUT is not NULL, time out
+   after waiting the interval specified therein.  Returns the number of ready
+   descriptors, or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+OVERRIDE int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+/* Same as above only that the TIMEOUT value is given with higher
+   resolution and a sigmask which is been set temporarily.  This version
+   should be used.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+OVERRIDE int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+	const struct timespec *timeout, const __sigset_t *sigmask);
 
 /**
  * \brief Wait a specified number of milliseconds before returning.

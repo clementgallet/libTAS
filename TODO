@@ -9,6 +9,7 @@
 ### Features
 
 - Use incremental savestates (using /proc/self/pagemap and soft_dirty flag)
+- Change the thread scheduler to add more determinism (FIFO or RR maybe)
 
 ### Fixes
 

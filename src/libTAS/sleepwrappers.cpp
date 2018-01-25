@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sched.h> // sched_yield()
+
 #include "sleepwrappers.h"
 #include "logging.h"
 #include "checkpoint/ThreadManager.h"
@@ -28,6 +30,8 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(nanosleep);
+DEFINE_ORIG_POINTER(select);
+DEFINE_ORIG_POINTER(pselect);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -50,8 +54,8 @@ DEFINE_ORIG_POINTER(nanosleep);
      */
     if (sleep && mainT) {
         detTimer.addDelay(ts);
-        ts.tv_sec = 0;
-        ts.tv_nsec = 0;
+        sched_yield();
+        return;
     }
 
     orig::nanosleep(&ts, NULL);
@@ -76,8 +80,8 @@ DEFINE_ORIG_POINTER(nanosleep);
      */
     if (usec && mainT) {
         detTimer.addDelay(ts);
-        ts.tv_sec = 0;
-        ts.tv_nsec = 0;
+        sched_yield();
+        return 0;
     }
 
     orig::nanosleep(&ts, NULL);
@@ -100,8 +104,8 @@ DEFINE_ORIG_POINTER(nanosleep);
      */
     if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
         detTimer.addDelay(*requested_time);
-        struct timespec owntime = {0, 0};
-        return orig::nanosleep(&owntime, remaining);
+        sched_yield();
+        return 0;
     }
 
     return orig::nanosleep(requested_time, remaining);
@@ -133,11 +137,81 @@ DEFINE_ORIG_POINTER(nanosleep);
     LINK_NAMESPACE(nanosleep, nullptr);
     if (mainT && !GlobalState::isNative()) {
         detTimer.addDelay(sleeptime);
-        struct timespec owntime = {0, 0};
-        return orig::nanosleep(&owntime, rem);
+        sched_yield();
+        return 0;
     }
 
     return orig::nanosleep(&sleeptime, rem);
+}
+
+/* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
+{
+    LINK_NAMESPACE(select, nullptr);
+
+    /* select can be used to sleep the cpu if feed with all null parameters
+     * except for timeout. In this case we replace it with what we did for
+     * other sleep functions. Otherwise, we call the original function.
+     */
+    if ((nfds != 0) || (readfds != nullptr) || (writefds != nullptr) || (exceptfds != nullptr))
+    {
+        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
+    }
+
+    if (GlobalState::isNative()) {
+        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
+    }
+
+    bool mainT = ThreadManager::isMainThread();
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000 + timeout->tv_usec, " usec");
+
+    /* If the function was called from the main thread, transfer the wait to
+     * the timer and do not actually wait.
+     */
+    if (mainT && (timeout->tv_sec || timeout->tv_usec)) {
+        struct timespec ts;
+        ts.tv_sec = timeout->tv_sec;
+        ts.tv_nsec = timeout->tv_usec * 1000;
+        detTimer.addDelay(ts);
+
+        sched_yield();
+        return 0;
+    }
+
+    return orig::select(nfds, readfds, writefds, exceptfds, timeout);
+}
+
+/* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+	const struct timespec *timeout, const __sigset_t *sigmask)
+{
+    LINK_NAMESPACE(pselect, nullptr);
+
+    /* select can be used to sleep the cpu if feed with all null parameters
+     * except for timeout. In this case we replace it with what we did for
+     * other sleep functions. Otherwise, we call the original function.
+     */
+    if ((nfds != 0) || (readfds != nullptr) || (writefds != nullptr) || (exceptfds != nullptr))
+    {
+        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+    }
+
+    if (GlobalState::isNative()) {
+        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+    }
+
+    bool mainT = ThreadManager::isMainThread();
+    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000000 + timeout->tv_nsec, " nsec");
+
+    /* If the function was called from the main thread, transfer the wait to
+     * the timer and do not actually wait.
+     */
+    if (mainT && (timeout->tv_sec || timeout->tv_nsec)) {
+        detTimer.addDelay(*timeout);
+
+        sched_yield();
+        return 0;
+    }
+
+    return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
 }
 
 }
