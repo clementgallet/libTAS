@@ -93,7 +93,9 @@ static void executeGame(Context* context)
 
     /* Change the working directory if the user set one */
     if (!context->config.rundir.empty())
-        chdir(context->config.rundir.c_str());
+        if (0 != chdir(context->config.rundir.c_str()) {
+            std::cerr << "Could not change the working directory to " << context->config.rundir << std::endl;
+        }
 
     /* Set where stderr of the game is redirected */
     int fd;

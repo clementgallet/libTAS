@@ -127,13 +127,6 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
         }
     }
 
-    if (codec_id == AV_CODEC_ID_H264)
-        video_codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
-    if (codec_id == AV_CODEC_ID_FFV1)
-        video_codec_context->pix_fmt = AV_PIX_FMT_YUV444P10LE;
-    if (codec_id == AV_CODEC_ID_RAWVIDEO)
-        video_codec_context->pix_fmt = pixfmt;
-
     /* Some formats want stream headers to be separate. */
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
         video_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
