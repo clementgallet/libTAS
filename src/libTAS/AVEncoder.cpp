@@ -103,6 +103,30 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     video_codec_context->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
     video_codec_context->gop_size = 10; /* emit one intra frame every ten frames */
     // video_codec_context->max_b_frames = 1;
+
+    /* Checking if we can use the native pixel format.
+     * If not, taking the default pixel format of the codec
+     */
+    video_codec_context->pix_fmt = pixfmt;
+    if (video_codec_context->codec->pix_fmts) {
+        int i;
+        for (i = 0; video_codec_context->codec->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            if (video_codec_context->pix_fmt == video_codec_context->codec->pix_fmts[i]) {
+                /* Our native format is accepted by the codec */
+                break;
+            }
+        }
+
+        if (video_codec_context->codec->pix_fmts[i] == AV_PIX_FMT_NONE) {
+            /* Our native pixel format is not supported,
+             * taking the default one.
+             */
+
+            video_codec_context->pix_fmt = avcodec_default_get_format(video_codec_context, video_codec_context->codec->pix_fmts);
+            debuglog(LCF_DUMP, "Our native pixel format is not supported. Choosing ", av_get_pix_fmt_name(video_codec_context->pix_fmt));
+        }
+    }
+
     if (codec_id == AV_CODEC_ID_H264)
         video_codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
     if (codec_id == AV_CODEC_ID_FFV1)

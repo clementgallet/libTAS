@@ -53,11 +53,11 @@ class EncodeWindow {
         Fl_Native_File_Chooser *encodepathchooser;
 
         Fl_Choice *videochoice;
-        static Fl_Menu_Item video_items[];
+//        static Fl_Menu_Item video_items[];
         Fl_Input *videobitrate;
 
         Fl_Choice *audiochoice;
-        static Fl_Menu_Item audio_items[];
+//        static Fl_Menu_Item audio_items[];
         Fl_Input *audiobitrate;
 
 };

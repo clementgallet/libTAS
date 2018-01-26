@@ -21,7 +21,16 @@
 
 #include "EncodeWindow.h"
 #include "MainWindow.h"
+
 #include <iostream>
+extern "C" {
+#include <libavcodec/avcodec.h>
+//#include <libavformat/avformat.h>
+//#include <libavutil/opt.h>
+//#include <libavutil/imgutils.h>
+//#include <libswscale/swscale.h>
+//#include <libswresample/swresample.h>
+}
 
 static Fl_Callback start_cb;
 static Fl_Callback cancel_cb;
@@ -31,7 +40,7 @@ static Fl_Callback acodec_cb;
 
 EncodeWindow::EncodeWindow(Context* c) : context(c)
 {
-    window = new Fl_Double_Window(600, 200, "Encoding configuration");
+    window = new Fl_Double_Window(600, 260, "Encoding configuration");
 
     /* Game Executable */
     encodepath = new Fl_Output(10, 30, 500, 30, "Encode file path");
@@ -45,48 +54,64 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
     encodepathchooser->title("Choose an encode filename");
     encodepathchooser->options(Fl_Native_File_Chooser::SAVEAS_CONFIRM);
 
-    videochoice = new Fl_Choice(10, 100, 100, 30, "Video codec");
+    videochoice = new Fl_Choice(10, 100, 450, 30, "Video codec");
     videochoice->align(FL_ALIGN_TOP_LEFT);
-    videochoice->menu(video_items);
     videochoice->callback(vcodec_cb, this);
 
-    videobitrate = new Fl_Input(10, 160, 100, 30, "Video bitrate");
+    videobitrate = new Fl_Input(480, 100, 100, 30, "Video bitrate");
     videobitrate->align(FL_ALIGN_TOP_LEFT);
 
-    audiochoice = new Fl_Choice(150, 100, 100, 30, "Audio codec");
+    audiochoice = new Fl_Choice(10, 160, 450, 30, "Audio codec");
     audiochoice->align(FL_ALIGN_TOP_LEFT);
-    audiochoice->menu(audio_items);
     audiochoice->callback(acodec_cb, this);
 
-    audiobitrate = new Fl_Input(150, 160, 100, 30, "Audio bitrate");
+    audiobitrate = new Fl_Input(480, 160, 100, 30, "Audio bitrate");
     audiobitrate->align(FL_ALIGN_TOP_LEFT);
 
-    start = new Fl_Button(400, 160, 70, 30, "Ok");
+    start = new Fl_Button(400, 220, 70, 30, "Ok");
     start->callback(start_cb, this);
 
-    cancel = new Fl_Button(500, 160, 70, 30, "Cancel");
+    cancel = new Fl_Button(500, 220, 70, 30, "Cancel");
     cancel->callback(cancel_cb, this);
+
+    /* Get all encoding codecs available and fill the codec menus */
+
+    /* Initialize libavcodec, and register all codecs and formats */
+    //av_register_all();
+    avcodec_register_all();
+
+    /* Enumerate the codecs */
+    AVCodec* codec = av_codec_next(nullptr);
+
+    while(codec != nullptr)
+    {
+        if (av_codec_is_encoder(codec)) {
+            /* Codec supports encoding */
+
+            /* Build codec name */
+            std::string codecstr = codec->long_name?codec->long_name:codec->name;
+
+            /* Escape some characters that have a special meaning in FLTK */
+            for (std::string::size_type i = 0; (i = codecstr.find('/', i)) != std::string::npos;) {
+                codecstr.insert(i, "\\");
+                i += 2;
+            }
+
+            if (codec->type == AVMEDIA_TYPE_VIDEO) {
+                videochoice->add(codecstr.c_str(), 0, nullptr, reinterpret_cast<void*>(codec->id), 0);
+            }
+            if (codec->type == AVMEDIA_TYPE_AUDIO) {
+                audiochoice->add(codecstr.c_str(), 0, nullptr, reinterpret_cast<void*>(codec->id), 0);
+            }
+        }
+        //std::cout << "found codec " << codec->name << std::endl;
+        // fprintf(stderr, "%s\n", codec->long_name);
+        codec = av_codec_next(codec);
+    }
 
     update_config();
     window->end();
 }
-
-Fl_Menu_Item EncodeWindow::video_items[] = {
-    {"h264", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_H264)},
-    {"ffv1", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_FFV1)},
-    {"raw", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_RAWVIDEO)},
-    {nullptr}
-};
-
-Fl_Menu_Item EncodeWindow::audio_items[] = {
-    {"mp3", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_MP3)},
-    {"aac", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_AAC)},
-    {"vorbis", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_VORBIS)},
-    {"opus", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_OPUS)},
-    {"flac", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_FLAC)},
-    {"pcm", 0, nullptr, reinterpret_cast<void*>(AV_CODEC_ID_PCM_S16LE)},
-    {nullptr}
-};
 
 void EncodeWindow::update_config()
 {
@@ -111,15 +136,13 @@ void EncodeWindow::update_config()
         vcodec_item = vcodec_item->next();
     }
 
-    /* Enable/disable video bitrate */
-    switch(context->config.sc.video_codec) {
-        case AV_CODEC_ID_FFV1:
-        case AV_CODEC_ID_RAWVIDEO:
-            videobitrate->deactivate();
-            break;
-        case AV_CODEC_ID_H264:
-        default:
-            videobitrate->activate();
+    /* Enable/disable video bitrate for lossy/lossless codecs */
+    const AVCodecDescriptor* vcodec = avcodec_descriptor_get(context->config.sc.video_codec);
+    if ((vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
+        videobitrate->deactivate();
+    }
+    else {
+        videobitrate->activate();
     }
 
     /* Set video bitrate */
@@ -137,18 +160,13 @@ void EncodeWindow::update_config()
         acodec_item = acodec_item->next();
     }
 
-    /* Enable/disable audio bitrate */
-    switch(context->config.sc.audio_codec) {
-        case AV_CODEC_ID_FLAC:
-        case AV_CODEC_ID_PCM_S16LE:
-            audiobitrate->deactivate();
-            break;
-        case AV_CODEC_ID_MP3:
-        case AV_CODEC_ID_AAC:
-        case AV_CODEC_ID_VORBIS:
-        case AV_CODEC_ID_OPUS:
-        default:
-            audiobitrate->activate();
+    /* Enable/disable audio bitrate for lossy/lossless codecs */
+    const AVCodecDescriptor* acodec = avcodec_descriptor_get(context->config.sc.audio_codec);
+    if ((acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
+        audiobitrate->deactivate();
+    }
+    else {
+        audiobitrate->activate();
     }
 
     std::string abstr = std::to_string(context->config.sc.audio_bitrate);
@@ -205,15 +223,13 @@ void vcodec_cb(Fl_Widget* w, void* v)
     EncodeWindow* ew = (EncodeWindow*) v;
     const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
 
-    /* Enable/disable video bitrate */
-    switch(vcodec_item->argument()) {
-        case AV_CODEC_ID_FFV1:
-        case AV_CODEC_ID_RAWVIDEO:
-            ew->videobitrate->deactivate();
-            break;
-        case AV_CODEC_ID_H264:
-        default:
-            ew->videobitrate->activate();
+    /* Enable/disable video bitrate for lossy/lossless codecs */
+    const AVCodecDescriptor* vcodec = avcodec_descriptor_get(static_cast<AVCodecID>(vcodec_item->argument()));
+    if ((vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
+        ew->videobitrate->deactivate();
+    }
+    else {
+        ew->videobitrate->activate();
     }
 }
 
@@ -222,18 +238,13 @@ void acodec_cb(Fl_Widget* w, void* v)
     EncodeWindow* ew = (EncodeWindow*) v;
     const Fl_Menu_Item* acodec_item = ew->audiochoice->mvalue();
 
-    /* Enable/disable audio bitrate */
-    switch(acodec_item->argument()) {
-        case AV_CODEC_ID_FLAC:
-        case AV_CODEC_ID_PCM_S16LE:
-            ew->audiobitrate->deactivate();
-            break;
-        case AV_CODEC_ID_MP3:
-        case AV_CODEC_ID_AAC:
-        case AV_CODEC_ID_VORBIS:
-        case AV_CODEC_ID_OPUS:
-        default:
-            ew->audiobitrate->activate();
+    /* Enable/disable audio bitrate for lossy/lossless codecs */
+    const AVCodecDescriptor* acodec = avcodec_descriptor_get(static_cast<AVCodecID>(acodec_item->argument()));
+    if ((acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
+        ew->audiobitrate->deactivate();
+    }
+    else {
+        ew->audiobitrate->activate();
     }
 }
 

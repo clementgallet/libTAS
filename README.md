@@ -15,7 +15,7 @@ The current mandatory dependancies so far are `libx11-dev`, `libfltk1.3-dev`, `l
 
 To enable audio and video dumping, you will need `libavcodec-dev`, `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, `libswresample-dev`.
 
-To enable audio playback, you will need `libswresample-dev` 
+To enable audio playback, you will need `libswresample-dev`
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 
@@ -47,78 +47,6 @@ Here are the default controls when the game has started:
 - fast forward, using the `tab` key
 
 Note: the game starts up **paused**.
-
-## Input Format
-
-The tool records inputs into a movie file which has a `.ltm` extension. It is actually a `tar.gz` archive which contains two text files. The first one is `config.prefs`, containing all meta-data of the movie file. It consists of a list of key/value pairs. Here is an example of such a file, with added comments:
-```
-; FLTK preferences file format 1.0
-; vendor: movie
-; application: config
-
-[.]
-
-frame_count:159
-keyboard_support:1
-mouse_support:0
-nb_controllers:0 ; up to 4 controllers are supported
-initial_time_sec:0 ; number of seconds of the initial system time
-initial_time_nsec:0 ; number of nanoseconds of the initial system time
-rerecord_count:107
-framerate:60 ; number of frames per second
-movie_length_sec:2 ; number of seconds of the movie length
-movie_length_nsec:650000000 ; number of nanoseconds of the movie length
-game_name:FEZ.bin.x86_64 ; name of the game binary
-libtas_major_version:1
-libtas_minor_version:0
-
-; The following values affect sync. These values are related to a time hack:
-; Some game expects the time to advance, and wait in a loop, querying the time
-; constantly until the time has advanced enough. However, we only advance time
-; during a frame boundary, triggered by a screen display call.
-; To avoid this softlock, we let the time advance after a threshold number of
-; calls from the same time-querying function. The values below are the
-; threshold values for each time-querying function. A value of -1 means we
-; never advance time.
-; Moreover, we make a difference between the main thread (= rendering thread)
-; calling these functions and other threads. While enabling this hack on
-; the main thread affects sync, the game still runs deterministically if values
-; are unchanged. However, enabling this hack on other threads make the replays
-; non-deterministic.
-[./mainthread_timetrack]
-
-time:-1
-gettimeofday:-1
-clock:-1
-clock_gettime:100
-sdl_getticks:-1
-sdl_getperformancecounter:-1
-
-[./secondarythread_timetrack]
-
-time:-1
-gettimeofday:-1
-clock:-1
-clock_gettime:-1
-sdl_getticks:-1
-sdl_getperformancecounter:-1
-```
-
-The second file is the `inputs` text file. In this file, each line that starts with the character `|` is an input frame.
-The content of one line depends on the three settings `keyboard_support`, `mouse_support` and `nb_controllers` above.
-
-If `keyboard_support=1`, a list of Xlib KeySym (u32) values of each pressed key is appended to the line. They are encoded into an hex string and separated by the `:` character. The list ends with the `|` character.
-
-If `mouse_support=1`, mouse inputs in the format: `xpos:ypos:12345` are appended to the line. `xpos` and `ypos` are x and y coordinates of the pointer (i32) in decimal strings (can be negative). This is followed by 5 characters which are either a digit if the corresponding mouse button is pressed, or the character `.`. When decoding the file, the code only checks if the character is a `.` or not. The list ends with the `|` character.
-
-For each controller from 1 to `nb_controllers`, the corresponding controller inputs is appended to the line, in the format: `axis_left_x:axis_left_y:axis_right_x:axis_right_y:trigger_left:trigger_right:ABXYbgs()[]udlr`. The first 6 values are the axis values (i16) encoded in decimal strings. Then each character is either a button character or `.`, indicating if the corresponding button was pressed or not. The order of the buttons are:
-- `A`, `B`, `X`, `Y` buttons
-- back (`b`), guide (`g`) and start (`s`) buttons
-- left stick (`(`) and right stick (`)`)
-- left shoulder (`[`) and right shoulder (`]`)
-- dpad up (`u`), down (`d`), left (`l`) and right (`r`)
-
-Each controller inputs end with the `|` character.
 
 ## Troubleshooting
 
