@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <vector>
+#include <GL/gl.h>
 #ifdef LIBTAS_ENABLE_AVDUMPING
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -65,8 +66,10 @@ public:
      */
     static int getPixels(const uint8_t* orig_plane[], int orig_stride[]);
 
-    /* Set the screen pixels from our buffers */
-    static int setPixels();
+    /* Set the screen pixels from our buffers.
+     * @param update  true if the screen has changed since last call.
+     */
+    static int setPixels(bool update);
 
 private:
 
@@ -80,6 +83,9 @@ private:
     static int width, height, pitch;
     static unsigned int size;
     static int pixelSize;
+
+    /* OpenGL screen texture */
+    static GLuint screenTex;
 
     /* SDL window if any */
     static SDL_Window* sdl_window;

@@ -22,9 +22,10 @@
 #include "hook.h"
 #include "sdlversion.h"
 #include "logging.h"
-#include <GL/gl.h>
 #include "../external/SDL1.h" // SDL_Surface
+#include "opengl_helpers.h"
 #include "global.h"
+
 #include <cstring> // memcpy
 
 namespace libtas {
@@ -34,20 +35,34 @@ namespace orig {
     static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
     static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
-    static int (*SDL_RenderReadPixels)(SDL_Renderer*, const SDL_Rect*, Uint32, void*, int);
-    static Uint32 (*SDL_GetWindowPixelFormat)(SDL_Window* window);
-    static SDL_Renderer* (*SDL_GetRenderer)(SDL_Window* window);
-    static int (*SDL_GetRendererOutputSize)(SDL_Renderer* renderer, int* w, int* h);
-    static SDL_Texture* (*SDL_CreateTexture)(SDL_Renderer* renderer, Uint32 format, int access, int w, int h);
-    static int (*SDL_UpdateTexture)(SDL_Texture* texture, const SDL_Rect* rect, const void* pixels, int pitch);
-    static int (*SDL_RenderCopy)(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
-    static void (*SDL_DestroyTexture)(SDL_Texture* texture);
-
-    static void (*glGetIntegerv)( int pname, GLint* data);
-    static void (*glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* data);
-    static void (*glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
-    static void (*glWindowPos2i)(GLint x, GLint y);
 }
+
+DEFINE_ORIG_POINTER(SDL_RenderReadPixels);
+DEFINE_ORIG_POINTER(SDL_GetWindowPixelFormat);
+DEFINE_ORIG_POINTER(SDL_GetRenderer);
+DEFINE_ORIG_POINTER(SDL_GetRendererOutputSize);
+DEFINE_ORIG_POINTER(SDL_CreateTexture);
+DEFINE_ORIG_POINTER(SDL_UpdateTexture);
+DEFINE_ORIG_POINTER(SDL_RenderCopy);
+DEFINE_ORIG_POINTER(SDL_DestroyTexture);
+
+DEFINE_ORIG_POINTER(glGetIntegerv);
+DEFINE_ORIG_POINTER(glReadPixels);
+DEFINE_ORIG_POINTER(glDrawPixels);
+DEFINE_ORIG_POINTER(glRasterPos2i);
+DEFINE_ORIG_POINTER(glClear);
+DEFINE_ORIG_POINTER(glClearColor);
+DEFINE_ORIG_POINTER(glFinish);
+DEFINE_ORIG_POINTER(glGetError);
+DEFINE_ORIG_POINTER(glBindTexture);
+DEFINE_ORIG_POINTER(glTexParameteri);
+DEFINE_ORIG_POINTER(glTexImage2D);
+DEFINE_ORIG_POINTER(glBegin);
+DEFINE_ORIG_POINTER(glTexCoord2f);
+DEFINE_ORIG_POINTER(glVertex2f);
+DEFINE_ORIG_POINTER(glEnd);
+DEFINE_ORIG_POINTER(glGenTextures);
+DEFINE_ORIG_POINTER(glDeleteTextures);
 
 bool ScreenCapture::inited = false;
 
@@ -60,6 +75,7 @@ int ScreenCapture::width, ScreenCapture::height, ScreenCapture::pitch;
 unsigned int ScreenCapture::size;
 int ScreenCapture::pixelSize;
 
+GLuint ScreenCapture::screenTex = 0;
 SDL_Window* ScreenCapture::sdl_window;
 SDL_Renderer* ScreenCapture::sdl_renderer;
 
@@ -76,7 +92,20 @@ int ScreenCapture::init(SDL_Window* window)
         LINK_NAMESPACE(glGetIntegerv, "libGL");
         LINK_NAMESPACE(glReadPixels, "libGL");
         LINK_NAMESPACE(glDrawPixels, "libGL");
-        LINK_NAMESPACE(glWindowPos2i, "libGL");
+        LINK_NAMESPACE(glRasterPos2i, "libGL");
+        LINK_NAMESPACE(glClear, "libGL");
+        LINK_NAMESPACE(glClearColor, "libGL");
+        LINK_NAMESPACE(glFinish, "libGL");
+        LINK_NAMESPACE(glGetError, "libGL");
+        LINK_NAMESPACE(glBindTexture, "libGL");
+        LINK_NAMESPACE(glTexParameteri, "libGL");
+        LINK_NAMESPACE(glTexImage2D, "libGL");
+        LINK_NAMESPACE(glBegin, "libGL");
+        LINK_NAMESPACE(glTexCoord2f, "libGL");
+        LINK_NAMESPACE(glVertex2f, "libGL");
+        LINK_NAMESPACE(glEnd, "libGL");
+        LINK_NAMESPACE(glGenTextures, "libGL");
+        LINK_NAMESPACE(glDeleteTextures, "libGL");
 
         GLint viewport[4];
         orig::glGetIntegerv(GL_VIEWPORT, viewport);
@@ -88,9 +117,14 @@ int ScreenCapture::init(SDL_Window* window)
 
         /* Do we already have access to the glReadPixels function? */
         if (!orig::glGetIntegerv || !orig::glReadPixels ||
-            !orig::glDrawPixels || !orig::glWindowPos2i) {
+            !orig::glDrawPixels || !orig::glClear) {
             debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
             return -1;
+        }
+
+        /* Create the screen texture */
+        if (screenTex == 0) {
+            orig::glGenTextures(1, &screenTex);
         }
     }
 
@@ -157,6 +191,13 @@ void ScreenCapture::fini()
 {
     winpixels.clear();
     glpixels.clear();
+
+    /* Delete the OpenGL screen texture */
+    if (screenTex != 0) {
+        orig::glDeleteTextures(1, &screenTex);
+        screenTex = 0;
+    }
+
     inited = false;
 }
 
@@ -252,8 +293,14 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         /* TODO: Check that the openGL dimensions did not change in between */
 
         /* We access to the image pixels directly using glReadPixels */
+        orig::glGetError();
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
-        /* TODO: I saw this in some examples before calling glReadPixels: glPixelStorei(GL_PACK_ALIGNMENT, 1); */
+        orig::glFinish();
+        GLenum glerror = orig::glGetError();
+        while (glerror != GL_NO_ERROR) {
+            debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
+            glerror = orig::glGetError();
+        }
 
         if (orig_plane) {
             /*
@@ -320,12 +367,48 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
     return 0;
 }
 
-int ScreenCapture::setPixels() {
+int ScreenCapture::setPixels(bool update) {
     MYASSERT(inited)
 
     if (game_info.video & GameInfo::OPENGL) {
-        orig::glWindowPos2i(0, 0);
-        orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
+        orig::glGetError();
+
+        // orig::glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        //orig::glClear(GL_COLOR_BUFFER_BIT);
+//        orig::glFinish();
+        orig::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        orig::glRasterPos2i(0, 0);
+
+
+        /* Load the screen pixels into a texture */
+
+        enterGLRender();
+        orig::glBindTexture(GL_TEXTURE_2D, screenTex);
+
+        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        //if (update) {
+            orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
+        //}
+
+        orig::glBegin(GL_QUADS);
+        {
+            orig::glTexCoord2f(0,1); orig::glVertex2f(0, 0);
+            orig::glTexCoord2f(1,1); orig::glVertex2f(width, 0);
+            orig::glTexCoord2f(1,0); orig::glVertex2f(width, height);
+            orig::glTexCoord2f(0,0); orig::glVertex2f(0, height);
+        }
+        orig::glEnd();
+
+        exitGLRender();
+
+        //orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
+        GLenum glerror = orig::glGetError();
+        while (glerror != GL_NO_ERROR) {
+            debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
+            glerror = orig::glGetError();
+        }
     }
 
     else {

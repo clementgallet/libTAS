@@ -17,24 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef LIBTAS_ENABLE_HUD
-
-#ifndef LIBTAS_RENDERHUD_GL_H_INCL
-#define LIBTAS_RENDERHUD_GL_H_INCL
-
-#include "RenderHUD.h"
-#include <GL/gl.h>
+#ifndef LIBTAS_OPENGL_HELPERS_H_INCL
+#define LIBTAS_OPENGL_HELPERS_H_INCL
 
 namespace libtas {
-class RenderHUD_GL : public RenderHUD
-{
-    public:
-        ~RenderHUD_GL();
-        void init(void);
-        void size(int& width, int& height);
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+    void enterGLRender(void);
+    void exitGLRender(void);
 };
-}
 
-#endif
 #endif

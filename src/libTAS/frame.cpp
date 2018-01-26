@@ -354,7 +354,7 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_EXPOSE:
                 if (shared_config.save_screenpixels) {
-                    ScreenCapture::setPixels();
+                    ScreenCapture::setPixels(false);
                     NATIVECALL(draw());
                 }
                 break;
@@ -364,7 +364,7 @@ static void receive_messages(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
                 if (shared_config.hud_inputs && shared_config.save_screenpixels) {
-                    ScreenCapture::setPixels();
+                    ScreenCapture::setPixels(false);
 
                     if (shared_config.hud_framecount) {
                         hud.renderFrame(frame_counter);
@@ -415,11 +415,11 @@ static void receive_messages(std::function<void()> draw)
                     if (shared_config.save_screenpixels) {
                         /* If we restored from a savestate, refresh the screen */
 
-                        ScreenCapture::setPixels();
+                        ScreenCapture::setPixels(true);
 
 #ifdef LIBTAS_ENABLE_HUD
                         if (shared_config.hud_framecount) {
-                            hud.renderFrame(frame_counter);
+//                            hud.renderFrame(frame_counter);
                             // hud.renderNonDrawFrame(nondraw_frame_counter);
                         }
                         if (shared_config.hud_inputs)
