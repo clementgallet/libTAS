@@ -57,6 +57,27 @@ OVERRIDE pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name)
 /** Decrease the reference counter of the context by one */
 OVERRIDE void pa_context_unref(pa_context *c);
 
+/** Generic notification callback prototype */
+typedef void (*pa_context_notify_cb_t)(pa_context *c, void *userdata);
+
+/** Set a callback function that is called whenever the context status changes */
+OVERRIDE void pa_context_set_state_callback(pa_context *c, pa_context_notify_cb_t cb, void *userdata);
+
+/** A property list object. Basically a dictionary with ASCII strings
+ * as keys and arbitrary data as values. \since 0.9.11 */
+typedef struct pa_proplist pa_proplist;
+
+/** A callback for asynchronous meta/policy event messages. The set
+ * of defined events can be extended at any time. Also, server modules
+ * may introduce additional message types so make sure that your
+ * callback function ignores messages it doesn't know. \since
+ * 0.9.15 */
+typedef void (*pa_context_event_cb_t)(pa_context *c, const char *name, pa_proplist *p, void *userdata);
+
+/** Set a callback function that is called whenever a meta/policy
+ * control event is received. \since 0.9.15 */
+OVERRIDE void pa_context_set_event_callback(pa_context *p, pa_context_event_cb_t cb, void *userdata);
+
 /** Return the current context status */
 OVERRIDE pa_context_state_t pa_context_get_state(pa_context *c);
 

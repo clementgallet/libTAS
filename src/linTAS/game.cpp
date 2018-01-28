@@ -146,7 +146,7 @@ static void executeGame(Context* context)
             "-ex", "handle SIGPWR nostop noprint", // used a lot in some games
             "-ex", "handle SIGXCPU nostop noprint", // used a lot in some games
             "-ex", "run",
-            context->gamepath.c_str(),
+            "--args", context->gamepath.c_str(), context->config.gameargs.c_str(),
             (char*) NULL);
     }
     else {

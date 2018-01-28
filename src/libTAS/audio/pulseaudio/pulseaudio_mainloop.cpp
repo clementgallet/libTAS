@@ -24,12 +24,12 @@
 
 namespace libtas {
 
-namespace orig {
-    static pa_mainloop *(*pa_mainloop_new)(void);
-    static void (*pa_mainloop_free)(pa_mainloop* m);
-    static int (*pa_mainloop_iterate)(pa_mainloop *m, int block, int *retval);
-    static pa_mainloop_api* (*pa_mainloop_get_api)(pa_mainloop *m);
-}
+DEFINE_ORIG_POINTER(pa_mainloop_new);
+DEFINE_ORIG_POINTER(pa_mainloop_free);
+DEFINE_ORIG_POINTER(pa_mainloop_iterate);
+DEFINE_ORIG_POINTER(pa_mainloop_run);
+DEFINE_ORIG_POINTER(pa_mainloop_get_api);
+DEFINE_ORIG_POINTER(pa_mainloop_set_poll_func);
 
 pa_mainloop *pa_mainloop_new(void)
 {
@@ -63,6 +63,18 @@ int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval)
     return 0;
 }
 
+int pa_mainloop_run(pa_mainloop *m, int *retval)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(pa_mainloop_run, "libpulse.so");
+        return orig::pa_mainloop_run(m, retval);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
+    return 0;
+}
+
+
 pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m)
 {
     if (GlobalState::isNative()) {
@@ -73,6 +85,16 @@ pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m)
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     static pa_mainloop_api api;
     return &api;
+}
+
+void pa_mainloop_set_poll_func(pa_mainloop *m, pa_poll_func poll_func, void *userdata)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(pa_mainloop_set_poll_func, "libpulse.so");
+        return orig::pa_mainloop_set_poll_func(m, poll_func, userdata);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
 }
 
 }

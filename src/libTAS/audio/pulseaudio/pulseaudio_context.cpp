@@ -24,13 +24,14 @@
 
 namespace libtas {
 
-namespace orig {
-    static pa_context *(*pa_context_new)(pa_mainloop_api *mainloop, const char *name);
-    static void (*pa_context_unref)(pa_context *c);
-    static pa_context_state_t (*pa_context_get_state)(pa_context *c);
-    static int (*pa_context_connect)(pa_context *c, const char *server, pa_context_flags_t flags, /*const pa_spawn_api*/void *api);
-    static void (*pa_context_disconnect)(pa_context *c);
-}
+DEFINE_ORIG_POINTER(pa_context_new);
+DEFINE_ORIG_POINTER(pa_context_unref);
+DEFINE_ORIG_POINTER(pa_context_get_state);
+DEFINE_ORIG_POINTER(pa_context_connect);
+DEFINE_ORIG_POINTER(pa_context_disconnect);
+
+DEFINE_ORIG_POINTER(pa_context_set_state_callback);
+DEFINE_ORIG_POINTER(pa_context_set_event_callback);
 
 pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name)
 {
@@ -48,6 +49,26 @@ void pa_context_unref(pa_context *c)
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(pa_context_unref, "libpulse.so");
         return orig::pa_context_unref(c);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+}
+
+void pa_context_set_state_callback(pa_context *c, pa_context_notify_cb_t cb, void *userdata)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(pa_context_set_state_callback, "libpulse.so");
+        return orig::pa_context_set_state_callback(c, cb, userdata);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+}
+
+void pa_context_set_event_callback(pa_context *p, pa_context_event_cb_t cb, void *userdata)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(pa_context_set_event_callback, "libpulse.so");
+        return orig::pa_context_set_event_callback(p, cb, userdata);
     }
 
     DEBUGLOGCALL(LCF_SOUND);

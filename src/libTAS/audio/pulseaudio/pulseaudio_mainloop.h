@@ -42,10 +42,21 @@ specified with the main loop's quit() routine in the integer variable retval poi
 to. On success returns the number of sources dispatched in this iteration. */
 OVERRIDE int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval);
 
+/** Run unlimited iterations of the main loop object until the main loop's quit() routine is called. */
+OVERRIDE int pa_mainloop_run(pa_mainloop *m, int *retval);
+
+
 /** Return the abstract main loop abstraction layer vtable for this
     main loop. No need to free the API as it is owned by the loop
     and is destroyed when the loop is freed. */
 OVERRIDE pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m);
+
+/** Generic prototype of a poll() like function */
+typedef int (*pa_poll_func)(struct pollfd *ufds, unsigned long nfds, int timeout, void*userdata);
+
+/** Change the poll() implementation */
+OVERRIDE void pa_mainloop_set_poll_func(pa_mainloop *m, pa_poll_func poll_func, void *userdata);
+
 
 }
 
