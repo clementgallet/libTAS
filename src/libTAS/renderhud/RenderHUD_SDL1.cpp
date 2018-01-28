@@ -47,8 +47,9 @@ void RenderHUD_SDL1::init(void)
     RenderHUD::init();
 }
 
-void RenderHUD_SDL1::size(int& width, int& height)
+void RenderHUD_SDL1::box(int& x, int& y, int& width, int& height)
 {
+    x = y = 0;
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
     width = screen->w;
     height = screen->h;

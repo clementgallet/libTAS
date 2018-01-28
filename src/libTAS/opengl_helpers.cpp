@@ -52,30 +52,8 @@ DEFINE_ORIG_POINTER(glBlendFunc);
 DEFINE_ORIG_POINTER(glTexParameteri);
 DEFINE_ORIG_POINTER(glGetIntegerv);
 DEFINE_ORIG_POINTER(glGetBooleanv);
-// DEFINE_ORIG_POINTER(glUseProgram);
 
 namespace orig {
-//     static void (*glGenTextures)(int n, unsigned int* tex);
-//     static void (*glBindTexture)(int target, unsigned int tex);
-//     static void (*glTexImage2D)(int, int, int, int, int, int, int, int, const void*);
-//     static void (*glBegin)( int mode );
-//     static void (*glEnd)( void );
-//     static void (*glVertex2f)( float x, float y );
-//     static void (*glTexCoord2f)( float s, float t );
-//     static void (*glDeleteTextures)( int n, const unsigned int *textures);
-//     static void (*glEnable)( int cap );
-//     static void (*glDisable)( int cap );
-//     static void (*glVertexPointer)(int size, int type, int stride, const void* pointer);
-//     static void (*glDrawArrays)( int mode, int first, int count);
-//     static void (*glMatrixMode)(int mode);
-//     static void (*glPushMatrix)(void);
-//     static void (*glPopMatrix)(void);
-//     static void (*glLoadIdentity)(void);
-//     static void (*glOrtho)(double left, double right, double bottom, double top, double near, double far);
-//     static void (*glBlendFunc)(int sfactor, int dfactor);
-//     static void (*glTexParameteri)(int target, int pname, int param);
-//     static void (*glGetIntegerv)( int pname, GLint* data);
-//     static void (*glGetBooleanv)( int pname, GLboolean* data);
     static void (*glUseProgram)(unsigned int program);
 }
 
@@ -113,7 +91,6 @@ void enterGLRender(void)
     orig::glMatrixMode(GL_PROJECTION);
     orig::glPushMatrix();
     orig::glLoadIdentity();
-    //orig::glOrtho(0, sw, sh, 0, -1, 1);
     orig::glOrtho(viewport[0], viewport[0] + viewport[2], viewport[1] + viewport[3], viewport[1], -1, 1);
 
     orig::glMatrixMode(GL_MODELVIEW);

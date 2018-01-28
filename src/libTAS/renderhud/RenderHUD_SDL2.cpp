@@ -52,8 +52,9 @@ void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
     renderer = r;
 }
 
-void RenderHUD_SDL2::size(int& width, int& height)
+void RenderHUD_SDL2::box(int& x, int& y, int& width, int& height)
 {
+    x = y = 0;
     orig::SDL_GetRendererOutputSize(renderer, &width, &height);
 }
 

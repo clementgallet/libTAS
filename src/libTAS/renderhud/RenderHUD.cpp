@@ -96,7 +96,7 @@ void RenderHUD::init(const char* path)
     TTF_SetFontOutline(bg_font, outline_size);
 }
 
-void RenderHUD::size(int& width, int& height) {}
+void RenderHUD::box(int& x, int& y, int& width, int& height) {};
 
 std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
 {
@@ -123,7 +123,10 @@ void RenderHUD::renderFrame(unsigned int framecount)
     default:
         break;
     }
-    renderText(framestr.c_str(), fg_color, bg_color, 2, 2);
+
+    int x, y, width, height;
+    box(x, y, width, height);
+    renderText(framestr.c_str(), fg_color, bg_color, x + 2, y + 2);
 }
 
 void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
@@ -131,21 +134,24 @@ void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
     Color red_color = {255, 0, 0, 0};
     Color bg_color = {0, 0, 0, 0};
     std::string nondraw_framestr = std::to_string(nondraw_framecount);
-    renderText(nondraw_framestr.c_str(), red_color, bg_color, 2, 30);
+
+    int x, y, width, height;
+    box(x, y, width, height);
+    renderText(nondraw_framestr.c_str(), red_color, bg_color, x + 2, y + 30);
 }
 
 
 void RenderHUD::renderInputs(AllInputs& ai)
 {
-    renderInputs(ai, 50, {255, 255, 255, 0});
+    renderInputs(ai, -50, {255, 255, 255, 0});
 }
 
 void RenderHUD::renderPreviewInputs(AllInputs& ai)
 {
-    renderInputs(ai, 25, {160, 160, 160, 0});
+    renderInputs(ai, -25, {160, 160, 160, 0});
 }
 
-void RenderHUD::renderInputs(AllInputs& ai, int y, Color fg_color)
+void RenderHUD::renderInputs(AllInputs& ai, int off_y, Color fg_color)
 {
     std::ostringstream oss;
 
@@ -193,9 +199,9 @@ void RenderHUD::renderInputs(AllInputs& ai, int y, Color fg_color)
     std::string text = oss.str();
     if (!text.empty()) {
         /* Get size of the window */
-        int width, height;
-        size(width, height);
-        renderText(text.c_str(), fg_color, bg_color, 2, height-y);
+        int x, y, width, height;
+        box(x, y, width, height);
+        renderText(text.c_str(), fg_color, bg_color, x + 2, y + height + off_y);
     }
 }
 

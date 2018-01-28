@@ -30,7 +30,7 @@ class RenderHUD_SDL1 : public RenderHUD
     public:
         ~RenderHUD_SDL1();
         void init(void);
-        void size(int& width, int& height);
+        void box(int& x, int& y, int& width, int& height);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 };
 }

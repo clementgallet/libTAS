@@ -36,36 +36,8 @@ DEFINE_ORIG_POINTER(glTexCoord2f)
 DEFINE_ORIG_POINTER(glVertex2f)
 DEFINE_ORIG_POINTER(glEnd)
 
-// namespace orig {
-//     static void (*glGenTextures)(int n, unsigned int* tex);
-//     static void (*glBindTexture)(int target, unsigned int tex);
-//     static void (*glTexImage2D)(int, int, int, int, int, int, int, int, const void*);
-//     static void (*glBegin)( int mode );
-//     static void (*glEnd)( void );
-//     static void (*glVertex2f)( float x, float y );
-//     static void (*glTexCoord2f)( float s, float t );
-//     static void (*glDeleteTextures)( int n, const unsigned int *textures);
-//     static void (*glEnable)( int cap );
-//     static void (*glDisable)( int cap );
-//     static void (*glVertexPointer)(int size, int type, int stride, const void* pointer);
-//     static void (*glDrawArrays)( int mode, int first, int count);
-//     static void (*glMatrixMode)(int mode);
-//     static void (*glPushMatrix)(void);
-//     static void (*glPopMatrix)(void);
-//     static void (*glLoadIdentity)(void);
-//     static void (*glOrtho)(double left, double right, double bottom, double top, double near, double far);
-//     static void (*glBlendFunc)(int sfactor, int dfactor);
-//     static void (*glTexParameteri)(int target, int pname, int param);
-//     static void (*glGetIntegerv)( int pname, GLint* data);
-//     static void (*glGetBooleanv)( int pname, GLboolean* data);
-//     static void (*glUseProgram)(unsigned int program);
-// }
-
 RenderHUD_GL::~RenderHUD_GL()
 {
-    /* We should destroy our created GL texture here,
-     * but they are not handled yet.
-     */
 }
 
 void RenderHUD_GL::init()
@@ -79,27 +51,16 @@ void RenderHUD_GL::init()
     LINK_NAMESPACE(glEnd, "libGL");
     LINK_NAMESPACE(glVertex2f, "libGL");
     LINK_NAMESPACE(glTexCoord2f, "libGL");
-    // LINK_NAMESPACE(glDeleteTextures, "libGL");
-    // LINK_NAMESPACE(glEnable, "libGL");
-    // LINK_NAMESPACE(glDisable, "libGL");
-    // LINK_NAMESPACE(glVertexPointer, "libGL");
-    // LINK_NAMESPACE(glDrawArrays, "libGL");
-    // LINK_NAMESPACE(glMatrixMode, "libGL");
-    // LINK_NAMESPACE(glPushMatrix, "libGL");
-    // LINK_NAMESPACE(glPopMatrix, "libGL");
-    // LINK_NAMESPACE(glLoadIdentity, "libGL");
-    // LINK_NAMESPACE(glOrtho, "libGL");
-    // LINK_NAMESPACE(glBlendFunc, "libGL");
     LINK_NAMESPACE(glTexParameteri, "libGL");
-    LINK_NAMESPACE(glGetIntegerv, "libGL");
-    // LINK_NAMESPACE(glGetBooleanv, "libGL");
-    // LINK_NAMESPACE(glUseProgram, "libGL");
 }
 
-void RenderHUD_GL::size(int& width, int& height)
+void RenderHUD_GL::box(int& x, int& y, int& width, int& height)
 {
     GLint viewport[4];
+    LINK_NAMESPACE(glGetIntegerv, "libGL");
     orig::glGetIntegerv(GL_VIEWPORT, viewport);
+    x = viewport[0];
+    y = viewport[1];
     width = viewport[2];
     height = viewport[3];
 }
@@ -111,7 +72,7 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
         init();
         inited = 1;
     }
-    
+
     enterGLRender();
 
     /* TODO: Manage GL textures!!! */
