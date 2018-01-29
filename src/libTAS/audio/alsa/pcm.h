@@ -50,22 +50,22 @@ OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
     // int snd_pcm_hw_free(snd_pcm_t *pcm);
-    // int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
-    // int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
+OVERRIDE int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
+OVERRIDE int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
 OVERRIDE int snd_pcm_prepare(snd_pcm_t *pcm);
     // int snd_pcm_reset(snd_pcm_t *pcm);
     // int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
-    // int snd_pcm_start(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_start(snd_pcm_t *pcm);
     // int snd_pcm_drop(snd_pcm_t *pcm);
     // int snd_pcm_drain(snd_pcm_t *pcm);
     // int snd_pcm_pause(snd_pcm_t *pcm, int enable);
     // snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm);
     // int snd_pcm_hwsync(snd_pcm_t *pcm);
     // int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp);
-    // int snd_pcm_resume(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_resume(snd_pcm_t *pcm);
     // int snd_pcm_htimestamp(snd_pcm_t *pcm, snd_pcm_uframes_t *avail, snd_htimestamp_t *tstamp);
     // snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm);
-    // snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm);
+OVERRIDE snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm);
     // int snd_pcm_avail_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *availp, snd_pcm_sframes_t *delayp);
     // snd_pcm_sframes_t snd_pcm_rewindable(snd_pcm_t *pcm);
     // snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames);
@@ -91,6 +91,27 @@ OVERRIDE int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t 
 OVERRIDE int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
 OVERRIDE int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
+OVERRIDE int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
+
+OVERRIDE size_t snd_pcm_sw_params_sizeof(void);
+
+// int snd_pcm_sw_params_set_tstamp_mode(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_tstamp_t val);
+// int snd_pcm_sw_params_get_tstamp_mode(const snd_pcm_sw_params_t *params, snd_pcm_tstamp_t *val);
+// int snd_pcm_sw_params_set_tstamp_type(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_tstamp_type_t val);
+// int snd_pcm_sw_params_get_tstamp_type(const snd_pcm_sw_params_t *params, snd_pcm_tstamp_type_t *val);
+OVERRIDE int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+// int snd_pcm_sw_params_get_avail_min(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
+// int snd_pcm_sw_params_set_period_event(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, int val);
+// int snd_pcm_sw_params_get_period_event(const snd_pcm_sw_params_t *params, int *val);
+OVERRIDE int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+// int snd_pcm_sw_params_get_start_threshold(const snd_pcm_sw_params_t *paramsm, snd_pcm_uframes_t *val);
+// int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+// int snd_pcm_sw_params_get_stop_threshold(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
+// int snd_pcm_sw_params_set_silence_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+// int snd_pcm_sw_params_get_silence_threshold(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
+// int snd_pcm_sw_params_set_silence_size(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+// int snd_pcm_sw_params_get_silence_size(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
+
 
 }
 
