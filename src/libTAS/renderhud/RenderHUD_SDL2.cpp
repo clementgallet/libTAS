@@ -43,7 +43,6 @@ void RenderHUD_SDL2::init(void)
     LINK_NAMESPACE_SDL2(SDL_RenderCopy);
     LINK_NAMESPACE_SDL2(SDL_CreateTextureFromSurface);
     LINK_NAMESPACE_SDL2(SDL_CreateRGBSurfaceFrom);
-    LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
     RenderHUD::init();
 }
 
@@ -55,6 +54,7 @@ void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
 void RenderHUD_SDL2::box(int& x, int& y, int& width, int& height)
 {
     x = y = 0;
+    LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
     orig::SDL_GetRendererOutputSize(renderer, &width, &height);
 }
 

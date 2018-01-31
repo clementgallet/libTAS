@@ -22,6 +22,7 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include <cstring>
+#include <csignal>
 
 namespace libtas {
 
@@ -157,6 +158,15 @@ static thread_local int origUsrMaskThread = 0;
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE(sigsuspend, nullptr);
+
+    sigset_t tmp;
+    if (set) {
+        tmp = *set;
+        sigdelset(&tmp, SIGUSR1);
+        sigdelset(&tmp, SIGUSR2);
+        set = &tmp;
+    }
+
     return orig::sigsuspend(set);
 }
 
@@ -220,6 +230,14 @@ static thread_local int origUsrMaskThread = 0;
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigaltstack, nullptr);
+
+    if (ss) {
+        debuglog(LCF_SIGNAL, "    Setting altstack with base address ", ss->ss_sp, " and size ", ss->ss_size);
+    }
+    else if (oss) {
+        debuglog(LCF_SIGNAL, "    Getting altstack with base address ", oss->ss_sp, " and size ", oss->ss_size);
+    }
+
     return orig::sigaltstack(ss, oss);
 }
 
