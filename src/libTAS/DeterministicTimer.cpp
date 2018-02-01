@@ -29,6 +29,8 @@
 #include "renderhud/RenderHUD.h"
 #include "global.h" // shared_config
 
+#include <sched.h> // sched_yield()
+
 namespace libtas {
 
 struct timespec DeterministicTimer::getTicks()
@@ -105,7 +107,6 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
     if(shared_config.framerate == 0) // 0 framerate means disable deterministic timer
@@ -121,18 +122,18 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
      * However, there must be a limit,
      * otherwise it could easily build up and make us freeze (in some games)
      */
-
     TimeHolder maxDeferredDelay = timeIncrement;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
 
-    addedDelay += delayTicks;
-    ticks += delayTicks;
+        addedDelay += delayTicks;
+        ticks += delayTicks;
+    }
 
     if(!shared_config.fastforward)
     {
         /* Sleep, because the caller would have yielded at least a little */
-        struct timespec nosleep = {0, 0};
-        /* Call the real nanosleep function */
-        NATIVECALL(nanosleep(&nosleep, NULL));
+        sched_yield();
     }
 
     /* We only allow the main thread to trigger a frame boundary! */

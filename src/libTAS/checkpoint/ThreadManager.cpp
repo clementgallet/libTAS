@@ -419,7 +419,21 @@ void ThreadManager::suspendThreads()
                 */
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
 
-                    /* Setup an alternate signal stack */
+                    /* Setup an alternate signal stack.
+                     *
+                     * This is a workaround for a bug when loading a savestate
+                     * which involves the stack pointer.
+                     * During a state loading, the main thread restores the
+                     * memory of the thread stacks, then resume the threads, and
+                     * each thread restore its registers.
+                     * If the stack pointer had changed, the thread is resumed
+                     * with a corrupted stack (old stack pointer, new stack memory)
+                     * and cannot reach the function to restore its stack pointer.
+                     *
+                     * The workaround is to run our signal handler function on
+                     * an alternate stack (different for each thread).
+                     * This way, this stack pointer will be the same.
+                     */
                     NATIVECALL(sigaltstack(&thread->altstack, nullptr));
 
                     /* Send the suspend signal to the thread */

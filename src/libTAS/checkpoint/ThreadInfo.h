@@ -60,7 +60,7 @@ struct ThreadInfo {
     bool initial_owncode; // initial value of the global owncode state
     bool initial_nolog; // initial value of the global nolog state
 
-    stack_t altstack;
+    stack_t altstack; // altstack to be used when suspending threads
 
     ThreadInfo *next; // next thread info in the linked list
     ThreadInfo *prev; // previous thread info in the linked list
