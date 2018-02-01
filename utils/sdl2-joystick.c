@@ -3,13 +3,15 @@
  * Source taken from http://askubuntu.com/a/368711 
  */
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 int main()
 {
   SDL_Init(SDL_INIT_JOYSTICK);
   SDL_Init(SDL_INIT_GAMECONTROLLER);
   atexit(SDL_Quit);
+
+  printf("EventState is %d\n", SDL_GameControllerEventState(-1));
 
   int num_joysticks = SDL_NumJoysticks();
   int i;
@@ -33,7 +35,7 @@ int main()
              num_axes, num_buttons, num_hats, num_balls);
       printf("Raw guid is");
       for (int g=0; g<16; g++)
-        printf(" %d", guid.data[g]);
+        printf(" %x", guid.data[g]);
       printf("\n");
 
       SDL_JoystickClose(js);

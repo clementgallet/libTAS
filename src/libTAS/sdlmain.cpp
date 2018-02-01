@@ -97,7 +97,7 @@ DEFINE_ORIG_POINTER(SDL_Quit);
     }
 
     if (flags & SDL_INIT_HAPTIC)
-        debuglog(LCF_SDL, "    SDL_HAPTIC enabled.");
+        debuglog(LCF_SDL, "    SDL_HAPTIC fake enabled.");
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
         debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
@@ -114,6 +114,9 @@ DEFINE_ORIG_POINTER(SDL_Quit);
 
     /* Disabling Joystick subsystem, we don't need any initialization from SDL */
     flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;
+
+    /* Disabling Haptic subsystem, we don't need any initialization from SDL */
+    flags &= 0xFFFFFFFF ^ SDL_INIT_HAPTIC;
 
     /* Disabling GameController subsystem, we don't need any initialization from SDL */
     flags &= 0xFFFFFFFF ^ SDL_INIT_GAMECONTROLLER;

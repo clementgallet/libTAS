@@ -26,6 +26,20 @@
 
 namespace libtas {
 
+typedef enum
+{
+    SDL_JOYSTICK_TYPE_UNKNOWN,
+    SDL_JOYSTICK_TYPE_GAMECONTROLLER,
+    SDL_JOYSTICK_TYPE_WHEEL,
+    SDL_JOYSTICK_TYPE_ARCADE_STICK,
+    SDL_JOYSTICK_TYPE_FLIGHT_STICK,
+    SDL_JOYSTICK_TYPE_DANCE_PAD,
+    SDL_JOYSTICK_TYPE_GUITAR,
+    SDL_JOYSTICK_TYPE_DRUM_KIT,
+    SDL_JOYSTICK_TYPE_ARCADE_PAD,
+    SDL_JOYSTICK_TYPE_THROTTLE
+} SDL_JoystickType;
+
 /**
  *  Count the number of joysticks attached to the system right now
  */
@@ -55,9 +69,59 @@ OVERRIDE SDL_Joystick *SDL_JoystickOpen(int device_index);
 OVERRIDE SDL_Joystick *SDL_JoystickFromInstanceID(SDL_JoystickID joyid);
 
 /**
+ *  Get the USB vendor ID of a joystick, if available.
+ *  This can be called before any joysticks are opened.
+ *  If the vendor ID isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetDeviceVendor(int device_index);
+
+/**
+ *  Get the USB product ID of a joystick, if available.
+ *  This can be called before any joysticks are opened.
+ *  If the product ID isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetDeviceProduct(int device_index);
+
+/**
+ *  Get the product version of a joystick, if available.
+ *  This can be called before any joysticks are opened.
+ *  If the product version isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetDeviceProductVersion(int device_index);
+
+/**
+ *  Get the type of a joystick, if available.
+ *  This can be called before any joysticks are opened.
+ */
+OVERRIDE SDL_JoystickType SDL_JoystickGetDeviceType(int device_index);
+
+/**
  *  Return the GUID for the joystick at this index
  */
 OVERRIDE SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index);
+
+/**
+ *  Get the USB vendor ID of an opened joystick, if available.
+ *  If the vendor ID isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetVendor(SDL_Joystick * joystick);
+
+/**
+ *  Get the USB product ID of an opened joystick, if available.
+ *  If the product ID isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetProduct(SDL_Joystick * joystick);
+
+/**
+ *  Get the product version of an opened joystick, if available.
+ *  If the product version isn't available this function returns 0.
+ */
+OVERRIDE Uint16 SDL_JoystickGetProductVersion(SDL_Joystick * joystick);
+
+/**
+ *  Get the type of an opened joystick.
+ */
+OVERRIDE SDL_JoystickType SDL_JoystickGetType(SDL_Joystick * joystick);
 
 /**
  *  Return the GUID for this opened joystick

@@ -111,9 +111,53 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     return reinterpret_cast<SDL_Joystick*>(&joyids[joyid]);
 }
 
+/* Override */ Uint16 SDL_JoystickGetDeviceVendor(int device_index)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
+        return 0;
+    if (device_index >= shared_config.nb_controllers)
+        return 0;
+
+    return 0x045e; // vendor of the wired xbox360 controller
+}
+
+/* Override */ Uint16 SDL_JoystickGetDeviceProduct(int device_index)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
+        return 0;
+    if (device_index >= shared_config.nb_controllers)
+        return 0;
+
+    return 0x028e; // product of the wired xbox360 controller
+}
+
+/* Override */ Uint16 SDL_JoystickGetDeviceProductVersion(int device_index)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
+        return 0;
+    if (device_index >= shared_config.nb_controllers)
+        return 0;
+
+    return 0x0114; // product version of the wired xbox360 controller
+}
+
+/* Override */ SDL_JoystickType SDL_JoystickGetDeviceType(int device_index)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
+        return SDL_JOYSTICK_TYPE_UNKNOWN;
+    if (device_index >= shared_config.nb_controllers)
+        return SDL_JOYSTICK_TYPE_UNKNOWN;
+
+    return SDL_JOYSTICK_TYPE_GAMECONTROLLER;
+}
+
 /* Xbox 360 GUID */
-SDL_JoystickGUID xinputGUID = {{3,0,0,0,94,4,0,0,142,2,0,0,20,1,0,0}};
-SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+SDL_JoystickGUID xinputGUID = {{0x03,0x00,0x00,0x00,0x5e,0x04,0x00,0x00,0x8e,0x02,0x00,0x00,0x14,0x01,0x00,0x00}};
+SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}};
 
 /* Override */ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
@@ -122,6 +166,46 @@ SDL_JoystickGUID nullGUID   = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 	    return nullGUID;
 
     return xinputGUID;
+}
+
+/* Override */ Uint16 SDL_JoystickGetVendor(SDL_Joystick * joystick)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+
+    if (!isIdValid(joystick))
+        return 0;
+
+    return 0x045e; // vendor of the wired xbox360 controller
+}
+
+/* Override */ Uint16 SDL_JoystickGetProduct(SDL_Joystick * joystick)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+
+    if (!isIdValid(joystick))
+        return 0;
+
+    return 0x028e; // product of the wired xbox360 controller
+}
+
+/* Override */ Uint16 SDL_JoystickGetProductVersion(SDL_Joystick * joystick)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+
+    if (!isIdValid(joystick))
+        return 0;
+
+    return 0x0114; // product version of the wired xbox360 controller
+}
+
+/* Override */ SDL_JoystickType SDL_JoystickGetType(SDL_Joystick * joystick)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+
+    if (!isIdValid(joystick))
+        return SDL_JOYSTICK_TYPE_UNKNOWN;
+
+    return SDL_JOYSTICK_TYPE_GAMECONTROLLER;
 }
 
 /* Override */ SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick)
