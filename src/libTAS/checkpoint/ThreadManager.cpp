@@ -147,6 +147,11 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
     thread->initial_native = GlobalState::isNative();
     thread->initial_owncode = GlobalState::isOwnCode();
     thread->initial_nolog = GlobalState::isNoLog();
+
+    thread->altstack.ss_size = 4096;
+    thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
+    thread->altstack.ss_flags = 0;
+
     thread->next = nullptr;
     thread->prev = nullptr;
 }
@@ -240,6 +245,8 @@ void ThreadManager::deallocateThreads()
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     while (free_list != nullptr) {
         ThreadInfo *thread = free_list;
+        if (free_list->altstack.ss_sp != 0)
+            free(free_list->altstack.ss_sp);
         free_list = free_list->next;
         free(thread);
     }
@@ -265,6 +272,9 @@ void ThreadManager::checkpoint(const char* savestatepath)
 
     /* Before suspending threads, we must also register our signal handlers */
     CustomSignals::registerHandlers();
+
+    /* We save the alternate stack if the game did set one */
+    AltStack::saveStack();
 
     /* Sending a suspend signal to all threads */
     suspendThreads();
@@ -322,6 +332,9 @@ void ThreadManager::restore(const char* savestatepath)
 
     /* Before suspending threads, we must also register our signal handlers */
     CustomSignals::registerHandlers();
+
+    /* We save the alternate stack if the game did set one */
+    AltStack::saveStack();
 
     restoreInProgress = false;
 
@@ -405,7 +418,12 @@ void ThreadManager::suspendThreads()
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
                 if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
-                    ret = pthread_kill(thread->tid, SIGUSR1);
+
+                    /* Setup an alternate signal stack */
+                    NATIVECALL(sigaltstack(&thread->altstack, nullptr));
+
+                    /* Send the suspend signal to the thread */
+                    NATIVECALL(ret = pthread_kill(thread->tid, SIGUSR1));
 
                     if (ret == 0) {
                         needrescan = true;
@@ -431,7 +449,7 @@ void ThreadManager::suspendThreads()
                 break;
 
             case ThreadInfo::ST_SIGNALED:
-                ret = pthread_kill(thread->tid, 0);
+                NATIVECALL(ret = pthread_kill(thread->tid, 0));
 
                 if (ret == 0) {
                     needrescan = true;

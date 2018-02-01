@@ -34,6 +34,13 @@ namespace libtas {
  */
 static stack_t oss;
 
+void AltStack::saveStack()
+{
+    int ret;
+    NATIVECALL(ret = sigaltstack(nullptr, &oss));
+    MYASSERT(ret == 0)
+}
+
 void AltStack::prepareStack()
 {
     /* Setup an alternate signal stack using our reserved memory */
@@ -41,13 +48,18 @@ void AltStack::prepareStack()
     ss.ss_sp = ReservedMemory::getAddr(ONE_MB);
     ss.ss_size = ReservedMemory::getSize() - ONE_MB;
     ss.ss_flags = 0;
-    MYASSERT(sigaltstack(&ss, &oss) == 0)
+
+    int ret;
+    NATIVECALL(ret = sigaltstack(&ss, nullptr));
+    MYASSERT(ret == 0)
 }
 
 void AltStack::restoreStack()
 {
     /* Restore the game altstack if any */
-    MYASSERT(sigaltstack(&oss, nullptr) == 0)
+    int ret;
+    NATIVECALL(ret = sigaltstack(&oss, nullptr));
+    MYASSERT(ret == 0)
 }
 
 }

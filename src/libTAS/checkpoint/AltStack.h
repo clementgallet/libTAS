@@ -25,6 +25,7 @@
 namespace libtas {
 namespace AltStack
 {
+    void saveStack();
     void prepareStack();
     void restoreStack();
 };

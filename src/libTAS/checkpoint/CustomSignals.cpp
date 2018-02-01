@@ -36,7 +36,7 @@ void CustomSignals::registerHandlers()
 {
     struct sigaction sigusr1;
     sigfillset(&sigusr1.sa_mask);
-    sigusr1.sa_flags = SA_RESTART;
+    sigusr1.sa_flags = SA_RESTART | SA_ONSTACK;
     sigusr1.sa_handler = ThreadManager::stopThisThread;
     {
         GlobalNative gn;

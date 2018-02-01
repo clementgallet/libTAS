@@ -21,6 +21,8 @@
 #include "logging.h"
 #include "GlobalState.h"
 #include "hook.h"
+#include "checkpoint/ThreadSync.h"
+
 #include <cstring>
 #include <csignal>
 
@@ -50,6 +52,11 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(signal, nullptr);
 
+    /* Our checkpoint code uses signals, so we must prevent the game from
+     * signaling threads at the same time.
+     */
+    ThreadSync::wrapperExecutionLockLock();
+
     debuglog(LCF_SIGNAL, "    Setting handler ", reinterpret_cast<void*>(handler),
         " for signal ", strsignal(sig));
 
@@ -57,7 +64,11 @@ static thread_local int origUsrMaskThread = 0;
         return SIG_IGN;
     }
 
-    return orig::signal(sig, handler);
+    sighandler_t ret = orig::signal(sig, handler);
+
+    ThreadSync::wrapperExecutionLockUnlock();
+
+    return ret;
 }
 
 /* Override */ int sigblock (int mask) throw()
@@ -181,6 +192,11 @@ static thread_local int origUsrMaskThread = 0;
 
     DEBUGLOGCALL(LCF_SIGNAL);
 
+    /* Our checkpoint code uses signals, so we must prevent the game from
+     * signaling threads at the same time.
+     */
+    ThreadSync::wrapperExecutionLockLock();
+
     if (act != nullptr) {
         debuglog(LCF_SIGNAL, "    Setting handler ", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
@@ -193,7 +209,12 @@ static thread_local int origUsrMaskThread = 0;
             reinterpret_cast<void*>(oact->sa_handler),
             " for signal ", sig, " (", strsignal(sig), ")");
     }
-    return orig::sigaction(sig, act, oact);
+
+    int ret = orig::sigaction(sig, act, oact);
+
+    ThreadSync::wrapperExecutionLockUnlock();
+
+    return ret;
 }
 
 /* Override */ int sigpending (sigset_t *set) throw()
@@ -228,8 +249,18 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigaltstack (const struct sigaltstack *ss,
 			struct sigaltstack *oss) throw()
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE(sigaltstack, nullptr);
+
+    if (GlobalState::isNative()) {
+        return orig::sigaltstack(ss, oss);
+    }
+
+    DEBUGLOGCALL(LCF_SIGNAL);
+
+    /* Our checkpoint code uses altstacks, so we must prevent the game from
+     * changing the altstack at the same time.
+     */
+    ThreadSync::wrapperExecutionLockLock();
 
     if (ss) {
         debuglog(LCF_SIGNAL, "    Setting altstack with base address ", ss->ss_sp, " and size ", ss->ss_size);
@@ -238,7 +269,11 @@ static thread_local int origUsrMaskThread = 0;
         debuglog(LCF_SIGNAL, "    Getting altstack with base address ", oss->ss_sp, " and size ", oss->ss_size);
     }
 
-    return orig::sigaltstack(ss, oss);
+    int ret = orig::sigaltstack(ss, oss);
+
+    ThreadSync::wrapperExecutionLockUnlock();
+
+    return ret;
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
@@ -259,11 +294,19 @@ static thread_local int origUsrMaskThread = 0;
             debuglog(LCF_SIGNAL, "    Setting signals to block:");
         for (int s=1; s<NSIG; s++) {
             if (sigismember(newmask, s) == 1)
-                debuglog(LCF_SIGNAL, "        ", s, " (", strsignal(s), ")");
+                /* I encountered a deadlock here when using strsignal() to print
+                 * the signal name with the following pattern:
+                 * malloc() -> acquires lock -> signal handler called ->
+                 * pthread_sigmask() -> strsignal() -> malloc() ->
+                 * acquires lock -> deadlock
+                 *
+                 * So I don't use any function that is making memory allocation.
+                 */
+                debuglogstdio(LCF_SIGNAL, "        %d", s);
         }
     }
     else if (oldmask) {
-        debuglog(LCF_SIGNAL, "    Getting blocked signals");
+        debuglogstdio(LCF_SIGNAL, "    Getting blocked signals");
     }
 
     sigset_t tmpmask;
@@ -302,9 +345,23 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int pthread_kill (pthread_t threadid, int signo) throw()
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE(pthread_kill, nullptr);
-    return orig::pthread_kill(threadid, signo);
+
+    if (GlobalState::isNative())
+        return orig::pthread_kill(threadid, signo);
+
+    DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
+
+    /* Our checkpoint code uses signals, so we must prevent the game from
+     * signaling threads at the same time.
+     */
+    ThreadSync::wrapperExecutionLockLock();
+
+    int ret = orig::pthread_kill(threadid, signo);
+
+    ThreadSync::wrapperExecutionLockUnlock();
+
+    return ret;
 }
 
 /* Override */ int pthread_sigqueue (pthread_t threadid, int signo,

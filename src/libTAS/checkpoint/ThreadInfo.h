@@ -24,6 +24,8 @@
 #include <atomic>
 #include <ucontext.h>
 #include <pthread.h> // pthread_t
+#include <csignal> // stack_t
+
 #include "ThreadLocalStorage.h"
 
 namespace libtas {
@@ -57,6 +59,8 @@ struct ThreadInfo {
     bool initial_native; // initial value of the global native state
     bool initial_owncode; // initial value of the global owncode state
     bool initial_nolog; // initial value of the global nolog state
+
+    stack_t altstack;
 
     ThreadInfo *next; // next thread info in the linked list
     ThreadInfo *prev; // previous thread info in the linked list
