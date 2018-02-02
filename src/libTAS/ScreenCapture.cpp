@@ -37,6 +37,7 @@ namespace orig {
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
 }
 
+DEFINE_ORIG_POINTER(SDL_GetWindowSize);
 DEFINE_ORIG_POINTER(SDL_RenderReadPixels);
 DEFINE_ORIG_POINTER(SDL_GetWindowPixelFormat);
 DEFINE_ORIG_POINTER(SDL_GetRenderer);
@@ -107,10 +108,21 @@ int ScreenCapture::init(SDL_Window* window)
         LINK_NAMESPACE(glGenTextures, "libGL");
         LINK_NAMESPACE(glDeleteTextures, "libGL");
 
-        GLint viewport[4];
-        orig::glGetIntegerv(GL_VIEWPORT, viewport);
-        width = viewport[2];
-        height = viewport[3];
+        /* OpenGL viewport size and window size can differ. Here we capture the
+         * screen, so we want the window size.
+         * TODO: Don't use viewport but only SDL/Xlib functions
+         */
+        if (game_info.video & GameInfo::SDL2) {
+            LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+
+            SDL_GetWindowSize(sdl_window, &width, &height);
+        }
+        else {
+            GLint viewport[4];
+            orig::glGetIntegerv(GL_VIEWPORT, viewport);
+            width = viewport[2];
+            height = viewport[3];
+        }
 
         /* TODO: Is this always 4 for OpenGL? */
         pixelSize = 4;
@@ -161,7 +173,7 @@ int ScreenCapture::init(SDL_Window* window)
 
         /* Get surface from window */
         if (!orig::SDL_GetRendererOutputSize) {
-            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "Need function SDL_GetWindowSize.");
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "Need function SDL_GetRendererOutputSize.");
             return -1;
         }
 

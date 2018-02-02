@@ -419,7 +419,7 @@ static void receive_messages(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
                         if (shared_config.hud_framecount) {
-//                            hud.renderFrame(frame_counter);
+                            hud.renderFrame(frame_counter);
                             // hud.renderNonDrawFrame(nondraw_frame_counter);
                         }
                         if (shared_config.hud_inputs)
