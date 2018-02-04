@@ -49,11 +49,8 @@ class RenderHUD
         RenderHUD();
         virtual ~RenderHUD();
 
-        /* Initialize the default font */
-        virtual void init();
-
         /* Initialize the font located at the given path */
-        virtual void init(const char* path);
+        virtual void initFonts(const char* path);
 
         /* Get the box coords of the rendering on the game window */
         virtual void box(int& x, int& y, int& width, int& height);
@@ -93,8 +90,8 @@ class RenderHUD
         int outline_size;
         int font_size;
 
-        TTF_Font* fg_font;
-        TTF_Font* bg_font;
+        static TTF_Font* fg_font;
+        static TTF_Font* bg_font;
 };
 }
 

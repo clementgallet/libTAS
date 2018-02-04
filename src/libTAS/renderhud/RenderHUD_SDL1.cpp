@@ -39,17 +39,10 @@ RenderHUD_SDL1::~RenderHUD_SDL1()
 {
 }
 
-void RenderHUD_SDL1::init(void)
-{
-    LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-    LINK_NAMESPACE_SDL1(SDL_UpperBlit);
-    LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);
-    RenderHUD::init();
-}
-
 void RenderHUD_SDL1::box(int& x, int& y, int& width, int& height)
 {
     x = y = 0;
+    LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
     width = screen->w;
     height = screen->h;
@@ -57,18 +50,16 @@ void RenderHUD_SDL1::box(int& x, int& y, int& width, int& height)
 
 void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
-    static int inited = 0;
-    if (inited == 0) {
-        init();
-        inited = 1;
-    }
+    LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);
+    LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+    LINK_NAMESPACE_SDL1(SDL_UpperBlit);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL1::SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
 
-    SDL_Rect rect = {x, y, x+sdlsurf->w, y+sdlsurf->h};
+    SDL_Rect rect = {x, y, sdlsurf->w, sdlsurf->h};
     orig::SDL_UpperBlit(sdlsurf, NULL, screen, &rect);
 }
 

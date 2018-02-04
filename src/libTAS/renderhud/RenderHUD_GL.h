@@ -29,10 +29,12 @@ namespace libtas {
 class RenderHUD_GL : public RenderHUD
 {
     public:
+        RenderHUD_GL();
         ~RenderHUD_GL();
-        void init(void);
         void box(int& x, int& y, int& width, int& height);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+    private:
+        static GLuint texture;
 };
 }
 

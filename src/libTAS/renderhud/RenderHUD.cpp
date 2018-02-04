@@ -28,10 +28,40 @@
 
 namespace libtas {
 
+TTF_Font* RenderHUD::fg_font = nullptr;
+TTF_Font* RenderHUD::bg_font = nullptr;
+
 RenderHUD::RenderHUD()
 {
     outline_size = 1;
     font_size = 20;
+
+    if (!fg_font || !bg_font) {
+        /* Find an installed regular font in the system using fontconfig */
+        /* Code taken from http://stackoverflow.com/questions/10542832 */
+        FcConfig* config = FcInitLoadConfigAndFonts();
+        FcPattern* pat = FcPatternCreate();
+        FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
+        FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
+        FcFontSet* fs = FcFontList(config, pat, os);
+        // debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
+        for (int i=0; fs && i < fs->nfont; ++i) {
+            FcPattern* font = fs->fonts[i];
+            FcChar8 *file, *family;
+            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
+                FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch) {
+                if (FcStrStr(file, reinterpret_cast<const FcChar8*>(".ttf"))) {
+                    debuglog(LCF_WINDOW, "Picking font: ", file, " (family ", family, ")");
+                    initFonts(reinterpret_cast<char*>(file));
+                    if (fs) FcFontSetDestroy(fs);
+                    return;
+                }
+            }
+        }
+
+        debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+        if (fs) FcFontSetDestroy(fs);
+    }
 }
 
 RenderHUD::~RenderHUD()
@@ -44,34 +74,7 @@ RenderHUD::~RenderHUD()
         TTF_Quit();
 }
 
-void RenderHUD::init()
-{
-    /* Code taken from http://stackoverflow.com/questions/10542832 */
-    FcConfig* config = FcInitLoadConfigAndFonts();
-    FcPattern* pat = FcPatternCreate();
-    FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
-    FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
-    FcFontSet* fs = FcFontList(config, pat, os);
-    // debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
-    for (int i=0; fs && i < fs->nfont; ++i) {
-        FcPattern* font = fs->fonts[i];
-        FcChar8 *file, *family;
-        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
-            FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch) {
-            if (FcStrStr(file, reinterpret_cast<const FcChar8*>(".ttf"))) {
-                debuglog(LCF_WINDOW, "Picking font: ", file, " (family ", family, ")");
-                init(reinterpret_cast<char*>(file));
-                if (fs) FcFontSetDestroy(fs);
-                return;
-            }
-        }
-    }
-
-    debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
-    if (fs) FcFontSetDestroy(fs);
-}
-
-void RenderHUD::init(const char* path)
+void RenderHUD::initFonts(const char* path)
 {
     debuglog(LCF_WINDOW, "Try opening font ", path);
 

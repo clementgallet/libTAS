@@ -28,6 +28,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(glGetIntegerv)
 DEFINE_ORIG_POINTER(glGenTextures)
+DEFINE_ORIG_POINTER(glDeleteTextures)
 DEFINE_ORIG_POINTER(glBindTexture)
 DEFINE_ORIG_POINTER(glTexParameteri)
 DEFINE_ORIG_POINTER(glTexImage2D)
@@ -36,22 +37,23 @@ DEFINE_ORIG_POINTER(glTexCoord2f)
 DEFINE_ORIG_POINTER(glVertex2f)
 DEFINE_ORIG_POINTER(glEnd)
 
-RenderHUD_GL::~RenderHUD_GL()
+GLuint RenderHUD_GL::texture = 0;
+
+RenderHUD_GL::RenderHUD_GL() : RenderHUD()
 {
+    if (texture == 0) {
+        LINK_NAMESPACE(glGenTextures, "libGL");
+        orig::glGenTextures(1, &texture);
+    }
 }
 
-void RenderHUD_GL::init()
+RenderHUD_GL::~RenderHUD_GL()
 {
-    RenderHUD::init();
-
-    LINK_NAMESPACE(glGenTextures, "libGL");
-    LINK_NAMESPACE(glBindTexture, "libGL");
-    LINK_NAMESPACE(glTexImage2D, "libGL");
-    LINK_NAMESPACE(glBegin, "libGL");
-    LINK_NAMESPACE(glEnd, "libGL");
-    LINK_NAMESPACE(glVertex2f, "libGL");
-    LINK_NAMESPACE(glTexCoord2f, "libGL");
-    LINK_NAMESPACE(glTexParameteri, "libGL");
+    if (texture != 0) {
+        LINK_NAMESPACE(glDeleteTextures, "libGL");
+        orig::glDeleteTextures(1, &texture);
+        texture = 0;
+    }
 }
 
 void RenderHUD_GL::box(int& x, int& y, int& width, int& height)
@@ -67,19 +69,16 @@ void RenderHUD_GL::box(int& x, int& y, int& width, int& height)
 
 void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
-    static int inited = 0;
-    if (inited == 0) {
-        init();
-        inited = 1;
-    }
+    LINK_NAMESPACE(glBindTexture, "libGL");
+    LINK_NAMESPACE(glTexImage2D, "libGL");
+    LINK_NAMESPACE(glBegin, "libGL");
+    LINK_NAMESPACE(glEnd, "libGL");
+    LINK_NAMESPACE(glVertex2f, "libGL");
+    LINK_NAMESPACE(glTexCoord2f, "libGL");
+    LINK_NAMESPACE(glTexParameteri, "libGL");
 
     enterGLRender();
 
-    /* TODO: Manage GL textures!!! */
-    static GLuint texture = 0;
-    if (texture == 0) {
-        orig::glGenTextures(1, &texture);
-    }
     orig::glBindTexture(GL_TEXTURE_2D, texture);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
