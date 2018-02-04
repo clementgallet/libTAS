@@ -250,6 +250,7 @@ void launchGame(Context* context)
 
             default:
                 // ui_print("Message init: unknown message\n");
+                loopExit(context);
                 return;
         }
         message = receiveMessage();
@@ -315,17 +316,7 @@ void launchGame(Context* context)
         /* Wait for frame boundary */
         message = receiveMessage();
 
-        /* Check if game is still running */
-        if (message != MSGB_QUIT) {
-            int ret = kill(context->game_pid, 0);
-            if (ret < 0 && errno == ESRCH) {
-                std::string* alert_str = new std::string("It seems the game has crashed...");
-                Fl::awake(alert_dialog, alert_str);
-                break;
-            }
-        }
-
-        while ((message >= 0) && (message != MSGB_QUIT) && (message != MSGB_START_FRAMEBOUNDARY)) {
+        while (message != MSGB_START_FRAMEBOUNDARY) {
             std::string* alert_str;
             float fps, lfps;
             switch (message) {
@@ -370,20 +361,15 @@ void launchGame(Context* context)
                 receiveData(&lfps, sizeof(float));
                 ui.update_fps(fps, lfps);
                 break;
+            case MSGB_QUIT:
+                loopExit(context);
+                return;
             default:
                 std::cerr << "Got unknown message!!!" << std::endl;
+                loopExit(context);
                 return;
             }
             message = receiveMessage();
-        }
-
-        if (message < 0) {
-            std::cerr << "Got a socket error: " << strerror(errno) << std::endl;
-            break;
-        }
-
-        if (message == MSGB_QUIT) {
-            break;
         }
 
         /* Flag to trigger a frame advance even if the game is on pause */
@@ -394,6 +380,15 @@ void launchGame(Context* context)
             /* If we did not yet receive the game window id, just make the game running */
             if (! context->game_window ) {
                 break;
+            }
+
+            /* Check if game is still running */
+            int ret = waitpid(context->game_pid, nullptr, WNOHANG);
+            if (ret == context->game_pid) {
+                std::string* alert_str = new std::string("Game did not exit normally...");
+                Fl::awake(alert_dialog, alert_str);
+                loopExit(context);
+                return;
             }
 
             ui.update_ramsearch();
@@ -614,7 +609,7 @@ void launchGame(Context* context)
                              * a prefix of our moviefile.
                              */
                             MovieFile savedmovie(context);
-                            int ret = savedmovie.loadInputs(moviepath);
+                            ret = savedmovie.loadInputs(moviepath);
                             if (ret < 0) {
                                 std::string* alert_str = new std::string("Could not load the moviefile associated with the savestate");
                                 Fl::awake(alert_dialog, alert_str);
@@ -838,7 +833,10 @@ void launchGame(Context* context)
 
         sendMessage(MSGN_END_FRAMEBOUNDARY);
     }
+}
 
+void loopExit(Context* context)
+{
     if (movie.modifiedSinceLastSave) {
         /* Ask the user if he wants to save the movie, and get the answer.
          * Prompting a alert window must be done by the UI thread, so we are
@@ -861,6 +859,7 @@ void launchGame(Context* context)
     remove_savestates(context);
 
     context->status = Context::INACTIVE;
+    MainWindow& ui = MainWindow::getInstance();
     ui.update_status();
 
     /* Disable auto-repeat */
@@ -868,9 +867,5 @@ void launchGame(Context* context)
     uint32_t values_aron[] = {XCB_AUTO_REPEAT_MODE_ON, None};
 
     xcb_change_keyboard_control(context->conn, mask_aron, values_aron);
-    // XAutoRepeatOn(context->display);
     xcb_flush(context->conn);
-    // XFlush(context->display);
-
-    return;
 }

@@ -35,4 +35,6 @@ extern MovieFile movie;
 
 void launchGame(Context* context);
 
+void loopExit(Context* context);
+
 #endif
