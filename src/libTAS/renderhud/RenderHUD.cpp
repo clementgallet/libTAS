@@ -42,9 +42,10 @@ RenderHUD::RenderHUD()
         FcConfig* config = FcInitLoadConfigAndFonts();
         FcPattern* pat = FcPatternCreate();
         FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
+        FcPatternAddString(pat, FC_LANG, reinterpret_cast<const FcChar8*>("en-US"));
         FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
         FcFontSet* fs = FcFontList(config, pat, os);
-        // debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
+        debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
         for (int i=0; fs && i < fs->nfont; ++i) {
             FcPattern* font = fs->fonts[i];
             FcChar8 *file, *family;
