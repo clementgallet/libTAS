@@ -115,7 +115,7 @@ int ScreenCapture::init(SDL_Window* window)
         if (game_info.video & GameInfo::SDL2) {
             LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
 
-            SDL_GetWindowSize(sdl_window, &width, &height);
+            orig::SDL_GetWindowSize(sdl_window, &width, &height);
         }
         else {
             GLint viewport[4];
