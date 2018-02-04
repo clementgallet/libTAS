@@ -204,7 +204,7 @@ int glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned
 
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    debuglog(LCF_WINDOW, __func__, " call with dimensions ", width, "x", height);
     LINK_NAMESPACE_GLOBAL(XCreateWindow);
 
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
@@ -214,7 +214,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
 Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    debuglog(LCF_WINDOW, __func__, " call with dimensions ", width, "x", height);
     LINK_NAMESPACE(XCreateSimpleWindow, nullptr);
 
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
@@ -226,6 +226,9 @@ int XDestroyWindow(Display *display, Window w)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XDestroyWindow, nullptr);
+
+    ScreenCapture::fini();
+
     return orig::XDestroyWindow(display, w);
 }
 

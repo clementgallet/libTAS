@@ -85,7 +85,10 @@ private:
     static int pixelSize;
 
     /* OpenGL screen texture */
-    static GLuint screenTex;
+    static GLuint screenGLTex;
+
+    /* SDL2 screen texture */
+    static SDL_Texture* screenSDLTex;
 
     /* SDL window if any */
     static SDL_Window* sdl_window;

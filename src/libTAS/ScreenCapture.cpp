@@ -46,6 +46,7 @@ DEFINE_ORIG_POINTER(SDL_CreateTexture);
 DEFINE_ORIG_POINTER(SDL_UpdateTexture);
 DEFINE_ORIG_POINTER(SDL_RenderCopy);
 DEFINE_ORIG_POINTER(SDL_DestroyTexture);
+DEFINE_ORIG_POINTER(SDL_GetError);
 
 DEFINE_ORIG_POINTER(glGetIntegerv);
 DEFINE_ORIG_POINTER(glReadPixels);
@@ -76,7 +77,8 @@ int ScreenCapture::width, ScreenCapture::height, ScreenCapture::pitch;
 unsigned int ScreenCapture::size;
 int ScreenCapture::pixelSize;
 
-GLuint ScreenCapture::screenTex = 0;
+GLuint ScreenCapture::screenGLTex = 0;
+SDL_Texture* ScreenCapture::screenSDLTex = nullptr;
 SDL_Window* ScreenCapture::sdl_window;
 SDL_Renderer* ScreenCapture::sdl_renderer;
 
@@ -135,8 +137,8 @@ int ScreenCapture::init(SDL_Window* window)
         }
 
         /* Create the screen texture */
-        if (screenTex == 0) {
-            orig::glGenTextures(1, &screenTex);
+        if (screenGLTex == 0) {
+            orig::glGenTextures(1, &screenGLTex);
         }
     }
 
@@ -167,18 +169,25 @@ int ScreenCapture::init(SDL_Window* window)
         LINK_NAMESPACE_SDL2(SDL_UpdateTexture);
         LINK_NAMESPACE_SDL2(SDL_RenderCopy);
         LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
+        LINK_NAMESPACE_SDL2(SDL_GetError);
 
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
         pixelSize = sdlpixfmt & 0xFF;
 
-        /* Get surface from window */
-        if (!orig::SDL_GetRendererOutputSize) {
-            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "Need function SDL_GetRendererOutputSize.");
-            return -1;
+        sdl_renderer = orig::SDL_GetRenderer(sdl_window);
+        int ret = orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
+        if (ret < 0) {
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRendererOutputSize failed: ", orig::SDL_GetError());
         }
 
-        sdl_renderer = orig::SDL_GetRenderer(sdl_window);
-        orig::SDL_GetRendererOutputSize(sdl_renderer, &width, &height);
+        /* Create the screen texture */
+        if (!screenSDLTex) {
+            screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
+                SDL_TEXTUREACCESS_STREAMING, width, height);
+            if (!screenSDLTex) {
+                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: ", orig::SDL_GetError());
+            }
+        }
     }
 
     /* We don't allocate the array of pixels here, we are doing a lazy
@@ -205,9 +214,15 @@ void ScreenCapture::fini()
     glpixels.clear();
 
     /* Delete the OpenGL screen texture */
-    if (screenTex != 0) {
-        orig::glDeleteTextures(1, &screenTex);
-        screenTex = 0;
+    if (screenGLTex != 0) {
+        orig::glDeleteTextures(1, &screenGLTex);
+        screenGLTex = 0;
+    }
+
+    /* Delete the SDL2 screen texture */
+    if (screenSDLTex) {
+        orig::SDL_DestroyTexture(screenSDLTex);
+        screenSDLTex = nullptr;
     }
 
     inited = false;
@@ -367,7 +382,10 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
                 return -1;
             }
 
-            orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
+            int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
+            if (ret < 0) {
+                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: ", orig::SDL_GetError());
+            }
         }
     }
 
@@ -395,7 +413,7 @@ int ScreenCapture::setPixels(bool update) {
         /* Load the screen pixels into a texture */
 
         enterGLRender();
-        orig::glBindTexture(GL_TEXTURE_2D, screenTex);
+        orig::glBindTexture(GL_TEXTURE_2D, screenGLTex);
 
         orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -463,12 +481,15 @@ int ScreenCapture::setPixels(bool update) {
             }
 
             /* We must set our pixels into an SDL texture before drawing on screen */
-            Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
-            SDL_Texture* texture = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
-                SDL_TEXTUREACCESS_STREAMING, width, height);
-            orig::SDL_UpdateTexture(texture, NULL, winpixels.data(), pitch);
-            orig::SDL_RenderCopy(sdl_renderer, texture, NULL, NULL);
-            orig::SDL_DestroyTexture(texture);
+            int ret = orig::SDL_UpdateTexture(screenSDLTex, NULL, winpixels.data(), pitch);
+            if (ret < 0) {
+                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_UpdateTexture failed: ", orig::SDL_GetError());
+            }
+
+            ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
+            if (ret < 0) {
+                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: ", orig::SDL_GetError());
+            }
         }
     }
 

@@ -44,7 +44,6 @@ void RenderHUD_SDL2::box(int& x, int& y, int& width, int& height)
     x = y = 0;
     LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
     orig::SDL_GetRendererOutputSize(renderer, &width, &height);
-    debuglog(LCF_SDL | LCF_WINDOW, "box dims are ", width, " and ", height);
 }
 
 void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)

@@ -162,10 +162,11 @@ static int swapInterval = 0;
         game_info.tosend = true;
     }
     else {
+        game_info.video &= ~GameInfo::OPENGL;
+        game_info.tosend = true;
         /* We init the screen capture only when not in openGL here, because
          * for openGL we wait until the context has been created to init it
          */
-        ScreenCapture::init(gameWindow);
     }
 
     LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
@@ -250,7 +251,11 @@ static int swapInterval = 0;
     if (flags & SDL_RENDERER_TARGETTEXTURE)
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
 
-    return orig::SDL_CreateRenderer(window, index, flags);
+    SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
+
+    ScreenCapture::init(window);
+
+    return renderer;
 }
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
@@ -271,6 +276,8 @@ static int swapInterval = 0;
 
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     gameWindow = *window;
+
+    game_info.video &= ~GameInfo::OPENGL;
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
@@ -334,6 +341,9 @@ static int swapInterval = 0;
     if (flags & /*SDL_OPENGL*/ 0x00000002) {
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;
+    }
+    else {
+        game_info.video &= ~GameInfo::OPENGL;
     }
 
     /* If we are going to save the screen when savestating, we need to init
