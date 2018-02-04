@@ -30,6 +30,7 @@
 namespace libtas {
 
 static int gcids[4] = {-1, -1, -1, -1};
+static int refids[4] = {0, 0, 0, 0}; // GC open/close is ref-counted
 static const char joy_name[] = "XInput Controller";
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
@@ -49,6 +50,9 @@ static const char joy_name[] = "XInput Controller";
 
     /* Save the opening of the game controller */
     gcids[joystick_index] = joystick_index;
+
+    /* Increase the ref count */
+    refids[joystick_index]++;
 
     return reinterpret_cast<SDL_GameController*>(&gcids[joystick_index]);
 }
@@ -223,6 +227,8 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return 0;
 
     /* Return button value */
+    debuglog(LCF_SDL | LCF_JOYSTICK, "  return ", (game_ai.controller_buttons[*gcid] >> button) & 0x1);
+
     return (game_ai.controller_buttons[*gcid] >> button) & 0x1;
 
 }
@@ -236,7 +242,12 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
     if (*gcid < 0 || *gcid >= shared_config.nb_controllers)
         return;
 
-    gcids[*gcid] = -1;
+    /* Decrease the ref count */
+    refids[*gcid]--;
+
+    /* If no more ref, close the controller */
+    if (refids[*gcid] == 0)
+        gcids[*gcid] = -1;
 }
 
 }
