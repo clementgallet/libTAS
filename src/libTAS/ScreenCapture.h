@@ -32,71 +32,45 @@ extern "C" {
 
 namespace libtas {
 
-class ScreenCapture {
+namespace ScreenCapture {
 
-public:
-    /* Initiate the internal variables and buffers, and get the screen dimensions
-     * @return 0 if successful or -1 if an error occured
-     */
-    static int init(SDL_Window* window);
+/* Initiate the internal variables and buffers, and get the screen dimensions
+ * @return 0 if successful or -1 if an error occured
+ */
+int init(SDL_Window* window);
 
-    /* Called when screen is closed */
-    static void fini();
+/* Called when screen is closed */
+void fini();
 
-    /* Called when screen is resized */
-    static void reinit(SDL_Window* window);
+/* Called when screen is resized */
+void reinit(SDL_Window* window);
 
-    static void getDimensions(int& w, int& h);
+void getDimensions(int& w, int& h);
 
-    #ifdef LIBTAS_ENABLE_AVDUMPING
+#ifdef LIBTAS_ENABLE_AVDUMPING
 
-    /* Get the pixel format as an enum used by ffmpeg library. */
-    static AVPixelFormat getPixelFormat();
+/* Get the pixel format as an enum used by ffmpeg library. */
+AVPixelFormat getPixelFormat();
 
-    #endif
+#endif
 
-    /* Capture the pixels from the screen and copy it to the following structs:
-     * @param plane   Array of 4 elements containing a pointer to list of
-     *                pixel values for each plane. For non-planar formats
-     *                (like RGB/RGBA), all pixels are stored in the first list
-     * @param stride  Array of 4 elements containing the size in bytes of a
-     *                row of pixels for each plane. For non-planar formats,
-     *                the first element contains width * (size of a pixel).
-     * @return        0 if successful or -1 if an error occured
-     */
-    static int getPixels(const uint8_t* orig_plane[], int orig_stride[]);
+/* Capture the pixels from the screen and copy it to the following structs:
+ * @param plane   Array of 4 elements containing a pointer to list of
+ *                pixel values for each plane. For non-planar formats
+ *                (like RGB/RGBA), all pixels are stored in the first list
+ * @param stride  Array of 4 elements containing the size in bytes of a
+ *                row of pixels for each plane. For non-planar formats,
+ *                the first element contains width * (size of a pixel).
+ * @return        0 if successful or -1 if an error occured
+ */
+int getPixels(const uint8_t* orig_plane[], int orig_stride[]);
 
-    /* Set the screen pixels from our buffers.
-     * @param update  true if the screen has changed since last call.
-     */
-    static int setPixels(bool update);
+/* Set the screen pixels from our buffers.
+ * @param same  if true, the screen did not change since last call with same==true
+ */
+int setPixels(bool same);
 
-private:
-
-    static bool inited;
-
-    /* Temporary pixel arrays */
-    static std::vector<uint8_t> glpixels;
-    static std::vector<uint8_t> winpixels;
-
-    /* Video dimensions */
-    static int width, height, pitch;
-    static unsigned int size;
-    static int pixelSize;
-
-    /* OpenGL screen texture */
-    static GLuint screenGLTex;
-
-    /* SDL2 screen texture */
-    static SDL_Texture* screenSDLTex;
-
-    /* SDL window if any */
-    static SDL_Window* sdl_window;
-
-    /* SDL2 renderer if any */
-    static SDL_Renderer* sdl_renderer;
-
-};
+}
 }
 
 #endif

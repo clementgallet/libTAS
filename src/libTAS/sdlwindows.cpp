@@ -112,7 +112,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     }
 
     /* Now that the context is created, we can init the screen capture */
-    ScreenCapture::init(nullptr);
+    ScreenCapture::init(window);
 
     return context;
 }
@@ -164,9 +164,6 @@ static int swapInterval = 0;
     else {
         game_info.video &= ~GameInfo::OPENGL;
         game_info.tosend = true;
-        /* We init the screen capture only when not in openGL here, because
-         * for openGL we wait until the context has been created to init it
-         */
     }
 
     LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);

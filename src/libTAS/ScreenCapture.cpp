@@ -50,11 +50,7 @@ DEFINE_ORIG_POINTER(SDL_GetError);
 
 DEFINE_ORIG_POINTER(glGetIntegerv);
 DEFINE_ORIG_POINTER(glReadPixels);
-DEFINE_ORIG_POINTER(glDrawPixels);
-DEFINE_ORIG_POINTER(glRasterPos2i);
 DEFINE_ORIG_POINTER(glClear);
-DEFINE_ORIG_POINTER(glClearColor);
-DEFINE_ORIG_POINTER(glFinish);
 DEFINE_ORIG_POINTER(glGetError);
 DEFINE_ORIG_POINTER(glBindTexture);
 DEFINE_ORIG_POINTER(glTexParameteri);
@@ -66,21 +62,28 @@ DEFINE_ORIG_POINTER(glEnd);
 DEFINE_ORIG_POINTER(glGenTextures);
 DEFINE_ORIG_POINTER(glDeleteTextures);
 
-bool ScreenCapture::inited = false;
+static bool inited = false;
 
 /* Temporary pixel arrays */
-std::vector<uint8_t> ScreenCapture::glpixels;
-std::vector<uint8_t> ScreenCapture::winpixels;
+static std::vector<uint8_t> glpixels;
+static std::vector<uint8_t> winpixels;
 
 /* Video dimensions */
-int ScreenCapture::width, ScreenCapture::height, ScreenCapture::pitch;
-unsigned int ScreenCapture::size;
-int ScreenCapture::pixelSize;
+static int width, height, pitch;
+static unsigned int size;
+static int pixelSize;
 
-GLuint ScreenCapture::screenGLTex = 0;
-SDL_Texture* ScreenCapture::screenSDLTex = nullptr;
-SDL_Window* ScreenCapture::sdl_window;
-SDL_Renderer* ScreenCapture::sdl_renderer;
+/* OpenGL screen texture */
+static GLuint screenGLTex = 0;
+
+/* SDL2 screen texture */
+static SDL_Texture* screenSDLTex = nullptr;
+
+/* SDL window if any */
+static SDL_Window* sdl_window;
+
+/* SDL2 renderer if any */
+static SDL_Renderer* sdl_renderer;
 
 int ScreenCapture::init(SDL_Window* window)
 {
@@ -94,11 +97,7 @@ int ScreenCapture::init(SDL_Window* window)
     if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glGetIntegerv, "libGL");
         LINK_NAMESPACE(glReadPixels, "libGL");
-        LINK_NAMESPACE(glDrawPixels, "libGL");
-        LINK_NAMESPACE(glRasterPos2i, "libGL");
         LINK_NAMESPACE(glClear, "libGL");
-        LINK_NAMESPACE(glClearColor, "libGL");
-        LINK_NAMESPACE(glFinish, "libGL");
         LINK_NAMESPACE(glGetError, "libGL");
         LINK_NAMESPACE(glBindTexture, "libGL");
         LINK_NAMESPACE(glTexParameteri, "libGL");
@@ -115,6 +114,10 @@ int ScreenCapture::init(SDL_Window* window)
          * TODO: Don't use viewport but only SDL/Xlib functions
          */
         if (game_info.video & GameInfo::SDL2) {
+            if (!window) {
+                /* Init must provide a sdl_window pointer */
+                return -1;
+            }
             LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
 
             orig::SDL_GetWindowSize(sdl_window, &width, &height);
@@ -130,8 +133,7 @@ int ScreenCapture::init(SDL_Window* window)
         pixelSize = 4;
 
         /* Do we already have access to the glReadPixels function? */
-        if (!orig::glGetIntegerv || !orig::glReadPixels ||
-            !orig::glDrawPixels || !orig::glClear) {
+        if (!orig::glGetIntegerv || !orig::glReadPixels || !orig::glClear) {
             debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
             return -1;
         }
@@ -304,7 +306,8 @@ AVPixelFormat ScreenCapture::getPixelFormat()
 
 int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
 {
-    MYASSERT(inited)
+    if (!inited)
+        return 0;
 
     /* Lazy allocations */
     if (winpixels.size() != size)
@@ -322,7 +325,6 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         /* We access to the image pixels directly using glReadPixels */
         orig::glGetError();
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
-        orig::glFinish();
         GLenum glerror = orig::glGetError();
         while (glerror != GL_NO_ERROR) {
             debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
@@ -397,30 +399,25 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
     return 0;
 }
 
-int ScreenCapture::setPixels(bool update) {
-    MYASSERT(inited)
+int ScreenCapture::setPixels(bool same) {
+    if (!inited)
+        return 0;
+
+    static bool last_same = false;
 
     if (game_info.video & GameInfo::OPENGL) {
         orig::glGetError();
-
-        // orig::glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        //orig::glClear(GL_COLOR_BUFFER_BIT);
-//        orig::glFinish();
         orig::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//        orig::glRasterPos2i(0, 0);
-
-
         /* Load the screen pixels into a texture */
-
         enterGLRender();
         orig::glBindTexture(GL_TEXTURE_2D, screenGLTex);
-
         orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        //if (update) {
+        if (!same || !last_same) {
             orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
-        //}
+        }
+        last_same = same;
 
         orig::glBegin(GL_QUADS);
         {
@@ -433,7 +430,6 @@ int ScreenCapture::setPixels(bool update) {
 
         exitGLRender();
 
-        //orig::glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
         GLenum glerror = orig::glGetError();
         while (glerror != GL_NO_ERROR) {
             debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
@@ -480,10 +476,16 @@ int ScreenCapture::setPixels(bool update) {
                 return -1;
             }
 
-            /* We must set our pixels into an SDL texture before drawing on screen */
-            int ret = orig::SDL_UpdateTexture(screenSDLTex, NULL, winpixels.data(), pitch);
-            if (ret < 0) {
-                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_UpdateTexture failed: ", orig::SDL_GetError());
+            int ret;
+
+            /* Check if we need to update our texture */
+            if (!same || !last_same) {
+                /* We must set our pixels into an SDL texture before drawing on screen */
+                ret = orig::SDL_UpdateTexture(screenSDLTex, NULL, winpixels.data(), pitch);
+                if (ret < 0) {
+                    debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_UpdateTexture failed: ", orig::SDL_GetError());
+                }
+                last_same = same;
             }
 
             ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
