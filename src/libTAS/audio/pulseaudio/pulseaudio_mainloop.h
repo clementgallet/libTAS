@@ -51,6 +51,9 @@ OVERRIDE int pa_mainloop_run(pa_mainloop *m, int *retval);
     and is destroyed when the loop is freed. */
 OVERRIDE pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m);
 
+/** Interrupt a running poll (for threaded systems) */
+OVERRIDE void pa_mainloop_wakeup(pa_mainloop *m);
+
 /** Generic prototype of a poll() like function */
 typedef int (*pa_poll_func)(struct pollfd *ufds, unsigned long nfds, int timeout, void*userdata);
 

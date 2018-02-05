@@ -29,6 +29,7 @@ DEFINE_ORIG_POINTER(pa_mainloop_free);
 DEFINE_ORIG_POINTER(pa_mainloop_iterate);
 DEFINE_ORIG_POINTER(pa_mainloop_run);
 DEFINE_ORIG_POINTER(pa_mainloop_get_api);
+DEFINE_ORIG_POINTER(pa_mainloop_wakeup);
 DEFINE_ORIG_POINTER(pa_mainloop_set_poll_func);
 
 pa_mainloop *pa_mainloop_new(void)
@@ -85,6 +86,17 @@ pa_mainloop_api* pa_mainloop_get_api(pa_mainloop *m)
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     static pa_mainloop_api api;
     return &api;
+}
+
+void pa_mainloop_wakeup(pa_mainloop *m)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(pa_mainloop_wakeup, "libpulse.so");
+        return orig::pa_mainloop_wakeup(m);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
+    return;
 }
 
 void pa_mainloop_set_poll_func(pa_mainloop *m, pa_poll_func poll_func, void *userdata)

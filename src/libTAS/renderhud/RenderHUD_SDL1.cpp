@@ -32,7 +32,7 @@ namespace orig {
             int width, int height, int depth, int pitch,
             Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
     static SDL1::SDL_Surface *(*SDL_GetVideoSurface)(void);
-    static int (*SDL_UpperBlit)(SDL1::SDL_Surface *src, SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL_Rect *dstrect);
+    static int (*SDL_BlitSurface)(SDL1::SDL_Surface *src, SDL1::SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL1::SDL_Rect *dstrect);
 }
 
 RenderHUD_SDL1::~RenderHUD_SDL1()
@@ -52,15 +52,15 @@ void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color
 {
     LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);
     LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-    LINK_NAMESPACE_SDL1(SDL_UpperBlit);
+    LINK_NAMESPACE_SDL1(SDL_BlitSurface);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL1::SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
 
-    SDL_Rect rect = {x, y, sdlsurf->w, sdlsurf->h};
-    orig::SDL_UpperBlit(sdlsurf, NULL, screen, &rect);
+    SDL1::SDL_Rect rect = {static_cast<Sint16>(x), static_cast<Sint16>(y), 0, 0}; // width and height are ignored
+    orig::SDL_BlitSurface(sdlsurf, NULL, screen, &rect);
 }
 
 }

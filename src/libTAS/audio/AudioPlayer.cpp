@@ -38,7 +38,7 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
     GlobalNative gn;
 
     if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
-        debuglog(LCF_SOUND, "  Cannot open default audio device");
+        debuglog(LCF_SOUND | LCF_ERROR, "  Cannot open default audio device");
     }
 
     snd_pcm_hw_params_t *hw_params;
