@@ -83,7 +83,7 @@ RamSearchWindow::RamSearchWindow(Context* c) : context(c)
     compare_pack->type(Fl_Pack::VERTICAL);
     compare_pack->box(FL_ENGRAVED_FRAME);
 
-    compare_previous = new Fl_Radio_Round_Button(0, 0, 280, 30, "Previous Value");
+    compare_previous = new Fl_Radio_Round_Button(0, 0, 280, 30, "Unknown/Previous Value");
     compare_previous->set();
 
     compare_value = new Fl_Radio_Round_Button(0, 0, 280, 30, "Specific Value:");

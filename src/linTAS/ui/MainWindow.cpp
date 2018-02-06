@@ -136,11 +136,10 @@ void MainWindow::build(Context* c)
     movie_framecount = new Fl_Output(220, 140, 90, 30, " / ");
     movie_framecount->color(FL_LIGHT1);
 
-    /* Pause/FF */
-    pausecheck = new Fl_Check_Button(340, 140, 80, 20, "Pause");
-    pausecheck->callback(pause_cb);
-    fastforwardcheck = new Fl_Check_Button(440, 140, 80, 20, "Fast-forward");
-    fastforwardcheck->callback(fastforward_cb);
+    /* Current/movie length */
+    movie_length = new Fl_Box(340, 140, 240, 30, "Current Time: - / -");
+    movie_length->box(FL_NO_BOX);
+    movie_length->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
     /* Frames per second */
     logicalfps = new Fl_Int_Input(220, 180, 90, 30, "Frames per second: ");
@@ -161,6 +160,12 @@ void MainWindow::build(Context* c)
     initial_time_nsec = new Fl_Int_Input(220, 260, 90, 30, " . ");
     initial_time_nsec->align(FL_ALIGN_LEFT);
     initial_time_nsec->callback(initial_time_cb);
+
+    /* Pause/FF */
+    pausecheck = new Fl_Check_Button(340, 260, 80, 20, "Pause");
+    pausecheck->callback(pause_cb);
+    fastforwardcheck = new Fl_Check_Button(440, 260, 120, 20, "Fast-forward");
+    fastforwardcheck->callback(fastforward_cb);
 
     /* Command-line options */
     cmdoptions = new Fl_Input(10, 400, 500, 30, "Command-line options");
@@ -599,6 +604,34 @@ void MainWindow::update_framecount_time()
     initial_time_sec->value(secstr.c_str());
     std::string nsecstr = std::to_string(context->current_time.tv_nsec);
     initial_time_nsec->value(nsecstr.c_str());
+
+    /* Update movie time */
+
+    if (context->config.sc.framerate > 0) {
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(2);
+
+        /* Format current length */
+        float sec = (float)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+        int min = (context->framecount / (context->config.sc.framerate * 60)) % 60;
+        int hour = (context->framecount / (context->config.sc.framerate * 3600));
+        if (hour > 0) oss << hour << "h ";
+        if (min > 0) oss << min << "m ";
+        oss << sec << "s";
+
+        /* Format movie length */
+        if (context->config.sc.movie_framecount != 0) {
+            oss << " / ";
+            float msec = (float)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+            int mmin = (context->config.sc.movie_framecount / (context->config.sc.framerate * 60)) % 60;
+            int mhour = (context->config.sc.movie_framecount / (context->config.sc.framerate * 3600));
+            if (mhour > 0) oss << mhour << "h ";
+            if (mmin > 0) oss << mmin << "m ";
+            oss << msec << "s";
+        }
+
+        movie_length->copy_label(oss.str().c_str());
+    }
 
     Fl::unlock();
     Fl::awake();

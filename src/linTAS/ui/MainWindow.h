@@ -100,6 +100,7 @@ class MainWindow {
         Fl_Output *framecount;
         Fl_Output *movie_framecount;
         Fl_Output *rerecord_count;
+        Fl_Box *movie_length;
 
         Fl_Input *initial_time_sec;
         Fl_Input *initial_time_nsec;
