@@ -81,6 +81,11 @@ public:
             return true;
 
         previous_value = value;
+
+        /* Check NaN/Inf for float/double */
+        if (!std::isfinite(value))
+            return true;
+
         return false;
     }
 

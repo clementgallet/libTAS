@@ -159,6 +159,27 @@ void RamSearchWindow::update()
     address_table->cols(3);
 }
 
+static void get_compare_parameters(RamSearchWindow* rsw, CompareType& compare_type, CompareOperator& compare_operator, double& compare_value)
+{
+    compare_type = CompareType::Previous;
+    if (rsw->compare_value->value()) {
+        compare_type = CompareType::Value;
+        compare_value = strtod(rsw->comparing_value->value(), nullptr);
+    }
+
+    compare_operator = CompareOperator::Equal;
+    if (rsw->operator_not_equal->value())
+        compare_operator = CompareOperator::NotEqual;
+    if (rsw->operator_less->value())
+        compare_operator = CompareOperator::Less;
+    if (rsw->operator_greater->value())
+        compare_operator = CompareOperator::Greater;
+    if (rsw->operator_less_equal->value())
+        compare_operator = CompareOperator::LessEqual;
+    if (rsw->operator_greater_equal->value())
+        compare_operator = CompareOperator::GreaterEqual;
+}
+
 static void new_cb(Fl_Widget* w, void* v)
 {
     RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
@@ -186,53 +207,46 @@ static void new_cb(Fl_Widget* w, void* v)
     if (rsw->mem_special->value())
         memregions |= MemSection::MemSpecial;
 
+    /* Get the comparison parameters */
+    CompareType compare_type;
+    CompareOperator compare_operator;
+    double compare_value;
+    get_compare_parameters(rsw, compare_type, compare_operator, compare_value);
+
     /* Call the RamSearch new function using the right type as template */
     switch (rsw->type_choice->value()) {
         case 0:
-            rsw->ram_search.new_watches<unsigned char>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<unsigned char>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 1:
-            rsw->ram_search.new_watches<char>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<char>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 2:
-            rsw->ram_search.new_watches<unsigned short>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<unsigned short>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 3:
-            rsw->ram_search.new_watches<short>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<short>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 4:
-            rsw->ram_search.new_watches<unsigned int>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<unsigned int>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 5:
-            rsw->ram_search.new_watches<int>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<int>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 6:
-            rsw->ram_search.new_watches<int64_t>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<int64_t>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 7:
-            rsw->ram_search.new_watches<uint64_t>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<uint64_t>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 8:
-            rsw->ram_search.new_watches<float>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<float>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
         case 9:
-            rsw->ram_search.new_watches<double>(rsw->context->game_pid, memregions);
+            rsw->ram_search.new_watches<double>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
             break;
     }
 
-    rsw->search_progress->show();
-    rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
-
-    int num = 0;
-    for (auto &ramwatch : rsw->ram_search.ramwatches) {
-        ramwatch->query();
-        if (!(num++ & 0xfff)) {
-            rsw->search_progress->value(num);
-            Fl::flush();
-        }
-    }
-
-    rsw->search_progress->hide();
     rsw->address_table->hex = (rsw->display_choice->value() == 1);
     rsw->address_table->rows(rsw->ram_search.ramwatches.size());
 
@@ -247,24 +261,10 @@ static void search_cb(Fl_Widget* w, void* v)
 {
     RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
 
-    CompareType compare_type = CompareType::Previous;
-    double compvalue = 0;
-    if (rsw->compare_value->value()) {
-        compare_type = CompareType::Value;
-        compvalue = strtod(rsw->comparing_value->value(), nullptr);
-    }
-
-    CompareOperator compare_operator = CompareOperator::Equal;
-    if (rsw->operator_not_equal->value())
-        compare_operator = CompareOperator::NotEqual;
-    if (rsw->operator_less->value())
-        compare_operator = CompareOperator::Less;
-    if (rsw->operator_greater->value())
-        compare_operator = CompareOperator::Greater;
-    if (rsw->operator_less_equal->value())
-        compare_operator = CompareOperator::LessEqual;
-    if (rsw->operator_greater_equal->value())
-        compare_operator = CompareOperator::GreaterEqual;
+    CompareType compare_type;
+    CompareOperator compare_operator;
+    double compare_value;
+    get_compare_parameters(rsw, compare_type, compare_operator, compare_value);
 
     rsw->search_progress->show();
     rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
@@ -275,12 +275,12 @@ static void search_cb(Fl_Widget* w, void* v)
     int num = 0;
     rsw->ram_search.ramwatches.erase(
         std::remove_if(rsw->ram_search.ramwatches.begin(), rsw->ram_search.ramwatches.end(),
-            [&compare_type, &compare_operator, &compvalue, &num, &rsw] (std::unique_ptr<IRamWatch> &watch) {
+            [&compare_type, &compare_operator, &compare_value, &num, &rsw] (std::unique_ptr<IRamWatch> &watch) {
                 if (!(num++ & 0xfff)) {
                     rsw->search_progress->value(num);
                     Fl::flush();
                 }
-                return watch->check_update(compare_type, compare_operator, compvalue);
+                return watch->check_update(compare_type, compare_operator, compare_value);
             }),
         rsw->ram_search.ramwatches.end());
 
@@ -290,7 +290,7 @@ static void search_cb(Fl_Widget* w, void* v)
     rsw->address_table->hex = (rsw->display_choice->value() == 1);
     rsw->address_table->compare_type = compare_type;
     rsw->address_table->compare_operator = compare_operator;
-    rsw->address_table->compare_value_db = compvalue;
+    rsw->address_table->compare_value_db = compare_value;
     rsw->address_table->rows(rsw->ram_search.ramwatches.size());
 
     /* Update address count */
@@ -307,8 +307,6 @@ void add_cb(Fl_Widget* w, void* v)
     int r;
     for (r=0; r<rsw->address_table->rows(); r++) {
         if (rsw->address_table->row_selected(r)) {
-            /* Fill the watch edit window accordingly */
-            //rww->edit_window->fill(rww->watch_table->ramwatches.at(r));
             break;
         }
     }

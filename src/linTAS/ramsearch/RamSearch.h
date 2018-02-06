@@ -23,21 +23,18 @@
 #include "IRamWatch.h"
 #include "RamWatch.h"
 #include "CompareEnums.h"
-#include <sys/types.h>
 #include "MemSection.h"
+
+#include <sys/types.h>
 #include <sstream>
 #include <fstream>
+#include <FL/Fl.H>
+#include <Fl/Fl_Hor_Fill_Slider.H>
 
-// #include "../shared/AllInputs.h"
-// #include "../shared/SharedConfig.h"
-// #include <X11/Xlib.h>
-// #include <X11/keysym.h>
-// #include <map>
-// #include <vector>
 #include <memory>
 #include <vector>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
+// #include <sys/ptrace.h>
+// #include <sys/wait.h>
 #include <iostream>
 
 class RamSearch {
@@ -47,7 +44,7 @@ class RamSearch {
         pid_t game_pid;
 
         template <class T>
-        void new_watches(pid_t pid, int type_filter)
+        void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value, Fl_Hor_Fill_Slider *search_progress)
         {
             game_pid = pid;
             ramwatches.clear();
@@ -59,18 +56,40 @@ class RamSearch {
             std::ifstream mapsfile(oss.str());
             if (!mapsfile) {
                 std::cerr << "Could not open " << oss.str() << std::endl;
-                // detachToGame(game_pid);
                 return;
             }
 
             std::string line;
             MemSection::reset();
+
+            /* We first get the total size of the watches, to be able to
+             * print the progress bar
+             */
+            int total_size = 0;
+            while (std::getline(mapsfile, line)) {
+                MemSection section;
+                section.readMap(line);
+
+                /* Filter based on type */
+                if (!(type_filter & section.type))
+                    continue;
+
+                total_size += section.size/sizeof(T);
+            }
+
+            search_progress->show();
+            search_progress->bounds(0, total_size);
+
+            /* Rewinding the ifstream */
+            mapsfile.clear( );
+            mapsfile.seekg( 0, std::ios::beg );
+
+            MemSection::reset();
+            int cur_size = 0;
             while (std::getline(mapsfile, line)) {
 
                 MemSection section;
                 section.readMap(line);
-
-                // std::cerr << "Found section at addr " <<  (void*)section.addr << " of type " << section.type << std::endl;
 
                 /* Filter based on type */
                 if (!(type_filter & section.type))
@@ -80,10 +99,37 @@ class RamSearch {
                 ramwatches.reserve(ramwatches.size() + section.size/sizeof(T));
 
                 /* For now we only store aligned addresses */
+                std::unique_ptr<RamWatch<T>> watch(nullptr);
                 for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T)) {
-                    ramwatches.emplace_back(new RamWatch<T>(addr));
+
+                    if (!(cur_size++ & 0xfff)) {
+                        search_progress->value(cur_size);
+                        Fl::flush();
+                    }
+
+                    if (! watch)
+                        watch = std::unique_ptr<RamWatch<T>>(new RamWatch<T>(addr));
+                    else
+                        /* Reusing a watch object that wasn't inserted */
+                        watch->address = addr;
+
+                    /* If only insert watches that match the compare */
+                    if (compare_type == CompareType::Value) {
+                        if (!watch->check_update(compare_type, compare_operator, compare_value)) {
+                            ramwatches.push_back(std::move(watch));
+                        }
+                    }
+
+                    /* Insert all watches, still checking for accessible and non NaN/Inf values */
+                    else {
+                        if (!watch->query()) {
+                            ramwatches.push_back(std::move(watch));
+                        }
+                    }
                 }
             }
+
+            search_progress->hide();
         }
 };
 

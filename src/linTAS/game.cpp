@@ -38,6 +38,7 @@
 #include <future>
 #include <csignal> // kill
 #include <memory> // unique_ptr
+#include <sys/wait.h> // waitpid
 
 MovieFile movie;
 
