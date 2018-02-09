@@ -27,23 +27,19 @@ namespace libtas {
 
 /* Set of libraries that are loaded by the game,
  * either at startup (link time) or using the dl functions.
- *
- * TODO: This is annoying, but because add_lib is called at the lib constructor,
- * some objects (even static) may not be constructed yet. This is a quick fix:
- * I'm dynamically creating the object, so we are fine.
  */
-static std::set<std::string>* libraries;
+static std::set<std::string> libraries;
 
-void add_lib(std::string library)
-{
-    if (! libraries)
-        libraries = new std::set<std::string>();
-    libraries->insert(library);
-}
+// void add_lib(std::string library)
+// {
+//     if (! libraries)
+//         libraries = new std::set<std::string>();
+//     libraries->insert(library);
+// }
 
 std::string find_lib(const char* library)
 {
-    for (auto const& itr : *libraries)
+    for (auto const& itr : libraries)
         if (itr.find(library) != std::string::npos)
             return itr;
 
@@ -70,7 +66,7 @@ static void *my_dlopen(const char *file, int mode, void *dl_caller) {
     dlleave();
 
     if (result && (file != nullptr))
-        libraries->insert(std::string(file));
+        libraries.insert(std::string(file));
     return result;
 }
 

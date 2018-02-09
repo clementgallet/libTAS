@@ -76,7 +76,7 @@ void __attribute__((constructor)) init(void)
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
                 libstring = receiveString();
-                add_lib(libstring);
+                //add_lib(libstring);
                 debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;
             default:
