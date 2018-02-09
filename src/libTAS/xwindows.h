@@ -27,8 +27,8 @@
 
 namespace libtas {
 
-OVERRIDE void* glXGetProcAddress (const GLubyte *procName);
-OVERRIDE void* glXGetProcAddressARB (const GLubyte *procName);
+OVERRIDE void(*glXGetProcAddress (const GLubyte *procName))();
+OVERRIDE __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName);
 OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
 
 /* Map the GLX context to the Display connection */
@@ -45,7 +45,7 @@ OVERRIDE int glXSwapIntervalMESA (unsigned int interval);
 OVERRIDE int glXGetSwapIntervalMESA(void);
 
 /* Returns an attribute assoicated with a GLX drawable */
-OVERRIDE int glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
+OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
 
 OVERRIDE Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
 

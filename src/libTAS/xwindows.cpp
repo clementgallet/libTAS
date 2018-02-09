@@ -76,24 +76,24 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     return real_pointer;
 }
 
-void* glXGetProcAddress (const GLubyte *procName)
+void(*glXGetProcAddress (const GLubyte *procName))()
 {
     debuglog(LCF_WINDOW, __func__, " call with symbol ", procName);
     LINK_NAMESPACE(glXGetProcAddress, "libGL");
 
     if (!orig::glXGetProcAddress) return nullptr;
 
-    return store_orig_and_return_my_symbol(procName, orig::glXGetProcAddress(procName));
+    return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(procName, reinterpret_cast<void*>(orig::glXGetProcAddress(procName))));
 }
 
-void* glXGetProcAddressARB (const GLubyte *procName)
+__GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 {
     debuglog(LCF_WINDOW, __func__, " call with symbol ", procName);
     LINK_NAMESPACE(glXGetProcAddressARB, "libGL");
 
     if (!orig::glXGetProcAddressARB) return nullptr;
 
-    return store_orig_and_return_my_symbol(procName, orig::glXGetProcAddressARB(procName));
+    return reinterpret_cast<__GLXextFuncPtr>(store_orig_and_return_my_symbol(procName, reinterpret_cast<void*>(orig::glXGetProcAddressARB(procName))));
 }
 
 void* glXGetProcAddressEXT (const GLubyte *procName)
@@ -185,17 +185,17 @@ int glXGetSwapIntervalMESA(void)
     return swapInterval;
 }
 
-int glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value)
+void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value)
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
     if (attribute == GLX_SWAP_INTERVAL_EXT) {
         *value = swapInterval;
-        return True;
+        return;
     }
     if (attribute == GLX_MAX_SWAP_INTERVAL_EXT) {
         *value = 1;
-        return True;
+        return;
     }
 
     LINK_NAMESPACE(glXQueryDrawable, "libGL");

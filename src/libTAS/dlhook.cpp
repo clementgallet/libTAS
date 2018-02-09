@@ -214,16 +214,16 @@ static void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller
 static struct dlfcn_hook *old_dlfcn_hook;
 
 static struct dlfcn_hook my_dlfcn_hook = {
-    dlopen   : my_dlopen,
-    dlclose  : my_dlclose,
-    dlsym    : my_dlsym,
-    dlvsym   : my_dlvsym,
-    dlerror  : my_dlerror,
-    dladdr   : my_dladdr,
-    dladdr1  : my_dladdr1,
-    dlinfo   : my_dlinfo,
-    dlmopen  : my_dlmopen,
-    pad      : {0, 0, 0, 0}
+    my_dlopen, // dlopen
+    my_dlclose, // dlclose
+    my_dlsym, // dlsym
+    my_dlvsym, // dlvsym
+    my_dlerror, // dlerror
+    my_dladdr, // dladdr
+    my_dladdr1, // dladdr1
+    my_dlinfo, // dlinfo
+    my_dlmopen, // dlmopen
+    {0, 0, 0, 0} // pad
 };
 
 static int depth;

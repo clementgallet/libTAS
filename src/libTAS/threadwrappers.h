@@ -118,10 +118,10 @@ OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
 OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
 /* Wake up one thread waiting for condition variable COND.  */
-OVERRIDE int pthread_cond_signal (pthread_cond_t *cond);
+OVERRIDE int pthread_cond_signal (pthread_cond_t *cond) throw();
 
 /* Wake up all threads waiting for condition variables COND.  */
-OVERRIDE int pthread_cond_broadcast (pthread_cond_t *__cond);
+OVERRIDE int pthread_cond_broadcast (pthread_cond_t *__cond) throw();
 
 /* Wait for condition variable COND to be signaled or broadcast.
    MUTEX is assumed to be locked before.

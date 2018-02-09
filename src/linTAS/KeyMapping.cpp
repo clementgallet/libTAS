@@ -303,7 +303,7 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(struct AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc){
+void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc){
     int i,j;
     int keysym_i = 0;
     //std::array<char,32> keyboard_state;
@@ -356,7 +356,7 @@ void KeyMapping::buildAllInputs(struct AllInputs& ai, xcb_connection_t *conn, xc
                 }
 
                 /* Checking the mapped input for that key */
-                struct SingleInput si = {IT_NONE,0};
+                SingleInput si = {IT_NONE,0};
                 if (input_mapping.find(ks) != input_mapping.end())
                     si = input_mapping[ks];
 

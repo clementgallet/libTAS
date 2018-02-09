@@ -34,13 +34,13 @@ extern unsigned long frame_counter;
 
 /* Time used by the program so far (user time + system time).
    The result / CLOCKS_PER_SECOND is program time in seconds.  */
-OVERRIDE clock_t clock (void);
+OVERRIDE clock_t clock (void) throw();
 
 /* Get current value of clock CLOCK_ID and store it in TP.  */
-OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp);
+OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp) throw();
 
 /* Return the current time and put it in *TIMER if TIMER is not NULL.  */
-OVERRIDE time_t time(time_t* t);
+OVERRIDE time_t time(time_t* t) throw();
 
 /* Get the current time of day and timezone information,
    putting it into *TV and *TZ.  If TZ is NULL, *TZ is not filled.

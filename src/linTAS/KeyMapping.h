@@ -279,7 +279,7 @@ class KeyMapping {
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          * - Get the mouse state
          */
-        void buildAllInputs(struct AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc);
+        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED

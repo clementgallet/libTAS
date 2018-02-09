@@ -37,7 +37,7 @@ namespace orig {
     static int (*ioctl)(int fd, unsigned long request, ...);
 }
 
-int ioctl(int fd, unsigned long request, ...)
+int ioctl(int fd, unsigned long request, ...) throw()
 {
     //debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE(ioctl, nullptr);

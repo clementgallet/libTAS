@@ -145,7 +145,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
          */
         if (! swr_is_initialized(swr)) {
             /* Get the sample format */
-            AVSampleFormat inFormat, outFormat;
+            AVSampleFormat inFormat = AV_SAMPLE_FMT_U8;
+            AVSampleFormat outFormat = AV_SAMPLE_FMT_U8;
             switch (curBuf->format) {
                 case AudioBuffer::SAMPLE_FMT_U8:
                     inFormat = AV_SAMPLE_FMT_U8;

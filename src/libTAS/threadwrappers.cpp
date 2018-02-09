@@ -241,14 +241,14 @@ static void *pthread_start(void *arg)
     return orig::pthread_cond_timedwait(cond, mutex, abstime);
 }
 
-/* Override */ int pthread_cond_signal(pthread_cond_t *cond)
+/* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
     return orig::pthread_cond_signal(cond);
 }
 
-/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond)
+/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));

@@ -34,7 +34,7 @@ unsigned long frame_counter = 0;
 
 DEFINE_ORIG_POINTER(clock_gettime);
 
-/* Override */ time_t time(time_t* t)
+/* Override */ time_t time(time_t* t) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_TIME);
@@ -54,7 +54,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
     return 0;
 }
 
-/* Override */ clock_t clock (void)
+/* Override */ clock_t clock (void) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
@@ -63,7 +63,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
     return clk;
 }
 
-/* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp)
+/* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp) throw()
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(clock_gettime, nullptr);

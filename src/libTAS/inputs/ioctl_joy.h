@@ -25,7 +25,7 @@
 
 namespace libtas {
 
-OVERRIDE int ioctl(int fd, unsigned long request, ...);
+OVERRIDE int ioctl(int fd, unsigned long request, ...) throw();
 
 }
 

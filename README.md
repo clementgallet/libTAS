@@ -4,7 +4,16 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 ## Install
 
-You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. Installing with the debian package will install all the required packages as well. The ffmpeg API used in the software is quite recent (> 3.2) so it is possible you will need to update your ffmpeg libraries.
+You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependancies are:
+
+* `libc6`, `libgcc1`, `libstdc++6`
+* `libfltk1.3`, `libx11-6`, `libxcb1`, `libxcb-keysyms1`
+* `libavcodec57`, `libavformat57`, `libavutil55`, `libswscale4`
+* `libswresample2`, `libasound2`
+* `libfontconfig1`, `libfreetype6`
+* `libtar0`, `zlib1g`
+
+Installing with the debian package will install all the required packages as well. The ffmpeg API used in the software is quite recent (> 3.2) so it is possible you will need to update your ffmpeg libraries.
 
 ## Compile
 
