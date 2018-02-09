@@ -41,7 +41,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-inc
 #find_library(RT_LIB rt)
 #target_link_libraries (linTAS ${RT_LIB})
 
-target_link_libraries(TAS ${CMAKE_DL_LIBS})
+#target_link_libraries(TAS ${CMAKE_DL_LIBS})
 
 # Add TAR lib
 find_library(TAR_LIB tar)
