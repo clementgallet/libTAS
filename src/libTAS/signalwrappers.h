@@ -21,7 +21,7 @@
 #define LIBTAS_SIGNALWRAPPERS_H_INCL
 
 #include "global.h"
-#include "signal.h" // for all signal structs
+#include <signal.h> // for all signal structs
 
 namespace libtas {
 
@@ -85,8 +85,7 @@ OVERRIDE int sigtimedwait (const sigset_t *set,
 
 /* Alternate signal handler stack interface.
     This interface should always be preferred over `sigstack'.  */
-OVERRIDE int sigaltstack (const struct sigaltstack *ss,
-			struct sigaltstack *oss) throw();
+OVERRIDE int sigaltstack (const stack_t *ss, stack_t *oss) throw();
 
 /* Modify the signal mask for the calling thread.  The arguments have
    the same meaning as for sigprocmask(2). */

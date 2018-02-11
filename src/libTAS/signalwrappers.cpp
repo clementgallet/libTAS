@@ -246,8 +246,7 @@ static thread_local int origUsrMaskThread = 0;
     return orig::sigtimedwait(set, info, timeout);
 }
 
-/* Override */ int sigaltstack (const struct sigaltstack *ss,
-			struct sigaltstack *oss) throw()
+/* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) throw()
 {
     LINK_NAMESPACE(sigaltstack, nullptr);
 
