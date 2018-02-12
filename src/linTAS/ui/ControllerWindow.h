@@ -26,8 +26,8 @@
 //#include <FL/Fl_Input.H>
 #include <FL/Fl_Value_Input.H>
 // #include <FL/Fl_Output.H>
-#include <Fl/Fl_Check_Button.H>
-#include <Fl/Fl_Hor_Slider.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Hor_Slider.H>
 
 #include "../Context.h"
 #include "ControllerAxisWidget.h"

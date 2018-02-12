@@ -28,10 +28,10 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Check_Button.H>
-#include <Fl/Fl_Menu_Bar.H>
-#include <Fl/Fl_Menu_Item.H>
-#include <Fl/Fl_Pack.H>
-#include <Fl/Fl_Radio_Round_Button.H>
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Menu_Item.H>
+#include <FL/Fl_Pack.H>
+#include <FL/Fl_Radio_Round_Button.H>
 #include <thread>
 
 #include "../Context.h"

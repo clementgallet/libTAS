@@ -24,10 +24,10 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Pack.H>
-#include <Fl/Fl_Choice.H>
-#include <Fl/Fl_Box.H>
-#include <Fl/Fl_Input.H>
-#include <Fl/Fl_Int_Input.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Int_Input.H>
 
 // #include <X11/Xlib.h>
 // #include "../Context.h"

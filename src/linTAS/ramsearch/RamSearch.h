@@ -29,7 +29,7 @@
 #include <sstream>
 #include <fstream>
 #include <FL/Fl.H>
-#include <Fl/Fl_Hor_Fill_Slider.H>
+#include <FL/Fl_Hor_Fill_Slider.H>
 
 #include <memory>
 #include <vector>

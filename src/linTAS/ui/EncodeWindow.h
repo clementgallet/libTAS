@@ -29,8 +29,8 @@
 //#include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Output.H>
-#include <Fl/Fl_Menu_Item.H>
-#include <Fl/Fl_Choice.H>
+#include <FL/Fl_Menu_Item.H>
+#include <FL/Fl_Choice.H>
 
 #include "../Context.h"
 

@@ -25,11 +25,11 @@
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Pack.H>
-#include <Fl/Fl_Choice.H>
-#include <Fl/Fl_Check_Button.H>
-#include <Fl/Fl_Box.H>
-#include <Fl/Fl_Float_Input.H>
-#include <Fl/Fl_Hor_Fill_Slider.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Float_Input.H>
+#include <FL/Fl_Hor_Fill_Slider.H>
 
 #include "RamSearchTable.h"
 
