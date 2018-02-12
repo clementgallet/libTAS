@@ -37,7 +37,6 @@ DEFINE_ORIG_POINTER(pthread_create);
 DEFINE_ORIG_POINTER(pthread_exit);
 DEFINE_ORIG_POINTER(pthread_join);
 DEFINE_ORIG_POINTER(pthread_detach);
-DEFINE_ORIG_POINTER(pthread_getname_np);
 DEFINE_ORIG_POINTER(pthread_tryjoin_np);
 DEFINE_ORIG_POINTER(pthread_timedjoin_np);
 DEFINE_ORIG_POINTER(pthread_cond_wait);
@@ -66,18 +65,17 @@ static void *pthread_start(void *arg)
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
     ThreadManager::update(thread);
 
+    debuglog(LCF_THREAD, "Beginning of thread code");
+
 #if 0
     // NOTE: turn this to '#if 1' to impose de-sync on every single thread
     debuglog(LCF_THREAD, "WAITING for 2 sec");
     sleep(1);
 #endif
-    /* Wait for main thread to be ready to sleep */
-    // while(!thread->go)
-    //     ;
 
     ThreadSync::decrementUninitializedThreadCount();
     void *ret = thread->start(thread->arg);
-    debuglog(LCF_THREAD, "WE ARE DONE");
+    debuglog(LCF_THREAD, "End of thread code");
     ThreadManager::threadExit();
     return ret;
 }
@@ -85,6 +83,7 @@ static void *pthread_start(void *arg)
 
 /* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
+    debuglog(LCF_THREAD, "Thread is created with routine ", (void*)start_routine);
     LINK_NAMESPACE(pthread_create, "pthread");
 
     ThreadSync::wrapperExecutionLockLock();
@@ -106,25 +105,6 @@ static void *pthread_start(void *arg)
         return ret;
     }
 
-    // ThreadManager::start(*tid_p, __builtin_return_address(0), (void*)start_routine);
-
-    LINK_NAMESPACE(pthread_getname_np, "pthread");
-    char name[16];
-    name[0] = '\0';
-    orig::pthread_getname_np(*tid_p, name, 16);
-    std::string thstr = stringify(*tid_p);
-    if (name[0])
-        debuglog(LCF_THREAD, "Thread ", thstr, " was created (", name, ").");
-    else
-        debuglog(LCF_THREAD, "Thread ", thstr, " was created.");
-    debuglog(LCF_THREAD, "  - Entry point: ", (void*)start_routine, " .");
-
-    /* Say to thread created that it can go! */
-    //thread->go = true;
-
-    //Check and suspend main thread if needed
-    // ThreadManager::suspend(*tid_p);
-
     ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
@@ -139,22 +119,22 @@ static void *pthread_start(void *arg)
     orig::pthread_exit(retval);
 }
 
-/* Override */ int pthread_join (pthread_t tid, void **thread_return)
+/* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)
 {
     LINK_NAMESPACE(pthread_join, "pthread");
 
     if (GlobalState::isNative())
-        return orig::pthread_join(tid, thread_return);
+        return orig::pthread_join(pthread_id, thread_return);
 
     ThreadSync::wrapperExecutionLockLock();
-    debuglog(LCF_THREAD, "Joining thread ", stringify(tid));
+    debuglog(LCF_THREAD, "Joining thread ", ThreadManager::getThreadTid(pthread_id));
 
     /* Because we detach zombie threads before saving or loading a state,
      * this thread might not be there anymore. So we check in our thread list
      * and don't detach/join if in fake zombie state. If so, we can return
      * the value that we stored when we joined the thread.
      */
-    ThreadInfo* thread = ThreadManager::getThread(tid);
+    ThreadInfo* thread = ThreadManager::getThread(pthread_id);
     if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
         /* Thread is now officially joined, we can remove the thread from
         * our list.
@@ -165,23 +145,23 @@ static void *pthread_start(void *arg)
         return 0;
     }
 
-    int ret = orig::pthread_join(tid, thread_return);
-    ThreadManager::threadDetach(tid);
+    int ret = orig::pthread_join(pthread_id, thread_return);
+    ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
-/* Override */ int pthread_detach (pthread_t tid) throw()
+/* Override */ int pthread_detach (pthread_t pthread_id) throw()
 {
     LINK_NAMESPACE(pthread_detach, "pthread");
 
     if (GlobalState::isNative())
-        return orig::pthread_detach(tid);
+        return orig::pthread_detach(pthread_id);
 
     /* Same comment as above */
     ThreadSync::wrapperExecutionLockLock();
-    debuglog(LCF_THREAD, "Detaching thread ", stringify(tid));
-    ThreadInfo* thread = ThreadManager::getThread(tid);
+    debuglog(LCF_THREAD, "Detaching thread ", ThreadManager::getThreadTid(pthread_id));
+    ThreadInfo* thread = ThreadManager::getThread(pthread_id);
     if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
         /* Thread is now officially detached, we can remove the thread from
          * our list.
@@ -191,38 +171,38 @@ static void *pthread_start(void *arg)
         return 0;
     }
 
-    int ret = orig::pthread_detach(tid);
-    ThreadManager::threadDetach(tid);
+    int ret = orig::pthread_detach(pthread_id);
+    ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
-/* Override */ int pthread_tryjoin_np(pthread_t thread, void **retval) throw()
+/* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) throw()
 {
     LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
-    std::string thstr = stringify(thread);
-    debuglog(LCF_THREAD | LCF_TODO, "Try to join thread ", thstr);
-    int ret = orig::pthread_tryjoin_np(thread, retval);
+    pid_t tid = ThreadManager::getThreadTid(pthread_id);
+    debuglog(LCF_THREAD | LCF_TODO, "Try to join thread ", tid);
+    int ret = orig::pthread_tryjoin_np(pthread_id, retval);
     if (ret == 0) {
-        debuglog(LCF_THREAD | LCF_TODO, "Joining thread ", thstr, " successfully.");
+        debuglog(LCF_THREAD | LCF_TODO, "Joining thread ", tid, " successfully.");
     }
     if (ret == EBUSY) {
-        debuglog(LCF_THREAD | LCF_TODO, "Thread ", thstr, " has not yet terminated.");
+        debuglog(LCF_THREAD | LCF_TODO, "Thread ", tid, " has not yet terminated.");
     }
     return ret;
 }
 
-/* Override */ int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime)
+/* Override */ int pthread_timedjoin_np(pthread_t pthread_id, void **retval, const struct timespec *abstime)
 {
     LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
-    std::string thstr = stringify(thread);
-    debuglog(LCF_THREAD | LCF_TODO, "Try to join thread ", thstr, " in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
-    int ret = orig::pthread_timedjoin_np(thread, retval, abstime);
+    pid_t tid = ThreadManager::getThreadTid(pthread_id);
+    debuglog(LCF_THREAD | LCF_TODO, "Try to join thread ", tid, " in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
+    int ret = orig::pthread_timedjoin_np(pthread_id, retval, abstime);
     if (ret == 0) {
-        debuglog(LCF_THREAD | LCF_TODO, "Joining thread ", thstr, " successfully.");
+        debuglog(LCF_THREAD | LCF_TODO, "Joining thread ", tid, " successfully.");
     }
     if (ret == ETIMEDOUT) {
-        debuglog(LCF_THREAD | LCF_TODO, "Call timed out before thread ", thstr, " terminated.");
+        debuglog(LCF_THREAD | LCF_TODO, "Call timed out before thread ", tid, " terminated.");
     }
     return ret;
 }
@@ -269,12 +249,11 @@ static void *pthread_start(void *arg)
     return orig::pthread_setcanceltype(type, oldtype);
 }
 
-/* Override */ int pthread_cancel (pthread_t th)
+/* Override */ int pthread_cancel (pthread_t pthread_id)
 {
     LINK_NAMESPACE(pthread_cancel, "pthread");
-    std::string thstr = stringify(th);
-    debuglog(LCF_THREAD | LCF_TODO, "Cancel thread ", thstr);
-    return orig::pthread_cancel(th);
+    debuglog(LCF_THREAD | LCF_TODO, "Cancel thread ", ThreadManager::getThreadTid(pthread_id));
+    return orig::pthread_cancel(pthread_id);
 }
 
 /* Override */ void pthread_testcancel (void)

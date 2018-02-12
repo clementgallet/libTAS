@@ -52,13 +52,6 @@
 
 namespace libtas {
 
-/* Convert an integer into a short string to allow meaningless ints
- * to be printed in a shorter representation and be easier to
- * recognize. In practice, it is base64 convertion.
- * Used by pthread ids.
- */
-const char* stringify(pthread_t id);
-
 /* Print the debug message using stdio functions */
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 

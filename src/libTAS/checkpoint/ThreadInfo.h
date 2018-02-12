@@ -45,7 +45,8 @@ struct ThreadInfo {
     };
 
     ThreadState state; // thread state
-    pthread_t tid; // tid of the thread
+    pthread_t pthread_id; // tid of the thread
+    pid_t tid; // tid of the thread
     void *(*start)(void *); // original start function of the thread
     void *arg; // original argument of the start function
     //std::atomic<bool> go;

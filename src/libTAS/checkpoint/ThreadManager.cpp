@@ -24,6 +24,8 @@
 #include <csignal>
 #include <algorithm> // std::find
 #include <sys/mman.h>
+#include <sys/syscall.h> // syscall, SYS_gettid
+
 #include "ThreadManager.h"
 #include "ThreadSync.h"
 #include "Checkpoint.h"
@@ -42,7 +44,7 @@ ThreadInfo* ThreadManager::thread_list = nullptr;
 ThreadInfo* ThreadManager::free_list = nullptr;
 thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
 // bool ThreadManager::inited = false;
-pthread_t ThreadManager::main_tid = 0;
+pthread_t ThreadManager::main_pthread_id = 0;
 pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_rwlock_t ThreadManager::threadResumeLock = PTHREAD_RWLOCK_INITIALIZER;
@@ -56,7 +58,8 @@ void ThreadManager::init()
     /* Create a ThreadInfo struct for this thread */
     ThreadInfo* thread = ThreadManager::getNewThread();
     thread->state = ThreadInfo::ST_RUNNING;
-    thread->tid = getThreadId();
+    thread->pthread_id = getThreadId();
+    thread->tid = syscall(SYS_gettid);
     thread->detached = false;
     current_thread = thread;
     addToList(thread);
@@ -87,20 +90,27 @@ pthread_t ThreadManager::getThreadId()
     /* We couldn't link to pthread, meaning threading should be off.
      * We must return a value so that isMainThread() returns true.
      */
-    return main_tid;
+    return main_pthread_id;
+}
+
+pid_t ThreadManager::getThreadTid()
+{
+    if (current_thread)
+        return current_thread->tid;
+    return 0;
 }
 
 void ThreadManager::setMainThread()
 {
-    main_tid = getThreadId();
+    main_pthread_id = getThreadId();
     current_thread->state = ThreadInfo::ST_CKPNTHREAD;
 }
 
 bool ThreadManager::isMainThread()
 {
     /* Check if main thread has been set */
-    if (main_tid) {
-        return (getThreadId() == main_tid);
+    if (main_pthread_id) {
+        return (getThreadId() == main_pthread_id);
     }
 
     return true;
@@ -126,18 +136,27 @@ ThreadInfo* ThreadManager::getNewThread()
     return thread;
 }
 
-ThreadInfo* ThreadManager::getThread(pthread_t tid)
+ThreadInfo* ThreadManager::getThread(pthread_t pthread_id)
 {
     for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next)
-        if (thread->tid == tid)
+        if (thread->pthread_id == pthread_id)
             return thread;
 
     return nullptr;
 }
 
+pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
+{
+    ThreadInfo* ti = getThread(pthread_id);
+    if (ti)
+        return ti->tid;
+    return 0;
+}
+
 void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
+    thread->pthread_id = 0;
     thread->tid = 0;
     thread->start = start_routine;
     thread->arg = arg;
@@ -158,7 +177,8 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
 
 void ThreadManager::update(ThreadInfo* thread)
 {
-    thread->tid = getThreadId();
+    thread->pthread_id = getThreadId();
+    thread->tid = syscall(SYS_gettid);
 
     /* If a thread that is in native state is creating another thread, we
      * consider that the entire new thread is in native mode (e.g. audio thread)
@@ -181,7 +201,7 @@ void ThreadManager::addToList(ThreadInfo* thread)
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
 
     /* Check for a thread with the same tid, and remove it */
-    ThreadInfo* cur_thread = getThread(thread->tid);
+    ThreadInfo* cur_thread = getThread(thread->pthread_id);
     if (cur_thread)
         threadIsDead(cur_thread);
 
@@ -198,7 +218,7 @@ void ThreadManager::addToList(ThreadInfo* thread)
 
 void ThreadManager::threadIsDead(ThreadInfo *thread)
 {
-    debuglog(LCF_THREAD, "Remove thread ", stringify(thread->tid), " from list");
+    debuglog(LCF_THREAD, "Remove thread ", thread->tid, " from list");
 
     if (thread->prev != nullptr) {
         thread->prev->next = thread->next;
@@ -214,15 +234,15 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
     free_list = thread;
 }
 
-void ThreadManager::threadDetach(pthread_t tid)
+void ThreadManager::threadDetach(pthread_t pthread_id)
 {
-    ThreadInfo* thread = getThread(tid);
+    ThreadInfo* thread = getThread(pthread_id);
 
     if (thread) {
         MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
         thread->detached = true;
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            debuglog(LCF_THREAD, "Zombie thread ", stringify(tid), " is detached");
+            debuglog(LCF_THREAD, "Zombie thread ", thread->tid, " is detached");
             threadIsDead(thread);
         }
         MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
@@ -234,7 +254,7 @@ void ThreadManager::threadExit()
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING))
     if (current_thread->detached) {
-        debuglog(LCF_THREAD, "Detached thread ", stringify(current_thread->tid), " exited");
+        debuglog(LCF_THREAD, "Detached thread ", current_thread->tid, " exited");
         threadIsDead(current_thread);
     }
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
@@ -406,7 +426,7 @@ void ThreadManager::suspendThreads()
         numThreads = 0;
         ThreadInfo *next;
         for (ThreadInfo *thread = thread_list; thread != nullptr; thread = next) {
-            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread ", stringify(thread->tid));
+            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread ", thread->tid);
             next = thread->next;
             int ret;
 
@@ -437,14 +457,14 @@ void ThreadManager::suspendThreads()
                     NATIVECALL(sigaltstack(&thread->altstack, nullptr));
 
                     /* Send the suspend signal to the thread */
-                    NATIVECALL(ret = pthread_kill(thread->tid, SIGUSR1));
+                    NATIVECALL(ret = pthread_kill(thread->pthread_id, SIGUSR1));
 
                     if (ret == 0) {
                         needrescan = true;
                     }
                     else {
                         MYASSERT(ret == ESRCH)
-                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread", stringify(thread->tid), "has died since");
+                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread", thread->tid, "has died since");
                         threadIsDead(thread);
                     }
                 }
@@ -457,20 +477,20 @@ void ThreadManager::suspendThreads()
                  * We have to get the return value if the game wants it later
                  */
 
-                debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", stringify(thread->tid), " is joined");
+                debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", thread->tid, " is joined");
                 updateState(thread, ThreadInfo::ST_FAKEZOMBIE, ThreadInfo::ST_ZOMBIE);
-                NATIVECALL(pthread_join(thread->tid, &thread->retval));
+                NATIVECALL(pthread_join(thread->pthread_id, &thread->retval));
                 break;
 
             case ThreadInfo::ST_SIGNALED:
-                NATIVECALL(ret = pthread_kill(thread->tid, 0));
+                NATIVECALL(ret = pthread_kill(thread->pthread_id, 0));
 
                 if (ret == 0) {
                     needrescan = true;
                 }
                 else {
                     MYASSERT(ret == ESRCH)
-                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread ", stringify(thread->tid), " died");
+                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread ", thread->tid, " died");
                     threadIsDead(thread);
                 }
                 break;

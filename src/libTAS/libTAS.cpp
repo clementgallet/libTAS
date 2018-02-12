@@ -38,6 +38,8 @@ namespace libtas {
 
 void __attribute__((constructor)) init(void)
 {
+    ThreadManager::init();
+
     bool didConnect = initSocketGame();
     /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
      * In this case, we must detect it and do not run this again
@@ -98,8 +100,6 @@ void __attribute__((constructor)) init(void)
 
     /* Initialize sound parameters */
     audiocontext.init();
-
-    ThreadManager::init();
 }
 
 void __attribute__((destructor)) term(void)

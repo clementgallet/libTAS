@@ -73,11 +73,11 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
     size = strlen(s);
 
-    const char* thstr = stringify(ThreadManager::getThreadId());
+    pid_t tid = ThreadManager::getThreadTid();
     if (ThreadManager::isMainThread())
-        snprintf(s + size, maxsize-size-1, "Thread %s (main) ", thstr);
+        snprintf(s + size, maxsize-size-1, "Thread %d (main) ", tid);
     else
-        snprintf(s + size, maxsize-size-1, "Thread %s        ", thstr);
+        snprintf(s + size, maxsize-size-1, "Thread %d        ", tid);
     size = strlen(s);
 
     if (isTerm) {
@@ -114,25 +114,6 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
      */
     fputs_unlocked(s, stderr);
 
-}
-
-/* Print long integers as string for shorter ids. Use base64 */
-const char* stringify(pthread_t id)
-{
-    static char string[17] = {0};
-    int idx = 0;
-    while (id && (idx<16)) {
-        unsigned long digit = id % 64;
-        if (digit < 26) string[idx++] = static_cast<char>('A' + digit);
-        else if (digit < 52) string[idx++] = static_cast<char>('a' + (digit - 26));
-        else if (digit < 62) string[idx++] = static_cast<char>('0' + (digit - 52));
-        else if (digit == 62) string[idx++] = '+';
-        else string[idx++] = '/';
-
-        id /= 64;
-    }
-    string[idx] = '\0';
-    return string;
 }
 
 static std::list<std::string> alert_messages;

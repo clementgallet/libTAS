@@ -38,7 +38,7 @@ class ThreadManager {
     static thread_local ThreadInfo* current_thread;
 
     // static bool inited;
-    static pthread_t main_tid;
+    static pthread_t main_pthread_id;
 
     static pthread_mutex_t threadStateLock;
     static pthread_mutex_t threadListLock;
@@ -56,8 +56,11 @@ public:
     // Called from SDL_init, assumed to be main thread
     static void init();
 
-    /* Get the thread id */
+    /* Get the pthread id */
     static pthread_t getThreadId();
+
+    /* Get the thread tid */
+    static pid_t getThreadTid();
 
     /* Set the main thread to this thread */
     static void setMainThread();
@@ -68,8 +71,11 @@ public:
     /* Create a new ThreadInfo struct from the parent thread*/
     static ThreadInfo* getNewThread();
 
+    /* Get the thread tid of another thread */
+    static pid_t getThreadTid(pthread_t pthread_id);
+
     /* Get the ThreadInfo struct from the thread id, or null if not there */
-    static ThreadInfo* getThread(pthread_t tid);
+    static ThreadInfo* getThread(pthread_t pthread_id);
 
     /* Init the ThreadInfo with values passed in pthread_create */
     static void initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
@@ -84,7 +90,7 @@ public:
     static void threadIsDead(ThreadInfo *thread);
 
     /* Called when thread detach another thread */
-    static void threadDetach(pthread_t tid);
+    static void threadDetach(pthread_t pthread_id);
 
     /* Called when thread reaches the end (by return or pthread_exit) */
     static void threadExit();

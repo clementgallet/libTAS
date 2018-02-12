@@ -75,7 +75,7 @@ bool Checkpoint::checkRestore()
 
         int t;
         for (t=0; t<sh.thread_count; t++) {
-            if (sh.thread_tids[t] == thread->tid) {
+            if (sh.pthread_ids[t] == thread->pthread_id && (sh.tids[t] == thread->tid)) {
                 n++;
                 break;
             }
@@ -263,8 +263,10 @@ static void writeAllAreas()
     StateHeader sh;
     int n=0;
     for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        if (thread->state == ThreadInfo::ST_SUSPENDED)
-            sh.thread_tids[n++] = thread->tid;
+        if (thread->state == ThreadInfo::ST_SUSPENDED) {
+            sh.pthread_ids[n] = thread->pthread_id;
+            sh.tids[n++] = thread->tid;
+        }
     }
     sh.thread_count = n;
     Utils::writeAll(fd, &sh, sizeof(sh));

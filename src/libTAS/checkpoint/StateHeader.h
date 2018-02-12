@@ -30,7 +30,8 @@ namespace libtas {
 union StateHeader {
     struct {
         int thread_count;
-        pthread_t thread_tids[STATEMAXTHREADS];
+        pthread_t pthread_ids[STATEMAXTHREADS];
+        pid_t tids[STATEMAXTHREADS];
     };
     char _padding[4096];
 };
