@@ -215,6 +215,7 @@ void MainWindow::build(Context* c)
     encode_window = new EncodeWindow(c);
 #endif
     input_window = new InputWindow(c);
+    // executable_window = new ExecutableWindow(c, this);
     executable_window = new ExecutableWindow(c);
     controller_window = new ControllerWindow(c);
     gameinfo_window = new GameInfoWindow(c);
@@ -1008,11 +1009,7 @@ void config_executable_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.executable_window->update_config();
-    mw.executable_window->window->show();
-
-    while (mw.executable_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.executable_window->exec();
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING

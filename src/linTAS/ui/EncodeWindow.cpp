@@ -39,14 +39,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     setFixedSize(600, 260);
     setWindowTitle("Encoding configuration");
 
-    // window = new Fl_Double_Window(600, 260, "Encoding configuration");
-
-
-
-    /* Game Executable */
-    // QLabel* encodeLabel = new QLabel("Encode file path", encodePath);
-
-
+    /* Video file */
     encodePath = new QLineEdit();
     encodePath->setReadOnly(true);
 
@@ -59,23 +52,14 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     encodeFileLayout->addWidget(browseEncodePath);
     encodeFileGroupBox->setLayout(encodeFileLayout);
 
+    /* Video/Audio codecs */
 
-    // videoChoice = new QComboBox(10, 100, 450, 30, "Video codec");
     videoChoice = new QComboBox();
     connect(videoChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
-
-    // videobitrate = new Fl_Input(480, 100, 100, 30, "Video bitrate");
-    // videobitrate->align(FL_ALIGN_TOP_LEFT);
     videoBitrate = new QSpinBox();
 
-    // audiochoice = new Fl_Choice(10, 160, 450, 30, "Audio codec");
-    // audiochoice->align(FL_ALIGN_TOP_LEFT);
-    // audiochoice->callback(acodec_cb, this);
     audioChoice = new QComboBox();
     connect(audioChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
-
-    // audiobitrate = new Fl_Input(480, 160, 100, 30, "Audio bitrate");
-    // audiobitrate->align(FL_ALIGN_TOP_LEFT);
     audioBitrate = new QSpinBox();
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
@@ -94,7 +78,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &EncodeWindow::slotOk);
-    connect(buttonBox, &QDialogButtonBox::rejected, this, &EncodeWindow::slotCancel);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &EncodeWindow::reject);
 
     /* Create the main layout */
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -212,12 +196,6 @@ void EncodeWindow::slotOk()
 
     /* Close window */
     accept();
-}
-
-void EncodeWindow::slotCancel()
-{
-    /* Close window */
-    reject();
 }
 
 void EncodeWindow::slotBrowseEncodePath(bool checked)

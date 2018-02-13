@@ -20,37 +20,33 @@
 #ifndef LINTAS_EXECUTABLEWINDOW_H_INCLUDED
 #define LINTAS_EXECUTABLEWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Native_File_Chooser.H>
-#include <FL/Fl_Output.H>
+#include <QDialog>
+#include <QPushButton>
+#include <QLineEdit>
 
 #include "../Context.h"
 
-class ExecutableWindow {
-    public:
-        ExecutableWindow(Context *c);
+class ExecutableWindow : public QDialog {
+    Q_OBJECT
+public:
+    ExecutableWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-        /* Update UI elements when the config has changed */
-        void update_config();
+    /* Update UI elements when the config has changed */
+    void update_config();
 
-        Context *context;
+    Context *context;
 
-        Fl_Double_Window *window;
+private:
+    QLineEdit *runPath;
+    QPushButton *browseRunPath;
 
-        Fl_Button *confirm;
-        Fl_Button *cancel;
+    QLineEdit *libPath;
+    QPushButton *browseLibPath;
 
-        Fl_Output *runpath;
-        Fl_Button *browserunpath;
-        Fl_Native_File_Chooser *runpathchooser;
-        Fl_Button *clear_runpath;
-
-        Fl_Output *libpath;
-        Fl_Button *browselibpath;
-        Fl_Native_File_Chooser *libpathchooser;
-        Fl_Button *clear_libpath;
+private slots:
+    void slotOk();
+    void slotBrowseRunPath();
+    void slotBrowseLibPath();
 };
 
 #endif

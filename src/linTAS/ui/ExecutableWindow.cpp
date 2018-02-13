@@ -17,128 +17,96 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QLabel>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 #include "ExecutableWindow.h"
-#include <iostream>
 
-static Fl_Callback confirm_cb;
-static Fl_Callback cancel_cb;
-static Fl_Callback browse_runpath_cb;
-static Fl_Callback browse_libpath_cb;
-static Fl_Callback clear_runpath_cb;
-static Fl_Callback clear_libpath_cb;
-
-ExecutableWindow::ExecutableWindow(Context* c) : context(c)
+ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(680, 160, "Executable Options");
+    setFixedSize(680, 160);
+    setWindowTitle("Executable Options");
 
     /* Run path */
-    runpath = new Fl_Output(10, 30, 500, 30, "Run path");
-    runpath->align(FL_ALIGN_TOP_LEFT);
-    runpath->color(FL_LIGHT1);
+    runPath = new QLineEdit();
+    runPath->setReadOnly(true);
+    runPath->setClearButtonEnabled(true);
 
-    browserunpath = new Fl_Button(520, 30, 70, 30, "Browse...");
-    browserunpath->callback(browse_runpath_cb, this);
+    browseRunPath = new QPushButton("Browse...");
+    connect(browseRunPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseRunPath);
 
-    runpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
-    runpathchooser->title("Choose an run directory");
+    // runpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+    // runpathchooser->title("Choose an run directory");
 
-    clear_runpath = new Fl_Button(600, 30, 70, 30, "Clear");
-    clear_runpath->callback(clear_runpath_cb, this);
+    /* Run path layout */
+    QGroupBox *runPathGroupBox = new QGroupBox(tr("Run path"));
+    QHBoxLayout *runPathLayout = new QHBoxLayout;
+    runPathLayout->addWidget(runPath);
+    runPathLayout->addWidget(browseRunPath);
+    runPathGroupBox->setLayout(runPathLayout);
 
     /* Lib path */
-    libpath = new Fl_Output(10, 80, 500, 30, "Library path");
-    libpath->align(FL_ALIGN_TOP_LEFT);
-    libpath->color(FL_LIGHT1);
+    libPath = new QLineEdit();
+    libPath->setReadOnly(true);
+    libPath->setClearButtonEnabled(true);
 
-    browselibpath = new Fl_Button(520, 80, 70, 30, "Browse...");
-    browselibpath->callback(browse_libpath_cb, this);
+    browseLibPath = new QPushButton("Browse...");
+    connect(browseLibPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseLibPath);
 
-    libpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
-    libpathchooser->title("Choose an lib directory");
-
-    clear_libpath = new Fl_Button(600, 80, 70, 30, "Clear");
-    clear_libpath->callback(clear_libpath_cb, this);
+    /* Lib path layout */
+    QGroupBox *libPathGroupBox = new QGroupBox(tr("Library path"));
+    QHBoxLayout *libPathLayout = new QHBoxLayout;
+    libPathLayout->addWidget(libPath);
+    libPathLayout->addWidget(browseLibPath);
+    libPathGroupBox->setLayout(libPathLayout);
 
     /* Buttons */
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    confirm = new Fl_Button(400, 120, 70, 30, "Ok");
-    confirm->callback(confirm_cb, this);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &ExecutableWindow::slotOk);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &ExecutableWindow::reject);
 
-    cancel = new Fl_Button(500, 120, 70, 30, "Cancel");
-    cancel->callback(cancel_cb, this);
+    /* Create the main layout */
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    mainLayout->addWidget(runPathGroupBox);
+    mainLayout->addWidget(libPathGroupBox);
+    mainLayout->addWidget(buttonBox);
+
+    setLayout(mainLayout);
 
     update_config();
-    window->end();
 }
 
 void ExecutableWindow::update_config()
 {
-    runpath->value(context->config.rundir.c_str());
-    if (!context->config.rundir.empty())
-        runpathchooser->preset_file(runpath->value());
-    else
-        runpathchooser->preset_file(context->gamepath.c_str());
-
-    libpath->value(context->config.libdir.c_str());
-    if (!context->config.libdir.empty())
-        libpathchooser->preset_file(libpath->value());
-    else
-        libpathchooser->preset_file(context->gamepath.c_str());
+    runPath->setText(context->config.rundir.c_str());
+    libPath->setText(context->config.libdir.c_str());
 }
 
-void confirm_cb(Fl_Widget* w, void* v)
+void ExecutableWindow::slotOk()
 {
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-
-    ew->context->config.rundir = ew->runpath->value();
-    ew->context->config.libdir = ew->libpath->value();
+    context->config.rundir = runPath->text().toStdString();
+    context->config.libdir = libPath->text().toStdString();
 
     /* Close window */
-    ew->window->hide();
+    accept();
 }
 
-void cancel_cb(Fl_Widget* w, void* v)
+void ExecutableWindow::slotBrowseRunPath()
 {
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-
-    /* Close window */
-    ew->window->hide();
+    QString defaultPath = context->config.rundir.empty()?QString(context->gamepath.c_str()):runPath->text();
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an run directory"), defaultPath);
+    runPath->setText(dirname);
 }
 
-void browse_runpath_cb(Fl_Widget* w, void* v)
+void ExecutableWindow::slotBrowseLibPath()
 {
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-    int ret = ew->runpathchooser->show();
-
-    const char* filename = ew->runpathchooser->filename();
-
-    /* If the user picked a file */
-    if (ret == 0) {
-        ew->runpath->value(filename);
-    }
-}
-
-void browse_libpath_cb(Fl_Widget* w, void* v)
-{
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-    int ret = ew->libpathchooser->show();
-
-    const char* filename = ew->libpathchooser->filename();
-
-    /* If the user picked a file */
-    if (ret == 0) {
-        ew->libpath->value(filename);
-    }
-}
-
-void clear_runpath_cb(Fl_Widget* w, void* v)
-{
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-    ew->runpath->value("");
-}
-
-void clear_libpath_cb(Fl_Widget* w, void* v)
-{
-    ExecutableWindow* ew = (ExecutableWindow*) v;
-    ew->libpath->value("");
+    QString defaultPath = context->config.libdir.empty()?QString(context->gamepath.c_str()):libPath->text();
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an library directory"), defaultPath);
+    libPath->setText(dirname);
 }

@@ -43,12 +43,9 @@ private:
     Context *context;
 
     QLineEdit *encodePath;
-
     QPushButton *browseEncodePath;
-
     QComboBox *videoChoice;
     QSpinBox *videoBitrate;
-
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
 
@@ -57,7 +54,6 @@ private slots:
     void slotVideoCodec(int index);
     void slotAudioCodec(int index);
     void slotOk();
-    void slotCancel();
 };
 
 #endif
