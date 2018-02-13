@@ -1402,11 +1402,7 @@ void game_info_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.gameinfo_window->update();
-    mw.gameinfo_window->window->show();
-
-    while (mw.gameinfo_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.gameinfo_window->exec();
 }
 
 void movie_end_cb(Fl_Widget* w, void* v)

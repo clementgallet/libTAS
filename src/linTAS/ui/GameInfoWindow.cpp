@@ -17,136 +17,116 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QFormLayout>
 #include "GameInfoWindow.h"
-#include <sstream>
 
-GameInfoWindow::GameInfoWindow(Context* c) : context(c)
+GameInfoWindow::GameInfoWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(300, 240, "Game information");
+    setFixedSize(300, 240);
+    setWindowTitle("Game information");
 
-    video_box = new Fl_Box(10, 10, 200, 30);
-    video_box->box(FL_NO_BOX);
-    video_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    videoLabel = new QLabel(tr("unknown"));
+    audioLabel = new QLabel(tr("unknown"));
+    keyboardLabel = new QLabel(tr("unknown"));
+    mouseLabel = new QLabel(tr("unknown"));
+    joystickLabel = new QLabel(tr("unknown"));
 
-    audio_box = new Fl_Box(10, 50, 200, 30);
-    audio_box->box(FL_NO_BOX);
-    audio_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    keyboard_box = new Fl_Box(10, 90, 200, 30);
-    keyboard_box->box(FL_NO_BOX);
-    keyboard_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    mouse_box = new Fl_Box(10, 130, 200, 30);
-    mouse_box->box(FL_NO_BOX);
-    mouse_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    joystick_box = new Fl_Box(10, 170, 200, 30);
-    joystick_box->box(FL_NO_BOX);
-    joystick_box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    window->end();
+    QFormLayout *layout = new QFormLayout;
+    layout->addRow(new QLabel(tr("Video support:")), videoLabel);
+    layout->addRow(new QLabel(tr("Audio support:")), audioLabel);
+    layout->addRow(new QLabel(tr("Keyboard support:")), keyboardLabel);
+    layout->addRow(new QLabel(tr("Mouse support:")), mouseLabel);
+    layout->addRow(new QLabel(tr("Joystick support:")), joystickLabel);
+    setLayout(layout);
 }
 
 void GameInfoWindow::update()
 {
-    std::ostringstream oss;
-    oss << "Video support: ";
+    QString videoStr;
     if (context->game_info.video & GameInfo::SDL1) {
-        oss << "SDL 1";
+        videoStr = "SDL 1";
     }
     else if (context->game_info.video & GameInfo::SDL2) {
-        oss << "SDL 2";
+        videoStr = "SDL 2";
     }
     else {
-        oss << "unknown";
+        videoStr = "unknown";
     }
 
     if (context->game_info.video & GameInfo::OPENGL) {
-        oss << " (OpenGL ";
-        oss << context->game_info.opengl_major;
-        oss << ".";
-        oss << context->game_info.opengl_minor;
+        QString profile;
         switch(context->game_info.opengl_profile) {
         case GameInfo::CORE:
-            oss << " Core profile";
+            profile = "Core profile";
             break;
         case GameInfo::COMPATIBILITY:
-            oss << " Compatibility profile";
+            profile = "Compatibility profile";
             break;
         case GameInfo::ES:
-            oss << " ES profile";
+            profile = "ES profile";
             break;
         default:
             break;
         }
-        oss << ")";
+        videoStr += QString(" (OpenGL %1.%2 %3)").arg(context->game_info.opengl_major).arg(context->game_info.opengl_minor).arg(profile);
     }
-    video_box->copy_label(oss.str().c_str());
+    videoLabel->setText(videoStr);
 
-    std::string audiostr = "Audio support: ";
     if (context->game_info.audio & GameInfo::SDL1) {
-        audiostr += "yes (SDL 1)";
+        audioLabel->setText(tr("yes (SDL 1)"));
     }
     else if (context->game_info.audio & GameInfo::SDL2) {
-        audiostr += "yes (SDL 2)";
+        audioLabel->setText(tr("yes (SDL 2)"));
     }
     else if (context->game_info.audio & GameInfo::OPENAL) {
-        audiostr += "yes (OpenAL)";
+        audioLabel->setText(tr("yes (OpenAL)"));
     }
     else if (context->game_info.audio & GameInfo::PULSEAUDIO) {
-        audiostr += "yes (PulseAudio)";
+        audioLabel->setText(tr("yes (PulseAudio)"));
     }
     else if (context->game_info.audio & GameInfo::ALSA) {
-        audiostr += "yes (ALSA)";
+        audioLabel->setText(tr("yes (ALSA)"));
     }
     else {
-        audiostr += "unknown";
+        audioLabel->setText(tr("unknown"));
     }
-    audio_box->copy_label(audiostr.c_str());
 
-    std::string keyboardstr = "Keyboard support: ";
     if (context->game_info.keyboard & GameInfo::SDL1) {
-        keyboardstr += "yes (SDL 1)";
+        keyboardLabel->setText(tr("yes (SDL 1)"));
     }
     else if (context->game_info.keyboard & GameInfo::SDL2) {
-        keyboardstr += "yes (SDL 2)";
+        keyboardLabel->setText(tr("yes (SDL 2)"));
     }
     else if (context->game_info.keyboard & GameInfo::XEVENTS) {
-        keyboardstr += "default (xevents)";
+        keyboardLabel->setText(tr("default (xevents)"));
     }
     else {
-        keyboardstr += "unknown";
+        keyboardLabel->setText(tr("unknown"));
     }
-    keyboard_box->copy_label(keyboardstr.c_str());
 
-    std::string mousestr = "Mouse support: ";
     if (context->game_info.mouse & GameInfo::SDL1) {
-        mousestr += "yes (SDL 1)";
+        mouseLabel->setText(tr("yes (SDL 1)"));
     }
     else if (context->game_info.mouse & GameInfo::SDL2) {
-        mousestr += "yes (SDL 2)";
+        mouseLabel->setText(tr("yes (SDL 2)"));
     }
     else if (context->game_info.mouse & GameInfo::XEVENTS) {
-        mousestr += "default (xevents)";
+        mouseLabel->setText(tr("default (xevents)"));
     }
     else {
-        mousestr += "unknown";
+        mouseLabel->setText(tr("unknown"));
     }
-    mouse_box->copy_label(mousestr.c_str());
 
-    std::string joystickstr = "Joystick support: ";
     if (context->game_info.joystick & GameInfo::SDL1) {
-        joystickstr += "yes (SDL 1)";
+        joystickLabel->setText(tr("yes (SDL 1)"));
     }
     else if (context->game_info.joystick & GameInfo::SDL2) {
-        joystickstr += "yes (SDL 2)";
+        joystickLabel->setText(tr("yes (SDL 2)"));
     }
     else if (context->game_info.joystick & GameInfo::JSDEV) {
-        joystickstr += "yes (jsdev)";
+        joystickLabel->setText(tr("yes (jsdev)"));
     }
     else {
-        joystickstr += "unknown";
+        joystickLabel->setText(tr("unknown"));
     }
-    joystick_box->copy_label(joystickstr.c_str());
-
 }

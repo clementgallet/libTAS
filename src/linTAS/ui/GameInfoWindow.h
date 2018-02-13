@@ -20,28 +20,27 @@
 #ifndef LINTAS_GAMEINFOWINDOW_H_INCLUDED
 #define LINTAS_GAMEINFOWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Box.H>
+#include <QDialog>
+#include <QLabel>
 
 #include "../Context.h"
 
-class GameInfoWindow {
-    public:
-        GameInfoWindow(Context *c);
+class GameInfoWindow : public QDialog {
+    Q_OBJECT
+public:
+    GameInfoWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-        /* Update UI elements */
-        void update();
+    /* Update UI elements */
+    void update();
 
-        Context *context;
+private:
+    Context *context;
 
-        Fl_Double_Window *window;
-
-        Fl_Box *video_box;
-        Fl_Box *audio_box;
-        Fl_Box *keyboard_box;
-        Fl_Box *mouse_box;
-        Fl_Box *joystick_box;
+    QLabel *videoLabel;
+    QLabel *audioLabel;
+    QLabel *keyboardLabel;
+    QLabel *mouseLabel;
+    QLabel *joystickLabel;
 
 };
 
