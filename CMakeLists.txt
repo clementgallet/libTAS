@@ -16,6 +16,7 @@ set(LIBRARY_OUTPUT_PATH ./)
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
+
 # Include FLTK path
 set(FLTK_SKIP_OPENGL TRUE)
 set(FLTK_SKIP_FORMS TRUE)
@@ -43,9 +44,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-inc
 
 #target_link_libraries(TAS ${CMAKE_DL_LIBS})
 
+# Add Qt5 lib
+find_package(Qt5Widgets)
+target_link_libraries (linTAS Qt5::Widgets)
+
 # Add TAR lib
 find_library(TAR_LIB tar)
-target_link_libraries (linTAS ${TAR_LIB})
+target_link_libraries(linTAS ${TAR_LIB})
 
 # Add pthread
 find_package(Threads REQUIRED)

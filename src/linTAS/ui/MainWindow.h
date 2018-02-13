@@ -20,6 +20,15 @@
 #ifndef LINTAS_MAINWINDOW_H_INCLUDED
 #define LINTAS_MAINWINDOW_H_INCLUDED
 
+#include "EncodeWindow.h"
+#include "ExecutableWindow.h"
+#include "InputWindow.h"
+#include "ControllerWindow.h"
+#include "GameInfoWindow.h"
+#include "RamSearchWindow.h"
+#include "RamWatchWindow.h"
+#include "../Context.h"
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -33,15 +42,6 @@
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <thread>
-
-#include "../Context.h"
-#include "EncodeWindow.h"
-#include "ExecutableWindow.h"
-#include "InputWindow.h"
-#include "ControllerWindow.h"
-#include "GameInfoWindow.h"
-#include "RamSearchWindow.h"
-#include "RamWatchWindow.h"
 
 class MainWindow {
     public:

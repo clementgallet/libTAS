@@ -18,7 +18,6 @@
  */
 
 #include "InputWindow.h"
-#include "MainWindow.h"
 #include <iostream>
 // #include <X11/XKBlib.h>
 #include <xcb/xcb.h>

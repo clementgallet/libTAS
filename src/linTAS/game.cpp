@@ -17,11 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/MainWindow.h"
+
 #include "game.h"
 #include "utils.h"
 #include "AutoSave.h"
-
-#include "ui/MainWindow.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"

@@ -18,7 +18,6 @@
  */
 
 #include "ExecutableWindow.h"
-#include "MainWindow.h"
 #include <iostream>
 
 static Fl_Callback confirm_cb;

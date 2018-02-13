@@ -211,6 +211,7 @@ void MainWindow::build(Context* c)
     window->end();
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
+    // encode_window = new EncodeWindow(c, this);
     encode_window = new EncodeWindow(c);
 #endif
     input_window = new InputWindow(c);
@@ -999,11 +1000,7 @@ void config_encode_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.encode_window->update_config();
-    mw.encode_window->window->show();
-
-    while (mw.encode_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.encode_window->exec();
 }
 #endif
 

@@ -19,60 +19,92 @@
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
+#include <QLabel>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+
 #include "EncodeWindow.h"
-#include "MainWindow.h"
 
 #include <iostream>
 extern "C" {
 #include <libavcodec/avcodec.h>
-//#include <libavformat/avformat.h>
-//#include <libavutil/opt.h>
-//#include <libavutil/imgutils.h>
-//#include <libswscale/swscale.h>
-//#include <libswresample/swresample.h>
 }
 
-static Fl_Callback start_cb;
-static Fl_Callback cancel_cb;
-static Fl_Callback browse_encodepath_cb;
-static Fl_Callback vcodec_cb;
-static Fl_Callback acodec_cb;
-
-EncodeWindow::EncodeWindow(Context* c) : context(c)
+EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(600, 260, "Encoding configuration");
+    setFixedSize(600, 260);
+    setWindowTitle("Encoding configuration");
+
+    // window = new Fl_Double_Window(600, 260, "Encoding configuration");
+
+
 
     /* Game Executable */
-    encodepath = new Fl_Output(10, 30, 500, 30, "Encode file path");
-    encodepath->align(FL_ALIGN_TOP_LEFT);
-    encodepath->color(FL_LIGHT1);
+    // QLabel* encodeLabel = new QLabel("Encode file path", encodePath);
 
-    browseencodepath = new Fl_Button(520, 30, 70, 30, "Browse...");
-    browseencodepath->callback(browse_encodepath_cb, this);
 
-    encodepathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-    encodepathchooser->title("Choose an encode filename");
-    encodepathchooser->options(Fl_Native_File_Chooser::SAVEAS_CONFIRM);
+    encodePath = new QLineEdit();
+    encodePath->setReadOnly(true);
 
-    videochoice = new Fl_Choice(10, 100, 450, 30, "Video codec");
-    videochoice->align(FL_ALIGN_TOP_LEFT);
-    videochoice->callback(vcodec_cb, this);
+    browseEncodePath = new QPushButton("Browse...");
+    connect(browseEncodePath, &QAbstractButton::clicked, this, &EncodeWindow::slotBrowseEncodePath);
 
-    videobitrate = new Fl_Input(480, 100, 100, 30, "Video bitrate");
-    videobitrate->align(FL_ALIGN_TOP_LEFT);
+    QGroupBox *encodeFileGroupBox = new QGroupBox(tr("Encode file path"));
+    QHBoxLayout *encodeFileLayout = new QHBoxLayout;
+    encodeFileLayout->addWidget(encodePath);
+    encodeFileLayout->addWidget(browseEncodePath);
+    encodeFileGroupBox->setLayout(encodeFileLayout);
 
-    audiochoice = new Fl_Choice(10, 160, 450, 30, "Audio codec");
-    audiochoice->align(FL_ALIGN_TOP_LEFT);
-    audiochoice->callback(acodec_cb, this);
 
-    audiobitrate = new Fl_Input(480, 160, 100, 30, "Audio bitrate");
-    audiobitrate->align(FL_ALIGN_TOP_LEFT);
+    // videoChoice = new QComboBox(10, 100, 450, 30, "Video codec");
+    videoChoice = new QComboBox();
+    connect(videoChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
 
-    start = new Fl_Button(400, 220, 70, 30, "Ok");
-    start->callback(start_cb, this);
+    // videobitrate = new Fl_Input(480, 100, 100, 30, "Video bitrate");
+    // videobitrate->align(FL_ALIGN_TOP_LEFT);
+    videoBitrate = new QSpinBox();
 
-    cancel = new Fl_Button(500, 220, 70, 30, "Cancel");
-    cancel->callback(cancel_cb, this);
+    // audiochoice = new Fl_Choice(10, 160, 450, 30, "Audio codec");
+    // audiochoice->align(FL_ALIGN_TOP_LEFT);
+    // audiochoice->callback(acodec_cb, this);
+    audioChoice = new QComboBox();
+    connect(audioChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
+
+    // audiobitrate = new Fl_Input(480, 160, 100, 30, "Audio bitrate");
+    // audiobitrate->align(FL_ALIGN_TOP_LEFT);
+    audioBitrate = new QSpinBox();
+
+    QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
+    QGridLayout *encodeCodecLayout = new QGridLayout;
+    encodeCodecLayout->addWidget(new QLabel(tr("Video codec")), 0, 0);
+    encodeCodecLayout->addWidget(videoChoice, 0, 1);
+    encodeCodecLayout->addWidget(new QLabel(tr("Video bitrate")), 0, 2);
+    encodeCodecLayout->addWidget(videoBitrate, 0, 3);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec")), 1, 0);
+    encodeCodecLayout->addWidget(audioChoice, 1, 1);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate")), 1, 2);
+    encodeCodecLayout->addWidget(audioBitrate, 1, 3);
+    codecGroupBox->setLayout(encodeCodecLayout);
+
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &EncodeWindow::slotOk);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &EncodeWindow::slotCancel);
+
+    /* Create the main layout */
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    mainLayout->addWidget(encodeFileGroupBox);
+    mainLayout->addWidget(codecGroupBox);
+    mainLayout->addWidget(buttonBox);
+
+    setLayout(mainLayout);
+
 
     /* Get all encoding codecs available and fill the codec menus */
 
@@ -98,153 +130,126 @@ EncodeWindow::EncodeWindow(Context* c) : context(c)
             }
 
             if (codec->type == AVMEDIA_TYPE_VIDEO) {
-                videochoice->add(codecstr.c_str(), 0, nullptr, reinterpret_cast<void*>(codec->id), 0);
+                videoChoice->addItem(codecstr.c_str(), QVariant(codec->id));
             }
             if (codec->type == AVMEDIA_TYPE_AUDIO) {
-                audiochoice->add(codecstr.c_str(), 0, nullptr, reinterpret_cast<void*>(codec->id), 0);
+                audioChoice->addItem(codecstr.c_str(), QVariant(codec->id));
             }
         }
-        //std::cout << "found codec " << codec->name << std::endl;
-        // fprintf(stderr, "%s\n", codec->long_name);
         codec = av_codec_next(codec);
     }
 
     update_config();
-    window->end();
 }
 
 void EncodeWindow::update_config()
 {
     if (context->config.dumpfile.empty()) {
-        encodepath->value(context->gamepath.c_str());
+        encodePath->setText(context->gamepath.c_str());
     }
     else {
-        encodepath->value(context->config.dumpfile.c_str());
+        encodePath->setText(context->config.dumpfile.c_str());
     }
-    encodepathchooser->preset_file(encodepath->value());
 
     /* Browse the list of video codecs and select the item that matches
      * the value in the config using the item's user data.
      */
-    const Fl_Menu_Item* vcodec_item = videochoice->menu();
-    // vcodec_item = vcodec_item->first();
-    while (vcodec_item) { // FIXME: This might loop if we don't find any matching value!
-        if (static_cast<AVCodecID>(vcodec_item->argument()) == context->config.sc.video_codec) {
-            videochoice->value(vcodec_item);
+    for (int c = 0; c < videoChoice->count(); c++) {
+        if (static_cast<AVCodecID>(videoChoice->itemData(c).toInt()) == context->config.sc.video_codec) {
+            videoChoice->setCurrentIndex(c);
             break;
         }
-        vcodec_item = vcodec_item->next();
     }
 
     /* Enable/disable video bitrate for lossy/lossless codecs */
     const AVCodecDescriptor* vcodec = avcodec_descriptor_get(context->config.sc.video_codec);
     if ((vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
-        videobitrate->deactivate();
+        videoBitrate->setEnabled(false);
     }
     else {
-        videobitrate->activate();
+        videoBitrate->setEnabled(true);
     }
 
     /* Set video bitrate */
-    std::string vbstr = std::to_string(context->config.sc.video_bitrate);
-    videobitrate->value(vbstr.c_str());
+    videoBitrate->setValue(context->config.sc.video_bitrate);
 
     /* Same for audio codec and bitrate */
-    const Fl_Menu_Item* acodec_item = audiochoice->menu();
-    acodec_item = acodec_item->first();
-    while (acodec_item) {
-        if (static_cast<AVCodecID>(acodec_item->argument()) == context->config.sc.audio_codec) {
-            audiochoice->value(acodec_item);
+    for (int c = 0; c < audioChoice->count(); c++) {
+        if (static_cast<AVCodecID>(audioChoice->itemData(c).toInt()) == context->config.sc.audio_codec) {
+            audioChoice->setCurrentIndex(c);
             break;
         }
-        acodec_item = acodec_item->next();
     }
 
     /* Enable/disable audio bitrate for lossy/lossless codecs */
     const AVCodecDescriptor* acodec = avcodec_descriptor_get(context->config.sc.audio_codec);
     if ((acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
-        audiobitrate->deactivate();
+        audioBitrate->setEnabled(false);
     }
     else {
-        audiobitrate->activate();
+        audioBitrate->setEnabled(true);
     }
 
-    std::string abstr = std::to_string(context->config.sc.audio_bitrate);
-    audiobitrate->value(abstr.c_str());
+    /* Set audio bitrate */
+    audioBitrate->setValue(context->config.sc.audio_bitrate);
 }
 
-void start_cb(Fl_Widget* w, void* v)
+void EncodeWindow::slotOk()
 {
-    EncodeWindow* ew = (EncodeWindow*) v;
-
     /* Fill encode filename */
-    ew->context->config.dumpfile = ew->encodepath->value();
-    ew->context->config.dumpfile_modified = true;
+    context->config.dumpfile = encodePath->text().toStdString();
+    context->config.dumpfile_modified = true;
 
     /* Set video codec and bitrate */
-    const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
-    ew->context->config.sc.video_codec = static_cast<AVCodecID>(vcodec_item->argument());
-    ew->context->config.sc.video_bitrate = std::stoi(ew->videobitrate->value());
+    context->config.sc.video_codec = static_cast<AVCodecID>(videoChoice->currentData().toInt());
+    context->config.sc.video_bitrate = videoBitrate->value();
 
     /* Set audio codec and bitrate */
-    const Fl_Menu_Item* acodec_item = ew->audiochoice->mvalue();
-    ew->context->config.sc.audio_codec = static_cast<AVCodecID>(acodec_item->argument());
-    ew->context->config.sc.audio_bitrate = std::stoi(ew->audiobitrate->value());
+    context->config.sc.audio_codec = static_cast<AVCodecID>(audioChoice->currentData().toInt());
+    context->config.sc.audio_bitrate = audioBitrate->value();
 
-    ew->context->config.sc_modified = true;
-
-    /* Close window */
-    ew->window->hide();
-}
-
-void cancel_cb(Fl_Widget* w, void* v)
-{
-    EncodeWindow* ew = (EncodeWindow*) v;
+    context->config.sc_modified = true;
 
     /* Close window */
-    ew->window->hide();
+    accept();
 }
 
-void browse_encodepath_cb(Fl_Widget* w, void* v)
+void EncodeWindow::slotCancel()
 {
-    EncodeWindow* ew = (EncodeWindow*) v;
-    int ret = ew->encodepathchooser->show();
-
-    const char* filename = ew->encodepathchooser->filename();
-
-    /* If the user picked a file */
-    if (ret == 0) {
-        ew->encodepath->value(filename);
-    }
+    /* Close window */
+    reject();
 }
 
-void vcodec_cb(Fl_Widget* w, void* v)
+void EncodeWindow::slotBrowseEncodePath(bool checked)
 {
-    EncodeWindow* ew = (EncodeWindow*) v;
-    const Fl_Menu_Item* vcodec_item = ew->videochoice->mvalue();
+    if (! checked)
+        return;
 
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose an encode filename"), encodePath->text());
+    encodePath->setText(filename);
+}
+
+void EncodeWindow::slotVideoCodec(int index)
+{
     /* Enable/disable video bitrate for lossy/lossless codecs */
-    const AVCodecDescriptor* vcodec = avcodec_descriptor_get(static_cast<AVCodecID>(vcodec_item->argument()));
+    const AVCodecDescriptor* vcodec = avcodec_descriptor_get(static_cast<AVCodecID>(videoChoice->itemData(index).toInt()));
     if ((vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
-        ew->videobitrate->deactivate();
+        videoBitrate->setEnabled(false);
     }
     else {
-        ew->videobitrate->activate();
+        videoBitrate->setEnabled(true);
     }
 }
 
-void acodec_cb(Fl_Widget* w, void* v)
+void EncodeWindow::slotAudioCodec(int index)
 {
-    EncodeWindow* ew = (EncodeWindow*) v;
-    const Fl_Menu_Item* acodec_item = ew->audiochoice->mvalue();
-
     /* Enable/disable audio bitrate for lossy/lossless codecs */
-    const AVCodecDescriptor* acodec = avcodec_descriptor_get(static_cast<AVCodecID>(acodec_item->argument()));
+    const AVCodecDescriptor* acodec = avcodec_descriptor_get(static_cast<AVCodecID>(audioChoice->itemData(index).toInt()));
     if ((acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
-        ew->audiobitrate->deactivate();
+        audioBitrate->setEnabled(false);
     }
     else {
-        ew->audiobitrate->activate();
+        audioBitrate->setEnabled(true);
     }
 }
 

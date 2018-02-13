@@ -22,44 +22,42 @@
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Button.H>
-//#include <FL/Fl_Input.H>
-//#include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Native_File_Chooser.H>
-#include <FL/Fl_Output.H>
-#include <FL/Fl_Menu_Item.H>
-#include <FL/Fl_Choice.H>
+#include <QDialog>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QSpinBox>
 
 #include "../Context.h"
 
-class EncodeWindow {
-    public:
-        EncodeWindow(Context *c);
+class EncodeWindow : public QDialog {
+    Q_OBJECT
 
-        /* Update UI elements when the config has changed */
-        void update_config();
+public:
+    EncodeWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-        Context *context;
+    /* Update UI elements when the config has changed */
+    void update_config();
 
-        Fl_Double_Window *window;
+private:
+    Context *context;
 
-        Fl_Button *start;
-        Fl_Button *cancel;
+    QLineEdit *encodePath;
 
-        Fl_Output *encodepath;
-        Fl_Button *browseencodepath;
-        Fl_Native_File_Chooser *encodepathchooser;
+    QPushButton *browseEncodePath;
 
-        Fl_Choice *videochoice;
-//        static Fl_Menu_Item video_items[];
-        Fl_Input *videobitrate;
+    QComboBox *videoChoice;
+    QSpinBox *videoBitrate;
 
-        Fl_Choice *audiochoice;
-//        static Fl_Menu_Item audio_items[];
-        Fl_Input *audiobitrate;
+    QComboBox *audioChoice;
+    QSpinBox *audioBitrate;
 
+private slots:
+    void slotBrowseEncodePath(bool checked);
+    void slotVideoCodec(int index);
+    void slotAudioCodec(int index);
+    void slotOk();
+    void slotCancel();
 };
 
 #endif

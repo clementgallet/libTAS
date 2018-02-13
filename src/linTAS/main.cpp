@@ -17,18 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/MainWindow.h"
+#include "Context.h"
+#include "utils.h" // create_dir
+
+#include <limits.h> // PATH_MAX
+#include <libgen.h> // dirname
+#include <signal.h> // kill
+#include <xcb/xcb.h>
 #include <unistd.h>
 #include <string.h>
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "Context.h"
-#include "ui/MainWindow.h"
-#include "utils.h" // create_dir
-#include <limits.h> // PATH_MAX
-#include <libgen.h> // dirname
-#include <signal.h> // kill
-#include <xcb/xcb.h>
+
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
