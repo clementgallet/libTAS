@@ -20,31 +20,36 @@
 #ifndef LINTAS_INPUTWINDOW_H_INCLUDED
 #define LINTAS_INPUTWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Multi_Browser.H>
-// #include <X11/Xlib.h>
+#include <QDialog>
+#include <QPushButton>
+#include <QTableWidget>
 #include "../Context.h"
 
-class InputWindow {
-    public:
-        InputWindow(Context *c);
-        Context *context;
+class InputWindow : public QDialog {
+    Q_OBJECT
+public:
+    InputWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    Context *context;
 
-        Fl_Double_Window *window;
+    void update();
 
-        Fl_Multi_Browser *hotkey_browser;
-        Fl_Multi_Browser *input_browser;
+private:
+    QTableWidget *hotkeyTable;
+    QTableWidget *inputTable;
 
-        Fl_Button *assign_button;
-        Fl_Button *default_button;
-        Fl_Button *disable_button;
+    QPushButton *assignButton;
+    QPushButton *defaultButton;
+    QPushButton *disableButton;
 
-        Fl_Button *save_button;
-        Fl_Button *cancel_button;
+    void updateInputRow(int row);
+    void updateHotkeyRow(int row);
 
-        void update();
+private slots:
+    void slotSelect();
+    void slotDefault();
+    void slotDisable();
+    void slotSave();
+    void slotAssign();
 };
 
 #endif

@@ -17,132 +17,174 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QStringList>
+#include <QTableWidgetItem>
+#include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QStringList>
+#include <QStringList>
+#include <QStringList>
+#include <QStringList>
+#include <QStringList>
+#include <QStringList>
+
 #include "InputWindow.h"
 #include <iostream>
 // #include <X11/XKBlib.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
-#include <FL/names.h>
-#include <FL/x.H>
-#include <iostream>
+// #include <FL/names.h>
+// #include <FL/x.H>
+// #include <iostream>
 
 static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers);
-static Fl_Callback select_cb;
-static Fl_Callback assign_cb;
-static Fl_Callback default_cb;
-static Fl_Callback disable_cb;
-static Fl_Callback save_cb;
-static Fl_Callback cancel_cb;
+// static Fl_Callback select_cb;
+// static Fl_Callback assign_cb;
+// static Fl_Callback default_cb;
+// static Fl_Callback disable_cb;
+// static Fl_Callback save_cb;
+// static Fl_Callback cancel_cb;
 
-InputWindow::InputWindow(Context* c) : context(c)
+InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(800, 500, "Input mapping");
+    setFixedSize(800, 500);
+    setWindowTitle("Input mapping");
 
-    /* Browsers */
-    hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
-    hotkey_browser->callback(select_cb, this);
+    /* Tables */
+    hotkeyTable = new QTableWidget(context->config.km.hotkey_list.size(), 2, this);
+    QStringList hotkeyHeader;
+    hotkeyHeader << "Hotkey" << "Mapping";
+    hotkeyTable->setHorizontalHeaderLabels(hotkeyHeader);
+    connect(hotkeyTable, &QTableWidget::itemSelectionChanged, this, &InputWindow::slotSelect);
 
-    input_browser = new Fl_Multi_Browser(400, 10, 350, 400, "Inputs");
-    input_browser->callback(select_cb, this);
+    // hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
+    // hotkey_browser->callback(select_cb, this);
+
+    inputTable = new QTableWidget(context->config.km.input_list.size(), 2, this);
+    QStringList inputHeader;
+    inputHeader << "Hotkey" << "Mapping";
+    inputTable->setHorizontalHeaderLabels(inputHeader);
+    connect(inputTable, &QTableWidget::itemSelectionChanged, this, &InputWindow::slotSelect);
+
+    // input_browser = new Fl_Multi_Browser(400, 10, 350, 400, "Inputs");
+    // input_browser->callback(select_cb, this);
 
     /* Set two columns */
-    static int col_width[] = {220, 130, 0};
-    hotkey_browser->column_widths(col_width);
-    hotkey_browser->column_char('\t');
-    input_browser->column_widths(col_width);
-    input_browser->column_char('\t');
+    // static int col_width[] = {220, 130, 0};
+    // hotkey_browser->column_widths(col_width);
+    // hotkey_browser->column_char('\t');
+    // input_browser->column_widths(col_width);
+    // input_browser->column_char('\t');
 
     /* Fill hotkey list */
+    int r = 0;
     for (auto iter : context->config.km.hotkey_list) {
-        std::string linestr(iter.description);
-        /* Add the line in the browser */
-        hotkey_browser->add(linestr.c_str());
+        hotkeyTable->setItem(r++, 0, new QTableWidgetItem(iter.description.c_str()));
+        hotkeyTable->setItem(r++, 1, new QTableWidgetItem());
     }
 
     /* Fill input list */
+    r = 0;
     for (auto iter : context->config.km.input_list) {
-        std::string linestr(iter.description);
-        /* Add the line in the browser */
-        input_browser->add(linestr.c_str());
+        inputTable->setItem(r++, 0, new QTableWidgetItem(iter.description.c_str()));
+        inputTable->setItem(r++, 1, new QTableWidgetItem());
     }
 
     update();
 
-    assign_button = new Fl_Button(250, 420, 90, 30, "Assign");
-    assign_button->callback(assign_cb, this);
-    assign_button->deactivate();
+    assignButton = new QPushButton("Assign");
+    assignButton->setEnabled(false);
+    connect(assignButton, &QAbstractButton::clicked, this, &InputWindow::slotAssign);
 
-    default_button = new Fl_Button(350, 420, 90, 30, "Default");
-    default_button->callback(default_cb, this);
-    default_button->deactivate();
+    defaultButton = new QPushButton("Default");
+    defaultButton->setEnabled(false);
+    connect(defaultButton, &QAbstractButton::clicked, this, &InputWindow::slotDefault);
 
-    disable_button = new Fl_Button(450, 420, 90, 30, "Disable");
-    disable_button->callback(disable_cb, this);
-    disable_button->deactivate();
+    disableButton = new QPushButton("Disable");
+    disableButton->setEnabled(false);
+    connect(disableButton, &QAbstractButton::clicked, this, &InputWindow::slotDisable);
 
-    save_button = new Fl_Button(600, 460, 70, 30, "Ok");
-    save_button->callback(save_cb, this);
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+    buttonBox->addButton(assignButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(defaultButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(disableButton, QDialogButtonBox::ActionRole);
 
-    cancel_button = new Fl_Button(700, 460, 70, 30, "Cancel");
-    cancel_button->callback(cancel_cb, this);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &InputWindow::slotSave);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &InputWindow::reject);
 
-    window->end();
+    /* Layouts */
+    QHBoxLayout *tableLayout = new QHBoxLayout;
+    tableLayout->addWidget(hotkeyTable);
+    tableLayout->addWidget(inputTable);
+
+    /* Create the main layout */
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    mainLayout->addLayout(tableLayout);
+    mainLayout->addWidget(buttonBox);
+
+    setLayout(mainLayout);
+}
+
+void InputWindow::updateHotkeyRow(int row)
+{
+    /* Check if a key is mapped to this hotkey */
+    for (auto itermap : context->config.km.hotkey_mapping) {
+        if (itermap.second == context->config.km.hotkey_list[row]) {
+            /* Build the key string with modifiers */
+            QString str;
+            xcb_keysym_t ks = itermap.first;
+            for (ModifierKey modifier : modifier_list) {
+                if (ks & modifier.flag) {
+                    str += modifier.description.c_str();
+                    str += "+";
+                    ks ^= modifier.flag;
+                }
+            }
+
+            str += XKeysymToString(ks);
+            hotkeyTable->item(row, 1)->setText(str);
+            return;
+        }
+    }
+
+    hotkeyTable->item(row, 1)->setText("");
+}
+
+void InputWindow::updateInputRow(int row)
+{
+    SingleInput si = context->config.km.input_list[row];
+
+    /* Check if a key is mapped to this input */
+    for (auto itermap : context->config.km.input_mapping) {
+        if (itermap.second == si) {
+            QString str;
+            /* Special case for visibility:
+             * if mapped to itself print <self> */
+            if ((si.type == IT_KEYBOARD) && (si.value == itermap.first))
+                str += "<self>";
+            else
+                str += XKeysymToString(itermap.first);
+
+            inputTable->item(row, 1)->setText(str);
+            return;
+        }
+    }
+
+    inputTable->item(row, 1)->setText("");
 }
 
 void InputWindow::update()
 {
     /* Update hotkey list */
-    int index = 1;
-    for (auto iter : context->config.km.hotkey_list) {
-        std::string linestr(iter.description);
-
-        /* Check if a key is mapped to this hotkey */
-        for (auto itermap : context->config.km.hotkey_mapping) {
-            if (itermap.second == iter) {
-                linestr += '\t';
-
-                /* Build the key string with modifiers */
-                xcb_keysym_t ks = itermap.first;
-                for (ModifierKey modifier : modifier_list) {
-                    if (ks & modifier.flag) {
-                        linestr += modifier.description;
-                        linestr += "+";
-                        ks ^= modifier.flag;
-                    }
-                }
-
-                linestr += XKeysymToString(ks);
-                break;
-            }
-        }
-
-        /* Modify the text in the browser */
-        hotkey_browser->text(index, linestr.c_str());
-        index++;
+    for (int row = 0; row < context->config.km.hotkey_list.size(); row++) {
+        updateHotkeyRow(row);
     }
 
     /* Update input list */
-    index = 1;
-    for (auto iter : context->config.km.input_list) {
-        std::string linestr(iter.description);
-
-        /* Check if a key is mapped to this input */
-        for (auto itermap : context->config.km.input_mapping) {
-            if (itermap.second == iter) {
-                linestr += '\t';
-                /* Special case for visibility:
-                 * if mapped to itself print <self> */
-                if ((iter.type == IT_KEYBOARD) && (iter.value == itermap.first))
-                    linestr += "<self>";
-                else
-                    linestr += XKeysymToString(itermap.first);
-                break;
-            }
-        }
-
-        /* Modify the text in the browser */
-        input_browser->text(index, linestr.c_str());
-        index++;
+    for (int row = 0; row < context->config.km.input_list.size(); row++) {
+        updateInputRow(row);
     }
 }
 
@@ -199,184 +241,155 @@ static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t win
     return 0;
 }
 
-static void select_cb(Fl_Widget* w, void* v)
+void InputWindow::slotSelect()
 {
-    InputWindow* iw = (InputWindow*) v;
-    Fl_Multi_Browser* cur_browser = static_cast<Fl_Multi_Browser*>(w);
+    QTableWidget* table = static_cast<QTableWidget*>(sender());
 
     /* Deselect the other browser */
-    if (cur_browser == iw->input_browser) {
-        iw->hotkey_browser->deselect();
+    if (table == hotkeyTable) {
+        inputTable->clearSelection();
     }
     else {
-        iw->input_browser->deselect();
+        hotkeyTable->clearSelection();
     }
 
     /* Count how many lines are selected */
-    int count = 0;
-    for (int i = 1; i <= cur_browser->size(); i++) {
-        count += cur_browser->selected(i);
-    }
+
+    int count = table->selectedItems().count();
 
     /* Enable/disable the assign button */
     if (count >= 1) {
         if (count == 1) {
-            iw->assign_button->activate();
+            assignButton->setEnabled(true);
         }
         else {
-            iw->assign_button->deactivate();
+            assignButton->setEnabled(false);
         }
-        iw->default_button->activate();
-        iw->disable_button->activate();
+        defaultButton->setEnabled(true);
+        disableButton->setEnabled(true);
     }
     else {
-        iw->assign_button->deactivate();
-        iw->default_button->deactivate();
-        iw->disable_button->deactivate();
+        assignButton->setEnabled(false);
+        defaultButton->setEnabled(false);
+        disableButton->setEnabled(false);
     }
 
     /* Check if we had a double-click with a single line selected, and
      * trigger the assignment if so */
 
-    if ((count == 1) && (Fl::event_clicks() != 0)) {
-        Fl::event_clicks(0); // Prevent from triggering this again
-        iw->assign_button->do_callback(iw->assign_button, v);
-    }
+    // if ((count == 1) && (Fl::event_clicks() != 0)) {
+    //     Fl::event_clicks(0); // Prevent from triggering this again
+    //     iw->assign_button->do_callback(iw->assign_button, v);
+    // }
 }
 
-static void assign_cb(Fl_Widget* w, void* v)
+void InputWindow::slotAssign()
 {
     /* We need to ignore calls that arrive just after another one, this means
      * that the user queued multiple events that trigger this callback.
      * Unfortunately, I didn't manage to ignore or delete mouse events, either
      * in FLTK or Xlib level, so this is a fallback, using system time... sorry.
      */
-    static timespec lastassign = {0, 0};
-    timespec thisassign;
-    clock_gettime(CLOCK_MONOTONIC, &thisassign);
+    // static timespec lastassign = {0, 0};
+    // timespec thisassign;
+    // clock_gettime(CLOCK_MONOTONIC, &thisassign);
+    //
+    // if ( ((thisassign.tv_sec - lastassign.tv_sec) <= 1) && // This first check is necessary for 32-bit arch
+    //     (1000L*1000L*1000L*(thisassign.tv_sec - lastassign.tv_sec) +
+    //     thisassign.tv_nsec - lastassign.tv_nsec) < 10L*1000L*1000L )
+    //     return;
 
-    if ( ((thisassign.tv_sec - lastassign.tv_sec) <= 1) && // This first check is necessary for 32-bit arch
-        (1000L*1000L*1000L*(thisassign.tv_sec - lastassign.tv_sec) +
-        thisassign.tv_nsec - lastassign.tv_nsec) < 10L*1000L*1000L )
+    /* Check if the selected item is in the hotkey browser.
+     * We cannot use value() function only, it is supposed to return 0 if
+     * no item is selected, but after calling deselect(), it actually returns
+     * the index of the last element. So we check if this element is selected.
+     */
+    // int sel_hotkey = hotkey_browser->value();
+    // int sel_input = input_browser->value();
+    //
+    // bool is_hotkey = iw->hotkey_browser->selected(sel_hotkey);
+
+    QList<QTableWidgetItem*> hotkeySelList = hotkeyTable->selectedItems();
+    QList<QTableWidgetItem*> inputSelList = inputTable->selectedItems();
+
+    if (hotkeySelList.count() + inputSelList.count() != 1)
         return;
 
-    InputWindow* iw = (InputWindow*) v;
-
-    /* Check if the selected item is in the hotkey browser.
-     * We cannot use value() function only, it is supposed to return 0 if
-     * no item is selected, but after calling deselect(), it actually returns
-     * the index of the last element. So we check if this element is selected.
-     */
-    int sel_hotkey = iw->hotkey_browser->value();
-    int sel_input = iw->input_browser->value();
-    bool is_hotkey = iw->hotkey_browser->selected(sel_hotkey);
-
-    iw->assign_button->label("Press key...");
-    iw->assign_button->deactivate();
-
-    std::string linestr = is_hotkey?iw->hotkey_browser->text(sel_hotkey):
-        iw->input_browser->text(sel_input);
-    size_t pos = linestr.find('\t');
-    if (pos != std::string::npos) {
-        linestr.resize(pos);
-    }
-    linestr.append("\t<press key>");
-    if (is_hotkey)
-        iw->hotkey_browser->text(sel_hotkey, linestr.c_str());
-    else
-        iw->input_browser->text(sel_input, linestr.c_str());
-
-    Fl::flush();
-    xcb_keysym_t ks = get_next_keypressed(iw->context->conn, fl_xid(iw->window), is_hotkey);
-
-    iw->assign_button->label("Assign");
-    iw->assign_button->activate();
-
-    if (is_hotkey) {
-        iw->context->config.km.reassign_hotkey(sel_hotkey-1, ks);
+    QTableWidget *selTable;
+    bool isHotkey = (hotkeySelList.count() == 1);
+    if (isHotkey) {
+        selTable = hotkeyTable;
     }
     else {
-        iw->context->config.km.reassign_input(sel_input-1, ks);
+        selTable = inputTable;
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &lastassign);
-    iw->update();
-}
+    int row = selTable->row(selTable->selectedItems().first());
 
-static void default_cb(Fl_Widget* w, void* v)
-{
-    InputWindow* iw = (InputWindow*) v;
+    assignButton->setText(tr("Press key..."));
+    assignButton->setEnabled(false);
 
-    /* Check if the selected item is in the hotkey browser.
-     * We cannot use value() function only, it is supposed to return 0 if
-     * no item is selected, but after calling deselect(), it actually returns
-     * the index of the last element. So we check if this element is selected.
+    selTable->item(row, 1)->setText(tr("<press key>"));
+
+    // Fl::flush();
+    /* TODO: replace the following function with an implementation of
+     * keyPressEvent(QKeyEvent *ev), then access ev->nativeVirtualKey() and
+     * ev->modifiers(). We need some synchronisation to recover the keysym here.
      */
-    int sel_hotkey = iw->hotkey_browser->value();
-    if (iw->hotkey_browser->selected(sel_hotkey)) {
-        for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
-            if (iw->hotkey_browser->selected(i)) {
-                iw->context->config.km.default_hotkey(i-1);
-            }
-        }
+    xcb_keysym_t ks = get_next_keypressed(context->conn, winId(), isHotkey);
+
+    assignButton->setText(tr("Assign"));
+    assignButton->setEnabled(true);
+
+    if (isHotkey) {
+        context->config.km.reassign_hotkey(row, ks);
+    }
+    else {
+        context->config.km.reassign_input(row, ks);
     }
 
-    int sel_input = iw->input_browser->value();
-    if (iw->input_browser->selected(sel_input)) {
-        for (int i = 1; i <= iw->input_browser->size(); i++) {
-            if (iw->input_browser->selected(i)) {
-                iw->context->config.km.default_input(i-1);
-            }
-        }
-    }
-
-    iw->update();
+    // clock_gettime(CLOCK_MONOTONIC, &lastassign);
+    update();
 }
 
-static void disable_cb(Fl_Widget* w, void* v)
+void InputWindow::slotDefault()
 {
-    InputWindow* iw = (InputWindow*) v;
-
-    /* Check if the selected item is in the hotkey browser.
-     * We cannot use value() function only, it is supposed to return 0 if
-     * no item is selected, but after calling deselect(), it actually returns
-     * the index of the last element. So we check if this element is selected.
-     */
-    int sel_hotkey = iw->hotkey_browser->value();
-    if (iw->hotkey_browser->selected(sel_hotkey)) {
-        for (int i = 1; i <= iw->hotkey_browser->size(); i++) {
-            if (iw->hotkey_browser->selected(i)) {
-                iw->context->config.km.reassign_hotkey(i-1, 0);
-            }
-        }
+    QList<QTableWidgetItem*> hotkeySelList = hotkeyTable->selectedItems();
+    for (auto item : hotkeySelList) {
+        int row = hotkeyTable->row(item);
+        context->config.km.default_hotkey(row);
+        updateHotkeyRow(row);
     }
 
-    int sel_input = iw->input_browser->value();
-    if (iw->input_browser->selected(sel_input)) {
-        for (int i = 1; i <= iw->input_browser->size(); i++) {
-            if (iw->input_browser->selected(i)) {
-                iw->context->config.km.reassign_input(i-1, 0);
-            }
-        }
+    QList<QTableWidgetItem*> inputSelList = inputTable->selectedItems();
+    for (auto item : inputSelList) {
+        int row = inputTable->row(item);
+        context->config.km.default_input(row);
+        updateInputRow(row);
     }
-
-    iw->update();
 }
 
-static void save_cb(Fl_Widget* w, void* v)
+void InputWindow::slotDisable()
 {
-    InputWindow* iw = (InputWindow*) v;
+    QList<QTableWidgetItem*> hotkeySelList = hotkeyTable->selectedItems();
+    for (auto item : hotkeySelList) {
+        int row = hotkeyTable->row(item);
+        context->config.km.reassign_hotkey(row, 0);
+        updateHotkeyRow(row);
+    }
 
+    QList<QTableWidgetItem*> inputSelList = inputTable->selectedItems();
+    for (auto item : inputSelList) {
+        int row = inputTable->row(item);
+        context->config.km.reassign_input(row, 0);
+        updateInputRow(row);
+    }
+}
+
+void InputWindow::slotSave()
+{
     /* TODO: Save mappings */
 
     /* Close window */
-    iw->window->hide();
-}
-
-static void cancel_cb(Fl_Widget* w, void* v)
-{
-    InputWindow* iw = (InputWindow*) v;
-
-    /* Close window */
-    iw->window->hide();
+    accept();
 }
