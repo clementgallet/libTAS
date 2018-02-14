@@ -44,7 +44,8 @@ class RamSearch {
         pid_t game_pid;
 
         template <class T>
-        void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value, Fl_Hor_Fill_Slider *search_progress)
+        // void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value, Fl_Hor_Fill_Slider *search_progress)
+        void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value)
         {
             game_pid = pid;
             ramwatches.clear();
@@ -77,8 +78,8 @@ class RamSearch {
                 total_size += section.size/sizeof(T);
             }
 
-            search_progress->show();
-            search_progress->bounds(0, total_size);
+            // search_progress->show();
+            // search_progress->bounds(0, total_size);
 
             /* Rewinding the ifstream */
             mapsfile.clear( );
@@ -102,10 +103,10 @@ class RamSearch {
                 std::unique_ptr<RamWatch<T>> watch(nullptr);
                 for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T)) {
 
-                    if (!(cur_size++ & 0xfff)) {
-                        search_progress->value(cur_size);
-                        Fl::flush();
-                    }
+                    // if (!(cur_size++ & 0xfff)) {
+                    //     search_progress->value(cur_size);
+                    //     Fl::flush();
+                    // }
 
                     if (! watch)
                         watch = std::unique_ptr<RamWatch<T>>(new RamWatch<T>(addr));
@@ -129,7 +130,7 @@ class RamSearch {
                 }
             }
 
-            search_progress->hide();
+            // search_progress->hide();
         }
 };
 

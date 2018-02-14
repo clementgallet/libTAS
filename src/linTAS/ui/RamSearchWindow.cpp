@@ -17,304 +17,317 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QTableView>
+#include <QPushButton>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+
+#include <QFormLayout>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QVBoxLayout>
+
 #include "RamSearchWindow.h"
-// #include "MainWindow.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm> // std::remove_if
-// #include <X11/XKBlib.h>
-// #include <FL/names.h>
-// #include <FL/x.H>
 #include "../ramsearch/CompareEnums.h"
 
-static Fl_Callback new_cb;
-static Fl_Callback search_cb;
-static Fl_Callback add_cb;
+// static Fl_Callback new_cb;
+// static Fl_Callback search_cb;
+// static Fl_Callback add_cb;
 
-RamSearchWindow::RamSearchWindow(Context* c) : context(c)
+RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(800, 700, "Ram Search");
+    setFixedSize(800, 700);
+    setWindowTitle("Ram Search");
 
     /* Table */
-    address_table = new RamSearchTable(&ram_search.ramwatches, 10, 10, 480, 630, "");
+    ramSearchView = new QTableView();
+    ramSearchView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ramSearchView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    ramSearchModel = new RamSearchModel(&ram_search.ramwatches);
+    ramSearchView->setModel(ramSearchModel);
+
 
     /* Progress bar */
-    search_progress = new Fl_Hor_Fill_Slider(10, 650, 480, 10);
-    search_progress->hide();
-    search_progress->selection_color(FL_BLUE);
-    search_progress->box(FL_THIN_DOWN_FRAME);
-    search_progress->slider(FL_FLAT_BOX);
+    // search_progress = new Fl_Hor_Fill_Slider(10, 650, 480, 10);
+    // search_progress->hide();
+    // search_progress->selection_color(FL_BLUE);
+    // search_progress->box(FL_THIN_DOWN_FRAME);
+    // search_progress->slider(FL_FLAT_BOX);
+    //
+    // watch_count = new Fl_Box(10, 670, 480, 30);
+    // watch_count->box(FL_NO_BOX);
+    // watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
-    watch_count = new Fl_Box(10, 670, 480, 30);
-    watch_count->box(FL_NO_BOX);
-    watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
-    config_pack = new Fl_Pack(510, 50, 280, 680, "");
-    config_pack->type(Fl_Pack::VERTICAL);
-    config_pack->spacing(30);
+    /* Memory regions */
+    memTextBox = new QCheckBox("Text");
+    memDataROBox = new QCheckBox("RO Data");
+    memDataRWBox = new QCheckBox("RW Data");
+    memBSSBox = new QCheckBox("BSS");
+    memHeapBox = new QCheckBox("Heap");
+    memFileMappingBox = new QCheckBox("File Mapping");
+    memAnonymousMappingROBox = new QCheckBox("Anon RO Mapping");
+    memAnonymousMappingRWBox = new QCheckBox("Anon RW Mapping");
+    memStackBox = new QCheckBox("Stack");
+    memSpecialBox = new QCheckBox("Special");
 
-    mem_pack = new Fl_Pack(0, 0, 280, 160, "Included Memory Regions");
-    mem_pack->type(Fl_Pack::HORIZONTAL);
-    mem_pack->box(FL_ENGRAVED_FRAME);
+    QGroupBox *memGroupBox = new QGroupBox(tr("Included Memory Regions"));
+    QGridLayout *memLayout = new QGridLayout;
+    memLayout->addWidget(memTextBox, 0, 0);
+    memLayout->addWidget(memDataROBox, 1, 0);
+    memLayout->addWidget(memDataRWBox, 2, 0);
+    memLayout->addWidget(memBSSBox, 3, 0);
+    memLayout->addWidget(memHeapBox, 4, 0);
+    memLayout->addWidget(memFileMappingBox, 0, 1);
+    memLayout->addWidget(memAnonymousMappingROBox, 1, 1);
+    memLayout->addWidget(memAnonymousMappingRWBox, 2, 1);
+    memLayout->addWidget(memStackBox, 3, 1);
+    memLayout->addWidget(memSpecialBox, 4, 1);
 
-    mem_col1 = new Fl_Pack(0, 0, 120, 160, "");
-    mem_col1->type(Fl_Pack::VERTICAL);
+    memGroupBox->setLayout(memLayout);
 
-    mem_text = new Fl_Check_Button(0, 0, 120, 30, "Text");
-    mem_data_ro = new Fl_Check_Button(0, 0, 120, 30, "RO Data");
-    mem_data_rw = new Fl_Check_Button(0, 0, 120, 30, "RW Data");
-    mem_bss = new Fl_Check_Button(0, 0, 120, 30, "BSS");
-    mem_heap = new Fl_Check_Button(0, 0, 120, 30, "Heap");
+    /* Comparisons */
+    comparePreviousButton = new QRadioButton("Unknown/Previous Value");
+    comparePreviousButton->setChecked(true);
+    compareValueButton = new QRadioButton("Specific Value:");
+    comparingValueBox = new QDoubleSpinBox();
 
-    mem_col1->end();
-    mem_col2 = new Fl_Pack(0, 0, 155, 160, "");
-    mem_col2->type(Fl_Pack::VERTICAL);
+    QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
+    QVBoxLayout *compareLayout = new QVBoxLayout;
+    compareLayout->addWidget(comparePreviousButton);
+    compareLayout->addWidget(compareValueButton);
+    compareLayout->addWidget(comparingValueBox);
+    compareGroupBox->setLayout(compareLayout);
 
-    mem_file_mapping = new Fl_Check_Button(0, 0, 155, 30, "File Mapping");
-    mem_anonymous_mapping_ro = new Fl_Check_Button(0, 0, 155, 30, "Anon RO Mapping");
-    mem_anonymous_mapping_rw = new Fl_Check_Button(0, 0, 155, 30, "Anon RW Mapping");
-    mem_stack = new Fl_Check_Button(0, 0, 155, 30, "Stack");
-    mem_special = new Fl_Check_Button(0, 0, 155, 30, "Special");
+    /* Operators */
+    operatorEqualButton = new QRadioButton("Equal To");
+    operatorNotEqualButton = new QRadioButton("Not Equal To");
+    operatorLessButton = new QRadioButton("Less Than");
+    operatorGreaterButton = new QRadioButton("Greater Than");
+    operatorLessEqualButton = new QRadioButton("Less Than Or Equal To");
+    operatorGreaterEqualButton = new QRadioButton("Greater Than Or Equal To");
 
-    mem_col2->end();
-    mem_pack->end();
+    QGroupBox *operatorGroupBox = new QGroupBox(tr("Comparison Operator"));
+    QVBoxLayout *operatorLayout = new QVBoxLayout;
+    operatorLayout->addWidget(operatorEqualButton);
+    operatorLayout->addWidget(operatorNotEqualButton);
+    operatorLayout->addWidget(operatorLessButton);
+    operatorLayout->addWidget(operatorGreaterButton);
+    operatorLayout->addWidget(operatorLessEqualButton);
+    operatorLayout->addWidget(operatorGreaterEqualButton);
+    operatorGroupBox->setLayout(operatorLayout);
 
-    compare_pack = new Fl_Pack(0, 0, 280, 100, "Compare To");
-    compare_pack->type(Fl_Pack::VERTICAL);
-    compare_pack->box(FL_ENGRAVED_FRAME);
+    /* Format */
+    typeBox = new QComboBox();
+    QStringList typeList;
+    typeList << "unsigned char" << "char" << "unsigned short" << "short";
+    typeList << "unsigned int" << "int" << "unsigned int64" << "int64";
+    typeList << "float" << "double";
+    typeBox->addItems(typeList);
 
-    compare_previous = new Fl_Radio_Round_Button(0, 0, 280, 30, "Unknown/Previous Value");
-    compare_previous->set();
+    displayBox = new QComboBox();
+    displayBox->addItem("Decimal");
+    displayBox->addItem("Hexadecimal");
 
-    compare_value = new Fl_Radio_Round_Button(0, 0, 280, 30, "Specific Value:");
-    comparing_value = new Fl_Float_Input(0, 0, 280, 30);
+    QGroupBox *formatGroupBox = new QGroupBox(tr("Format"));
+    QFormLayout *formatLayout = new QFormLayout;
+    formatLayout->addRow(new QLabel(tr("Type:")), typeBox);
+    formatLayout->addRow(new QLabel(tr("Display:")), displayBox);
+    formatGroupBox->setLayout(formatLayout);
 
-    compare_pack->end();
+    /* Buttons */
+    QPushButton *newButton = new QPushButton(tr("New"));
+    connect(newButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotNew);
 
-    operator_pack = new Fl_Pack(0, 0, 280, 200, "Comparison Operator");
-    operator_pack->type(Fl_Pack::VERTICAL);
-    operator_pack->align(FL_ALIGN_TOP_LEFT);
-    operator_pack->box(FL_ENGRAVED_FRAME);
+    QPushButton *searchButton = new QPushButton(tr("Search"));
+    connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
 
-    operator_equal = new Fl_Radio_Round_Button(0, 0, 280, 30, "Equal To");
-    operator_equal->set();
-    operator_not_equal = new Fl_Radio_Round_Button(0, 0, 280, 30, "Not Equal To");
-    operator_less = new Fl_Radio_Round_Button(0, 0, 280, 30, "Less Than");
-    operator_greater = new Fl_Radio_Round_Button(0, 0, 280, 30, "Greater Than");
-    operator_less_equal = new Fl_Radio_Round_Button(0, 0, 280, 30, "Less Than Or Equal To");
-    operator_greater_equal = new Fl_Radio_Round_Button(0, 0, 280, 30, "Greater Than Or Equal To");
+    QPushButton *addButton = new QPushButton(tr("Add Watch"));
+    connect(addButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotAdd);
 
-    operator_pack->end();
+    QDialogButtonBox *buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(newButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(searchButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(addButton, QDialogButtonBox::ActionRole);
 
-    type_pack = new Fl_Pack(0, 0, 280, 30);
-    type_pack->type(Fl_Pack::HORIZONTAL);
+    /* Create the options layout */
+    QVBoxLayout *optionLayout = new QVBoxLayout;
+    optionLayout->addWidget(memGroupBox);
+    optionLayout->addWidget(compareGroupBox);
+    optionLayout->addWidget(operatorGroupBox);
+    optionLayout->addWidget(formatGroupBox);
+    optionLayout->addWidget(buttonBox);
 
-    type_choice = new Fl_Choice(0, 0, 160, 30, "Type");
-    type_choice->align(FL_ALIGN_TOP_LEFT);
-    type_choice->menu(type_items);
+    /* Create the main layout */
+    QHBoxLayout *mainLayout = new QHBoxLayout;
 
-    display_choice = new Fl_Choice(0, 0, 120, 30, "Display");
-    display_choice->align(FL_ALIGN_TOP_LEFT);
-    display_choice->menu(display_items);
+    mainLayout->addWidget(ramSearchView);
+    mainLayout->addLayout(optionLayout);
 
-    type_pack->end();
-
-    config_pack->end();
-
-    new_button = new Fl_Button(510, 650, 70, 30, "New");
-    new_button->callback(new_cb, this);
-
-    search_button = new Fl_Button(600, 650, 70, 30, "Search");
-    search_button->callback(search_cb, this);
-
-    add_button = new Fl_Button(690, 650, 90, 30, "Add Watch");
-    add_button->callback(add_cb, this);
-
-    window->end();
+    setLayout(mainLayout);
 }
-
-Fl_Menu_Item RamSearchWindow::type_items[] = {
-    {"unsigned char"},
-    {"char"},
-    {"unsigned short"},
-    {"short"},
-    {"unsigned int"},
-    {"int"},
-    {"unsigned int64"},
-    {"int64"},
-    {"float"},
-    {"double"},
-    {nullptr}
-};
-
-Fl_Menu_Item RamSearchWindow::display_items[] = {
-    {"Decimal"},
-    {"Hexadecimal"},
-    {nullptr}
-};
 
 void RamSearchWindow::update()
 {
-    /* This is just to trigger a table redraw */
-    address_table->cols(3);
+    ramSearchModel->update();
 }
 
-static void get_compare_parameters(RamSearchWindow* rsw, CompareType& compare_type, CompareOperator& compare_operator, double& compare_value)
+void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value)
 {
     compare_type = CompareType::Previous;
-    if (rsw->compare_value->value()) {
+    if (compareValueButton->isChecked()) {
         compare_type = CompareType::Value;
-        compare_value = strtod(rsw->comparing_value->value(), nullptr);
+        compare_value = comparingValueBox->value();
     }
 
     compare_operator = CompareOperator::Equal;
-    if (rsw->operator_not_equal->value())
+    if (operatorNotEqualButton->isChecked())
         compare_operator = CompareOperator::NotEqual;
-    if (rsw->operator_less->value())
+    if (operatorLessButton->isChecked())
         compare_operator = CompareOperator::Less;
-    if (rsw->operator_greater->value())
+    if (operatorGreaterButton->isChecked())
         compare_operator = CompareOperator::Greater;
-    if (rsw->operator_less_equal->value())
+    if (operatorLessEqualButton->isChecked())
         compare_operator = CompareOperator::LessEqual;
-    if (rsw->operator_greater_equal->value())
+    if (operatorGreaterEqualButton->isChecked())
         compare_operator = CompareOperator::GreaterEqual;
 }
 
-static void new_cb(Fl_Widget* w, void* v)
+void RamSearchWindow::slotNew()
 {
-    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
-
     /* Build the memory region flag variable */
     int memregions = 0;
-    if (rsw->mem_text->value())
+    if (memTextBox->isChecked())
         memregions |= MemSection::MemText;
-    if (rsw->mem_data_ro->value())
+    if (memDataROBox->isChecked())
         memregions |= MemSection::MemDataRO;
-    if (rsw->mem_data_rw->value())
+    if (memDataRWBox->isChecked())
         memregions |= MemSection::MemDataRW;
-    if (rsw->mem_bss->value())
+    if (memBSSBox->isChecked())
         memregions |= MemSection::MemBSS;
-    if (rsw->mem_heap->value())
+    if (memHeapBox->isChecked())
         memregions |= MemSection::MemHeap;
-    if (rsw->mem_file_mapping->value())
+    if (memFileMappingBox->isChecked())
         memregions |= MemSection::MemFileMapping;
-    if (rsw->mem_anonymous_mapping_ro->value())
+    if (memAnonymousMappingROBox->isChecked())
         memregions |= MemSection::MemAnonymousMappingRO;
-    if (rsw->mem_anonymous_mapping_rw->value())
+    if (memAnonymousMappingRWBox->isChecked())
         memregions |= MemSection::MemAnonymousMappingRW;
-    if (rsw->mem_stack->value())
+    if (memStackBox->isChecked())
         memregions |= MemSection::MemStack;
-    if (rsw->mem_special->value())
+    if (memSpecialBox->isChecked())
         memregions |= MemSection::MemSpecial;
 
     /* Get the comparison parameters */
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
-    get_compare_parameters(rsw, compare_type, compare_operator, compare_value);
+    getCompareParameters(compare_type, compare_operator, compare_value);
 
     /* Call the RamSearch new function using the right type as template */
-    switch (rsw->type_choice->value()) {
+    switch (typeBox->currentIndex()) {
         case 0:
-            rsw->ram_search.new_watches<unsigned char>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<unsigned char>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 1:
-            rsw->ram_search.new_watches<char>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<char>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 2:
-            rsw->ram_search.new_watches<unsigned short>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<unsigned short>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 3:
-            rsw->ram_search.new_watches<short>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<short>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 4:
-            rsw->ram_search.new_watches<unsigned int>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<unsigned int>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 5:
-            rsw->ram_search.new_watches<int>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<int>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 6:
-            rsw->ram_search.new_watches<int64_t>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<int64_t>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 7:
-            rsw->ram_search.new_watches<uint64_t>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<uint64_t>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 8:
-            rsw->ram_search.new_watches<float>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<float>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
         case 9:
-            rsw->ram_search.new_watches<double>(rsw->context->game_pid, memregions, compare_type, compare_operator, compare_value, rsw->search_progress);
+            ram_search.new_watches<double>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
             break;
     }
 
-    rsw->address_table->hex = (rsw->display_choice->value() == 1);
-    rsw->address_table->rows(rsw->ram_search.ramwatches.size());
+    ramSearchModel->hex = (displayBox->currentIndex() == 1);
+    ramSearchModel->update();
 
     /* Update address count */
-    std::ostringstream oss;
-    oss << rsw->ram_search.ramwatches.size();
-    oss << " addresses";
-    rsw->watch_count->copy_label(oss.str().c_str());
+    // std::ostringstream oss;
+    // oss << ram_search.ramwatches.size();
+    // oss << " addresses";
+    // watch_count->copy_label(oss.str().c_str());
 }
 
-static void search_cb(Fl_Widget* w, void* v)
+void RamSearchWindow::slotSearch()
 {
-    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
-
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
-    get_compare_parameters(rsw, compare_type, compare_operator, compare_value);
+    getCompareParameters(compare_type, compare_operator, compare_value);
 
-    rsw->search_progress->show();
-    rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
+    // rsw->search_progress->show();
+    // rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
 
     /* Update the previous_value attribute of each RamWatch object in the vector,
      * and remove objects from the vector where the search condition returns false.
      */
     int num = 0;
-    rsw->ram_search.ramwatches.erase(
-        std::remove_if(rsw->ram_search.ramwatches.begin(), rsw->ram_search.ramwatches.end(),
-            [&compare_type, &compare_operator, &compare_value, &num, &rsw] (std::unique_ptr<IRamWatch> &watch) {
-                if (!(num++ & 0xfff)) {
-                    rsw->search_progress->value(num);
-                    Fl::flush();
-                }
+    ram_search.ramwatches.erase(
+        std::remove_if(ram_search.ramwatches.begin(), ram_search.ramwatches.end(),
+            [&compare_type, &compare_operator, &compare_value, &num] (std::unique_ptr<IRamWatch> &watch) {
+                // if (!(num++ & 0xfff)) {
+                //     rsw->search_progress->value(num);
+                //     Fl::flush();
+                // }
                 return watch->check_update(compare_type, compare_operator, compare_value);
             }),
-        rsw->ram_search.ramwatches.end());
+        ram_search.ramwatches.end());
 
-    rsw->search_progress->hide();
+    // rsw->search_progress->hide();
 
     /* Update table parameters */
-    rsw->address_table->hex = (rsw->display_choice->value() == 1);
-    rsw->address_table->compare_type = compare_type;
-    rsw->address_table->compare_operator = compare_operator;
-    rsw->address_table->compare_value_db = compare_value;
-    rsw->address_table->rows(rsw->ram_search.ramwatches.size());
+    ramSearchModel->hex = (displayBox->currentIndex() == 1);
+    ramSearchModel->compare_type = compare_type;
+    ramSearchModel->compare_operator = compare_operator;
+    ramSearchModel->compare_value_db = compare_value;
+    ramSearchModel->update();
+    // ramSearchModel->rows(rsw->ram_search.ramwatches.size());
 
     /* Update address count */
-    std::ostringstream oss;
-    oss << rsw->ram_search.ramwatches.size();
-    oss << " adresses";
-    rsw->watch_count->copy_label(oss.str().c_str());
+    // std::ostringstream oss;
+    // oss << rsw->ram_search.ramwatches.size();
+    // oss << " adresses";
+    // rsw->watch_count->copy_label(oss.str().c_str());
 }
 
-void add_cb(Fl_Widget* w, void* v)
+void RamSearchWindow::slotAdd()
 {
-    RamSearchWindow* rsw = static_cast<RamSearchWindow*>(v);
-
-    int r;
-    for (r=0; r<rsw->address_table->rows(); r++) {
-        if (rsw->address_table->row_selected(r)) {
-            break;
-        }
-    }
+    const QModelIndex index = ramSearchView->selectionModel()->currentIndex();
+    ramSearchView->selectionModel()->clear();
 
     /* If no watch was selected, return */
-    if (r == rsw->address_table->rows())
+    if (!index.isValid())
         return;
 
+    int row = index.row();
+
+    /* TODO! */
     /* Fill the watch edit window with parameters from the selected watch */
     // MainWindow& mw = MainWindow::getInstance();
     // mw.ramwatch_window->edit_window->fill(rsw->ram_search.ramwatches.at(r));

@@ -17,23 +17,40 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_RAMWATCHMODEL_H_INCLUDED
-#define LINTAS_RAMWATCHMODEL_H_INCLUDED
+#ifndef LINTAS_RAMSEARCHMODEL_H_INCLUDED
+#define LINTAS_RAMSEARCHMODEL_H_INCLUDED
 
 #include <QAbstractTableModel>
 #include <vector>
 #include <memory>
 
-#include "../ramsearch/IRamWatchDetailed.h"
+#include "../ramsearch/IRamWatch.h"
+#include "../ramsearch/CompareEnums.h"
 
-class RamWatchModel : public QAbstractTableModel {
+// #include <FL/Fl.H>
+// #include <FL/Fl_Double_Window.H>
+// #include <FL/Fl_Table_Row.H>
+
+class RamSearchModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    RamWatchModel(QObject *parent = Q_NULLPTR);
+    RamSearchModel(std::vector<std::unique_ptr<IRamWatch>> *ramwatches, QObject *parent = Q_NULLPTR);
+    void update();
 
+    /* Flag if we display values in hex or decimal */
+    bool hex;
+
+    /* Comparison parameters so that we can display with addresses would be
+     * removed by the search */
+    CompareType compare_type;
+    CompareOperator compare_operator;
+    double compare_value_db;
+
+private:
     /* A reference to the vector of addresses to watch */
-    std::vector<std::unique_ptr<IRamWatchDetailed>> ramwatches;
+    std::vector<std::unique_ptr<IRamWatch>> *ramwatches;
+
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -43,7 +60,6 @@ public:
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    void update();
 };
 
 #endif

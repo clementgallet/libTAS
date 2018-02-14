@@ -676,14 +676,14 @@ void MainWindow::update_fps(float fps, float lfps)
 void MainWindow::update_ramsearch()
 {
     /* This function is called by another thread */
-    Fl::lock();
+    // Fl::lock();
 
-    if (ramsearch_window->window->shown()) {
+    if (ramsearch_window->isVisible()) {
         ramsearch_window->update();
     }
 
-    Fl::unlock();
-    Fl::awake();
+    // Fl::unlock();
+    // Fl::awake();
 }
 
 void MainWindow::update_ramwatch()
@@ -1047,11 +1047,7 @@ void config_input_cb(Fl_Widget* w, void*)
 void ram_search_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
-    mw.ramsearch_window->window->show();
-
-    while (mw.ramsearch_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.ramsearch_window->exec();
 }
 
 void ram_watch_cb(Fl_Widget* w, void*)
