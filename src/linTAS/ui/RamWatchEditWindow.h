@@ -20,49 +20,35 @@
 #ifndef LINTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 #define LINTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Pack.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Int_Input.H>
+#include <QDialog>
+#include <QLineEdit>
+#include <QComboBox>
+#include <memory> // std::unique_ptr
 
-// #include <X11/Xlib.h>
-// #include "../Context.h"
 #include "../ramsearch/IRamWatch.h"
 #include "../ramsearch/IRamWatchDetailed.h"
-#include <memory>
 
-class RamWatchEditWindow {
-    public:
-        RamWatchEditWindow();
-        // Context *context;
-        // RamSearch ram_search;
+class RamWatchEditWindow : public QDialog {
+    Q_OBJECT
 
-        std::unique_ptr<IRamWatchDetailed> ramwatch;
+public:
+    RamWatchEditWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-        Fl_Double_Window *window;
+    void fill(std::unique_ptr<IRamWatchDetailed> &watch);
+    void fill(std::unique_ptr<IRamWatch> &watch);
+    void update();
 
-        Fl_Pack *edit_pack;
+    std::unique_ptr<IRamWatchDetailed> ramwatch;
 
-        Fl_Int_Input *address_input;
-        Fl_Input *label_input;
+private:
+    QLineEdit *addressInput;
+    QLineEdit *labelInput;
 
-        Fl_Choice *type_choice;
-        static Fl_Menu_Item type_items[];
-        Fl_Choice *display_choice;
-        static Fl_Menu_Item display_items[];
+    QComboBox *typeBox;
+    QComboBox *displayBox;
 
-        Fl_Pack *button_pack;
-
-        Fl_Button *save_button;
-        Fl_Button *cancel_button;
-
-        void fill(std::unique_ptr<IRamWatchDetailed> &watch);
-        void fill(std::unique_ptr<IRamWatch> &watch);
-        void update();
+private slots:
+    void slotSave();
 };
 
 #endif

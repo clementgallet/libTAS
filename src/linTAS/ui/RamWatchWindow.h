@@ -20,41 +20,34 @@
 #ifndef LINTAS_RAMWATCHWINDOW_H_INCLUDED
 #define LINTAS_RAMWATCHWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Pack.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Float_Input.H>
-#include <FL/Fl_Hor_Fill_Slider.H>
-
-#include "RamWatchTable.h"
-#include "RamWatchEditWindow.h"
-
-// #include <X11/Xlib.h>
-#include "../Context.h"
-// #include "../ramsearch/RamSearch.h"
+#include <QDialog>
+#include <QTableView>
 #include <memory>
 
-class RamWatchWindow {
-    public:
-        RamWatchWindow(Context *c);
-        Context *context;
-        // RamSearch ram_search;
+#include "RamWatchModel.h"
+#include "RamWatchEditWindow.h"
+#include "../Context.h"
 
-        Fl_Double_Window *window;
-        RamWatchEditWindow *edit_window;
+class RamWatchWindow : public QDialog {
+    Q_OBJECT
 
-        RamWatchTable *watch_table;
+public:
+    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    void update();
 
-        Fl_Button *add_watch;
-        Fl_Button *edit_watch;
-        Fl_Button *remove_watch;
+private:
+    Context *context;
 
-        void update();
+    RamWatchEditWindow *editWindow;
+
+    QTableView *ramWatchView;
+    RamWatchModel *ramWatchModel;
+
+private slots:
+    void slotAdd();
+    void slotEdit();
+    void slotRemove();
+
 };
 
 #endif

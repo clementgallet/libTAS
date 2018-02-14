@@ -17,25 +17,33 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_RAMWATCHTABLE_H_INCLUDED
-#define LINTAS_RAMWATCHTABLE_H_INCLUDED
+#ifndef LINTAS_RAMWATCHMODEL_H_INCLUDED
+#define LINTAS_RAMWATCHMODEL_H_INCLUDED
+
+#include <QAbstractTableModel>
 
 #include "../ramsearch/IRamWatchDetailed.h"
-
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Table_Row.H>
 #include <vector>
 #include <memory>
 
-class RamWatchTable : public Fl_Table_Row {
-    public:
-        /* A reference to the vector of addresses to watch */
-        std::vector<std::unique_ptr<IRamWatchDetailed>> ramwatches;
+class RamWatchModel : public QAbstractTableModel {
+    Q_OBJECT
 
-        RamWatchTable(int X, int Y, int W, int H, const char *l=0);
-        void draw_cell (TableContext context, int R=0, int C=0, int X=0, int Y=0, int W=0, int H=0);
-        void update();
+public:
+    RamWatchModel(QObject *parent = Q_NULLPTR);
+
+    /* A reference to the vector of addresses to watch */
+    std::vector<std::unique_ptr<IRamWatchDetailed>> ramwatches;
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+    void update();
 };
 
 #endif

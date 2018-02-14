@@ -22,29 +22,13 @@
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QStringList>
-#include <QStringList>
-#include <QStringList>
-#include <QStringList>
-#include <QStringList>
-#include <QStringList>
 
 #include "InputWindow.h"
 #include <iostream>
-// #include <X11/XKBlib.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
-// #include <FL/names.h>
-// #include <FL/x.H>
-// #include <iostream>
 
 static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers);
-// static Fl_Callback select_cb;
-// static Fl_Callback assign_cb;
-// static Fl_Callback default_cb;
-// static Fl_Callback disable_cb;
-// static Fl_Callback save_cb;
-// static Fl_Callback cancel_cb;
 
 InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
@@ -58,24 +42,11 @@ InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : Q
     hotkeyTable->setHorizontalHeaderLabels(hotkeyHeader);
     connect(hotkeyTable, &QTableWidget::itemSelectionChanged, this, &InputWindow::slotSelect);
 
-    // hotkey_browser = new Fl_Multi_Browser(10, 10, 350, 400, "Hotkeys");
-    // hotkey_browser->callback(select_cb, this);
-
     inputTable = new QTableWidget(context->config.km.input_list.size(), 2, this);
     QStringList inputHeader;
     inputHeader << "Hotkey" << "Mapping";
     inputTable->setHorizontalHeaderLabels(inputHeader);
     connect(inputTable, &QTableWidget::itemSelectionChanged, this, &InputWindow::slotSelect);
-
-    // input_browser = new Fl_Multi_Browser(400, 10, 350, 400, "Inputs");
-    // input_browser->callback(select_cb, this);
-
-    /* Set two columns */
-    // static int col_width[] = {220, 130, 0};
-    // hotkey_browser->column_widths(col_width);
-    // hotkey_browser->column_char('\t');
-    // input_browser->column_widths(col_width);
-    // input_browser->column_char('\t');
 
     /* Fill hotkey list */
     int r = 0;

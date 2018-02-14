@@ -18,7 +18,7 @@
  */
 
 #include "RamSearchWindow.h"
-#include "MainWindow.h"
+// #include "MainWindow.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm> // std::remove_if
@@ -316,18 +316,18 @@ void add_cb(Fl_Widget* w, void* v)
         return;
 
     /* Fill the watch edit window with parameters from the selected watch */
-    MainWindow& mw = MainWindow::getInstance();
-    mw.ramwatch_window->edit_window->fill(rsw->ram_search.ramwatches.at(r));
-
-    mw.ramwatch_window->edit_window->window->show();
-
-    while (mw.ramwatch_window->edit_window->window->shown()) {
-        Fl::wait();
-    }
-
-    if (mw.ramwatch_window->edit_window->ramwatch) {
-        mw.ramwatch_window->edit_window->ramwatch->game_pid = rsw->context->game_pid;
-        mw.ramwatch_window->watch_table->ramwatches.push_back(std::move(mw.ramwatch_window->edit_window->ramwatch));
-        mw.ramwatch_window->watch_table->update();
-    }
+    // MainWindow& mw = MainWindow::getInstance();
+    // mw.ramwatch_window->edit_window->fill(rsw->ram_search.ramwatches.at(r));
+    //
+    // mw.ramwatch_window->edit_window->window->show();
+    //
+    // while (mw.ramwatch_window->edit_window->window->shown()) {
+    //     Fl::wait();
+    // }
+    //
+    // if (mw.ramwatch_window->edit_window->ramwatch) {
+    //     mw.ramwatch_window->edit_window->ramwatch->game_pid = rsw->context->game_pid;
+    //     mw.ramwatch_window->watch_table->ramwatches.push_back(std::move(mw.ramwatch_window->edit_window->ramwatch));
+    //     mw.ramwatch_window->watch_table->update();
+    // }
 }

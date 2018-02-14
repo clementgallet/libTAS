@@ -17,105 +17,103 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QTableView>
+#include <QPushButton>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+// #include <iostream>
+// #include <sstream>
+
 #include "RamWatchWindow.h"
-// #include "MainWindow.h"
-#include <iostream>
-#include <sstream>
-#include <algorithm> // std::remove_if
-// #include <X11/XKBlib.h>
-// #include <FL/names.h>
-// #include <FL/x.H>
-// #include "../ramsearch/CompareEnums.h"
 
-static Fl_Callback add_cb;
-static Fl_Callback edit_cb;
-static Fl_Callback remove_cb;
-
-RamWatchWindow::RamWatchWindow(Context* c) : context(c)
+RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    window = new Fl_Double_Window(500, 700, "Ram Watch");
+    setFixedSize(500, 700);
+    setWindowTitle("Ram Watch");
 
     /* Table */
-    watch_table = new RamWatchTable(10, 10, 480, 630, "");
+    ramWatchView = new QTableView();
+    ramWatchView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ramWatchView->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    add_watch = new Fl_Button(10, 650, 120, 30, "Add Watch");
-    add_watch->callback(add_cb, this);
+    ramWatchModel = new RamWatchModel();
+    ramWatchView->setModel(ramWatchModel);
 
-    edit_watch = new Fl_Button(170, 650, 120, 30, "Edit Watch");
-    edit_watch->callback(edit_cb, this);
+    /* Buttons */
+    QPushButton *addWatch = new QPushButton(tr("Add Watch"));
+    connect(addWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotAdd);
 
-    remove_watch = new Fl_Button(330, 650, 120, 30, "Remove Watch");
-    remove_watch->callback(remove_cb, this);
+    QPushButton *editWatch = new QPushButton(tr("Edit Watch"));
+    connect(editWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotEdit);
 
-    window->end();
+    QPushButton *removeWatch = new QPushButton(tr("Remove Watch"));
+    connect(removeWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotRemove);
 
-    edit_window = new RamWatchEditWindow();
+    QDialogButtonBox *buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(addWatch, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(editWatch, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(removeWatch, QDialogButtonBox::ActionRole);
+
+    /* Create the main layout */
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    mainLayout->addWidget(ramWatchView);
+    mainLayout->addWidget(buttonBox);
+
+    setLayout(mainLayout);
+
+    editWindow = new RamWatchEditWindow();
 }
 
 void RamWatchWindow::update()
 {
-    watch_table->update();
+    ramWatchModel->update();
 }
 
-void add_cb(Fl_Widget* w, void* v)
+void RamWatchWindow::slotAdd()
 {
-    RamWatchWindow* rww = static_cast<RamWatchWindow*>(v);
-    rww->edit_window->window->show();
+    editWindow->exec();
 
-    while (rww->edit_window->window->shown()) {
-        Fl::wait();
-    }
-
-    if (rww->edit_window->ramwatch) {
-        rww->edit_window->ramwatch->game_pid = rww->context->game_pid;
-        rww->watch_table->ramwatches.push_back(std::move(rww->edit_window->ramwatch));
-        rww->watch_table->update();
+    if (editWindow->ramwatch) {
+        editWindow->ramwatch->game_pid = context->game_pid;
+        ramWatchModel->ramwatches.push_back(std::move(editWindow->ramwatch));
+        ramWatchModel->update();
     }
 }
 
-void edit_cb(Fl_Widget* w, void* v)
+void RamWatchWindow::slotEdit()
 {
-    RamWatchWindow* rww = static_cast<RamWatchWindow*>(v);
-
-    int r;
-    for (r=0; r<rww->watch_table->rows(); r++) {
-        if (rww->watch_table->row_selected(r)) {
-            /* Fill the watch edit window accordingly */
-            rww->edit_window->fill(rww->watch_table->ramwatches.at(r));
-            break;
-        }
-    }
+    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
 
     /* If no watch was selected, return */
-    if (r == rww->watch_table->rows())
+    if (!index.isValid())
         return;
 
-    rww->edit_window->window->show();
+    int row = index.row();
 
-    while (rww->edit_window->window->shown()) {
-        Fl::wait();
-    }
+    /* Fill and show the watch edit window */
+    editWindow->fill(ramWatchModel->ramwatches.at(row));
+    editWindow->exec();
 
-    if (rww->edit_window->ramwatch) {
-        rww->edit_window->ramwatch->game_pid = rww->context->game_pid;
-        /* Replace the smart pointer object */
-        rww->watch_table->ramwatches[r] = std::move(rww->edit_window->ramwatch);
-
-//        selected_watch = rww->edit_window->ramwatch;
-        rww->watch_table->update();
+    /* Modify the watch */
+    if (editWindow->ramwatch) {
+        editWindow->ramwatch->game_pid = context->game_pid;
+        ramWatchModel->ramwatches[row] = std::move(editWindow->ramwatch);
+        ramWatchModel->update();
     }
 }
 
-
-void remove_cb(Fl_Widget* w, void* v)
+void RamWatchWindow::slotRemove()
 {
-    RamWatchWindow* rww = static_cast<RamWatchWindow*>(v);
+    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
+    ramWatchView->selectionModel()->clear();
 
-    for (int r=rww->watch_table->rows() - 1; r>=0; r--) {
-        if (rww->watch_table->row_selected(r)) {
-            rww->watch_table->ramwatches.erase(rww->watch_table->ramwatches.begin() + r);
-        }
-    }
+    /* If no watch was selected, return */
+    if (!index.isValid())
+        return;
 
-    rww->watch_table->select_all_rows(0);
+    int row = index.row();
+
+    ramWatchModel->ramwatches.erase(ramWatchModel->ramwatches.begin() + row);
+    ramWatchModel->update();
 }

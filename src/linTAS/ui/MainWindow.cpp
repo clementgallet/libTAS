@@ -689,14 +689,14 @@ void MainWindow::update_ramsearch()
 void MainWindow::update_ramwatch()
 {
     /* This function is called by another thread */
-    Fl::lock();
+    // Fl::lock();
 
-    if (ramwatch_window->window->shown()) {
+    if (ramwatch_window->isVisible()) {
         ramwatch_window->update();
     }
 
-    Fl::unlock();
-    Fl::awake();
+    // Fl::unlock();
+    // Fl::awake();
 }
 
 void MainWindow::update_config()
@@ -1041,11 +1041,7 @@ void config_input_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
     mw.input_window->update();
-    mw.input_window->window->show();
-
-    while (mw.input_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.input_window->exec();
 }
 
 void ram_search_cb(Fl_Widget* w, void*)
@@ -1061,11 +1057,7 @@ void ram_search_cb(Fl_Widget* w, void*)
 void ram_watch_cb(Fl_Widget* w, void*)
 {
     MainWindow& mw = MainWindow::getInstance();
-    mw.ramwatch_window->window->show();
-
-    while (mw.ramwatch_window->window->shown()) {
-        Fl::wait();
-    }
+    mw.ramwatch_window->exec();
 }
 
 void controller_inputs_cb(Fl_Widget* w, void*)
