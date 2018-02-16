@@ -52,14 +52,14 @@ InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : Q
     /* Fill hotkey list */
     int r = 0;
     for (auto iter : context->config.km.hotkey_list) {
-        hotkeyTable->setItem(r++, 0, new QTableWidgetItem(iter.description.c_str()));
+        hotkeyTable->setItem(r, 0, new QTableWidgetItem(iter.description.c_str()));
         hotkeyTable->setItem(r++, 1, new QTableWidgetItem());
     }
 
     /* Fill input list */
     r = 0;
     for (auto iter : context->config.km.input_list) {
-        inputTable->setItem(r++, 0, new QTableWidgetItem(iter.description.c_str()));
+        inputTable->setItem(r, 0, new QTableWidgetItem(iter.description.c_str()));
         inputTable->setItem(r++, 1, new QTableWidgetItem());
     }
 

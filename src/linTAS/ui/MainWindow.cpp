@@ -47,6 +47,17 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
 
+    /* Create other windows */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+    encodeWindow = new EncodeWindow(c, this);
+#endif
+    inputWindow = new InputWindow(c, this);
+    executableWindow = new ExecutableWindow(c, this);
+    // controllerWindow = new ControllerWindow(c, this);
+    gameInfoWindow = new GameInfoWindow(c, this);
+    ramSearchWindow = new RamSearchWindow(c, this);
+    ramWatchWindow = new RamWatchWindow(c, this);
+
     /* Menu */
     createActions();
     createMenus();
@@ -55,7 +66,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     moviePath = new QLineEdit();
     moviePath->setReadOnly(true);
 
-    QLabel *movieLabel = new QLabel("Movie File");
+    // QLabel *movieLabel = new QLabel("Movie File");
 
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
@@ -124,7 +135,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(launchGdbButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
     disabledWidgetsOnStart.append(launchGdbButton);
 
-    QPushButton *stopButton = new QPushButton(tr("Stop"));
+    stopButton = new QPushButton(tr("Stop"));
     connect(stopButton, &QAbstractButton::clicked, this, &MainWindow::slotStop);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
@@ -135,16 +146,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     updateUIFromConfig();
 
-
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    encodeWindow = new EncodeWindow(c, this);
-#endif
-    inputWindow = new InputWindow(c, this);
-    executableWindow = new ExecutableWindow(c, this);
-    // controllerWindow = new ControllerWindow(c, this);
-    gameInfoWindow = new GameInfoWindow(c, this);
-    ramSearchWindow = new RamSearchWindow(c, this);
-    ramWatchWindow = new RamWatchWindow(c, this);
 
     // context->ui_window = fl_xid(window);
 }
@@ -158,11 +159,11 @@ MainWindow::~MainWindow()
 /* We are going to do this a lot, so this is a helper function to insert
  * checkable actions into an action group with data.
  */
-void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data)
+void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata)
 {
     QAction *action = group->addAction(text);
     action->setCheckable(true);
-    action->setData(data);
+    action->setData(qdata);
 }
 
 void MainWindow::createActions()
@@ -250,6 +251,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingOutputGroup, tr("Log to file"), SharedConfig::LOGGING_TO_FILE);
 
     loggingPrintGroup = new QActionGroup(this);
+    loggingPrintGroup->setExclusive(false);
     connect(loggingPrintGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingPrint);
 
     addActionCheckable(loggingPrintGroup, tr("Untested"), LCF_UNTESTED);
@@ -284,6 +286,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingPrintGroup, tr("Timers"), LCF_TIMERS);
 
     loggingExcludeGroup = new QActionGroup(this);
+    loggingExcludeGroup->setExclusive(false);
     connect(loggingExcludeGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingExclude);
 
     addActionCheckable(loggingExcludeGroup, tr("Untested"), LCF_UNTESTED);
