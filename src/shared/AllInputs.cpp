@@ -20,7 +20,7 @@
 #include "AllInputs.h"
 #include <linux/input.h>
 #include <SDL2/SDL_gamecontroller.h>
-
+#include <X11/keysym.h>
 
 void AllInputs::emptyInputs() {
     int i,j;

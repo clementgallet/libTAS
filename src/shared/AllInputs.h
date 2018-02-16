@@ -20,8 +20,8 @@
 #ifndef LIBTAS_ALLINPUTS_H_INCLUDED
 #define LIBTAS_ALLINPUTS_H_INCLUDED
 
-#include <X11/Xlib.h> // For the KeySym type
-#include <X11/keysym.h>
+// #include <X11/Xlib.h> // For the KeySym type
+#include <X11/X.h> // For the KeySym type
 #include <array>
 
 /* Input structure that is filled by linTAS and send to libTAS every frame

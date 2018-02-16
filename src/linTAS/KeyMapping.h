@@ -24,7 +24,7 @@
 #include "../shared/SharedConfig.h"
 #include <xcb/xcb.h>
 // #include <X11/Xlib.h>
-// #include <X11/keysym.h>
+#include <X11/keysym.h>
 #include <map>
 #include <vector>
 #include <array>

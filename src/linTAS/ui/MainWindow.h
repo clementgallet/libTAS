@@ -78,7 +78,8 @@ public:
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;
 
-    std::forward_list<QWidget*> disableOnStart;
+    QList<QWidget*> disabledWidgetsOnStart;
+    QList<QAction*> disabledActionsOnStart;
 
     QActionGroup *movieEndGroup;
     QAction *renderSoftAction;

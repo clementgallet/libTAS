@@ -19,6 +19,7 @@
 
 #include <QFileDialog>
 #include <QMenu>
+#include <QMenuBar>
 #include <QMessageBox>
 #include <QDialogButtonBox>
 
@@ -36,9 +37,12 @@
 // #include <iomanip> // setprecision
 // #include <sstream> // ostringstream
 
-MainWindow::MainWindow(Context* c) : context(c)
+MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
     setFixedSize(600, 500);
+
+    QWidget *widget = new QWidget;
+    setCentralWidget(widget);
 
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
@@ -55,11 +59,11 @@ MainWindow::MainWindow(Context* c) : context(c)
 
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
-    disableOnStart.push_front(browseMoviePath);
+    disabledWidgetsOnStart.append(browseMoviePath);
 
     movieNo = new QRadioButton("No Movie");
     connect(movieNo, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
-    disableOnStart.push_front(movieNo);
+    disabledWidgetsOnStart.append(movieNo);
     movieRecording = new QRadioButton("Recording");
     connect(movieRecording, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
     moviePlayback = new QRadioButton("Playback");
@@ -68,15 +72,15 @@ MainWindow::MainWindow(Context* c) : context(c)
     /* Frame count */
     frameCount = new QSpinBox();
     frameCount->setReadOnly(true);
-    movieFrameFount = new QSpinBox();
-    movieFrameFount->setReadOnly(true);
+    movieFrameCount = new QSpinBox();
+    movieFrameCount->setReadOnly(true);
 
     /* Current/movie length */
     movieLength = new QLabel("Current Time: - / -");
 
     /* Frames per second */
     logicalFps = new QSpinBox();
-    disableOnStart.push_front(logicalFps);
+    disabledWidgetsOnStart.append(logicalFps);
 
     fpsValues = new QLabel("Current FPS: - / -");
 
@@ -87,8 +91,8 @@ MainWindow::MainWindow(Context* c) : context(c)
     /* Initial time */
     initialTimeSec = new QSpinBox();
     initialTimeNsec = new QSpinBox();
-    disableOnStart.push_front(initialTimeSec);
-    disableOnStart.push_front(initialTimeNsec);
+    disabledWidgetsOnStart.append(initialTimeSec);
+    disabledWidgetsOnStart.append(initialTimeNsec);
 
     /* Pause/FF */
     pauseCheck = new QCheckBox("Pause");
@@ -102,23 +106,23 @@ MainWindow::MainWindow(Context* c) : context(c)
 
     browseGamePath = new QPushButton("Browse...");
     connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
-    disableOnStart.push_front(browseGamePath);
+    disabledWidgetsOnStart.append(browseGamePath);
 
     // gamepathchooser = new Fl_Native_File_Chooser();
     // gamepathchooser->title("Game path");
 
     /* Command-line options */
     cmdOptions = new QLineEdit();
-    disableOnStart.push_front(cmdOptions);
+    disabledWidgetsOnStart.append(cmdOptions);
 
     /* Buttons */
     QPushButton *launchButton = new QPushButton(tr("Start"));
     connect(launchButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
-    disableOnStart.push_front(launchButton);
+    disabledWidgetsOnStart.append(launchButton);
 
     launchGdbButton = new QPushButton(tr("Start and attach gdb"));
     connect(launchGdbButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
-    disableOnStart.push_front(launchGdbButton);
+    disabledWidgetsOnStart.append(launchGdbButton);
 
     QPushButton *stopButton = new QPushButton(tr("Stop"));
     connect(stopButton, &QAbstractButton::clicked, this, &MainWindow::slotStop);
@@ -364,11 +368,11 @@ void MainWindow::createMenus()
 
     renderSoftAction = fileMenu->addAction(tr("Force software rendering"));
     renderSoftAction->setCheckable(true);
-    disableOnStart.push_front(renderSoftAction);
+    disabledActionsOnStart.append(renderSoftAction);
 
     QMenu *renderPerfMenu = videoMenu->addMenu(tr("Add performance flags to software rendering"));
     renderPerfMenu->addActions(renderPerfGroup->actions());
-    disableOnStart.push_front(renderPerfMenu);
+    disabledWidgetsOnStart.append(renderPerfMenu);
 
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
     osdMenu->addActions(osdGroup->actions());
@@ -385,7 +389,7 @@ void MainWindow::createMenus()
     formatMenu->addActions(bitDepthGroup->actions());
     formatMenu->addSeparator();
     formatMenu->addActions(channelGroup->actions());
-    disableOnStart.push_front(formatMenu);
+    disabledWidgetsOnStart.append(formatMenu);
 
     muteAction = soundMenu->addAction(tr("Mute"), this, &MainWindow::slotMuteSound);
     muteAction->setCheckable(true);
@@ -394,7 +398,7 @@ void MainWindow::createMenus()
     QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
 
     QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
-    disableOnStart.push_front(timeMenu);
+    disabledWidgetsOnStart.append(timeMenu);
     QMenu *timeMainMenu = timeMenu->addMenu(tr("Main thread"));
     timeMainMenu->addActions(timeMainGroup->actions());
     QMenu *timeSecMenu = timeMenu->addMenu(tr("Secondary thread"));
@@ -411,7 +415,7 @@ void MainWindow::createMenus()
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug Logging"));
     debugMenu->addActions(loggingOutputGroup->actions());
-    disableOnStart.push_front(loggingOutputGroup);
+    disabledActionsOnStart.append(loggingOutputGroup->actions());
 
     debugMenu->addSeparator();
 
@@ -438,14 +442,14 @@ void MainWindow::createMenus()
 
     keyboardAction = inputMenu->addAction(tr("Keyboard support"));
     keyboardAction->setCheckable(true);
-    disableOnStart.push_front(keyboardAction);
+    disabledActionsOnStart.append(keyboardAction);
     mouseAction = inputMenu->addAction(tr("Mouse support"));
     mouseAction->setCheckable(true);
-    disableOnStart.push_front(mouseAction);
+    disabledActionsOnStart.append(mouseAction);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
     joystickMenu->addActions(joystickGroup->actions());
-    disableOnStart.push_front(joystickMenu);
+    disabledWidgetsOnStart.append(joystickMenu);
 
     QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
     hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());
@@ -464,8 +468,10 @@ void MainWindow::updateStatus()
     switch (context->status) {
 
         case Context::INACTIVE:
-            for (QWidget* w : disableOnStart)
+            for (QWidget* w : disabledWidgetsOnStart)
                 w->setEnabled(true);
+            for (QAction* a : disabledActionsOnStart)
+                a->setEnabled(true);
 
             // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
             // if (item) item->deactivate();
@@ -497,8 +503,10 @@ void MainWindow::updateStatus()
             break;
 
         case Context::STARTING:
-            for (QWidget* w : disableOnStart)
+            for (QWidget* w : disabledWidgetsOnStart)
                 w->setEnabled(false);
+            for (QAction* a : disabledActionsOnStart)
+                a->setEnabled(false);
 
             if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {

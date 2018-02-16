@@ -27,6 +27,7 @@
 #include <iostream>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
+#include <X11/Xlib.h> // XKeysymToString
 
 static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t window, bool with_modifiers);
 

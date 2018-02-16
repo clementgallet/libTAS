@@ -173,12 +173,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (shared_config.hud_encode) {
-        if (shared_config.hud_framecount) {
+    if (shared_config.osd_encode) {
+        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(frame_counter);
             // hud.renderNonDrawFrame(nondraw_frame_counter);
         }
-        if (shared_config.hud_inputs)
+        if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
     }
 #endif
@@ -216,12 +216,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (!shared_config.hud_encode) {
-        if (shared_config.hud_framecount) {
+    if (!shared_config.osd_encode) {
+        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(frame_counter);
             // hud.renderNonDrawFrame(nondraw_frame_counter);
         }
-        if (shared_config.hud_inputs)
+        if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
     }
 #endif
@@ -363,10 +363,10 @@ static void receive_messages(std::function<void()> draw)
                 receiveData(&preview_ai, sizeof(AllInputs));
 
 #ifdef LIBTAS_ENABLE_HUD
-                if (shared_config.hud_inputs && shared_config.save_screenpixels) {
+                if ((shared_config.osd & SharedConfig::OSD_INPUTS) && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
 
-                    if (shared_config.hud_framecount) {
+                    if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
                         hud.renderFrame(frame_counter);
                         // hud.renderNonDrawFrame(nondraw_frame_counter);
                     }
@@ -418,11 +418,11 @@ static void receive_messages(std::function<void()> draw)
                         ScreenCapture::setPixels(true);
 
 #ifdef LIBTAS_ENABLE_HUD
-                        if (shared_config.hud_framecount) {
+                        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
                             hud.renderFrame(frame_counter);
                             // hud.renderNonDrawFrame(nondraw_frame_counter);
                         }
-                        if (shared_config.hud_inputs)
+                        if (shared_config.osd & SharedConfig::OSD_INPUTS)
                             hud.renderInputs(ai);
 #endif
 

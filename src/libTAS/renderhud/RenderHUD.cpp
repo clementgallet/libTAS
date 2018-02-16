@@ -25,6 +25,7 @@
 #include <sstream>
 #include "../global.h" // shared_config
 #include <fontconfig/fontconfig.h>
+#include <X11/keysym.h>
 
 namespace libtas {
 
