@@ -44,7 +44,7 @@ struct SharedConfig {
         RECORDING_WRITE,
         RECORDING_READ // Read until end of movie or toggle
     };
-    RecStatus recording = NO_RECORDING;
+    int recording = NO_RECORDING;
 
     unsigned int movie_framecount = 0;
 
@@ -55,7 +55,7 @@ struct SharedConfig {
         LOGGING_TO_FILE
     };
 
-    LogStatus logging_status = LOGGING_TO_CONSOLE;
+    int logging_status = LOGGING_TO_CONSOLE;
 
     /* Which flags trigger a debug message */
     LogCategoryFlag includeFlags = LCF_ERROR;
@@ -81,14 +81,17 @@ struct SharedConfig {
     /* Number of SDL controllers to (virtually) plug in */
     int nb_controllers = 0;
 
-    /* Display frame count in the HUD */
-    bool hud_framecount = true;
+    /* Log status */
+    enum OSDFlags {
+        OSD_FRAMECOUNT = 0x01,
+        OSD_INPUTS = 0x02,
+    };
 
-    /* Display inputs in the HUD */
-    bool hud_inputs = true;
+    /* Elements to be displayed on the OSD */
+    int osd = OSD_FRAMECOUNT | OSD_INPUTS;
 
-    /* Display HUD in the video encode */
-    bool hud_encode = false;
+    /* Display OSD in the video encode */
+    bool osd_encode = false;
 
     /* Use a backup of savefiles in memory, which leaves the original
      * savefiles unmodified and save the content in savestates */

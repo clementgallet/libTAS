@@ -70,9 +70,8 @@ void Config::save() {
     prefs_shared.set("keyboard_support", static_cast<int>(sc.keyboard_support));
     prefs_shared.set("mouse_support", static_cast<int>(sc.mouse_support));
     prefs_shared.set("nb_controllers", sc.nb_controllers);
-    prefs_shared.set("hud_framecount", static_cast<int>(sc.hud_framecount));
-    prefs_shared.set("hud_inputs", static_cast<int>(sc.hud_inputs));
-    prefs_shared.set("hud_encode", static_cast<int>(sc.hud_encode));
+    prefs_shared.set("osd", sc.osd);
+    prefs_shared.set("osd_encode", static_cast<int>(sc.osd_encode));
     prefs_shared.set("prevent_savefiles", static_cast<int>(sc.prevent_savefiles));
     prefs_shared.set("audio_bitdepth", sc.audio_bitdepth);
     prefs_shared.set("audio_channels", sc.audio_channels);
@@ -195,9 +194,8 @@ void Config::load(const std::string& gamepath) {
     GETWITHTYPE(mouse_support, bool);
     GETWITHTYPE(keyboard_support, bool);
     GETWITHTYPE(nb_controllers, int);
-    GETWITHTYPE(hud_framecount, bool);
-    GETWITHTYPE(hud_inputs, bool);
-    GETWITHTYPE(hud_encode, bool);
+    GETWITHTYPE(osd, bool);
+    GETWITHTYPE(osd_encode, bool);
     GETWITHTYPE(prevent_savefiles, bool);
     GETWITHTYPE(audio_bitdepth, int);
     GETWITHTYPE(audio_channels, int);

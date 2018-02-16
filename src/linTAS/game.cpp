@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QApplication>
+
 #include "ui/MainWindow.h"
 
 #include "game.h"
@@ -176,8 +178,15 @@ void launchGame(Context* context)
         context->gamename = context->gamepath;
 
     context->status = Context::ACTIVE;
-    MainWindow& ui = MainWindow::getInstance();
-    ui.update_status();
+
+    MainWindow* ui;
+    for(QWidget *widget : QApplication::topLevelWidgets()) {
+        if (MainWindow *mainWindow = static_cast<MainWindow*>(widget)) {
+            ui = mainWindow;
+        }
+    }
+
+    ui->updateStatus();
 
     /* Remove savestates again in case we did not exist cleanly the previous time */
     remove_savestates(context);
@@ -264,17 +273,17 @@ void launchGame(Context* context)
     if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
         int ret = movie.loadMovie();
         if (ret < 0) {
-            Fl::awake(alert_dialog, new std::string(MovieFile::errorString(ret)));
+            ui->alertDialog(MovieFile::errorString(ret));
             context->config.sc.recording = SharedConfig::NO_RECORDING;
         }
         else {
             context->config.sc.movie_framecount = movie.nbFrames();
 
             /* Update the UI accordingly */
-            ui.update_config();
+            ui->updateUIFromConfig();
         }
     }
-    ui.update_rerecordcount();
+    ui->updateRerecordCount();
 
     /* Send informations to the game */
 
@@ -318,7 +327,6 @@ void launchGame(Context* context)
         message = receiveMessage();
 
         while (message != MSGB_START_FRAMEBOUNDARY) {
-            std::string* alert_str;
             float fps, lfps;
             switch (message) {
             case MSGB_WINDOW_ID:
@@ -340,19 +348,17 @@ void launchGame(Context* context)
                 /* Ask the UI thread to display the alert. He is in charge of
                  * freeing the string.
                  */
-                alert_str = new std::string;
-                *alert_str = receiveString();
-                Fl::awake(alert_dialog, alert_str);
+                ui->alertDialog(receiveString().c_str());
                 break;
             case MSGB_ENCODE_FAILED:
                 context->config.sc.av_dumping = false;
                 context->config.sc_modified = true;
-                ui.update_ui();
+                ui->updateSharedConfigChanged();
                 break;
             case MSGB_FRAMECOUNT_TIME:
                 receiveData(&context->framecount, sizeof(unsigned long));
                 receiveData(&context->current_time, sizeof(struct timespec));
-                ui.update_framecount_time();
+                ui->updateFrameCountTime();
                 break;
             case MSGB_GAMEINFO:
                 receiveData(&context->game_info, sizeof(context->game_info));
@@ -360,7 +366,7 @@ void launchGame(Context* context)
             case MSGB_FPS:
                 receiveData(&fps, sizeof(float));
                 receiveData(&lfps, sizeof(float));
-                ui.update_fps(fps, lfps);
+                ui->updateFps(fps, lfps);
                 break;
             case MSGB_QUIT:
                 loopExit(context);
@@ -386,14 +392,12 @@ void launchGame(Context* context)
             /* Check if game is still running */
             int ret = waitpid(context->game_pid, nullptr, WNOHANG);
             if (ret == context->game_pid) {
-                std::string* alert_str = new std::string("Game did not exit normally...");
-                Fl::awake(alert_dialog, alert_str);
+                ui->alertDialog("Game did not exit normally...");
                 loopExit(context);
                 return;
             }
 
-            ui.update_ramsearch();
-            ui.update_ramwatch();
+            ui->updateRam();
 
             /* Implement frame-advance auto-repeat */
             if (ar_ticks >= 0) {
@@ -508,7 +512,7 @@ void launchGame(Context* context)
                     if (hk.type == HOTKEY_FRAMEADVANCE){
                         if (context->config.sc.running) {
                             context->config.sc.running = false;
-                            ui.update_ui();
+                            ui->updateSharedConfigChanged();
                             context->config.sc_modified = true;
                         }
                         ar_ticks = 0; // Activate auto-repeat
@@ -518,14 +522,14 @@ void launchGame(Context* context)
                     /* Toggle between play and pause */
                     if (hk.type == HOTKEY_PLAYPAUSE){
                         context->config.sc.running = !context->config.sc.running;
-                        ui.update_ui();
+                        ui->updateSharedConfigChanged();
                         context->config.sc_modified = true;
                     }
 
                     /* Enable fastforward */
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = true;
-                        ui.update_ui();
+                        ui->updateSharedConfigChanged();
                         context->config.sc_modified = true;
                     }
 
@@ -536,8 +540,7 @@ void launchGame(Context* context)
                     if (hk.type >= HOTKEY_SAVESTATE1 && hk.type <= HOTKEY_SAVESTATE9){
                         /* Saving is not allowed if currently encoding */
                         if (context->config.sc.av_dumping) {
-                            std::string* alert_str = new std::string("Saving is not allowed when in the middle of video encoding");
-                            Fl::awake(alert_dialog, alert_str);
+                            ui->alertDialog("Saving is not allowed when in the middle of video encoding");
                             continue;
                         }
 
@@ -578,8 +581,7 @@ void launchGame(Context* context)
                     if (hk.type >= HOTKEY_LOADSTATE1 && hk.type <= HOTKEY_LOADSTATE9){
                         /* Loading is not allowed if currently encoding */
                         if (context->config.sc.av_dumping) {
-                            std::string* alert_str = new std::string("Loading is not allowed when in the middle of video encoding");
-                            Fl::awake(alert_dialog, alert_str);
+                            ui->alertDialog("Loading is not allowed when in the middle of video encoding");
                             continue;
                         }
 
@@ -594,8 +596,7 @@ void launchGame(Context* context)
                         /* Check that the savestate exists */
                         struct stat sb;
                         if (stat(savestatepath.c_str(), &sb) == -1) {
-                            std::string* alert_str = new std::string("There is no savestate to load in this slot");
-                            Fl::awake(alert_dialog, alert_str);
+                            ui->alertDialog("There is no savestate to load in this slot");
                             continue;
                         }
 
@@ -612,15 +613,13 @@ void launchGame(Context* context)
                             MovieFile savedmovie(context);
                             ret = savedmovie.loadInputs(moviepath);
                             if (ret < 0) {
-                                std::string* alert_str = new std::string("Could not load the moviefile associated with the savestate");
-                                Fl::awake(alert_dialog, alert_str);
+                                ui->alertDialog("Could not load the moviefile associated with the savestate");
                                 continue;
                             }
 
                             if (!movie.isPrefix(savedmovie)) {
                                 /* Not a prefix, we don't allow loading */
-                                std::string* alert_str = new std::string("Trying to load a state in read-only but the inputs mismatch");
-                                Fl::awake(alert_dialog, alert_str);
+                                ui->alertDialog("Trying to load a state in read-only but the inputs mismatch");
                                 continue;
                             }
                         }
@@ -653,7 +652,7 @@ void launchGame(Context* context)
 
                                 /* Increment rerecord count */
                                 context->rerecord_count++;
-                                ui.update_rerecordcount();
+                                ui->updateRerecordCount();
                             }
 
                             last_savestate_slot = statei;
@@ -667,7 +666,7 @@ void launchGame(Context* context)
                         }
                         receiveData(&context->framecount, sizeof(unsigned long));
                         receiveData(&context->current_time, sizeof(struct timespec));
-                        ui.update_framecount_time();
+                        ui->updateFrameCountTime();
                     }
 
                     /* Switch between movie write and read-only */
@@ -680,8 +679,7 @@ void launchGame(Context* context)
                         case SharedConfig::RECORDING_READ:
                             /* Check if we reached the end of the movie already. */
                             if (context->framecount > context->config.sc.movie_framecount) {
-                                std::string* alert_str = new std::string("Cannot write to a movie after its end");
-                                Fl::awake(alert_dialog, alert_str);
+                                ui->alertDialog("Cannot write to a movie after its end");
                             }
                             else {
                                 context->config.sc.recording = SharedConfig::RECORDING_WRITE;
@@ -691,7 +689,7 @@ void launchGame(Context* context)
                             break;
                         }
                         context->config.sc_modified = true;
-                        ui.update_ui();
+                        ui->updateSharedConfigChanged();
                     }
 
                     /* Start or stop a video encode */
@@ -713,7 +711,7 @@ void launchGame(Context* context)
                              */
                             sendMessage(MSGN_STOP_ENCODE);
                         }
-                        ui.update_ui();
+                        ui->updateSharedConfigChanged();
 #endif
                     }
                 } /* if (event->response_type & ~0x80 == XCB_KEY_PRESS) */
@@ -722,7 +720,7 @@ void launchGame(Context* context)
                 {
                     if (hk.type == HOTKEY_FASTFORWARD){
                         context->config.sc.fastforward = false;
-                        ui.update_ui();
+                        ui->updateSharedConfigChanged();
                         context->config.sc_modified = true;
                     }
                     if (hk.type == HOTKEY_FRAMEADVANCE){
@@ -795,12 +793,12 @@ void launchGame(Context* context)
                         case Config::MOVIEEND_PAUSE:
                             context->config.sc.running = false;
                             //context->config.sc_modified = true;
-                            ui.update_ui();
+                            ui->updateSharedConfigChanged();
                             break;
                         case Config::MOVIEEND_WRITE:
                             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
                             context->config.sc_modified = true;
-                            ui.update_ui();
+                            ui->updateSharedConfigChanged();
                             break;
                         default:
                             break;
@@ -838,16 +836,16 @@ void launchGame(Context* context)
 
 void loopExit(Context* context)
 {
-    if (movie.modifiedSinceLastSave) {
-        /* Ask the user if he wants to save the movie, and get the answer.
-         * Prompting a alert window must be done by the UI thread, so we are
-         * using std::future/std::promise mechanism.
-         */
-        std::promise<bool> saveAnswer;
-        std::future<bool> futureSave = saveAnswer.get_future();
-        Fl::awake(alert_save, &saveAnswer);
+    MainWindow* ui;
+    for(QWidget *widget : QApplication::topLevelWidgets()) {
+        if (MainWindow *mainWindow = static_cast<MainWindow*>(widget)) {
+            ui = mainWindow;
+        }
+    }
 
-        if (futureSave.get()) {
+    if (movie.modifiedSinceLastSave) {
+        bool answer = ui->alertSave();
+        if (answer) {
             /* User answered yes */
             movie.saveMovie();
         }
@@ -860,8 +858,7 @@ void loopExit(Context* context)
     remove_savestates(context);
 
     context->status = Context::INACTIVE;
-    MainWindow& ui = MainWindow::getInstance();
-    ui.update_status();
+    ui->updateStatus();
 
     /* Disable auto-repeat */
     uint32_t mask_aron = XCB_KB_AUTO_REPEAT_MODE;

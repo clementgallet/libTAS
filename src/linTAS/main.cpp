@@ -17,6 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QApplication>
+
 #include "ui/MainWindow.h"
 #include "Context.h"
 #include "utils.h" // create_dir
@@ -174,13 +176,12 @@ int main(int argc, char **argv)
     }
 
     /* Starts the user interface */
-    MainWindow& ui = MainWindow::getInstance();
-    ui.build(&context);
+    QApplication app(argc, argv);
 
-    /* Start the threaded environnment */
-    Fl::lock();
+    MainWindow mainWin(&context);
+    mainWin.show();
 
-    Fl::run();
+    app.exec();
 
     /* Check if the game is still running and try to close it softly */
     if (context.status != Context::INACTIVE) {

@@ -20,6 +20,17 @@
 #ifndef LINTAS_MAINWINDOW_H_INCLUDED
 #define LINTAS_MAINWINDOW_H_INCLUDED
 
+#include <QMainWindow>
+#include <QActionGroup>
+#include <QAction>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <QLabel>
+#include <QCheckBox>
+#include <forward_list>
+
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
@@ -29,124 +40,198 @@
 #include "RamWatchWindow.h"
 #include "../Context.h"
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Native_File_Chooser.H>
-#include <FL/Fl_Output.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Menu_Item.H>
-#include <FL/Fl_Pack.H>
-#include <FL/Fl_Radio_Round_Button.H>
 #include <thread>
 
-class MainWindow {
-    public:
-        /* Implement a Singleton pattern */
-        static MainWindow& getInstance()
-        {
-            static MainWindow instance;
-            return instance;
-        }
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
 
-        MainWindow(MainWindow const&) = delete;
-        void operator=(MainWindow const&) = delete;
+public:
+    MainWindow(Context* c);
+    ~MainWindow();
+    // /* Implement a Singleton pattern */
+    // static MainWindow& getInstance()
+    // {
+    //     static MainWindow instance;
+    //     return instance;
+    // }
+    //
+    // MainWindow(MainWindow const&) = delete;
+    // void operator=(MainWindow const&) = delete;
 
-        void build(Context* c);
+    // void build(Context* c);
 
-        std::thread game_thread;
-        Context *context;
-        Fl_Double_Window *window;
+    std::thread game_thread;
+    Context *context;
+    // Fl_Double_Window *window;
 
-        Fl_Menu_Bar *menu_bar;
-        static Fl_Menu_Item menu_items[];
+    // Fl_Menu_Bar *menu_bar;
+    // static Fl_Menu_Item menu_items[];
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
-        EncodeWindow* encode_window;
+    EncodeWindow* encodeWindow;
 #endif
-        InputWindow* input_window;
-        ExecutableWindow* executable_window;
-        ControllerWindow* controller_window;
-        GameInfoWindow* gameinfo_window;
-        RamSearchWindow* ramsearch_window;
-        RamWatchWindow* ramwatch_window;
+    InputWindow* inputWindow;
+    ExecutableWindow* executableWindow;
+    // ControllerWindow* controllerWindow;
+    GameInfoWindow* gameInfoWindow;
+    RamSearchWindow* ramSearchWindow;
+    RamWatchWindow* ramWatchWindow;
 
-        Fl_Button *launch;
-        Fl_Button *launch_gdb;
+    std::forward_list<QWidget*> disableOnStart;
 
-        Fl_Output *gamepath;
-        Fl_Button *browsegamepath;
-        Fl_Native_File_Chooser *gamepathchooser;
-        Fl_Input *cmdoptions;
+    QActionGroup *movieEndGroup;
+    QAction *renderSoftAction;
+    QActionGroup *renderPerfGroup;
+    QActionGroup *osdGroup;
+    QAction *osdEncodeAction;
 
-        Fl_Output *moviepath;
-        Fl_Button *browsemoviepath;
-        Fl_Native_File_Chooser *moviepathchooser;
+    QActionGroup *frequencyGroup;
+    QActionGroup *bitDepthGroup;
+    QActionGroup *channelGroup;
+    QAction *muteAction;
 
-        Fl_Pack *movie_pack;
-        Fl_Radio_Round_Button *movie_no;
-        Fl_Radio_Round_Button *movie_recording;
-        Fl_Radio_Round_Button *movie_playback;
+    QActionGroup *timeMainGroup;
+    QActionGroup *timeSecGroup;
 
-        Fl_Int_Input *logicalfps;
-        Fl_Box *fps_values;
+    QAction *saveScreenAction;
+    QAction *preventSavefileAction;
 
-        Fl_Check_Button *pausecheck;
-        Fl_Check_Button *fastforwardcheck;
+    QActionGroup *savestateIgnoreGroup;
 
-        Fl_Output *framecount;
-        Fl_Output *movie_framecount;
-        Fl_Output *rerecord_count;
-        Fl_Box *movie_length;
+    QActionGroup *loggingOutputGroup;
+    QActionGroup *loggingPrintGroup;
+    QActionGroup *loggingExcludeGroup;
 
-        Fl_Input *initial_time_sec;
-        Fl_Input *initial_time_nsec;
+    QAction *configEncodeAction;
+    QAction *toggleEncodeAction;
 
-        /* Update UI elements (mainly enable/disable) depending on
-         * the game status (running/stopped), to prevent modifying values that
-         * are not supposed to be modified when the game is running.
-         */
-        void update_status();
+    QActionGroup *slowdownGroup;
 
-        /* Update UI elements, when the game is running, that may have been
-         * modified by hotkeys or messages from the game.
-         */
-        void update_ui();
+    QAction *keyboardAction;
+    QAction *mouseAction;
+    QActionGroup *joystickGroup;
 
-        /* Update frame count and time */
-        void update_framecount_time();
+    QActionGroup *hotkeyFocusGroup;
+    QActionGroup *inputFocusGroup;
 
-        /* Update rerecord count */
-        void update_rerecordcount();
 
-        /* Update fps values */
-        void update_fps(float fps, float lfps);
 
-        /* Update ramsearch values if window is shown */
-        void update_ramsearch();
+    QLineEdit *gamePath;
+    QPushButton *browseGamePath;
+    // Fl_Native_File_Chooser *gamepathchooser;
+    QLineEdit *cmdOptions;
 
-        /* Update ramwatch values if window is shown */
-        void update_ramwatch();
+    QLineEdit *moviePath;
+    QPushButton *browseMoviePath;
+    // Fl_Native_File_Chooser *moviepathchooser;
 
-        /* Update UI elements when a config file is loaded */
-        void update_config();
+    QRadioButton *movieNo;
+    QRadioButton *movieRecording;
+    QRadioButton *moviePlayback;
 
-    private:
-        MainWindow() {}
-        ~MainWindow();
+    QSpinBox *logicalFps;
+    QLabel *fpsValues;
+
+    QCheckBox *pauseCheck;
+    QCheckBox *fastForwardCheck;
+
+    QSpinBox *frameCount;
+    QSpinBox *movieFrameCount;
+    QSpinBox *rerecordCount;
+    QLabel *movieLength;
+
+    QSpinBox *initialTimeSec;
+    QSpinBox *initialTimeNsec;
+
+    QPushButton *launchGdbButton;
+    QPushButton *stopButton;
+
+    /* Update UI elements (mainly enable/disable) depending on
+     * the game status (running/stopped), to prevent modifying values that
+     * are not supposed to be modified when the game is running.
+     */
+    void updateStatus();
+
+    /* Update UI elements when the shared config has changed (pause, fastforward,
+     * encode, etc.
+     */
+    void updateSharedConfigChanged();
+
+    /* Update frame count and time */
+    void updateFrameCountTime();
+
+    /* Update rerecord count */
+    void updateRerecordCount();
+
+    /* Update fps values */
+    void updateFps(float fps, float lfps);
+
+    /* Update ramsearch and ramwatch values if window is shown */
+    void updateRam();
+
+    /* Update UI elements when a config file is loaded */
+    void updateUIFromConfig();
+
+    /* Show an alert dialog containing alert_msg as text */
+    void alertDialog(const char* alert_msg);
+
+    /* Show an alert dialog asking the user if we wants to save the movie file */
+    bool alertSave();
+
+private:
+
+    /* Helper function to create a checkable action inside an action group */
+    void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
+
+    /* Create the main window actions that will go in the menus */
+    void createActions();
+
+    /* Create the main window menus */
+    void createMenus();
+
+    /* Check all checkboxes from a list of actions whose associated flag data
+     * is present in the value
+     */
+    void setCheckboxesFromMask(const QActionGroup *actionGroup, int value);
+
+    /* For each checkbox of the action group that is checked, set the
+     * corresponding flag in the value.
+     */
+    void setMaskFromCheckboxes(const QActionGroup *actionGroup, int &value);
+
+    /* Check the radio from a list of actions whose associated data is equal
+     * to the value.
+     */
+    void setRadioFromList(const QActionGroup *actionGroup, int value);
+
+    /* Set the value to the data of the checked radio from the action group. */
+    void setListFromRadio(const QActionGroup *actionGroup, int &value);
+
+private slots:
+
+    void slotLaunch();
+    void slotStop();
+    void slotBrowseGamePath();
+    void slotBrowseMoviePath();
+    void slotSaveMovie();
+    void slotExportMovie();
+    void slotPause();
+    void slotFastForward();
+    void slotMovieRecording();
+    void slotToggleEncode();
+    void slotMuteSound();
+    void slotLoggingPrint();
+    void slotLoggingExclude();
+    void slotHotkeyFocus();
+    void slotInputFocus();
+    void slotSlowdown();
+    void slotOsd();
+    void slotOsdEncode();
+    void slotSavestateIgnore();
+    void slotSaveScreen();
+    void slotPreventSavefile();
+    void slotMovieEnd();
 };
-
-/* The launch callback is exposed because the other thread may want to
- * trigger a game restart using this callback in case of PseudoSaveState
- */
-Fl_Callback0 launch_cb;
-
-/* Prompt a message asking if movie must be saved */
-void alert_save(void*);
-
-void alert_dialog(void* alert_msg);
 
 #endif

@@ -17,65 +17,133 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QFileDialog>
+#include <QMenu>
+#include <QMessageBox>
+#include <QDialogButtonBox>
+
+
+
+
 #include "MainWindow.h"
-#include "../game.h"
+#include "../game.h" // Only to access to the movie. Not very clean...
 #include "../MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
 
-#include <iostream>
-#include <iomanip> // setprecision
-#include <sstream> // ostringstream
-#include <FL/x.H>
-#include <FL/fl_ask.H>
-#include <future>
 
-static Fl_Callback browse_gamepath_cb;
-static Fl_Callback browse_moviepath_cb;
-static Fl_Callback save_movie_cb;
-static Fl_Callback export_movie_cb;
-static Fl_Callback0 set_fps_cb;
-static Fl_Callback0 pause_cb;
-static Fl_Callback0 fastforward_cb;
-static Fl_Callback0 movie_recording_cb;
+// #include <iostream>
+// #include <iomanip> // setprecision
+// #include <sstream> // ostringstream
+
+MainWindow::MainWindow(Context* c) : context(c)
+{
+    setFixedSize(600, 500);
+
+    QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
+    setWindowTitle(title);
+
+    /* Menu */
+    createActions();
+    createMenus();
+
+    /* Movie File */
+    moviePath = new QLineEdit();
+    moviePath->setReadOnly(true);
+
+    QLabel *movieLabel = new QLabel("Movie File");
+
+    browseMoviePath = new QPushButton("Browse...");
+    connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
+    disableOnStart.push_front(browseMoviePath);
+
+    movieNo = new QRadioButton("No Movie");
+    connect(movieNo, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+    disableOnStart.push_front(movieNo);
+    movieRecording = new QRadioButton("Recording");
+    connect(movieRecording, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+    moviePlayback = new QRadioButton("Playback");
+    connect(moviePlayback, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+
+    /* Frame count */
+    frameCount = new QSpinBox();
+    frameCount->setReadOnly(true);
+    movieFrameFount = new QSpinBox();
+    movieFrameFount->setReadOnly(true);
+
+    /* Current/movie length */
+    movieLength = new QLabel("Current Time: - / -");
+
+    /* Frames per second */
+    logicalFps = new QSpinBox();
+    disableOnStart.push_front(logicalFps);
+
+    fpsValues = new QLabel("Current FPS: - / -");
+
+    /* Re-record count */
+    rerecordCount = new QSpinBox();
+    rerecordCount->setReadOnly(true);
+
+    /* Initial time */
+    initialTimeSec = new QSpinBox();
+    initialTimeNsec = new QSpinBox();
+    disableOnStart.push_front(initialTimeSec);
+    disableOnStart.push_front(initialTimeNsec);
+
+    /* Pause/FF */
+    pauseCheck = new QCheckBox("Pause");
+    connect(pauseCheck, &QAbstractButton::toggled, this, &MainWindow::slotPause);
+    fastForwardCheck = new QCheckBox("Fast-forward");
+    connect(fastForwardCheck, &QAbstractButton::toggled, this, &MainWindow::slotFastForward);
+
+    /* Game Executable */
+    gamePath = new QLineEdit();
+    gamePath->setReadOnly(true);
+
+    browseGamePath = new QPushButton("Browse...");
+    connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
+    disableOnStart.push_front(browseGamePath);
+
+    // gamepathchooser = new Fl_Native_File_Chooser();
+    // gamepathchooser->title("Game path");
+
+    /* Command-line options */
+    cmdOptions = new QLineEdit();
+    disableOnStart.push_front(cmdOptions);
+
+    /* Buttons */
+    QPushButton *launchButton = new QPushButton(tr("Start"));
+    connect(launchButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
+    disableOnStart.push_front(launchButton);
+
+    launchGdbButton = new QPushButton(tr("Start and attach gdb"));
+    connect(launchGdbButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
+    disableOnStart.push_front(launchGdbButton);
+
+    QPushButton *stopButton = new QPushButton(tr("Stop"));
+    connect(stopButton, &QAbstractButton::clicked, this, &MainWindow::slotStop);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(launchButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(launchGdbButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
+
+
+    updateUIFromConfig();
+
+
 #ifdef LIBTAS_ENABLE_AVDUMPING
-static Fl_Callback config_encode_cb;
-static Fl_Callback toggle_encode_cb;
+    encodeWindow = new EncodeWindow(c, this);
 #endif
-static Fl_Callback config_input_cb;
-static Fl_Callback ram_search_cb;
-static Fl_Callback ram_watch_cb;
-static Fl_Callback config_executable_cb;
-static Fl_Callback sound_frequency_cb;
-static Fl_Callback sound_bitdepth_cb;
-static Fl_Callback sound_channel_cb;
-static Fl_Callback mute_sound_cb;
-static Fl_Callback logging_status_cb;
-static Fl_Callback logging_print_cb;
-static Fl_Callback logging_exclude_cb;
-static Fl_Callback input_keyboard_cb;
-static Fl_Callback input_mouse_cb;
-static Fl_Callback input_joy_cb;
-static Fl_Callback hotkeys_focus_cb;
-static Fl_Callback inputs_focus_cb;
-static Fl_Callback slowmo_cb;
-#ifdef LIBTAS_ENABLE_HUD
-static Fl_Callback osd_frame_cb;
-static Fl_Callback osd_inputs_cb;
-static Fl_Callback osd_encode_cb;
-#endif
-static Fl_Callback time_main_cb;
-static Fl_Callback time_sec_cb;
-static Fl_Callback render_soft_cb;
-static Fl_Callback savestate_screen_cb;
-static Fl_Callback0 cmdoptions_cb;
-static Fl_Callback llvm_perf_cb;
-static Fl_Callback ignore_memory_cb;
-static Fl_Callback0 initial_time_cb;
-static Fl_Callback prevent_savefiles_cb;
-static Fl_Callback controller_inputs_cb;
-static Fl_Callback game_info_cb;
-static Fl_Callback movie_end_cb;
+    inputWindow = new InputWindow(c, this);
+    executableWindow = new ExecutableWindow(c, this);
+    // controllerWindow = new ControllerWindow(c, this);
+    gameInfoWindow = new GameInfoWindow(c, this);
+    ramSearchWindow = new RamSearchWindow(c, this);
+    ramWatchWindow = new RamWatchWindow(c, this);
+
+    // context->ui_window = fl_xid(window);
+}
 
 MainWindow::~MainWindow()
 {
@@ -83,1337 +151,914 @@ MainWindow::~MainWindow()
         game_thread.detach();
 }
 
-void MainWindow::build(Context* c)
+/* We are going to do this a lot, so this is a helper function to insert
+ * checkable actions into an action group with data.
+ */
+void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data)
 {
-    context = c;
-
-    std::string title = "libTAS v";
-    title += std::to_string(MAJORVERSION);
-    title += ".";
-    title += std::to_string(MINORVERSION);
-    title += ".";
-    title += std::to_string(PATCHVERSION);
-
-    window = new Fl_Double_Window(600, 500, title.c_str());
-
-    /* Menu */
-    menu_bar = new Fl_Menu_Bar(0, 0, window->w(), 30);
-    menu_bar->menu(menu_items);
-
-    /* Movie File */
-    moviepath = new Fl_Output(10, 50, 500, 30, "Movie File");
-    moviepath->align(FL_ALIGN_TOP_LEFT);
-    moviepath->color(FL_LIGHT1);
-
-    moviepathchooser = new Fl_Native_File_Chooser();
-    moviepathchooser->title("Choose a movie file");
-    moviepathchooser->filter("libTAS movie file \t*.ltm\n");
-
-    browsemoviepath = new Fl_Button(520, 50, 70, 30, "Browse...");
-    browsemoviepath->callback(browse_moviepath_cb);
-
-    movie_pack = new Fl_Pack(10, 90, window->w(), 20);
-    movie_pack->type(Fl_Pack::HORIZONTAL);
-    // movie_pack->box(FL_ENGRAVED_FRAME);
-
-    movie_no = new Fl_Radio_Round_Button(0, 0, 160, 20, "No Movie");
-    movie_no->callback(movie_recording_cb);
-    movie_no->set();
-
-    movie_recording = new Fl_Radio_Round_Button(0, 0, 160, 20, "Recording");
-    movie_recording->callback(movie_recording_cb);
-
-    movie_playback = new Fl_Radio_Round_Button(0, 0, 160, 20, "Playback");
-    movie_playback->callback(movie_recording_cb);
-
-    movie_pack->end();
-
-    /* Frame count */
-    framecount = new Fl_Output(110, 140, 90, 30, "Frames: ");
-    framecount->value("0");
-    framecount->color(FL_LIGHT1);
-
-    movie_framecount = new Fl_Output(220, 140, 90, 30, " / ");
-    movie_framecount->color(FL_LIGHT1);
-
-    /* Current/movie length */
-    movie_length = new Fl_Box(340, 140, 240, 30, "Current Time: - / -");
-    movie_length->box(FL_NO_BOX);
-    movie_length->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    /* Frames per second */
-    logicalfps = new Fl_Int_Input(220, 180, 90, 30, "Frames per second: ");
-    logicalfps->callback(set_fps_cb);
-
-    fps_values = new Fl_Box(340, 180, 240, 30, "Current FPS: - / -");
-    fps_values->box(FL_NO_BOX);
-    fps_values->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-
-    /* Re-record count */
-    rerecord_count = new Fl_Output(220, 220, 90, 30, "Rerecord count: ");
-    rerecord_count->color(FL_LIGHT1);
-
-    /* Initial time */
-    initial_time_sec = new Fl_Int_Input(110, 260, 90, 30, "System time: ");
-    initial_time_sec->callback(initial_time_cb);
-
-    initial_time_nsec = new Fl_Int_Input(220, 260, 90, 30, " . ");
-    initial_time_nsec->align(FL_ALIGN_LEFT);
-    initial_time_nsec->callback(initial_time_cb);
-
-    /* Pause/FF */
-    pausecheck = new Fl_Check_Button(340, 260, 80, 20, "Pause");
-    pausecheck->callback(pause_cb);
-    fastforwardcheck = new Fl_Check_Button(440, 260, 120, 20, "Fast-forward");
-    fastforwardcheck->callback(fastforward_cb);
-
-    /* Command-line options */
-    cmdoptions = new Fl_Input(10, 400, 500, 30, "Command-line options");
-    cmdoptions->align(FL_ALIGN_TOP_LEFT);
-    cmdoptions->callback(cmdoptions_cb);
-    // cmdoptions->color(FL_LIGHT1);
-
-    /* Game Executable */
-    gamepath = new Fl_Output(10, 340, 500, 30, "Game Executable");
-    gamepath->align(FL_ALIGN_TOP_LEFT);
-    gamepath->color(FL_LIGHT1);
-
-    browsegamepath = new Fl_Button(520, 340, 70, 30, "Browse...");
-    browsegamepath->callback(browse_gamepath_cb);
-
-    gamepathchooser = new Fl_Native_File_Chooser();
-    gamepathchooser->title("Game path");
-
-    launch = new Fl_Button(10, 450, 70, 40, "Start");
-    launch->callback(launch_cb);
-
-    launch_gdb = new Fl_Button(400, 450, 180, 40, "Start and attach gdb");
-    launch_gdb->callback(launch_cb);
-
-    MovieFile tempmovie(context);
-    if (tempmovie.extractMovie() == 0) {
-        std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
-        movie_framecount->value(movieframestr.c_str());
-        std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
-        rerecord_count->value(rerecordstr.c_str());
-
-        /* Also, by default, set the read-only mode */
-        movie_playback->setonly();
-        context->config.sc.recording = SharedConfig::RECORDING_READ;
-        context->config.sc_modified = true;
-    }
-
-    pausecheck->value(!context->config.sc.running);
-    fastforwardcheck->value(context->config.sc.fastforward);
-
-    update_config();
-
-    window->end();
-
-#ifdef LIBTAS_ENABLE_AVDUMPING
-    // encode_window = new EncodeWindow(c, this);
-    encode_window = new EncodeWindow(c);
-#endif
-    input_window = new InputWindow(c);
-    // executable_window = new ExecutableWindow(c, this);
-    executable_window = new ExecutableWindow(c);
-    controller_window = new ControllerWindow(c);
-    gameinfo_window = new GameInfoWindow(c);
-    ramsearch_window = new RamSearchWindow(c);
-    ramwatch_window = new RamWatchWindow(c);
-
-    window->show();
-
-    context->ui_window = fl_xid(window);
+    QAction *action = group->addAction(text);
+    action->setCheckable(true);
+    action->setData(data);
 }
 
-Fl_Menu_Item MainWindow::menu_items[] = {
-    {"File", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Open Executable...", 0, browse_gamepath_cb},
-        {"Executable Options...", 0, config_executable_cb},
-        {"Open Movie...", 0, browse_moviepath_cb},
-        {"Save Movie", 0, save_movie_cb},
-        {"Export Movie...", 0, export_movie_cb},
-        {"On Movie End", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Pause the Movie", 0, movie_end_cb, reinterpret_cast<void*>(Config::MOVIEEND_PAUSE), FL_MENU_RADIO},
-            {"Switch to Writing", 0, movie_end_cb, reinterpret_cast<void*>(Config::MOVIEEND_WRITE), FL_MENU_RADIO},
-            {nullptr},
-        {nullptr},
-    {"Video", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Force software rendering", 0, render_soft_cb, nullptr, FL_MENU_TOGGLE},
-        {"Add performance flags to software rendering", 0, nullptr, nullptr, FL_SUBMENU},
-            {"texmem", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* minimize texture cache footprint */
-            {"no_mipmap", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* MIP_FILTER_NONE always */
-            {"no_linear", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* FILTER_NEAREST always */
-            {"no_mip_linear", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* MIP_FILTER_LINEAR ==> _NEAREST */
-            {"no_tex", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* sample white always */
-            {"no_blend", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable blending */
-            {"no_depth", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable depth buffering entirely */
-            {"no_alphatest", 0, llvm_perf_cb, nullptr, FL_MENU_TOGGLE}, /* disable alpha testing */
-            {nullptr},
-#ifdef LIBTAS_ENABLE_HUD
-        {"OSD", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Frame Count", 0, osd_frame_cb, nullptr, FL_MENU_TOGGLE},
-            {"Inputs", 0, osd_inputs_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-            {"OSD on video encode", 0, osd_encode_cb, nullptr, FL_MENU_TOGGLE},
-            {nullptr},
-#else
-        {"OSD (disabled)", 0, nullptr, nullptr, FL_MENU_INACTIVE},
-#endif
-        {nullptr},
-    {"Sound", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Format", 0, nullptr, nullptr, FL_SUBMENU},
-            {"8000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(8000), FL_MENU_RADIO},
-            {"11025 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(11025), FL_MENU_RADIO},
-            {"12000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(12000), FL_MENU_RADIO},
-            {"16000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(16000), FL_MENU_RADIO},
-            {"22050 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(22050), FL_MENU_RADIO},
-            {"24000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(24000), FL_MENU_RADIO},
-            {"32000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(32000), FL_MENU_RADIO},
-            {"44100 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(44100), FL_MENU_RADIO},
-            {"48000 Hz", 0, sound_frequency_cb, reinterpret_cast<void*>(48000), FL_MENU_RADIO | FL_MENU_DIVIDER},
-            {"8 bit", 0, sound_bitdepth_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
-            {"16 bit", 0, sound_bitdepth_cb, reinterpret_cast<void*>(16), FL_MENU_RADIO | FL_MENU_DIVIDER},
-            {"Mono", 0, sound_channel_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
-            {"Stereo", 0, sound_channel_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
-            {nullptr},
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-        {"Mute Sound", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE},
-#else
-        {"Mute Sound (disabled)", 0, mute_sound_cb, nullptr, FL_MENU_TOGGLE | FL_MENU_INACTIVE},
-#endif
-        {nullptr},
-    {"Runtime", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Time tracking", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Main thread", 0, nullptr, nullptr, FL_SUBMENU},
-                {"time()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_TIME), FL_MENU_TOGGLE},
-                {"gettimeofday()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_GETTIMEOFDAY), FL_MENU_TOGGLE},
-                {"clock()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCK), FL_MENU_TOGGLE},
-                {"clock_gettime()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCKGETTIME), FL_MENU_TOGGLE},
-                {"SDL_GetTicks()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETTICKS), FL_MENU_TOGGLE},
-                {"SDL_GetPerformanceCounter()", 0, time_main_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER), FL_MENU_TOGGLE},
-                {nullptr},
-            {"Secondary threads", 0, nullptr, nullptr, FL_SUBMENU},
-                {"time()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_TIME), FL_MENU_TOGGLE},
-                {"gettimeofday()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_GETTIMEOFDAY), FL_MENU_TOGGLE},
-                {"clock()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCK), FL_MENU_TOGGLE},
-                {"clock_gettime()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_CLOCKGETTIME), FL_MENU_TOGGLE},
-                {"SDL_GetTicks()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETTICKS), FL_MENU_TOGGLE},
-                {"SDL_GetPerformanceCounter()", 0, time_sec_cb, reinterpret_cast<void*>(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER), FL_MENU_TOGGLE},
-                {nullptr},
-            {nullptr},
-        {"Savestates", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Ignore memory segments", 0, nullptr, nullptr, FL_SUBMENU},
-                {"Ignore non-writeable segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_NON_WRITEABLE), FL_MENU_TOGGLE},
-                {"Ignore non-writeable non-anonymous segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE), FL_MENU_TOGGLE},
-                {"Ignore exec segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_EXEC), FL_MENU_TOGGLE},
-                {"Ignore shared segments", 0, ignore_memory_cb, reinterpret_cast<void*>(SharedConfig::IGNORE_SHARED), FL_MENU_TOGGLE},
-                {nullptr},
-            {nullptr},
-        {"Save screen", 0, savestate_screen_cb, nullptr, FL_MENU_TOGGLE},
-        {"Backup savefiles in memory", 0, prevent_savefiles_cb, nullptr, FL_MENU_TOGGLE},
-        {"Debug Logging", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Disabled", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::NO_LOGGING), FL_MENU_RADIO},
-            {"Log to console", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_CONSOLE), FL_MENU_RADIO},
-            {"Log to file", 0, logging_status_cb, reinterpret_cast<void*>(SharedConfig::LOGGING_TO_FILE), FL_MENU_RADIO | FL_MENU_DIVIDER},
-            {"Print Categories", 0, nullptr, nullptr, FL_SUBMENU},
-                {"Untested", 0, logging_print_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
-                {"Desync", 0, logging_print_cb, reinterpret_cast<void*>(LCF_DESYNC), FL_MENU_TOGGLE},
-                {"Frequent", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FREQUENT), FL_MENU_TOGGLE},
-                {"Error", 0, logging_print_cb, reinterpret_cast<void*>(LCF_ERROR), FL_MENU_TOGGLE},
-                {"ToDo", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
-                {"Frame", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"Hook", 0, logging_print_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
-                {"Time Set", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
-                {"Time Get", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
-                {"Checkpoint", 0, logging_print_cb, reinterpret_cast<void*>(LCF_CHECKPOINT), FL_MENU_TOGGLE},
-                {"Wait", 0, logging_print_cb, reinterpret_cast<void*>(LCF_WAIT), FL_MENU_TOGGLE},
-                {"Sleep", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SLEEP), FL_MENU_TOGGLE},
-                {"Socket", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SOCKET), FL_MENU_TOGGLE},
-                {"OpenGL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_OGL), FL_MENU_TOGGLE},
-                {"AV Dumping", 0, logging_print_cb, reinterpret_cast<void*>(LCF_DUMP), FL_MENU_TOGGLE},
-                {"SDL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SDL), FL_MENU_TOGGLE},
-                {"Memory", 0, logging_print_cb, reinterpret_cast<void*>(LCF_MEMORY), FL_MENU_TOGGLE},
-                {"Keyboard", 0, logging_print_cb, reinterpret_cast<void*>(LCF_KEYBOARD), FL_MENU_TOGGLE},
-                {"Mouse", 0, logging_print_cb, reinterpret_cast<void*>(LCF_MOUSE), FL_MENU_TOGGLE},
-                {"Joystick", 0, logging_print_cb, reinterpret_cast<void*>(LCF_JOYSTICK), FL_MENU_TOGGLE},
-                {"OpenAL", 0, logging_print_cb, reinterpret_cast<void*>(LCF_OPENAL), FL_MENU_TOGGLE},
-                {"Sound", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SOUND), FL_MENU_TOGGLE},
-                {"Random", 0, logging_print_cb, reinterpret_cast<void*>(LCF_RANDOM), FL_MENU_TOGGLE},
-                {"Signals", 0, logging_print_cb, reinterpret_cast<void*>(LCF_SIGNAL), FL_MENU_TOGGLE},
-                {"Events", 0, logging_print_cb, reinterpret_cast<void*>(LCF_EVENTS), FL_MENU_TOGGLE},
-                {"Windows", 0, logging_print_cb, reinterpret_cast<void*>(LCF_WINDOW), FL_MENU_TOGGLE},
-                {"File IO", 0, logging_print_cb, reinterpret_cast<void*>(LCF_FILEIO), FL_MENU_TOGGLE},
-                {"Steam", 0, logging_print_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
-                {"Threads", 0, logging_print_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
-                {"Timers", 0, logging_print_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"All", 0, logging_print_cb, reinterpret_cast<void*>(LCF_ALL)},
-                {"None", 0, logging_print_cb, reinterpret_cast<void*>(LCF_NONE)},
-                {nullptr},
-            {"Exclude Categories", 0, nullptr, nullptr, FL_SUBMENU},
-                {"Untested", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_UNTESTED), FL_MENU_TOGGLE},
-                {"Desync", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_DESYNC), FL_MENU_TOGGLE},
-                {"Frequent", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FREQUENT), FL_MENU_TOGGLE},
-                {"Error", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_ERROR), FL_MENU_TOGGLE},
-                {"ToDo", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TODO), FL_MENU_TOGGLE},
-                {"Frame", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FRAME), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"Hook", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_HOOK), FL_MENU_TOGGLE},
-                {"Time Set", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMESET), FL_MENU_TOGGLE},
-                {"Time Get", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMEGET), FL_MENU_TOGGLE},
-                {"Checkpoint", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_CHECKPOINT), FL_MENU_TOGGLE},
-                {"Wait", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_WAIT), FL_MENU_TOGGLE},
-                {"Sleep", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SLEEP), FL_MENU_TOGGLE},
-                {"Socket", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SOCKET), FL_MENU_TOGGLE},
-                {"OpenGL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_OGL), FL_MENU_TOGGLE},
-                {"AV Dumping", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_DUMP), FL_MENU_TOGGLE},
-                {"SDL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SDL), FL_MENU_TOGGLE},
-                {"Memory", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_MEMORY), FL_MENU_TOGGLE},
-                {"Keyboard", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_KEYBOARD), FL_MENU_TOGGLE},
-                {"Mouse", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_MOUSE), FL_MENU_TOGGLE},
-                {"Joystick", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_JOYSTICK), FL_MENU_TOGGLE},
-                {"OpenAL", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_OPENAL), FL_MENU_TOGGLE},
-                {"Sound", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SOUND), FL_MENU_TOGGLE},
-                {"Random", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_RANDOM), FL_MENU_TOGGLE},
-                {"Signals", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_SIGNAL), FL_MENU_TOGGLE},
-                {"Events", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_EVENTS), FL_MENU_TOGGLE},
-                {"Windows", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_WINDOW), FL_MENU_TOGGLE},
-                {"File IO", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_FILEIO), FL_MENU_TOGGLE},
-                {"Steam", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_STEAM), FL_MENU_TOGGLE},
-                {"Threads", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_THREAD), FL_MENU_TOGGLE},
-                {"Timers", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_TIMERS), FL_MENU_TOGGLE | FL_MENU_DIVIDER},
-                {"All", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_ALL)},
-                {"None", 0, logging_exclude_cb, reinterpret_cast<void*>(LCF_NONE)},
-                {nullptr},
-            {nullptr},
-        {nullptr},
-    {"Tools", 0, nullptr, nullptr, FL_SUBMENU},
-#ifdef LIBTAS_ENABLE_AVDUMPING
-        {"Configure encode...", 0, config_encode_cb},
-        {"Start encode", 0, toggle_encode_cb, nullptr, FL_MENU_DIVIDER},
-#else
-        {"Configure encode... (disabled)", 0, nullptr, nullptr, FL_MENU_INACTIVE},
-        {"Start encode (disabled)", 0, nullptr, nullptr, FL_MENU_DIVIDER | FL_MENU_INACTIVE},
-#endif
-        {"Slow Motion", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_DIVIDER},
-            {"100% (normal speed)", 0, slowmo_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
-            {"50%", 0, slowmo_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
-            {"25%", 0, slowmo_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
-            {"12%", 0, slowmo_cb, reinterpret_cast<void*>(8), FL_MENU_RADIO},
-            {nullptr},
-        {"Game information...", 0, game_info_cb},
-        {"Ram Search...", 0, ram_search_cb},
-        {"Ram Watch...", 0, ram_watch_cb},
-        {nullptr},
-    {"Input", 0, nullptr, nullptr, FL_SUBMENU},
-        {"Configure mapping...", 0, config_input_cb, nullptr, FL_MENU_DIVIDER},
-        {"Keyboard support", 0, input_keyboard_cb, nullptr, FL_MENU_TOGGLE},
-        {"Mouse support", 0, input_mouse_cb, nullptr, FL_MENU_TOGGLE},
-        {"Joystick support", 0, nullptr, nullptr, FL_SUBMENU | FL_MENU_DIVIDER},
-            {"None", 0, input_joy_cb, reinterpret_cast<void*>(0), FL_MENU_RADIO},
-            {"1", 0, input_joy_cb, reinterpret_cast<void*>(1), FL_MENU_RADIO},
-            {"2", 0, input_joy_cb, reinterpret_cast<void*>(2), FL_MENU_RADIO},
-            {"3", 0, input_joy_cb, reinterpret_cast<void*>(3), FL_MENU_RADIO},
-            {"4", 0, input_joy_cb, reinterpret_cast<void*>(4), FL_MENU_RADIO},
-            {nullptr},
-        {"Joystick inputs (dummy)", 0, controller_inputs_cb, nullptr, FL_MENU_DIVIDER},
-        {"Enable hotkeys when", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Game has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_GAME), FL_MENU_TOGGLE},
-            {"UI has focus", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_UI), FL_MENU_TOGGLE},
-            {"Always (not working)", 0, hotkeys_focus_cb, reinterpret_cast<void*>(Context::FOCUS_ALL), FL_MENU_TOGGLE},
-            {nullptr},
-        {"Enable inputs when", 0, nullptr, nullptr, FL_SUBMENU},
-            {"Game has focus", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_GAME), FL_MENU_TOGGLE},
-            {"UI has focus", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_UI), FL_MENU_TOGGLE},
-            {"Always", 0, inputs_focus_cb, reinterpret_cast<void*>(Context::FOCUS_ALL), FL_MENU_TOGGLE},
-            {nullptr},
-        {nullptr},
-    {nullptr}
-};
+void MainWindow::createActions()
+{
+    movieEndGroup = new QActionGroup(this);
+    connect(movieEndGroup, &QActionGroup::triggered, this, &MainWindow::slotMovieEnd);
 
-void MainWindow::update_status()
+    addActionCheckable(movieEndGroup, tr("Pause the Movie"), Config::MOVIEEND_PAUSE);
+    addActionCheckable(movieEndGroup, tr("Switch to Writing"), Config::MOVIEEND_WRITE);
+
+    renderPerfGroup = new QActionGroup(this);
+    renderPerfGroup->setExclusive(false);
+
+    addActionCheckable(renderPerfGroup, tr("minimize texture cache footprint"), "texmem");
+    addActionCheckable(renderPerfGroup, tr("MIP_FILTER_NONE always"), "no_mipmap");
+    addActionCheckable(renderPerfGroup, tr("FILTER_NEAREST always"), "no_linear");
+    addActionCheckable(renderPerfGroup, tr("MIP_FILTER_LINEAR ==> _NEAREST"), "no_mip_linear");
+    addActionCheckable(renderPerfGroup, tr("sample white always"), "no_tex");
+    addActionCheckable(renderPerfGroup, tr("disable blending"), "no_blend");
+    addActionCheckable(renderPerfGroup, tr("disable depth buffering entirely"), "no_depth");
+    addActionCheckable(renderPerfGroup, tr("disable alpha testing"), "no_alphatest");
+
+    osdGroup = new QActionGroup(this);
+    osdGroup->setExclusive(false);
+    connect(osdGroup, &QActionGroup::triggered, this, &MainWindow::slotOsd);
+
+    addActionCheckable(osdGroup, tr("Frame Count"), SharedConfig::OSD_FRAMECOUNT);
+    addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
+
+    frequencyGroup = new QActionGroup(this);
+
+    addActionCheckable(frequencyGroup, tr("8000 Hz"), 8000);
+    addActionCheckable(frequencyGroup, tr("11025 Hz"), 11025);
+    addActionCheckable(frequencyGroup, tr("12000 Hz"), 12000);
+    addActionCheckable(frequencyGroup, tr("16000 Hz"), 16000);
+    addActionCheckable(frequencyGroup, tr("22050 Hz"), 22050);
+    addActionCheckable(frequencyGroup, tr("24000 Hz"), 24000);
+    addActionCheckable(frequencyGroup, tr("32000 Hz"), 32000);
+    addActionCheckable(frequencyGroup, tr("44100 Hz"), 44100);
+    addActionCheckable(frequencyGroup, tr("48000 Hz"), 48000);
+
+    bitDepthGroup = new QActionGroup(this);
+
+    addActionCheckable(bitDepthGroup, tr("8 bit"), 8);
+    addActionCheckable(bitDepthGroup, tr("16 bit"), 16);
+
+    channelGroup = new QActionGroup(this);
+
+    addActionCheckable(channelGroup, tr("Mono"), 1);
+    addActionCheckable(channelGroup, tr("Stereo"), 2);
+
+    timeMainGroup = new QActionGroup(this);
+    timeMainGroup->setExclusive(false);
+
+    addActionCheckable(timeMainGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
+    addActionCheckable(timeMainGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
+    addActionCheckable(timeMainGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
+    addActionCheckable(timeMainGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
+    addActionCheckable(timeMainGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
+    addActionCheckable(timeMainGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+
+    timeSecGroup = new QActionGroup(this);
+    timeSecGroup->setExclusive(false);
+
+    addActionCheckable(timeSecGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
+    addActionCheckable(timeSecGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
+    addActionCheckable(timeSecGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
+    addActionCheckable(timeSecGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
+    addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
+    addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+
+    savestateIgnoreGroup = new QActionGroup(this);
+    savestateIgnoreGroup->setExclusive(false);
+    connect(savestateIgnoreGroup, &QActionGroup::triggered, this, &MainWindow::slotSavestateIgnore);
+
+    addActionCheckable(savestateIgnoreGroup, tr("Ignore non-writeable segments"), SharedConfig::IGNORE_NON_WRITEABLE);
+    addActionCheckable(savestateIgnoreGroup, tr("Ignore non-writeable non-anonymous segments"), SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE);
+    addActionCheckable(savestateIgnoreGroup, tr("Ignore exec segments"), SharedConfig::IGNORE_EXEC);
+    addActionCheckable(savestateIgnoreGroup, tr("Ignore shared segments"), SharedConfig::IGNORE_SHARED);
+
+    loggingOutputGroup = new QActionGroup(this);
+
+    addActionCheckable(loggingOutputGroup, tr("Disabled"), SharedConfig::NO_LOGGING);
+    addActionCheckable(loggingOutputGroup, tr("Log to console"), SharedConfig::LOGGING_TO_CONSOLE);
+    addActionCheckable(loggingOutputGroup, tr("Log to file"), SharedConfig::LOGGING_TO_FILE);
+
+    loggingPrintGroup = new QActionGroup(this);
+    connect(loggingPrintGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingPrint);
+
+    addActionCheckable(loggingPrintGroup, tr("Untested"), LCF_UNTESTED);
+    addActionCheckable(loggingPrintGroup, tr("Desync"), LCF_DESYNC);
+    addActionCheckable(loggingPrintGroup, tr("Frequent"), LCF_FREQUENT);
+    addActionCheckable(loggingPrintGroup, tr("Error"), LCF_ERROR);
+    addActionCheckable(loggingPrintGroup, tr("ToDo"), LCF_TODO);
+    addActionCheckable(loggingPrintGroup, tr("Frame"), LCF_FRAME);
+    addActionCheckable(loggingPrintGroup, tr("Hook"), LCF_HOOK);
+    addActionCheckable(loggingPrintGroup, tr("Time Set"), LCF_TIMESET);
+    addActionCheckable(loggingPrintGroup, tr("Time Get"), LCF_TIMEGET);
+    addActionCheckable(loggingPrintGroup, tr("Checkpoint"), LCF_CHECKPOINT);
+    addActionCheckable(loggingPrintGroup, tr("Wait"), LCF_WAIT);
+    addActionCheckable(loggingPrintGroup, tr("Sleep"), LCF_SLEEP);
+    addActionCheckable(loggingPrintGroup, tr("Socket"), LCF_SOCKET);
+    addActionCheckable(loggingPrintGroup, tr("OpenGL"), LCF_OGL);
+    addActionCheckable(loggingPrintGroup, tr("AV Dumping"), LCF_DUMP);
+    addActionCheckable(loggingPrintGroup, tr("SDL"), LCF_SDL);
+    addActionCheckable(loggingPrintGroup, tr("Memory"), LCF_MEMORY);
+    addActionCheckable(loggingPrintGroup, tr("Keyboard"), LCF_KEYBOARD);
+    addActionCheckable(loggingPrintGroup, tr("Mouse"), LCF_MOUSE);
+    addActionCheckable(loggingPrintGroup, tr("Joystick"), LCF_JOYSTICK);
+    addActionCheckable(loggingPrintGroup, tr("OpenAL"), LCF_OPENAL);
+    addActionCheckable(loggingPrintGroup, tr("Sound"), LCF_SOUND);
+    addActionCheckable(loggingPrintGroup, tr("Random"), LCF_RANDOM);
+    addActionCheckable(loggingPrintGroup, tr("Signals"), LCF_SIGNAL);
+    addActionCheckable(loggingPrintGroup, tr("Events"), LCF_EVENTS);
+    addActionCheckable(loggingPrintGroup, tr("Windows"), LCF_WINDOW);
+    addActionCheckable(loggingPrintGroup, tr("File IO"), LCF_FILEIO);
+    addActionCheckable(loggingPrintGroup, tr("Steam"), LCF_STEAM);
+    addActionCheckable(loggingPrintGroup, tr("Threads"), LCF_THREAD);
+    addActionCheckable(loggingPrintGroup, tr("Timers"), LCF_TIMERS);
+
+    loggingExcludeGroup = new QActionGroup(this);
+    connect(loggingExcludeGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingExclude);
+
+    addActionCheckable(loggingExcludeGroup, tr("Untested"), LCF_UNTESTED);
+    addActionCheckable(loggingExcludeGroup, tr("Desync"), LCF_DESYNC);
+    addActionCheckable(loggingExcludeGroup, tr("Frequent"), LCF_FREQUENT);
+    addActionCheckable(loggingExcludeGroup, tr("Error"), LCF_ERROR);
+    addActionCheckable(loggingExcludeGroup, tr("ToDo"), LCF_TODO);
+    addActionCheckable(loggingExcludeGroup, tr("Frame"), LCF_FRAME);
+    addActionCheckable(loggingExcludeGroup, tr("Hook"), LCF_HOOK);
+    addActionCheckable(loggingExcludeGroup, tr("Time Set"), LCF_TIMESET);
+    addActionCheckable(loggingExcludeGroup, tr("Time Get"), LCF_TIMEGET);
+    addActionCheckable(loggingExcludeGroup, tr("Checkpoint"), LCF_CHECKPOINT);
+    addActionCheckable(loggingExcludeGroup, tr("Wait"), LCF_WAIT);
+    addActionCheckable(loggingExcludeGroup, tr("Sleep"), LCF_SLEEP);
+    addActionCheckable(loggingExcludeGroup, tr("Socket"), LCF_SOCKET);
+    addActionCheckable(loggingExcludeGroup, tr("OpenGL"), LCF_OGL);
+    addActionCheckable(loggingExcludeGroup, tr("AV Dumping"), LCF_DUMP);
+    addActionCheckable(loggingExcludeGroup, tr("SDL"), LCF_SDL);
+    addActionCheckable(loggingExcludeGroup, tr("Memory"), LCF_MEMORY);
+    addActionCheckable(loggingExcludeGroup, tr("Keyboard"), LCF_KEYBOARD);
+    addActionCheckable(loggingExcludeGroup, tr("Mouse"), LCF_MOUSE);
+    addActionCheckable(loggingExcludeGroup, tr("Joystick"), LCF_JOYSTICK);
+    addActionCheckable(loggingExcludeGroup, tr("OpenAL"), LCF_OPENAL);
+    addActionCheckable(loggingExcludeGroup, tr("Sound"), LCF_SOUND);
+    addActionCheckable(loggingExcludeGroup, tr("Random"), LCF_RANDOM);
+    addActionCheckable(loggingExcludeGroup, tr("Signals"), LCF_SIGNAL);
+    addActionCheckable(loggingExcludeGroup, tr("Events"), LCF_EVENTS);
+    addActionCheckable(loggingExcludeGroup, tr("Windows"), LCF_WINDOW);
+    addActionCheckable(loggingExcludeGroup, tr("File IO"), LCF_FILEIO);
+    addActionCheckable(loggingExcludeGroup, tr("Steam"), LCF_STEAM);
+    addActionCheckable(loggingExcludeGroup, tr("Threads"), LCF_THREAD);
+    addActionCheckable(loggingExcludeGroup, tr("Timers"), LCF_TIMERS);
+
+    slowdownGroup = new QActionGroup(this);
+    connect(slowdownGroup, &QActionGroup::triggered, this, &MainWindow::slotSlowdown);
+
+    addActionCheckable(slowdownGroup, tr("100% (normal speed)"), 1);
+    addActionCheckable(slowdownGroup, tr("50%"), 2);
+    addActionCheckable(slowdownGroup, tr("25%"), 4);
+    addActionCheckable(slowdownGroup, tr("12%"), 8);
+
+    joystickGroup = new QActionGroup(this);
+    addActionCheckable(joystickGroup, tr("None"), 0);
+    addActionCheckable(joystickGroup, tr("1"), 1);
+    addActionCheckable(joystickGroup, tr("2"), 2);
+    addActionCheckable(joystickGroup, tr("3"), 3);
+    addActionCheckable(joystickGroup, tr("4"), 4);
+
+    hotkeyFocusGroup = new QActionGroup(this);
+    hotkeyFocusGroup->setExclusive(false);
+    connect(hotkeyFocusGroup, &QActionGroup::triggered, this, &MainWindow::slotHotkeyFocus);
+
+    addActionCheckable(hotkeyFocusGroup, tr("Game has focus"), Context::FOCUS_GAME);
+    addActionCheckable(hotkeyFocusGroup, tr("UI has focus"), Context::FOCUS_UI);
+    addActionCheckable(hotkeyFocusGroup, tr("Always (not working)"), Context::FOCUS_ALL);
+
+    inputFocusGroup = new QActionGroup(this);
+    inputFocusGroup->setExclusive(false);
+    connect(inputFocusGroup, &QActionGroup::triggered, this, &MainWindow::slotInputFocus);
+
+    addActionCheckable(inputFocusGroup, tr("Game has focus"), Context::FOCUS_GAME);
+    addActionCheckable(inputFocusGroup, tr("UI has focus"), Context::FOCUS_UI);
+    addActionCheckable(inputFocusGroup, tr("Always (not working)"), Context::FOCUS_ALL);
+}
+
+void MainWindow::createMenus()
+{
+    /* File Menu */
+    QMenu *fileMenu = menuBar()->addMenu(tr("File"));
+
+    fileMenu->addAction(tr("Open Executable..."), this, &MainWindow::slotBrowseGamePath);
+    fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
+    fileMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
+    fileMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
+    fileMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
+
+    QMenu *movieEndMenu = fileMenu->addMenu(tr("On Movie End"));
+    movieEndMenu->addActions(movieEndGroup->actions());
+
+    /* Video Menu */
+    QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
+
+    renderSoftAction = fileMenu->addAction(tr("Force software rendering"));
+    renderSoftAction->setCheckable(true);
+    disableOnStart.push_front(renderSoftAction);
+
+    QMenu *renderPerfMenu = videoMenu->addMenu(tr("Add performance flags to software rendering"));
+    renderPerfMenu->addActions(renderPerfGroup->actions());
+    disableOnStart.push_front(renderPerfMenu);
+
+    QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
+    osdMenu->addActions(osdGroup->actions());
+    osdMenu->addSeparator();
+    osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, &MainWindow::slotOsdEncode);
+    osdEncodeAction->setCheckable(true);
+
+    /* Sound Menu */
+    QMenu *soundMenu = menuBar()->addMenu(tr("Sound"));
+
+    QMenu *formatMenu = soundMenu->addMenu(tr("Format"));
+    formatMenu->addActions(frequencyGroup->actions());
+    formatMenu->addSeparator();
+    formatMenu->addActions(bitDepthGroup->actions());
+    formatMenu->addSeparator();
+    formatMenu->addActions(channelGroup->actions());
+    disableOnStart.push_front(formatMenu);
+
+    muteAction = soundMenu->addAction(tr("Mute"), this, &MainWindow::slotMuteSound);
+    muteAction->setCheckable(true);
+
+    /* Runtime Menu */
+    QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
+
+    QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
+    disableOnStart.push_front(timeMenu);
+    QMenu *timeMainMenu = timeMenu->addMenu(tr("Main thread"));
+    timeMainMenu->addActions(timeMainGroup->actions());
+    QMenu *timeSecMenu = timeMenu->addMenu(tr("Secondary thread"));
+    timeSecMenu->addActions(timeSecGroup->actions());
+
+    QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
+    QMenu *savestateSegmentMenu = savestateMenu->addMenu(tr("Ignore memory segments"));
+    savestateSegmentMenu->addActions(savestateIgnoreGroup->actions());
+
+    saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
+    saveScreenAction->setCheckable(true);
+    preventSavefileAction = runtimeMenu->addAction(tr("Backup savefiles in memory"), this, &MainWindow::slotPreventSavefile);
+    preventSavefileAction->setCheckable(true);
+
+    QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug Logging"));
+    debugMenu->addActions(loggingOutputGroup->actions());
+    disableOnStart.push_front(loggingOutputGroup);
+
+    debugMenu->addSeparator();
+
+    QMenu *debugPrintMenu = debugMenu->addMenu(tr("Print Categories"));
+    debugPrintMenu->addActions(loggingPrintGroup->actions());
+    QMenu *debugExcludeMenu = debugMenu->addMenu(tr("Exclude Categories"));
+    debugExcludeMenu->addActions(loggingPrintGroup->actions());
+
+    /* Tools Menu */
+    QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
+    configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
+    toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
+
+    QMenu *slowdownMenu = toolsMenu->addMenu(tr("Slow Motion"));
+    slowdownMenu->addActions(slowdownGroup->actions());
+
+    toolsMenu->addAction(tr("Game information..."), gameInfoWindow, &GameInfoWindow::exec);
+    toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::exec);
+    toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::exec);
+
+    /* Input Menu */
+    QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
+    inputMenu->addAction(tr("Configure mapping..."), inputWindow, &InputWindow::exec);
+
+    keyboardAction = inputMenu->addAction(tr("Keyboard support"));
+    keyboardAction->setCheckable(true);
+    disableOnStart.push_front(keyboardAction);
+    mouseAction = inputMenu->addAction(tr("Mouse support"));
+    mouseAction->setCheckable(true);
+    disableOnStart.push_front(mouseAction);
+
+    QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
+    joystickMenu->addActions(joystickGroup->actions());
+    disableOnStart.push_front(joystickMenu);
+
+    QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
+    hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());
+
+    QMenu *inputFocusMenu = inputMenu->addMenu(tr("Enable inputs when"));
+    inputFocusMenu->addActions(inputFocusGroup->actions());
+
+}
+
+void MainWindow::updateStatus()
 {
     /* Update game status (active/inactive) */
 
-    /* This function might be called by another thread */
-    Fl::lock();
-
-    Fl_Menu_Item *item;
     std::string tmpstr;
 
     switch (context->status) {
+
         case Context::INACTIVE:
-            launch->label("Start");
-            launch->activate();
-            launch_gdb->label("Start and attach gdb");
-            launch_gdb->activate();
-            moviepath->activate();
-            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
-            if (item) item->deactivate();
-            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
-            if (item) item->deactivate();
-            browsemoviepath->activate();
-            gamepath->activate();
-            browsegamepath->activate();
-            cmdoptions->activate();
-            logicalfps->activate();
-            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
-            if (item) item->activate();
-            tmpstr = std::to_string(context->config.sc.initial_time.tv_sec);
-            initial_time_sec->value(tmpstr.c_str());
-            initial_time_sec->activate();
-            tmpstr = std::to_string(context->config.sc.initial_time.tv_nsec);
-            initial_time_nsec->value(tmpstr.c_str());
-            initial_time_nsec->activate();
+            for (QWidget* w : disableOnStart)
+                w->setEnabled(true);
+
+            // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
+            // if (item) item->deactivate();
+            // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
+            // if (item) item->deactivate();
+
+            initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
+            initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
+
 #ifdef LIBTAS_ENABLE_AVDUMPING
             if (context->config.sc.av_dumping) {
-                Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
-                Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
                 context->config.sc.av_dumping = false;
-                if (encode_item) encode_item->label("Start encode");
-                if (config_item) config_item->activate();
+                configEncodeAction->setEnabled(true);
+                toggleEncodeAction->setText("Start encode");
             }
 #endif
-            movie_no->activate();
-            movie_recording->activate();
-            movie_playback->activate();
-            framecount->value("0");
+            movieRecording->setEnabled(true);
+            moviePlayback->setEnabled(true);
+
+            frameCount->setValue(0);
             {
-                movie_framecount->activate();
+                movieFrameCount->setEnabled(true);
                 MovieFile tempmovie(context);
                 /* Update the movie frame count if the movie file is valid */
                 if (tempmovie.extractMovie() == 0) {
-                    std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
-                    movie_framecount->value(movieframestr.c_str());
+                    movieFrameCount->setValue(tempmovie.nbFramesConfig());
                 }
             }
             break;
+
         case Context::STARTING:
-            launch->deactivate();
-            launch_gdb->deactivate();
-            moviepath->deactivate();
-            browsemoviepath->deactivate();
-            gamepath->deactivate();
-            browsegamepath->deactivate();
-            cmdoptions->deactivate();
-            logicalfps->deactivate();
-            item = const_cast<Fl_Menu_Item*>(menu_bar->find_item("Sound/Format"));
-            if (item) item->deactivate();
-            initial_time_sec->deactivate();
-            initial_time_nsec->deactivate();
+            for (QWidget* w : disableOnStart)
+                w->setEnabled(false);
+
             if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
-                movie_framecount->value("");
-                movie_framecount->deactivate();
+                movieFrameCount->setValue(0);
+                movieFrameCount->setEnabled(false);
             }
             if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
-                movie_recording->deactivate();
-                movie_playback->deactivate();
-            }
-            else {
-                movie_no->deactivate();
+                movieRecording->setEnabled(false);
+                moviePlayback->setEnabled(false);
             }
             break;
+
         case Context::ACTIVE:
-            if (context->attach_gdb) {
-                launch_gdb->activate();
-                launch_gdb->label("Stop");
-            }
-            else {
-                launch->activate();
-                launch->label("Stop");
-            }
-            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-                item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
-                if (item) item->activate();
-                item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
-                if (item) item->activate();
-            }
+            stopButton->setEnabled(true);
+            // if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+            //     item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
+            //     if (item) item->activate();
+            //     item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
+            //     if (item) item->activate();
+            // }
             break;
         case Context::QUITTING:
-            launch->deactivate();
-            launch_gdb->deactivate();
+            stopButton->setEnabled(false);
             break;
         default:
             break;
     }
 
-    Fl::unlock();
-    Fl::awake();
+    // Fl::unlock();
+    // Fl::awake();
 }
 
-void MainWindow::update_ui()
+void MainWindow::updateSharedConfigChanged()
 {
-    /* This function is called by another thread */
-    Fl::lock();
-
     /* Update pause status */
-    pausecheck->value(!context->config.sc.running);
+    pauseCheck->setChecked(!context->config.sc.running);
 
     /* Update fastforward status */
-    fastforwardcheck->value(context->config.sc.fastforward);
+    fastForwardCheck->setChecked(context->config.sc.fastforward);
 
     /* Update recording state */
     std::string movieframestr;
     switch (context->config.sc.recording) {
         case SharedConfig::RECORDING_WRITE:
-            movie_recording->setonly();
-            movie_framecount->value("");
-            movie_framecount->deactivate();
+            movieRecording->setChecked(true);
+            movieFrameCount->setValue(0);
+            movieFrameCount->setEnabled(false);
             break;
         case SharedConfig::RECORDING_READ:
-            movie_playback->setonly();
-            movieframestr = std::to_string(context->config.sc.movie_framecount);
-            movie_framecount->value(movieframestr.c_str());
-            movie_framecount->activate();
+            moviePlayback->setChecked(true);
+            movieFrameCount->setValue(context->config.sc.movie_framecount);
+            movieFrameCount->setEnabled(true);
             break;
         case SharedConfig::NO_RECORDING:
-            movie_no->setonly();
-            moviepath->deactivate();
-            browsemoviepath->deactivate();
+            movieNo->setChecked(true);
+            moviePath->setEnabled(false);
+            browseMoviePath->setEnabled(false);
         default:
             break;
     }
 
     /* Update encode menus */
 #ifdef LIBTAS_ENABLE_AVDUMPING
-    Fl_Menu_Item* encode_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(toggle_encode_cb));
-    Fl_Menu_Item* config_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(config_encode_cb));
     if (context->config.sc.av_dumping) {
-        if (encode_item) encode_item->label("Stop encode");
-        if (config_item) config_item->deactivate();
+        configEncodeAction->setEnabled(false);
+        toggleEncodeAction->setText("Stop encode");
     }
     else {
-        if (encode_item) encode_item->label("Start encode");
-        if (config_item) config_item->activate();
+        configEncodeAction->setEnabled(true);
+        toggleEncodeAction->setText("Start encode");
     }
 #endif
-
-    Fl::unlock();
-    Fl::awake();
 }
 
-void MainWindow::update_framecount_time()
+void MainWindow::updateFrameCountTime()
 {
-    /* This function is called by another thread */
-    Fl::lock();
-
     /* Update frame count */
-    std::string framestr = std::to_string(context->framecount);
-    framecount->value(framestr.c_str());
+    frameCount->setValue(context->framecount);
 
     /* Update time */
-    std::string secstr = std::to_string(context->current_time.tv_sec);
-    initial_time_sec->value(secstr.c_str());
-    std::string nsecstr = std::to_string(context->current_time.tv_nsec);
-    initial_time_nsec->value(nsecstr.c_str());
+    initialTimeSec->setValue(context->current_time.tv_sec);
+    initialTimeNsec->setValue(context->current_time.tv_nsec);
 
     /* Update movie time */
-
     if (context->config.sc.framerate > 0) {
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(2);
+        double sec = (double)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+        int min = context->framecount / (context->config.sc.framerate * 60);
 
-        /* Format current length */
-        float sec = (float)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-        int min = (context->framecount / (context->config.sc.framerate * 60)) % 60;
-        int hour = (context->framecount / (context->config.sc.framerate * 3600));
-        if (hour > 0) oss << hour << "h ";
-        if (min > 0) oss << min << "m ";
-        oss << sec << "s";
+        QString timeStr = QString("%1m %2s").arg(min).arg(sec, 0, 'g', 2);
 
         /* Format movie length */
         if (context->config.sc.movie_framecount != 0) {
-            oss << " / ";
-            float msec = (float)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-            int mmin = (context->config.sc.movie_framecount / (context->config.sc.framerate * 60)) % 60;
-            int mhour = (context->config.sc.movie_framecount / (context->config.sc.framerate * 3600));
-            if (mhour > 0) oss << mhour << "h ";
-            if (mmin > 0) oss << mmin << "m ";
-            oss << msec << "s";
+            double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+            int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
+
+            timeStr.append(" / %1m %2s").arg(mmin).arg(msec, 0, 'g', 2);
         }
 
-        movie_length->copy_label(oss.str().c_str());
+        movieLength->setText(timeStr);
     }
-
-    Fl::unlock();
-    Fl::awake();
 }
 
-void MainWindow::update_rerecordcount()
+void MainWindow::updateRerecordCount()
 {
-    /* This function is called by another thread */
-    Fl::lock();
-
     /* Update frame count */
-    std::string rerecordstr = std::to_string(context->rerecord_count);
-    rerecord_count->value(rerecordstr.c_str());
-
-    Fl::unlock();
-    Fl::awake();
+    rerecordCount->setValue(context->rerecord_count);
 }
 
-void MainWindow::update_fps(float fps, float lfps)
+void MainWindow::updateFps(float fps, float lfps)
 {
-    /* This function is called by another thread */
-    Fl::lock();
-
     /* Update fps values */
-    std::ostringstream oss;
     if ((fps > 0) || (lfps > 0)) {
-        oss << std::fixed << std::setprecision(1);
-        oss << "Current FPS: " << fps << " / " << lfps;
+        fpsValues->setText(QString("Current FPS: %1 / %2").arg(fps, 0, 'g', 1).arg(lfps, 0, 'g', 1));
     }
     else {
-        oss << "Current FPS: - / -";
+        fpsValues->setText("Current FPS: - / -");
     }
-
-    fps_values->copy_label(oss.str().c_str());
-
-    Fl::unlock();
-    Fl::awake();
 }
 
-void MainWindow::update_ramsearch()
+void MainWindow::updateRam()
 {
-    /* This function is called by another thread */
-    // Fl::lock();
-
-    if (ramsearch_window->isVisible()) {
-        ramsearch_window->update();
+    if (ramSearchWindow->isVisible()) {
+        ramSearchWindow->update();
     }
-
-    // Fl::unlock();
-    // Fl::awake();
+    if (ramWatchWindow->isVisible()) {
+        ramWatchWindow->update();
+    }
 }
 
-void MainWindow::update_ramwatch()
+void MainWindow::setCheckboxesFromMask(const QActionGroup *actionGroup, int value)
 {
-    /* This function is called by another thread */
-    // Fl::lock();
-
-    if (ramwatch_window->isVisible()) {
-        ramwatch_window->update();
+    for (auto& action : actionGroup->actions()) {
+        action->setChecked(value & action->data().toInt());
     }
-
-    // Fl::unlock();
-    // Fl::awake();
 }
 
-void MainWindow::update_config()
+void MainWindow::setMaskFromCheckboxes(const QActionGroup *actionGroup, int &value)
 {
-    gamepath->value(context->gamepath.c_str());
-    gamepathchooser->preset_file(context->gamepath.c_str());
-    cmdoptions->value(context->config.gameargs.c_str());
-    moviepath->value(context->config.moviefile.c_str());
-    moviepathchooser->preset_file(context->config.moviefile.c_str());
-    std::string fpsstr = std::to_string(context->config.sc.framerate);
-    logicalfps->value(fpsstr.c_str());
+    value = 0;
+    for (const auto& action : actionGroup->actions()) {
+        if (action->isChecked()) {
+            value |= action->data().toInt();
+        }
+    }
+}
 
-    /* Define some macros to help setting menu items */
-    Fl_Menu_Item* menu_item;
+void MainWindow::setRadioFromList(const QActionGroup *actionGroup, int value)
+{
+    for (auto& action : actionGroup->actions()) {
+        if (value == action->data().toInt()) {
+            action->setChecked(true);
+            return;
+        }
+    }
+}
 
-#define SET_TOGGLE_FROM_BOOL(cb, value) \
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
-    if (value) \
-        menu_item->set(); \
-    else \
-        menu_item->clear()
+void MainWindow::setListFromRadio(const QActionGroup *actionGroup, int &value)
+{
+    for (const auto& action : actionGroup->actions()) {
+        if (action->isChecked()) {
+            value = action->data().toInt();
+            return;
+        }
+    }
+}
 
-#define SET_TOGGLES_FROM_MASK(cb, value) \
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
-    do { \
-        if ((value) & menu_item->argument()) \
-            menu_item->set(); \
-        else \
-            menu_item->clear(); \
-      menu_item = menu_item->next(); \
-    } while (menu_item->flags)
+void MainWindow::updateUIFromConfig()
+{
+    gamePath->setText(context->gamepath.c_str());
+    cmdOptions->setText(context->config.gameargs.c_str());
+    moviePath->setText(context->config.moviefile.c_str());
+    logicalFps->setValue(context->config.sc.framerate);
 
-#define SET_RADIO_FROM_LIST(cb, value) \
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(cb)); \
-    do { \
-        if ((value) == menu_item->argument()) { \
-            menu_item->setonly(); \
-            break; \
-        } \
-        menu_item = menu_item->next(); \
-    } while (menu_item->flags)
+    initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
+    initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
 
-    SET_RADIO_FROM_LIST(sound_frequency_cb, context->config.sc.audio_frequency);
-    SET_RADIO_FROM_LIST(sound_bitdepth_cb, context->config.sc.audio_bitdepth);
-    SET_RADIO_FROM_LIST(sound_channel_cb, context->config.sc.audio_channels);
+    MovieFile tempmovie(context);
+    if (tempmovie.extractMovie() == 0) {
+        movieFrameCount->setValue(tempmovie.nbFramesConfig());
+        rerecordCount->setValue(tempmovie.nbRerecords());
 
-    SET_TOGGLE_FROM_BOOL(mute_sound_cb, context->config.sc.audio_mute);
+        /* Also, by default, set the read-only mode */
+        moviePlayback->setChecked(true);
+        context->config.sc.recording = SharedConfig::RECORDING_READ;
+        context->config.sc_modified = true;
+    }
 
-    SET_RADIO_FROM_LIST(logging_status_cb, context->config.sc.logging_status);
+    pauseCheck->setChecked(!context->config.sc.running);
+    fastForwardCheck->setChecked(context->config.sc.fastforward);
 
-    SET_TOGGLES_FROM_MASK(logging_print_cb, context->config.sc.includeFlags);
-    SET_TOGGLES_FROM_MASK(logging_exclude_cb, context->config.sc.excludeFlags);
+    setRadioFromList(frequencyGroup, context->config.sc.audio_frequency);
+    setRadioFromList(bitDepthGroup, context->config.sc.audio_bitdepth);
+    setRadioFromList(channelGroup, context->config.sc.audio_channels);
 
-    SET_RADIO_FROM_LIST(slowmo_cb, context->config.sc.speed_divisor);
+    muteAction->setChecked(context->config.sc.audio_mute);
 
-    SET_TOGGLE_FROM_BOOL(input_keyboard_cb, context->config.sc.keyboard_support);
-    SET_TOGGLE_FROM_BOOL(input_mouse_cb, context->config.sc.mouse_support);
+    setRadioFromList(loggingOutputGroup, context->config.sc.logging_status);
 
-    SET_RADIO_FROM_LIST(input_joy_cb, context->config.sc.nb_controllers);
+    setCheckboxesFromMask(loggingPrintGroup, context->config.sc.includeFlags);
+    setCheckboxesFromMask(loggingExcludeGroup, context->config.sc.excludeFlags);
+
+    setRadioFromList(slowdownGroup, context->config.sc.speed_divisor);
+
+    keyboardAction->setChecked(context->config.sc.keyboard_support);
+    mouseAction->setChecked(context->config.sc.mouse_support);
+
+    setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
 
 #ifdef LIBTAS_ENABLE_HUD
-    SET_TOGGLE_FROM_BOOL(osd_frame_cb, context->config.sc.hud_framecount);
-    SET_TOGGLE_FROM_BOOL(osd_inputs_cb, context->config.sc.hud_inputs);
-    SET_TOGGLE_FROM_BOOL(osd_encode_cb, context->config.sc.hud_encode);
+    setCheckboxesFromMask(osdGroup, context->config.sc.osd);
+    osdEncodeAction->setChecked(context->config.sc.osd_encode);
 #endif
 
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_main_cb));
-    while (menu_item->flags) {
-        if (context->config.sc.main_gettimes_threshold[menu_item->argument()] == -1)
-            menu_item->clear();
-        else
-            menu_item->set();
-        menu_item = menu_item->next();
+    for (auto& action : timeMainGroup->actions()) {
+        action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
     }
 
-    menu_item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(time_sec_cb));
-    while (menu_item->flags) {
-        if (context->config.sc.sec_gettimes_threshold[menu_item->argument()] == -1)
-            menu_item->clear();
-        else
-            menu_item->set();
-      menu_item = menu_item->next();
+    for (auto& action : timeSecGroup->actions()) {
+        action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
 
-    SET_TOGGLES_FROM_MASK(hotkeys_focus_cb, context->hotkeys_focus);
-    SET_TOGGLES_FROM_MASK(inputs_focus_cb, context->inputs_focus);
+    setCheckboxesFromMask(hotkeyFocusGroup, context->hotkeys_focus);
+    setCheckboxesFromMask(inputFocusGroup, context->inputs_focus);
 
-    SET_TOGGLE_FROM_BOOL(render_soft_cb, context->config.opengl_soft);
-    SET_TOGGLE_FROM_BOOL(savestate_screen_cb, context->config.sc.save_screenpixels);
+    renderSoftAction->setChecked(context->config.opengl_soft);
+    saveScreenAction->setChecked(context->config.sc.save_screenpixels);
+    preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
 
-    SET_TOGGLES_FROM_MASK(ignore_memory_cb, context->config.sc.ignore_sections);
+    setCheckboxesFromMask(savestateIgnoreGroup, context->config.sc.ignore_sections);
 
-    std::string secstr = std::to_string(context->config.sc.initial_time.tv_sec);
-    initial_time_sec->value(secstr.c_str());
-
-    std::string nsecstr = std::to_string(context->config.sc.initial_time.tv_nsec);
-    initial_time_nsec->value(nsecstr.c_str());
-
-    SET_TOGGLE_FROM_BOOL(prevent_savefiles_cb, context->config.sc.prevent_savefiles);
-
-    SET_RADIO_FROM_LIST(movie_end_cb, context->config.on_movie_end);
+    setRadioFromList(movieEndGroup, context->config.on_movie_end);
 }
 
-void launch_cb(Fl_Widget* w)
+void MainWindow::slotLaunch()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.context->attach_gdb = (static_cast<Fl_Button*>(w) == mw.launch_gdb);
+    /* Do we attach gdb ? */
+    QPushButton* button = static_cast<QPushButton*>(sender());
+    context->attach_gdb = (button == launchGdbButton);
 
-    switch (mw.context->status) {
-        case Context::INACTIVE:
-            /* Perform all checks */
-            if (!ErrorChecking::allChecks(mw.context))
-                break;
+    if (context->status != Context::INACTIVE)
+        return;
 
-            /* Check that there might be a thread from a previous game execution */
-            if (mw.game_thread.joinable())
-                mw.game_thread.join();
+    /* Perform all checks */
+    if (!ErrorChecking::allChecks(context))
+        return;
 
-            /* Start game */
-            mw.context->status = Context::STARTING;
-            mw.update_status();
-            mw.game_thread = std::thread{launchGame, mw.context};
-            break;
-        case Context::ACTIVE:
-            mw.context->status = Context::QUITTING;
-            mw.context->config.sc.running = true;
-            mw.context->config.sc_modified = true;
-            mw.update_ui();
-            mw.update_status();
-            mw.game_thread.detach();
-            break;
-        default:
-            break;
-    }
-}
+    /* Set a few parameters */
+    context->config.sc.framerate = logicalFps->value();
+    context->config.sc.initial_time.tv_sec = initialTimeSec->value();
+    context->config.sc.initial_time.tv_nsec = initialTimeNsec->value();
 
-void browse_gamepath_cb(Fl_Widget* w, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int ret = mw.gamepathchooser->show();
+    setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
+    setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);
+    setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
-    const char* filename = mw.gamepathchooser->filename();
+    setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
+    // for (auto& action : loggingOutputGroup->actions()) {
+    //     if (action->isChecked()) {
+    //         context->config.sc.logging_status = static_cast<SharedConfig::LogStatus>(action->data()->toInt());
+    //         break;
+    //     }
+    // }
 
-    /* If the user picked a file */
-    if (ret == 0) {
-        mw.gamepath->value(filename);
-        mw.context->gamepath = std::string(filename);
+    context->config.sc.keyboard_support = keyboardAction->isChecked();
+    context->config.sc.mouse_support = mouseAction->isChecked();
+    setListFromRadio(joystickGroup, context->config.sc.nb_controllers);
 
-        /* Try to load the game-specific pref file */
-        mw.context->config.load(mw.context->gamepath);
-
-        /* Update the movie parameters */
-        MovieFile tempmovie(mw.context);
-        if (tempmovie.extractMovie() == 0) {
-            /* If the moviefile is valid, update the frame and rerecord counts */
-            std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
-            mw.movie_framecount->value(movieframestr.c_str());
-            std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
-            mw.rerecord_count->value(rerecordstr.c_str());
-
-            /* Also, by default, set the read-only mode */
-            mw.movie_playback->setonly();
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
-            mw.context->config.sc_modified = true;
-        }
-
-        /* Update the UI accordingly */
-        mw.update_config();
-#ifdef LIBTAS_ENABLE_AVDUMPING
-        mw.encode_window->update_config();
-#endif
-        mw.executable_window->update_config();
-        mw.input_window->update();
-
-    }
-}
-
-void browse_moviepath_cb(Fl_Widget* w, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int ret = mw.moviepathchooser->show();
-
-    const char* filename = mw.moviepathchooser->filename();
-
-    /* If the user picked a file */
-    if (ret == 0) {
-        mw.moviepath->value(filename);
-        mw.context->config.moviefile = std::string(filename);
-        MovieFile tempmovie(mw.context);
-        if (tempmovie.extractMovie() == 0) {
-            /* If the moviefile is valid, update the frame and rerecord counts */
-            std::string movieframestr = std::to_string(tempmovie.nbFramesConfig());
-            mw.movie_framecount->value(movieframestr.c_str());
-            std::string rerecordstr = std::to_string(tempmovie.nbRerecords());
-            mw.rerecord_count->value(rerecordstr.c_str());
-
-            /* Also, by default, set the read-only mode */
-            mw.movie_playback->setonly();
-            mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
-            mw.context->config.sc_modified = true;
+    for (const auto& action : timeMainGroup->actions()) {
+        int index = action->data().toInt();
+        if (action->isChecked()) {
+            context->config.sc.main_gettimes_threshold[index] = 100;
         }
         else {
-            mw.movie_framecount->value("0");
-            mw.rerecord_count->value("0");
-
-            /* Also, by default, set the write mode */
-            mw.movie_recording->setonly();
-            mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-            mw.context->config.sc_modified = true;
+            context->config.sc.main_gettimes_threshold[index] = -1;
         }
+    }
+    for (const auto& action : timeSecGroup->actions()) {
+        int index = action->data().toInt();
+        if (action->isChecked()) {
+            context->config.sc.sec_gettimes_threshold[index] = 100;
+        }
+        else {
+            context->config.sc.sec_gettimes_threshold[index] = -1;
+        }
+    }
+
+    context->config.opengl_soft = renderSoftAction->isChecked();
+    context->config.gameargs = cmdOptions->text().toStdString();
+
+    QString llvmStr;
+    for (const auto& action : renderPerfGroup->actions()) {
+        if (action->isChecked()) {
+            llvmStr.append(action->data().toString()).append(",");
+        }
+    }
+    /* Remove the trailing comma */
+    llvmStr.chop(1);
+    context->config.llvm_perf = llvmStr.toStdString();
+
+    /* Check that there might be a thread from a previous game execution */
+    if (game_thread.joinable())
+        game_thread.join();
+
+    /* Start game */
+    context->status = Context::STARTING;
+    updateStatus();
+    game_thread = std::thread{launchGame, context};
+}
+
+void MainWindow::slotStop()
+{
+    if (context->status != Context::ACTIVE)
+        return;
+
+    context->status = Context::QUITTING;
+    context->config.sc.running = true;
+    context->config.sc_modified = true;
+    updateSharedConfigChanged();
+    updateStatus();
+    game_thread.detach();
+}
+
+void MainWindow::slotBrowseGamePath()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Game path"), context->gamepath.c_str());
+
+    gamePath->setText(filename);
+    context->gamepath = filename.toStdString();
+
+    /* Try to load the game-specific pref file */
+    context->config.load(context->gamepath);
+
+    /* Update the UI accordingly */
+    updateUIFromConfig();
+#ifdef LIBTAS_ENABLE_AVDUMPING
+    encodeWindow->update_config();
+#endif
+    executableWindow->update_config();
+    inputWindow->update();
+}
+
+void MainWindow::slotBrowseMoviePath()
+{
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
+
+    moviePath->setText(filename);
+    context->config.moviefile = filename.toStdString();
+
+    MovieFile tempmovie(context);
+    if (tempmovie.extractMovie() == 0) {
+        movieFrameCount->setValue(tempmovie.nbFramesConfig());
+        rerecordCount->setValue(tempmovie.nbRerecords());
+
+        /* Also, by default, set the read-only mode */
+        moviePlayback->setChecked(true);
+        context->config.sc.recording = SharedConfig::RECORDING_READ;
+        context->config.sc_modified = true;
+    }
+    else {
+        movieFrameCount->setValue(0);
+        rerecordCount->setValue(0);
+
+        /* Also, by default, no recording */
+        movieNo->setChecked(true);
+        context->config.sc.recording = SharedConfig::NO_RECORDING;
+        context->config.sc_modified = true;
     }
 }
 
-void save_movie_cb(Fl_Widget* w, void*)
+void MainWindow::slotSaveMovie()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    if (mw.context->config.sc.recording != SharedConfig::NO_RECORDING)
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING)
         movie.saveMovie(); // TODO: game.h exports the movie object, bad...
 }
 
-void export_movie_cb(Fl_Widget* w, void*)
+void MainWindow::slotExportMovie()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    if (mw.context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        int ret = mw.moviepathchooser->show();
-        const char* filename = mw.moviepathchooser->filename();
-
-        /* If the user picked a file */
-        if (ret == 0) {
-            movie.saveMovie(filename); // TODO: game.h exports the movie object, bad...
-        }
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
+        movie.saveMovie(filename.toStdString()); // TODO: game.h exports the movie object, bad...
     }
 }
 
-void set_fps_cb(Fl_Widget* w)
+void MainWindow::slotPause()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    Fl_Int_Input *ii = (Fl_Int_Input*) w;
-    std::string fpsstr = ii->value();
-    mw.context->config.sc.framerate = std::stoi(fpsstr);
-}
-
-void pause_cb(Fl_Widget* w)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    if (mw.context->status == Context::INACTIVE) {
+    if (context->status == Context::INACTIVE) {
         /* If the game is inactive, set the value directly */
-        Fl_Check_Button *cb = (Fl_Check_Button*) w;
-        int cb_val = static_cast<int>(cb->value());
-        mw.context->config.sc.running = !cb_val;
+        context->config.sc.running = !pauseCheck->isChecked();
     }
     else {
         /* Else, let the game thread set the value */
-        mw.context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
+        context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
     }
 }
 
-void fastforward_cb(Fl_Widget* w)
+void MainWindow::slotFastForward()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    Fl_Check_Button *cb = (Fl_Check_Button*) w;
-    int cb_val = static_cast<int>(cb->value());
-    mw.context->config.sc.fastforward = cb_val;
-    mw.context->config.sc_modified = true;
+    context->config.sc.fastforward = fastForwardCheck->isChecked();
+    context->config.sc_modified = true;
 }
 
-void movie_recording_cb(Fl_Widget* w)
+
+void MainWindow::slotMovieRecording()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    if (mw.movie_no->value() == 1) {
-        mw.context->config.sc.recording = SharedConfig::NO_RECORDING;
+    if (movieNo->isChecked()) {
+        context->config.sc.recording = SharedConfig::NO_RECORDING;
 
         /* Disable the other movie UI elements */
-        mw.moviepath->deactivate();
-        mw.browsemoviepath->deactivate();
+        moviePath->setEnabled(false);
+        browseMoviePath->setEnabled(false);
     }
     else {
         /* If the game is running, we let the main thread deal with movie toggling.
          * Else, we set the recording mode.
          */
-        if (mw.context->status == Context::INACTIVE) {
-            if (mw.movie_recording->value() == 1) {
-                mw.context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+        if (context->status == Context::INACTIVE) {
+            if (movieRecording->isChecked()) {
+                context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             }
             else {
-                mw.context->config.sc.recording = SharedConfig::RECORDING_READ;
+                context->config.sc.recording = SharedConfig::RECORDING_READ;
             }
 
             /* Enable the other movie UI elements */
-            mw.moviepath->activate();
-            mw.browsemoviepath->activate();
+            moviePath->setEnabled(true);
+            browseMoviePath->setEnabled(true);
         }
         else {
-            mw.context->hotkey_queue.push(HOTKEY_READWRITE);
+            context->hotkey_queue.push(HOTKEY_READWRITE);
         }
     }
-    mw.context->config.sc_modified = true;
+    context->config.sc_modified = true;
 }
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
-void config_encode_cb(Fl_Widget* w, void*)
+void MainWindow::slotToggleEncode()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.encode_window->update_config();
-    mw.encode_window->exec();
-}
-#endif
-
-void config_executable_cb(Fl_Widget* w, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    mw.executable_window->update_config();
-    mw.executable_window->exec();
-}
-
-#ifdef LIBTAS_ENABLE_AVDUMPING
-void toggle_encode_cb(Fl_Widget* w, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-
     /* Prompt a confirmation message for overwriting an encode file */
-    if (!mw.context->config.sc.av_dumping) {
+    if (!context->config.sc.av_dumping) {
         struct stat sb;
-        if (stat(mw.context->config.dumpfile.c_str(), &sb) == 0) {
+        if (stat(context->config.dumpfile.c_str(), &sb) == 0) {
             /* Pause the game during the choice */
-            mw.context->config.sc.running = false;
-            mw.context->config.sc_modified = true;
+            context->config.sc.running = false;
+            context->config.sc_modified = true;
 
-            int choice = fl_choice("The encode file %s does exist. Do you want to overwrite it?", "Yes", "No", 0, mw.context->config.dumpfile.c_str());
-            if (choice == 1)
+            QMessageBox::StandardButton btn = QMessageBox::question(this, "File overwrite", QString("The encode file %s does exist. Do you want to overwrite it?").arg(context->config.dumpfile.c_str()), QMessageBox::Ok | QMessageBox::Cancel);
+            if (btn != QMessageBox::Ok)
                 return;
         }
     }
 
     /* TODO: Using directly the hotkey does not check for existing file */
-    mw.context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
+    context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
 
 }
 #endif
 
-void config_input_cb(Fl_Widget* w, void*)
+void MainWindow::slotMuteSound()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.input_window->update();
-    mw.input_window->exec();
+    context->config.sc.audio_mute = muteAction->isChecked();
+    context->config.sc_modified = true;
 }
 
-void ram_search_cb(Fl_Widget* w, void*)
+void MainWindow::slotLoggingPrint()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.ramsearch_window->exec();
+    setMaskFromCheckboxes(loggingPrintGroup, context->config.sc.includeFlags);
+    context->config.sc_modified = true;
 }
 
-void ram_watch_cb(Fl_Widget* w, void*)
+void MainWindow::slotLoggingExclude()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.ramwatch_window->exec();
+    setMaskFromCheckboxes(loggingExcludeGroup, context->config.sc.excludeFlags);
+    context->config.sc_modified = true;
 }
 
-void controller_inputs_cb(Fl_Widget* w, void*)
+void MainWindow::slotHotkeyFocus()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    // mw.controller_window->update();
-    mw.controller_window->window->show();
+    setMaskFromCheckboxes(hotkeyFocusGroup, context->hotkeys_focus);
 
-    while (mw.controller_window->window->shown()) {
-        Fl::wait();
-    }
-}
-
-
-void sound_frequency_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int frequency = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.sc.audio_frequency = frequency;
-}
-
-void sound_bitdepth_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int bitdepth = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.sc.audio_bitdepth = bitdepth;
-}
-
-void sound_channel_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int channel = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.sc.audio_channels = channel;
-}
-
-void mute_sound_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* mute_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(mute_sound_cb));
-
-    if (mw.context->config.sc.audio_mute) {
-        if (mute_item) mute_item->clear();
-        mw.context->config.sc.audio_mute = false;
-        mw.context->config.sc_modified = true;
-    }
-    else {
-        if (mute_item) mute_item->set();
-        mw.context->config.sc.audio_mute = true;
-        mw.context->config.sc_modified = true;
-    }
-}
-
-void logging_status_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    SharedConfig::LogStatus logstatus = static_cast<SharedConfig::LogStatus>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.sc.logging_status = logstatus;
-}
-
-void logging_print_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    LogCategoryFlag logcat = static_cast<LogCategoryFlag>(reinterpret_cast<intptr_t>(v));
-    if (logcat == LCF_ALL) {
-        /* Get the first item of the log categories */
-        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_print_cb));
-        while (log_item->argument() != LCF_ALL) {
-            log_item->set();
-            log_item = log_item->next();
-        }
-        mw.context->config.sc.includeFlags = LCF_ALL;
-    }
-    else if (logcat == LCF_NONE) {
-        /* Get the first item of the log categories */
-        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_print_cb));
-        while (log_item->argument() != LCF_ALL) {
-            log_item->clear();
-            log_item = log_item->next();
-        }
-        mw.context->config.sc.includeFlags = LCF_NONE;
-    }
-    else {
-        mw.context->config.sc.includeFlags ^= logcat;
-    }
-    mw.context->config.sc_modified = true;
-}
-
-void logging_exclude_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    LogCategoryFlag logcat = static_cast<LogCategoryFlag>(reinterpret_cast<intptr_t>(v));
-    if (logcat == LCF_ALL) {
-        /* Get the first item of the log categories */
-        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_exclude_cb));
-        while (log_item->argument() != LCF_ALL) {
-            log_item->set();
-            log_item = log_item->next();
-        }
-        mw.context->config.sc.excludeFlags = LCF_ALL;
-    }
-    else if (logcat == LCF_NONE) {
-        /* Get the first item of the log categories */
-        Fl_Menu_Item* log_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(logging_exclude_cb));
-        while (log_item->argument() != LCF_ALL) {
-            log_item->clear();
-            log_item = log_item->next();
-        }
-        mw.context->config.sc.excludeFlags = LCF_NONE;
-    }
-    else {
-        mw.context->config.sc.excludeFlags ^= logcat;
-    }
-    mw.context->config.sc_modified = true;
-}
-
-void input_keyboard_cb(Fl_Widget*, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* keyboard_item = mw.menu_bar->mvalue();
-
-    if (keyboard_item && (keyboard_item->value() == 0)) {
-        mw.context->config.sc.keyboard_support = false;
-    }
-    else {
-        mw.context->config.sc.keyboard_support = true;
-    }
-    mw.context->config.sc_modified = true;
-}
-
-void input_mouse_cb(Fl_Widget*, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* mouse_item = mw.menu_bar->mvalue();
-
-    if (mouse_item && (mouse_item->value() == 0)) {
-        mw.context->config.sc.mouse_support = false;
-    }
-    else {
-        mw.context->config.sc.mouse_support = true;
-    }
-    mw.context->config.sc_modified = true;
-}
-
-void input_joy_cb(Fl_Widget*, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int nb_joy = static_cast<int>(reinterpret_cast<intptr_t>(v));
-
-    mw.context->config.sc.nb_controllers = nb_joy;
-    mw.context->config.sc_modified = true;
-}
-
-void hotkeys_focus_cb(Fl_Widget*, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int focus_state = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->hotkeys_focus ^= focus_state;
-
-    switch (focus_state) {
-    case Context::FOCUS_GAME:
-        /* If the game was not launched, don't do anything */
-        if (! mw.context->game_window ) return;
-
-        if (mw.menu_bar->mvalue()->value()) {
+    /* If the game was not launched, don't do anything */
+    if (context->game_window ) {
+        if (context->hotkeys_focus & Context::FOCUS_GAME) {
             const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
-            xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
+            xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
         }
         else {
             const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
-            xcb_change_window_attributes (mw.context->conn, mw.context->game_window, XCB_CW_EVENT_MASK, values);
+            xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
         }
-        break;
-
-    case Context::FOCUS_UI:
-        if (mw.menu_bar->mvalue()->value()) {
-            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
-            xcb_change_window_attributes (mw.context->conn, mw.context->ui_window, XCB_CW_EVENT_MASK, values);
-        }
-        else {
-            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
-            xcb_change_window_attributes (mw.context->conn, mw.context->ui_window, XCB_CW_EVENT_MASK, values);
-        }
-        break;
-
-    case Context::FOCUS_ALL:
-        /* TODO */
-        break;
-
-    default:
-        break;
     }
+    // if (context->hotkeys_focus & Context::FOCUS_UI) {
+    //     const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
+    //     xcb_change_window_attributes (context->conn, context->ui_window, XCB_CW_EVENT_MASK, values);
+    // }
+    // else {
+    //     const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
+    //     xcb_change_window_attributes (context->conn, context->ui_window, XCB_CW_EVENT_MASK, values);
+    // }
 }
 
-void inputs_focus_cb(Fl_Widget*, void* v)
+void MainWindow::slotInputFocus()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    int focus_state = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->inputs_focus ^= focus_state;
+    setMaskFromCheckboxes(inputFocusGroup, context->inputs_focus);
 }
 
-void slowmo_cb(Fl_Widget*, void* v)
+void MainWindow::slotSlowdown()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    int spdiv = static_cast<int>(reinterpret_cast<intptr_t>(v));
-
-    mw.context->config.sc.speed_divisor = spdiv;
-    mw.context->config.sc_modified = true;
+    setListFromRadio(slowdownGroup, context->config.sc.speed_divisor);
+    context->config.sc_modified = true;
 }
 
 #ifdef LIBTAS_ENABLE_HUD
-void osd_frame_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
 
-    mw.context->config.sc.hud_framecount = osd_item->value();
-    mw.context->config.sc_modified = true;
+void MainWindow::slotOsd()
+{
+    setListFromRadio(osdGroup, context->config.sc.osd);
+    context->config.sc_modified = true;
 }
 
-void osd_inputs_cb(Fl_Widget* w, void* v)
+void MainWindow::slotOsdEncode()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
-
-    mw.context->config.sc.hud_inputs = osd_item->value();
-    mw.context->config.sc_modified = true;
-}
-
-void osd_encode_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* osd_item = mw.menu_bar->mvalue();
-
-    mw.context->config.sc.hud_encode = osd_item->value();
-    mw.context->config.sc_modified = true;
+    context->config.sc.osd_encode = osdEncodeAction->isChecked();
+    context->config.sc_modified = true;
 }
 #endif
 
-void time_main_cb(Fl_Widget* w, void* v)
+void MainWindow::slotSavestateIgnore()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    int timetype = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    const Fl_Menu_Item* timetype_item = mw.menu_bar->mvalue();
-
-    if (timetype_item->value())
-        mw.context->config.sc.main_gettimes_threshold[timetype] = 100; // TODO: Arbitrary
-    else
-        mw.context->config.sc.main_gettimes_threshold[timetype] = -1;
-    mw.context->config.sc_modified = true;
+    setMaskFromCheckboxes(savestateIgnoreGroup, context->config.sc.ignore_sections);
+    context->config.sc_modified = true;
 }
 
-void time_sec_cb(Fl_Widget* w, void* v)
+void MainWindow::slotSaveScreen()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    int timetype = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    const Fl_Menu_Item* timetype_item = mw.menu_bar->mvalue();
-
-    if (timetype_item->value())
-        mw.context->config.sc.sec_gettimes_threshold[timetype] = 1000; // TODO: Arbitrary
-    else
-        mw.context->config.sc.sec_gettimes_threshold[timetype] = -1;
-    mw.context->config.sc_modified = true;
+    context->config.sc.save_screenpixels = saveScreenAction->isChecked();
+    context->config.sc_modified = true;
 }
 
-void render_soft_cb(Fl_Widget* w, void* v)
+void MainWindow::slotPreventSavefile()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* menu_item = mw.menu_bar->mvalue();
-
-    mw.context->config.opengl_soft = menu_item->value();
+    context->config.sc.save_screenpixels = preventSavefileAction->isChecked();
+    context->config.sc_modified = true;
 }
 
-void savestate_screen_cb(Fl_Widget* w, void* v)
+void MainWindow::slotMovieEnd()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    const Fl_Menu_Item* menu_item = mw.menu_bar->mvalue();
-
-    mw.context->config.sc.save_screenpixels = menu_item->value();
-    mw.context->config.sc_modified = true;
+    setListFromRadio(movieEndGroup, context->config.on_movie_end);
 }
 
-void cmdoptions_cb(Fl_Widget*)
+bool MainWindow::alertSave()
 {
-    MainWindow& mw = MainWindow::getInstance();
-    mw.context->config.gameargs = mw.cmdoptions->value();
+    QMessageBox::StandardButton btn = QMessageBox::question(this, "Save movie", QString("Do you want to save the movie file?"), QMessageBox::Yes | QMessageBox::No);
+    return (btn == QMessageBox::Yes);
 }
 
-void llvm_perf_cb(Fl_Widget* w, void* v)
+void MainWindow::alertDialog(const char* alert_msg)
 {
-    MainWindow& mw = MainWindow::getInstance();
-
-    mw.context->config.llvm_perf = "";
-
-    Fl_Menu_Item* menu_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(llvm_perf_cb));
-    for (;menu_item->flags;menu_item = menu_item->next()) {
-        if (menu_item->value()) {
-            mw.context->config.llvm_perf += menu_item->label();
-            mw.context->config.llvm_perf.push_back(',');
-        }
-    }
-    /* Remove the trailing comma */
-    mw.context->config.llvm_perf.pop_back();
-}
-
-void ignore_memory_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int ignore = static_cast<int>(reinterpret_cast<intptr_t>(v));
-
-    mw.context->config.sc.ignore_sections ^= ignore;
-    mw.context->config.sc_modified = true;
-}
-
-void initial_time_cb(Fl_Widget*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    std::string secstr = mw.initial_time_sec->value();
-    mw.context->config.sc.initial_time.tv_sec = std::stoi(secstr);
-
-    std::string nsecstr = mw.initial_time_nsec->value();
-    mw.context->config.sc.initial_time.tv_nsec = std::stoi(nsecstr);
-}
-
-void prevent_savefiles_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    Fl_Menu_Item* menu_item = const_cast<Fl_Menu_Item*>(mw.menu_bar->find_item(prevent_savefiles_cb));
-
-    mw.context->config.sc.prevent_savefiles = menu_item->value();
-    mw.context->config.sc_modified = true;
-}
-
-void game_info_cb(Fl_Widget* w, void*)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    mw.gameinfo_window->update();
-    mw.gameinfo_window->exec();
-}
-
-void movie_end_cb(Fl_Widget* w, void* v)
-{
-    MainWindow& mw = MainWindow::getInstance();
-    int value = static_cast<int>(reinterpret_cast<intptr_t>(v));
-    mw.context->config.on_movie_end = value;
-}
-
-void alert_save(void* promise)
-{
-    std::promise<bool>* saveAnswer = static_cast<std::promise<bool>*>(promise);
-    int choice = fl_choice("Do you want to save the input file?", "Yes", "No", 0);
-    saveAnswer->set_value(choice == 0);
-}
-
-void alert_dialog(void* alert_msg)
-{
-    MainWindow& mw = MainWindow::getInstance();
-
     /* Pause the game */
-    mw.context->config.sc.running = false;
-    mw.context->config.sc_modified = true;
+    context->config.sc.running = false;
+    context->config.sc_modified = true;
 
     /* Bring FLTK to foreground
      * taken from https://stackoverflow.com/a/28404920
@@ -1434,7 +1079,5 @@ void alert_dialog(void* alert_msg)
     // XMapRaised(mw.context->display, mw.context->ui_window);
 
     /* Show alert window */
-    std::string* alert_str = static_cast<std::string*>(alert_msg);
-    fl_alert("%s", alert_str->c_str());
-    free(alert_str);
+    QMessageBox::warning(this, "Warning", alert_msg);
 }
