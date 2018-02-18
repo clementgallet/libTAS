@@ -22,6 +22,10 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QApplication>
 
 
 
@@ -33,16 +37,13 @@
 #include "../../shared/version.h"
 
 
-// #include <iostream>
+#include <iostream>
 // #include <iomanip> // setprecision
 // #include <sstream> // ostringstream
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
-    setFixedSize(600, 500);
-
-    QWidget *widget = new QWidget;
-    setCentralWidget(widget);
+    setFixedSize(600, 600);
 
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
@@ -72,25 +73,30 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
     disabledWidgetsOnStart.append(browseMoviePath);
 
-    movieNo = new QRadioButton("No Movie");
-    connect(movieNo, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
-    disabledWidgetsOnStart.append(movieNo);
+    // movieNo = new QRadioButton("No Movie");
+    // connect(movieNo, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+    // disabledWidgetsOnStart.append(movieNo);
     movieRecording = new QRadioButton("Recording");
-    connect(movieRecording, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+    connect(movieRecording, &QAbstractButton::clicked, this, &MainWindow::slotMovieRecording);
     moviePlayback = new QRadioButton("Playback");
-    connect(moviePlayback, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
+    connect(moviePlayback, &QAbstractButton::clicked, this, &MainWindow::slotMovieRecording);
 
     /* Frame count */
     frameCount = new QSpinBox();
     frameCount->setReadOnly(true);
+    frameCount->setMaximum(1000000000);
+
     movieFrameCount = new QSpinBox();
     movieFrameCount->setReadOnly(true);
+    movieFrameCount->setMaximum(1000000000);
 
     /* Current/movie length */
-    movieLength = new QLabel("Current Time: - / -");
+    currentLength = new QLabel("Current time: -");
+    movieLength = new QLabel("Movie length: -");
 
     /* Frames per second */
     logicalFps = new QSpinBox();
+    logicalFps->setMaximum(100000);
     disabledWidgetsOnStart.append(logicalFps);
 
     fpsValues = new QLabel("Current FPS: - / -");
@@ -98,18 +104,23 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Re-record count */
     rerecordCount = new QSpinBox();
     rerecordCount->setReadOnly(true);
+    rerecordCount->setMaximum(1000000000);
 
     /* Initial time */
     initialTimeSec = new QSpinBox();
+    initialTimeSec->setMaximum(1000000000);
+    initialTimeSec->setMinimumWidth(50);
     initialTimeNsec = new QSpinBox();
+    initialTimeNsec->setMaximum(1000000000);
+    initialTimeNsec->setMinimumWidth(50);
     disabledWidgetsOnStart.append(initialTimeSec);
     disabledWidgetsOnStart.append(initialTimeNsec);
 
     /* Pause/FF */
     pauseCheck = new QCheckBox("Pause");
-    connect(pauseCheck, &QAbstractButton::toggled, this, &MainWindow::slotPause);
+    connect(pauseCheck, &QAbstractButton::clicked, this, &MainWindow::slotPause);
     fastForwardCheck = new QCheckBox("Fast-forward");
-    connect(fastForwardCheck, &QAbstractButton::toggled, this, &MainWindow::slotFastForward);
+    connect(fastForwardCheck, &QAbstractButton::clicked, this, &MainWindow::slotFastForward);
 
     /* Game Executable */
     gamePath = new QLineEdit();
@@ -143,6 +154,99 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     buttonBox->addButton(launchGdbButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
 
+
+    /* Layouts */
+
+
+    /* Game parameters layout */
+    QGroupBox *gameBox = new QGroupBox(tr("Game execution"));
+    QGridLayout *gameLayout = new QGridLayout;
+    gameLayout->addWidget(new QLabel(tr("Game executable")), 0, 0);
+    gameLayout->addWidget(gamePath, 0, 1);
+    gameLayout->addWidget(browseGamePath, 0, 2);
+    gameLayout->addWidget(new QLabel(tr("Command-line options")), 1, 0);
+    gameLayout->addWidget(cmdOptions, 1, 1);
+    gameBox->setLayout(gameLayout);
+
+    /* Movie layout */
+    movieBox = new QGroupBox(tr("Movie recording"));
+    movieBox->setCheckable(true);
+    connect(movieBox, &QGroupBox::clicked, this, &MainWindow::slotMovieEnable);
+
+    QVBoxLayout *movieLayout = new QVBoxLayout;
+
+    QHBoxLayout *movieFileLayout = new QHBoxLayout;
+    movieFileLayout->addWidget(new QLabel(tr("Movie file:")));
+    movieFileLayout->addWidget(moviePath);
+    movieFileLayout->addWidget(browseMoviePath);
+
+    QGridLayout *movieCountLayout = new QGridLayout;
+    movieCountLayout->addWidget(new QLabel(tr("Movie frame count:")), 0, 0);
+    movieCountLayout->addWidget(movieFrameCount, 0, 1);
+    movieCountLayout->addWidget(movieLength, 0, 3);
+    movieCountLayout->addWidget(new QLabel(tr("Rerecord count:")), 1, 0);
+    movieCountLayout->addWidget(rerecordCount, 1, 1);
+    movieCountLayout->setColumnMinimumWidth(2, 50);
+
+    QGroupBox *movieStatusBox = new QGroupBox(tr("Movie status"));
+    QHBoxLayout *movieStatusLayout = new QHBoxLayout;
+    movieStatusLayout->addWidget(movieRecording);
+    movieStatusLayout->addWidget(moviePlayback);
+    movieStatusLayout->addStretch(1);
+    movieStatusBox->setLayout(movieStatusLayout);
+
+    movieLayout->addLayout(movieFileLayout);
+    movieLayout->addLayout(movieCountLayout);
+    movieLayout->addWidget(movieStatusBox);
+    movieBox->setLayout(movieLayout);
+
+    /* General layout */
+    QGroupBox *generalBox = new QGroupBox(tr("General options"));
+    QVBoxLayout *generalLayout = new QVBoxLayout;
+
+    QGridLayout *generalFrameLayout = new QGridLayout;
+    generalFrameLayout->addWidget(new QLabel(tr("Frame:")), 0, 0);
+    generalFrameLayout->addWidget(frameCount, 0, 1);
+    generalFrameLayout->addWidget(currentLength, 0, 3);
+    generalFrameLayout->addWidget(new QLabel(tr("Frames per second:")), 1, 0);
+    generalFrameLayout->addWidget(logicalFps, 1, 1);
+    generalFrameLayout->addWidget(fpsValues, 1, 3);
+    generalFrameLayout->setColumnMinimumWidth(2, 50);
+
+    QHBoxLayout *generalTimeLayout = new QHBoxLayout;
+    generalTimeLayout->addWidget(new QLabel(tr("System time:")));
+    generalTimeLayout->addStretch(1);
+    generalTimeLayout->addWidget(initialTimeSec);
+    generalTimeLayout->addWidget(new QLabel(tr("sec")));
+    generalTimeLayout->addStretch(1);
+    generalTimeLayout->addWidget(initialTimeNsec);
+    generalTimeLayout->addWidget(new QLabel(tr("nsec")));
+    generalTimeLayout->addStretch(1);
+
+    QHBoxLayout *generalControlLayout = new QHBoxLayout;
+    generalControlLayout->addWidget(pauseCheck);
+    generalControlLayout->addWidget(fastForwardCheck);
+    generalControlLayout->addStretch(1);
+
+    generalLayout->addLayout(generalFrameLayout);
+    generalLayout->addLayout(generalTimeLayout);
+    generalLayout->addLayout(generalControlLayout);
+    generalBox->setLayout(generalLayout);
+
+    /* Create the main layout */
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    mainLayout->addWidget(gameBox);
+    mainLayout->addStretch(1);
+    mainLayout->addWidget(movieBox);
+    mainLayout->addStretch(1);
+    mainLayout->addWidget(generalBox);
+    mainLayout->addStretch(1);
+    mainLayout->addWidget(buttonBox);
+
+    QWidget *centralWidget = new QWidget;
+    centralWidget->setLayout(mainLayout);
+    setCentralWidget(centralWidget);
 
     updateUIFromConfig();
 
@@ -466,8 +570,6 @@ void MainWindow::updateStatus()
 {
     /* Update game status (active/inactive) */
 
-    std::string tmpstr;
-
     switch (context->status) {
 
         case Context::INACTIVE:
@@ -475,6 +577,9 @@ void MainWindow::updateStatus()
                 w->setEnabled(true);
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(true);
+
+            movieBox->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+            movieBox->setFocusPolicy(Qt::StrongFocus);
 
             // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
             // if (item) item->deactivate();
@@ -510,6 +615,9 @@ void MainWindow::updateStatus()
                 w->setEnabled(false);
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
+
+            movieBox->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+            movieBox->setFocusPolicy(Qt::NoFocus);
 
             if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
@@ -563,10 +671,10 @@ void MainWindow::updateSharedConfigChanged()
             movieFrameCount->setValue(context->config.sc.movie_framecount);
             movieFrameCount->setEnabled(true);
             break;
-        case SharedConfig::NO_RECORDING:
-            movieNo->setChecked(true);
-            moviePath->setEnabled(false);
-            browseMoviePath->setEnabled(false);
+        // case SharedConfig::NO_RECORDING:
+        //     movieNo->setChecked(true);
+        //     moviePath->setEnabled(false);
+        //     browseMoviePath->setEnabled(false);
         default:
             break;
     }
@@ -593,23 +701,26 @@ void MainWindow::updateFrameCountTime()
     initialTimeSec->setValue(context->current_time.tv_sec);
     initialTimeNsec->setValue(context->current_time.tv_nsec);
 
+    std::cout << "sec" << context->current_time.tv_sec << " nsec " << context->current_time.tv_nsec << std::endl;
+
     /* Update movie time */
     if (context->config.sc.framerate > 0) {
         double sec = (double)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
         int min = context->framecount / (context->config.sc.framerate * 60);
 
-        QString timeStr = QString("%1m %2s").arg(min).arg(sec, 0, 'g', 2);
+        currentLength->setText(QString("Current Time: %1m %2s").arg(min).arg(sec, 0, 'f', 2));
 
         /* Format movie length */
         if (context->config.sc.movie_framecount != 0) {
             double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
             int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
 
-            timeStr.append(" / %1m %2s").arg(mmin).arg(msec, 0, 'g', 2);
+            movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
         }
-
-        movieLength->setText(timeStr);
     }
+
+    update();
+    QApplication::processEvents();
 }
 
 void MainWindow::updateRerecordCount()
@@ -622,7 +733,7 @@ void MainWindow::updateFps(float fps, float lfps)
 {
     /* Update fps values */
     if ((fps > 0) || (lfps > 0)) {
-        fpsValues->setText(QString("Current FPS: %1 / %2").arg(fps, 0, 'g', 1).arg(lfps, 0, 'g', 1));
+        fpsValues->setText(QString("Current FPS: %1 / %2").arg(fps, 0, 'f', 1).arg(lfps, 0, 'f', 1));
     }
     else {
         fpsValues->setText("Current FPS: - / -");
@@ -873,8 +984,8 @@ void MainWindow::slotBrowseMoviePath()
         rerecordCount->setValue(0);
 
         /* Also, by default, no recording */
-        movieNo->setChecked(true);
-        context->config.sc.recording = SharedConfig::NO_RECORDING;
+        movieRecording->setChecked(true);
+        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
         context->config.sc_modified = true;
     }
 }
@@ -911,35 +1022,39 @@ void MainWindow::slotFastForward()
     context->config.sc_modified = true;
 }
 
+void MainWindow::slotMovieEnable(bool checked)
+{
+    // movieBox->setEnabled(checked);
+
+    if (checked) {
+        if (movieRecording->isChecked()) {
+            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+        }
+        else {
+            context->config.sc.recording = SharedConfig::RECORDING_READ;
+        }
+    }
+    else {
+        context->config.sc.recording = SharedConfig::NO_RECORDING;
+    }
+    context->config.sc_modified = true;
+}
 
 void MainWindow::slotMovieRecording()
 {
-    if (movieNo->isChecked()) {
-        context->config.sc.recording = SharedConfig::NO_RECORDING;
-
-        /* Disable the other movie UI elements */
-        moviePath->setEnabled(false);
-        browseMoviePath->setEnabled(false);
-    }
-    else {
-        /* If the game is running, we let the main thread deal with movie toggling.
-         * Else, we set the recording mode.
-         */
-        if (context->status == Context::INACTIVE) {
-            if (movieRecording->isChecked()) {
-                context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-            }
-            else {
-                context->config.sc.recording = SharedConfig::RECORDING_READ;
-            }
-
-            /* Enable the other movie UI elements */
-            moviePath->setEnabled(true);
-            browseMoviePath->setEnabled(true);
+    /* If the game is running, we let the main thread deal with movie toggling.
+     * Else, we set the recording mode.
+     */
+    if (context->status == Context::INACTIVE) {
+        if (movieRecording->isChecked()) {
+            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
         }
         else {
-            context->hotkey_queue.push(HOTKEY_READWRITE);
+            context->config.sc.recording = SharedConfig::RECORDING_READ;
         }
+    }
+    else {
+        context->hotkey_queue.push(HOTKEY_READWRITE);
     }
     context->config.sc_modified = true;
 }

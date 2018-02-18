@@ -181,7 +181,7 @@ void launchGame(Context* context)
 
     MainWindow* ui;
     for(QWidget *widget : QApplication::topLevelWidgets()) {
-        if (MainWindow *mainWindow = static_cast<MainWindow*>(widget)) {
+        if (MainWindow *mainWindow = qobject_cast<MainWindow*>(widget)) {
             ui = mainWindow;
         }
     }
@@ -838,7 +838,7 @@ void loopExit(Context* context)
 {
     MainWindow* ui;
     for(QWidget *widget : QApplication::topLevelWidgets()) {
-        if (MainWindow *mainWindow = static_cast<MainWindow*>(widget)) {
+        if (MainWindow *mainWindow = qobject_cast<MainWindow*>(widget)) {
             ui = mainWindow;
         }
     }

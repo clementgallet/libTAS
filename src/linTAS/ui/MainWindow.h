@@ -29,6 +29,7 @@
 #include <QSpinBox>
 #include <QLabel>
 #include <QCheckBox>
+#include <QGroupBox>
 #include <forward_list>
 
 #include "EncodeWindow.h"
@@ -120,14 +121,11 @@ public:
 
     QLineEdit *gamePath;
     QPushButton *browseGamePath;
-    // Fl_Native_File_Chooser *gamepathchooser;
     QLineEdit *cmdOptions;
 
     QLineEdit *moviePath;
     QPushButton *browseMoviePath;
-    // Fl_Native_File_Chooser *moviepathchooser;
 
-    QRadioButton *movieNo;
     QRadioButton *movieRecording;
     QRadioButton *moviePlayback;
 
@@ -140,6 +138,7 @@ public:
     QSpinBox *frameCount;
     QSpinBox *movieFrameCount;
     QSpinBox *rerecordCount;
+    QLabel *currentLength;
     QLabel *movieLength;
 
     QSpinBox *initialTimeSec;
@@ -147,6 +146,8 @@ public:
 
     QPushButton *launchGdbButton;
     QPushButton *stopButton;
+
+    QGroupBox *movieBox;
 
     /* Update UI elements (mainly enable/disable) depending on
      * the game status (running/stopped), to prevent modifying values that
@@ -219,6 +220,7 @@ private slots:
     void slotExportMovie();
     void slotPause();
     void slotFastForward();
+    void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
     void slotMuteSound();
