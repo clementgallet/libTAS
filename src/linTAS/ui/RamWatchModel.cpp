@@ -68,6 +68,21 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+void RamWatchModel::addWatch(std::unique_ptr<IRamWatchDetailed> ramwatch)
+{
+    beginInsertRows(QModelIndex(), ramwatches.size(), ramwatches.size());
+    ramwatches.push_back(std::move(ramwatch));
+    endInsertRows();
+}
+
+void RamWatchModel::removeWatch(int row)
+{
+    beginRemoveRows(QModelIndex(), row, row);
+    ramwatches.erase(ramwatches.begin() + row);
+    endRemoveRows();
+}
+
+
 void RamWatchModel::update()
 {
     emit dataChanged(createIndex(0,1), createIndex(rowCount(),1));

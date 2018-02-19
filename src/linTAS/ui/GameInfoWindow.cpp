@@ -22,7 +22,6 @@
 
 GameInfoWindow::GameInfoWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(300, 240);
     setWindowTitle("Game information");
 
     videoLabel = new QLabel(tr("unknown"));

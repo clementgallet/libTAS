@@ -28,19 +28,16 @@
 
 ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(680, 160);
     setWindowTitle("Executable Options");
 
     /* Run path */
     runPath = new QLineEdit();
-    runPath->setReadOnly(true);
+    // runPath->setReadOnly(true);
     runPath->setClearButtonEnabled(true);
+    runPath->setMinimumWidth(400);
 
     browseRunPath = new QPushButton("Browse...");
     connect(browseRunPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseRunPath);
-
-    // runpathchooser = new Fl_Native_File_Chooser(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
-    // runpathchooser->title("Choose an run directory");
 
     /* Run path layout */
     QGroupBox *runPathGroupBox = new QGroupBox(tr("Run path"));
@@ -51,8 +48,9 @@ ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags 
 
     /* Lib path */
     libPath = new QLineEdit();
-    libPath->setReadOnly(true);
+    // libPath->setReadOnly(true);
     libPath->setClearButtonEnabled(true);
+    libPath->setMinimumWidth(400);
 
     browseLibPath = new QPushButton("Browse...");
     connect(browseLibPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseLibPath);

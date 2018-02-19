@@ -21,14 +21,11 @@
 // #include <FL/fl_draw.H>
 // #include <inttypes.h> // PRIxPTR
 
-RamSearchModel::RamSearchModel(std::vector<std::unique_ptr<IRamWatch>> *rw, QObject *parent) : QAbstractTableModel(parent)
-{
-    ramwatches = rw;
-}
+RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
 int RamSearchModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return ramwatches->size();
+   return ramwatches.size();
 }
 
 int RamSearchModel::columnCount(const QModelIndex & /*parent*/) const
@@ -56,7 +53,7 @@ QVariant RamSearchModel::headerData(int section, Qt::Orientation orientation, in
 QVariant RamSearchModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
-        const std::unique_ptr<IRamWatch> &watch = ramwatches->at(index.row());
+        const std::unique_ptr<IRamWatch> &watch = ramwatches.at(index.row());
         switch(index.column()) {
             case 0:
                 return QString("%1").arg(watch->address, 0, 16);
@@ -69,6 +66,62 @@ QVariant RamSearchModel::data(const QModelIndex &index, int role) const
         }
     }
     return QVariant();
+}
+
+int RamSearchModel::predictWatchCount(int type_filter)
+{
+    /* Compose the filename for the /proc memory map, and open it. */
+    std::ostringstream oss;
+    oss << "/proc/" << context->game_pid << "/maps";
+    std::ifstream mapsfile(oss.str());
+    if (!mapsfile) {
+        std::cerr << "Could not open " << oss.str() << std::endl;
+        return 0;
+    }
+
+    std::string line;
+    MemSection::reset();
+
+    int total_size = 0;
+    while (std::getline(mapsfile, line)) {
+        MemSection section;
+        section.readMap(line);
+
+        /* Filter based on type */
+        if (!(type_filter & section.type))
+            continue;
+
+        total_size += section.size;
+    }
+
+    return total_size;
+}
+
+int RamSearchModel::watchCount()
+{
+    return ramwatches.size();
+}
+
+void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv)
+{
+    compare_type = ct;
+    compare_operator = co;
+    compare_value = cv;
+
+    beginResetModel();
+
+    int count = 0;
+    ramwatches.erase(
+        std::remove_if(ramwatches.begin(), ramwatches.end(),
+            [this, &count] (std::unique_ptr<IRamWatch> &watch) {
+                if (!(count++ & 0xfff)) {
+                    emit signalProgress(count);
+                }
+                return watch->check_update(compare_type, compare_operator, compare_value);
+            }),
+        ramwatches.end());
+
+    endResetModel();
 }
 
 void RamSearchModel::update()

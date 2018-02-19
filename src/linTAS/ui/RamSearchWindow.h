@@ -26,12 +26,13 @@
 #include <QRadioButton>
 #include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QProgressBar>
+#include <QLabel>
 
 #include "RamSearchModel.h"
 
 // #include <X11/Xlib.h>
 #include "../Context.h"
-#include "../ramsearch/RamSearch.h"
 #include <memory>
 
 class RamSearchWindow : public QDialog {
@@ -44,10 +45,11 @@ public:
 
 private:
     Context *context;
-    RamSearch ram_search;
     QTableView *ramSearchView;
 
     RamSearchModel *ramSearchModel;
+    QProgressBar *searchProgress;
+    QLabel *watchCount;
     // Fl_Box *watch_count;
     // Fl_Hor_Fill_Slider *search_progress;
 

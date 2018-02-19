@@ -29,7 +29,6 @@
 
 RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags)
 {
-    setFixedSize(350, 300);
     setWindowTitle("Edit Watch");
 
     addressInput = new QLineEdit();

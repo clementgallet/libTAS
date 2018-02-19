@@ -36,7 +36,6 @@ extern "C" {
 
 EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(600, 260);
     setWindowTitle("Encoding configuration");
 
     /* Video file */
@@ -57,21 +56,25 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     videoChoice = new QComboBox();
     connect(videoChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
     videoBitrate = new QSpinBox();
+    videoBitrate->setMaximum(1000000000);
 
     audioChoice = new QComboBox();
     connect(audioChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
     audioBitrate = new QSpinBox();
+    audioBitrate->setMaximum(1000000000);
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
     QGridLayout *encodeCodecLayout = new QGridLayout;
-    encodeCodecLayout->addWidget(new QLabel(tr("Video codec")), 0, 0);
+    encodeCodecLayout->addWidget(new QLabel(tr("Video codec:")), 0, 0);
     encodeCodecLayout->addWidget(videoChoice, 0, 1);
-    encodeCodecLayout->addWidget(new QLabel(tr("Video bitrate")), 0, 2);
-    encodeCodecLayout->addWidget(videoBitrate, 0, 3);
-    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec")), 1, 0);
+    encodeCodecLayout->addWidget(new QLabel(tr("Video bitrate:")), 0, 3);
+    encodeCodecLayout->addWidget(videoBitrate, 0, 4);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec:")), 1, 0);
     encodeCodecLayout->addWidget(audioChoice, 1, 1);
-    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate")), 1, 2);
-    encodeCodecLayout->addWidget(audioBitrate, 1, 3);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate:")), 1, 3);
+    encodeCodecLayout->addWidget(audioBitrate, 1, 4);
+    encodeCodecLayout->setColumnMinimumWidth(2, 50);
+    encodeCodecLayout->setColumnStretch(2, 1);
     codecGroupBox->setLayout(encodeCodecLayout);
 
 
@@ -85,6 +88,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
     mainLayout->addWidget(encodeFileGroupBox);
     mainLayout->addWidget(codecGroupBox);
+    mainLayout->addStretch(1);
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
@@ -106,12 +110,6 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
             /* Build codec name */
             std::string codecstr = codec->long_name?codec->long_name:codec->name;
-
-            /* Escape some characters that have a special meaning in FLTK */
-            for (std::string::size_type i = 0; (i = codecstr.find('/', i)) != std::string::npos;) {
-                codecstr.insert(i, "\\");
-                i += 2;
-            }
 
             if (codec->type == AVMEDIA_TYPE_VIDEO) {
                 videoChoice->addItem(codecstr.c_str(), QVariant(codec->id));

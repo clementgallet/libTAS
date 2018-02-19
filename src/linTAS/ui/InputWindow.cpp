@@ -33,7 +33,6 @@ static xcb_keysym_t get_next_keypressed(xcb_connection_t* conn, xcb_window_t win
 
 InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(800, 500);
     setWindowTitle("Input mapping");
 
     /* Tables */

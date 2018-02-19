@@ -43,7 +43,7 @@
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
-    setFixedSize(600, 600);
+    // setFixedSize(600, 600);
 
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
@@ -67,15 +67,10 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     moviePath = new QLineEdit();
     moviePath->setReadOnly(true);
 
-    // QLabel *movieLabel = new QLabel("Movie File");
-
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
     disabledWidgetsOnStart.append(browseMoviePath);
 
-    // movieNo = new QRadioButton("No Movie");
-    // connect(movieNo, &QAbstractButton::toggled, this, &MainWindow::slotMovieRecording);
-    // disabledWidgetsOnStart.append(movieNo);
     movieRecording = new QRadioButton("Recording");
     connect(movieRecording, &QAbstractButton::clicked, this, &MainWindow::slotMovieRecording);
     moviePlayback = new QRadioButton("Playback");
@@ -125,6 +120,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Game Executable */
     gamePath = new QLineEdit();
     gamePath->setReadOnly(true);
+    gamePath->setMinimumWidth(400);
 
     browseGamePath = new QPushButton("Browse...");
     connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
@@ -473,7 +469,7 @@ void MainWindow::createMenus()
     /* Video Menu */
     QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
 
-    renderSoftAction = fileMenu->addAction(tr("Force software rendering"));
+    renderSoftAction = videoMenu->addAction(tr("Force software rendering"));
     renderSoftAction->setCheckable(true);
     disabledActionsOnStart.append(renderSoftAction);
 
@@ -529,7 +525,7 @@ void MainWindow::createMenus()
     QMenu *debugPrintMenu = debugMenu->addMenu(tr("Print Categories"));
     debugPrintMenu->addActions(loggingPrintGroup->actions());
     QMenu *debugExcludeMenu = debugMenu->addMenu(tr("Exclude Categories"));
-    debugExcludeMenu->addActions(loggingPrintGroup->actions());
+    debugExcludeMenu->addActions(loggingExcludeGroup->actions());
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
@@ -701,8 +697,6 @@ void MainWindow::updateFrameCountTime()
     initialTimeSec->setValue(context->current_time.tv_sec);
     initialTimeNsec->setValue(context->current_time.tv_nsec);
 
-    std::cout << "sec" << context->current_time.tv_sec << " nsec " << context->current_time.tv_nsec << std::endl;
-
     /* Update movie time */
     if (context->config.sc.framerate > 0) {
         double sec = (double)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
@@ -719,8 +713,8 @@ void MainWindow::updateFrameCountTime()
         }
     }
 
-    update();
-    QApplication::processEvents();
+    // update();
+    // QApplication::processEvents();
 }
 
 void MainWindow::updateRerecordCount()

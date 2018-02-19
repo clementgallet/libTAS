@@ -23,46 +23,43 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
-
 #include <QFormLayout>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QVBoxLayout>
+#include <QHeaderView>
 
 #include "RamSearchWindow.h"
-#include <iostream>
-#include <sstream>
+// #include <iostream>
+// #include <sstream>
 #include <algorithm> // std::remove_if
 #include "../ramsearch/CompareEnums.h"
 
-// static Fl_Callback new_cb;
-// static Fl_Callback search_cb;
-// static Fl_Callback add_cb;
-
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(800, 700);
     setWindowTitle("Ram Search");
 
     /* Table */
     ramSearchView = new QTableView();
     ramSearchView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ramSearchView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ramSearchView->setShowGrid(false);
+    ramSearchView->setAlternatingRowColors(true);
+    ramSearchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ramSearchView->verticalHeader()->hide();
 
-    ramSearchModel = new RamSearchModel(&ram_search.ramwatches);
+    ramSearchModel = new RamSearchModel(context);
     ramSearchView->setModel(ramSearchModel);
 
-
     /* Progress bar */
-    // search_progress = new Fl_Hor_Fill_Slider(10, 650, 480, 10);
-    // search_progress->hide();
-    // search_progress->selection_color(FL_BLUE);
-    // search_progress->box(FL_THIN_DOWN_FRAME);
-    // search_progress->slider(FL_FLAT_BOX);
-    //
-    // watch_count = new Fl_Box(10, 670, 480, 30);
-    // watch_count->box(FL_NO_BOX);
-    // watch_count->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    searchProgress = new QProgressBar();
+    connect(ramSearchModel, &RamSearchModel::signalProgress, searchProgress, &QProgressBar::setValue);
+
+    watchCount = new QLabel();
+    // watchCount->setHeight(searchProgress->height());
+    searchProgress->hide();
+
+    QVBoxLayout *watchLayout = new QVBoxLayout;
+    watchLayout->addWidget(ramSearchView);
+    watchLayout->addWidget(searchProgress);
+    watchLayout->addWidget(watchCount);
 
 
     /* Memory regions */
@@ -132,8 +129,8 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     typeBox->addItems(typeList);
 
     displayBox = new QComboBox();
-    displayBox->addItem("Decimal");
-    displayBox->addItem("Hexadecimal");
+    displayBox->addItem("decimal");
+    displayBox->addItem("hexadecimal");
 
     QGroupBox *formatGroupBox = new QGroupBox(tr("Format"));
     QFormLayout *formatLayout = new QFormLayout;
@@ -162,12 +159,12 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     optionLayout->addWidget(compareGroupBox);
     optionLayout->addWidget(operatorGroupBox);
     optionLayout->addWidget(formatGroupBox);
+    optionLayout->addStretch(1);
     optionLayout->addWidget(buttonBox);
 
-    /* Create the main layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
 
-    mainLayout->addWidget(ramSearchView);
+    mainLayout->addLayout(watchLayout, 1);
     mainLayout->addLayout(optionLayout);
 
     setLayout(mainLayout);
@@ -230,48 +227,51 @@ void RamSearchWindow::slotNew()
     double compare_value;
     getCompareParameters(compare_type, compare_operator, compare_value);
 
+    ramSearchModel->hex = (displayBox->currentIndex() == 1);
+
+    watchCount->hide();
+    searchProgress->show();
+    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
+
     /* Call the RamSearch new function using the right type as template */
     switch (typeBox->currentIndex()) {
         case 0:
-            ram_search.new_watches<unsigned char>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<unsigned char>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 1:
-            ram_search.new_watches<char>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<char>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 2:
-            ram_search.new_watches<unsigned short>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<unsigned short>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 3:
-            ram_search.new_watches<short>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<short>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 4:
-            ram_search.new_watches<unsigned int>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<unsigned int>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 5:
-            ram_search.new_watches<int>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<int>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 6:
-            ram_search.new_watches<int64_t>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<int64_t>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 7:
-            ram_search.new_watches<uint64_t>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<uint64_t>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 8:
-            ram_search.new_watches<float>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<float>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 9:
-            ram_search.new_watches<double>(context->game_pid, memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<double>(memregions, compare_type, compare_operator, compare_value);
             break;
     }
 
-    ramSearchModel->hex = (displayBox->currentIndex() == 1);
-    ramSearchModel->update();
+    searchProgress->hide();
+    watchCount->show();
 
     /* Update address count */
-    // std::ostringstream oss;
-    // oss << ram_search.ramwatches.size();
-    // oss << " addresses";
-    // watch_count->copy_label(oss.str().c_str());
+    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
 }
 
 void RamSearchWindow::slotSearch()
@@ -281,39 +281,17 @@ void RamSearchWindow::slotSearch()
     double compare_value;
     getCompareParameters(compare_type, compare_operator, compare_value);
 
-    // rsw->search_progress->show();
-    // rsw->search_progress->bounds(0, rsw->ram_search.ramwatches.size());
+    searchProgress->setMaximum(ramSearchModel->watchCount());
+    watchCount->hide();
+    searchProgress->show();
 
-    /* Update the previous_value attribute of each RamWatch object in the vector,
-     * and remove objects from the vector where the search condition returns false.
-     */
-    int num = 0;
-    ram_search.ramwatches.erase(
-        std::remove_if(ram_search.ramwatches.begin(), ram_search.ramwatches.end(),
-            [&compare_type, &compare_operator, &compare_value, &num] (std::unique_ptr<IRamWatch> &watch) {
-                // if (!(num++ & 0xfff)) {
-                //     rsw->search_progress->value(num);
-                //     Fl::flush();
-                // }
-                return watch->check_update(compare_type, compare_operator, compare_value);
-            }),
-        ram_search.ramwatches.end());
-
-    // rsw->search_progress->hide();
-
-    /* Update table parameters */
-    ramSearchModel->hex = (displayBox->currentIndex() == 1);
-    ramSearchModel->compare_type = compare_type;
-    ramSearchModel->compare_operator = compare_operator;
-    ramSearchModel->compare_value_db = compare_value;
-    ramSearchModel->update();
-    // ramSearchModel->rows(rsw->ram_search.ramwatches.size());
+    ramSearchModel->searchWatches(compare_type, compare_operator, compare_value);
 
     /* Update address count */
-    // std::ostringstream oss;
-    // oss << rsw->ram_search.ramwatches.size();
-    // oss << " adresses";
-    // rsw->watch_count->copy_label(oss.str().c_str());
+    searchProgress->hide();
+    watchCount->show();
+    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+
 }
 
 void RamSearchWindow::slotAdd()
@@ -325,7 +303,7 @@ void RamSearchWindow::slotAdd()
     if (!index.isValid())
         return;
 
-    int row = index.row();
+    // int row = index.row();
 
     /* TODO! */
     /* Fill the watch edit window with parameters from the selected watch */

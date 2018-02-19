@@ -21,6 +21,7 @@
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <QHeaderView>
 // #include <iostream>
 // #include <sstream>
 
@@ -28,13 +29,16 @@
 
 RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
-    setFixedSize(500, 700);
     setWindowTitle("Ram Watch");
 
     /* Table */
     ramWatchView = new QTableView();
     ramWatchView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ramWatchView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ramWatchView->setShowGrid(false);
+    ramWatchView->setAlternatingRowColors(true);
+    ramWatchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ramWatchView->verticalHeader()->hide();
 
     ramWatchModel = new RamWatchModel();
     ramWatchView->setModel(ramWatchModel);
@@ -76,8 +80,7 @@ void RamWatchWindow::slotAdd()
 
     if (editWindow->ramwatch) {
         editWindow->ramwatch->game_pid = context->game_pid;
-        ramWatchModel->ramwatches.push_back(std::move(editWindow->ramwatch));
-        ramWatchModel->update();
+        ramWatchModel->addWatch(std::move(editWindow->ramwatch));
     }
 }
 
@@ -113,7 +116,5 @@ void RamWatchWindow::slotRemove()
         return;
 
     int row = index.row();
-
-    ramWatchModel->ramwatches.erase(ramWatchModel->ramwatches.begin() + row);
-    ramWatchModel->update();
+    ramWatchModel->removeWatch(row);
 }

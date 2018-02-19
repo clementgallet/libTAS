@@ -43,6 +43,9 @@ public:
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
+    void addWatch(std::unique_ptr<IRamWatchDetailed> ramwatch);
+    void removeWatch(int row);
+
     void update();
 };
 
