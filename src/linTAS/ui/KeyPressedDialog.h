@@ -17,42 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_INPUTWINDOW_H_INCLUDED
-#define LINTAS_INPUTWINDOW_H_INCLUDED
+#ifndef LINTAS_KEYPRESSEDDIALOG_H_INCLUDED
+#define LINTAS_KEYPRESSEDDIALOG_H_INCLUDED
 
 #include <QDialog>
-#include <QPushButton>
-#include <QTableWidget>
 
-#include "../Context.h"
-#include "KeyPressedDialog.h"
-
-class InputWindow : public QDialog {
+/* Very small QDialog class to catch a pressed key (or key + modifiers) */
+class KeyPressedDialog : public QDialog {
     Q_OBJECT
 public:
-    InputWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
-    Context *context;
+    KeyPressedDialog(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-    void update();
+    bool withModifiers;
 
-private:
-    QTableWidget *hotkeyTable;
-    QTableWidget *inputTable;
+protected:
+    void keyPressEvent(QKeyEvent * e);
 
-    QPushButton *assignButton;
-    QPushButton *defaultButton;
-    QPushButton *disableButton;
-
-    KeyPressedDialog* keyDialog;
-
-    void updateInputRow(int row);
-    void updateHotkeyRow(int row);
-
-private slots:
-    void slotSelect();
-    void slotDefault();
-    void slotDisable();
-    void slotAssign();
 };
 
 #endif

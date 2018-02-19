@@ -27,9 +27,6 @@
 #include <QHeaderView>
 
 #include "RamSearchWindow.h"
-// #include <iostream>
-// #include <sstream>
-#include <algorithm> // std::remove_if
 #include "../ramsearch/CompareEnums.h"
 
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)

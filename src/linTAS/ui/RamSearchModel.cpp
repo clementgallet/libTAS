@@ -18,8 +18,6 @@
  */
 
 #include "RamSearchModel.h"
-// #include <FL/fl_draw.H>
-// #include <inttypes.h> // PRIxPTR
 
 RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 

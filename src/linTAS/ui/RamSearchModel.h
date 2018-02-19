@@ -34,12 +34,6 @@
 #include "../ramsearch/RamWatch.h"
 #include "../ramsearch/MemSection.h"
 
-
-
-// #include <FL/Fl.H>
-// #include <FL/Fl_Double_Window.H>
-// #include <FL/Fl_Table_Row.H>
-
 class RamSearchModel : public QAbstractTableModel {
     Q_OBJECT
 

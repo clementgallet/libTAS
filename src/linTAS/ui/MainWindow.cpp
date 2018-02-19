@@ -27,9 +27,6 @@
 #include <QGridLayout>
 #include <QApplication>
 
-
-
-
 #include "MainWindow.h"
 #include "../game.h" // Only to access to the movie. Not very clean...
 #include "../MovieFile.h"

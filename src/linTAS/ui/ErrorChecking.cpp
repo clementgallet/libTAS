@@ -17,8 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QMessageBox>
+
 #include "ErrorChecking.h"
-#include <FL/fl_ask.H>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -45,13 +46,13 @@ bool ErrorChecking::checkGameExists(std::string gamepath)
 {
     /* Checking that the game binary exists */
     if (access(gamepath.c_str(), F_OK) != 0) {
-        fl_alert("Game path %s was not found", gamepath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("Game path %1 was not found").arg(gamepath.c_str()));
         return false;
     }
 
     /* Checking that the game can be executed by the user */
     if (access(gamepath.c_str(), X_OK) != 0) {
-        fl_alert("Game %s is not executable by the user", gamepath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("Game %1 is not executable by the user").arg(gamepath.c_str()));
         return false;
     }
 
@@ -62,7 +63,7 @@ bool ErrorChecking::checkMovieExists(std::string moviepath)
 {
     /* Checking that the movie file exists */
     if (access(moviepath.c_str(), F_OK) != 0) {
-        fl_alert("Movie path %s was not found", moviepath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("Movie path %1 was not found").arg(moviepath.c_str()));
         return false;
     }
 
@@ -77,7 +78,7 @@ bool ErrorChecking::checkMovieWriteable(std::string moviepath)
     if (sep != std::string::npos)
         moviedir = moviepath.substr(0, sep);
     else {
-        fl_alert("The movie path %s is not an absolute path", moviedir.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("The movie path %1 is not an absolute path").arg(moviedir.c_str()));
         return false;
     }
 
@@ -86,31 +87,31 @@ bool ErrorChecking::checkMovieWriteable(std::string moviepath)
     if (stat(moviedir.c_str(), &sb) == -1) {
         if (errno == ENOENT) {
             /* The directory does not exist */
-            fl_alert("The directory of the moviefile %s does not exists", moviedir.c_str());
+            QMessageBox::critical(nullptr, "Error", QString("The directory of the moviefile %1 does not exists").arg(moviedir.c_str()));
             return false;
         }
         else {
             /* Another error */
-            fl_alert("The directory of the moviefile %s cannot be accessed", moviedir.c_str());
+            QMessageBox::critical(nullptr, "Error", QString("The directory of the moviefile %1 cannot be accessed").arg(moviedir.c_str()));
             return false;
         }
     }
     else if (!S_ISDIR(sb.st_mode))
     {
-        fl_alert("The directory of the moviefile %s is not a directory", moviedir.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("The directory of the moviefile %1 is not a directory").arg(moviedir.c_str()));
         return false;
     }
 
     /* Checking that the user can create a movie file */
     if (access(moviedir.c_str(), W_OK) != 0) {
-        fl_alert("You don't have permission to create moviefile %s", moviepath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("You don't have permission to create moviefile %1").arg(moviepath.c_str()));
         return false;
     }
 
     /* Prompt a confirmation message if overwriting a movie file */
     if (access(moviepath.c_str(), F_OK) == 0) {
-        int choice = fl_choice("The movie file %s does exist. Do you want to overwrite it?", "Yes", "No", 0, moviepath.c_str());
-        if (choice == 1)
+        QMessageBox::StandardButton btn = QMessageBox::question(nullptr, "Movie overwrite", QString("The movie file %1 does exist. Do you want to overwrite it?").arg(moviepath.c_str()), QMessageBox::Ok | QMessageBox::Cancel);
+        if (btn != QMessageBox::Ok)
             return false;
     }
 
@@ -141,7 +142,7 @@ static int extractFileArch(std::string path)
     }
 
     if (outputstr.empty()) {
-        fl_alert("Could not call `file` command on %s", path.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("Could not call `file` command on %1").arg(path.c_str()));
         return -1;
     }
 
@@ -153,7 +154,7 @@ static int extractFileArch(std::string path)
         return 32;
     }
 
-    fl_alert("Could not determine arch of file %s based on the `file` command output\nFull output: %s", path.c_str(), outputstr.c_str());
+    QMessageBox::critical(nullptr, "Error", QString("Could not determine arch of file %1 based on the `file` command output\nFull output: %2").arg(path.c_str()).arg(outputstr.c_str()));
     return 0;
 }
 
@@ -161,13 +162,13 @@ bool ErrorChecking::checkArchType(std::string gamepath, std::string libtaspath)
 {
     /* Checking that the game binary exists (again) */
     if (access(gamepath.c_str(), F_OK) != 0) {
-        fl_alert("Game path %s was not found", gamepath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("Game path %1 was not found").arg(gamepath.c_str()));
         return false;
     }
 
     /* Checking that the libtas.so library path is correct */
     if (access(libtaspath.c_str(), F_OK) != 0) {
-        fl_alert("libtas.so library at %s was not found", libtaspath.c_str());
+        QMessageBox::critical(nullptr, "Error", QString("libtas.so library at %1 was not found. Make sure that the file libtas.so is in the same directory as linTAS file").arg(libtaspath.c_str()));
         return false;
     }
 
@@ -179,7 +180,7 @@ bool ErrorChecking::checkArchType(std::string gamepath, std::string libtaspath)
         return false;
 
     if (gameArch != libtasArch) {
-        fl_alert("libtas.so library was compiled for a %d-bit arch but %s has a %d-bit arch", libtasArch, gamepath.c_str(), gameArch);
+        QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg(libtasArch).arg(gamepath.c_str()).arg(gameArch));
         return false;
     }
 

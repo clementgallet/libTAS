@@ -22,8 +22,6 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <QHeaderView>
-// #include <iostream>
-// #include <sstream>
 
 #include "RamWatchWindow.h"
 

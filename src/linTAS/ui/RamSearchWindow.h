@@ -28,12 +28,10 @@
 #include <QComboBox>
 #include <QProgressBar>
 #include <QLabel>
+#include <memory>
 
 #include "RamSearchModel.h"
-
-// #include <X11/Xlib.h>
 #include "../Context.h"
-#include <memory>
 
 class RamSearchWindow : public QDialog {
     Q_OBJECT

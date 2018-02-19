@@ -22,7 +22,6 @@
 
 #include <QDialog>
 #include <QTableView>
-#include <memory>
 
 #include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"

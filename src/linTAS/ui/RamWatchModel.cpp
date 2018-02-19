@@ -18,8 +18,6 @@
  */
 
 #include "RamWatchModel.h"
-// #include <FL/fl_draw.H>
-// #include <inttypes.h> // PRIxPTR
 
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
 
