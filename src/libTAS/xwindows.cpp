@@ -54,6 +54,7 @@ DEFINE_ORIG_POINTER(XMapRaised);
 DEFINE_ORIG_POINTER(XStoreName);
 DEFINE_ORIG_POINTER(XSetWMName);
 DEFINE_ORIG_POINTER(XInternAtom);
+DEFINE_ORIG_POINTER(XSelectInput);
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -113,7 +114,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
     Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
 
-    if (drawable != None) {
+    if (drawable) {
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;
 
@@ -297,6 +298,22 @@ Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
     debuglog(LCF_WINDOW, __func__, " call with atom ", atom_name);
     LINK_NAMESPACE(XInternAtom, nullptr);
     return orig::XInternAtom(display, atom_name, only_if_exists);
+}
+
+int XSelectInput(Display *display, Window w, long event_mask)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE(XSelectInput, nullptr);
+
+    event_mask &= ~(KeyPressMask | KeyReleaseMask | KeymapStateMask);
+    event_mask &= ~(ButtonPressMask | ButtonReleaseMask);
+    event_mask &= ~(PointerMotionMask | PointerMotionHintMask);
+    event_mask &= ~(Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask | ButtonMotionMask);
+    event_mask &= ~(FocusChangeMask);
+    event_mask &= ~(EnterWindowMask | LeaveWindowMask);
+    event_mask &= ~(ExposureMask | PropertyChangeMask);
+
+    return orig::XSelectInput(display, w, event_mask);
 }
 
 

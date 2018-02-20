@@ -39,6 +39,7 @@
 #include "GameInfoWindow.h"
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
+#include "../GameLoop.h"
 #include "../Context.h"
 
 #include <thread>
@@ -63,6 +64,7 @@ public:
     // void build(Context* c);
 
     std::thread game_thread;
+    GameLoop *gameLoop;
     Context *context;
     // Fl_Double_Window *window;
 
@@ -176,10 +178,10 @@ public:
     void updateUIFromConfig();
 
     /* Show an alert dialog containing alert_msg as text */
-    void alertDialog(const char* alert_msg);
+    void alertDialog(QString alert_msg);
 
     /* Show an alert dialog asking the user if we wants to save the movie file */
-    bool alertSave();
+    void alertSave(void* promise);
 
 private:
 

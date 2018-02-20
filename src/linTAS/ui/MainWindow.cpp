@@ -28,13 +28,13 @@
 #include <QApplication>
 
 #include "MainWindow.h"
-#include "../game.h" // Only to access to the movie. Not very clean...
 #include "../MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
 
 
 #include <iostream>
+#include <future>
 // #include <iomanip> // setprecision
 // #include <sstream> // ostringstream
 
@@ -44,6 +44,22 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
+
+    /* Create the object that will launch and communicate with the game,
+     * and connect all the signals.
+     */
+    gameLoop = new GameLoop(context);
+    connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
+    connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
+    connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
+    connect(gameLoop, &GameLoop::startInnerLoop, this, &MainWindow::updateRam);
+    connect(gameLoop, &GameLoop::rerecordChanged, this, &MainWindow::updateRerecordCount);
+    connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateFrameCountTime);
+    connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
+    connect(gameLoop, &GameLoop::fpsChanged, this, &MainWindow::updateFps);
+    connect(gameLoop, &GameLoop::askMovieSaved, this, &MainWindow::alertSave);
+
+
 
     /* Create other windows */
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -868,12 +884,6 @@ void MainWindow::slotLaunch()
     setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
     setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
-    // for (auto& action : loggingOutputGroup->actions()) {
-    //     if (action->isChecked()) {
-    //         context->config.sc.logging_status = static_cast<SharedConfig::LogStatus>(action->data()->toInt());
-    //         break;
-    //     }
-    // }
 
     context->config.sc.keyboard_support = keyboardAction->isChecked();
     context->config.sc.mouse_support = mouseAction->isChecked();
@@ -918,7 +928,7 @@ void MainWindow::slotLaunch()
     /* Start game */
     context->status = Context::STARTING;
     updateStatus();
-    game_thread = std::thread{launchGame, context};
+    game_thread = std::thread{&GameLoop::start, gameLoop};
 }
 
 void MainWindow::slotStop()
@@ -984,14 +994,14 @@ void MainWindow::slotBrowseMoviePath()
 void MainWindow::slotSaveMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING)
-        movie.saveMovie(); // TODO: game.h exports the movie object, bad...
+        gameLoop->movie.saveMovie(); // TODO: game.h exports the movie object, bad...
 }
 
 void MainWindow::slotExportMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
         QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
-        movie.saveMovie(filename.toStdString()); // TODO: game.h exports the movie object, bad...
+        gameLoop->movie.saveMovie(filename.toStdString()); // TODO: game.h exports the movie object, bad...
     }
 }
 
@@ -1165,13 +1175,14 @@ void MainWindow::slotMovieEnd()
     setListFromRadio(movieEndGroup, context->config.on_movie_end);
 }
 
-bool MainWindow::alertSave()
+void MainWindow::alertSave(void* promise)
 {
+    std::promise<bool>* saveAnswer = static_cast<std::promise<bool>*>(promise);
     QMessageBox::StandardButton btn = QMessageBox::question(this, "Save movie", QString("Do you want to save the movie file?"), QMessageBox::Yes | QMessageBox::No);
-    return (btn == QMessageBox::Yes);
+    saveAnswer->set_value(btn == QMessageBox::Yes);
 }
 
-void MainWindow::alertDialog(const char* alert_msg)
+void MainWindow::alertDialog(QString alert_msg)
 {
     /* Pause the game */
     context->config.sc.running = false;

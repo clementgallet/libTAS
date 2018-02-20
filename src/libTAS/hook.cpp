@@ -43,6 +43,27 @@ bool link_function(void** function, const char* source, const char* library, con
         *function = dlsym(RTLD_NEXT, source);
 
     if (*function != nullptr) {
+
+        /* Now checking that this function does not come from our library.
+         * Otherwise this would usually lead to a call loop.
+         */
+        Dl_info info;
+        int res = dladdr(*function, &info);
+        if (res != 0) {
+            std::string libpath = info.dli_fname;
+            std::string libtasstr = "libTAS.so"; // bad!
+            if (libpath.length() >= libtasstr.length() &&
+                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
+
+                debuglog(LCF_ERROR | LCF_HOOK, "   we could not find the real function ", source, " using RTLD_NEXT. Trying RTLD_DEFAULT");
+
+                if (version)
+                    *function = dlvsym(RTLD_NEXT, source, version);
+                else
+                    *function = dlsym(RTLD_NEXT, source);
+            }
+        }
+
         dlleave();
         debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
         return true;

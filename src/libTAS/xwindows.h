@@ -62,6 +62,8 @@ OVERRIDE int XStoreName(Display *display, Window w, const char *window_name);
 OVERRIDE void XSetWMName(Display *display, Window w, XTextProperty *text_prop);
 
 OVERRIDE Atom XInternAtom(Display* display, const char*	atom_name, Bool only_if_exists);
+
+OVERRIDE int XSelectInput(Display *display, Window w, long event_mask);
 }
 
 #endif

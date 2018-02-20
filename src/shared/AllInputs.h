@@ -22,6 +22,8 @@
 
 // #include <X11/Xlib.h> // For the KeySym type
 #include <X11/X.h> // For the KeySym type
+#undef CursorShape //  messes up with Qt
+#undef None //  messes up with Qt
 #include <array>
 
 /* Input structure that is filled by linTAS and send to libTAS every frame

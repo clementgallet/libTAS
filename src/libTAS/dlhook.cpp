@@ -134,12 +134,12 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
         /* We found a matching symbol. Now checking that this symbol comes
          * from our library and not another linked library.
          */
-         Dl_info info;
-         int res = dladdr(addr, &info);
-         if (res != 0) {
-             std::string libpath = info.dli_fname;
-             std::string libtasstr = "libTAS.so"; // bad!
-             if (libpath.length() >= libtasstr.length() &&
+        Dl_info info;
+        int res = dladdr(addr, &info);
+        if (res != 0) {
+            std::string libpath = info.dli_fname;
+            std::string libtasstr = "libTAS.so"; // bad!
+            if (libpath.length() >= libtasstr.length() &&
                 libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
                 debuglog(LCF_HOOK, "   function ", name, " is overriden!");
                 dlleave();
