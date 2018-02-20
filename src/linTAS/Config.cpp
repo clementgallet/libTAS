@@ -18,75 +18,87 @@
  */
 
 #include "Config.h"
-#include <iostream>
+// #include <iostream>
 //#include <sys/stat.h>
 
-Config::~Config() {
-    save();
-}
-
 void Config::save() {
-    if (!prefs) return;
+    if (!settings) return;
 
-    prefs->set("gameargs", gameargs.c_str());
-    prefs->set("moviefile", moviefile.c_str());
-    prefs->set("dumpfile", dumpfile.c_str());
-    prefs->set("libdir", libdir.c_str());
-    prefs->set("rundir", rundir.c_str());
-    prefs->set("opengl_soft", opengl_soft);
-    prefs->set("on_movie_end", on_movie_end);
+    settings->setValue("gameargs", gameargs.c_str());
+    settings->setValue("moviefile", moviefile.c_str());
+    settings->setValue("dumpfile", dumpfile.c_str());
+    settings->setValue("libdir", libdir.c_str());
+    settings->setValue("rundir", rundir.c_str());
+    settings->setValue("opengl_soft", opengl_soft);
+    settings->setValue("on_movie_end", on_movie_end);
 
-    Fl_Preferences prefs_km(*prefs, "keymapping");
+    settings->beginGroup("keymapping");
 
-    Fl_Preferences prefs_km_hotkeys(prefs_km, "hotkeys");
-
-    prefs_km_hotkeys.deleteAllEntries();
-
-    char hdata[sizeof(HotKeyType)];
+    settings->remove("hotkeys");
+    settings->beginWriteArray("hotkeys");
+    int i = 0;
     for (auto& hmap : km.hotkey_mapping) {
-        hmap.second.pack(hdata);
-        std::string key_str = std::to_string(hmap.first);
-        prefs_km_hotkeys.set(key_str.c_str(), static_cast<void*>(hdata), sizeof(HotKeyType));
+        settings->setArrayIndex(i++);
+        settings->setValue("keysym", hmap.first);
+        settings->setValue("hotkey", QVariant::fromValue(hmap.second));
     }
+    settings->endArray();
 
-    Fl_Preferences prefs_km_inputs(prefs_km, "inputs");
+    settings->remove("inputs");
+    settings->beginWriteArray("inputs");
 
-    prefs_km_inputs.deleteAllEntries();
-
-    char idata[sizeof(InputType) + sizeof(int)];
+    i = 0;
     for (auto& imap : km.input_mapping) {
-        imap.second.pack(idata);
-        std::string key_str = std::to_string(imap.first);
-        prefs_km_inputs.set(key_str.c_str(), static_cast<void*>(idata), sizeof(InputType) + sizeof(int));
+        settings->setArrayIndex(i++);
+        settings->setValue("keysym", imap.first);
+        settings->setValue("input", QVariant::fromValue(imap.second));
     }
+    settings->endArray();
 
-    Fl_Preferences prefs_shared(*prefs, "shared");
+    settings->endGroup();
 
-    prefs_shared.set("speed_divisor", sc.speed_divisor);
-    prefs_shared.set("logging_status", static_cast<int>(sc.logging_status));
-    prefs_shared.set("includeFlags", static_cast<int>(sc.includeFlags));
-    prefs_shared.set("excludeFlags", static_cast<int>(sc.excludeFlags));
-    prefs_shared.set("framerate", static_cast<int>(sc.framerate));
-    prefs_shared.set("keyboard_support", static_cast<int>(sc.keyboard_support));
-    prefs_shared.set("mouse_support", static_cast<int>(sc.mouse_support));
-    prefs_shared.set("nb_controllers", sc.nb_controllers);
-    prefs_shared.set("osd", sc.osd);
-    prefs_shared.set("osd_encode", static_cast<int>(sc.osd_encode));
-    prefs_shared.set("prevent_savefiles", static_cast<int>(sc.prevent_savefiles));
-    prefs_shared.set("audio_bitdepth", sc.audio_bitdepth);
-    prefs_shared.set("audio_channels", sc.audio_channels);
-    prefs_shared.set("audio_frequency", sc.audio_frequency);
-    prefs_shared.set("audio_mute", static_cast<int>(sc.audio_mute));
+    settings->beginGroup("shared");
+
+    settings->setValue("speed_divisor", sc.speed_divisor);
+    settings->setValue("logging_status", sc.logging_status);
+    settings->setValue("includeFlags", sc.includeFlags);
+    settings->setValue("excludeFlags", sc.excludeFlags);
+    settings->setValue("framerate", sc.framerate);
+    settings->setValue("keyboard_support", sc.keyboard_support);
+    settings->setValue("mouse_support", sc.mouse_support);
+    settings->setValue("nb_controllers", sc.nb_controllers);
+    settings->setValue("osd", sc.osd);
+    settings->setValue("osd_encode", sc.osd_encode);
+    settings->setValue("prevent_savefiles", sc.prevent_savefiles);
+    settings->setValue("audio_bitdepth", sc.audio_bitdepth);
+    settings->setValue("audio_channels", sc.audio_channels);
+    settings->setValue("audio_frequency", sc.audio_frequency);
+    settings->setValue("audio_mute", sc.audio_mute);
 #ifdef LIBTAS_ENABLE_AVDUMPING
-    prefs_shared.set("video_codec", static_cast<int>(sc.video_codec));
-    prefs_shared.set("video_bitrate", sc.video_bitrate);
-    prefs_shared.set("audio_codec", static_cast<int>(sc.audio_codec));
-    prefs_shared.set("audio_bitrate", sc.audio_bitrate);
+    settings->setValue("video_codec", sc.video_codec);
+    settings->setValue("video_bitrate", sc.video_bitrate);
+    settings->setValue("audio_codec", sc.audio_codec);
+    settings->setValue("audio_bitrate", sc.audio_bitrate);
 #endif
-    prefs_shared.set("main_gettimes_threshold", static_cast<void*>(sc.main_gettimes_threshold), sizeof(sc.main_gettimes_threshold));
-    prefs_shared.set("sec_gettimes_threshold", static_cast<void*>(sc.sec_gettimes_threshold), sizeof(sc.sec_gettimes_threshold));
-    prefs_shared.set("save_screenpixels", static_cast<int>(sc.save_screenpixels));
-    prefs_shared.set("ignore_sections", static_cast<int>(sc.ignore_sections));
+
+    settings->beginWriteArray("main_gettimes_threshold");
+    for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
+        settings->setArrayIndex(t);
+        settings->setValue("value", sc.main_gettimes_threshold[t]);
+    }
+    settings->endArray();
+
+    settings->beginWriteArray("sec_gettimes_threshold");
+    for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
+        settings->setArrayIndex(t);
+        settings->setValue("value", sc.sec_gettimes_threshold[t]);
+    }
+    settings->endArray();
+
+    settings->setValue("save_screenpixels", sc.save_screenpixels);
+    settings->setValue("ignore_sections", sc.ignore_sections);
+
+    settings->endGroup();
 }
 
 void Config::load(const std::string& gamepath) {
@@ -99,130 +111,95 @@ void Config::load(const std::string& gamepath) {
     else
         gamename = gamepath;
 
+    QString configPath = configdir.c_str();
+    configPath += "/";
+    configPath += gamename.c_str();
+
     /* Open the preferences for the game */
-    prefs.reset(new Fl_Preferences(configdir.c_str(), "libtas", gamename.c_str()));
-    char* text;
-    if (prefs->get("gameargs", text, gameargs.c_str()))
-        gameargs = text;
-    free(text);
+    settings.reset(new QSettings(configPath, QSettings::IniFormat));
+    settings->setFallbacksEnabled(false);
+
+    gameargs = settings->value("gameargs").toString().toStdString();
 
     std::string default_moviefile = gamepath + ".ltm";
-    prefs->get("moviefile", text, default_moviefile.c_str());
-    moviefile = text;
-    free(text);
+    moviefile = settings->value("moviefile", default_moviefile.c_str()).toString().toStdString();
 
     std::string default_dumpfile = gamepath + ".mkv";
-    prefs->get("dumpfile", text, default_dumpfile.c_str());
-    dumpfile = text;
-    free(text);
+    dumpfile = settings->value("dumpfile", default_dumpfile.c_str()).toString().toStdString();
 
-    if (prefs->get("libdir", text, libdir.c_str()))
-        libdir = text;
-    free(text);
+    libdir = settings->value("libdir").toString().toStdString();
+    rundir = settings->value("rundir").toString().toStdString();
 
-    if (prefs->get("rundir", text, rundir.c_str()))
-        rundir = text;
-    free(text);
-
-    int val;
-
-    val = static_cast<int>(opengl_soft);
-    prefs->get("opengl_soft", val, val);
-    opengl_soft = static_cast<bool>(val);
-
-    prefs->get("on_movie_end", on_movie_end, on_movie_end);
+    opengl_soft = settings->value("opengl_soft").toBool();
+    on_movie_end = settings->value("on_movie_end").toInt();
 
     /* Load key mapping */
 
-    Fl_Preferences prefs_km(*prefs, "keymapping");
+    settings->beginGroup("keymapping");
 
-    if (prefs_km.groupExists("hotkeys")) {
-        Fl_Preferences prefs_km_hotkeys(prefs_km, "hotkeys");
-
+    int size = settings->beginReadArray("hotkeys");
+    for (int i = 0; i < size; ++i) {
+        settings->setArrayIndex(i);
         km.hotkey_mapping.clear();
-
-        int n_entries = prefs_km_hotkeys.entries();
-        for (int i=0; i<n_entries; i++) {
-            const char* key = prefs_km_hotkeys.entry(i);
-            const char def_data[sizeof(HotKeyType)] = {};
-            void* vdata;
-            if (prefs_km_hotkeys.get(key, vdata, def_data, sizeof(HotKeyType))) {
-                HotKey hk;
-                hk.unpack(static_cast<char*>(vdata));
-                std::string key_str(key);
-                km.hotkey_mapping[static_cast<KeySym>(std::stoi(key_str))] = hk;
-            }
-            free(vdata);
-        }
+        KeySym keysym = settings->value("keysym").toInt();
+        HotKey hotkey = settings->value("hotkey").value<HotKey>();
+        km.hotkey_mapping[keysym] = hotkey;
     }
+    settings->endArray();
 
-    if (prefs_km.groupExists("inputs")) {
-        Fl_Preferences prefs_km_inputs(prefs_km, "inputs");
-
+    size = settings->beginReadArray("inputs");
+    for (int i = 0; i < size; ++i) {
+        settings->setArrayIndex(i);
         km.input_mapping.clear();
-
-        int n_entries = prefs_km_inputs.entries();
-        for (int i=0; i<n_entries; i++) {
-            const char* key = prefs_km_inputs.entry(i);
-            const char def_data[sizeof(InputType) + sizeof(int)] = {};
-            void* vdata;
-            if (prefs_km_inputs.get(key, vdata, def_data, sizeof(InputType) + sizeof(int))) {
-                SingleInput si;
-                si.unpack(static_cast<char*>(vdata));
-                std::string key_str(key);
-                km.input_mapping[static_cast<KeySym>(std::stoi(key_str))] = si;
-            }
-            free(vdata);
-        }
+        KeySym keysym = settings->value("keysym").toInt();
+        SingleInput si = settings->value("input").value<SingleInput>();
+        km.input_mapping[keysym] = si;
     }
+    settings->endArray();
+
+    settings->endGroup();
 
     /* Load shared config */
+    settings->beginGroup("shared");
 
-    Fl_Preferences prefs_shared(*prefs, "shared");
+    sc.speed_divisor = settings->value("speed_divisor").toInt();
+    sc.logging_status = settings->value("speed_divisor").toInt();
+    sc.includeFlags = settings->value("speed_divisor").toInt();
+    sc.excludeFlags = settings->value("speed_divisor").toInt();
+    sc.framerate = settings->value("speed_divisor").toUInt();
+    sc.keyboard_support = settings->value("keyboard_support").toBool();
+    sc.mouse_support = settings->value("keyboard_support").toBool();
+    sc.nb_controllers = settings->value("nb_controllers").toInt();
+    sc.osd = settings->value("osd").toInt();
+    sc.osd_encode = settings->value("osd_encode").toBool();
+    sc.prevent_savefiles = settings->value("prevent_savefiles").toBool();
+    sc.audio_bitdepth = settings->value("audio_bitdepth").toInt();
+    sc.audio_channels = settings->value("audio_channels").toInt();
+    sc.audio_frequency = settings->value("audio_frequency").toInt();
+    sc.audio_mute = settings->value("audio_mute").toBool();
 
-    #define GETWITHTYPE(member, type) \
-        val = static_cast<int>(sc.member); \
-        prefs_shared.get(#member, val, val); \
-        sc.member = static_cast<type>(val)
-
-    GETWITHTYPE(speed_divisor, int);
-    GETWITHTYPE(logging_status, SharedConfig::LogStatus);
-    GETWITHTYPE(includeFlags, LogCategoryFlag);
-    GETWITHTYPE(excludeFlags, LogCategoryFlag);
-    GETWITHTYPE(framerate, unsigned int);
-    GETWITHTYPE(keyboard_support, bool);
-    GETWITHTYPE(mouse_support, bool);
-    GETWITHTYPE(keyboard_support, bool);
-    GETWITHTYPE(nb_controllers, int);
-    GETWITHTYPE(osd, bool);
-    GETWITHTYPE(osd_encode, bool);
-    GETWITHTYPE(prevent_savefiles, bool);
-    GETWITHTYPE(audio_bitdepth, int);
-    GETWITHTYPE(audio_channels, int);
-    GETWITHTYPE(audio_frequency, int);
-    GETWITHTYPE(audio_mute, bool);
     #ifdef LIBTAS_ENABLE_AVDUMPING
-    GETWITHTYPE(video_codec, AVCodecID);
-    GETWITHTYPE(video_bitrate, int);
-    GETWITHTYPE(audio_codec, AVCodecID);
-    GETWITHTYPE(audio_bitrate, int);
+    sc.video_codec = settings->value("video_codec").value<AVCodecID>();
+    sc.video_bitrate = settings->value("video_bitrate").toInt();
+    sc.audio_codec = settings->value("audio_codec").value<AVCodecID>();
+    sc.audio_bitrate = settings->value("audio_bitrate").toInt();
     #endif
-    GETWITHTYPE(save_screenpixels, bool);
-    GETWITHTYPE(ignore_sections, int);
+    sc.save_screenpixels = settings->value("save_screenpixels").toBool();
+    sc.ignore_sections = settings->value("ignore_sections").toInt();
 
-    const int def_data[SharedConfig::TIMETYPE_NUMTRACKEDTYPES] = {};
-    void* vdata;
-    if (prefs_shared.get("main_gettimes_threshold", vdata, def_data, sizeof(sc.main_gettimes_threshold))) {
-        int* tdata = static_cast<int*>(vdata);
-        for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++)
-            sc.main_gettimes_threshold[t] = tdata[t];
+    size = settings->beginReadArray("main_gettimes_threshold");
+    for (int t=0; t<size; t++) {
+        settings->setArrayIndex(t);
+        sc.main_gettimes_threshold[t] = settings->value("value").toInt();
     }
-    free(vdata);
+    settings->endArray();
 
-    if (prefs_shared.get("sec_gettimes_threshold", vdata, def_data, sizeof(sc.sec_gettimes_threshold))) {
-        int* tdata = static_cast<int*>(vdata);
-        for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++)
-            sc.sec_gettimes_threshold[t] = tdata[t];
+    size = settings->beginReadArray("sec_gettimes_threshold");
+    for (int t=0; t<size; t++) {
+        settings->setArrayIndex(t);
+        sc.sec_gettimes_threshold[t] = settings->value("value").toInt();
     }
-    free(vdata);
+    settings->endArray();
+
+    settings->endGroup();
 }

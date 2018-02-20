@@ -55,6 +55,8 @@ static void print_usage(void)
 
 int main(int argc, char **argv)
 {
+    qRegisterMetaTypeStreamOperators<HotKey>("HotKey");
+    qRegisterMetaTypeStreamOperators<SingleInput>("SingleInput");
 
     /* Parsing arguments */
     int c;
@@ -208,6 +210,8 @@ int main(int argc, char **argv)
 
     app.exec();
 
+    context.config.save();
+    
     /* Check if the game is still running and try to close it softly */
     if (context.status != Context::INACTIVE) {
         context.status = Context::QUITTING;

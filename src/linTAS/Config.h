@@ -22,23 +22,26 @@
 
 #include <string>
 #include <memory>
+#include <QSettings>
 #include "../shared/SharedConfig.h"
 #include "KeyMapping.h"
-#include <FL/Fl_Preferences.H>
+
+/* We need to register the AVCodecID struct to be able to serialize it */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+Q_DECLARE_METATYPE(AVCodecID)
+#endif
 
 /* Structure holding program configuration that is saved in a file.
- * We use FLTK preferences system for that, which basically stores preferences
+ * We use QtSettings class for that, which basically stores preferences
  * in a key/value way in a plain text file. Each game (determined by its
  * executable name) gets its own preferences.
  */
 
 class Config {
 private:
-    std::unique_ptr<Fl_Preferences> prefs;
+    std::unique_ptr<QSettings> settings;
 
 public:
-    ~Config();
-
     /* Set of the config that is sent to the game */
     SharedConfig sc;
 

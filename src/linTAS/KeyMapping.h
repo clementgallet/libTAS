@@ -20,6 +20,7 @@
 #ifndef LINTAS_KEYMAPPING_H_INCLUDED
 #define LINTAS_KEYMAPPING_H_INCLUDED
 
+#include <QDataStream>
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
 #include <xcb/xcb.h>
@@ -146,13 +147,13 @@ public:
     bool operator<( const SingleInput &si ) const {
         return ((type < si.type) || ((type == si.type) && (value < si.value)));
     }
+}; Q_DECLARE_METATYPE(SingleInput)
 
-    /* Pack the content of the struct into the data array */
-    void pack(char* data);
+/* Save the content of the struct into the stream */
+QDataStream &operator<<(QDataStream &out, const SingleInput &obj);
 
-    /* Unpack data the content of the struct into the data array */
-    void unpack(const char* data);
-};
+/* Load the content of the struct from the stream */
+QDataStream &operator>>(QDataStream &in, SingleInput &obj);
 
 typedef int HotKeyType; enum
 {
@@ -194,13 +195,13 @@ struct HotKey {
     bool operator<( const HotKey &hk ) const {
         return type < hk.type;
     }
+}; Q_DECLARE_METATYPE(HotKey)
 
-    /* Pack the content of the struct into the data array */
-    void pack(char* data);
+/* Save the content of the struct into the stream */
+QDataStream &operator<<(QDataStream &out, const HotKey &obj);
 
-    /* Unpack data the content of the struct into the data array */
-    void unpack(const char* data);
-};
+/* Load the content of the struct from the stream */
+QDataStream &operator>>(QDataStream &in, HotKey &obj);
 
 struct ModifierKey {
     xcb_keysym_t ks;

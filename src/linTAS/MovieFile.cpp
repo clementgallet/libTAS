@@ -26,6 +26,7 @@
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
+#include <FL/Fl_Preferences.H>
 
 static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};

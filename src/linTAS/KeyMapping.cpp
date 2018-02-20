@@ -25,32 +25,24 @@
 #include <memory> // unique_ptr
 #include <iostream>
 
-void SingleInput::pack(char* data)
-{
-    const void* type_data = const_cast<const void*>(static_cast<void*>(&type));
-    memcpy(static_cast<void*>(data), type_data, sizeof(InputType));
-    const void* value_data = const_cast<const void*>(static_cast<void*>(&value));
-    memcpy(static_cast<void*>(data+sizeof(InputType)), value_data, sizeof(int));
+QDataStream &operator<<(QDataStream &out, const SingleInput &obj) {
+    out << obj.type << obj.value;
+    return out;
 }
 
-void SingleInput::unpack(const char* data)
-{
-    void* type_data = static_cast<void*>(&type);
-    memcpy(type_data, static_cast<const void*>(data), sizeof(InputType));
-    void* value_data = static_cast<void*>(&value);
-    memcpy(value_data, static_cast<const void*>(data+sizeof(InputType)), sizeof(int));
+QDataStream &operator>>(QDataStream &in, SingleInput &obj) {
+    in >> obj.type >> obj.value;
+    return in;
 }
 
-void HotKey::pack(char* data)
-{
-    const void* type_data = const_cast<const void*>(static_cast<void*>(&type));
-    memcpy(static_cast<void*>(data), type_data, sizeof(HotKeyType));
+QDataStream &operator<<(QDataStream &out, const HotKey &obj) {
+    out << obj.type;
+    return out;
 }
 
-void HotKey::unpack(const char* data)
-{
-    void* type_data = static_cast<void*>(&type);
-    memcpy(type_data, static_cast<const void*>(data), sizeof(HotKeyType));
+QDataStream &operator>>(QDataStream &in, HotKey &obj) {
+    in >> obj.type;
+    return in;
 }
 
 bool is_modifier(xcb_keysym_t ks)

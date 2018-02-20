@@ -145,7 +145,7 @@ void EncodeWindow::update_config()
 
     /* Enable/disable video bitrate for lossy/lossless codecs */
     const AVCodecDescriptor* vcodec = avcodec_descriptor_get(context->config.sc.video_codec);
-    if ((vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
+    if (vcodec && (vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
         videoBitrate->setEnabled(false);
     }
     else {
@@ -165,7 +165,7 @@ void EncodeWindow::update_config()
 
     /* Enable/disable audio bitrate for lossy/lossless codecs */
     const AVCodecDescriptor* acodec = avcodec_descriptor_get(context->config.sc.audio_codec);
-    if ((acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
+    if (acodec && (acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
         audioBitrate->setEnabled(false);
     }
     else {

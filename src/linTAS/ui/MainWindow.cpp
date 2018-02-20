@@ -951,6 +951,9 @@ void MainWindow::slotBrowseGamePath()
     gamePath->setText(filename);
     context->gamepath = filename.toStdString();
 
+    /* Save the previous config */
+    context->config.save();
+
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
 
