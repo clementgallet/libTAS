@@ -38,9 +38,6 @@ Q_DECLARE_METATYPE(AVCodecID)
  */
 
 class Config {
-private:
-    std::unique_ptr<QSettings> settings;
-
 public:
     /* Set of the config that is sent to the game */
     SharedConfig sc;
@@ -93,11 +90,13 @@ public:
     int on_movie_end = MOVIEEND_PAUSE;
 
     /* Save the config into the config file */
-    void save();
+    void save(const std::string& gamepath);
 
     /* Load a game-specific config from the config file */
     void load(const std::string& gamepath);
 
+private:
+    QString iniPath(const std::string& gamepath) const;
 };
 
 #endif

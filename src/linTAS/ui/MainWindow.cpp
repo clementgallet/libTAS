@@ -948,11 +948,11 @@ void MainWindow::slotBrowseGamePath()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Game path"), context->gamepath.c_str());
 
+    /* Save the previous config */
+    context->config.save(context->gamepath);
+
     gamePath->setText(filename);
     context->gamepath = filename.toStdString();
-
-    /* Save the previous config */
-    context->config.save();
 
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
@@ -1008,11 +1008,11 @@ void MainWindow::slotExportMovie()
     }
 }
 
-void MainWindow::slotPause()
+void MainWindow::slotPause(bool checked)
 {
     if (context->status == Context::INACTIVE) {
         /* If the game is inactive, set the value directly */
-        context->config.sc.running = !pauseCheck->isChecked();
+        context->config.sc.running = !checked;
     }
     else {
         /* Else, let the game thread set the value */
@@ -1020,16 +1020,14 @@ void MainWindow::slotPause()
     }
 }
 
-void MainWindow::slotFastForward()
+void MainWindow::slotFastForward(bool checked)
 {
-    context->config.sc.fastforward = fastForwardCheck->isChecked();
+    context->config.sc.fastforward = checked;
     context->config.sc_modified = true;
 }
 
 void MainWindow::slotMovieEnable(bool checked)
 {
-    // movieBox->setEnabled(checked);
-
     if (checked) {
         if (movieRecording->isChecked()) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
@@ -1086,9 +1084,9 @@ void MainWindow::slotToggleEncode()
 }
 #endif
 
-void MainWindow::slotMuteSound()
+void MainWindow::slotMuteSound(bool checked)
 {
-    context->config.sc.audio_mute = muteAction->isChecked();
+    context->config.sc.audio_mute = checked;
     context->config.sc_modified = true;
 }
 
@@ -1148,9 +1146,9 @@ void MainWindow::slotOsd()
     context->config.sc_modified = true;
 }
 
-void MainWindow::slotOsdEncode()
+void MainWindow::slotOsdEncode(bool checked)
 {
-    context->config.sc.osd_encode = osdEncodeAction->isChecked();
+    context->config.sc.osd_encode = checked;
     context->config.sc_modified = true;
 }
 #endif
@@ -1161,15 +1159,15 @@ void MainWindow::slotSavestateIgnore()
     context->config.sc_modified = true;
 }
 
-void MainWindow::slotSaveScreen()
+void MainWindow::slotSaveScreen(bool checked)
 {
-    context->config.sc.save_screenpixels = saveScreenAction->isChecked();
+    context->config.sc.save_screenpixels = checked;
     context->config.sc_modified = true;
 }
 
-void MainWindow::slotPreventSavefile()
+void MainWindow::slotPreventSavefile(bool checked)
 {
-    context->config.sc.save_screenpixels = preventSavefileAction->isChecked();
+    context->config.sc.save_screenpixels = checked;
     context->config.sc_modified = true;
 }
 

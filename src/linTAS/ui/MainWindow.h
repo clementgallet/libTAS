@@ -220,22 +220,22 @@ private slots:
     void slotBrowseMoviePath();
     void slotSaveMovie();
     void slotExportMovie();
-    void slotPause();
-    void slotFastForward();
+    void slotPause(bool checked);
+    void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
-    void slotMuteSound();
+    void slotMuteSound(bool checked);
     void slotLoggingPrint();
     void slotLoggingExclude();
     void slotHotkeyFocus();
     void slotInputFocus();
     void slotSlowdown();
     void slotOsd();
-    void slotOsdEncode();
+    void slotOsdEncode(bool checked);
     void slotSavestateIgnore();
-    void slotSaveScreen();
-    void slotPreventSavefile();
+    void slotSaveScreen(bool checked);
+    void slotPreventSavefile(bool checked);
     void slotMovieEnd();
 };
 
