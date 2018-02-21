@@ -17,7 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QSettings>
 #include "Config.h"
+
+/* We need to register the AVCodecID struct to be able to serialize it */
+#ifdef LIBTAS_ENABLE_AVDUMPING
+Q_DECLARE_METATYPE(AVCodecID)
+#endif
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */

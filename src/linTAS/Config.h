@@ -20,16 +20,13 @@
 #ifndef LINTAS_CONFIG_H_INCLUDED
 #define LINTAS_CONFIG_H_INCLUDED
 
+#include <QString>
 #include <string>
 #include <memory>
-#include <QSettings>
+
 #include "../shared/SharedConfig.h"
 #include "KeyMapping.h"
 
-/* We need to register the AVCodecID struct to be able to serialize it */
-#ifdef LIBTAS_ENABLE_AVDUMPING
-Q_DECLARE_METATYPE(AVCodecID)
-#endif
 
 /* Structure holding program configuration that is saved in a file.
  * We use QtSettings class for that, which basically stores preferences

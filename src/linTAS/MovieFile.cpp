@@ -17,16 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "MovieFile.h"
-#include "utils.h"
-#include "../shared/version.h"
+#include <QSettings>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
-#include <FL/Fl_Preferences.H>
+
+#include "MovieFile.h"
+#include "utils.h"
+#include "../shared/version.h"
 
 static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
 	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
@@ -55,7 +56,7 @@ int MovieFile::extractMovie(const std::string& moviefile)
 		return ENOMOVIE;
 
 	/* Empty the temp directory */
-	std::string configfile = context->config.tempmoviedir + "/config.prefs";
+	std::string configfile = context->config.tempmoviedir + "/config.ini";
 	std::string inputfile = context->config.tempmoviedir + "/inputs";
 	unlink(configfile.c_str());
 	unlink(inputfile.c_str());
@@ -94,29 +95,26 @@ int MovieFile::loadMovie(const std::string& moviefile)
 		return ret;
 
     /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
 
-	int val;
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
 
-	#define GETWITHTYPE(prefs, key, member, type) \
-		val = static_cast<int>(member); \
-		prefs.get(key, val, val); \
-		member = static_cast<type>(val)
+	context->config.sc.movie_framecount = config.value("frame_count").toUInt();
+	context->config.sc.keyboard_support = config.value("keyboard_support").toBool();
+	context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
-	unsigned int movie_framecount = 0;
-	GETWITHTYPE(config_prefs, "frame_count", movie_framecount, unsigned int);
-	GETWITHTYPE(config_prefs, "keyboard_support", context->config.sc.keyboard_support, bool);
-	GETWITHTYPE(config_prefs, "mouse_support", context->config.sc.mouse_support, bool);
-	GETWITHTYPE(config_prefs, "nb_controllers", context->config.sc.nb_controllers, int);
-	GETWITHTYPE(config_prefs, "initial_time_sec", context->config.sc.initial_time.tv_sec, time_t);
-	GETWITHTYPE(config_prefs, "initial_time_nsec", context->config.sc.initial_time.tv_nsec, time_t);
-	GETWITHTYPE(config_prefs, "framerate", context->config.sc.framerate, unsigned int);
-	GETWITHTYPE(config_prefs, "rerecord_count", context->rerecord_count, unsigned int);
+	context->config.sc.nb_controllers = config.value("nb_controllers").toBool();
+	context->config.sc.initial_time.tv_sec = config.value("initial_time_sec").toInt();
+	context->config.sc.initial_time.tv_nsec = config.value("initial_time_nsec").toInt();
+	context->config.sc.framerate = config.value("framerate").toUInt();
+	context->rerecord_count = config.value("rerecord_count").toUInt();
 
 	/* Load the movie length and compute the movie end time using the initial time */
 	struct timespec movie_length;
-	GETWITHTYPE(config_prefs, "movie_length_sec", movie_length.tv_sec, time_t);
-	GETWITHTYPE(config_prefs, "movie_length_nsec", movie_length.tv_nsec, time_t);
+	movie_length.tv_sec = config.value("movie_length_sec").toInt();
+	movie_length.tv_nsec = config.value("movie_length_nsec").toInt();
 
 	context->movie_end_time.tv_sec = movie_length.tv_sec + context->config.sc.initial_time.tv_sec;
 	context->movie_end_time.tv_nsec = movie_length.tv_nsec + context->config.sc.initial_time.tv_nsec;
@@ -125,23 +123,23 @@ int MovieFile::loadMovie(const std::string& moviefile)
 		context->movie_end_time.tv_sec++;
 	}
 
-	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
+	config.beginGroup("mainthread_timetrack");
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toUInt();
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toUInt();
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toUInt();
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toUInt();
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toUInt();
+	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toUInt();
+	config.endGroup();
 
-	main_time_prefs.get("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
-	main_time_prefs.get("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
-	main_time_prefs.get("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-	main_time_prefs.get("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
-	main_time_prefs.get("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
-	main_time_prefs.get("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER], context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
-
-	Fl_Preferences sec_time_prefs(config_prefs, "secondarythread_timetrack");
-
-	sec_time_prefs.get("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
-	sec_time_prefs.get("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
-	sec_time_prefs.get("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-	sec_time_prefs.get("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
-	sec_time_prefs.get("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
-	sec_time_prefs.get("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER], context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+	config.beginGroup("secondarythread_timetrack");
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toUInt();
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toUInt();
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toUInt();
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toUInt();
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toUInt();
+	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toUInt();
+	config.endGroup();
 
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";
@@ -158,9 +156,9 @@ int MovieFile::loadMovie(const std::string& moviefile)
         }
     }
 
-	if (movie_framecount != input_list.size()) {
+	if (context->config.sc.movie_framecount != input_list.size()) {
 		std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
-		movie_framecount = input_list.size();
+		context->config.sc.movie_framecount = input_list.size();
 	}
 
     input_stream.close();
@@ -210,19 +208,24 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
     input_stream.close();
 
     /* Save some parameters into the config file */
-    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-	config_prefs.set("game_name", context->gamename.c_str());
-    config_prefs.set("frame_count", static_cast<int>(nb_frames));
-    config_prefs.set("keyboard_support", static_cast<int>(context->config.sc.keyboard_support));
-    config_prefs.set("mouse_support", static_cast<int>(context->config.sc.mouse_support));
-    config_prefs.set("nb_controllers", context->config.sc.nb_controllers);
-	config_prefs.set("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
-	config_prefs.set("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
-	config_prefs.set("framerate", static_cast<int>(context->config.sc.framerate));
-	config_prefs.set("rerecord_count", static_cast<int>(context->rerecord_count));
-	config_prefs.set("libtas_major_version", MAJORVERSION);
-	config_prefs.set("libtas_minor_version", MINORVERSION);
-	config_prefs.set("libtas_patch_version", PATCHVERSION);
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
+
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	config.setValue("game_name", context->gamename.c_str());
+	config.setValue("frame_count", nb_frames);
+	config.setValue("keyboard_support", context->config.sc.keyboard_support);
+	config.setValue("mouse_support", context->config.sc.mouse_support);
+	config.setValue("nb_controllers", context->config.sc.nb_controllers);
+	config.setValue("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
+	config.setValue("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
+	config.setValue("framerate", context->config.sc.framerate);
+	config.setValue("rerecord_count", context->rerecord_count);
+	config.setValue("libtas_major_version", MAJORVERSION);
+	config.setValue("libtas_minor_version", MINORVERSION);
+	config.setValue("libtas_patch_version", PATCHVERSION);
 
 	/* Compute and save movie length */
 	time_t movie_length_sec = context->movie_end_time.tv_sec - context->config.sc.initial_time.tv_sec;
@@ -231,28 +234,28 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 		movie_length_nsec += 1000000000;
 		movie_length_sec--;
 	}
-	config_prefs.set("movie_length_sec", static_cast<int>(movie_length_sec));
-	config_prefs.set("movie_length_nsec", static_cast<int>(movie_length_nsec));
+	config.setValue("movie_length_sec", static_cast<int>(movie_length_sec));
+	config.setValue("movie_length_nsec", static_cast<int>(movie_length_nsec));
 
-	Fl_Preferences main_time_prefs(config_prefs, "mainthread_timetrack");
+	config.beginGroup("mainthread_timetrack");
+	config.setValue("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	config.setValue("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	config.setValue("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	config.setValue("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	config.setValue("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	config.setValue("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+	config.endGroup();
 
-	main_time_prefs.set("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
-	main_time_prefs.set("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
-	main_time_prefs.set("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-	main_time_prefs.set("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
-	main_time_prefs.set("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
-	main_time_prefs.set("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+	config.beginGroup("secondarythread_timetrack");
+	config.setValue("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
+	config.setValue("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
+	config.setValue("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
+	config.setValue("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+	config.setValue("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
+	config.setValue("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+	config.endGroup();
 
-	Fl_Preferences sec_time_prefs(config_prefs, "secondarythread_timetrack");
-
-	sec_time_prefs.set("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
-	sec_time_prefs.set("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
-	sec_time_prefs.set("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-	sec_time_prefs.set("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
-	sec_time_prefs.set("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
-	sec_time_prefs.set("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
-
-    config_prefs.flush();
+    config.sync();
 
     /* Compress the files into the final movie file */
     TAR *tar;
@@ -262,9 +265,9 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
     char* input_ptr = const_cast<char*>(input_file.c_str());
     char savename[7] = "inputs";
     tar_append_file(tar, input_ptr, savename);
-    std::string config_file = context->config.tempmoviedir + "/config.prefs";
+    std::string config_file = context->config.tempmoviedir + "/config.ini";
     char* config_ptr = const_cast<char*>(config_file.c_str());
-    char savename2[13] = "config.prefs";
+    char savename2[13] = "config.ini";
     tar_append_file(tar, config_ptr, savename2);
 
     tar_append_eof(tar);
@@ -395,12 +398,14 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
 
 unsigned int MovieFile::nbFramesConfig()
 {
-    /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-    int frame_count;
-    config_prefs.get("frame_count", frame_count, 0);
+	/* Load the config file into the context struct */
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
 
-    return frame_count;
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	return config.value("frame_count").toUInt();
 }
 
 unsigned int MovieFile::nbFrames()
@@ -411,11 +416,13 @@ unsigned int MovieFile::nbFrames()
 unsigned int MovieFile::nbRerecords()
 {
     /* Load the config file into the context struct */
-    Fl_Preferences config_prefs(context->config.tempmoviedir.c_str(), "movie", "config");
-    int rerecord_count;
-    config_prefs.get("rerecord_count", rerecord_count, 0);
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
 
-    return rerecord_count;
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	return config.value("rerecord_count").toUInt();
 }
 
 int MovieFile::setInputs(const AllInputs& inputs)
