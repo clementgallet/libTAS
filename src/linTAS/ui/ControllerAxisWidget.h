@@ -20,18 +20,37 @@
 #ifndef LINTAS_CONTROLLERAXISWIDGET_H_INCLUDED
 #define LINTAS_CONTROLLERAXISWIDGET_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Widget.H>
+#include <QWidget>
+#include <QPaintEvent>
+#include <QMouseEvent>
 
-class ControllerAxisWidget : public Fl_Widget {
-    public:
-        ControllerAxisWidget(int x, int y, int w, int h, const char *label=0L);
+class ControllerAxisWidget : public QWidget {
+    Q_OBJECT
 
-        void draw();
+public:
+    ControllerAxisWidget(QWidget *parent = Q_NULLPTR);
 
-        int handle(int event);
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
 
-        short x_axis, y_axis;
+    short x_axis, y_axis;
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+public slots:
+    void slotSetAxes(short x, short y);
+    void slotSetXAxis(int x);
+    void slotSetYAxis(int y);
+
+signals:
+    void XAxisChanged(int x);
+    void YAxisChanged(int y);
+
+private:
+    short clampToShort(int val);
+
 };
 
 #endif

@@ -17,14 +17,6 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_AUTOMOC ON)
 
-# Include FLTK path
-set(FLTK_SKIP_OPENGL TRUE)
-set(FLTK_SKIP_FORMS TRUE)
-set(FLTK_SKIP_IMAGES TRUE)
-set(FLTK_SKIP_FLUID TRUE)
-find_package(FLTK REQUIRED NO_MODULE)
-include_directories(${FLTK_INCLUDE_DIRS})
-
 add_executable(linTAS ${lin_sources} ${shared_sources} ${external_sources})
 add_library(TAS SHARED ${lib_sources} ${shared_sources} ${external_sources})
 
@@ -70,9 +62,6 @@ find_package(X11 REQUIRED)
 include_directories(${X11_X11_INCLUDE_DIRS})
 target_link_libraries (linTAS ${X11_X11_LIB})
 target_link_libraries (TAS ${X11_X11_LIB})
-
-# Add FLTK library
-target_link_libraries(linTAS fltk)
 
 # Add zlib library
 find_package(ZLIB REQUIRED)

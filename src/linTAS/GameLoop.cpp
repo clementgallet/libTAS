@@ -43,6 +43,7 @@
 #include <memory> // unique_ptr
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
+#include <X11/X.h>
 
 GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
 

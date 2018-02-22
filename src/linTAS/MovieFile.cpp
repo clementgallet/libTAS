@@ -24,6 +24,7 @@
 #include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
+#include <X11/X.h> // ButtonXMask
 
 #include "MovieFile.h"
 #include "utils.h"

@@ -17,62 +17,94 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ControllerAxisWidget.h"
-#include <FL/fl_draw.H>
+#include <QPainter>
 #include <cstdint>
 #include <iostream>
 
-// static Fl_Callback start_cb;
+#include "ControllerAxisWidget.h"
 
-ControllerAxisWidget::ControllerAxisWidget(int x, int y, int w, int h, const char *label) :
-    Fl_Widget(x, y, w, h, label)
+ControllerAxisWidget::ControllerAxisWidget(QWidget *parent) : QWidget(parent)
 {
     x_axis = y_axis = 0;
+
+    setBackgroundRole(QPalette::Base);
+    setAutoFillBackground(true);
     // when(FL_WHEN_CHANGED);
 }
 
-
-void ControllerAxisWidget::draw()
+QSize ControllerAxisWidget::sizeHint() const
 {
-    // Fl_Widget::draw();
-    // int w = this->w();
-    // int h = this->h();
-
-    fl_color(200, 200, 200);
-    fl_rectf(x(), y(), w(), h());
-
-    fl_color(100, 100, 100);
-    fl_rect(x(), y(), w(), h());
-    fl_arc(x(), y(), w(), h(), 0, 360);
-
-    fl_color(0, 0, 0);
-
-    fl_line(x()+ w()/2, y() + h()/2, x() + ((double)x_axis - INT16_MIN) * w() / UINT16_MAX, y() + ((double)y_axis - INT16_MIN) * h() / UINT16_MAX);
-
+    return QSize(200, 200);
 }
 
-int ControllerAxisWidget::handle(int event)
+QSize ControllerAxisWidget::minimumSizeHint() const
 {
-    switch (event) {
-        default:
-            return Fl_Widget::handle(event);
-        case FL_PUSH:
-        case FL_DRAG:
-        case FL_RELEASE:
-            int x_axis_unclip = ((Fl::event_x() - x()) * UINT16_MAX / w()) + INT16_MIN;
-            int y_axis_unclip = ((Fl::event_y() - y()) * UINT16_MAX / h()) + INT16_MIN;
+    return QSize(200, 200);
+}
 
-            /* Clip values to short */
-            #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
+void ControllerAxisWidget::paintEvent(QPaintEvent * /* event */)
+{
+    QRect rect(2, 2, width()-4, height()-4);
 
-            x_axis = static_cast<short>(clamptofullsignedrange(x_axis_unclip, INT16_MIN, INT16_MAX));
-            y_axis = static_cast<short>(clamptofullsignedrange(y_axis_unclip, INT16_MIN, INT16_MAX));
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setBrush(QBrush(Qt::white));
+    painter.setPen(QPen(Qt::black, 2));
 
-            // std::cout << Fl::event_x() << " - " << x_axis << std::endl;
-            // std::cout << Fl::event_y() << " - " << y_axis << std::endl;
-            redraw();
+    painter.drawChord(rect, 0, 360 * 16);
 
-            do_callback();
-            return 1;
+    float value_x = ((float)x_axis - INT16_MIN) * width() / UINT16_MAX;
+    float value_y = ((float)y_axis - INT16_MIN) * height() / UINT16_MAX;
+
+    painter.setBrush(QBrush(Qt::blue));
+    painter.setPen(QPen(Qt::blue, 2));
+
+    painter.drawLine(QLineF(width()/2.0, height()/2.0, value_x, value_y));
+
+    QRectF rect_value(value_x-5, value_y-5, 10, 10);
+    painter.drawChord(rect_value, 0, 360 * 16);
+}
+
+/* Clip values to short */
+short ControllerAxisWidget::clampToShort(int val)
+{
+    return (val>INT16_MAX)?INT16_MAX:((val<INT16_MIN)?INT16_MIN:static_cast<short>(val));
+}
+
+void ControllerAxisWidget::slotSetXAxis(int x)
+{
+    x_axis = clampToShort(x);
+    update();
+}
+
+void ControllerAxisWidget::slotSetYAxis(int y)
+{
+    y_axis = clampToShort(y);
+    update();
+}
+
+void ControllerAxisWidget::slotSetAxes(short x, short y)
+{
+    x_axis = x;
+    y_axis = y;
+    update();
+}
+
+void ControllerAxisWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton)) {
+        event->ignore();
+        return;
     }
+
+    int x_axis_unclamped = (event->x() * UINT16_MAX / width()) + INT16_MIN;
+    int y_axis_unclamped = (event->y() * UINT16_MAX / height()) + INT16_MIN;
+
+    x_axis = clampToShort(x_axis_unclamped);
+    y_axis = clampToShort(y_axis_unclamped);
+
+    update();
+
+    emit XAxisChanged(x_axis);
+    emit YAxisChanged(y_axis);
 }

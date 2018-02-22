@@ -21,9 +21,9 @@
 #define LIBTAS_ALLINPUTS_H_INCLUDED
 
 // #include <X11/Xlib.h> // For the KeySym type
-#include <X11/X.h> // For the KeySym type
-#undef CursorShape //  messes up with Qt
-#undef None //  messes up with Qt
+
+/* I'm typedef'ing KeySym here because including <X11/X.h> messes up with Qt */
+typedef unsigned long int KeySym;
 #include <array>
 
 /* Input structure that is filled by linTAS and send to libTAS every frame
@@ -50,6 +50,7 @@ class AllInputs {
          * and there would be a highly non-trivial translation between bitmap
          * position and equivalent KeySym.
          */
+
         std::array<KeySym,MAXKEYS> keyboard;
 
         /* Pointer coordinates relative to the origin of the game window */

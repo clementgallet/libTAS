@@ -32,9 +32,9 @@
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
 
-
 #include <iostream>
 #include <future>
+#include <sys/stat.h>
 // #include <iomanip> // setprecision
 // #include <sstream> // ostringstream
 
@@ -67,7 +67,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 #endif
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
-    // controllerWindow = new ControllerWindow(c, this);
+    controllerWindow = new ControllerWindow(c, this);
     gameInfoWindow = new GameInfoWindow(c, this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
@@ -566,6 +566,8 @@ void MainWindow::createMenus()
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
     joystickMenu->addActions(joystickGroup->actions());
     disabledWidgetsOnStart.append(joystickMenu);
+
+    inputMenu->addAction(tr("Analog inputs..."), controllerWindow, &ControllerWindow::exec);
 
     QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
     hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());

@@ -20,62 +20,67 @@
 #ifndef LINTAS_CONTROLLERWINDOW_H_INCLUDED
 #define LINTAS_CONTROLLERWINDOW_H_INCLUDED
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-// #include <FL/Fl_Button.H>
-//#include <FL/Fl_Input.H>
-#include <FL/Fl_Value_Input.H>
-// #include <FL/Fl_Output.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_Hor_Slider.H>
+#include <QDialog>
+#include <QCheckBox>
+#include <QSpinBox>
+#include <QSlider>
 
-#include "../Context.h"
+// #include <FL/Fl.H>
+// #include <FL/Fl_Double_Window.H>
+// // #include <FL/Fl_Button.H>
+// //#include <FL/Fl_Input.H>
+// #include <FL/Fl_Value_Input.H>
+// // #include <FL/Fl_Output.H>
+// #include <FL/Fl_Check_Button.H>
+// #include <FL/Fl_Hor_Slider.H>
+
 #include "ControllerAxisWidget.h"
+#include "../Context.h"
 
-class ControllerWindow {
-    public:
-        ControllerWindow(Context *c);
+class ControllerWindow : public QDialog {
+    Q_OBJECT
 
-        /* Update UI elements when the config has changed */
-        // void update_config();
+public:
+    // ControllerWindow(Context *c);
+    ControllerWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-        Context *context;
+    /* Update UI elements when the config has changed */
+    // void update_config();
 
-        Fl_Double_Window *window;
+    Context *context;
 
-        Fl_Check_Button *button_a;
-        Fl_Check_Button *button_b;
-        Fl_Check_Button *button_x;
-        Fl_Check_Button *button_y;
+    QCheckBox *button_a;
+    QCheckBox *button_b;
+    QCheckBox *button_x;
+    QCheckBox *button_y;
 
-        Fl_Check_Button *button_dpad_left;
-        Fl_Check_Button *button_dpad_right;
-        Fl_Check_Button *button_dpad_up;
-        Fl_Check_Button *button_dpad_down;
+    QCheckBox *button_dpad_left;
+    QCheckBox *button_dpad_right;
+    QCheckBox *button_dpad_up;
+    QCheckBox *button_dpad_down;
 
-        Fl_Check_Button *button_rb;
-        Fl_Check_Button *button_lb;
-        Fl_Check_Button *button_rs;
-        Fl_Check_Button *button_ls;
+    QCheckBox *button_rb;
+    QCheckBox *button_lb;
+    QCheckBox *button_rs;
+    QCheckBox *button_ls;
 
-        ControllerAxisWidget *axis_left;
-        ControllerAxisWidget *axis_right;
+    ControllerAxisWidget *axis_left;
+    ControllerAxisWidget *axis_right;
 
-        Fl_Value_Input *axis_left_x;
-        Fl_Value_Input *axis_left_y;
-        Fl_Value_Input *axis_right_x;
-        Fl_Value_Input *axis_right_y;
+    QSpinBox *axis_left_x;
+    QSpinBox *axis_left_y;
+    QSpinBox *axis_right_x;
+    QSpinBox *axis_right_y;
 
-        Fl_Check_Button *button_back;
-        Fl_Check_Button *button_guide;
-        Fl_Check_Button *button_start;
+    QCheckBox *button_back;
+    QCheckBox *button_guide;
+    QCheckBox *button_start;
 
-        Fl_Hor_Slider *trigger_right;
-        Fl_Hor_Slider *trigger_left;
+    QSlider *trigger_right;
+    QSlider *trigger_left;
 
-        Fl_Value_Input *trigger_right_value;
-        Fl_Value_Input *trigger_left_value;
-
+    QSpinBox *trigger_right_value;
+    QSpinBox *trigger_left_value;
 };
 
 #endif
