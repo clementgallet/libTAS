@@ -61,10 +61,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 #endif
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
-    controller1Window = new ControllerWindow(c, 0, this);
-    controller2Window = new ControllerWindow(c, 1, this);
-    controller3Window = new ControllerWindow(c, 2, this);
-    controller4Window = new ControllerWindow(c, 3, this);
+    controllerTabWindow = new ControllerTabWindow(c, this);
     gameInfoWindow = new GameInfoWindow(c, this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
@@ -568,12 +565,7 @@ void MainWindow::createMenus()
     joystickMenu->addActions(joystickGroup->actions());
     disabledWidgetsOnStart.append(joystickMenu);
 
-    inputMenu->addAction(tr("Joystick inputs..."), this, [this](){
-        controller1Window->show();
-        controller2Window->show();
-        controller3Window->show();
-        controller4Window->show();
-    });
+    inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
 
     inputMenu->addSeparator();
 
@@ -597,8 +589,11 @@ void MainWindow::updateStatus()
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(true);
 
-            movieBox->setAttribute(Qt::WA_TransparentForMouseEvents, false);
-            movieBox->setFocusPolicy(Qt::StrongFocus);
+            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+                movieBox->setEnabled(true);
+            }
+            movieBox->setCheckable(true);
+            movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
             // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
             // if (item) item->deactivate();
@@ -619,7 +614,6 @@ void MainWindow::updateStatus()
             frameCount->setValue(0);
             currentLength->setText("Current Time: -");
             fpsValues->setText("Current FPS: - / -");
-            movieFrameCount->setEnabled(true);
             {
                 MovieFile tempmovie(context);
                 /* Update the movie frame count and rerecord count
@@ -652,13 +646,11 @@ void MainWindow::updateStatus()
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
 
-            movieBox->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-            movieBox->setFocusPolicy(Qt::NoFocus);
-
-            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                // movieFrameCount->setValue(0);
-                movieFrameCount->setEnabled(false);
+            movieBox->setCheckable(false);
+            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+                movieBox->setEnabled(false);
             }
+
             break;
 
         case Context::ACTIVE:
@@ -691,13 +683,11 @@ void MainWindow::updateSharedConfigChanged()
     switch (context->config.sc.recording) {
         case SharedConfig::RECORDING_WRITE:
             movieRecording->setChecked(true);
-            // movieFrameCount->setValue(0);
-            movieFrameCount->setEnabled(false);
+            movieFrameCount->setValue(context->config.sc.movie_framecount);
             break;
         case SharedConfig::RECORDING_READ:
             moviePlayback->setChecked(true);
             movieFrameCount->setValue(context->config.sc.movie_framecount);
-            movieFrameCount->setEnabled(true);
             break;
         default:
             break;
@@ -720,6 +710,7 @@ void MainWindow::updateFrameCountTime()
 {
     /* Update frame count */
     frameCount->setValue(context->framecount);
+    movieFrameCount->setValue(context->config.sc.movie_framecount);
 
     /* Update time */
     initialTimeSec->setValue(context->current_time.tv_sec);
@@ -733,12 +724,10 @@ void MainWindow::updateFrameCountTime()
         currentLength->setText(QString("Current Time: %1m %2s").arg(min).arg(sec, 0, 'f', 2));
 
         /* Format movie length */
-        if (context->config.sc.movie_framecount != 0) {
-            double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-            int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
+        double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+        int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
 
-            movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
-        }
+        movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
     }
 }
 
@@ -1006,6 +995,7 @@ void MainWindow::slotBrowseMoviePath()
     else {
         movieFrameCount->setValue(0);
         rerecordCount->setValue(0);
+        movieLength->setText("Movie length: -");
 
         movieRecording->setChecked(true);
         context->config.sc.recording = SharedConfig::RECORDING_WRITE;

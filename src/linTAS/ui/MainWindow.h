@@ -35,7 +35,7 @@
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
-#include "ControllerWindow.h"
+#include "ControllerTabWindow.h"
 #include "GameInfoWindow.h"
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
@@ -61,10 +61,7 @@ public:
 #endif
     InputWindow* inputWindow;
     ExecutableWindow* executableWindow;
-    ControllerWindow* controller1Window;
-    ControllerWindow* controller2Window;
-    ControllerWindow* controller3Window;
-    ControllerWindow* controller4Window;
+    ControllerTabWindow* controllerTabWindow;
     GameInfoWindow* gameInfoWindow;
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;

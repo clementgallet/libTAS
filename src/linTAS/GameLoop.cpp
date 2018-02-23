@@ -365,6 +365,9 @@ bool GameLoop::loopReceiveMessages()
             break;
         case MSGB_FRAMECOUNT_TIME:
             receiveData(&context->framecount, sizeof(unsigned long));
+            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                context->config.sc.movie_framecount = context->framecount;
+            }
             receiveData(&context->current_time, sizeof(struct timespec));
             emit frameCountChanged();
             break;
@@ -728,6 +731,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 return false;
             }
             receiveData(&context->framecount, sizeof(unsigned long));
+            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                context->config.sc.movie_framecount = context->framecount;
+            }
             receiveData(&context->current_time, sizeof(struct timespec));
             emit frameCountChanged();
             return false;

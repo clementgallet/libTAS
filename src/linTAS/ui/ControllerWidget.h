@@ -17,39 +17,21 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_CONTROLLERWINDOW_H_INCLUDED
-#define LINTAS_CONTROLLERWINDOW_H_INCLUDED
+#ifndef LINTAS_CONTROLLERWIDGET_H_INCLUDED
+#define LINTAS_CONTROLLERWIDGET_H_INCLUDED
 
-#include <QDialog>
+#include <QWidget>
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QSlider>
 
-// #include <FL/Fl.H>
-// #include <FL/Fl_Double_Window.H>
-// // #include <FL/Fl_Button.H>
-// //#include <FL/Fl_Input.H>
-// #include <FL/Fl_Value_Input.H>
-// // #include <FL/Fl_Output.H>
-// #include <FL/Fl_Check_Button.H>
-// #include <FL/Fl_Hor_Slider.H>
-
 #include "ControllerAxisWidget.h"
-#include "../Context.h"
 
-class ControllerWindow : public QDialog {
+class ControllerWidget : public QWidget {
     Q_OBJECT
 
 public:
-    // ControllerWindow(Context *c);
-    ControllerWindow(Context *c, int id, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
-
-    int controller_id;
-
-    /* Update UI elements when the config has changed */
-    // void update_config();
-
-    Context *context;
+    ControllerWidget(QWidget *parent = Q_NULLPTR);
 
     QCheckBox *button_a;
     QCheckBox *button_b;
@@ -83,15 +65,6 @@ public:
 
     QSpinBox *trigger_right_value;
     QSpinBox *trigger_left_value;
-
-protected:
-    void keyPressEvent(QKeyEvent *e);
-    void keyReleaseEvent(QKeyEvent *e);
-
-public slots:
-    void slotButtonToggle(int id, int button, bool pressed);
-    void slotSetInputs(AllInputs &ai);
-
 };
 
 #endif
