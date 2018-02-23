@@ -617,6 +617,8 @@ void MainWindow::updateStatus()
 #endif
 
             frameCount->setValue(0);
+            currentLength->setText("Current Time: -");
+            fpsValues->setText("Current FPS: - / -");
             movieFrameCount->setEnabled(true);
             {
                 MovieFile tempmovie(context);

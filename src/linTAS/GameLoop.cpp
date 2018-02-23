@@ -453,10 +453,15 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                  * KeyRelease event...
                  */
                 xcb_generic_event_t *next_event = nullptr;
+
                 if (response_type == XCB_KEY_RELEASE) {
                     next_event = xcb_poll_for_event (context->conn);
+                    xcb_key_press_event_t* next_key_event = reinterpret_cast<xcb_key_press_event_t*>(next_event);
 
-                    if (next_event && (next_event->sequence == event->sequence)) {
+                    if (next_event &&
+                        (next_event->sequence == event->sequence) &&
+                        ((next_event->response_type & ~0x80) == XCB_KEY_PRESS) &&
+                        (next_key_event->detail == key_event->detail)) {
                         /* This event must be discarded */
                         event.reset(next_event);
                         continue;
