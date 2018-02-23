@@ -84,8 +84,11 @@ public:
     /* Get the number of frames of the current movie */
     unsigned int nbFrames();
 
-    /* Get the number of rerecords from a moviefile */
+    /* Get the number of rerecords from a moviefile. It must be extracted first */
     unsigned int nbRerecords();
+
+    /* Get the length of a moviefile. It must be extracted first */
+    void lengthConfig(int &sec, int& nsec);
 
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);

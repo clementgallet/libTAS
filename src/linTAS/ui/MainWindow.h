@@ -51,25 +51,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(Context* c);
     ~MainWindow();
-    // /* Implement a Singleton pattern */
-    // static MainWindow& getInstance()
-    // {
-    //     static MainWindow instance;
-    //     return instance;
-    // }
-    //
-    // MainWindow(MainWindow const&) = delete;
-    // void operator=(MainWindow const&) = delete;
-
-    // void build(Context* c);
 
     std::thread game_thread;
     GameLoop *gameLoop;
     Context *context;
-    // Fl_Double_Window *window;
-
-    // Fl_Menu_Bar *menu_bar;
-    // static Fl_Menu_Item menu_items[];
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     EncodeWindow* encodeWindow;

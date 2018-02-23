@@ -58,7 +58,7 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     connect(axis_right_y, QOverload<int>::of(&QSpinBox::valueChanged), axis_right, &ControllerAxisWidget::slotSetYAxis);
     connect(axis_right, &ControllerAxisWidget::YAxisChanged, axis_right_y, &QSpinBox::setValue);
 
-    trigger_left = new QSlider(Qt::Vertical);
+    trigger_left = new QSlider(Qt::Horizontal);
     trigger_left->setMinimum(INT16_MIN);
     trigger_left->setMaximum(INT16_MAX);
 
@@ -67,7 +67,7 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     connect(trigger_left_value, QOverload<int>::of(&QSpinBox::valueChanged), trigger_left, &QSlider::value);
     connect(trigger_left, &QSlider::valueChanged, trigger_left_value, &QSpinBox::setValue);
 
-    trigger_right = new QSlider(Qt::Vertical);
+    trigger_right = new QSlider(Qt::Horizontal);
     trigger_right->setMinimum(INT16_MIN);
     trigger_right->setMaximum(INT16_MAX);
 
@@ -106,14 +106,14 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     QGroupBox *leftStickBox = new QGroupBox(tr("Left Stick"));
 
     QHBoxLayout *leftAxesLayout = new QHBoxLayout;
-    leftAxesLayout->addWidget(new QLabel("X axis"));
+    leftAxesLayout->addWidget(new QLabel("X:"));
     leftAxesLayout->addWidget(axis_left_x);
-    leftAxesLayout->addWidget(new QLabel("Y axis"));
+    leftAxesLayout->addWidget(new QLabel("Y:"));
     leftAxesLayout->addWidget(axis_left_y);
 
     QVBoxLayout *leftStickLayout = new QVBoxLayout;
     leftStickLayout->addLayout(leftAxesLayout);
-    leftStickLayout->addWidget(axis_left, 1);
+    leftStickLayout->addWidget(axis_left);
 
     leftStickBox->setLayout(leftStickLayout);
 
@@ -122,14 +122,14 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     QGroupBox *rightStickBox = new QGroupBox(tr("Right Stick"));
 
     QHBoxLayout *rightAxesLayout = new QHBoxLayout;
-    rightAxesLayout->addWidget(new QLabel("X axis"));
+    rightAxesLayout->addWidget(new QLabel("X:"));
     rightAxesLayout->addWidget(axis_right_x);
-    rightAxesLayout->addWidget(new QLabel("Y axis"));
+    rightAxesLayout->addWidget(new QLabel("Y:"));
     rightAxesLayout->addWidget(axis_right_y);
 
     QVBoxLayout *rightStickLayout = new QVBoxLayout;
     rightStickLayout->addLayout(rightAxesLayout);
-    rightStickLayout->addWidget(axis_right, 1);
+    rightStickLayout->addWidget(axis_right);
 
     rightStickBox->setLayout(rightStickLayout);
 
@@ -138,18 +138,18 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     QGroupBox *triggerBox = new QGroupBox(tr("Triggers"));
 
     QGroupBox *leftTriggerBox = new QGroupBox(tr("Left Trigger"));
-    QHBoxLayout *leftTriggerLayout = new QHBoxLayout;
+    QVBoxLayout *leftTriggerLayout = new QVBoxLayout;
     leftTriggerLayout->addWidget(trigger_left);
     leftTriggerLayout->addWidget(trigger_left_value);
     leftTriggerBox->setLayout(leftTriggerLayout);
 
     QGroupBox *rightTriggerBox = new QGroupBox(tr("Right Trigger"));
-    QHBoxLayout *rightTriggerLayout = new QHBoxLayout;
+    QVBoxLayout *rightTriggerLayout = new QVBoxLayout;
     rightTriggerLayout->addWidget(trigger_right);
     rightTriggerLayout->addWidget(trigger_right_value);
     rightTriggerBox->setLayout(rightTriggerLayout);
 
-    QHBoxLayout *triggerLayout = new QHBoxLayout;
+    QVBoxLayout *triggerLayout = new QVBoxLayout;
     triggerLayout->addWidget(leftTriggerBox);
     triggerLayout->addWidget(rightTriggerBox);
 
@@ -186,6 +186,8 @@ ControllerWindow::ControllerWindow(Context* c, int id, QWidget *parent, Qt::Wind
     mainLayout->addWidget(rightStickBox, 0, 1);
     mainLayout->addWidget(triggerBox, 1, 0);
     mainLayout->addWidget(buttonBox, 1, 1);
+    mainLayout->setColumnStretch(0, 1);
+    mainLayout->setColumnStretch(1, 1);
 
     setLayout(mainLayout);
 

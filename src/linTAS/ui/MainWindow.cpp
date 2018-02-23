@@ -35,13 +35,9 @@
 #include <iostream>
 #include <future>
 #include <sys/stat.h>
-// #include <iomanip> // setprecision
-// #include <sstream> // ostringstream
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
-    // setFixedSize(600, 600);
-
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
     setWindowTitle(title);
 
@@ -58,8 +54,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
     connect(gameLoop, &GameLoop::fpsChanged, this, &MainWindow::updateFps);
     connect(gameLoop, &GameLoop::askMovieSaved, this, &MainWindow::alertSave);
-
-
 
     /* Create other windows */
 #ifdef LIBTAS_ENABLE_AVDUMPING
@@ -261,9 +255,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     setCentralWidget(centralWidget);
 
     updateUIFromConfig();
-
-
-    // context->ui_window = fl_xid(window);
 }
 
 MainWindow::~MainWindow()
@@ -548,10 +539,17 @@ void MainWindow::createMenus()
     configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
 
+    toolsMenu->addSeparator();
+
     QMenu *slowdownMenu = toolsMenu->addMenu(tr("Slow Motion"));
     slowdownMenu->addActions(slowdownGroup->actions());
 
+    toolsMenu->addSeparator();
+
     toolsMenu->addAction(tr("Game information..."), gameInfoWindow, &GameInfoWindow::exec);
+
+    toolsMenu->addSeparator();
+
     toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::exec);
     toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::exec);
 
@@ -570,12 +568,14 @@ void MainWindow::createMenus()
     joystickMenu->addActions(joystickGroup->actions());
     disabledWidgetsOnStart.append(joystickMenu);
 
-    inputMenu->addAction(tr("Analog inputs..."), this, [this](){
+    inputMenu->addAction(tr("Joystick inputs..."), this, [this](){
         controller1Window->show();
         controller2Window->show();
         controller3Window->show();
         controller4Window->show();
     });
+
+    inputMenu->addSeparator();
 
     QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
     hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());
@@ -615,16 +615,31 @@ void MainWindow::updateStatus()
                 toggleEncodeAction->setText("Start encode");
             }
 #endif
-            movieRecording->setEnabled(true);
-            moviePlayback->setEnabled(true);
 
             frameCount->setValue(0);
+            movieFrameCount->setEnabled(true);
             {
-                movieFrameCount->setEnabled(true);
                 MovieFile tempmovie(context);
-                /* Update the movie frame count if the movie file is valid */
+                /* Update the movie frame count and rerecord count
+                 * if the movie file is valid.
+                 */
                 if (tempmovie.extractMovie() == 0) {
                     movieFrameCount->setValue(tempmovie.nbFramesConfig());
+                    rerecordCount->setValue(tempmovie.nbRerecords());
+                    int sec, nsec;
+                    tempmovie.lengthConfig(sec, nsec);
+                    movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
+
+                    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+                        context->config.sc.recording = SharedConfig::RECORDING_READ;
+                        moviePlayback->setChecked(true);
+                    }
+                }
+                else {
+                    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+                        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+                        movieRecording->setChecked(true);
+                    }
                 }
             }
             break;
@@ -638,14 +653,9 @@ void MainWindow::updateStatus()
             movieBox->setAttribute(Qt::WA_TransparentForMouseEvents, true);
             movieBox->setFocusPolicy(Qt::NoFocus);
 
-            if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
-                (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
-                movieFrameCount->setValue(0);
+            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                // movieFrameCount->setValue(0);
                 movieFrameCount->setEnabled(false);
-            }
-            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
-                movieRecording->setEnabled(false);
-                moviePlayback->setEnabled(false);
             }
             break;
 
@@ -664,9 +674,6 @@ void MainWindow::updateStatus()
         default:
             break;
     }
-
-    // Fl::unlock();
-    // Fl::awake();
 }
 
 void MainWindow::updateSharedConfigChanged()
@@ -682,7 +689,7 @@ void MainWindow::updateSharedConfigChanged()
     switch (context->config.sc.recording) {
         case SharedConfig::RECORDING_WRITE:
             movieRecording->setChecked(true);
-            movieFrameCount->setValue(0);
+            // movieFrameCount->setValue(0);
             movieFrameCount->setEnabled(false);
             break;
         case SharedConfig::RECORDING_READ:
@@ -690,10 +697,6 @@ void MainWindow::updateSharedConfigChanged()
             movieFrameCount->setValue(context->config.sc.movie_framecount);
             movieFrameCount->setEnabled(true);
             break;
-        // case SharedConfig::NO_RECORDING:
-        //     movieNo->setChecked(true);
-        //     moviePath->setEnabled(false);
-        //     browseMoviePath->setEnabled(false);
         default:
             break;
     }
@@ -735,9 +738,6 @@ void MainWindow::updateFrameCountTime()
             movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
         }
     }
-
-    // update();
-    // QApplication::processEvents();
 }
 
 void MainWindow::updateRerecordCount()
@@ -814,15 +814,21 @@ void MainWindow::updateUIFromConfig()
     initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
     initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
 
+    movieBox->setChecked(!(context->config.sc.recording == SharedConfig::NO_RECORDING));
+
     MovieFile tempmovie(context);
     if (tempmovie.extractMovie() == 0) {
         movieFrameCount->setValue(tempmovie.nbFramesConfig());
         rerecordCount->setValue(tempmovie.nbRerecords());
+        int sec, nsec;
+        tempmovie.lengthConfig(sec, nsec);
+        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
 
-        /* Also, by default, set the read-only mode */
+        /* Also, by default, set to playback mode */
         moviePlayback->setChecked(true);
-        context->config.sc.recording = SharedConfig::RECORDING_READ;
-        context->config.sc_modified = true;
+    }
+    else {
+        movieRecording->setChecked(true);
     }
 
     pauseCheck->setChecked(!context->config.sc.running);
@@ -987,8 +993,10 @@ void MainWindow::slotBrowseMoviePath()
     if (tempmovie.extractMovie() == 0) {
         movieFrameCount->setValue(tempmovie.nbFramesConfig());
         rerecordCount->setValue(tempmovie.nbRerecords());
+        int sec, nsec;
+        tempmovie.lengthConfig(sec, nsec);
+        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
 
-        /* Also, by default, set the read-only mode */
         moviePlayback->setChecked(true);
         context->config.sc.recording = SharedConfig::RECORDING_READ;
         context->config.sc_modified = true;
@@ -997,7 +1005,6 @@ void MainWindow::slotBrowseMoviePath()
         movieFrameCount->setValue(0);
         rerecordCount->setValue(0);
 
-        /* Also, by default, no recording */
         movieRecording->setChecked(true);
         context->config.sc.recording = SharedConfig::RECORDING_WRITE;
         context->config.sc_modified = true;

@@ -426,6 +426,19 @@ unsigned int MovieFile::nbRerecords()
 	return config.value("rerecord_count").toUInt();
 }
 
+void MovieFile::lengthConfig(int &sec, int& nsec)
+{
+    /* Load the config file into the context struct */
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
+
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	sec = config.value("movie_length_sec").toInt();
+	nsec = config.value("movie_length_nsec").toInt();
+}
+
 int MovieFile::setInputs(const AllInputs& inputs)
 {
     /* Check that we are writing to the next frame */
