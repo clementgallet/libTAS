@@ -83,6 +83,8 @@ private:
 
     uint8_t nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct HotKey &hk);
 
+    void notifyControllerEvent(xcb_keysym_t ks, bool pressed);
+
     bool processEvent(uint8_t type, struct HotKey &hk);
 
     void sleepSendPreview();
@@ -108,6 +110,9 @@ signals:
     void sharedConfigChanged();
     void fpsChanged(float fps, float lfps);
     void askMovieSaved(void* promise);
+
+    void controllerButtonToggled(int controller_id, int button, bool pressed);
+    void inputsToBeSent(AllInputs &allinputs);
 
 };
 

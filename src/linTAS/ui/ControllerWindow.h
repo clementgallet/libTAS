@@ -42,7 +42,9 @@ class ControllerWindow : public QDialog {
 
 public:
     // ControllerWindow(Context *c);
-    ControllerWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    ControllerWindow(Context *c, int id, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+
+    int controller_id;
 
     /* Update UI elements when the config has changed */
     // void update_config();
@@ -81,6 +83,15 @@ public:
 
     QSpinBox *trigger_right_value;
     QSpinBox *trigger_left_value;
+
+protected:
+    void keyPressEvent(QKeyEvent *e);
+    void keyReleaseEvent(QKeyEvent *e);
+
+public slots:
+    void slotButtonToggle(int id, int button, bool pressed);
+    void slotSetInputs(AllInputs &ai);
+
 };
 
 #endif

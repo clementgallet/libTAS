@@ -108,3 +108,8 @@ void ControllerAxisWidget::mouseMoveEvent(QMouseEvent *event)
     emit XAxisChanged(x_axis);
     emit YAxisChanged(y_axis);
 }
+
+void ControllerAxisWidget::mousePressEvent(QMouseEvent *event)
+{
+    return mouseMoveEvent(event);
+}

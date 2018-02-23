@@ -67,7 +67,10 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 #endif
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
-    controllerWindow = new ControllerWindow(c, this);
+    controller1Window = new ControllerWindow(c, 0, this);
+    controller2Window = new ControllerWindow(c, 1, this);
+    controller3Window = new ControllerWindow(c, 2, this);
+    controller4Window = new ControllerWindow(c, 3, this);
     gameInfoWindow = new GameInfoWindow(c, this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
@@ -567,7 +570,12 @@ void MainWindow::createMenus()
     joystickMenu->addActions(joystickGroup->actions());
     disabledWidgetsOnStart.append(joystickMenu);
 
-    inputMenu->addAction(tr("Analog inputs..."), controllerWindow, &ControllerWindow::exec);
+    inputMenu->addAction(tr("Analog inputs..."), this, [this](){
+        controller1Window->show();
+        controller2Window->show();
+        controller3Window->show();
+        controller4Window->show();
+    });
 
     QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
     hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());

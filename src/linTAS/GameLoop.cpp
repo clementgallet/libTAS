@@ -468,6 +468,9 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                 /* Get keysym from keycode */
                 xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms.get(), kc, 0);
 
+                /* If pressed a controller button, update the controller input window */
+                notifyControllerEvent(ks, response_type == XCB_KEY_PRESS);
+
                 /* If the key is a modifier, skip it */
                 if (is_modifier(ks))
                     continue;
@@ -506,6 +509,22 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
     return 0;
 }
 
+void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
+{
+    if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
+        SingleInput si = context->config.km.input_mapping[ks];
+
+        if (si.type >= IT_CONTROLLER1_BUTTON_A && si.type <= IT_CONTROLLER1_BUTTON_DPAD_RIGHT)
+            emit controllerButtonToggled(0, si.type - IT_CONTROLLER1_BUTTON_A, pressed);
+        if (si.type >= IT_CONTROLLER2_BUTTON_A && si.type <= IT_CONTROLLER2_BUTTON_DPAD_RIGHT)
+            emit controllerButtonToggled(1, si.type - IT_CONTROLLER2_BUTTON_A, pressed);
+        if (si.type >= IT_CONTROLLER3_BUTTON_A && si.type <= IT_CONTROLLER3_BUTTON_DPAD_RIGHT)
+            emit controllerButtonToggled(2, si.type - IT_CONTROLLER3_BUTTON_A, pressed);
+        if (si.type >= IT_CONTROLLER4_BUTTON_A && si.type <= IT_CONTROLLER4_BUTTON_DPAD_RIGHT)
+            emit controllerButtonToggled(3, si.type - IT_CONTROLLER4_BUTTON_A, pressed);
+    }
+
+}
 
 bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 {
@@ -793,6 +812,7 @@ void GameLoop::sleepSendPreview()
             /* Format the keyboard and mouse state and save it in the AllInputs struct */
             static AllInputs preview_ai, last_preview_ai;
             context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, context->config.sc);
+            emit inputsToBeSent(preview_ai);
 
             /* Send inputs if changed */
             if (!(preview_ai == last_preview_ai)) {
@@ -817,6 +837,7 @@ void GameLoop::processInputs(AllInputs &ai)
             if (haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
                 context->config.km.buildAllInputs(ai, context->conn, context->game_window, context->config.sc);
+                emit inputsToBeSent(ai);
             }
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {

@@ -76,7 +76,10 @@ public:
 #endif
     InputWindow* inputWindow;
     ExecutableWindow* executableWindow;
-    ControllerWindow* controllerWindow;
+    ControllerWindow* controller1Window;
+    ControllerWindow* controller2Window;
+    ControllerWindow* controller3Window;
+    ControllerWindow* controller4Window;
     GameInfoWindow* gameInfoWindow;
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;
