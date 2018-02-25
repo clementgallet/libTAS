@@ -48,8 +48,6 @@ private:
     RamSearchModel *ramSearchModel;
     QProgressBar *searchProgress;
     QLabel *watchCount;
-    // Fl_Box *watch_count;
-    // Fl_Hor_Fill_Slider *search_progress;
 
     QCheckBox *memTextBox;
     QCheckBox *memDataROBox;

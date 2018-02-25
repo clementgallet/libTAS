@@ -954,6 +954,8 @@ void MainWindow::slotStop()
 void MainWindow::slotBrowseGamePath()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Game path"), context->gamepath.c_str());
+    if (filename.isNull())
+        return;
 
     /* Save the previous config */
     context->config.save(context->gamepath);
@@ -976,6 +978,8 @@ void MainWindow::slotBrowseGamePath()
 void MainWindow::slotBrowseMoviePath()
 {
     QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
+    if (filename.isNull())
+        return;
 
     moviePath->setText(filename);
     context->config.moviefile = filename.toStdString();

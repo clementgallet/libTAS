@@ -101,6 +101,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
 
     /* Operators */
     operatorEqualButton = new QRadioButton("Equal To");
+    operatorEqualButton->setChecked(true);
     operatorNotEqualButton = new QRadioButton("Not Equal To");
     operatorLessButton = new QRadioButton("Less Than");
     operatorGreaterButton = new QRadioButton("Greater Than");

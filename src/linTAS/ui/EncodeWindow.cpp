@@ -196,13 +196,11 @@ void EncodeWindow::slotOk()
     accept();
 }
 
-void EncodeWindow::slotBrowseEncodePath(bool checked)
+void EncodeWindow::slotBrowseEncodePath()
 {
-    if (! checked)
-        return;
-
     QString filename = QFileDialog::getSaveFileName(this, tr("Choose an encode filename"), encodePath->text());
-    encodePath->setText(filename);
+    if (!filename.isNull())
+        encodePath->setText(filename);
 }
 
 void EncodeWindow::slotVideoCodec(int index)

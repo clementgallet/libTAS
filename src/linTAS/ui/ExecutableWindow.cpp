@@ -99,12 +99,14 @@ void ExecutableWindow::slotBrowseRunPath()
 {
     QString defaultPath = context->config.rundir.empty()?QString(context->gamepath.c_str()):runPath->text();
     QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an run directory"), defaultPath);
-    runPath->setText(dirname);
+    if (!dirname.isNull())
+        runPath->setText(dirname);
 }
 
 void ExecutableWindow::slotBrowseLibPath()
 {
     QString defaultPath = context->config.libdir.empty()?QString(context->gamepath.c_str()):libPath->text();
     QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an library directory"), defaultPath);
-    libPath->setText(dirname);
+    if (!dirname.isNull())
+        libPath->setText(dirname);
 }

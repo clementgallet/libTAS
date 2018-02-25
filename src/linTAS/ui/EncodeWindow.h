@@ -50,7 +50,7 @@ private:
     QSpinBox *audioBitrate;
 
 private slots:
-    void slotBrowseEncodePath(bool checked);
+    void slotBrowseEncodePath();
     void slotVideoCodec(int index);
     void slotAudioCodec(int index);
     void slotOk();
