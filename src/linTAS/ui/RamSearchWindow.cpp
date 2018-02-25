@@ -27,6 +27,7 @@
 #include <QHeaderView>
 
 #include "RamSearchWindow.h"
+#include "MainWindow.h"
 #include "../ramsearch/CompareEnums.h"
 
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
@@ -196,6 +197,9 @@ void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOpe
 
 void RamSearchWindow::slotNew()
 {
+    if (context->status != Context::ACTIVE)
+        return;
+
     /* Build the memory region flag variable */
     int memregions = 0;
     if (memTextBox->isChecked())
@@ -301,22 +305,13 @@ void RamSearchWindow::slotAdd()
     if (!index.isValid())
         return;
 
-    // int row = index.row();
+    int row = index.row();
 
-    /* TODO! */
     /* Fill the watch edit window with parameters from the selected watch */
-    // MainWindow& mw = MainWindow::getInstance();
-    // mw.ramwatch_window->edit_window->fill(rsw->ram_search.ramwatches.at(r));
-    //
-    // mw.ramwatch_window->edit_window->window->show();
-    //
-    // while (mw.ramwatch_window->edit_window->window->shown()) {
-    //     Fl::wait();
-    // }
-    //
-    // if (mw.ramwatch_window->edit_window->ramwatch) {
-    //     mw.ramwatch_window->edit_window->ramwatch->game_pid = rsw->context->game_pid;
-    //     mw.ramwatch_window->watch_table->ramwatches.push_back(std::move(mw.ramwatch_window->edit_window->ramwatch));
-    //     mw.ramwatch_window->watch_table->update();
-    // }
+
+    MainWindow *mw = qobject_cast<MainWindow*>(parent());
+    if (mw) {
+        mw->ramWatchWindow->editWindow->fill(ramSearchModel->ramwatches.at(row));
+        mw->ramWatchWindow->slotAdd();
+    }
 }

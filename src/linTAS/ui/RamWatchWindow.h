@@ -34,16 +34,18 @@ public:
     RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
     void update();
 
+    RamWatchEditWindow *editWindow;
+
 private:
     Context *context;
-
-    RamWatchEditWindow *editWindow;
 
     QTableView *ramWatchView;
     RamWatchModel *ramWatchModel;
 
-private slots:
+public slots:
     void slotAdd();
+
+private slots:
     void slotEdit();
     void slotRemove();
 

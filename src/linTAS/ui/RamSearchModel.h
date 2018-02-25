@@ -42,6 +42,9 @@ public:
 
     void update();
 
+    /* List of watches */
+    std::vector<std::unique_ptr<IRamWatch>> ramwatches;
+
     /* Flag if we display values in hex or decimal */
     bool hex;
 
@@ -128,9 +131,6 @@ public:
 
 private:
     Context *context;
-
-    /* List of watches */
-    std::vector<std::unique_ptr<IRamWatch>> ramwatches;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 

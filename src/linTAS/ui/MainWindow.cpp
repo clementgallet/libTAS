@@ -547,8 +547,8 @@ void MainWindow::createMenus()
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::exec);
-    toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::exec);
+    toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::show);
+    toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::show);
 
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
