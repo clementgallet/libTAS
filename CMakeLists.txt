@@ -53,7 +53,7 @@ target_link_libraries(TAS Threads::Threads)
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
 
-find_package(XCB COMPONENTS XCB KEYSYMS XKB REQUIRED)
+find_package(XCB COMPONENTS XCB KEYSYMS REQUIRED)
 include_directories(${XCB_INCLUDE_DIRS})
 target_link_libraries (linTAS ${XCB_LIBRARIES})
 

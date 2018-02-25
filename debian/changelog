@@ -1,3 +1,10 @@
+libtas (1.1.0) unstable; urgency=medium
+
+  * Switch FLTK to Qt
+  * Add full controller inputs
+
+ -- clement <clement@debian.home>  Sun, 25 Feb 2018 11:28:27 +0100
+
 libtas (1.0.0) unstable; urgency=medium
 
   * Initial Release.
