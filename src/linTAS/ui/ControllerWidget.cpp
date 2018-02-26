@@ -35,22 +35,23 @@ ControllerWidget::ControllerWidget(QWidget *parent) : QWidget(parent)
 
     axis_left_x = new QSpinBox();
     axis_left_x->setRange(INT16_MIN, INT16_MAX);
-    connect(axis_left_x, QOverload<int>::of(&QSpinBox::valueChanged), axis_left, &ControllerAxisWidget::slotSetXAxis);
+    // connect(axis_left_x, QOverload<int>::of(&QSpinBox::valueChanged), axis_left, &ControllerAxisWidget::slotSetXAxis);
+    connect(axis_left_x, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), axis_left, &ControllerAxisWidget::slotSetXAxis);
     connect(axis_left, &ControllerAxisWidget::XAxisChanged, axis_left_x, &QSpinBox::setValue);
 
     axis_left_y = new QSpinBox();
     axis_left_y->setRange(INT16_MIN, INT16_MAX);
-    connect(axis_left_y, QOverload<int>::of(&QSpinBox::valueChanged), axis_left, &ControllerAxisWidget::slotSetYAxis);
+    connect(axis_left_y, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), axis_left, &ControllerAxisWidget::slotSetYAxis);
     connect(axis_left, &ControllerAxisWidget::YAxisChanged, axis_left_y, &QSpinBox::setValue);
 
     axis_right_x = new QSpinBox();
     axis_right_x->setRange(INT16_MIN, INT16_MAX);
-    connect(axis_right_x, QOverload<int>::of(&QSpinBox::valueChanged), axis_right, &ControllerAxisWidget::slotSetXAxis);
+    connect(axis_right_x, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), axis_right, &ControllerAxisWidget::slotSetXAxis);
     connect(axis_right, &ControllerAxisWidget::XAxisChanged, axis_right_x, &QSpinBox::setValue);
 
     axis_right_y = new QSpinBox();
     axis_right_y->setRange(INT16_MIN, INT16_MAX);
-    connect(axis_right_y, QOverload<int>::of(&QSpinBox::valueChanged), axis_right, &ControllerAxisWidget::slotSetYAxis);
+    connect(axis_right_y, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), axis_right, &ControllerAxisWidget::slotSetYAxis);
     connect(axis_right, &ControllerAxisWidget::YAxisChanged, axis_right_y, &QSpinBox::setValue);
 
     trigger_left = new QSlider(Qt::Horizontal);
@@ -59,7 +60,7 @@ ControllerWidget::ControllerWidget(QWidget *parent) : QWidget(parent)
 
     trigger_left_value = new QSpinBox();
     trigger_left_value->setRange(INT16_MIN, INT16_MAX);
-    connect(trigger_left_value, QOverload<int>::of(&QSpinBox::valueChanged), trigger_left, &QSlider::value);
+    connect(trigger_left_value, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), trigger_left, &QSlider::value);
     connect(trigger_left, &QSlider::valueChanged, trigger_left_value, &QSpinBox::setValue);
 
     trigger_right = new QSlider(Qt::Horizontal);
@@ -68,7 +69,7 @@ ControllerWidget::ControllerWidget(QWidget *parent) : QWidget(parent)
 
     trigger_right_value = new QSpinBox();
     trigger_right_value->setRange(INT16_MIN, INT16_MAX);
-    connect(trigger_right_value, QOverload<int>::of(&QSpinBox::valueChanged), trigger_right, &QSlider::value);
+    connect(trigger_right_value, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), trigger_right, &QSlider::value);
     connect(trigger_right, &QSlider::valueChanged, trigger_right_value, &QSpinBox::setValue);
 
     /* Create button controls */

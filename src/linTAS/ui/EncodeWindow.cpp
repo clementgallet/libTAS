@@ -54,12 +54,12 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     /* Video/Audio codecs */
 
     videoChoice = new QComboBox();
-    connect(videoChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
+    connect(videoChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
     videoBitrate = new QSpinBox();
     videoBitrate->setMaximum(1000000000);
 
     audioChoice = new QComboBox();
-    connect(audioChoice, QOverload<int>::of(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
+    connect(audioChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
     audioBitrate = new QSpinBox();
     audioBitrate->setMaximum(1000000000);
 
