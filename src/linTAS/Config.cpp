@@ -86,6 +86,8 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("keyboard_support", sc.keyboard_support);
     settings.setValue("mouse_support", sc.mouse_support);
     settings.setValue("nb_controllers", sc.nb_controllers);
+    settings.setValue("screen_width", sc.screen_width);
+    settings.setValue("screen_height", sc.screen_height);
     settings.setValue("osd", sc.osd);
     settings.setValue("osd_encode", sc.osd_encode);
     settings.setValue("prevent_savefiles", sc.prevent_savefiles);
@@ -179,6 +181,8 @@ void Config::load(const std::string& gamepath) {
     sc.keyboard_support = settings.value("keyboard_support", sc.keyboard_support).toBool();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();
+    sc.screen_width = settings.value("screen_width", sc.screen_width).toInt();
+    sc.screen_height = settings.value("screen_height", sc.screen_height).toInt();
     sc.osd = settings.value("osd", sc.osd).toInt();
     sc.osd_encode = settings.value("osd_encode", sc.osd_encode).toBool();
     sc.prevent_savefiles = settings.value("prevent_savefiles", sc.prevent_savefiles).toBool();

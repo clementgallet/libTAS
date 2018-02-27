@@ -139,7 +139,7 @@ struct SharedConfig {
 
     bool save_screenpixels = true;
 
-    /* Log status */
+    /* What kind of memory segment should we not save inside savestates */
     enum IgnoreMemorySection {
         IGNORE_NON_WRITEABLE = 0x01,
         IGNORE_NON_ANONYMOUS_NON_WRITEABLE = 0x02,
@@ -149,7 +149,13 @@ struct SharedConfig {
 
     int ignore_sections = IGNORE_EXEC | IGNORE_SHARED | IGNORE_NON_ANONYMOUS_NON_WRITEABLE;
 
+    /* Initial system time at game startup */
     struct timespec initial_time = {0, 0};
+
+    /* Virtual monitor resolution */
+    int screen_width = 0;
+    int screen_height = 0;
+
 };
 
 #endif

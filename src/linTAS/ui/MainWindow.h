@@ -70,6 +70,8 @@ public:
     QList<QAction*> disabledActionsOnStart;
 
     QActionGroup *movieEndGroup;
+    QActionGroup *screenResGroup;
+
     QAction *renderSoftAction;
     QActionGroup *renderPerfGroup;
     QActionGroup *osdGroup;
@@ -216,6 +218,7 @@ private slots:
     void slotHotkeyFocus();
     void slotInputFocus();
     void slotSlowdown();
+    void slotScreenRes();
     void slotOsd();
     void slotOsdEncode(bool checked);
     void slotSavestateIgnore();

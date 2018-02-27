@@ -278,6 +278,22 @@ void MainWindow::createActions()
     addActionCheckable(movieEndGroup, tr("Pause the Movie"), Config::MOVIEEND_PAUSE);
     addActionCheckable(movieEndGroup, tr("Switch to Writing"), Config::MOVIEEND_WRITE);
 
+    screenResGroup = new QActionGroup(this);
+    addActionCheckable(screenResGroup, tr("Native"), 0);
+    addActionCheckable(screenResGroup, tr("640x480 (4:3)"), (640 << 16) | 480);
+    addActionCheckable(screenResGroup, tr("800x600 (4:3)"), (800 << 16) | 600);
+    addActionCheckable(screenResGroup, tr("1024x768 (4:3)"), (1024 << 16) | 768);
+    addActionCheckable(screenResGroup, tr("1280x720 (16:9)"), (1280 << 16) | 720);
+    addActionCheckable(screenResGroup, tr("1280x800 (16:10)"), (1280 << 16) | 800);
+    addActionCheckable(screenResGroup, tr("1440x900 (16:10)"), (1440 << 16) | 900);
+    addActionCheckable(screenResGroup, tr("1600x900 (16:9)"), (1600 << 16) | 900);
+    addActionCheckable(screenResGroup, tr("1680x1050 (16:10)"), (1680 << 16) | 1050);
+    addActionCheckable(screenResGroup, tr("1920x1080 (16:9)"), (1920 << 16) | 1080);
+    addActionCheckable(screenResGroup, tr("1920x1200 (16:10)"), (1920 << 16) | 1200);
+    addActionCheckable(screenResGroup, tr("2560x1440 (16:9)"), (2560 << 16) | 1440);
+    addActionCheckable(screenResGroup, tr("3840x2160 (16:9)"), (3840 << 16) | 2160);
+    connect(screenResGroup, &QActionGroup::triggered, this, &MainWindow::slotScreenRes);
+
     renderPerfGroup = new QActionGroup(this);
     renderPerfGroup->setExclusive(false);
 
@@ -472,6 +488,10 @@ void MainWindow::createMenus()
 
     /* Video Menu */
     QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
+
+    QMenu *screenResMenu = videoMenu->addMenu(tr("Virtual screen resolution"));
+    screenResMenu->addActions(screenResGroup->actions());
+    disabledWidgetsOnStart.append(screenResMenu);
 
     renderSoftAction = videoMenu->addAction(tr("Force software rendering"));
     renderSoftAction->setCheckable(true);
@@ -843,6 +863,9 @@ void MainWindow::updateUIFromConfig()
 
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
 
+    int screenResValue = (context->config.sc.screen_width << 16) | context->config.sc.screen_height;
+    setRadioFromList(screenResGroup, screenResValue);
+
 #ifdef LIBTAS_ENABLE_HUD
     setCheckboxesFromMask(osdGroup, context->config.sc.osd);
     osdEncodeAction->setChecked(context->config.sc.osd_encode);
@@ -1151,6 +1174,15 @@ void MainWindow::slotSlowdown()
     context->config.sc_modified = true;
 }
 
+void MainWindow::slotScreenRes()
+{
+    int value = 0;
+    setListFromRadio(screenResGroup, value);
+
+    context->config.sc.screen_width = (value >> 16);
+    context->config.sc.screen_height = (value & 0xffff);
+}
+
 #ifdef LIBTAS_ENABLE_HUD
 
 void MainWindow::slotOsd()
@@ -1180,7 +1212,7 @@ void MainWindow::slotSaveScreen(bool checked)
 
 void MainWindow::slotPreventSavefile(bool checked)
 {
-    context->config.sc.save_screenpixels = checked;
+    context->config.sc.prevent_savefiles = checked;
     context->config.sc_modified = true;
 }
 
