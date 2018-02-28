@@ -199,7 +199,10 @@ static int swapInterval = 0;
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
-    return orig::SDL_GetWindowFlags(window);
+    Uint32 flags = orig::SDL_GetWindowFlags(window);
+    flags |= SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
+    debuglog(LCF_SDL | LCF_WINDOW, "  flags: ", flags);
+    return flags;
 }
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
