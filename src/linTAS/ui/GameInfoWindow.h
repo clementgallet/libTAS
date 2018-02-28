@@ -23,24 +23,23 @@
 #include <QDialog>
 #include <QLabel>
 
-#include "../Context.h"
+#include "../../shared/GameInfo.h"
 
 class GameInfoWindow : public QDialog {
     Q_OBJECT
 public:
-    GameInfoWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
-
-    /* Update UI elements */
-    void update();
+    GameInfoWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
 private:
-    Context *context;
-
     QLabel *videoLabel;
     QLabel *audioLabel;
     QLabel *keyboardLabel;
     QLabel *mouseLabel;
     QLabel *joystickLabel;
+
+public slots:
+    /* Update UI elements */
+    void update(GameInfo game_info);
 
 };
 

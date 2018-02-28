@@ -113,7 +113,7 @@ signals:
 
     void controllerButtonToggled(int controller_id, int button, bool pressed);
     void inputsToBeSent(AllInputs &allinputs);
-
+    void gameInfoChanged(GameInfo game_info);
 };
 
 #endif

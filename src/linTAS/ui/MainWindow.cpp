@@ -62,7 +62,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
     controllerTabWindow = new ControllerTabWindow(c, this);
-    gameInfoWindow = new GameInfoWindow(c, this);
+    gameInfoWindow = new GameInfoWindow(this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
 

@@ -373,6 +373,7 @@ bool GameLoop::loopReceiveMessages()
             break;
         case MSGB_GAMEINFO:
             receiveData(&context->game_info, sizeof(context->game_info));
+            emit gameInfoChanged(context->game_info);
             break;
         case MSGB_FPS:
             receiveData(&fps, sizeof(float));
