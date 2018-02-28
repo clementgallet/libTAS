@@ -74,9 +74,20 @@ DEFINE_ORIG_POINTER(SDL_GetWindowDisplayMode);
 /* Override */ int SDL_GetDisplayBounds(int displayIndex, SDL_Rect * rect)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with index ", displayIndex);
-    LINK_NAMESPACE_SDL2(SDL_GetDisplayBounds);
 
-    int ret = orig::SDL_GetDisplayBounds(displayIndex, rect);
+    int ret = 0;
+    if (GlobalState::isNative() || !shared_config.screen_width) {
+        LINK_NAMESPACE_SDL2(SDL_GetDisplayBounds);
+        ret = orig::SDL_GetDisplayBounds(displayIndex, rect);
+
+    }
+    else {
+        rect->x = displayIndex*shared_config.screen_width;
+        rect->y = 0;
+        rect->w = shared_config.screen_width;
+        rect->h = shared_config.screen_height;
+    }
+
     debuglog(LCF_SDL | LCF_WINDOW, "   returns rect (", rect->x, ",", rect->y, ",", rect->w, ",", rect->h, ")");
 
     return ret;
@@ -245,11 +256,6 @@ DEFINE_ORIG_POINTER(SDL_GetWindowDisplayMode);
     LINK_NAMESPACE_SDL2(SDL_GetWindowDisplayMode);
 
     int ret = orig::SDL_GetWindowDisplayMode(window, mode);
-
-    // mode->format = SDL_PIXELFORMAT_RGB888;
-    // mode->w = 1920;
-    // mode->h = 1080;
-    // mode->refresh_rate = 60;
 
     debuglog(LCF_SDL | LCF_WINDOW, "   returns mode format: ", mode->format, ", w: ", mode->w, ", h: ", mode->h, ", refresh rate: ", mode->refresh_rate, ", data: ", mode->driverdata);
 

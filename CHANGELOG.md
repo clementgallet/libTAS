@@ -1,3 +1,7 @@
+## [Unreleased]
+### Added
+- Simulate a specific monitor resolution
+
 ## [1.1.0] - 2018-02-25
 ### Added
 - Add full controller inputs, including analog inputs.
