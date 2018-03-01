@@ -61,6 +61,7 @@ DEFINE_ORIG_POINTER(glVertex2f);
 DEFINE_ORIG_POINTER(glEnd);
 DEFINE_ORIG_POINTER(glGenTextures);
 DEFINE_ORIG_POINTER(glDeleteTextures);
+DEFINE_ORIG_POINTER(glActiveTexture);
 
 static bool inited = false;
 
@@ -108,6 +109,7 @@ int ScreenCapture::init(SDL_Window* window)
         LINK_NAMESPACE(glEnd, "libGL");
         LINK_NAMESPACE(glGenTextures, "libGL");
         LINK_NAMESPACE(glDeleteTextures, "libGL");
+        LINK_NAMESPACE(glActiveTexture, "libGL");
 
         /* OpenGL viewport size and window size can differ. Here we capture the
          * screen, so we want the window size.
@@ -138,9 +140,19 @@ int ScreenCapture::init(SDL_Window* window)
             return -1;
         }
 
+        /* Get previous active texture */
+        GLint oldActiveTex;
+        orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
+        orig::glActiveTexture(GL_TEXTURE0);
+
         /* Create the screen texture */
         if (screenGLTex == 0) {
             orig::glGenTextures(1, &screenGLTex);
+        }
+
+        /* Restore previous active texture */
+        if (oldActiveTex != 0) {
+            orig::glActiveTexture(oldActiveTex);
         }
     }
 

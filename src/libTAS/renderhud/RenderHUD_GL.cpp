@@ -36,6 +36,7 @@ DEFINE_ORIG_POINTER(glBegin)
 DEFINE_ORIG_POINTER(glTexCoord2f)
 DEFINE_ORIG_POINTER(glVertex2f)
 DEFINE_ORIG_POINTER(glEnd)
+DEFINE_ORIG_POINTER(glActiveTexture)
 
 GLuint RenderHUD_GL::texture = 0;
 
@@ -43,7 +44,20 @@ RenderHUD_GL::RenderHUD_GL() : RenderHUD()
 {
     if (texture == 0) {
         LINK_NAMESPACE(glGenTextures, "libGL");
+        LINK_NAMESPACE(glGetIntegerv, "libGL");
+        LINK_NAMESPACE(glActiveTexture, "libGL");
+
+        /* Get previous active texture */
+        GLint oldActiveTex;
+        orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
+        orig::glActiveTexture(GL_TEXTURE0);
+
         orig::glGenTextures(1, &texture);
+
+        /* Restore previous active texture */
+        if (oldActiveTex != 0) {
+            orig::glActiveTexture(oldActiveTex);
+        }
     }
 }
 

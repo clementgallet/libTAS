@@ -69,6 +69,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Menu */
     createActions();
     createMenus();
+    menuBar()->setNativeMenuBar(false);
 
     /* Movie File */
     moviePath = new QLineEdit();
@@ -1187,7 +1188,7 @@ void MainWindow::slotScreenRes()
 
 void MainWindow::slotOsd()
 {
-    setListFromRadio(osdGroup, context->config.sc.osd);
+    setMaskFromCheckboxes(osdGroup, context->config.sc.osd);
     context->config.sc_modified = true;
 }
 
