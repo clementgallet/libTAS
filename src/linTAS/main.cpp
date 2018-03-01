@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2016 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2018 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
