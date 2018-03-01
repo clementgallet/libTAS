@@ -1109,7 +1109,7 @@ void MainWindow::slotToggleEncode()
             context->config.sc.running = false;
             context->config.sc_modified = true;
 
-            QMessageBox::StandardButton btn = QMessageBox::question(this, "File overwrite", QString("The encode file %s does exist. Do you want to overwrite it?").arg(context->config.dumpfile.c_str()), QMessageBox::Ok | QMessageBox::Cancel);
+            QMessageBox::StandardButton btn = QMessageBox::question(this, "File overwrite", QString("The encode file %1 does exist. Do you want to overwrite it?").arg(context->config.dumpfile.c_str()), QMessageBox::Ok | QMessageBox::Cancel);
             if (btn != QMessageBox::Ok)
                 return;
         }

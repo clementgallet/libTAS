@@ -243,14 +243,14 @@ void InputWindow::slotDefault()
     QList<QModelIndex> hotkeySelList = hotkeyTable->selectionModel()->selectedRows();
     for (auto item : hotkeySelList) {
         context->config.km.default_hotkey(item.row());
-        updateHotkeyRow(item.row());
     }
 
     QList<QModelIndex> inputSelList = inputTable->selectionModel()->selectedRows();
     for (auto item : inputSelList) {
         context->config.km.default_input(item.row());
-        updateInputRow(item.row());
     }
+
+    update();
 }
 
 void InputWindow::slotDisable()

@@ -65,6 +65,8 @@ public:
         beginResetModel();
 
         ramwatches.clear();
+        ramwatches.reserve(0);
+
         IRamWatch::game_pid = context->game_pid;
 
         /* Compose the filename for the /proc memory map, and open it. */
