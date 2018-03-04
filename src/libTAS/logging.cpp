@@ -32,13 +32,13 @@ namespace libtas {
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
-    /* Not printing anything if global state is set to NOLOG */
-    if (GlobalState::isNoLog())
-        return;
-
     if ((!(lcf & shared_config.includeFlags)  ||
           (lcf & shared_config.excludeFlags)) &&
          !(lcf & LCF_ALERT))
+        return;
+
+    /* Not printing anything if global state is set to NOLOG */
+    if (GlobalState::isNoLog())
         return;
 
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
