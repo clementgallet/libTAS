@@ -156,11 +156,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     detTimer.enterFrameBoundary();
 
-    /* Decide if we skip drawing to the screen because of fastforward. We must
-     * call it once per frame boundary, because it raises an internal counter.
-     */
-    bool skipping_draw = skipDraw(fps);
-
     /* Saving the screen pixels before drawing. This is done before rendering
      * the HUD, so that we can redraw with another HUD.
      *
@@ -229,6 +224,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (!skipping_draw) {
         NATIVECALL(draw());
     }
+
+    /* Decide if we skip drawing the next frame because of fastforward. We must
+     * call it once per frame boundary, because it raises an internal counter.
+     * It is stored in an extern so that we can disable opengl draws.
+     */
+    skipping_draw = skipDraw(fps);
 
     /* Send error messages */
     std::string alert;

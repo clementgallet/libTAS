@@ -38,6 +38,7 @@ namespace libtas {
     extern SharedConfig shared_config;
     extern GameInfo game_info;
     extern volatile bool is_exiting;
+    extern bool skipping_draw;
     extern Display* gameDisplay;
     extern Window gameXWindow;
 

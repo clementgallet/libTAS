@@ -63,7 +63,7 @@ namespace orig {
 
 void enterGLRender(void)
 {
-    DEBUGLOGCALL(LCF_OGL);
+    // DEBUGLOGCALL(LCF_OGL);
 
     LINK_NAMESPACE(glGenTextures, "libGL");
     LINK_NAMESPACE(glBindTexture, "libGL");
@@ -91,7 +91,7 @@ void enterGLRender(void)
     LINK_NAMESPACE(glActiveTexture, "libGL");
 
     orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);
-    debuglog(LCF_OGL, "   old program is ", oldProgram);
+    // debuglog(LCF_OGL, "   old program is ", oldProgram);
     orig::glUseProgram(0);
 
     GLint viewport[4];
@@ -101,7 +101,7 @@ void enterGLRender(void)
     // orig::glPushMatrix();
     orig::glLoadIdentity();
     orig::glOrtho(viewport[0], viewport[0] + viewport[2], viewport[1] + viewport[3], viewport[1], -1, 1);
-    debuglog(LCF_OGL, "   viewport is ", viewport[0], " - ", viewport[1], " - ", viewport[2], " - ", viewport[3]);
+    // debuglog(LCF_OGL, "   viewport is ", viewport[0], " - ", viewport[1], " - ", viewport[2], " - ", viewport[3]);
 
     orig::glMatrixMode(GL_MODELVIEW);
     // orig::glPushMatrix();
@@ -113,25 +113,25 @@ void enterGLRender(void)
     // orig::glDepthMask(GL_FALSE);
 
     orig::glGetBooleanv(GL_TEXTURE_2D, &oldTex2DEnabled);
-    debuglog(LCF_OGL, "   old is tex 2D: ", (int)oldTex2DEnabled);
+    // debuglog(LCF_OGL, "   old is tex 2D: ", (int)oldTex2DEnabled);
     orig::glEnable(GL_TEXTURE_2D);
 
     /* Get previous blind texture */
     orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
-    debuglog(LCF_OGL, "   old tex 2D: ", oldTex);
+    // debuglog(LCF_OGL, "   old tex 2D: ", oldTex);
 
     /* Get previous active texture */
     orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
-    debuglog(LCF_OGL, "   old active tex: ", oldActiveTex);
+    // debuglog(LCF_OGL, "   old active tex: ", oldActiveTex);
     orig::glActiveTexture(GL_TEXTURE0);
 
     orig::glGetBooleanv(GL_BLEND, &oldBlendEnabled);
-    debuglog(LCF_OGL, "   old blend: ", (int)oldBlendEnabled);
+    // debuglog(LCF_OGL, "   old blend: ", (int)oldBlendEnabled);
 
     orig::glGetIntegerv(GL_BLEND_SRC_ALPHA, &oldBlendSrc);
     orig::glGetIntegerv(GL_BLEND_DST_ALPHA, &oldBlendDst);
-    debuglog(LCF_OGL, "   old blend src: ", oldBlendSrc);
-    debuglog(LCF_OGL, "   old blend dst: ", oldBlendDst);
+    // debuglog(LCF_OGL, "   old blend src: ", oldBlendSrc);
+    // debuglog(LCF_OGL, "   old blend dst: ", oldBlendDst);
 
     orig::glEnable(GL_BLEND);
     orig::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
