@@ -53,7 +53,6 @@ DEFINE_ORIG_POINTER(glDrawElements);
 DEFINE_ORIG_POINTER(glMultiDrawArrays);
 DEFINE_ORIG_POINTER(glMultiDrawElements);
 
-
 DEFINE_ORIG_POINTER(glDrawRangeElements);
 DEFINE_ORIG_POINTER(glDrawElementsBaseVertex);
 DEFINE_ORIG_POINTER(glDrawRangeElementsBaseVertex);
@@ -62,6 +61,20 @@ DEFINE_ORIG_POINTER(glMultiDrawElementsBaseVertex);
 DEFINE_ORIG_POINTER(glDrawArraysInstancedBaseInstance);
 DEFINE_ORIG_POINTER(glDrawElementsInstancedBaseInstance);
 DEFINE_ORIG_POINTER(glDrawElementsInstancedBaseVertexBaseInstance);
+
+DEFINE_ORIG_POINTER(glDrawTransformFeedback);
+DEFINE_ORIG_POINTER(glDrawTransformFeedbackStream);
+DEFINE_ORIG_POINTER(glDrawTransformFeedbackInstanced);
+DEFINE_ORIG_POINTER(glDrawTransformFeedbackStreamInstanced);
+
+DEFINE_ORIG_POINTER(glDrawArraysInstancedARB);
+DEFINE_ORIG_POINTER(glDrawElementsInstancedARB);
+DEFINE_ORIG_POINTER(glDrawArraysInstancedEXT);
+DEFINE_ORIG_POINTER(glDrawElementsInstancedEXT);
+DEFINE_ORIG_POINTER(glDrawRangeElementsEXT);
+DEFINE_ORIG_POINTER(glMultiDrawArraysEXT);
+DEFINE_ORIG_POINTER(glMultiDrawElementsEXT);
+DEFINE_ORIG_POINTER(glDrawArraysEXT);
 
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
@@ -109,6 +122,20 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance, myglDrawArraysInstancedBaseInstance);
     STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance, myglDrawElementsInstancedBaseInstance);
     STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance, myglDrawElementsInstancedBaseVertexBaseInstance);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback, myglDrawTransformFeedback);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream, myglDrawTransformFeedbackStream);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced, myglDrawTransformFeedbackInstanced);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced, myglDrawTransformFeedbackStreamInstanced);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB, myglDrawArraysInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB, myglDrawElementsInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT, myglDrawArraysInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT, myglDrawElementsInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT, myglDrawRangeElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT, myglMultiDrawArraysEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT, myglMultiDrawElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT, myglDrawArraysEXT);
 
     return real_pointer;
 }
@@ -239,6 +266,22 @@ void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigne
     return orig::glXQueryDrawable(dpy, draw, attribute, value);
 }
 
+void glDrawArrays( GLenum mode, GLint first, GLsizei count )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glDrawArrays, "libGL");
+    if (!skipping_draw)
+        return orig::glDrawArrays(mode, first, count);
+}
+
+void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glDrawElements, "libGL");
+    if (!skipping_draw)
+        return orig::glDrawElements(mode, count, type, indices);
+}
+
 void myglDrawArrays( GLenum mode, GLint first, GLsizei count )
 {
     DEBUGLOGCALL(LCF_OGL);
@@ -321,6 +364,90 @@ void myglDrawElementsInstancedBaseVertexBaseInstance (GLenum mode, GLsizei count
     DEBUGLOGCALL(LCF_OGL);
     if (!skipping_draw)
         return orig::glDrawElementsInstancedBaseVertexBaseInstance(mode, count, type, indices, instancecount, basevertex, baseinstance);
+}
+
+void myglDrawTransformFeedback (GLenum mode, GLuint id)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawTransformFeedback(mode, id);
+}
+
+void myglDrawTransformFeedbackStream (GLenum mode, GLuint id, GLuint stream)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawTransformFeedbackStream(mode, id, stream);
+}
+
+void myglDrawTransformFeedbackInstanced (GLenum mode, GLuint id, GLsizei instancecount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawTransformFeedbackInstanced(mode, id, instancecount);
+}
+
+void myglDrawTransformFeedbackStreamInstanced (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawTransformFeedbackStreamInstanced(mode, id, stream, instancecount);
+}
+
+void myglDrawArraysInstancedARB (GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawArraysInstancedARB(mode, first, count, primcount);
+}
+
+void myglDrawElementsInstancedARB (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawElementsInstancedARB(mode, count, type, indices, primcount);
+}
+
+void myglDrawArraysInstancedEXT (GLenum mode, GLint start, GLsizei count, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawArraysInstancedEXT(mode, start, count, primcount);
+}
+
+void myglDrawElementsInstancedEXT (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawElementsInstancedEXT(mode, count, type, indices, primcount);
+}
+
+void myglDrawRangeElementsEXT (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawRangeElementsEXT(mode, start, end, count, type, indices);
+}
+
+void myglMultiDrawArraysEXT (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glMultiDrawArraysEXT(mode, first, count, primcount);
+}
+
+void myglMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glMultiDrawElementsEXT(mode, count, type, indices, primcount);
+}
+
+void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glDrawArraysEXT(mode, first, count);
 }
 
 }

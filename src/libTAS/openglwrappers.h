@@ -48,6 +48,9 @@ OVERRIDE int glXGetSwapIntervalMESA(void);
 /* Returns an attribute assoicated with a GLX drawable */
 OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
 
+OVERRIDE void glDrawArrays( GLenum mode, GLint first, GLsizei count );
+OVERRIDE void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
+
 void myglDrawArrays( GLenum mode, GLint first, GLsizei count );
 void myglDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
 
@@ -64,6 +67,23 @@ void myglMultiDrawElementsBaseVertex (GLenum mode, const GLsizei *count, GLenum 
 void myglDrawArraysInstancedBaseInstance (GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance);
 void myglDrawElementsInstancedBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLuint baseinstance);
 void myglDrawElementsInstancedBaseVertexBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance);
+
+void myglDrawTransformFeedback (GLenum mode, GLuint id);
+void myglDrawTransformFeedbackStream (GLenum mode, GLuint id, GLuint stream);
+void myglDrawTransformFeedbackInstanced (GLenum mode, GLuint id, GLsizei instancecount);
+void myglDrawTransformFeedbackStreamInstanced (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount);
+
+void myglDrawArraysInstancedARB (GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+void myglDrawElementsInstancedARB (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
+
+void myglDrawArraysInstancedEXT (GLenum mode, GLint start, GLsizei count, GLsizei primcount);
+void myglDrawElementsInstancedEXT (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
+void myglDrawRangeElementsEXT (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
+
+void myglMultiDrawArraysEXT (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount);
+void myglMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount);
+
+void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count);
 
 };
 
