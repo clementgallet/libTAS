@@ -34,7 +34,7 @@
 #include <csignal>
 #include <X11/Xlibint.h>
 #include <X11/Xlib-xcb.h>
-//#include "../../external/xcbint.h"
+#include "../../external/xcbint.h"
 //#include "../sdlwindows.h"
 #include "ReservedMemory.h"
 
@@ -605,9 +605,9 @@ void Checkpoint::handler(int signum)
 #endif
 
         /* Copy the entire xcb connection struct */
-        // xcb_connection_t xcb_conn;
-        // xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
-        // memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
+        xcb_connection_t xcb_conn;
+        xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
+        memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
 
         readAllAreas();
         /* restoreInProgress was overwritten, putting the right value again */
@@ -623,7 +623,7 @@ void Checkpoint::handler(int signum)
 #endif
 
         /* Restore the entire xcb connection struct */
-        // memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
+        memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
     }
     else {
         writeAllAreas();
