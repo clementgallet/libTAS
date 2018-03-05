@@ -103,40 +103,48 @@ static bool skipDraw(float fps)
 {
     static unsigned int skip_counter = 0;
 
+    /* Don't skip if not fastforwarding */
+    if (!shared_config.fastforward)
+        return false;
+
     /* Never skip a draw when encoding. */
     if (shared_config.av_dumping)
         return false;
 
-    if (shared_config.fastforward) {
-        unsigned int skip_freq = 1;
+    /* Don't skip if we are reading the last frame of a movie. Because the tool
+     * autopause at the end of a movie playback, the user can see the screen
+     * and continue from there.
+     */
+    if ((shared_config.recording == SharedConfig::RECORDING_READ) &&
+        ((frame_counter + 1) == shared_config.movie_framecount))
+        return false;
 
-        /* I want to display about 8 effective frames per second, so I divide
-         * the fps value by 8 to get the skip frequency.
-         * Moreover, it is better to have bands of the same skip frequency, so
-         * I take the next highest power of 2.
-         * Because the value is already in a float, I can use this neat trick from
-         * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-         */
+    unsigned int skip_freq = 1;
 
-        if (fps > 1) {
-            fps--;
-            memcpy(&skip_freq, &fps, sizeof(int));
-            skip_freq = 1U << ((skip_freq >> 23) - 126 - 3); // -3 -> divide by 8
-        }
+    /* I want to display about 8 effective frames per second, so I divide
+     * the fps value by 8 to get the skip frequency.
+     * Moreover, it is better to have bands of the same skip frequency, so
+     * I take the next highest power of 2.
+     * Because the value is already in a float, I can use this neat trick from
+     * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+     */
 
-        /* At least skip 3 frames out of 4 */
-        if (skip_freq < 4)
-            skip_freq = 4;
-
-        if (++skip_counter >= skip_freq) {
-            skip_counter = 0;
-            return false;
-        }
-
-        return true;
+    if (fps > 1) {
+        fps--;
+        memcpy(&skip_freq, &fps, sizeof(int));
+        skip_freq = 1U << ((skip_freq >> 23) - 126 - 3); // -3 -> divide by 8
     }
 
-    return false;
+    /* At least skip 3 frames out of 4 */
+    if (skip_freq < 4)
+        skip_freq = 4;
+
+    if (++skip_counter >= skip_freq) {
+        skip_counter = 0;
+        return false;
+    }
+
+    return true;
 }
 
 #ifdef LIBTAS_ENABLE_HUD
@@ -150,6 +158,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     debuglog(LCF_FRAME, "Enter frame boundary");
     ThreadManager::setMainThread();
 
+    /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
         debuglog(LCF_FRAME, "Game is exiting: skipping frame boundary");
         detTimer.flushDelay();
@@ -157,13 +166,54 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         return;
     }
 
+    /* Compute new FPS values */
+    if (drawFB) {
+        computeFPS(fps, lfps);
+        debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
+    }
+
+    /* Send information to the game and notify for the beginning of the frame
+     * boundary. This is done as soon as possible so the game and the program
+     * can process in parallel.
+     */
+
+    /* Send error messages */
+    std::string alert;
+    while (getAlertMsg(alert)) {
+        sendMessage(MSGB_ALERT_MSG);
+        sendString(alert);
+    }
+
+    /* Send framecount and internal time */
+    sendMessage(MSGB_FRAMECOUNT_TIME);
+    sendData(&frame_counter, sizeof(unsigned long));
+    struct timespec ticks = detTimer.getTicks();
+    sendData(&ticks, sizeof(struct timespec));
+
+    /* Send GameInfo struct if needed */
+    if (game_info.tosend) {
+        sendMessage(MSGB_GAMEINFO);
+        sendData(&game_info, sizeof(game_info));
+        game_info.tosend = false;
+    }
+
+    /* Send fps and lfps values */
+    sendMessage(MSGB_FPS);
+    sendData(&fps, sizeof(float));
+    sendData(&lfps, sizeof(float));
+
+    /* Last message to send */
+    sendMessage(MSGB_START_FRAMEBOUNDARY);
+
+
+    /* Update the deterministic timer, sleep is necessary and mix audio */
+    detTimer.enterFrameBoundary();
+
+
+    /*** Rendering ***/
+
     if (!drawFB)
         nondraw_frame_counter++;
-
-    // if (!ThreadManager::isMainThread())
-    //     debuglog(LCF_ERROR | LCF_FRAME, "Warning! Entering a frame boudary from a secondary thread!");
-
-    detTimer.enterFrameBoundary();
 
     /* Saving the screen pixels before drawing. This is done before rendering
      * the HUD, so that we can redraw with another HUD.
@@ -234,39 +284,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         NATIVECALL(draw());
     }
 
-    /* Decide if we skip drawing the next frame because of fastforward. We must
-     * call it once per frame boundary, because it raises an internal counter.
-     * It is stored in an extern so that we can disable opengl draws.
-     */
-    skipping_draw = skipDraw(fps);
-
-    /* Send error messages */
-    std::string alert;
-    while (getAlertMsg(alert)) {
-        sendMessage(MSGB_ALERT_MSG);
-        sendString(alert);
-    }
-
-    /* Send framecount and internal time */
-    sendMessage(MSGB_FRAMECOUNT_TIME);
-    sendData(&frame_counter, sizeof(unsigned long));
-    struct timespec ticks = detTimer.getTicks();
-    sendData(&ticks, sizeof(struct timespec));
-
-    /* Send GameInfo struct if needed */
-    if (game_info.tosend) {
-        sendMessage(MSGB_GAMEINFO);
-        sendData(&game_info, sizeof(game_info));
-        game_info.tosend = false;
-    }
-
-    /* Send fps and lfps values */
-    sendMessage(MSGB_FPS);
-    sendData(&fps, sizeof(float));
-    sendData(&lfps, sizeof(float));
-
-    /* Last message to send */
-    sendMessage(MSGB_START_FRAMEBOUNDARY);
+    /* Receive messages from the program */
 
 #ifdef LIBTAS_ENABLE_HUD
     receive_messages(draw, hud);
@@ -289,18 +307,20 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     generateMouseMotionEvents();
     generateMouseButtonEvents();
 
-    ++frame_counter;
+    /* Decide if we skip drawing the next frame because of fastforward.
+     * It is stored in an extern so that we can disable opengl draws.
+     */
+    skipping_draw = skipDraw(fps);
 
-    /* Print FPS */
-    if (drawFB) {
-        computeFPS(fps, lfps);
-        debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
-    }
-
+    /* Update window title */
     if (!skipping_draw)
         WindowTitle::update(fps, lfps);
 
     detTimer.exitFrameBoundary();
+
+    /* Finally, increase the frame counter */
+    ++frame_counter;
+
     debuglog(LCF_FRAME, "Leave frame boundary");
 }
 
@@ -367,6 +387,16 @@ static void receive_messages(std::function<void()> draw)
             case MSGN_EXPOSE:
                 if (!skipping_draw && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
+
+                    if (!shared_config.osd_encode) {
+                        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
+                            hud.renderFrame(frame_counter);
+                            // hud.renderNonDrawFrame(nondraw_frame_counter);
+                        }
+                        if (shared_config.osd & SharedConfig::OSD_INPUTS)
+                            hud.renderInputs(ai);
+                    }
+
                     NATIVECALL(draw());
                 }
                 break;
