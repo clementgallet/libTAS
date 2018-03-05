@@ -116,8 +116,12 @@ static bool skipDraw(float fps)
         if (fps > 1) {
             fps--;
             memcpy(&skip_freq, &fps, sizeof(int));
-            skip_freq = 1U << ((skip_freq >> 23) - 126 - 4);
+            skip_freq = 1U << ((skip_freq >> 23) - 126 - 4); // -4 -> divide by 16
         }
+
+        /* At least skip every other frame */
+        if (skip_freq < 2)
+            skip_freq = 2;
 
         if (++skip_counter >= skip_freq) {
             skip_counter = 0;

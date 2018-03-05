@@ -76,6 +76,7 @@ DEFINE_ORIG_POINTER(glMultiDrawArraysEXT);
 DEFINE_ORIG_POINTER(glMultiDrawElementsEXT);
 DEFINE_ORIG_POINTER(glDrawArraysEXT);
 
+DEFINE_ORIG_POINTER(glBlitFramebuffer);
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -136,6 +137,8 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT, myglMultiDrawArraysEXT);
     STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT, myglMultiDrawElementsEXT);
     STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT, myglDrawArraysEXT);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glBlitFramebuffer, myglBlitFramebuffer);
 
     return real_pointer;
 }
@@ -448,6 +451,21 @@ void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count)
     DEBUGLOGCALL(LCF_OGL);
     if (!skipping_draw)
         return orig::glDrawArraysEXT(mode, first, count);
+}
+
+void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glBlitFramebuffer, "libGL");
+    if (!skipping_draw)
+        return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+}
+
+void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
 }
