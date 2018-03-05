@@ -1001,7 +1001,7 @@ void MainWindow::slotBrowseGamePath()
 
 void MainWindow::slotBrowseMoviePath()
 {
-    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"), Q_NULLPTR, QFileDialog::DontConfirmOverwrite);
     if (filename.isNull())
         return;
 

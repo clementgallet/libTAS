@@ -1,6 +1,11 @@
 ## [Unreleased]
 ### Added
 - Simulate a specific monitor resolution
+- Improve fastforward by skipping OpenGL draw functions
+- Initialize allocated memory with zeros, fixing desyncs in some games
+
+### Changed
+- Don't rely on the keyboard layout to determine keycodes from keysyms when feeding inputs to the game. Now using a standard qwerty keyboard layout
 
 ## [1.1.0] - 2018-02-25
 ### Added
