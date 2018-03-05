@@ -102,11 +102,16 @@ static void computeFPS(float& fps, float& lfps)
 static bool skipDraw(float fps)
 {
     static unsigned int skip_counter = 0;
+
+    /* Never skip a draw when encoding. */
+    if (shared_config.av_dumping)
+        return false;
+
     if (shared_config.fastforward) {
         unsigned int skip_freq = 1;
 
-        /* I want to display about 16 effective frames per second, so I divide
-         * the fps value by 16 to get the skip frequency.
+        /* I want to display about 8 effective frames per second, so I divide
+         * the fps value by 8 to get the skip frequency.
          * Moreover, it is better to have bands of the same skip frequency, so
          * I take the next highest power of 2.
          * Because the value is already in a float, I can use this neat trick from
@@ -116,12 +121,12 @@ static bool skipDraw(float fps)
         if (fps > 1) {
             fps--;
             memcpy(&skip_freq, &fps, sizeof(int));
-            skip_freq = 1U << ((skip_freq >> 23) - 126 - 4); // -4 -> divide by 16
+            skip_freq = 1U << ((skip_freq >> 23) - 126 - 3); // -3 -> divide by 8
         }
 
-        /* At least skip every other frame */
-        if (skip_freq < 2)
-            skip_freq = 2;
+        /* At least skip 3 frames out of 4 */
+        if (skip_freq < 4)
+            skip_freq = 4;
 
         if (++skip_counter >= skip_freq) {
             skip_counter = 0;
@@ -172,7 +177,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (shared_config.osd_encode) {
+    if (!skipping_draw && shared_config.osd_encode) {
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(frame_counter);
             // hud.renderNonDrawFrame(nondraw_frame_counter);
@@ -215,7 +220,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (!shared_config.osd_encode) {
+    if (!skipping_draw && !shared_config.osd_encode) {
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(frame_counter);
             // hud.renderNonDrawFrame(nondraw_frame_counter);
@@ -291,7 +296,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         computeFPS(fps, lfps);
         debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
-    WindowTitle::update(fps, lfps);
+
+    if (!skipping_draw)
+        WindowTitle::update(fps, lfps);
 
     detTimer.exitFrameBoundary();
     debuglog(LCF_FRAME, "Leave frame boundary");
@@ -358,7 +365,7 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_EXPOSE:
-                if (shared_config.save_screenpixels) {
+                if (!skipping_draw && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
                     NATIVECALL(draw());
                 }
@@ -368,7 +375,7 @@ static void receive_messages(std::function<void()> draw)
                 receiveData(&preview_ai, sizeof(AllInputs));
 
 #ifdef LIBTAS_ENABLE_HUD
-                if ((shared_config.osd & SharedConfig::OSD_INPUTS) && shared_config.save_screenpixels) {
+                if (!skipping_draw && (shared_config.osd & SharedConfig::OSD_INPUTS) && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
 
                     if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
@@ -417,7 +424,7 @@ static void receive_messages(std::function<void()> draw)
                     struct timespec ticks = detTimer.getTicks();
                     sendData(&ticks, sizeof(struct timespec));
 
-                    if (shared_config.save_screenpixels) {
+                    if (!skipping_draw && shared_config.save_screenpixels) {
                         /* If we restored from a savestate, refresh the screen */
 
                         ScreenCapture::setPixels(true);

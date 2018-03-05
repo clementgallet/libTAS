@@ -204,11 +204,13 @@ int ScreenCapture::init(SDL_Window* window)
         }
     }
 
-    /* We don't allocate the array of pixels here, we are doing a lazy
-     * allocation when we will need it.
-     */
     size = width * height * pixelSize;
     pitch = pixelSize * width;
+
+    winpixels.resize(size);
+    if (game_info.video & GameInfo::OPENGL) {
+        glpixels.resize(size);
+    }
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
@@ -321,19 +323,7 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
     if (!inited)
         return 0;
 
-    /* Lazy allocations */
-    if (winpixels.size() != size)
-        winpixels.resize(size);
-
     if (game_info.video & GameInfo::OPENGL) {
-        /* Allocate another pixels array,
-         * because the image will need to be flipped.
-         */
-        if (glpixels.size() != size)
-            glpixels.resize(size);
-
-        /* TODO: Check that the openGL dimensions did not change in between */
-
         /* We access to the image pixels directly using glReadPixels */
         orig::glGetError();
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
