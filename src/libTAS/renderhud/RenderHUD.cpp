@@ -68,10 +68,14 @@ RenderHUD::RenderHUD()
 
 RenderHUD::~RenderHUD()
 {
-    if (fg_font)
+    if (fg_font) {
         TTF_CloseFont(fg_font);
-    if (bg_font)
+        fg_font = nullptr;
+    }
+    if (bg_font) {
         TTF_CloseFont(bg_font);
+        bg_font = nullptr;        
+    }
     if (TTF_WasInit())
         TTF_Quit();
 }
