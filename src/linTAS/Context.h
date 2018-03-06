@@ -93,6 +93,9 @@ struct Context {
     /* Store some game information sent by the game, that is shown in the UI */
     GameInfo game_info;
 
+    /* Authors of the movie */
+    std::string authors;
+
 };
 
 #endif

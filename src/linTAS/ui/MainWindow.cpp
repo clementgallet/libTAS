@@ -79,6 +79,9 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
     disabledWidgetsOnStart.append(browseMoviePath);
 
+    authorField = new QLineEdit();
+    disabledWidgetsOnStart.append(authorField);
+
     movieRecording = new QRadioButton("Recording");
     connect(movieRecording, &QAbstractButton::clicked, this, &MainWindow::slotMovieRecording);
     moviePlayback = new QRadioButton("Playback");
@@ -179,10 +182,12 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     QVBoxLayout *movieLayout = new QVBoxLayout;
 
-    QHBoxLayout *movieFileLayout = new QHBoxLayout;
-    movieFileLayout->addWidget(new QLabel(tr("Movie file:")));
-    movieFileLayout->addWidget(moviePath);
-    movieFileLayout->addWidget(browseMoviePath);
+    QGridLayout *movieFileLayout = new QGridLayout;
+    movieFileLayout->addWidget(new QLabel(tr("Movie file:")), 0, 0);
+    movieFileLayout->addWidget(moviePath, 0, 1);
+    movieFileLayout->addWidget(browseMoviePath, 0, 2);
+    movieFileLayout->addWidget(new QLabel(tr("Authors:")), 1, 0);
+    movieFileLayout->addWidget(authorField, 1, 1);
 
     QGridLayout *movieCountLayout = new QGridLayout;
     movieCountLayout->addWidget(new QLabel(tr("Movie frame count:")), 0, 0);
@@ -824,6 +829,7 @@ void MainWindow::updateUIFromConfig()
     cmdOptions->setText(context->config.gameargs.c_str());
     moviePath->setText(context->config.moviefile.c_str());
     logicalFps->setValue(context->config.sc.framerate);
+    authorField->setText(context->authors.c_str());
 
     initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
     initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
@@ -906,6 +912,8 @@ void MainWindow::slotLaunch()
     /* Perform all checks */
     if (!ErrorChecking::allChecks(context))
         return;
+
+    context->authors = authorField->text().toStdString();
 
     /* Set a few parameters */
     context->config.sc.framerate = logicalFps->value();

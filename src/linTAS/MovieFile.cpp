@@ -111,6 +111,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.initial_time.tv_nsec = config.value("initial_time_nsec").toInt();
 	context->config.sc.framerate = config.value("framerate").toUInt();
 	context->rerecord_count = config.value("rerecord_count").toUInt();
+	context->authors = config.value("authors").toString().toStdString();
 
 	/* Load the movie length and compute the movie end time using the initial time */
 	struct timespec movie_length;
@@ -224,6 +225,7 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
 	config.setValue("framerate", context->config.sc.framerate);
 	config.setValue("rerecord_count", context->rerecord_count);
+	config.setValue("authors", context->authors.c_str());
 	config.setValue("libtas_major_version", MAJORVERSION);
 	config.setValue("libtas_minor_version", MINORVERSION);
 	config.setValue("libtas_patch_version", PATCHVERSION);

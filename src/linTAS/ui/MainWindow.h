@@ -115,6 +115,8 @@ public:
     QLineEdit *moviePath;
     QPushButton *browseMoviePath;
 
+    QLineEdit *authorField;
+
     QRadioButton *movieRecording;
     QRadioButton *moviePlayback;
 
