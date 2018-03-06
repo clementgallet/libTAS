@@ -48,6 +48,8 @@ DEFINE_ORIG_POINTER(glXSwapIntervalSGI);
 DEFINE_ORIG_POINTER(glXSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
+DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
+
 DEFINE_ORIG_POINTER(glDrawArrays);
 DEFINE_ORIG_POINTER(glDrawElements);
 DEFINE_ORIG_POINTER(glMultiDrawArrays);
@@ -103,6 +105,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_RETURN_SYMBOL(glXSwapIntervalMESA)
     STORE_RETURN_SYMBOL(glXGetSwapIntervalMESA)
     STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
+    STORE_RETURN_SYMBOL(glXCreateContextAttribsARB)
 
     /* Some games like Super Meat Boy defines the glDrawArrays function in the
      * executable, so even if we preload our glDrawArrays function, it will still
@@ -267,6 +270,39 @@ void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigne
 
     LINK_NAMESPACE(glXQueryDrawable, "libGL");
     return orig::glXQueryDrawable(dpy, draw, attribute, value);
+}
+
+GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glXCreateContextAttribsARB, "libGL");
+    int i = 0;
+    while (attrib_list[i] != 0) {
+        if (attrib_list[i] == GLX_CONTEXT_MAJOR_VERSION_ARB) {
+            game_info.opengl_major = attrib_list[i+1];
+            game_info.tosend = true;
+        }
+        if (attrib_list[i] == GLX_CONTEXT_MINOR_VERSION_ARB) {
+            game_info.opengl_minor = attrib_list[i+1];
+            game_info.tosend = true;
+        }
+        if (attrib_list[i] == GLX_CONTEXT_PROFILE_MASK_ARB) {
+            switch(attrib_list[i+1]) {
+            case GLX_CONTEXT_CORE_PROFILE_BIT_ARB:
+                game_info.opengl_profile = GameInfo::CORE;
+                break;
+            case GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB:
+                game_info.opengl_profile = GameInfo::COMPATIBILITY;
+                break;
+            default:
+                break;
+            }
+            game_info.tosend = true;
+        }
+
+        i += 2;
+    }
+    return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
 }
 
 void glDrawArrays( GLenum mode, GLint first, GLsizei count )

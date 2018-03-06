@@ -62,21 +62,26 @@ void GameInfoWindow::update(GameInfo game_info)
     }
 
     if (game_info.video & GameInfo::OPENGL) {
-        QString profile;
-        switch(game_info.opengl_profile) {
-        case GameInfo::CORE:
-            profile = " Core profile";
-            break;
-        case GameInfo::COMPATIBILITY:
-            profile = " Compatibility profile";
-            break;
-        case GameInfo::ES:
-            profile = " ES profile";
-            break;
-        default:
-            break;
+        if (game_info.opengl_major > 0) {
+            QString profile;
+            switch(game_info.opengl_profile) {
+            case GameInfo::CORE:
+                profile = " Core profile";
+                break;
+            case GameInfo::COMPATIBILITY:
+                profile = " Compatibility profile";
+                break;
+            case GameInfo::ES:
+                profile = " ES profile";
+                break;
+            default:
+                break;
+            }
+            videoStr += QString(" (OpenGL %1.%2%3)").arg(game_info.opengl_major).arg(game_info.opengl_minor).arg(profile);
         }
-        videoStr += QString(" (OpenGL %1.%2%3)").arg(game_info.opengl_major).arg(game_info.opengl_minor).arg(profile);
+        else {
+            videoStr += " (OpenGL)";
+        }
     }
     videoLabel->setText(videoStr);
 

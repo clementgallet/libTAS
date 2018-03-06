@@ -391,9 +391,11 @@ static int swapInterval = 0;
     switch (attr) {
     case SDL_GL_CONTEXT_MAJOR_VERSION:
         game_info.opengl_major = value;
+        game_info.tosend = true;
         break;
     case SDL_GL_CONTEXT_MINOR_VERSION:
         game_info.opengl_minor = value;
+        game_info.tosend = true;
         break;
     case SDL_GL_CONTEXT_PROFILE_MASK:
         switch (value) {
@@ -409,6 +411,7 @@ static int swapInterval = 0;
         default:
             break;
         }
+        game_info.tosend = true;
         break;
     default:
         break;

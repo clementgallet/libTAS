@@ -25,6 +25,7 @@
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
+#include <GL/glxext.h>
 
 namespace libtas {
 
@@ -47,6 +48,8 @@ OVERRIDE int glXGetSwapIntervalMESA(void);
 
 /* Returns an attribute assoicated with a GLX drawable */
 OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
+
+OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
 
 OVERRIDE void glDrawArrays( GLenum mode, GLint first, GLsizei count );
 OVERRIDE void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
