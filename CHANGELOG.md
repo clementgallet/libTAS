@@ -1,11 +1,14 @@
 ## [Unreleased]
 ### Added
-- Simulate a specific monitor resolution
-- Improve fastforward by skipping OpenGL draw functions
-- Initialize allocated memory with zeros, fixing desyncs in some games
+- Simulate a specific monitor resolution.
+- Improve fastforward by skipping OpenGL draw functions.
+- Initialize allocated memory with zeros, fixing desyncs in some games.
 
 ### Changed
-- Don't rely on the keyboard layout to determine keycodes from keysyms when feeding inputs to the game. Now using a standard qwerty keyboard layout
+- Don't rely on the keyboard layout to determine keycodes from keysyms when feeding inputs to the game. Now using a standard qwerty keyboard layout.
+
+### Fixed
+- Always display the last frame of a movie during a fast-forward, so that a TAS can be more easily resumed.
 
 ## [1.1.0] - 2018-02-25
 ### Added

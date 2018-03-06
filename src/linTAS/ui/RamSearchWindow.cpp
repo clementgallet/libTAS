@@ -35,7 +35,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     setWindowTitle("Ram Search");
 
     /* Table */
-    ramSearchView = new QTableView();
+    ramSearchView = new QTableView(this);
     ramSearchView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ramSearchView->setSelectionMode(QAbstractItemView::SingleSelection);
     ramSearchView->setShowGrid(false);

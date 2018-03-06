@@ -257,6 +257,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
 MainWindow::~MainWindow()
 {
+    delete gameLoop;
+
     if (game_thread.joinable())
         game_thread.detach();
 }

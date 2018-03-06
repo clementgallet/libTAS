@@ -30,7 +30,7 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
     setWindowTitle("Ram Watch");
 
     /* Table */
-    ramWatchView = new QTableView();
+    ramWatchView = new QTableView(this);
     ramWatchView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ramWatchView->setSelectionMode(QAbstractItemView::SingleSelection);
     ramWatchView->setShowGrid(false);

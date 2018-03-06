@@ -27,16 +27,6 @@
 #include "MovieFile.h"
 #include <xcb/xcb_keysyms.h>
 
-/* TODO: I really don't like this extern, but let's use it for now.
- * The thing is that we need the UI to be able to save the movie.
- * In the scenario where the UI sends a command for the game-handling thread to
- * save, it can lead to a problematic case, because if the game is frozen, the
- * game-handling thread is waiting forever for the frame boundary and never
- * perform its actions, including the movie saving. It is safer for the UI
- * thread to perform the save itself, because it is less likely to be stuck.
- */
-// extern MovieFile movie;
-
 class GameLoop : public QObject {
     Q_OBJECT
 public:
