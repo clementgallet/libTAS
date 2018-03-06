@@ -23,7 +23,9 @@
 #define LIBTAS_RENDERHUD_GL_H_INCL
 
 #include "RenderHUD.h"
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+#include <GL/glext.h>
 
 namespace libtas {
 class RenderHUD_GL : public RenderHUD
@@ -31,10 +33,10 @@ class RenderHUD_GL : public RenderHUD
     public:
         RenderHUD_GL();
         ~RenderHUD_GL();
-        void box(int& x, int& y, int& width, int& height);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
     private:
         static GLuint texture;
+        static GLuint fbo;
 };
 }
 

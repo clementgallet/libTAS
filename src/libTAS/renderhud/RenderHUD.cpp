@@ -26,6 +26,7 @@
 #include "../global.h" // shared_config
 #include <fontconfig/fontconfig.h>
 #include <X11/keysym.h>
+#include "../ScreenCapture.h"
 
 namespace libtas {
 
@@ -74,7 +75,7 @@ RenderHUD::~RenderHUD()
     }
     if (bg_font) {
         TTF_CloseFont(bg_font);
-        bg_font = nullptr;        
+        bg_font = nullptr;
     }
     if (TTF_WasInit())
         TTF_Quit();
@@ -105,8 +106,6 @@ void RenderHUD::initFonts(const char* path)
     TTF_SetFontOutline(bg_font, outline_size);
 }
 
-void RenderHUD::box(int& x, int& y, int& width, int& height) {};
-
 std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
 {
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
@@ -133,9 +132,9 @@ void RenderHUD::renderFrame(unsigned int framecount)
         break;
     }
 
-    int x, y, width, height;
-    box(x, y, width, height);
-    renderText(framestr.c_str(), fg_color, bg_color, x + 2, y + 2);
+    // int width, height;
+    // ScreenCapture::getDimensions(width, height);
+    renderText(framestr.c_str(), fg_color, bg_color, 2, 2);
 }
 
 void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
@@ -144,9 +143,9 @@ void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
     Color bg_color = {0, 0, 0, 0};
     std::string nondraw_framestr = std::to_string(nondraw_framecount);
 
-    int x, y, width, height;
-    box(x, y, width, height);
-    renderText(nondraw_framestr.c_str(), red_color, bg_color, x + 2, y + 30);
+    // int width, height;
+    // ScreenCapture::getDimensions(width, height);
+    renderText(nondraw_framestr.c_str(), red_color, bg_color, 2, 30);
 }
 
 
@@ -208,9 +207,9 @@ void RenderHUD::renderInputs(AllInputs& ai, int off_y, Color fg_color)
     std::string text = oss.str();
     if (!text.empty()) {
         /* Get size of the window */
-        int x, y, width, height;
-        box(x, y, width, height);
-        renderText(text.c_str(), fg_color, bg_color, x + 2, y + height + off_y);
+        int width, height;
+        ScreenCapture::getDimensions(width, height);
+        renderText(text.c_str(), fg_color, bg_color, 2, height + off_y);
     }
 }
 

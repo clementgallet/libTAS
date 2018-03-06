@@ -52,9 +52,6 @@ class RenderHUD
         /* Initialize the font located at the given path */
         virtual void initFonts(const char* path);
 
-        /* Get the box coords of the rendering on the game window */
-        virtual void box(int& x, int& y, int& width, int& height);
-
         /* Main function to render some text on the screen.
          * This function does nothing in this class and must be overridden.
          * @param text      Text to display

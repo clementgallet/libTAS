@@ -30,7 +30,6 @@ class RenderHUD_SDL2 : public RenderHUD
 {
     public:
         ~RenderHUD_SDL2();
-        void box(int& x, int& y, int& width, int& height);
         void setRenderer(SDL_Renderer* r);
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 

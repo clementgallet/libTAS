@@ -39,15 +39,6 @@ RenderHUD_SDL1::~RenderHUD_SDL1()
 {
 }
 
-void RenderHUD_SDL1::box(int& x, int& y, int& width, int& height)
-{
-    x = y = 0;
-    LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-    SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
-    width = screen->w;
-    height = screen->h;
-}
-
 void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);

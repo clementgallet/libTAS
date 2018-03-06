@@ -28,7 +28,6 @@ namespace libtas {
 DEFINE_ORIG_POINTER(SDL_CreateRGBSurfaceFrom)
 DEFINE_ORIG_POINTER(SDL_RenderCopy)
 DEFINE_ORIG_POINTER(SDL_CreateTextureFromSurface)
-DEFINE_ORIG_POINTER(SDL_GetRendererOutputSize)
 
 RenderHUD_SDL2::~RenderHUD_SDL2()
 {
@@ -37,13 +36,6 @@ RenderHUD_SDL2::~RenderHUD_SDL2()
 void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
 {
     renderer = r;
-}
-
-void RenderHUD_SDL2::box(int& x, int& y, int& width, int& height)
-{
-    x = y = 0;
-    LINK_NAMESPACE_SDL2(SDL_GetRendererOutputSize);
-    orig::SDL_GetRendererOutputSize(renderer, &width, &height);
 }
 
 void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
