@@ -20,7 +20,6 @@
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "RenderHUD_GL.h"
-#include "../opengl_helpers.h"
 #include "../logging.h"
 #include "../hook.h"
 #include "../ScreenCapture.h"
@@ -33,10 +32,6 @@ DEFINE_ORIG_POINTER(glDeleteTextures)
 DEFINE_ORIG_POINTER(glBindTexture)
 DEFINE_ORIG_POINTER(glTexParameteri)
 DEFINE_ORIG_POINTER(glTexImage2D)
-DEFINE_ORIG_POINTER(glBegin)
-DEFINE_ORIG_POINTER(glTexCoord2f)
-DEFINE_ORIG_POINTER(glVertex2f)
-DEFINE_ORIG_POINTER(glEnd)
 DEFINE_ORIG_POINTER(glActiveTexture)
 
 DEFINE_ORIG_POINTER(glGenFramebuffers)
@@ -46,12 +41,6 @@ DEFINE_ORIG_POINTER(glDeleteFramebuffers)
 DEFINE_ORIG_POINTER(glBlitFramebuffer)
 
 DEFINE_ORIG_POINTER(glUseProgram)
-DEFINE_ORIG_POINTER(glEnable)
-DEFINE_ORIG_POINTER(glDisable)
-DEFINE_ORIG_POINTER(glBlendFunc)
-
-DEFINE_ORIG_POINTER(glClear)
-DEFINE_ORIG_POINTER(glClearColor)
 
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;
@@ -78,10 +67,6 @@ RenderHUD_GL::RenderHUD_GL() : RenderHUD()
         orig::glGenTextures(1, &texture);
 
         orig::glGenFramebuffers(1, &fbo);
-        // orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        // orig::glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        //                        GL_TEXTURE_2D, texture, 0);
-        // orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
         // /* Restore previous active texture */
         // if (oldActiveTex != 0) {
@@ -106,20 +91,11 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
 {
     LINK_NAMESPACE(glBindTexture, "libGL");
     LINK_NAMESPACE(glTexImage2D, "libGL");
-    LINK_NAMESPACE(glBegin, "libGL");
-    LINK_NAMESPACE(glEnd, "libGL");
-    LINK_NAMESPACE(glVertex2f, "libGL");
-    LINK_NAMESPACE(glTexCoord2f, "libGL");
     LINK_NAMESPACE(glTexParameteri, "libGL");
 
     LINK_NAMESPACE(glBlitFramebuffer, "libGL");
     LINK_NAMESPACE(glUseProgram, "libGL");
     LINK_NAMESPACE(glGetIntegerv, "libGL");
-    LINK_NAMESPACE(glEnable, "libGL");
-    LINK_NAMESPACE(glDisable, "libGL");
-    LINK_NAMESPACE(glBlendFunc, "libGL");
-    LINK_NAMESPACE(glClear, "libGL");
-    LINK_NAMESPACE(glClearColor, "libGL");
 
     /* Save the previous program */
     GLint oldProgram;
@@ -132,19 +108,11 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     GLint oldActiveTex;
     orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
 
-    /* Activate blending */
-    // orig::glDisable(GL_BLEND);
-    // orig::glEnable(GL_BLEND);
-    // orig::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     /* Create our text as a texture */
     orig::glActiveTexture(GL_TEXTURE0);
     orig::glBindTexture(GL_TEXTURE_2D, texture);
 
     orig::glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    orig::glClearColor(0.0, 0.0, 0.0, 1.0);
-    orig::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
 

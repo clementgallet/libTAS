@@ -23,7 +23,6 @@
 #include "sdlversion.h"
 #include "logging.h"
 #include "../external/SDL1.h" // SDL_Surface
-#include "opengl_helpers.h"
 #include "global.h"
 
 #include <cstring> // memcpy
