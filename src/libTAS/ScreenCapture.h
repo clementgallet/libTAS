@@ -23,7 +23,6 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <vector>
-#include <GL/gl.h>
 #ifdef LIBTAS_ENABLE_AVDUMPING
 extern "C" {
 #include <libavutil/pixfmt.h>

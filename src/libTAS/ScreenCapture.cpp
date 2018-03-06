@@ -27,6 +27,9 @@
 #include "global.h"
 
 #include <cstring> // memcpy
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
 
 namespace libtas {
 
@@ -50,18 +53,15 @@ DEFINE_ORIG_POINTER(SDL_GetError);
 
 DEFINE_ORIG_POINTER(glGetIntegerv);
 DEFINE_ORIG_POINTER(glReadPixels);
-DEFINE_ORIG_POINTER(glClear);
-DEFINE_ORIG_POINTER(glGetError);
-DEFINE_ORIG_POINTER(glBindTexture);
-DEFINE_ORIG_POINTER(glTexParameteri);
-DEFINE_ORIG_POINTER(glTexImage2D);
-DEFINE_ORIG_POINTER(glBegin);
-DEFINE_ORIG_POINTER(glTexCoord2f);
-DEFINE_ORIG_POINTER(glVertex2f);
-DEFINE_ORIG_POINTER(glEnd);
-DEFINE_ORIG_POINTER(glGenTextures);
-DEFINE_ORIG_POINTER(glDeleteTextures);
-DEFINE_ORIG_POINTER(glActiveTexture);
+DEFINE_ORIG_POINTER(glGenFramebuffers);
+DEFINE_ORIG_POINTER(glBindFramebuffer);
+DEFINE_ORIG_POINTER(glDeleteFramebuffers);
+DEFINE_ORIG_POINTER(glGenRenderbuffers);
+DEFINE_ORIG_POINTER(glBindRenderbuffer);
+DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
+DEFINE_ORIG_POINTER(glRenderbufferStorage);
+DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
+DEFINE_ORIG_POINTER(glBlitFramebuffer);
 
 static bool inited = false;
 
@@ -74,8 +74,11 @@ static int width, height, pitch;
 static unsigned int size;
 static int pixelSize;
 
-/* OpenGL screen texture */
-static GLuint screenGLTex = 0;
+/* OpenGL framebuffer */
+static GLuint screenFBO = 0;
+
+/* OpenGL render buffer */
+static GLuint screenRBO = 0;
 
 /* SDL2 screen texture */
 static SDL_Texture* screenSDLTex = nullptr;
@@ -98,18 +101,15 @@ int ScreenCapture::init(SDL_Window* window)
     if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glGetIntegerv, "libGL");
         LINK_NAMESPACE(glReadPixels, "libGL");
-        LINK_NAMESPACE(glClear, "libGL");
-        LINK_NAMESPACE(glGetError, "libGL");
-        LINK_NAMESPACE(glBindTexture, "libGL");
-        LINK_NAMESPACE(glTexParameteri, "libGL");
-        LINK_NAMESPACE(glTexImage2D, "libGL");
-        LINK_NAMESPACE(glBegin, "libGL");
-        LINK_NAMESPACE(glTexCoord2f, "libGL");
-        LINK_NAMESPACE(glVertex2f, "libGL");
-        LINK_NAMESPACE(glEnd, "libGL");
-        LINK_NAMESPACE(glGenTextures, "libGL");
-        LINK_NAMESPACE(glDeleteTextures, "libGL");
-        LINK_NAMESPACE(glActiveTexture, "libGL");
+        LINK_NAMESPACE(glGenFramebuffers, "libGL");
+        LINK_NAMESPACE(glBindFramebuffer, "libGL");
+        LINK_NAMESPACE(glDeleteFramebuffers, "libGL");
+        LINK_NAMESPACE(glGenRenderbuffers, "libGL");
+        LINK_NAMESPACE(glBindRenderbuffer, "libGL");
+        LINK_NAMESPACE(glDeleteRenderbuffers, "libGL");
+        LINK_NAMESPACE(glRenderbufferStorage, "libGL");
+        LINK_NAMESPACE(glFramebufferRenderbuffer, "libGL");
+        LINK_NAMESPACE(glBlitFramebuffer, "libGL");
 
         /* OpenGL viewport size and window size can differ. Here we capture the
          * screen, so we want the window size.
@@ -134,26 +134,19 @@ int ScreenCapture::init(SDL_Window* window)
         /* TODO: Is this always 4 for OpenGL? */
         pixelSize = 4;
 
-        /* Do we already have access to the glReadPixels function? */
-        if (!orig::glGetIntegerv || !orig::glReadPixels || !orig::glClear) {
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "Could not load function gl*.");
-            return -1;
+        /* Generate FBO and RBO */
+        if (screenFBO == 0) {
+            orig::glGenFramebuffers(1, &screenFBO);
         }
+        orig::glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
 
-        /* Get previous active texture */
-        GLint oldActiveTex;
-        orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
-        orig::glActiveTexture(GL_TEXTURE0);
-
-        /* Create the screen texture */
-        if (screenGLTex == 0) {
-            orig::glGenTextures(1, &screenGLTex);
+        if (screenRBO == 0) {
+            orig::glGenRenderbuffers(1, &screenRBO);
         }
+        orig::glBindRenderbuffer(GL_RENDERBUFFER, screenRBO);
 
-        /* Restore previous active texture */
-        if (oldActiveTex != 0) {
-            orig::glActiveTexture(oldActiveTex);
-        }
+        orig::glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
+        orig::glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, screenRBO);
     }
 
     else if (game_info.video & GameInfo::SDL1) {
@@ -229,10 +222,14 @@ void ScreenCapture::fini()
     winpixels.clear();
     glpixels.clear();
 
-    /* Delete the OpenGL screen texture */
-    if (screenGLTex != 0) {
-        orig::glDeleteTextures(1, &screenGLTex);
-        screenGLTex = 0;
+    /* Delete openGL framebuffers */
+    if (screenFBO != 0) {
+        orig::glDeleteFramebuffers(1, &screenFBO);
+        screenFBO = 0;
+    }
+    if (screenRBO != 0) {
+        orig::glDeleteRenderbuffers(1, &screenRBO);
+        screenRBO = 0;
     }
 
     /* Delete the SDL2 screen texture */
@@ -324,16 +321,19 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         return 0;
 
     if (game_info.video & GameInfo::OPENGL) {
-        /* We access to the image pixels directly using glReadPixels */
-        orig::glGetError();
-        orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
-        GLenum glerror = orig::glGetError();
-        while (glerror != GL_NO_ERROR) {
-            debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
-            glerror = orig::glGetError();
-        }
+        /* Copy the default framebuffer to our FBO */
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screenFBO);
+        orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (orig_plane) {
+
+            /* We need to recover the pixels for encoding */
+            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
+            orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
+            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
             /*
              * Flip image horizontally
              * This is because OpenGL has a different reference point
@@ -408,35 +408,10 @@ int ScreenCapture::setPixels(bool same) {
     static bool last_same = false;
 
     if (game_info.video & GameInfo::OPENGL) {
-        orig::glGetError();
-        orig::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        /* Load the screen pixels into a texture */
-        enterGLRender();
-        orig::glBindTexture(GL_TEXTURE_2D, screenGLTex);
-        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        if (!same || !last_same) {
-            orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, const_cast<const GLvoid*>(static_cast<GLvoid*>(glpixels.data())));
-        }
-        last_same = same;
-
-        orig::glBegin(GL_QUADS);
-        {
-            orig::glTexCoord2f(0,1); orig::glVertex2f(0, 0);
-            orig::glTexCoord2f(1,1); orig::glVertex2f(width, 0);
-            orig::glTexCoord2f(1,0); orig::glVertex2f(width, height);
-            orig::glTexCoord2f(0,0); orig::glVertex2f(0, height);
-        }
-        orig::glEnd();
-
-        exitGLRender();
-
-        GLenum glerror = orig::glGetError();
-        while (glerror != GL_NO_ERROR) {
-            debuglog(LCF_ERROR | LCF_OGL, "OpenGL error: ", glerror);
-            glerror = orig::glGetError();
-        }
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     else {
