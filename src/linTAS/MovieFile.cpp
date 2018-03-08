@@ -441,6 +441,19 @@ void MovieFile::lengthConfig(int &sec, int& nsec)
 	nsec = config.value("movie_length_nsec").toInt();
 }
 
+std::string MovieFile::authors()
+{
+    /* Load the config file into the context struct */
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
+
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	return config.value("authors").toString().toStdString();
+}
+
+
 int MovieFile::setInputs(const AllInputs& inputs)
 {
     /* Check that we are writing to the next frame */

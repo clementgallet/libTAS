@@ -174,6 +174,9 @@ public:
 
 private:
 
+    /* Update movie parameters from movie file */
+    void updateMovieParams();
+    
     /* Helper function to create a checkable action inside an action group */
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
 

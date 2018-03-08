@@ -642,30 +642,8 @@ void MainWindow::updateStatus()
             frameCount->setValue(0);
             currentLength->setText("Current Time: -");
             fpsValues->setText("Current FPS: - / -");
-            {
-                MovieFile tempmovie(context);
-                /* Update the movie frame count and rerecord count
-                 * if the movie file is valid.
-                 */
-                if (tempmovie.extractMovie() == 0) {
-                    movieFrameCount->setValue(tempmovie.nbFramesConfig());
-                    rerecordCount->setValue(tempmovie.nbRerecords());
-                    int sec, nsec;
-                    tempmovie.lengthConfig(sec, nsec);
-                    movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
 
-                    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-                        context->config.sc.recording = SharedConfig::RECORDING_READ;
-                        moviePlayback->setChecked(true);
-                    }
-                }
-                else {
-                    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-                        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-                        movieRecording->setChecked(true);
-                    }
-                }
-            }
+            updateMovieParams();
             break;
 
         case Context::STARTING:
@@ -823,6 +801,40 @@ void MainWindow::setListFromRadio(const QActionGroup *actionGroup, int &value)
     }
 }
 
+void MainWindow::updateMovieParams()
+{
+    MovieFile tempmovie(context);
+    if (tempmovie.extractMovie() == 0) {
+        movieFrameCount->setValue(tempmovie.nbFramesConfig());
+        rerecordCount->setValue(tempmovie.nbRerecords());
+        authorField->setText(tempmovie.authors().c_str());
+        authorField->setReadOnly(true);
+
+        int sec, nsec;
+        tempmovie.lengthConfig(sec, nsec);
+        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
+
+        moviePlayback->setChecked(true);
+        if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+            context->config.sc.recording = SharedConfig::RECORDING_READ;
+            context->config.sc_modified = true;
+        }
+    }
+    else {
+        movieFrameCount->setValue(0);
+        rerecordCount->setValue(0);
+        authorField->setText("");
+        authorField->setReadOnly(false);
+        movieLength->setText("Movie length: -");
+
+        movieRecording->setChecked(true);
+        if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+            context->config.sc_modified = true;
+        }
+    }
+}
+
 void MainWindow::updateUIFromConfig()
 {
     gamePath->setText(context->gamepath.c_str());
@@ -836,20 +848,7 @@ void MainWindow::updateUIFromConfig()
 
     movieBox->setChecked(!(context->config.sc.recording == SharedConfig::NO_RECORDING));
 
-    MovieFile tempmovie(context);
-    if (tempmovie.extractMovie() == 0) {
-        movieFrameCount->setValue(tempmovie.nbFramesConfig());
-        rerecordCount->setValue(tempmovie.nbRerecords());
-        int sec, nsec;
-        tempmovie.lengthConfig(sec, nsec);
-        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
-
-        /* Also, by default, set to playback mode */
-        moviePlayback->setChecked(true);
-    }
-    else {
-        movieRecording->setChecked(true);
-    }
+    updateMovieParams();
 
     pauseCheck->setChecked(!context->config.sc.running);
     fastForwardCheck->setChecked(context->config.sc.fastforward);
@@ -1018,27 +1017,7 @@ void MainWindow::slotBrowseMoviePath()
     moviePath->setText(filename);
     context->config.moviefile = filename.toStdString();
 
-    MovieFile tempmovie(context);
-    if (tempmovie.extractMovie() == 0) {
-        movieFrameCount->setValue(tempmovie.nbFramesConfig());
-        rerecordCount->setValue(tempmovie.nbRerecords());
-        int sec, nsec;
-        tempmovie.lengthConfig(sec, nsec);
-        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
-
-        moviePlayback->setChecked(true);
-        context->config.sc.recording = SharedConfig::RECORDING_READ;
-        context->config.sc_modified = true;
-    }
-    else {
-        movieFrameCount->setValue(0);
-        rerecordCount->setValue(0);
-        movieLength->setText("Movie length: -");
-
-        movieRecording->setChecked(true);
-        context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-        context->config.sc_modified = true;
-    }
+    updateMovieParams();
 }
 
 void MainWindow::slotSaveMovie()
@@ -1097,9 +1076,11 @@ void MainWindow::slotMovieRecording()
     if (context->status == Context::INACTIVE) {
         if (movieRecording->isChecked()) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+            authorField->setReadOnly(false);
         }
         else {
             context->config.sc.recording = SharedConfig::RECORDING_READ;
+            authorField->setReadOnly(true);
         }
     }
     else {

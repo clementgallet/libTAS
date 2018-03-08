@@ -90,6 +90,9 @@ public:
     /* Get the length of a moviefile. It must be extracted first */
     void lengthConfig(int &sec, int& nsec);
 
+    /* Get the authors of the movie file */
+    std::string authors();
+
     /* Set inputs in the current frame */
     int setInputs(const AllInputs& inputs);
 
