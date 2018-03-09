@@ -482,14 +482,21 @@ void MainWindow::createActions()
 
 void MainWindow::createMenus()
 {
+    QAction *action;
+
     /* File Menu */
     QMenu *fileMenu = menuBar()->addMenu(tr("File"));
 
-    fileMenu->addAction(tr("Open Executable..."), this, &MainWindow::slotBrowseGamePath);
-    fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
-    fileMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
-    fileMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
-    fileMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
+    action = fileMenu->addAction(tr("Open Executable..."), this, &MainWindow::slotBrowseGamePath);
+    disabledActionsOnStart.append(action);
+    action = fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
+    disabledActionsOnStart.append(action);
+    action = fileMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
+    disabledActionsOnStart.append(action);
+    saveMovieAction = fileMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
+    saveMovieAction->setEnabled(false);
+    exportMovieAction = fileMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
+    exportMovieAction->setEnabled(false);
 
     QMenu *movieEndMenu = fileMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
@@ -620,13 +627,11 @@ void MainWindow::updateStatus()
             if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
                 movieBox->setEnabled(true);
             }
+            saveMovieAction->setEnabled(false);
+            exportMovieAction->setEnabled(false);
+
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
-
-            // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
-            // if (item) item->deactivate();
-            // item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
-            // if (item) item->deactivate();
 
             initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
             initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
@@ -661,12 +666,12 @@ void MainWindow::updateStatus()
 
         case Context::ACTIVE:
             stopButton->setEnabled(true);
-            // if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-            //     item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(save_movie_cb));
-            //     if (item) item->activate();
-            //     item = const_cast<Fl_Menu_Item*>(menu_bar->find_item(export_movie_cb));
-            //     if (item) item->activate();
-            // }
+
+            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+                saveMovieAction->setEnabled(true);
+                exportMovieAction->setEnabled(true);
+            }
+
             break;
         case Context::QUITTING:
             stopButton->setEnabled(false);
@@ -1030,7 +1035,9 @@ void MainWindow::slotExportMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
         QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
-        gameLoop->movie.saveMovie(filename.toStdString()); // TODO: game.h exports the movie object, bad...
+        if (!filename.isNull()) {
+            gameLoop->movie.saveMovie(filename.toStdString());
+        }
     }
 }
 

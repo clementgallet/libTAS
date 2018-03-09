@@ -69,6 +69,9 @@ public:
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
 
+    QAction *saveMovieAction;
+    QAction *exportMovieAction;
+
     QActionGroup *movieEndGroup;
     QActionGroup *screenResGroup;
 
@@ -176,7 +179,7 @@ private:
 
     /* Update movie parameters from movie file */
     void updateMovieParams();
-    
+
     /* Helper function to create a checkable action inside an action group */
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
 
