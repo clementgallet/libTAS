@@ -94,7 +94,7 @@ signals:
     void statusChanged();
     void configChanged();
     void alertToShow(QString str);
-    void startInnerLoop();
+    void startFrameBoundary();
     void rerecordChanged();
     void frameCountChanged();
     void sharedConfigChanged();

@@ -92,6 +92,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     comparePreviousButton->setChecked(true);
     compareValueButton = new QRadioButton("Specific Value:");
     comparingValueBox = new QDoubleSpinBox();
+    comparingValueBox->setRange(-1000000000,1000000000);
 
     QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
     QVBoxLayout *compareLayout = new QVBoxLayout;

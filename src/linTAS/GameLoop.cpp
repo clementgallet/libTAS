@@ -141,6 +141,8 @@ void GameLoop::start()
             return;
         }
 
+        emit startFrameBoundary();
+
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
@@ -153,8 +155,6 @@ void GameLoop::start()
                 loopExit();
                 return;
             }
-
-            emit startInnerLoop();
 
             /* Implement frame-advance auto-repeat */
             bool ar_advance = false;

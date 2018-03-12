@@ -107,6 +107,10 @@ static bool skipDraw(float fps)
     if (!shared_config.fastforward)
         return false;
 
+    /* Don't skip if frame-advancing */
+    if (!shared_config.running)
+        return false;
+
     /* Never skip a draw when encoding. */
     if (shared_config.av_dumping)
         return false;

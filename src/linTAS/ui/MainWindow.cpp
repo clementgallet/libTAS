@@ -48,7 +48,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
-    connect(gameLoop, &GameLoop::startInnerLoop, this, &MainWindow::updateRam);
+    connect(gameLoop, &GameLoop::startFrameBoundary, this, &MainWindow::updateRam);
     connect(gameLoop, &GameLoop::rerecordChanged, this, &MainWindow::updateRerecordCount);
     connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
