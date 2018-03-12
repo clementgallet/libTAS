@@ -371,6 +371,7 @@ void MainWindow::createActions()
     addActionCheckable(savestateIgnoreGroup, tr("Ignore non-writeable non-anonymous segments"), SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE);
     addActionCheckable(savestateIgnoreGroup, tr("Ignore exec segments"), SharedConfig::IGNORE_EXEC);
     addActionCheckable(savestateIgnoreGroup, tr("Ignore shared segments"), SharedConfig::IGNORE_SHARED);
+    addActionCheckable(savestateIgnoreGroup, tr("Ignore large segments (> 64 GB)"), SharedConfig::IGNORE_LARGE);
 
     loggingOutputGroup = new QActionGroup(this);
 

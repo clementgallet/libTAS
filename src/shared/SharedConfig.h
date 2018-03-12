@@ -144,10 +144,11 @@ struct SharedConfig {
         IGNORE_NON_WRITEABLE = 0x01,
         IGNORE_NON_ANONYMOUS_NON_WRITEABLE = 0x02,
         IGNORE_EXEC = 0x04,
-        IGNORE_SHARED = 0x08
+        IGNORE_SHARED = 0x08,
+        IGNORE_LARGE = 0x10,
     };
 
-    int ignore_sections = IGNORE_EXEC | IGNORE_SHARED | IGNORE_NON_ANONYMOUS_NON_WRITEABLE;
+    int ignore_sections = IGNORE_SHARED;
 
     /* Initial system time at game startup */
     struct timespec initial_time = {0, 0};

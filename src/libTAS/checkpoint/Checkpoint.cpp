@@ -158,6 +158,12 @@ static bool skipArea(Area *area)
         return true;
     }
 
+    if ((shared_config.ignore_sections & SharedConfig::IGNORE_LARGE) &&
+        (area->flags & MAP_ANONYMOUS) &&
+        (area->size > 64*ONE_MB)) {
+        return true;
+    }
+
     return false;
 }
 
