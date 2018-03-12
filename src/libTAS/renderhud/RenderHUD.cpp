@@ -125,6 +125,8 @@ void RenderHUD::renderFrame(unsigned int framecount)
     switch (shared_config.recording) {
     case SharedConfig::RECORDING_READ:
         framestr.append("/").append(std::to_string(shared_config.movie_framecount));
+        if (framecount > shared_config.movie_framecount)
+            framestr.append(" (Finished)");
         break;
     case SharedConfig::RECORDING_WRITE:
     case SharedConfig::NO_RECORDING:

@@ -194,6 +194,9 @@ void GameLoop::init()
     /* Unvalidate the game window id */
     context->game_window = 0;
 
+    /* Reset the frame count */
+    context->framecount = 0;
+
     /* Reset the rerecord count */
     context->rerecord_count = 0;
 
@@ -261,6 +264,16 @@ void GameLoop::init()
             emit configChanged();
         }
     }
+    if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+        /* Add one blank frame in every movie corresponding to the input
+         * between the game startup and the first screen draw, which is for now
+         * impossible to set
+         */
+        AllInputs ai;
+        ai.emptyInputs();
+        movie.setInputs(ai);
+    }
+
     emit rerecordChanged();
 }
 

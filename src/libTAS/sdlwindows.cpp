@@ -319,7 +319,7 @@ static int swapInterval = 0;
 #ifdef LIBTAS_ENABLE_AVDUMPING
     if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        avencoder.reset(new AVEncoder(gameWindow, frame_counter));
+        avencoder.reset(new AVEncoder(gameWindow, framecount));
     }
 #endif
 

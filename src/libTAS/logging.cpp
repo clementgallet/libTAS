@@ -23,8 +23,7 @@
 #include <unistd.h> // For isatty
 #include <cstdarg>
 #include <cstring>
-// #include "hook.h" // For pthread_self_real
-#include "timewrappers.h" // For frame_counter
+#include "frame.h" // For framecount
 #include <mutex>
 #include <list>
 
@@ -70,7 +69,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     }
     size = strlen(s);
 
-    snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", frame_counter);
+    snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", framecount);
     size = strlen(s);
 
     pid_t tid = ThreadManager::getThreadTid();

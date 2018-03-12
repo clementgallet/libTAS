@@ -25,6 +25,9 @@
 
 namespace libtas {
 
+extern unsigned long framecount;
+
+
 /* Called to initiate a frame boundary.
  * Does several things like:
  * - Advancing timers

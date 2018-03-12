@@ -472,7 +472,7 @@ int MovieFile::setInputs(const AllInputs& inputs)
         return 0;
     }
     else {
-        std::cerr << "Writing to a frame " << context->framecount << "higher than the current list " << input_list.size() << std::endl;
+        std::cerr << "Writing to a frame " << context->framecount << " higher than the current list " << input_list.size() << std::endl;
         return 1;
     }
 }

@@ -42,8 +42,11 @@ namespace libtas {
 #define SAVESTATE_FILESIZE 1024
 static char savestatepath[SAVESTATE_FILESIZE];
 
+/* Frame counter */
+unsigned long framecount = 0;
+
 /* Store the number of nondraw frames */
-static unsigned int nondraw_frame_counter = 0;
+static unsigned int nondraw_framecount = 0;
 
 #ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
@@ -120,7 +123,7 @@ static bool skipDraw(float fps)
      * and continue from there.
      */
     if ((shared_config.recording == SharedConfig::RECORDING_READ) &&
-        ((frame_counter + 1) == shared_config.movie_framecount))
+        ((framecount + 1) == shared_config.movie_framecount))
         return false;
 
     unsigned int skip_freq = 1;
@@ -170,15 +173,22 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         return;
     }
 
+    /*** Update time ***/
+
+    /* First, increase the frame count */
+    ++framecount;
+
     /* Compute new FPS values */
     if (drawFB) {
         computeFPS(fps, lfps);
         debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
 
+    /* Update the deterministic timer, sleep if necessary and mix audio */
+    detTimer.enterFrameBoundary();
+
     /* Send information to the game and notify for the beginning of the frame
-     * boundary. This is done as soon as possible so the game and the program
-     * can process in parallel.
+     * boundary.
      */
 
     /* Send error messages */
@@ -190,7 +200,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     /* Send framecount and internal time */
     sendMessage(MSGB_FRAMECOUNT_TIME);
-    sendData(&frame_counter, sizeof(unsigned long));
+    sendData(&framecount, sizeof(unsigned long));
     struct timespec ticks = detTimer.getTicks();
     sendData(&ticks, sizeof(struct timespec));
 
@@ -209,15 +219,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
-
-    /* Update the deterministic timer, sleep is necessary and mix audio */
-    detTimer.enterFrameBoundary();
-
-
     /*** Rendering ***/
-
     if (!drawFB)
-        nondraw_frame_counter++;
+        nondraw_framecount++;
+
+    /* Update window title */
+    if (!skipping_draw)
+        WindowTitle::update(fps, lfps);
 
     /* Saving the screen pixels before drawing. This is done before rendering
      * the HUD, so that we can redraw with another HUD.
@@ -233,8 +241,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && shared_config.osd_encode) {
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-            hud.renderFrame(frame_counter);
-            // hud.renderNonDrawFrame(nondraw_frame_counter);
+            hud.renderFrame(framecount);
+            // hud.renderNonDrawFrame(nondraw_framecount);
         }
         if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
@@ -249,11 +257,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
             debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
-            avencoder.reset(new AVEncoder(gameWindow, frame_counter));
+            avencoder.reset(new AVEncoder(gameWindow, framecount));
         }
 
         /* Write the current frame */
-        int enc = avencoder->encodeOneFrame(frame_counter, drawFB);
+        int enc = avencoder->encodeOneFrame(framecount, drawFB);
         if (enc < 0) {
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
@@ -276,36 +284,37 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && !shared_config.osd_encode) {
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-            hud.renderFrame(frame_counter);
-            // hud.renderNonDrawFrame(nondraw_frame_counter);
+            hud.renderFrame(framecount);
+            // hud.renderNonDrawFrame(nondraw_framecount);
         }
         if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
     }
 #endif
 
+    /* Actual draw command */
     if (!skipping_draw) {
         NATIVECALL(draw());
     }
 
+
     /* Receive messages from the program */
+    #ifdef LIBTAS_ENABLE_HUD
+        receive_messages(draw, hud);
+    #else
+        receive_messages(draw);
+    #endif
 
-#ifdef LIBTAS_ENABLE_HUD
-    receive_messages(draw, hud);
-#else
-    receive_messages(draw);
-#endif
-
+    /*** Process inputs and events ***/
     if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
         /* Push native SDL events into our emulated event queue */
         pushNativeEvents();
     }
 
-    /* Push generated events.
-     * This must be done after getting the new inputs. */
+    /* Push generated events. This must be done after getting the new inputs. */
     generateKeyUpEvents();
     generateKeyDownEvents();
-    if (frame_counter == 0)
+    if (framecount == 0)
         generateControllerAdded();
     generateControllerEvents();
     generateMouseMotionEvents();
@@ -316,14 +325,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     skipping_draw = skipDraw(fps);
 
-    /* Update window title */
-    if (!skipping_draw)
-        WindowTitle::update(fps, lfps);
-
     detTimer.exitFrameBoundary();
-
-    /* Finally, increase the frame counter */
-    ++frame_counter;
 
     debuglog(LCF_FRAME, "Leave frame boundary");
 }
@@ -394,8 +396,8 @@ static void receive_messages(std::function<void()> draw)
 
                     if (!shared_config.osd_encode) {
                         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                            hud.renderFrame(frame_counter);
-                            // hud.renderNonDrawFrame(nondraw_frame_counter);
+                            hud.renderFrame(framecount);
+                            // hud.renderNonDrawFrame(nondraw_framecount);
                         }
                         if (shared_config.osd & SharedConfig::OSD_INPUTS)
                             hud.renderInputs(ai);
@@ -413,8 +415,8 @@ static void receive_messages(std::function<void()> draw)
                     ScreenCapture::setPixels(false);
 
                     if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                        hud.renderFrame(frame_counter);
-                        // hud.renderNonDrawFrame(nondraw_frame_counter);
+                        hud.renderFrame(framecount);
+                        // hud.renderNonDrawFrame(nondraw_framecount);
                     }
                     hud.renderInputs(ai);
                     hud.renderPreviewInputs(preview_ai);
@@ -454,7 +456,7 @@ static void receive_messages(std::function<void()> draw)
                      * probably has changed.
                      */
                     sendMessage(MSGB_FRAMECOUNT_TIME);
-                    sendData(&frame_counter, sizeof(unsigned long));
+                    sendData(&framecount, sizeof(unsigned long));
                     struct timespec ticks = detTimer.getTicks();
                     sendData(&ticks, sizeof(struct timespec));
 
@@ -465,8 +467,8 @@ static void receive_messages(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
                         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                            hud.renderFrame(frame_counter);
-                            // hud.renderNonDrawFrame(nondraw_frame_counter);
+                            hud.renderFrame(framecount);
+                            // hud.renderNonDrawFrame(nondraw_framecount);
                         }
                         if (shared_config.osd & SharedConfig::OSD_INPUTS)
                             hud.renderInputs(ai);
@@ -490,7 +492,7 @@ static void receive_messages(std::function<void()> draw)
                  * message in either case.
                  */
                 sendMessage(MSGB_FRAMECOUNT_TIME);
-                sendData(&frame_counter, sizeof(unsigned long));
+                sendData(&framecount, sizeof(unsigned long));
                 {
                     struct timespec ticks = detTimer.getTicks();
                     sendData(&ticks, sizeof(struct timespec));

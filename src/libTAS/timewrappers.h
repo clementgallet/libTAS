@@ -30,8 +30,6 @@
 
 namespace libtas {
 
-extern unsigned long frame_counter;
-
 /* Time used by the program so far (user time + system time).
    The result / CLOCKS_PER_SECOND is program time in seconds.  */
 OVERRIDE clock_t clock (void) throw();

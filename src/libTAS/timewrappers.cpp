@@ -29,9 +29,6 @@
 
 namespace libtas {
 
-/* Frame counter */
-unsigned long frame_counter = 0;
-
 DEFINE_ORIG_POINTER(clock_gettime);
 
 /* Override */ time_t time(time_t* t) throw()
