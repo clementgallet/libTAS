@@ -284,7 +284,7 @@ void MainWindow::createActions()
     movieEndGroup = new QActionGroup(this);
     connect(movieEndGroup, &QActionGroup::triggered, this, &MainWindow::slotMovieEnd);
 
-    addActionCheckable(movieEndGroup, tr("Pause the Movie"), Config::MOVIEEND_PAUSE);
+    addActionCheckable(movieEndGroup, tr("Keep Reading"), Config::MOVIEEND_READ);
     addActionCheckable(movieEndGroup, tr("Switch to Writing"), Config::MOVIEEND_WRITE);
 
     screenResGroup = new QActionGroup(this);

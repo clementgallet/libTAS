@@ -80,11 +80,11 @@ public:
 
     /* Flags when end of movie */
     enum MovieEnd {
-        MOVIEEND_PAUSE = 0,
+        MOVIEEND_READ = 0,
         MOVIEEND_WRITE = 1,
     };
 
-    int on_movie_end = MOVIEEND_PAUSE;
+    int on_movie_end = MOVIEEND_READ;
 
     /* Save the config into the config file */
     void save(const std::string& gamepath);

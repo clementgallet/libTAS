@@ -895,10 +895,10 @@ void GameLoop::processInputs(AllInputs &ai)
             if (movie.getInputs(ai) == 1) {
                 /* We are reading the last frame of the movie */
                 switch(context->config.on_movie_end) {
-                    case Config::MOVIEEND_PAUSE:
-                        context->config.sc.running = false;
+                    case Config::MOVIEEND_READ:
+                        // context->config.sc.running = false;
                         //context->config.sc_modified = true;
-                        emit sharedConfigChanged();
+                        // emit sharedConfigChanged();
                         break;
                     case Config::MOVIEEND_WRITE:
                         context->config.sc.recording = SharedConfig::RECORDING_WRITE;
