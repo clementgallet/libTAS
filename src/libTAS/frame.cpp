@@ -118,14 +118,6 @@ static bool skipDraw(float fps)
     if (shared_config.av_dumping)
         return false;
 
-    /* Don't skip if we are reading the last frame of a movie. Because the tool
-     * autopause at the end of a movie playback, the user can see the screen
-     * and continue from there.
-     */
-    if ((shared_config.recording == SharedConfig::RECORDING_READ) &&
-        ((framecount + 1) == shared_config.movie_framecount))
-        return false;
-
     unsigned int skip_freq = 1;
 
     /* I want to display about 8 effective frames per second, so I divide

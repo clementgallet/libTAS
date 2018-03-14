@@ -96,6 +96,9 @@ struct Context {
     /* Authors of the movie */
     std::string authors;
 
+    /* A frame number when the game pauses */
+    int pause_frame = 0;
+
 };
 
 #endif

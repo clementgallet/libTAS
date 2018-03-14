@@ -25,6 +25,7 @@
 #include <QGroupBox>
 #include <QFormLayout>
 #include <QHeaderView>
+#include <QMessageBox>
 
 #include "RamSearchWindow.h"
 #include "MainWindow.h"
@@ -303,8 +304,10 @@ void RamSearchWindow::slotAdd()
     ramSearchView->selectionModel()->clear();
 
     /* If no watch was selected, return */
-    if (!index.isValid())
+    if (!index.isValid()) {
+        QMessageBox::critical(nullptr, "Error", QString("You must select an address to add a watch"));
         return;
+    }
 
     int row = index.row();
 

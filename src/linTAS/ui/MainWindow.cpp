@@ -25,7 +25,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
-#include <QApplication>
+// #include <QApplication>
+#include <QInputDialog>
 
 #include "MainWindow.h"
 #include "../MovieFile.h"
@@ -492,15 +493,21 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(action);
     action = fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
     disabledActionsOnStart.append(action);
-    action = fileMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
-    disabledActionsOnStart.append(action);
-    saveMovieAction = fileMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
-    saveMovieAction->setEnabled(false);
-    exportMovieAction = fileMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
-    exportMovieAction->setEnabled(false);
 
-    QMenu *movieEndMenu = fileMenu->addMenu(tr("On Movie End"));
+    /* Movie Menu */
+    QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));
+
+    action = movieMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
+    disabledActionsOnStart.append(action);
+    saveMovieAction = movieMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
+    saveMovieAction->setEnabled(false);
+    exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
+    exportMovieAction->setEnabled(false);
+    movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
+
+    QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
+
 
     /* Video Menu */
     QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
@@ -1040,6 +1047,13 @@ void MainWindow::slotExportMovie()
             gameLoop->movie.saveMovie(filename.toStdString());
         }
     }
+}
+
+void MainWindow::slotPauseMovie()
+{
+    context->pause_frame = QInputDialog::getInt(this, tr("Pause Movie"),
+        tr("Pause movie at the indicated frame. Fill zero to disable. Fill a negative value to pause at a number of frames before the end of the movie."),
+        context->pause_frame);
 }
 
 void MainWindow::slotPause(bool checked)

@@ -184,6 +184,21 @@ void GameLoop::start()
 
         AllInputs ai;
         processInputs(ai);
+
+        /* Pause if needed */
+        if ((context->pause_frame == (context->framecount + 1)) ||
+            ((context->config.sc.movie_framecount + context->pause_frame) == (context->framecount + 1))) {
+
+            /* Disable pause */
+            context->pause_frame = 0;
+
+            /* Pause and disable fast-forward */
+            context->config.sc.running = false;
+            context->config.sc.fastforward = false;
+            context->config.sc_modified = true;
+            emit sharedConfigChanged();
+        }
+
         loopSendMessages(ai);
 
     }

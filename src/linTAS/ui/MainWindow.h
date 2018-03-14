@@ -233,6 +233,7 @@ private slots:
     void slotSaveScreen(bool checked);
     void slotPreventSavefile(bool checked);
     void slotMovieEnd();
+    void slotPauseMovie();
 };
 
 #endif
