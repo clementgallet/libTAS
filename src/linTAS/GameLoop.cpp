@@ -604,6 +604,10 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             context->config.sc.fastforward = true;
             emit sharedConfigChanged();
             context->config.sc_modified = true;
+
+            /* Make frame advance auto-repeat faster */
+            ar_freq = 1;
+
             return false;
 
         case HOTKEY_SAVESTATE1:
@@ -823,6 +827,10 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             context->config.sc.fastforward = false;
             emit sharedConfigChanged();
             context->config.sc_modified = true;
+
+            /* Recover normal frame-advance auto-repeat */
+            ar_freq = 1;
+
             return false;
         case HOTKEY_FRAMEADVANCE:
             ar_ticks = -1; // Deactivate auto-repeat
