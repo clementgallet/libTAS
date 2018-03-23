@@ -228,8 +228,9 @@ void generateControllerEvents(void)
          */
         bool genGC, genJoy = true;
 
-        if (game_info.keyboard & GameInfo::SDL2) {
+        if (game_info.joystick & GameInfo::SDL2) {
             GlobalOwnCode toc;
+            GlobalNoLog gnl;
             genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
             //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
             /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
@@ -239,8 +240,9 @@ void generateControllerEvents(void)
                 continue;
         }
 
-        if (game_info.keyboard & GameInfo::SDL1) {
+        if (game_info.joystick & GameInfo::SDL1) {
             GlobalOwnCode toc;
+            GlobalNoLog gnl;
             genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji));
 
             if (!genJoy)

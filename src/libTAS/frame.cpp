@@ -306,7 +306,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Push generated events. This must be done after getting the new inputs. */
     generateKeyUpEvents();
     generateKeyDownEvents();
-    if (framecount == 0)
+    if (framecount == 1)
         generateControllerAdded();
     generateControllerEvents();
     generateMouseMotionEvents();
