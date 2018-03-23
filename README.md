@@ -7,7 +7,7 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependancies are:
 
 * `libc6`, `libgcc1`, `libstdc++6`
-* `libqt5core5a`, `libqt5gui5`, `libqt5widgets5`
+* `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
 * `libx11-6`, `libxcb1`, `libxcb-keysyms1`
 * `libavcodec57`, `libavformat57`, `libavutil55`, `libswscale4`
 * `libswresample2`, `libasound2`
@@ -15,6 +15,8 @@ You can download the latest version of the software in the [Releases](https://gi
 * `libtar0`, `zlib1g`
 
 Installing with the debian package will install all the required packages as well. The ffmpeg API used in the software is quite recent (> 3.2) so it is possible you will need to update your ffmpeg libraries.
+
+If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu) whose architecture matches a supported architecture of the game you want to run (in most cases amd64, sometimes only i386 is available). Note for Ubuntu users that you need a recent version (17.10 minimum).
 
 ## Compile
 
@@ -41,7 +43,7 @@ If you want to manually enable/disable a feature, you must add just after the `c
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
 - `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file opening/closing hooks to handle savefiles
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, then you must cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. You could also try to cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. However, many users failed to do this due to some libraries that don't like this operation.
 
 ## Run
 

@@ -37,7 +37,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-inc
 #target_link_libraries(TAS ${CMAKE_DL_LIBS})
 
 # Add Qt5 lib
-find_package(Qt5Widgets)
+find_package(Qt5Widgets REQUIRED)
+if (Qt5Widgets_FOUND)
+    if (Qt5Widgets_VERSION VERSION_LESS 5.6.0)
+        message(FATAL_ERROR "Minimum supported Qt5 version is 5.6.0")
+    endif()
+else()
+    message(SEND_ERROR "The Qt5Widgets library could not be found!")
+endif(Qt5Widgets_FOUND)
 target_link_libraries (linTAS Qt5::Widgets)
 
 # Add TAR lib
