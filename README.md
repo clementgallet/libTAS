@@ -2,6 +2,10 @@
 
 GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86` (not much tested). To run OpenGL games, you will need a card supporting at least OpenGL 3.0.
 
+## Supported Games
+
+Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, Steam games **won't** work because Steam messes up with our code injection, so you must check if a drm-free version of the game exists. For more details, check the [Game Compatibility](https://github.com/clementgallet/libTAS/wiki/Game-Compatibility) page.
+
 ## Install
 
 You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependancies are:
