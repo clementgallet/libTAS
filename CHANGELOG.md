@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.1.1] - 2018-03-25
 ### Added
 - Simulate a specific monitor resolution.
 - Improve fastforward by skipping OpenGL draw functions.
