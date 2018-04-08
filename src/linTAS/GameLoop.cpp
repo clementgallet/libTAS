@@ -876,6 +876,10 @@ void GameLoop::sleepSendPreview()
 
 void GameLoop::processInputs(AllInputs &ai)
 {
+    /* Don't record inputs if we are quitting */
+    if (context->status == Context::QUITTING)
+        return;
+
     /* Record inputs or get inputs from movie file */
     switch (context->config.sc.recording) {
         case SharedConfig::NO_RECORDING:
