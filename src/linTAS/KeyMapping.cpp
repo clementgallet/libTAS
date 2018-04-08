@@ -19,7 +19,6 @@
 
 #include "KeyMapping.h"
 // #include <X11/XKBlib.h>
-#include <xcb/xcb_keysyms.h>
 #include <X11/Xlib.h>
 #include <cstring>
 #include <memory> // unique_ptr
@@ -54,15 +53,9 @@ bool is_modifier(xcb_keysym_t ks)
     return false;
 }
 
-xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_connection_t *conn)
+xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_key_symbols_t *keysyms)
 {
     xcb_keysym_t modifiers = 0;
-
-    xcb_key_symbols_t *keysyms;
-    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
-        //std::cerr << "Could not allocate key symbols" << std::endl;
-        return 0;
-    }
 
     for (int i=0; i<256; i++) {
         if (keyboard_state[i/8] & (1 << (i % 8))) {
@@ -75,8 +68,6 @@ xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_connection_t *c
             }
         }
     }
-
-    xcb_key_symbols_free(keysyms);
     return modifiers;
 }
 
@@ -295,32 +286,26 @@ void KeyMapping::reassign_input(int input_index, KeySym ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc){
+void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc){
     int i,j;
     int keysym_i = 0;
-    //std::array<char,32> keyboard_state;
 
     ai.emptyInputs();
 
     /* Get keyboard inputs */
-    xcb_generic_error_t* error;
+    xcb_generic_error_t* error = nullptr;
     xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);
-    std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(conn, keymap_cookie, &error));
+    xcb_query_keymap_reply_t* keymap_reply = xcb_query_keymap_reply(conn, keymap_cookie, &error);
 
     if (error) {
         // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+        free(keymap_reply);
+        free(error);
         return;
     }
 
     unsigned char* keyboard_state = keymap_reply->keys;
-
-    xcb_keysym_t modifiers = build_modifiers(keyboard_state, conn);
-
-    xcb_key_symbols_t *keysyms;
-    if (!(keysyms = xcb_key_symbols_alloc(conn))) {
-        // std::cerr << "Could not allocate key symbols" << std::endl;
-        return;
-    }
+    xcb_keysym_t modifiers = build_modifiers(keyboard_state, keysyms);
 
     for (i=0; i<32; i++) {
         if (keyboard_state[i] == 0)
@@ -365,7 +350,7 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
                     /* Checking the current number of keys */
                     if (keysym_i >= AllInputs::MAXKEYS) {
                         fprintf(stderr, "Reached maximum number of inputs (%d).", AllInputs::MAXKEYS);
-                        return;
+                        continue;
                     }
 
                     /* Saving the key */
@@ -397,15 +382,17 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
         }
     }
 
-    xcb_key_symbols_free(keysyms);
+    free(keymap_reply);
 
     if (sc.mouse_support && window) {
         /* Get the pointer position and mask */
         xcb_query_pointer_cookie_t pointer_cookie = xcb_query_pointer(conn, window);
-        std::unique_ptr<xcb_query_pointer_reply_t> pointer_reply(xcb_query_pointer_reply(conn, pointer_cookie, &error));
+        xcb_query_pointer_reply_t* pointer_reply = xcb_query_pointer_reply(conn, pointer_cookie, &error);
 
         if (error) {
             // std::cerr << "Could not get keymap, X error" << error->error_code << std::endl;
+            free(pointer_reply);
+            free(error);
             return;
         }
 
@@ -414,7 +401,7 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
         /* We only care about the three mouse buttons */
         ai.pointer_mask = pointer_reply->mask & (XCB_BUTTON_MASK_1 | XCB_BUTTON_MASK_2 | XCB_BUTTON_MASK_3);
 
-//        Bool onScreen = XQueryPointer(display, window, &w, &w, &i, &i, &ai.pointer_x, &ai.pointer_y, &ai.pointer_mask);
+        free(pointer_reply);
 
         /* TODO: Do something with off-screen pointer */
         // if (!onScreen) {

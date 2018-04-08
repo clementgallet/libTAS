@@ -512,6 +512,8 @@ int MovieFile::getInputs(AllInputs& inputs)
 
 void MovieFile::close()
 {
+	input_list.clear();
+
     // if (context->config.sc.recording != SharedConfig::NO_RECORDING)
     //     saveMovie();
 }

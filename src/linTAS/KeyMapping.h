@@ -24,6 +24,7 @@
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
 #include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 // #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <map>
@@ -233,7 +234,7 @@ static std::array<ModifierKey, 8> modifier_list {{
 
 bool is_modifier(xcb_keysym_t ks);
 
-xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_connection_t *conn);
+xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_key_symbols_t *keysyms);
 
 class KeyMapping {
     public:
@@ -280,7 +281,7 @@ class KeyMapping {
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          * - Get the mouse state
          */
-        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, SharedConfig& sc);
+        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc);
 };
 
 #endif // KEYMAPPING_H_INCLUDED

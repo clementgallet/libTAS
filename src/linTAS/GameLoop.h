@@ -71,7 +71,7 @@ private:
      */
     void launchGameThread();
 
-    uint8_t nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct HotKey &hk);
+    uint8_t nextEvent(struct HotKey &hk);
 
     void notifyControllerEvent(xcb_keysym_t ks, bool pressed);
 

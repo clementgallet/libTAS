@@ -165,10 +165,8 @@ void GameLoop::start()
                     ar_advance = true;
             }
 
-            std::unique_ptr<xcb_generic_event_t> event;
             struct HotKey hk;
-
-            uint8_t eventType = nextEvent(event, hk);
+            uint8_t eventType = nextEvent(hk);
 
             bool hasFrameAdvanced = false;
             if (eventType) {
@@ -419,11 +417,20 @@ bool GameLoop::loopReceiveMessages()
     return false;
 }
 
-uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct HotKey &hk)
+uint8_t GameLoop::nextEvent(struct HotKey &hk)
 {
+    static xcb_generic_event_t *next_event = nullptr;
+
     while (true) {
-        if (!event)
-            event.reset(xcb_poll_for_event(context->conn));
+        xcb_generic_event_t *event = nullptr;
+
+        if (next_event) {
+            event = next_event;
+            next_event = nullptr;
+        }
+        else {
+            event = xcb_poll_for_event(context->conn);
+        }
 
         if (!event) {
             if (context->hotkey_queue.empty()) {
@@ -441,7 +448,7 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
 
             if ((response_type == XCB_KEY_PRESS) || (response_type == XCB_KEY_RELEASE)) {
                 /* Get the actual pressed/released key */
-                xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event.get());
+                xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event);
                 xcb_keycode_t kc = key_event->detail;
 
                 // if ((event->response_type & ~0x80) == XCB_KEY_PRESS) {
@@ -484,7 +491,6 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                  * AutoRepeat and I use this code to delete the extra
                  * KeyRelease event...
                  */
-                xcb_generic_event_t *next_event = nullptr;
 
                 if (response_type == XCB_KEY_RELEASE) {
                     next_event = xcb_poll_for_event (context->conn);
@@ -495,12 +501,12 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                         ((next_event->response_type & ~0x80) == XCB_KEY_PRESS) &&
                         (next_key_event->detail == key_event->detail)) {
                         /* This event must be discarded */
-                        event.reset(next_event);
+                        free(event);
                         continue;
                     }
                 }
 
-                event.reset(next_event);
+                free(event);
 
                 /* Get keysym from keycode */
                 xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms.get(), kc, 0);
@@ -515,15 +521,16 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                 /* Build the modifier value */
                 xcb_generic_error_t* error;
                 xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(context->conn);
-                std::unique_ptr<xcb_query_keymap_reply_t> keymap_reply(xcb_query_keymap_reply(context->conn, keymap_cookie, &error));
+                xcb_query_keymap_reply_t* keymap_reply = xcb_query_keymap_reply(context->conn, keymap_cookie, &error);
 
                 xcb_keysym_t modifiers = 0;
                 if (error) {
                     std::cerr << "Could not get xcb_query_keymap, X error" << error->error_code << std::endl;
                 }
                 else {
-                    modifiers = build_modifiers(keymap_reply->keys, context->conn);
+                    modifiers = build_modifiers(keymap_reply->keys, keysyms.get());
                 }
+                free(keymap_reply);
 
                 /* Check if this KeySym with or without modifiers is mapped to a hotkey */
                 if (context->config.km.hotkey_mapping.find(ks | modifiers) != context->config.km.hotkey_mapping.end()) {
@@ -539,6 +546,7 @@ uint8_t GameLoop::nextEvent(std::unique_ptr<xcb_generic_event_t> &event, struct 
                     continue;
             }
             else {
+                free(event);
                 return response_type;
             }
         }
@@ -859,7 +867,7 @@ void GameLoop::sleepSendPreview()
 
             /* Format the keyboard and mouse state and save it in the AllInputs struct */
             static AllInputs preview_ai, last_preview_ai;
-            context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, context->config.sc);
+            context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
             emit inputsToBeSent(preview_ai);
 
             /* Send inputs if changed */
@@ -888,7 +896,7 @@ void GameLoop::processInputs(AllInputs &ai)
             /* Get inputs if we have input focus */
             if (haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                context->config.km.buildAllInputs(ai, context->conn, context->game_window, context->config.sc);
+                context->config.km.buildAllInputs(ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
                 emit inputsToBeSent(ai);
             }
 
