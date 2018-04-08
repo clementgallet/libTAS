@@ -72,11 +72,11 @@ public:
     int loadInputs(const std::string& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
-    void saveMovie();
-    void saveMovie(const std::string& moviefile);
+    int saveMovie();
+    int saveMovie(const std::string& moviefile);
 
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
-    void saveMovie(const std::string& moviefile, unsigned int frame_nb);
+    int saveMovie(const std::string& moviefile, unsigned int frame_nb);
 
     /* Get the number of frames from a moviefile config. It must be extracted first */
     unsigned int nbFramesConfig();

@@ -25,6 +25,7 @@
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <zlib.h>
 #include <X11/X.h> // ButtonXMask
+#include <errno.h>
 
 #include "MovieFile.h"
 #include "utils.h"
@@ -36,11 +37,15 @@ static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_w
 MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), context(c) {}
 
 const char* MovieFile::errorString(int error_code) {
+	static std::string err;
+
 	switch (error_code) {
 		case ENOMOVIE:
 			return "Could not find the movie file";
 		case EBADARCHIVE:
-			return "The movie file could not be extracted";
+			err = "The movie file could not be extracted or build: ";
+			err += strerror(errno);
+			return err.c_str();
 		case ENOINPUTS:
 			return "The movie file does not contain the inputs file";
 		case ENOCONFIG:
@@ -198,7 +203,7 @@ int MovieFile::loadInputs(const std::string& moviefile)
 	return 0;
 }
 
-void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
+int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 {
     /* Format and write input frames into the input file */
     std::string input_file = context->config.tempmoviedir + "/inputs";
@@ -262,30 +267,41 @@ void MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
     /* Compress the files into the final movie file */
     TAR *tar;
-    tar_open(&tar, moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
+    int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
+	if (ret == -1) return EBADARCHIVE;
+
     /* I would like to use tar_append_tree but it saves files with their path */
     //tar_append_tree(tar, md, save_dir);
+
     char* input_ptr = const_cast<char*>(input_file.c_str());
     char savename[7] = "inputs";
-    tar_append_file(tar, input_ptr, savename);
+    ret = tar_append_file(tar, input_ptr, savename);
+	if (ret == -1) return EBADARCHIVE;
+
     std::string config_file = context->config.tempmoviedir + "/config.ini";
     char* config_ptr = const_cast<char*>(config_file.c_str());
     char savename2[13] = "config.ini";
-    tar_append_file(tar, config_ptr, savename2);
+    ret = tar_append_file(tar, config_ptr, savename2);
+	if (ret == -1) return EBADARCHIVE;
 
-    tar_append_eof(tar);
-    tar_close(tar);
+    ret = tar_append_eof(tar);
+	if (ret == -1) return EBADARCHIVE;
+
+    ret = tar_close(tar);
+	if (ret == -1) return EBADARCHIVE;
+
+	return 0;
 }
 
-void MovieFile::saveMovie(const std::string& moviefile)
+int MovieFile::saveMovie(const std::string& moviefile)
 {
-	saveMovie(moviefile, input_list.size());
+	return saveMovie(moviefile, input_list.size());
 }
 
-void MovieFile::saveMovie()
+int MovieFile::saveMovie()
 {
-    saveMovie(context->config.moviefile);
 	modifiedSinceLastSave = false;
+	return saveMovie(context->config.moviefile);
 }
 
 int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)

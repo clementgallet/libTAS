@@ -1035,8 +1035,12 @@ void MainWindow::slotBrowseMoviePath()
 
 void MainWindow::slotSaveMovie()
 {
-    if (context->config.sc.recording != SharedConfig::NO_RECORDING)
-        gameLoop->movie.saveMovie(); // TODO: game.h exports the movie object, bad...
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        int ret = gameLoop->movie.saveMovie();
+        if (ret < 0) {
+            QMessageBox::warning(this, "Warning", gameLoop->movie.errorString(ret));
+        }
+    }
 }
 
 void MainWindow::slotExportMovie()
@@ -1044,7 +1048,10 @@ void MainWindow::slotExportMovie()
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
         QString filename = QFileDialog::getSaveFileName(this, tr("Choose a movie file"), context->config.moviefile.c_str(), tr("libTAS movie files (*.ltm)"));
         if (!filename.isNull()) {
-            gameLoop->movie.saveMovie(filename.toStdString());
+            int ret = gameLoop->movie.saveMovie(filename.toStdString());
+            if (ret < 0) {
+                QMessageBox::warning(this, "Warning", gameLoop->movie.errorString(ret));
+            }
         }
     }
 }
