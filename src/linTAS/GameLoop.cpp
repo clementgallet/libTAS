@@ -884,6 +884,8 @@ void GameLoop::sleepSendPreview()
 
 void GameLoop::processInputs(AllInputs &ai)
 {
+    ai.emptyInputs();
+
     /* Don't record inputs if we are quitting */
     if (context->status == Context::QUITTING)
         return;
