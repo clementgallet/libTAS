@@ -510,6 +510,24 @@ int MovieFile::getInputs(AllInputs& inputs)
     return 0;
 }
 
+void MovieFile::insertInputsBefore(const AllInputs& inputs, int pos)
+{
+	if (pos > input_list.size())
+		return;
+
+	input_list.insert(input_list.begin() + pos, inputs);
+	modifiedSinceLastSave = true;
+}
+
+void MovieFile::deleteInputs(int pos)
+{
+	if (pos >= input_list.size())
+		return;
+
+	input_list.erase(input_list.begin() + pos);
+	modifiedSinceLastSave = true;
+}
+
 void MovieFile::close()
 {
 	input_list.clear();

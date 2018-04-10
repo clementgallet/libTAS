@@ -39,6 +39,7 @@
 #include "GameInfoWindow.h"
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
+#include "InputEditorWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
@@ -65,6 +66,7 @@ public:
     GameInfoWindow* gameInfoWindow;
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;
+    InputEditorWindow* inputEditorWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
@@ -165,6 +167,9 @@ public:
 
     /* Update ramsearch and ramwatch values if window is shown */
     void updateRam();
+
+    /* Update input editor if window is shown */
+    void updateInputEditor();
 
     /* Update UI elements when a config file is loaded */
     void updateUIFromConfig();

@@ -99,6 +99,12 @@ public:
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
 
+    /* Insert inputs before the requested pos */
+    void insertInputsBefore(const AllInputs& inputs, int pos);
+
+    /* Delete inputs at the requested pos */
+    void deleteInputs(int pos);
+
     /* Close the moviefile */
     void close();
 

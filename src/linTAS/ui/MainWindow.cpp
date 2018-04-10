@@ -50,6 +50,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
     connect(gameLoop, &GameLoop::startFrameBoundary, this, &MainWindow::updateRam);
+    connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateInputEditor);
     connect(gameLoop, &GameLoop::rerecordChanged, this, &MainWindow::updateRerecordCount);
     connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
@@ -66,6 +67,9 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     gameInfoWindow = new GameInfoWindow(this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
+    inputEditorWindow = new InputEditorWindow(c, this);
+
+    connect(inputEditorWindow->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
 
     /* Menu */
     createActions();
@@ -503,10 +507,13 @@ void MainWindow::createMenus()
     saveMovieAction->setEnabled(false);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
-    movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
 
+    movieMenu->addSeparator();
+
+    movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
+    movieMenu->addAction(tr("Input Editor (experimental)..."), inputEditorWindow, &InputEditorWindow::show);
 
 
     /* Video Menu */
@@ -775,6 +782,13 @@ void MainWindow::updateRam()
     if (ramWatchWindow->isVisible()) {
         ramWatchWindow->update();
     }
+}
+
+void MainWindow::updateInputEditor()
+{
+    // if (inputEditorWindow->isVisible()) {
+    inputEditorWindow->update();
+    // }
 }
 
 void MainWindow::setCheckboxesFromMask(const QActionGroup *actionGroup, int value)
