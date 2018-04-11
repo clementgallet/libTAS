@@ -25,7 +25,12 @@ InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : 
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return movie->nbFrames();
+    /* We have to make a special case, because loading the same savestate
+     * in write mode does not update the movie length until the next frame
+     */
+    if (context->config.sc.recording == SharedConfig::RECORDING_WRITE)
+        return context->framecount;
+    return movie->nbFrames();
 }
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
@@ -271,6 +276,27 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+void InputEditorModel::beginModifyInputs()
+{
+    beginResetModel();
+}
+
+void InputEditorModel::endModifyInputs()
+{
+    endResetModel();
+}
+
+void InputEditorModel::beginAddedInputs()
+{
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+}
+
+void InputEditorModel::endAddedInputs()
+{
+    endInsertRows();
+
+    /* We have to check if new inputs were added */
+}
 
 //
 //

@@ -290,6 +290,8 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
     int i,j;
     int keysym_i = 0;
 
+    ai.emptyInputs();
+
     /* Get keyboard inputs */
     xcb_generic_error_t* error = nullptr;
     xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);

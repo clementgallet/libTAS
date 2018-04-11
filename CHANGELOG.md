@@ -1,3 +1,13 @@
+## [Unreleased]
+
+### Added
+- Input editor
+
+### Fixed
+- Don't add an extra frame when user stops the game
+- Remove a memory leak caused by allocated keycode-keysym mapping
+- Fix garbage inputs caused by uninitialized inputs when game does not have focus
+
 ## [1.1.1] - 2018-03-25
 ### Added
 - Simulate a specific monitor resolution.

@@ -734,6 +734,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             sendMessage(MSGN_LOADSTATE);
             sendString(savestatepath);
 
+            emit inputsToBeChanged();
+
             int message = receiveMessage();
             /* Loading is not assured to succeed, the following must
              * only be done if it's the case.
@@ -776,6 +778,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 context->config.sc.movie_framecount = context->framecount;
             }
             receiveData(&context->current_time, sizeof(struct timespec));
+            emit inputsChanged();
             emit frameCountChanged();
             return false;
         }
@@ -793,7 +796,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     emit alertToShow(QString("Cannot write to a movie after its end"));
                 }
                 else {
+                    emit inputsToBeChanged();
                     context->config.sc.recording = SharedConfig::RECORDING_WRITE;
+                    emit inputsChanged();
                 }
                 break;
             default:
@@ -866,7 +871,7 @@ void GameLoop::sleepSendPreview()
         if (haveFocus()) {
 
             /* Format the keyboard and mouse state and save it in the AllInputs struct */
-            static AllInputs preview_ai, last_preview_ai;
+            static AllInputs preview_ai, last_preview_ai;            
             context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
             emit inputsToBeSent(preview_ai);
 
@@ -903,8 +908,11 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                emit inputsToBeAdded();
                 /* Save inputs to moviefile */
                 movie.setInputs(ai);
+                emit inputsAdded();
+
                 AutoSave::update(context, movie);
             }
 

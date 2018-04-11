@@ -87,8 +87,9 @@ void InputEditorWindow::update()
     inputEditorModel->update();
 
     /* Scroll to make the current frame visible */
-    QModelIndex index = inputEditorModel->index(context->framecount, 0);
-    inputEditorView->scrollTo(index, QAbstractItemView::PositionAtCenter);
+    QModelIndex index = inputEditorModel->index(context->framecount-1, 0);
+    if (index.isValid())
+        inputEditorView->scrollTo(index, QAbstractItemView::PositionAtCenter);
 }
 
 void InputEditorWindow::horizontalMenu(QPoint pos)

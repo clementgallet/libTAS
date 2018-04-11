@@ -60,13 +60,27 @@ public slots:
     /* Toggle a single input */
     void toggleInput(const QModelIndex &index);
 
+    /* Prepare for a change of inputs */
+    void beginModifyInputs();
+
+    /* End change of inputs */
+    void endModifyInputs();
+
+    /* Prepare for new inputs */
+    void beginAddedInputs();
+
+    /* End new inputs */
+    void endAddedInputs();
+
+
+
+
 private:
     Context *context;
     MovieFile *movie;
 
     /* Set of inputs present in the movie */
     std::vector<SingleInput> input_set;
-
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
