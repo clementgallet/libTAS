@@ -25,7 +25,7 @@
 #include <sstream>
 #include "../global.h" // shared_config
 #include <fontconfig/fontconfig.h>
-#include <X11/keysym.h>
+// #include <X11/keysym.h>
 #include "../ScreenCapture.h"
 
 namespace libtas {
@@ -168,7 +168,7 @@ void RenderHUD::renderInputs(AllInputs& ai, int off_y, Color fg_color)
     /* Keyboard */
     if (shared_config.keyboard_support) {
         for (int i=0; i<AllInputs::MAXKEYS; i++) {
-            if (ai.keyboard[i] != XK_VoidSymbol) {
+            if (ai.keyboard[i]) {
                 oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
             }
         }

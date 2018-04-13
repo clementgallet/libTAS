@@ -311,7 +311,7 @@ int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
         input_stream.put('|');
         input_stream << std::hex;
         for (int k=0; k<AllInputs::MAXKEYS; k++) {
-            if (inputs.keyboard[k] == XK_VoidSymbol) break;
+            if (!inputs.keyboard[k]) break;
             input_stream << (k>0?":":"") << inputs.keyboard[k];
         }
     }

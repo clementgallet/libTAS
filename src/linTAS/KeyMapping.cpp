@@ -74,29 +74,29 @@ xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_key_symbols_t *
 void KeyMapping::init(xcb_connection_t* conn)
 {
     /* Fill hotkey list */
-    hotkey_list.push_back({{IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
-    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F1 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F2 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE2, "Save State 2"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F3 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE3, "Save State 3"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F4 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE4, "Save State 4"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F5 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE5, "Save State 5"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F6 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE6, "Save State 6"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F7 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE7, "Save State 7"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F8 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE8, "Save State 8"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F9 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE9, "Save State 9"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F1}, HOTKEY_LOADSTATE1, "Load State 1"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F2}, HOTKEY_LOADSTATE2, "Load State 2"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F3}, HOTKEY_LOADSTATE3, "Load State 3"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F4}, HOTKEY_LOADSTATE4, "Load State 4"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F5}, HOTKEY_LOADSTATE5, "Load State 5"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F6}, HOTKEY_LOADSTATE6, "Load State 6"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F7}, HOTKEY_LOADSTATE7, "Load State 7"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F8}, HOTKEY_LOADSTATE8, "Load State 8"});
-    hotkey_list.push_back({{IT_KEYBOARD, XK_F9}, HOTKEY_LOADSTATE9, "Load State 9"});
-    hotkey_list.push_back({{IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE2, "Save State 2"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE3, "Save State 3"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F4 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE4, "Save State 4"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F5 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE5, "Save State 5"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F6 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE6, "Save State 6"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE7, "Save State 7"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE8, "Save State 8"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE9, "Save State 9"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1}, HOTKEY_LOADSTATE1, "Load State 1"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2}, HOTKEY_LOADSTATE2, "Load State 2"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3}, HOTKEY_LOADSTATE3, "Load State 3"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F4}, HOTKEY_LOADSTATE4, "Load State 4"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F5}, HOTKEY_LOADSTATE5, "Load State 5"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F6}, HOTKEY_LOADSTATE6, "Load State 6"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7}, HOTKEY_LOADSTATE7, "Load State 7"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8}, HOTKEY_LOADSTATE8, "Load State 8"});
+    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9}, HOTKEY_LOADSTATE9, "Load State 9"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
 
     /* Set default hotkeys */
     default_hotkeys();
@@ -120,7 +120,7 @@ void KeyMapping::init(xcb_connection_t* conn)
         if (ks == XCB_NO_SYMBOL) continue;
 
         SingleInput si;
-        si.type = IT_KEYBOARD;
+        si.type = SingleInput::IT_KEYBOARD;
         si.value = static_cast<int>(ks);
         si.description = XKeysymToString(ks); // AFAIK there is no xcb counterpart to this...
         input_list.push_back(si);
@@ -129,69 +129,69 @@ void KeyMapping::init(xcb_connection_t* conn)
     xcb_key_symbols_free(keysyms);
 
     /* Add controller mapping */
-    input_list.push_back({IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_B, 1, "Controller 1 - B"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_X, 1, "Controller 1 - X"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_Y, 1, "Controller 1 - Y"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_BACK, 1, "Controller 1 - Back"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_GUIDE, 1, "Controller 1 - Guide"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_START, 1, "Controller 1 - Start"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_LEFTSTICK, 1, "Controller 1 - Left Stick"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_RIGHTSTICK, 1, "Controller 1 - Right Stick"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_LEFTSHOULDER, 1, "Controller 1 - Left Shoulder"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_RIGHTSHOULDER, 1, "Controller 1 - Right Shoulder"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_UP, 1, "Controller 1 - Dpad Up"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_DOWN, 1, "Controller 1 - Dpad Down"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Controller 1 - Dpad Left"});
-    input_list.push_back({IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Controller 1 - Dpad Right"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_B, 1, "Controller 1 - B"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_X, 1, "Controller 1 - X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_Y, 1, "Controller 1 - Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_BACK, 1, "Controller 1 - Back"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_GUIDE, 1, "Controller 1 - Guide"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_START, 1, "Controller 1 - Start"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_LEFTSTICK, 1, "Controller 1 - Left Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_RIGHTSTICK, 1, "Controller 1 - Right Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_LEFTSHOULDER, 1, "Controller 1 - Left Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_RIGHTSHOULDER, 1, "Controller 1 - Right Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_UP, 1, "Controller 1 - Dpad Up"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_DOWN, 1, "Controller 1 - Dpad Down"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Controller 1 - Dpad Left"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Controller 1 - Dpad Right"});
 
-    input_list.push_back({IT_CONTROLLER2_BUTTON_A, 1, "Controller 2 - A"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_B, 1, "Controller 2 - B"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_X, 1, "Controller 2 - X"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_Y, 1, "Controller 2 - Y"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_BACK, 1, "Controller 2 - Back"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_GUIDE, 1, "Controller 2 - Guide"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_START, 1, "Controller 2 - Start"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_LEFTSTICK, 1, "Controller 2 - Left Stick"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_RIGHTSTICK, 1, "Controller 2 - Right Stick"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_LEFTSHOULDER, 1, "Controller 2 - Left Shoulder"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_RIGHTSHOULDER, 1, "Controller 2 - Right Shoulder"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_UP, 1, "Controller 2 - Dpad Up"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Controller 2 - Dpad Down"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Controller 2 - Dpad Left"});
-    input_list.push_back({IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Controller 2 - Dpad Right"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_A, 1, "Controller 2 - A"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_B, 1, "Controller 2 - B"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_X, 1, "Controller 2 - X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_Y, 1, "Controller 2 - Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_BACK, 1, "Controller 2 - Back"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_GUIDE, 1, "Controller 2 - Guide"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_START, 1, "Controller 2 - Start"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_LEFTSTICK, 1, "Controller 2 - Left Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_RIGHTSTICK, 1, "Controller 2 - Right Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_LEFTSHOULDER, 1, "Controller 2 - Left Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_RIGHTSHOULDER, 1, "Controller 2 - Right Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_UP, 1, "Controller 2 - Dpad Up"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Controller 2 - Dpad Down"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Controller 2 - Dpad Left"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Controller 2 - Dpad Right"});
 
-    input_list.push_back({IT_CONTROLLER3_BUTTON_A, 1, "Controller 3 - A"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_B, 1, "Controller 3 - B"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_X, 1, "Controller 3 - X"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_Y, 1, "Controller 3 - Y"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_BACK, 1, "Controller 3 - Back"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_GUIDE, 1, "Controller 3 - Guide"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_START, 1, "Controller 3 - Start"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_LEFTSTICK, 1, "Controller 3 - Left Stick"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_RIGHTSTICK, 1, "Controller 3 - Right Stick"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_LEFTSHOULDER, 1, "Controller 3 - Left Shoulder"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_RIGHTSHOULDER, 1, "Controller 3 - Right Shoulder"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_UP, 1, "Controller 3 - Dpad Up"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_DOWN, 1, "Controller 3 - Dpad Down"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Controller 3 - Dpad Left"});
-    input_list.push_back({IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Controller 3 - Dpad Right"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_A, 1, "Controller 3 - A"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_B, 1, "Controller 3 - B"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_X, 1, "Controller 3 - X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_Y, 1, "Controller 3 - Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_BACK, 1, "Controller 3 - Back"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_GUIDE, 1, "Controller 3 - Guide"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_START, 1, "Controller 3 - Start"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_LEFTSTICK, 1, "Controller 3 - Left Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_RIGHTSTICK, 1, "Controller 3 - Right Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_LEFTSHOULDER, 1, "Controller 3 - Left Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_RIGHTSHOULDER, 1, "Controller 3 - Right Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_UP, 1, "Controller 3 - Dpad Up"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_DOWN, 1, "Controller 3 - Dpad Down"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Controller 3 - Dpad Left"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Controller 3 - Dpad Right"});
 
-    input_list.push_back({IT_CONTROLLER4_BUTTON_A, 1, "Controller 4 - A"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_B, 1, "Controller 4 - B"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_X, 1, "Controller 4 - X"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_Y, 1, "Controller 4 - Y"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_BACK, 1, "Controller 4 - Back"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_GUIDE, 1, "Controller 4 - Guide"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_START, 1, "Controller 4 - Start"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_LEFTSTICK, 1, "Controller 4 - Left Stick"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_RIGHTSTICK, 1, "Controller 4 - Right Stick"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_LEFTSHOULDER, 1, "Controller 4 - Left Shoulder"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_RIGHTSHOULDER, 1, "Controller 4 - Right Shoulder"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_UP, 1, "Controller 4 - Dpad Up"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Controller 4 - Dpad Down"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Controller 4 - Dpad Left"});
-    input_list.push_back({IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Controller 4 - Dpad Right"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_A, 1, "Controller 4 - A"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_B, 1, "Controller 4 - B"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_X, 1, "Controller 4 - X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_Y, 1, "Controller 4 - Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_BACK, 1, "Controller 4 - Back"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_GUIDE, 1, "Controller 4 - Guide"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_START, 1, "Controller 4 - Start"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_LEFTSTICK, 1, "Controller 4 - Left Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_RIGHTSTICK, 1, "Controller 4 - Right Stick"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_LEFTSHOULDER, 1, "Controller 4 - Left Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_RIGHTSHOULDER, 1, "Controller 4 - Right Shoulder"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_UP, 1, "Controller 4 - Dpad Up"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Controller 4 - Dpad Down"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Controller 4 - Dpad Left"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Controller 4 - Dpad Right"});
 
     /* Set default inputs */
     default_inputs();
@@ -201,7 +201,7 @@ void KeyMapping::default_hotkeys()
 {
     hotkey_mapping.clear();
     for (auto iter : hotkey_list) {
-        if (iter.default_input.type == IT_KEYBOARD) {
+        if (iter.default_input.type == SingleInput::IT_KEYBOARD) {
             hotkey_mapping[iter.default_input.value] = iter;
         }
     }
@@ -211,7 +211,7 @@ void KeyMapping::default_inputs()
 {
     input_mapping.clear();
     for (auto iter : input_list) {
-        if (iter.type == IT_KEYBOARD) {
+        if (iter.type == SingleInput::IT_KEYBOARD) {
             input_mapping[iter.value] = iter;
         }
     }
@@ -230,7 +230,7 @@ void KeyMapping::default_hotkey(int hotkey_index)
         }
     }
 
-    if (hk.default_input.type == IT_KEYBOARD)
+    if (hk.default_input.type == SingleInput::IT_KEYBOARD)
         hotkey_mapping[hk.default_input.value] = hk;
 
 }
@@ -248,7 +248,7 @@ void KeyMapping::default_input(int input_index)
         }
     }
 
-    if (si.type == IT_KEYBOARD)
+    if (si.type == SingleInput::IT_KEYBOARD)
         input_mapping[si.value] = si;
 }
 
@@ -333,16 +333,16 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
                 }
 
                 /* Checking the mapped input for that key */
-                SingleInput si = {IT_NONE,0};
+                SingleInput si = {SingleInput::IT_NONE,0};
                 if (input_mapping.find(ks) != input_mapping.end())
                     si = input_mapping[ks];
 
-                if (si.type == IT_NONE) {
+                if (si.type == SingleInput::IT_NONE) {
                     /* Key is mapped to nothing */
                     continue;
                 }
 
-                if (si.type == IT_KEYBOARD) {
+                if (si.type == SingleInput::IT_KEYBOARD) {
                     /* Check if we support keyboard */
                     if (!sc.keyboard_support)
                         continue;
@@ -357,20 +357,20 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
                     ai.keyboard[keysym_i++] = si.value;
                 }
 
-                if (si.type & IT_CONTROLLER_ID_MASK) {
+                if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
                     /* Key is mapped to a game controller */
 
                     /* Getting Controller id
                      * Arithmetic on enums is bad, no?
                      */
-                    int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
+                    int controller_i = ((si.type & SingleInput::IT_CONTROLLER_ID_MASK) >> SingleInput::IT_CONTROLLER_ID_SHIFT) - 1;
 
                     /* Check if we support this joystick */
                     if (controller_i >= sc.nb_controllers)
                         continue;
 
-                    int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;
-                    int controller_type = si.type & IT_CONTROLLER_TYPE_MASK;
+                    int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
+                    int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
                     if (controller_axis) {
                         ai.controller_axes[controller_i][controller_type] = static_cast<short>(si.value);
                     }

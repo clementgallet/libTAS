@@ -72,27 +72,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         const SingleInput si = input_set[index.column()];
 
         /* Check if the single input is set in movie inputs */
-        bool is_set = false;
-
-        if (si.type == IT_KEYBOARD) {
-            for (const KeySym& ks : ai.keyboard) {
-                if (si.value == ks) {
-                    is_set = true;
-                    break;
-                }
-            }
-        }
-
-        if (si.type & IT_CONTROLLER_ID_MASK) {
-            int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
-            int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;
-            int controller_type = si.type & IT_CONTROLLER_TYPE_MASK;
-
-            /* We don't support analog inputs in input editor */
-            if (!controller_axis) {
-                is_set = ai.controller_buttons[controller_i] & ((si.value & 0x1) << controller_type);
-            }
-        }
+        bool is_set = ai.checkInput(si);
 
         if (is_set) {
             return QString(si.description.c_str());
@@ -111,8 +91,8 @@ void InputEditorModel::buildInputSet()
     /* Gather all unique inputs from the movie */
     for (const AllInputs &ai : movie->input_list) {
         for (const KeySym& ks : ai.keyboard) {
-            if (ks != XK_VoidSymbol) {
-                SingleInput si = {IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
+            if (ks) {
+                SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
                 new_input_set.insert(si);
             }
             else {
@@ -126,7 +106,7 @@ void InputEditorModel::buildInputSet()
             else {
                 for (int b=0; b<16; b++) {
                     if (ai.controller_buttons[c] & (1 << b)) {
-                        SingleInput si = {((c+1) << IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
+                        SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
                         new_input_set.insert(si);
                     }
                 }
@@ -160,45 +140,7 @@ void InputEditorModel::toggleInput(const QModelIndex &index)
     SingleInput si = input_set[index.column()];
     AllInputs &ai = movie->input_list[index.row()];
 
-    if (si.type == IT_KEYBOARD) {
-        /* Check if key is set and remove it */
-        bool is_set = false;
-        int index_set = 0;
-        int k;
-        for (k=0; k < AllInputs::MAXKEYS; k++) {
-            if (ai.keyboard[k] == XK_VoidSymbol) {
-                if (is_set) {
-                    /* Switch the last set key and the removed key */
-                    ai.keyboard[index_set] = ai.keyboard[k-1];
-                    ai.keyboard[k-1] = XK_VoidSymbol;
-                }
-                break;
-            }
-            if (si.value == ai.keyboard[k]) {
-                is_set = true;
-                index_set = k;
-                ai.keyboard[k] = XK_VoidSymbol;
-            }
-        }
-
-        /* If not set, add it */
-        if (!is_set) {
-            if (k < AllInputs::MAXKEYS) {
-                ai.keyboard[k] = si.value;
-            }
-        }
-    }
-
-    if (si.type & IT_CONTROLLER_ID_MASK) {
-        int controller_i = ((si.type & IT_CONTROLLER_ID_MASK) >> IT_CONTROLLER_ID_SHIFT) - 1;
-        int controller_axis = si.type & IT_CONTROLLER_AXIS_MASK;
-        int controller_type = si.type & IT_CONTROLLER_TYPE_MASK;
-
-        /* We don't support analog inputs in input editor */
-        if (!controller_axis) {
-            ai.controller_buttons[controller_i] ^= ((si.value & 0x1) << controller_type);
-        }
-    }
+    ai.toggleInput(si);
 
     emit dataChanged(index, index);
 }

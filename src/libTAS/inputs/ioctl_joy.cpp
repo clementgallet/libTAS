@@ -22,6 +22,7 @@
 #include "../hook.h"
 #include "evdev.h" // get_ev_number
 #include "inputs.h" // game_ai
+#include "../../shared/SingleInput.h"
 #include <linux/joystick.h>
 #include <linux/input.h>
 
@@ -203,7 +204,7 @@ int ioctl(int fd, unsigned long request, ...) throw()
         uint8_t* bits = static_cast<uint8_t*>(argp);
 
         for (int bi=0; bi<11; bi++) {
-            if (buttons & (1 << bi)) CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevButton(bi), bits, len);
+            if (buttons & (1 << bi)) CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevButton(bi), bits, len);
         }
         return 0;
         // int len = _IOC_SIZE(request);
@@ -241,7 +242,7 @@ int ioctl(int fd, unsigned long request, ...) throw()
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_KEY,0))) {
                 debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_KEY on fd ", fd);
                 for (int bi=0; bi<11; bi++) {
-                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevButton(bi), bits, len);
+                    CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevButton(bi), bits, len);
                 }
                 return 0;
             }
@@ -249,7 +250,7 @@ int ioctl(int fd, unsigned long request, ...) throw()
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_ABS,0))) {
                 debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_ABS on fd ", fd);
                 for (int axi=0; axi<AllInputs::MAXAXES; axi++) {
-                    CHECK_LEN_AND_SET_BIT(AllInputs::toEvdevAxis(axi), bits, len);
+                    CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevAxis(axi), bits, len);
                 }
                 /* Add the two hat axes because they are not considered as buttons */
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0X, bits, len);
@@ -320,45 +321,29 @@ int ioctl(int fd, unsigned long request, ...) throw()
             /* Write the axis value */
             switch (_IOC_NR(request)) {
                 case _IOC_NR(EVIOCGABS(ABS_X)):
-                    absinfo->value = axes[AllInputs::AXIS_LEFTX];
+                    absinfo->value = axes[SingleInput::AXIS_LEFTX];
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_Y)):
-                    absinfo->value = axes[AllInputs::AXIS_LEFTY];
+                    absinfo->value = axes[SingleInput::AXIS_LEFTY];
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_RX)):
-                    absinfo->value = axes[AllInputs::AXIS_RIGHTX];
+                    absinfo->value = axes[SingleInput::AXIS_RIGHTX];
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_RY)):
-                    absinfo->value = axes[AllInputs::AXIS_RIGHTY];
+                    absinfo->value = axes[SingleInput::AXIS_RIGHTY];
                     return 0;
                 /* TODO: Clamp values ! */
                 case _IOC_NR(EVIOCGABS(ABS_Z)):
-                    absinfo->value = axes[AllInputs::AXIS_TRIGGERLEFT];
+                    absinfo->value = axes[SingleInput::AXIS_TRIGGERLEFT];
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_RZ)):
-                    absinfo->value = axes[AllInputs::AXIS_TRIGGERRIGHT];
+                    absinfo->value = axes[SingleInput::AXIS_TRIGGERRIGHT];
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_HAT0X)):
-                    if (buttons & (1 << AllInputs::BUTTON_DPAD_LEFT)) {
-                        absinfo->value = -1;
-                    }
-                    else if (buttons & (1 << AllInputs::BUTTON_DPAD_RIGHT)) {
-                        absinfo->value = 1;
-                    }
-                    else {
-                        absinfo->value = 0;
-                    }
+                    absinfo->value = SingleInput::toDevHatX(buttons);
                     return 0;
                 case _IOC_NR(EVIOCGABS(ABS_HAT0Y)):
-                    if (buttons & (1 << AllInputs::BUTTON_DPAD_DOWN)) {
-                        absinfo->value = -1;
-                    }
-                    else if (buttons & (1 << AllInputs::BUTTON_DPAD_UP)) {
-                        absinfo->value = 1;
-                    }
-                    else {
-                        absinfo->value = 0;
-                    }
+                    absinfo->value = SingleInput::toDevHatY(buttons);
                     return 0;
                 default:
                     errno = ENOTTY;

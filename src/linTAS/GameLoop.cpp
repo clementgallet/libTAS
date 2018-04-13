@@ -558,15 +558,8 @@ void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
 {
     if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[ks];
-
-        if (si.type >= IT_CONTROLLER1_BUTTON_A && si.type <= IT_CONTROLLER1_BUTTON_DPAD_RIGHT)
-            emit controllerButtonToggled(0, si.type - IT_CONTROLLER1_BUTTON_A, pressed);
-        if (si.type >= IT_CONTROLLER2_BUTTON_A && si.type <= IT_CONTROLLER2_BUTTON_DPAD_RIGHT)
-            emit controllerButtonToggled(1, si.type - IT_CONTROLLER2_BUTTON_A, pressed);
-        if (si.type >= IT_CONTROLLER3_BUTTON_A && si.type <= IT_CONTROLLER3_BUTTON_DPAD_RIGHT)
-            emit controllerButtonToggled(2, si.type - IT_CONTROLLER3_BUTTON_A, pressed);
-        if (si.type >= IT_CONTROLLER4_BUTTON_A && si.type <= IT_CONTROLLER4_BUTTON_DPAD_RIGHT)
-            emit controllerButtonToggled(3, si.type - IT_CONTROLLER4_BUTTON_A, pressed);
+        if (SingleInput::inputTypeIsController(si.type))
+            emit controllerButtonToggled(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), pressed);
     }
 
 }
@@ -871,7 +864,7 @@ void GameLoop::sleepSendPreview()
         if (haveFocus()) {
 
             /* Format the keyboard and mouse state and save it in the AllInputs struct */
-            static AllInputs preview_ai, last_preview_ai;            
+            static AllInputs preview_ai, last_preview_ai;
             context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
             emit inputsToBeSent(preview_ai);
 

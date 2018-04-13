@@ -20,7 +20,7 @@
 #ifndef LIBTAS_ALLINPUTS_H_INCLUDED
 #define LIBTAS_ALLINPUTS_H_INCLUDED
 
-// #include <X11/Xlib.h> // For the KeySym type
+#include "SingleInput.h"
 
 /* I'm typedef'ing KeySym here because including <X11/X.h> messes up with Qt */
 typedef unsigned long int KeySym;
@@ -60,35 +60,8 @@ class AllInputs {
         /* Pointer buttons */
         unsigned int pointer_mask;
 
-        enum {
-            AXIS_LEFTX,
-            AXIS_LEFTY,
-            AXIS_RIGHTX,
-            AXIS_RIGHTY,
-            AXIS_TRIGGERLEFT,
-            AXIS_TRIGGERRIGHT
-        };
-
         /* controller_axes[i][j] stores the state of axis j of controller i */
         std::array<std::array<short, MAXAXES>,MAXJOYS> controller_axes;
-
-        enum {
-            BUTTON_A,
-            BUTTON_B,
-            BUTTON_X,
-            BUTTON_Y,
-            BUTTON_BACK,
-            BUTTON_GUIDE,
-            BUTTON_START,
-            BUTTON_LEFTSTICK,
-            BUTTON_RIGHTSTICK,
-            BUTTON_LEFTSHOULDER,
-            BUTTON_RIGHTSHOULDER,
-            BUTTON_DPAD_UP,
-            BUTTON_DPAD_DOWN,
-            BUTTON_DPAD_LEFT,
-            BUTTON_DPAD_RIGHT
-        };
 
         /* controller_buttons[i] stores the bitmap state of buttons of
          * controller i. Bit j set means that button j is pressed.
@@ -111,23 +84,12 @@ class AllInputs {
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 
-        /* Convert a AllInputs axis number to a SDL2 axis number */
-        static int toSDL2Axis(int axis);
+        /* Check if a single input is present in the inputs */
+        bool checkInput(const SingleInput &si) const;
 
-        /* Convert a AllInputs button number to a SDL2 button number */
-        static int toSDL2Button(int button);
+        /* Toggle a single input from the inputs */
+        void toggleInput(const SingleInput &si);
 
-        /* Convert a AllInputs axis number to an jsdev axis number */
-        static int toJsdevAxis(int axis);
-
-        /* Convert a AllInputs button number to an jsdev button number */
-        static int toJsdevButton(int button);
-
-        /* Convert a AllInputs axis number to an evdev axis number */
-        static int toEvdevAxis(int axis);
-
-        /* Convert a AllInputs button number to an evdev button number */
-        static int toEvdevButton(int button);
 };
 
 #endif

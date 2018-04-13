@@ -18,14 +18,12 @@
  */
 
 #include "AllInputs.h"
-#include <linux/input.h>
-#include <SDL2/SDL_gamecontroller.h>
 #include <X11/keysym.h>
 
 void AllInputs::emptyInputs() {
     int i,j;
     for (i=0; i<MAXKEYS; i++)
-        keyboard[i] = XK_VoidSymbol;
+        keyboard[i] = 0;
 
     pointer_x = 0;
     pointer_y = 0;
@@ -38,166 +36,70 @@ void AllInputs::emptyInputs() {
     }
 }
 
-int AllInputs::toSDL2Axis(int axis)
+bool AllInputs::checkInput(const SingleInput &si) const
 {
-    switch(axis) {
-        case AllInputs::AXIS_LEFTX:
-            return SDL_CONTROLLER_AXIS_LEFTX;
-        case AllInputs::AXIS_LEFTY:
-            return SDL_CONTROLLER_AXIS_LEFTY;
-        case AllInputs::AXIS_RIGHTX:
-            return SDL_CONTROLLER_AXIS_RIGHTX;
-        case AllInputs::AXIS_RIGHTY:
-            return SDL_CONTROLLER_AXIS_RIGHTY;
-        case AllInputs::AXIS_TRIGGERLEFT:
-            return SDL_CONTROLLER_AXIS_TRIGGERLEFT;
-        case AllInputs::AXIS_TRIGGERRIGHT:
-            return SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
-        default:
-            return SDL_CONTROLLER_AXIS_INVALID;
+    if (si.type == SingleInput::IT_KEYBOARD) {
+        for (const KeySym& ks : keyboard) {
+            if (si.value == ks) {
+                return true;
+                break;
+            }
+        }
     }
+
+    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
+        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
+        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
+        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
+
+        /* We don't support analog inputs in input editor */
+        if (!controller_axis) {
+            return controller_buttons[controller_i] & ((si.value & 0x1) << controller_type);
+        }
+    }
+
+    return false;
 }
 
-int AllInputs::toSDL2Button(int button)
+void AllInputs::toggleInput(const SingleInput &si)
 {
-    switch(button) {
-        case AllInputs::BUTTON_A:
-            return SDL_CONTROLLER_BUTTON_A;
-        case AllInputs::BUTTON_B:
-            return SDL_CONTROLLER_BUTTON_B;
-        case AllInputs::BUTTON_X:
-            return SDL_CONTROLLER_BUTTON_X;
-        case AllInputs::BUTTON_Y:
-            return SDL_CONTROLLER_BUTTON_Y;
-        case AllInputs::BUTTON_BACK:
-            return SDL_CONTROLLER_BUTTON_BACK;
-        case AllInputs::BUTTON_GUIDE:
-            return SDL_CONTROLLER_BUTTON_GUIDE;
-        case AllInputs::BUTTON_START:
-            return SDL_CONTROLLER_BUTTON_START;
-        case AllInputs::BUTTON_LEFTSTICK:
-            return SDL_CONTROLLER_BUTTON_LEFTSTICK;
-        case AllInputs::BUTTON_RIGHTSTICK:
-            return SDL_CONTROLLER_BUTTON_RIGHTSTICK;
-        case AllInputs::BUTTON_LEFTSHOULDER:
-            return SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
-        case AllInputs::BUTTON_RIGHTSHOULDER:
-            return SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
-        case AllInputs::BUTTON_DPAD_UP:
-            return SDL_CONTROLLER_BUTTON_DPAD_UP;
-        case AllInputs::BUTTON_DPAD_DOWN:
-            return SDL_CONTROLLER_BUTTON_DPAD_DOWN;
-        case AllInputs::BUTTON_DPAD_LEFT:
-            return SDL_CONTROLLER_BUTTON_DPAD_LEFT;
-        case AllInputs::BUTTON_DPAD_RIGHT:
-            return SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
-        default:
-            return SDL_CONTROLLER_BUTTON_INVALID;
-    }
-}
+    if (si.type == SingleInput::IT_KEYBOARD) {
+        /* Check if key is set and remove it */
+        bool is_set = false;
+        int index_set = 0;
+        int k;
+        for (k=0; k < AllInputs::MAXKEYS; k++) {
+            if (!keyboard[k]) {
+                if (is_set) {
+                    /* Switch the last set key and the removed key */
+                    keyboard[index_set] = keyboard[k-1];
+                    keyboard[k-1] = 0;
+                }
+                break;
+            }
+            if (si.value == keyboard[k]) {
+                is_set = true;
+                index_set = k;
+                keyboard[k] = 0;
+            }
+        }
 
-int AllInputs::toJsdevAxis(int axis)
-{
-    /* Mapping between xbox360 controller and joydev is taken from
-     * http://wiki.unity3d.com/index.php/Xbox360Controller
-     */
-    switch(axis) {
-        case AllInputs::AXIS_LEFTX:
-            return 0;
-        case AllInputs::AXIS_LEFTY:
-            return 1;
-        case AllInputs::AXIS_RIGHTX:
-            return 3;
-        case AllInputs::AXIS_RIGHTY:
-            return 4;
-        case AllInputs::AXIS_TRIGGERLEFT:
-            return 2;
-        case AllInputs::AXIS_TRIGGERRIGHT:
-            return 5;
-        default:
-            return -1;
+        /* If not set, add it */
+        if (!is_set) {
+            if (k < AllInputs::MAXKEYS) {
+                keyboard[k] = si.value;
+            }
+        }
     }
-}
 
-int AllInputs::toJsdevButton(int button)
-{
-    /* Mapping between xbox360 controller and joydev is taken from
-     * http://wiki.unity3d.com/index.php/Xbox360Controller
-     */
-    switch(button) {
-        case AllInputs::BUTTON_A:
-            return 0;
-        case AllInputs::BUTTON_B:
-            return 1;
-        case AllInputs::BUTTON_X:
-            return 2;
-        case AllInputs::BUTTON_Y:
-            return 3;
-        case AllInputs::BUTTON_BACK:
-            return 6;
-        case AllInputs::BUTTON_GUIDE:
-            return 8;
-        case AllInputs::BUTTON_START:
-            return 7;
-        case AllInputs::BUTTON_LEFTSTICK:
-            return 9;
-        case AllInputs::BUTTON_RIGHTSTICK:
-            return 10;
-        case AllInputs::BUTTON_LEFTSHOULDER:
-            return 4;
-        case AllInputs::BUTTON_RIGHTSHOULDER:
-            return 5;
-        default:
-            return -1;
-    }
-}
+    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
+        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
+        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
+        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
 
-int AllInputs::toEvdevAxis(int axis)
-{
-    switch(axis) {
-        case AllInputs::AXIS_LEFTX:
-            return ABS_X;
-        case AllInputs::AXIS_LEFTY:
-            return ABS_Y;
-        case AllInputs::AXIS_RIGHTX:
-            return ABS_RX;
-        case AllInputs::AXIS_RIGHTY:
-            return ABS_RY;
-        case AllInputs::AXIS_TRIGGERLEFT:
-            return ABS_Z;
-        case AllInputs::AXIS_TRIGGERRIGHT:
-            return ABS_RZ;
-        default:
-            return -1;
-    }
-}
-
-int AllInputs::toEvdevButton(int button)
-{
-    switch(button) {
-        case AllInputs::BUTTON_A:
-            return BTN_A;
-        case AllInputs::BUTTON_B:
-            return BTN_B;
-        case AllInputs::BUTTON_X:
-            return BTN_X;
-        case AllInputs::BUTTON_Y:
-            return BTN_Y;
-        case AllInputs::BUTTON_BACK:
-            return BTN_SELECT;
-        case AllInputs::BUTTON_GUIDE:
-            return BTN_MODE;
-        case AllInputs::BUTTON_START:
-            return BTN_START;
-        case AllInputs::BUTTON_LEFTSTICK:
-            return BTN_THUMBL;
-        case AllInputs::BUTTON_RIGHTSTICK:
-            return BTN_THUMBR;
-        case AllInputs::BUTTON_LEFTSHOULDER:
-            return BTN_TL;
-        case AllInputs::BUTTON_RIGHTSHOULDER:
-            return BTN_TR;
-        default:
-            return -1;
+        /* We don't support analog inputs in input editor */
+        if (!controller_axis) {
+            controller_buttons[controller_i] ^= ((si.value & 0x1) << controller_type);
+        }
     }
 }

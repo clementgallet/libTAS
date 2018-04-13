@@ -144,7 +144,7 @@ void InputWindow::updateInputRow(int row)
             QString str;
             /* Special case for visibility:
              * if mapped to itself print <self> */
-            if ((si.type == IT_KEYBOARD) && (si.value == itermap.first))
+            if ((si.type == SingleInput::IT_KEYBOARD) && (si.value == itermap.first))
                 str += "<self>";
             else
                 str += XKeysymToString(itermap.first);

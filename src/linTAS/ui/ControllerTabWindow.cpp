@@ -26,6 +26,7 @@
 #include "ControllerTabWindow.h"
 #include "../GameLoop.h"
 #include "MainWindow.h"
+#include "../../shared/SingleInput.h"
 
 ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -61,49 +62,49 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
 void ControllerTabWindow::slotButtonToggle(int id, int button, bool pressed)
 {
     switch(button) {
-    case AllInputs::BUTTON_A:
+    case SingleInput::BUTTON_A:
         controllers[id]->button_a->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_B:
+    case SingleInput::BUTTON_B:
         controllers[id]->button_b->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_X:
+    case SingleInput::BUTTON_X:
         controllers[id]->button_x->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_Y:
+    case SingleInput::BUTTON_Y:
         controllers[id]->button_y->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_BACK:
+    case SingleInput::BUTTON_BACK:
         controllers[id]->button_back->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_GUIDE:
+    case SingleInput::BUTTON_GUIDE:
         controllers[id]->button_guide->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_START:
+    case SingleInput::BUTTON_START:
         controllers[id]->button_start->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_LEFTSTICK:
+    case SingleInput::BUTTON_LEFTSTICK:
         controllers[id]->button_ls->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_RIGHTSTICK:
+    case SingleInput::BUTTON_RIGHTSTICK:
         controllers[id]->button_rs->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_LEFTSHOULDER:
+    case SingleInput::BUTTON_LEFTSHOULDER:
         controllers[id]->button_lb->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_RIGHTSHOULDER:
+    case SingleInput::BUTTON_RIGHTSHOULDER:
         controllers[id]->button_rb->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_DPAD_UP:
+    case SingleInput::BUTTON_DPAD_UP:
         controllers[id]->button_dpad_up->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_DPAD_DOWN:
+    case SingleInput::BUTTON_DPAD_DOWN:
         controllers[id]->button_dpad_down->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_DPAD_LEFT:
+    case SingleInput::BUTTON_DPAD_LEFT:
         controllers[id]->button_dpad_left->setChecked(pressed);
         break;
-    case AllInputs::BUTTON_DPAD_RIGHT:
+    case SingleInput::BUTTON_DPAD_RIGHT:
         controllers[id]->button_dpad_right->setChecked(pressed);
         break;
     }
@@ -114,34 +115,34 @@ void ControllerTabWindow::slotSetInputs(AllInputs &ai)
     /* Don't set inputs from the controller input window if the window is hidden */
     if (!isVisible())
         return;
-        
+
     for (int j=0; j<AllInputs::MAXJOYS; j++) {
         /* Set controller axes */
-        ai.controller_axes[j][AllInputs::AXIS_LEFTX] = controllers[j]->axis_left->x_axis;
-        ai.controller_axes[j][AllInputs::AXIS_LEFTY] = controllers[j]->axis_left->y_axis;
-        ai.controller_axes[j][AllInputs::AXIS_RIGHTX] = controllers[j]->axis_right->x_axis;
-        ai.controller_axes[j][AllInputs::AXIS_RIGHTY] = controllers[j]->axis_right->y_axis;
-        ai.controller_axes[j][AllInputs::AXIS_TRIGGERLEFT] = static_cast<short>(controllers[j]->trigger_left_value->value());
-        ai.controller_axes[j][AllInputs::AXIS_TRIGGERRIGHT] = static_cast<short>(controllers[j]->trigger_right_value->value());
+        ai.controller_axes[j][SingleInput::AXIS_LEFTX] = controllers[j]->axis_left->x_axis;
+        ai.controller_axes[j][SingleInput::AXIS_LEFTY] = controllers[j]->axis_left->y_axis;
+        ai.controller_axes[j][SingleInput::AXIS_RIGHTX] = controllers[j]->axis_right->x_axis;
+        ai.controller_axes[j][SingleInput::AXIS_RIGHTY] = controllers[j]->axis_right->y_axis;
+        ai.controller_axes[j][SingleInput::AXIS_TRIGGERLEFT] = static_cast<short>(controllers[j]->trigger_left_value->value());
+        ai.controller_axes[j][SingleInput::AXIS_TRIGGERRIGHT] = static_cast<short>(controllers[j]->trigger_right_value->value());
 
         /* Set controller buttons */
         ai.controller_buttons[j] = 0;
 
-        ai.controller_buttons[j] |= (controllers[j]->button_a->isChecked() << AllInputs::BUTTON_A);
-        ai.controller_buttons[j] |= (controllers[j]->button_b->isChecked() << AllInputs::BUTTON_B);
-        ai.controller_buttons[j] |= (controllers[j]->button_x->isChecked() << AllInputs::BUTTON_X);
-        ai.controller_buttons[j] |= (controllers[j]->button_y->isChecked() << AllInputs::BUTTON_Y);
-        ai.controller_buttons[j] |= (controllers[j]->button_back->isChecked() << AllInputs::BUTTON_BACK);
-        ai.controller_buttons[j] |= (controllers[j]->button_guide->isChecked() << AllInputs::BUTTON_GUIDE);
-        ai.controller_buttons[j] |= (controllers[j]->button_start->isChecked() << AllInputs::BUTTON_START);
-        ai.controller_buttons[j] |= (controllers[j]->button_ls->isChecked() << AllInputs::BUTTON_LEFTSTICK);
-        ai.controller_buttons[j] |= (controllers[j]->button_rs->isChecked() << AllInputs::BUTTON_RIGHTSTICK);
-        ai.controller_buttons[j] |= (controllers[j]->button_lb->isChecked() << AllInputs::BUTTON_LEFTSHOULDER);
-        ai.controller_buttons[j] |= (controllers[j]->button_rb->isChecked() << AllInputs::BUTTON_RIGHTSHOULDER);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_up->isChecked() << AllInputs::BUTTON_DPAD_UP);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_down->isChecked() << AllInputs::BUTTON_DPAD_DOWN);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_left->isChecked() << AllInputs::BUTTON_DPAD_LEFT);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_right->isChecked() << AllInputs::BUTTON_DPAD_RIGHT);
+        ai.controller_buttons[j] |= (controllers[j]->button_a->isChecked() << SingleInput::BUTTON_A);
+        ai.controller_buttons[j] |= (controllers[j]->button_b->isChecked() << SingleInput::BUTTON_B);
+        ai.controller_buttons[j] |= (controllers[j]->button_x->isChecked() << SingleInput::BUTTON_X);
+        ai.controller_buttons[j] |= (controllers[j]->button_y->isChecked() << SingleInput::BUTTON_Y);
+        ai.controller_buttons[j] |= (controllers[j]->button_back->isChecked() << SingleInput::BUTTON_BACK);
+        ai.controller_buttons[j] |= (controllers[j]->button_guide->isChecked() << SingleInput::BUTTON_GUIDE);
+        ai.controller_buttons[j] |= (controllers[j]->button_start->isChecked() << SingleInput::BUTTON_START);
+        ai.controller_buttons[j] |= (controllers[j]->button_ls->isChecked() << SingleInput::BUTTON_LEFTSTICK);
+        ai.controller_buttons[j] |= (controllers[j]->button_rs->isChecked() << SingleInput::BUTTON_RIGHTSTICK);
+        ai.controller_buttons[j] |= (controllers[j]->button_lb->isChecked() << SingleInput::BUTTON_LEFTSHOULDER);
+        ai.controller_buttons[j] |= (controllers[j]->button_rb->isChecked() << SingleInput::BUTTON_RIGHTSHOULDER);
+        ai.controller_buttons[j] |= (controllers[j]->button_dpad_up->isChecked() << SingleInput::BUTTON_DPAD_UP);
+        ai.controller_buttons[j] |= (controllers[j]->button_dpad_down->isChecked() << SingleInput::BUTTON_DPAD_DOWN);
+        ai.controller_buttons[j] |= (controllers[j]->button_dpad_left->isChecked() << SingleInput::BUTTON_DPAD_LEFT);
+        ai.controller_buttons[j] |= (controllers[j]->button_dpad_right->isChecked() << SingleInput::BUTTON_DPAD_RIGHT);
     }
 }
 
@@ -149,15 +150,8 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 {
     if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
-
-        if (si.type >= IT_CONTROLLER1_BUTTON_A && si.type <= IT_CONTROLLER1_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(0, si.type - IT_CONTROLLER1_BUTTON_A, true);
-        if (si.type >= IT_CONTROLLER2_BUTTON_A && si.type <= IT_CONTROLLER2_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(1, si.type - IT_CONTROLLER2_BUTTON_A, true);
-        if (si.type >= IT_CONTROLLER3_BUTTON_A && si.type <= IT_CONTROLLER3_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(2, si.type - IT_CONTROLLER3_BUTTON_A, true);
-        if (si.type >= IT_CONTROLLER4_BUTTON_A && si.type <= IT_CONTROLLER4_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(3, si.type - IT_CONTROLLER4_BUTTON_A, true);
+        if (SingleInput::inputTypeIsController(si.type))
+            return slotButtonToggle(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), true);
     }
 
     QWidget::keyPressEvent(e);
@@ -167,15 +161,8 @@ void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
 {
     if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
-
-        if (si.type >= IT_CONTROLLER1_BUTTON_A && si.type <= IT_CONTROLLER1_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(0, si.type - IT_CONTROLLER1_BUTTON_A, false);
-        if (si.type >= IT_CONTROLLER2_BUTTON_A && si.type <= IT_CONTROLLER2_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(1, si.type - IT_CONTROLLER2_BUTTON_A, false);
-        if (si.type >= IT_CONTROLLER3_BUTTON_A && si.type <= IT_CONTROLLER3_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(2, si.type - IT_CONTROLLER3_BUTTON_A, false);
-        if (si.type >= IT_CONTROLLER4_BUTTON_A && si.type <= IT_CONTROLLER4_BUTTON_DPAD_RIGHT)
-            return slotButtonToggle(3, si.type - IT_CONTROLLER4_BUTTON_A, false);
+        if (SingleInput::inputTypeIsController(si.type))
+            return slotButtonToggle(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), false);
     }
 
     QWidget::keyReleaseEvent(e);

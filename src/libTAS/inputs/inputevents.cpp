@@ -22,6 +22,7 @@
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
+#include "../../shared/SingleInput.h"
 #include "../../shared/SharedConfig.h"
 #include <X11/keysym.h>
 #include <stdlib.h>
@@ -52,7 +53,7 @@ void generateKeyUpEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
-        if (old_ai.keyboard[i] == XK_VoidSymbol) {
+        if (!old_ai.keyboard[i]) {
             continue;
         }
         for (j=0; j<AllInputs::MAXKEYS; j++) {
@@ -108,7 +109,7 @@ void generateKeyUpEvents(void)
             }
 
             /* Update old keyboard state */
-            old_ai.keyboard[i] = XK_VoidSymbol;
+            old_ai.keyboard[i] = 0;
         }
     }
 }
@@ -125,7 +126,7 @@ void generateKeyDownEvents(void)
     for (i=0; i<AllInputs::MAXKEYS; i++) {
         game_ai.keyboard[i] = ai.keyboard[i];
 
-        if (ai.keyboard[i] == XK_VoidSymbol) {
+        if (!ai.keyboard[i]) {
             continue;
         }
         for (j=0; j<AllInputs::MAXKEYS; j++) {
@@ -182,7 +183,7 @@ void generateKeyDownEvents(void)
 
             /* Update old keyboard state */
             for (k=0; k<AllInputs::MAXKEYS; k++)
-                if (old_ai.keyboard[k] == XK_VoidSymbol) {
+                if (!old_ai.keyboard[k]) {
                     /* We found an empty space to put our key*/
                     old_ai.keyboard[k] = ai.keyboard[i];
                     break;
@@ -263,7 +264,7 @@ void generateControllerEvents(void)
                         event2.type = SDL_CONTROLLERAXISMOTION;
                         event2.caxis.timestamp = timestamp;
                         event2.caxis.which = ji;
-                        event2.caxis.axis = AllInputs::toSDL2Axis(axis);
+                        event2.caxis.axis = SingleInput::toSDL2Axis(axis);
                         event2.caxis.value = ai.controller_axes[ji][axis];
                         sdlEventQueue.insert(&event2);
                         debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis ", axis);
@@ -294,7 +295,7 @@ void generateControllerEvents(void)
                     struct js_event ev;
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
-                    ev.number = AllInputs::toJsdevAxis(axis);
+                    ev.number = SingleInput::toJsdevAxis(axis);
                     ev.value = ai.controller_axes[ji][axis];
                     write_jsdev(ev, ji);
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_AXIS with axis ", axis);
@@ -305,7 +306,7 @@ void generateControllerEvents(void)
                     ev.time.tv_sec = time.tv_sec;
                     ev.time.tv_usec = time.tv_nsec / 1000;
                     ev.type = EV_ABS;
-                    ev.code = AllInputs::toEvdevAxis(axis);
+                    ev.code = SingleInput::toEvdevAxis(axis);
                     ev.value = ai.controller_axes[ji][axis];
                     write_evdev(ev, ji);
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis ", axis);
@@ -347,7 +348,7 @@ void generateControllerEvents(void)
                         }
                         event2.cbutton.timestamp = timestamp;
                         event2.cbutton.which = ji;
-                        event2.cbutton.button = AllInputs::toSDL2Button(bi);
+                        event2.cbutton.button = SingleInput::toSDL2Button(bi);
                         sdlEventQueue.insert(&event2);
                     }
 
@@ -405,7 +406,7 @@ void generateControllerEvents(void)
                         struct js_event ev;
                         ev.time = timestamp;
                         ev.type = JS_EVENT_BUTTON;
-                        ev.number = AllInputs::toJsdevButton(bi);
+                        ev.number = SingleInput::toJsdevButton(bi);
                         ev.value = (buttons >> bi) & 0x1;
                         debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button ", bi);
                         write_jsdev(ev, ji);
@@ -421,7 +422,7 @@ void generateControllerEvents(void)
                         ev.time.tv_sec = time.tv_sec;
                         ev.time.tv_usec = time.tv_nsec / 1000;
                         ev.type = EV_KEY;
-                        ev.code = AllInputs::toEvdevButton(bi);
+                        ev.code = SingleInput::toEvdevButton(bi);
                         ev.value = (buttons >> bi) & 0x1;
                         debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_KEY with button ", bi);
                         write_evdev(ev, ji);
@@ -439,50 +440,33 @@ void generateControllerEvents(void)
         /* Generate hat state */
         if (hatHasChanged) {
 
-            /* Fortunately, we use the fact that SDL_HAT_X constants
-             * are the same in SDL 1 and SDL 2
-             */
-            Uint8 hatState = SDL_HAT_CENTERED;
-            if (buttons & (1 << AllInputs::BUTTON_DPAD_UP))
-                hatState |= SDL_HAT_UP;
-            if (buttons & (1 << AllInputs::BUTTON_DPAD_DOWN))
-                hatState |= SDL_HAT_DOWN;
-            if (buttons & (1 << AllInputs::BUTTON_DPAD_LEFT))
-                hatState |= SDL_HAT_LEFT;
-            if (buttons & (1 << AllInputs::BUTTON_DPAD_RIGHT))
-                hatState |= SDL_HAT_RIGHT;
-
             if (game_info.joystick & GameInfo::SDL2) {
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
                 /* SDL2 joystick hat */
                 SDL_Event event2;
                 event2.type = SDL_JOYHATMOTION;
                 event2.jhat.timestamp = timestamp;
                 event2.jhat.which = ji;
                 event2.jhat.hat = 0;
-                event2.jhat.value = hatState;
+                event2.jhat.value = SingleInput::toSDLHat(buttons);
                 sdlEventQueue.insert(&event2);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", event2.jhat.value);
             }
 
             if (game_info.joystick & GameInfo::SDL1) {
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)hatState);
                 /* SDL1 joystick hat */
                 SDL1::SDL_Event event1;
                 event1.type = SDL1::SDL_JOYHATMOTION;
                 event1.jhat.which = ji;
                 event1.jhat.hat = 0;
-                event1.jhat.value = hatState;
+                event1.jhat.value = SingleInput::toSDLHat(buttons);
                 sdlEventQueue.insert(&event1);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", event1.jhat.value);
             }
 
             if (game_info.joystick & GameInfo::JSDEV) {
                 /* Hat status is represented as 7th and 8th axes */
 
-                int hatx = 0;
-                if (buttons & (1 << AllInputs::BUTTON_DPAD_LEFT))
-                    hatx = -1;
-                else if (buttons & (1 << AllInputs::BUTTON_DPAD_RIGHT))
-                    hatx = 1;
+                int hatx = SingleInput::toDevHatX(buttons);
                 if (hatx != 0) {
                     struct js_event ev;
                     ev.time = timestamp;
@@ -493,12 +477,7 @@ void generateControllerEvents(void)
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_AXIS with axis 6");
                 }
 
-                int haty = 0;
-                if (buttons & (1 << AllInputs::BUTTON_DPAD_UP))
-                    haty = 1;
-                else if (buttons & (1 << AllInputs::BUTTON_DPAD_DOWN))
-                    haty = -1;
-
+                int haty = SingleInput::toDevHatY(buttons);
                 if (haty != 0) {
                     struct js_event ev;
                     ev.time = timestamp;
@@ -513,11 +492,7 @@ void generateControllerEvents(void)
             if (game_info.joystick & GameInfo::EVDEV) {
                 /* Hat status is represented as 7th and 8th axes */
 
-                int hatx = 0;
-                if (buttons & (1 << AllInputs::BUTTON_DPAD_LEFT))
-                    hatx = -1;
-                else if (buttons & (1 << AllInputs::BUTTON_DPAD_RIGHT))
-                    hatx = 1;
+                int hatx = SingleInput::toDevHatX(buttons);
                 if (hatx != 0) {
                     struct input_event ev;
                     ev.time.tv_sec = time.tv_sec;
@@ -529,12 +504,7 @@ void generateControllerEvents(void)
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis ", ABS_HAT0X);
                 }
 
-                int haty = 0;
-                if (buttons & (1 << AllInputs::BUTTON_DPAD_UP))
-                    haty = 1;
-                else if (buttons & (1 << AllInputs::BUTTON_DPAD_DOWN))
-                    haty = -1;
-
+                int haty = SingleInput::toDevHatY(buttons);
                 if (haty != 0) {
                     struct input_event ev;
                     ev.time.tv_sec = time.tv_sec;

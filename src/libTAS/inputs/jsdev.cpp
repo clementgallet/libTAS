@@ -23,6 +23,7 @@
 #include <cerrno>
 #include "../DeterministicTimer.h"
 #include "../../shared/AllInputs.h"
+#include "../../shared/SingleInput.h"
 #include <unistd.h>
 #include <sys/syscall.h>
 
