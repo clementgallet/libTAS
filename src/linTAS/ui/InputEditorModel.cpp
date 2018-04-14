@@ -238,6 +238,59 @@ void InputEditorModel::endAddedInputs()
     endInsertRows();
 
     /* We have to check if new inputs were added */
+    std::set<SingleInput> new_input_set;
+    const AllInputs &ai = movie->input_list.back();
+
+    for (const KeySym& ks : ai.keyboard) {
+        if (ks) {
+            SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
+            new_input_set.insert(si);
+        }
+        else {
+            break;
+        }
+    }
+    for (int c = 0; c < AllInputs::MAXJOYS; c++) {
+        if (!ai.controller_buttons[c]) {
+            continue;
+        }
+        else {
+            for (int b=0; b<16; b++) {
+                if (ai.controller_buttons[c] & (1 << b)) {
+                    SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
+                    new_input_set.insert(si);
+                }
+            }
+        }
+    }
+
+    /* Check if added inputs are already in the list */
+    for (SingleInput si : new_input_set) {
+
+        bool new_input = true;
+        for (SingleInput ti : input_set) {
+            if (si == ti) {
+                new_input = false;
+                break;
+            }
+        }
+
+        /* Insert input if new */
+        if (new_input) {
+
+            /* Gather input description */
+            for (SingleInput ti : context->config.km.input_list) {
+                if (si == ti) {
+                    si.description = ti.description;
+                    break;
+                }
+            }
+
+            beginInsertColumns(QModelIndex(), columnCount(), columnCount());
+            input_set.push_back(si);
+            endInsertColumns();
+        }
+    }
 }
 
 //
