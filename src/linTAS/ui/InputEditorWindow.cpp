@@ -43,6 +43,11 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent, Qt::WindowFlag
     setLayout(mainLayout);
 }
 
+QSize InputEditorWindow::sizeHint() const
+{
+    return QSize(600, 600);
+}
+
 void InputEditorWindow::update()
 {
     inputEditorView->update();

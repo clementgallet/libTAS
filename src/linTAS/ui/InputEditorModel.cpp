@@ -60,12 +60,29 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::BackgroundRole) {
-        if (index.row() < context->framecount)
-            return QBrush(Qt::gray);
-        if (index.row() == context->framecount)
-            return QBrush(Qt::lightGray);
+        /* Return white-ish for future inputs */
+        if (index.row() > context->framecount)
+            return QBrush(QColor(0xff, 0xfe, 0xee));
 
-        return QBrush(Qt::white);
+        QColor color;
+
+        /* Main color */
+        if (index.row() == context->framecount)
+            color.setRgb(0xb5, 0xe7, 0xf7);
+        else
+            color.setRgb(0xd2, 0xf9, 0xd3);
+
+        /* Frame column */
+        if (index.column() == 0) {
+            color = color.lighter(105);
+        }
+
+        /* Alternating colors */
+        if (index.row() % 5 == 0) {
+            color = color.darker(105);
+        }
+
+        return QBrush(color);
     }
 
     if (role == Qt::DisplayRole) {

@@ -49,6 +49,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     /* Horizontal header */
     horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     horizontalHeader()->setSectionsMovable(true);
+    horizontalHeader()->setHighlightSections(false);
     horizontalHeader()->setDropIndicatorShown(true);
     horizontalHeader()->setDragEnabled(true);
     horizontalHeader()->setDragDropMode(QTableView::InternalMove);
@@ -59,6 +60,10 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     /* Horizontal menu */
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
+
+    /* Vertical header */
+    verticalHeader()->setVisible(false);
+    verticalHeader()->setDefaultSectionSize(verticalHeader()->minimumSectionSize());
 
     /* Main menu */
     setContextMenuPolicy(Qt::CustomContextMenu);
