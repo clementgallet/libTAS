@@ -561,7 +561,6 @@ void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
         if (SingleInput::inputTypeIsController(si.type))
             emit controllerButtonToggled(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), pressed);
     }
-
 }
 
 bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)

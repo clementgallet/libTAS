@@ -35,18 +35,20 @@ int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return input_set.size();
+    return input_set.size() + 1;
 }
 
 QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole) {
         if (orientation == Qt::Horizontal) {
-            return QString(input_set[section].description.c_str());
+            if (section == 0)
+                return QString(tr("Frame"));
+            return QString(input_set[section-1].description.c_str());
         }
-        if (orientation == Qt::Vertical) {
-            return section;
-        }
+        // if (orientation == Qt::Vertical) {
+        //     return section;
+        // }
     }
     return QVariant();
 }
@@ -67,9 +69,12 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
+        if (index.column() == 0) {
+            return index.row();
+        }
 
         const AllInputs ai = movie->input_list[index.row()];
-        const SingleInput si = input_set[index.column()];
+        const SingleInput si = input_set[index.column()-1];
 
         /* Check if the single input is set in movie inputs */
         bool is_set = ai.checkInput(si);
@@ -131,35 +136,61 @@ void InputEditorModel::buildInputSet()
 
 }
 
-void InputEditorModel::toggleInput(const QModelIndex &index)
+bool InputEditorModel::toggleInput(const QModelIndex &index)
 {
+    /* Don't toggle frame count */
+    if (index.column() == 0)
+        return false;
+
+    /* Don't toggle past inputs */
+    if (index.row() < context->framecount)
+        return false;
+
+    SingleInput si = input_set[index.column()-1];
+    AllInputs &ai = movie->input_list[index.row()];
+
+    bool value = ai.toggleInput(si);
+
+    emit dataChanged(index, index);
+    return value;
+}
+
+void InputEditorModel::editInput(const QModelIndex &index, bool value)
+{
+    /* Don't toggle frame count */
+    if (index.column() == 0)
+        return;
+
     /* Don't toggle past inputs */
     if (index.row() < context->framecount)
         return;
 
-    SingleInput si = input_set[index.column()];
+    SingleInput si = input_set[index.column()-1];
     AllInputs &ai = movie->input_list[index.row()];
 
-    ai.toggleInput(si);
+    if (value)
+        ai.setInput(si);
+    else
+        ai.clearInput(si);
 
     emit dataChanged(index, index);
 }
 
 std::string InputEditorModel::inputLabel(int column)
 {
-    return input_set[column].description;
+    return input_set[column-1].description;
 }
 
 void InputEditorModel::renameLabel(int column, std::string label)
 {
-    input_set[column].description = label;
+    input_set[column-1].description = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
 }
 
 
 std::string InputEditorModel::inputDescription(int column)
 {
-    SingleInput si = input_set[column];
+    SingleInput si = input_set[column-1];
 
     /* Gather input description */
     for (SingleInput ti : context->config.km.input_list) {

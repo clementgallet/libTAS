@@ -69,11 +69,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     ramWatchWindow = new RamWatchWindow(c, this);
     inputEditorWindow = new InputEditorWindow(c, this);
 
-    connect(inputEditorWindow->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
-    connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorModel, &InputEditorModel::beginModifyInputs);
-    connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorModel, &InputEditorModel::endModifyInputs);
-    connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorModel, &InputEditorModel::beginAddedInputs);
-    connect(gameLoop, &GameLoop::inputsAdded, inputEditorWindow->inputEditorModel, &InputEditorModel::endAddedInputs);
+    connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
+    connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
+    connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
+    connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginAddedInputs);
+    connect(gameLoop, &GameLoop::inputsAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endAddedInputs);
 
     /* Menu */
     createActions();

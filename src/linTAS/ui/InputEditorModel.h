@@ -57,8 +57,11 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
 public slots:
-    /* Toggle a single input */
-    void toggleInput(const QModelIndex &index);
+    /* Toggle a single input and return the new value */
+    bool toggleInput(const QModelIndex &index);
+
+    /* Edit a single input */
+    void editInput(const QModelIndex &index, bool value);
 
     /* Prepare for a change of inputs */
     void beginModifyInputs();

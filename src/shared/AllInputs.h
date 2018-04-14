@@ -87,8 +87,14 @@ class AllInputs {
         /* Check if a single input is present in the inputs */
         bool checkInput(const SingleInput &si) const;
 
-        /* Toggle a single input from the inputs */
-        void toggleInput(const SingleInput &si);
+        /* Set a single input in the inputs */
+        void setInput(const SingleInput &si);
+
+        /* Clear a single input in the inputs */
+        void clearInput(const SingleInput &si);
+
+        /* Toggle a single input from the inputs and return the new value */
+        bool toggleInput(const SingleInput &si);
 
 };
 

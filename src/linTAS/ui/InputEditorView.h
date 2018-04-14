@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_INPUTEDITORWINDOW_H_INCLUDED
-#define LINTAS_INPUTEDITORWINDOW_H_INCLUDED
+#ifndef LINTAS_INPUTEDITORVIEW_H_INCLUDED
+#define LINTAS_INPUTEDITORVIEW_H_INCLUDED
 
 #include <QDialog>
 #include <QTableView>
@@ -30,17 +30,38 @@
 #include <QMenu>
 #include <memory>
 
-#include "InputEditorView.h"
+#include "InputEditorModel.h"
 #include "../Context.h"
 
-class InputEditorWindow : public QDialog {
+class InputEditorView : public QTableView {
     Q_OBJECT
 
 public:
-    InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
-    void update();
+    InputEditorView(Context *c, QWidget *parent = Q_NULLPTR);
 
-    InputEditorView *inputEditorView;
+    void update();
+    InputEditorModel *inputEditorModel;
+
+public slots:
+    // void toggleInput(const QModelIndex &index);
+    void horizontalMenu(QPoint pos);
+    void renameLabel();
+
+    void mainMenu(QPoint pos);
+    void insertInput();
+    void deleteInput();
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+private:
+    Context *context;
+    QMenu *horMenu;
+    QMenu *menu;
+    int contextSection;
+    int mouseSection;
+    bool mouseValue;
 };
 
 #endif
