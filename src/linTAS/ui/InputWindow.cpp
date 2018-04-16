@@ -23,7 +23,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QHeaderView>
-#include <X11/Xlib.h> // XKeysymToString
+// #include <X11/Xlib.h> // XKeysymToString
 
 #include "InputWindow.h"
 
@@ -125,7 +125,7 @@ void InputWindow::updateHotkeyRow(int row)
                 }
             }
 
-            str += XKeysymToString(ks);
+            str += context->config.km.input_description(ks).c_str();
             hotkeyTable->item(row, 1)->setText(str);
             return;
         }
@@ -147,7 +147,7 @@ void InputWindow::updateInputRow(int row)
             if ((si.type == SingleInput::IT_KEYBOARD) && (si.value == itermap.first))
                 str += "<self>";
             else
-                str += XKeysymToString(itermap.first);
+                str += context->config.km.input_description(itermap.first).c_str();
 
             inputTable->item(row, 1)->setText(str);
             return;

@@ -52,8 +52,10 @@ public:
     /* Return the original description of an input */
     std::string inputDescription(int column);
 
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    /* Add an input column */
+    void addUniqueInput(const SingleInput &si);
 
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
 public slots:

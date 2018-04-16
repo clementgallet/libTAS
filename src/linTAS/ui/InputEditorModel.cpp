@@ -266,6 +266,13 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+void InputEditorModel::addUniqueInput(const SingleInput &si)
+{
+    beginInsertColumns(QModelIndex(), columnCount(), columnCount());
+    input_set.push_back(si);
+    endInsertColumns();
+}
+
 void InputEditorModel::beginModifyInputs()
 {
     beginResetModel();

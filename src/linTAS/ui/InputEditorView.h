@@ -32,6 +32,7 @@
 
 #include "InputEditorModel.h"
 #include "../Context.h"
+#include "KeyPressedDialog.h"
 
 class InputEditorView : public QTableView {
     Q_OBJECT
@@ -46,6 +47,7 @@ public slots:
     // void toggleInput(const QModelIndex &index);
     void horizontalMenu(QPoint pos);
     void renameLabel();
+    void addInputColumn();
 
     void mainMenu(QPoint pos);
     void insertInput();
@@ -62,6 +64,8 @@ private:
     int contextSection;
     int mouseSection;
     bool mouseValue;
+    KeyPressedDialog* keyDialog;
+
 };
 
 #endif

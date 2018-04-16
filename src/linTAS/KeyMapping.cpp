@@ -197,6 +197,19 @@ void KeyMapping::init(xcb_connection_t* conn)
     default_inputs();
 }
 
+std::string KeyMapping::input_description(KeySym ks)
+{
+    for (auto iter : input_list) {
+        if (iter.type == SingleInput::IT_KEYBOARD) {
+            if (iter.value == ks) {
+                return iter.description;
+            }
+        }
+    }
+
+    return "";
+}
+
 void KeyMapping::default_hotkeys()
 {
     hotkey_mapping.clear();

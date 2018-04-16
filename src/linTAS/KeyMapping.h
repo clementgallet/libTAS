@@ -138,6 +138,9 @@ class KeyMapping {
         /* List of hotkeys */
         std::vector<HotKey> hotkey_list;
 
+        /* Get the input description */
+        std::string input_description(KeySym ks);
+
         /* Set hotkeys to default values */
         void default_hotkeys();
 

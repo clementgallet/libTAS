@@ -60,6 +60,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     /* Horizontal menu */
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
+    horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
@@ -72,6 +73,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     menu = new QMenu(this);
     menu->addAction(tr("Insert input before"), this, &InputEditorView::insertInput);
     menu->addAction(tr("Delete input"), this, &InputEditorView::deleteInput);
+
+    keyDialog = new KeyPressedDialog(this);
 }
 
 void InputEditorView::update()
@@ -136,22 +139,6 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
     event->accept();
 }
 
-// void InputEditorView::toggleInput(const QModelIndex &index)
-// {
-//     // Qt::MouseButtons buttons = QApplication::mouseButtons()
-//
-//     /* If we toggle an input, do not select the row */
-//     if (index.column() != 0) {
-//         setSelectionMode(QAbstractItemView::NoSelection);
-//     }
-//
-//     inputEditorModel->toggleInput(index);
-//
-//     if (index.column() != 0) {
-//         setSelectionMode(QAbstractItemView::ExtendedSelection);
-//     }
-// }
-
 void InputEditorView::horizontalMenu(QPoint pos)
 {
     /* Storing the index of the section where context menu was shown */
@@ -171,6 +158,19 @@ void InputEditorView::renameLabel()
 
     if (!newLabel.isEmpty()) {
         inputEditorModel->renameLabel(contextSection, newLabel.toStdString());
+    }
+}
+
+void InputEditorView::addInputColumn()
+{
+    /* Get an input from the user */
+    xcb_keysym_t ks = keyDialog->exec();
+
+    /* Get the mapped input */
+    if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
+        SingleInput si = context->config.km.input_mapping[ks];
+        si.description = context->config.km.input_description(ks);
+        inputEditorModel->addUniqueInput(si);
     }
 }
 

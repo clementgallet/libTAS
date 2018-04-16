@@ -29,6 +29,8 @@ KeyPressedDialog::KeyPressedDialog(QWidget *parent, Qt::WindowFlags flags) : QDi
     setWindowTitle("");
     setFocusPolicy(Qt::ClickFocus);
 
+    withModifiers = false;
+
     QLabel *label = new QLabel(tr("Press a key"));
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(label);
