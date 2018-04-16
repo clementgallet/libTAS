@@ -18,8 +18,9 @@
  */
 
 #include <QBrush>
-#include "InputEditorModel.h"
+#include <set>
 
+#include "InputEditorModel.h"
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 
@@ -271,6 +272,12 @@ void InputEditorModel::addUniqueInput(const SingleInput &si)
     beginInsertColumns(QModelIndex(), columnCount(), columnCount());
     input_set.push_back(si);
     endInsertColumns();
+}
+
+void InputEditorModel::clearInput(int row)
+{
+    movie->input_list[row].emptyInputs();
+    emit dataChanged(createIndex(row, 0), createIndex(row, columnCount()));
 }
 
 void InputEditorModel::beginModifyInputs()

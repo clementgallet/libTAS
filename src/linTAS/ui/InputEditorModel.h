@@ -22,11 +22,6 @@
 
 #include <QAbstractTableModel>
 #include <vector>
-#include <set>
-#include <sys/types.h>
-#include <sstream>
-#include <fstream>
-#include <iostream>
 
 #include "../Context.h"
 #include "../MovieFile.h"
@@ -55,6 +50,9 @@ public:
     /* Add an input column */
     void addUniqueInput(const SingleInput &si);
 
+    /* Clear input */
+    void clearInput(int row);
+
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
@@ -76,9 +74,6 @@ public slots:
 
     /* End new inputs */
     void endAddedInputs();
-
-
-
 
 private:
     Context *context;

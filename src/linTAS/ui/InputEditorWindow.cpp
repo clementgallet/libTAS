@@ -17,15 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QTableView>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QInputDialog>
-#include <QAction>
-#include <QHeaderView>
-#include <QMessageBox>
 
 #include "InputEditorWindow.h"
 #include "MainWindow.h"

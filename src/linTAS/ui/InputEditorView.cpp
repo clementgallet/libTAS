@@ -17,15 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QTableView>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QInputDialog>
-#include <QAction>
 #include <QHeaderView>
-#include <QMessageBox>
 
 #include "InputEditorView.h"
 #include "MainWindow.h"
@@ -71,8 +64,9 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     connect(this, &QWidget::customContextMenuRequested, this, &InputEditorView::mainMenu);
 
     menu = new QMenu(this);
-    menu->addAction(tr("Insert input before"), this, &InputEditorView::insertInput);
-    menu->addAction(tr("Delete input"), this, &InputEditorView::deleteInput);
+    menu->addAction(tr("Insert"), this, &InputEditorView::insertInput);
+    menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput);
+    menu->addAction(tr("Clear"), this, &InputEditorView::clearInput);
 
     keyDialog = new KeyPressedDialog(this);
 }
@@ -209,4 +203,11 @@ void InputEditorView::deleteInput()
         max_row = (index.row()>max_row)?index.row():max_row;
     }
     inputEditorModel->removeRows(min_row, max_row-min_row+1);
+}
+
+void InputEditorView::clearInput()
+{
+    for (const QModelIndex index : selectionModel()->selectedRows()) {
+        inputEditorModel->clearInput(index.row());
+    }
 }

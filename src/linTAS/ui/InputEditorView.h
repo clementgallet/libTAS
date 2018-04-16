@@ -20,15 +20,8 @@
 #ifndef LINTAS_INPUTEDITORVIEW_H_INCLUDED
 #define LINTAS_INPUTEDITORVIEW_H_INCLUDED
 
-#include <QDialog>
 #include <QTableView>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QDoubleSpinBox>
-#include <QComboBox>
-#include <QProgressBar>
 #include <QMenu>
-#include <memory>
 
 #include "InputEditorModel.h"
 #include "../Context.h"
@@ -52,6 +45,7 @@ public slots:
     void mainMenu(QPoint pos);
     void insertInput();
     void deleteInput();
+    void clearInput();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

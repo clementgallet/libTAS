@@ -21,14 +21,6 @@
 #define LINTAS_INPUTEDITORWINDOW_H_INCLUDED
 
 #include <QDialog>
-#include <QTableView>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QDoubleSpinBox>
-#include <QComboBox>
-#include <QProgressBar>
-#include <QMenu>
-#include <memory>
 
 #include "InputEditorView.h"
 #include "../Context.h"
