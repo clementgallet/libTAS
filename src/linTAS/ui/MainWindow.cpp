@@ -72,8 +72,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
-    connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginAddedInputs);
-    connect(gameLoop, &GameLoop::inputsAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endAddedInputs);
+    connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginAddInputs);
+    connect(gameLoop, &GameLoop::inputsAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endAddInputs);
+    connect(gameLoop, &GameLoop::inputsToBeEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginEditInputs);
+    connect(gameLoop, &GameLoop::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
+    connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
 
     /* Menu */
     createActions();

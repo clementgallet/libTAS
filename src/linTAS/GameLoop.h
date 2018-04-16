@@ -31,13 +31,10 @@ class GameLoop : public QObject {
     Q_OBJECT
 public:
     GameLoop(Context *c);
-
     void start();
-
     MovieFile movie;
 
 private:
-
     Context* context;
 
     /*
@@ -49,11 +46,6 @@ private:
     int ar_ticks;
     int ar_delay;
     int ar_freq;
-
-    /* Keep track of the last savestate loaded. This will save us from loading
-     * a moviefile if we don't have to.
-     */
-    int last_savestate_slot;
 
     /* Keyboard layout */
     std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
@@ -106,10 +98,13 @@ signals:
     void gameInfoChanged(GameInfo game_info);
 
     /* Signals for notifying the input editor */
+    void isInputEditorVisible(bool &isVisible);
     void inputsToBeChanged();
     void inputsChanged();
     void inputsToBeAdded();
     void inputsAdded();
+    void inputsToBeEdited();
+    void inputsEdited();
 
 };
 

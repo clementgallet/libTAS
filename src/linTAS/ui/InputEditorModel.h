@@ -50,6 +50,9 @@ public:
     /* Add an input column */
     void addUniqueInput(const SingleInput &si);
 
+    /* Add all new input columns from an AllInput object */
+    void addUniqueInputs(const AllInputs &ai);
+
     /* Clear input */
     void clearInput(int row);
 
@@ -70,10 +73,16 @@ public slots:
     void endModifyInputs();
 
     /* Prepare for new inputs */
-    void beginAddedInputs();
+    void beginAddInputs();
 
     /* End new inputs */
-    void endAddedInputs();
+    void endAddInputs();
+
+    /* Prepare for edit inputs */
+    void beginEditInputs();
+
+    /* End edit inputs */
+    void endEditInputs();
 
 private:
     Context *context;

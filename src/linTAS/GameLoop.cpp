@@ -254,8 +254,6 @@ void GameLoop::init()
 
     xcb_change_keyboard_control(context->conn, mask_aroff, values_aroff);
 
-    last_savestate_slot = -1;
-
     ar_ticks = -1;
     ar_delay = 50;
     ar_freq = 2;
@@ -284,7 +282,7 @@ void GameLoop::init()
          */
         AllInputs ai;
         ai.emptyInputs();
-        movie.setInputs(ai);
+        movie.setInputs(ai, false);
     }
 
     emit rerecordChanged();
@@ -633,7 +631,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             /* Slot number */
             int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
-            last_savestate_slot = statei;
 
             if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
                 /* Building the movie path */
@@ -704,19 +701,19 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             moviepath += context->gamename;
             moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-                /* When loading in read mode, we must check that
-                 * the moviefile associated with the savestate is
-                 * a prefix of our moviefile.
-                 */
-                MovieFile savedmovie(context);
-                int ret = savedmovie.loadInputs(moviepath);
-                if (ret < 0) {
-                    emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
-                    return false;
-                }
+            /* Checking if the savestate movie is a prefix of our movie */
+            MovieFile savedmovie(context);
+            int ret = savedmovie.loadInputs(moviepath);
+            if (ret < 0) {
+                emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
+                return false;
+            }
 
-                if (!movie.isPrefix(savedmovie)) {
+            bool moviePrefix = movie.isPrefix(savedmovie);
+
+            /* When loading in read mode, we don't allow loading a non-prefix movie */
+            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+                if (!moviePrefix) {
                     /* Not a prefix, we don't allow loading */
                     emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
                     return false;
@@ -742,11 +739,10 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                     /* When in writing move, we load the movie associated
-                     * with the savestate.
-                     * Check if we are loading the same state we just saved.
+                     * with the savestate. We check if we are loading a movie prefix.
                      * If so, we can keep the same movie.
                      */
-                    if (last_savestate_slot != statei) {
+                    if (!moviePrefix) {
                         /* Load the movie file */
                         movie.loadInputs(moviepath);
                     }
@@ -756,7 +752,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     emit rerecordChanged();
                 }
 
-                last_savestate_slot = statei;
                 message = receiveMessage();
             }
 
@@ -770,6 +765,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 context->config.sc.movie_framecount = context->framecount;
             }
             receiveData(&context->current_time, sizeof(struct timespec));
+
+            /* If we loaded the same savestate, we didn't reload the movie as
+             * an optimisation, so the current movie is longer than the
+             * frame count so we need to truncate the movie.
+             */
+            // if (movie.nbFrames() > context->framecount) {
+            //     movie.truncateInputs(context->framecount);
+            // }
+
             emit inputsChanged();
             emit frameCountChanged();
             return false;
@@ -900,10 +904,41 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                emit inputsToBeAdded();
+                /* If the input editor is visible, we should keep future inputs.
+                 * If not, we truncate inputs if necessary.
+                 */
+                bool keep_inputs = false;
+                bool past_inputs = context->framecount < movie.nbFrames();
+                emit isInputEditorVisible(keep_inputs);
+
+                /* Send signal before saving the input */
+                if (past_inputs) {
+                    if (keep_inputs) {
+                        emit inputsToBeEdited();
+                    }
+                    else {
+                        emit inputsToBeChanged();
+                    }
+                }
+                else {
+                    emit inputsToBeAdded();
+                }
+
                 /* Save inputs to moviefile */
-                movie.setInputs(ai);
-                emit inputsAdded();
+                movie.setInputs(ai, keep_inputs);
+
+                /* Send signal after saving the input */
+                if (past_inputs) {
+                    if (keep_inputs) {
+                        emit inputsEdited();
+                    }
+                    else {
+                        emit inputsChanged();
+                    }
+                }
+                else {
+                    emit inputsAdded();
+                }
 
                 AutoSave::update(context, movie);
             }

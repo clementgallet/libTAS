@@ -93,8 +93,8 @@ public:
     /* Get the authors of the movie file */
     std::string authors();
 
-    /* Set inputs in the current frame */
-    int setInputs(const AllInputs& inputs);
+    /* Set inputs in the current frame, and truncate if keep_inputs is false */
+    int setInputs(const AllInputs& inputs, bool keep_inputs);
 
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
@@ -104,6 +104,9 @@ public:
 
     /* Delete inputs at the requested pos */
     void deleteInputs(int pos);
+
+    /* Truncate inputs to a frame number */
+    void truncateInputs(int size);
 
     /* Close the moviefile */
     void close();

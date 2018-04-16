@@ -29,8 +29,8 @@ int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
     /* We have to make a special case, because loading the same savestate
      * in write mode does not update the movie length until the next frame
      */
-    if (context->config.sc.recording == SharedConfig::RECORDING_WRITE)
-        return context->framecount;
+    // if (context->config.sc.recording == SharedConfig::RECORDING_WRITE)
+    //     return context->framecount;
     return movie->nbFrames();
 }
 
@@ -274,34 +274,9 @@ void InputEditorModel::addUniqueInput(const SingleInput &si)
     endInsertColumns();
 }
 
-void InputEditorModel::clearInput(int row)
+void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 {
-    movie->input_list[row].emptyInputs();
-    emit dataChanged(createIndex(row, 0), createIndex(row, columnCount()));
-}
-
-void InputEditorModel::beginModifyInputs()
-{
-    beginResetModel();
-}
-
-void InputEditorModel::endModifyInputs()
-{
-    endResetModel();
-}
-
-void InputEditorModel::beginAddedInputs()
-{
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
-}
-
-void InputEditorModel::endAddedInputs()
-{
-    endInsertRows();
-
-    /* We have to check if new inputs were added */
     std::set<SingleInput> new_input_set;
-    const AllInputs &ai = movie->input_list.back();
 
     for (const KeySym& ks : ai.keyboard) {
         if (ks) {
@@ -348,37 +323,51 @@ void InputEditorModel::endAddedInputs()
                 }
             }
 
-            beginInsertColumns(QModelIndex(), columnCount(), columnCount());
-            input_set.push_back(si);
-            endInsertColumns();
+            addUniqueInput(si);
         }
     }
 }
 
-//
-//
-// void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv)
-// {
-//     compare_type = ct;
-//     compare_operator = co;
-//     compare_value = cv;
-//
-//     beginResetModel();
-//
-//     int count = 0;
-//     ramwatches.erase(
-//         std::remove_if(ramwatches.begin(), ramwatches.end(),
-//             [this, &count] (std::unique_ptr<IRamWatch> &watch) {
-//                 if (!(count++ & 0xfff)) {
-//                     emit signalProgress(count);
-//                 }
-//                 return watch->check_update(compare_type, compare_operator, compare_value);
-//             }),
-//         ramwatches.end());
-//
-//     endResetModel();
-// }
-//
+void InputEditorModel::clearInput(int row)
+{
+    movie->input_list[row].emptyInputs();
+    emit dataChanged(createIndex(row, 0), createIndex(row, columnCount()));
+}
+
+void InputEditorModel::beginModifyInputs()
+{
+    beginResetModel();
+}
+
+void InputEditorModel::endModifyInputs()
+{
+    endResetModel();
+}
+
+void InputEditorModel::beginAddInputs()
+{
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+}
+
+void InputEditorModel::endAddInputs()
+{
+    endInsertRows();
+
+    /* We have to check if new inputs were added */
+    addUniqueInputs(movie->input_list.back());
+}
+
+void InputEditorModel::beginEditInputs()
+{
+}
+
+void InputEditorModel::endEditInputs()
+{
+    emit dataChanged(createIndex(context->framecount,0), createIndex(context->framecount,columnCount()));
+
+    /* We have to check if new inputs were added */
+    addUniqueInputs(movie->input_list[context->framecount]);
+}
 
 void InputEditorModel::update()
 {

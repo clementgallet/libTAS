@@ -470,7 +470,7 @@ std::string MovieFile::authors()
 }
 
 
-int MovieFile::setInputs(const AllInputs& inputs)
+int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
 {
     /* Check that we are writing to the next frame */
     if (context->framecount == input_list.size()) {
@@ -479,11 +479,17 @@ int MovieFile::setInputs(const AllInputs& inputs)
         return 0;
     }
     else if (context->framecount < input_list.size()) {
-        /* Writing to a frame that is before the last one. We resize the input
-         * list accordingly and append the frame at the end.
+        /* Writing to a frame that is before the last one. if keep_inputs is
+		 * false, we resize the input list accordingly and append the frame at
+		 * the end.
          */
-        input_list.resize(context->framecount);
-        input_list.push_back(inputs);
+		if (keep_inputs) {
+			input_list[context->framecount] = inputs;
+		}
+		else {
+	        input_list.resize(context->framecount);
+	        input_list.push_back(inputs);
+		}
 		modifiedSinceLastSave = true;
         return 0;
     }
@@ -526,6 +532,11 @@ void MovieFile::deleteInputs(int pos)
 
 	input_list.erase(input_list.begin() + pos);
 	modifiedSinceLastSave = true;
+}
+
+void MovieFile::truncateInputs(int size)
+{
+	input_list.resize(size);
 }
 
 void MovieFile::close()
