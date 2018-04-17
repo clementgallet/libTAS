@@ -139,7 +139,9 @@ static void *pthread_start(void *arg)
         /* Thread is now officially joined, we can remove the thread from
         * our list.
         */
-        *thread_return = thread->retval;
+        if (thread_return != nullptr) {
+            *thread_return = thread->retval;
+        }
         ThreadManager::threadIsDead(thread);
         ThreadSync::wrapperExecutionLockUnlock();
         return 0;
