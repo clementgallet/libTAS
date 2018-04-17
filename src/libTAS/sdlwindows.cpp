@@ -50,6 +50,7 @@ DEFINE_ORIG_POINTER(SDL_WM_SetCaption);
 DEFINE_ORIG_POINTER(SDL_GL_CreateContext);
 DEFINE_ORIG_POINTER(SDL_GL_SetSwapInterval);
 DEFINE_ORIG_POINTER(SDL_DestroyWindow);
+DEFINE_ORIG_POINTER(SDL_GetWindowPosition);
 DEFINE_ORIG_POINTER(SDL_SetWindowSize);
 DEFINE_ORIG_POINTER(SDL_CreateRenderer);
 DEFINE_ORIG_POINTER(SDL_CreateWindowAndRenderer);
@@ -303,6 +304,16 @@ static int swapInterval = 0;
 #else
     frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);});
 #endif
+}
+
+/* Override */ void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    /* Always simulate the game window being on top-left corner, so that games
+     * using global mouse coords do not desync on different window positions.
+     */
+    x = 0;
+    y = 0;
 }
 
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)

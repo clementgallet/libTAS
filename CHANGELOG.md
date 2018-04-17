@@ -7,6 +7,7 @@
 - Don't add an extra frame when user stops the game
 - Remove a memory leak caused by allocated keycode-keysym mapping
 - Fix garbage inputs caused by uninitialized inputs when game does not have focus
+- Always simulate the game window being on top-left corner so that games using global mouse coords do not desync
 
 ## [1.1.1] - 2018-03-25
 ### Added

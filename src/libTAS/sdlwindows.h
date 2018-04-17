@@ -190,7 +190,37 @@ OVERRIDE SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32
  */
 OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
 
+/**
+ *  \brief Get the position of a window.
+ *
+ *  \param window   The window to query.
+ *  \param x        Pointer to variable for storing the x position, in screen
+ *                  coordinates. May be NULL.
+ *  \param y        Pointer to variable for storing the y position, in screen
+ *                  coordinates. May be NULL.
+ *
+ *  \sa SDL_SetWindowPosition()
+ */
+OVERRIDE void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y);
 
+/**
+ *  \brief Set the size of a window's client area.
+ *
+ *  \param window   The window to resize.
+ *  \param w        The width of the window, in screen coordinates. Must be >0.
+ *  \param h        The height of the window, in screen coordinates. Must be >0.
+ *
+ *  \note Fullscreen windows automatically match the size of the display mode,
+ *        and you should use SDL_SetWindowDisplayMode() to change their size.
+ *
+ *  The window size in screen coordinates may differ from the size in pixels, if
+ *  the window was created with SDL_WINDOW_ALLOW_HIGHDPI on a platform with
+ *  high-dpi support (e.g. iOS or OS X). Use SDL_GL_GetDrawableSize() or
+ *  SDL_GetRendererOutputSize() to get the real client area size in pixels.
+ *
+ *  \sa SDL_GetWindowSize()
+ *  \sa SDL_SetWindowDisplayMode()
+ */
 OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
 
 /**
