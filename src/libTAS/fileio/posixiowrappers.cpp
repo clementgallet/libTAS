@@ -203,11 +203,6 @@ int open (const char *file, int oflag, ...)
         return open_evdev(file, oflag);
     }
 
-    const char* wdevstr = "warnings.txt";
-    if ((strlen(file) > strlen(wdevstr)) && (strstr(file, wdevstr) != nullptr)) {
-        return orig::open(file, oflag, mode);
-    }
-
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         return get_memfd(file, oflag);
@@ -403,11 +398,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
      */
     std::string sstr(path);
     if (savefile_fds.find(sstr) != savefile_fds.end()) {
-        int ret = __fxstat(ver, savefile_fds[sstr], buf);
-        debuglogstdio(LCF_FILEIO, "  savefile size %d", buf->st_size);
-        // debuglogstdio(LCF_FILEIO, "  mode %d", buf->st_mode);
-        debuglogstdio(LCF_FILEIO, "  returns %d", ret);
-        return ret;
+        return __fxstat(ver, savefile_fds[sstr], buf);
     }
 
     return orig::__xstat(ver, path, buf);
@@ -427,11 +418,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
      */
     std::string sstr(path);
     if (savefile_fds.find(sstr) != savefile_fds.end()) {
-        int ret = __fxstat(ver, savefile_fds[sstr], buf);
-        debuglogstdio(LCF_FILEIO, "  savefile size %d", buf->st_size);
-        // debuglogstdio(LCF_FILEIO, "  mode %d", buf->st_mode);
-        debuglogstdio(LCF_FILEIO, "  returns %d", ret);
-        return ret;
+        return __fxstat(ver, savefile_fds[sstr], buf);
     }
 
     return orig::__lxstat(ver, path, buf);
