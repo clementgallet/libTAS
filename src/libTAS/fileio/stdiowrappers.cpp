@@ -142,11 +142,26 @@ static bool isSaveFile(const char *file, const char *modes)
     return isSaveFile(file);
 }
 
-namespace orig {
-    static FILE *(*fopen) (const char *filename, const char *modes) = nullptr;
-    static FILE *(*fopen64) (const char *filename, const char *modes) = nullptr;
-    static int (*fclose) (FILE *stream) = nullptr;
+bool rename_stdio (const char *oldf, const char *newf)
+{
+    std::string oldstr(oldf);
+    if (savefile_buffers.find(oldstr) != savefile_buffers.end()) {
+        /* The file is a savefile, thus we erase the entry and insert it
+         * again with the new string.
+         */
+        std::pair<char*,size_t> value = savefile_buffers[oldstr];
+        savefile_buffers.erase(oldstr);
+        std::string newstr(newf);
+        savefile_buffers[newstr] = value;
+        return true;
+    }
+    return false;
 }
+
+
+DEFINE_ORIG_POINTER(fopen)
+DEFINE_ORIG_POINTER(fopen64)
+DEFINE_ORIG_POINTER(fclose)
 
 FILE *fopen (const char *filename, const char *modes)
 {

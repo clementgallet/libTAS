@@ -22,6 +22,7 @@
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
 #include "../global.h" // shared_config
+#include "../GlobalState.h"
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -62,6 +63,7 @@ bool isSaveFile(const char *file)
         return false;
 
     /* Check if file is a dev file */
+    GlobalNative gn;
     struct stat filestat;
     int rv = stat(file, &filestat);
 

@@ -17,25 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STDIO_H_INCLUDED
-#define LIBTAS_STDIO_H_INCLUDED
+#ifndef LIBTAS_GENERALIO_H_INCLUDED
+#define LIBTAS_GENERALIO_H_INCLUDED
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
 #include "../global.h"
-#include <cstdio> // FILE
+#include <cstdio>
 
 namespace libtas {
 
-/* Check if oldf is a savefile and rename it. Returns true is renamed */
-bool rename_stdio (const char *oldf, const char *newf);
-
-/* Open a file and create a new stream for it. */
-OVERRIDE FILE *fopen (const char *filename, const char *modes);
-OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
-
-/* Close STREAM. */
-OVERRIDE int fclose (FILE *stream);
+/* Rename file OLD to NEW.  */
+OVERRIDE int rename (const char *oldf, const char *newf) throw();
 
 }
 

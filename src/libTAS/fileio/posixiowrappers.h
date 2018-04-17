@@ -24,8 +24,13 @@
 
 #include "../global.h"
 #include <sys/types.h> // mode_t
+#include <sys/stat.h>
+// #include <sys/sendfile.h>
 
 namespace libtas {
+
+/* Check if oldf is a savefile and rename it. Returns true is renamed */
+bool rename_posix (const char *oldf, const char *newf);
 
 /* Open FILE and return a new file descriptor for it, or -1 on error.
    OFLAG determines the type of access used.  If O_CREAT or O_TMPFILE is set
@@ -50,6 +55,16 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 
 /* Close the file descriptor FD. */
 OVERRIDE int close (int fd);
+
+/* Test for access to NAME using the real UID and real GID. */
+OVERRIDE int access (const char *name, int type) throw();
+
+/* Wrappers for stat functions */
+OVERRIDE int __xstat(int ver, const char *path, struct stat *buf) throw();
+OVERRIDE int __lxstat(int ver, const char *path, struct stat *buf) throw();
+OVERRIDE int __fxstat(int ver, int fd, struct stat *buf) throw();
+
+// OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) throw();
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
 OVERRIDE int dup2 (int fd, int fd2) throw();

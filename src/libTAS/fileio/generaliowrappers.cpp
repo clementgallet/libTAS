@@ -17,27 +17,41 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STDIO_H_INCLUDED
-#define LIBTAS_STDIO_H_INCLUDED
+#include "generaliowrappers.h"
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
-#include "../global.h"
-#include <cstdio> // FILE
+#include "../logging.h"
+#include "../hook.h"
+#include "stdiowrappers.h"
+#include "posixiowrappers.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 
-/* Check if oldf is a savefile and rename it. Returns true is renamed */
-bool rename_stdio (const char *oldf, const char *newf);
+DEFINE_ORIG_POINTER(rename)
 
-/* Open a file and create a new stream for it. */
-OVERRIDE FILE *fopen (const char *filename, const char *modes);
-OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
+int rename (const char *oldf, const char *newf) throw()
+{
+    LINK_NAMESPACE(rename, nullptr);
 
-/* Close STREAM. */
-OVERRIDE int fclose (FILE *stream);
+    if (GlobalState::isNative())
+        return orig::rename(oldf, newf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
+
+    /* Check if file is a savefile */
+    if (rename_stdio(oldf, newf)) {
+        return 0;
+    }
+
+    if (rename_posix(oldf, newf)) {
+        return 0;
+    }
+
+    return orig::rename(oldf, newf);
+}
 
 }
 
-#endif
 #endif

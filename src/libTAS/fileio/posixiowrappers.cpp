@@ -79,13 +79,12 @@ static int get_memfd(const char* source, int flags)
         if (!overwrite) {
             /* Append the content of the file to the newly created memfile
              * if the file exists */
+            GlobalNative gn;
             struct stat filestat;
             int rv = stat(source, &filestat);
 
             if (rv == 0) {
                 /* The file exists, copying the content to the stream */
-                GlobalNative gn;
-
                 FILE* f = fopen(source, "rb");
 
                 if (f != nullptr) {
@@ -144,17 +143,34 @@ static bool isSaveFile(const char *file, int oflag)
     return isSaveFile(file);
 }
 
-namespace orig {
-    static int (*open) (const char *file, int oflag, ...);
-    static int (*open64) (const char *file, int oflag, ...);
-    static int (*openat) (int fd, const char *file, int oflag, ...);
-    static int (*openat64) (int fd, const char *file, int oflag, ...);
-    static int (*creat) (const char *file, mode_t mode);
-    static int (*creat64) (const char *file, mode_t mode);
-    static int (*close) (int fd);
-    static int (*dup2) (int fd, int fd2) throw();
-
+bool rename_posix (const char *oldf, const char *newf)
+{
+    std::string oldstr(oldf);
+    if (savefile_fds.find(oldstr) != savefile_fds.end()) {
+        /* The file is a savefile, thus we erase the entry and insert it
+         * again with the new string.
+         */
+        int fd = savefile_fds[oldstr];
+        savefile_fds.erase(oldstr);
+        std::string newstr(newf);
+        savefile_fds[newstr] = fd;
+        return true;
+    }
+    return false;
 }
+
+DEFINE_ORIG_POINTER(open)
+DEFINE_ORIG_POINTER(open64)
+DEFINE_ORIG_POINTER(openat)
+DEFINE_ORIG_POINTER(openat64)
+DEFINE_ORIG_POINTER(creat)
+DEFINE_ORIG_POINTER(creat64)
+DEFINE_ORIG_POINTER(close)
+DEFINE_ORIG_POINTER(access)
+DEFINE_ORIG_POINTER(__xstat)
+DEFINE_ORIG_POINTER(__lxstat)
+DEFINE_ORIG_POINTER(__fxstat)
+DEFINE_ORIG_POINTER(dup2)
 
 int open (const char *file, int oflag, ...)
 {
@@ -185,6 +201,11 @@ int open (const char *file, int oflag, ...)
     if ((strlen(file) > strlen(evdevstr)) && (strncmp(evdevstr, file, strlen(evdevstr)) == 0)) {
         debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  event device detected");
         return open_evdev(file, oflag);
+    }
+
+    const char* wdevstr = "warnings.txt";
+    if ((strlen(file) > strlen(wdevstr)) && (strstr(file, wdevstr) != nullptr)) {
+        return orig::open(file, oflag, mode);
     }
 
     if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
@@ -348,6 +369,83 @@ int close (int fd)
     }
 
     return orig::close(fd);
+}
+
+int access(const char *name, int type) throw()
+{
+    LINK_NAMESPACE(access, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::access(name, type);
+
+    debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
+
+    /* Check if savefile. If so, return that file exists */
+    std::string sstr(name);
+    if (savefile_fds.find(sstr) != savefile_fds.end()) {
+        return 0;
+    }
+
+    return orig::access(name, type);
+}
+
+int __xstat(int ver, const char *path, struct stat *buf) throw()
+{
+    LINK_NAMESPACE(__xstat, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__xstat(ver, path, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if savefile. If so, return the result of fstat which returns
+     * correct information.
+     */
+    std::string sstr(path);
+    if (savefile_fds.find(sstr) != savefile_fds.end()) {
+        int ret = __fxstat(ver, savefile_fds[sstr], buf);
+        debuglogstdio(LCF_FILEIO, "  savefile size %d", buf->st_size);
+        // debuglogstdio(LCF_FILEIO, "  mode %d", buf->st_mode);
+        debuglogstdio(LCF_FILEIO, "  returns %d", ret);
+        return ret;
+    }
+
+    return orig::__xstat(ver, path, buf);
+}
+
+int __lxstat(int ver, const char *path, struct stat *buf) throw()
+{
+    LINK_NAMESPACE(__lxstat, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__lxstat(ver, path, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if savefile. If so, return the result of fstat which returns
+     * correct information.
+     */
+    std::string sstr(path);
+    if (savefile_fds.find(sstr) != savefile_fds.end()) {
+        int ret = __fxstat(ver, savefile_fds[sstr], buf);
+        debuglogstdio(LCF_FILEIO, "  savefile size %d", buf->st_size);
+        // debuglogstdio(LCF_FILEIO, "  mode %d", buf->st_mode);
+        debuglogstdio(LCF_FILEIO, "  returns %d", ret);
+        return ret;
+    }
+
+    return orig::__lxstat(ver, path, buf);
+}
+
+int __fxstat(int ver, int fd, struct stat *buf) throw()
+{
+    LINK_NAMESPACE(__fxstat, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__fxstat(ver, fd, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    return orig::__fxstat(ver, fd, buf);
 }
 
 int dup2 (int fd, int fd2) throw()
