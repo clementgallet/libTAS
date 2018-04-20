@@ -701,22 +701,27 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             moviepath += context->gamename;
             moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-            /* Checking if the savestate movie is a prefix of our movie */
-            MovieFile savedmovie(context);
-            int ret = savedmovie.loadInputs(moviepath);
-            if (ret < 0) {
-                emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
-                return false;
-            }
+            bool moviePrefix;
 
-            bool moviePrefix = movie.isPrefix(savedmovie);
+            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
 
-            /* When loading in read mode, we don't allow loading a non-prefix movie */
-            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-                if (!moviePrefix) {
-                    /* Not a prefix, we don't allow loading */
-                    emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
+                /* Checking if the savestate movie is a prefix of our movie */
+                MovieFile savedmovie(context);
+                int ret = savedmovie.loadInputs(moviepath);
+                if (ret < 0) {
+                    emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
                     return false;
+                }
+
+                moviePrefix = movie.isPrefix(savedmovie);
+
+                /* When loading in read mode, we don't allow loading a non-prefix movie */
+                if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+                    if (!moviePrefix) {
+                        /* Not a prefix, we don't allow loading */
+                        emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
+                        return false;
+                    }
                 }
             }
 
@@ -765,14 +770,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 context->config.sc.movie_framecount = context->framecount;
             }
             receiveData(&context->current_time, sizeof(struct timespec));
-
-            /* If we loaded the same savestate, we didn't reload the movie as
-             * an optimisation, so the current movie is longer than the
-             * frame count so we need to truncate the movie.
-             */
-            // if (movie.nbFrames() > context->framecount) {
-            //     movie.truncateInputs(context->framecount);
-            // }
 
             emit inputsChanged();
             emit frameCountChanged();
