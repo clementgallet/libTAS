@@ -51,6 +51,42 @@ OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,
 
 OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
 
+/* A lot of openGL draw commands that are NOPed when fastforwarding */
+
+OVERRIDE void glBegin(GLenum mode);
+OVERRIDE void glEnd(void);
+
+OVERRIDE void glVertex2d( GLdouble x, GLdouble y );
+OVERRIDE void glVertex2f( GLfloat x, GLfloat y );
+OVERRIDE void glVertex2i( GLint x, GLint y );
+OVERRIDE void glVertex2s( GLshort x, GLshort y );
+
+OVERRIDE void glVertex3d( GLdouble x, GLdouble y, GLdouble z );
+OVERRIDE void glVertex3f( GLfloat x, GLfloat y, GLfloat z );
+OVERRIDE void glVertex3i( GLint x, GLint y, GLint z );
+OVERRIDE void glVertex3s( GLshort x, GLshort y, GLshort z );
+
+OVERRIDE void glVertex4d( GLdouble x, GLdouble y, GLdouble z, GLdouble w );
+OVERRIDE void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w );
+OVERRIDE void glVertex4i( GLint x, GLint y, GLint z, GLint w );
+OVERRIDE void glVertex4s( GLshort x, GLshort y, GLshort z, GLshort w );
+
+OVERRIDE void glVertex2dv( const GLdouble *v );
+OVERRIDE void glVertex2fv( const GLfloat *v );
+OVERRIDE void glVertex2iv( const GLint *v );
+OVERRIDE void glVertex2sv( const GLshort *v );
+
+OVERRIDE void glVertex3dv( const GLdouble *v );
+OVERRIDE void glVertex3fv( const GLfloat *v );
+OVERRIDE void glVertex3iv( const GLint *v );
+OVERRIDE void glVertex3sv( const GLshort *v );
+
+OVERRIDE void glVertex4dv( const GLdouble *v );
+OVERRIDE void glVertex4fv( const GLfloat *v );
+OVERRIDE void glVertex4iv( const GLint *v );
+OVERRIDE void glVertex4sv( const GLshort *v );
+
+
 OVERRIDE void glDrawArrays( GLenum mode, GLint first, GLsizei count );
 OVERRIDE void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
 

@@ -50,6 +50,40 @@ DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
 
+DEFINE_ORIG_POINTER(glBegin);
+DEFINE_ORIG_POINTER(glEnd);
+
+DEFINE_ORIG_POINTER(glVertex2d);
+DEFINE_ORIG_POINTER(glVertex2f);
+DEFINE_ORIG_POINTER(glVertex2i);
+DEFINE_ORIG_POINTER(glVertex2s);
+
+DEFINE_ORIG_POINTER(glVertex3d);
+DEFINE_ORIG_POINTER(glVertex3f);
+DEFINE_ORIG_POINTER(glVertex3i);
+DEFINE_ORIG_POINTER(glVertex3s);
+
+DEFINE_ORIG_POINTER(glVertex4d);
+DEFINE_ORIG_POINTER(glVertex4f);
+DEFINE_ORIG_POINTER(glVertex4i);
+DEFINE_ORIG_POINTER(glVertex4s);
+
+DEFINE_ORIG_POINTER(glVertex2dv);
+DEFINE_ORIG_POINTER(glVertex2fv);
+DEFINE_ORIG_POINTER(glVertex2iv);
+DEFINE_ORIG_POINTER(glVertex2sv);
+
+DEFINE_ORIG_POINTER(glVertex3dv);
+DEFINE_ORIG_POINTER(glVertex3fv);
+DEFINE_ORIG_POINTER(glVertex3iv);
+DEFINE_ORIG_POINTER(glVertex3sv);
+
+DEFINE_ORIG_POINTER(glVertex4dv);
+DEFINE_ORIG_POINTER(glVertex4fv);
+DEFINE_ORIG_POINTER(glVertex4iv);
+DEFINE_ORIG_POINTER(glVertex4sv);
+
+
 DEFINE_ORIG_POINTER(glDrawArrays);
 DEFINE_ORIG_POINTER(glDrawElements);
 DEFINE_ORIG_POINTER(glMultiDrawArrays);
@@ -303,6 +337,216 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
         i += 2;
     }
     return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
+}
+
+
+void glBegin(GLenum mode)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glBegin, "libGL");
+    if (!skipping_draw)
+        return orig::glBegin(mode);
+}
+
+void glEnd(void)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glEnd, "libGL");
+    if (!skipping_draw)
+        return orig::glEnd();
+}
+
+void glVertex2d( GLdouble x, GLdouble y )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2d, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2d(x, y);
+}
+
+void glVertex2f( GLfloat x, GLfloat y )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2f, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2f(x, y);
+}
+
+void glVertex2i( GLint x, GLint y )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2i, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2i(x, y);
+}
+
+void glVertex2s( GLshort x, GLshort y )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2s, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2s(x, y);
+}
+
+void glVertex3d( GLdouble x, GLdouble y, GLdouble z )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3d, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3d(x, y, z);
+}
+
+void glVertex3f( GLfloat x, GLfloat y, GLfloat z )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3f, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3f(x, y, z);
+}
+
+void glVertex3i( GLint x, GLint y, GLint z )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3i, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3i(x, y, z);
+}
+
+void glVertex3s( GLshort x, GLshort y, GLshort z )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3s, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3s(x, y, z);
+}
+
+void glVertex4d( GLdouble x, GLdouble y, GLdouble z, GLdouble w )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4d, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4d(x, y, z, w);
+}
+
+void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4f, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4f(x, y, z, w);
+}
+
+void glVertex4i( GLint x, GLint y, GLint z, GLint w )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4i, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4i(x, y, z, w);
+}
+
+void glVertex4s( GLshort x, GLshort y, GLshort z, GLshort w )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4s, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4s(x, y, z, w);
+}
+
+void glVertex2dv( const GLdouble *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2dv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2dv(v);
+}
+
+void glVertex2fv( const GLfloat *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2fv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2fv(v);
+}
+
+void glVertex2iv( const GLint *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2iv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2iv(v);
+}
+
+void glVertex2sv( const GLshort *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex2sv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex2sv(v);
+}
+
+void glVertex3dv( const GLdouble *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3dv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3dv(v);
+}
+
+void glVertex3fv( const GLfloat *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3fv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3fv(v);
+}
+
+void glVertex3iv( const GLint *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3iv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3iv(v);
+}
+
+void glVertex3sv( const GLshort *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex3sv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex3sv(v);
+}
+
+
+void glVertex4dv( const GLdouble *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4dv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4dv(v);
+}
+
+void glVertex4fv( const GLfloat *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4fv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4fv(v);
+}
+
+void glVertex4iv( const GLint *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4iv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4iv(v);
+}
+
+void glVertex4sv( const GLshort *v )
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glVertex4sv, "libGL");
+    if (!skipping_draw)
+        return orig::glVertex4sv(v);
 }
 
 void glDrawArrays( GLenum mode, GLint first, GLsizei count )
