@@ -142,13 +142,11 @@ void GameLoop::start()
         }
 
         emit startFrameBoundary();
-        std::cerr << "start FB: " << std::endl;
 
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
         if (context->game_window ) do {
-            std::cerr << "game windo " << std::endl;
 
             /* Check if game is still running */
             int ret = waitpid(context->game_pid, nullptr, WNOHANG);
@@ -174,10 +172,6 @@ void GameLoop::start()
             if (eventType) {
                 hasFrameAdvanced = processEvent(eventType, hk);
             }
-
-            std::cerr << "running: " << context->config.sc.running << std::endl;
-            std::cerr << "ar_advance: " << ar_advance << std::endl;
-            std::cerr << "hasFrameAdvanced: " << hasFrameAdvanced << std::endl;
 
             endInnerLoop = context->config.sc.running || ar_advance || hasFrameAdvanced;
 
@@ -368,7 +362,6 @@ bool GameLoop::loopReceiveMessages()
         float fps, lfps;
         switch (message) {
         case MSGB_WINDOW_ID:
-            std::cerr << "window ID !!" << std::endl;
             receiveData(&context->game_window, sizeof(Window));
             /* FIXME: Don't do this if the ui option is unchecked  */
             {

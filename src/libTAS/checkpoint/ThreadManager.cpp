@@ -126,6 +126,7 @@ ThreadInfo* ThreadManager::getNewThread()
             thread = th;
             /* We must change the state so that this thread is not chosed twice */
             thread->state = ThreadInfo::ST_RECYCLED;
+            break;
         }
     }
 
@@ -464,11 +465,14 @@ void ThreadManager::suspendThreads()
             /* Do various things based on thread's state */
             switch (thread->state) {
             case ThreadInfo::ST_RUNNING:
+            case ThreadInfo::ST_ZOMBIE:
+            case ThreadInfo::ST_FREE:
 
                 /* Thread is running. Send it a signal so it will call stopthisthread.
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
-                if (updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
+                thread->orig_state = thread->state;
+                if (updateState(thread, ThreadInfo::ST_SIGNALED, thread->state)) {
 
                     /* Setup an alternate signal stack.
                      *
@@ -501,18 +505,6 @@ void ThreadManager::suspendThreads()
                 }
                 break;
 
-            case ThreadInfo::ST_ZOMBIE:
-
-                /* Zombie threads are detached here, to avoid getting leaking
-                 * threads after state loading or other kinds of errors.
-                 * We have to get the return value if the game wants it later
-                 */
-
-                // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", thread->tid, " is joined");
-                // updateState(thread, ThreadInfo::ST_FAKEZOMBIE, ThreadInfo::ST_ZOMBIE);
-                // NATIVECALL(pthread_join(thread->pthread_id, &thread->retval));
-                break;
-
             case ThreadInfo::ST_SIGNALED:
                 NATIVECALL(ret = pthread_kill(thread->pthread_id, 0));
 
@@ -541,9 +533,6 @@ void ThreadManager::suspendThreads()
             //     break;
 
             case ThreadInfo::ST_UNINITIALIZED:
-                break;
-
-            case ThreadInfo::ST_FREE:
                 break;
 
             case ThreadInfo::ST_RECYCLED:
@@ -621,7 +610,7 @@ void ThreadManager::stopThisThread(int signum)
             ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo); // restore thread local storage
         }
 
-        MYASSERT(updateState(current_thread, ThreadInfo::ST_RUNNING, ThreadInfo::ST_SUSPENDED))
+        MYASSERT(updateState(current_thread, current_thread->orig_state, ThreadInfo::ST_SUSPENDED))
 
         /* We successfully resumed the thread. We wait for all other
          * threads to restore before continuing

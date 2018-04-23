@@ -70,7 +70,9 @@ bool Checkpoint::checkRestore()
     /* Check that the thread list is identical */
     int n=0;
     for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        if (thread->state != ThreadInfo::ST_RUNNING)
+        if ((thread->state != ThreadInfo::ST_RUNNING) &&
+            (thread->state != ThreadInfo::ST_ZOMBIE) &&
+            (thread->state != ThreadInfo::ST_FREE))
             continue;
 
         int t;

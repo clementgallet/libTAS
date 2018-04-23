@@ -50,6 +50,7 @@ struct ThreadInfo {
     };
 
     ThreadState state = ST_UNINITIALIZED; // thread state
+    ThreadState orig_state = ST_UNINITIALIZED; // thread state before savestate
     pthread_t pthread_id; // tid of the thread
     pid_t tid; // tid of the thread
     void *(*start)(void *); // original start function of the thread

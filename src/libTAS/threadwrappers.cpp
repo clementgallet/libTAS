@@ -108,6 +108,7 @@ static void *pthread_start(void *arg)
     int ret = 0;
     if (isRecycled) {
         debuglog(LCF_THREAD, "Recycling thread ", thread->tid);
+        *tid_p = thread->pthread_id;
         /* Notify the thread that it has a function to execute */
         thread->cv.notify_all();
     }
