@@ -25,6 +25,8 @@
 #include <ucontext.h>
 #include <pthread.h> // pthread_t
 #include <csignal> // stack_t
+#include <mutex>
+#include <condition_variable>
 
 #include "ThreadLocalStorage.h"
 
@@ -32,19 +34,22 @@ namespace libtas {
 
 struct ThreadInfo {
     enum ThreadState {
+        ST_UNINITIALIZED, // thread was just created
         ST_RUNNING, // thread is running normally
         ST_SIGNALED, // a suspend signal has been sent to the thread
         ST_SUSPINPROG, // thread is in the middle of being suspended
         ST_SUSPENDED, // thread is suspended
         ST_ZOMBIE, // thread has returned but is not yet joined or detached
-        ST_FAKEZOMBIE, // like ST_ZOMBIE except the actual thread no longer
+        // ST_FAKEZOMBIE, // like ST_ZOMBIE except the actual thread no longer
                        // exists. The thread has been joined by us during a
                        // savestate, so we keep information including the
                        // return value until the game does a join or detach.
-        ST_CKPNTHREAD // thread that does the checkpoint
+        ST_FREE, // thread that has finished its job and waiting for another
+        ST_RECYCLED, // thread that is about to be recycled
+        ST_CKPNTHREAD, // thread that does the checkpoint
     };
 
-    ThreadState state; // thread state
+    ThreadState state = ST_UNINITIALIZED; // thread state
     pthread_t pthread_id; // tid of the thread
     pid_t tid; // tid of the thread
     void *(*start)(void *); // original start function of the thread
@@ -62,6 +67,11 @@ struct ThreadInfo {
     bool initial_nolog; // initial value of the global nolog state
 
     stack_t altstack; // altstack to be used when suspending threads
+
+    std::mutex mutex; // mutex to notify a thread for a new routing
+    std::condition_variable cv; // associated conditional variable
+
+    bool quit = false; // is game quitting
 
     ThreadInfo *next; // next thread info in the linked list
     ThreadInfo *prev; // previous thread info in the linked list

@@ -77,8 +77,10 @@ public:
     /* Get the ThreadInfo struct from the thread id, or null if not there */
     static ThreadInfo* getThread(pthread_t pthread_id);
 
-    /* Init the ThreadInfo with values passed in pthread_create */
-    static void initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
+    /* Init the ThreadInfo with values passed in pthread_create, and return if
+     * the thread was recycled or not.
+     */
+    static bool initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 
     /* Update the ThreadInfo struct by the child thread */
     static void update(ThreadInfo* thread);
@@ -92,8 +94,10 @@ public:
     /* Called when thread detach another thread */
     static void threadDetach(pthread_t pthread_id);
 
-    /* Called when thread reaches the end (by return or pthread_exit) */
-    static void threadExit();
+    /* Called when thread reaches the end (by return or pthread_exit).
+     * Store the returned value.
+     */
+    static void threadExit(void* retval);
 
     /* Deallocate all ThreadInfo structs from the free list */
     static void deallocateThreads();

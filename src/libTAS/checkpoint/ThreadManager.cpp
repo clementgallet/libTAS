@@ -41,7 +41,6 @@
 namespace libtas {
 
 ThreadInfo* ThreadManager::thread_list = nullptr;
-ThreadInfo* ThreadManager::free_list = nullptr;
 thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
 // bool ThreadManager::inited = false;
 pthread_t ThreadManager::main_pthread_id = 0;
@@ -118,16 +117,20 @@ bool ThreadManager::isMainThread()
 
 ThreadInfo* ThreadManager::getNewThread()
 {
-    ThreadInfo* thread;
+    ThreadInfo* thread = nullptr;
 
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
-    /* Try to recycle a thread from the free list */
-    if (free_list) {
-        thread = free_list;
-        free_list = free_list->next;
-        debuglog(LCF_THREAD, "Recycle a ThreadInfo struct");
+    /* Try to recycle a free thread */
+    for (ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
+        if (th->state == ThreadInfo::ST_FREE) {
+            thread = th;
+            /* We must change the state so that this thread is not chosed twice */
+            thread->state = ThreadInfo::ST_RECYCLED;
+        }
     }
-    else {
+
+    /* Try to recycle a thread from the free list */
+    if (!thread) {
         thread = new ThreadInfo;
         debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
     }
@@ -153,11 +156,11 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
     return 0;
 }
 
-void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
+bool ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
-    thread->pthread_id = 0;
-    thread->tid = 0;
+    bool isRecycled = thread->state == ThreadInfo::ST_RECYCLED;
+
     thread->start = start_routine;
     thread->arg = arg;
     thread->state = ThreadInfo::ST_RUNNING;
@@ -167,12 +170,21 @@ void ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
     thread->initial_owncode = GlobalState::isOwnCode();
     thread->initial_nolog = GlobalState::isNoLog();
 
-    thread->altstack.ss_size = 4096;
-    thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
-    thread->altstack.ss_flags = 0;
+    if (!isRecycled) {
+        thread->pthread_id = 0;
+        thread->tid = 0;
 
-    thread->next = nullptr;
-    thread->prev = nullptr;
+        if (!thread->altstack.ss_sp) {
+            thread->altstack.ss_size = 4096;
+            thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
+            thread->altstack.ss_flags = 0;
+        }
+
+        thread->next = nullptr;
+        thread->prev = nullptr;
+    }
+
+    return isRecycled;
 }
 
 void ThreadManager::update(ThreadInfo* thread)
@@ -200,10 +212,17 @@ void ThreadManager::addToList(ThreadInfo* thread)
 {
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
 
-    /* Check for a thread with the same tid, and remove it */
+    /* Check for a thread with the same tid. If it is the same thread then we
+     * have nothing to do. Otherwise, remove it.
+     */
     ThreadInfo* cur_thread = getThread(thread->pthread_id);
-    if (cur_thread)
+    if (cur_thread) {
+        if (thread == cur_thread) {
+            MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
+            return;
+        }
         threadIsDead(cur_thread);
+    }
 
     /* Add the new thread to the list */
     thread->next = thread_list;
@@ -230,8 +249,7 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
         thread_list = thread_list->next;
     }
 
-    thread->next = free_list;
-    free_list = thread;
+    delete(thread);
 }
 
 void ThreadManager::threadDetach(pthread_t pthread_id)
@@ -243,19 +261,20 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         thread->detached = true;
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
             debuglog(LCF_THREAD, "Zombie thread ", thread->tid, " is detached");
-            threadIsDead(thread);
+            MYASSERT(updateState(thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
         }
         MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
     }
 }
 
-void ThreadManager::threadExit()
+void ThreadManager::threadExit(void* retval)
 {
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
+    current_thread->retval = retval;
     MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING))
     if (current_thread->detached) {
         debuglog(LCF_THREAD, "Detached thread ", current_thread->tid, " exited");
-        threadIsDead(current_thread);
+        MYASSERT(updateState(current_thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
     }
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
@@ -263,12 +282,24 @@ void ThreadManager::threadExit()
 void ThreadManager::deallocateThreads()
 {
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
-    while (free_list != nullptr) {
-        ThreadInfo *thread = free_list;
-        if (free_list->altstack.ss_sp != 0)
-            free(free_list->altstack.ss_sp);
-        free_list = free_list->next;
-        free(thread);
+
+    ThreadInfo *next;
+    for (ThreadInfo* thread = thread_list; thread != nullptr; thread = next) {
+        next = thread->next;
+
+        /* Skip the main thread */
+        if (thread->state == ThreadInfo::ST_CKPNTHREAD)
+            continue;
+
+        /* Notify each thread to quit */
+        thread->quit = true;
+        thread->cv.notify_all();
+
+        /* Join thread */
+        NATIVECALL(pthread_detach(thread->pthread_id));
+
+        /* Delete the thread struct */
+        threadIsDead(thread);
     }
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
@@ -477,9 +508,9 @@ void ThreadManager::suspendThreads()
                  * We have to get the return value if the game wants it later
                  */
 
-                debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", thread->tid, " is joined");
-                updateState(thread, ThreadInfo::ST_FAKEZOMBIE, ThreadInfo::ST_ZOMBIE);
-                NATIVECALL(pthread_join(thread->pthread_id, &thread->retval));
+                // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Zombie thread ", thread->tid, " is joined");
+                // updateState(thread, ThreadInfo::ST_FAKEZOMBIE, ThreadInfo::ST_ZOMBIE);
+                // NATIVECALL(pthread_join(thread->pthread_id, &thread->retval));
                 break;
 
             case ThreadInfo::ST_SIGNALED:
@@ -506,7 +537,16 @@ void ThreadManager::suspendThreads()
             case ThreadInfo::ST_CKPNTHREAD:
                 break;
 
-            case ThreadInfo::ST_FAKEZOMBIE:
+            // case ThreadInfo::ST_FAKEZOMBIE:
+            //     break;
+
+            case ThreadInfo::ST_UNINITIALIZED:
+                break;
+
+            case ThreadInfo::ST_FREE:
+                break;
+
+            case ThreadInfo::ST_RECYCLED:
                 break;
 
             default:
