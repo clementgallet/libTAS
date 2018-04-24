@@ -207,6 +207,24 @@ void ThreadManager::update(ThreadInfo* thread)
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
+
+    /* The signal handler for the thread suspend must be registered on *each*
+     * thread, because it runs on a custom stack.
+     */
+    int ret;
+    NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
+    if (ret < 0) {
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", ret);
+    }
+
+    struct sigaction sigusr1;
+    sigfillset(&sigusr1.sa_mask);
+    sigusr1.sa_flags = SA_RESTART | SA_ONSTACK;
+    sigusr1.sa_handler = stopThisThread;
+    {
+        GlobalNative gn;
+        MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+    }
 }
 
 void ThreadManager::addToList(ThreadInfo* thread)
@@ -250,6 +268,9 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
         thread_list = thread_list->next;
     }
 
+    if (thread->altstack.ss_sp) {
+        free(thread->altstack.ss_sp);
+    }
     delete(thread);
 }
 
@@ -488,7 +509,22 @@ void ThreadManager::suspendThreads()
                      * an alternate stack (different for each thread).
                      * This way, this stack pointer will be the same.
                      */
-                    NATIVECALL(sigaltstack(&thread->altstack, nullptr));
+
+                    // NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
+                    // if (ret < 0) {
+                    //     debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", ret);
+                    // }
+                    // else {
+                    //     debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack with add ", thread->altstack.ss_sp);
+                    // }
+                    // struct sigaction sigusr1;
+                    // sigfillset(&sigusr1.sa_mask);
+                    // sigusr1.sa_flags = SA_RESTART | SA_ONSTACK;
+                    // sigusr1.sa_handler = stopThisThread;
+                    // {
+                    //     GlobalNative gn;
+                    //     MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+                    // }
 
                     /* Send the suspend signal to the thread */
                     NATIVECALL(ret = pthread_kill(thread->pthread_id, SIGUSR1));
@@ -571,6 +607,14 @@ void ThreadManager::stopThisThread(int signum)
         return;
     }
 
+    /* Checking that we run in our custom stack, using the address of a local variable */
+    stack_t altstack = current_thread->altstack;
+    if ((&altstack < altstack.ss_sp) ||
+        (&altstack >= (void*)((char*)altstack.ss_sp + altstack.ss_size))) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread suspend is not running on alternate stack");
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
+    }
+
     /* Make sure we don't get called twice for same thread */
     if (updateState(current_thread, ThreadInfo::ST_SUSPINPROG, ThreadInfo::ST_SIGNALED)) {
 
@@ -594,8 +638,16 @@ void ThreadManager::stopThisThread(int signum)
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
             debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
 
+            // sigset_t mask;
+            // sigemptyset(&mask);
+            // sigaddset(&mask, SIGTRAP);
+            // NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
+            // raise(SIGTRAP);
+
             MYASSERT(pthread_rwlock_rdlock(&threadResumeLock) == 0)
             MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
+
+            // raise(SIGTRAP);
 
             /* If when thread was suspended, we performed a restore,
              * then we must resume execution using setcontext

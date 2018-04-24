@@ -2,6 +2,7 @@
 
 ### Added
 - Input editor
+- Recycle threads so that savestates always see the same number of threads
 
 ### Fixed
 - Don't add an extra frame when user stops the game
