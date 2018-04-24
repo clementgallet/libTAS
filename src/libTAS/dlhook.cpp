@@ -19,6 +19,7 @@
 
 #include "dlhook.h"
 #include "logging.h"
+#include "hook.h"
 #include <cstring>
 #include <set>
 #include "backtrace.h"
@@ -47,66 +48,44 @@ std::string find_lib(const char* library)
     return emptystring;
 }
 
-static void *my_dlopen(const char *file, int mode, void *dl_caller);
-static int my_dlclose(void *handle);
-static void *my_dlsym(void *handle, const char *name, void *dl_caller);
-static void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller);
-static char *my_dlerror(void);
-static int my_dladdr(const void *address, Dl_info *info);
-static int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags);
-static int my_dlinfo(void *handle, int request, void *arg, void *dl_caller);
-static void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller);
+DEFINE_ORIG_POINTER(dlopen);
+DEFINE_ORIG_POINTER(dlsym);
 
+void *dlopen(const char *file, int mode) {
+    if (!orig::dlopen) {
+        orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
+    }
 
-static void *my_dlopen(const char *file, int mode, void *dl_caller) {
-    void *result;
+    if (GlobalState::isNative()) {
+        return orig::dlopen(file, mode);
+    }
+
     debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
-    dlenter();
-    result = dlopen(file, mode);
-    dlleave();
+
+    void *result = orig::dlopen(file, mode);
 
     if (result && (file != nullptr))
         libraries.insert(std::string(file));
     return result;
 }
 
-static int my_dlclose(void *handle) {
-    int result;
-    DEBUGLOGCALL(LCF_HOOK);
-    dlenter();
-    result = dlclose(handle);
-    dlleave();
-    return result;
-}
+void *dlsym(void *handle, const char *name) {
+    if (!orig::dlsym) {
+        orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
+    }
 
-static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
-    void *addr;
+    if (GlobalState::isNative()) {
+        return orig::dlsym(handle, name);
+    }
+
     debuglog(LCF_HOOK, __func__, " call with function ", name);
 
-    /* Special cases when dlsym is called with dl* functions (yes, it happens...).
-     * Because our dl* functions have another name (my_dl*), the standard code
-     * won't work. So we manually return the correct function pointers.
-     */
+    /* Special cases when dlsym is called with dl* functions (yes, it happens...). */
     if (strcmp(name, "dlopen") == 0)
-        return reinterpret_cast<void*>(my_dlopen);
-    if (strcmp(name, "dlclose") == 0)
-        return reinterpret_cast<void*>(my_dlclose);
+        return reinterpret_cast<void*>(dlopen);
     if (strcmp(name, "dlsym") == 0)
-        return reinterpret_cast<void*>(my_dlsym);
-    if (strcmp(name, "dlvsym") == 0)
-        return reinterpret_cast<void*>(my_dlvsym);
-    if (strcmp(name, "dlerror") == 0)
-        return reinterpret_cast<void*>(my_dlerror);
-    if (strcmp(name, "dladdr") == 0)
-        return reinterpret_cast<void*>(my_dladdr);
-    if (strcmp(name, "dladdr1") == 0)
-        return reinterpret_cast<void*>(my_dladdr1);
-    if (strcmp(name, "dlinfo") == 0)
-        return reinterpret_cast<void*>(my_dlinfo);
-    if (strcmp(name, "dlmopen") == 0)
-        return reinterpret_cast<void*>(my_dlmopen);
+        return reinterpret_cast<void*>(dlsym);
 
-    dlenter();
     /* FIXME: This design is not good enough.
      * This idea is to link to our defined function when there is one, instead
      * of the function inside the library that the game wants to load.
@@ -128,7 +107,7 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
     dlerror(); // Reseting the internal buffer
 
     /* Try to link to an already defined function first */
-    addr = dlsym(RTLD_DEFAULT, name);
+    void *addr = orig::dlsym(RTLD_DEFAULT, name);
     char* error = dlerror();
     if (error == nullptr) {
         /* We found a matching symbol. Now checking that this symbol comes
@@ -142,103 +121,13 @@ static void *my_dlsym(void *handle, const char *name, void *dl_caller) {
             if (libpath.length() >= libtasstr.length() &&
                 libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
                 debuglog(LCF_HOOK, "   function ", name, " is overriden!");
-                dlleave();
                 return addr;
             }
         }
     }
 
-    addr = dlsym(handle, name);
-    dlleave();
+    addr = orig::dlsym(handle, name);
     return addr;
-}
-
-static void *my_dlvsym(void *handle, const char *name, const char *version, void *dl_caller) {
-    void *result;
-    debuglog(LCF_HOOK, __func__, " call with function ", name, " and version ", version);
-    dlenter();
-    result = dlvsym(handle, name, version);
-    dlleave();
-    return result;
-}
-
-static char *my_dlerror(void) {
-    char *result;
-    DEBUGLOGCALL(LCF_HOOK);
-    dlenter();
-    result = dlerror();
-    dlleave();
-    return result;
-}
-
-static int my_dladdr(const void *address, Dl_info *info) {
-    int result;
-    DEBUGLOGCALL(LCF_HOOK);
-    dlenter();
-    result = dladdr(address, info);
-    dlleave();
-    return result;
-}
-
-static int my_dladdr1(const void *address, Dl_info *info, void **extra_info, int flags) {
-    int result;
-    DEBUGLOGCALL(LCF_HOOK);
-    dlenter();
-    result = dladdr1(address, info, extra_info, flags);
-    dlleave();
-    return result;
-}
-
-static int my_dlinfo(void *handle, int request, void *arg, void *dl_caller) {
-    int result;
-    DEBUGLOGCALL(LCF_HOOK);
-    dlenter();
-    result = dlinfo(handle, request, arg);
-    dlleave();
-    return result;
-}
-
-static void *my_dlmopen(Lmid_t nsid, const char *file, int mode, void *dl_caller) {
-    void *result;
-    debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
-    dlenter();
-    result = dlmopen(nsid, file, mode);
-    dlleave();
-    return result;
-}
-
-static struct dlfcn_hook *old_dlfcn_hook;
-
-static struct dlfcn_hook my_dlfcn_hook = {
-    my_dlopen, // dlopen
-    my_dlclose, // dlclose
-    my_dlsym, // dlsym
-    my_dlvsym, // dlvsym
-    my_dlerror, // dlerror
-    my_dladdr, // dladdr
-    my_dladdr1, // dladdr1
-    my_dlinfo, // dlinfo
-    my_dlmopen, // dlmopen
-    {0, 0, 0, 0} // pad
-};
-
-static int depth;
-void dlenter(void) { if (!depth++) _dlfcn_hook = old_dlfcn_hook; }
-void dlleave(void) { if (!--depth) _dlfcn_hook = &my_dlfcn_hook; }
-
-void dlhook_init(void)
-{
-    static int inited = 0;
-    if (!inited) {
-        old_dlfcn_hook = _dlfcn_hook;
-        _dlfcn_hook = &my_dlfcn_hook;
-        inited = 1;
-    }
-}
-
-void dlhook_end(void)
-{
-    _dlfcn_hook = old_dlfcn_hook;
 }
 
 }

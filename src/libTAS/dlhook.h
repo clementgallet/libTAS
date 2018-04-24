@@ -22,22 +22,7 @@
 
 #include <dlfcn.h>
 #include <string>
-
-/* Internal struct of pointers to dl functions that is used
- * specifically by glibc
- */
-extern struct dlfcn_hook {
-    void *(*dlopen)(const char *, int, void *);
-    int (*dlclose)(void *);
-    void *(*dlsym)(void *, const char *, void *);
-    void *(*dlvsym)(void *, const char *, const char *, void *);
-    char *(*dlerror)(void);
-    int (*dladdr)(const void *, Dl_info *);
-    int (*dladdr1)(const void *, Dl_info *, void **, int);
-    int (*dlinfo)(void *, int, void *, void *);
-    void *(*dlmopen)(Lmid_t, const char *, int, void *);
-    void *pad[4];
-} *_dlfcn_hook;
+#include "global.h"
 
 namespace libtas {
 
@@ -70,9 +55,10 @@ namespace libtas {
  * Indeed, we cannot use dlsym to get the original function
  * because we are hooking dlsym itself.
  * Solution comes from this post:
- * http://stackoverflow.com/a/1161195
- * This solution is very specific to glibc, by replacing
- * the internal struct of dl functions
+ * https://stackoverflow.com/a/18825060
+ * which is using the internal _dl_sym function for dynamic library loading
+ * However, this internal function is much more unsafe, so we are only using it
+ * to access to the real dlsym function, and we use that function everything else.
  */
 
 /* Add a library in the above set */
@@ -83,27 +69,10 @@ namespace libtas {
  */
 std::string find_lib(const char* library);
 
-/* Functions used to call the original dl functions.
- * Use like this:
- *   dlenter();
- *   fp = dlsym(RTLD_NEXT, source); // Will call real dlsym function.
- *   dlleave();
- * dlenter() and dlleave() have a call count.
- * You can call multiple times dlenter() (e.g. in different threads),
- * but must call dlleave() the same number of times.
- */
-void dlenter(void);
-void dlleave(void);
+OVERRIDE void *dlopen(const char *file, int mode);
+OVERRIDE void *dlsym(void *handle, const char *name);
 
-/* Set up the our function pointers to replace the internal function pointers
- * of the dl library.
- * We *must* call the init function as early as possible, before the game or
- * any library has a chance to call a dl function. Also before we start to use
- * dlenter() and dlleave(). Otherwise we can miss hooking some functions,
- * or can trigger an endless loop.
- */
-void dlhook_init(void);
-void dlhook_end(void);
+OVERRIDE void *_dl_sym(void *, const char *, void *);
 
 }
 

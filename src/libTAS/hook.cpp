@@ -30,17 +30,11 @@ bool link_function(void** function, const char* source, const char* library, con
     if (*function != nullptr)
         return true;
 
-    /* Initialize the pointers to use real dl functions */
-    dlhook_init();
-
-    dlenter();
-    /* From this function dl* call will refer to real dl functions */
-
     /* First try to link it from the global namespace */
     if (version)
         *function = dlvsym(RTLD_NEXT, source, version);
     else
-        *function = dlsym(RTLD_NEXT, source);
+        NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {
 
@@ -60,11 +54,10 @@ bool link_function(void** function, const char* source, const char* library, con
                 if (version)
                     *function = dlvsym(RTLD_NEXT, source, version);
                 else
-                    *function = dlsym(RTLD_NEXT, source);
+                    NATIVECALL(*function = dlsym(RTLD_NEXT, source));
             }
         }
 
-        dlleave();
         debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
         return true;
     }
@@ -76,16 +69,16 @@ bool link_function(void** function, const char* source, const char* library, con
          */
         std::string libpath = find_lib(library);
 
+        void* handle;
         if (! libpath.empty()) {
 
             /* Try to link again using a matching library */
-            void* handle = dlopen(libpath.c_str(), RTLD_LAZY);
+            NATIVECALL(handle = dlopen(libpath.c_str(), RTLD_LAZY));
 
             if (handle != NULL) {
-                *function = dlsym(handle, source);
+                NATIVECALL(*function = dlsym(handle, source));
 
                 if (*function != nullptr) {
-                    dlleave();
                     debuglog(LCF_HOOK, "Imported from lib ", libpath, " symbol ", source, " function : ", *function);
                     return true;
                 }
@@ -93,13 +86,12 @@ bool link_function(void** function, const char* source, const char* library, con
         }
 
         /* If it did not succeed, try to link using the given library */
-        void* handle = dlopen(library, RTLD_LAZY);
+        NATIVECALL(handle = dlopen(library, RTLD_LAZY));
 
         if (handle != NULL) {
-            *function = dlsym(handle, source);
+            NATIVECALL(*function = dlsym(handle, source));
 
             if (*function != nullptr) {
-                dlleave();
                 debuglog(LCF_HOOK, "Imported from lib ", library, " symbol ", source, " function : ", *function);
                 return true;
             }
@@ -109,7 +101,6 @@ bool link_function(void** function, const char* source, const char* library, con
     debuglogstdio(LCF_ERROR | LCF_HOOK, "Could not import symbol %s", source);
 
     *function = nullptr;
-    dlleave();
     return false;
 }
 
