@@ -105,7 +105,6 @@ void __attribute__((constructor)) init(void)
 void __attribute__((destructor)) term(void)
 {
     ThreadManager::deallocateThreads();
-    dlhook_end();
 
     sendMessage(MSGB_QUIT);
 
