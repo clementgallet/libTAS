@@ -365,7 +365,6 @@ void ThreadManager::restore(const char* savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
     ThreadSync::acquireLocks();
-    // debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restore fi ", savestatepath);
 
     Checkpoint::setSavestatePath(savestatepath);
 

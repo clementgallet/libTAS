@@ -81,6 +81,12 @@ static void *pthread_start(void *arg)
 
             debuglog(LCF_THREAD, "End of thread code");
             ThreadManager::threadExit(ret);
+
+            /* Thread is now in zombie state until it is detached */
+            while (thread->state == ThreadInfo::ST_ZOMBIE) {
+                struct timespec mssleep = {0, 1000*1000};
+                NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            }
         }
         else {
              thread->cv.wait(lock);
@@ -149,23 +155,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     debuglog(LCF_THREAD, "Joining thread ", ThreadManager::getThreadTid(pthread_id));
 
-    /* Because we detach zombie threads before saving or loading a state,
-     * this thread might not be there anymore. So we check in our thread list
-     * and don't detach/join if in fake zombie state. If so, we can return
-     * the value that we stored when we joined the thread.
-     */
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
-    // if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
-    //     /* Thread is now officially joined, we can remove the thread from
-    //     * our list.
-    //     */
-    //     if (thread_return != nullptr) {
-    //         *thread_return = thread->retval;
-    //     }
-    //     ThreadManager::threadIsDead(thread);
-    //     ThreadSync::wrapperExecutionLockUnlock();
-    //     return 0;
-    // }
 
     if (!thread) {
         ThreadSync::wrapperExecutionLockUnlock();
@@ -195,18 +185,9 @@ static void *pthread_start(void *arg)
         return orig::pthread_detach(pthread_id);
     }
 
-    /* Same comment as above */
     ThreadSync::wrapperExecutionLockLock();
     debuglog(LCF_THREAD, "Detaching thread ", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
-    // if (thread && thread->state == ThreadInfo::ST_FAKEZOMBIE) {
-    //     /* Thread is now officially detached, we can remove the thread from
-    //      * our list.
-    //      */
-    //     ThreadManager::threadIsDead(thread);
-    //     ThreadSync::wrapperExecutionLockUnlock();
-    //     return 0;
-    // }
 
     if (!thread) {
         ThreadSync::wrapperExecutionLockUnlock();
