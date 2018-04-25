@@ -763,6 +763,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* The frame count has changed, we must get the new one */
             if (message != MSGB_FRAMECOUNT_TIME) {
                 std::cerr << "Got wrong message after state loading" << std::endl;
+
+                if (!context->config.opengl_soft) {
+                    emit alertToShow(QString("Crash after loading the savestate. Savestates are unstable unless you check Video>Force software rendering"));
+                }
+
                 return false;
             }
             receiveData(&context->framecount, sizeof(unsigned long));
