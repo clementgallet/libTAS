@@ -281,7 +281,12 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE(pthread_sigmask, nullptr);
 
-    if (GlobalState::isNative())
+    /* This is a bit of a workaround. We still want native threads
+     * (like pulseaudio thread) to be able to be suspended, but we also want
+     * threads to unblock SIGUSR1 and SIGUSR2, so we only allow native threads
+     * to unblock.
+     */
+    if (GlobalState::isNative() && (how == SIG_UNBLOCK))
         return orig::pthread_sigmask(how, newmask, oldmask);
 
     if (newmask) {
