@@ -176,7 +176,7 @@ bool ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
         thread->tid = 0;
 
         if (!thread->altstack.ss_sp) {
-            thread->altstack.ss_size = 4096;
+            thread->altstack.ss_size = 64*1024;
             thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
             thread->altstack.ss_flags = 0;
         }
@@ -478,7 +478,7 @@ void ThreadManager::suspendThreads()
         numThreads = 0;
         ThreadInfo *next;
         for (ThreadInfo *thread = thread_list; thread != nullptr; thread = next) {
-            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread ", thread->tid);
+            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->tid);
             next = thread->next;
             int ret;
 
@@ -602,7 +602,7 @@ void ThreadManager::resumeThreads()
 
 void ThreadManager::stopThisThread(int signum)
 {
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Received suspend signal!");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Received suspend signal!");
     if (current_thread->state == ThreadInfo::ST_CKPNTHREAD) {
         return;
     }
@@ -623,7 +623,7 @@ void ThreadManager::stopThisThread(int signum)
         ThreadLocalStorage::saveTLSState(&current_thread->tlsInfo); // save thread local storage
         MYASSERT(getcontext(&current_thread->savctx) == 0)
 
-        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext");
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread after getcontext");
 
         if (!restoreInProgress) {
 
@@ -636,7 +636,7 @@ void ThreadManager::stopThisThread(int signum)
             sem_post(&semNotifyCkptThread);
 
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
-            debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
+            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
 
             // sigset_t mask;
             // sigemptyset(&mask);
@@ -668,7 +668,7 @@ void ThreadManager::stopThisThread(int signum)
          */
         waitForAllRestored(current_thread);
 
-        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
     }
 }
 
