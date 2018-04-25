@@ -241,6 +241,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && shared_config.osd_encode) {
+        hud.resetOffsets();
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(framecount);
             // hud.renderNonDrawFrame(nondraw_framecount);
@@ -284,6 +285,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && !shared_config.osd_encode) {
+        hud.resetOffsets();
         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
             hud.renderFrame(framecount);
             // hud.renderNonDrawFrame(nondraw_framecount);
@@ -395,7 +397,9 @@ static void receive_messages(std::function<void()> draw)
                 if (!skipping_draw && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
 
+#ifdef LIBTAS_ENABLE_HUD
                     if (!shared_config.osd_encode) {
+                        hud.resetOffsets();
                         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
                             hud.renderFrame(framecount);
                             // hud.renderNonDrawFrame(nondraw_framecount);
@@ -403,6 +407,7 @@ static void receive_messages(std::function<void()> draw)
                         if (shared_config.osd & SharedConfig::OSD_INPUTS)
                             hud.renderInputs(ai);
                     }
+#endif
 
                     NATIVECALL(draw());
                 }
@@ -415,6 +420,7 @@ static void receive_messages(std::function<void()> draw)
                 if (!skipping_draw && (shared_config.osd & SharedConfig::OSD_INPUTS) && shared_config.save_screenpixels) {
                     ScreenCapture::setPixels(false);
 
+                    hud.resetOffsets();
                     if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
                         hud.renderFrame(framecount);
                         // hud.renderNonDrawFrame(nondraw_framecount);
@@ -467,6 +473,8 @@ static void receive_messages(std::function<void()> draw)
                         ScreenCapture::setPixels(true);
 
 #ifdef LIBTAS_ENABLE_HUD
+                        hud.resetOffsets();
+
                         if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
                             hud.renderFrame(framecount);
                             // hud.renderNonDrawFrame(nondraw_framecount);

@@ -22,6 +22,7 @@
 #include "RenderHUD_SDL2.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "../ScreenCapture.h"
 
 namespace libtas {
 
@@ -47,6 +48,12 @@ void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
     SDL_Texture* tex = orig::SDL_CreateTextureFromSurface(renderer, sdlsurf);
+
+    /* Change the coords so that the text fills on screen */
+    int width, height;
+    ScreenCapture::getDimensions(width, height);
+    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
+    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
     SDL_Rect rect = {x, y, sdlsurf->w, sdlsurf->h};
     orig::SDL_RenderCopy(renderer, tex, NULL, &rect);

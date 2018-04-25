@@ -50,6 +50,10 @@ void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color
 
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
 
+    /* Change the coords so that the text fills on screen */
+    x = (x + surf->w + 5) > screen->w ? (screen->w - surf->w - 5) : x;
+    y = (y + surf->h + 5) > screen->h ? (screen->h - surf->h - 5) : y;
+
     SDL1::SDL_Rect rect = {static_cast<Sint16>(x), static_cast<Sint16>(y), 0, 0}; // width and height are ignored
     orig::SDL_BlitSurface(sdlsurf, NULL, screen, &rect);
 }

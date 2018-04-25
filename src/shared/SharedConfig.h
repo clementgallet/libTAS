@@ -93,6 +93,19 @@ struct SharedConfig {
     /* Display OSD in the video encode */
     bool osd_encode = false;
 
+    /* OSD text location */
+    enum OSDLocation {
+        OSD_LEFT = 0x01,
+        OSD_HCENTER = 0x02,
+        OSD_RIGHT = 0x04,
+        OSD_TOP = 0x10,
+        OSD_VCENTER = 0x20,
+        OSD_BOTTOM = 0x40,
+    };
+
+    int osd_frame_location = OSD_LEFT | OSD_TOP;
+    int osd_inputs_location = OSD_LEFT | OSD_BOTTOM;
+
     /* Use a backup of savefiles in memory, which leaves the original
      * savefiles unmodified and save the content in savestates */
     bool prevent_savefiles = true;

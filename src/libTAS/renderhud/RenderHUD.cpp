@@ -117,6 +117,38 @@ std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Colo
     return bg_surf;
 }
 
+void RenderHUD::locationToCoords(int location, int& x, int& y)
+{
+    int width, height;
+    ScreenCapture::getDimensions(width, height);
+
+    if (location & SharedConfig::OSD_LEFT)         x = 5;
+    else if (location & SharedConfig::OSD_HCENTER) x = width / 2;
+    else                                           x = width - 30;
+
+    if (location & SharedConfig::OSD_TOP)          y = 5;
+    else if (location & SharedConfig::OSD_VCENTER) y = height / 2;
+    else                                           y = height - 30;
+
+    /* Add an offset if other text was displayed here */
+    int offset_index = 0;
+    if (location & SharedConfig::OSD_HCENTER)     offset_index += 1;
+    else if (location & SharedConfig::OSD_RIGHT)  offset_index += 2;
+    if (location & SharedConfig::OSD_VCENTER)     offset_index += 3;
+    else if (location & SharedConfig::OSD_BOTTOM) offset_index += 6;
+
+    y += offsets[offset_index];
+    if (location & SharedConfig::OSD_BOTTOM)
+        offsets[offset_index] -= 25;
+    else
+        offsets[offset_index] += 25;
+}
+
+void RenderHUD::resetOffsets()
+{
+    memset(offsets, 0, 9 * sizeof(int));
+}
+
 void RenderHUD::renderFrame(unsigned int framecount)
 {
     Color fg_color = {255, 255, 255, 0};
@@ -134,9 +166,9 @@ void RenderHUD::renderFrame(unsigned int framecount)
         break;
     }
 
-    // int width, height;
-    // ScreenCapture::getDimensions(width, height);
-    renderText(framestr.c_str(), fg_color, bg_color, 2, 2);
+    int x, y;
+    locationToCoords(shared_config.osd_frame_location, x, y);
+    renderText(framestr.c_str(), fg_color, bg_color, x, y);
 }
 
 void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
@@ -145,23 +177,23 @@ void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
     Color bg_color = {0, 0, 0, 0};
     std::string nondraw_framestr = std::to_string(nondraw_framecount);
 
-    // int width, height;
-    // ScreenCapture::getDimensions(width, height);
-    renderText(nondraw_framestr.c_str(), red_color, bg_color, 2, 30);
+    int x, y;
+    locationToCoords(shared_config.osd_frame_location, x, y);
+    renderText(nondraw_framestr.c_str(), red_color, bg_color, x, y);
 }
 
 
 void RenderHUD::renderInputs(AllInputs& ai)
 {
-    renderInputs(ai, -50, {255, 255, 255, 0});
+    renderInputs(ai, {255, 255, 255, 0});
 }
 
 void RenderHUD::renderPreviewInputs(AllInputs& ai)
 {
-    renderInputs(ai, -25, {160, 160, 160, 0});
+    renderInputs(ai, {160, 160, 160, 0});
 }
 
-void RenderHUD::renderInputs(AllInputs& ai, int off_y, Color fg_color)
+void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
 {
     std::ostringstream oss;
 
@@ -208,10 +240,9 @@ void RenderHUD::renderInputs(AllInputs& ai, int off_y, Color fg_color)
     Color bg_color = {0, 0, 0, 0};
     std::string text = oss.str();
     if (!text.empty()) {
-        /* Get size of the window */
-        int width, height;
-        ScreenCapture::getDimensions(width, height);
-        renderText(text.c_str(), fg_color, bg_color, 2, height + off_y);
+        int x, y;
+        locationToCoords(shared_config.osd_inputs_location, x, y);
+        renderText(text.c_str(), fg_color, bg_color, x, y);
     }
 }
 

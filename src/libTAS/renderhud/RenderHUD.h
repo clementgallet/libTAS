@@ -74,21 +74,31 @@ class RenderHUD
         /* Display the preview of inputs on screen */
         void renderPreviewInputs(AllInputs& ai);
 
+        /* Reset offsets to 0 */
+        void resetOffsets();
+
     protected:
         /* Create a texture from a text, using colors for the text and the outline */
         std::unique_ptr<SurfaceARGB> createTextSurface(const char* text, Color fg_color, Color bg_color);
 
     private:
+        /* Convert a location into screen coordinates, with an offset if text
+         * was already displayed at that position.
+         */
+        void locationToCoords(int location, int& x, int& y);
 
         /* Generic function to display inputs on screen, using fg_color as the
-         * text color and display the text at delta_y pixels from the bottom */
-        void renderInputs(AllInputs& ai, int delta_y, Color fg_color);
+         * text color */
+        void renderInputs(AllInputs& ai, Color fg_color);
 
         int outline_size;
         int font_size;
 
         static TTF_Font* fg_font;
         static TTF_Font* bg_font;
+
+        /* Location offsets when displaying multiple texts on the same location */
+        int offsets[9];
 };
 }
 

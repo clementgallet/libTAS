@@ -126,6 +126,10 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
+    /* Change the coords so that the text fills on screen */
+    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
+    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
+
     orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     orig::glBlitFramebuffer(0, 0, surf->w, surf->h, x, height-y, x+surf->w, height-(y+surf->h),
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
