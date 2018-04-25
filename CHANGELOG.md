@@ -3,12 +3,15 @@
 ### Added
 - Input editor
 - Recycle threads so that savestates always see the same number of threads
+- OSD element can be positioned by the user
 
 ### Fixed
 - Don't add an extra frame when user stops the game
 - Remove a memory leak caused by allocated keycode-keysym mapping
 - Fix garbage inputs caused by uninitialized inputs when game does not have focus
 - Always simulate the game window being on top-left corner so that games using global mouse coords do not desync
+- Savestates work with audio not muted
+- Change the way of hooking dlfoo functions because it broke on glibc 2.27 (now using _dl_sym to get the real dlsym)
 
 ## [1.1.1] - 2018-03-25
 ### Added

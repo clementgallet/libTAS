@@ -68,6 +68,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
     inputEditorWindow = new InputEditorWindow(c, this);
+    osdWindow = new OsdWindow(c, this);
 
     connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -540,6 +541,7 @@ void MainWindow::createMenus()
 
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
     osdMenu->addActions(osdGroup->actions());
+    osdMenu->addAction(tr("OSD Options..."), osdWindow, &OsdWindow::exec);
     osdMenu->addSeparator();
     osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, &MainWindow::slotOsdEncode);
     osdEncodeAction->setCheckable(true);
@@ -1040,6 +1042,7 @@ void MainWindow::slotBrowseGamePath()
 #endif
     executableWindow->update_config();
     inputWindow->update();
+    osdWindow->update_config();
 }
 
 void MainWindow::slotBrowseMoviePath()

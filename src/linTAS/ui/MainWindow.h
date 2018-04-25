@@ -40,6 +40,7 @@
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
 #include "InputEditorWindow.h"
+#include "OsdWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
@@ -67,6 +68,7 @@ public:
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;
     InputEditorWindow* inputEditorWindow;
+    OsdWindow* osdWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
