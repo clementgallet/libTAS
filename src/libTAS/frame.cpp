@@ -154,6 +154,17 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 {
     static float fps, lfps = 0;
 
+    /* We store the previous draw function so that we can still draw the hud
+     * for non-draw frames.
+     */
+    static std::function<void()> previous_draw;
+    if (drawFB) {
+        previous_draw = draw;
+    }
+    else {
+        draw = previous_draw;
+    }
+
     debuglog(LCF_FRAME, "Enter frame boundary");
     ThreadManager::setMainThread();
 
@@ -221,8 +232,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     /* Saving the screen pixels before drawing. This is done before rendering
      * the HUD, so that we can redraw with another HUD.
-     *
-     * TODO: What should we do for nondraw frames ???
      */
     if (!skipping_draw) {
         if (drawFB && shared_config.save_screenpixels) {
