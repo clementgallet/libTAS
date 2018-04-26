@@ -26,6 +26,7 @@ namespace libtas {
 namespace Checkpoint
 {
     void setSavestatePath(const char* savestatepath);
+    bool checkCheckpoint();
     bool checkRestore();
     void handler(int signum);
 };

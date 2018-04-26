@@ -25,7 +25,7 @@
 
 namespace libtas {
 
-void Area::print(const char* prefix)
+void Area::print(const char* prefix) const
 {
     debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p (%s) with size %d",
     prefix,

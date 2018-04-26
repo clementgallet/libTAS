@@ -33,6 +33,8 @@
 #include <cstring>
 #include <csignal>
 #include <X11/Xlibint.h>
+#include <sys/statvfs.h>
+#include "errno.h"
 // #include <X11/Xlib-xcb.h>
 #include "../../external/xcbint.h"
 //#include "../sdlwindows.h"
@@ -44,10 +46,60 @@ namespace libtas {
 
 static const char* savestatepath;
 
+static bool skipArea(const Area *area);
+
+static void readAllAreas();
+static int readAndCompAreas(int fd, Area *saved_area, Area *current_area);
+
+static void writeAllAreas();
+static void writeAnArea(int fd, const Area *area);
+static void writeAnAreaWithZeroPages(int fd, const Area *orig_area);
+static void getNextPageRange(const Area &area, size_t &size, bool &is_zero);
+
 void Checkpoint::setSavestatePath(const char* filepath)
 {
     /* We want to avoid any allocated memory here, so using char array */
     savestatepath = filepath;
+}
+
+bool Checkpoint::checkCheckpoint()
+{
+    /* Get an estimation of the savestate space */
+    size_t savestate_size = 0;
+
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
+
+    /* Read the first current area */
+    Area area;
+    bool not_eof = procSelfMaps.getNextArea(&area);
+
+    while (not_eof) {
+        if (!skipArea(&area)) {
+            savestate_size += area.size;
+        }
+        not_eof = procSelfMaps.getNextArea(&area);
+    }
+
+    /* Get the savestate directory */
+    std::string savestate_str = savestatepath;
+    size_t sep = savestate_str.find_last_of("/");
+    if (sep != std::string::npos)
+        savestate_str.resize(sep);
+
+    struct statvfs devData;
+    int ret;
+    if ((ret = statvfs(savestate_str.c_str(), &devData)) >= 0) {
+        unsigned long available_size = devData.f_bavail * devData.f_bsize;
+        if (savestate_size > available_size) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate");
+            return false;
+        }
+    }
+    // else {
+    //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "statvfs errno gives %d", errno);
+    // }
+
+    return true;
 }
 
 bool Checkpoint::checkRestore()
@@ -98,7 +150,69 @@ bool Checkpoint::checkRestore()
     return true;
 }
 
-static bool skipArea(Area *area)
+void Checkpoint::handler(int signum)
+{
+    /* Access the X Window identifier from the SDL_Window struct */
+    Display *display = gameDisplay;
+    if (!display) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Could not access connection to X11");
+        return;
+    }
+
+    /* Check that we are using our alternate stack by looking at the address
+     * of this local variable.
+     */
+    if ((&display < ReservedMemory::getAddr(0)) ||
+        (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
+        return;
+    }
+
+    XSync(display, false);
+
+    if (ThreadManager::restoreInProgress) {
+        /* Before reading from the savestate, we must keep some values from
+         * the connection to the X server, because they are used for checking
+         * consistency of requests. We can store them in this (alternate) stack
+         * which will be preserved.
+         */
+
+#ifdef X_DPY_GET_LAST_REQUEST_READ
+        uint64_t last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
+        uint64_t request = X_DPY_GET_REQUEST(display);
+#else
+        uint64_t last_request_read = static_cast<uint64_t>(display->last_request_read);
+        uint64_t request = static_cast<uint64_t>(display->request);
+#endif
+
+        /* Copy the entire xcb connection struct */
+        // xcb_connection_t xcb_conn;
+        // xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
+        // memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
+
+        readAllAreas();
+        /* restoreInProgress was overwritten, putting the right value again */
+        ThreadManager::restoreInProgress = true;
+
+        /* Restoring the display values */
+#ifdef X_DPY_SET_LAST_REQUEST_READ
+        X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
+        X_DPY_SET_REQUEST(display, request);
+#else
+        display->last_request_read = static_cast<unsigned long>(last_request_read);
+        display->request = static_cast<unsigned long>(request);
+#endif
+
+        /* Restore the entire xcb connection struct */
+        // memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
+    }
+    else {
+        writeAllAreas();
+    }
+    debuglogstdio(LCF_CHECKPOINT, "End restore.");
+}
+
+static bool skipArea(const Area *area)
 {
     /* If it's readable, but it's VDSO, it will be dangerous to restore it.
     * In 32-bit mode later Red Hat RHEL Linux 2.6.9 releases use 0xffffe000,
@@ -169,142 +283,52 @@ static bool skipArea(Area *area)
     return false;
 }
 
-/* This function returns a range of zero or non-zero pages. If the first page
- * is non-zero, it searches for all contiguous non-zero pages and returns them.
- * If the first page is all-zero, it searches for contiguous zero pages and
- * returns them.
- */
-static void getNextPageRange(Area &area, size_t &size, bool &is_zero)
+static void readAllAreas()
 {
-    static const size_t page_size = sysconf(_SC_PAGESIZE);
-    static const size_t block_size = 25 * page_size; // Arbitrary, about 100 KB
-
-    if (area.size < block_size) {
-        size = area.size;
-        is_zero = false;
-        return;
-    }
-
-    intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
-
-    size = block_size;
-    is_zero = Utils::areZeroPages(area.addr, block_size / page_size);
-
-    // prevAddr = area.addr;
-    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + block_size;
-    curAddrInt < endAddrInt;
-    curAddrInt += block_size) {
-
-        size_t minsize = ((endAddrInt-curAddrInt)<block_size)?(endAddrInt-curAddrInt):block_size;
-        if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
-            break;
-        }
-        size += minsize;
-    }
-
-    /* If we are near the end and processing non-zero memory, we can return
-     * the entire section.
-     */
-    if (((area.size - size) < block_size) && !is_zero)
-        size = area.size;
-}
-
-static void writeAnAreaWithZeroPages(int fd, Area *orig_area)
-{
-    Area area = *orig_area;
-
-    while (area.size > 0) {
-        size_t size;
-        bool is_zero;
-        Area a = area;
-        getNextPageRange(a, size, is_zero);
-
-        a.properties = is_zero ? Area::ZERO_PAGE : Area::NONE;
-        a.size = size;
-        void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
-        a.endAddr = endAddr;
-
-        Utils::writeAll(fd, &a, sizeof(a));
-        if (!is_zero) {
-            debuglogstdio(LCF_CHECKPOINT, "Found non zero pages starting %p of size %d", a.addr, a.size);
-            Utils::writeAll(fd, a.addr, a.size);
-        }
-        else {
-            debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
-        }
-        area.addr = endAddr;
-        area.size -= size;
-    }
-}
-
-static void writeAnArea(int fd, Area *area)
-{
-    area->print("Save");
-
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
-    }
-
-    if (area->flags & MAP_ANONYMOUS) {
-        /* We look for zero pages in anonymous sections and skip saving them */
-        writeAnAreaWithZeroPages(fd, area);
-    }
-    else {
-        Utils::writeAll(fd, area, sizeof(*area));
-        Utils::writeAll(fd, area->addr, area->size);
-    }
-
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
-    }
-}
-
-static void writeAllAreas()
-{
-    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", savestatepath);
     int fd;
-    unlink(savestatepath);
-    OWNCALL(fd = creat(savestatepath, 0644));
+    OWNCALL(fd = open(savestatepath, O_RDONLY));
     MYASSERT(fd != -1)
 
-    /* Saving the savestate header */
+    /* Read the savestate header */
     StateHeader sh;
-    int n=0;
-    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
-        if (thread->state == ThreadInfo::ST_SUSPENDED) {
-            sh.pthread_ids[n] = thread->pthread_id;
-            sh.tids[n++] = thread->tid;
-        }
-    }
-    sh.thread_count = n;
-    Utils::writeAll(fd, &sh, sizeof(sh));
+    Utils::readAll(fd, &sh, sizeof(sh));
 
-    /* Parse the content of /proc/self/maps into memory.
-     * We don't allocate memory here, we are using our special allocated
-     * memory section that won't be saved in the savestate.
-     */
+    Area current_area;
+    Area saved_area;
+
+    debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
+
+    /* Read the memory mapping */
     ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
 
-    Area area;
-    while (procSelfMaps.getNextArea(&area)) {
+    /* Read the first saved area */
+    Utils::readAll(fd, &saved_area, sizeof saved_area);
 
-        if (skipArea(&area)) {
-            area.properties |= Area::SKIP;
-            Utils::writeAll(fd, &area, sizeof(area));
-            continue;
+    /* Read the first current area */
+    bool not_eof = procSelfMaps.getNextArea(&current_area);
+
+    while ((saved_area.addr != nullptr) || not_eof) {
+
+        /* Check for matching areas */
+        int cmp = readAndCompAreas(fd, &saved_area, &current_area);
+        if (cmp == 0) {
+            /* Areas matched, we advance both areas */
+            Utils::readAll(fd, &saved_area, sizeof saved_area);
+            not_eof = procSelfMaps.getNextArea(&current_area);
         }
-
-        writeAnArea(fd, &area);
+        if (cmp > 0) {
+            /* Saved area is greater, advance current area */
+            not_eof = procSelfMaps.getNextArea(&current_area);
+        }
+        if (cmp < 0) {
+            /* Saved area is smaller, advance saved area */
+            Utils::readAll(fd, &saved_area, sizeof saved_area);
+        }
     }
-
-    area.addr = nullptr; // End of data
-    area.size = 0; // End of data
-    Utils::writeAll(fd, &area, sizeof(area));
 
     /* That's all folks */
     MYASSERT(close(fd) == 0);
 }
-
 
 static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 {
@@ -529,114 +553,141 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     return 0;
 }
 
-
-static void readAllAreas()
+static void writeAllAreas()
 {
+    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", savestatepath);
     int fd;
-    OWNCALL(fd = open(savestatepath, O_RDONLY));
+    unlink(savestatepath);
+    OWNCALL(fd = creat(savestatepath, 0644));
     MYASSERT(fd != -1)
 
-    /* Read the savestate header */
+    /* Saving the savestate header */
     StateHeader sh;
-    Utils::readAll(fd, &sh, sizeof(sh));
-
-    Area current_area;
-    Area saved_area;
-
-    debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
-
-    /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
-
-    /* Read the first saved area */
-    Utils::readAll(fd, &saved_area, sizeof saved_area);
-
-    /* Read the first current area */
-    bool not_eof = procSelfMaps.getNextArea(&current_area);
-
-    while ((saved_area.addr != nullptr) || not_eof) {
-
-        /* Check for matching areas */
-        int cmp = readAndCompAreas(fd, &saved_area, &current_area);
-        if (cmp == 0) {
-            /* Areas matched, we advance both areas */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
-            not_eof = procSelfMaps.getNextArea(&current_area);
-        }
-        if (cmp > 0) {
-            /* Saved area is greater, advance current area */
-            not_eof = procSelfMaps.getNextArea(&current_area);
-        }
-        if (cmp < 0) {
-            /* Saved area is smaller, advance saved area */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
+    int n=0;
+    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+        if (thread->state == ThreadInfo::ST_SUSPENDED) {
+            sh.pthread_ids[n] = thread->pthread_id;
+            sh.tids[n++] = thread->tid;
         }
     }
+    sh.thread_count = n;
+    Utils::writeAll(fd, &sh, sizeof(sh));
+
+    /* Parse the content of /proc/self/maps into memory.
+     * We don't allocate memory here, we are using our special allocated
+     * memory section that won't be saved in the savestate.
+     */
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
+
+    Area area;
+    while (procSelfMaps.getNextArea(&area)) {
+
+        if (skipArea(&area)) {
+            area.properties |= Area::SKIP;
+            Utils::writeAll(fd, &area, sizeof(area));
+            continue;
+        }
+
+        writeAnArea(fd, &area);
+    }
+
+    area.addr = nullptr; // End of data
+    area.size = 0; // End of data
+    Utils::writeAll(fd, &area, sizeof(area));
 
     /* That's all folks */
     MYASSERT(close(fd) == 0);
 }
 
-void Checkpoint::handler(int signum)
+static void writeAnArea(int fd, const Area *area)
 {
-    /* Access the X Window identifier from the SDL_Window struct */
-    Display *display = gameDisplay;
-    if (!display) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Could not access connection to X11");
-        return;
+    area->print("Save");
+
+    if ((area->prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
     }
 
-    /* Check that we are using our alternate stack by looking at the address
-     * of this local variable.
-     */
-    if ((&display < ReservedMemory::getAddr(0)) ||
-        (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
-        return;
-    }
-
-    XSync(display, false);
-
-    if (ThreadManager::restoreInProgress) {
-        /* Before reading from the savestate, we must keep some values from
-         * the connection to the X server, because they are used for checking
-         * consistency of requests. We can store them in this (alternate) stack
-         * which will be preserved.
-         */
-
-#ifdef X_DPY_GET_LAST_REQUEST_READ
-        uint64_t last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
-        uint64_t request = X_DPY_GET_REQUEST(display);
-#else
-        uint64_t last_request_read = static_cast<uint64_t>(display->last_request_read);
-        uint64_t request = static_cast<uint64_t>(display->request);
-#endif
-
-        /* Copy the entire xcb connection struct */
-        // xcb_connection_t xcb_conn;
-        // xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
-        // memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
-
-        readAllAreas();
-        /* restoreInProgress was overwritten, putting the right value again */
-        ThreadManager::restoreInProgress = true;
-
-        /* Restoring the display values */
-#ifdef X_DPY_SET_LAST_REQUEST_READ
-        X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
-        X_DPY_SET_REQUEST(display, request);
-#else
-        display->last_request_read = static_cast<unsigned long>(last_request_read);
-        display->request = static_cast<unsigned long>(request);
-#endif
-
-        /* Restore the entire xcb connection struct */
-        // memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
+    if (area->flags & MAP_ANONYMOUS) {
+        /* We look for zero pages in anonymous sections and skip saving them */
+        writeAnAreaWithZeroPages(fd, area);
     }
     else {
-        writeAllAreas();
+        Utils::writeAll(fd, area, sizeof(*area));
+        Utils::writeAll(fd, area->addr, area->size);
     }
-    debuglogstdio(LCF_CHECKPOINT, "End restore.");
+
+    if ((area->prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
+    }
 }
+
+static void writeAnAreaWithZeroPages(int fd, const Area *orig_area)
+{
+    Area area = *orig_area;
+
+    while (area.size > 0) {
+        size_t size;
+        bool is_zero;
+        Area a = area;
+        getNextPageRange(a, size, is_zero);
+
+        a.properties = is_zero ? Area::ZERO_PAGE : Area::NONE;
+        a.size = size;
+        void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
+        a.endAddr = endAddr;
+
+        Utils::writeAll(fd, &a, sizeof(a));
+        if (!is_zero) {
+            debuglogstdio(LCF_CHECKPOINT, "Found non zero pages starting %p of size %d", a.addr, a.size);
+            Utils::writeAll(fd, a.addr, a.size);
+        }
+        else {
+            debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
+        }
+        area.addr = endAddr;
+        area.size -= size;
+    }
+}
+
+/* This function returns a range of zero or non-zero pages. If the first page
+ * is non-zero, it searches for all contiguous non-zero pages and returns them.
+ * If the first page is all-zero, it searches for contiguous zero pages and
+ * returns them.
+ */
+static void getNextPageRange(const Area &area, size_t &size, bool &is_zero)
+{
+    static const size_t page_size = sysconf(_SC_PAGESIZE);
+    static const size_t block_size = 25 * page_size; // Arbitrary, about 100 KB
+
+    if (area.size < block_size) {
+        size = area.size;
+        is_zero = false;
+        return;
+    }
+
+    intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
+
+    size = block_size;
+    is_zero = Utils::areZeroPages(area.addr, block_size / page_size);
+
+    // prevAddr = area.addr;
+    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + block_size;
+    curAddrInt < endAddrInt;
+    curAddrInt += block_size) {
+
+        size_t minsize = ((endAddrInt-curAddrInt)<block_size)?(endAddrInt-curAddrInt):block_size;
+        if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
+            break;
+        }
+        size += minsize;
+    }
+
+    /* If we are near the end and processing non-zero memory, we can return
+     * the entire section.
+     */
+    if (((area.size - size) < block_size) && !is_zero)
+        size = area.size;
+}
+
 
 }

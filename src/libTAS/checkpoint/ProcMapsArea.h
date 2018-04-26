@@ -67,7 +67,7 @@ union Area {
     };
     char _padding[4096];
 
-    void print(const char* prefix);
+    void print(const char* prefix) const;
 };
 }
 

@@ -343,6 +343,12 @@ void ThreadManager::checkpoint(const char* savestatepath)
     AudioPlayer::close();
 #endif
 
+    /* Perform a series of checks before attempting to checkpoint */
+    if (!Checkpoint::checkCheckpoint()) {
+        ThreadSync::releaseLocks();
+        return;
+    }
+
     /* Before suspending threads, we must also register our signal handlers */
     CustomSignals::registerHandlers();
 
