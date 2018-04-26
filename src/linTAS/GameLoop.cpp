@@ -986,9 +986,6 @@ void GameLoop::processInputs(AllInputs &ai)
 
                 AutoSave::update(context, movie);
             }
-
-            /* Update the movie end time */
-            context->movie_end_time = context->current_time;
             break;
 
         case SharedConfig::RECORDING_READ:

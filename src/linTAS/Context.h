@@ -63,9 +63,6 @@ struct Context {
     /* current time */
     struct timespec current_time;
 
-    /* time at the end of the loaded movie */
-    struct timespec movie_end_time;
-
     /* config */
     Config config;
 

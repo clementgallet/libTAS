@@ -141,11 +141,6 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 
     if (mainT) {
         while(addedDelay > maxDeferredDelay) {
-            /* Indicating that the following frame boundary is not
-             * a normal (draw) frame boundary.
-             */
-            drawFB = false;
-
             /* We have built up too much delay. We must enter a frame boundary,
              * to advance the time.
              * This decrements addedDelay by (basically) how much it advances ticks
@@ -178,13 +173,6 @@ void DeterministicTimer::exitFrameBoundary()
 
     if(shared_config.framerate == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
-
-    if(addedDelay > timeIncrement)
-        addedDelay -= timeIncrement;
-    else {
-        addedDelay.tv_sec = 0;
-        addedDelay.tv_nsec = 0;
-    }
 }
 
 
@@ -215,13 +203,17 @@ void DeterministicTimer::enterFrameBoundary()
     }
 
     /* If we have less delay than the length of a frame, we advance ticks by
-     * the length of a frame. Otherwise, we don't increment ticks, and
-     * addedDelay will be decremented at the end of the frame boundary.
+     * the remaining length. Otherwise, we don't increment ticks, and we
+     * decrement addedDelay by the time increment.
      */
     if (timeIncrement > addedDelay) {
-        TimeHolder deltaTicks = lastEnterTicks + timeIncrement - ticks;
-        ticks = lastEnterTicks + timeIncrement;
+        TimeHolder deltaTicks = timeIncrement - addedDelay;
+        ticks += deltaTicks;
         debuglog(LCF_TIMESET | LCF_FRAME, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
+        addedDelay = {0, 0};
+    }
+    else {
+        addedDelay -= timeIncrement;
     }
 
     /* Doing the audio mixing here */
@@ -261,8 +253,6 @@ void DeterministicTimer::enterFrameBoundary()
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
 
     lastEnterTime = currentTime;
-
-    lastEnterTicks = ticks;
 }
 
 void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
@@ -274,7 +264,6 @@ void DeterministicTimer::initialize(void)
     ticks = shared_config.initial_time;
     fractional_part = 0;
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
-    lastEnterTicks = ticks;
 
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
         main_gettimes[i] = 0;
@@ -283,7 +272,6 @@ void DeterministicTimer::initialize(void)
 
     addedDelay = {0, 0};
     fakeExtraTicks = {0, 0};
-    drawFB = true;
 }
 
 DeterministicTimer detTimer;

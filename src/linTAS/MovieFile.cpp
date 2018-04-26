@@ -118,18 +118,6 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->rerecord_count = config.value("rerecord_count").toUInt();
 	context->authors = config.value("authors").toString().toStdString();
 
-	/* Load the movie length and compute the movie end time using the initial time */
-	struct timespec movie_length;
-	movie_length.tv_sec = config.value("movie_length_sec").toInt();
-	movie_length.tv_nsec = config.value("movie_length_nsec").toInt();
-
-	context->movie_end_time.tv_sec = movie_length.tv_sec + context->config.sc.initial_time.tv_sec;
-	context->movie_end_time.tv_nsec = movie_length.tv_nsec + context->config.sc.initial_time.tv_nsec;
-	if (context->movie_end_time.tv_nsec >= 1000000000) {
-		context->movie_end_time.tv_nsec -= 1000000000;
-		context->movie_end_time.tv_sec++;
-	}
-
 	config.beginGroup("mainthread_timetrack");
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
@@ -234,16 +222,6 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("libtas_major_version", MAJORVERSION);
 	config.setValue("libtas_minor_version", MINORVERSION);
 	config.setValue("libtas_patch_version", PATCHVERSION);
-
-	/* Compute and save movie length */
-	time_t movie_length_sec = context->movie_end_time.tv_sec - context->config.sc.initial_time.tv_sec;
-	time_t movie_length_nsec = context->movie_end_time.tv_nsec - context->config.sc.initial_time.tv_nsec;
-	if (movie_length_nsec < 0) {
-		movie_length_nsec += 1000000000;
-		movie_length_sec--;
-	}
-	config.setValue("movie_length_sec", static_cast<int>(movie_length_sec));
-	config.setValue("movie_length_nsec", static_cast<int>(movie_length_nsec));
 
 	config.beginGroup("mainthread_timetrack");
 	config.setValue("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
@@ -453,8 +431,11 @@ void MovieFile::lengthConfig(int &sec, int& nsec)
 	QSettings config(configfile, QSettings::IniFormat);
 	config.setFallbacksEnabled(false);
 
-	sec = config.value("movie_length_sec").toInt();
-	nsec = config.value("movie_length_nsec").toInt();
+	unsigned int movie_framecount = config.value("frame_count").toUInt();
+	unsigned int framerate = config.value("framerate").toUInt();
+
+	sec = movie_framecount / framerate;
+	nsec = (int) ((1000000000.0f * (double)(movie_framecount % framerate)) / framerate);
 }
 
 std::string MovieFile::authors()

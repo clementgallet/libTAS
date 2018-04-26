@@ -87,9 +87,6 @@ private:
     /* State of the deterministic timer */
     TimeHolder ticks;
 
-    /* Timer value during the last frame boundary enter */
-    TimeHolder lastEnterTicks;
-
     /*
      * Extra ticks to add to GetTicks().
      * Required for very specific situations.
@@ -104,11 +101,6 @@ private:
 
     /* Accumulated delay */
     TimeHolder addedDelay;
-
-    /* Store if we enter a frame boundary from a draw or
-     * from a sleep.
-     */
-    bool drawFB;
 
     /* Count for each time-getting method before time auto-advances to
      * avoid a freeze. Distinguish between main and secondary threads.
