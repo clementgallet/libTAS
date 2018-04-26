@@ -147,6 +147,10 @@ public:
 
     QGroupBox *movieBox;
 
+    QLabel *statusIcon;
+    QLabel *statusSoft;
+    QLabel *statusMute;
+
     /* Update UI elements (mainly enable/disable) depending on
      * the game status (running/stopped), to prevent modifying values that
      * are not supposed to be modified when the game is running.
@@ -183,6 +187,8 @@ public:
     void alertSave(void* promise);
 
 private:
+    /* Update the status bar */
+    void updateStatusBar();
 
     /* Update movie parameters from movie file */
     void updateMovieParams();
@@ -228,6 +234,7 @@ private slots:
     void slotMovieRecording();
     void slotToggleEncode();
     void slotMuteSound(bool checked);
+    void slotRenderSoft(bool checked);
     void slotLoggingPrint();
     void slotLoggingExclude();
     void slotHotkeyFocus();

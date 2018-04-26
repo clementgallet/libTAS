@@ -25,8 +25,9 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
-// #include <QApplication>
+#include <QStatusBar>
 #include <QInputDialog>
+#include <QApplication>
 
 #include "MainWindow.h"
 #include "../MovieFile.h"
@@ -83,6 +84,19 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     createActions();
     createMenus();
     menuBar()->setNativeMenuBar(false);
+
+    /* Game Executable */
+    gamePath = new QLineEdit();
+    gamePath->setReadOnly(true);
+    gamePath->setMinimumWidth(400);
+
+    browseGamePath = new QPushButton("Browse...");
+    connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
+    disabledWidgetsOnStart.append(browseGamePath);
+
+    /* Command-line options */
+    cmdOptions = new QLineEdit();
+    disabledWidgetsOnStart.append(cmdOptions);
 
     /* Movie File */
     moviePath = new QLineEdit();
@@ -141,22 +155,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fastForwardCheck = new QCheckBox("Fast-forward");
     connect(fastForwardCheck, &QAbstractButton::clicked, this, &MainWindow::slotFastForward);
 
-    /* Game Executable */
-    gamePath = new QLineEdit();
-    gamePath->setReadOnly(true);
-    gamePath->setMinimumWidth(400);
-
-    browseGamePath = new QPushButton("Browse...");
-    connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
-    disabledWidgetsOnStart.append(browseGamePath);
-
-    // gamepathchooser = new Fl_Native_File_Chooser();
-    // gamepathchooser->title("Game path");
-
-    /* Command-line options */
-    cmdOptions = new QLineEdit();
-    disabledWidgetsOnStart.append(cmdOptions);
-
     /* Buttons */
     QPushButton *launchButton = new QPushButton(tr("Start"));
     connect(launchButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
@@ -174,6 +172,15 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     buttonBox->addButton(launchGdbButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
 
+    /* Status bar */
+    QStyle *currentStyle = QApplication::style();
+    QIcon icon = currentStyle->standardIcon(QStyle::SP_MessageBoxWarning);
+    QPixmap pixmap = icon.pixmap(statusBar()->height()*0.6,statusBar()->height()*0.6);
+
+    statusIcon = new QLabel();
+    statusIcon->setPixmap(pixmap);
+    statusSoft = new QLabel(tr("Savestates will likely not work unless you check [Video > Force software rendering]"));
+    statusMute = new QLabel(tr("Savestates will likely not work unless you check [Sound > Mute]"));
 
     /* Layouts */
 
@@ -531,7 +538,7 @@ void MainWindow::createMenus()
     screenResMenu->addActions(screenResGroup->actions());
     disabledWidgetsOnStart.append(screenResMenu);
 
-    renderSoftAction = videoMenu->addAction(tr("Force software rendering"));
+    renderSoftAction = videoMenu->addAction(tr("Force software rendering"), this, &MainWindow::slotRenderSoft);
     renderSoftAction->setCheckable(true);
     disabledActionsOnStart.append(renderSoftAction);
 
@@ -933,6 +940,30 @@ void MainWindow::updateUIFromConfig()
     setCheckboxesFromMask(savestateIgnoreGroup, context->config.sc.ignore_sections);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
+
+    updateStatusBar();
+}
+
+void MainWindow::updateStatusBar()
+{
+    statusBar()->removeWidget(statusIcon);
+    statusBar()->removeWidget(statusSoft);
+    statusBar()->removeWidget(statusMute);
+
+    if (!context->config.opengl_soft) {
+        statusBar()->addWidget(statusIcon);
+        statusIcon->show();
+        statusBar()->addWidget(statusSoft);
+        statusSoft->show();
+        return;
+    }
+    if (!context->config.sc.audio_mute) {
+        statusBar()->addWidget(statusIcon);
+        statusIcon->show();
+        statusBar()->addWidget(statusMute);
+        statusMute->show();
+        return;
+    }
 }
 
 void MainWindow::slotLaunch()
@@ -984,7 +1015,6 @@ void MainWindow::slotLaunch()
         }
     }
 
-    context->config.opengl_soft = renderSoftAction->isChecked();
     context->config.gameargs = cmdOptions->text().toStdString();
 
     QString llvmStr;
@@ -1169,6 +1199,13 @@ void MainWindow::slotMuteSound(bool checked)
 {
     context->config.sc.audio_mute = checked;
     context->config.sc_modified = true;
+    updateStatusBar();
+}
+
+void MainWindow::slotRenderSoft(bool checked)
+{
+    context->config.opengl_soft = checked;
+    updateStatusBar();
 }
 
 void MainWindow::slotLoggingPrint()
