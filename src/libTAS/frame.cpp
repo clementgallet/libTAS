@@ -157,7 +157,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* We store the previous draw function so that we can still draw the hud
      * for non-draw frames.
      */
-    static std::function<void()> previous_draw;
+    static std::function<void()> previous_draw([](){});
     if (drawFB) {
         previous_draw = draw;
     }
