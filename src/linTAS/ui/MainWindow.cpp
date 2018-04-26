@@ -600,8 +600,15 @@ void MainWindow::createMenus()
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
+#ifdef LIBTAS_ENABLE_AVDUMPING
     configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
+#else
+    configEncodeAction = toolsMenu->addAction(tr("Configure encode... (disabled)"));
+    configEncodeAction->setEnabled(false);
+    toggleEncodeAction = toolsMenu->addAction(tr("Start encode (disabled)"));
+    toggleEncodeAction->setEnabled(false);
+#endif
 
     toolsMenu->addSeparator();
 
@@ -853,6 +860,12 @@ void MainWindow::updateMovieParams()
         rerecordCount->setValue(tempmovie.nbRerecords());
         authorField->setText(tempmovie.authors().c_str());
         authorField->setReadOnly(true);
+
+        /* Format movie length */
+        double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
+        int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
+
+        movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
 
         int sec, nsec;
         tempmovie.lengthConfig(sec, nsec);

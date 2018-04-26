@@ -232,7 +232,9 @@ private slots:
     void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
+#ifdef LIBTAS_ENABLE_AVDUMPING    
     void slotToggleEncode();
+#endif
     void slotMuteSound(bool checked);
     void slotRenderSoft(bool checked);
     void slotLoggingPrint();
