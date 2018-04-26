@@ -40,6 +40,8 @@ private:
     QComboBox *frameVertChoice;
     QComboBox *inputsHorChoice;
     QComboBox *inputsVertChoice;
+    QComboBox *messagesHorChoice;
+    QComboBox *messagesVertChoice;
 
 private slots:
     void slotOk();

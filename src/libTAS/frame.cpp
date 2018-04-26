@@ -248,6 +248,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         }
         if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
+
+        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+            hud.renderMessages();
     }
 #endif
 
@@ -268,6 +271,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
             /* Encode failed, disable AV dumping */
             avencoder.reset(nullptr);
             debuglog(LCF_ALERT, "Encoding to ", AVEncoder::dumpfile, " failed because:\n", avencoder->getErrorMsg());
+            RenderHUD::insertMessage("Encoding failed");
             shared_config.av_dumping = false;
             sendMessage(MSGB_ENCODE_FAILED);
         }
@@ -292,6 +296,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         }
         if (shared_config.osd & SharedConfig::OSD_INPUTS)
             hud.renderInputs(ai);
+
+        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+            hud.renderMessages();
     }
 #endif
 
@@ -360,6 +367,35 @@ static void pushQuitEvent(void)
     }
 }
 
+
+#ifdef LIBTAS_ENABLE_HUD
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud)
+#else
+static void screen_redraw(std::function<void()> draw)
+#endif
+{
+    if (!skipping_draw && shared_config.save_screenpixels) {
+        ScreenCapture::setPixels(false);
+
+#ifdef LIBTAS_ENABLE_HUD
+        if (!shared_config.osd_encode) {
+            hud.resetOffsets();
+            if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
+                hud.renderFrame(framecount);
+                // hud.renderNonDrawFrame(nondraw_framecount);
+            }
+            if (shared_config.osd & SharedConfig::OSD_INPUTS)
+                hud.renderInputs(ai);
+
+            if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+                hud.renderMessages();
+        }
+#endif
+
+        NATIVECALL(draw());
+    }
+}
+
 #ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 #else
@@ -369,6 +405,7 @@ static void receive_messages(std::function<void()> draw)
     while (1)
     {
         int message = receiveMessage();
+        std::string str;
         AllInputs preview_ai;
 
         switch (message)
@@ -394,44 +431,15 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_EXPOSE:
-                if (!skipping_draw && shared_config.save_screenpixels) {
-                    ScreenCapture::setPixels(false);
-
 #ifdef LIBTAS_ENABLE_HUD
-                    if (!shared_config.osd_encode) {
-                        hud.resetOffsets();
-                        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                            hud.renderFrame(framecount);
-                            // hud.renderNonDrawFrame(nondraw_framecount);
-                        }
-                        if (shared_config.osd & SharedConfig::OSD_INPUTS)
-                            hud.renderInputs(ai);
-                    }
+                screen_redraw(draw, hud);
+#else
+                screen_redraw(draw);
 #endif
-
-                    NATIVECALL(draw());
-                }
                 break;
 
             case MSGN_PREVIEW_INPUTS:
                 receiveData(&preview_ai, sizeof(AllInputs));
-
-#ifdef LIBTAS_ENABLE_HUD
-                if (!skipping_draw && (shared_config.osd & SharedConfig::OSD_INPUTS) && shared_config.save_screenpixels) {
-                    ScreenCapture::setPixels(false);
-
-                    hud.resetOffsets();
-                    if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                        hud.renderFrame(framecount);
-                        // hud.renderNonDrawFrame(nondraw_framecount);
-                    }
-                    hud.renderInputs(ai);
-                    hud.renderPreviewInputs(preview_ai);
-
-                    NATIVECALL(draw());
-                }
-#endif
-
                 break;
 
             case MSGN_SAVESTATE:
@@ -467,24 +475,10 @@ static void receive_messages(std::function<void()> draw)
                     struct timespec ticks = detTimer.getTicks();
                     sendData(&ticks, sizeof(struct timespec));
 
-                    if (!skipping_draw && shared_config.save_screenpixels) {
-                        /* If we restored from a savestate, refresh the screen */
-
-                        ScreenCapture::setPixels(true);
-
-#ifdef LIBTAS_ENABLE_HUD
-                        hud.resetOffsets();
-
-                        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                            hud.renderFrame(framecount);
-                            // hud.renderNonDrawFrame(nondraw_framecount);
-                        }
-                        if (shared_config.osd & SharedConfig::OSD_INPUTS)
-                            hud.renderInputs(ai);
-#endif
-
-                        NATIVECALL(draw());
-                    }
+                    /* Screen should have changed after loading, so update
+                     * the internal screen memory.
+                     */
+                    ScreenCapture::setPixels(true);
 
                 }
 
@@ -521,6 +515,11 @@ static void receive_messages(std::function<void()> draw)
                 }
 #endif
                 break;
+
+            case MSGN_OSD_MSG:
+                RenderHUD::insertMessage(receiveString().c_str());
+                break;
+
             case MSGN_END_FRAMEBOUNDARY:
                 return;
 

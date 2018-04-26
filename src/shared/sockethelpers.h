@@ -40,7 +40,7 @@ void closeSocket(void);
  */
 void sendData(const void* elem, size_t size);
 
-/* Send a string object through the socket. It first sends the string lenght,
+/* Send a string object through the socket. It first sends the string length,
  * followed by the char array.
  */
 void sendString(const std::string& str);

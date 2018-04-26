@@ -114,6 +114,12 @@ enum {
     MSGB_ALERT_MSG,
 
     /*
+     * Send a message to be displayed on the game screen
+     * Arguments: size_t (string length) then char[len]
+     */
+    MSGN_OSD_MSG,
+
+    /*
      * Ask the game to make a savestate
      * Argument: none
      */

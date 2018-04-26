@@ -35,9 +35,8 @@
 #include <X11/Xlibint.h>
 #include <sys/statvfs.h>
 #include "errno.h"
-// #include <X11/Xlib-xcb.h>
 #include "../../external/xcbint.h"
-//#include "../sdlwindows.h"
+#include "../renderhud/RenderHUD.h"
 #include "ReservedMemory.h"
 
 #define ONE_MB 1024 * 1024
@@ -92,6 +91,7 @@ bool Checkpoint::checkCheckpoint()
         unsigned long available_size = devData.f_bavail * devData.f_bsize;
         if (savestate_size > available_size) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate");
+            RenderHUD::insertMessage("Not enough available space to store the savestate");
             return false;
         }
     }
@@ -138,12 +138,14 @@ bool Checkpoint::checkRestore()
         if (t == sh.thread_count) {
             /* We didn't find a match */
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
+            RenderHUD::insertMessage("Loading the savestate not allowed because new threads where created");
             return false;
         }
     }
 
     if (n != sh.thread_count) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
+        RenderHUD::insertMessage("Loading the savestate not allowed because new threads where created");
         return false;
     }
 

@@ -340,6 +340,7 @@ void MainWindow::createActions()
 
     addActionCheckable(osdGroup, tr("Frame Count"), SharedConfig::OSD_FRAMECOUNT);
     addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
+    addActionCheckable(osdGroup, tr("Messages"), SharedConfig::OSD_MESSAGES);
 
     frequencyGroup = new QActionGroup(this);
 

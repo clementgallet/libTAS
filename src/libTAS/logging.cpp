@@ -96,9 +96,9 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
     /* If we must send the string to the program for displaying to the user,
      * we only send the actual message */
-    if (lcf & LCF_ALERT) {
-        setAlertMsg(s+size, strlen(s)-size);
-    }
+    // if (lcf & LCF_ALERT) {
+    //     setAlertMsg(s+size, strlen(s)-size);
+    // }
 
     size = strlen(s);
 

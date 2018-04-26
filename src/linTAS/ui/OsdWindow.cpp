@@ -67,6 +67,25 @@ OsdWindow::OsdWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDial
     inputsLayout->addWidget(inputsVertChoice);
     inputsGroupBox->setLayout(inputsLayout);
 
+    /* Messages */
+    messagesHorChoice = new QComboBox();
+    messagesHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
+    messagesHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
+    messagesHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
+
+    messagesVertChoice = new QComboBox();
+    messagesVertChoice->addItem("Top", SharedConfig::OSD_TOP);
+    messagesVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
+    messagesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
+
+    QGroupBox *messagesGroupBox = new QGroupBox(tr("Messages"));
+    QHBoxLayout *messagesLayout = new QHBoxLayout;
+    messagesLayout->addWidget(new QLabel(tr("Horizontal position:")));
+    messagesLayout->addWidget(messagesHorChoice);
+    messagesLayout->addWidget(new QLabel(tr("Vertical position:")));
+    messagesLayout->addWidget(messagesVertChoice);
+    messagesGroupBox->setLayout(messagesLayout);
+
     /* Buttons */
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -78,6 +97,7 @@ OsdWindow::OsdWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDial
 
     mainLayout->addWidget(frameGroupBox);
     mainLayout->addWidget(inputsGroupBox);
+    mainLayout->addWidget(messagesGroupBox);
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
@@ -106,12 +126,22 @@ void OsdWindow::update_config()
     index = inputsVertChoice->findData(context->config.sc.osd_inputs_location & vflags);
     if (index >= 0)
         inputsVertChoice->setCurrentIndex(index);
+
+    index = messagesHorChoice->findData(context->config.sc.osd_messages_location & hflags);
+    if (index >= 0)
+        messagesHorChoice->setCurrentIndex(index);
+
+    index = messagesVertChoice->findData(context->config.sc.osd_messages_location & vflags);
+    if (index >= 0)
+        messagesVertChoice->setCurrentIndex(index);
+
 }
 
 void OsdWindow::slotOk()
 {
     context->config.sc.osd_frame_location = frameHorChoice->currentData().toInt() | frameVertChoice->currentData().toInt();
     context->config.sc.osd_inputs_location = inputsHorChoice->currentData().toInt() | inputsVertChoice->currentData().toInt();
+    context->config.sc.osd_messages_location = messagesHorChoice->currentData().toInt() | messagesVertChoice->currentData().toInt();
     context->config.sc_modified = true;
 
     /* Close window */

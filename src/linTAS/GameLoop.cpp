@@ -649,6 +649,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             sendMessage(MSGN_SAVESTATE);
             sendString(savestatepath);
+
+            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                std::string message = "Saved state ";
+                message += std::to_string(statei);
+                sendMessage(MSGN_OSD_MSG);
+                sendString(message);
+                sendMessage(MSGN_EXPOSE);
+            }
+
             return false;
         }
 
@@ -692,7 +701,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Check that the savestate exists */
             struct stat sb;
             if (stat(savestatepath.c_str(), &sb) == -1) {
-                emit alertToShow(QString("There is no savestate to load in this slot"));
+                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                    std::string message = "No savestate in slot ";
+                    message += std::to_string(statei);
+                    sendMessage(MSGN_OSD_MSG);
+                    sendString(message);
+                }
+                else {
+                    emit alertToShow(QString("There is no savestate to load in this slot"));
+                }
                 return false;
             }
 
@@ -719,7 +736,13 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
                     if (!moviePrefix) {
                         /* Not a prefix, we don't allow loading */
-                        emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
+                        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                            sendMessage(MSGN_OSD_MSG);
+                            sendString(std::string("Savestate inputs mismatch"));
+                        }
+                        else {
+                            emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
+                        }
                         return false;
                     }
                 }
@@ -734,7 +757,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Loading is not assured to succeed, the following must
              * only be done if it's the case.
              */
-            if (message == MSGB_LOADING_SUCCEEDED) {
+
+            bool didLoad = message == MSGB_LOADING_SUCCEEDED;
+            if (didLoad) {
                 /* The copy of SharedConfig that the game stores may not
                  * be the same as this one due to memory loading, so we
                  * send it.
@@ -778,6 +803,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             emit inputsChanged();
             emit frameCountChanged();
+
+            if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
+                std::string msg = "Loaded state ";
+                msg += std::to_string(statei);
+                sendMessage(MSGN_OSD_MSG);
+                sendString(msg);
+            }
+
+            sendMessage(MSGN_EXPOSE);
+
             return false;
         }
 
@@ -862,25 +897,32 @@ void GameLoop::sleepSendPreview()
     /* Send a preview of inputs so that the game can display them
      * on the HUD */
 #ifdef LIBTAS_ENABLE_HUD
-    if ((context->config.sc.recording == SharedConfig::NO_RECORDING) ||
-        (context->config.sc.recording == SharedConfig::RECORDING_WRITE)) {
 
-        /* Get inputs if we have input focus */
-        if (haveFocus()) {
+    /* Don't preview when reading inputs */
+    if (context->config.sc.recording == SharedConfig::RECORDING_READ)
+        return;
 
-            /* Format the keyboard and mouse state and save it in the AllInputs struct */
-            static AllInputs preview_ai, last_preview_ai;
-            context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
-            emit inputsToBeSent(preview_ai);
+    /* Only preview if input focus */
+    if (!haveFocus())
+        return;
 
-            /* Send inputs if changed */
-            if (!(preview_ai == last_preview_ai)) {
-                sendMessage(MSGN_PREVIEW_INPUTS);
-                sendData(&preview_ai, sizeof(AllInputs));
-                last_preview_ai = preview_ai;
-            }
-        }
+    /* Only preview if we actually print inputs */
+    if (!(context->config.sc.osd & SharedConfig::OSD_INPUTS))
+        return;
+
+    /* Format the keyboard and mouse state and save it in the AllInputs struct */
+    static AllInputs preview_ai, last_preview_ai;
+    context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
+    emit inputsToBeSent(preview_ai);
+
+    /* Send inputs if changed */
+    if (!(preview_ai == last_preview_ai)) {
+        sendMessage(MSGN_PREVIEW_INPUTS);
+        sendData(&preview_ai, sizeof(AllInputs));
+        sendMessage(MSGN_EXPOSE);
+        last_preview_ai = preview_ai;
     }
+
 #endif
 }
 

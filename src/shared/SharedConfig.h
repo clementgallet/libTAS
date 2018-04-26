@@ -85,10 +85,11 @@ struct SharedConfig {
     enum OSDFlags {
         OSD_FRAMECOUNT = 0x01,
         OSD_INPUTS = 0x02,
+        OSD_MESSAGES = 0x04,
     };
 
     /* Elements to be displayed on the OSD */
-    int osd = OSD_FRAMECOUNT | OSD_INPUTS;
+    int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES;
 
     /* Display OSD in the video encode */
     bool osd_encode = false;
@@ -105,6 +106,7 @@ struct SharedConfig {
 
     int osd_frame_location = OSD_LEFT | OSD_TOP;
     int osd_inputs_location = OSD_LEFT | OSD_BOTTOM;
+    int osd_messages_location = OSD_RIGHT | OSD_BOTTOM;
 
     /* Use a backup of savefiles in memory, which leaves the original
      * savefiles unmodified and save the content in savestates */

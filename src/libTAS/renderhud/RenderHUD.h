@@ -26,7 +26,11 @@
 #include "sdl_ttf.h"
 #include "SurfaceARGB.h"
 #include "../../shared/AllInputs.h"
+#include "../TimeHolder.h"
 #include <memory>
+#include <list>
+#include <utility>
+#include <string>
 
 namespace libtas {
 /* This class handles the display of some text over the game screen (HUD).
@@ -74,6 +78,12 @@ class RenderHUD
         /* Display the preview of inputs on screen */
         void renderPreviewInputs(AllInputs& ai);
 
+        /* Display messages */
+        void renderMessages();
+
+        /* Insert a message to be displayed */
+        static void insertMessage(const char* message);
+
         /* Reset offsets to 0 */
         void resetOffsets();
 
@@ -99,6 +109,9 @@ class RenderHUD
 
         /* Location offsets when displaying multiple texts on the same location */
         int offsets[9];
+
+        /* Messages to print on screen with the creation time */
+        static std::list<std::pair<std::string, TimeHolder>> messages;
 };
 }
 

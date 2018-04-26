@@ -32,6 +32,7 @@ namespace libtas {
 
 TTF_Font* RenderHUD::fg_font = nullptr;
 TTF_Font* RenderHUD::bg_font = nullptr;
+std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 
 RenderHUD::RenderHUD()
 {
@@ -243,6 +244,43 @@ void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
         int x, y;
         locationToCoords(shared_config.osd_inputs_location, x, y);
         renderText(text.c_str(), fg_color, bg_color, x, y);
+    }
+}
+
+void RenderHUD::insertMessage(const char* message)
+{
+    /* Get current time */
+    TimeHolder current_time;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time));
+
+    messages.push_back(std::make_pair(std::string(message), current_time));
+}
+
+void RenderHUD::renderMessages()
+{
+    Color fg_color = {255, 255, 255, 0};
+    Color bg_color = {0, 0, 0, 0};
+
+    TimeHolder message_timeout;
+    message_timeout = {2, 0};
+
+    /* Get current time */
+    TimeHolder current_time;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time));
+
+    auto iter = messages.begin();
+    while (iter != messages.end()) {
+
+        /* Check if we must remove the message */
+        if ((current_time - iter->second) > message_timeout) {
+            iter = messages.erase(iter);
+        }
+        else {
+            int x, y;
+            locationToCoords(shared_config.osd_messages_location, x, y);
+            renderText(iter->first.c_str(), fg_color, bg_color, x, y);
+            iter++;
+        }
     }
 }
 
