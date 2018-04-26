@@ -31,7 +31,7 @@ If you want to compile it yourself, you will need `cmake`. From the root directo
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libasound2-dev`
+The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libasound2-dev`
 
 To enable audio and video dumping, you will need `libavcodec-dev`, `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, `libswresample-dev`.
 
