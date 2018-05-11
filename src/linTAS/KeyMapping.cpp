@@ -18,10 +18,8 @@
  */
 
 #include "KeyMapping.h"
-// #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
 #include <cstring>
-#include <memory> // unique_ptr
 #include <iostream>
 
 QDataStream &operator<<(QDataStream &out, const SingleInput &obj) {

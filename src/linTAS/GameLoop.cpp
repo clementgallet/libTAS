@@ -40,10 +40,15 @@
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
 #include <csignal> // kill
-#include <memory> // unique_ptr
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 #include <X11/X.h>
+
+#include <sys/personality.h>
+#ifndef HAVE_PERSONALITY
+# include <syscall.h>
+# define personality(pers) ((long)syscall(SYS_personality, pers))
+#endif
 
 GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
 
@@ -96,6 +101,12 @@ void GameLoop::launchGameThread()
         setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
     else
         unsetenv("LP_PERF");
+
+    /* Disable Address Space Layout Randomization for the game, so that ram
+     * watch addresses do not change on game restart.
+     * Source: https://stackoverflow.com/questions/5194666/disable-randomization-of-memory-addresses/30385370#30385370
+     */
+    personality(ADDR_NO_RANDOMIZE);
 
     /* Run the actual game */
     if (context->attach_gdb) {
@@ -1039,14 +1050,13 @@ bool GameLoop::haveFocus()
 
     xcb_generic_error_t* error;
     xcb_get_input_focus_cookie_t focus_cookie = xcb_get_input_focus(context->conn);
-    std::unique_ptr<xcb_get_input_focus_reply_t> focus_reply(xcb_get_input_focus_reply(context->conn, focus_cookie, &error));
+    xcb_get_input_focus_reply_t* focus_reply = xcb_get_input_focus_reply(context->conn, focus_cookie, &error);
     if (error) {
         std::cerr << "Could not get focussed window, X error" << error->error_code << std::endl;
     }
 
     window = focus_reply->focus;
-
-    // XGetInputFocus(context->display, &window, &revert);
+    free(focus_reply);
 
     if ((context->inputs_focus & Context::FOCUS_GAME) &&
         (window == context->game_window))
