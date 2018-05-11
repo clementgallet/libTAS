@@ -718,9 +718,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             moviepath += context->gamename;
             moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
-            bool moviePrefix;
-
-            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+            /* When loading in read mode, we don't allow loading a non-prefix movie */
+            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
 
                 /* Checking if the savestate movie is a prefix of our movie */
                 MovieFile savedmovie(context);
@@ -730,21 +729,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     return false;
                 }
 
-                moviePrefix = movie.isPrefix(savedmovie);
-
-                /* When loading in read mode, we don't allow loading a non-prefix movie */
-                if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-                    if (!moviePrefix) {
-                        /* Not a prefix, we don't allow loading */
-                        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                            sendMessage(MSGN_OSD_MSG);
-                            sendString(std::string("Savestate inputs mismatch"));
-                        }
-                        else {
-                            emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
-                        }
-                        return false;
+                if (!movie.isPrefix(savedmovie)) {
+                    /* Not a prefix, we don't allow loading */
+                    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                        sendMessage(MSGN_OSD_MSG);
+                        sendString(std::string("Savestate inputs mismatch"));
                     }
+                    else {
+                        emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
+                    }
+                    return false;
                 }
             }
 
@@ -769,13 +763,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                     /* When in writing move, we load the movie associated
-                     * with the savestate. We check if we are loading a movie prefix.
-                     * If so, we can keep the same movie.
+                     * with the savestate.
                      */
-                    if (!moviePrefix) {
-                        /* Load the movie file */
-                        movie.loadInputs(moviepath);
-                    }
+                    movie.loadInputs(moviepath);
 
                     /* Increment rerecord count */
                     context->rerecord_count++;

@@ -26,11 +26,6 @@ InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : 
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
-    /* We have to make a special case, because loading the same savestate
-     * in write mode does not update the movie length until the next frame
-     */
-    // if (context->config.sc.recording == SharedConfig::RECORDING_WRITE)
-    //     return context->framecount;
     return movie->nbFrames();
 }
 

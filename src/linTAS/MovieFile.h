@@ -84,6 +84,9 @@ public:
     /* Get the number of frames of the current movie */
     unsigned int nbFrames();
 
+    /* Get the frame count of the associated savestate if any */
+    unsigned int savestateFramecount() const;
+
     /* Get the number of rerecords from a moviefile. It must be extracted first */
     unsigned int nbRerecords();
 

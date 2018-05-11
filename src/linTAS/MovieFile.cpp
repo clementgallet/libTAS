@@ -197,7 +197,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
 
-    for (auto it = input_list.begin(); it != input_list.begin() + nb_frames; ++it) {
+    for (auto it = input_list.begin(); it != input_list.end(); ++it) {
         writeFrame(input_stream, *it);
     }
     input_stream.close();
@@ -210,7 +210,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setFallbacksEnabled(false);
 
 	config.setValue("game_name", context->gamename.c_str());
-	config.setValue("frame_count", nb_frames);
+	config.setValue("frame_count", static_cast<unsigned int>(input_list.size()));
 	config.setValue("keyboard_support", context->config.sc.keyboard_support);
 	config.setValue("mouse_support", context->config.sc.mouse_support);
 	config.setValue("nb_controllers", context->config.sc.nb_controllers);
@@ -222,6 +222,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("libtas_major_version", MAJORVERSION);
 	config.setValue("libtas_minor_version", MINORVERSION);
 	config.setValue("libtas_patch_version", PATCHVERSION);
+	config.setValue("savestate_frame_count", nb_frames);
 
 	config.beginGroup("mainthread_timetrack");
 	config.setValue("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
@@ -410,6 +411,18 @@ unsigned int MovieFile::nbFrames()
 	return input_list.size();
 }
 
+unsigned int MovieFile::savestateFramecount() const
+{
+	/* Load the config file into the context struct */
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
+
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	return config.value("savestate_frame_count").toUInt();
+}
+
 unsigned int MovieFile::nbRerecords()
 {
     /* Load the config file into the context struct */
@@ -523,16 +536,16 @@ void MovieFile::truncateInputs(int size)
 void MovieFile::close()
 {
 	input_list.clear();
-
-    // if (context->config.sc.recording != SharedConfig::NO_RECORDING)
-    //     saveMovie();
 }
 
 bool MovieFile::isPrefix(const MovieFile& movie)
 {
+	/* We only care about frame up to the savestate point */
+	unsigned int fc = movie.savestateFramecount();
+
     /* Not a prefix if the size is greater */
-    if (movie.input_list.size() > input_list.size())
+    if (fc > input_list.size())
         return false;
 
-    return std::equal(movie.input_list.begin(), movie.input_list.end(), input_list.begin());
+    return std::equal(movie.input_list.begin(), movie.input_list.begin() + fc, input_list.begin());
 }
