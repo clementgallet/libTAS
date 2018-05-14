@@ -69,8 +69,8 @@ namespace libtas {
  */
 std::string find_lib(const char* library);
 
-OVERRIDE void *dlopen(const char *file, int mode);
-OVERRIDE void *dlsym(void *handle, const char *name);
+OVERRIDE void *dlopen(const char *file, int mode) throw();
+OVERRIDE void *dlsym(void *handle, const char *name) throw();
 
 OVERRIDE void *_dl_sym(void *, const char *, void *);
 

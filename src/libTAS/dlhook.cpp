@@ -51,7 +51,7 @@ std::string find_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen);
 DEFINE_ORIG_POINTER(dlsym);
 
-void *dlopen(const char *file, int mode) {
+void *dlopen(const char *file, int mode) throw() {
     if (!orig::dlopen) {
         orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
     }
@@ -69,7 +69,7 @@ void *dlopen(const char *file, int mode) {
     return result;
 }
 
-void *dlsym(void *handle, const char *name) {
+void *dlsym(void *handle, const char *name) throw() {
     if (!orig::dlsym) {
         orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
     }
