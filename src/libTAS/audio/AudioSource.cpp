@@ -260,7 +260,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                  */
                 int64_t extraTicks = static_cast<int64_t>(1000000000) * (-remainingSamples);
                 extraTicks /= curBuf->frequency;
-                detTimer.fakeAdvanceTimer({extraTicks / 1000000000, extraTicks % 1000000000});
+                detTimer.fakeAdvanceTimer({static_cast<time_t>(extraTicks / 1000000000), static_cast<long>(extraTicks % 1000000000)});
                 callback(*curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
