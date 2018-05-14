@@ -32,6 +32,9 @@ namespace libtas {
 /* Check if oldf is a savefile and rename it. Returns true is renamed */
 bool rename_posix (const char *oldf, const char *newf);
 
+/* Check if filename is a savefile and flag it as removed. Returns true is removed */
+bool remove_posix (const char *filename);
+
 /* Open FILE and return a new file descriptor for it, or -1 on error.
    OFLAG determines the type of access used.  If O_CREAT or O_TMPFILE is set
    in OFLAG, the third argument is taken as a `mode_t', the mode of the

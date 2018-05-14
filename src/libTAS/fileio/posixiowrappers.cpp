@@ -33,6 +33,7 @@
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <errno.h>
 #include "../GlobalState.h"
 #include "../inputs/jsdev.h"
 #include "../inputs/evdev.h"
@@ -60,14 +61,24 @@ static int get_memfd(const char* source, int flags)
     bool overwrite = ((flags & O_TRUNC) != 0);
 
     /*
-     * If we already register the savefile, just return the file descriptor
+     * If we already register the savefile, just return the file descriptor.
      */
-    if (savefile_fds.find(sstr) != savefile_fds.end()) {
+    if ((savefile_fds.find(sstr) != savefile_fds.end()) && (savefile_fds[sstr] != -1)) {
         fd = savefile_fds[sstr];
 
         if (overwrite) {
             ftruncate(fd, 0);
         }
+    }
+    else if ((savefile_fds.find(sstr) != savefile_fds.end()) && (flags & O_RDONLY)) {
+        /* File was removed and opened in read-only mode */
+        errno = ENOENT;
+        return -1;
+    }
+    else if ((savefile_fds.find(sstr) != savefile_fds.end())) {
+        /* File was removed and opened in write mode */
+        fd = syscall(SYS_memfd_create, source, 0);
+        savefile_fds[sstr] = fd;
     }
     else {
         /* Create an anonymous file and store its file descriptor using the
@@ -154,6 +165,19 @@ bool rename_posix (const char *oldf, const char *newf)
         savefile_fds.erase(oldstr);
         std::string newstr(newf);
         savefile_fds[newstr] = fd;
+        return true;
+    }
+    return false;
+}
+
+bool remove_posix (const char *filename)
+{
+    std::string filestr(filename);
+    if (savefile_fds.find(filestr) != savefile_fds.end()) {
+        /* The file is a savefile, thus we close the fd and flag the entry as removed */
+        int fd = savefile_fds[filestr];
+        NATIVECALL(close(fd));
+        savefile_fds[filestr] = -1;
         return true;
     }
     return false;

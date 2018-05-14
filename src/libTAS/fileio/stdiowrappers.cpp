@@ -54,7 +54,7 @@ static FILE* get_memstream(const char* source, const char* modes)
      * If we already register the savefile, we must copy the content of the
      * old buffer to the new stream.
      */
-    if (savefile_buffers.find(sstr) != savefile_buffers.end()) {
+    if ((savefile_buffers.find(sstr) != savefile_buffers.end()) && (savefile_buffers[sstr].first != nullptr)) {
 
         /* Open a new memory stream using pointers to the previous memory buffer
          * and size. Pointers are not updated until fflush or fclose, so we
@@ -69,7 +69,15 @@ static FILE* get_memstream(const char* source, const char* modes)
 
         /* Free the old buffer */
         free(savefile_buffers[sstr].first);
-
+    }
+    else if ((savefile_buffers.find(sstr) != savefile_buffers.end()) && (strstr(modes, "r") != nullptr)) {
+        /* File was removed and opened in read-only mode */
+        errno = ENOENT;
+        return nullptr;
+    }
+    else if (savefile_buffers.find(sstr) != savefile_buffers.end()) {
+        /* File was removed and opened in write mode */
+        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
     }
     else {
         /* Create an entry in our map */
@@ -158,6 +166,20 @@ bool rename_stdio (const char *oldf, const char *newf)
     return false;
 }
 
+bool remove_stdio (const char *filename)
+{
+    std::string filestr(filename);
+    if (savefile_buffers.find(filestr) != savefile_buffers.end()) {
+        /* The file is a savefile, thus we close the fd and flag the entry as removed */
+        std::pair<char*,size_t> value = savefile_buffers[filestr];
+        free(value.first);
+        value.first = nullptr;
+        value.second = 0;
+        savefile_buffers[filestr] = value;
+        return true;
+    }
+    return false;
+}
 
 DEFINE_ORIG_POINTER(fopen)
 DEFINE_ORIG_POINTER(fopen64)

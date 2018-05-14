@@ -30,6 +30,11 @@ namespace libtas {
 /* Rename file OLD to NEW.  */
 OVERRIDE int rename (const char *oldf, const char *newf) throw();
 
+/* Remove file FILENAME.  */
+OVERRIDE int remove (const char *filename) throw();
+
+/* Remove the link NAME.  */
+OVERRIDE int unlink (const char *name) throw();
 }
 
 #endif
