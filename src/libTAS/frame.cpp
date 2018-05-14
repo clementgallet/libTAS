@@ -154,17 +154,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 {
     static float fps, lfps = 0;
 
-    /* We store the previous draw function so that we can still draw the hud
-     * for non-draw frames.
-     */
-    static std::function<void()> previous_draw([](){});
-    if (drawFB) {
-        previous_draw = draw;
-    }
-    else {
-        draw = previous_draw;
-    }
-
     debuglog(LCF_FRAME, "Enter frame boundary");
     ThreadManager::setMainThread();
 
