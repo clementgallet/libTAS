@@ -358,9 +358,9 @@ static void pushQuitEvent(void)
 
 
 #ifdef LIBTAS_ENABLE_HUD
-static void screen_redraw(std::function<void()> draw, RenderHUD& hud)
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs preview_ai)
 #else
-static void screen_redraw(std::function<void()> draw)
+static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 #endif
 {
     if (!skipping_draw && shared_config.save_screenpixels) {
@@ -373,8 +373,10 @@ static void screen_redraw(std::function<void()> draw)
                 hud.renderFrame(framecount);
                 // hud.renderNonDrawFrame(nondraw_framecount);
             }
-            if (shared_config.osd & SharedConfig::OSD_INPUTS)
+            if (shared_config.osd & SharedConfig::OSD_INPUTS) {
                 hud.renderInputs(ai);
+                hud.renderPreviewInputs(preview_ai);
+            }
 
             if (shared_config.osd & SharedConfig::OSD_MESSAGES)
                 hud.renderMessages();
@@ -391,11 +393,13 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 static void receive_messages(std::function<void()> draw)
 #endif
 {
+    AllInputs preview_ai;
+    preview_ai.emptyInputs();
+
     while (1)
     {
         int message = receiveMessage();
         std::string str;
-        AllInputs preview_ai;
 
         switch (message)
         {
@@ -421,14 +425,19 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_EXPOSE:
 #ifdef LIBTAS_ENABLE_HUD
-                screen_redraw(draw, hud);
+                screen_redraw(draw, hud, preview_ai);
 #else
-                screen_redraw(draw);
+                screen_redraw(draw, preview_ai);
 #endif
                 break;
 
             case MSGN_PREVIEW_INPUTS:
                 receiveData(&preview_ai, sizeof(AllInputs));
+#ifdef LIBTAS_ENABLE_HUD
+                screen_redraw(draw, hud, preview_ai);
+#else
+                screen_redraw(draw, preview_ai);
+#endif
                 break;
 
             case MSGN_SAVESTATE:
@@ -507,6 +516,11 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_OSD_MSG:
                 RenderHUD::insertMessage(receiveString().c_str());
+#ifdef LIBTAS_ENABLE_HUD
+                screen_redraw(draw, hud, preview_ai);
+#else
+                screen_redraw(draw, preview_ai);
+#endif
                 break;
 
             case MSGN_END_FRAMEBOUNDARY:

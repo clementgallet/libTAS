@@ -658,6 +658,13 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             savestatepath += context->gamename;
             savestatepath += ".state" + std::to_string(statei);
 
+            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                std::string msg = "Saving state ";
+                msg += std::to_string(statei);
+                sendMessage(MSGN_OSD_MSG);
+                sendString(msg);
+            }
+
             sendMessage(MSGN_SAVESTATE);
             sendString(savestatepath);
 
@@ -666,7 +673,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 message += std::to_string(statei);
                 sendMessage(MSGN_OSD_MSG);
                 sendString(message);
-                sendMessage(MSGN_EXPOSE);
             }
 
             return false;
@@ -751,6 +757,13 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     }
                     return false;
                 }
+            }
+
+            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                std::string msg = "Loading state ";
+                msg += std::to_string(statei);
+                sendMessage(MSGN_OSD_MSG);
+                sendString(msg);
             }
 
             sendMessage(MSGN_LOADSTATE);
@@ -920,7 +933,6 @@ void GameLoop::sleepSendPreview()
     if (!(preview_ai == last_preview_ai)) {
         sendMessage(MSGN_PREVIEW_INPUTS);
         sendData(&preview_ai, sizeof(AllInputs));
-        sendMessage(MSGN_EXPOSE);
         last_preview_ai = preview_ai;
     }
 
