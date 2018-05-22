@@ -367,20 +367,18 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
         ScreenCapture::setPixels(false);
 
 #ifdef LIBTAS_ENABLE_HUD
-        if (!shared_config.osd_encode) {
-            hud.resetOffsets();
-            if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-                hud.renderFrame(framecount);
-                // hud.renderNonDrawFrame(nondraw_framecount);
-            }
-            if (shared_config.osd & SharedConfig::OSD_INPUTS) {
-                hud.renderInputs(ai);
-                hud.renderPreviewInputs(preview_ai);
-            }
-
-            if (shared_config.osd & SharedConfig::OSD_MESSAGES)
-                hud.renderMessages();
+        hud.resetOffsets();
+        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
+            hud.renderFrame(framecount);
+            // hud.renderNonDrawFrame(nondraw_framecount);
         }
+        if (shared_config.osd & SharedConfig::OSD_INPUTS) {
+            hud.renderInputs(ai);
+            hud.renderPreviewInputs(preview_ai);
+        }
+
+        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+            hud.renderMessages();
 #endif
 
         NATIVECALL(draw());
