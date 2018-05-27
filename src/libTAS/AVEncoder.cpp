@@ -51,7 +51,7 @@ static std::string error_msg;
 AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     error = 0;
 
-    ASSERT_RETURN_VOID(shared_config.framerate > 0, "Not supporting non deterministic timer");
+    ASSERT_RETURN_VOID(shared_config.framerate_num > 0, "Not supporting non deterministic timer");
 
     start_frame = sf;
     accum_samples = 0;
@@ -100,7 +100,7 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     video_codec_context->bit_rate = shared_config.video_bitrate;
     video_codec_context->width = width;
     video_codec_context->height = height;
-    video_codec_context->time_base = (AVRational){1,static_cast<int>(shared_config.framerate)};
+    video_codec_context->time_base = (AVRational){static_cast<int>(shared_config.framerate_den),static_cast<int>(shared_config.framerate_num)};
     video_codec_context->gop_size = 10; /* emit one intra frame every ten frames */
     // video_codec_context->max_b_frames = 1;
 

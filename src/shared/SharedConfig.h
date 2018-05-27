@@ -66,11 +66,12 @@ struct SharedConfig {
     /* Are we dumping audio and video? */
     bool av_dumping = false;
 
-    /* Framerate at which the game is running.
+    /* Framerate at which the game is running, as a fraction
      * Set to 0 to use the nondeterministic timer
      * In that case, AV dumping is disabled.
      */
-    unsigned int framerate = 60;
+    unsigned int framerate_num = 60;
+    unsigned int framerate_den = 1;
 
     /* Are we recording and sending keyboard inputs to the game? */
     bool keyboard_support = true;

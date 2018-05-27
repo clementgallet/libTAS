@@ -128,9 +128,13 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     movieLength = new QLabel("Movie length: -");
 
     /* Frames per second */
-    logicalFps = new QSpinBox();
-    logicalFps->setMaximum(100000);
-    disabledWidgetsOnStart.append(logicalFps);
+    fpsNumField = new QSpinBox();
+    fpsNumField->setMaximum(100000);
+    disabledWidgetsOnStart.append(fpsNumField);
+
+    fpsDenField = new QSpinBox();
+    fpsDenField->setMaximum(100000);
+    disabledWidgetsOnStart.append(fpsDenField);
 
     fpsValues = new QLabel("Current FPS: - / -");
 
@@ -233,14 +237,22 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     QGroupBox *generalBox = new QGroupBox(tr("General options"));
     QVBoxLayout *generalLayout = new QVBoxLayout;
 
-    QGridLayout *generalFrameLayout = new QGridLayout;
-    generalFrameLayout->addWidget(new QLabel(tr("Frame:")), 0, 0);
-    generalFrameLayout->addWidget(frameCount, 0, 1);
-    generalFrameLayout->addWidget(currentLength, 0, 3);
-    generalFrameLayout->addWidget(new QLabel(tr("Frames per second:")), 1, 0);
-    generalFrameLayout->addWidget(logicalFps, 1, 1);
-    generalFrameLayout->addWidget(fpsValues, 1, 3);
-    generalFrameLayout->setColumnMinimumWidth(2, 50);
+    QHBoxLayout *generalFrameLayout = new QHBoxLayout;
+    generalFrameLayout->addWidget(new QLabel(tr("Frame:")));
+    generalFrameLayout->addStretch(1);
+    generalFrameLayout->addWidget(frameCount);
+    generalFrameLayout->addStretch(1);
+    generalFrameLayout->addWidget(currentLength);
+    generalFrameLayout->addStretch(1);
+
+    QHBoxLayout *generalFpsLayout = new QHBoxLayout;
+    generalFpsLayout->addWidget(new QLabel(tr("Frames per second:")));
+    generalFpsLayout->addStretch(1);
+    generalFpsLayout->addWidget(fpsNumField);
+    generalFpsLayout->addWidget(new QLabel(tr("/")));
+    generalFpsLayout->addWidget(fpsDenField);
+    generalFpsLayout->addStretch(1);
+    generalFpsLayout->addWidget(fpsValues);
 
     QHBoxLayout *generalTimeLayout = new QHBoxLayout;
     generalTimeLayout->addWidget(new QLabel(tr("System time:")));
@@ -258,6 +270,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     generalControlLayout->addStretch(1);
 
     generalLayout->addLayout(generalFrameLayout);
+    generalLayout->addLayout(generalFpsLayout);
     generalLayout->addLayout(generalTimeLayout);
     generalLayout->addLayout(generalControlLayout);
     generalBox->setLayout(generalLayout);
@@ -767,17 +780,17 @@ void MainWindow::updateFrameCountTime()
     initialTimeNsec->setValue(context->current_time.tv_nsec);
 
     /* Update movie time */
-    if (context->config.sc.framerate > 0) {
-        double sec = (double)(context->framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-        int min = context->framecount / (context->config.sc.framerate * 60);
-
-        currentLength->setText(QString("Current Time: %1m %2s").arg(min).arg(sec, 0, 'f', 2));
+    if (context->config.sc.framerate_num > 0) {
+        double sec = (double)(context->framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num;
+        int imin = (int)(sec/60);
+        double dsec = sec - 60*imin;
+        currentLength->setText(QString("Current Time: %1m %2s").arg(imin).arg(dsec, 0, 'f', 2));
 
         /* Format movie length */
-        double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-        int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
-
-        movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
+        double msec = (double)(context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num;
+        int immin = (int)(msec/60);
+        double dmsec = msec - 60*immin;
+        movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
     }
 }
 
@@ -862,11 +875,6 @@ void MainWindow::updateMovieParams()
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        double msec = (double)(context->config.sc.movie_framecount % (context->config.sc.framerate * 60)) / context->config.sc.framerate;
-        int mmin = context->config.sc.movie_framecount / (context->config.sc.framerate * 60);
-
-        movieLength->setText(QString("Movie length: %1m %2s").arg(mmin).arg(msec, 0, 'f', 2));
-
         int sec, nsec;
         tempmovie.lengthConfig(sec, nsec);
         movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
@@ -897,7 +905,8 @@ void MainWindow::updateUIFromConfig()
     gamePath->setText(context->gamepath.c_str());
     cmdOptions->setText(context->config.gameargs.c_str());
     moviePath->setText(context->config.moviefile.c_str());
-    logicalFps->setValue(context->config.sc.framerate);
+    fpsNumField->setValue(context->config.sc.framerate_num);
+    fpsDenField->setValue(context->config.sc.framerate_den);
     authorField->setText(context->authors.c_str());
 
     initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
@@ -996,7 +1005,8 @@ void MainWindow::slotLaunch()
     context->authors = authorField->text().toStdString();
 
     /* Set a few parameters */
-    context->config.sc.framerate = logicalFps->value();
+    context->config.sc.framerate_num = fpsNumField->value();
+    context->config.sc.framerate_den = fpsDenField->value();
     context->config.sc.initial_time.tv_sec = initialTimeSec->value();
     context->config.sc.initial_time.tv_nsec = initialTimeNsec->value();
 

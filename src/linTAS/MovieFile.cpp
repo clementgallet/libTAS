@@ -114,7 +114,13 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.nb_controllers = config.value("nb_controllers").toBool();
 	context->config.sc.initial_time.tv_sec = config.value("initial_time_sec").toInt();
 	context->config.sc.initial_time.tv_nsec = config.value("initial_time_nsec").toInt();
-	context->config.sc.framerate = config.value("framerate").toUInt();
+	context->config.sc.framerate_num = config.value("framerate_num").toUInt();
+	context->config.sc.framerate_den = config.value("framerate_den").toUInt();
+	/* Compatibility with older movie format */
+	if (!context->config.sc.framerate_num) {
+		context->config.sc.framerate_num = config.value("framerate").toUInt();
+		context->config.sc.framerate_den = 1;
+	}
 	context->rerecord_count = config.value("rerecord_count").toUInt();
 	context->authors = config.value("authors").toString().toStdString();
 
@@ -216,7 +222,8 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("nb_controllers", context->config.sc.nb_controllers);
 	config.setValue("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
 	config.setValue("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
-	config.setValue("framerate", context->config.sc.framerate);
+	config.setValue("framerate_num", context->config.sc.framerate_num);
+	config.setValue("framerate_den", context->config.sc.framerate_den);
 	config.setValue("rerecord_count", context->rerecord_count);
 	config.setValue("authors", context->authors.c_str());
 	config.setValue("libtas_major_version", MAJORVERSION);
@@ -445,10 +452,17 @@ void MovieFile::lengthConfig(int &sec, int& nsec)
 	config.setFallbacksEnabled(false);
 
 	unsigned int movie_framecount = config.value("frame_count").toUInt();
-	unsigned int framerate = config.value("framerate").toUInt();
+	unsigned int framerate_num = config.value("framerate_num").toUInt();
+	unsigned int framerate_den = config.value("framerate_den").toUInt();
+	/* Compatibility with older movie format */
+	if (!framerate_num) {
+		framerate_num = config.value("framerate").toUInt();
+		framerate_den = 1;
+	}
 
-	sec = movie_framecount / framerate;
-	nsec = (int) ((1000000000.0f * (double)(movie_framecount % framerate)) / framerate);
+
+	sec = movie_framecount * framerate_den / framerate_num;
+	nsec = (int) ((1000000000.0f * (double)((movie_framecount * framerate_den) % framerate_num)) / framerate_num);
 }
 
 std::string MovieFile::authors()

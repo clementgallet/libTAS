@@ -106,7 +106,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* We override this function to disable vsync,
      * except when using non deterministic timer.
      */
-    if (shared_config.framerate > 0) {
+    if (shared_config.framerate_num > 0) {
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
     }
@@ -128,7 +128,7 @@ static int swapInterval = 0;
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
-    if (shared_config.framerate == 0)
+    if (shared_config.framerate_num == 0)
         return orig::SDL_GL_SetSwapInterval(interval);
 
     return 0; // Success

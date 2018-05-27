@@ -82,7 +82,8 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("logging_status", sc.logging_status);
     settings.setValue("includeFlags", sc.includeFlags);
     settings.setValue("excludeFlags", sc.excludeFlags);
-    settings.setValue("framerate", sc.framerate);
+    settings.setValue("framerate_num", sc.framerate_num);
+    settings.setValue("framerate_den", sc.framerate_den);
     settings.setValue("keyboard_support", sc.keyboard_support);
     settings.setValue("mouse_support", sc.mouse_support);
     settings.setValue("nb_controllers", sc.nb_controllers);
@@ -179,7 +180,8 @@ void Config::load(const std::string& gamepath) {
     sc.logging_status = settings.value("logging_status", sc.logging_status).toInt();
     sc.includeFlags = settings.value("includeFlags", sc.includeFlags).toInt();
     sc.excludeFlags = settings.value("excludeFlags", sc.excludeFlags).toInt();
-    sc.framerate = settings.value("framerate", sc.framerate).toUInt();
+    sc.framerate_num = settings.value("framerate_num", sc.framerate_num).toUInt();
+    sc.framerate_den = settings.value("framerate_den", sc.framerate_den).toUInt();
     sc.keyboard_support = settings.value("keyboard_support", sc.keyboard_support).toBool();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();

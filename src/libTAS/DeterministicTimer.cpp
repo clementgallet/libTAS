@@ -49,7 +49,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return realtime;
     }
 
-    if(shared_config.framerate == 0) {
+    if(shared_config.framerate_num == 0) {
         return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
     }
 
@@ -109,7 +109,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
-    if(shared_config.framerate == 0) // 0 framerate means disable deterministic timer
+    if(shared_config.framerate_num == 0) // 0 framerate means disable deterministic timer
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
@@ -171,7 +171,7 @@ void DeterministicTimer::exitFrameBoundary()
         sec_gettimes[i] = 0;
     }
 
-    if(shared_config.framerate == 0)
+    if(shared_config.framerate_num == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
 }
 
@@ -181,7 +181,7 @@ void DeterministicTimer::enterFrameBoundary()
     //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
 
-    if(shared_config.framerate == 0)
+    if(shared_config.framerate_num == 0)
         return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
 
     /*** First we update the state of the internal timer ***/
@@ -189,17 +189,19 @@ void DeterministicTimer::enterFrameBoundary()
     /* We compute by how much we should advance the timer
      * to run exactly as the indicated framerate
      */
-    unsigned int integer_increment = 1000000000 / shared_config.framerate;
-    unsigned int fractional_increment = 1000000000 % shared_config.framerate;
 
-    timeIncrement.tv_sec = 0;
+    timeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
+
+    uint64_t integer_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
+    uint64_t fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
+
     timeIncrement.tv_nsec = integer_increment;
 
     fractional_part += fractional_increment;
-    if (fractional_part >= shared_config.framerate)
+    while (fractional_part >= shared_config.framerate_num)
     {
         timeIncrement.tv_nsec++;
-        fractional_part -= shared_config.framerate;
+        fractional_part -= shared_config.framerate_num;
     }
 
     /* If we have less delay than the length of a frame, we advance ticks by

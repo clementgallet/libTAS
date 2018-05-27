@@ -127,7 +127,8 @@ public:
     QRadioButton *movieRecording;
     QRadioButton *moviePlayback;
 
-    QSpinBox *logicalFps;
+    QSpinBox *fpsNumField;
+    QSpinBox *fpsDenField;
     QLabel *fpsValues;
 
     QCheckBox *pauseCheck;
@@ -232,7 +233,7 @@ private slots:
     void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
-#ifdef LIBTAS_ENABLE_AVDUMPING    
+#ifdef LIBTAS_ENABLE_AVDUMPING
     void slotToggleEncode();
 #endif
     void slotMuteSound(bool checked);
