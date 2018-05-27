@@ -30,8 +30,11 @@
 #include "renderhud/RenderHUD_SDL2.h"
 #include "timewrappers.h"
 #include "ScreenCapture.h"
-#include <SDL2/SDL_syswm.h>
+// #include <SDL2/SDL_syswm.h>
 #include "WindowTitle.h"
+#include "AVEncoder.h"
+// #include <string>
+// #include <X11/Xlib.h> // Display
 
 namespace libtas {
 
@@ -51,9 +54,7 @@ DEFINE_ORIG_POINTER(SDL_GL_CreateContext);
 DEFINE_ORIG_POINTER(SDL_GL_SetSwapInterval);
 DEFINE_ORIG_POINTER(SDL_DestroyWindow);
 DEFINE_ORIG_POINTER(SDL_SetWindowSize);
-DEFINE_ORIG_POINTER(SDL_CreateRenderer);
 DEFINE_ORIG_POINTER(SDL_CreateWindowAndRenderer);
-DEFINE_ORIG_POINTER(SDL_RenderPresent);
 DEFINE_ORIG_POINTER(SDL_SetVideoMode);
 DEFINE_ORIG_POINTER(SDL_GL_SwapBuffers);
 DEFINE_ORIG_POINTER(SDL_Flip);
@@ -237,26 +238,6 @@ static int swapInterval = 0;
     /* Don't do anything */
 }
 
-/* Override */ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
-
-    if (flags & SDL_RENDERER_SOFTWARE)
-        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
-    if (flags & SDL_RENDERER_ACCELERATED)
-        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_ACCELERATED");
-    if (flags & SDL_RENDERER_PRESENTVSYNC)
-        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
-    if (flags & SDL_RENDERER_TARGETTEXTURE)
-        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
-
-    SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
-
-    ScreenCapture::init(window);
-
-    return renderer;
-}
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
@@ -284,25 +265,6 @@ static int swapInterval = 0;
     ScreenCapture::init(gameWindow);
 
     return ret;
-}
-
-/* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
-{
-    LINK_NAMESPACE_SDL2(SDL_RenderPresent);
-
-    if (GlobalState::isNative())
-        return orig::SDL_RenderPresent(renderer);
-
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-
-    /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
-    static RenderHUD_SDL2 renderHUD;
-    renderHUD.setRenderer(renderer);
-    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, renderHUD);
-#else
-    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);});
-#endif
 }
 
 /* Override */ void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y)

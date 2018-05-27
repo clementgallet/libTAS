@@ -21,6 +21,7 @@
 - Change the way of hooking dlfoo functions because it broke on glibc 2.27 (now using _dl_sym to get the real dlsym)
 - Fix the time increase at frame boundary when the game had some sleep calls, so that the time remains a multiple of the framerate increment
 - Fix games using SDL mixer by replacing calls to SDL_MixAudio by SDL_MixAudioFormat, the former needed an audio device opened
+- Always make logical and screen coords match on SDL2
 
 ## [1.1.1] - 2018-03-25
 ### Added

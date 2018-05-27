@@ -23,9 +23,6 @@
 #include "global.h"
 #include "../external/SDL1.h"
 #include <SDL2/SDL.h>
-#include "AVEncoder.h"
-#include <string>
-#include <X11/Xlib.h> // Display
 
 namespace libtas {
 
@@ -168,27 +165,6 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 OVERRIDE int SDL_CreateWindowAndRenderer(
                  int width, int height, Uint32 window_flags,
                  SDL_Window **window, SDL_Renderer **renderer);
-
-/**
- *  \brief Create a 2D rendering context for a window.
- *
- *  \param window The window where rendering is displayed.
- *  \param index    The index of the rendering driver to initialize, or -1 to
- *                  initialize the first one supporting the requested flags.
- *  \param flags    ::SDL_RendererFlags.
- *
- *  \return A valid rendering context or NULL if there was an error.
- *
- *  \sa SDL_CreateSoftwareRenderer()
- *  \sa SDL_GetRendererInfo()
- *  \sa SDL_DestroyRenderer()
- */
-OVERRIDE SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
-
-/**
- *  \brief Update the screen with rendering performed.
- */
-OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
 
 /**
  *  \brief Get the position of a window.
