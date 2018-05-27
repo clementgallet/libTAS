@@ -27,6 +27,12 @@
 namespace libtas {
 
 static const char* dummySDLDriver = "libtas";
+
+/* Keep a copy of the SDL_AudioFormat used to open the audio device, because
+ * SDL_MixAudio uses the current audio format, but as we actually don't open the
+ * audio device, we call instead SDL_MixAudioFormat with the saved audio format.
+ */
+static SDL_AudioFormat audioFormat;
 static SDL_AudioCallback audioCallback;
 static void* callbackArg;
 // static Uint16 bufferSamplesSize;
@@ -164,6 +170,9 @@ void fillBufferCallback(AudioBuffer& ab)
         if (obtained != NULL) {
             memmove(obtained, desired, sizeof(SDL_AudioSpec));
         }
+
+        /* Keep a copy of the audio format */
+        audioFormat = desired->format;
     }
 
     return 0;
@@ -238,6 +247,17 @@ void fillBufferCallback(AudioBuffer& ab)
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     SDL_PauseAudio(pause_on);
 }
+
+void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    /* SDL_MixAudio uses the opened audio device, but we don't open any,
+     * so we use SDL_MixAudioFormat which don't required a device to be opened
+     * and instead let us specify the audio format.
+     */
+    SDL_MixAudioFormat(dst, src, audioFormat, len, volume);
+}
+
 
 /* Override */ int SDL_QueueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
