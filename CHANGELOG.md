@@ -1,5 +1,4 @@
-## [Unreleased]
-
+## [1.2.0] - 2018-05-28
 ### Added
 - Input editor
 - Recording mode when input editor is opened does not truncate the movie
@@ -18,9 +17,9 @@
 - Fix garbage inputs caused by uninitialized inputs when game does not have focus
 - Always simulate the game window being on top-left corner so that games using global mouse coords do not desync
 - Savestates work with audio not muted
-- Change the way of hooking dlfoo functions because it broke on glibc 2.27 (now using _dl_sym to get the real dlsym)
+- Change the way of hooking dlfoo functions because it broke on glibc 2.27 (now using `_dl_sym` to get the real dlsym)
 - Fix the time increase at frame boundary when the game had some sleep calls, so that the time remains a multiple of the framerate increment
-- Fix games using SDL mixer by replacing calls to SDL_MixAudio by SDL_MixAudioFormat, the former needed an audio device opened
+- Fix games using SDL mixer by replacing calls to `SDL_MixAudio` by `SDL_MixAudioFormat`, the former needed an audio device opened
 - Always make logical and screen coords match on SDL2
 
 ## [1.1.1] - 2018-03-25

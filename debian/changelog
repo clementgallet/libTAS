@@ -1,3 +1,15 @@
+libtas (1.2.0) unstable; urgency=medium
+
+  * Input editor
+  * Recording mode when input editor is opened does not truncate the movie
+  * Recycle threads so that savestates always see the same number of threads
+  * OSD element can be positioned by the user
+  * Add messages on the OSD
+  * Add a status bar on the main GUI window
+  * Fractional fps value
+
+ -- clement <clement@debian.home>  Mon, 28 May 2018 10:57:12 +0200
+
 libtas (1.1.1) unstable; urgency=medium
 
   * Add virtual monitor resolution
