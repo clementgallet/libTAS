@@ -33,7 +33,7 @@ namespace libtas {
     DEBUGLOGCALL(LCF_MOUSE);
     *win_x_return = game_ai.pointer_x;
     *win_y_return = game_ai.pointer_y;
-    *mask_return = game_ai.pointer_mask;
+    *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
 
     /* I don't know what it should return */
     return 1;

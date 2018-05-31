@@ -150,8 +150,8 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 {
     if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
-        if (SingleInput::inputTypeIsController(si.type))
-            return slotButtonToggle(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), true);
+        if (si.inputTypeIsController())
+            return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), true);
     }
 
     QWidget::keyPressEvent(e);
@@ -161,8 +161,8 @@ void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
 {
     if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
-        if (SingleInput::inputTypeIsController(si.type))
-            return slotButtonToggle(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), false);
+        if (si.inputTypeIsController())
+            return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), false);
     }
 
     QWidget::keyReleaseEvent(e);

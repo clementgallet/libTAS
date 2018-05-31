@@ -32,6 +32,18 @@ class InputEditorModel : public QAbstractTableModel {
 public:
     InputEditorModel(Context* c, MovieFile* m, QObject *parent = Q_NULLPTR);
 
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+
     /* Update the content of the table */
     void update();
 
@@ -56,15 +68,9 @@ public:
     /* Clear input */
     void clearInput(int row);
 
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-
 public slots:
     /* Toggle a single input and return the new value */
     bool toggleInput(const QModelIndex &index);
-
-    /* Edit a single input */
-    void editInput(const QModelIndex &index, bool value);
 
     /* Prepare for a change of inputs */
     void beginModifyInputs();
@@ -90,11 +96,6 @@ private:
 
     /* Set of inputs present in the movie */
     std::vector<SingleInput> input_set;
-
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 signals:
     void frameCountChanged();

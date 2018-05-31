@@ -253,6 +253,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     generalFpsLayout->addWidget(fpsDenField);
     generalFpsLayout->addStretch(1);
     generalFpsLayout->addWidget(fpsValues);
+    generalFpsLayout->addStretch(1);
 
     QHBoxLayout *generalTimeLayout = new QHBoxLayout;
     generalTimeLayout->addWidget(new QLabel(tr("System time:")));

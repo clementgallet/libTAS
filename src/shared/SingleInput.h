@@ -24,6 +24,14 @@
 
 class SingleInput {
 public:
+    /* Pointer buttons */
+    enum {
+        POINTER_B1,
+        POINTER_B2,
+        POINTER_B3,
+        POINTER_B4,
+        POINTER_B5,
+    };
 
     /* Controller buttons */
     enum {
@@ -63,6 +71,15 @@ public:
     enum {
         IT_NONE = -1, /* No input */
         IT_KEYBOARD = 0, /* Keyboard */
+
+        /* Mouse */
+        IT_POINTER_X = 1,
+        IT_POINTER_Y = 2,
+        IT_POINTER_B1 = 3 + POINTER_B1,
+        IT_POINTER_B2 = 3 + POINTER_B2,
+        IT_POINTER_B3 = 3 + POINTER_B3,
+        IT_POINTER_B4 = 3 + POINTER_B4,
+        IT_POINTER_B5 = 3 + POINTER_B5,
 
         /* Controller 1 */
         IT_CONTROLLER1_BUTTON_A = (1 << IT_CONTROLLER_ID_SHIFT) + BUTTON_A,
@@ -169,6 +186,39 @@ public:
         return ((type < si.type) || ((type == si.type) && (value < si.value)));
     }
 
+    /* Returns if the input is analog (non-boolean) */
+    bool isAnalog() const;
+
+    /* Check is input type is a controller */
+    int inputTypeIsController() const;
+
+    /* Extract a controller number from an input type */
+    int inputTypeToControllerNumber() const;
+
+    /* Extract a controller axis flag from an input type */
+    bool inputTypeToAxisFlag() const;
+
+    /* Extract a controller input number from an input type */
+    int inputTypeToInputNumber() const;
+
+    /* Convert a pointer button to a Xlib pointer button */
+    static unsigned int toXlibPointerButton(int button);
+
+    /* Convert a pointer button to a SDL1 pointer button */
+    static unsigned int toSDL1PointerButton(int button);
+
+    /* Convert a pointer button to a SDL2 pointer button */
+    static unsigned int toSDL2PointerButton(int button);
+
+    /* Convert a pointer mask to a Xlib pointer mask */
+    static unsigned int toXlibPointerMask(int mask);
+
+    /* Convert a pointer mask to a SDL1 pointer mask */
+    static unsigned int toSDL1PointerMask(int mask);
+
+    /* Convert a pointer mask to a SDL2 pointer mask */
+    static unsigned int toSDL2PointerMask(int mask);
+
     /* Convert an axis number to a SDL2 axis number */
     static int toSDL2Axis(int axis);
 
@@ -196,17 +246,6 @@ public:
     /* Convert button flags to an jsdev/evdev vertical hat number */
     static int toDevHatY(int buttons);
 
-    /* Check is input type is a controller */
-    static int inputTypeIsController(int type);
-
-    /* Extract a controller number from an input type */
-    static int inputTypeToControllerNumber(int type);
-
-    /* Extract a controller axis flag from an input type */
-    static bool inputTypeToAxisFlag(int type);
-
-    /* Extract a controller input number from an input type */
-    static int inputTypeToInputNumber(int type);
 };
 
 #endif

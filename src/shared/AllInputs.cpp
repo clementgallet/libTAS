@@ -36,146 +36,168 @@ void AllInputs::emptyInputs() {
     }
 }
 
-bool AllInputs::checkInput(const SingleInput &si) const
+int AllInputs::getInput(const SingleInput &si) const
 {
+    /* Keyboard inputs */
     if (si.type == SingleInput::IT_KEYBOARD) {
         for (const KeySym& ks : keyboard) {
             if (si.value == ks) {
-                return true;
-                break;
+                return 1;
             }
         }
+        return 0;
     }
 
-    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
-        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
-        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
-        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
+    /* Mouse inputs */
+    if (si.type == SingleInput::IT_POINTER_X) {
+        return pointer_x;
+    }
+    if (si.type == SingleInput::IT_POINTER_Y) {
+        return pointer_y;
+    }
+    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
+        return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
+    }
+
+    /* Controller inputs */
+    if (si.inputTypeIsController()) {
+        int controller_i = si.inputTypeToControllerNumber();
+        bool is_controller_axis = si.inputTypeToAxisFlag();
+        int controller_type = si.inputTypeToInputNumber();
 
         /* We don't support analog inputs in input editor */
-        if (!controller_axis) {
-            return controller_buttons[controller_i] & ((si.value & 0x1) << controller_type);
+        if (is_controller_axis) {
+            return controller_axes[controller_i][controller_type];
+        }
+        else {
+            return (controller_buttons[controller_i] >> controller_type) & 0x1;
         }
     }
 
-    return false;
+    return 0;
 }
 
-void AllInputs::setInput(const SingleInput &si)
+void AllInputs::setInput(const SingleInput &si, int value)
 {
     if (si.type == SingleInput::IT_KEYBOARD) {
-        bool is_set = false;
-        int k;
-        for (k=0; k < AllInputs::MAXKEYS; k++) {
-            if (!keyboard[k]) {
-                break;
-            }
-            if (si.value == keyboard[k]) {
-                is_set = true;
-            }
-        }
-
-        /* If not set, add it */
-        if (!is_set) {
-            if (k < AllInputs::MAXKEYS) {
-                keyboard[k] = si.value;
-            }
-        }
-    }
-
-    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
-        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
-        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
-        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
-
-        /* We don't support analog inputs in input editor */
-        if (!controller_axis) {
-            controller_buttons[controller_i] |= ((si.value & 0x1) << controller_type);
-        }
-    }
-}
-
-void AllInputs::clearInput(const SingleInput &si)
-{
-    if (si.type == SingleInput::IT_KEYBOARD) {
-        /* Check if key is set and remove it */
         bool is_set = false;
         int index_set = 0;
         int k;
         for (k=0; k < AllInputs::MAXKEYS; k++) {
+            if (si.value == keyboard[k]) {
+                is_set = true;
+                if (!value) {
+                    index_set = k;
+                    keyboard[k] = 0;
+                }
+            }
             if (!keyboard[k]) {
-                if (is_set) {
+                if (is_set && !value) {
                     /* Switch the last set key and the removed key */
                     keyboard[index_set] = keyboard[k-1];
                     keyboard[k-1] = 0;
                 }
                 break;
             }
-            if (si.value == keyboard[k]) {
-                is_set = true;
-                index_set = k;
-                keyboard[k] = 0;
+        }
+
+        /* If not set, add it */
+        if (!is_set && value) {
+            if (k < AllInputs::MAXKEYS) {
+                keyboard[k] = si.value;
             }
         }
     }
 
-    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
-        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
-        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
-        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
+    /* Mouse inputs */
+    if (si.type == SingleInput::IT_POINTER_X) {
+        pointer_x = value;
+    }
+    if (si.type == SingleInput::IT_POINTER_Y) {
+        pointer_y = value;
+    }
+    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
+        if (value)
+            pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
+        else
+            pointer_mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
+    }
 
-        /* We don't support analog inputs in input editor */
-        if (!controller_axis) {
-            controller_buttons[controller_i] &= ~((si.value & 0x1) << controller_type);
+
+    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
+        int controller_i = si.inputTypeToControllerNumber();
+        bool is_controller_axis = si.inputTypeToAxisFlag();
+        int controller_type = si.inputTypeToInputNumber();
+
+        if (is_controller_axis) {
+            if (value > INT16_MAX)
+                controller_axes[controller_i][controller_type] = INT16_MAX;
+            else if (value < INT16_MIN)
+                controller_axes[controller_i][controller_type] = INT16_MIN;
+            else
+                controller_axes[controller_i][controller_type] = static_cast<short>(value);
+        }
+        else {
+            if (value)
+                controller_buttons[controller_i] |= (0x1 << controller_type);
+            else
+                controller_buttons[controller_i] &= ~(0x1 << controller_type);
         }
     }
 }
 
-bool AllInputs::toggleInput(const SingleInput &si)
+int AllInputs::toggleInput(const SingleInput &si)
 {
-    if (si.type == SingleInput::IT_KEYBOARD) {
-        /* Check if key is set and remove it */
-        bool is_set = false;
-        int index_set = 0;
-        int k;
-        for (k=0; k < AllInputs::MAXKEYS; k++) {
-            if (!keyboard[k]) {
-                if (is_set) {
-                    /* Switch the last set key and the removed key */
-                    keyboard[index_set] = keyboard[k-1];
-                    keyboard[k-1] = 0;
-                    return false;
+    int value = getInput(si);
+    setInput(si, !value);
+    return !value;
+}
+
+void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
+{
+    for (const KeySym& ks : keyboard) {
+        if (ks) {
+            SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
+            input_set.insert(si);
+        }
+        else {
+            break;
+        }
+    }
+
+    if (pointer_x) {
+        SingleInput si = {SingleInput::IT_POINTER_X, 1, ""};
+        input_set.insert(si);
+    }
+    if (pointer_y) {
+        SingleInput si = {SingleInput::IT_POINTER_Y, 1, ""};
+        input_set.insert(si);
+    }
+    for (int b=0; b<5; b++) {
+        if (pointer_mask & (1 << b)) {
+            SingleInput si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
+            input_set.insert(si);
+        }
+    }
+
+    for (int c = 0; c < AllInputs::MAXJOYS; c++) {
+        for (int a = 0; a < AllInputs::MAXAXES; a++) {
+            if (controller_axes[c][a]) {
+                SingleInput si = {(((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK) + a, 1, ""};
+                input_set.insert(si);
+            }
+        }
+
+        if (!controller_buttons[c]) {
+            continue;
+        }
+        else {
+            for (int b=0; b<16; b++) {
+                if (controller_buttons[c] & (1 << b)) {
+                    SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
+                    input_set.insert(si);
                 }
-                break;
-            }
-            if (si.value == keyboard[k]) {
-                is_set = true;
-                index_set = k;
-                keyboard[k] = 0;
-            }
-        }
-
-        /* If not set, add it */
-        if (!is_set) {
-            if (k < AllInputs::MAXKEYS) {
-                keyboard[k] = si.value;
-                return true;
             }
         }
     }
-
-    if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
-        int controller_i = SingleInput::inputTypeToControllerNumber(si.type);
-        bool controller_axis = SingleInput::inputTypeToAxisFlag(si.type);
-        int controller_type = SingleInput::inputTypeToInputNumber(si.type);
-
-        /* We don't support analog inputs in input editor */
-        if (!controller_axis) {
-            bool value = controller_buttons[controller_i] & ((si.value & 0x1) << controller_type);
-            controller_buttons[controller_i] ^= ((si.value & 0x1) << controller_type);
-            return !value;
-        }
-    }
-
-    return false;
 }

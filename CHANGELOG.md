@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Added
+- Analog inputs in input editor, which are also editable
+
 ## [1.2.0] - 2018-05-28
 ### Added
 - Input editor

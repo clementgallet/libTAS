@@ -45,19 +45,8 @@ Uint32 SDL_GetMouseState(int *x, int *y)
     if (y != NULL)
         *y = ai.pointer_y;
 
-    /* Translating Xlib pointer mask to SDL pointer state */
-    Uint32 sdlmask = 0;
-    if (ai.pointer_mask & Button1Mask)
-        sdlmask |= SDL_BUTTON_LMASK;
-    if (ai.pointer_mask & Button2Mask)
-        sdlmask |= SDL_BUTTON_MMASK;
-    if (ai.pointer_mask & Button3Mask)
-        sdlmask |= SDL_BUTTON_RMASK;
-    if (ai.pointer_mask & Button4Mask)
-        sdlmask |= SDL_BUTTON_X1MASK;
-    if (ai.pointer_mask & Button5Mask)
-        sdlmask |= SDL_BUTTON_X2MASK;
-    return sdlmask;
+    /* Translating pointer mask to SDL pointer state */
+    return SingleInput::toSDL2PointerMask(ai.pointer_mask);
 }
 
 Uint32 SDL_GetGlobalMouseState(int *x, int *y)
@@ -95,20 +84,8 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
     oldx = game_ai.pointer_x;
     oldy = game_ai.pointer_y;
 
-    /* Translating Xlib pointer mask to SDL pointer state */
-    Uint32 sdlmask = 0;
-    if (ai.pointer_mask & Button1Mask)
-        sdlmask |= SDL_BUTTON_LMASK;
-    if (ai.pointer_mask & Button2Mask)
-        sdlmask |= SDL_BUTTON_MMASK;
-    if (ai.pointer_mask & Button3Mask)
-        sdlmask |= SDL_BUTTON_RMASK;
-    if (ai.pointer_mask & Button4Mask)
-        sdlmask |= SDL_BUTTON_X1MASK;
-    if (ai.pointer_mask & Button5Mask)
-        sdlmask |= SDL_BUTTON_X2MASK;
-    return sdlmask;
-
+    /* Translating pointer mask to SDL pointer state */
+    return SingleInput::toSDL2PointerMask(ai.pointer_mask);
 }
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
@@ -125,18 +102,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event2.motion.state = 0;
-    if (ai.pointer_mask & Button1Mask)
-        event2.motion.state |= SDL_BUTTON_LMASK;
-    if (ai.pointer_mask & Button2Mask)
-        event2.motion.state |= SDL_BUTTON_MMASK;
-    if (ai.pointer_mask & Button3Mask)
-        event2.motion.state |= SDL_BUTTON_RMASK;
-    if (ai.pointer_mask & Button4Mask)
-        event2.motion.state |= SDL_BUTTON_X1MASK;
-    if (ai.pointer_mask & Button5Mask)
-        event2.motion.state |= SDL_BUTTON_X2MASK;
-
+    event2.motion.state = SingleInput::toSDL2PointerMask(ai.pointer_mask);
     event2.motion.x = x;
     event2.motion.y = y;
     event2.motion.xrel = game_ai.pointer_x - x;
@@ -167,18 +133,7 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event1.motion.state = 0;
-    if (ai.pointer_mask & Button1Mask)
-        event1.motion.state |= SDL1::SDL1_BUTTON_LMASK;
-    if (ai.pointer_mask & Button2Mask)
-        event1.motion.state |= SDL1::SDL1_BUTTON_MMASK;
-    if (ai.pointer_mask & Button3Mask)
-        event1.motion.state |= SDL1::SDL1_BUTTON_RMASK;
-    if (ai.pointer_mask & Button4Mask)
-        event1.motion.state |= SDL1::SDL1_BUTTON_X1MASK;
-    if (ai.pointer_mask & Button5Mask)
-        event1.motion.state |= SDL1::SDL1_BUTTON_X2MASK;
-
+    event1.motion.state = SingleInput::toSDL1PointerMask(ai.pointer_mask);
     event1.motion.x = x;
     event1.motion.y = y;
     event1.motion.xrel = (Sint16)(game_ai.pointer_x - x);

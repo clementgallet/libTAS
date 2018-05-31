@@ -25,6 +25,7 @@
 /* I'm typedef'ing KeySym here because including <X11/X.h> messes up with Qt */
 typedef unsigned long int KeySym;
 #include <array>
+#include <set>
 
 /* Input structure that is filled by linTAS and send to libTAS every frame
  * Structure is inspired by SDL.
@@ -84,17 +85,17 @@ class AllInputs {
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 
-        /* Check if a single input is present in the inputs */
-        bool checkInput(const SingleInput &si) const;
+        /* Get the value of a single input, or 0/1 if the input is set/not set */
+        int getInput(const SingleInput &si) const;
 
-        /* Set a single input in the inputs */
-        void setInput(const SingleInput &si);
-
-        /* Clear a single input in the inputs */
-        void clearInput(const SingleInput &si);
+        /* Set a single input in the inputs to a certain value */
+        void setInput(const SingleInput &si, int value);
 
         /* Toggle a single input from the inputs and return the new value */
-        bool toggleInput(const SingleInput &si);
+        int toggleInput(const SingleInput &si);
+
+        /* Extract all single inputs and insert them in the set */
+        void extractInputs(std::set<SingleInput> &set) const;
 
 };
 

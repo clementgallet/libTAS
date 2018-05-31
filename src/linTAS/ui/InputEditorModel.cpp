@@ -34,6 +34,24 @@ int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
     return input_set.size() + 1;
 }
 
+Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return QAbstractItemModel::flags(index);
+
+    if (index.column() == 0)
+        return QAbstractItemModel::flags(index);
+
+    if (index.row() < context->framecount)
+        return QAbstractItemModel::flags(index);
+
+    const SingleInput si = input_set[index.column()-1];
+    if (si.isAnalog())
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+
+    return QAbstractItemModel::flags(index);
+}
+
 QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole) {
@@ -89,18 +107,61 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         const AllInputs ai = movie->input_list[index.row()];
         const SingleInput si = input_set[index.column()-1];
 
-        /* Check if the single input is set in movie inputs */
-        bool is_set = ai.checkInput(si);
+        /* Get the value of the single input in movie inputs */
+        int value = ai.getInput(si);
 
-        if (is_set) {
+        if (si.isAnalog()) {
+            return QString().setNum(value);
+        }
+
+        if (value) {
             return QString(si.description.c_str());
         }
         else {
             return QString("");
         }
     }
+
+    if (role == Qt::EditRole) {
+        if (index.column() == 0) {
+            return QVariant();
+        }
+
+        const AllInputs ai = movie->input_list[index.row()];
+        const SingleInput si = input_set[index.column()-1];
+
+        /* Get the value of the single input in movie inputs */
+        int value = ai.getInput(si);
+
+        if (si.isAnalog()) {
+            return QString().setNum(value);
+        }
+    }
+
     return QVariant();
 }
+
+bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (index.isValid() && role == Qt::EditRole) {
+
+        if (index.column() == 0)
+            return false;
+
+        if (index.row() < context->framecount)
+            return false;
+
+        AllInputs &ai = movie->input_list[index.row()];
+        const SingleInput si = input_set[index.column()-1];
+        int ivalue = value.toInt();
+
+        ai.setInput(si, ivalue);
+        emit dataChanged(index, index, {role});
+        return true;
+    }
+    return false;
+}
+
 
 void InputEditorModel::buildInputSet()
 {
@@ -108,28 +169,7 @@ void InputEditorModel::buildInputSet()
 
     /* Gather all unique inputs from the movie */
     for (const AllInputs &ai : movie->input_list) {
-        for (const KeySym& ks : ai.keyboard) {
-            if (ks) {
-                SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
-                new_input_set.insert(si);
-            }
-            else {
-                break;
-            }
-        }
-        for (int c = 0; c < AllInputs::MAXJOYS; c++) {
-            if (!ai.controller_buttons[c]) {
-                continue;
-            }
-            else {
-                for (int b=0; b<16; b++) {
-                    if (ai.controller_buttons[c] & (1 << b)) {
-                        SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
-                        new_input_set.insert(si);
-                    }
-                }
-            }
-        }
+        ai.extractInputs(new_input_set);
     }
 
     input_set.clear();
@@ -162,31 +202,10 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     SingleInput si = input_set[index.column()-1];
     AllInputs &ai = movie->input_list[index.row()];
 
-    bool value = ai.toggleInput(si);
+    int value = ai.toggleInput(si);
 
     emit dataChanged(index, index);
     return value;
-}
-
-void InputEditorModel::editInput(const QModelIndex &index, bool value)
-{
-    /* Don't toggle frame count */
-    if (index.column() == 0)
-        return;
-
-    /* Don't toggle past inputs */
-    if (index.row() < context->framecount)
-        return;
-
-    SingleInput si = input_set[index.column()-1];
-    AllInputs &ai = movie->input_list[index.row()];
-
-    if (value)
-        ai.setInput(si);
-    else
-        ai.clearInput(si);
-
-    emit dataChanged(index, index);
 }
 
 std::string InputEditorModel::inputLabel(int column)
@@ -264,6 +283,13 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
 
 void InputEditorModel::addUniqueInput(const SingleInput &si)
 {
+    /* Check if input is already present */
+    for (SingleInput ti : input_set) {
+        if (si == ti) {
+            return;
+        }
+    }
+
     beginInsertColumns(QModelIndex(), columnCount(), columnCount());
     input_set.push_back(si);
     endInsertColumns();
@@ -272,29 +298,7 @@ void InputEditorModel::addUniqueInput(const SingleInput &si)
 void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 {
     std::set<SingleInput> new_input_set;
-
-    for (const KeySym& ks : ai.keyboard) {
-        if (ks) {
-            SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
-            new_input_set.insert(si);
-        }
-        else {
-            break;
-        }
-    }
-    for (int c = 0; c < AllInputs::MAXJOYS; c++) {
-        if (!ai.controller_buttons[c]) {
-            continue;
-        }
-        else {
-            for (int b=0; b<16; b++) {
-                if (ai.controller_buttons[c] & (1 << b)) {
-                    SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
-                    new_input_set.insert(si);
-                }
-            }
-        }
-    }
+    ai.extractInputs(new_input_set);
 
     /* Check if added inputs are already in the list */
     for (SingleInput si : new_input_set) {

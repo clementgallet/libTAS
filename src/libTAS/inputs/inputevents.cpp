@@ -546,18 +546,7 @@ void generateMouseMotionEvents(void)
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
         /* Build up mouse state */
-        event2.motion.state = 0;
-        if (ai.pointer_mask & Button1Mask)
-            event2.motion.state |= SDL_BUTTON_LMASK;
-        if (ai.pointer_mask & Button2Mask)
-            event2.motion.state |= SDL_BUTTON_MMASK;
-        if (ai.pointer_mask & Button3Mask)
-            event2.motion.state |= SDL_BUTTON_RMASK;
-        if (ai.pointer_mask & Button4Mask)
-            event2.motion.state |= SDL_BUTTON_X1MASK;
-        if (ai.pointer_mask & Button5Mask)
-            event2.motion.state |= SDL_BUTTON_X2MASK;
-
+        event2.motion.state = SingleInput::toSDL2PointerMask(ai.pointer_mask);
         event2.motion.xrel = ai.pointer_x - old_ai.pointer_x;
         event2.motion.yrel = ai.pointer_y - old_ai.pointer_y;
         event2.motion.x = game_ai.pointer_x + event2.motion.xrel;
@@ -572,18 +561,7 @@ void generateMouseMotionEvents(void)
         event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
         /* Build up mouse state */
-        event1.motion.state = 0;
-        if (ai.pointer_mask & Button1Mask)
-            event1.motion.state |= SDL1::SDL1_BUTTON_LMASK;
-        if (ai.pointer_mask & Button2Mask)
-            event1.motion.state |= SDL1::SDL1_BUTTON_MMASK;
-        if (ai.pointer_mask & Button3Mask)
-            event1.motion.state |= SDL1::SDL1_BUTTON_RMASK;
-        if (ai.pointer_mask & Button4Mask)
-            event1.motion.state |= SDL1::SDL1_BUTTON_X1MASK;
-        if (ai.pointer_mask & Button5Mask)
-            event1.motion.state |= SDL1::SDL1_BUTTON_X2MASK;
-
+        event1.motion.state = SingleInput::toSDL1PointerMask(ai.pointer_mask);
         event1.motion.xrel = (Sint16)(ai.pointer_x - old_ai.pointer_x);
         event1.motion.yrel = (Sint16)(ai.pointer_y - old_ai.pointer_y);
         event1.motion.x = (Uint16) (game_ai.pointer_x + event1.motion.xrel);
@@ -595,7 +573,7 @@ void generateMouseMotionEvents(void)
     if (game_info.mouse & GameInfo::XEVENTS) {
         XEvent event;
         event.xmotion.type = MotionNotify;
-        event.xmotion.state = ai.pointer_mask;
+        event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
         event.xmotion.x = game_ai.pointer_x + ai.pointer_x - old_ai.pointer_x;
         event.xmotion.y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
         event.xmotion.x_root = event.xmotion.x;
@@ -617,41 +595,32 @@ void generateMouseButtonEvents(void)
 {
     struct timespec time = detTimer.getTicks();
 
-    static int xbuttons[] = {Button1,
-        Button2, Button3,
-        Button4, Button5};
-    static int xbuttonmasks[] = {Button1Mask,
-        Button2Mask, Button3Mask,
-        Button4Mask, Button5Mask};
-    static int sdlbuttons[] = {SDL_BUTTON_LEFT,
-        SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT,
-        SDL_BUTTON_X1, SDL_BUTTON_X2};
-    static int sdl1buttons[] = {SDL1::SDL1_BUTTON_LEFT,
-        SDL1::SDL1_BUTTON_MIDDLE, SDL1::SDL1_BUTTON_RIGHT,
-        SDL1::SDL1_BUTTON_X1, SDL1::SDL1_BUTTON_X2};
+    static int buttons[] = {SingleInput::POINTER_B1,
+        SingleInput::POINTER_B2, SingleInput::POINTER_B3,
+        SingleInput::POINTER_B4, SingleInput::POINTER_B5};
 
     for (int bi=0; bi<5; bi++) {
-        if ((ai.pointer_mask & xbuttonmasks[bi]) != (old_ai.pointer_mask & xbuttonmasks[bi])) {
+        if ((ai.pointer_mask ^ old_ai.pointer_mask) & (1 << buttons[bi])) {
             /* We got a change in a button state */
 
             /* Fill the event structure */
             if (game_info.mouse & GameInfo::SDL2) {
                 SDL_Event event2;
-                if (ai.pointer_mask & xbuttonmasks[bi]) {
+                if (ai.pointer_mask & (1 << buttons[bi])) {
                     event2.type = SDL_MOUSEBUTTONDOWN;
                     event2.button.state = SDL_PRESSED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdlbuttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 else {
                     event2.type = SDL_MOUSEBUTTONUP;
                     event2.button.state = SDL_RELEASED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdlbuttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 event2.button.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                 LINK_NAMESPACE_SDL2(SDL_GetWindowID);
                 event2.button.windowID = orig::SDL_GetWindowID(gameWindow);
                 event2.button.which = 0; // TODO: Same as above...
-                event2.button.button = sdlbuttons[bi];
+                event2.button.button = SingleInput::toSDL2PointerButton(buttons[bi]);
                 event2.button.clicks = 1;
                 event2.button.x = game_ai.pointer_x;
                 event2.button.y = game_ai.pointer_y;
@@ -660,18 +629,18 @@ void generateMouseButtonEvents(void)
 
             if (game_info.mouse & GameInfo::SDL1) {
                 SDL1::SDL_Event event1;
-                if (ai.pointer_mask & xbuttonmasks[bi]) {
+                if (ai.pointer_mask & (1 << buttons[bi])) {
                     event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
                     event1.button.state = SDL_PRESSED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", sdl1buttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
                 }
                 else {
                     event1.type = SDL1::SDL_MOUSEBUTTONUP;
                     event1.button.state = SDL_RELEASED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", sdl1buttons[bi]);
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
                 }
                 event1.button.which = 0; // TODO: Same as above...
-                event1.button.button = sdl1buttons[bi];
+                event1.button.button = SingleInput::toSDL1PointerButton(buttons[bi]);
                 event1.button.x = (Uint16) game_ai.pointer_x;
                 event1.button.y = (Uint16) game_ai.pointer_y;
                 sdlEventQueue.insert(&event1);
@@ -679,24 +648,24 @@ void generateMouseButtonEvents(void)
 
             if (game_info.mouse & GameInfo::XEVENTS) {
                 XEvent event;
-                if (ai.pointer_mask & xbuttonmasks[bi]) {
+                if (ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
                 }
                 else {
                     event.xbutton.type = ButtonRelease;
                 }
-                event.xbutton.state = ai.pointer_mask;
+                event.xbutton.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
                 event.xbutton.x = game_ai.pointer_x;
                 event.xbutton.y = game_ai.pointer_y;
                 event.xbutton.x_root = event.xbutton.x;
                 event.xbutton.y_root = event.xbutton.y;
-                event.xbutton.button = xbuttons[bi];
+                event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
 
                 OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
             }
 
             /* Upload the old AllInput struct */
-            old_ai.pointer_mask ^= xbuttonmasks[bi];
+            old_ai.pointer_mask ^= (1 << buttons[bi]);
         }
     }
     game_ai.pointer_mask = ai.pointer_mask;

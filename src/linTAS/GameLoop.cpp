@@ -567,8 +567,8 @@ void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
 {
     if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
         SingleInput si = context->config.km.input_mapping[ks];
-        if (SingleInput::inputTypeIsController(si.type))
-            emit controllerButtonToggled(SingleInput::inputTypeToControllerNumber(si.type), SingleInput::inputTypeToInputNumber(si.type), pressed);
+        if (si.inputTypeIsController())
+            emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), pressed);
     }
 }
 

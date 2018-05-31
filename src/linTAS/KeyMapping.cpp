@@ -126,6 +126,15 @@ void KeyMapping::init(xcb_connection_t* conn)
 
     xcb_key_symbols_free(keysyms);
 
+    /* Add mouse mapping */
+    input_list.push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
+    input_list.push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
+    input_list.push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});
+    input_list.push_back({SingleInput::IT_POINTER_B2, 1, "Mouse button 2"});
+    input_list.push_back({SingleInput::IT_POINTER_B3, 1, "Mouse button 3"});
+    input_list.push_back({SingleInput::IT_POINTER_B4, 1, "Mouse button 4"});
+    input_list.push_back({SingleInput::IT_POINTER_B5, 1, "Mouse button 5"});
+
     /* Add controller mapping */
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Controller 1 - A"});
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_B, 1, "Controller 1 - B"});
@@ -143,6 +152,13 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Controller 1 - Dpad Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Controller 1 - Dpad Right"});
 
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTX, 1, "Controller 1 - Left Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTY, 1, "Controller 1 - Left Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTX, 1, "Controller 1 - Right Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTY, 1, "Controller 1 - Right Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERLEFT, 1, "Controller 1 - Left Trigger"});
+    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERRIGHT, 1, "Controller 1 - Right Trigger"});
+
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_A, 1, "Controller 2 - A"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_B, 1, "Controller 2 - B"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_X, 1, "Controller 2 - X"});
@@ -158,6 +174,13 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Controller 2 - Dpad Down"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Controller 2 - Dpad Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Controller 2 - Dpad Right"});
+
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTX, 1, "Controller 2 - Left Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTY, 1, "Controller 2 - Left Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTX, 1, "Controller 2 - Right Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTY, 1, "Controller 2 - Right Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERLEFT, 1, "Controller 2 - Left Trigger"});
+    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERRIGHT, 1, "Controller 2 - Right Trigger"});
 
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_A, 1, "Controller 3 - A"});
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_B, 1, "Controller 3 - B"});
@@ -175,6 +198,13 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Controller 3 - Dpad Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Controller 3 - Dpad Right"});
 
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTX, 1, "Controller 3 - Left Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTY, 1, "Controller 3 - Left Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTX, 1, "Controller 3 - Right Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTY, 1, "Controller 3 - Right Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERLEFT, 1, "Controller 3 - Left Trigger"});
+    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERRIGHT, 1, "Controller 3 - Right Trigger"});
+
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_A, 1, "Controller 4 - A"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_B, 1, "Controller 4 - B"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_X, 1, "Controller 4 - X"});
@@ -190,6 +220,13 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Controller 4 - Dpad Down"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Controller 4 - Dpad Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Controller 4 - Dpad Right"});
+
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTX, 1, "Controller 4 - Left Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTY, 1, "Controller 4 - Left Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTX, 1, "Controller 4 - Right Stick X"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTY, 1, "Controller 4 - Right Stick Y"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERLEFT, 1, "Controller 4 - Left Trigger"});
+    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERRIGHT, 1, "Controller 4 - Right Trigger"});
 
     /* Set default inputs */
     default_inputs();
@@ -409,8 +446,18 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
 
         ai.pointer_x = pointer_reply->win_x;
         ai.pointer_y = pointer_reply->win_y;
-        /* We only care about the three mouse buttons */
-        ai.pointer_mask = pointer_reply->mask & (XCB_BUTTON_MASK_1 | XCB_BUTTON_MASK_2 | XCB_BUTTON_MASK_3);
+        /* We only care about the five mouse buttons */
+        ai.pointer_mask = 0;
+        if (pointer_reply->mask & XCB_BUTTON_MASK_1)
+            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+        if (pointer_reply->mask & XCB_BUTTON_MASK_2)
+            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+        if (pointer_reply->mask & XCB_BUTTON_MASK_3)
+            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+        if (pointer_reply->mask & XCB_BUTTON_MASK_4)
+            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+        if (pointer_reply->mask & XCB_BUTTON_MASK_5)
+            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
 
         free(pointer_reply);
 

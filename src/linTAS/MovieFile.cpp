@@ -307,11 +307,11 @@ int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
         input_stream.put('|');
         input_stream << std::dec;
         input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
-        input_stream.put((inputs.pointer_mask&Button1Mask)?'1':'.');
-        input_stream.put((inputs.pointer_mask&Button2Mask)?'2':'.');
-        input_stream.put((inputs.pointer_mask&Button3Mask)?'3':'.');
-        input_stream.put((inputs.pointer_mask&Button4Mask)?'4':'.');
-        input_stream.put((inputs.pointer_mask&Button5Mask)?'5':'.');
+        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B1))?'1':'.');
+        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B2))?'2':'.');
+        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B3))?'3':'.');
+        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B4))?'4':'.');
+        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B5))?'5':'.');
     }
 
     /* Write controller inputs */
@@ -321,21 +321,21 @@ int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             input_stream << inputs.controller_axes[joy][axis] << ':';
         }
-        input_stream.put((inputs.controller_buttons[joy]&(1<<0))?'A':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<1))?'B':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<2))?'X':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<3))?'Y':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<4))?'b':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<5))?'g':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<6))?'s':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<7))?'(':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<8))?')':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<9))?'[':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<10))?']':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<11))?'u':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<12))?'d':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<13))?'l':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<14))?'r':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_A))?'A':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_B))?'B':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_X))?'X':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_Y))?'Y':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_BACK))?'b':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_GUIDE))?'g':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_START))?'s':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_LEFTSTICK))?'(':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_RIGHTSTICK))?')':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_LEFTSHOULDER))?'[':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_RIGHTSHOULDER))?']':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_UP))?'u':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_DOWN))?'d':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_LEFT))?'l':'.');
+        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
     input_stream << '|' << std::endl;
@@ -374,21 +374,21 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
         input_string >> std::dec;
         input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
         input_string >> d;
-        if (d != '.') inputs.pointer_mask |= Button1Mask;
+        if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
         input_string >> d;
-        if (d != '.') inputs.pointer_mask |= Button2Mask;
+        if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);
         input_string >> d;
-        if (d != '.') inputs.pointer_mask |= Button3Mask;
+        if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B3);
         input_string >> d;
-        if (d != '.') inputs.pointer_mask |= Button4Mask;
+        if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B4);
         input_string >> d;
-        if (d != '.') inputs.pointer_mask |= Button5Mask;
+        if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B5);
     }
 
     /* Read controller inputs */
     for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
         input_string >> d;
-        input_string >> std::hex;
+        input_string >> std::dec;
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             input_string >> inputs.controller_axes[joy][axis] >> d;
         }

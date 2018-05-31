@@ -99,6 +99,11 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
         return QTableView::mousePressEvent(event);
     }
 
+    /* Don't toggle editable items */
+    if (inputEditorModel->flags(index) & Qt::ItemIsEditable) {
+        return QTableView::mousePressEvent(event);
+    }
+
     selectionModel()->clear();
     mouseSection = index.column();
     mouseValue = inputEditorModel->toggleInput(index);
@@ -121,15 +126,16 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
     if (!index.isValid()) {
         return QTableView::mouseMoveEvent(event);
     }
-    // std::cout << "valid move" << std::endl;
 
     /* Toggle the cell with the same row as the cell under the mouse */
-
     QModelIndex toggle_index = inputEditorModel->index(index.row(), mouseSection);
-    // std::cout << "mouse move" << std::endl;
 
-    // selectionModel()->clear();
-    inputEditorModel->editInput(toggle_index, mouseValue);
+    /* Don't toggle editable items */
+    if (inputEditorModel->flags(toggle_index) & Qt::ItemIsEditable) {
+        return QTableView::mouseMoveEvent(event);
+    }
+
+    inputEditorModel->setData(toggle_index, QVariant(mouseValue), Qt::EditRole);
     event->accept();
 }
 

@@ -19,8 +19,147 @@
 
 #include "SingleInput.h"
 #include <linux/input.h>
-#include <SDL2/SDL_gamecontroller.h>
+#include <SDL2/SDL.h>
+#include "../external/SDL1.h"
 // #include <X11/keysym.h>
+#include <xcb/xcb.h>
+
+bool SingleInput::isAnalog() const
+{
+    if ((type == IT_POINTER_X) || (type == IT_POINTER_Y))
+        return true;
+    if (inputTypeIsController()) {
+        return inputTypeToAxisFlag();
+    }
+    return false;
+}
+
+int SingleInput::inputTypeIsController() const
+{
+    return (type >= IT_CONTROLLER1_BUTTON_A) && (type <= IT_CONTROLLER4_AXIS_TRIGGERRIGHT);
+}
+
+int SingleInput::inputTypeToControllerNumber() const
+{
+    return (type >> IT_CONTROLLER_ID_SHIFT) - 1;
+}
+
+bool SingleInput::inputTypeToAxisFlag() const
+{
+    return type & IT_CONTROLLER_AXIS_MASK;
+}
+
+int SingleInput::inputTypeToInputNumber() const
+{
+    return type & IT_CONTROLLER_TYPE_MASK;
+}
+
+unsigned int SingleInput::toXlibPointerButton(int button)
+{
+    switch (button) {
+        case SingleInput::POINTER_B1:
+            return XCB_BUTTON_INDEX_1;
+        case SingleInput::POINTER_B2:
+            return XCB_BUTTON_INDEX_2;
+        case SingleInput::POINTER_B3:
+            return XCB_BUTTON_INDEX_3;
+        case SingleInput::POINTER_B4:
+            return XCB_BUTTON_INDEX_4;
+        case SingleInput::POINTER_B5:
+            return XCB_BUTTON_INDEX_5;
+        default:
+            return 0;
+    }
+}
+
+unsigned int SingleInput::toSDL1PointerButton(int button)
+{
+    switch (button) {
+        case SingleInput::POINTER_B1:
+            return SDL1::SDL1_BUTTON_LEFT;
+        case SingleInput::POINTER_B2:
+            return SDL1::SDL1_BUTTON_MIDDLE;
+        case SingleInput::POINTER_B3:
+            return SDL1::SDL1_BUTTON_RIGHT;
+        case SingleInput::POINTER_B4:
+            return SDL1::SDL1_BUTTON_X1;
+        case SingleInput::POINTER_B5:
+            return SDL1::SDL1_BUTTON_X2;
+        default:
+            return 0;
+    }
+}
+
+unsigned int SingleInput::toSDL2PointerButton(int button)
+{
+    switch (button) {
+        case SingleInput::POINTER_B1:
+            return SDL_BUTTON_LEFT;
+        case SingleInput::POINTER_B2:
+            return SDL_BUTTON_MIDDLE;
+        case SingleInput::POINTER_B3:
+            return SDL_BUTTON_RIGHT;
+        case SingleInput::POINTER_B4:
+            return SDL_BUTTON_X1;
+        case SingleInput::POINTER_B5:
+            return SDL_BUTTON_X2;
+        default:
+            return 0;
+    }
+}
+
+
+unsigned int SingleInput::toXlibPointerMask(int mask)
+{
+    unsigned int xlib_mask = 0;
+    if (mask & (1 << SingleInput::POINTER_B1))
+        xlib_mask |= XCB_BUTTON_MASK_1;
+    if (mask & (1 << SingleInput::POINTER_B2))
+        xlib_mask |= XCB_BUTTON_MASK_2;
+    if (mask & (1 << SingleInput::POINTER_B3))
+        xlib_mask |= XCB_BUTTON_MASK_3;
+    if (mask & (1 << SingleInput::POINTER_B4))
+        xlib_mask |= XCB_BUTTON_MASK_4;
+    if (mask & (1 << SingleInput::POINTER_B5))
+        xlib_mask |= XCB_BUTTON_MASK_5;
+
+    return xlib_mask;
+}
+
+unsigned int SingleInput::toSDL1PointerMask(int mask)
+{
+    unsigned int sdl_mask = 0;
+    if (mask & (1 << SingleInput::POINTER_B1))
+        sdl_mask |= SDL1::SDL1_BUTTON_LMASK;
+    if (mask & (1 << SingleInput::POINTER_B2))
+        sdl_mask |= SDL1::SDL1_BUTTON_MMASK;
+    if (mask & (1 << SingleInput::POINTER_B3))
+        sdl_mask |= SDL1::SDL1_BUTTON_RMASK;
+    if (mask & (1 << SingleInput::POINTER_B4))
+        sdl_mask |= SDL1::SDL1_BUTTON_X1MASK;
+    if (mask & (1 << SingleInput::POINTER_B5))
+        sdl_mask |= SDL1::SDL1_BUTTON_X2MASK;
+
+    return sdl_mask;
+}
+
+unsigned int SingleInput::toSDL2PointerMask(int mask)
+{
+    unsigned int sdl_mask = 0;
+    if (mask & (1 << SingleInput::POINTER_B1))
+        sdl_mask |= SDL_BUTTON_LMASK;
+    if (mask & (1 << SingleInput::POINTER_B2))
+        sdl_mask |= SDL_BUTTON_MMASK;
+    if (mask & (1 << SingleInput::POINTER_B3))
+        sdl_mask |= SDL_BUTTON_RMASK;
+    if (mask & (1 << SingleInput::POINTER_B4))
+        sdl_mask |= SDL_BUTTON_X1MASK;
+    if (mask & (1 << SingleInput::POINTER_B5))
+        sdl_mask |= SDL_BUTTON_X2MASK;
+
+    return sdl_mask;
+}
+
 
 int SingleInput::toSDL2Axis(int axis)
 {
@@ -223,25 +362,4 @@ int SingleInput::toDevHatY(int buttons)
     else if (buttons & (1 << BUTTON_DPAD_DOWN))
         haty = -1;
     return haty;
-}
-
-int SingleInput::inputTypeIsController(int type)
-{
-    return (type >= IT_CONTROLLER1_BUTTON_A) && (type <= IT_CONTROLLER4_AXIS_TRIGGERRIGHT);
-
-}
-
-int SingleInput::inputTypeToControllerNumber(int type)
-{
-    return (type >> IT_CONTROLLER_ID_SHIFT) - 1;
-}
-
-bool SingleInput::inputTypeToAxisFlag(int type)
-{
-    return type & IT_CONTROLLER_AXIS_MASK;
-}
-
-int SingleInput::inputTypeToInputNumber(int type)
-{
-    return type & IT_CONTROLLER_TYPE_MASK;
 }
