@@ -44,22 +44,24 @@
 
 namespace libtas {
 
-static const char* savestatepath;
+static const char* pagemappath;
+static const char* pagespath;
 
 static bool skipArea(const Area *area);
 
 static void readAllAreas();
-static int readAndCompAreas(int fd, Area *saved_area, Area *current_area);
+static int reallocateArea(Area *saved_area, Area *current_area);
+static void readAnArea(const Area &saved_area, int pmfd, int pfd);
 
 static void writeAllAreas();
-static void writeAnArea(int fd, const Area *area);
-static void writeAnAreaWithZeroPages(int fd, const Area *orig_area);
-static void getNextPageRange(const Area &area, size_t &size, bool &is_zero);
+static void writeAnArea(int pmfd, int pfd, Area &area);
+static void writeAnAreaWithZeroPages(int pmfd, int pfd, const Area &area);
 
-void Checkpoint::setSavestatePath(const char* filepath)
+void Checkpoint::setSavestatePath(const char* pmpath, const char* pspath)
 {
     /* We want to avoid any allocated memory here, so using char array */
-    savestatepath = filepath;
+    pagemappath = pmpath;
+    pagespath = pspath;
 }
 
 bool Checkpoint::checkCheckpoint()
@@ -81,7 +83,7 @@ bool Checkpoint::checkCheckpoint()
     }
 
     /* Get the savestate directory */
-    std::string savestate_str = savestatepath;
+    std::string savestate_str = pagemappath;
     size_t sep = savestate_str.find_last_of("/");
     if (sep != std::string::npos)
         savestate_str.resize(sep);
@@ -105,20 +107,22 @@ bool Checkpoint::checkCheckpoint()
 
 bool Checkpoint::checkRestore()
 {
-    /* Check that the savestate file exists */
+    /* Check that the savestate files exist */
     struct stat sb;
-    if (stat(savestatepath, &sb) == -1)
+    if (stat(pagemappath, &sb) == -1)
+        return false;
+    if (stat(pagespath, &sb) == -1)
         return false;
 
-    int fd;
-    OWNCALL(fd = open(savestatepath, O_RDONLY));
-    if (fd == -1)
+    int pmfd;
+    OWNCALL(pmfd = open(pagemappath, O_RDONLY));
+    if (pmfd == -1)
         return false;
 
     /* Read the savestate header */
     StateHeader sh;
-    Utils::readAll(fd, &sh, sizeof(sh));
-    close(fd);
+    Utils::readAll(pmfd, &sh, sizeof(sh));
+    close(pmfd);
 
     /* Check that the thread list is identical */
     int n=0;
@@ -288,13 +292,17 @@ static bool skipArea(const Area *area)
 
 static void readAllAreas()
 {
-    int fd;
-    OWNCALL(fd = open(savestatepath, O_RDONLY));
-    MYASSERT(fd != -1)
+    int pmfd;
+    OWNCALL(pmfd = open(pagemappath, O_RDONLY));
+    MYASSERT(pmfd != -1)
+
+    int pfd;
+    OWNCALL(pfd = open(pagespath, O_RDONLY));
+    MYASSERT(pfd != -1)
 
     /* Read the savestate header */
     StateHeader sh;
-    Utils::readAll(fd, &sh, sizeof(sh));
+    Utils::readAll(pmfd, &sh, sizeof(sh));
 
     Area current_area;
     Area saved_area;
@@ -305,18 +313,25 @@ static void readAllAreas()
     ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
 
     /* Read the first saved area */
-    Utils::readAll(fd, &saved_area, sizeof saved_area);
+    Utils::readAll(pmfd, &saved_area, sizeof(Area));
+    if (saved_area.properties & Area::PAGES) {
+        lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
+    }
 
     /* Read the first current area */
     bool not_eof = procSelfMaps.getNextArea(&current_area);
 
+    /* Reallocate areas to match the savestate areas. Nothing is written yet */
     while ((saved_area.addr != nullptr) || not_eof) {
 
         /* Check for matching areas */
-        int cmp = readAndCompAreas(fd, &saved_area, &current_area);
+        int cmp = reallocateArea(&saved_area, &current_area);
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
+            Utils::readAll(pmfd, &saved_area, sizeof(Area));
+            if (saved_area.properties & Area::PAGES) {
+                lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
+            }
             not_eof = procSelfMaps.getNextArea(&current_area);
         }
         if (cmp > 0) {
@@ -325,15 +340,30 @@ static void readAllAreas()
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
-            Utils::readAll(fd, &saved_area, sizeof saved_area);
+            Utils::readAll(pmfd, &saved_area, sizeof(Area));
+            if (saved_area.properties & Area::PAGES) {
+                lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
+            }
         }
     }
 
+    /* Now that the memory layout matches the savestate, we load savestate into memory */
+    lseek(pmfd, sizeof(StateHeader), SEEK_SET);
+
+    /* Read the first saved area */
+    Utils::readAll(pmfd, &saved_area, sizeof saved_area);
+
+    while (saved_area.addr != nullptr) {
+        readAnArea(saved_area, pmfd, pfd);
+        Utils::readAll(pmfd, &saved_area, sizeof(saved_area));
+    }
+
     /* That's all folks */
-    MYASSERT(close(fd) == 0);
+    MYASSERT(close(pmfd) == 0);
+    MYASSERT(close(pfd) == 0);
 }
 
-static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
+static int reallocateArea(Area *saved_area, Area *current_area)
 {
     /* Do Areas start on the same address? */
     if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
@@ -362,13 +392,11 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
                 if (newAddr == MAP_FAILED) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Resizing failed");
-                    lseek(fd, saved_area->size, SEEK_CUR);
                     return 0;
                 }
 
                 if (newAddr != saved_area->addr) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
-                    lseek(fd, saved_area->size, SEEK_CUR);
                     return 0;
                 }
 
@@ -383,30 +411,11 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
                 if (ret < 0) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "brk failed");
-                    lseek(fd, saved_area->size, SEEK_CUR);
                     return 0;
                 }
 
                 copy_size = saved_area->size;
             }
-        }
-
-        /* Now copy the data */
-        if (!(current_area->prot & PROT_WRITE)) {
-            MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot | PROT_WRITE) == 0)
-        }
-
-        if (saved_area->properties & Area::ZERO_PAGE) {
-            debuglogstdio(LCF_CHECKPOINT, "Writing %d zero bytes to memory!", copy_size);
-            memset(saved_area->addr, 0, copy_size);
-        }
-        else {
-            debuglogstdio(LCF_CHECKPOINT, "Writing %d bytes to memory!", copy_size);
-            Utils::readAll(fd, saved_area->addr, copy_size);
-        }
-
-        if (!(current_area->prot & PROT_WRITE)) {
-            MYASSERT(mprotect(current_area->addr, copy_size, current_area->prot) == 0)
         }
 
         if ((saved_area->endAddr == current_area->endAddr) || (saved_area->name[0] == '[')) {
@@ -449,7 +458,7 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             /* We call this function again with the rest of the area */
             current_area->addr = saved_area->addr;
             current_area->size -= unmap_size;
-            return readAndCompAreas(fd, saved_area, current_area);
+            return reallocateArea(saved_area, current_area);
         }
         else {
             /* Areas are not overlapping, we unmap the whole area */
@@ -512,17 +521,15 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
 
         /* Create the memory area */
 
-        void *mmappedat = mmap(saved_area->addr, map_size, saved_area->prot | PROT_WRITE,
+        void *mmappedat = mmap(saved_area->addr, map_size, saved_area->prot,
             saved_area->flags, imagefd, saved_area->offset);
 
         if (mmappedat == MAP_FAILED) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Mapping %d bytes at %p failed", saved_area->size, saved_area->addr);
-            lseek(fd, map_size, SEEK_CUR);
             return -1;
         }
         if (mmappedat != saved_area->addr) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
-            lseek(fd, map_size, SEEK_CUR);
             return -1;
         }
 
@@ -531,22 +538,11 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
             close(imagefd);
         }
 
-        if (saved_area->properties & Area::ZERO_PAGE) {
-            memset(saved_area->addr, 0, map_size);
-        }
-        else {
-            Utils::readAll(fd, saved_area->addr, map_size);
-        }
-
-        if (!(saved_area->prot & PROT_WRITE)) {
-            MYASSERT(mprotect(saved_area->addr, map_size, saved_area->prot) == 0)
-        }
-
         if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
             /* If areas were overlapping, we must deal with the rest of the area */
             saved_area->addr = current_area->addr;
             saved_area->size -= map_size;
-            return readAndCompAreas(fd, saved_area, current_area);
+            return reallocateArea(saved_area, current_area);
         }
 
         return -1;
@@ -556,13 +552,56 @@ static int readAndCompAreas(int fd, Area *saved_area, Area *current_area)
     return 0;
 }
 
+static void readAnArea(const Area &saved_area, int pmfd, int pfd)
+{
+    if (saved_area.properties & Area::SKIP)
+        return;
+
+    MYASSERT(saved_area.page_offset == lseek(pfd, 0, SEEK_CUR))
+
+    /* Add write permission to the area */
+    MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
+
+    if (saved_area.properties & Area::PAGES) {
+        /* Area contains flags for each page */
+
+        char* endAddr = static_cast<char*>(saved_area.endAddr);
+        for (char* curAddr = static_cast<char*>(saved_area.addr);
+        curAddr < endAddr;
+        curAddr += 4096) {
+
+            char flag;
+            Utils::readAll(pmfd, &flag, sizeof(char));
+
+            if (flag & Area::ZERO_PAGE) {
+                memset(static_cast<void*>(curAddr), 0, 4096);
+            }
+            else {
+                Utils::readAll(pfd, static_cast<void*>(curAddr), 4096);
+            }
+        }
+    }
+    else {
+        /* Save the entire area */
+        Utils::readAll(pfd, saved_area.addr, saved_area.size);
+    }
+
+    /* Recover permission */
+    MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
+}
+
+
 static void writeAllAreas()
 {
-    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", savestatepath);
-    int fd;
-    unlink(savestatepath);
-    OWNCALL(fd = creat(savestatepath, 0644));
-    MYASSERT(fd != -1)
+    debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", pagespath);
+    int pmfd, pfd;
+    unlink(pagemappath);
+    OWNCALL(pmfd = creat(pagemappath, 0644));
+    MYASSERT(pmfd != -1)
+
+    unlink(pagespath);
+    OWNCALL(pfd = creat(pagespath, 0644));
+    MYASSERT(pfd != -1)
 
     /* Saving the savestate header */
     StateHeader sh;
@@ -574,7 +613,7 @@ static void writeAllAreas()
         }
     }
     sh.thread_count = n;
-    Utils::writeAll(fd, &sh, sizeof(sh));
+    Utils::writeAll(pmfd, &sh, sizeof(sh));
 
     /* Parse the content of /proc/self/maps into memory.
      * We don't allocate memory here, we are using our special allocated
@@ -587,110 +626,68 @@ static void writeAllAreas()
 
         if (skipArea(&area)) {
             area.properties |= Area::SKIP;
-            Utils::writeAll(fd, &area, sizeof(area));
-            continue;
+            Utils::writeAll(pmfd, &area, sizeof(area));
         }
-
-        writeAnArea(fd, &area);
+        else {
+            writeAnArea(pmfd, pfd, area);
+        }
     }
 
     area.addr = nullptr; // End of data
     area.size = 0; // End of data
-    Utils::writeAll(fd, &area, sizeof(area));
+    Utils::writeAll(pmfd, &area, sizeof(area));
 
     /* That's all folks */
-    MYASSERT(close(fd) == 0);
+    MYASSERT(close(pmfd) == 0);
+    MYASSERT(close(pfd) == 0);
 }
 
-static void writeAnArea(int fd, const Area *area)
+static void writeAnArea(int pmfd, int pfd, Area &area)
 {
-    area->print("Save");
+    area.print("Save");
 
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot | PROT_READ) == 0)
+    /* Save the position of the first area page in the pages file */
+    area.page_offset = lseek(pfd, 0, SEEK_CUR);
+
+    if ((area.prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area.addr, area.size, area.prot | PROT_READ) == 0)
     }
 
-    if (area->flags & MAP_ANONYMOUS) {
+    if (area.flags & MAP_ANONYMOUS) {
+        area.properties |= Area::PAGES;
+        Utils::writeAll(pmfd, &area, sizeof(area));
+
         /* We look for zero pages in anonymous sections and skip saving them */
-        writeAnAreaWithZeroPages(fd, area);
+        writeAnAreaWithZeroPages(pmfd, pfd, area);
     }
     else {
-        Utils::writeAll(fd, area, sizeof(*area));
-        Utils::writeAll(fd, area->addr, area->size);
+        Utils::writeAll(pmfd, &area, sizeof(area));
+        Utils::writeAll(pfd, area.addr, area.size);
     }
 
-    if ((area->prot & PROT_READ) == 0) {
-        MYASSERT(mprotect(area->addr, area->size, area->prot) == 0)
+    if ((area.prot & PROT_READ) == 0) {
+        MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
     }
 }
 
-static void writeAnAreaWithZeroPages(int fd, const Area *orig_area)
+static void writeAnAreaWithZeroPages(int pmfd, int pfd, const Area &area)
 {
-    Area area = *orig_area;
+    char* endAddr = static_cast<char*>(area.endAddr);
 
-    while (area.size > 0) {
-        size_t size;
-        bool is_zero;
-        Area a = area;
-        getNextPageRange(a, size, is_zero);
+    for (char* curAddr = static_cast<char*>(area.addr);
+    curAddr < endAddr;
+    curAddr += 4096) {
 
-        a.properties = is_zero ? Area::ZERO_PAGE : Area::NONE;
-        a.size = size;
-        void* endAddr = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(area.addr) + size);
-        a.endAddr = endAddr;
-
-        Utils::writeAll(fd, &a, sizeof(a));
-        if (!is_zero) {
-            debuglogstdio(LCF_CHECKPOINT, "Found non zero pages starting %p of size %d", a.addr, a.size);
-            Utils::writeAll(fd, a.addr, a.size);
+        if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
+            char flag = Area::ZERO_PAGE;
+            Utils::writeAll(pmfd, &flag, sizeof(flag));
         }
         else {
-            debuglogstdio(LCF_CHECKPOINT, "Found zero pages starting %p of size %d", a.addr, a.size);
+            char flag = Area::NONE;
+            Utils::writeAll(pmfd, &flag, sizeof(flag));
+            Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
         }
-        area.addr = endAddr;
-        area.size -= size;
     }
 }
-
-/* This function returns a range of zero or non-zero pages. If the first page
- * is non-zero, it searches for all contiguous non-zero pages and returns them.
- * If the first page is all-zero, it searches for contiguous zero pages and
- * returns them.
- */
-static void getNextPageRange(const Area &area, size_t &size, bool &is_zero)
-{
-    static const size_t page_size = sysconf(_SC_PAGESIZE);
-    static const size_t block_size = 25 * page_size; // Arbitrary, about 100 KB
-
-    if (area.size < block_size) {
-        size = area.size;
-        is_zero = false;
-        return;
-    }
-
-    intptr_t endAddrInt = reinterpret_cast<intptr_t>(area.endAddr);
-
-    size = block_size;
-    is_zero = Utils::areZeroPages(area.addr, block_size / page_size);
-
-    // prevAddr = area.addr;
-    for (intptr_t curAddrInt = reinterpret_cast<intptr_t>(area.addr) + block_size;
-    curAddrInt < endAddrInt;
-    curAddrInt += block_size) {
-
-        size_t minsize = ((endAddrInt-curAddrInt)<block_size)?(endAddrInt-curAddrInt):block_size;
-        if (is_zero != Utils::areZeroPages(reinterpret_cast<void*>(curAddrInt), minsize / page_size)) {
-            break;
-        }
-        size += minsize;
-    }
-
-    /* If we are near the end and processing non-zero memory, we can return
-     * the entire section.
-     */
-    if (((area.size - size) < block_size) && !is_zero)
-        size = area.size;
-}
-
 
 }

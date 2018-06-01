@@ -326,13 +326,16 @@ void ThreadManager::deallocateThreads()
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
-void ThreadManager::checkpoint(const char* savestatepath)
+void ThreadManager::checkpoint(std::string savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
 
     ThreadSync::acquireLocks();
 
-    Checkpoint::setSavestatePath(savestatepath);
+    std::string pagemappath = savestatepath + ".pm";
+    std::string pagespath = savestatepath + ".p";
+
+    Checkpoint::setSavestatePath(pagemappath.c_str(), pagespath.c_str());
 
     restoreInProgress = false;
 
@@ -388,12 +391,15 @@ void ThreadManager::checkpoint(const char* savestatepath)
     ThreadSync::releaseLocks();
 }
 
-void ThreadManager::restore(const char* savestatepath)
+void ThreadManager::restore(std::string savestatepath)
 {
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
     ThreadSync::acquireLocks();
 
-    Checkpoint::setSavestatePath(savestatepath);
+    std::string pagemappath = savestatepath + ".pm";
+    std::string pagespath = savestatepath + ".p";
+
+    Checkpoint::setSavestatePath(pagemappath.c_str(), pagespath.c_str());
 
     /* We must close the connection to the sound device. This must be done
      * BEFORE suspending threads.

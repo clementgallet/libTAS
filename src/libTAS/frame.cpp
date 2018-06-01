@@ -39,9 +39,6 @@
 
 namespace libtas {
 
-#define SAVESTATE_FILESIZE 1024
-static char savestatepath[SAVESTATE_FILESIZE];
-
 /* Frame counter */
 unsigned long framecount = 0;
 
@@ -393,6 +390,7 @@ static void receive_messages(std::function<void()> draw)
 {
     AllInputs preview_ai;
     preview_ai.emptyInputs();
+    std::string savestatepath;
 
     while (1)
     {
@@ -440,7 +438,7 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_SAVESTATE:
                 /* Get the savestate path */
-                receiveCString(savestatepath);
+                savestatepath = receiveString();
 
                 ThreadManager::checkpoint(savestatepath);
 
@@ -482,7 +480,7 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_LOADSTATE:
                 /* Get the savestate path */
-                receiveCString(savestatepath);
+                savestatepath = receiveString();
 
                 ThreadManager::restore(savestatepath);
 

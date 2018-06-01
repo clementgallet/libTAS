@@ -45,27 +45,26 @@
 #define FILENAMESIZE        1024
 
 namespace libtas {
-union Area {
+struct Area {
     enum ProcMapsAreaProperties {
         NONE = 0x00,
-        ZERO_PAGE = 0x01,
-        SKIP = 0x02
+        PAGES = 0x01, /* Area is followed by property of every page */
+        ZERO_PAGE = 0x02, /* Entire area or page is zero */
+        SKIP = 0x04 /* Area is skipped */
     };
 
-    struct {
-        void* addr;
-        void* endAddr;
-        size_t size;
-        off_t offset;
-        int prot;
-        int flags;
-        unsigned int long devmajor;
-        unsigned int long devminor;
-        ino_t inodenum;
-        int properties;
-        char name[FILENAMESIZE];
-    };
-    char _padding[4096];
+    void* addr;
+    void* endAddr;
+    size_t size;
+    off_t offset;
+    int prot;
+    int flags;
+    unsigned int long devmajor;
+    unsigned int long devminor;
+    ino_t inodenum;
+    int properties;
+    off_t page_offset; // position of the first area page in the pages file (in bytes)
+    char name[FILENAMESIZE];
 
     void print(const char* prefix) const;
 };

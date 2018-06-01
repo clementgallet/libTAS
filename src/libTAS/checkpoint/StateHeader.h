@@ -27,13 +27,10 @@
 #define STATEMAXTHREADS 100
 
 namespace libtas {
-union StateHeader {
-    struct {
-        int thread_count;
-        pthread_t pthread_ids[STATEMAXTHREADS];
-        pid_t tids[STATEMAXTHREADS];
-    };
-    char _padding[4096];
+struct StateHeader {
+    int thread_count;
+    pthread_t pthread_ids[STATEMAXTHREADS];
+    pid_t tids[STATEMAXTHREADS];
 };
 }
 

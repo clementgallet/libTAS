@@ -717,7 +717,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             /* Check that the savestate exists */
             struct stat sb;
-            if (stat(savestatepath.c_str(), &sb) == -1) {
+            std::string pagemappath = savestatepath + ".pm";
+            std::string pagespath = savestatepath + ".p";
+            if ((stat(pagemappath.c_str(), &sb) == -1) || (stat(pagespath.c_str(), &sb) == -1)) {
                 if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                     std::string message = "No savestate in slot ";
                     message += std::to_string(statei);

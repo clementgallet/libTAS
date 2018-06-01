@@ -78,17 +78,17 @@ ssize_t Utils::readAll(int fd, void *buf, size_t count)
     return num_read;
 }
 
-/* This function detects if the given pages are zero pages or not. There is
+/* This function detects if the given page is zero pages or not. There is
  * scope of improving this function using some optimizations.
  *
  * TODO: One can use /proc/self/pagemap to detect if the page is backed by a
  * shared zero page.
  */
-bool Utils::areZeroPages(void *addr, size_t numPages)
+bool Utils::isZeroPage(void *addr)
 {
     static const size_t page_size = sysconf(_SC_PAGESIZE);
     long long *buf = (long long *)addr;
-    size_t end = numPages * page_size / sizeof(*buf);
+    size_t end = page_size / sizeof(*buf);
     long long res = 0;
 
     for (size_t i = 0; i + 7 < end; i += 8) {
