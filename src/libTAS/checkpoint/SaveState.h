@@ -19,21 +19,33 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#ifndef LIBTAS_SAVESTATE_H
+#define LIBTAS_SAVESTATE_H
 
-#include <string>
+#include "ProcMapsArea.h"
 
 namespace libtas {
-namespace Checkpoint
+class SaveState
 {
-    void setSavestatePath(const char* pmpath, const char* pspath);
-    void setParentSavestatePath(std::string path);
-    void setBaseSavestatePath(std::string path);
+    public:
+        SaveState(char* pagemappath, char* pagespath);
+        ~SaveState();
 
-    bool checkCheckpoint();
-    bool checkRestore();
-    void handler(int signum);
+        char getPageFlag(char* addr);
+
+        explicit operator bool() const {
+            return (pmfd != -1);
+        }
+
+        char page[4096];
+
+    private:
+        int pmfd, pfd;
+
+        Area area;
+        char* current_addr;
+
+
 };
 }
 

@@ -33,6 +33,7 @@
 #include "timewrappers.h" // clock_gettime
 #include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
+#include "checkpoint/Checkpoint.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
 #include "EventQueue.h"
@@ -434,6 +435,12 @@ static void receive_messages(std::function<void()> draw)
 #else
                 screen_redraw(draw, preview_ai);
 #endif
+                break;
+
+            case MSGN_PARENT_SAVESTATE:
+                /* Get the parent savestate path */
+                savestatepath = receiveString();
+                Checkpoint::setParentSavestatePath(savestatepath);
                 break;
 
             case MSGN_SAVESTATE:

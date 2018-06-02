@@ -334,6 +334,13 @@ void GameLoop::initProcessMessages()
         sendString(context->config.dumpfile);
     }
 
+    /* Build and send the base savestate path */
+    std::string basesavestatepath = context->config.savestatedir + '/';
+    basesavestatepath += context->gamename;
+    basesavestatepath += ".state0";
+    sendMessage(MSGN_BASE_SAVESTATE);
+    sendString(basesavestatepath);
+
     /* Get the shared libs of the game executable */
     std::vector<std::string> linked_libs;
     std::ostringstream libcmd;
@@ -574,6 +581,7 @@ void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
 
 bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 {
+    static int current_savestate = -1;
 
     switch (type) {
 
@@ -665,6 +673,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
+            /* Building the parent savestate path if any */
+            if (current_savestate > 0) {
+                std::string parentsavestatepath = context->config.savestatedir + '/';
+                parentsavestatepath += context->gamename;
+                parentsavestatepath += ".state" + std::to_string(current_savestate);
+
+                sendMessage(MSGN_PARENT_SAVESTATE);
+                sendString(parentsavestatepath);
+            }
+
             sendMessage(MSGN_SAVESTATE);
             sendString(savestatepath);
 
@@ -674,6 +692,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendMessage(MSGN_OSD_MSG);
                 sendString(message);
             }
+
+            current_savestate = statei;
 
             return false;
         }

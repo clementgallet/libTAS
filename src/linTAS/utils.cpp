@@ -110,9 +110,11 @@ void remove_savestates(Context* context)
 {
     std::string savestateprefix = context->config.savestatedir + '/';
     savestateprefix += context->gamename;
-    for (int i=1; i<=9; i++) {
-        std::string savestatepath = savestateprefix + ".state" + std::to_string(i);
-        unlink(savestatepath.c_str());
+    for (int i=0; i<=9; i++) {
+        std::string savestatepmpath = savestateprefix + ".state" + std::to_string(i) + ".pm";
+        unlink(savestatepmpath.c_str());
+        std::string savestatepspath = savestateprefix + ".state" + std::to_string(i) + ".p";
+        unlink(savestatepspath.c_str());
         std::string moviepath = savestateprefix + ".movie" + std::to_string(i) + ".ltm";
         unlink(moviepath.c_str());
     }

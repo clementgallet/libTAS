@@ -30,6 +30,7 @@
 #include "../shared/AllInputs.h"
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
+#include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
 #include "AVEncoder.h"
 #include <unistd.h> // getpid()
@@ -63,6 +64,7 @@ void __attribute__((constructor)) init(void)
     receiveData(&message, sizeof(int));
     while (message != MSGN_END_INIT) {
         std::string libstring;
+        std::string basesavestatepath;
         switch (message) {
             case MSGN_CONFIG:
                 debuglog(LCF_SOCKET, "Receiving config");
@@ -75,6 +77,10 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
                 break;
 #endif
+            case MSGN_BASE_SAVESTATE:
+                basesavestatepath = receiveString();
+                Checkpoint::setBaseSavestatePath(basesavestatepath);
+                break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");
                 libstring = receiveString();
