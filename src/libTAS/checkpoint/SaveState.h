@@ -32,6 +32,9 @@ class SaveState
         ~SaveState();
 
         char getPageFlag(char* addr);
+        char* getPage(char flag);
+        int getPageFd();
+        void skipPage(char flag);
 
         explicit operator bool() const {
             return (pmfd != -1);

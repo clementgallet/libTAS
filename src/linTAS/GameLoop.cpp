@@ -269,6 +269,8 @@ void GameLoop::init()
     ar_delay = 50;
     ar_freq = 2;
 
+    current_savestate = -1;
+
     /* Opening a movie, which imports the inputs and parameters if in read mode,
      * or prepare a movie if in write mode.
      */
@@ -581,8 +583,6 @@ void GameLoop::notifyControllerEvent(xcb_keysym_t ks, bool pressed)
 
 bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 {
-    static int current_savestate = -1;
-
     switch (type) {
 
     case XCB_FOCUS_OUT:
@@ -788,6 +788,18 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
+            /* Building the parent savestate path */
+            if (current_savestate < 0) {
+                std::cerr << "No parent savestate when loading ??" << std::endl;
+            }
+
+            std::string parentsavestatepath = context->config.savestatedir + '/';
+            parentsavestatepath += context->gamename;
+            parentsavestatepath += ".state" + std::to_string(current_savestate);
+
+            sendMessage(MSGN_PARENT_SAVESTATE);
+            sendString(parentsavestatepath);
+
             sendMessage(MSGN_LOADSTATE);
             sendString(savestatepath);
 
@@ -819,6 +831,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 }
 
                 message = receiveMessage();
+
+                current_savestate = statei;
             }
 
             /* The frame count has changed, we must get the new one */

@@ -58,7 +58,7 @@ static bool skipArea(const Area *area);
 
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
-static void readAnArea(const Area &saved_area, int pmfd, int pfd);
+static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &parent_state, SaveState &base_state);
 
 static void writeAllAreas(bool base);
 static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveState &parent_state);
@@ -139,14 +139,14 @@ bool Checkpoint::checkRestore()
         return false;
 
     int pmfd;
-    OWNCALL(pmfd = open(pagemappath, O_RDONLY));
+    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
     if (pmfd == -1)
         return false;
 
     /* Read the savestate header */
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
-    close(pmfd);
+    NATIVECALL(close(pmfd));
 
     /* Check that the thread list is identical */
     int n=0;
@@ -323,11 +323,11 @@ static bool skipArea(const Area *area)
 static void readAllAreas()
 {
     int pmfd;
-    OWNCALL(pmfd = open(pagemappath, O_RDONLY));
+    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
     MYASSERT(pmfd != -1)
 
     int pfd;
-    OWNCALL(pfd = open(pagespath, O_RDONLY));
+    NATIVECALL(pfd = open(pagespath, O_RDONLY));
     MYASSERT(pfd != -1)
 
     /* Read the savestate header */
@@ -344,9 +344,8 @@ static void readAllAreas()
 
     /* Read the first saved area */
     Utils::readAll(pmfd, &saved_area, sizeof(Area));
-    if (saved_area.properties & Area::PAGES) {
+    if (!(saved_area.properties & Area::SKIP))
         lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
-    }
 
     /* Read the first current area */
     bool not_eof = procSelfMaps.getNextArea(&current_area);
@@ -359,9 +358,8 @@ static void readAllAreas()
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
             Utils::readAll(pmfd, &saved_area, sizeof(Area));
-            if (saved_area.properties & Area::PAGES) {
+            if (!(saved_area.properties & Area::SKIP))
                 lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
-            }
             not_eof = procSelfMaps.getNextArea(&current_area);
         }
         if (cmp > 0) {
@@ -371,26 +369,36 @@ static void readAllAreas()
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
             Utils::readAll(pmfd, &saved_area, sizeof(Area));
-            if (saved_area.properties & Area::PAGES) {
+            if (!(saved_area.properties & Area::SKIP))
                 lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
-            }
         }
     }
 
     /* Now that the memory layout matches the savestate, we load savestate into memory */
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
 
+    /* Load base and parent savestates */
+    SaveState parent_state(parentpagemappath, parentpagespath);
+    SaveState base_state(basepagemappath, basepagespath);
+
     /* Read the first saved area */
     Utils::readAll(pmfd, &saved_area, sizeof saved_area);
 
     while (saved_area.addr != nullptr) {
-        readAnArea(saved_area, pmfd, pfd);
+        readAnArea(saved_area, pmfd, pfd, parent_state, base_state);
         Utils::readAll(pmfd, &saved_area, sizeof(saved_area));
     }
 
+    /* Clear soft-dirty bits */
+    int fd;
+    NATIVECALL(fd = open("/proc/self/clear_refs", O_WRONLY));
+    MYASSERT(fd != -1);
+    MYASSERT(write(fd, "4\n", 2) == 2);
+    NATIVECALL(close(fd));
+
     /* That's all folks */
-    MYASSERT(close(pmfd) == 0);
-    MYASSERT(close(pfd) == 0);
+    NATIVECALL(close(pmfd));
+    NATIVECALL(close(pfd));
 }
 
 static int reallocateArea(Area *saved_area, Area *current_area)
@@ -522,7 +530,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
-            imagefd = open(saved_area->name, O_RDONLY, 0);
+            NATIVECALL(imagefd = open(saved_area->name, O_RDONLY, 0));
             if (imagefd >= 0) {
                 /* If the current file size is smaller than the original, we map the region
                 * as private anonymous. Note that with this we lose the name of the region
@@ -531,7 +539,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                 off_t curr_size = lseek(imagefd, 0, SEEK_END);
                 MYASSERT(curr_size != -1);
                 if (static_cast<size_t>(curr_size) < saved_area->offset + map_size) {
-                    close(imagefd);
+                    NATIVECALL(close(imagefd));
                     imagefd = -1;
                     saved_area->offset = 0;
                     saved_area->flags |= MAP_ANONYMOUS;
@@ -565,7 +573,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         /* Close image file (fd only gets in the way) */
         if (imagefd >= 0) {
-            close(imagefd);
+            NATIVECALL(close(imagefd));
         }
 
         if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
@@ -582,7 +590,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
     return 0;
 }
 
-static void readAnArea(const Area &saved_area, int pmfd, int pfd)
+static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &parent_state, SaveState &base_state)
 {
     if (saved_area.properties & Area::SKIP)
         return;
@@ -592,29 +600,75 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd)
     /* Add write permission to the area */
     MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
 
-    if (saved_area.properties & Area::PAGES) {
-        /* Area contains flags for each page */
+    int fd;
+    NATIVECALL(fd = open("/proc/self/pagemap", O_RDONLY));
+    MYASSERT(fd != -1);
 
-        char* endAddr = static_cast<char*>(saved_area.endAddr);
-        for (char* curAddr = static_cast<char*>(saved_area.addr);
-        curAddr < endAddr;
-        curAddr += 4096) {
+    char* endAddr = static_cast<char*>(saved_area.endAddr);
+    for (char* curAddr = static_cast<char*>(saved_area.addr);
+    curAddr < endAddr;
+    curAddr += 4096) {
 
-            char flag;
-            Utils::readAll(pmfd, &flag, sizeof(char));
+        // debuglogstdio(LCF_CHECKPOINT, "Read page %p from area %p-%p", curAddr, saved_area.addr, saved_area.endAddr);
 
-            if (flag & Area::ZERO_PAGE) {
-                memset(static_cast<void*>(curAddr), 0, 4096);
+        char flag;
+        Utils::readAll(pmfd, &flag, sizeof(char));
+
+        if (flag & Area::NO_PAGE) {
+            // debuglogstdio(LCF_CHECKPOINT, "Page %p is no page", curAddr);
+        }
+        else if (flag & Area::ZERO_PAGE) {
+            // debuglogstdio(LCF_CHECKPOINT, "Page %p is zero page", curAddr);
+            memset(static_cast<void*>(curAddr), 0, 4096);
+        }
+        else if (flag & Area::BASE) {
+            // debuglogstdio(LCF_CHECKPOINT, "Page %p is base page", curAddr);
+
+            /* The memory page of the loading savestate is the same as the base
+             * savestate. We must check if we actually need to read from the
+             * base savestate or if the page already contains the correct values.
+             */
+
+            char parent_flag = parent_state.getPageFlag(curAddr);
+            parent_state.skipPage(parent_flag);
+
+            if (!(parent_flag & Area::BASE)) {
+                /* Memory page has been modified between the two savestates.
+                 * We must read from the base savestate.
+                 */
+                // debuglogstdio(LCF_CHECKPOINT, "Parent Page is not base page");
+                char base_flag = base_state.getPageFlag(curAddr);
+                MYASSERT(base_flag == Area::NONE);
+                Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
             }
             else {
-                Utils::readAll(pfd, static_cast<void*>(curAddr), 4096);
+                // debuglogstdio(LCF_CHECKPOINT, "Parent Page is base page");
+
+                /* Gather the flag for the page map */
+                lseek(fd, reinterpret_cast<off_t>(curAddr) / (4096/8), SEEK_SET);
+                uint64_t page;
+                MYASSERT(read(fd, &page, 8) == 8);
+                bool soft_dirty = page & (0x1ull << 55);
+
+                //if (true) {
+                if (soft_dirty) {
+                    /* Memory page has been modified after parent state.
+                     * We must read from the base savestate.
+                     */
+                    // debuglogstdio(LCF_CHECKPOINT, "Page is dirty");
+
+                    char base_flag = base_state.getPageFlag(curAddr);
+                    MYASSERT(base_flag == Area::NONE);
+                    Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
+                }
             }
         }
+        else {
+            Utils::readAll(pfd, static_cast<void*>(curAddr), 4096);
+        }
     }
-    else {
-        /* Save the entire area */
-        Utils::readAll(pfd, saved_area.addr, saved_area.size);
-    }
+
+    NATIVECALL(close(fd));
 
     /* Recover permission */
     MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
@@ -635,8 +689,8 @@ static void writeAllAreas(bool base)
     if (base) {
         debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
-        OWNCALL(pmfd = creat(basepagemappath, 0644));
-        OWNCALL(pfd = creat(basepagespath, 0644));
+        NATIVECALL(pmfd = creat(basepagemappath, 0644));
+        NATIVECALL(pfd = creat(basepagespath, 0644));
     }
     else {
         strncpy(temppagemappath, pagemappath, 1023);
@@ -648,10 +702,10 @@ static void writeAllAreas(bool base)
         debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
 
         unlink(temppagemappath);
-        OWNCALL(pmfd = creat(temppagemappath, 0644));
+        NATIVECALL(pmfd = creat(temppagemappath, 0644));
 
         unlink(temppagespath);
-        OWNCALL(pfd = creat(temppagespath, 0644));
+        NATIVECALL(pfd = creat(temppagespath, 0644));
     }
 
     MYASSERT(pmfd != -1)
@@ -698,22 +752,22 @@ static void writeAllAreas(bool base)
     area.size = 0; // End of data
     Utils::writeAll(pmfd, &area, sizeof(area));
 
+    /* Clear soft-dirty bits */
+    int fd;
+    NATIVECALL(fd = open("/proc/self/clear_refs", O_WRONLY));
+    MYASSERT(fd != -1);
+    MYASSERT(write(fd, "4\n", 2) == 2);
+    NATIVECALL(close(fd));
+
     /* Closing the savestate files */
-    MYASSERT(close(pmfd) == 0);
-    MYASSERT(close(pfd) == 0);
+    NATIVECALL(close(pmfd));
+    NATIVECALL(close(pfd));
 
     /* Rename the savestate files */
     if (!base) {
         rename(temppagemappath, pagemappath);
         rename(temppagespath, pagespath);
     }
-
-    /* Clear soft-dirty bits */
-    int fd;
-    OWNCALL(fd = open("/proc/self/clear_refs", O_WRONLY));
-    MYASSERT(fd != -1);
-    MYASSERT(write(fd, "4\n", 2) == 2);
-    MYASSERT(close(fd) == 0);
 }
 
 static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveState &parent_state)
@@ -729,7 +783,6 @@ static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveSta
     }
 
     /* Write the area struct */
-    area.properties |= Area::PAGES;
     Utils::writeAll(pmfd, &area, sizeof(area));
 
     int fd = open("/proc/self/pagemap", O_RDONLY);
@@ -746,8 +799,14 @@ static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveSta
         bool page_present = page & (0x1ull << 63);
         bool soft_dirty = page & (0x1ull << 55);
 
+        /* Check if page is present */
+        if (!page_present) {
+            char flag = Area::NO_PAGE;
+            Utils::writeAll(pmfd, &flag, sizeof(flag));
+        }
+
         /* Check if page is zero */
-        if (!page_present || Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        else if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
             char flag = Area::ZERO_PAGE;
             Utils::writeAll(pmfd, &flag, sizeof(flag));
         }
@@ -764,14 +823,14 @@ static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveSta
                     Utils::writeAll(pmfd, &flag, sizeof(flag));
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
                 }
-                else if ((parent_flag & Area::ZERO_PAGE) || (parent_flag & Area::BASE)) {
+                else if ((parent_flag & Area::NO_PAGE) || (parent_flag & Area::ZERO_PAGE) || (parent_flag & Area::BASE)) {
                     Utils::writeAll(pmfd, &parent_flag, sizeof(parent_flag));
                 }
                 else {
                     /* Parent state stores the memory page, we must store it too */
                     char flag = Area::NONE;
                     Utils::writeAll(pmfd, &flag, sizeof(flag));
-                    Utils::writeAll(pfd, parent_state.page, 4096);
+                    Utils::writeAll(pfd, parent_state.getPage(parent_flag), 4096);
                 }
             }
             else {
@@ -786,7 +845,7 @@ static void writeAnArea(int pmfd, int pfd, Area &area, bool incremental, SaveSta
         }
     }
 
-    close(fd);
+    NATIVECALL(close(fd));
 
     /* Restore permission on the area */
     if ((area.prot & PROT_READ) == 0) {

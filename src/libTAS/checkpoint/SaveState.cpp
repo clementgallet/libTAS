@@ -37,10 +37,10 @@ SaveState::SaveState(char* pagemappath, char* pagespath)
         return;
     }
 
-    OWNCALL(pmfd = open(pagemappath, O_RDONLY));
+    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
     MYASSERT(pmfd != -1)
 
-    OWNCALL(pfd = open(pagespath, O_RDONLY));
+    NATIVECALL(pfd = open(pagespath, O_RDONLY));
     MYASSERT(pfd != -1)
 
     /* Seek after the savestate header */
@@ -54,19 +54,21 @@ SaveState::SaveState(char* pagemappath, char* pagespath)
 SaveState::~SaveState()
 {
     if (pmfd > 0) {
-        MYASSERT(close(pmfd) == 0);
-        MYASSERT(close(pfd) == 0);
+        NATIVECALL(close(pmfd));
+        NATIVECALL(close(pfd));
     }
 }
 
 char SaveState::getPageFlag(char* addr)
 {
     while ((area.addr != nullptr) && (addr >= static_cast<char*>(area.endAddr))) {
+        // debuglogstdio(LCF_CHECKPOINT, "Savestate skip area %p - %p", area.addr, area.endAddr);
 
         /* Skip areas until the one we are interested in */
-        if (area.properties & Area::PAGES) {
+        if (!(area.properties & Area::SKIP)) {
             lseek(pmfd, static_cast<intptr_t>(static_cast<char*>(area.endAddr) - current_addr) / 4096, SEEK_CUR);
         }
+
         Utils::readAll(pmfd, &area, sizeof(Area));
         lseek(pfd, area.page_offset, SEEK_SET);
         current_addr = static_cast<char*>(area.addr);
@@ -93,11 +95,29 @@ char SaveState::getPageFlag(char* addr)
 
     Utils::readAll(pmfd, &flag, sizeof(char));
     current_addr += 4096;
+    return flag;
+}
+
+char* SaveState::getPage(char flag)
+{
     if (!(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
         /* Store the content of the page in this object */
         Utils::readAll(pfd, page, 4096);
     }
-    return flag;
+    return page;
 }
+
+int SaveState::getPageFd()
+{
+    return pfd;
+}
+
+void SaveState::skipPage(char flag)
+{
+    if (!(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+        lseek(pfd, 4096, SEEK_CUR);
+    }
+}
+
 
 }

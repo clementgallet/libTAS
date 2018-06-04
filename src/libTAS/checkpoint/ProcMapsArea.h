@@ -48,7 +48,7 @@ namespace libtas {
 struct Area {
     enum ProcMapsAreaProperties {
         NONE = 0x00,
-        PAGES = 0x01, /* Area is followed by property of every page */
+        NO_PAGE = 0x01, /* No physical page is mapped to the virtual page */
         ZERO_PAGE = 0x02, /* Entire area or page is zero */
         SKIP = 0x04, /* Area is skipped */
         BASE = 0x08, /* Page was not modified from base savestate */

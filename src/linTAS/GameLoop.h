@@ -50,6 +50,9 @@ private:
     /* Keyboard layout */
     std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
 
+    /* Last saved/loaded savestate */
+    int current_savestate;
+
     void init();
 
     void initProcessMessages();
