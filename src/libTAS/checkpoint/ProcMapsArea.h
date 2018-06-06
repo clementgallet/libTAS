@@ -46,12 +46,12 @@
 
 namespace libtas {
 struct Area {
-    enum ProcMapsAreaProperties {
-        NONE = 0x00,
-        NO_PAGE = 0x01, /* No physical page is mapped to the virtual page */
-        ZERO_PAGE = 0x02, /* Entire area or page is zero */
-        SKIP = 0x04, /* Area is skipped */
-        BASE = 0x08, /* Page was not modified from base savestate */
+    enum PageFlag {
+        NONE,
+        NO_PAGE, /* No physical page is mapped at the virtual address */
+        ZERO_PAGE, /* Entire page is zero */
+        FULL_PAGE, /* Area contains a copy of the page */
+        BASE_PAGE, /* Page was not modified from base savestate */
     };
 
     void* addr;
@@ -63,7 +63,7 @@ struct Area {
     unsigned int long devmajor;
     unsigned int long devminor;
     ino_t inodenum;
-    int properties;
+    bool skip;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
     char name[FILENAMESIZE];
 

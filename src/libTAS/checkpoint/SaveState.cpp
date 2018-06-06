@@ -62,10 +62,8 @@ SaveState::~SaveState()
 char SaveState::getPageFlag(char* addr)
 {
     while ((area.addr != nullptr) && (addr >= static_cast<char*>(area.endAddr))) {
-        // debuglogstdio(LCF_CHECKPOINT, "Savestate skip area %p - %p", area.addr, area.endAddr);
-
         /* Skip areas until the one we are interested in */
-        if (!(area.properties & Area::SKIP)) {
+        if (!area.skip) {
             lseek(pmfd, static_cast<intptr_t>(static_cast<char*>(area.endAddr) - current_addr) / 4096, SEEK_CUR);
         }
 
@@ -77,18 +75,18 @@ char SaveState::getPageFlag(char* addr)
     // debuglogstdio(LCF_CHECKPOINT, "Savestate addr query %p, current area %p and size %d, with current addr %p", addr, area.addr, area.size, current_addr);
 
     if (area.addr == nullptr)
-        return Area::SKIP;
+        return Area::NONE;
 
     if (addr < static_cast<char*>(area.addr))
-        return Area::SKIP;
+        return Area::NONE;
 
-    if (area.properties & Area::SKIP)
-        return Area::SKIP;
+    if (area.skip)
+        return Area::NONE;
 
     char flag;
     for (; current_addr < addr; current_addr += 4096) {
         Utils::readAll(pmfd, &flag, sizeof(char));
-        if (!(flag & Area::NO_PAGE) && !(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+        if (flag == Area::FULL_PAGE) {
             lseek(pfd, 4096, SEEK_CUR);
         }
     }
@@ -100,7 +98,7 @@ char SaveState::getPageFlag(char* addr)
 
 char* SaveState::getPage(char flag)
 {
-    if (!(flag & Area::NO_PAGE) && !(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+    if (flag == Area::FULL_PAGE) {
         /* Store the content of the page in this object */
         Utils::readAll(pfd, page, 4096);
     }
@@ -114,10 +112,9 @@ int SaveState::getPageFd()
 
 void SaveState::skipPage(char flag)
 {
-    if (!(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+    if (flag == Area::FULL_PAGE) {
         lseek(pfd, 4096, SEEK_CUR);
     }
 }
-
 
 }

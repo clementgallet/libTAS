@@ -355,7 +355,7 @@ static void readAllAreas()
 
     /* Read the first saved area */
     Utils::readAll(pmfd, &saved_area, sizeof(Area));
-    if (!(saved_area.properties & Area::SKIP))
+    if (!saved_area.skip)
         lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
 
     /* Read the first current area */
@@ -369,7 +369,7 @@ static void readAllAreas()
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
             Utils::readAll(pmfd, &saved_area, sizeof(Area));
-            if (!(saved_area.properties & Area::SKIP))
+            if (!saved_area.skip)
                 lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
             not_eof = procSelfMaps.getNextArea(&current_area);
         }
@@ -380,7 +380,7 @@ static void readAllAreas()
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
             Utils::readAll(pmfd, &saved_area, sizeof(Area));
-            if (!(saved_area.properties & Area::SKIP))
+            if (!saved_area.skip)
                 lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
         }
     }
@@ -409,15 +409,15 @@ static void readAllAreas()
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
 
     Utils::readAll(pmfd, &saved_area, sizeof saved_area);
-    if (!(saved_area.properties & Area::SKIP))
+    if (!saved_area.skip)
         lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
 
     while (saved_area.addr != nullptr) {
-        if (!(saved_area.properties & Area::SKIP)) {
+        if (!saved_area.skip) {
             MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
         }
         Utils::readAll(pmfd, &saved_area, sizeof(saved_area));
-        if (!(saved_area.properties & Area::SKIP))
+        if (!saved_area.skip)
             lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
     }
 
@@ -438,7 +438,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         (saved_area->addr == current_area->addr)) {
 
         /* Check if it is a skipped area */
-        if (saved_area->properties & Area::SKIP) {
+        if (saved_area->skip) {
             if (!skipArea(current_area)) {
                 debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Current section is not skipped anymore !?");
                 saved_area->print("Saved");
@@ -541,7 +541,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
     if ((current_area->addr == nullptr) || (saved_area->addr < current_area->addr)) {
 
-        if (saved_area->properties & Area::SKIP) {
+        if (saved_area->skip) {
             // debuglogstdio(LCF_CHECKPOINT, "Section is skipped");
             return -1;
         }
@@ -622,7 +622,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
 static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, SaveState &parent_state, SaveState &base_state)
 {
-    if (saved_area.properties & Area::SKIP)
+    if (saved_area.skip)
         return;
 
     MYASSERT(saved_area.page_offset == lseek(pfd, 0, SEEK_CUR))
@@ -642,14 +642,14 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
         char flag;
         Utils::readAll(pmfd, &flag, sizeof(char));
 
-        if (flag & Area::NO_PAGE) {
+        if (flag == Area::NO_PAGE) {
             // debuglogstdio(LCF_CHECKPOINT, "Page %p is no page", curAddr);
         }
-        else if (flag & Area::ZERO_PAGE) {
+        else if (flag == Area::ZERO_PAGE) {
             // debuglogstdio(LCF_CHECKPOINT, "Page %p is zero page", curAddr);
             memset(static_cast<void*>(curAddr), 0, 4096);
         }
-        else if (flag & Area::BASE) {
+        else if (flag == Area::BASE_PAGE) {
             // debuglogstdio(LCF_CHECKPOINT, "Page %p is base page", curAddr);
 
             /* The memory page of the loading savestate is the same as the base
@@ -660,13 +660,13 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
             char parent_flag = parent_state.getPageFlag(curAddr);
             parent_state.skipPage(parent_flag);
 
-            if (!(parent_flag & Area::BASE)) {
+            if (parent_flag != Area::BASE_PAGE) {
                 /* Memory page has been modified between the two savestates.
                  * We must read from the base savestate.
                  */
                 // debuglogstdio(LCF_CHECKPOINT, "Parent Page is not base page");
                 char base_flag = base_state.getPageFlag(curAddr);
-                MYASSERT(base_flag == Area::NONE);
+                MYASSERT(base_flag == Area::FULL_PAGE);
                 Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
             }
             else {
@@ -678,7 +678,6 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
                 Utils::readAll(spmfd, &page, 8);
                 bool soft_dirty = page & (0x1ull << 55);
 
-                //if (true) {
                 if (soft_dirty) {
                     /* Memory page has been modified after parent state.
                      * We must read from the base savestate.
@@ -686,7 +685,7 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
                     // debuglogstdio(LCF_CHECKPOINT, "Page is dirty");
 
                     char base_flag = base_state.getPageFlag(curAddr);
-                    MYASSERT(base_flag == Area::NONE);
+                    MYASSERT(base_flag == Area::FULL_PAGE);
                     Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
                 }
             }
@@ -791,7 +790,7 @@ static void writeAllAreas(bool base)
     procSelfMaps.reset();
     while (procSelfMaps.getNextArea(&area)) {
         if (skipArea(&area)) {
-            area.properties |= Area::SKIP;
+            area.skip = true;
             Utils::writeAll(pmfd, &area, sizeof(area));
         }
         else {
@@ -903,18 +902,19 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);
 
-                if (parent_flag & Area::SKIP) {
-                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-skipped area with soft-dirty cleared and parent savestate skipped, wtf. Saving the page just in case.");
-                    ss_pagemaps[ss_pagemap_i++] = Area::NONE;
+                if (parent_flag == Area::NONE) {
+                    /* This is not supposed to happen, saving the full page */
+                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area with soft-dirty cleared but no parent page !?");
+                    ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
                 }
-                else if ((parent_flag & Area::NO_PAGE) || (parent_flag & Area::ZERO_PAGE) || (parent_flag & Area::BASE)) {
-                    ss_pagemaps[ss_pagemap_i++] = parent_flag;
+                else if (parent_flag == Area::FULL_PAGE) {
+                    /* Parent state stores the memory page, we must store it too */
+                    ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
+                    Utils::writeAll(pfd, parent_state.getPage(parent_flag), 4096);
                 }
                 else {
-                    /* Parent state stores the memory page, we must store it too */
-                    ss_pagemaps[ss_pagemap_i++] = Area::NONE;
-                    Utils::writeAll(pfd, parent_state.getPage(parent_flag), 4096);
+                    ss_pagemaps[ss_pagemap_i++] = parent_flag;
                 }
             }
             else {
@@ -928,11 +928,11 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
                     //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page match!");
                     // }
                 // }
-                ss_pagemaps[ss_pagemap_i++] = Area::BASE;
+                ss_pagemaps[ss_pagemap_i++] = Area::BASE_PAGE;
             }
         }
         else {
-            ss_pagemaps[ss_pagemap_i++] = Area::NONE;
+            ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
             Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
         }
     }

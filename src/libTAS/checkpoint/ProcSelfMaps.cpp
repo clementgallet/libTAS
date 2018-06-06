@@ -182,9 +182,9 @@ bool ProcSelfMaps::getNextArea(Area *area)
         area->flags |= MAP_ANONYMOUS;
     }
 
-    area->properties = 0;
+    area->skip = false;
 
-    /* Somtetimes the [heap] is split into several contiguous segments, such as
+    /* Sometimes the [heap] is split into several contiguous segments, such as
      * after a dumping was made (but why...?). This can screw up our code for
      * loading and remapping the [heap] using brk, so we always read the [heap]
      * as one single segment.
