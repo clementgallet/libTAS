@@ -133,6 +133,7 @@ ThreadInfo* ThreadManager::getNewThread()
     /* Try to recycle a thread from the free list */
     if (!thread) {
         thread = new ThreadInfo;
+        memset(thread, 0, sizeof(ThreadInfo));
         debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
     }
 
@@ -214,7 +215,8 @@ void ThreadManager::update(ThreadInfo* thread)
     int ret;
     NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
     if (ret < 0) {
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", ret);
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", errno);
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "stack starts at ", thread->altstack.ss_sp);
     }
 
     struct sigaction sigusr1;
