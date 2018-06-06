@@ -61,7 +61,7 @@ static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, SaveState &parent_state, SaveState &base_state);
 
 static void writeAllAreas(bool base);
-static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, SaveState &base_state);
+static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state);
 
 void Checkpoint::setSavestatePath(const char* pmpath, const char* pspath)
 {
@@ -770,7 +770,6 @@ static void writeAllAreas(bool base)
 
     /* Load the parent savestate if any. */
     SaveState parent_state(parentpagemappath, parentpagespath);
-    SaveState base_state(basepagemappath, basepagespath);
 
     /* Parse the content of /proc/self/maps into memory.
      * We don't allocate memory here, we are using our special allocated
@@ -783,7 +782,7 @@ static void writeAllAreas(bool base)
     while (procSelfMaps.getNextArea(&area)) {
         if (!skipArea(&area)) {
             MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
-            // MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
+            //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_SEQUENTIAL) == 0);
         }
     }
@@ -796,7 +795,7 @@ static void writeAllAreas(bool base)
             Utils::writeAll(pmfd, &area, sizeof(area));
         }
         else {
-            writeAnArea(pmfd, pfd, spmfd, area, parent_state, base_state);
+            writeAnArea(pmfd, pfd, spmfd, area, parent_state);
         }
     }
 
@@ -836,7 +835,7 @@ static void writeAllAreas(bool base)
     }
 }
 
-static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, SaveState &base_state)
+static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state)
 {
 //    area.print("Save");
 
@@ -920,12 +919,14 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
             }
             else {
                 // char base_flag = base_state.getPageFlag(curAddr);
-                // char* base_page = base_state.getPage(base_flag);
-                // if (0 != memcmp(base_page, curAddr, 4096)) {
-                //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page mismatch!");
-                // }
-                // else {
-                //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page match!");
+                // if (base_flag == Area::NONE) {
+                //     char* base_page = base_state.getPage(base_flag);
+                //     if (0 != memcmp(base_page, curAddr, 4096)) {
+                //         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page mismatch!");
+                //     }
+                    // else {
+                    //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page match!");
+                    // }
                 // }
                 ss_pagemaps[ss_pagemap_i++] = Area::BASE;
             }

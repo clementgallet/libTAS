@@ -88,7 +88,7 @@ char SaveState::getPageFlag(char* addr)
     char flag;
     for (; current_addr < addr; current_addr += 4096) {
         Utils::readAll(pmfd, &flag, sizeof(char));
-        if (!(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+        if (!(flag & Area::NO_PAGE) && !(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
             lseek(pfd, 4096, SEEK_CUR);
         }
     }
@@ -100,7 +100,7 @@ char SaveState::getPageFlag(char* addr)
 
 char* SaveState::getPage(char flag)
 {
-    if (!(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
+    if (!(flag & Area::NO_PAGE) && !(flag & Area::ZERO_PAGE) && (!(flag & Area::BASE))) {
         /* Store the content of the page in this object */
         Utils::readAll(pfd, page, 4096);
     }
