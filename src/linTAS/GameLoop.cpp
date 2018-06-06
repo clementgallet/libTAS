@@ -337,11 +337,13 @@ void GameLoop::initProcessMessages()
     }
 
     /* Build and send the base savestate path */
-    std::string basesavestatepath = context->config.savestatedir + '/';
-    basesavestatepath += context->gamename;
-    basesavestatepath += ".state0";
-    sendMessage(MSGN_BASE_SAVESTATE);
-    sendString(basesavestatepath);
+    if (context->config.sc.incremental_savestates) {
+        std::string basesavestatepath = context->config.savestatedir + '/';
+        basesavestatepath += context->gamename;
+        basesavestatepath += ".state0";
+        sendMessage(MSGN_BASE_SAVESTATE);
+        sendString(basesavestatepath);
+    }
 
     /* Get the shared libs of the game executable */
     std::vector<std::string> linked_libs;
@@ -673,8 +675,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
-            /* Building the parent savestate path if any */
-            if (current_savestate > 0) {
+            if (context->config.sc.incremental_savestates && (current_savestate > 0)) {
                 std::string parentsavestatepath = context->config.savestatedir + '/';
                 parentsavestatepath += context->gamename;
                 parentsavestatepath += ".state" + std::to_string(current_savestate);
@@ -789,16 +790,18 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             /* Building the parent savestate path */
-            if (current_savestate < 0) {
-                std::cerr << "No parent savestate when loading ??" << std::endl;
+            if (context->config.sc.incremental_savestates) {                
+                if (current_savestate < 0) {
+                    std::cerr << "No parent savestate when loading ??" << std::endl;
+                }
+
+                std::string parentsavestatepath = context->config.savestatedir + '/';
+                parentsavestatepath += context->gamename;
+                parentsavestatepath += ".state" + std::to_string(current_savestate);
+
+                sendMessage(MSGN_PARENT_SAVESTATE);
+                sendString(parentsavestatepath);
             }
-
-            std::string parentsavestatepath = context->config.savestatedir + '/';
-            parentsavestatepath += context->gamename;
-            parentsavestatepath += ".state" + std::to_string(current_savestate);
-
-            sendMessage(MSGN_PARENT_SAVESTATE);
-            sendString(parentsavestatepath);
 
             sendMessage(MSGN_LOADSTATE);
             sendString(savestatepath);

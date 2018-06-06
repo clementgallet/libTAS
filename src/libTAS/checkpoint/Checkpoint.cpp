@@ -48,11 +48,11 @@ namespace libtas {
 static const char* pagemappath;
 static const char* pagespath;
 
-static char parentpagemappath[1024];
-static char parentpagespath[1024];
+static char parentpagemappath[1024] = "\0";
+static char parentpagespath[1024] = "\0";
 
-static char basepagemappath[1024];
-static char basepagespath[1024];
+static char basepagemappath[1024] = "\0";
+static char basepagespath[1024] = "\0";
 
 static bool skipArea(const Area *area);
 
@@ -239,9 +239,11 @@ void Checkpoint::handler(int signum)
     }
     else {
         /* Check that base savestate exists, otherwise save it */
-        struct stat sb;
-        if (stat(basepagemappath, &sb) == -1) {
-            writeAllAreas(true);
+        if (shared_config.incremental_savestates) {
+            struct stat sb;
+            if (stat(basepagemappath, &sb) == -1) {
+                writeAllAreas(true);
+            }
         }
 
         writeAllAreas(false);
@@ -720,8 +722,10 @@ static void writeAllAreas(bool base)
     MYASSERT(spmfd != -1);
 
     int crfd;
-    NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
-    MYASSERT(crfd != -1);
+    if (shared_config.incremental_savestates) {
+        NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
+        MYASSERT(crfd != -1);
+    }
 
     /* Saving the savestate header */
     StateHeader sh;
@@ -770,8 +774,10 @@ static void writeAllAreas(bool base)
     area.size = 0; // End of data
     Utils::writeAll(pmfd, &area, sizeof(area));
 
-    /* Clear soft-dirty bits */
-    Utils::writeAll(crfd, "4\n", 2);
+    if (shared_config.incremental_savestates) {
+        /* Clear soft-dirty bits */
+        Utils::writeAll(crfd, "4\n", 2);
+    }
 
     /* Recover area protection */
     procSelfMaps.reset();
@@ -781,7 +787,10 @@ static void writeAllAreas(bool base)
         }
     }
 
-    NATIVECALL(close(crfd));
+    if (shared_config.incremental_savestates) {
+        NATIVECALL(close(crfd));
+    }
+
     NATIVECALL(close(spmfd));
 
     /* Closing the savestate files */
@@ -828,7 +837,7 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
         }
 
         /* Check if page was not modified since last savestate */
-        else if (!soft_dirty) {
+        else if (!soft_dirty && shared_config.incremental_savestates) {
             /* Copy the value of the parent savestate if any */
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);

@@ -173,6 +173,9 @@ struct SharedConfig {
     int screen_width = 0;
     int screen_height = 0;
 
+    /* Using incremental savestates */
+    bool incremental_savestates = false;
+
 };
 
 #endif
