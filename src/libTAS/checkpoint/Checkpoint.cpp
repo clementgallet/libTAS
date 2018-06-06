@@ -58,7 +58,7 @@ static bool skipArea(const Area *area);
 
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
-static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &parent_state, SaveState &base_state);
+static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, SaveState &parent_state, SaveState &base_state);
 
 static void writeAllAreas(bool base);
 static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, SaveState &base_state);
@@ -332,6 +332,15 @@ static void readAllAreas()
     NATIVECALL(pfd = open(pagespath, O_RDONLY));
     MYASSERT(pfd != -1)
 
+    int spmfd, crfd;
+    if (shared_config.incremental_savestates) {
+        NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
+        MYASSERT(spmfd != -1);
+
+        NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
+        MYASSERT(crfd != -1);
+    }
+
     /* Read the savestate header */
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
@@ -387,16 +396,35 @@ static void readAllAreas()
     Utils::readAll(pmfd, &saved_area, sizeof saved_area);
 
     while (saved_area.addr != nullptr) {
-        readAnArea(saved_area, pmfd, pfd, parent_state, base_state);
+        readAnArea(saved_area, pmfd, pfd, spmfd, parent_state, base_state);
         Utils::readAll(pmfd, &saved_area, sizeof(saved_area));
     }
 
-    /* Clear soft-dirty bits */
-    int fd;
-    NATIVECALL(fd = open("/proc/self/clear_refs", O_WRONLY));
-    MYASSERT(fd != -1);
-    MYASSERT(write(fd, "4\n", 2) == 2);
-    NATIVECALL(close(fd));
+    if (shared_config.incremental_savestates) {
+        /* Clear soft-dirty bits */
+        Utils::writeAll(crfd, "4\n", 2);
+    }
+
+    /* Recover write permission to all areas */
+    lseek(pmfd, sizeof(StateHeader), SEEK_SET);
+
+    Utils::readAll(pmfd, &saved_area, sizeof saved_area);
+    if (!(saved_area.properties & Area::SKIP))
+        lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
+
+    while (saved_area.addr != nullptr) {
+        if (!(saved_area.properties & Area::SKIP)) {
+            MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
+        }
+        Utils::readAll(pmfd, &saved_area, sizeof(saved_area));
+        if (!(saved_area.properties & Area::SKIP))
+            lseek(pmfd, saved_area.size / 4096, SEEK_CUR);
+    }
+
+    if (shared_config.incremental_savestates) {
+        NATIVECALL(close(crfd));
+        NATIVECALL(close(spmfd));
+    }
 
     /* That's all folks */
     NATIVECALL(close(pmfd));
@@ -592,7 +620,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
     return 0;
 }
 
-static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &parent_state, SaveState &base_state)
+static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, SaveState &parent_state, SaveState &base_state)
 {
     if (saved_area.properties & Area::SKIP)
         return;
@@ -603,10 +631,6 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &par
     if (!(saved_area.prot & PROT_WRITE)) {
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
     }
-
-    int fd;
-    NATIVECALL(fd = open("/proc/self/pagemap", O_RDONLY));
-    MYASSERT(fd != -1);
 
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
@@ -649,9 +673,9 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &par
                 // debuglogstdio(LCF_CHECKPOINT, "Parent Page is base page");
 
                 /* Gather the flag for the page map */
-                lseek(fd, reinterpret_cast<off_t>(curAddr) / (4096/8), SEEK_SET);
+                lseek(spmfd, reinterpret_cast<off_t>(curAddr) / (4096/8), SEEK_SET);
                 uint64_t page;
-                Utils::readAll(fd, &page, 8);
+                Utils::readAll(spmfd, &page, 8);
                 bool soft_dirty = page & (0x1ull << 55);
 
                 //if (true) {
@@ -672,12 +696,8 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, SaveState &par
         }
     }
 
-    NATIVECALL(close(fd));
-
-    /* Recover permission */
-    if (!(saved_area.prot & PROT_WRITE)) {
-        MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
-    }
+    /* Remove write permission to the area */
+    MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot & ~PROT_WRITE) == 0)
 }
 
 
@@ -692,7 +712,16 @@ static void writeAllAreas(bool base)
     char temppagemappath[1024];
     char temppagespath[1024];
 
-    if (base) {
+    if (!shared_config.incremental_savestates) {
+        debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
+
+        unlink(pagemappath);
+        NATIVECALL(pmfd = creat(pagemappath, 0644));
+
+        unlink(pagespath);
+        NATIVECALL(pfd = creat(pagespath, 0644));
+    }
+    else if (base) {
         debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
         NATIVECALL(pmfd = creat(basepagemappath, 0644));
@@ -754,6 +783,8 @@ static void writeAllAreas(bool base)
     while (procSelfMaps.getNextArea(&area)) {
         if (!skipArea(&area)) {
             MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
+            // MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
+            MYASSERT(madvise(area.addr, area.size, MADV_SEQUENTIAL) == 0);
         }
     }
 
@@ -779,11 +810,12 @@ static void writeAllAreas(bool base)
         Utils::writeAll(crfd, "4\n", 2);
     }
 
-    /* Recover area protection */
+    /* Recover area protection and advise */
     procSelfMaps.reset();
     while (procSelfMaps.getNextArea(&area)) {
         if (!skipArea(&area)) {
             MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
+            MYASSERT(madvise(area.addr, area.size, MADV_NORMAL) == 0);
         }
     }
 
@@ -798,7 +830,7 @@ static void writeAllAreas(bool base)
     NATIVECALL(close(pfd));
 
     /* Rename the savestate files */
-    if (!base) {
+    if (shared_config.incremental_savestates && !base) {
         rename(temppagemappath, pagemappath);
         rename(temppagespath, pagespath);
     }
@@ -806,7 +838,7 @@ static void writeAllAreas(bool base)
 
 static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, SaveState &base_state)
 {
-    //area.print("Save");
+//    area.print("Save");
 
     /* Save the position of the first area page in the pages file */
     area.page_offset = lseek(pfd, 0, SEEK_CUR);
@@ -830,8 +862,8 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
             Utils::writeAll(pmfd, &flag, sizeof(flag));
         }
 
-        /* Check if page is zero */
-        else if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        /* Check if page is zero (only check on anonymous memory)*/
+        else if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             char flag = Area::ZERO_PAGE;
             Utils::writeAll(pmfd, &flag, sizeof(flag));
         }
