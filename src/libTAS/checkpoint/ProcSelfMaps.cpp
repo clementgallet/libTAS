@@ -52,6 +52,11 @@ ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
     }
 }
 
+void ProcSelfMaps::reset()
+{
+    dataIdx = 0;
+}
+
 intptr_t ProcSelfMaps::readDec()
 {
     intptr_t v = 0;

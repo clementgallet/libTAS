@@ -31,6 +31,7 @@ class ProcSelfMaps
         ProcSelfMaps(void* restoreAddr, size_t restoreLength);
 
         bool getNextArea(Area *area);
+        void reset();
 
     private:
         intptr_t readDec();
