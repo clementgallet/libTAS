@@ -632,26 +632,54 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
     }
 
+    /* Seek at the beginning of the area pagemap */
+    lseek(spmfd, reinterpret_cast<off_t>(saved_area.addr) / (4096/8), SEEK_SET);
+
+    /* Number of pages in the area */
+    int nb_pages = saved_area.size / 4096;
+
+    /* Index of the current area page */
+    int page_i = 0;
+
+    /* Chunk of pagemap values */
+    uint64_t pagemaps[512];
+
+    /* Current index in the pagemaps array */
+    int pagemap_i = 512;
+
+    /* Chunk of savestate pagemap values */
+    char ss_pagemaps[4096];
+
+    /* Current index in the savestate pagemap array */
+    int ss_pagemap_i = 4096;
+
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
-    curAddr += 4096) {
+    curAddr += 4096, page_i++, pagemap_i++) {
 
-        // debuglogstdio(LCF_CHECKPOINT, "Read page %p from area %p-%p", curAddr, saved_area.addr, saved_area.endAddr);
+        /* We read savestate pagemap flags in chunks to avoid too many read syscalls. */
+        if (ss_pagemap_i >= 4096) {
+            size_t remaining_pages = (nb_pages-page_i)>4096?4096:(nb_pages-page_i);
+            Utils::readAll(pmfd, ss_pagemaps, remaining_pages);
+            ss_pagemap_i = 0;
+        }
 
-        char flag;
-        Utils::readAll(pmfd, &flag, sizeof(char));
+        /* Same for pagemap file */
+        if (pagemap_i >= 512) {
+            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
+            Utils::readAll(spmfd, pagemaps, remaining_pages*8);
+            pagemap_i = 0;
+        }
+
+        char flag = ss_pagemaps[ss_pagemap_i++];
 
         if (flag == Area::NO_PAGE) {
-            // debuglogstdio(LCF_CHECKPOINT, "Page %p is no page", curAddr);
         }
         else if (flag == Area::ZERO_PAGE) {
-            // debuglogstdio(LCF_CHECKPOINT, "Page %p is zero page", curAddr);
             memset(static_cast<void*>(curAddr), 0, 4096);
         }
         else if (flag == Area::BASE_PAGE) {
-            // debuglogstdio(LCF_CHECKPOINT, "Page %p is base page", curAddr);
-
             /* The memory page of the loading savestate is the same as the base
              * savestate. We must check if we actually need to read from the
              * base savestate or if the page already contains the correct values.
@@ -664,26 +692,19 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
                 /* Memory page has been modified between the two savestates.
                  * We must read from the base savestate.
                  */
-                // debuglogstdio(LCF_CHECKPOINT, "Parent Page is not base page");
                 char base_flag = base_state.getPageFlag(curAddr);
                 MYASSERT(base_flag == Area::FULL_PAGE);
                 Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
             }
             else {
-                // debuglogstdio(LCF_CHECKPOINT, "Parent Page is base page");
-
                 /* Gather the flag for the page map */
-                lseek(spmfd, reinterpret_cast<off_t>(curAddr) / (4096/8), SEEK_SET);
-                uint64_t page;
-                Utils::readAll(spmfd, &page, 8);
+                uint64_t page = pagemaps[pagemap_i];
                 bool soft_dirty = page & (0x1ull << 55);
 
                 if (soft_dirty) {
                     /* Memory page has been modified after parent state.
                      * We must read from the base savestate.
                      */
-                    // debuglogstdio(LCF_CHECKPOINT, "Page is dirty");
-
                     char base_flag = base_state.getPageFlag(curAddr);
                     MYASSERT(base_flag == Area::FULL_PAGE);
                     Utils::readAll(base_state.getPageFd(), static_cast<void*>(curAddr), 4096);
