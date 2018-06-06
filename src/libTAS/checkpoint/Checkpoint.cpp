@@ -846,26 +846,56 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
     /* Write the area struct */
     Utils::writeAll(pmfd, &area, sizeof(area));
 
-    char* endAddr = static_cast<char*>(area.endAddr);
-    for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096) {
+    /* Seek at the beginning of the area pagemap */
+    lseek(spmfd, reinterpret_cast<off_t>(area.addr) / (4096/8), SEEK_SET);
 
-        /* Gather the flag for the page map */
-        lseek(spmfd, reinterpret_cast<off_t>(curAddr) / (4096/8), SEEK_SET);
-        uint64_t page;
-        Utils::readAll(spmfd, &page, 8);
+    /* Number of pages in the area */
+    int nb_pages = area.size / 4096;
+
+    /* Index of the current area page */
+    int page_i = 0;
+
+    /* Chunk of pagemap values */
+    uint64_t pagemaps[512];
+
+    /* Current index in the pagemaps array */
+    int pagemap_i = 512;
+
+    /* Chunk of savestate pagemap values */
+    char ss_pagemaps[4096];
+
+    /* Current index in the savestate pagemap array */
+    int ss_pagemap_i = 0;
+
+    char* endAddr = static_cast<char*>(area.endAddr);
+    for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
+
+        /* We write a chunk of savestate pagemaps if it is full */
+        if (ss_pagemap_i >= 4096) {
+            Utils::writeAll(pmfd, ss_pagemaps, 4096);
+            ss_pagemap_i = 0;
+        }
+
+        /* We read pagemap flags in chunks to avoid too many read syscalls. */
+        if (pagemap_i >= 512) {
+            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
+            Utils::readAll(spmfd, pagemaps, remaining_pages*8);
+            pagemap_i = 0;
+        }
+
+        /* Gather the flag for the current pagemap. */
+        uint64_t page = pagemaps[pagemap_i++];
         bool page_present = page & (0x1ull << 63);
         bool soft_dirty = page & (0x1ull << 55);
 
         /* Check if page is present */
         if (!page_present) {
-            char flag = Area::NO_PAGE;
-            Utils::writeAll(pmfd, &flag, sizeof(flag));
+            ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
         }
 
         /* Check if page is zero (only check on anonymous memory)*/
         else if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
-            char flag = Area::ZERO_PAGE;
-            Utils::writeAll(pmfd, &flag, sizeof(flag));
+            ss_pagemaps[ss_pagemap_i++] = Area::ZERO_PAGE;
         }
 
         /* Check if page was not modified since last savestate */
@@ -876,17 +906,15 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
 
                 if (parent_flag & Area::SKIP) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-skipped area with soft-dirty cleared and parent savestate skipped, wtf. Saving the page just in case.");
-                    char flag = Area::NONE;
-                    Utils::writeAll(pmfd, &flag, sizeof(flag));
+                    ss_pagemaps[ss_pagemap_i++] = Area::NONE;
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
                 }
                 else if ((parent_flag & Area::NO_PAGE) || (parent_flag & Area::ZERO_PAGE) || (parent_flag & Area::BASE)) {
-                    Utils::writeAll(pmfd, &parent_flag, sizeof(parent_flag));
+                    ss_pagemaps[ss_pagemap_i++] = parent_flag;
                 }
                 else {
                     /* Parent state stores the memory page, we must store it too */
-                    char flag = Area::NONE;
-                    Utils::writeAll(pmfd, &flag, sizeof(flag));
+                    ss_pagemaps[ss_pagemap_i++] = Area::NONE;
                     Utils::writeAll(pfd, parent_state.getPage(parent_flag), 4096);
                 }
             }
@@ -899,16 +927,18 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
                 // else {
                 //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page match!");
                 // }
-                char flag = Area::BASE;
-                Utils::writeAll(pmfd, &flag, sizeof(flag));
+                ss_pagemaps[ss_pagemap_i++] = Area::BASE;
             }
         }
         else {
-            char flag = Area::NONE;
-            Utils::writeAll(pmfd, &flag, sizeof(flag));
+            ss_pagemaps[ss_pagemap_i++] = Area::NONE;
             Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
         }
     }
+
+    /* Writing the last savestate pagemap chunk */
+    Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
+
 }
 
 }
