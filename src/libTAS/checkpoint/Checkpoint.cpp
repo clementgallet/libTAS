@@ -632,8 +632,10 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
     }
 
-    /* Seek at the beginning of the area pagemap */
-    lseek(spmfd, reinterpret_cast<off_t>(saved_area.addr) / (4096/8), SEEK_SET);
+    if (shared_config.incremental_savestates) {
+        /* Seek at the beginning of the area pagemap */
+        lseek(spmfd, reinterpret_cast<off_t>(saved_area.addr) / (4096/8), SEEK_SET);
+    }
 
     /* Number of pages in the area */
     int nb_pages = saved_area.size / 4096;
@@ -666,7 +668,7 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
         }
 
         /* Same for pagemap file */
-        if (pagemap_i >= 512) {
+        if (shared_config.incremental_savestates && pagemap_i >= 512) {
             size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;

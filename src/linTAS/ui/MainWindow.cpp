@@ -593,6 +593,9 @@ void MainWindow::createMenus()
     timeSecMenu->addActions(timeSecGroup->actions());
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
+    incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
+    incrementalStateAction->setCheckable(true);
+    disabledActionsOnStart.append(incrementalStateAction);
     QMenu *savestateSegmentMenu = savestateMenu->addMenu(tr("Ignore memory segments"));
     savestateSegmentMenu->addActions(savestateIgnoreGroup->actions());
 
@@ -961,6 +964,7 @@ void MainWindow::updateUIFromConfig()
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
 
+    incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     setCheckboxesFromMask(savestateIgnoreGroup, context->config.sc.ignore_sections);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
@@ -1326,6 +1330,12 @@ void MainWindow::slotPreventSavefile(bool checked)
 void MainWindow::slotMovieEnd()
 {
     setListFromRadio(movieEndGroup, context->config.on_movie_end);
+}
+
+void MainWindow::slotIncrementalState(bool checked)
+{
+    context->config.sc.incremental_savestates = checked;
+    context->config.sc_modified = true;
 }
 
 void MainWindow::alertSave(void* promise)
