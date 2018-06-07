@@ -45,8 +45,8 @@ void AltStack::prepareStack()
 {
     /* Setup an alternate signal stack using our reserved memory */
     stack_t ss;
-    ss.ss_sp = ReservedMemory::getAddr(ONE_MB);
-    ss.ss_size = ReservedMemory::getSize() - ONE_MB;
+    ss.ss_sp = ReservedMemory::getAddr(ReservedMemory::STACK_ADDR);
+    ss.ss_size = ReservedMemory::STACK_SIZE;
     ss.ss_flags = 0;
 
     int ret;

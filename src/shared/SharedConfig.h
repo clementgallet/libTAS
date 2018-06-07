@@ -176,6 +176,9 @@ struct SharedConfig {
     /* Using incremental savestates */
     bool incremental_savestates = true;
 
+    /* Storing savestates in RAM */
+    bool savestates_in_ram = false;
+
 };
 
 #endif

@@ -122,6 +122,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("save_screenpixels", sc.save_screenpixels);
     settings.setValue("ignore_sections", sc.ignore_sections);
     settings.setValue("incremental_savestates", sc.incremental_savestates);
+    settings.setValue("savestates_in_ram", sc.savestates_in_ram);
 
     settings.endGroup();
 }
@@ -207,6 +208,7 @@ void Config::load(const std::string& gamepath) {
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
     sc.ignore_sections = settings.value("ignore_sections", sc.ignore_sections).toInt();
     sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
+    sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();
 
     size = settings.beginReadArray("main_gettimes_threshold");
     for (int t=0; t<size; t++) {

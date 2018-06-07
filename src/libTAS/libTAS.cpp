@@ -65,6 +65,7 @@ void __attribute__((constructor)) init(void)
     while (message != MSGN_END_INIT) {
         std::string libstring;
         std::string basesavestatepath;
+        int index;
         switch (message) {
             case MSGN_CONFIG:
                 debuglog(LCF_SOCKET, "Receiving config");
@@ -77,9 +78,13 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
                 break;
 #endif
-            case MSGN_BASE_SAVESTATE:
+            case MSGN_BASE_SAVESTATE_PATH:
                 basesavestatepath = receiveString();
                 Checkpoint::setBaseSavestatePath(basesavestatepath);
+                break;
+            case MSGN_BASE_SAVESTATE_INDEX:
+                receiveData(&index, sizeof(int));
+                Checkpoint::setBaseSavestateIndex(index);
                 break;
             case MSGN_LIB_FILE:
                 debuglog(LCF_SOCKET, "Receiving lib filename");

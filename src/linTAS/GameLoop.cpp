@@ -336,13 +336,20 @@ void GameLoop::initProcessMessages()
         sendString(context->config.dumpfile);
     }
 
-    /* Build and send the base savestate path */
+    /* Build and send the base savestate path/index */
     if (context->config.sc.incremental_savestates) {
-        std::string basesavestatepath = context->config.savestatedir + '/';
-        basesavestatepath += context->gamename;
-        basesavestatepath += ".state0";
-        sendMessage(MSGN_BASE_SAVESTATE);
-        sendString(basesavestatepath);
+        if (context->config.sc.savestates_in_ram) {
+            sendMessage(MSGN_BASE_SAVESTATE_INDEX);
+            int index = 0;
+            sendData(&index, sizeof(int));
+        }
+        else {
+            std::string basesavestatepath = context->config.savestatedir + '/';
+            basesavestatepath += context->gamename;
+            basesavestatepath += ".state0";
+            sendMessage(MSGN_BASE_SAVESTATE_PATH);
+            sendString(basesavestatepath);
+        }
     }
 
     /* Get the shared libs of the game executable */
@@ -663,10 +670,18 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 movie.saveMovie(moviepath, context->framecount);
             }
 
-            /* Building the savestate path */
-            std::string savestatepath = context->config.savestatedir + '/';
-            savestatepath += context->gamename;
-            savestatepath += ".state" + std::to_string(statei);
+            /* Send the savestate path/index */
+            if (context->config.sc.savestates_in_ram) {
+                sendMessage(MSGN_SAVESTATE_INDEX);
+                sendData(&statei, sizeof(int));
+            }
+            else {
+                std::string savestatepath = context->config.savestatedir + '/';
+                savestatepath += context->gamename;
+                savestatepath += ".state" + std::to_string(statei);
+                sendMessage(MSGN_SAVESTATE_PATH);
+                sendString(savestatepath);
+            }
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                 std::string msg = "Saving state ";
@@ -675,17 +690,22 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
+            /* Send the parent savestate path/index */
             if (context->config.sc.incremental_savestates && (current_savestate > 0)) {
-                std::string parentsavestatepath = context->config.savestatedir + '/';
-                parentsavestatepath += context->gamename;
-                parentsavestatepath += ".state" + std::to_string(current_savestate);
-
-                sendMessage(MSGN_PARENT_SAVESTATE);
-                sendString(parentsavestatepath);
+                if (context->config.sc.savestates_in_ram) {
+                    sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
+                    sendData(&current_savestate, sizeof(int));
+                }
+                else {
+                    std::string parentsavestatepath = context->config.savestatedir + '/';
+                    parentsavestatepath += context->gamename;
+                    parentsavestatepath += ".state" + std::to_string(current_savestate);
+                    sendMessage(MSGN_PARENT_SAVESTATE_PATH);
+                    sendString(parentsavestatepath);
+                }
             }
 
             sendMessage(MSGN_SAVESTATE);
-            sendString(savestatepath);
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                 std::string message = "Saved state ";
@@ -732,25 +752,34 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
 
             /* Building the savestate path */
-            std::string savestatepath = context->config.savestatedir + '/';
-            savestatepath += context->gamename;
-            savestatepath += ".state" + std::to_string(statei);
+            if (context->config.sc.savestates_in_ram) {
+                sendMessage(MSGN_SAVESTATE_INDEX);
+                sendData(&statei, sizeof(int));
+            }
+            else {
+                std::string savestatepath = context->config.savestatedir + '/';
+                savestatepath += context->gamename;
+                savestatepath += ".state" + std::to_string(statei);
 
-            /* Check that the savestate exists */
-            struct stat sb;
-            std::string pagemappath = savestatepath + ".pm";
-            std::string pagespath = savestatepath + ".p";
-            if ((stat(pagemappath.c_str(), &sb) == -1) || (stat(pagespath.c_str(), &sb) == -1)) {
-                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                    std::string message = "No savestate in slot ";
-                    message += std::to_string(statei);
-                    sendMessage(MSGN_OSD_MSG);
-                    sendString(message);
+                /* Check that the savestate exists */
+                struct stat sb;
+                std::string pagemappath = savestatepath + ".pm";
+                std::string pagespath = savestatepath + ".p";
+                if ((stat(pagemappath.c_str(), &sb) == -1) || (stat(pagespath.c_str(), &sb) == -1)) {
+                    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                        std::string message = "No savestate in slot ";
+                        message += std::to_string(statei);
+                        sendMessage(MSGN_OSD_MSG);
+                        sendString(message);
+                    }
+                    else {
+                        emit alertToShow(QString("There is no savestate to load in this slot"));
+                    }
+                    return false;
                 }
-                else {
-                    emit alertToShow(QString("There is no savestate to load in this slot"));
-                }
-                return false;
+
+                sendMessage(MSGN_SAVESTATE_PATH);
+                sendString(savestatepath);
             }
 
             /* Building the movie path */
@@ -790,21 +819,26 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             /* Building the parent savestate path */
-            if (context->config.sc.incremental_savestates) {                
+            if (context->config.sc.incremental_savestates) {
                 if (current_savestate < 0) {
                     std::cerr << "No parent savestate when loading ??" << std::endl;
                 }
 
-                std::string parentsavestatepath = context->config.savestatedir + '/';
-                parentsavestatepath += context->gamename;
-                parentsavestatepath += ".state" + std::to_string(current_savestate);
+                if (context->config.sc.savestates_in_ram) {
+                    sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
+                    sendData(&current_savestate, sizeof(int));
+                }
+                else {
+                    std::string parentsavestatepath = context->config.savestatedir + '/';
+                    parentsavestatepath += context->gamename;
+                    parentsavestatepath += ".state" + std::to_string(current_savestate);
 
-                sendMessage(MSGN_PARENT_SAVESTATE);
-                sendString(parentsavestatepath);
+                    sendMessage(MSGN_PARENT_SAVESTATE_PATH);
+                    sendString(parentsavestatepath);
+                }
             }
 
             sendMessage(MSGN_LOADSTATE);
-            sendString(savestatepath);
 
             emit inputsToBeChanged();
 

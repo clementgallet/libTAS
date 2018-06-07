@@ -25,11 +25,29 @@
 #include <cstdint> // intptr_t
 #include <cstddef> // size_t
 
+#define ONE_MB 1024 * 1024
+#define RESTORE_TOTAL_SIZE 5 * ONE_MB
+
 namespace libtas {
 namespace ReservedMemory {
+    enum Addresses {
+        PAGEMAPS_ADDR = 0,
+        PAGES_ADDR = 10*sizeof(int),
+        PSM_ADDR = 20*sizeof(int),
+        STACK_ADDR = ONE_MB,
+    };
+    enum Sizes {
+        PAGEMAPS_SIZE = PAGES_ADDR - PAGEMAPS_ADDR,
+        PAGES_SIZE = PSM_ADDR - PAGES_ADDR,
+        PSM_SIZE = STACK_ADDR - PSM_ADDR,
+        STACK_SIZE = RESTORE_TOTAL_SIZE - STACK_ADDR,
+    };
+
     void init();
     void* getAddr(intptr_t offset);
     size_t getSize();
+
+
 }
 }
 

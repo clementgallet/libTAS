@@ -121,13 +121,13 @@ enum {
 
     /*
      * Ask the game to make a savestate
-     * Argument: size_t (string length) then char[len]
+     * Argument: none
      */
     MSGN_SAVESTATE,
 
     /*
      * Ask the game to load a savestate
-     * Argument: size_t (string length) then char[len]
+     * Argument: none
      */
     MSGN_LOADSTATE,
 
@@ -138,16 +138,40 @@ enum {
     MSGB_LOADING_SUCCEEDED,
 
     /*
+     * Send to the game the path of the savestate
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_SAVESTATE_PATH,
+
+    /*
      * Send to the game the path of the base savestate
      * Argument: size_t (string length) then char[len]
      */
-    MSGN_BASE_SAVESTATE,
+    MSGN_BASE_SAVESTATE_PATH,
 
     /*
      * Send to the game the path of the parent savestate
      * Argument: size_t (string length) then char[len]
      */
-    MSGN_PARENT_SAVESTATE,
+    MSGN_PARENT_SAVESTATE_PATH,
+
+    /*
+     * Send to the game the index of the savestate
+     * Argument: int
+     */
+    MSGN_SAVESTATE_INDEX,
+
+    /*
+     * Send to the game the index of the savestate
+     * Argument: int
+     */
+    MSGN_PARENT_SAVESTATE_INDEX,
+
+    /*
+     * Send to the game the index of the savestate
+     * Argument: int
+     */
+    MSGN_BASE_SAVESTATE_INDEX,
 
     /*
      * Notify the program that encoding failed

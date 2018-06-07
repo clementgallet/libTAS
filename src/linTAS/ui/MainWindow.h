@@ -96,6 +96,8 @@ public:
     QAction *preventSavefileAction;
 
     QAction *incrementalStateAction;
+    QAction *ramStateAction;
+
     QActionGroup *savestateIgnoreGroup;
 
     QActionGroup *loggingOutputGroup;
@@ -253,6 +255,7 @@ private slots:
     void slotMovieEnd();
     void slotPauseMovie();
     void slotIncrementalState(bool checked);
+    void slotRamState(bool checked);
 };
 
 #endif

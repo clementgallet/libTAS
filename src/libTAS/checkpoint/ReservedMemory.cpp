@@ -23,9 +23,6 @@
 #include "../logging.h"
 #include <sys/mman.h>
 
-#define ONE_MB 1024 * 1024
-#define RESTORE_TOTAL_SIZE 5 * ONE_MB
-
 namespace libtas {
 
 static intptr_t restoreAddr = 0;
@@ -44,6 +41,7 @@ void ReservedMemory::init()
         MYASSERT(addr != MAP_FAILED)
         restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
         MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
+        memset(reinterpret_cast<void*>(restoreAddr), 0, restoreLength);
         // debuglogstdio(LCF_ERROR, "Setup reserved space from %p to %p", reinterpret_cast<void*>(restoreAddr+ONE_MB), reinterpret_cast<void*>(restoreAddr+restoreLength));
     }
 }

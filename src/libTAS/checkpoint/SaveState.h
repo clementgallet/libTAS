@@ -28,7 +28,7 @@ namespace libtas {
 class SaveState
 {
     public:
-        SaveState(char* pagemappath, char* pagespath);
+        SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd);
         ~SaveState();
 
         char getPageFlag(char* addr);

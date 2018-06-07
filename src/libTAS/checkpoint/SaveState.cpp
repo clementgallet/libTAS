@@ -30,18 +30,31 @@
 
 namespace libtas {
 
-SaveState::SaveState(char* pagemappath, char* pagespath)
+SaveState::SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd)
 {
-    if (pagemappath[0] == '\0') {
-        pmfd = -1;
-        return;
+    if (shared_config.savestates_in_ram) {
+        pmfd = pagemapfd;
+        pfd = pagesfd;
+        if (!pmfd) {
+            pmfd = -1;
+            return;
+        }
+
+        lseek(pmfd, 0, SEEK_SET);
+        lseek(pfd, 0, SEEK_SET);
     }
+    else {
+        if (pagemappath[0] == '\0') {
+            pmfd = -1;
+            return;
+        }
 
-    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
-    MYASSERT(pmfd != -1)
+        NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+        MYASSERT(pmfd != -1)
 
-    NATIVECALL(pfd = open(pagespath, O_RDONLY));
-    MYASSERT(pfd != -1)
+        NATIVECALL(pfd = open(pagespath, O_RDONLY));
+        MYASSERT(pfd != -1)
+    }
 
     /* Seek after the savestate header */
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
@@ -53,7 +66,7 @@ SaveState::SaveState(char* pagemappath, char* pagespath)
 
 SaveState::~SaveState()
 {
-    if (pmfd > 0) {
+    if (!shared_config.savestates_in_ram && (pmfd > 0)) {
         NATIVECALL(close(pmfd));
         NATIVECALL(close(pfd));
     }

@@ -392,6 +392,7 @@ static void receive_messages(std::function<void()> draw)
     AllInputs preview_ai;
     preview_ai.emptyInputs();
     std::string savestatepath;
+    int index;
 
     while (1)
     {
@@ -437,17 +438,32 @@ static void receive_messages(std::function<void()> draw)
 #endif
                 break;
 
-            case MSGN_PARENT_SAVESTATE:
+            case MSGN_SAVESTATE_PATH:
+                /* Get the parent savestate path */
+                savestatepath = receiveString();
+                Checkpoint::setSavestatePath(savestatepath);
+                break;
+
+            case MSGN_SAVESTATE_INDEX:
+                /* Get the parent savestate index */
+                receiveData(&index, sizeof(int));
+                Checkpoint::setSavestateIndex(index);
+                break;
+
+            case MSGN_PARENT_SAVESTATE_PATH:
                 /* Get the parent savestate path */
                 savestatepath = receiveString();
                 Checkpoint::setParentSavestatePath(savestatepath);
                 break;
 
-            case MSGN_SAVESTATE:
-                /* Get the savestate path */
-                savestatepath = receiveString();
+            case MSGN_PARENT_SAVESTATE_INDEX:
+                /* Get the parent savestate index */
+                receiveData(&index, sizeof(int));
+                Checkpoint::setParentSavestateIndex(index);
+                break;
 
-                ThreadManager::checkpoint(savestatepath);
+            case MSGN_SAVESTATE:
+                ThreadManager::checkpoint();
 
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from ThreadManager::restore() under.
@@ -486,10 +502,7 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_LOADSTATE:
-                /* Get the savestate path */
-                savestatepath = receiveString();
-
-                ThreadManager::restore(savestatepath);
+                ThreadManager::restore();
 
                 /* If restoring failed, we return here. We still send the
                  * frame count and time because the program will pull a

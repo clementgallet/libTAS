@@ -27,9 +27,13 @@
 namespace libtas {
 namespace Checkpoint
 {
-    void setSavestatePath(const char* pmpath, const char* pspath);
+    void setSavestatePath(std::string path);
     void setParentSavestatePath(std::string path);
     void setBaseSavestatePath(std::string path);
+
+    void setSavestateIndex(int index);
+    void setBaseSavestateIndex(int index);
+    void setParentSavestateIndex(int index);
 
     bool checkCheckpoint();
     bool checkRestore();

@@ -3,6 +3,7 @@
 ### Added
 - Analog inputs in input editor, which are also editable
 - Incremental savestates
+- Store savestates in disk or RAM
 
 ## [1.2.0] - 2018-05-28
 ### Added

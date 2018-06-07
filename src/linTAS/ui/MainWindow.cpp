@@ -596,6 +596,9 @@ void MainWindow::createMenus()
     incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
     incrementalStateAction->setCheckable(true);
     disabledActionsOnStart.append(incrementalStateAction);
+    ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
+    ramStateAction->setCheckable(true);
+    disabledActionsOnStart.append(ramStateAction);
     QMenu *savestateSegmentMenu = savestateMenu->addMenu(tr("Ignore memory segments"));
     savestateSegmentMenu->addActions(savestateIgnoreGroup->actions());
 
@@ -965,6 +968,7 @@ void MainWindow::updateUIFromConfig()
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
+    ramStateAction->setChecked(context->config.sc.savestates_in_ram);
     setCheckboxesFromMask(savestateIgnoreGroup, context->config.sc.ignore_sections);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
@@ -1335,6 +1339,12 @@ void MainWindow::slotMovieEnd()
 void MainWindow::slotIncrementalState(bool checked)
 {
     context->config.sc.incremental_savestates = checked;
+    context->config.sc_modified = true;
+}
+
+void MainWindow::slotRamState(bool checked)
+{
+    context->config.sc.savestates_in_ram = checked;
     context->config.sc_modified = true;
 }
 

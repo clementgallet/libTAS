@@ -35,6 +35,7 @@
 #include <X11/Xlibint.h>
 #include <X11/Xlib-xcb.h>
 #include <sys/statvfs.h>
+#include <sys/syscall.h>
 #include "errno.h"
 #include "../../external/xcbint.h"
 #include "../renderhud/RenderHUD.h"
@@ -45,14 +46,20 @@
 
 namespace libtas {
 
-static const char* pagemappath;
-static const char* pagespath;
+/* Savestate paths (for file storing)*/
+static char pagemappath[1024] = "\0";
+static char pagespath[1024] = "\0";
 
 static char parentpagemappath[1024] = "\0";
 static char parentpagespath[1024] = "\0";
 
 static char basepagemappath[1024] = "\0";
 static char basepagespath[1024] = "\0";
+
+/* Savestate indexes (for RAM storing) */
+static int ss_index;
+static int parent_ss_index;
+static int base_ss_index;
 
 static bool skipArea(const Area *area);
 
@@ -63,11 +70,13 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
 static void writeAllAreas(bool base);
 static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state);
 
-void Checkpoint::setSavestatePath(const char* pmpath, const char* pspath)
+void Checkpoint::setSavestatePath(std::string path)
 {
-    /* We want to avoid any allocated memory here, so using char array */
-    pagemappath = pmpath;
-    pagespath = pspath;
+    std::string pmpath = path + ".pm";
+    strncpy(pagemappath, pmpath.c_str(), 1023);
+
+    std::string ppath = path + ".p";
+    strncpy(pagespath, ppath.c_str(), 1023);
 }
 
 void Checkpoint::setBaseSavestatePath(std::string path)
@@ -88,12 +97,53 @@ void Checkpoint::setParentSavestatePath(std::string path)
     strncpy(parentpagespath, ppath.c_str(), 1023);
 }
 
+void Checkpoint::setSavestateIndex(int index)
+{
+    ss_index = index;
+}
+
+void Checkpoint::setBaseSavestateIndex(int index)
+{
+    base_ss_index = index;
+}
+
+void Checkpoint::setParentSavestateIndex(int index)
+{
+    parent_ss_index = index;
+}
+
+static int getPagemapFd(int index)
+{
+    int* pagemaps = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
+    return pagemaps[index];
+}
+
+static int getPagesFd(int index)
+{
+    int* pages = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGES_ADDR));
+    return pages[index];
+}
+
+static void setPagemapFd(int index, int fd)
+{
+    int* pagemaps = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
+    pagemaps[index] = fd;
+}
+static void setPagesFd(int index, int fd)
+{
+    int* pages = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGES_ADDR));
+    pages[index] = fd;
+}
+
 bool Checkpoint::checkCheckpoint()
 {
+    if (shared_config.savestates_in_ram)
+        return true;
+
     /* Get an estimation of the savestate space */
     size_t savestate_size = 0;
 
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
 
     /* Read the first current area */
     Area area;
@@ -132,21 +182,46 @@ bool Checkpoint::checkCheckpoint()
 bool Checkpoint::checkRestore()
 {
     /* Check that the savestate files exist */
-    struct stat sb;
-    if (stat(pagemappath, &sb) == -1)
-        return false;
-    if (stat(pagespath, &sb) == -1)
-        return false;
+    if (shared_config.savestates_in_ram) {
+        if (!getPagemapFd(ss_index)) {
+            RenderHUD::insertMessage("Savestate does not exist");
+            return false;
+        }
+
+        if (!getPagesFd(ss_index)) {
+            RenderHUD::insertMessage("Savestate does not exist");
+            return false;
+        }
+    }
+    else {
+        struct stat sb;
+        if (stat(pagemappath, &sb) == -1) {
+            RenderHUD::insertMessage("Savestate does not exist");
+            return false;
+        }
+        if (stat(pagespath, &sb) == -1) {
+            RenderHUD::insertMessage("Savestate does not exist");
+            return false;
+        }
+    }
 
     int pmfd;
-    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
-    if (pmfd == -1)
-        return false;
+    if (shared_config.savestates_in_ram) {
+        pmfd = getPagemapFd(ss_index);
+        lseek(pmfd, 0, SEEK_SET);
+    }
+    else {
+        NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+        if (pmfd == -1)
+            return false;
+    }
 
     /* Read the savestate header */
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
-    NATIVECALL(close(pmfd));
+    if (!shared_config.savestates_in_ram) {
+        NATIVECALL(close(pmfd));
+    }
 
     /* Check that the thread list is identical */
     int n=0;
@@ -240,9 +315,17 @@ void Checkpoint::handler(int signum)
     else {
         /* Check that base savestate exists, otherwise save it */
         if (shared_config.incremental_savestates) {
-            struct stat sb;
-            if (stat(basepagemappath, &sb) == -1) {
-                writeAllAreas(true);
+            if (shared_config.savestates_in_ram) {
+                int fd = getPagemapFd(base_ss_index);
+                if (!fd) {
+                    writeAllAreas(true);
+                }
+            }
+            else {
+                struct stat sb;
+                if (stat(basepagemappath, &sb) == -1) {
+                    writeAllAreas(true);
+                }
             }
         }
 
@@ -325,12 +408,24 @@ static bool skipArea(const Area *area)
 static void readAllAreas()
 {
     int pmfd;
-    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
-    MYASSERT(pmfd != -1)
+    if (shared_config.savestates_in_ram) {
+        pmfd = getPagemapFd(ss_index);
+        lseek(pmfd, 0, SEEK_SET);
+    }
+    else {
+        NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+        MYASSERT(pmfd != -1)
+    }
 
     int pfd;
-    NATIVECALL(pfd = open(pagespath, O_RDONLY));
-    MYASSERT(pfd != -1)
+    if (shared_config.savestates_in_ram) {
+        pfd = getPagesFd(ss_index);
+        lseek(pfd, 0, SEEK_SET);
+    }
+    else {
+        NATIVECALL(pfd = open(pagespath, O_RDONLY));
+        MYASSERT(pfd != -1)
+    }
 
     int spmfd, crfd;
     if (shared_config.incremental_savestates) {
@@ -351,7 +446,7 @@ static void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
 
     /* Read the first saved area */
     Utils::readAll(pmfd, &saved_area, sizeof(Area));
@@ -389,8 +484,8 @@ static void readAllAreas()
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
 
     /* Load base and parent savestates */
-    SaveState parent_state(parentpagemappath, parentpagespath);
-    SaveState base_state(basepagemappath, basepagespath);
+    SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
+    SaveState base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
 
     /* Read the first saved area */
     Utils::readAll(pmfd, &saved_area, sizeof saved_area);
@@ -426,9 +521,11 @@ static void readAllAreas()
         NATIVECALL(close(spmfd));
     }
 
-    /* That's all folks */
-    NATIVECALL(close(pmfd));
-    NATIVECALL(close(pfd));
+    /* Closing savestate files */
+    if (!shared_config.savestates_in_ram) {
+        NATIVECALL(close(pmfd));
+        NATIVECALL(close(pfd));
+    }
 }
 
 static int reallocateArea(Area *saved_area, Area *current_area)
@@ -727,6 +824,9 @@ static void writeAllAreas(bool base)
 {
     int pmfd, pfd;
 
+    /* Storing the savestate index in stack */
+    int current_ss_index = ss_index;
+
     /* Because we may overwrite our parent state, we must save on a temp file
      * and rename it at the end. Again, we must not allocate any memory, so
      * we store the strings on the stack.
@@ -734,35 +834,79 @@ static void writeAllAreas(bool base)
     char temppagemappath[1024];
     char temppagespath[1024];
 
-    if (!shared_config.incremental_savestates) {
-        debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
+    if (shared_config.savestates_in_ram) {
+        if (!shared_config.incremental_savestates) {
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot ", ss_index);
 
-        unlink(pagemappath);
-        NATIVECALL(pmfd = creat(pagemappath, 0644));
+            pmfd = getPagemapFd(ss_index);
+            if (pmfd) {
+                ftruncate(pmfd, 0);
+                lseek(pmfd, 0, SEEK_SET);
+            }
+            else {
+                /* Create a new memfd */
+                pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
+                setPagemapFd(ss_index, pmfd);
+            }
 
-        unlink(pagespath);
-        NATIVECALL(pfd = creat(pagespath, 0644));
-    }
-    else if (base) {
-        debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
+            pfd = getPagesFd(ss_index);
+            if (pfd) {
+                ftruncate(pfd, 0);
+                lseek(pfd, 0, SEEK_SET);
+            }
+            else {
+                /* Create a new memfd */
+                pfd = syscall(SYS_memfd_create, "pagesstate", 0);
+                setPagesFd(ss_index, pfd);
+            }
+        }
+        else if (base) {
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", base_ss_index);
 
-        NATIVECALL(pmfd = creat(basepagemappath, 0644));
-        NATIVECALL(pfd = creat(basepagespath, 0644));
+            /* Create new memfds */
+            pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
+            setPagemapFd(base_ss_index, pmfd);
+
+            pfd = syscall(SYS_memfd_create, "pagesstate", 0);
+            setPagesFd(base_ss_index, pfd);
+        }
+        else {
+            /* Creating new memfds for temp state */
+            pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
+            pfd = syscall(SYS_memfd_create, "pagesstate", 0);
+        }
     }
     else {
-        strncpy(temppagemappath, pagemappath, 1023);
-        strncpy(temppagespath, pagespath, 1023);
+        if (!shared_config.incremental_savestates) {
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
-        strncat(temppagemappath, ".temp", 1023 - strlen(temppagemappath));
-        strncat(temppagespath, ".temp", 1023 - strlen(temppagespath));
+            unlink(pagemappath);
+            NATIVECALL(pmfd = creat(pagemappath, 0644));
 
-        debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
+            unlink(pagespath);
+            NATIVECALL(pfd = creat(pagespath, 0644));
+        }
+        else if (base) {
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
-        unlink(temppagemappath);
-        NATIVECALL(pmfd = creat(temppagemappath, 0644));
+            NATIVECALL(pmfd = creat(basepagemappath, 0644));
+            NATIVECALL(pfd = creat(basepagespath, 0644));
+        }
+        else {
+            strncpy(temppagemappath, pagemappath, 1023);
+            strncpy(temppagespath, pagespath, 1023);
 
-        unlink(temppagespath);
-        NATIVECALL(pfd = creat(temppagespath, 0644));
+            strncat(temppagemappath, ".temp", 1023 - strlen(temppagemappath));
+            strncat(temppagespath, ".temp", 1023 - strlen(temppagespath));
+
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
+
+            unlink(temppagemappath);
+            NATIVECALL(pmfd = creat(temppagemappath, 0644));
+
+            unlink(temppagespath);
+            NATIVECALL(pfd = creat(temppagespath, 0644));
+        }
     }
 
     MYASSERT(pmfd != -1)
@@ -791,13 +935,13 @@ static void writeAllAreas(bool base)
     Utils::writeAll(pmfd, &sh, sizeof(sh));
 
     /* Load the parent savestate if any. */
-    SaveState parent_state(parentpagemappath, parentpagespath);
+    SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
 
     /* Parse the content of /proc/self/maps into memory.
      * We don't allocate memory here, we are using our special allocated
      * memory section that won't be saved in the savestate.
      */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(0), ONE_MB);
+    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
 
     /* Remove write and add read flags from all memory areas we will be dumping */
     Area area;
@@ -847,13 +991,26 @@ static void writeAllAreas(bool base)
     NATIVECALL(close(spmfd));
 
     /* Closing the savestate files */
-    NATIVECALL(close(pmfd));
-    NATIVECALL(close(pfd));
+    if (!shared_config.savestates_in_ram) {
+        NATIVECALL(close(pmfd));
+        NATIVECALL(close(pfd));
+    }
 
     /* Rename the savestate files */
     if (shared_config.incremental_savestates && !base) {
-        rename(temppagemappath, pagemappath);
-        rename(temppagespath, pagespath);
+        if (shared_config.savestates_in_ram) {
+            /* Closing the old savestate memfds and replace with the new one */
+            if (getPagemapFd(current_ss_index)) {
+                NATIVECALL(close(getPagemapFd(current_ss_index)));
+                NATIVECALL(close(getPagesFd(current_ss_index)));
+            }
+            setPagemapFd(current_ss_index, pmfd);
+            setPagesFd(current_ss_index, pfd);
+        }
+        else {
+            rename(temppagemappath, pagemappath);
+            rename(temppagespath, pagespath);
+        }
     }
 }
 
