@@ -98,8 +98,6 @@ public:
     QAction *incrementalStateAction;
     QAction *ramStateAction;
 
-    QActionGroup *savestateIgnoreGroup;
-
     QActionGroup *loggingOutputGroup;
     QActionGroup *loggingPrintGroup;
     QActionGroup *loggingExcludeGroup;
@@ -249,7 +247,6 @@ private slots:
     void slotScreenRes();
     void slotOsd();
     void slotOsdEncode(bool checked);
-    void slotSavestateIgnore();
     void slotSaveScreen(bool checked);
     void slotPreventSavefile(bool checked);
     void slotMovieEnd();

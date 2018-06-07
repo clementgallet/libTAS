@@ -398,16 +398,6 @@ void MainWindow::createActions()
     addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
 
-    savestateIgnoreGroup = new QActionGroup(this);
-    savestateIgnoreGroup->setExclusive(false);
-    connect(savestateIgnoreGroup, &QActionGroup::triggered, this, &MainWindow::slotSavestateIgnore);
-
-    addActionCheckable(savestateIgnoreGroup, tr("Ignore non-writeable segments"), SharedConfig::IGNORE_NON_WRITEABLE);
-    addActionCheckable(savestateIgnoreGroup, tr("Ignore non-writeable non-anonymous segments"), SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE);
-    addActionCheckable(savestateIgnoreGroup, tr("Ignore exec segments"), SharedConfig::IGNORE_EXEC);
-    addActionCheckable(savestateIgnoreGroup, tr("Ignore shared segments"), SharedConfig::IGNORE_SHARED);
-    addActionCheckable(savestateIgnoreGroup, tr("Ignore large segments (> 64 GB)"), SharedConfig::IGNORE_LARGE);
-
     loggingOutputGroup = new QActionGroup(this);
 
     addActionCheckable(loggingOutputGroup, tr("Disabled"), SharedConfig::NO_LOGGING);
@@ -599,8 +589,6 @@ void MainWindow::createMenus()
     ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
     ramStateAction->setCheckable(true);
     disabledActionsOnStart.append(ramStateAction);
-    QMenu *savestateSegmentMenu = savestateMenu->addMenu(tr("Ignore memory segments"));
-    savestateSegmentMenu->addActions(savestateIgnoreGroup->actions());
 
     saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
     saveScreenAction->setCheckable(true);
@@ -969,7 +957,6 @@ void MainWindow::updateUIFromConfig()
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
-    setCheckboxesFromMask(savestateIgnoreGroup, context->config.sc.ignore_sections);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
 
@@ -1312,12 +1299,6 @@ void MainWindow::slotOsdEncode(bool checked)
     context->config.sc_modified = true;
 }
 #endif
-
-void MainWindow::slotSavestateIgnore()
-{
-    setMaskFromCheckboxes(savestateIgnoreGroup, context->config.sc.ignore_sections);
-    context->config.sc_modified = true;
-}
 
 void MainWindow::slotSaveScreen(bool checked)
 {

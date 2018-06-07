@@ -172,9 +172,6 @@ bool Checkpoint::checkCheckpoint()
             return false;
         }
     }
-    // else {
-    //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "statvfs errno gives %d", errno);
-    // }
 
     return true;
 }
@@ -370,39 +367,29 @@ static bool skipArea(const Area *area)
         return true;
     }
 
+    /* Don't save our reserved memory */
     if ((area->addr == ReservedMemory::getAddr(0)) && (area->size == ReservedMemory::getSize())) {
         return true;
     }
 
-    /* Start of user-configurable skips */
-
-    if ((shared_config.ignore_sections & SharedConfig::IGNORE_NON_WRITEABLE) &&
-        !(area->prot & PROT_WRITE)) {
+    /* Don't save shared memory */
+    if (area->flags & MAP_SHARED) {
         return true;
     }
 
-    if ((shared_config.ignore_sections & SharedConfig::IGNORE_NON_ANONYMOUS_NON_WRITEABLE) &&
-        !(area->prot & PROT_WRITE) && !(area->flags & MAP_ANONYMOUS)) {
-        return true;
+    /* Save area if write permission */
+    if (area->prot & PROT_WRITE) {
+        return false;
     }
 
-    if ((shared_config.ignore_sections & SharedConfig::IGNORE_EXEC) &&
-        (area->prot & PROT_EXEC)) {
-        return true;
+    /* Save anonymous area even if write protection off, because some
+     * games or libs could change protections
+     */
+    if (area->flags & MAP_ANONYMOUS) {
+        return false;
     }
 
-    if ((shared_config.ignore_sections & SharedConfig::IGNORE_SHARED) &&
-        (area->flags & MAP_SHARED)) {
-        return true;
-    }
-
-    if ((shared_config.ignore_sections & SharedConfig::IGNORE_LARGE) &&
-        (area->flags & MAP_ANONYMOUS) &&
-        (area->size > 64*ONE_MB)) {
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 static void readAllAreas()

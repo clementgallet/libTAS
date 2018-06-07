@@ -120,7 +120,6 @@ void Config::save(const std::string& gamepath) {
     settings.endArray();
 
     settings.setValue("save_screenpixels", sc.save_screenpixels);
-    settings.setValue("ignore_sections", sc.ignore_sections);
     settings.setValue("incremental_savestates", sc.incremental_savestates);
     settings.setValue("savestates_in_ram", sc.savestates_in_ram);
 
@@ -206,7 +205,6 @@ void Config::load(const std::string& gamepath) {
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     #endif
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
-    sc.ignore_sections = settings.value("ignore_sections", sc.ignore_sections).toInt();
     sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
     sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();
 
