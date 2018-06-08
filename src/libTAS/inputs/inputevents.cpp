@@ -27,10 +27,8 @@
 #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
-#include "../sdlwindows.h" // for gameWindow
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
-#include "sdlpointer.h" // MASK constants
 #include "../EventQueue.h"
 #include <SDL2/SDL.h>
 #include "../../external/SDL1.h"
@@ -39,11 +37,8 @@
 #include "jsdev.h"
 #include "evdev.h"
 #include "../global.h" // game_info
-#include "../hook.h"
 
 namespace libtas {
-
-DEFINE_ORIG_POINTER(SDL_GetWindowID);
 
 void generateKeyUpEvents(void)
 {
@@ -68,9 +63,9 @@ void generateKeyUpEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
-                LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-                event2.key.windowID = orig::SDL_GetWindowID(gameWindow);
+                event2.key.windowID = 0;
                 event2.key.timestamp = timestamp;
+                event2.key.repeat = 0;
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, old_ai.keyboard[i]);
@@ -141,9 +136,9 @@ void generateKeyDownEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYDOWN;
                 event2.key.state = SDL_PRESSED;
-                LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-                event2.key.windowID = orig::SDL_GetWindowID(gameWindow);
+                event2.key.windowID = 0;
                 event2.key.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+                event2.key.repeat = 0;
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, ai.keyboard[i]);
@@ -541,8 +536,7 @@ void generateMouseMotionEvents(void)
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
         event2.motion.timestamp = timestamp;
-        LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-        event2.motion.windowID = orig::SDL_GetWindowID(gameWindow);
+        event2.motion.windowID = 0;
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
         /* Build up mouse state */
@@ -617,8 +611,7 @@ void generateMouseButtonEvents(void)
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 event2.button.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-                LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-                event2.button.windowID = orig::SDL_GetWindowID(gameWindow);
+                event2.button.windowID = 0;
                 event2.button.which = 0; // TODO: Same as above...
                 event2.button.button = SingleInput::toSDL2PointerButton(buttons[bi]);
                 event2.button.clicks = 1;
