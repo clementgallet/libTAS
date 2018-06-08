@@ -4,6 +4,10 @@
 - Analog inputs in input editor, which are also editable
 - Incremental savestates
 - Store savestates in disk or RAM
+- Simulates a system with english language
+
+### Fixed
+- Set the repeat attribute in SDL2 key events, fixing keyboard inputs in SWD2
 
 ## [1.2.0] - 2018-05-28
 ### Added

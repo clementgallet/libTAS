@@ -44,7 +44,7 @@ typedef int LogCategoryFlag; enum
 	LCF_WAIT     = 1 << 11, // waiting on synchronization objects
 	LCF_SLEEP    = 1 << 12, // calls on thread sleep
 	LCF_SOCKET   = 1 << 13, // sending messages over the socket
-	//LCF_D3D      = 1 << 14,
+	LCF_LOCALE   = 1 << 14, // localization
 	LCF_OGL      = 1 << 15, // openGL related functions
 	LCF_DUMP     = 1 << 16, // video and audio dumping
 	LCF_SDL      = 1 << 17, // call to SDL functions
