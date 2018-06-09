@@ -934,8 +934,8 @@ static void writeAllAreas(bool base)
     Area area;
     while (procSelfMaps.getNextArea(&area)) {
         if (!skipArea(&area)) {
-            MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
-            //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
+            //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
+            MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_SEQUENTIAL) == 0);
         }
     }
