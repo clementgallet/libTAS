@@ -19,6 +19,7 @@
 
 #include "AllInputs.h"
 #include <X11/keysym.h>
+#include <iostream>
 
 void AllInputs::emptyInputs() {
     int i,j;
@@ -84,13 +85,6 @@ void AllInputs::setInput(const SingleInput &si, int value)
         int index_set = 0;
         int k;
         for (k=0; k < AllInputs::MAXKEYS; k++) {
-            if (si.value == keyboard[k]) {
-                is_set = true;
-                if (!value) {
-                    index_set = k;
-                    keyboard[k] = 0;
-                }
-            }
             if (!keyboard[k]) {
                 if (is_set && !value) {
                     /* Switch the last set key and the removed key */
@@ -98,6 +92,13 @@ void AllInputs::setInput(const SingleInput &si, int value)
                     keyboard[k-1] = 0;
                 }
                 break;
+            }
+            if (si.value == keyboard[k]) {
+                is_set = true;
+                if (!value) {
+                    index_set = k;
+                    keyboard[k] = 0;
+                }
             }
         }
 
