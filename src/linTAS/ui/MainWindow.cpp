@@ -79,6 +79,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::inputsToBeEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginEditInputs);
     connect(gameLoop, &GameLoop::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
+    connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
 
     /* Menu */
     createActions();
@@ -355,6 +356,7 @@ void MainWindow::createActions()
     addActionCheckable(osdGroup, tr("Frame Count"), SharedConfig::OSD_FRAMECOUNT);
     addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
     addActionCheckable(osdGroup, tr("Messages"), SharedConfig::OSD_MESSAGES);
+    addActionCheckable(osdGroup, tr("Ram Watches"), SharedConfig::OSD_RAMWATCHES);
 
     frequencyGroup = new QActionGroup(this);
 

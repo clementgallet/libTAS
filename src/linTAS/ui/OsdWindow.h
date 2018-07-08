@@ -42,6 +42,8 @@ private:
     QComboBox *inputsVertChoice;
     QComboBox *messagesHorChoice;
     QComboBox *messagesVertChoice;
+    QComboBox *watchesHorChoice;
+    QComboBox *watchesVertChoice;
 
 private slots:
     void slotOk();

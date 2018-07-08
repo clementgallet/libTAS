@@ -146,7 +146,7 @@ void GameLoop::start()
 
     while (1)
     {
-        bool exitMsg = loopReceiveMessages();
+        bool exitMsg = startFrameMessages();
         if (exitMsg) {
             loopExit();
             return;
@@ -208,7 +208,7 @@ void GameLoop::start()
             emit sharedConfigChanged();
         }
 
-        loopSendMessages(ai);
+        endFrameMessages(ai);
 
     }
 }
@@ -382,7 +382,7 @@ void GameLoop::initProcessMessages()
     sendMessage(MSGN_END_INIT);
 }
 
-bool GameLoop::loopReceiveMessages()
+bool GameLoop::startFrameMessages()
 {
     /* Wait for frame boundary */
     int message = receiveMessage();
@@ -441,6 +441,20 @@ bool GameLoop::loopReceiveMessages()
         }
         message = receiveMessage();
     }
+
+    /* Send ram watches */
+    if (context->config.sc.osd & SharedConfig::OSD_RAMWATCHES) {
+        std::string ramwatch;
+        emit getRamWatch(ramwatch);
+        while(!ramwatch.empty()) {
+            sendMessage(MSGN_RAMWATCH);
+            sendString(ramwatch);
+            emit getRamWatch(ramwatch);
+        }
+    }
+
+    sendMessage(MSGN_START_FRAMEBOUNDARY);
+
     return false;
 }
 
@@ -1097,7 +1111,7 @@ void GameLoop::processInputs(AllInputs &ai)
     }
 }
 
-void GameLoop::loopSendMessages(AllInputs &ai)
+void GameLoop::endFrameMessages(AllInputs &ai)
 {
     /* Send shared config if modified */
     if (context->config.sc_modified) {

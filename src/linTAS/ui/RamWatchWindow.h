@@ -44,6 +44,7 @@ private:
 
 public slots:
     void slotAdd();
+    void slotGet(std::string &watch);
 
 private slots:
     void slotEdit();

@@ -33,6 +33,7 @@ namespace libtas {
 TTF_Font* RenderHUD::fg_font = nullptr;
 TTF_Font* RenderHUD::bg_font = nullptr;
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
+std::list<std::string> RenderHUD::watches;
 
 RenderHUD::RenderHUD()
 {
@@ -283,6 +284,29 @@ void RenderHUD::renderMessages()
         }
     }
 }
+
+void RenderHUD::insertWatch(std::string watch)
+{
+    watches.push_back(watch);
+}
+
+void RenderHUD::resetWatches()
+{
+    watches.clear();
+}
+
+void RenderHUD::renderWatches()
+{
+    Color fg_color = {255, 255, 255, 0};
+    Color bg_color = {0, 0, 0, 0};
+
+    for (auto iter = watches.begin(); iter != watches.end(); iter++) {
+        int x, y;
+        locationToCoords(shared_config.osd_ramwatches_location, x, y);
+        renderText(iter->c_str(), fg_color, bg_color, x, y);
+    }
+}
+
 
 }
 

@@ -84,6 +84,15 @@ class RenderHUD
         /* Insert a message to be displayed */
         static void insertMessage(const char* message);
 
+        /* Display ram watches */
+        void renderWatches();
+
+        /* Insert a ram watch to be displayed */
+        static void insertWatch(std::string watch);
+
+        /* Clear the list of watches */
+        static void resetWatches();
+
         /* Reset offsets to 0 */
         void resetOffsets();
 
@@ -112,6 +121,10 @@ class RenderHUD
 
         /* Messages to print on screen with the creation time */
         static std::list<std::pair<std::string, TimeHolder>> messages;
+
+        /* Ram watches to print on screen */
+        static std::list<std::string> watches;
+
 };
 }
 

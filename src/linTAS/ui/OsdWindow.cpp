@@ -86,6 +86,25 @@ OsdWindow::OsdWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDial
     messagesLayout->addWidget(messagesVertChoice);
     messagesGroupBox->setLayout(messagesLayout);
 
+    /* Watches */
+    watchesHorChoice = new QComboBox();
+    watchesHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
+    watchesHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
+    watchesHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
+
+    watchesVertChoice = new QComboBox();
+    watchesVertChoice->addItem("Top", SharedConfig::OSD_TOP);
+    watchesVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
+    watchesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
+
+    QGroupBox *watchesGroupBox = new QGroupBox(tr("Ram Watches"));
+    QHBoxLayout *watchesLayout = new QHBoxLayout;
+    watchesLayout->addWidget(new QLabel(tr("Horizontal position:")));
+    watchesLayout->addWidget(watchesHorChoice);
+    watchesLayout->addWidget(new QLabel(tr("Vertical position:")));
+    watchesLayout->addWidget(watchesVertChoice);
+    watchesGroupBox->setLayout(watchesLayout);
+
     /* Buttons */
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -98,6 +117,7 @@ OsdWindow::OsdWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDial
     mainLayout->addWidget(frameGroupBox);
     mainLayout->addWidget(inputsGroupBox);
     mainLayout->addWidget(messagesGroupBox);
+    mainLayout->addWidget(watchesGroupBox);
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);

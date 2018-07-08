@@ -82,6 +82,24 @@ void RamWatchWindow::slotAdd()
     }
 }
 
+void RamWatchWindow::slotGet(std::string &watch)
+{
+    static int index = 0;
+
+    if (index >= ramWatchModel->ramwatches.size()) {
+        /* We sent all watches, returning NULL */
+        watch = "";
+        index = 0;
+        return;
+    }
+
+    watch = ramWatchModel->ramwatches[index]->label;
+    watch += ": ";
+    watch += ramWatchModel->ramwatches[index]->value_str();
+
+    index++;
+}
+
 void RamWatchWindow::slotEdit()
 {
     const QModelIndex index = ramWatchView->selectionModel()->currentIndex();

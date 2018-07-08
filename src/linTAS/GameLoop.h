@@ -57,7 +57,7 @@ private:
 
     void initProcessMessages();
 
-    bool loopReceiveMessages();
+    bool startFrameMessages();
 
     /* Set the different environment variables, then start the game executable with
      * our library to be injected using the LD_PRELOAD trick.
@@ -76,7 +76,7 @@ private:
 
     void processInputs(AllInputs &ai);
 
-    void loopSendMessages(AllInputs &ai);
+    void endFrameMessages(AllInputs &ai);
 
     /* Determine if we are allowed to send inputs to the game, based on which
      * window has focus and our settings.
@@ -108,6 +108,8 @@ signals:
     void inputsAdded();
     void inputsToBeEdited();
     void inputsEdited();
+
+    void getRamWatch(std::string &watch);
 
 };
 

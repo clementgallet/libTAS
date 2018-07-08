@@ -209,6 +209,16 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
+    /* Get ramwatches from the program */
+    RenderHUD::resetWatches();
+
+    int message = receiveMessage();
+    while (message == MSGN_RAMWATCH) {
+        std::string ramwatch = receiveString();
+        RenderHUD::insertWatch(ramwatch);
+        message = receiveMessage();
+    }
+
     /*** Rendering ***/
     if (!drawFB)
         nondraw_framecount++;
@@ -238,6 +248,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
         if (shared_config.osd & SharedConfig::OSD_MESSAGES)
             hud.renderMessages();
+
+        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
+            hud.renderWatches();
     }
 #endif
 
@@ -286,14 +299,17 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
         if (shared_config.osd & SharedConfig::OSD_MESSAGES)
             hud.renderMessages();
+
+        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
+            hud.renderWatches();
     }
 #endif
 
     /* Actual draw command */
     if (!skipping_draw) {
+        GlobalNoLog gnl;
         NATIVECALL(draw());
     }
-
 
     /* Receive messages from the program */
     #ifdef LIBTAS_ENABLE_HUD
@@ -377,6 +393,9 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 
         if (shared_config.osd & SharedConfig::OSD_MESSAGES)
             hud.renderMessages();
+
+        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
+            hud.renderWatches();
 #endif
 
         NATIVECALL(draw());

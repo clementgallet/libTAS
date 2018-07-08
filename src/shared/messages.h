@@ -29,6 +29,12 @@ enum {
     MSGB_START_FRAMEBOUNDARY,
 
     /*
+     * The program sent all messages at the beginning of the frame boundary.
+     * Argument: none
+     */
+    MSGN_START_FRAMEBOUNDARY,
+
+    /*
      * The game sends the frame number and time
      * Argument: unsigned long, struct timespec
      */
@@ -202,6 +208,12 @@ enum {
      * Arguments: 2 floats
      */
     MSGB_FPS,
+
+    /*
+     * Send ramwatch string to display on OSD
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_RAMWATCH
 };
 
 #endif
