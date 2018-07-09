@@ -23,6 +23,10 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QFormLayout>
+#include <QVBoxLayout>
+#include <QCheckBox>
+#include <QDialogButtonBox>
 #include <memory> // std::unique_ptr
 
 #include "../ramsearch/IRamWatch.h"
@@ -34,9 +38,10 @@ class RamWatchEditWindow : public QDialog {
 public:
     RamWatchEditWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
+    void clear();
     void fill(std::unique_ptr<IRamWatchDetailed> &watch);
     void fill(std::unique_ptr<IRamWatch> &watch);
-    void update();
+    // void update();
 
     std::unique_ptr<IRamWatchDetailed> ramwatch;
 
@@ -47,8 +52,19 @@ private:
     QComboBox *typeBox;
     QComboBox *displayBox;
 
+    QCheckBox *pointerBox;
+
+    // std::vector<std::unique_ptr<QSpinBox>> offsetBoxes;
+    QVBoxLayout *mainLayout;
+    QFormLayout *pointerLayout;
+    QDialogButtonBox *buttonOffsetBox;
+    QLineEdit *baseAddressInput;
+
 private slots:
     void slotSave();
+    void slotPointer(bool checked);
+    void slotAddOffset();
+    void slotRemoveOffset();
 };
 
 #endif

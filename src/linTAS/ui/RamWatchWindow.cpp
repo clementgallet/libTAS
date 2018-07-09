@@ -74,6 +74,7 @@ void RamWatchWindow::update()
 
 void RamWatchWindow::slotAdd()
 {
+    editWindow->clear();
     editWindow->exec();
 
     if (editWindow->ramwatch) {
@@ -84,7 +85,7 @@ void RamWatchWindow::slotAdd()
 
 void RamWatchWindow::slotGet(std::string &watch)
 {
-    static int index = 0;
+    static unsigned int index = 0;
 
     if (index >= ramWatchModel->ramwatches.size()) {
         /* We sent all watches, returning NULL */

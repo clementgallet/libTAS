@@ -23,12 +23,18 @@
 // #include <cstdint>
 // #include <sys/types.h>
 #include <string>
+#include <vector>
 
 class IRamWatchDetailed {
 public:
     uintptr_t address;
     std::string label;
     bool hex;
+
+    bool isPointer;
+    std::vector<int> pointer_offsets;
+    uintptr_t base_address;
+
     static pid_t game_pid;
 
     IRamWatchDetailed(uintptr_t addr) : address(addr) {};

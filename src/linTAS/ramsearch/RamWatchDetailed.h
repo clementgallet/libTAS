@@ -32,6 +32,20 @@ public:
     T get_value()
     {
         struct iovec local, remote;
+        if (isPointer) {
+            address = base_address;
+            for (auto offset : pointer_offsets) {
+                local.iov_base = static_cast<void*>(&address);
+                local.iov_len = sizeof(uintptr_t);
+                remote.iov_base = reinterpret_cast<void*>(address);
+                remote.iov_len = sizeof(uintptr_t);
+
+                process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
+
+                address += offset;
+            }
+        }
+        
         T value = 0;
         local.iov_base = static_cast<void*>(&value);
         local.iov_len = sizeof(T);
