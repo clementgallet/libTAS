@@ -29,7 +29,6 @@ public:
     uintptr_t address;
     std::string label;
     bool hex;
-    static ssize_t last_read;
     static pid_t game_pid;
 
     IRamWatchDetailed(uintptr_t addr) : address(addr) {};

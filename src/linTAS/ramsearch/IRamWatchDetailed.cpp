@@ -19,5 +19,4 @@
 
 #include "IRamWatchDetailed.h"
 
-ssize_t IRamWatchDetailed::last_read;
 pid_t IRamWatchDetailed::game_pid;

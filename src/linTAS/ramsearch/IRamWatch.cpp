@@ -19,5 +19,5 @@
 
 #include "IRamWatch.h"
 
-ssize_t IRamWatch::last_read;
+bool IRamWatch::isValid;
 pid_t IRamWatch::game_pid;

@@ -69,15 +69,15 @@ public:
         remote.iov_base = reinterpret_cast<void*>(address);
         remote.iov_len = sizeof(T);
 
-        last_read = process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
+        isValid = (process_vm_readv(game_pid, &local, 1, &remote, 1, 0) == sizeof(T));
 
         return value;
     }
 
     bool query()
     {
-        T value = get_value(); // sets last_read == -1 if error
-        if (last_read == -1)
+        T value = get_value();
+        if (!isValid)
             return true;
 
         previous_value = value;
@@ -136,8 +136,8 @@ public:
 
     bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
     {
-        T value = get_value(); // sets last_read == -1 if error
-        if (last_read == -1)
+        T value = get_value();
+        if (!isValid)
             return true;
 
         bool res = check(value, compare_type, compare_operator, compare_value_db);
@@ -147,8 +147,8 @@ public:
 
     bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
     {
-        T value = get_value(); // sets last_read == -1 if error
-        if (last_read == -1)
+        T value = get_value();
+        if (!isValid)
             return true;
 
         return check(value, compare_type, compare_operator, compare_value_db);

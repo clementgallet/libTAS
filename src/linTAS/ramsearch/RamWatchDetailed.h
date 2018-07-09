@@ -38,7 +38,7 @@ public:
         remote.iov_base = reinterpret_cast<void*>(address);
         remote.iov_len = sizeof(T);
 
-        last_read = process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
+        process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
 
         return value;
     }

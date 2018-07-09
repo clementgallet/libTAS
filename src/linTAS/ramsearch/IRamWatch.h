@@ -28,7 +28,7 @@
 class IRamWatch {
 public:
     uintptr_t address;
-    static ssize_t last_read;
+    static bool isValid;
     static pid_t game_pid;
 
     IRamWatch(uintptr_t addr) : address(addr) {};
