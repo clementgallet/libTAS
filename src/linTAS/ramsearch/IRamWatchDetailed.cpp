@@ -19,4 +19,5 @@
 
 #include "IRamWatchDetailed.h"
 
+bool IRamWatchDetailed::isValid;
 pid_t IRamWatchDetailed::game_pid;

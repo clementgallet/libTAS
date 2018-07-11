@@ -36,6 +36,7 @@ public:
     uintptr_t base_address;
 
     static pid_t game_pid;
+    static bool isValid;
 
     IRamWatchDetailed(uintptr_t addr) : address(addr) {};
     virtual std::string value_str() = 0;
