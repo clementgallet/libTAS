@@ -96,29 +96,51 @@ public:
 
             /* For now we only store aligned addresses */
             std::unique_ptr<RamWatch<T>> watch(nullptr);
-            for (uintptr_t addr = section.addr; addr < section.endaddr; addr += sizeof(T), cur_size += sizeof(T)) {
 
-                if (!(cur_size & 0xfff)) {
-                    emit signalProgress(cur_size);
+            struct iovec local, remote;
+
+            for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
+
+                /* Read values in chunks of 4096 bytes so we lower the number
+                 * of `process_vm_readv` calls.
+                 */
+                T chunk[4096/sizeof(T)];
+                local.iov_base = static_cast<void*>(chunk);
+                local.iov_len = 4096;
+                remote.iov_base = reinterpret_cast<void*>(addr);
+                remote.iov_len = 4096;
+
+                int readValues = process_vm_readv(context->game_pid, &local, 1, &remote, 1, 0);
+                if (readValues < 0) {
+                    continue;
                 }
 
-                if (! watch)
-                    watch = std::unique_ptr<RamWatch<T>>(new RamWatch<T>(addr));
-                else
-                    /* Reusing a watch object that wasn't inserted */
-                    watch->address = addr;
+                for (unsigned int i = 0; i < readValues/sizeof(T); i++, cur_size += sizeof(T)) {
 
-                /* If only insert watches that match the compare */
-                if (compare_type == CompareType::Value) {
-                    if (!watch->check_update(compare_type, compare_operator, compare_value)) {
-                        ramwatches.push_back(std::move(watch));
+                    if (!(cur_size & 0xfff)) {
+                        emit signalProgress(cur_size);
                     }
-                }
 
-                /* Insert all watches, still checking for accessible and non NaN/Inf values */
-                else {
-                    if (!watch->query()) {
-                        ramwatches.push_back(std::move(watch));
+                    if (! watch)
+                        watch = std::unique_ptr<RamWatch<T>>(new RamWatch<T>(addr+i*sizeof(T)));
+                    else
+                        /* Reusing a watch object that wasn't inserted */
+                        watch->address = addr+i*sizeof(T);
+
+                    watch->previous_value = chunk[i];
+
+                    /* If only insert watches that match the compare */
+                    if (compare_type == CompareType::Value) {
+                        if (!watch->check(chunk[i], compare_type, compare_operator, compare_value)) {
+                            ramwatches.push_back(std::move(watch));
+                        }
+                    }
+
+                    /* Insert all watches, still checking for accessible and non NaN/Inf values */
+                    else {
+                        if (std::isfinite(chunk[i])) {
+                            ramwatches.push_back(std::move(watch));
+                        }
                     }
                 }
             }

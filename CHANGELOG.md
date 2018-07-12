@@ -5,6 +5,8 @@
 - Incremental savestates
 - Store savestates in disk or RAM
 - Simulates a system with english language
+- Display ram watches on game screen
+- Add pointers to ram watches
 
 ### Fixed
 - Set the repeat attribute in SDL2 key events, fixing keyboard inputs in SWD2
