@@ -24,6 +24,7 @@
 #include <cstring>
 #include <atomic>
 #include <memory>
+#include <setjmp.h>
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
@@ -80,8 +81,23 @@ static void *pthread_start(void *arg)
 
             ThreadSync::decrementUninitializedThreadCount();
 
-            /* Execute the function */
-            void *ret = thread->start(thread->arg);
+            /* We need to handle the case where the thread calls pthread_exit to
+             * terminate. Because we recycle thread routines, we must continue
+             * the execution past the routine, so we are using setjmp/longjmp
+             * for that. This feature will bypass destructors, so this may lead
+             * to memory leaks or crashes.
+             */
+
+            /* Saving the current context. The result tells us if this is a
+             * direct call or if we just returned from longjmp.
+             */
+            int threadExited = setjmp(thread->env);
+
+            void *ret;
+            if (threadExited == 0) {
+                /* Execute the function */
+                ret = thread->start(thread->arg);
+            }
 
             debuglog(LCF_THREAD, "End of thread code");
             ThreadManager::threadExit(ret);
@@ -141,12 +157,11 @@ static void *pthread_start(void *arg)
 {
     LINK_NAMESPACE(pthread_exit, "pthread");
     debuglog(LCF_THREAD, "Thread has exited.");
-    ThreadSync::wrapperExecutionLockLock();
 
-    /* We don't support (yet) recycling threads that calls pthread_exit */
-    ThreadManager::threadIsDead(ThreadManager::getThread(ThreadManager::getThreadId()));
-    ThreadSync::wrapperExecutionLockUnlock();
-    orig::pthread_exit(retval);
+    /* We need to jump to code after the end of the original thread routine */
+    /* For now we forget about the return value. */
+    ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
+    longjmp(thread->env, 1);
 }
 
 /* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)

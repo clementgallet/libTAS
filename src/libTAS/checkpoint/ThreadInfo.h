@@ -27,6 +27,7 @@
 #include <csignal> // stack_t
 #include <mutex>
 #include <condition_variable>
+#include <setjmp.h>
 
 #include "ThreadLocalStorage.h"
 
@@ -55,7 +56,6 @@ struct ThreadInfo {
     pid_t tid; // tid of the thread
     void *(*start)(void *); // original start function of the thread
     void *arg; // original argument of the start function
-    //std::atomic<bool> go;
     bool detached; // flag to keep track if the thread was detached
     std::ptrdiff_t routine_id; // mostly unique identifier of a start function,
                                // constant across instances of the game
@@ -71,6 +71,8 @@ struct ThreadInfo {
 
     std::mutex mutex; // mutex to notify a thread for a new routing
     std::condition_variable cv; // associated conditional variable
+
+    jmp_buf env; // context saved before calling the original thread routine
 
     bool quit = false; // is game quitting
 

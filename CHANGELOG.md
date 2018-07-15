@@ -12,6 +12,7 @@
 
 ### Fixed
 - Set the repeat attribute in SDL2 key events, fixing keyboard inputs in SWD2
+- Support thread exit with recycled threads
 
 ## [1.2.0] - 2018-05-28
 ### Added
