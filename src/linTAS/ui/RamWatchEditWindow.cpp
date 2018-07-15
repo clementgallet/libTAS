@@ -22,6 +22,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QSpinBox>
+#include <QMessageBox>
 
 #include "RamWatchEditWindow.h"
 #include "../ramsearch/RamWatchDetailed.h"
@@ -31,6 +32,7 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) :
     setWindowTitle("Edit Watch");
 
     addressInput = new QLineEdit();
+    valueInput = new QLineEdit();
     labelInput = new QLineEdit();
 
     typeBox = new QComboBox();
@@ -62,7 +64,11 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) :
     baseAddressInput = new QLineEdit();
 
     /* Buttons */
+    QPushButton *pokeButton = new QPushButton(tr("Poke Value"));
+    connect(pokeButton, &QAbstractButton::clicked, this, &RamWatchEditWindow::slotPoke);
+
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+    buttonBox->addButton(pokeButton, QDialogButtonBox::ActionRole);
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &RamWatchEditWindow::slotSave);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &RamWatchEditWindow::reject);
@@ -70,6 +76,7 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) :
     /* Create the form layout */
     QFormLayout *formLayout = new QFormLayout;
     formLayout->addRow(new QLabel(tr("Address:")), addressInput);
+    formLayout->addRow(new QLabel(tr("Value:")), valueInput);
     formLayout->addRow(new QLabel(tr("Label:")), labelInput);
     formLayout->addRow(new QLabel(tr("Type:")), typeBox);
     formLayout->addRow(new QLabel(tr("Display:")), displayBox);
@@ -100,22 +107,14 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) :
 
 void RamWatchEditWindow::clear()
 {
-    /* Clear address */
     addressInput->setText("");
     addressInput->setEnabled(true);
-
-    /* Clear label */
+    valueInput->setText("");
     labelInput->setText("");
-
-    /* Clear display */
     displayBox->setCurrentIndex(0);
-
-    /* Clear type */
     typeBox->setCurrentIndex(0);
 
-    /* Clear pointer */
     pointerBox->setChecked(false);
-
     baseAddressInput->setText("");
 
     while (pointerLayout->rowCount() > 1) {
@@ -133,6 +132,9 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
     /* Fill address */
     addressInput->setText(QString("%1").arg(watch->address, 0, 16));
     addressInput->setEnabled(!watch->isPointer);
+
+    /* Fill value */
+    valueInput->setText(watch->value_str().c_str());
 
     /* Fill label */
     labelInput->setText(watch->label.c_str());
@@ -192,13 +194,39 @@ void RamWatchEditWindow::slotAddOffset()
     QSpinBox* offsetBox = new QSpinBox();
     offsetBox->setMaximum(1000000);
     offsetBox->setValue(0);
-    pointerLayout->insertRow(0, new QLabel(tr("Offset")), offsetBox);
+    pointerLayout->insertRow(0, new QLabel(tr("Offset:")), offsetBox);
 }
 
 void RamWatchEditWindow::slotRemoveOffset()
 {
     if (pointerLayout->rowCount() > 2) {
         pointerLayout->removeRow(0);
+    }
+}
+
+void RamWatchEditWindow::slotPoke()
+{
+    /* Save fields into the ram watch */
+    slotSave();
+
+    int res = ramwatch->poke_value(valueInput->text().toStdString());
+
+    if (res < 0) {
+        if (res == EFAULT) {
+            QMessageBox::critical(nullptr, "Error", QString("Poking failed because address is outside the game's accessible address space."));
+        }
+        else if (res == EPERM) {
+            QMessageBox::critical(nullptr, "Error", QString("Poking failed because we don't have permission to write at the game address."));
+        }
+        else if (res == ESRCH) {
+            QMessageBox::critical(nullptr, "Error", QString("Poking failed because the game does not appear to be running."));
+        }
+        else {
+            QMessageBox::critical(nullptr, "Error", QString("Poking failed."));
+        }
+    }
+    else {
+        QMessageBox::information(nullptr, "Success", QString("Poking succeeded."));
     }
 }
 
@@ -254,7 +282,7 @@ void RamWatchEditWindow::slotSave()
             reject();
 
         ramwatch->pointer_offsets.clear();
-        for (int r=0; r<pointerLayout->rowCount()-1; r++) {
+        for (int r=pointerLayout->rowCount()-2; r>=0; r--) {
             QSpinBox* offsetBox = qobject_cast<QSpinBox*>(pointerLayout->itemAt(r, QFormLayout::FieldRole)->widget());
             ramwatch->pointer_offsets.push_back(offsetBox->value());
         }

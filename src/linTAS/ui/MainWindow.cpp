@@ -815,9 +815,7 @@ void MainWindow::updateRam()
     if (ramSearchWindow->isVisible()) {
         ramSearchWindow->update();
     }
-    if (ramWatchWindow->isVisible()) {
-        ramWatchWindow->update();
-    }
+    ramWatchWindow->update();
 }
 
 void MainWindow::updateInputEditor()

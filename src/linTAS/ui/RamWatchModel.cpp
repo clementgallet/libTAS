@@ -86,5 +86,5 @@ void RamWatchModel::removeWatch(int row)
 
 void RamWatchModel::update()
 {
-    emit dataChanged(createIndex(0,1), createIndex(rowCount(),1));
+    emit dataChanged(createIndex(0,0), createIndex(rowCount(),1));
 }

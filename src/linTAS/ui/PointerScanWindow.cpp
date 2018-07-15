@@ -133,7 +133,6 @@ void PointerScanWindow::slotSearch()
     for (int c=max_level; c>=0; c--) {
         pointerScanView->sortByColumn(c, Qt::AscendingOrder);
     }
-
 }
 
 void PointerScanWindow::slotAdd()

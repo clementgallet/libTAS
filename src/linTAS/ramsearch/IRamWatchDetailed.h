@@ -27,6 +27,17 @@
 
 class IRamWatchDetailed {
 public:
+    IRamWatchDetailed(uintptr_t addr) : address(addr) {};
+    virtual ~IRamWatchDetailed() = default;
+
+    /* Return the current value of the ram watch as a string */
+    virtual std::string value_str() = 0;
+
+    /* Poke a value (given as a string) into the ram watch address. Return
+     * the result of process_vm_writev call
+     */
+    virtual int poke_value(std::string) = 0;
+
     uintptr_t address;
     std::string label;
     bool hex;
@@ -38,9 +49,6 @@ public:
     static pid_t game_pid;
     static bool isValid;
 
-    IRamWatchDetailed(uintptr_t addr) : address(addr) {};
-    virtual std::string value_str() = 0;
-    virtual ~IRamWatchDetailed() = default;
 };
 
 #endif

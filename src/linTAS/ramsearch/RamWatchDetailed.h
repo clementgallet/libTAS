@@ -22,6 +22,7 @@
 
 #include "IRamWatchDetailed.h"
 #include <sstream>
+#include <iostream>
 #include <sys/uio.h>
 
 template <class T>
@@ -36,7 +37,8 @@ public:
         if (isPointer) {
             address = base_address;
             for (auto offset : pointer_offsets) {
-                local.iov_base = static_cast<void*>(&address);
+                uintptr_t next_address;
+                local.iov_base = static_cast<void*>(&next_address);
                 local.iov_len = sizeof(uintptr_t);
                 remote.iov_base = reinterpret_cast<void*>(address);
                 remote.iov_len = sizeof(uintptr_t);
@@ -45,7 +47,7 @@ public:
                 if (!isValid)
                     return value;
 
-                address += offset;
+                address = next_address + offset;
             }
         }
 
@@ -77,9 +79,43 @@ public:
         }
         if (!isValid)
             return std::string("??????");
-            
+
         return oss.str();
     }
+
+    int poke_value(std::string str_value)
+    {
+        std::istringstream iss(str_value);
+        T value;
+        if (hex) iss >> std::hex;
+
+        /* ISS will consider char and unsigned char as text element. To get the
+         * integer value, I need to cast it to another integer type.
+         */
+        if (std::is_same<T, char>::value) {
+            int intval;
+            iss >> intval;
+            value = static_cast<char>(intval);
+        }
+        else if (std::is_same<T, unsigned char>::value) {
+            unsigned int uintval;
+            iss >> uintval;
+            value = static_cast<unsigned char>(uintval);
+        }
+        else {
+            iss >> value;
+        }
+
+        /* Write value into the game process address */
+        struct iovec local, remote;
+        local.iov_base = static_cast<void*>(&value);
+        local.iov_len = sizeof(T);
+        remote.iov_base = reinterpret_cast<void*>(address);
+        remote.iov_len = sizeof(T);
+
+        return process_vm_writev(game_pid, &local, 1, &remote, 1, 0);
+    }
+
 };
 
 #endif

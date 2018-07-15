@@ -47,6 +47,7 @@ public:
 
 private:
     QLineEdit *addressInput;
+    QLineEdit *valueInput;
     QLineEdit *labelInput;
 
     QComboBox *typeBox;
@@ -62,6 +63,7 @@ private:
 
 private slots:
     void slotSave();
+    void slotPoke();
     void slotPointer(bool checked);
     void slotAddOffset();
     void slotRemoveOffset();

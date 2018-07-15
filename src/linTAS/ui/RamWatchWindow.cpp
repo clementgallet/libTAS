@@ -75,6 +75,7 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
 
 void RamWatchWindow::update()
 {
+    IRamWatchDetailed::game_pid = context->game_pid;
     ramWatchModel->update();
 }
 
