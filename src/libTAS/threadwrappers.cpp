@@ -24,7 +24,7 @@
 #include <cstring>
 #include <atomic>
 #include <memory>
-#include <setjmp.h>
+#include <exception>
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
@@ -52,6 +52,9 @@ DEFINE_ORIG_POINTER(pthread_cancel);
 DEFINE_ORIG_POINTER(pthread_testcancel);
 DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
+
+/* We create a specific exception for thread exit calls */
+class ThreadExitException: public std::exception {};
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
@@ -83,21 +86,15 @@ static void *pthread_start(void *arg)
 
             /* We need to handle the case where the thread calls pthread_exit to
              * terminate. Because we recycle thread routines, we must continue
-             * the execution past the routine, so we are using setjmp/longjmp
-             * for that. This feature will bypass destructors, so this may lead
-             * to memory leaks or crashes.
+             * the execution past the routine, so we are using the exception
+             * feature for that.
              */
-
-            /* Saving the current context. The result tells us if this is a
-             * direct call or if we just returned from longjmp.
-             */
-            int threadExited = setjmp(thread->env);
-
             void *ret;
-            if (threadExited == 0) {
+            try {
                 /* Execute the function */
                 ret = thread->start(thread->arg);
             }
+            catch (const ThreadExitException& e) {}
 
             debuglog(LCF_THREAD, "End of thread code");
             ThreadManager::threadExit(ret);
@@ -159,9 +156,10 @@ static void *pthread_start(void *arg)
     debuglog(LCF_THREAD, "Thread has exited.");
 
     /* We need to jump to code after the end of the original thread routine */
-    /* For now we forget about the return value. */
-    ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
-    longjmp(thread->env, 1);
+    throw ThreadExitException();
+
+    // ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
+    // longjmp(thread->env, 1);
 }
 
 /* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)

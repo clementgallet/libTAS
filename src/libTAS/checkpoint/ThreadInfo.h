@@ -72,8 +72,6 @@ struct ThreadInfo {
     std::mutex mutex; // mutex to notify a thread for a new routing
     std::condition_variable cv; // associated conditional variable
 
-    jmp_buf env; // context saved before calling the original thread routine
-
     bool quit = false; // is game quitting
 
     ThreadInfo *next; // next thread info in the linked list
