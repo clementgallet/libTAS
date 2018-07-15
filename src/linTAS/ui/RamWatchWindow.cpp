@@ -36,6 +36,7 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
     ramWatchView->setShowGrid(false);
     ramWatchView->setAlternatingRowColors(true);
     ramWatchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ramWatchView->horizontalHeader()->setHighlightSections(false);
     ramWatchView->verticalHeader()->hide();
 
     ramWatchModel = new RamWatchModel();

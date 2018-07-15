@@ -42,6 +42,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     ramSearchView->setShowGrid(false);
     ramSearchView->setAlternatingRowColors(true);
     ramSearchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ramSearchView->horizontalHeader()->setHighlightSections(false);
     ramSearchView->verticalHeader()->hide();
 
     ramSearchModel = new RamSearchModel(context);

@@ -165,8 +165,6 @@ void PointerScanModel::recursiveFind(uintptr_t addr, int level, int offsets[], i
     }
 }
 
-
-
 int PointerScanModel::rowCount(const QModelIndex & /*parent*/) const
 {
    return pointer_chains.size();
@@ -201,7 +199,7 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
             return QString("");
         }
         /* Offsets are stored in reverse order */
-        return QString("%1").arg(*(chain.second.rbegin() + (index.column() - 1)));
+        return *(chain.second.rbegin() + (index.column() - 1));
     }
     return QVariant();
 }

@@ -42,6 +42,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : Q
     hotkeyTable->setShowGrid(false);
     hotkeyTable->setAlternatingRowColors(true);
     hotkeyTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    hotkeyTable->horizontalHeader()->setHighlightSections(false);
     hotkeyTable->verticalHeader()->hide();
     hotkeyTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
@@ -56,6 +57,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : Q
     inputTable->setShowGrid(false);
     inputTable->setAlternatingRowColors(true);
     inputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    inputTable->horizontalHeader()->setHighlightSections(false);
     inputTable->verticalHeader()->hide();
     inputTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 

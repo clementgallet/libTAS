@@ -26,6 +26,7 @@
 #include <QFormLayout>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QSortFilterProxyModel>
 
 #include "PointerScanWindow.h"
 #include "MainWindow.h"
@@ -44,10 +45,15 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent, Qt::WindowFlag
     pointerScanView->setShowGrid(false);
     pointerScanView->setAlternatingRowColors(true);
     pointerScanView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    pointerScanView->horizontalHeader()->setHighlightSections(false);
     pointerScanView->verticalHeader()->hide();
+    pointerScanView->setSortingEnabled(true);
+    pointerScanView->sortByColumn(0, Qt::AscendingOrder);
 
     pointerScanModel = new PointerScanModel(context);
-    pointerScanView->setModel(pointerScanModel);
+    QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel();
+    proxyModel->setSourceModel(pointerScanModel);
+    pointerScanView->setModel(proxyModel);
 
     /* Progress bar */
     searchProgress = new QProgressBar();
@@ -122,6 +128,12 @@ void PointerScanWindow::slotSearch()
     searchProgress->hide();
     scanCount->show();
     scanCount->setText(QString("%1 results").arg(pointerScanModel->pointer_chains.size()));
+
+    /* Sort results */
+    for (int c=max_level; c>=0; c--) {
+        pointerScanView->sortByColumn(c, Qt::AscendingOrder);
+    }
+
 }
 
 void PointerScanWindow::slotAdd()
