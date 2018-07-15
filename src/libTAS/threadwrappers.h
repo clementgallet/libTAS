@@ -22,7 +22,8 @@
 
 #include "hook.h"
 #include "global.h"
-#include "pthread.h" // pthread_t
+#include <pthread.h> // pthread_t
+#include <semaphore.h>
 #include <SDL2/SDL.h> // SDL_Thread, SDL_ThreadFunction
 
 namespace libtas {
@@ -154,6 +155,12 @@ OVERRIDE int pthread_cancel (pthread_t th);
    the thread as per pthread_exit(PTHREAD_CANCELED) if it has been
    cancelled.  */
 OVERRIDE void pthread_testcancel (void);
+
+OVERRIDE int sem_timedwait (sem_t *sem, const struct timespec *abstime);
+
+/* Test whether SEM is posted.  */
+OVERRIDE int sem_trywait (sem_t *__sem) throw();
+
 
 void link_sdlthreads(void);
 

@@ -27,6 +27,8 @@
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
+#include "DeterministicTimer.h"
+#include "backtrace.h"
 
 namespace libtas {
 
@@ -47,6 +49,8 @@ DEFINE_ORIG_POINTER(pthread_setcancelstate);
 DEFINE_ORIG_POINTER(pthread_setcanceltype);
 DEFINE_ORIG_POINTER(pthread_cancel);
 DEFINE_ORIG_POINTER(pthread_testcancel);
+DEFINE_ORIG_POINTER(sem_timedwait);
+DEFINE_ORIG_POINTER(sem_trywait);
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
@@ -288,28 +292,29 @@ static void *pthread_start(void *arg)
 /* Override */ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
     LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
 
 /* Override */ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime)
 {
     LINK_NAMESPACE_VERSION(pthread_cond_timedwait, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
     return orig::pthread_cond_timedwait(cond, mutex, abstime);
 }
 
 /* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond));
     return orig::pthread_cond_signal(cond);
 }
 
 /* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond));
+//    if (ThreadManager::isMainThread()) printBacktrace();
     return orig::pthread_cond_broadcast(cond);
 }
 
@@ -339,6 +344,20 @@ static void *pthread_start(void *arg)
     LINK_NAMESPACE(pthread_testcancel, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     return orig::pthread_testcancel();
+}
+
+int sem_timedwait (sem_t * sem, const struct timespec *abstime)
+{
+    LINK_NAMESPACE(sem_timedwait, "pthread");
+    DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
+    return orig::sem_timedwait(sem, abstime);
+}
+
+int sem_trywait (sem_t *sem) throw()
+{
+    LINK_NAMESPACE(sem_trywait, "pthread");
+    DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
+    return orig::sem_trywait(sem);
 }
 
 void link_sdlthreads(void)
