@@ -7,6 +7,7 @@
 - Simulates a system with english language
 - Display ram watches on game screen
 - Add pointers to ram watches
+- Add a pointer scanning window to search for chains of indirection to a specific address
 
 ### Fixed
 - Set the repeat attribute in SDL2 key events, fixing keyboard inputs in SWD2

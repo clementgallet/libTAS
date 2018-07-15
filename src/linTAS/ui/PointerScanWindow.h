@@ -17,41 +17,43 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_RAMWATCHWINDOW_H_INCLUDED
-#define LINTAS_RAMWATCHWINDOW_H_INCLUDED
+#ifndef LINTAS_POINTERSCANWINDOW_H_INCLUDED
+#define LINTAS_POINTERSCANWINDOW_H_INCLUDED
 
 #include <QDialog>
 #include <QTableView>
+#include <QCheckBox>
+#include <QRadioButton>
+#include <QDoubleSpinBox>
+#include <QComboBox>
+#include <QProgressBar>
+#include <QLabel>
+#include <memory>
 
-#include "RamWatchModel.h"
-#include "RamWatchEditWindow.h"
-#include "PointerScanWindow.h"
+#include "PointerScanModel.h"
 #include "../Context.h"
 
-class RamWatchWindow : public QDialog {
+class PointerScanWindow : public QDialog {
     Q_OBJECT
 
 public:
-    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
-    void update();
+    PointerScanWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
 
-    RamWatchEditWindow *editWindow;
-    PointerScanWindow *pointerScanWindow;
-
+    QLineEdit *addressInput;
 private:
     Context *context;
+    QTableView *pointerScanView;
 
-    QTableView *ramWatchView;
-    RamWatchModel *ramWatchModel;
+    PointerScanModel *pointerScanModel;
+    QProgressBar *searchProgress;
+    QLabel *scanCount;
 
-public slots:
-    void slotAdd();
-    void slotGet(std::string &watch);
+    QSpinBox *maxLevelInput;
+    QSpinBox *maxOffsetInput;
 
 private slots:
-    void slotEdit();
-    void slotRemove();
-    void slotScanPointer();
+    void slotSearch();
+    void slotAdd();
 
 };
 

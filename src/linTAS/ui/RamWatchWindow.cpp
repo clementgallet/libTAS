@@ -51,10 +51,14 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
     QPushButton *removeWatch = new QPushButton(tr("Remove Watch"));
     connect(removeWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotRemove);
 
+    QPushButton *scanWatch = new QPushButton(tr("Scan Pointer"));
+    connect(scanWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotScanPointer);
+
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
     buttonBox->addButton(addWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(editWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(removeWatch, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(scanWatch, QDialogButtonBox::ActionRole);
 
     /* Create the main layout */
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -64,7 +68,8 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
 
     setLayout(mainLayout);
 
-    editWindow = new RamWatchEditWindow();
+    editWindow = new RamWatchEditWindow(this);
+    pointerScanWindow = new PointerScanWindow(c, this);
 }
 
 void RamWatchWindow::update()
@@ -74,7 +79,6 @@ void RamWatchWindow::update()
 
 void RamWatchWindow::slotAdd()
 {
-    editWindow->clear();
     editWindow->exec();
 
     if (editWindow->ramwatch) {
@@ -134,4 +138,19 @@ void RamWatchWindow::slotRemove()
 
     int row = index.row();
     ramWatchModel->removeWatch(row);
+}
+
+void RamWatchWindow::slotScanPointer()
+{
+    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
+
+    /* If no watch was selected, return */
+    if (!index.isValid())
+        return;
+
+    int row = index.row();
+
+    /* Fill and show the watch edit window */
+    pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchModel->ramwatches.at(row)->address, 0, 16));
+    pointerScanWindow->exec();
 }

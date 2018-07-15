@@ -136,7 +136,7 @@ public:
                         }
                     }
 
-                    /* Insert all watches, still checking for accessible and non NaN/Inf values */
+                    /* Insert all watches, still checking for non NaN/Inf values */
                     else {
                         if (std::isfinite(chunk[i])) {
                             ramwatches.push_back(std::move(watch));

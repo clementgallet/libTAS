@@ -54,7 +54,10 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
         const std::unique_ptr<IRamWatchDetailed> &watch = ramwatches.at(index.row());
         switch(index.column()) {
             case 0:
-                return QString("%1").arg(watch->address, 0, 16);
+                if (watch->isPointer)
+                    return QString("P->%1").arg(watch->address, 0, 16);
+                else
+                    return QString("%1").arg(watch->address, 0, 16);
             case 1:
                 return QString(watch->value_str().c_str());
             case 2:

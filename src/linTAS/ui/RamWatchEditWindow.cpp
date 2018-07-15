@@ -189,7 +189,10 @@ void RamWatchEditWindow::slotPointer(bool checked)
 
 void RamWatchEditWindow::slotAddOffset()
 {
-    pointerLayout->insertRow(0, new QLabel(tr("Offset")), new QSpinBox());
+    QSpinBox* offsetBox = new QSpinBox();
+    offsetBox->setMaximum(1000000);
+    offsetBox->setValue(0);
+    pointerLayout->insertRow(0, new QLabel(tr("Offset")), offsetBox);
 }
 
 void RamWatchEditWindow::slotRemoveOffset()
