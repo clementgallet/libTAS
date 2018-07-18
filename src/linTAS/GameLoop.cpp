@@ -108,35 +108,62 @@ void GameLoop::launchGameThread()
      */
     personality(ADDR_NO_RANDOMIZE);
 
-    /* Run the actual game */
+    /* Build the argument list to be fed to execv */
+    std::list<std::string> arg_list;
+
     if (context->attach_gdb) {
-        /* Call the game using gdb. The LD_PRELOAD must be set inside gdb,
-         * so building a command to be executed at the start of gdb.
-         */
+        arg_list.push_back("/usr/bin/gdb");
+        arg_list.push_back("-q");
+        arg_list.push_back("-ex");
+
+        /* LD_PRELOAD must be set inside a gdb command to be effective */
         std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
         ldpreloadstr += context->libtaspath;
         ldpreloadstr += "'";
+        arg_list.push_back(ldpreloadstr);
 
-        execl("/usr/bin/gdb", "/usr/bin/gdb", "-q",
-            "-ex", ldpreloadstr.c_str(),
-            /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
-             * print and pause when one signal is sent */
-            "-ex", "handle SIGUSR1 nostop noprint",
-            "-ex", "handle SIGUSR2 nostop noprint",
-            "-ex", "handle SIGPWR nostop noprint", // used a lot in some games
-            "-ex", "handle SIGXCPU nostop noprint", // used a lot in some games
-            "-ex", "handle SIG35 nostop noprint", // used a lot in some games
-            "-ex", "handle SIG36 nostop noprint", // used a lot in some games
-            "-ex", "run",
-            "--args", context->gamepath.c_str(), context->config.gameargs.c_str(),
-            (char*) NULL);
+        /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
+         * print and pause when one signal is sent */
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGUSR1 nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGUSR2 nostop noprint");
+        /* The following signals are used a lot in some games */
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGPWR nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGXCPU nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIG35 nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIG36 nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("run");
+        arg_list.push_back("--args");
     }
     else {
         /* Set the LD_PRELOAD environment variable to inject our lib to the game */
         setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
-
-        execl(context->gamepath.c_str(), context->gamepath.c_str(), context->config.gameargs.c_str(), NULL);
     }
+    arg_list.push_back(context->gamepath);
+
+    /* Parse the game command-line arguments */
+    std::istringstream iss(context->config.gameargs);
+    std::string arg;
+    while (iss >> arg) {
+        arg_list.push_back(arg);
+    }
+
+    /* Build the char* array for execv */
+    std::vector<char*> arg_vect;
+    for (const std::string& elem : arg_list) {
+        /* The const_cast is bad, but execv has no reason to modify it, no ? */
+        arg_vect.push_back(const_cast<char*>(elem.c_str()));
+    }
+    arg_vect.push_back(NULL);
+
+    /* Run the actual game */
+    execv(arg_vect[0], &arg_vect[0]);
 }
 
 void GameLoop::start()

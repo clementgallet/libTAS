@@ -49,7 +49,6 @@ static void print_usage(void)
     std::cout << "  -d, --dump FILE     Start a audio/video encode into the specified FILE" << std::endl;
     std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
     std::cout << "  -w, --write MOVIE   Record game inputs into the specified MOVIE file" << std::endl;
-    // std::cout << "  -l, --lib     PATH  Manually import a library" << std::endl;
     std::cout << "  -h, --help          Show this message" << std::endl;
 }
 
@@ -64,7 +63,7 @@ int main(int argc, char **argv)
     char* abspath;
     std::ofstream o;
     // std::string libname;
-    while ((c = getopt (argc, argv, "+r:w:d:l:h")) != -1)
+    while ((c = getopt (argc, argv, "+r:w:d:h")) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -92,14 +91,6 @@ int main(int argc, char **argv)
                     context.config.dumpfile = abspath;
                 }
                 break;
-            // case 'l':
-            //     /* Shared library */
-            //     abspath = realpath(optarg, buf);
-            //     if (abspath) {
-            //         libname = abspath;
-            //         shared_libs.push_back(libname);
-            //     }
-            //     break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
             case 'h':
@@ -108,6 +99,19 @@ int main(int argc, char **argv)
             default:
                 return -1;
         }
+    }
+
+    /* Game path */
+    abspath = realpath(argv[optind], buf);
+    if (abspath) {
+        context.gamepath = abspath;
+    }
+
+    /* Game arguments */
+    for (int i = optind+1; i < argc; i++) {
+        context.config.gameargs += argv[i];
+        context.config.gameargs += " ";
+    }
 
     /* Open connection with the server */
     // XInitThreads();
@@ -153,12 +157,6 @@ int main(int argc, char **argv)
     context.libtaspath = dirname(binpathptr);
     context.libtaspath += "/libTAS.so";
 
-    /* Game path */
-    abspath = realpath(argv[optind], buf);
-    if (abspath) {
-        context.gamepath = abspath;
-    }
-
     /* Create the working directories */
     std::string base_dir = getenv("HOME");
     base_dir += "/.libtas";
@@ -194,12 +192,6 @@ int main(int argc, char **argv)
     if (create_dir(context.config.savestatedir) < 0) {
         std::cerr << "Cannot create dir " << context.config.savestatedir << std::endl;
         return -1;
-    }
-
-    /* Game arguments */
-    for (int i = optind+1; i < argc; i++) {
-        context.config.gameargs += argv[i];
-        context.config.gameargs += " ";
     }
 
     /* Starts the user interface */
