@@ -576,6 +576,7 @@ void generateMouseMotionEvents(void)
         event.xmotion.time = timestamp;
 
         OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+        debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
     /* Upload the old AllInput struct */
@@ -643,9 +644,11 @@ void generateMouseButtonEvents(void)
                 XEvent event;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
+                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonPress with button ", SingleInput::toXlibPointerMask(ai.pointer_mask));
                 }
                 else {
                     event.xbutton.type = ButtonRelease;
+                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonRelease with button ", SingleInput::toXlibPointerMask(ai.pointer_mask));
                 }
                 event.xbutton.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
                 event.xbutton.x = game_ai.pointer_x;
