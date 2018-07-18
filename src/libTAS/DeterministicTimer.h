@@ -78,10 +78,15 @@ public:
 
 private:
 
-    /* By how much time did we increment the timer */
-    TimeHolder timeIncrement;
+    /* By how much time do we increment the timer, excluding fractional part.
+     * It only depends on the framerate setting.
+     */
+    TimeHolder baseTimeIncrement;
 
     /* Remainder when increasing the timer by 1/fps */
+    unsigned int fractional_increment;
+
+    /* Current sum of all fractional increments */
     unsigned int fractional_part;
 
     /* State of the deterministic timer */

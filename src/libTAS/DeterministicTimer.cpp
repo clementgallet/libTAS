@@ -122,7 +122,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
      * However, there must be a limit,
      * otherwise it could easily build up and make us freeze (in some games)
      */
-    TimeHolder maxDeferredDelay = timeIncrement;
+    TimeHolder maxDeferredDelay = baseTimeIncrement;
     {
         std::lock_guard<std::mutex> lock(mutex);
 
@@ -189,13 +189,7 @@ void DeterministicTimer::enterFrameBoundary()
     /* We compute by how much we should advance the timer
      * to run exactly as the indicated framerate
      */
-
-    timeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
-
-    uint64_t integer_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
-    uint64_t fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
-
-    timeIncrement.tv_nsec = integer_increment;
+    TimeHolder timeIncrement = baseTimeIncrement;
 
     fractional_part += fractional_increment;
     while (fractional_part >= shared_config.framerate_num)
@@ -264,7 +258,12 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
 void DeterministicTimer::initialize(void)
 {
     ticks = shared_config.initial_time;
+
+    baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
+    baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
+    fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
     fractional_part = 0;
+
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
 
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
