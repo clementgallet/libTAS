@@ -113,6 +113,9 @@ private:
     int main_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
     int sec_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
 
+    /* Are we inside a frame boudary */
+    bool insideFrameBoundary = false;
+
     /* Mutex to protect access to the ticks value */
     std::mutex mutex;
 };

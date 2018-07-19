@@ -68,7 +68,10 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
     int gettimes_threshold = mainT ? shared_config.main_gettimes_threshold[type]
                           : shared_config.sec_gettimes_threshold[type];
-    if (type != SharedConfig::TIMETYPE_UNTRACKED && gettimes_threshold >= 0) {
+
+    if (!insideFrameBoundary && /* Don't track is already inside a frame boundary */
+        type != SharedConfig::TIMETYPE_UNTRACKED &&
+        gettimes_threshold >= 0) {
 
         /* We actually track this time call */
         std::lock_guard<std::mutex> lock(mutex);
@@ -95,7 +98,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         }
     }
 
-    if(ticksExtra) {
+    if (ticksExtra) {
         /* Delay by ticksExtra ms. Arbitrary */
         struct timespec delay = {0, ticksExtra * 1000000};
         addDelay(delay);
@@ -173,6 +176,8 @@ void DeterministicTimer::exitFrameBoundary()
 
     if(shared_config.framerate_num == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
+
+    insideFrameBoundary = false;
 }
 
 
@@ -180,6 +185,8 @@ void DeterministicTimer::enterFrameBoundary()
 {
     //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
+
+    insideFrameBoundary = true;
 
     if(shared_config.framerate_num == 0)
         return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
@@ -259,7 +266,7 @@ void DeterministicTimer::initialize(void)
 {
     ticks = shared_config.initial_time;
 
-    if (framerate_num > 0) {        
+    if (shared_config.framerate_num > 0) {
         baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
         baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
         fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
