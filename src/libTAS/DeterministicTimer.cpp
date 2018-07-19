@@ -259,10 +259,12 @@ void DeterministicTimer::initialize(void)
 {
     ticks = shared_config.initial_time;
 
-    baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
-    baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
-    fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
-    fractional_part = 0;
+    if (framerate_num > 0) {        
+        baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
+        baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
+        fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
+        fractional_part = 0;
+    }
 
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
 
