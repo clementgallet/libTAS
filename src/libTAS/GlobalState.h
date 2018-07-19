@@ -97,7 +97,7 @@ public:
     ~GlobalOwnCode();
 };
 
-#define OWNCALL(expr) do{GlobalOwnCode gn; expr;} while (false)
+#define OWNCALL(expr) do{GlobalOwnCode goc; expr;} while (false)
 
 class GlobalNoLog
 {
@@ -105,6 +105,8 @@ public:
     GlobalNoLog();
     ~GlobalNoLog();
 };
+
+#define NOLOGCALL(expr) do{GlobalNoLog gnl; expr;} while (false)
 
 }
 

@@ -20,7 +20,7 @@
 #include "xkeyboard.h"
 #include "../logging.h"
 #include "inputs.h"
-#include <X11/XKBlib.h>
+#include "xkeyboardlayout.h"
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
 
@@ -31,6 +31,7 @@ namespace libtas {
     DEBUGLOGCALL(LCF_KEYBOARD);
 
     memset(keymap, 0, 32);
+    GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
     for (int kc=0; kc<256; kc++) {
         KeySym ks = XkbKeycodeToKeysym(display, (KeyCode)kc, 0, 0);
         for (int i=0; i<AllInputs::MAXKEYS; i++) {

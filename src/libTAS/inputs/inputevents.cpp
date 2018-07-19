@@ -20,11 +20,12 @@
 #include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
+#include "xkeyboardlayout.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SingleInput.h"
 #include "../../shared/SharedConfig.h"
-#include <X11/keysym.h>
+// #include <X11/keysym.h>
 #include <stdlib.h>
 #include "../DeterministicTimer.h"
 #include "sdlgamecontroller.h" // sdl_controller_events
@@ -95,7 +96,7 @@ void generateKeyUpEvents(void)
                 XEvent event;
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]);
+                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]));
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
                 OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
@@ -168,7 +169,7 @@ void generateKeyDownEvents(void)
                 XEvent event;
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]);
+                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]));
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
                 OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
