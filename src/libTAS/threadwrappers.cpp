@@ -80,7 +80,7 @@ static void *pthread_start(void *arg)
         /* Check if there is a function to execute */
         if (thread->state == ThreadInfo::ST_RUNNING) {
             ThreadManager::update(thread);
-            debuglog(LCF_THREAD, "Beginning of thread code");
+            debuglog(LCF_THREAD, "Beginning of thread code ", thread->routine_id);
 
             ThreadSync::decrementUninitializedThreadCount();
 

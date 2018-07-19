@@ -57,7 +57,7 @@ namespace libtas {
         KeySym ks = XkbKeycodeToKeysym(nullptr, (KeyCode)kc, 0, 0);
         for (int i=0; i<AllInputs::MAXKEYS; i++) {
             if (ks == game_ai.keyboard[i]) {
-                reply->keys[kc>>3] |= (1 << kc&0x7);
+                reply->keys[kc>>3] |= (1 << (kc&0x7));
                 break;
             }
         }

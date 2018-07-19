@@ -23,6 +23,7 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(XCheckIfEvent);
 DEFINE_ORIG_POINTER(XNextEvent);
 DEFINE_ORIG_POINTER(XPeekEvent);
 DEFINE_ORIG_POINTER(XWindowEvent);
@@ -34,9 +35,11 @@ DEFINE_ORIG_POINTER(XCheckTypedWindowEvent);
 DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
 
-/* Return we must prevent an event from being read by the game */
-static bool filteredXEvent(XEvent *event)
-{
+/* Function to indicate if an event is filtered */
+static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
+    if (event->xkey.send_event) {
+        return False;
+    }
     switch (event->type) {
         case KeyPress:
         case KeyRelease:
@@ -45,11 +48,21 @@ static bool filteredXEvent(XEvent *event)
         case MotionNotify:
         case FocusIn:
         case FocusOut:
-            return true;
+            return True;
         default:
-            return false;
+            return False;
     }
 }
+
+/* Removes all filtered events from the event queue */
+static void filterEventQueue(Display *display)
+{
+    LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
+    XEvent event;
+    XPointer arg = nullptr;
+    while (True == XCheckIfEvent(display, &event, isEventFiltered, arg)) {}
+}
+
 
 static void catchCloseEvent(Display *display, XEvent *event)
 {
@@ -62,91 +75,57 @@ static void catchCloseEvent(Display *display, XEvent *event)
     }
 }
 
-static void getFirstValidXEvent(Display *display, XEvent *event_return, bool peek)
-{
-    LINK_NAMESPACE(XNextEvent, nullptr);
-    LINK_NAMESPACE(XPeekEvent, nullptr);
-    LINK_NAMESPACE(XPending, nullptr);
-    orig::XPeekEvent(display, event_return);
-
-    /* Pull events from the queue until the first non-filtered event or
-     * until the queue is empty.
-     */
-    while (filteredXEvent(event_return) && !event_return->xkey.send_event &&
-        (orig::XPending(display) > 1)) {
-        /* This event is filtered, we pull it and look at the next one */
-        orig::XNextEvent(display, event_return);
-        orig::XPeekEvent(display, event_return);
-    }
-
-    if (filteredXEvent(event_return) && !event_return->xkey.send_event) {
-        /* We only pulled filtered events. We must
-         * return some event, so returning a dummy event.
-         */
-        orig::XNextEvent(display, event_return);
-        event_return->type = GenericEvent;
-        return;
-    }
-
-    if (!peek) {
-        /* Remove the event from the queue */
-        orig::XNextEvent(display, event_return);
-    }
-
-    if (filteredXEvent(event_return)) {
-        /* Remove the send_event flag so the event looks normal */
-        event_return->xkey.send_event = false;
-    }
-
-    catchCloseEvent(display, event_return);
-}
-
 int XNextEvent(Display *display, XEvent *event_return)
 {
+    LINK_NAMESPACE_GLOBAL(XNextEvent);
     if (GlobalState::isOwnCode()) {
-        LINK_NAMESPACE(XNextEvent, nullptr);
-        //return orig::XNextEvent(display, event_return);
+        return orig::XNextEvent(display, event_return);
     }
 
     DEBUGLOGCALL(LCF_EVENTS);
-    getFirstValidXEvent(display, event_return, false);
-    return True;
+    filterEventQueue(display);
+    int ret = orig::XNextEvent(display, event_return);
+
+    catchCloseEvent(display, event_return);
+
+    return ret;
 }
 
 int XPeekEvent(Display *display, XEvent *event_return)
 {
+    LINK_NAMESPACE_GLOBAL(XPeekEvent);
     if (GlobalState::isOwnCode()) {
-        LINK_NAMESPACE(XPeekEvent, nullptr);
         return orig::XPeekEvent(display, event_return);
     }
 
     DEBUGLOGCALL(LCF_EVENTS);
-    getFirstValidXEvent(display, event_return, true);
-    return True;
+    filterEventQueue(display);
+    int ret = orig::XPeekEvent(display, event_return);
+
+    catchCloseEvent(display, event_return);
+    return ret;
 }
 
 int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
     LINK_NAMESPACE_GLOBAL(XWindowEvent);
-    return orig::XWindowEvent(display, w, event_mask, event_return);
+    filterEventQueue(display);
+    int ret = orig::XWindowEvent(display, w, event_mask, event_return);
+    catchCloseEvent(display, event_return);
+    return ret;
 }
 
 Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
     LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
+    filterEventQueue(display);
     if (GlobalState::isOwnCode()) {
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
 
     Bool ret = orig::XCheckWindowEvent(display, w, event_mask, event_return);
-
-    /* We must not return a filtered event */
-    while ((ret == True) && (filteredXEvent(event_return) && !event_return->xkey.send_event)) {
-        ret = orig::XCheckWindowEvent(display, w, event_mask, event_return);
-    }
-
     catchCloseEvent(display, event_return);
     return ret;
 }
@@ -155,7 +134,10 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
     LINK_NAMESPACE_GLOBAL(XMaskEvent);
-    return orig::XMaskEvent(display, event_mask, event_return);
+    filterEventQueue(display);
+    int ret = orig::XMaskEvent(display, event_mask, event_return);
+    catchCloseEvent(display, event_return);
+    return ret;
 }
 
 Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
@@ -165,13 +147,9 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
     if (GlobalState::isOwnCode()) {
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
+    filterEventQueue(display);
 
     Bool ret = orig::XCheckMaskEvent(display, event_mask, event_return);
-
-    /* We must not return a filtered event */
-    while ((ret == True) && (filteredXEvent(event_return) && !event_return->xkey.send_event)) {
-        ret = orig::XCheckMaskEvent(display, event_mask, event_return);
-    }
 
     catchCloseEvent(display, event_return);
     return ret;
@@ -184,13 +162,9 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
     if (GlobalState::isOwnCode()) {
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
+    filterEventQueue(display);
 
     Bool ret = orig::XCheckTypedEvent(display, event_type, event_return);
-
-    /* We must not return a filtered event */
-    while ((ret == True) && (filteredXEvent(event_return) && !event_return->xkey.send_event)) {
-        ret = orig::XCheckTypedEvent(display, event_type, event_return);
-    }
 
     catchCloseEvent(display, event_return);
     return ret;
@@ -203,26 +177,25 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
     if (GlobalState::isOwnCode()) {
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
+    filterEventQueue(display);
 
     Bool ret = orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
-
-    /* We must not return a filtered event */
-    while ((ret == True) && (filteredXEvent(event_return) && !event_return->xkey.send_event)) {
-        ret = orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
-    }
 
     catchCloseEvent(display, event_return);
     return ret;
 }
 
+
 int XPending(Display *display)
 {
-    LINK_NAMESPACE(XPending, nullptr);
+    LINK_NAMESPACE_GLOBAL(XPending);
     if (GlobalState::isOwnCode()) {
         return orig::XPending(display);
     }
 
     DEBUGLOGCALL(LCF_EVENTS);
+    filterEventQueue(display);
+
     int ret = orig::XPending(display);
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
@@ -230,12 +203,12 @@ int XPending(Display *display)
 
 Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send)
 {
-    LINK_NAMESPACE(XSendEvent, nullptr);
+    LINK_NAMESPACE_GLOBAL(XSendEvent);
     if (GlobalState::isOwnCode()) {
         return orig::XSendEvent(display, w, propagate, event_mask, event_send);
     }
+    DEBUGLOGCALL(LCF_EVENTS);
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);
 }
-
 
 }

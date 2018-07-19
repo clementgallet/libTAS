@@ -39,7 +39,7 @@ namespace libtas {
         for (int kc=0; kc<256; kc++) {
             KeySym ks = XkbKeycodeToKeysym(display, (KeyCode)kc, 0, 0);
             if (ks == game_ai.keyboard[i]) {
-                keymap[kc>>3] |= (1 << kc&0x7);
+                keymap[kc>>3] |= (1 << (kc&0x7));
                 break;
             }
         }
