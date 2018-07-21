@@ -228,19 +228,20 @@ void DeterministicTimer::enterFrameBoundary()
 
     /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
 
-    /* Get the current actual time */
     TimeHolder currentTime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-
-    /* Calculate the target time we wanted to be at now */
-    TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
-
-    TimeHolder deltaTime = desiredTime - currentTime;
 
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
-    if (!shared_config.fastforward) {
+    if (!(shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
+
+        /* Get the current actual time */
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
+
+        /* Calculate the target time we wanted to be at now */
+        TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
+
+        TimeHolder deltaTime = desiredTime - currentTime;
 
         /* Check that we wait for a positive time */
         if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {

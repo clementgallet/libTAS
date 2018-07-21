@@ -106,6 +106,7 @@ public:
     QAction *toggleEncodeAction;
 
     QActionGroup *slowdownGroup;
+    QActionGroup *fastforwardGroup;
 
     QAction *keyboardAction;
     QAction *mouseAction;
@@ -244,6 +245,7 @@ private slots:
     void slotHotkeyFocus();
     void slotInputFocus();
     void slotSlowdown();
+    void slotFastforwardMode();
     void slotScreenRes();
     void slotOsd();
     void slotOsdEncode(bool checked);

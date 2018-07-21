@@ -136,10 +136,13 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     debuglog(LCF_SOUND | LCF_FRAME, "Start mixing source ", id);
 
+    bool skipMixing = !shared_config.av_dumping && (shared_config.audio_mute ||
+        (shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_MIXING)));
+
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-    if (!shared_config.audio_mute || shared_config.av_dumping) {
+    if (!skipMixing) {
         /* Check if SWR context is initialized.
          * If not, set parameters and init it
          */
@@ -234,7 +237,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        if (!shared_config.audio_mute || shared_config.av_dumping) {
+        if (!skipMixing) {
             convOutSamples = swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
         }
 #endif
@@ -243,7 +246,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-        if (!shared_config.audio_mute || shared_config.av_dumping) {
+        if (!skipMixing) {
             if (availableSamples > 0)
                 swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
         }
@@ -265,7 +268,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                if (!shared_config.audio_mute || shared_config.av_dumping) {
+                if (!skipMixing) {
                     swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                 }
 #endif
@@ -276,7 +279,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-            if (!shared_config.audio_mute || shared_config.av_dumping) {
+            if (!skipMixing) {
                 /* Get the mixed samples */
                 convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
@@ -294,7 +297,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    if (!shared_config.audio_mute || shared_config.av_dumping) {
+                    if (!skipMixing) {
                         swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
 #endif
@@ -311,7 +314,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-                    if (!shared_config.audio_mute || shared_config.av_dumping) {
+                    if (!skipMixing) {
                         swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
 #endif
@@ -324,7 +327,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-            if (!shared_config.audio_mute || shared_config.av_dumping) {
+            if (!skipMixing) {
                 /* Get the mixed samples */
                 convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
@@ -346,7 +349,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     }
 
 #if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
-    if (!shared_config.audio_mute || shared_config.av_dumping) {
+    if (!skipMixing) {
         #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
         /* Add mixed source to the output buffer */

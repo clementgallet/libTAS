@@ -116,6 +116,10 @@ static bool skipDraw(float fps)
     if (shared_config.av_dumping)
         return false;
 
+    /* Always skip if rendering skip mode */
+    if (shared_config.fastforward_mode & SharedConfig::FF_RENDERING)
+        return true;
+
     unsigned int skip_freq = 1;
 
     /* I want to display about 8 effective frames per second, so I divide

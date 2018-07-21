@@ -38,6 +38,14 @@ struct SharedConfig {
     /* Is fastforward enabled */
     bool fastforward = false;
 
+    /* Fastforward mode */
+    enum FastForwardMode {
+        FF_SLEEP = 0x01, // Skips sleep calls
+        FF_MIXING = 0x02, // Skips audio mixing
+        FF_RENDERING = 0x04, // Skips all rendering
+    };
+    int fastforward_mode = FF_SLEEP | FF_MIXING;
+
     /* Recording status */
     enum RecStatus {
         NO_RECORDING,

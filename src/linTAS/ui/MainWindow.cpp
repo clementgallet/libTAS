@@ -486,6 +486,14 @@ void MainWindow::createActions()
     addActionCheckable(slowdownGroup, tr("25%"), 4);
     addActionCheckable(slowdownGroup, tr("12%"), 8);
 
+    fastforwardGroup = new QActionGroup(this);
+    fastforwardGroup->setExclusive(false);
+    connect(fastforwardGroup, &QActionGroup::triggered, this, &MainWindow::slotFastforwardMode);
+
+    addActionCheckable(fastforwardGroup, tr("Skipping sleep"), SharedConfig::FF_SLEEP);
+    addActionCheckable(fastforwardGroup, tr("Skipping audio mixing"), SharedConfig::FF_MIXING);
+    addActionCheckable(fastforwardGroup, tr("Skipping all rendering"), SharedConfig::FF_RENDERING);
+
     joystickGroup = new QActionGroup(this);
     addActionCheckable(joystickGroup, tr("None"), 0);
     addActionCheckable(joystickGroup, tr("1"), 1);
@@ -626,6 +634,11 @@ void MainWindow::createMenus()
 
     QMenu *slowdownMenu = toolsMenu->addMenu(tr("Slow Motion"));
     slowdownMenu->addActions(slowdownGroup->actions());
+
+    toolsMenu->addSeparator();
+
+    QMenu *fastforwardMenu = toolsMenu->addMenu(tr("Fast-forward mode"));
+    fastforwardMenu->addActions(fastforwardGroup->actions());
 
     toolsMenu->addSeparator();
 
@@ -960,6 +973,8 @@ void MainWindow::updateUIFromConfig()
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
 
+    setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
+
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
 
     updateStatusBar();
@@ -1275,6 +1290,12 @@ void MainWindow::slotInputFocus()
 void MainWindow::slotSlowdown()
 {
     setListFromRadio(slowdownGroup, context->config.sc.speed_divisor);
+    context->config.sc_modified = true;
+}
+
+void MainWindow::slotFastforwardMode()
+{
+    setMaskFromCheckboxes(fastforwardGroup, context->config.sc.fastforward_mode);
     context->config.sc_modified = true;
 }
 

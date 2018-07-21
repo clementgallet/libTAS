@@ -79,6 +79,7 @@ void Config::save(const std::string& gamepath) {
     settings.beginGroup("shared");
 
     settings.setValue("speed_divisor", sc.speed_divisor);
+    settings.setValue("fastforward_mode", sc.fastforward_mode);
     settings.setValue("logging_status", sc.logging_status);
     settings.setValue("includeFlags", sc.includeFlags);
     settings.setValue("excludeFlags", sc.excludeFlags);
@@ -178,6 +179,7 @@ void Config::load(const std::string& gamepath) {
     settings.beginGroup("shared");
 
     sc.speed_divisor = settings.value("speed_divisor", sc.speed_divisor).toInt();
+    sc.speed_divisor = settings.value("fastforward_mode", sc.fastforward_mode).toInt();
     sc.logging_status = settings.value("logging_status", sc.logging_status).toInt();
     sc.includeFlags = settings.value("includeFlags", sc.includeFlags).toInt();
     sc.excludeFlags = settings.value("excludeFlags", sc.excludeFlags).toInt();
