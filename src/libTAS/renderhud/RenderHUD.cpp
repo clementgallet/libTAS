@@ -50,21 +50,42 @@ RenderHUD::RenderHUD()
         FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
         FcFontSet* fs = FcFontList(config, pat, os);
         debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
+        char* fontFile = nullptr;
         for (int i=0; fs && i < fs->nfont; ++i) {
             FcPattern* font = fs->fonts[i];
             FcChar8 *file, *family;
             if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
                 FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch) {
+
+                /* In priority, choose one of the following font */
+                if (FcStrStr(file, reinterpret_cast<const FcChar8*>("FreeSans.ttf")) ||
+                    FcStrStr(file, reinterpret_cast<const FcChar8*>("Gentium-R.ttf")) ||
+                    FcStrStr(file, reinterpret_cast<const FcChar8*>("LiberationSans-Regular.ttf")) ||
+                    FcStrStr(file, reinterpret_cast<const FcChar8*>("Ubuntu-R.ttf"))) {
+
+                    fontFile = reinterpret_cast<char*>(file);
+                    break;
+                }
+
                 if (FcStrStr(file, reinterpret_cast<const FcChar8*>(".ttf"))) {
-                    debuglog(LCF_WINDOW, "Picking font: ", file, " (family ", family, ")");
-                    initFonts(reinterpret_cast<char*>(file));
-                    if (fs) FcFontSetDestroy(fs);
-                    return;
+                    // debuglog(LCF_WINDOW, "   Font: ", file, " (family ", family, ")");
+
+                    /* Otherwise, pick this font */
+                    if (!fontFile) {
+                        fontFile = reinterpret_cast<char*>(file);
+                    }
                 }
             }
         }
 
-        debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+        if (fontFile) {
+            debuglog(LCF_WINDOW, "Picking font: ", fontFile);
+            initFonts(fontFile);
+        }
+        else {
+            debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+        }
+
         if (fs) FcFontSetDestroy(fs);
     }
 }
