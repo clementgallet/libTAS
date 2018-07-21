@@ -59,19 +59,29 @@ static void computeFPS(float& fps, float& lfps)
     static bool can_output = false;
 
     /* Frequency of FPS computing (every n frames) */
-    static const int fps_refresh_freq = 10;
+    static int fps_refresh_freq = 15;
 
     /* Computations include values from past n calls */
     static const int history_length = 10;
 
+    static std::array<unsigned long, history_length> lastFrames;
     static std::array<TimeHolder, history_length> lastTimes;
     static std::array<TimeHolder, history_length> lastTicks;
 
     static int refresh_counter = 0;
     static int compute_counter = 0;
 
+    /* Immedialty reset fps computing frequency if not fast-forwarding */
+    if (!shared_config.fastforward) {
+        fps_refresh_freq = 10;
+    }
+
     if (++refresh_counter >= fps_refresh_freq) {
         refresh_counter = 0;
+
+        /* Update frame */
+        unsigned long lastFrame = lastFrames[compute_counter];
+        lastFrames[compute_counter] = framecount;
 
         /* Update current time */
         TimeHolder lastTime = lastTimes[compute_counter];
@@ -80,6 +90,8 @@ static void computeFPS(float& fps, float& lfps)
         /* Update current ticks */
         TimeHolder lastTick = lastTicks[compute_counter];
         lastTicks[compute_counter] = detTimer.getTicks();
+
+        unsigned long deltaFrames = framecount - lastFrame;
 
         /* Compute real fps (number of drawn screens per second) */
         TimeHolder deltaTime = lastTimes[compute_counter] - lastTime;
@@ -93,8 +105,13 @@ static void computeFPS(float& fps, float& lfps)
         }
 
         if (can_output) {
-            fps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
-            lfps = static_cast<float>(fps_refresh_freq*history_length) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+            fps = static_cast<float>(deltaFrames) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
+            lfps = static_cast<float>(deltaFrames) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
+
+            /* Update fps computing frequency if fast-forwarding */
+            if (shared_config.fastforward) {
+                fps_refresh_freq = static_cast<int>(fps) / 4;
+            }
         }
     }
 }
