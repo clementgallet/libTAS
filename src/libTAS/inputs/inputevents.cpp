@@ -172,6 +172,7 @@ void generateKeyDownEvents(void)
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]));
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
+                event.xkey.same_screen = 1;
                 OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
