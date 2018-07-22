@@ -19,12 +19,16 @@
 
 #include "sdlaudio.h"
 #include "../logging.h"
+#include "../hook.h"
 #include "AudioContext.h"
 #include "AudioSource.h"
 #include "AudioBuffer.h"
 #include <cstring> // strncpy
 
 namespace libtas {
+
+DEFINE_ORIG_POINTER(SDL_MixAudioFormat);
+DEFINE_ORIG_POINTER(SDL_MixAudio);
 
 static const char* dummySDLDriver = "libtas";
 
@@ -251,11 +255,21 @@ void fillBufferCallback(AudioBuffer& ab)
 void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    /* SDL_MixAudio uses the opened audio device, but we don't open any,
-     * so we use SDL_MixAudioFormat which don't required a device to be opened
-     * and instead let us specify the audio format.
-     */
-    SDL_MixAudioFormat(dst, src, audioFormat, len, volume);
+
+    int SDLver = get_sdlversion();
+
+    if (SDLver == 2) {
+        /* SDL_MixAudio uses the opened audio device, but we don't open any,
+         * so we use SDL_MixAudioFormat which don't required a device to be opened
+         * and instead let us specify the audio format.
+         */
+
+         LINK_NAMESPACE_SDL2(SDL_MixAudioFormat);
+         return orig::SDL_MixAudioFormat(dst, src, audioFormat, len, volume);
+    }
+
+    LINK_NAMESPACE_SDL1(SDL_MixAudio);
+    return orig::SDL_MixAudio(dst, src, len, volume);
 }
 
 
