@@ -420,6 +420,7 @@ typedef void ALvoid;
 namespace libtas {
 
 OVERRIDE ALenum alGetError(ALvoid);
+void alSetError(ALenum error);
 
 /**
  * Extension support.

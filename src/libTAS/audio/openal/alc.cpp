@@ -18,6 +18,7 @@
  */
 
 #include "alc.h"
+#include "efx.h"
 #include "../AudioContext.h"
 #include "../../logging.h"
 
@@ -311,6 +312,14 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
         case ALC_CAPTURE_SAMPLES:
             debuglog(LCF_OPENAL | LCF_TODO, "Request capture samples");
             values[0] = 0;
+            return;
+        case ALC_MAX_AUXILIARY_SENDS:
+            debuglog(LCF_OPENAL | LCF_TODO, "Request max auxiliary sends");
+            values[0] = 2;
+            return;
+        default:
+            debuglog(LCF_OPENAL | LCF_TODO, "Unknown param ", param);
+            values[0] = 2;
             return;
     }
 }

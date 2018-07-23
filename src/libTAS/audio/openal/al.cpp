@@ -27,7 +27,11 @@
 namespace libtas {
 
 ALenum alError;
-#define ALSETERROR(error) if(alError==AL_NO_ERROR) alError = error
+void alSetError(ALenum error)
+{
+    if (alError == AL_NO_ERROR)
+        alError = error;
+}
 
 ALenum alGetError(ALvoid)
 {
@@ -117,7 +121,7 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
     for (int i=0; i<n; i++) {
         /* Check if all buffers exist before removing any. */
         if (! audiocontext.isBuffer(buffers[i])) {
-            ALSETERROR(AL_INVALID_NAME);
+            alSetError(AL_INVALID_NAME);
             return;
         }
     }
@@ -141,7 +145,7 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
 
 	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -202,7 +206,7 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
 
     /* Check for size validity */
     if (! ab->checkSize()) {
-        ALSETERROR(AL_INVALID_VALUE);
+        alSetError(AL_INVALID_VALUE);
         return;
     }
 
@@ -236,7 +240,7 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -262,7 +266,7 @@ void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     if (values == nullptr) {
-        ALSETERROR(AL_INVALID_VALUE);
+        alSetError(AL_INVALID_VALUE);
         return;
     }
     alBufferi(buffer, param, *values);
@@ -280,7 +284,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -306,7 +310,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
             debuglog(LCF_OPENAL, "  Get block alignment of ", *value);
             return;
         default:
-            ALSETERROR(AL_INVALID_VALUE);
+            alSetError(AL_INVALID_VALUE);
             return;
     }
 }
@@ -322,7 +326,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -344,7 +348,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
             debuglog(LCF_OPENAL, "  Get size of ", *values);
             return;
         default:
-            ALSETERROR(AL_INVALID_VALUE);
+            alSetError(AL_INVALID_VALUE);
             return;
     }
 }
@@ -371,7 +375,7 @@ void alDeleteSources(ALsizei n, ALuint *sources)
 	for (int i=0; i<n; i++) {
         /* Check if all sources exist before removing any. */
 	    if (! audiocontext.isSource(sources[i])) {
-            ALSETERROR(AL_INVALID_NAME);
+            alSetError(AL_INVALID_NAME);
             return;
         }
     }
@@ -397,7 +401,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -447,7 +451,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             break;
         default:
             debuglog(LCF_OPENAL, "  Unknown param ", param);
-            ALSETERROR(AL_INVALID_OPERATION);
+            alSetError(AL_INVALID_OPERATION);
             return;
     }
 }
@@ -462,7 +466,7 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     if (values == nullptr) {
-        ALSETERROR(AL_INVALID_VALUE);
+        alSetError(AL_INVALID_VALUE);
         return;
     }
     alSourcef(source, param, *values);
@@ -474,7 +478,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -487,13 +491,13 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             else if (value == AL_FALSE)
                 as->looping = false;
             else
-                ALSETERROR(AL_INVALID_VALUE);
+                alSetError(AL_INVALID_VALUE);
             break;
         case AL_BUFFER:
             /* Bind a buffer to the source */
 
             if ((as->state == AudioSource::SOURCE_PLAYING) || (as->state == AudioSource::SOURCE_PAUSED)) {
-                ALSETERROR(AL_INVALID_OPERATION);
+                alSetError(AL_INVALID_OPERATION);
                 return;
             }
 
@@ -505,7 +509,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             else {
                 ab = audiocontext.getBuffer(value);
                 if (!ab) {
-                    ALSETERROR(AL_INVALID_VALUE);
+                    alSetError(AL_INVALID_VALUE);
                     return;
                 }
                 as->init();
@@ -551,7 +555,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             break;
         default:
             debuglog(LCF_OPENAL, "  Unknown param ", param);
-            ALSETERROR(AL_INVALID_OPERATION);
+            alSetError(AL_INVALID_OPERATION);
             return;
     }
 }
@@ -571,7 +575,7 @@ void alSourceiv(ALuint source, ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     if (values == nullptr) {
-        ALSETERROR(AL_INVALID_VALUE);
+        alSetError(AL_INVALID_VALUE);
         return;
     }
     alSourcei(source, param, *values);
@@ -636,7 +640,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             break;
         default:
             debuglog(LCF_OPENAL, "  Unknown param ", param);
-            ALSETERROR(AL_INVALID_OPERATION);
+            alSetError(AL_INVALID_OPERATION);
             return;
     }
 }
@@ -664,7 +668,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
-        ALSETERROR(AL_INVALID_NAME);
+        alSetError(AL_INVALID_NAME);
         return;
     }
 
@@ -712,7 +716,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
                     debuglog(LCF_OPENAL, "  Get source type STREAMING");
                     break;
                 default:
-                    ALSETERROR(AL_INVALID_VALUE);
+                    alSetError(AL_INVALID_VALUE);
                     break;
             }
             break;
@@ -761,7 +765,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             break;
         default:
             debuglog(LCF_OPENAL, "  Unknown param ", param);
-            ALSETERROR(AL_INVALID_OPERATION);
+            alSetError(AL_INVALID_OPERATION);
             return;
     }
 }
@@ -882,7 +886,7 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     /* Check if the source has a static buffer attached */
     if (as->source == AudioSource::SOURCE_STATIC) {
-        ALSETERROR(AL_INVALID_OPERATION);
+        alSetError(AL_INVALID_OPERATION);
         return;
     }
 
@@ -914,7 +918,7 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
     else
         processedBuffers = as->nbQueueProcessed();
     if (processedBuffers < n) {
-        ALSETERROR(AL_INVALID_VALUE);
+        alSetError(AL_INVALID_VALUE);
         return;
     }
 
@@ -977,7 +981,7 @@ void alGetListenerf(ALenum param, ALfloat *value)
     DEBUGLOGCALL(LCF_OPENAL);
     if (param == AL_GAIN) {
         if (!value) {
-            // ALSETERROR(AL_INVALID_VALUE);
+            // alSetError(AL_INVALID_VALUE);
             return;
         }
         *value = audiocontext.outVolume;
