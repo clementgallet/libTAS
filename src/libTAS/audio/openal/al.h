@@ -20,7 +20,7 @@
 #ifndef LIBTAS_OPENAL_H_INCL
 #define LIBTAS_OPENAL_H_INCL
 
-#include "../global.h"
+#include "../../global.h"
 
 typedef char ALboolean;
 typedef char ALchar;
@@ -420,6 +420,16 @@ typedef void ALvoid;
 namespace libtas {
 
 OVERRIDE ALenum alGetError(ALvoid);
+
+/**
+ * Extension support.
+ *
+ * Query for the presence of an extension, and obtain any appropriate function
+ * pointers and enum values.
+ */
+OVERRIDE ALboolean alIsExtensionPresent(const ALchar *extname);
+OVERRIDE void* alGetProcAddress(const ALchar *fname);
+// OVERRIDE ALenum alGetEnumValue(const ALchar *ename);
 
 /** Create Buffer objects */
 OVERRIDE void alGenBuffers(ALsizei n, ALuint *buffers);

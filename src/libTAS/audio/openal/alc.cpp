@@ -17,10 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "openalc.h"
-#include "AudioContext.h"
-#include "../logging.h"
-#include <iostream>
+#include "alc.h"
+#include "../AudioContext.h"
+#include "../../logging.h"
 
 namespace libtas {
 

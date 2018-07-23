@@ -17,11 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "openal.h"
-#include "../logging.h"
-#include "AudioBuffer.h"
-#include "AudioSource.h"
-#include "AudioContext.h"
+#include "al.h"
+#include "efx.h"
+#include "../../logging.h"
+#include "../AudioBuffer.h"
+#include "../AudioSource.h"
+#include "../AudioContext.h"
 
 namespace libtas {
 
@@ -33,6 +34,66 @@ ALenum alGetError(ALvoid)
     ALenum err = alError;
     alError = AL_NO_ERROR;
     return err;
+}
+
+ALboolean alIsExtensionPresent(const ALchar *extname)
+{
+    debuglog(LCF_OPENAL, __func__, " call with extname ", extname);
+
+    if (strcmp(extname, ALC_EXT_EFX_NAME) == 0) {
+        return AL_TRUE;
+    }
+
+    return AL_FALSE;
+}
+
+/* Little helper macro */
+#define CHECK_RETURN_MY_FUNCTION(name) \
+    if (strcmp(fname, #name) == 0) { \
+        return reinterpret_cast<void*>(my##name); \
+    }
+
+void* alGetProcAddress(const ALchar *fname)
+{
+    debuglog(LCF_OPENAL, __func__, " call with name ", fname);
+
+    CHECK_RETURN_MY_FUNCTION(alGenEffects)
+    CHECK_RETURN_MY_FUNCTION(alDeleteEffects)
+    CHECK_RETURN_MY_FUNCTION(alIsEffect)
+    CHECK_RETURN_MY_FUNCTION(alEffecti)
+    CHECK_RETURN_MY_FUNCTION(alEffectiv)
+    CHECK_RETURN_MY_FUNCTION(alEffectf)
+    CHECK_RETURN_MY_FUNCTION(alEffectfv)
+    CHECK_RETURN_MY_FUNCTION(alGetEffecti)
+    CHECK_RETURN_MY_FUNCTION(alGetEffectiv)
+    CHECK_RETURN_MY_FUNCTION(alGetEffectf)
+    CHECK_RETURN_MY_FUNCTION(alGetEffectfv)
+
+    CHECK_RETURN_MY_FUNCTION(alGenFilters)
+    CHECK_RETURN_MY_FUNCTION(alDeleteFilters)
+    CHECK_RETURN_MY_FUNCTION(alIsFilter)
+    CHECK_RETURN_MY_FUNCTION(alFilteri)
+    CHECK_RETURN_MY_FUNCTION(alFilteriv)
+    CHECK_RETURN_MY_FUNCTION(alFilterf)
+    CHECK_RETURN_MY_FUNCTION(alFilterfv)
+    CHECK_RETURN_MY_FUNCTION(alGetFilteri)
+    CHECK_RETURN_MY_FUNCTION(alGetFilteriv)
+    CHECK_RETURN_MY_FUNCTION(alGetFilterf)
+    CHECK_RETURN_MY_FUNCTION(alGetFilterfv)
+
+    CHECK_RETURN_MY_FUNCTION(alGenAuxiliaryEffectSlots)
+    CHECK_RETURN_MY_FUNCTION(alDeleteAuxiliaryEffectSlots)
+    CHECK_RETURN_MY_FUNCTION(alIsAuxiliaryEffectSlot)
+    CHECK_RETURN_MY_FUNCTION(alAuxiliaryEffectSloti)
+    CHECK_RETURN_MY_FUNCTION(alAuxiliaryEffectSlotiv)
+    CHECK_RETURN_MY_FUNCTION(alAuxiliaryEffectSlotf)
+    CHECK_RETURN_MY_FUNCTION(alAuxiliaryEffectSlotfv)
+    CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSloti)
+    CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotiv)
+    CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotf)
+    CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotfv)
+
+    return nullptr;
 }
 
 void alGenBuffers(ALsizei n, ALuint *buffers)
@@ -355,6 +416,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         case AL_CONE_INNER_ANGLE:
         case AL_CONE_OUTER_ANGLE:
         case AL_REFERENCE_DISTANCE:
+        case AL_AUXILIARY_SEND_FILTER:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_SEC_OFFSET:
@@ -384,6 +446,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             }
             break;
         default:
+            debuglog(LCF_OPENAL, "  Unknown param ", param);
             ALSETERROR(AL_INVALID_OPERATION);
             return;
     }
@@ -454,6 +517,10 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         case AL_SOURCE_RELATIVE:
         case AL_CONE_INNER_ANGLE:
         case AL_CONE_OUTER_ANGLE:
+        case AL_DIRECT_FILTER:
+        case AL_DIRECT_FILTER_GAINHF_AUTO:
+        case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
+        case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_SEC_OFFSET:
@@ -483,6 +550,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             }
             break;
         default:
+            debuglog(LCF_OPENAL, "  Unknown param ", param);
             ALSETERROR(AL_INVALID_OPERATION);
             return;
     }
@@ -491,6 +559,11 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+    switch(param) {
+        case AL_AUXILIARY_SEND_FILTER:
+            debuglog(LCF_OPENAL, "Operation not supported");
+            return;
+    }
     debuglog(LCF_OPENAL, "Operation not supported");
 }
 
@@ -532,6 +605,9 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         case AL_CONE_INNER_ANGLE:
         case AL_CONE_OUTER_ANGLE:
         case AL_REFERENCE_DISTANCE:
+        case AL_AIR_ABSORPTION_FACTOR:
+        case AL_ROOM_ROLLOFF_FACTOR:
+        case AL_CONE_OUTER_GAINHF:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_SEC_OFFSET:
@@ -559,6 +635,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             }
             break;
         default:
+            debuglog(LCF_OPENAL, "  Unknown param ", param);
             ALSETERROR(AL_INVALID_OPERATION);
             return;
     }
@@ -640,6 +717,9 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             }
             break;
         case AL_SOURCE_RELATIVE:
+        case AL_DIRECT_FILTER_GAINHF_AUTO:
+        case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
+        case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_BUFFERS_QUEUED:
@@ -680,6 +760,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             }
             break;
         default:
+            debuglog(LCF_OPENAL, "  Unknown param ", param);
             ALSETERROR(AL_INVALID_OPERATION);
             return;
     }
@@ -895,8 +976,8 @@ void alGetListenerf(ALenum param, ALfloat *value)
 {
     DEBUGLOGCALL(LCF_OPENAL);
     if (param == AL_GAIN) {
-        if (*value < 0) {
-            ALSETERROR(AL_INVALID_VALUE);
+        if (!value) {
+            // ALSETERROR(AL_INVALID_VALUE);
             return;
         }
         *value = audiocontext.outVolume;
