@@ -259,12 +259,28 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
     }
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    auto ab = audiocontext.getBuffer(buffer);
+    if (ab == nullptr) {
+        ALSETERROR(AL_INVALID_NAME);
+        return;
+    }
+
     switch(pname) {
         case AL_FREQUENCY:
+            *values = ab->frequency;
+            debuglog(LCF_OPENAL, "  Get frequency of ", *values);
+            return;
         case AL_BITS:
+            *values = ab->bitDepth;
+            debuglog(LCF_OPENAL, "  Get bit depth of ", *values);
+            return;
         case AL_CHANNELS:
+            *values = ab->nbChannels;
+            debuglog(LCF_OPENAL, "  Get channel number of ", *values);
+            return;
         case AL_SIZE:
-            alGetBufferi(buffer, pname, values);
+            *values = ab->size;
+            debuglog(LCF_OPENAL, "  Get size of ", *values);
             return;
         default:
             ALSETERROR(AL_INVALID_VALUE);
@@ -399,7 +415,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         return;
     }
 
-    std::shared_ptr<AudioBuffer> bindab;
+    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_LOOPING:
             debuglog(LCF_OPENAL, "  Set looping of ", value);
@@ -424,13 +440,13 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 debuglog(LCF_OPENAL, "  Unbind buffer");
             }
             else {
-                bindab = audiocontext.getBuffer(value);
-                if (!bindab) {
+                ab = audiocontext.getBuffer(value);
+                if (!ab) {
                     ALSETERROR(AL_INVALID_VALUE);
                     return;
                 }
                 as->init();
-                as->buffer_queue.push_back(bindab);
+                as->buffer_queue.push_back(ab);
                 as->source = AudioSource::SOURCE_STATIC;
                 debuglog(LCF_OPENAL, "  Bind to buffer ", value);
             }
@@ -441,9 +457,30 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             debuglog(LCF_OPENAL, "Operation not supported");
             break;
         case AL_SEC_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                debuglog(LCF_OPENAL, "  Set position of ", value, " seconds");
+                value *= static_cast<ALint>(ab->frequency);
+                as->setPosition(static_cast<int>(value));
+            }
+            break;
         case AL_SAMPLE_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            debuglog(LCF_OPENAL, "  Set position of ", value, " samples");
+            as->setPosition(static_cast<int>(value));
+            break;
         case AL_BYTE_OFFSET:
-            alSourcef(source, param, (ALfloat)value);
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                value /= static_cast<ALint>(ab->alignSize);
+                debuglog(LCF_OPENAL, "  Set position of ", value, " bytes");
+                as->setPosition(static_cast<int>(value));
+            }
             break;
         default:
             ALSETERROR(AL_INVALID_OPERATION);
@@ -503,9 +540,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
              */
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
-                ALfloat pos = (ALfloat) as->getPosition();
-                pos /= (ALfloat) ab->frequency;
-                *value = pos;
+                *value = static_cast<ALfloat>(as->getPosition()) / ab->frequency;
                 debuglog(LCF_OPENAL, "  Get position of ", *value, " seconds");
             }
             break;
@@ -519,9 +554,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
              */
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
-                ALfloat pos = (ALfloat) as->getPosition();
-                pos *= (ALfloat) ab->alignSize;
-                *value = pos;
+                *value = static_cast<ALfloat>(as->getPosition()) * ab->alignSize;
                 debuglog(LCF_OPENAL, "  Get position of ", *value, " bytes");
             }
             break;
@@ -558,6 +591,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         return;
     }
 
+    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_BUFFER:
             if (! as->buffer_queue.empty())
@@ -622,11 +656,28 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             debuglog(LCF_OPENAL, "  Get number of processed queued buffers of ", *value);
             break;
         case AL_SEC_OFFSET:
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                *value = as->getPosition() / ab->frequency;
+                debuglog(LCF_OPENAL, "  Get position of ", *value, " seconds");
+            }
+            break;
         case AL_SAMPLE_OFFSET:
+            *value = static_cast<ALint>(as->getPosition());
+            debuglog(LCF_OPENAL, "  Get position of ", *value, " samples");
+            break;
         case AL_BYTE_OFFSET:
-            ALfloat res;
-            alGetSourcef(source, param, &res);
-            *value = (ALint) res;
+            /* We fetch the buffer format of the source.
+             * Normally, all buffers from a queue share the exact same format.
+             */
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                *value = as->getPosition() * ab->alignSize;
+                debuglog(LCF_OPENAL, "  Get position of ", *value, " bytes");
+            }
             break;
         default:
             ALSETERROR(AL_INVALID_OPERATION);
