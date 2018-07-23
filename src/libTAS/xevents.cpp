@@ -32,22 +32,28 @@ DEFINE_ORIG_POINTER(XMaskEvent);
 DEFINE_ORIG_POINTER(XCheckMaskEvent);
 DEFINE_ORIG_POINTER(XCheckTypedEvent);
 DEFINE_ORIG_POINTER(XCheckTypedWindowEvent);
+DEFINE_ORIG_POINTER(XEventsQueued);
 DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
 
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
-    if (event->xkey.send_event) {
-        return False;
-    }
     switch (event->type) {
         case KeyPress:
         case KeyRelease:
         case ButtonPress:
         case ButtonRelease:
         case MotionNotify:
+            if (event->xkey.send_event) {
+                return False;
+            }
         case FocusIn:
         case FocusOut:
+        case Expose:
+        case ConfigureNotify:
+        case EnterNotify:
+        case LeaveNotify:
+        case ReparentNotify:
             return True;
         default:
             return False;
@@ -78,10 +84,6 @@ static void catchCloseEvent(Display *display, XEvent *event)
 int XNextEvent(Display *display, XEvent *event_return)
 {
     LINK_NAMESPACE_GLOBAL(XNextEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XNextEvent(display, event_return);
-    }
-
     DEBUGLOGCALL(LCF_EVENTS);
     filterEventQueue(display);
     int ret = orig::XNextEvent(display, event_return);
@@ -185,14 +187,20 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
     return ret;
 }
 
+int XEventsQueued(Display* display, int mode)
+{
+    LINK_NAMESPACE_GLOBAL(XEventsQueued);
+    DEBUGLOGCALL(LCF_EVENTS);
+    filterEventQueue(display);
+
+    int ret = orig::XEventsQueued(display, mode);
+    debuglog(LCF_EVENTS, "    returns ", ret);
+    return ret;
+}
 
 int XPending(Display *display)
 {
     LINK_NAMESPACE_GLOBAL(XPending);
-    if (GlobalState::isOwnCode()) {
-        return orig::XPending(display);
-    }
-
     DEBUGLOGCALL(LCF_EVENTS);
     filterEventQueue(display);
 

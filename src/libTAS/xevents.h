@@ -34,6 +34,7 @@ OVERRIDE int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 OVERRIDE Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return);
 OVERRIDE Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return);
 OVERRIDE Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *event_return);
+OVERRIDE int XEventsQueued(Display* display, int mode);
 OVERRIDE int XPending(Display *display);
 OVERRIDE Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
 

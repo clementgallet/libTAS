@@ -359,6 +359,11 @@ bool filterSDL2Event(SDL_Event *event)
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_FOCUS_GAINED:
                 case SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL_WINDOWEVENT_SHOWN:
+                case SDL_WINDOWEVENT_EXPOSED:
+                case SDL_WINDOWEVENT_ENTER:
+                case SDL_WINDOWEVENT_LEAVE:
+                case SDL_WINDOWEVENT_TAKE_FOCUS:
                     return true;
                 default:
                     return false;
