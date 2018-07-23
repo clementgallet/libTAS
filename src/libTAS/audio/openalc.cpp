@@ -18,6 +18,7 @@
  */
 
 #include "openalc.h"
+#include "AudioContext.h"
 #include "../logging.h"
 #include <iostream>
 
@@ -59,6 +60,12 @@ static ALCenum alcError = ALC_NO_ERROR;
         debuglog(LCF_OPENAL | LCF_TODO, "We don't support multiple openAL contexts yet");
         return NULL;
     }
+    if (attrlist) {
+        for (int attr = 0; attrlist[attr] != 0; attr+=2) {
+            debuglog(LCF_OPENAL, "Attribute ", attrlist[attr], " is ", attrlist[attr+1]);
+        }
+    }
+
     dummyContext = 0;
     return &dummyContext;
 }
@@ -152,6 +159,23 @@ static ALCenum alcError = ALC_NO_ERROR;
     }
 
     debuglog(LCF_OPENAL | LCF_ERROR, "Requesting function ", funcname);
+
+    if (strcmp(funcname, "alcSetThreadContext") == 0) {
+        return reinterpret_cast<void*>(myalcSetThreadContext);
+    }
+    if (strcmp(funcname, "alcGetThreadContext") == 0) {
+        return reinterpret_cast<void*>(myalcGetThreadContext);
+    }
+    if (strcmp(funcname, "alcLoopbackOpenDeviceSOFT") == 0) {
+        return reinterpret_cast<void*>(myalcLoopbackOpenDeviceSOFT);
+    }
+    if (strcmp(funcname, "alcIsRenderFormatSupportedSOFT") == 0) {
+        return reinterpret_cast<void*>(myalcIsRenderFormatSupportedSOFT);
+    }
+    if (strcmp(funcname, "alcRenderSamplesSOFT") == 0) {
+        return reinterpret_cast<void*>(myalcRenderSamplesSOFT);
+    }
+
     return NULL;
 }
 
@@ -290,6 +314,42 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
             values[0] = 0;
             return;
     }
+}
+
+ALCboolean myalcSetThreadContext(ALCcontext *context)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    return ALC_TRUE;
+}
+
+ALCcontext* myalcGetThreadContext(void)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    if (currentContext == -1)
+        return nullptr;
+    else
+        return &dummyContext;
+}
+
+ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO | LCF_UNTESTED);
+    game_info.audio |= GameInfo::OPENAL;
+    game_info.tosend = true;
+    return &dummyDevice;
+}
+
+ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type)
+{
+    debuglog(LCF_OPENAL | LCF_TODO | LCF_UNTESTED, __func__, " call with freq ", freq, ", channels ", channels, " and type ", type);
+    return ALC_TRUE;
+}
+
+void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO | LCF_UNTESTED);
+    audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
+    memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
 }
 
 }

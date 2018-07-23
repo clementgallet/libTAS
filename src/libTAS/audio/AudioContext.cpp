@@ -44,6 +44,25 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
     return static_cast<int>(bytes);
 }
 
+/* Helper function to convert a number of samples in the audio buffer into ticks */
+static struct timespec samplesToTicks(int nbSamples, int frequency)
+{
+    static int64_t nsec_frac = 0;
+    uint64_t nsecs = (static_cast<uint64_t>(nbSamples) * 1000000000) / frequency;
+
+    struct timespec ticks;
+    ticks.tv_sec = nsecs / 1000000000;
+    ticks.tv_nsec = nsecs % 1000000000;
+
+    nsec_frac += (static_cast<uint64_t>(nbSamples) * 1000000000) % frequency;
+    if (nsec_frac > frequency) {
+        nsec_frac -= frequency;
+        ticks.tv_nsec++;
+    }
+    return ticks;
+}
+
+
 AudioContext::AudioContext(void)
 {
     outVolume = 1.0f;
@@ -56,6 +75,7 @@ void AudioContext::init(void)
     outNbChannels = shared_config.audio_channels;
     outFrequency = shared_config.audio_frequency;
     outAlignSize = outNbChannels * outBitDepth / 8;
+    isLoopback = false;
 }
 
 int AudioContext::createBuffer(void)
@@ -168,6 +188,12 @@ std::shared_ptr<AudioSource> AudioContext::getSource(int id)
     return nullptr;
 }
 
+void AudioContext::mixAllSources(int nbSamples)
+{
+    return mixAllSources(samplesToTicks(nbSamples, outFrequency));
+}
+
+
 void AudioContext::mixAllSources(struct timespec ticks)
 {
     /* Check that ticks is positive! */
@@ -194,7 +220,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     }
 
 #ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-    if (!shared_config.audio_mute) {
+    if (!audiocontext.isLoopback && !shared_config.audio_mute) {
         /* Play the music */
         AudioPlayer::play(*this);
     }

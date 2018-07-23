@@ -66,6 +66,9 @@ class AudioContext
         /* Size of the mixed buffer in bytes */
         int outBytes;
 
+        /* Is the context a loop-back device ?*/
+        bool isLoopback;
+
         /* Init parameters from the config */
         void init(void);
 
@@ -95,6 +98,7 @@ class AudioContext
 
         /* Mix all source that are playing */
         void mixAllSources(struct timespec ticks);
+        void mixAllSources(int nbSamples);
 
         /* Mutex to protect access to all audio objects */
         std::mutex mutex;

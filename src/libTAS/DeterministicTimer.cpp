@@ -219,12 +219,10 @@ void DeterministicTimer::enterFrameBoundary()
         addedDelay -= timeIncrement;
     }
 
-    /* Doing the audio mixing here */
-    /* TODO: We advance audio by timeIncrement ticks, but our timer may have
-     * advance by more than that because of sleep or time hack. Is this a
-     * problem?
-     */
-    audiocontext.mixAllSources(timeIncrement);
+    /* Doing the audio mixing here, except if the game opened a loopback context */
+    if (! audiocontext.isLoopback) {
+        audiocontext.mixAllSources(timeIncrement);
+    }
 
     /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
 

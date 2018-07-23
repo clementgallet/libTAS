@@ -193,6 +193,35 @@ OVERRIDE ALCenum    alcGetEnumValue(ALCdevice *device, const ALCchar *enumname);
 OVERRIDE const ALCchar* alcGetString(ALCdevice *device, ALCenum param);
 OVERRIDE void           alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values);
 
+/** Extensions **/
+OVERRIDE ALCboolean  myalcSetThreadContext(ALCcontext *context);
+OVERRIDE ALCcontext* myalcGetThreadContext(void);
+
+#define AL_DIRECT_CHANNELS_SOFT                  0x1033
+#define ALC_FORMAT_CHANNELS_SOFT                 0x1990
+#define ALC_FORMAT_TYPE_SOFT                     0x1991
+
+/* Sample types */
+#define ALC_BYTE_SOFT                            0x1400
+#define ALC_UNSIGNED_BYTE_SOFT                   0x1401
+#define ALC_SHORT_SOFT                           0x1402
+#define ALC_UNSIGNED_SHORT_SOFT                  0x1403
+#define ALC_INT_SOFT                             0x1404
+#define ALC_UNSIGNED_INT_SOFT                    0x1405
+#define ALC_FLOAT_SOFT                           0x1406
+
+/* Channel configurations */
+#define ALC_MONO_SOFT                            0x1500
+#define ALC_STEREO_SOFT                          0x1501
+#define ALC_QUAD_SOFT                            0x1503
+#define ALC_5POINT1_SOFT                         0x1504
+#define ALC_6POINT1_SOFT                         0x1505
+#define ALC_7POINT1_SOFT                         0x1506
+
+OVERRIDE ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName);
+OVERRIDE ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type);
+OVERRIDE void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples);
+
 }
 
 #endif

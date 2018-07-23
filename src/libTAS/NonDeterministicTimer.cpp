@@ -97,8 +97,10 @@ void NonDeterministicTimer::enterFrameBoundary()
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
 
     /* Doing the audio mixing here */
-    TimeHolder elapsedTicks = ticks - lastEnterTicks;
-    audiocontext.mixAllSources(elapsedTicks);
+    if (! audiocontext.isLoopback) {
+        TimeHolder elapsedTicks = ticks - lastEnterTicks;
+        audiocontext.mixAllSources(elapsedTicks);
+    }
 
     lastEnterTicks = ticks;
 }
