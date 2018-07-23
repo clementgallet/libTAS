@@ -44,7 +44,7 @@ static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
         case ButtonPress:
         case ButtonRelease:
         case MotionNotify:
-            if (event->xkey.send_event) {
+            if (event->xany.send_event == True) {
                 return False;
             }
         case FocusIn:
@@ -54,6 +54,7 @@ static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
         case EnterNotify:
         case LeaveNotify:
         case ReparentNotify:
+        case GenericEvent:
             return True;
         default:
             return False;
