@@ -38,18 +38,29 @@ int get_sdlversion(void)
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
 
-    LINK_NAMESPACE_SDL2(SDL_GetVersion);
+    LINK_NAMESPACE(SDL_GetVersion, "libSDL");
 
     if (orig::SDL_GetVersion) {
         orig::SDL_GetVersion(&ver);
     }
     else {
-        LINK_NAMESPACE_SDL1(SDL_Linked_Version);
+        LINK_NAMESPACE(SDL_Linked_Version, "libSDL");
 
         if (orig::SDL_Linked_Version) {
             SDL_version *verp;
             verp = orig::SDL_Linked_Version();
             ver = *verp;
+        }
+        else {
+            /* No SDL lib was found among libraries opened by the game.
+             * As a fallback, we link to our SDL2 library.
+             */
+            LINK_NAMESPACE_SDL2(SDL_GetVersion);
+
+            if (orig::SDL_GetVersion) {
+                orig::SDL_GetVersion(&ver);
+            }
+
         }
     }
 
