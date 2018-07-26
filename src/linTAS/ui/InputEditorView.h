@@ -44,7 +44,9 @@ public slots:
 
     void mainMenu(QPoint pos);
     void insertInput();
+    void insertInputs();
     void deleteInput();
+    void truncateInputs();
     void clearInput();
 
 protected:

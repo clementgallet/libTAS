@@ -65,7 +65,9 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
 
     menu = new QMenu(this);
     menu->addAction(tr("Insert"), this, &InputEditorView::insertInput);
+    menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
     menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput);
+    menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
     menu->addAction(tr("Clear"), this, &InputEditorView::clearInput);
 
     keyDialog = new KeyPressedDialog(this);
@@ -194,6 +196,22 @@ void InputEditorView::insertInput()
     inputEditorModel->insertRows(index.row(), 1);
 }
 
+void InputEditorView::insertInputs()
+{
+    const QModelIndex index = selectionModel()->currentIndex();
+
+    /* If no row was selected, return */
+    if (!index.isValid())
+        return;
+
+    bool ok;
+    int nbFrames = QInputDialog::getInt(this, tr("Insert frames"), tr("Number of frames to insert: "), 1, 0, 100000, 1, &ok);
+
+    if (ok) {
+        inputEditorModel->insertRows(index.row(), nbFrames);
+    }
+}
+
 void InputEditorView::deleteInput()
 {
     if (!selectionModel()->hasSelection())
@@ -209,6 +227,19 @@ void InputEditorView::deleteInput()
         max_row = (index.row()>max_row)?index.row():max_row;
     }
     inputEditorModel->removeRows(min_row, max_row-min_row+1);
+}
+
+void InputEditorView::truncateInputs()
+{
+    const QModelIndex index = selectionModel()->currentIndex();
+
+    /* If no row was selected, return */
+    if (!index.isValid())
+        return;
+
+    int nbRows = inputEditorModel->rowCount();
+
+    inputEditorModel->removeRows(index.row()+1, nbRows-index.row()-1);        
 }
 
 void InputEditorView::clearInput()
