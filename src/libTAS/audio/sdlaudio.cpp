@@ -239,6 +239,8 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    if (!sourceSDL)
+        return;
     if (pause_on == 0)
         sourceSDL->state = AudioSource::SOURCE_PLAYING;
     else
