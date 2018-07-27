@@ -359,6 +359,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     generateMouseMotionEvents();
     generateMouseButtonEvents();
 
+    if ((game_info.keyboard & GameInfo::XEVENTS) || (game_info.mouse & GameInfo::XEVENTS)) {
+        /* Sync Xlib event queue, so that we are sure the input events will be
+         * pulled by the game on the next frame.
+         */
+        XSync(gameDisplay, False);
+    }
+
     /* Decide if we skip drawing the next frame because of fastforward.
      * It is stored in an extern so that we can disable opengl draws.
      */
