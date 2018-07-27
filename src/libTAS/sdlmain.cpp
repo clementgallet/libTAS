@@ -89,6 +89,8 @@ DEFINE_ORIG_POINTER(SDL_Quit);
     if (flags & SDL_INIT_VIDEO) {
         debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
         game_info.video |= sdl_flag;
+        game_info.keyboard = sdl_flag;
+        game_info.mouse = sdl_flag;
     }
 
     if (flags & SDL_INIT_JOYSTICK) {
@@ -106,9 +108,6 @@ DEFINE_ORIG_POINTER(SDL_Quit);
 
     if (flags & SDL_INIT_EVENTS)
         debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
-
-    game_info.keyboard = sdl_flag;
-    game_info.mouse = sdl_flag;
 
     game_info.tosend = true;
 
