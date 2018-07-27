@@ -23,8 +23,7 @@
 
 #include "../logging.h"
 #include "../hook.h"
-#include "stdiowrappers.h"
-#include "posixiowrappers.h"
+#include "SaveFileList.h"
 #include "../GlobalState.h"
 
 namespace libtas {
@@ -43,12 +42,9 @@ int rename (const char *oldf, const char *newf) throw()
     debuglogstdio(LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
 
     /* Check if file is a savefile */
-    if (rename_stdio(oldf, newf)) {
-        return 0;
-    }
-
-    if (rename_posix(oldf, newf)) {
-        return 0;
+    int ret = SaveFileList::renameSaveFile(oldf, newf);
+    if (ret != 1) {
+        return ret;
     }
 
     return orig::rename(oldf, newf);
@@ -65,12 +61,9 @@ int remove (const char *filename) throw()
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, filename?filename:"<NULL>");
 
     /* Check if file is a savefile */
-    if (remove_stdio(filename)) {
-        return 0;
-    }
-
-    if (remove_posix(filename)) {
-        return 0;
+    int ret = SaveFileList::removeSaveFile(filename);
+    if (ret != 1) {
+        return ret;
     }
 
     return orig::remove(filename);
@@ -87,12 +80,9 @@ int unlink (const char *name) throw()
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, name?name:"<NULL>");
 
     /* Check if file is a savefile */
-    if (remove_stdio(name)) {
-        return 0;
-    }
-
-    if (remove_posix(name)) {
-        return 0;
+    int ret = SaveFileList::removeSaveFile(name);
+    if (ret != 1) {
+        return ret;
     }
 
     return orig::unlink(name);

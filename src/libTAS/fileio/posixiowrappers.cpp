@@ -23,165 +23,16 @@
 
 #include "../logging.h"
 #include "../hook.h"
-#include "detectsavefiles.h"
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <fcntl.h>
-#include <map>
-#include <string>
-#include <sys/stat.h>
-#include <errno.h>
+#include "SaveFileList.h"
 #include "../GlobalState.h"
 #include "../inputs/jsdev.h"
 #include "../inputs/evdev.h"
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <errno.h>
+
 namespace libtas {
-
-/*** Helper functions ***/
-
-static std::map<std::string,int> savefile_fds;
-
-/*
- * Create an anonymous file with a copy of the content of the file using
- * memfd_create. Save the file descriptor into a map because we may
- * need it again if the game open the file again in read or write mode.
- * We don't actually close the file if the game ask for it, so we can keep
- * the content of the file in memory, and return the same fd if the game opens
- * the file again.
- */
-static int get_memfd(const char* source, int flags)
-{
-    std::string sstr(source);
-    int fd;
-
-    /* Do we need to overwrite the content of the file ? */
-    bool overwrite = ((flags & O_TRUNC) != 0);
-
-    /*
-     * If we already register the savefile, just return the file descriptor.
-     */
-    if ((savefile_fds.find(sstr) != savefile_fds.end()) && (savefile_fds[sstr] != -1)) {
-        fd = savefile_fds[sstr];
-
-        if (overwrite) {
-            ftruncate(fd, 0);
-        }
-    }
-    else if ((savefile_fds.find(sstr) != savefile_fds.end()) && (flags & O_RDONLY)) {
-        /* File was removed and opened in read-only mode */
-        errno = ENOENT;
-        return -1;
-    }
-    else if ((savefile_fds.find(sstr) != savefile_fds.end())) {
-        /* File was removed and opened in write mode */
-        fd = syscall(SYS_memfd_create, source, 0);
-        savefile_fds[sstr] = fd;
-    }
-    else {
-        /* Create an anonymous file and store its file descriptor using the
-         * recent memfd_create syscall.
-         */
-        fd = syscall(SYS_memfd_create, source, 0);
-        savefile_fds[sstr] = fd;
-
-        if (!overwrite) {
-            /* Append the content of the file to the newly created memfile
-             * if the file exists */
-            GlobalNative gn;
-            struct stat filestat;
-            int rv = stat(source, &filestat);
-
-            if (rv == 0) {
-                /* The file exists, copying the content to the stream */
-                FILE* f = fopen(source, "rb");
-
-                if (f != nullptr) {
-                    char tmp_buf[4096];
-                    size_t s;
-                    do {
-                        s = fread(tmp_buf, 1, 4096, f);
-                        write(fd, tmp_buf, s);
-                    } while(s != 0);
-
-                    fclose(f);
-                }
-            }
-        }
-    }
-
-    /* If in append mode, seek to the end of the stream. If not, seek to the
-     * beginning
-     */
-    if (flags & O_APPEND) {
-        lseek(fd, 0, SEEK_END);
-    }
-    else {
-        lseek(fd, 0, SEEK_SET);
-    }
-
-    return fd;
-}
-
-static bool isSaveFile(const char *file, int oflag)
-{
-    static bool inited = 0;
-    if (!inited) {
-        /*
-         * Normally, we shouldn't have to clear the savefiles set,
-         * as it is clearly during creation. However, games break without
-         * clearing it. I suppose it is because we are using the set
-         * before it had time to initialize, and it seems clearing it
-         * is enough to make it usable.
-         */
-        savefile_fds.clear();
-        inited = 1;
-    }
-
-    /* If the file has already been registered as a savefile, open the duplicate file,
-     * even if the open is read-only.
-     */
-    std::string sstr(file);
-    if (savefile_fds.find(sstr) != savefile_fds.end())
-        return true;
-
-    /* Check if file is writeable */
-    if (!isWriteable(oflag))
-        return false;
-
-    return isSaveFile(file);
-}
-
-bool rename_posix (const char *oldf, const char *newf)
-{
-    std::string oldstr(oldf);
-    if (savefile_fds.find(oldstr) != savefile_fds.end()) {
-        /* The file is a savefile, thus we erase the entry and insert it
-         * again with the new string.
-         */
-        int fd = savefile_fds[oldstr];
-        savefile_fds.erase(oldstr);
-        std::string newstr(newf);
-        savefile_fds[newstr] = fd;
-        return true;
-    }
-    return false;
-}
-
-bool remove_posix (const char *filename)
-{
-    std::string filestr(filename);
-    if (savefile_fds.find(filestr) != savefile_fds.end()) {
-        /* The file is a savefile, thus we close the fd and flag the entry as removed */
-        int fd = savefile_fds[filestr];
-        NATIVECALL(close(fd));
-        savefile_fds[filestr] = -1;
-        return true;
-    }
-    return false;
-}
 
 DEFINE_ORIG_POINTER(open)
 DEFINE_ORIG_POINTER(open64)
@@ -227,9 +78,9 @@ int open (const char *file, int oflag, ...)
         return open_evdev(file, oflag);
     }
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::open(file, oflag, mode);
@@ -266,9 +117,9 @@ int open64 (const char *file, int oflag, ...)
         return open_evdev(file, oflag);
     }
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::open64(file, oflag, mode);
@@ -293,9 +144,9 @@ int openat (int fd, const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::openat(fd, file, oflag, mode);
@@ -320,9 +171,9 @@ int openat64 (int fd, const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::openat64(fd, file, oflag, mode);
@@ -342,9 +193,9 @@ int creat (const char *file, mode_t mode)
      */
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::creat(file, mode);
@@ -361,9 +212,9 @@ int creat64 (const char *file, mode_t mode)
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
-    if (!GlobalState::isOwnCode() && isSaveFile(file, oflag)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return get_memfd(file, oflag);
+        return SaveFileList::openSaveFile(file, oflag);
     }
 
     return orig::creat64(file, mode);
@@ -381,11 +232,9 @@ int close (int fd)
     close_jsdev(fd);
     close_evdev(fd);
 
-    /* We don't close the file if it is an opened savefile */
-    for (auto& savefile_fd : savefile_fds) {
-        if (savefile_fd.second == fd)
-            return 0;
-    }
+    int ret = SaveFileList::closeSaveFile(fd);
+    if (ret != 1)
+        return ret;
 
     return orig::close(fd);
 }
@@ -399,10 +248,15 @@ int access(const char *name, int type) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
 
-    /* Check if savefile. If so, return that file exists */
-    std::string sstr(name);
-    if (savefile_fds.find(sstr) != savefile_fds.end()) {
-        return 0;
+    /* Check for savefile. */
+    if (SaveFileList::getSaveFileFd(name) != 0) {
+        if (SaveFileList::isSaveFileRemoved(name)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            return 0;
+        }
     }
 
     return orig::access(name, type);
@@ -417,12 +271,16 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    /* Check if savefile. If so, return the result of fstat which returns
-     * correct information.
-     */
-    std::string sstr(path);
-    if (savefile_fds.find(sstr) != savefile_fds.end()) {
-        return __fxstat(ver, savefile_fds[sstr], buf);
+    /* Check if savefile. */
+    if (SaveFileList::getSaveFileFd(path) != 0) {
+        if (SaveFileList::isSaveFileRemoved(path)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            return 0;
+        }
     }
 
     return orig::__xstat(ver, path, buf);
@@ -437,12 +295,16 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    /* Check if savefile. If so, return the result of fstat which returns
-     * correct information.
-     */
-    std::string sstr(path);
-    if (savefile_fds.find(sstr) != savefile_fds.end()) {
-        return __fxstat(ver, savefile_fds[sstr], buf);
+    /* Check if savefile. */
+    if (SaveFileList::getSaveFileFd(path) != 0) {
+        if (SaveFileList::isSaveFileRemoved(path)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            return 0;
+        }
     }
 
     return orig::__lxstat(ver, path, buf);

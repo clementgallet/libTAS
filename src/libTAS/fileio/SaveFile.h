@@ -17,16 +17,42 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_DETECTSAVEFILES_H_INCLUDED
-#define LIBTAS_DETECTSAVEFILES_H_INCLUDED
+#ifndef LIBTAS_SAVEFILE_H_INCLUDED
+#define LIBTAS_SAVEFILE_H_INCLUDED
 
 #ifdef LIBTAS_ENABLE_FILEIO_HOOKING
 
+#include <string>
+#include <cstdio> // FILE
+
 namespace libtas {
 
-bool isWriteable(const char *modes);
-bool isWriteable(int oflag);
-bool isSaveFile(const char *file);
+class SaveFile {
+
+public:
+    SaveFile(const char *file);
+    ~SaveFile();
+
+    std::string filename;
+
+    FILE* stream;
+    char* stream_buffer;
+    size_t stream_size;
+
+    int fd;
+
+    bool removed = false;
+
+    /* Open and return a FILE stream of the savefile */
+    FILE* open(const char *modes);
+
+    /* Open and return a file descriptor of the savefile */
+    int open(int flags);
+
+    /* Remove a savefile and return 0 for success and -1 for error (+ errno set) */
+    int remove();
+
+};
 
 }
 

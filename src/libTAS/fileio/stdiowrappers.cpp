@@ -23,163 +23,10 @@
 
 #include "../logging.h"
 #include "../hook.h"
-#include "detectsavefiles.h"
-#include <map>
-#include <string>
-#include <sys/stat.h>
+#include "SaveFileList.h"
 #include "../GlobalState.h"
 
 namespace libtas {
-
-/*** Helper functions ***/
-
-static std::map<std::string,std::pair<char*,size_t>> savefile_buffers;
-
-/*
- * Create a memory stream with a copy of the content of the file using
- * open_memstream. Save the base pointer and size into a map because we may
- * need them again if the game open the file again in read or write mode.
- * If we already opened this file, don't copy the original content of the file
- * but the content of the old memory buffer.
- */
-static FILE* get_memstream(const char* source, const char* modes)
-{
-    std::string sstr(source);
-    FILE* memstream;
-
-    /* Do we need to overwrite the content of the file ? */
-    bool overwrite = (strstr(modes, "w") != nullptr);
-
-    /*
-     * If we already register the savefile, we must copy the content of the
-     * old buffer to the new stream.
-     */
-    if ((savefile_buffers.find(sstr) != savefile_buffers.end()) && (savefile_buffers[sstr].first != nullptr)) {
-
-        /* Open a new memory stream using pointers to the previous memory buffer
-         * and size. Pointers are not updated until fflush or fclose, so we
-         * still have access to the old buffer.
-         */
-        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
-
-        if (!overwrite) {
-            /* Append the content of the old buffer to the stream */
-            fwrite(savefile_buffers[sstr].first, 1, savefile_buffers[sstr].second, memstream);
-        }
-
-        /* Free the old buffer */
-        free(savefile_buffers[sstr].first);
-    }
-    else if ((savefile_buffers.find(sstr) != savefile_buffers.end()) && (strstr(modes, "r") != nullptr)) {
-        /* File was removed and opened in read-only mode */
-        errno = ENOENT;
-        return nullptr;
-    }
-    else if (savefile_buffers.find(sstr) != savefile_buffers.end()) {
-        /* File was removed and opened in write mode */
-        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
-    }
-    else {
-        /* Create an entry in our map */
-        savefile_buffers[sstr].first = 0;
-        savefile_buffers[sstr].second = 0;
-
-        /* Open a new memory stream using pointers to these entries */
-        memstream = open_memstream(&savefile_buffers[sstr].first, &savefile_buffers[sstr].second);
-
-        if (!overwrite) {
-            /* Append the content of the file to the stream if the file exists */
-            struct stat filestat;
-            int rv = stat(source, &filestat);
-
-            if (rv == 0) {
-                /* The file exists, copying the content to the stream */
-                GlobalNative gn;
-
-                FILE* f = fopen(source, "rb");
-
-                if (f != nullptr) {
-                    char tmp_buf[4096];
-                    size_t s;
-                    do {
-                        s = fread(tmp_buf, 1, 4096, f);
-                        fwrite(tmp_buf, 1, s, memstream);
-                    } while(s != 0);
-
-                    fclose(f);
-                }
-            }
-        }
-    }
-
-    /* If not in append mode, seek to the beginning of the stream */
-    if (strstr(modes, "a") == nullptr)
-        fseek(memstream, 0, SEEK_SET);
-
-    return memstream;
-}
-
-/* Specific savefile check for stdio and SDL open functions */
-static bool isSaveFile(const char *file, const char *modes)
-{
-    static bool inited = 0;
-    if (!inited) {
-        /*
-         * Normally, we shouldn't have to clear the savefiles set,
-         * as it is clearly during creation. However, games break without
-         * clearing it. I suppose it is because we are using the set
-         * before it had time to initialize, and it seems clearing it
-         * is enough to make it usable.
-         */
-        savefile_buffers.clear();
-        inited = 1;
-    }
-
-    /* If the file has already been registered as a savefile, open our memory
-     * buffer, even if the open is read-only.
-     */
-    std::string sstr(file);
-    if (savefile_buffers.find(sstr) != savefile_buffers.end())
-        return true;
-
-    /* If the file was not registered, check if the opening is writeable. */
-    if (!isWriteable(modes))
-        return false;
-
-    /* Check the file is regular */
-    return isSaveFile(file);
-}
-
-bool rename_stdio (const char *oldf, const char *newf)
-{
-    std::string oldstr(oldf);
-    if (savefile_buffers.find(oldstr) != savefile_buffers.end()) {
-        /* The file is a savefile, thus we erase the entry and insert it
-         * again with the new string.
-         */
-        std::pair<char*,size_t> value = savefile_buffers[oldstr];
-        savefile_buffers.erase(oldstr);
-        std::string newstr(newf);
-        savefile_buffers[newstr] = value;
-        return true;
-    }
-    return false;
-}
-
-bool remove_stdio (const char *filename)
-{
-    std::string filestr(filename);
-    if (savefile_buffers.find(filestr) != savefile_buffers.end()) {
-        /* The file is a savefile, thus we close the fd and flag the entry as removed */
-        std::pair<char*,size_t> value = savefile_buffers[filestr];
-        free(value.first);
-        value.first = nullptr;
-        value.second = 0;
-        savefile_buffers[filestr] = value;
-        return true;
-    }
-    return false;
-}
 
 DEFINE_ORIG_POINTER(fopen)
 DEFINE_ORIG_POINTER(fopen64)
@@ -203,9 +50,9 @@ FILE *fopen (const char *filename, const char *modes)
 
     FILE* f;
 
-    if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        f = get_memstream(filename, modes);
+        f = SaveFileList::openSaveFile(filename, modes);
     }
     else
         f = orig::fopen(filename, modes);
@@ -227,9 +74,9 @@ FILE *fopen64 (const char *filename, const char *modes)
 
     FILE* f;
 
-    if (!GlobalState::isOwnCode() && isSaveFile(filename, modes)) {
+    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        f = get_memstream(filename, modes);
+        f = SaveFileList::openSaveFile(filename, modes);
     }
     else
         f = orig::fopen64(filename, modes);
@@ -245,6 +92,10 @@ int fclose (FILE *stream)
         return orig::fclose(stream);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    int ret = SaveFileList::closeSaveFile(stream);
+    if (ret != 1)
+        return ret;
 
     int rv = orig::fclose(stream);
 
