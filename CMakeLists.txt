@@ -67,7 +67,7 @@ target_link_libraries (linTAS ${XCB_LIBRARIES})
 # Add X11_XCB library
 find_package(X11_XCB REQUIRED)
 include_directories(${X11_XCB_INCLUDE_DIR})
-target_link_libraries (linTAS ${X11_XCB_LIBRARIES})
+target_link_libraries (TAS ${X11_XCB_LIBRARIES})
 
 # Add X11 library
 find_package(X11 REQUIRED)

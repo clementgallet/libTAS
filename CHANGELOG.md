@@ -1,5 +1,4 @@
-## [Unreleased]
-
+## [1.3.0] - 2018-07-30
 ### Added
 - Analog inputs in input editor, which are also editable
 - Incremental savestates
@@ -9,10 +8,17 @@
 - Add pointers to ram watches
 - Add a pointer scanning window to search for chains of indirection to a specific address
 - Values can be poked into a game address
+- Fast-forward skip modes
+- Insert frames and truncate inputs in input editor
+
+### Changed
+- Some default fonts are chosen in priority for OSD
+- Better savefile handling
 
 ### Fixed
 - Set the repeat attribute in SDL2 key events, fixing keyboard inputs in SWD2
 - Support thread exit with recycled threads
+- Fix frame boundary trigger when game sleeps at startup, may affect sync
 
 ## [1.2.0] - 2018-05-28
 ### Added
