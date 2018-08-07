@@ -129,7 +129,7 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
 
     /* Some formats want stream headers to be separate. */
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-        video_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        video_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     /* Use a preset for h264 */
     if (codec_id == AV_CODEC_ID_H264)
@@ -224,7 +224,7 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     /* Some formats want stream headers to be separate. */
 
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-        audio_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        audio_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     /* Open the codec */
     ret = avcodec_open2(audio_codec_context, NULL, NULL);
@@ -354,7 +354,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
     /* Append input buffer to our delayed buffer */
     delayed_buffer.insert(delayed_buffer.end(), &audiocontext.outSamples[0], &audiocontext.outSamples[audiocontext.outBytes]);
 
-    if (audio_codec_context->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
+    if (audio_codec_context->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
         audio_frame->nb_samples = audiocontext.outNbSamples;
     else {
         audio_frame->nb_samples = audio_codec_context->frame_size;
