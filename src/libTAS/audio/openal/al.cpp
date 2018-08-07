@@ -800,7 +800,6 @@ void alSourcePlay(ALuint source)
 void alSourcePlayv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourcePlay(sources[i]);
 }
@@ -823,7 +822,6 @@ void alSourcePause(ALuint source)
 void alSourcePausev(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourcePause(sources[i]);
 }
@@ -847,7 +845,6 @@ void alSourceStop(ALuint source)
 void alSourceStopv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourceStop(sources[i]);
 }
@@ -871,7 +868,6 @@ void alSourceRewind(ALuint source)
 void alSourceRewindv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++)
         alSourceRewind(sources[i]);
 }
