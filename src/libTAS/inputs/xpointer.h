@@ -82,7 +82,28 @@ OVERRIDE int XUngrabButton(
     Window		/* grab_window */
 );
 
+OVERRIDE int XDefineCursor(
+    Display*        /* display */,
+    Window      /* w */,
+    Cursor      /* cursor */
+);
 
+OVERRIDE int XUndefineCursor(
+    Display*        /* display */,
+    Window      /* w */
+);
+
+OVERRIDE int XWarpPointer(
+    Display*        /* display */,
+    Window      /* src_w */,
+    Window      /* dest_w */,
+    int         /* src_x */,
+    int         /* src_y */,
+    unsigned int    /* src_width */,
+    unsigned int    /* src_height */,
+    int         /* dest_x */,
+    int         /* dest_y */
+);
 
 }
 

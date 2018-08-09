@@ -21,6 +21,7 @@
 #include "../logging.h"
 #include "inputs.h"
 #include "../../shared/AllInputs.h"
+#include "../DeterministicTimer.h"
 
 namespace libtas {
 
@@ -70,6 +71,56 @@ namespace libtas {
     DEBUGLOGCALL(LCF_MOUSE);
     return 0; // Not sure what to return
 }
+
+/* Override */ int XDefineCursor(Display*, Window, Cursor)
+{
+    DEBUGLOGCALL(LCF_MOUSE);
+    return 0; // Not sure what to return
+}
+
+/* Override */ int XUndefineCursor(Display*, Window)
+{
+    DEBUGLOGCALL(LCF_MOUSE);
+    return 0; // Not sure what to return
+}
+
+/* Override */ int XWarpPointer( Display*, Window src_w, Window dest_w,
+    int src_x, int src_y, unsigned int src_width, unsigned int src_height,
+    int dest_x, int dest_y)
+{
+    debuglog(LCF_MOUSE, __func__, " called with dest_w ", dest_w, " and dest_x ", dest_x, " and dest_y ", dest_y);
+
+    /* We have to generate an MotionNotify event. */
+    XEvent event;
+    event.xmotion.type = MotionNotify;
+    event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+    if (dest_w == None) {
+        /* Relative warp */
+        event.xmotion.x = game_ai.pointer_x + dest_x;
+        event.xmotion.y = game_ai.pointer_y + dest_y;
+    }
+    else {
+        /* Absolute warp */
+        event.xmotion.x = dest_x;
+        event.xmotion.y = dest_y;
+    }
+    event.xmotion.x_root = event.xmotion.x;
+    event.xmotion.y_root = event.xmotion.y;
+    event.xmotion.window = gameXWindow;
+
+    struct timespec time = detTimer.getTicks();
+    event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+
+    /* Update the pointer coordinates */
+    game_ai.pointer_x = event.xmotion.x;
+    game_ai.pointer_y = event.xmotion.y;
+
+    return 0; // Not sure what to return
+}
+
 
 
 }
