@@ -26,17 +26,8 @@
 
 namespace libtas {
 
-/* Set of libraries that are loaded by the game,
- * either at startup (link time) or using the dl functions.
- */
+/* Set of libraries that are loaded by the game using dlopen */
 static std::set<std::string> libraries;
-
-// void add_lib(std::string library)
-// {
-//     if (! libraries)
-//         libraries = new std::set<std::string>();
-//     libraries->insert(library);
-// }
 
 std::string find_lib(const char* library)
 {
@@ -53,6 +44,9 @@ DEFINE_ORIG_POINTER(dlsym);
 
 void *dlopen(const char *file, int mode) throw() {
     if (!orig::dlopen) {
+        /* To access the real dlopen function, we use the fact that dlsym
+         * calls internally _dl_sym.
+         */
         orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
     }
 
@@ -71,6 +65,11 @@ void *dlopen(const char *file, int mode) throw() {
 
 void *dlsym(void *handle, const char *name) throw() {
     if (!orig::dlsym) {
+        /* Again, we use the internal `_dl_sym` function to access to the
+         * location of the real `dlsym` function. This may seems weird, and is
+         * also implementation-dependant, but it is simple. `_dl_sym` does not
+         * have error-checking so we only use it here.
+         */
         orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
     }
 

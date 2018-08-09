@@ -61,9 +61,6 @@ namespace libtas {
  * to access to the real dlsym function, and we use that function everything else.
  */
 
-/* Add a library in the above set */
-//void add_lib(std::string library);
-
 /* Locate a library path in the above set from a substring,
  * and returns the first match.
  */

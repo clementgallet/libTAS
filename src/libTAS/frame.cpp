@@ -363,7 +363,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         /* Sync Xlib event queue, so that we are sure the input events will be
          * pulled by the game on the next frame.
          */
-        XSync(gameDisplay, False);
+        if (gameDisplay) {
+            XSync(gameDisplay, False);
+        }
     }
 
     /* Decide if we skip drawing the next frame because of fastforward.
