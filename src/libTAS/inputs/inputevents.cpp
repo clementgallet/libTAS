@@ -519,18 +519,11 @@ void generateControllerEvents(void)
 
 void generateMouseMotionEvents(void)
 {
+    /* Check if we got a change in mouse position */
     if ((ai.pointer_x == old_ai.pointer_x) && (ai.pointer_y == old_ai.pointer_y))
         return;
 
-    /* Check if cursor is out of window. Don't return an event for now */
-    if (ai.pointer_x < 0)
-        return;
-
-    /* We got a change in mouse position */
-
     /* Fill the event structure */
-    /* TODO: Deal if pointer is out of screen */
-
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 

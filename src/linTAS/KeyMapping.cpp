@@ -460,11 +460,5 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
 
         free(pointer_reply);
-
-        /* TODO: Do something with off-screen pointer */
-        // if (!onScreen) {
-        //     ai.pointer_x = -1;
-        //     ai.pointer_y = -1;
-        // }
     }
 }
