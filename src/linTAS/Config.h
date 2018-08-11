@@ -64,7 +64,7 @@ public:
     std::string rundir;
 
     /* Force Mesa software OpenGL driver */
-    bool opengl_soft = false;
+    bool opengl_soft = true;
 
     /* Directory holding our config files */
     std::string configdir;

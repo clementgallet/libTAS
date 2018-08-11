@@ -134,7 +134,7 @@ struct SharedConfig {
     int audio_frequency = 44100;
 
     /* Mute audio */
-    bool audio_mute = false;
+    bool audio_mute = true;
 
 #ifdef LIBTAS_ENABLE_AVDUMPING
     /* Encode config */
@@ -166,7 +166,7 @@ struct SharedConfig {
     bool save_screenpixels = true;
 
     /* Initial system time at game startup */
-    struct timespec initial_time = {0, 0};
+    struct timespec initial_time = {1, 0};
 
     /* Virtual monitor resolution */
     int screen_width = 0;
