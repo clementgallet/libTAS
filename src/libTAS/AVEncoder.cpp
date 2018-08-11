@@ -226,7 +226,7 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
         audio_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     /* Import audio codec options */
-    av_opt_set_from_string(audio_codec_context->priv_data, audio_options, nullptr, " ", " ");
+    av_opt_set_from_string(audio_codec_context->priv_data, audio_options, nullptr, "=", ":");
 
     /* Open the codec */
     ret = avcodec_open2(audio_codec_context, NULL, NULL);
