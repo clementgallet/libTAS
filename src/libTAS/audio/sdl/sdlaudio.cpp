@@ -18,11 +18,11 @@
  */
 
 #include "sdlaudio.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "AudioContext.h"
-#include "AudioSource.h"
-#include "AudioBuffer.h"
+#include "../../logging.h"
+#include "../../hook.h"
+#include "../AudioContext.h"
+#include "../AudioSource.h"
+#include "../AudioBuffer.h"
 #include <cstring> // strncpy
 
 namespace libtas {

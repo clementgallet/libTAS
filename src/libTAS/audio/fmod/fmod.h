@@ -17,37 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pulseaudio_operation.h"
-#include "../../logging.h"
-#include "../../GlobalState.h"
-#include "../../hook.h"
+#ifndef LIBTAS_FMOD_H_INCL
+#define LIBTAS_FMOD_H_INCL
+
+#include "../../global.h"
 
 namespace libtas {
 
-namespace orig {
-    static void (*pa_operation_unref)(pa_operation *o);
-    static pa_operation_state_t (*pa_operation_get_state)(pa_operation *o);
-}
+OVERRIDE int FMOD_System_Create(void **system);
 
-void pa_operation_unref(pa_operation *o)
-{
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_operation_unref, "libpulse.so");
-        return orig::pa_operation_unref(o);
-    }
+OVERRIDE int FMOD_EventSystem_Create(void **eventsystem);
+OVERRIDE int FMOD_EventSystem_GetSystemObject(void *eventsystem, void **system);
+OVERRIDE int _ZN4FMOD11EventSystem15getSystemObjectEPPNS_6SystemE(void *eventsystem, void **system);
 
-    DEBUGLOGCALL(LCF_SOUND);
-}
+OVERRIDE int FMOD_System_SetOutput(void *system, int output);
+OVERRIDE int _ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE(void *system, int output);
 
-pa_operation_state_t pa_operation_get_state(pa_operation *o)
-{
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pa_operation_get_state, "libpulse.so");
-        return orig::pa_operation_get_state(o);
-    }
-
-    DEBUGLOGCALL(LCF_SOUND);
-    return PA_OPERATION_DONE;
-}
 
 }
+
+#endif
