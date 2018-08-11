@@ -81,7 +81,7 @@ class AVEncoder {
         int error;
         AVFrame* video_frame;
         AVFrame* audio_frame;
-        struct SwsContext *toYUVctx = NULL;
+        struct SwsContext *video_pix_fmt_ctx = NULL;
         SwrContext *audio_fmt_ctx = NULL;
         AVOutputFormat *outputFormat = NULL;
         AVFormatContext *formatContext = NULL;

@@ -108,11 +108,30 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
      * If not, taking the default pixel format of the codec
      */
     video_codec_context->pix_fmt = pixfmt;
+
+    /* Reorder channels because codecs seem to accept BGR order and specifically BRG0 */
+    switch (video_codec_context->pix_fmt) {
+        case AV_PIX_FMT_ARGB:
+        case AV_PIX_FMT_RGBA:
+        case AV_PIX_FMT_ABGR:
+        case AV_PIX_FMT_BGRA:
+        case AV_PIX_FMT_RGB24:
+        case AV_PIX_FMT_BGR24:
+        case AV_PIX_FMT_0RGB:
+        case AV_PIX_FMT_RGB0:
+        case AV_PIX_FMT_0BGR:
+            video_codec_context->pix_fmt = AV_PIX_FMT_BGR0;
+            break;
+        default:
+            break;
+    }
+
     if (video_codec_context->codec->pix_fmts) {
         int i;
         for (i = 0; video_codec_context->codec->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
             if (video_codec_context->pix_fmt == video_codec_context->codec->pix_fmts[i]) {
                 /* Our native format is accepted by the codec */
+                debuglog(LCF_DUMP, "Choosen pixel format is ", av_get_pix_fmt_name(video_codec_context->pix_fmt));
                 break;
             }
         }
@@ -254,13 +273,13 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
 
     /* Initialize swscale context for pixel format conversion */
 
-    toYUVctx = sws_getContext(video_frame->width, video_frame->height,
-                              pixfmt,
-                              video_frame->width, video_frame->height,
-                              video_codec_context->pix_fmt,
-                              SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
+    video_pix_fmt_ctx = sws_getContext(video_frame->width, video_frame->height,
+          pixfmt,
+          video_frame->width, video_frame->height,
+          video_codec_context->pix_fmt,
+          SWS_LANCZOS | SWS_ACCURATE_RND, NULL,NULL,NULL);
 
-    ASSERT_RETURN_VOID(toYUVctx, "Could not allocate swscale context");
+    ASSERT_RETURN_VOID(video_pix_fmt_ctx, "Could not allocate swscale context");
 
     /* Initialize audio AVFrame */
 
@@ -334,7 +353,7 @@ int AVEncoder::encodeOneFrame(unsigned long fcounter, bool draw) {
         ScreenCapture::getPixels(orig_plane, orig_stride);
 
         /* Change pixel format to YUV420p and copy it into the AVframe */
-        ret = sws_scale(toYUVctx, orig_plane, orig_stride, 0,
+        ret = sws_scale(video_pix_fmt_ctx, orig_plane, orig_stride, 0,
                     video_frame->height, video_frame->data, video_frame->linesize);
         if (ret != video_frame->height) {
             error_msg = "We could not rescale the video frame";
@@ -483,7 +502,7 @@ AVEncoder::~AVEncoder() {
     avcodec_free_context(&audio_codec_context);
     avio_close(formatContext->pb);
     avformat_free_context(formatContext);
-    sws_freeContext(toYUVctx);
+    sws_freeContext(video_pix_fmt_ctx);
     if (audio_fmt_ctx)
         swr_free(&audio_fmt_ctx);
     // av_freep(&video_frame->data[0]);
