@@ -143,6 +143,9 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     ret = avcodec_parameters_from_context(video_st->codecpar, video_codec_context);
     ASSERT_RETURN_VOID(ret >= 0, "Could not copy the stream parameters");
 
+    /* Copy the framerate for the stream header */
+    video_st->avg_frame_rate = video_codec_context->time_base;
+
     /*** Create audio stream ***/
 
     /* Initialize audio AVCodec */
