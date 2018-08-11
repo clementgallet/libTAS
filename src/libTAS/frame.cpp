@@ -469,6 +469,8 @@ static void receive_messages(std::function<void()> draw)
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET | LCF_FRAME, "File ", AVEncoder::dumpfile);
+                receiveCString(AVEncoder::video_options);
+                receiveCString(AVEncoder::audio_options);
                 break;
 #endif
             case MSGN_ALL_INPUTS:

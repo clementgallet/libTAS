@@ -361,6 +361,8 @@ void GameLoop::initProcessMessages()
     if (context->config.sc.av_dumping) {
         sendMessage(MSGN_DUMP_FILE);
         sendString(context->config.dumpfile);
+        sendString(context->config.videooptions);
+        sendString(context->config.audiooptions);
     }
 
     /* Build and send the base savestate path/index */
@@ -1152,6 +1154,8 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     if (context->config.dumpfile_modified) {
         sendMessage(MSGN_DUMP_FILE);
         sendString(context->config.dumpfile);
+        sendString(context->config.videooptions);
+        sendString(context->config.audiooptions);
         context->config.dumpfile_modified = false;
     }
 

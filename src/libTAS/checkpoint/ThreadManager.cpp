@@ -42,7 +42,6 @@ namespace libtas {
 
 ThreadInfo* ThreadManager::thread_list = nullptr;
 thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
-// bool ThreadManager::inited = false;
 pthread_t ThreadManager::main_pthread_id = 0;
 pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
@@ -66,7 +65,6 @@ void ThreadManager::init()
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR2);
-    // NATIVECALL(sigprocmask(SIG_UNBLOCK, &mask, nullptr));
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 
     sem_init(&semNotifyCkptThread, 0, 0);
@@ -75,7 +73,6 @@ void ThreadManager::init()
     ReservedMemory::init();
 
     setMainThread();
-    // inited = true;
 }
 
 DEFINE_ORIG_POINTER(pthread_self);
@@ -124,13 +121,15 @@ ThreadInfo* ThreadManager::getNewThread()
     for (ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
         if (th->state == ThreadInfo::ST_FREE) {
             thread = th;
-            /* We must change the state so that this thread is not chosed twice */
+            /* We must change the state here so that this thread is not chosen
+             * twice by two different threads.
+             */
             thread->state = ThreadInfo::ST_RECYCLED;
             break;
         }
     }
 
-    /* Try to recycle a thread from the free list */
+    /* No free thread, create a new one */
     if (!thread) {
         thread = new ThreadInfo;
         memset(thread, 0, sizeof(ThreadInfo));

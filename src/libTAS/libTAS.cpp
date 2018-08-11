@@ -76,6 +76,8 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
+                receiveCString(AVEncoder::video_options);
+                receiveCString(AVEncoder::audio_options);
                 break;
 #endif
             case MSGN_BASE_SAVESTATE_PATH:

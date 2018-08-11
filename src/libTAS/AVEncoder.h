@@ -73,6 +73,10 @@ class AVEncoder {
          */
         static char dumpfile[4096];
 
+        /* Video/audio codec options */
+        static char video_options[4096];
+        static char audio_options[4096];
+
     private:
         int error;
         AVFrame* video_frame;

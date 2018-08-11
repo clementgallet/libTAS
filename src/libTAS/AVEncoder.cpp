@@ -131,9 +131,8 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
         video_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    /* Use a preset for h264 */
-    if (codec_id == AV_CODEC_ID_H264)
-        av_opt_set(video_codec_context->priv_data, "preset", "slow", 0);
+    /* Import video codec options */
+    av_opt_set_from_string(video_codec_context->priv_data, video_options, nullptr, "=", ":");
 
     /* Open the codec */
 
@@ -225,6 +224,9 @@ AVEncoder::AVEncoder(SDL_Window* window, unsigned long sf) {
 
     if (formatContext->oformat->flags & AVFMT_GLOBALHEADER)
         audio_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+    /* Import audio codec options */
+    av_opt_set_from_string(audio_codec_context->priv_data, audio_options, nullptr, " ", " ");
 
     /* Open the codec */
     ret = avcodec_open2(audio_codec_context, NULL, NULL);
@@ -487,6 +489,8 @@ AVEncoder::~AVEncoder() {
 }
 
 char AVEncoder::dumpfile[4096] = {0};
+char AVEncoder::video_options[4096] = {0};
+char AVEncoder::audio_options[4096] = {0};
 
 std::unique_ptr<AVEncoder> avencoder;
 

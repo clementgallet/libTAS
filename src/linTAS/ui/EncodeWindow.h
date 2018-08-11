@@ -46,8 +46,10 @@ private:
     QPushButton *browseEncodePath;
     QComboBox *videoChoice;
     QSpinBox *videoBitrate;
+    QLineEdit *videoOptions;
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
+    QLineEdit *audioOptions;
 
 private slots:
     void slotBrowseEncodePath();

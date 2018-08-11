@@ -122,7 +122,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::incrementUninitializedThreadCount();
 
-    /* Creating a new thread and filling some parameters.
+    /* Creating a new or recycled thread, and filling some parameters.
      * The rest (like thread->tid) will be filled by the child thread.
      */
     ThreadInfo* thread = ThreadManager::getNewThread();

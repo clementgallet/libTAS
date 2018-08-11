@@ -57,11 +57,13 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     connect(videoChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotVideoCodec);
     videoBitrate = new QSpinBox();
     videoBitrate->setMaximum(1000000000);
+    videoOptions = new QLineEdit();
 
     audioChoice = new QComboBox();
     connect(audioChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotAudioCodec);
     audioBitrate = new QSpinBox();
     audioBitrate->setMaximum(1000000000);
+    audioOptions = new QLineEdit();
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
     QGridLayout *encodeCodecLayout = new QGridLayout;
@@ -69,14 +71,19 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     encodeCodecLayout->addWidget(videoChoice, 0, 1);
     encodeCodecLayout->addWidget(new QLabel(tr("Video bitrate:")), 0, 3);
     encodeCodecLayout->addWidget(videoBitrate, 0, 4);
-    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec:")), 1, 0);
-    encodeCodecLayout->addWidget(audioChoice, 1, 1);
-    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate:")), 1, 3);
-    encodeCodecLayout->addWidget(audioBitrate, 1, 4);
+    encodeCodecLayout->addWidget(new QLabel(tr("Video codec options:")), 1, 0);
+    encodeCodecLayout->addWidget(videoOptions, 1, 1, 1, 4);
+
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec:")), 2, 0);
+    encodeCodecLayout->addWidget(audioChoice, 2, 1);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate:")), 2, 3);
+    encodeCodecLayout->addWidget(audioBitrate, 2, 4);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec options:")), 3, 0);
+    encodeCodecLayout->addWidget(audioOptions, 3, 1, 1, 4);
+
     encodeCodecLayout->setColumnMinimumWidth(2, 50);
     encodeCodecLayout->setColumnStretch(2, 1);
     codecGroupBox->setLayout(encodeCodecLayout);
-
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -155,6 +162,9 @@ void EncodeWindow::update_config()
     /* Set video bitrate */
     videoBitrate->setValue(context->config.sc.video_bitrate);
 
+    /* Set video options */
+    videoOptions->setText(context->config.videooptions.c_str());
+
     /* Same for audio codec and bitrate */
     for (int c = 0; c < audioChoice->count(); c++) {
         if (static_cast<AVCodecID>(audioChoice->itemData(c).toInt()) == context->config.sc.audio_codec) {
@@ -174,6 +184,9 @@ void EncodeWindow::update_config()
 
     /* Set audio bitrate */
     audioBitrate->setValue(context->config.sc.audio_bitrate);
+
+    /* Set audio options */
+    audioOptions->setText(context->config.audiooptions.c_str());
 }
 
 void EncodeWindow::slotOk()
@@ -185,10 +198,12 @@ void EncodeWindow::slotOk()
     /* Set video codec and bitrate */
     context->config.sc.video_codec = static_cast<AVCodecID>(videoChoice->currentData().toInt());
     context->config.sc.video_bitrate = videoBitrate->value();
+    context->config.videooptions = videoOptions->text().toStdString();
 
     /* Set audio codec and bitrate */
     context->config.sc.audio_codec = static_cast<AVCodecID>(audioChoice->currentData().toInt());
     context->config.sc.audio_bitrate = audioBitrate->value();
+    context->config.audiooptions = audioOptions->text().toStdString();
 
     context->config.sc_modified = true;
 
