@@ -24,6 +24,8 @@
 #include "../AudioSource.h"
 #include "../AudioContext.h"
 
+#include <cstring> // strcmp
+
 namespace libtas {
 
 ALenum alError;

@@ -87,10 +87,18 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
 target_include_directories(TAS PUBLIC ${SDL2_INCLUDE_DIRS})
 
+# Check for ffmpeg
+find_program(FFMPEG ffmpeg)
+if (NOT FFMPEG)
+    message(WARNING "ffmpeg was not found. Encoding won't work")
+endif()
+
 # Sound playback
 option(ENABLE_SOUND "Enable sound playback" ON)
 
 pkg_check_modules(ALSA alsa)
+pkg_check_modules(SWRESAMPLE libswresample)
+
 if (ENABLE_SOUND AND SWRESAMPLE_FOUND AND ALSA_FOUND)
     # Enable sound playback
     message(STATUS "Sound playback is enabled")

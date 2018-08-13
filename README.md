@@ -13,7 +13,7 @@ You can download the latest version of the software in the [Releases](https://gi
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
 * `libx11-6`, `libxcb1`, `libxcb-keysyms1`
-* `libavcodec57`, `libavformat57`, `libavutil55`, `libswscale4`
+* `ffmpeg`
 * `libswresample2`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
 * `libtar0`, `zlib1g`
@@ -33,8 +33,6 @@ If you want to compile it yourself, you will need `cmake`. From the root directo
 
 The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libasound2-dev`
 
-To enable audio and video dumping, you will need `libavcodec-dev`, `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, `libswresample-dev`.
-
 To enable audio playback, you will need `libswresample-dev`
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
@@ -42,7 +40,6 @@ To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconf
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
 
-- `-DENABLE_DUMPING=ON/OFF`: enable/disable video and audio dumping
 - `-DENABLE_SOUND=ON/OFF`: enable/disable audio playback
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
 - `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file opening/closing hooks to handle savefiles

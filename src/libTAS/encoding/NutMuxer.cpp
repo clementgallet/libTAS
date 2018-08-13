@@ -238,7 +238,14 @@ void NutMuxer::writeAudioHeader()
 
 	writeVarU(1, header_packet.data); // stream_id
 	writeVarU(1, header_packet.data); // stream_class = audio
-	writeBytes("\x01\x00\x00\x00", 4, header_packet.data); // fourcc = 01 00 00 00
+	if ((avparams.samplesize / avparams.channels) == 2)
+		writeBytes("PSD\x10", 4, header_packet.data); // fourcc = little-endian signed interleaved 16-bit
+	else if ((avparams.samplesize / avparams.channels) == 1)
+		writeBytes("PUD\x08", 4, header_packet.data); // fourcc = little-endian unsigned interleaved 8-bit
+	else {
+		debuglog(LCF_DUMP | LCF_ERROR, "Unrecognized audio format");
+		writeBytes("\x00\x00\x00\x00", 4, header_packet.data);
+	}
 	writeVarU(1, header_packet.data); // time_base_id = 1
 	writeVarU(8, header_packet.data); // msb_pts_shift
 	writeVarU(avparams.samplerate, header_packet.data); // max_pts_distance
