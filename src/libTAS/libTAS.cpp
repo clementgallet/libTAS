@@ -35,18 +35,24 @@
 #include "encoding/AVEncoder.h"
 #include <unistd.h> // getpid()
 
+extern char**environ;
+
 namespace libtas {
 
 void __attribute__((constructor)) init(void)
 {
+    /* Hacking `environ` to disable LD_PRELOAD for future processes */
+    /* Taken from <https://stackoverflow.com/a/3275799> */
+    for (int i=0; environ[i]; i++) {
+        if ( strstr(environ[i], "LD_PRELOAD=") ) {
+             // printf("hacking out LD_PRELOAD from environ[%d]\n",i);
+             environ[i][0] = 'D';
+        }
+    }
+
     ThreadManager::init();
 
-    bool didConnect = initSocketGame();
-    /* Sometimes the game starts a process that is not a thread, so that this constructor is called again
-     * In this case, we must detect it and do not run this again
-     */
-    if (! didConnect)
-        return;
+    initSocketGame();
 
     /* Send information to the program */
 

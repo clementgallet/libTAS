@@ -55,7 +55,7 @@ AVEncoder::AVEncoder(SDL_Window* window) {
 
     // ASSERT_RETURN_VOID(shared_config.framerate_num > 0, "Not supporting non deterministic timer");
 
-    std::string commandline = "ffmpeg -hide_banner -y -v 56 -f nut -i - ";
+    std::string commandline = "ffmpeg -hide_banner -y -f nut -i - ";
     commandline += ffmpeg_options;
     commandline += " \"";
     commandline += dumpfile;

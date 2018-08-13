@@ -258,13 +258,13 @@ const char* ScreenCapture::getPixelFormat()
     MYASSERT(inited)
 
     if (game_info.video & GameInfo::OPENGL) {
-        return "BGRA";
+        return "RGBA";
     }
 
     if (game_info.video & GameInfo::SDL1) {
         // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
         debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
-        return "BGRA"; // TODO
+        return "RGBA"; // TODO
     }
 
     if (game_info.video & GameInfo::SDL2) {
@@ -296,7 +296,7 @@ const char* ScreenCapture::getPixelFormat()
         }
     }
 
-    return "BGRA";
+    return "RGBA";
 }
 
 int ScreenCapture::getPixels(uint8_t **pixels)
