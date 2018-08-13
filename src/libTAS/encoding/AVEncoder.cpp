@@ -55,13 +55,13 @@ AVEncoder::AVEncoder(SDL_Window* window) {
 
     // ASSERT_RETURN_VOID(shared_config.framerate_num > 0, "Not supporting non deterministic timer");
 
-    std::string commandline = "ffmpeg -y -f nut -i - ";
+    std::string commandline = "ffmpeg -hide_banner -y -v 56 -f nut -i - ";
     commandline += ffmpeg_options;
     commandline += " \"";
     commandline += dumpfile;
     commandline += "\"";
 
-    ffmpeg_pipe = popen(commandline.c_str(), "w");
+    NATIVECALL(ffmpeg_pipe = popen(commandline.c_str(), "w"));
 
     // start_frame = sf;
     // accum_samples = 0;
@@ -108,11 +108,7 @@ int AVEncoder::encodeOneFrame(bool draw) {
 
 AVEncoder::~AVEncoder() {
     nutMuxer->finish();
-
-    /* Shouldn't need this */
-    NATIVECALL(usleep(1000000));
-
-    pclose(ffmpeg_pipe);
+    NATIVECALL(pclose(ffmpeg_pipe));
 }
 
 char AVEncoder::dumpfile[4096] = {0};

@@ -327,8 +327,8 @@ NutMuxer::NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pi
 void NutMuxer::finish()
 {
 	debuglog(LCF_DUMP, "Write nut EOF frames");
-	writeVideoFrame(nullptr, 0);
-	writeAudioFrame(nullptr, 0);
+	// writeVideoFrame(nullptr, 0);
+	// writeAudioFrame(nullptr, 0);
 }
 
 }
