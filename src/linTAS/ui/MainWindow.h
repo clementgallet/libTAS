@@ -58,9 +58,7 @@ public:
     GameLoop *gameLoop;
     Context *context;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
     EncodeWindow* encodeWindow;
-#endif
     InputWindow* inputWindow;
     ExecutableWindow* executableWindow;
     ControllerTabWindow* controllerTabWindow;
@@ -235,9 +233,7 @@ private slots:
     void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
-#ifdef LIBTAS_ENABLE_AVDUMPING
     void slotToggleEncode();
-#endif
     void slotMuteSound(bool checked);
     void slotRenderSoft(bool checked);
     void slotLoggingPrint();

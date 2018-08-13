@@ -20,8 +20,6 @@
 #ifndef LINTAS_ENCODEWINDOW_H_INCLUDED
 #define LINTAS_ENCODEWINDOW_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-
 #include <QDialog>
 #include <QPushButton>
 #include <QLineEdit>
@@ -46,17 +44,14 @@ private:
     QPushButton *browseEncodePath;
     QComboBox *videoChoice;
     QSpinBox *videoBitrate;
-    QLineEdit *videoOptions;
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
-    QLineEdit *audioOptions;
+    QLineEdit *ffmpegOptions;
 
 private slots:
     void slotBrowseEncodePath();
-    void slotVideoCodec(int index);
-    void slotAudioCodec(int index);
+    void slotUpdate();
     void slotOk();
 };
 
-#endif
 #endif

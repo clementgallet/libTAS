@@ -87,23 +87,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
 target_include_directories(TAS PUBLIC ${SDL2_INCLUDE_DIRS})
 
-# AV dumping
-option(ENABLE_DUMPING "Enable AV dumping" ON)
-
-pkg_check_modules(SWRESAMPLE libswresample)
-pkg_check_modules(AVVIDEO libavcodec>=57.48.101 libswscale libavformat libavutil)
-if (ENABLE_DUMPING AND SWRESAMPLE_FOUND AND AVVIDEO_FOUND)
-    # Enable av dumping
-    message(STATUS "AV dumping is enabled")
-    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${AVVIDEO_INCLUDE_DIRS})
-    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${AVVIDEO_LIBRARY_DIRS})
-    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${AVVIDEO_LIBRARIES})
-    target_link_libraries(linTAS ${AVVIDEO_LIBRARIES})
-    add_definitions(-DLIBTAS_ENABLE_AVDUMPING)
-else()
-    message(WARNING "AV dumping is disabled")
-endif()
-
 # Sound playback
 option(ENABLE_SOUND "Enable sound playback" ON)
 

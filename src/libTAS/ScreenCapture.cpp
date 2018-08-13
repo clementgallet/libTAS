@@ -253,20 +253,18 @@ void ScreenCapture::getDimensions(int& w, int& h) {
     h = height;
 }
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
-
-AVPixelFormat ScreenCapture::getPixelFormat()
+const char* ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
     if (game_info.video & GameInfo::OPENGL) {
-        return AV_PIX_FMT_RGBA;
+        return "BGRA";
     }
 
     if (game_info.video & GameInfo::SDL1) {
         // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
         debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
-        return AV_PIX_FMT_RGBA; // TODO
+        return "BGRA"; // TODO
     }
 
     if (game_info.video & GameInfo::SDL2) {
@@ -277,44 +275,31 @@ AVPixelFormat ScreenCapture::getPixelFormat()
         switch (sdlpixfmt) {
             case SDL_PIXELFORMAT_RGBA8888:
                 debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
-                return AV_PIX_FMT_BGRA;
+                return "BGRA";
             case SDL_PIXELFORMAT_BGRA8888:
                 debuglog(LCF_DUMP | LCF_SDL, "  BGRA");
-                return AV_PIX_FMT_RGBA;
+                return "RGBA";
             case SDL_PIXELFORMAT_ARGB8888:
                 debuglog(LCF_DUMP | LCF_SDL, "  ARGB");
-                return AV_PIX_FMT_ABGR;
+                return "ABGR";
             case SDL_PIXELFORMAT_ABGR8888:
                 debuglog(LCF_DUMP | LCF_SDL, "  ABGR");
-                return AV_PIX_FMT_ARGB;
+                return "ARGB";
             case SDL_PIXELFORMAT_RGB24:
                 debuglog(LCF_DUMP | LCF_SDL, "  RGB24");
-                return AV_PIX_FMT_BGR24;
+                return "24BG";
             case SDL_PIXELFORMAT_BGR24:
                 debuglog(LCF_DUMP | LCF_SDL, "  BGR24");
-                return AV_PIX_FMT_RGB24;
-            case SDL_PIXELFORMAT_RGB888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGB888");
-                return AV_PIX_FMT_BGR0;
-            case SDL_PIXELFORMAT_RGBX8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
-                return AV_PIX_FMT_RGB0;
-            case SDL_PIXELFORMAT_BGR888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGBX888");
-                return AV_PIX_FMT_0BGR;
-            case SDL_PIXELFORMAT_BGRX8888:
-                return AV_PIX_FMT_BGR0;
+                return "RAW ";
             default:
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format");
         }
     }
 
-    return AV_PIX_FMT_NONE;
+    return "BGRA";
 }
 
-#endif
-
-int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
+int ScreenCapture::getPixels(uint8_t **pixels)
 {
     if (!inited)
         return 0;
@@ -326,7 +311,7 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        if (orig_plane) {
+        if (pixels) {
 
             /* We need to recover the pixels for encoding */
             orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
@@ -392,12 +377,11 @@ int ScreenCapture::getPixels(const uint8_t* orig_plane[], int orig_stride[])
         }
     }
 
-    if (orig_plane)
-        orig_plane[0] = const_cast<const uint8_t*>(winpixels.data());
-    if (orig_stride)
-        orig_stride[0] = pitch;
+    if (pixels) {
+        *pixels = winpixels.data();
+    }
 
-    return 0;
+    return size;
 }
 
 int ScreenCapture::setPixels(bool same) {

@@ -22,11 +22,6 @@
 
 #include "lcf.h"
 #include <time.h>
-#ifdef LIBTAS_ENABLE_AVDUMPING
-extern "C" {
-#include <libavcodec/avcodec.h> // for AVCodecID struct
-}
-#endif
 
 struct SharedConfig {
     /* Is the game running or on pause */
@@ -136,13 +131,11 @@ struct SharedConfig {
     /* Mute audio */
     bool audio_mute = true;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Encode config */
-    AVCodecID video_codec = AV_CODEC_ID_H264;
-    int video_bitrate = 4000000;
-    AVCodecID audio_codec = AV_CODEC_ID_VORBIS;
-    int audio_bitrate = 128000;
-#endif
+    int video_codec = 0;
+    int video_bitrate = 4000;
+    int audio_codec = 0;
+    int audio_bitrate = 128;
 
     /* An enum indicating which time-getting function query the time */
     enum TimeCallType

@@ -26,7 +26,7 @@
 #include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "DeterministicTimer.h"
-#include "AVEncoder.h"
+#include "encoding/AVEncoder.h"
 #include "sdlwindows.h"
 #include "sdlevents.h"
 #include <iomanip>
@@ -253,7 +253,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     if (!skipping_draw) {
         if (drawFB && shared_config.save_screenpixels) {
-            ScreenCapture::getPixels(nullptr, nullptr);
+            ScreenCapture::getPixels(nullptr);
         }
     }
 
@@ -276,26 +276,25 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     /* Audio mixing is done above, so encode must be called after */
-#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Dumping audio and video */
     if (shared_config.av_dumping) {
 
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
             debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
-            avencoder.reset(new AVEncoder(gameWindow, framecount));
+            avencoder.reset(new AVEncoder(gameWindow));
         }
 
         /* Write the current frame */
-        int enc = avencoder->encodeOneFrame(framecount, drawFB);
-        if (enc < 0) {
-            /* Encode failed, disable AV dumping */
-            avencoder.reset(nullptr);
-            debuglog(LCF_ALERT, "Encoding to ", AVEncoder::dumpfile, " failed because:\n", avencoder->getErrorMsg());
-            RenderHUD::insertMessage("Encoding failed");
-            shared_config.av_dumping = false;
-            sendMessage(MSGB_ENCODE_FAILED);
-        }
+        avencoder->encodeOneFrame(drawFB);
+        // if (enc < 0) {
+        //     /* Encode failed, disable AV dumping */
+        //     avencoder.reset(nullptr);
+        //     debuglog(LCF_ALERT, "Encoding to ", AVEncoder::dumpfile, " failed because:\n", avencoder->getErrorMsg());
+        //     RenderHUD::insertMessage("Encoding failed");
+        //     shared_config.av_dumping = false;
+        //     sendMessage(MSGB_ENCODE_FAILED);
+        // }
     }
     else {
         /* If there is still an encoder object, it means we just stopped
@@ -306,7 +305,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
             avencoder.reset(nullptr);
         }
     }
-#endif
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && !shared_config.osd_encode) {
@@ -464,15 +462,13 @@ static void receive_messages(std::function<void()> draw)
                 receiveData(&shared_config, sizeof(SharedConfig));
                 break;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET | LCF_FRAME, "File ", AVEncoder::dumpfile);
-                receiveCString(AVEncoder::video_options);
-                receiveCString(AVEncoder::audio_options);
+                receiveCString(AVEncoder::ffmpeg_options);
                 break;
-#endif
+
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));
                 break;
@@ -574,7 +570,6 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_STOP_ENCODE:
-#ifdef LIBTAS_ENABLE_AVDUMPING
                 if (avencoder) {
                     debuglog(LCF_DUMP, "Stop AV dumping");
                     avencoder.reset(nullptr);
@@ -583,7 +578,6 @@ static void receive_messages(std::function<void()> draw)
                     /* Update title without changing fps */
                     WindowTitle::update(-1, -1);
                 }
-#endif
                 break;
 
             case MSGN_OSD_MSG:

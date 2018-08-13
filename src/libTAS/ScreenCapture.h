@@ -23,11 +23,6 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <vector>
-#ifdef LIBTAS_ENABLE_AVDUMPING
-extern "C" {
-#include <libavutil/pixfmt.h>
-}
-#endif
 
 namespace libtas {
 
@@ -46,23 +41,14 @@ void reinit(SDL_Window* window);
 
 void getDimensions(int& w, int& h);
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
 
-/* Get the pixel format as an enum used by ffmpeg library. */
-AVPixelFormat getPixelFormat();
+/* Get the pixel format as an string used by nut muxer. */
+const char* getPixelFormat();
 
-#endif
-
-/* Capture the pixels from the screen and copy it to the following structs:
- * @param plane   Array of 4 elements containing a pointer to list of
- *                pixel values for each plane. For non-planar formats
- *                (like RGB/RGBA), all pixels are stored in the first list
- * @param stride  Array of 4 elements containing the size in bytes of a
- *                row of pixels for each plane. For non-planar formats,
- *                the first element contains width * (size of a pixel).
- * @return        0 if successful or -1 if an error occured
+/* Capture the pixels from the screen and copy a pointer to this array into pixels.
+ * Returns the size of the array.
  */
-int getPixels(const uint8_t* orig_plane[], int orig_stride[]);
+int getPixels(uint8_t **pixels);
 
 /* Set the screen pixels from our buffers.
  * @param same  if true, the screen did not change since last call with same==true

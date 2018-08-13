@@ -22,7 +22,7 @@
 #include <algorithm>    // std::copy
 #include "../logging.h"
 #include "../global.h" // shared_config
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
     #include <libavutil/opt.h>
     #include <libavutil/channel_layout.h>
@@ -48,7 +48,7 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 
 AudioSource::AudioSource(void)
 {
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     swr = swr_alloc();
 #endif
 
@@ -70,7 +70,7 @@ void AudioSource::rewind(void)
     position = 0;
     samples_frac = 0;
     queue_index = 0;
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     if (swr_is_initialized(swr))
         swr_close(swr);
 #endif
@@ -141,7 +141,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     if (!skipMixing) {
         /* Check if SWR context is initialized.
          * If not, set parameters and init it
@@ -221,7 +221,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int newPosition = position + inNbSamples;
 
     /* Allocate the mixed audio array */
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     int outNbSamples = outBytes / (outNbChannels * outBitDepth / 8);
     mixedSamples.resize(outBytes);
     uint8_t* begMixed = mixedSamples.data();
@@ -236,7 +236,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
         position = newPosition;
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         if (!skipMixing) {
             convOutSamples = swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
         }
@@ -245,7 +245,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     else {
         /* We reached the end of the buffer */
         debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         if (!skipMixing) {
             if (availableSamples > 0)
                 swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
@@ -267,7 +267,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 callback(*curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                 if (!skipMixing) {
                     swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                 }
@@ -278,7 +278,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 remainingSamples -= availableSamples;
             }
 
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
             if (!skipMixing) {
                 /* Get the mixed samples */
                 convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
@@ -296,7 +296,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     if (!skipMixing) {
                         swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
@@ -313,7 +313,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
                     if (!skipMixing) {
                         swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
@@ -326,7 +326,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 }
             }
 
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
             if (!skipMixing) {
                 /* Get the mixed samples */
                 convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
@@ -348,7 +348,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     }
 
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
     if (!skipMixing) {
         #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 

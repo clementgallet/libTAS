@@ -23,7 +23,7 @@
 #include <vector>
 #include <memory>
 #include "AudioBuffer.h"
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
 #include <libswresample/swresample.h>
 }
@@ -101,7 +101,7 @@ class AudioSource
         /* Indicate the current position in the buffer queue */
         int queue_index;
 
-#if defined(LIBTAS_ENABLE_AVDUMPING) || defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
+#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         /* Context for resampling audio */
         struct SwrContext *swr;
 

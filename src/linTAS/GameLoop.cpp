@@ -361,8 +361,7 @@ void GameLoop::initProcessMessages()
     if (context->config.sc.av_dumping) {
         sendMessage(MSGN_DUMP_FILE);
         sendString(context->config.dumpfile);
-        sendString(context->config.videooptions);
-        sendString(context->config.audiooptions);
+        sendString(context->config.ffmpegoptions);
     }
 
     /* Build and send the base savestate path/index */
@@ -973,7 +972,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
         /* Start or stop a video encode */
         case HOTKEY_TOGGLE_ENCODE:
-#ifdef LIBTAS_ENABLE_AVDUMPING
             if (!context->config.sc.av_dumping) {
 
                 context->config.sc.av_dumping = true;
@@ -991,7 +989,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendMessage(MSGN_STOP_ENCODE);
             }
             emit sharedConfigChanged();
-#endif
             return false;
 
         } /* switch(hk.type) */
@@ -1154,8 +1151,7 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     if (context->config.dumpfile_modified) {
         sendMessage(MSGN_DUMP_FILE);
         sendString(context->config.dumpfile);
-        sendString(context->config.videooptions);
-        sendString(context->config.audiooptions);
+        sendString(context->config.ffmpegoptions);
         context->config.dumpfile_modified = false;
     }
 

@@ -32,7 +32,7 @@
 #include "ScreenCapture.h"
 #include "DeterministicTimer.h"
 #include "WindowTitle.h"
-#include "AVEncoder.h"
+#include "encoding/AVEncoder.h"
 #include "EventQueue.h"
 // #include <string>
 // #include <X11/Xlib.h> // Display
@@ -200,11 +200,9 @@ static int swapInterval = 0;
     if (gameWindow == window)
         gameWindow = NULL;
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
     /* Destroy the AVEncoder object */
     if (avencoder)
         avencoder.reset(nullptr);
-#endif
 
     ScreenCapture::fini();
 }
@@ -306,12 +304,10 @@ static int swapInterval = 0;
     ScreenCapture::reinit(gameWindow);
 
     /* We need to close the dumping if needed, and open a new one */
-#ifdef LIBTAS_ENABLE_AVDUMPING
     if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        avencoder.reset(new AVEncoder(gameWindow, framecount));
+        avencoder.reset(new AVEncoder(gameWindow));
     }
-#endif
 
 }
 

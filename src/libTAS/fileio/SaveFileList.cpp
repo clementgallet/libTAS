@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <vector>
 #include <memory>
+#include <cstring>
 
 namespace libtas {
 

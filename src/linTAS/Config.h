@@ -54,11 +54,8 @@ public:
     /* Absolute path of the dump file */
     std::string dumpfile;
 
-    /* Video codec options */
-    std::string videooptions;
-
-    /* Audio codec options */
-    std::string audiooptions;
+    /* ffmpeg options */
+    std::string ffmpegoptions;
 
     /* Was the dump file modified */
     bool dumpfile_modified;

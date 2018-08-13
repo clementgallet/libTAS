@@ -20,11 +20,6 @@
 #include <QSettings>
 #include "Config.h"
 
-/* We need to register the AVCodecID struct to be able to serialize it */
-#ifdef LIBTAS_ENABLE_AVDUMPING
-Q_DECLARE_METATYPE(AVCodecID)
-#endif
-
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
     size_t sep = gamepath.find_last_of("/");
@@ -99,12 +94,10 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_channels", sc.audio_channels);
     settings.setValue("audio_frequency", sc.audio_frequency);
     settings.setValue("audio_mute", sc.audio_mute);
-#ifdef LIBTAS_ENABLE_AVDUMPING
     settings.setValue("video_codec", sc.video_codec);
     settings.setValue("video_bitrate", sc.video_bitrate);
     settings.setValue("audio_codec", sc.audio_codec);
     settings.setValue("audio_bitrate", sc.audio_bitrate);
-#endif
 
     settings.beginWriteArray("main_gettimes_threshold");
     for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
@@ -200,12 +193,10 @@ void Config::load(const std::string& gamepath) {
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
 
-    #ifdef LIBTAS_ENABLE_AVDUMPING
-    sc.video_codec = settings.value("video_codec", sc.video_codec).value<AVCodecID>();
+    sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();
-    sc.audio_codec = settings.value("audio_codec", sc.audio_codec).value<AVCodecID>();
+    sc.audio_codec = settings.value("audio_codec", sc.audio_codec).toInt();
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
-    #endif
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
     sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
     sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();

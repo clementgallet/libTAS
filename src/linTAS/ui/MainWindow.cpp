@@ -59,9 +59,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::askMovieSaved, this, &MainWindow::alertSave);
 
     /* Create other windows */
-#ifdef LIBTAS_ENABLE_AVDUMPING
     encodeWindow = new EncodeWindow(c, this);
-#endif
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
     controllerTabWindow = new ControllerTabWindow(c, this);
@@ -620,15 +618,8 @@ void MainWindow::createMenus()
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
-#ifdef LIBTAS_ENABLE_AVDUMPING
     configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
-#else
-    configEncodeAction = toolsMenu->addAction(tr("Configure encode... (disabled)"));
-    configEncodeAction->setEnabled(false);
-    toggleEncodeAction = toolsMenu->addAction(tr("Start encode (disabled)"));
-    toggleEncodeAction->setEnabled(false);
-#endif
 
     toolsMenu->addSeparator();
 
@@ -700,13 +691,11 @@ void MainWindow::updateStatus()
             initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
             initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
             if (context->config.sc.av_dumping) {
                 context->config.sc.av_dumping = false;
                 configEncodeAction->setEnabled(true);
                 toggleEncodeAction->setText("Start encode");
             }
-#endif
 
             frameCount->setValue(0);
             currentLength->setText("Current Time: -");
@@ -769,7 +758,6 @@ void MainWindow::updateSharedConfigChanged()
     }
 
     /* Update encode menus */
-#ifdef LIBTAS_ENABLE_AVDUMPING
     if (context->config.sc.av_dumping) {
         configEncodeAction->setEnabled(false);
         toggleEncodeAction->setText("Stop encode");
@@ -778,7 +766,6 @@ void MainWindow::updateSharedConfigChanged()
         configEncodeAction->setEnabled(true);
         toggleEncodeAction->setText("Start encode");
     }
-#endif
 }
 
 void MainWindow::updateFrameCountTime()
@@ -1104,9 +1091,7 @@ void MainWindow::slotBrowseGamePath()
 
     /* Update the UI accordingly */
     updateUIFromConfig();
-#ifdef LIBTAS_ENABLE_AVDUMPING
     encodeWindow->update_config();
-#endif
     executableWindow->update_config();
     inputWindow->update();
     osdWindow->update_config();
@@ -1209,7 +1194,6 @@ void MainWindow::slotMovieRecording()
     context->config.sc_modified = true;
 }
 
-#ifdef LIBTAS_ENABLE_AVDUMPING
 void MainWindow::slotToggleEncode()
 {
     /* Prompt a confirmation message for overwriting an encode file */
@@ -1230,7 +1214,6 @@ void MainWindow::slotToggleEncode()
     context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
 
 }
-#endif
 
 void MainWindow::slotMuteSound(bool checked)
 {

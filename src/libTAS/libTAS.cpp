@@ -32,7 +32,7 @@
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
-#include "AVEncoder.h"
+#include "encoding/AVEncoder.h"
 #include <unistd.h> // getpid()
 
 namespace libtas {
@@ -71,15 +71,12 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_SOCKET, "Receiving config");
                 receiveData(&shared_config, sizeof(SharedConfig));
                 break;
-#ifdef LIBTAS_ENABLE_AVDUMPING
             case MSGN_DUMP_FILE:
                 debuglog(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
                 debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
-                receiveCString(AVEncoder::video_options);
-                receiveCString(AVEncoder::audio_options);
+                receiveCString(AVEncoder::ffmpeg_options);
                 break;
-#endif
             case MSGN_BASE_SAVESTATE_PATH:
                 basesavestatepath = receiveString();
                 Checkpoint::setBaseSavestatePath(basesavestatepath);
