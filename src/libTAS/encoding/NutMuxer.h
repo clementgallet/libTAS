@@ -70,7 +70,7 @@ public:
 
 	class AVParams {
     public:
-		int width, height, samplerate, fpsnum, fpsden, channels;
+		int width, height, samplerate, samplesize, fpsnum, fpsden, channels;
 		const char* pixfmt;
 		void reduce();
 	};
@@ -125,7 +125,7 @@ public:
 
     void writeAudioFrame(const uint8_t* samples, int len);
 
-	NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pixfmt, int samplerate, int channels, FILE *underlying);
+	NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pixfmt, int samplerate, int samplesize, int channels, FILE *underlying);
 
 	void finish();
 

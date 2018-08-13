@@ -287,21 +287,24 @@ void NutMuxer::writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, 
 void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
 {
 	debuglog(LCF_DUMP, "Write nut video frame");
+	debuglog(LCF_DUMP, "Video pts is ", (double)videopts * avparams.fpsden / avparams.fpsnum);
 
 	writeFrame(video, len, videopts, static_cast<uint64_t>(avparams.fpsden), static_cast<uint64_t>(avparams.fpsnum), 0, output);
 	videopts++;
+
 }
 
 void NutMuxer::writeAudioFrame(const uint8_t* samples, int len)
 {
 	debuglog(LCF_DUMP, "Write nut audio frame");
+	debuglog(LCF_DUMP, "Audio pts is ", (double)audiopts / avparams.samplerate);
 
 	writeFrame(samples, len, audiopts, 1, static_cast<uint64_t>(avparams.samplerate), 1, output);
 
-	audiopts += static_cast<uint64_t>(len) / static_cast<uint64_t>(avparams.channels);
+	audiopts += static_cast<uint64_t>(len) / static_cast<uint64_t>(avparams.samplesize);
 }
 
-NutMuxer::NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pixfmt, int samplerate, int channels, FILE *underlying)
+NutMuxer::NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pixfmt, int samplerate, int samplesize, int channels, FILE *underlying)
 {
 	avparams.width = width;
 	avparams.height = height;
@@ -309,6 +312,7 @@ NutMuxer::NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pi
 	avparams.fpsden = fpsden;
 	avparams.reduce(); // timebases in nut MUST be relatively prime
 	avparams.samplerate = samplerate;
+	avparams.samplesize = samplesize;
 	avparams.channels = channels;
 	avparams.pixfmt = pixfmt;
 	output = underlying;

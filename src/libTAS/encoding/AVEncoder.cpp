@@ -72,7 +72,7 @@ AVEncoder::AVEncoder(SDL_Window* window) {
     const char* pixfmt = ScreenCapture::getPixelFormat();
     // ASSERT_RETURN_VOID(pixfmt != AV_PIX_FMT_NONE, "Unable to get pixel format");
 
-    nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outNbChannels, ffmpeg_pipe);
+    nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
 
 }
 
@@ -82,6 +82,11 @@ AVEncoder::AVEncoder(SDL_Window* window) {
  * was encountered.
  */
 int AVEncoder::encodeOneFrame(bool draw) {
+
+    /*** Audio ***/
+    debuglog(LCF_DUMP, "Encode an audio frame");
+
+    nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
 
     /*** Video ***/
     debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
@@ -97,11 +102,6 @@ int AVEncoder::encodeOneFrame(bool draw) {
     }
 
     nutMuxer->writeVideoFrame(pixels, size);
-
-    /*** Audio ***/
-    debuglog(LCF_DUMP, "Encode an audio frame");
-
-    nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
 
     return 0;
 }
