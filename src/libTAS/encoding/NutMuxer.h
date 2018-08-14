@@ -36,7 +36,6 @@ public:
 	static void writeVarU(int v, std::vector<uint8_t> &stream);
 	static void writeVarU(int64_t v, std::vector<uint8_t> &stream);
 	static void writeVarS(int64_t v, std::vector<uint8_t> &stream);
-	static void writeString(const char* s, std::vector<uint8_t> &stream);
 	static void writeBytes(const char* s, int len, std::vector<uint8_t> &stream);
 	static void writeBE64(uint64_t v, std::vector<uint8_t> &stream);
 	static void writeBE32(unsigned int v, std::vector<uint8_t> &stream);

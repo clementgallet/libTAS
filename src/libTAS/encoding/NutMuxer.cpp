@@ -61,11 +61,6 @@ void NutMuxer::writeVarS(int64_t v, std::vector<uint8_t> &stream)
 	writeVarU(temp - 1, stream);
 }
 
-void NutMuxer::writeString(const char* s, std::vector<uint8_t> &stream)
-{
-	NutMuxer::writeBytes(s, strlen(s), stream);
-}
-
 void NutMuxer::writeBytes(const char* s, int len, std::vector<uint8_t> &stream)
 {
 	writeVarU(len, stream);
@@ -135,8 +130,8 @@ void NutMuxer::NutPacket::flush()
 {
 	// first, prep header
 	std::vector<uint8_t> header;
-	writeBE64(static_cast<unsigned long>(startcode), header);
-	writeVarU(data.size() + 4, header); // +4 for checksum
+	writeBE64(static_cast<uint64_t>(startcode), header);
+	writeVarU(static_cast<int>(data.size() + 4), header); // +4 for checksum
 	if (data.size() > 4092)
 	{
 		writeBE32(nutCRC32(header), header);
