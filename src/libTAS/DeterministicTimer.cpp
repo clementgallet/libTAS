@@ -177,6 +177,32 @@ void DeterministicTimer::exitFrameBoundary()
     if(shared_config.framerate_num == 0)
         return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
 
+    /* We sleep the right amount of time so that the game runs at normal speed */
+
+    /* Get the current actual time */
+    TimeHolder currentTime;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
+
+    /* If we are not fast forwarding, and not the first frame,
+     * then we wait the delta amount of time.
+     */
+    if (!(shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
+        TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * shared_config.speed_divisor;
+
+        /* Call the real nanosleep function */
+        NATIVECALL(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &desiredTime, NULL));
+
+        /* We assume that our sleep was perfect, so we save the desired time as our
+         * current time, except if our current time was longer than the desired time.
+         */
+        if (currentTime > desiredTime) {
+            lastEnterTime = currentTime;
+        }
+        else {
+            lastEnterTime = desiredTime;
+        }
+    }
+
     insideFrameBoundary = false;
 }
 
@@ -223,38 +249,6 @@ void DeterministicTimer::enterFrameBoundary()
     if (! audiocontext.isLoopback) {
         audiocontext.mixAllSources(timeIncrement);
     }
-
-    /*** Then, we sleep the right amount of time so that the game runs at normal speed ***/
-
-    TimeHolder currentTime;
-
-    /* If we are not fast forwarding, and not the first frame,
-     * then we wait the delta amount of time.
-     */
-    if (!(shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
-
-        /* Get the current actual time */
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-
-        /* Calculate the target time we wanted to be at now */
-        TimeHolder desiredTime = lastEnterTime + timeIncrement * shared_config.speed_divisor;
-
-        TimeHolder deltaTime = desiredTime - currentTime;
-
-        /* Check that we wait for a positive time */
-        if ((deltaTime.tv_sec > 0) || ((deltaTime.tv_sec == 0) && (deltaTime.tv_nsec >= 0))) {
-            /* Call the real nanosleep function */
-            NATIVECALL(nanosleep(&deltaTime, NULL));
-        }
-    }
-
-    /*
-     * WARNING: This time update is not done in Hourglass,
-     * maybe intentionally (the author does not remember).
-     */
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-
-    lastEnterTime = currentTime;
 }
 
 void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {

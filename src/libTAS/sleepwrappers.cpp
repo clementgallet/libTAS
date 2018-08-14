@@ -30,6 +30,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(nanosleep);
+DEFINE_ORIG_POINTER(clock_nanosleep);
 DEFINE_ORIG_POINTER(select);
 DEFINE_ORIG_POINTER(pselect);
 
@@ -115,6 +116,11 @@ DEFINE_ORIG_POINTER(pselect);
 			    const struct timespec *req,
 			    struct timespec *rem)
 {
+    LINK_NAMESPACE(clock_nanosleep, nullptr);
+    if (GlobalState::isNative()) {
+        return orig::clock_nanosleep(clock_id, flags, req, rem);
+    }
+
     bool mainT = ThreadManager::isMainThread();
     TimeHolder sleeptime;
     sleeptime = *req;
@@ -134,14 +140,14 @@ DEFINE_ORIG_POINTER(pselect);
      * transfer the wait to the timer and
      * do not actually wait
      */
-    LINK_NAMESPACE(nanosleep, nullptr);
-    if (mainT && !GlobalState::isNative()) {
+    if (mainT) {
+
         detTimer.addDelay(sleeptime);
         sched_yield();
         return 0;
     }
 
-    return orig::nanosleep(&sleeptime, rem);
+    return orig::clock_nanosleep(clock_id, flags, req, rem);
 }
 
 /* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
