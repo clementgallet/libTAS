@@ -24,10 +24,6 @@
 
 namespace libtas {
 
-namespace orig {
-    extern void (*SDL_GetVersion)(SDL_version* ver);
-}
-
 /* Returns the major version of the SDL library used in the game */
 int get_sdlversion(void);
 

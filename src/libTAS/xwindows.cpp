@@ -22,7 +22,6 @@
 #include "logging.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
-//#include "../shared/SharedConfig.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
 

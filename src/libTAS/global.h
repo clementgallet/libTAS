@@ -35,11 +35,22 @@
 
 namespace libtas {
 
+    /* Configuration parameters that are shared between the program and the game */
     extern SharedConfig shared_config;
+
+    /* Some informations about the game that are send to the program */
     extern GameInfo game_info;
+
+    /* Indicate if the game is exiting. It helps avoiding some invalid or blocking calls */
     extern volatile bool is_exiting;
+
+    /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
+
+    /* Connection to the Xlib server */
     extern Display* gameDisplay;
+
+    /* Game window (we suppose there is only one) */
     extern Window gameXWindow;
 
 }

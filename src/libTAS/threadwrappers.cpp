@@ -59,12 +59,14 @@ class ThreadExitException: public std::exception {};
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
     debuglog(LCF_THREAD, "SDL Thread ", name, " was created.");
+    LINK_NAMESPACE_SDLX(SDL_CreateThread);
     return orig::SDL_CreateThread(fn, name, data);
 }
 
 /* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
     DEBUGLOGCALL(LCF_THREAD);
+    LINK_NAMESPACE_SDLX(SDL_WaitThread);
     orig::SDL_WaitThread(thread, status);
 }
 
@@ -371,12 +373,6 @@ int sem_trywait (sem_t *sem) throw()
     LINK_NAMESPACE(sem_trywait, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     return orig::sem_trywait(sem);
-}
-
-void link_sdlthreads(void)
-{
-    LINK_NAMESPACE_SDLX(SDL_CreateThread);
-    LINK_NAMESPACE_SDLX(SDL_WaitThread);
 }
 
 }

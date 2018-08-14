@@ -21,10 +21,7 @@
 #define LIBTAS_SDLDISPLAY_H_INCL
 
 #include "global.h"
-// #include "../external/SDL1.h"
 #include <SDL2/SDL.h>
-// #include <string>
-// #include <X11/Xlib.h> // Display
 
 namespace libtas {
 

@@ -287,14 +287,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
         /* Write the current frame */
         avencoder->encodeOneFrame(drawFB);
-        // if (enc < 0) {
-        //     /* Encode failed, disable AV dumping */
-        //     avencoder.reset(nullptr);
-        //     debuglog(LCF_ALERT, "Encoding to ", AVEncoder::dumpfile, " failed because:\n", avencoder->getErrorMsg());
-        //     RenderHUD::insertMessage("Encoding failed");
-        //     shared_config.av_dumping = false;
-        //     sendMessage(MSGB_ENCODE_FAILED);
-        // }
     }
     else {
         /* If there is still an encoder object, it means we just stopped

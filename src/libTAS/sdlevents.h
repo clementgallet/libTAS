@@ -40,9 +40,6 @@ bool filterSDL2Event(SDL_Event *event);
 /* Print which event type is it */
 void logEvent(SDL_Event *event);
 
-/* Link function pointers to real SDL functions */
-void link_sdlevents(void);
-
 OVERRIDE void SDL_PumpEvents(void);
 
 /**

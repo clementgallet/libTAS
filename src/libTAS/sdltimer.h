@@ -46,7 +46,6 @@ OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback
  */
 OVERRIDE SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
-void link_sdltimer(void);
 }
 
 #endif

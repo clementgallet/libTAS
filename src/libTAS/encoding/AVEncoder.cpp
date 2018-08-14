@@ -19,7 +19,6 @@
 
 #include "AVEncoder.h"
 
-// #include "hook.h"
 #include "../logging.h"
 #include "../ScreenCapture.h"
 #include "../audio/AudioContext.h"
@@ -29,32 +28,9 @@
 #include <cstdint>
 #include <unistd.h> // usleep
 
-// #define ASSERT_RETURN_VOID(expr, msg) do {
-//         if (!(expr)) {
-//             error_msg = msg;
-//             debuglog(LCF_DUMP | LCF_ERROR, msg);
-//             error = -1;
-//             return;
-//         }
-//     } while (false)
-//
-// #define ASSERT_RETURN(ret, msg) do {
-//         if (ret < 0) {
-//             error_msg = msg;
-//             debuglog(LCF_DUMP | LCF_ERROR, msg);
-//             return ret;
-//         }
-//     } while (false)
-
 namespace libtas {
 
-// static std::string error_msg;
-
 AVEncoder::AVEncoder(SDL_Window* window) {
-    // error = 0;
-
-    // ASSERT_RETURN_VOID(shared_config.framerate_num > 0, "Not supporting non deterministic timer");
-
     std::string commandline = "ffmpeg -hide_banner -y -f nut -i - ";
     commandline += ffmpeg_options;
     commandline += " \"";
@@ -63,25 +39,22 @@ AVEncoder::AVEncoder(SDL_Window* window) {
 
     NATIVECALL(ffmpeg_pipe = popen(commandline.c_str(), "w"));
 
-    // start_frame = sf;
-    // accum_samples = 0;
+    if (! ffmpeg_pipe) {
+        debuglog(LCF_DUMP | LCF_ERROR, "Could not create a pipe to ffmpeg");
+        return;
+    }
 
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
     const char* pixfmt = ScreenCapture::getPixelFormat();
-    // ASSERT_RETURN_VOID(pixfmt != AV_PIX_FMT_NONE, "Unable to get pixel format");
 
     nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
-
 }
 
-/*
- * Encode one frame and send it to the muxer
- * Returns 0 if no error was encountered, or a negative value if an error
- * was encountered.
- */
-int AVEncoder::encodeOneFrame(bool draw) {
+void AVEncoder::encodeOneFrame(bool draw) {
+    if (!nutMuxer)
+        return;
 
     /*** Audio ***/
     debuglog(LCF_DUMP, "Encode an audio frame");
@@ -89,11 +62,9 @@ int AVEncoder::encodeOneFrame(bool draw) {
     nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
 
     /*** Video ***/
-    debuglog(LCF_DUMP | LCF_FRAME, "Encode a video frame");
+    debuglog(LCF_DUMP, "Encode a video frame");
 
-    uint8_t* pixels = nullptr;
     int size;
-
     /* Access to the screen pixels if the current frame is a draw frame
      * or if we never drew. If not, we will capture the last drawn frame.
      */
@@ -102,13 +73,20 @@ int AVEncoder::encodeOneFrame(bool draw) {
     }
 
     nutMuxer->writeVideoFrame(pixels, size);
-
-    return 0;
 }
 
 AVEncoder::~AVEncoder() {
-    nutMuxer->finish();
-    NATIVECALL(pclose(ffmpeg_pipe));
+    if (nutMuxer) {
+        nutMuxer->finish();
+    }
+
+    if (ffmpeg_pipe) {
+        int ret;
+        NATIVECALL(ret = pclose(ffmpeg_pipe));
+        if (ret < 0) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Could not close the pipe to ffmpeg");
+        }
+    }
 }
 
 char AVEncoder::dumpfile[4096] = {0};

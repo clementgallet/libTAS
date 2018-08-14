@@ -74,10 +74,6 @@ DEFINE_ORIG_POINTER(SDL_Quit);
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
     LINK_NAMESPACE_SDLX(SDL_Quit);
 
-    link_sdlevents();
-    link_sdlthreads();
-    link_sdltimer();
-
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
 

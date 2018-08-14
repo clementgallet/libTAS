@@ -30,7 +30,7 @@ class AVEncoder {
     public:
         /* The constructor sets up the AV dumping into a file.
          * This consists mainly of getting the dimensions of the screen,
-         * then starting a pipe into an ffmpeg process
+         * then starting a pipe into an ffmpeg process and initializing a nut muxer.
          *
          * @param window        Pointer to the SDL_Window* struct that is captured
          */
@@ -38,11 +38,10 @@ class AVEncoder {
 
         /* Encode a video and audio frame.
          * @param draw           Is this a draw frame?
-         * @return              -1 if error, 0 if not
          */
-        int encodeOneFrame(bool draw);
+        void encodeOneFrame(bool draw);
 
-        /* Close all allocated objects at the end of an av dump
+        /* Close all allocated objects and close the pipe at the end of an av dump
          */
         ~AVEncoder();
 
@@ -56,9 +55,10 @@ class AVEncoder {
         static char ffmpeg_options[4096];
 
     private:
-        FILE *ffmpeg_pipe;
-        NutMuxer* nutMuxer;
+        FILE *ffmpeg_pipe = nullptr;
+        NutMuxer* nutMuxer = nullptr;
 
+        uint8_t* pixels = nullptr;
 };
 
 extern std::unique_ptr<AVEncoder> avencoder;

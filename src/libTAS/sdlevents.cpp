@@ -28,14 +28,14 @@
 
 namespace libtas {
 
-/* Pointers to original functions */
-namespace orig {
-    static void (*SDL_PumpEvents)(void);
-    static int (*SDL_PeepEvents)(void *events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
-}
+DEFINE_ORIG_POINTER(SDL_PumpEvents);
+DEFINE_ORIG_POINTER(SDL_PeepEvents);
 
 void pushNativeEvents(void)
 {
+    LINK_NAMESPACE_SDLX(SDL_PeepEvents);
+    LINK_NAMESPACE_SDLX(SDL_PumpEvents);
+
     /* SDL_PumpEvents may call SDL_GetTicks() a lot, and we don't want to
      * advance the timer because of that, so we make it untrack
      */
@@ -50,7 +50,7 @@ void pushNativeEvents(void)
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
+        while (orig::SDL_PeepEvents(reinterpret_cast<SDL_Event*>(&ev), 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (ev.type == SDL1::SDL_QUIT) {
                 is_exiting = true;
             }
@@ -547,12 +547,6 @@ void logEvent(SDL_Event *event)
             debuglog(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: ", event->type, ".");
             break;
     }
-}
-
-void link_sdlevents(void)
-{
-    LINK_NAMESPACE_SDLX(SDL_PumpEvents);
-    LINK_NAMESPACE_SDLX(SDL_PeepEvents);
 }
 
 }

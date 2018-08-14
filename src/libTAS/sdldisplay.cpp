@@ -19,19 +19,7 @@
 
 #include "sdldisplay.h"
 #include "hook.h"
-// #include "sdlversion.h"
 #include "logging.h"
-// #include "../shared/sockethelpers.h"
-// #include "../shared/messages.h"
-// #include "../shared/SharedConfig.h"
-// #include "frame.h"
-// #include "renderhud/RenderHUD_GL.h"
-// #include "renderhud/RenderHUD_SDL1.h"
-// #include "renderhud/RenderHUD_SDL2.h"
-// #include "timewrappers.h"
-// #include "ScreenCapture.h"
-// #include <SDL2/SDL_syswm.h>
-// #include "WindowTitle.h"
 
 namespace libtas {
 

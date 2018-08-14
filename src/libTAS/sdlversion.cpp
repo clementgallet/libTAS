@@ -22,8 +22,9 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(SDL_GetVersion);
+
 namespace orig {
-    void (*SDL_GetVersion)(SDL_version* ver);
     /* SDL 1.2 specific function */
     static SDL_version * (*SDL_Linked_Version)(void);
 }

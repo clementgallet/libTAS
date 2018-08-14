@@ -45,7 +45,6 @@ void __attribute__((constructor)) init(void)
     /* Taken from <https://stackoverflow.com/a/3275799> */
     for (int i=0; environ[i]; i++) {
         if ( strstr(environ[i], "LD_PRELOAD=") ) {
-             // printf("hacking out LD_PRELOAD from environ[%d]\n",i);
              environ[i][0] = 'D';
         }
     }

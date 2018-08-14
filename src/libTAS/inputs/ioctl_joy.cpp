@@ -34,9 +34,7 @@
 
 namespace libtas {
 
-namespace orig {
-    static int (*ioctl)(int fd, unsigned long request, ...);
-}
+DEFINE_ORIG_POINTER(ioctl);
 
 int ioctl(int fd, unsigned long request, ...) throw()
 {
