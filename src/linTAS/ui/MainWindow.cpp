@@ -37,6 +37,7 @@
 #include <iostream>
 #include <future>
 #include <sys/stat.h>
+#include <csignal> // kill
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -701,6 +702,9 @@ void MainWindow::updateStatus()
             currentLength->setText("Current Time: -");
             fpsValues->setText("Current FPS: - / -");
 
+            stopButton->setText("Stop");
+            stopButton->setEnabled(false);
+
             updateMovieParams();
             break;
 
@@ -727,7 +731,7 @@ void MainWindow::updateStatus()
 
             break;
         case Context::QUITTING:
-            stopButton->setEnabled(false);
+            stopButton->setText("Kill");
             break;
         default:
             break;
@@ -1063,15 +1067,20 @@ void MainWindow::slotLaunch()
 
 void MainWindow::slotStop()
 {
-    if (context->status != Context::ACTIVE)
+    if (context->status == Context::QUITTING) {
+        /* Terminate the game process */
+        kill(context->game_pid, SIGTERM);
         return;
+    }
 
-    context->status = Context::QUITTING;
-    context->config.sc.running = true;
-    context->config.sc_modified = true;
-    updateSharedConfigChanged();
-    updateStatus();
-    game_thread.detach();
+    if (context->status == Context::ACTIVE) {
+        context->status = Context::QUITTING;
+        context->config.sc.running = true;
+        context->config.sc_modified = true;
+        updateSharedConfigChanged();
+        updateStatus();
+        game_thread.detach();
+    }
 }
 
 void MainWindow::slotBrowseGamePath()

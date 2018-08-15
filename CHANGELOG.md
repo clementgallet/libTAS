@@ -1,3 +1,16 @@
+## [Unreleased]
+### Added
+- Xlib cursor and pointer warping functions
+- Force FMOD to output to ALSA, and removed PulseAudio hooks
+- Kill button to terminate a hanging game process
+
+### Changed
+- Remove all ffmpeg API, and use a pipe to send video/audio using nut muxer
+
+### Fixed
+- Fix OpenAL deadlocks
+- Change frame sleep logic to get fps closer to target fps
+
 ## [1.3.0] - 2018-07-30
 ### Added
 - Analog inputs in input editor, which are also editable

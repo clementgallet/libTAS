@@ -127,7 +127,7 @@ void Config::load(const std::string& gamepath) {
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
 
-    gameargs = settings.value("gameargs", gameargs.c_str()).toString().toStdString();
+    gameargs = settings.value("gameargs", "").toString().toStdString();
 
     std::string default_moviefile = gamepath + ".ltm";
     moviefile = settings.value("moviefile", default_moviefile.c_str()).toString().toStdString();
@@ -137,8 +137,8 @@ void Config::load(const std::string& gamepath) {
 
     ffmpegoptions = settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
 
-    libdir = settings.value("libdir", libdir.c_str()).toString().toStdString();
-    rundir = settings.value("rundir", rundir.c_str()).toString().toStdString();
+    libdir = settings.value("libdir", "").toString().toStdString();
+    rundir = settings.value("rundir", "").toString().toStdString();
 
     opengl_soft = settings.value("opengl_soft", opengl_soft).toBool();
     on_movie_end = settings.value("on_movie_end", on_movie_end).toInt();
