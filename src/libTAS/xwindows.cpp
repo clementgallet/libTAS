@@ -141,14 +141,6 @@ int XSelectInput(Display *display, Window w, long event_mask)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XSelectInput, nullptr);
 
-    event_mask &= ~(KeyPressMask | KeyReleaseMask | KeymapStateMask);
-    event_mask &= ~(ButtonPressMask | ButtonReleaseMask);
-    event_mask &= ~(PointerMotionMask | PointerMotionHintMask);
-    event_mask &= ~(Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask | ButtonMotionMask);
-    event_mask &= ~(FocusChangeMask);
-    event_mask &= ~(EnterWindowMask | LeaveWindowMask);
-    event_mask &= ~(ExposureMask | PropertyChangeMask);
-
     return orig::XSelectInput(display, w, event_mask);
 }
 

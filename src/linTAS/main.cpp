@@ -27,9 +27,9 @@
 #include <libgen.h> // dirname
 #include <signal.h> // kill
 #include <xcb/xcb.h>
-// #define explicit _explicit
-// #include <xcb/xkb.h>
-// #undef explicit
+#define explicit _explicit
+#include <xcb/xkb.h>
+#undef explicit
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -122,27 +122,31 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // xcb_xkb_use_extension_cookie_t cookie =
-    //     xcb_xkb_use_extension(context.conn, XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION);
-    // std::unique_ptr<xcb_xkb_use_extension_reply_t> reply(xcb_xkb_use_extension_reply(context.conn, cookie, NULL));
-    // if (!reply || !reply->supported) {
-    //     std::cerr << "xcb xkb not supported" << std::endl;
-    // }
-    //
-    // xcb_generic_error_t *error;
-    // xcb_xkb_per_client_flags_cookie_t pcf = xcb_xkb_per_client_flags(context.conn,
-    //     XCB_XKB_ID_USE_CORE_KBD,
-    //     XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
-    //     // XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
-    //     0,
-    //     0,
-    //     0,
-    //     0);
-    // std::unique_ptr<xcb_xkb_per_client_flags_reply_t> pcf_reply(xcb_xkb_per_client_flags_reply(context.conn, pcf, &error));
-    // if (error) {
-    // 	std::cerr << "failed to set XKB per-client flags, not using detectable repeat" << std::endl;
-    // }
+    /* Open the xkb extension */
+    xcb_xkb_use_extension_cookie_t cookie =
+        xcb_xkb_use_extension(context.conn, XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION);
+    xcb_xkb_use_extension_reply_t *reply = xcb_xkb_use_extension_reply(context.conn, cookie, NULL);
+    if (!reply || !reply->supported) {
+        std::cerr << "xcb xkb not supported" << std::endl;
+    }
+    free(reply);
 
+    /* Enable detectable autorepeat. Otherwise, KeyRelease events are generated
+     * for each key press, even without holding the key.
+     */
+    xcb_generic_error_t *error;
+    xcb_xkb_per_client_flags_cookie_t pcf = xcb_xkb_per_client_flags(context.conn,
+        XCB_XKB_ID_USE_CORE_KBD,
+        XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+        XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+        0,
+        0,
+        0);
+    xcb_xkb_per_client_flags_reply_t *pcf_reply = xcb_xkb_per_client_flags_reply(context.conn, pcf, &error);
+    if (error) {
+    	std::cerr << "failed to set XKB per-client flags, not using detectable repeat" << std::endl;
+    }
+    free(pcf_reply);
 
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.

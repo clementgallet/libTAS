@@ -274,12 +274,6 @@ void GameLoop::init()
         launchGameThread();
     }
 
-    /* Disable auto-repeat */
-    uint32_t mask_aroff = XCB_KB_AUTO_REPEAT_MODE;
-    uint32_t values_aroff[] = {XCB_AUTO_REPEAT_MODE_OFF, 0};
-
-    xcb_change_keyboard_control(context->conn, mask_aroff, values_aroff);
-
     ar_ticks = -1;
     ar_delay = 50;
     ar_freq = 2;
@@ -476,18 +470,10 @@ bool GameLoop::startFrameMessages()
 
 uint8_t GameLoop::nextEvent(struct HotKey &hk)
 {
-    static xcb_generic_event_t *next_event = nullptr;
+    static xcb_keycode_t last_pressed_key = 0;
 
     while (true) {
-        xcb_generic_event_t *event = nullptr;
-
-        if (next_event) {
-            event = next_event;
-            next_event = nullptr;
-        }
-        else {
-            event = xcb_poll_for_event(context->conn);
-        }
+        xcb_generic_event_t *event = xcb_poll_for_event(context->conn);
 
         if (!event) {
             if (context->hotkey_queue.empty()) {
@@ -508,59 +494,22 @@ uint8_t GameLoop::nextEvent(struct HotKey &hk)
                 xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event);
                 xcb_keycode_t kc = key_event->detail;
 
-                // if ((event->response_type & ~0x80) == XCB_KEY_PRESS) {
-                //     std::cout << "Pressed key: " << kc << std::endl;
-                //     std::cout << "   response_type: " << (int)event->response_type << std::endl;
-                //     std::cout << "   sequence: " << key_event->sequence << std::endl;
-                //     std::cout << "   timestamp: " << key_event->time << std::endl;
-                //     std::cout << "   root: " << key_event->root << std::endl;
-                //     std::cout << "   event: " << key_event->event << std::endl;
-                //     std::cout << "   child: " << key_event->child << std::endl;
-                //     std::cout << "   root_x: " << key_event->root_x << std::endl;
-                //     std::cout << "   root_y: " << key_event->root_y << std::endl;
-                //     std::cout << "   event_x: " << key_event->event_x << std::endl;
-                //     std::cout << "   event_y: " << key_event->event_y << std::endl;
-                //     std::cout << "   state: " << key_event->state << std::endl;
-                //     std::cout << "   same_screen: " << key_event->same_screen << std::endl;
-                // }
-                // else {
-                //     std::cout << "Released key: " << kc << std::endl;
-                //     std::cout << "   response_type: " << (int)event->response_type << std::endl;
-                //     std::cout << "   sequence: " << key_event->sequence << std::endl;
-                //     std::cout << "   timestamp: " << key_event->time << std::endl;
-                //     std::cout << "   root: " << key_event->root << std::endl;
-                //     std::cout << "   event: " << key_event->event << std::endl;
-                //     std::cout << "   child: " << key_event->child << std::endl;
-                //     std::cout << "   root_x: " << key_event->root_x << std::endl;
-                //     std::cout << "   root_y: " << key_event->root_y << std::endl;
-                //     std::cout << "   event_x: " << key_event->event_x << std::endl;
-                //     std::cout << "   event_y: " << key_event->event_y << std::endl;
-                //     std::cout << "   state: " << key_event->state << std::endl;
-                //     std::cout << "   same_screen: " << key_event->same_screen << std::endl;
-                // }
-
-                /*
-                 * TODO: The following code was supposed to detect the X
-                 * AutoRepeat and remove the generated events. Actually,
-                 * I can't use it because for some reason, when I press a
-                 * key, a KeyRelease is generated at the same time as the
-                 * KeyPress event. For this reason, I disable X
-                 * AutoRepeat and I use this code to delete the extra
-                 * KeyRelease event...
+                /* Detecting auto-repeat if pressed event from the same key as
+                 * the last pressed key, without a key release.
                  */
-
-                if (response_type == XCB_KEY_RELEASE) {
-                    next_event = xcb_poll_for_event (context->conn);
-                    xcb_key_press_event_t* next_key_event = reinterpret_cast<xcb_key_press_event_t*>(next_event);
-
-                    if (next_event &&
-                        (next_event->sequence == event->sequence) &&
-                        ((next_event->response_type & ~0x80) == XCB_KEY_PRESS) &&
-                        (next_key_event->detail == key_event->detail)) {
-                        /* This event must be discarded */
+                if (kc == last_pressed_key) {
+                    if (response_type == XCB_KEY_RELEASE) {
+                        /* Normal key release */
+                        last_pressed_key = 0;
+                    }
+                    if (response_type == XCB_KEY_PRESS) {
+                        /* Auto-repeat, must skip */
                         free(event);
                         continue;
                     }
+                }
+                if (response_type == XCB_KEY_PRESS) {
+                    last_pressed_key = kc;
                 }
 
                 free(event);
@@ -1209,11 +1158,4 @@ void GameLoop::loopExit()
 
     context->status = Context::INACTIVE;
     emit statusChanged();
-
-    /* Disable auto-repeat */
-    uint32_t mask_aron = XCB_KB_AUTO_REPEAT_MODE;
-    uint32_t values_aron[] = {XCB_AUTO_REPEAT_MODE_ON, 0};
-
-    xcb_change_keyboard_control(context->conn, mask_aron, values_aron);
-    xcb_flush(context->conn);
 }
