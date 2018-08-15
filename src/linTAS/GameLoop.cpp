@@ -54,16 +54,16 @@ GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->co
 
 void GameLoop::launchGameThread()
 {
-    // /* Update the LD_LIBRARY_PATH environment variable if the user set one */
-    // if (!context->config.libdir.empty()) {
-    //     char* oldlibpath = getenv("LD_LIBRARY_PATH");
-    //     std::string libpath = context->config.libdir;
-    //     if (oldlibpath) {
-    //         libpath.append(":");
-    //         libpath.append(oldlibpath);
-    //     }
-    //     setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
-    // }
+    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
+    if (!context->config.libdir.empty()) {
+        char* oldlibpath = getenv("LD_LIBRARY_PATH");
+        std::string libpath = context->config.libdir;
+        if (oldlibpath) {
+            libpath.append(":");
+            libpath.append(oldlibpath);
+        }
+        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
+    }
 
     /* Change the working directory if the user set one */
     if (!context->config.rundir.empty()) {
@@ -267,18 +267,6 @@ void GameLoop::init()
 
     /* Remove the file socket */
     removeSocket();
-
-    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
-    if (!context->config.libdir.empty()) {
-        char* oldlibpath = getenv("LD_LIBRARY_PATH");
-        std::string libpath = context->config.libdir;
-        if (oldlibpath) {
-            libpath.append(":");
-            libpath.append(oldlibpath);
-        }
-        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
-    }
-
 
     /* We fork here so that the child process calls the game */
     int pid = fork();
