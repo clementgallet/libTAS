@@ -1219,9 +1219,18 @@ void MainWindow::slotToggleEncode()
         }
     }
 
-    /* TODO: Using directly the hotkey does not check for existing file */
-    context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
-
+    /* If the game is running, we let the main thread deal with dumping.
+     * Else, we set the dumping mode ourselved.
+     */
+    if (context->status == Context::INACTIVE) {
+        context->config.sc.av_dumping = !context->config.sc.av_dumping;
+        context->config.sc_modified = true;
+        updateSharedConfigChanged();
+    }
+    else {
+        /* TODO: Using directly the hotkey does not check for existing file */
+        context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
+    }
 }
 
 void MainWindow::slotMuteSound(bool checked)
