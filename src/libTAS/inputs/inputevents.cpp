@@ -30,6 +30,7 @@
 #include "../DeterministicTimer.h"
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
+#include "sdltextinput.h" // SDL_EnableUNICODE
 #include "../EventQueue.h"
 #include <SDL2/SDL.h>
 #include "../../external/SDL1.h"
@@ -75,6 +76,20 @@ void generateKeyUpEvents(void)
                 sdlEventQueue.insert(&event2);
 
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key ", event2.key.keysym.sym);
+
+                /* Generate a text input event if active */
+                if (SDL_IsTextInputActive()) {
+                    event2.type = SDL_TEXTINPUT;
+                    event2.text.windowID = 0;
+                    event2.text.timestamp = timestamp;
+                    /* SDL keycode is identical to its char number for common chars */
+                    event2.text.text[0] = static_cast<char>(event2.key.keysym.sym & 0xff);
+                    event2.text.text[1] = '\0';
+
+                    sdlEventQueue.insert(&event2);
+
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event SDL_TEXTINPUT with text ", event2.text.text);
+                }
             }
 
             if (game_info.keyboard & GameInfo::SDL1) {
@@ -86,6 +101,12 @@ void generateKeyUpEvents(void)
                 SDL1::SDL_keysym keysym;
                 xkeysymToSDL1(&keysym, old_ai.keyboard[i]);
                 event1.key.keysym = keysym;
+
+                if (SDL_EnableUNICODE(-1)) {
+                    /* Add an Unicode representation of the key */
+                    /* SDL keycode is identical to its char number for common chars */
+                    event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
+                }
 
                 sdlEventQueue.insert(&event1);
 
@@ -159,6 +180,12 @@ void generateKeyDownEvents(void)
                 SDL1::SDL_keysym keysym;
                 xkeysymToSDL1(&keysym, ai.keyboard[i]);
                 event1.key.keysym = keysym;
+
+                if (SDL_EnableUNICODE(-1)) {
+                    /* Add an Unicode representation of the key */
+                    /* SDL keycode is identical to its char number for common chars */
+                    event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
+                }
 
                 sdlEventQueue.insert(&event1);
 

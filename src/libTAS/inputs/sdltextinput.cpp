@@ -17,46 +17,52 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sdlkeyboard.h"
+#include "sdltextinput.h"
 #include "../../external/SDL1.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
-#include "../sdlwindows.h" // SDL_Window and gameWindow
 
 namespace libtas {
 
-static Uint8 SDL_keyboard[SDL_NUM_SCANCODES] = {0};
-static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
+static bool isTextInputActive = false;
 
-/* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
+void SDL_StartTextInput(void)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
-
-    if (numkeys)
-        *numkeys = SDL_NUM_SCANCODES;
-
-    xkeyboardToSDLkeyboard(ai.keyboard, SDL_keyboard);
-    //*numkeys = 512;
-    return SDL_keyboard;
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    isTextInputActive = true;
 }
 
-/* Override */ Uint8* SDL_GetKeyState( int* numkeys)
+SDL_bool SDL_IsTextInputActive(void)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_FRAME, __func__, " call.");
-
-    if (numkeys)
-        *numkeys = SDL1::SDLK_LAST;
-
-    xkeyboardToSDL1keyboard(ai.keyboard, SDL1_keyboard);
-    return SDL1_keyboard;
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    return isTextInputActive?SDL_TRUE:SDL_FALSE;
 }
 
-/* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
+void SDL_StopTextInput(void)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
-    return gameWindow;
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    isTextInputActive = true;
+}
+
+void SDL_SetTextInputRect(SDL_Rect *rect)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+}
+
+/* SDL 1 */
+static bool isUnicodeEnabled = false;
+
+int SDL_EnableUNICODE(int enable)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+
+    if (enable == -1) {
+        return isUnicodeEnabled?1:0;
+    }
+    isUnicodeEnabled = enable;
+    return enable;
 }
 
 }

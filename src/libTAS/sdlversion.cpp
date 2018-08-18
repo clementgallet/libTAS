@@ -41,8 +41,12 @@ int get_sdlversion(void)
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
 
-    LINK_NAMESPACE(SDL_GetVersion, "libSDL");
-    LINK_NAMESPACE(SDL_Linked_Version, "libSDL");
+    {
+        /* Remove logging to not alert user on an expected error */
+        GlobalNoLog gnl;
+        LINK_NAMESPACE(SDL_GetVersion, "libSDL");
+        LINK_NAMESPACE(SDL_Linked_Version, "libSDL");
+    }
 
     if (orig::SDL_GetVersion) {
         orig::SDL_GetVersion(&ver);

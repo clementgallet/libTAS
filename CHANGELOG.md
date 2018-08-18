@@ -3,6 +3,7 @@
 - Xlib cursor and pointer warping functions
 - Force FMOD to output to ALSA, and removed PulseAudio hooks
 - Kill button to terminate a hanging game process
+- Hook SDL text input
 
 ### Changed
 - Remove all ffmpeg API, and use a pipe to send video/audio using nut muxer
@@ -13,6 +14,7 @@
 - Auto-repeat bug, which forced to disable xlib auto-repeat during the game execution
 - Encode the first frame when starting encode before the game is launched
 - Encode non-draw frames at game startup as blank frames
+- Add encode segment number in encode filename
 
 ## [1.3.0] - 2018-07-30
 ### Added
