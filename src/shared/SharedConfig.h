@@ -171,6 +171,13 @@ struct SharedConfig {
     /* Storing savestates in RAM */
     bool savestates_in_ram = false;
 
+    /* Debug flags */
+    enum DebugFlags {
+        DEBUG_UNCONTROLLED_TIME = 0x01, // Using undeterministic timer
+        DEBUG_NATIVE_EVENTS = 0x02, // Allow game to access real events
+    };
+
+    int debug_state = 0;
 };
 
 #endif

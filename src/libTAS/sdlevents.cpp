@@ -31,8 +31,28 @@ namespace libtas {
 DEFINE_ORIG_POINTER(SDL_PumpEvents);
 DEFINE_ORIG_POINTER(SDL_PeepEvents);
 
+DEFINE_ORIG_POINTER(SDL_PollEvent);
+DEFINE_ORIG_POINTER(SDL_HasEvent);
+DEFINE_ORIG_POINTER(SDL_HasEvents);
+DEFINE_ORIG_POINTER(SDL_FlushEvent);
+DEFINE_ORIG_POINTER(SDL_FlushEvents);
+DEFINE_ORIG_POINTER(SDL_WaitEvent);
+DEFINE_ORIG_POINTER(SDL_WaitEventTimeout);
+DEFINE_ORIG_POINTER(SDL_PushEvent);
+DEFINE_ORIG_POINTER(SDL_SetEventFilter);
+DEFINE_ORIG_POINTER(SDL_GetEventFilter);
+DEFINE_ORIG_POINTER(SDL_AddEventWatch);
+DEFINE_ORIG_POINTER(SDL_DelEventWatch);
+DEFINE_ORIG_POINTER(SDL_FilterEvents);
+DEFINE_ORIG_POINTER(SDL_EventState);
+DEFINE_ORIG_POINTER(SDL_RegisterEvents);
+
 void pushNativeEvents(void)
 {
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return;
+    }
+
     LINK_NAMESPACE_SDLX(SDL_PeepEvents);
     LINK_NAMESPACE_SDLX(SDL_PumpEvents);
 
@@ -74,12 +94,20 @@ void pushNativeEvents(void)
 /* Override */ void SDL_PumpEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
-    return;
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_PumpEvents);
+        return orig::SDL_PumpEvents();
+    }
 }
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_PeepEvents);
+        return orig::SDL_PeepEvents(events, numevents, action, minType, maxType);
+    }
 
     /* We need to use a function signature with variable arguments,
      * because SDL 1.2 and SDL 2 provide a different function with the same name.
@@ -131,6 +159,11 @@ void pushNativeEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_PollEvent);
+        return orig::SDL_PollEvent(event);
+    }
+
     int SDLver = get_sdlversion();
     if (event) {
         /* Fetch one event with update using our helper function */
@@ -159,12 +192,23 @@ void pushNativeEvents(void)
 /* Override */ SDL_bool SDL_HasEvent(Uint32 type)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_HasEvent);
+        return orig::SDL_HasEvent(type);
+    }
+
     return SDL_HasEvents(type, type);
 }
 
 /* Override */ SDL_bool SDL_HasEvents(Uint32 minType, Uint32 maxType)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_HasEvents);
+        return orig::SDL_HasEvents(minType, maxType);
+    }
 
     /* Try to get one event without updating, and return if we got one */
     SDL_Event ev;
@@ -174,18 +218,35 @@ void pushNativeEvents(void)
 /* Override */ void SDL_FlushEvent(Uint32 type)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_FlushEvent);
+        return orig::SDL_FlushEvent(type);
+    }
+
     return SDL_FlushEvents(type, type);
 }
 
 /* Override */ void SDL_FlushEvents(Uint32 minType, Uint32 maxType)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_FlushEvents);
+        return orig::SDL_FlushEvents(minType, maxType);
+    }
+
     sdlEventQueue.flush(minType, maxType);
 }
 
 /* Override */ int SDL_WaitEvent(SDL_Event * event)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_WaitEvent);
+        return orig::SDL_WaitEvent(event);
+    }
 
     struct timespec mssleep = {0, 1000000};
     if (event) {
@@ -208,6 +269,11 @@ void pushNativeEvents(void)
 /* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
 {
     debuglog(LCF_SDL | LCF_EVENTS | LCF_TODO, __func__, " call with timeout ", timeout);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_WaitEventTimeout);
+        return orig::SDL_WaitEventTimeout(event, timeout);
+    }
 
     int t;
     struct timespec mssleep = {0, 1000000};
@@ -235,6 +301,11 @@ void pushNativeEvents(void)
 /* Override */ int SDL_PushEvent(SDL_Event * event)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_PushEvent);
+        return orig::SDL_PushEvent(event);
+    }
 
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
@@ -266,6 +337,11 @@ void pushNativeEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_SetEventFilter);
+        return orig::SDL_SetEventFilter(filter, userdata);
+    }
+
     int SDLver = get_sdlversion();
     if (SDLver == 1)
         sdlEventQueue.setFilter(reinterpret_cast<SDL1::SDL_EventFilter>(filter));
@@ -276,6 +352,12 @@ void pushNativeEvents(void)
 /* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_GetEventFilter);
+        return orig::SDL_GetEventFilter(filter, userdata);
+    }
+
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         debuglog(LCF_SDL | LCF_EVENTS | LCF_ERROR, "Not supported yet for SDL1");
@@ -294,24 +376,48 @@ void pushNativeEvents(void)
 /* Override */ void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_AddEventWatch);
+        return orig::SDL_AddEventWatch(filter, userdata);
+    }
+
     sdlEventQueue.addWatch(filter, userdata);
 }
 
 /* Override */ void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_DelEventWatch);
+        return orig::SDL_DelEventWatch(filter, userdata);
+    }
+
     sdlEventQueue.delWatch(filter, userdata);
 }
 
 /* Override */ void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_FilterEvents);
+        return orig::SDL_FilterEvents(filter, userdata);
+    }
+
     sdlEventQueue.applyFilter(filter, userdata);
 }
 
 /* Override */ Uint8 SDL_EventState(Uint32 type, int state)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_EventState);
+        return orig::SDL_EventState(type, state);
+    }
+
     int previousState = sdlEventQueue.isEnabled(type) ? SDL_ENABLE : SDL_DISABLE;
     switch (state) {
         case SDL_ENABLE:
@@ -329,6 +435,12 @@ void pushNativeEvents(void)
 /* Override */ Uint32 SDL_RegisterEvents(int numevents)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_SDLX(SDL_RegisterEvents);
+        return orig::SDL_RegisterEvents(numevents);
+    }
+
     return SDL_USEREVENT;
 }
 

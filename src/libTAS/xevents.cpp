@@ -64,6 +64,10 @@ static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
 /* Removes all filtered events from the event queue */
 static void filterEventQueue(Display *display)
 {
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return;
+    }
+
     LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
     XEvent event;
     XPointer arg = nullptr;

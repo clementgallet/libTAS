@@ -96,6 +96,7 @@ public:
     QAction *incrementalStateAction;
     QAction *ramStateAction;
 
+    QActionGroup *debugStateGroup;
     QActionGroup *loggingOutputGroup;
     QActionGroup *loggingPrintGroup;
     QActionGroup *loggingExcludeGroup;
@@ -236,6 +237,7 @@ private slots:
     void slotToggleEncode();
     void slotMuteSound(bool checked);
     void slotRenderSoft(bool checked);
+    void slotDebugState();
     void slotLoggingPrint();
     void slotLoggingExclude();
     void slotHotkeyFocus();

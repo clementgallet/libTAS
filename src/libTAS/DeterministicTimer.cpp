@@ -49,8 +49,8 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return realtime;
     }
 
-    if(shared_config.framerate_num == 0) {
-        return nonDetTimer.getTicks(); // 0 framerate means disable deterministic timer
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+        return nonDetTimer.getTicks(); // disable deterministic time
     }
 
     bool mainT = ThreadManager::isMainThread();
@@ -112,7 +112,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
-    if(shared_config.framerate_num == 0) // 0 framerate means disable deterministic timer
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
@@ -174,8 +174,8 @@ void DeterministicTimer::exitFrameBoundary()
         sec_gettimes[i] = 0;
     }
 
-    if(shared_config.framerate_num == 0)
-        return nonDetTimer.exitFrameBoundary(); // 0 framerate means disable deterministic timer
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+        return nonDetTimer.exitFrameBoundary();
 
     /* We sleep the right amount of time so that the game runs at normal speed */
 
@@ -214,8 +214,8 @@ void DeterministicTimer::enterFrameBoundary()
 
     insideFrameBoundary = true;
 
-    if(shared_config.framerate_num == 0)
-        return nonDetTimer.enterFrameBoundary(); // 0 framerate means disable deterministic timer
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+        return nonDetTimer.enterFrameBoundary();
 
     /*** First we update the state of the internal timer ***/
 

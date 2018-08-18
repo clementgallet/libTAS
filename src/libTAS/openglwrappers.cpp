@@ -258,9 +258,16 @@ void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
     LINK_NAMESPACE(glXSwapIntervalEXT, "libGL");
 
-    /* Store the interval but don't set it */
     swapInterval = interval;
-    orig::glXSwapIntervalEXT(dpy, drawable, 0);
+
+    /* When using non deterministic timer, we let the game set vsync */
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+        orig::glXSwapIntervalEXT(dpy, drawable, interval);
+    }
+    else {
+        orig::glXSwapIntervalEXT(dpy, drawable, 0);
+    }
+
 }
 
 int glXSwapIntervalSGI (int interval)
@@ -268,9 +275,15 @@ int glXSwapIntervalSGI (int interval)
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
     LINK_NAMESPACE(glXSwapIntervalSGI, "libGL");
 
-    /* Store the interval but don't set it */
     swapInterval = interval;
-    return orig::glXSwapIntervalSGI(0);
+
+    /* When using non deterministic timer, we let the game set vsync */
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+        return orig::glXSwapIntervalSGI(interval);
+    }
+    else {
+        return orig::glXSwapIntervalSGI(0);
+    }
 }
 
 int glXSwapIntervalMESA (unsigned int interval)
@@ -278,10 +291,16 @@ int glXSwapIntervalMESA (unsigned int interval)
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
     LINK_NAMESPACE(glXSwapIntervalMESA, "libGL");
 
-    /* Store the interval but don't set it */
     swapInterval = interval;
-    return orig::glXSwapIntervalMESA(0);
-}
+
+    /* When using non deterministic timer, we let the game set vsync */
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+        return orig::glXSwapIntervalMESA(interval);
+    }
+    else {
+        return orig::glXSwapIntervalMESA(0);
+    }
+    }
 
 int glXGetSwapIntervalMESA(void)
 {

@@ -399,9 +399,16 @@ void MainWindow::createActions()
     addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
 
+    debugStateGroup = new QActionGroup(this);
+    debugStateGroup->setExclusive(false);
+    connect(debugStateGroup, &QActionGroup::triggered, this, &MainWindow::slotDebugState);
+
+    addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME);
+    addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS);
+
     loggingOutputGroup = new QActionGroup(this);
 
-    addActionCheckable(loggingOutputGroup, tr("Disabled"), SharedConfig::NO_LOGGING);
+    addActionCheckable(loggingOutputGroup, tr("Disabled logging"), SharedConfig::NO_LOGGING);
     addActionCheckable(loggingOutputGroup, tr("Log to console"), SharedConfig::LOGGING_TO_CONSOLE);
     addActionCheckable(loggingOutputGroup, tr("Log to file"), SharedConfig::LOGGING_TO_FILE);
 
@@ -606,7 +613,12 @@ void MainWindow::createMenus()
     preventSavefileAction = runtimeMenu->addAction(tr("Backup savefiles in memory"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
 
-    QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug Logging"));
+    QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
+
+    debugMenu->addActions(debugStateGroup->actions());
+
+    debugMenu->addSeparator();
+
     debugMenu->addActions(loggingOutputGroup->actions());
     disabledActionsOnStart.append(loggingOutputGroup->actions());
 
@@ -926,6 +938,7 @@ void MainWindow::updateUIFromConfig()
 
     muteAction->setChecked(context->config.sc.audio_mute);
 
+    setRadioFromList(debugStateGroup, context->config.sc.debug_state);
     setRadioFromList(loggingOutputGroup, context->config.sc.logging_status);
 
     setCheckboxesFromMask(loggingPrintGroup, context->config.sc.includeFlags);
@@ -1246,6 +1259,13 @@ void MainWindow::slotRenderSoft(bool checked)
     updateStatusBar();
 }
 
+void MainWindow::slotDebugState()
+{
+    setMaskFromCheckboxes(debugStateGroup, context->config.sc.debug_state);
+    context->config.sc_modified = true;
+}
+
+
 void MainWindow::slotLoggingPrint()
 {
     setMaskFromCheckboxes(loggingPrintGroup, context->config.sc.includeFlags);
@@ -1365,24 +1385,6 @@ void MainWindow::alertDialog(QString alert_msg)
     /* Pause the game */
     context->config.sc.running = false;
     context->config.sc_modified = true;
-
-    /* Bring FLTK to foreground
-     * taken from https://stackoverflow.com/a/28404920
-     */
-    // xcb_client_message_event_t event;
-    // event.response_type = XCB_CLIENT_MESSAGE;
-    // event.window = mw.context->ui_window;
-    // event.format = 32;
-    // event.type = XInternAtom(mw.context->display, "_NET_ACTIVE_WINDOW", False);
-    //
-    // xcb_intern_atom_cookie_t cookie = xcb_intern_atom (mw.context->conn, 0, 0, strlen(names[i]), names[i] );
-    //     /* get response */
-    // xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply (connection,
-    //                                                             cookie,
-    //                                                             NULL ); // normally a pointer to receive error, but we'll just ignore error handling
-
-    // XSendEvent(mw.context->display, DefaultRootWindow(mw.context->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
-    // XMapRaised(mw.context->display, mw.context->ui_window);
 
     /* Show alert window */
     QMessageBox::warning(this, "Warning", alert_msg);
