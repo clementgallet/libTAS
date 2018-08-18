@@ -48,8 +48,7 @@ AVEncoder::AVEncoder() {
     commandline.write(dumpfile, static_cast<int>(strrchr(dumpfile, '.') - dumpfile));
     /* Add segment number to filename if not the first */
     if (segment_number > 0) {
-        commandline << "_";
-        commandline << std::setfill('0') << std::setw(2) << segment_number;
+        commandline << "_" << segment_number;
     }
     commandline << strrchr(dumpfile, '.');
     commandline << "\"";
