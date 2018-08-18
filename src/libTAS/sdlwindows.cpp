@@ -306,7 +306,7 @@ static int swapInterval = 0;
     /* We need to close the dumping if needed, and open a new one */
     if (shared_config.av_dumping) {
         debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-        avencoder.reset(new AVEncoder(gameWindow));
+        avencoder.reset(new AVEncoder());
     }
 
 }

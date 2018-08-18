@@ -30,7 +30,7 @@
 
 namespace libtas {
 
-AVEncoder::AVEncoder(SDL_Window* window) {
+AVEncoder::AVEncoder() {
     std::string commandline = "ffmpeg -hide_banner -y -f nut -i - ";
     commandline += ffmpeg_options;
     commandline += " \"";
@@ -44,6 +44,12 @@ AVEncoder::AVEncoder(SDL_Window* window) {
         return;
     }
 
+    if (ScreenCapture::isInited()) {
+        initMuxer();
+    }
+}
+
+void AVEncoder::initMuxer() {
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
@@ -53,8 +59,33 @@ AVEncoder::AVEncoder(SDL_Window* window) {
 }
 
 void AVEncoder::encodeOneFrame(bool draw) {
-    if (!nutMuxer)
-        return;
+
+    /* If the muxer is not initialized, try to initialize it. Otherwise, store
+     * that we skipped one frame and we need to encode it later.
+     */
+    if (!nutMuxer) {
+        if (ScreenCapture::isInited()) {
+            initMuxer();
+
+            /* Encode audio samples that we skipped */
+            nutMuxer->writeAudioFrame(startup_audio_bytes.data(), startup_audio_bytes.size());
+
+            /* Encode startup frames that we skipped */
+
+            /* Just getting the size of an image */
+            int size = ScreenCapture::getPixels(nullptr, false);
+            startup_audio_bytes.resize(size, 0); // reusing the audio samples vector
+            for (int i=0; i<startup_video_frames; i++) {
+                nutMuxer->writeVideoFrame(startup_audio_bytes.data(), size);
+            }
+        }
+        else {
+            startup_video_frames++;
+            /* Store audio samples that we skipped */
+            startup_audio_bytes.insert(startup_audio_bytes.end(), audiocontext.outSamples.data(), audiocontext.outSamples.data() + audiocontext.outBytes);
+            return;
+        }
+    }
 
     /*** Audio ***/
     debuglog(LCF_DUMP, "Encode an audio frame");

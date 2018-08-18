@@ -39,6 +39,8 @@ void fini();
 /* Called when screen is resized */
 void reinit(SDL_Window* window);
 
+bool isInited();
+
 void getDimensions(int& w, int& h);
 
 

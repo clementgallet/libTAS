@@ -282,7 +282,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
             debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
-            avencoder.reset(new AVEncoder(gameWindow));
+            avencoder.reset(new AVEncoder());
         }
 
         /* Write the current frame */

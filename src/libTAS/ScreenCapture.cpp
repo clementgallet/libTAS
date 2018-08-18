@@ -248,6 +248,11 @@ void ScreenCapture::reinit(SDL_Window* window)
     }
 }
 
+bool ScreenCapture::isInited()
+{
+    return inited;
+}
+
 void ScreenCapture::getDimensions(int& w, int& h) {
     w = width;
     h = height;

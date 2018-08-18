@@ -22,19 +22,21 @@
 
 #include "NutMuxer.h"
 #include <vector>
-#include <SDL2/SDL.h>
 #include <memory> // std::unique_ptr
 
 namespace libtas {
 class AVEncoder {
     public:
         /* The constructor sets up the AV dumping into a file.
-         * This consists mainly of getting the dimensions of the screen,
-         * then starting a pipe into an ffmpeg process and initializing a nut muxer.
-         *
-         * @param window        Pointer to the SDL_Window* struct that is captured
+         * It sets the pipe to an ffmpeg process, and initialize the muxer
+         * with the proper screen/sound parameters.
          */
-        AVEncoder(SDL_Window* window);
+        AVEncoder();
+
+        /* Initialize the muxer. Called by the constructor if parameters are
+         * available, or later if parameters are not available yet.
+         */
+        void initMuxer();
 
         /* Encode a video and audio frame.
          * @param draw           Is this a draw frame?
@@ -59,6 +61,9 @@ class AVEncoder {
         NutMuxer* nutMuxer = nullptr;
 
         uint8_t* pixels = nullptr;
+
+        int startup_video_frames = 0;
+        std::vector<uint8_t> startup_audio_bytes;
 };
 
 extern std::unique_ptr<AVEncoder> avencoder;

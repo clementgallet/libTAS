@@ -1,8 +1,13 @@
+// Compile with `gcc simplestGLgame.c -lSDL2 -lGL -o simplestGLgame`
+
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
+#include <unistd.h>
 
 int main()
 {
+    usleep(50*1000);
+
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -21,6 +26,7 @@ int main()
 
     int run = 1;
     int frame = 0;
+
     while (run) {
         glClearColor( ((float)(frame%256))/256.0f, ((float)(frame%256))/256.0f, ((float)(frame%256))/256.0f, 1.0f );
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -45,4 +51,3 @@ int main()
     SDL_Quit();
 
 }
-
