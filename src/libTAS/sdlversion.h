@@ -20,8 +20,6 @@
 #ifndef LIBTAS_SDLVERSION_H_INCLUDED
 #define LIBTAS_SDLVERSION_H_INCLUDED
 
-#include <SDL2/SDL.h> // SDL_version
-
 namespace libtas {
 
 /* Returns the major version of the SDL library used in the game */

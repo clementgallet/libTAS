@@ -21,6 +21,8 @@
 #include "logging.h"
 #include "hook.h"
 
+#include <cstring>
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(setlocale)

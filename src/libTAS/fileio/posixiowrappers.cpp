@@ -31,6 +31,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <cstdarg>
+#include <cstring>
 
 namespace libtas {
 

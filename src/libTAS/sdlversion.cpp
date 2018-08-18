@@ -20,6 +20,8 @@
 #include "hook.h"
 #include "logging.h"
 
+#include <SDL2/SDL.h> // SDL_version
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_GetVersion);
@@ -40,28 +42,30 @@ int get_sdlversion(void)
     SDL_version ver = {0, 0, 0};
 
     LINK_NAMESPACE(SDL_GetVersion, "libSDL");
+    LINK_NAMESPACE(SDL_Linked_Version, "libSDL");
 
     if (orig::SDL_GetVersion) {
         orig::SDL_GetVersion(&ver);
     }
-    else {
-        LINK_NAMESPACE(SDL_Linked_Version, "libSDL");
 
-        if (orig::SDL_Linked_Version) {
-            SDL_version *verp;
-            verp = orig::SDL_Linked_Version();
-            ver = *verp;
-        }
-        else {
-            /* No SDL lib was found among libraries opened by the game.
-             * As a fallback, we link to our SDL2 library.
-             */
-            LINK_NAMESPACE_SDL2(SDL_GetVersion);
+    if (orig::SDL_Linked_Version) {
+        SDL_version *verp;
+        verp = orig::SDL_Linked_Version();
+        ver = *verp;
+    }
 
-            if (orig::SDL_GetVersion) {
-                orig::SDL_GetVersion(&ver);
-            }
+    if (orig::SDL_GetVersion && orig::SDL_Linked_Version) {
+        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "Both SDL versions were detected! Taking SDL1 in priority");
+    }
 
+    if (!orig::SDL_GetVersion && !orig::SDL_Linked_Version) {
+        /* No SDL lib was found among libraries opened by the game.
+         * As a fallback, we link to our SDL2 library.
+         */
+        LINK_NAMESPACE_SDL2(SDL_GetVersion);
+
+        if (orig::SDL_GetVersion) {
+            orig::SDL_GetVersion(&ver);
         }
     }
 

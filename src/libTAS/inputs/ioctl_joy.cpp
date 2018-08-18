@@ -25,6 +25,8 @@
 #include "../../shared/SingleInput.h"
 #include <linux/joystick.h>
 #include <linux/input.h>
+#include <cstdarg>
+#include <cstring>
 
 #define CHECK_LEN_AND_SET_BIT(bit, bits, len) do {\
     if (bit < (len*8))\
