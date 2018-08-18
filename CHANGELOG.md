@@ -11,6 +11,7 @@
 - Fix OpenAL deadlocks
 - Change frame sleep logic to get fps closer to target fps
 - Auto-repeat bug, which forced to disable xlib auto-repeat during the game execution
+- Encode the first frame when starting encode before the game is launched
 
 ## [1.3.0] - 2018-07-30
 ### Added

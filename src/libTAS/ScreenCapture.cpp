@@ -299,10 +299,22 @@ const char* ScreenCapture::getPixelFormat()
     return "RGBA";
 }
 
-int ScreenCapture::getPixels(uint8_t **pixels)
+int ScreenCapture::storePixels()
+{
+    return getPixels(nullptr, true);
+}
+
+int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 {
     if (!inited)
         return 0;
+
+    if (pixels) {
+        *pixels = winpixels.data();
+    }
+
+    if (!draw)
+        return size;
 
     if (game_info.video & GameInfo::OPENGL) {
         /* Copy the default framebuffer to our FBO */
@@ -375,10 +387,6 @@ int ScreenCapture::getPixels(uint8_t **pixels)
                 debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: ", orig::SDL_GetError());
             }
         }
-    }
-
-    if (pixels) {
-        *pixels = winpixels.data();
     }
 
     return size;

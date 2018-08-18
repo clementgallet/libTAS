@@ -69,7 +69,7 @@ void AVEncoder::encodeOneFrame(bool draw) {
      * or if we never drew. If not, we will capture the last drawn frame.
      */
     if (draw || !pixels) {
-        size = ScreenCapture::getPixels(&pixels);
+        size = ScreenCapture::getPixels(&pixels, draw);
     }
 
     nutMuxer->writeVideoFrame(pixels, size);

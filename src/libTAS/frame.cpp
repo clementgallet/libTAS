@@ -253,7 +253,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      */
     if (!skipping_draw) {
         if (drawFB && shared_config.save_screenpixels) {
-            ScreenCapture::getPixels(nullptr);
+            ScreenCapture::storePixels();
         }
     }
 

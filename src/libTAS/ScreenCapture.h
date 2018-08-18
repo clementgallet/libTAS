@@ -45,10 +45,14 @@ void getDimensions(int& w, int& h);
 /* Get the pixel format as an string used by nut muxer. */
 const char* getPixelFormat();
 
+
+/* Capture the pixels from the screen. */
+int storePixels();
+
 /* Capture the pixels from the screen and copy a pointer to this array into pixels.
  * Returns the size of the array.
  */
-int getPixels(uint8_t **pixels);
+int getPixels(uint8_t **pixels, bool draw);
 
 /* Set the screen pixels from our buffers.
  * @param same  if true, the screen did not change since last call with same==true
