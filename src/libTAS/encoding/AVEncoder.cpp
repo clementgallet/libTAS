@@ -27,17 +27,34 @@
 
 #include <cstdint>
 #include <unistd.h> // usleep
+#include <sstream>
+#include <iomanip>
 
 namespace libtas {
 
-AVEncoder::AVEncoder() {
-    std::string commandline = "ffmpeg -hide_banner -y -f nut -i - ";
-    commandline += ffmpeg_options;
-    commandline += " \"";
-    commandline += dumpfile;
-    commandline += "\"";
 
-    NATIVECALL(ffmpeg_pipe = popen(commandline.c_str(), "w"));
+int AVEncoder::segment_number = 0;
+char AVEncoder::dumpfile[4096] = {0};
+char AVEncoder::ffmpeg_options[4096] = {0};
+
+std::unique_ptr<AVEncoder> avencoder;
+
+
+AVEncoder::AVEncoder() {
+    std::ostringstream commandline;
+    commandline << "ffmpeg -hide_banner -y -f nut -i - ";
+    commandline << ffmpeg_options;
+    commandline << " \"";
+    commandline.write(dumpfile, static_cast<int>(strrchr(dumpfile, '.') - dumpfile));
+    /* Add segment number to filename if not the first */
+    if (segment_number > 0) {
+        commandline << "_";
+        commandline << std::setfill('0') << std::setw(2) << segment_number;
+    }
+    commandline << strrchr(dumpfile, '.');
+    commandline << "\"";
+
+    NATIVECALL(ffmpeg_pipe = popen(commandline.str().c_str(), "w"));
 
     if (! ffmpeg_pipe) {
         debuglog(LCF_DUMP | LCF_ERROR, "Could not create a pipe to ffmpeg");
@@ -47,6 +64,8 @@ AVEncoder::AVEncoder() {
     if (ScreenCapture::isInited()) {
         initMuxer();
     }
+
+    segment_number++;
 }
 
 void AVEncoder::initMuxer() {
@@ -119,11 +138,6 @@ AVEncoder::~AVEncoder() {
         }
     }
 }
-
-char AVEncoder::dumpfile[4096] = {0};
-char AVEncoder::ffmpeg_options[4096] = {0};
-
-std::unique_ptr<AVEncoder> avencoder;
 
 }
 
