@@ -26,6 +26,8 @@
 
 namespace libtas {
 
+#if SDL_VERSION_ATLEAST(2, 0, 6)
+#else
 /* Adding the SDL_JoystickType enum because it was introduced in 2.0.6 and many
  * systems still use 2.0.5
  */
@@ -42,7 +44,7 @@ typedef enum
     SDL_JOYSTICK_TYPE_ARCADE_PAD,
     SDL_JOYSTICK_TYPE_THROTTLE
 } SDL_JoystickType;
-
+#endif
 
 /**
  *  Count the number of joysticks attached to the system right now

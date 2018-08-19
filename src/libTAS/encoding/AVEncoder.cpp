@@ -113,13 +113,8 @@ void AVEncoder::encodeOneFrame(bool draw) {
     /*** Video ***/
     debuglog(LCF_DUMP, "Encode a video frame");
 
-    int size;
-    /* Access to the screen pixels if the current frame is a draw frame
-     * or if we never drew. If not, we will capture the last drawn frame.
-     */
-    if (draw || !pixels) {
-        size = ScreenCapture::getPixels(&pixels, draw);
-    }
+    /* Access to the screen pixels, or last screen pixels if not a draw frame */
+    int size = ScreenCapture::getPixels(&pixels, draw);
 
     nutMuxer->writeVideoFrame(pixels, size);
 }

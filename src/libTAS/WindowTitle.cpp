@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "../shared/SharedConfig.h"
 #include "global.h" // game_info
+#include <math.h>
 
 namespace libtas {
 
@@ -55,8 +56,8 @@ void WindowTitle::update(float fps, float lfps)
     if (last_running == shared_config.running
      && last_fastforward == shared_config.fastforward
      && last_dumping == shared_config.av_dumping
-     && abs(last_fps-fps) < 0.1
-     && abs(last_lfps-lfps) < 0.1)
+     && fabsf(last_fps-fps) < 0.1
+     && fabsf(last_lfps-lfps) < 0.1)
         return;
 
     std::ostringstream out;
