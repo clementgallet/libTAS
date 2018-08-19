@@ -94,21 +94,15 @@ if (NOT FFMPEG)
 endif()
 
 # Sound playback
-option(ENABLE_SOUND "Enable sound playback" ON)
+pkg_check_modules(ALSA REQUIRED alsa)
+target_include_directories(TAS PUBLIC ${ALSA_INCLUDE_DIRS})
+target_link_libraries(TAS ${ALSA_LIBRARIES})
+link_directories(${ALSA_LIBRARY_DIRS})
 
-pkg_check_modules(ALSA alsa)
-pkg_check_modules(SWRESAMPLE libswresample)
-
-if (ENABLE_SOUND AND SWRESAMPLE_FOUND AND ALSA_FOUND)
-    # Enable sound playback
-    message(STATUS "Sound playback is enabled")
-    target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS})
-    target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES} ${ALSA_LIBRARIES})
-    link_directories(${SWRESAMPLE_LIBRARY_DIRS} ${ALSA_LIBRARY_DIRS})
-    add_definitions(-DLIBTAS_ENABLE_SOUNDPLAYBACK)
-else()
-    message(WARNING "Sound playback is disabled")
-endif()
+pkg_check_modules(SWRESAMPLE REQUIRED libswresample)
+target_include_directories(TAS PUBLIC ${SWRESAMPLE_INCLUDE_DIRS})
+target_link_libraries(TAS ${SWRESAMPLE_LIBRARIES})
+link_directories(${SWRESAMPLE_LIBRARY_DIRS})
 
 # HUD
 option(ENABLE_HUD "Enable HUD" ON)

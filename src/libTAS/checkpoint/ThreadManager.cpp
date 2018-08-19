@@ -338,9 +338,7 @@ void ThreadManager::checkpoint()
     /* We must close the connection to the sound device. This must be done
      * BEFORE suspending threads.
      */
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     AudioPlayer::close();
-#endif
 
     /* Perform a series of checks before attempting to checkpoint */
     if (!Checkpoint::checkCheckpoint()) {
@@ -395,9 +393,7 @@ void ThreadManager::restore()
     /* We must close the connection to the sound device. This must be done
      * BEFORE suspending threads.
      */
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     AudioPlayer::close();
-#endif
 
     /* Perform a series of checks before attempting to restore */
     if (!Checkpoint::checkRestore()) {

@@ -20,8 +20,6 @@
 #ifndef LIBTAS_AUDIOPLAYER_H_INCL
 #define LIBTAS_AUDIOPLAYER_H_INCL
 
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-
 #include "AudioContext.h"
 #include <alsa/asoundlib.h>
 
@@ -51,5 +49,4 @@ class AudioPlayer
 };
 }
 
-#endif
 #endif

@@ -219,12 +219,10 @@ void AudioContext::mixAllSources(struct timespec ticks)
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
     if (!audiocontext.isLoopback && !shared_config.audio_mute) {
         /* Play the music */
         AudioPlayer::play(*this);
     }
-#endif
 }
 
 }

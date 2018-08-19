@@ -19,8 +19,6 @@
 
 #include "AudioPlayer.h"
 
-#ifdef LIBTAS_ENABLE_SOUNDPLAYBACK
-
 #include "../logging.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
@@ -155,5 +153,3 @@ void AudioPlayer::close()
 }
 
 }
-
-#endif

@@ -23,11 +23,9 @@
 #include <vector>
 #include <memory>
 #include "AudioBuffer.h"
-#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
 extern "C" {
 #include <libswresample/swresample.h>
 }
-#endif
 
 namespace libtas {
 /* Class storing an audio source, whose role is to control the playback
@@ -101,13 +99,11 @@ class AudioSource
         /* Indicate the current position in the buffer queue */
         int queue_index;
 
-#if defined(LIBTAS_ENABLE_SOUNDPLAYBACK)
         /* Context for resampling audio */
         struct SwrContext *swr;
 
         /* Temporary array of mixed samples */
         std::vector<uint8_t> mixedSamples;
-#endif
 
         /* In case of callback type, callback function.
          * We send as an argument a pointer to the buffer to refill.

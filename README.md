@@ -12,13 +12,13 @@ You can download the latest version of the software in the [Releases](https://gi
 
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
-* `libx11-6`, `libxcb1`, `libxcb-keysyms1`
+* `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xkb1`
 * `ffmpeg`
 * `libswresample2`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
 * `libtar0`, `zlib1g`
 
-Installing with the debian package will install all the required packages as well. The ffmpeg API used in the software is quite recent (> 3.2) so it is possible you will need to update your ffmpeg libraries.
+Installing with the debian package will install all the required packages as well.
 
 If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu) whose architecture matches a supported architecture of the game you want to run (in most cases amd64, sometimes only i386 is available). Note for Ubuntu users that you need a recent version (17.10 minimum).
 
@@ -31,16 +31,13 @@ If you want to compile it yourself, you will need `cmake`. From the root directo
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libasound2-dev`
-
-To enable audio playback, you will need `libswresample-dev`
+The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libasound2-dev`, `libswresample-dev`
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
 
-- `-DENABLE_SOUND=ON/OFF`: enable/disable audio playback
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
 - `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file opening/closing hooks to handle savefiles
 
