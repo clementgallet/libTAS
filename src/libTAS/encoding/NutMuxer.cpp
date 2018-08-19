@@ -111,7 +111,7 @@ unsigned int NutMuxer::CRCtable[] =
 unsigned int NutMuxer::nutCRC32(const std::vector<uint8_t> &buf)
 {
 	unsigned int crc = 0;
-	for (int i = 0; i < buf.size(); i++)
+	for (unsigned int i = 0; i < buf.size(); i++)
 	{
 		crc ^= static_cast<unsigned int>(buf[i]) << 24;
 		crc = (crc << 4) ^ CRCtable[crc >> 28];

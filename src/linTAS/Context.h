@@ -94,7 +94,7 @@ struct Context {
     std::string authors;
 
     /* A frame number when the game pauses */
-    int pause_frame = 0;
+    unsigned int pause_frame = 0;
 
 };
 

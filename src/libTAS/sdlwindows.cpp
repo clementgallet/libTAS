@@ -108,7 +108,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* We override this function to disable vsync,
      * except when using non deterministic timer.
      */
-    if (! shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+    if (!(shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)) {
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
         debuglog(LCF_WINDOW, "Disable vsync !!");
@@ -289,14 +289,14 @@ static int swapInterval = 0;
     return ret;
 }
 
-/* Override */ void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y)
+/* Override */ void SDL_GetWindowPosition(SDL_Window *, int *x, int *y)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     /* Always simulate the game window being on top-left corner, so that games
      * using global mouse coords do not desync on different window positions.
      */
-    x = 0;
-    y = 0;
+    *x = 0;
+    *y = 0;
 }
 
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)

@@ -162,12 +162,12 @@ void InputWindow::updateInputRow(int row)
 void InputWindow::update()
 {
     /* Update hotkey list */
-    for (int row = 0; row < context->config.km.hotkey_list.size(); row++) {
+    for (unsigned int row = 0; row < context->config.km.hotkey_list.size(); row++) {
         updateHotkeyRow(row);
     }
 
     /* Update input list */
-    for (int row = 0; row < context->config.km.input_list.size(); row++) {
+    for (unsigned int row = 0; row < context->config.km.input_list.size(); row++) {
         updateInputRow(row);
     }
 }

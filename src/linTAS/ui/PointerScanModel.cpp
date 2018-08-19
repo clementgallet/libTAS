@@ -195,7 +195,7 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
         if (index.column() == 0) {
             return QString("%1").arg(chain.first, 0, 16);
         }
-        if (index.column() > chain.second.size()) {
+        if (index.column() > static_cast<int>(chain.second.size())) {
             return QString("");
         }
         /* Offsets are stored in reverse order */

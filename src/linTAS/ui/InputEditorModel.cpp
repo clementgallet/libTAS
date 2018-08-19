@@ -42,7 +42,7 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
     if (index.column() == 0)
         return QAbstractItemModel::flags(index);
 
-    if (index.row() < context->framecount)
+    if (index.row() < static_cast<int>(context->framecount))
         return QAbstractItemModel::flags(index);
 
     const SingleInput si = input_set[index.column()-1];
@@ -75,13 +75,13 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::BackgroundRole) {
         /* Return white-ish for future inputs */
-        if (index.row() > context->framecount)
+        if (index.row() > static_cast<int>(context->framecount))
             return QBrush(QColor(0xff, 0xfe, 0xee));
 
         QColor color;
 
         /* Main color */
-        if (index.row() == context->framecount)
+        if (index.row() == static_cast<int>(context->framecount))
             color.setRgb(0xb5, 0xe7, 0xf7);
         else
             color.setRgb(0xd2, 0xf9, 0xd3);
@@ -148,7 +148,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (index.column() == 0)
             return false;
 
-        if (index.row() < context->framecount)
+        if (index.row() < static_cast<int>(context->framecount))
             return false;
 
         AllInputs &ai = movie->input_list[index.row()];
@@ -196,7 +196,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
         return false;
 
     /* Don't toggle past inputs */
-    if (index.row() < context->framecount)
+    if (index.row() < static_cast<int>(context->framecount))
         return false;
 
     SingleInput si = input_set[index.column()-1];
@@ -237,7 +237,7 @@ std::string InputEditorModel::inputDescription(int column)
 bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     /* Don't insert past inputs */
-    if (row < context->framecount)
+    if (row < static_cast<int>(context->framecount))
         return false;
 
     beginInsertRows(parent, row, row+count-1);
@@ -262,7 +262,7 @@ bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
 bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     /* Don't delete past inputs */
-    if (row < context->framecount)
+    if (row < static_cast<int>(context->framecount))
         return false;
 
     beginRemoveRows(parent, row, row+count-1);

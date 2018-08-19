@@ -149,7 +149,7 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
 
         baseAddressInput->setText(QString("%1").arg(watch->base_address, 0, 16));
 
-        for (int r=0; r<8; r++) {
+        for (unsigned int r=0; r<8; r++) {
             if (r < watch->pointer_offsets.size()) {
                 pointerLayout->itemAt(r, QFormLayout::LabelRole)->widget()->setVisible(true);
                 pointerLayout->itemAt(r, QFormLayout::FieldRole)->widget()->setVisible(true);

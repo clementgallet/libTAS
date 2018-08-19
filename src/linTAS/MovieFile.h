@@ -103,10 +103,10 @@ public:
     int getInputs(AllInputs& inputs);
 
     /* Insert inputs before the requested pos */
-    void insertInputsBefore(const AllInputs& inputs, int pos);
+    void insertInputsBefore(const AllInputs& inputs, unsigned int pos);
 
     /* Delete inputs at the requested pos */
-    void deleteInputs(int pos);
+    void deleteInputs(unsigned int pos);
 
     /* Truncate inputs to a frame number */
     void truncateInputs(int size);

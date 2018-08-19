@@ -151,7 +151,7 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
             int rawPosition = position % blockSamples;
             outSamples = reinterpret_cast<uint8_t*>(&rawSamples[rawPosition*nbChannels]);
             int totSamples = nbSamples;
-            if ((rawSamples.size()/nbChannels - rawPosition) < nbSamples)
+            if ((rawSamples.size()/nbChannels - rawPosition) < static_cast<size_t>(nbSamples))
                 totSamples = rawSamples.size()/nbChannels - rawPosition;
 
             debuglog(LCF_SOUND, "   Decompressed ", portionSize, " B -> ", rawSamples.size(), " B");
