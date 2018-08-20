@@ -153,6 +153,10 @@ public:
     QLabel *statusSoft;
     QLabel *statusMute;
 
+
+    /* Event filter function to prevent menu close when a checkable option is clicked */
+    bool eventFilter(QObject *obj, QEvent *event);
+
     /* Update UI elements (mainly enable/disable) depending on
      * the game status (running/stopped), to prevent modifying values that
      * are not supposed to be modified when the game is running.

@@ -302,6 +302,23 @@ MainWindow::~MainWindow()
         game_thread.detach();
 }
 
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonRelease) {
+        QMenu *menu = qobject_cast<QMenu*>(obj);
+        if (menu) {
+            if (menu->activeAction() && menu->activeAction()->isCheckable()) {
+                /* If we click on a checkable action, trigger the action but
+                 * do not close the menu
+                 */
+                menu->activeAction()->trigger();
+                return true;
+            }
+        }
+    }
+    return QObject::eventFilter(obj, event);
+}
+
 /* We are going to do this a lot, so this is a helper function to insert
  * checkable actions into an action group with data.
  */
@@ -567,6 +584,7 @@ void MainWindow::createMenus()
 
     QMenu *renderPerfMenu = videoMenu->addMenu(tr("Add performance flags to software rendering"));
     renderPerfMenu->addActions(renderPerfGroup->actions());
+    renderPerfMenu->installEventFilter(this);
     disabledWidgetsOnStart.append(renderPerfMenu);
 
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
@@ -575,6 +593,7 @@ void MainWindow::createMenus()
     osdMenu->addSeparator();
     osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, &MainWindow::slotOsdEncode);
     osdEncodeAction->setCheckable(true);
+    osdMenu->installEventFilter(this);
 
     /* Sound Menu */
     QMenu *soundMenu = menuBar()->addMenu(tr("Sound"));
@@ -597,8 +616,10 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(timeMenu);
     QMenu *timeMainMenu = timeMenu->addMenu(tr("Main thread"));
     timeMainMenu->addActions(timeMainGroup->actions());
+    timeMainMenu->installEventFilter(this);
     QMenu *timeSecMenu = timeMenu->addMenu(tr("Secondary thread"));
     timeSecMenu->addActions(timeSecGroup->actions());
+    timeSecMenu->installEventFilter(this);
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
     incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
@@ -626,8 +647,11 @@ void MainWindow::createMenus()
 
     QMenu *debugPrintMenu = debugMenu->addMenu(tr("Print Categories"));
     debugPrintMenu->addActions(loggingPrintGroup->actions());
+    debugPrintMenu->installEventFilter(this);
+
     QMenu *debugExcludeMenu = debugMenu->addMenu(tr("Exclude Categories"));
     debugExcludeMenu->addActions(loggingExcludeGroup->actions());
+    debugExcludeMenu->installEventFilter(this);
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
