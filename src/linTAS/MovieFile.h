@@ -117,13 +117,13 @@ public:
     /* Check if another movie starts with the same inputs as this movie */
     bool isPrefix(const MovieFile& movie);
 
-private:
     /* Write a single frame of inputs into the input stream */
-    int writeFrame(std::ofstream& input_stream, const AllInputs& inputs);
+    int writeFrame(std::ostream& input_stream, const AllInputs& inputs);
 
     /* Read a single frame of inputs from the line of inputs */
     int readFrame(std::string& line, AllInputs& inputs);
 
+private:
     Context* context;
 
 };

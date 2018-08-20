@@ -69,6 +69,11 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput);
     menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
     menu->addAction(tr("Clear"), this, &InputEditorView::clearInput);
+    menu->addSeparator();
+    menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs);
+    menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs);
+    menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs);
+    menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs);
 
     keyDialog = new KeyPressedDialog(this);
 }
@@ -239,7 +244,7 @@ void InputEditorView::truncateInputs()
 
     int nbRows = inputEditorModel->rowCount();
 
-    inputEditorModel->removeRows(index.row()+1, nbRows-index.row()-1);        
+    inputEditorModel->removeRows(index.row()+1, nbRows-index.row()-1);
 }
 
 void InputEditorView::clearInput()
@@ -247,4 +252,74 @@ void InputEditorView::clearInput()
     for (const QModelIndex index : selectionModel()->selectedRows()) {
         inputEditorModel->clearInput(index.row());
     }
+}
+
+void InputEditorView::copyInputs()
+{
+    if (!selectionModel()->hasSelection())
+        return;
+
+    /* Selection mode garanties that we select a contiguous range, so getting
+     * the min and max row.
+     */
+    int min_row = 2000000000;
+    int max_row = -1;
+    for (const QModelIndex index : selectionModel()->selectedRows()) {
+        min_row = (index.row()<min_row)?index.row():min_row;
+        max_row = (index.row()>max_row)?index.row():max_row;
+    }
+    inputEditorModel->copyInputs(min_row, max_row-min_row+1);
+}
+
+void InputEditorView::cutInputs()
+{
+    if (!selectionModel()->hasSelection())
+        return;
+
+    /* Selection mode garanties that we select a contiguous range, so getting
+     * the min and max row.
+     */
+    int min_row = 2000000000;
+    int max_row = -1;
+    for (const QModelIndex index : selectionModel()->selectedRows()) {
+        min_row = (index.row()<min_row)?index.row():min_row;
+        max_row = (index.row()>max_row)?index.row():max_row;
+    }
+    inputEditorModel->copyInputs(min_row, max_row-min_row+1);
+    inputEditorModel->removeRows(min_row, max_row-min_row+1);
+
+}
+
+void InputEditorView::pasteInputs()
+{
+    const QModelIndex index = selectionModel()->currentIndex();
+
+    /* If no row was selected, return */
+    if (!index.isValid())
+        return;
+
+    int nbFrames = inputEditorModel->pasteInputs(index.row());
+
+    /* Select the pasted inputs */
+    QModelIndex top = inputEditorModel->index(index.row(), 0);
+    QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
+    selectionModel()->clear();
+    selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+}
+
+void InputEditorView::pasteInsertInputs()
+{
+    const QModelIndex index = selectionModel()->currentIndex();
+
+    /* If no row was selected, return */
+    if (!index.isValid())
+        return;
+
+    int nbFrames = inputEditorModel->pasteInsertInputs(index.row());
+
+    /* Select the pasted inputs */
+    QModelIndex top = inputEditorModel->index(index.row(), 0);
+    QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
+    selectionModel()->clear();
+    selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }

@@ -4,6 +4,7 @@
 - Force FMOD to output to ALSA, and removed PulseAudio hooks
 - Kill button to terminate a hanging game process
 - Hook SDL text input
+- Copy/cut/paste options in the input editor
 
 ### Changed
 - Remove all ffmpeg API, and use a pipe to send video/audio using nut muxer

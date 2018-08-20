@@ -68,6 +68,18 @@ public:
     /* Clear input */
     void clearInput(int row);
 
+    /* Copy selected inputs */
+    void copyInputs(int row, int count);
+
+    /* Cut selected inputs */
+    void cutInputs(int row, int count);
+
+    /* Paste selected inputs. Returns the number of pasted inputs */
+    int pasteInputs(int row);
+
+    /* Paste insert selected inputs. Returns the number of pasted inputs */
+    int pasteInsertInputs(int row);
+
 public slots:
     /* Toggle a single input and return the new value */
     bool toggleInput(const QModelIndex &index);

@@ -18,6 +18,10 @@
  */
 
 #include <QBrush>
+#include <QClipboard>
+#include <QGuiApplication>
+#include <sstream>
+
 #include <set>
 
 #include "InputEditorModel.h"
@@ -281,6 +285,101 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+void InputEditorModel::copyInputs(int row, int count)
+{
+    std::ostringstream inputString;
+
+    /* Translate inputs into a string */
+    for (int r=row; r < row+count; r++) {
+        movie->writeFrame(inputString, movie->input_list[r]);
+    }
+
+    // QString qInputs(inputString)
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(inputString.str().c_str());
+}
+
+int InputEditorModel::pasteInputs(int row)
+{
+    /* Don't modify past inputs */
+    if (row < static_cast<int>(context->framecount))
+        return 0;
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    std::istringstream inputString(clipboard->text().toStdString());
+
+    std::vector<AllInputs> paste_ais;
+    std::string line;
+    while (std::getline(inputString, line)) {
+        if (!line.empty() && (line[0] == '|')) {
+            AllInputs ai;
+            movie->readFrame(line, ai);
+            paste_ais.push_back(ai);
+        }
+    }
+
+    /* Check if we need to insert frames */
+    int insertedFrames = row + paste_ais.size() - movie->input_list.size();
+
+    if (insertedFrames > 0) {
+        beginInsertRows(QModelIndex(), row, row + insertedFrames);
+    }
+
+    for (size_t r = 0; r < paste_ais.size(); r++) {
+        movie->input_list[row + r] = paste_ais[r];
+    }
+
+    if (insertedFrames > 0) {
+        endInsertRows();
+    }
+
+    /* Update the movie framecount. Should it be done here ?? */
+    context->config.sc.movie_framecount = movie->nbFrames();
+    context->config.sc_modified = true;
+    emit frameCountChanged();
+
+    /* Update the paste inputs view */
+    emit dataChanged(createIndex(row,0), createIndex(row+paste_ais.size()-1,columnCount()));
+
+    return paste_ais.size();
+}
+
+int InputEditorModel::pasteInsertInputs(int row)
+{
+    /* Don't modify past inputs */
+    if (row < static_cast<int>(context->framecount))
+        return 0;
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    std::istringstream inputString(clipboard->text().toStdString());
+
+    std::vector<AllInputs> paste_ais;
+    std::string line;
+    while (std::getline(inputString, line)) {
+        if (!line.empty() && (line[0] == '|')) {
+            AllInputs ai;
+            movie->readFrame(line, ai);
+            paste_ais.push_back(ai);
+        }
+    }
+
+    beginInsertRows(QModelIndex(), row, row + paste_ais.size());
+
+    for (size_t r = 0; r < paste_ais.size(); r++) {
+        movie->insertInputsBefore(paste_ais[r], row + r);
+    }
+
+    endInsertRows();
+
+    /* Update the movie framecount. Should it be done here ?? */
+    context->config.sc.movie_framecount = movie->nbFrames();
+    context->config.sc_modified = true;
+    emit frameCountChanged();
+
+    return paste_ais.size();
+}
+
+
 void InputEditorModel::addUniqueInput(const SingleInput &si)
 {
     /* Check if input is already present */
@@ -367,6 +466,7 @@ void InputEditorModel::endEditInputs()
     /* We have to check if new inputs were added */
     addUniqueInputs(movie->input_list[context->framecount]);
 }
+
 
 void InputEditorModel::update()
 {

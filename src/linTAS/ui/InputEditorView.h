@@ -49,6 +49,11 @@ public slots:
     void truncateInputs();
     void clearInput();
 
+    void copyInputs();
+    void cutInputs();
+    void pasteInputs();
+    void pasteInsertInputs();
+
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

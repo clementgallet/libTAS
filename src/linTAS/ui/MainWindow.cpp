@@ -551,7 +551,7 @@ void MainWindow::createMenus()
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
-    movieMenu->addAction(tr("Input Editor (experimental)..."), inputEditorWindow, &InputEditorWindow::show);
+    movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
 
 
     /* Video Menu */

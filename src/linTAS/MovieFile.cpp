@@ -290,7 +290,7 @@ int MovieFile::saveMovie()
 	return saveMovie(context->config.moviefile);
 }
 
-int MovieFile::writeFrame(std::ofstream& input_stream, const AllInputs& inputs)
+int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 {
     /* Write keyboard inputs */
     if (context->config.sc.keyboard_support) {
