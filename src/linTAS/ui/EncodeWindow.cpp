@@ -28,9 +28,6 @@
 #include "EncodeWindow.h"
 
 #include <iostream>
-extern "C" {
-#include <libavcodec/avcodec.h>
-}
 
 EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
@@ -110,33 +107,6 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
     setLayout(mainLayout);
 
-    /* Get all encoding codecs available and fill the codec menus */
-
-    /* Initialize libavcodec, and register all codecs and formats */
-    //av_register_all();
-    // avcodec_register_all();
-    //
-    // /* Enumerate the codecs */
-    // AVCodec* codec = av_codec_next(nullptr);
-    //
-    // while(codec != nullptr)
-    // {
-    //     if (av_codec_is_encoder(codec)) {
-    //         /* Codec supports encoding */
-    //
-    //         /* Build codec name */
-    //         std::string codecstr = codec->long_name?codec->long_name:codec->name;
-    //
-    //         if (codec->type == AVMEDIA_TYPE_VIDEO) {
-    //             videoChoice->addItem(codecstr.c_str(), QVariant(codec->id));
-    //         }
-    //         if (codec->type == AVMEDIA_TYPE_AUDIO) {
-    //             audioChoice->addItem(codecstr.c_str(), QVariant(codec->id));
-    //         }
-    //     }
-    //     codec = av_codec_next(codec);
-    // }
-
     update_config();
 }
 
@@ -149,52 +119,15 @@ void EncodeWindow::update_config()
         encodePath->setText(context->config.dumpfile.c_str());
     }
 
-    /* Browse the list of video codecs and select the item that matches
-     * the value in the config using the item's user data.
-     */
+    /* Set video codec and bitrate */
     videoChoice->setCurrentIndex(context->config.sc.video_codec);
-    // for (int c = 0; c < videoChoice->count(); c++) {
-    //     if (static_cast<AVCodecID>(videoChoice->itemData(c).toInt()) == context->config.sc.video_codec) {
-    //         videoChoice->setCurrentIndex(c);
-    //         break;
-    //     }
-    // }
-
-    /* Enable/disable video bitrate for lossy/lossless codecs */
-    // const AVCodecDescriptor* vcodec = avcodec_descriptor_get(context->config.sc.video_codec);
-    // if (vcodec && (vcodec->props & AV_CODEC_PROP_LOSSLESS) && !(vcodec->props & AV_CODEC_PROP_LOSSY)) {
-    //     videoBitrate->setEnabled(false);
-    // }
-    // else {
-    //     videoBitrate->setEnabled(true);
-    // }
-
-    /* Set video bitrate */
     videoBitrate->setValue(context->config.sc.video_bitrate);
 
-    /* Same for audio codec and bitrate */
+    /* Set audio codec and bitrate */
     audioChoice->setCurrentIndex(context->config.sc.audio_codec);
-
-    // for (int c = 0; c < audioChoice->count(); c++) {
-    //     if (static_cast<AVCodecID>(audioChoice->itemData(c).toInt()) == context->config.sc.audio_codec) {
-    //         audioChoice->setCurrentIndex(c);
-    //         break;
-    //     }
-    // }
-
-    /* Enable/disable audio bitrate for lossy/lossless codecs */
-    // const AVCodecDescriptor* acodec = avcodec_descriptor_get(context->config.sc.audio_codec);
-    // if (acodec && (acodec->props & AV_CODEC_PROP_LOSSLESS) && !(acodec->props & AV_CODEC_PROP_LOSSY)) {
-    //     audioBitrate->setEnabled(false);
-    // }
-    // else {
-    //     audioBitrate->setEnabled(true);
-    // }
-
-    /* Set audio bitrate */
     audioBitrate->setValue(context->config.sc.audio_bitrate);
 
-    /* Set audio options */
+    /* Set ffmpeg options */
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
 
     if (context->config.ffmpegoptions.empty()) {
