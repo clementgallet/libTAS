@@ -802,8 +802,10 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
         }
     }
 
-    /* Remove write permission to the area */
-    MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot & ~PROT_WRITE) == 0)
+    /* Recover permission to the area */
+    if (!(saved_area.prot & PROT_WRITE)) {
+        MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
+    }
 }
 
 
@@ -1085,16 +1087,6 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
                 }
             }
             else {
-                // char base_flag = base_state.getPageFlag(curAddr);
-                // if (base_flag == Area::NONE) {
-                //     char* base_page = base_state.getPage(base_flag);
-                //     if (0 != memcmp(base_page, curAddr, 4096)) {
-                //         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page mismatch!");
-                //     }
-                    // else {
-                    //     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Non-dirty page match!");
-                    // }
-                // }
                 ss_pagemaps[ss_pagemap_i++] = Area::BASE_PAGE;
             }
         }
