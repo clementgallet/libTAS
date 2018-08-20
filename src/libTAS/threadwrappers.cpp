@@ -54,7 +54,12 @@ DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
 
 /* We create a specific exception for thread exit calls */
-class ThreadExitException: public std::exception {};
+class ThreadExitException {
+    const char* what () const throw ()
+    {
+    	return "Thread exit";
+    }
+};
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
