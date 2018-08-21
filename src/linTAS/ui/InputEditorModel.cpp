@@ -327,6 +327,7 @@ int InputEditorModel::pasteInputs(int row)
 
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->input_list[row + r] = paste_ais[r];
+        addUniqueInputs(paste_ais[r]);
     }
 
     if (insertedFrames > 0) {
@@ -367,6 +368,7 @@ int InputEditorModel::pasteInsertInputs(int row)
 
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->insertInputsBefore(paste_ais[r], row + r);
+        addUniqueInputs(paste_ais[r]);
     }
 
     endInsertRows();
