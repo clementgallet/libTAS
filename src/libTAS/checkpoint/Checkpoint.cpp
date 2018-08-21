@@ -517,6 +517,9 @@ static void readAllAreas()
 
 static int reallocateArea(Area *saved_area, Area *current_area)
 {
+    saved_area->print("Restore");
+    current_area->print("Current");
+
     /* Do Areas start on the same address? */
     if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
         (saved_area->addr == current_area->addr)) {
@@ -530,8 +533,6 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             }
             return 0;
         }
-
-        saved_area->print("Restore");
 
         size_t copy_size = (saved_area->size<current_area->size)?saved_area->size:current_area->size;
 
@@ -568,6 +569,11 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
                 copy_size = saved_area->size;
             }
+        }
+
+        /* Apply the protections from the saved area if needed */
+        if (saved_area->prot != current_area->prot) {
+            MYASSERT(mprotect(saved_area->addr, copy_size, saved_area->prot) == 0)
         }
 
         if ((saved_area->endAddr == current_area->endAddr) || (saved_area->name[0] == '[')) {
@@ -746,14 +752,14 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
 
         /* We read savestate pagemap flags in chunks to avoid too many read syscalls. */
         if (ss_pagemap_i >= 4096) {
-            size_t remaining_pages = (nb_pages-page_i)>4096?4096:(nb_pages-page_i);
+            size_t remaining_pages = ((nb_pages-page_i)>4096)?4096:(nb_pages-page_i);
             Utils::readAll(pmfd, ss_pagemaps, remaining_pages);
             ss_pagemap_i = 0;
         }
 
         /* Same for pagemap file */
-        if (shared_config.incremental_savestates && pagemap_i >= 512) {
-            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
+        if (shared_config.incremental_savestates && (pagemap_i >= 512)) {
+            size_t remaining_pages = ((nb_pages-page_i)>512)?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
         }

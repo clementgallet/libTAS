@@ -68,6 +68,7 @@ ssize_t Utils::readAll(int fd, void *buf, size_t count)
             if (errno == EINTR || errno == EAGAIN) {
                 continue;
             } else {
+                debuglogstdio(LCF_ERROR, "Read at address %p failed with errno %d", ptr + num_read, errno);
                 return -1;
             }
         } else if (rc == 0) {

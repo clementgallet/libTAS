@@ -27,11 +27,11 @@ namespace libtas {
 
 void Area::print(const char* prefix) const
 {
-    debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p (%s) with size %d",
+    debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p-%p (%s) with size %d",
     prefix,
     (prot&PROT_READ)?'r':'-', (prot&PROT_WRITE)?'w':'-',
     (prot&PROT_EXEC)?'x':'-', (flags&MAP_SHARED)?'s':'p',
-    addr, name, size);
+    addr, endAddr, name, size);
 }
 
 }
