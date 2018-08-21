@@ -68,6 +68,10 @@ void *dlopen(const char *file, int mode) throw() {
 
     void *result = orig::dlopen(file, mode);
 
+    if (!libraries) {
+        libraries = new std::set<std::string>();
+    }
+
     if (result && (file != nullptr))
         libraries->insert(std::string(file));
     return result;
