@@ -147,7 +147,21 @@ static ALCenum alcError = ALC_NO_ERROR;
     }
 
     debuglog(LCF_OPENAL, "Extension asked is ", extname);
-    return ALC_FALSE;
+
+    if (strcmp(extname, "ALC_ENUMERATION_EXT") == 0) {
+        return ALC_TRUE;
+    }
+
+    if (strcmp(extname, "ALC_ENUMERATE_ALL_EXT") == 0) {
+        return ALC_TRUE;
+    }
+
+    if (strcmp(extname, "ALC_EXT_CAPTURE") == 0) {
+        return ALC_TRUE;
+    }
+
+    debuglog(LCF_OPENAL | LCF_ERROR, "Extension ", extname, " not supported, but we will still return yes because some games crash if we return no");
+    return ALC_TRUE;
 }
 
 /* Override */ void* alcGetProcAddress(ALCdevice *device, const ALCchar *funcname)
@@ -197,7 +211,7 @@ static const ALCchar* alcInvalidContextStr = "Invalid context";
 static const ALCchar* alcInvalidEnumStr = "Invalid enum";
 static const ALCchar* alcInvalidValueStr = "Invalid value";
 static const ALCchar* alcOutOfMemoryStr = "Out of memory";
-static const ALCchar* alcExtensionsStr = ""; // extensions strings separated by space
+static const ALCchar* alcExtensionsStr = "ALC_ENUMERATION_EXT ALC_ENUMERATE_ALL_EXT ALC_EXT_CAPTURE"; // extensions strings separated by space
 static const ALCchar* alcDeviceListStr = "libTAS device\0"; // must be double null-terminated
 static const ALCchar* alcDeviceStr = "libTAS device";
 static const ALCchar* alcCaptureListStr = "\0"; // must be double null-terminated
@@ -216,6 +230,20 @@ static const ALCchar* alcDefault = "";
         case ALC_DEVICE_SPECIFIER:
             if (device == NULL) {
                 debuglog(LCF_OPENAL, "Request list of available devices");
+                return alcDeviceListStr;
+            }
+            else {
+                debuglog(LCF_OPENAL, "Request current device");
+                return alcDeviceStr;
+            }
+
+        case ALC_DEFAULT_ALL_DEVICES_SPECIFIER:
+            debuglog(LCF_OPENAL, "Request default all device");
+            return alcDeviceStr;
+
+        case ALC_ALL_DEVICES_SPECIFIER:
+            if (device == NULL) {
+                debuglog(LCF_OPENAL, "Request list of available all devices");
                 return alcDeviceListStr;
             }
             else {
