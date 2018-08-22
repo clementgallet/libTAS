@@ -47,6 +47,9 @@ DEFINE_ORIG_POINTER(access)
 DEFINE_ORIG_POINTER(__xstat)
 DEFINE_ORIG_POINTER(__lxstat)
 DEFINE_ORIG_POINTER(__fxstat)
+DEFINE_ORIG_POINTER(__xstat64)
+DEFINE_ORIG_POINTER(__lxstat64)
+DEFINE_ORIG_POINTER(__fxstat64)
 DEFINE_ORIG_POINTER(dup2)
 
 int open (const char *file, int oflag, ...)
@@ -288,6 +291,30 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__xstat(ver, path, buf);
 }
 
+int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
+{
+    LINK_NAMESPACE(__xstat64, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__xstat64(ver, path, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if savefile. */
+    if (SaveFileList::getSaveFileFd(path) != 0) {
+        if (SaveFileList::isSaveFileRemoved(path)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            return 0;
+        }
+    }
+
+    return orig::__xstat64(ver, path, buf);
+}
+
 int __lxstat(int ver, const char *path, struct stat *buf) throw()
 {
     LINK_NAMESPACE(__lxstat, nullptr);
@@ -312,6 +339,30 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__lxstat(ver, path, buf);
 }
 
+int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
+{
+    LINK_NAMESPACE(__lxstat64, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__lxstat64(ver, path, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if savefile. */
+    if (SaveFileList::getSaveFileFd(path) != 0) {
+        if (SaveFileList::isSaveFileRemoved(path)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            return 0;
+        }
+    }
+
+    return orig::__lxstat64(ver, path, buf);
+}
+
 int __fxstat(int ver, int fd, struct stat *buf) throw()
 {
     LINK_NAMESPACE(__fxstat, nullptr);
@@ -321,6 +372,17 @@ int __fxstat(int ver, int fd, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
     return orig::__fxstat(ver, fd, buf);
+}
+
+int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
+{
+    LINK_NAMESPACE(__fxstat64, nullptr);
+
+    if (GlobalState::isNative())
+        return orig::__fxstat64(ver, fd, buf);
+
+    debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    return orig::__fxstat64(ver, fd, buf);
 }
 
 int dup2 (int fd, int fd2) throw()

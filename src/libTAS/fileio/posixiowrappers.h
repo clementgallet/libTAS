@@ -58,8 +58,11 @@ OVERRIDE int access (const char *name, int type) throw();
 
 /* Wrappers for stat functions */
 OVERRIDE int __xstat(int ver, const char *path, struct stat *buf) throw();
+OVERRIDE int __xstat64(int ver, const char *path, struct stat64 *buf) throw();
 OVERRIDE int __lxstat(int ver, const char *path, struct stat *buf) throw();
+OVERRIDE int __lxstat64(int ver, const char *path, struct stat64 *buf) throw();
 OVERRIDE int __fxstat(int ver, int fd, struct stat *buf) throw();
+OVERRIDE int __fxstat64(int ver, int fd, struct stat64 *buf) throw();
 
 // OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) throw();
 
