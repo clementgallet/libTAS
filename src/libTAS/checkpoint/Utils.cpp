@@ -40,6 +40,7 @@ ssize_t Utils::writeAll(int fd, const void *buf, size_t count)
             if (errno == EINTR || errno == EAGAIN) {
                 continue;
             } else {
+                debuglogstdio(LCF_ERROR, "Write at address %p failed with errno %d", ptr + num_written, errno);
                 return rc;
             }
         } else if (rc == 0) {

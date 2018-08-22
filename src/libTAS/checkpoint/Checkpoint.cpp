@@ -724,7 +724,7 @@ static void readAnArea(const Area &saved_area, int pmfd, int pfd, int spmfd, Sav
 
     if (shared_config.incremental_savestates) {
         /* Seek at the beginning of the area pagemap */
-        lseek(spmfd, reinterpret_cast<off_t>(saved_area.addr) / (4096/8), SEEK_SET);
+        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
     }
 
     /* Number of pages in the area */
@@ -1015,12 +1015,13 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
 
     /* Save the position of the first area page in the pages file */
     area.page_offset = lseek(pfd, 0, SEEK_CUR);
+    MYASSERT(area.page_offset != -1)
 
     /* Write the area struct */
     Utils::writeAll(pmfd, &area, sizeof(area));
 
     /* Seek at the beginning of the area pagemap */
-    lseek(spmfd, reinterpret_cast<off_t>(area.addr) / (4096/8), SEEK_SET);
+    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
 
     /* Number of pages in the area */
     int nb_pages = area.size / 4096;
