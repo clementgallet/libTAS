@@ -111,7 +111,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.keyboard_support = config.value("keyboard_support").toBool();
 	context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
-	context->config.sc.nb_controllers = config.value("nb_controllers").toBool();
+	context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
 	context->config.sc.initial_time.tv_sec = config.value("initial_time_sec").toInt();
 	context->config.sc.initial_time.tv_nsec = config.value("initial_time_nsec").toInt();
 	context->config.sc.framerate_num = config.value("framerate_num").toUInt();
