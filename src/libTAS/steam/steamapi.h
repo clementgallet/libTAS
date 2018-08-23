@@ -17,10 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STEAM_H_INCL
-#define LIBTAS_STEAM_H_INCL
+#ifndef LIBTAS_STEAMAPI_H_INCL
+#define LIBTAS_STEAMAPI_H_INCL
 
-#include "global.h"
+#include "../global.h"
+#include "isteamuser.h"
+#include "isteamuserstats.h"
 
 namespace libtas {
 
@@ -59,6 +61,17 @@ OVERRIDE void SteamAPI_RunCallbacks();
 // functions used by the utility CCallback objects to receive callbacks
 OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
 OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
+
+
+OVERRIDE ISteamUserStats *SteamUserStats();
+
+OVERRIDE ISteamUser *SteamUser();
+
+// OVERRIDE bool SteamAPI_ISteamUserStats_RequestCurrentStats(intptr_t instancePtr);
+//
+// OVERRIDE bool RequestCurrentStats(intptr_t instancePtr);
+//
+// OVERRIDE bool GetProgressStat(const char* statID);
 
 }
 

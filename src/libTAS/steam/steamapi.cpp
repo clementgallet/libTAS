@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "steamwrappers.h"
-#include "logging.h"
+#include "steamapi.h"
+#include "../logging.h"
 
 namespace libtas {
 
@@ -59,6 +59,22 @@ void SteamAPI_RegisterCallback( void *pCallback, int iCallback )
 void SteamAPI_UnregisterCallback( void *pCallback )
 {
     debuglog(LCF_STEAM, __func__, " call.");
+}
+
+ISteamUserStats *SteamUserStats()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamUserStats steamuserstats;
+    return &steamuserstats;
+}
+
+ISteamUser *SteamUser()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamUser steamuser;
+    return &steamuser;
 }
 
 }
