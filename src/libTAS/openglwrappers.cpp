@@ -27,7 +27,8 @@
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        return reinterpret_cast<void*>(str); \
+        debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
+        return reinterpret_cast<void*>(libtas::str); \
     }
 
 #define STORE_RETURN_SYMBOL_CUSTOM(str,myfunc) \
@@ -50,6 +51,7 @@ DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
 
+DEFINE_ORIG_POINTER(glClear);
 DEFINE_ORIG_POINTER(glBegin);
 DEFINE_ORIG_POINTER(glEnd);
 
@@ -147,6 +149,8 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
      * other name. This is not a problem because games should not call these
      * opengl functions directly but by using a glGetProcAddress function.
      */
+    STORE_RETURN_SYMBOL_CUSTOM(glClear, myglClear)
+
     STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays, myglDrawArrays)
     STORE_RETURN_SYMBOL_CUSTOM(glDrawElements, myglDrawElements)
     STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArrays, myglMultiDrawArrays)
@@ -356,6 +360,21 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
         i += 2;
     }
     return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
+}
+
+void glClear(GLbitfield mask)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    LINK_NAMESPACE(glClear, "libGL");
+    if (!skipping_draw)
+        return orig::glClear(mask);
+}
+
+void myglClear(GLbitfield mask)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (!skipping_draw)
+        return orig::glClear(mask);
 }
 
 

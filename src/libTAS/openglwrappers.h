@@ -53,6 +53,9 @@ OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config
 
 /* A lot of openGL draw commands that are NOPed when fastforwarding */
 
+OVERRIDE void glClear(GLbitfield mask);
+void myglClear(GLbitfield mask);
+
 OVERRIDE void glBegin(GLenum mode);
 OVERRIDE void glEnd(void);
 
