@@ -234,15 +234,15 @@ void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
         if (ai.pointer_x != -1) {
             oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << "] ";
         }
-        if (ai.pointer_mask & Button1Mask)
+        if (ai.pointer_mask & (1 << SingleInput::POINTER_B1))
             oss << "[M b1] ";
-        if (ai.pointer_mask & Button2Mask)
+        if (ai.pointer_mask & (1 << SingleInput::POINTER_B2))
             oss << "[M b2] ";
-        if (ai.pointer_mask & Button3Mask)
+        if (ai.pointer_mask & (1 << SingleInput::POINTER_B3))
             oss << "[M b3] ";
-        if (ai.pointer_mask & Button4Mask)
+        if (ai.pointer_mask & (1 << SingleInput::POINTER_B4))
             oss << "[M b4] ";
-        if (ai.pointer_mask & Button5Mask)
+        if (ai.pointer_mask & (1 << SingleInput::POINTER_B5))
             oss << "[M b5] ";
     }
 
