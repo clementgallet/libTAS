@@ -57,6 +57,8 @@ int main(int argc, char **argv)
     qRegisterMetaTypeStreamOperators<HotKey>("HotKey");
     qRegisterMetaTypeStreamOperators<SingleInput>("SingleInput");
 
+    setlocale(LC_NUMERIC, "C");
+
     /* Parsing arguments */
     int c;
     char buf[PATH_MAX];
@@ -200,6 +202,8 @@ int main(int argc, char **argv)
 
     /* Starts the user interface */
     QApplication app(argc, argv);
+
+    QLocale::setDefault(QLocale("C"));
 
     MainWindow mainWin(&context);
     mainWin.show();
