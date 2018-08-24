@@ -87,7 +87,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Game Executable */
     gamePath = new QLineEdit();
-    gamePath->setReadOnly(true);
     gamePath->setMinimumWidth(400);
 
     browseGamePath = new QPushButton("Browse...");
@@ -100,7 +99,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Movie File */
     moviePath = new QLineEdit();
-    moviePath->setReadOnly(true);
 
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);

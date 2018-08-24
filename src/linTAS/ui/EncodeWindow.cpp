@@ -35,7 +35,6 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
     /* Video file */
     encodePath = new QLineEdit();
-    encodePath->setReadOnly(true);
 
     browseEncodePath = new QPushButton("Browse...");
     connect(browseEncodePath, &QAbstractButton::clicked, this, &EncodeWindow::slotBrowseEncodePath);
