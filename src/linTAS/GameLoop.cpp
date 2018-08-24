@@ -70,6 +70,11 @@ void GameLoop::launchGameThread()
         if (0 != chdir(context->config.rundir.c_str())) {
             std::cerr << "Could not change the working directory to " << context->config.rundir << std::endl;
         }
+
+        /* Set PWD environment variable because games may use it and chdir
+         * does not update it.
+         */
+        setenv("PWD", context->config.rundir.c_str(), 1);
     }
 
     /* Set where stderr of the game is redirected */
