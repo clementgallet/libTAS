@@ -21,6 +21,7 @@
 #define LINTAS_RAMWATCHDETAILED_H_INCLUDED
 
 #include "IRamWatchDetailed.h"
+#include "TypeIndex.h"
 #include <sstream>
 #include <iostream>
 #include <sys/uio.h>
@@ -114,6 +115,11 @@ public:
         remote.iov_len = sizeof(T);
 
         return process_vm_writev(game_pid, &local, 1, &remote, 1, 0);
+    }
+
+    int type()
+    {
+        return type_index<T>();
     }
 
 };

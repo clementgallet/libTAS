@@ -21,6 +21,7 @@
 #define LINTAS_RAMWATCH_H_INCLUDED
 
 #include "CompareEnums.h"
+#include "TypeIndex.h"
 #include "IRamWatch.h"
 #include <cstdint>
 #include <sys/types.h>
@@ -36,6 +37,7 @@ template <> inline const char* fmt_from_type<float>(bool hex) {return hex?"%a":"
 template <> inline const char* fmt_from_type<double>(bool hex) {return hex?"%la":"%lg";}
 template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?"%" PRIx64:"%" PRId64;}
 template <> inline const char* fmt_from_type<uint64_t>(bool hex) {return hex?"%" PRIx64:"%" PRIu64;}
+
 
 template <class T>
 class RamWatch : public virtual IRamWatch {
@@ -153,6 +155,12 @@ public:
 
         return check(value, compare_type, compare_operator, compare_value_db);
     }
+
+    int type()
+    {
+        return type_index<T>();
+    }
+
 };
 
 #endif

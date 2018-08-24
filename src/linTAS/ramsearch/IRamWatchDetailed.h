@@ -38,6 +38,9 @@ public:
      */
     virtual int poke_value(std::string) = 0;
 
+    /* Returns the index of the stored type */
+    virtual int type() = 0;
+
     uintptr_t address;
     std::string label;
     bool hex;

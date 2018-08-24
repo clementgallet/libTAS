@@ -134,6 +134,9 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
     /* Fill label */
     labelInput->setText(watch->label.c_str());
 
+    /* Fill type using virtual function */
+    typeBox->setCurrentIndex(watch->type());
+
     /* Fill display */
     if (watch->hex)
         displayBox->setCurrentIndex(1);
@@ -170,6 +173,9 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatch> &watch)
 
     /* Fill address */
     addressInput->setText(QString("%1").arg(watch->address, 0, 16));
+
+    /* Fill type using virtual function */
+    typeBox->setCurrentIndex(watch->type());
 }
 
 void RamWatchEditWindow::slotPointer(bool checked)

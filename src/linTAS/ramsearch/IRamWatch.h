@@ -33,11 +33,24 @@ public:
 
     IRamWatch(uintptr_t addr) : address(addr) {};
     virtual ~IRamWatch() = default;
+
+    /* Format the stored number into a string */
     virtual const char* tostring(bool hex) = 0;
+
+    /* Fetch the current value and format into a string */
     virtual const char* tostring_current(bool hex) = 0;
+
+    /* Check the current value against a condition, and store the value */
     virtual bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
+
+    /* Check the current value against a condition without storing it */
     virtual bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db) = 0;
+
+    /* Fetch and store the current value */
     virtual bool query() = 0;
+
+    /* Returns the index of the stored type */
+    virtual int type() = 0;
 };
 
 #endif
