@@ -231,7 +231,9 @@ private slots:
     void slotLaunch();
     void slotStop();
     void slotBrowseGamePath();
+    void slotGamePathChanged();
     void slotBrowseMoviePath();
+    void slotMoviePathChanged();
     void slotSaveMovie();
     void slotExportMovie();
     void slotPause(bool checked);

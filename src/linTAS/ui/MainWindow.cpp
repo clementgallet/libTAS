@@ -38,6 +38,7 @@
 #include <future>
 #include <sys/stat.h>
 #include <csignal> // kill
+#include <unistd.h> // access
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -88,6 +89,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Game Executable */
     gamePath = new QLineEdit();
     gamePath->setMinimumWidth(400);
+    connect(gamePath, &QLineEdit::editingFinished, this, &MainWindow::slotGamePathChanged);
 
     browseGamePath = new QPushButton("Browse...");
     connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
@@ -99,6 +101,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Movie File */
     moviePath = new QLineEdit();
+    connect(moviePath, &QLineEdit::editingFinished, this, &MainWindow::slotMoviePathChanged);
 
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
@@ -1124,11 +1127,33 @@ void MainWindow::slotBrowseGamePath()
     if (filename.isNull())
         return;
 
-    /* Save the previous config */
-    context->config.save(context->gamepath);
+    /* Save the previous config if game file exists */
+    if (access(context->gamepath.c_str(), F_OK) == 0) {
+        context->config.save(context->gamepath);
+    }
 
     gamePath->setText(filename);
     context->gamepath = filename.toStdString();
+
+    /* Try to load the game-specific pref file */
+    context->config.load(context->gamepath);
+
+    /* Update the UI accordingly */
+    updateUIFromConfig();
+    encodeWindow->update_config();
+    executableWindow->update_config();
+    inputWindow->update();
+    osdWindow->update_config();
+}
+
+void MainWindow::slotGamePathChanged()
+{
+    /* Save the previous config if game file exists */
+    if (access(context->gamepath.c_str(), F_OK) == 0) {
+        context->config.save(context->gamepath);
+    }
+
+    context->gamepath = gamePath->text().toStdString();
 
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
@@ -1150,6 +1175,12 @@ void MainWindow::slotBrowseMoviePath()
     moviePath->setText(filename);
     context->config.moviefile = filename.toStdString();
 
+    updateMovieParams();
+}
+
+void MainWindow::slotMoviePathChanged()
+{
+    context->config.moviefile = moviePath->text().toStdString();
     updateMovieParams();
 }
 
