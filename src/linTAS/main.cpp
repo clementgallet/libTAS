@@ -35,6 +35,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <fcntl.h>
 
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -196,6 +197,20 @@ int main(int argc, char **argv)
     if (create_dir(context.config.savestatedir) < 0) {
         std::cerr << "Cannot create dir " << context.config.savestatedir << std::endl;
         return -1;
+    }
+
+    /* Check if incremental savestates is supported by checking the soft-dirty bit */
+
+    int fd = open("/proc/self/pagemap", O_RDONLY);
+    if (fd != -1) {
+        lseek(fd, static_cast<off_t>((reinterpret_cast<uintptr_t>(&context)/4096)*8), SEEK_SET);
+
+        uint64_t page;
+        int ret = ::read(fd, &page, 8);
+        if (ret != -1) {
+            context.is_soft_dirty = page & (0x1ull << 55);
+        }
+        close(fd);
     }
 
     /* Starts the user interface */

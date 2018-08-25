@@ -96,6 +96,9 @@ struct Context {
     /* A frame number when the game pauses */
     unsigned int pause_frame = 0;
 
+    /* Can we use incremental savestates? */
+    bool is_soft_dirty = false;
+
 };
 
 #endif

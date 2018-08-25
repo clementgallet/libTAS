@@ -623,9 +623,18 @@ void MainWindow::createMenus()
     timeSecMenu->installEventFilter(this);
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
-    incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
-    incrementalStateAction->setCheckable(true);
-    disabledActionsOnStart.append(incrementalStateAction);
+
+    if (context->is_soft_dirty) {
+        incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
+        incrementalStateAction->setCheckable(true);
+        disabledActionsOnStart.append(incrementalStateAction);
+    }
+    else {
+        incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates (unavailable)"), this, &MainWindow::slotIncrementalState);
+        incrementalStateAction->setEnabled(false);
+        context->config.sc.incremental_savestates = false;
+    }
+
     ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
     ramStateAction->setCheckable(true);
     disabledActionsOnStart.append(ramStateAction);
@@ -1138,6 +1147,10 @@ void MainWindow::slotBrowseGamePath()
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
 
+    if (!context->is_soft_dirty) {
+        context->config.sc.incremental_savestates = false;
+    }
+
     /* Update the UI accordingly */
     updateUIFromConfig();
     encodeWindow->update_config();
@@ -1157,6 +1170,10 @@ void MainWindow::slotGamePathChanged()
 
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
+
+    if (!context->is_soft_dirty) {
+        context->config.sc.incremental_savestates = false;
+    }
 
     /* Update the UI accordingly */
     updateUIFromConfig();
