@@ -23,6 +23,7 @@
 #include <vector>
 #include <stdint.h>
 #include <istream>
+#include <string.h> // memset
 
 namespace libtas {
 /* Class storing samples of an audio buffer, and all the related information
@@ -49,6 +50,11 @@ class AudioBuffer
         /* Identifier of the buffer */
         int id;
 
+        /* Make the whole buffer silent */
+        void makeSilent();
+
+        /*** Primary parameters ***/
+
         /* Sample format */
         enum SampleFormat {
             SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
@@ -74,14 +80,16 @@ class AudioBuffer
         /* Audio samples */
         std::vector<uint8_t> samples;
 
+        /*** Derived parameters, computed by update function ***/
+
+        /* Update all fields below based on above fields */
+        void update(void);
+
         /* Number of samples in a block for compressed formats */
         int blockSamples;
 
         /* In the case of compressed audio, temporary uncompressed buffer */
         std::vector<int16_t> rawSamples;
-
-        /* Update all fields below based on above fields */
-        void update(void);
 
         /* Bit depth of the buffer. Computed from format */
         int bitDepth;

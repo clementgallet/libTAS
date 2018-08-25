@@ -38,6 +38,15 @@ AudioBuffer::AudioBuffer(void)
     blockSize = 0;
 }
 
+void AudioBuffer::makeSilent() {
+    if (format == SAMPLE_FMT_U8) {
+        memset(samples.data(), 0x80, size);
+    }
+    else {
+        memset(samples.data(), 0, size);
+    }
+}
+
 void AudioBuffer::update(void)
 {
     switch (format) {

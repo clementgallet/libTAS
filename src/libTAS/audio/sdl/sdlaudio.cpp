@@ -101,6 +101,8 @@ const char* curDriver = NULL;
 void fillBufferCallback(AudioBuffer& ab);
 void fillBufferCallback(AudioBuffer& ab)
 {
+    /* Emptying the audio buffer */
+    ab.makeSilent();
     audioCallback(callbackArg, ab.samples.data(), ab.size);
 }
 

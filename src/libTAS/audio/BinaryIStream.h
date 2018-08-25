@@ -35,7 +35,6 @@ class BinaryIStream
         int size;
         int pos;
         bool end;
-        uint8_t temp[2];
 
     public:
         BinaryIStream(uint8_t* data, int datasize)
@@ -78,12 +77,7 @@ class BinaryIStream
                 stream.end = true;
                 return stream;
             }
-            /* Wow you have never seen such crappiness.
-             * I'm so even afraid of left shift to build int16_t
-             */
-            stream.temp[0] = stream.values[stream.pos];
-            stream.temp[1] = stream.values[stream.pos+1];
-            v = *reinterpret_cast<int16_t*>(stream.temp);
+            v = *reinterpret_cast<int16_t*>(stream.values + stream.pos);
             stream.pos += 2;
             return stream;
         }
