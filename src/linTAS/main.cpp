@@ -94,6 +94,7 @@ int main(int argc, char **argv)
                 break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
+                break;
             case 'h':
                 print_usage();
                 return 0;
