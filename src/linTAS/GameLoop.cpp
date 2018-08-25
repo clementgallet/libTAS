@@ -408,6 +408,7 @@ bool GameLoop::startFrameMessages()
         case MSGB_WINDOW_ID:
             receiveData(&context->game_window, sizeof(Window));
             /* FIXME: Don't do this if the ui option is unchecked  */
+            if (context->game_window != 0)
             {
                 const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE };
                 xcb_void_cookie_t cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);

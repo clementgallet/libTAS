@@ -340,6 +340,11 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
 
     ai.emptyInputs();
 
+    /* Don't get inputs if the game window is closed */
+    if (window == 0) {
+        return;
+    }
+
     /* Get keyboard inputs */
     xcb_generic_error_t* error = nullptr;
     xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);
@@ -432,7 +437,7 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
 
     free(keymap_reply);
 
-    if (sc.mouse_support && window) {
+    if (sc.mouse_support) {
         /* Get the pointer position and mask */
         xcb_query_pointer_cookie_t pointer_cookie = xcb_query_pointer(conn, window);
         xcb_query_pointer_reply_t* pointer_reply = xcb_query_pointer_reply(conn, pointer_cookie, &error);

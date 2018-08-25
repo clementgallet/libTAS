@@ -46,6 +46,14 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
 
+    /* Only save the Window identifier for real resolutions, because SDL creates
+     * some dummy windows for testing.
+     */
+    if ((width > 32) && (height > 32)) {
+        gameDisplay = display;
+        gameXWindow = w;
+    }
+
     return w;
 }
 
@@ -55,6 +63,14 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     LINK_NAMESPACE(XCreateSimpleWindow, nullptr);
 
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
+
+    /* Only save the Window identifier for real resolutions, because SDL creates
+     * some dummy windows for testing.
+     */
+    if ((width > 32) && (height > 32)) {
+        gameDisplay = display;
+        gameXWindow = w;
+    }
 
     return w;
 }
@@ -66,6 +82,13 @@ int XDestroyWindow(Display *display, Window w)
 
     ScreenCapture::fini();
 
+    gameXWindow = 0;
+
+    /* Tells the program we don't have a window anymore to gather inputs */
+    sendMessage(MSGB_WINDOW_ID);
+    sendData(&gameXWindow, sizeof(Window));
+    debuglog(LCF_WINDOW, "Sent X11 window id 0");
+
     return orig::XDestroyWindow(display, w);
 }
 
@@ -74,17 +97,18 @@ int XMapWindow(Display *display, Window w)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XMapWindow, nullptr);
 
-    /* Only send the Window indentifier when the window is mapped, because
-     * SDL does create some unmapped windows at startup.
+    int ret = orig::XMapWindow(display, w);
+
+    /* We must wait until the window is mapped to send it to the program.
+     * We are checking the content of gameXWindow to see if we must send it
      */
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&w, sizeof(Window));
-    debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
+    if (gameXWindow != 0) {
+        sendMessage(MSGB_WINDOW_ID);
+        sendData(&w, sizeof(Window));
+        debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
+    }
 
-    gameDisplay = display;
-    gameXWindow = w;
-
-    return orig::XMapWindow(display, w);
+    return ret;
 }
 
 int XMapRaised(Display *display, Window w)
@@ -92,14 +116,18 @@ int XMapRaised(Display *display, Window w)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE(XMapRaised, nullptr);
 
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&w, sizeof(Window));
-    debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
+    int ret = orig::XMapRaised(display, w);
 
-    gameDisplay = display;
-    gameXWindow = w;
+    /* We must wait until the window is mapped to send it to the program.
+     * We are checking the content of gameXWindow to see if we must send it
+     */
+    if (gameXWindow != 0) {
+        sendMessage(MSGB_WINDOW_ID);
+        sendData(&w, sizeof(Window));
+        debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
+    }
 
-    return orig::XMapRaised(display, w);
+    return ret;
 }
 
 int XStoreName(Display *display, Window w, const char *window_name)
