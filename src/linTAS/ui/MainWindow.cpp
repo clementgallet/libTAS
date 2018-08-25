@@ -90,6 +90,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     gamePath = new QLineEdit();
     gamePath->setMinimumWidth(400);
     connect(gamePath, &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
+    disabledWidgetsOnStart.append(gamePath);
 
     browseGamePath = new QPushButton("Browse...");
     connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
@@ -102,6 +103,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Movie File */
     moviePath = new QLineEdit();
     connect(moviePath, &QLineEdit::textEdited, this, &MainWindow::slotMoviePathChanged);
+    disabledWidgetsOnStart.append(moviePath);
 
     browseMoviePath = new QPushButton("Browse...");
     connect(browseMoviePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseMoviePath);
