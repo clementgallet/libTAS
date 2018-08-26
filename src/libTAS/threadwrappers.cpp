@@ -29,6 +29,7 @@
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
 #include "DeterministicTimer.h"
+#include "tlswrappers.h"
 #include "backtrace.h"
 
 namespace libtas {
@@ -104,6 +105,12 @@ static void *pthread_start(void *arg)
             catch (const ThreadExitException& e) {}
 
             debuglog(LCF_THREAD, "End of thread code");
+
+            /* Because we recycle this thread, we must unset all TLS values
+             * and call destructors ourselves.
+             */
+            clear_pthread_keys();
+
             ThreadManager::threadExit(ret);
 
             /* Thread is now in zombie state until it is detached */
