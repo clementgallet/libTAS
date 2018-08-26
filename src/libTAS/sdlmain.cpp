@@ -55,12 +55,12 @@ DEFINE_ORIG_POINTER(SDL_Quit);
      *      }
      * So maybe the compiler is inlining stuff. To fix this, we call
      * ourselves our own SDL_InitSubSystem() function.
+     *
+     * It seems to be the case with SDL1 for some compiled libraries,
+     * so we also call our SDL_InitSubSystem function. This skips some code from
+     * SDL_Init but nothing relevant.
      */
-    if (SDLver == 1)
-        return orig::SDL_Init(flags);
-    if (SDLver == 2)
-        return SDL_InitSubSystem(flags);
-    return 0;
+    return SDL_InitSubSystem(flags);
 }
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
