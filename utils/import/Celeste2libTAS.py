@@ -36,10 +36,15 @@ for line in input_file:
                     angle = int(single_input)
 
                 # Compute coordinates of the left analog stick to match the
-                # requested angle. Use the max amplitude to get precise values
+                # requested angle. Use the max amplitude to get precise values.
+                # We must also compensate for the deadzone which is 0.239532471f
                 rad_angle = math.radians(angle)
-                x = 32767 * math.sin(rad_angle)
-                y = 32767 * math.cos(rad_angle)
+                deadzone = 0.239532471
+                float_x = math.copysign(math.fabs(math.sin(rad_angle))*(1-deadzone)+deadzone, math.sin(rad_angle))
+                float_y = math.copysign(math.fabs(math.cos(rad_angle))*(1-deadzone)+deadzone, math.cos(rad_angle))
+
+                x = 32767 * float_x
+                y = -32767 * float_y
                 output_axes = str(int(x)) + ':' + str(int(y))
 
                 is_axis = False
