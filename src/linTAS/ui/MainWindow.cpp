@@ -645,6 +645,9 @@ void MainWindow::createMenus()
     saveScreenAction->setCheckable(true);
     preventSavefileAction = runtimeMenu->addAction(tr("Backup savefiles in memory"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
+    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
+    recycleThreadsAction->setCheckable(true);
+    disabledActionsOnStart.append(recycleThreadsAction);
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
@@ -1009,6 +1012,7 @@ void MainWindow::updateUIFromConfig()
     renderSoftAction->setChecked(context->config.opengl_soft);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
+    recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
@@ -1425,6 +1429,12 @@ void MainWindow::slotSaveScreen(bool checked)
 void MainWindow::slotPreventSavefile(bool checked)
 {
     context->config.sc.prevent_savefiles = checked;
+    context->config.sc_modified = true;
+}
+
+void MainWindow::slotRecycleThreads(bool checked)
+{
+    context->config.sc.recycle_threads = checked;
     context->config.sc_modified = true;
 }
 

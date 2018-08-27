@@ -178,6 +178,8 @@ struct SharedConfig {
     };
 
     int debug_state = 0;
+
+    bool recycle_threads = true;
 };
 
 #endif

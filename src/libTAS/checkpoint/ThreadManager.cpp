@@ -285,6 +285,9 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
             debuglog(LCF_THREAD, "Zombie thread ", thread->tid, " is detached");
             MYASSERT(updateState(thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
+            if (! shared_config.recycle_threads) {
+                threadIsDead(thread);
+            }
         }
         MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
     }
@@ -298,6 +301,9 @@ void ThreadManager::threadExit(void* retval)
     if (current_thread->detached) {
         debuglog(LCF_THREAD, "Detached thread ", current_thread->tid, " exited");
         MYASSERT(updateState(current_thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
+        if (! shared_config.recycle_threads) {
+            threadIsDead(current_thread);
+        }
     }
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }

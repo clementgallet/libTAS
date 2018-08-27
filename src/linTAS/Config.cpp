@@ -91,6 +91,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("osd_frame_location", sc.osd_frame_location);
     settings.setValue("osd_inputs_location", sc.osd_inputs_location);
     settings.setValue("prevent_savefiles", sc.prevent_savefiles);
+    settings.setValue("recycle_threads", sc.recycle_threads);
     settings.setValue("audio_bitdepth", sc.audio_bitdepth);
     settings.setValue("audio_channels", sc.audio_channels);
     settings.setValue("audio_frequency", sc.audio_frequency);
@@ -191,6 +192,7 @@ void Config::load(const std::string& gamepath) {
     sc.osd_frame_location = settings.value("osd_frame_location", sc.osd_frame_location).toInt();
     sc.osd_inputs_location = settings.value("osd_inputs_location", sc.osd_inputs_location).toInt();
     sc.prevent_savefiles = settings.value("prevent_savefiles", sc.prevent_savefiles).toBool();
+    sc.recycle_threads = settings.value("recycle_threads", sc.recycle_threads).toBool();
     sc.audio_bitdepth = settings.value("audio_bitdepth", sc.audio_bitdepth).toInt();
     sc.audio_channels = settings.value("audio_channels", sc.audio_channels).toInt();
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();

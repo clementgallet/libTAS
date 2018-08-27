@@ -82,8 +82,7 @@ static void *pthread_start(void *arg)
 
     std::unique_lock<std::mutex> lock(thread->mutex);
 
-    /* Check if game is quitting */
-    while (!thread->quit) {
+    do {
 
         /* Check if there is a function to execute */
         if (thread->state == ThreadInfo::ST_RUNNING) {
@@ -114,15 +113,15 @@ static void *pthread_start(void *arg)
             ThreadManager::threadExit(ret);
 
             /* Thread is now in zombie state until it is detached */
-            while (thread->state == ThreadInfo::ST_ZOMBIE) {
-                struct timespec mssleep = {0, 1000*1000};
-                NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            }
+            // while (thread->state == ThreadInfo::ST_ZOMBIE) {
+            //     struct timespec mssleep = {0, 1000*1000};
+            //     NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            // }
         }
         else {
              thread->cv.wait(lock);
         }
-    }
+    } while (!thread->quit && shared_config.recycle_threads); /* Check if game is quitting */
 
     return nullptr;
 }
@@ -169,17 +168,23 @@ static void *pthread_start(void *arg)
     LINK_NAMESPACE(pthread_exit, "pthread");
     debuglog(LCF_THREAD, "Thread has exited.");
 
-    /* We need to jump to code after the end of the original thread routine */
-    throw ThreadExitException();
+    if (shared_config.recycle_threads) {
+        /* We need to jump to code after the end of the original thread routine */
+        throw ThreadExitException();
 
-    // ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
-    // longjmp(thread->env, 1);
+        // ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
+        // longjmp(thread->env, 1);
+    }
+    else {
+        ThreadManager::threadExit(retval);
+        orig::pthread_exit(retval);
+    }
 }
 
 /* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)
 {
+    LINK_NAMESPACE(pthread_join, "pthread");
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pthread_join, "pthread");
         return orig::pthread_join(pthread_id, thread_return);
     }
 
@@ -198,21 +203,27 @@ static void *pthread_start(void *arg)
         return EINVAL;
     }
 
-    /* Wait for the thread to become zombie */
-    while (thread->state != ThreadInfo::ST_ZOMBIE) {
-        struct timespec mssleep = {0, 1000*1000};
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+    int ret = 0;
+    if (shared_config.recycle_threads) {
+        /* Wait for the thread to become zombie */
+        while (thread->state != ThreadInfo::ST_ZOMBIE) {
+            struct timespec mssleep = {0, 1000*1000};
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+        }
+    }
+    else {
+        ret = orig::pthread_join(pthread_id, thread_return);
     }
 
     ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
-    return 0;
+    return ret;
 }
 
 /* Override */ int pthread_detach (pthread_t pthread_id) throw()
 {
+    LINK_NAMESPACE(pthread_detach, "pthread");
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pthread_detach, "pthread");
         return orig::pthread_detach(pthread_id);
     }
 
@@ -230,9 +241,14 @@ static void *pthread_start(void *arg)
         return EINVAL;
     }
 
+    int ret = 0;
+    if (! shared_config.recycle_threads) {
+        ret = orig::pthread_detach(pthread_id);
+    }
+
     ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
-    return 0;
+    return ret;
 }
 
 /* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) throw()
@@ -256,17 +272,29 @@ static void *pthread_start(void *arg)
         return EINVAL;
     }
 
-    if (thread->state == ThreadInfo::ST_ZOMBIE) {
-        debuglog(LCF_THREAD, "Joining thread successfully.");
-        if (retval) {
-            *retval = thread->retval;
+    int ret = 0;
+    if (shared_config.recycle_threads) {
+        if (thread->state == ThreadInfo::ST_ZOMBIE) {
+            if (retval) {
+                *retval = thread->retval;
+            }
+            ThreadManager::threadDetach(pthread_id);
         }
-        ThreadManager::threadDetach(pthread_id);
-        ThreadSync::wrapperExecutionLockUnlock();
-        return 0;
+        else {
+            ret = EBUSY;
+        }
+    }
+    else {
+        ret = orig::pthread_tryjoin_np(pthread_id, retval);
+        if (ret == 0) {
+            ThreadManager::threadDetach(pthread_id);
+        }
     }
 
-    debuglog(LCF_THREAD, "Thread has not yet terminated.");
+    if (ret == 0)
+        debuglog(LCF_THREAD, "Joining thread successfully.");
+    else
+        debuglog(LCF_THREAD, "Thread has not yet terminated.");
     ThreadSync::wrapperExecutionLockUnlock();
     return EBUSY;
 }
@@ -298,20 +326,33 @@ static void *pthread_start(void *arg)
         return EINVAL;
     }
 
-    /* For now I'm lazy, so we just wait the amount of time and check joining */
-    NATIVECALL(nanosleep(abstime, NULL));
+    int ret = 0;
+    if (shared_config.recycle_threads) {
+        /* For now I'm lazy, so we just wait the amount of time and check joining */
+        NATIVECALL(nanosleep(abstime, NULL));
 
-    if (thread->state == ThreadInfo::ST_ZOMBIE) {
-        debuglog(LCF_THREAD, "Joining thread successfully.");
-        if (retval) {
-            *retval = thread->retval;
+        if (thread->state == ThreadInfo::ST_ZOMBIE) {
+            if (retval) {
+                *retval = thread->retval;
+            }
+            ThreadManager::threadDetach(pthread_id);
         }
-        ThreadManager::threadDetach(pthread_id);
-        ThreadSync::wrapperExecutionLockUnlock();
-        return 0;
+        else {
+            ret = ETIMEDOUT;
+        }
+    }
+    else {
+        ret = orig::pthread_timedjoin_np(pthread_id, retval, abstime);
+        if (ret == 0) {
+            ThreadManager::threadDetach(pthread_id);
+        }
     }
 
-    debuglog(LCF_THREAD, "Call timed out before thread terminated.");
+    if (ret == 0)
+        debuglog(LCF_THREAD, "Joining thread successfully.");
+    else
+        debuglog(LCF_THREAD, "Call timed out before thread terminated.");
+
     ThreadSync::wrapperExecutionLockUnlock();
     return ETIMEDOUT;
 }

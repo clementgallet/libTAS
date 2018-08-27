@@ -92,6 +92,7 @@ public:
 
     QAction *saveScreenAction;
     QAction *preventSavefileAction;
+    QAction *recycleThreadsAction;
 
     QAction *incrementalStateAction;
     QAction *ramStateAction;
@@ -259,6 +260,7 @@ private slots:
     void slotPauseMovie();
     void slotIncrementalState(bool checked);
     void slotRamState(bool checked);
+    void slotRecycleThreads(bool checked);
 };
 
 #endif
