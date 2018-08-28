@@ -17,27 +17,51 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "isteamuser.h"
+#include "isteamapps.h"
 #include "../logging.h"
 
 namespace libtas {
 
-HSteamUser ISteamUser::GetHSteamUser()
+bool ISteamApps::BIsSubscribed()
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return 1;
+	return true;
 }
 
-bool ISteamUser::BLoggedOn()
+bool ISteamApps::BIsLowViolence()
 {
     DEBUGLOGCALL(LCF_STEAM);
 	return false;
 }
 
-CSteamID ISteamUser::GetSteamID()
+bool ISteamApps::BIsCybercafe()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return 1;
+	return false;
+}
+
+bool ISteamApps::BIsVACBanned()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return false;
+}
+
+const char *ISteamApps::GetCurrentGameLanguage()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return "english";
+}
+
+const char *ISteamApps::GetAvailableGameLanguages()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return "english";
+}
+
+bool ISteamApps::BIsSubscribedApp( AppId_t appID )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return false;
 }
 
 }

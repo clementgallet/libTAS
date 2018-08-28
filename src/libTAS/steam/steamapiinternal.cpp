@@ -33,7 +33,17 @@ HSteamUser SteamAPI_GetHSteamUser()
 void * SteamInternal_ContextInit( void *pContextInitData )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return nullptr;
+    static CSteamAPIContext context;
+    context.m_pSteamClient = SteamClient();
+    context.m_pSteamUser = SteamUser();
+    context.m_pSteamUserStats = SteamUserStats();
+    context.m_pSteamUtils = SteamUtils();
+    context.m_pSteamRemoteStorage = SteamRemoteStorage();
+    context.m_pSteamApps = SteamApps();
+    context.m_pSteamFriends = SteamFriends();
+    context.m_pSteamScreenshots = SteamScreenshots();
+    context.m_pSteamUGC = SteamUGC();
+    return &context;
 }
 
 void * SteamInternal_CreateInterface( const char *ver )
@@ -45,10 +55,15 @@ void * SteamInternal_CreateInterface( const char *ver )
 bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
 {
     DEBUGLOGCALL(LCF_STEAM);
+    context->m_pSteamClient = SteamClient();
     context->m_pSteamUser = SteamUser();
     context->m_pSteamUserStats = SteamUserStats();
     context->m_pSteamUtils = SteamUtils();
     context->m_pSteamRemoteStorage = SteamRemoteStorage();
+    context->m_pSteamApps = SteamApps();
+    context->m_pSteamFriends = SteamFriends();
+    context->m_pSteamScreenshots = SteamScreenshots();
+    context->m_pSteamUGC = SteamUGC();
     return true;
 }
 

@@ -21,10 +21,15 @@
 #define LIBTAS_STEAMAPI_H_INCL
 
 #include "../global.h"
+#include "isteamclient.h"
 #include "isteamuser.h"
 #include "isteamuserstats.h"
 #include "isteamutils.h"
 #include "isteamremotestorage.h"
+#include "isteamapps.h"
+#include "isteamfriends.h"
+#include "isteamscreenshots.h"
+#include "isteamugc.h"
 
 namespace libtas {
 
@@ -67,10 +72,15 @@ OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
 OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 
 
+OVERRIDE ISteamClient *SteamClient();
 OVERRIDE ISteamUserStats *SteamUserStats();
 OVERRIDE ISteamUser *SteamUser();
 OVERRIDE ISteamUtils *SteamUtils();
 OVERRIDE ISteamRemoteStorage *SteamRemoteStorage();
+OVERRIDE ISteamApps *SteamApps();
+OVERRIDE ISteamFriends *SteamFriends();
+OVERRIDE ISteamScreenshots *SteamScreenshots();
+OVERRIDE ISteamUGC *SteamUGC();
 
 }
 

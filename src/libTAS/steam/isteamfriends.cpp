@@ -17,27 +17,27 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "isteamuser.h"
+#include "isteamfriends.h"
 #include "../logging.h"
 
 namespace libtas {
 
-HSteamUser ISteamUser::GetHSteamUser()
+const char *ISteamFriends::GetPersonaName()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return "";
+}
+
+SteamAPICall_t ISteamFriends::SetPersonaName( const char *pchPersonaName )
 {
     DEBUGLOGCALL(LCF_STEAM);
 	return 1;
 }
 
-bool ISteamUser::BLoggedOn()
+EPersonaState ISteamFriends::GetPersonaState()
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return false;
-}
-
-CSteamID ISteamUser::GetSteamID()
-{
-    DEBUGLOGCALL(LCF_STEAM);
-    return 1;
+	return 0; // k_EPersonaStateOffline
 }
 
 }

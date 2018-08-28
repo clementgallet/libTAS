@@ -68,6 +68,14 @@ void SteamAPI_UnregisterCallback( void *pCallback )
     debuglog(LCF_STEAM, __func__, " call.");
 }
 
+ISteamClient *SteamClient()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamClient steamclient;
+    return &steamclient;
+}
+
 ISteamUserStats *SteamUserStats()
 {
     DEBUGLOGCALL(LCF_STEAM);
@@ -100,5 +108,36 @@ ISteamRemoteStorage *SteamRemoteStorage()
     return &steamremotestorage;
 }
 
+ISteamApps *SteamApps()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamApps steamapps;
+    return &steamapps;
+}
+
+ISteamFriends *SteamFriends()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamFriends steamfriends;
+    return &steamfriends;
+}
+
+ISteamScreenshots *SteamScreenshots()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamScreenshots steamscreenshots;
+    return &steamscreenshots;
+}
+
+ISteamUGC *SteamUGC()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamUGC steamugc;
+    return &steamugc;
+}
 
 }
