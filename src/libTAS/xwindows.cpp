@@ -49,7 +49,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     /* Only save the Window identifier for real resolutions, because SDL creates
      * some dummy windows for testing.
      */
-    if ((width > 32) && (height > 32)) {
+    if ((gameXWindow == 0) && (width > 32) && (height > 32)) {
         gameDisplay = display;
         gameXWindow = w;
     }
@@ -67,7 +67,7 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     /* Only save the Window identifier for real resolutions, because SDL creates
      * some dummy windows for testing.
      */
-    if ((width > 32) && (height > 32)) {
+    if ((gameXWindow == 0) && (width > 32) && (height > 32)) {
         gameDisplay = display;
         gameXWindow = w;
     }
