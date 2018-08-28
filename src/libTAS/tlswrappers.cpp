@@ -19,17 +19,7 @@
 
 #include "tlswrappers.h"
 #include "logging.h"
-// #include <errno.h>
-// #include <unistd.h>
-// #include <cstring>
-// #include <atomic>
 #include <map>
-// #include <exception>
-// #include "checkpoint/ThreadInfo.h"
-// #include "checkpoint/ThreadManager.h"
-// #include "checkpoint/ThreadSync.h"
-// #include "DeterministicTimer.h"
-// #include "backtrace.h"
 
 namespace libtas {
 
@@ -82,7 +72,7 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) thr
 int pthread_key_delete (pthread_key_t key) throw()
 {
     debuglog(LCF_THREAD, __func__, " called on key ", key);
-    LINK_NAMESPACE(pthread_key_create, "pthread");
+    LINK_NAMESPACE(pthread_key_delete, "pthread");
 
     int ret = orig::pthread_key_delete(key);
 

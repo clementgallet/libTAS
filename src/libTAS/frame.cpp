@@ -322,11 +322,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         NATIVECALL(draw());
     }
 
-    // int pause_frames[] = {2, 16, 17, 30, 34, 38, 42, 46, 50, 54, 58, 62, 63, 64, 67, 83, 90, 377, 411, 2895, 2897, 2947, 2954, 3235, 3557, 7020, 7022, 7415, 7422, 7703, 8025};
-    // for (int pp = 0; pp < (sizeof(pause_frames)/sizeof(pause_frames[0])); pp++)
-    //     if (pause_frames[pp] == (framecount-1))
-    //         NATIVECALL(sleep(1));
-
     /* Receive messages from the program */
     #ifdef LIBTAS_ENABLE_HUD
         receive_messages(draw, hud);

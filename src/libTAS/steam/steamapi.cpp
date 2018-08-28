@@ -19,10 +19,17 @@
 
 #include "steamapi.h"
 #include "../logging.h"
+#include <signal.h>
 
 namespace libtas {
 
 bool SteamAPI_Init()
+{
+    debuglog(LCF_STEAM, __func__, " call.");
+	return true;
+}
+
+bool SteamAPI_InitSafe()
 {
     debuglog(LCF_STEAM, __func__, " call.");
 	return true;
@@ -37,7 +44,7 @@ void SteamAPI_Shutdown()
 bool SteamAPI_IsSteamRunning()
 {
     debuglog(LCF_STEAM, __func__, " call.");
-	return false;
+	return true;
 }
 
 bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
@@ -76,5 +83,22 @@ ISteamUser *SteamUser()
     static ISteamUser steamuser;
     return &steamuser;
 }
+
+ISteamUtils *SteamUtils()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamUtils steamutils;
+    return &steamutils;
+}
+
+ISteamRemoteStorage *SteamRemoteStorage()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    static ISteamRemoteStorage steamremotestorage;
+    return &steamremotestorage;
+}
+
 
 }

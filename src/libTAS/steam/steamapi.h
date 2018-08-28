@@ -23,6 +23,8 @@
 #include "../global.h"
 #include "isteamuser.h"
 #include "isteamuserstats.h"
+#include "isteamutils.h"
+#include "isteamremotestorage.h"
 
 namespace libtas {
 
@@ -46,6 +48,8 @@ OVERRIDE bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID );
 
 OVERRIDE bool SteamAPI_Init();
 
+OVERRIDE bool SteamAPI_InitSafe();
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 //	steam callback helper functions
 //
@@ -64,14 +68,9 @@ OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 
 
 OVERRIDE ISteamUserStats *SteamUserStats();
-
 OVERRIDE ISteamUser *SteamUser();
-
-// OVERRIDE bool SteamAPI_ISteamUserStats_RequestCurrentStats(intptr_t instancePtr);
-//
-// OVERRIDE bool RequestCurrentStats(intptr_t instancePtr);
-//
-// OVERRIDE bool GetProgressStat(const char* statID);
+OVERRIDE ISteamUtils *SteamUtils();
+OVERRIDE ISteamRemoteStorage *SteamRemoteStorage();
 
 }
 
