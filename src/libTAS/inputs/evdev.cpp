@@ -30,6 +30,21 @@ namespace libtas {
 
 static int evdevfds[AllInputs::MAXJOYS] = {0};
 
+int is_evdev(const char* source)
+{
+    /* Extract the ev number from the dev filename */
+    int evnum;
+    int ret = sscanf(source, "/dev/input/event%d", &evnum);
+    if (ret != 1)
+        return -1;
+
+    if (evnum < 0 || evnum >= shared_config.nb_controllers) {
+        return 0;
+    }
+
+    return 1;
+}
+
 int open_evdev(const char* source, int flags)
 {
     /* Extract the ev number from the dev filename */
@@ -42,6 +57,8 @@ int open_evdev(const char* source, int flags)
         errno = ENOENT;
         return -1;
     }
+
+    debuglog(LCF_JOYSTICK, "   evdev device ", evnum, " detected");
 
     if (evdevfds[evnum] != 0) {
         debuglog(LCF_JOYSTICK | LCF_ERROR, "Warning, evdev ", source, " opened multiple times!");

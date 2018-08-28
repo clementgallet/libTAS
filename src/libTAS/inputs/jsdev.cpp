@@ -31,6 +31,22 @@ namespace libtas {
 
 static int jsdevfds[AllInputs::MAXJOYS] = {0};
 
+int is_jsdev(const char* source)
+{
+    /* Extract the js number from the dev filename */
+    int jsnum;
+    int ret = sscanf(source, "/dev/input/js%d", &jsnum);
+
+    if (ret != 1)
+        return -1;
+
+    if (jsnum < 0 || jsnum >= shared_config.nb_controllers) {
+        return 0;
+    }
+
+    return 1;
+}
+
 int open_jsdev(const char* source, int flags)
 {
     /* Extract the js number from the dev filename */
@@ -43,6 +59,8 @@ int open_jsdev(const char* source, int flags)
         errno = ENOENT;
         return -1;
     }
+
+    debuglog(LCF_JOYSTICK, "   jsdev device ", jsnum, " detected");
 
     if (jsdevfds[jsnum] != 0) {
         debuglog(LCF_JOYSTICK | LCF_ERROR, "Warning, jsdev ", source, " opened multiple times!");

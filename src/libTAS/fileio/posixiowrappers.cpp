@@ -71,15 +71,12 @@ int open (const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    const char* jsdevstr = "/dev/input/js";
-    if ((strlen(file) > strlen(jsdevstr)) && (strncmp(jsdevstr, file, strlen(jsdevstr)) == 0)) {
-        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  joystick device detected");
+    /* Check if joystick device */
+    if (is_jsdev(file) >= 0) {
         return open_jsdev(file, oflag);
     }
 
-    const char* evdevstr = "/dev/input/event";
-    if ((strlen(file) > strlen(evdevstr)) && (strncmp(evdevstr, file, strlen(evdevstr)) == 0)) {
-        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  event device detected");
+    if (is_evdev(file) >= 0) {
         return open_evdev(file, oflag);
     }
 
@@ -110,15 +107,12 @@ int open64 (const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
-    const char* jsdevstr = "/dev/input/js";
-    if ((strlen(file) > strlen(jsdevstr)) && (strncmp(jsdevstr, file, strlen(jsdevstr)) == 0)) {
-        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  joystick device detected");
+    /* Check if joystick device */
+    if (is_jsdev(file) >= 0) {
         return open_jsdev(file, oflag);
     }
 
-    const char* evdevstr = "/dev/input/event";
-    if ((strlen(file) > strlen(evdevstr)) && (strncmp(evdevstr, file, strlen(evdevstr)) == 0)) {
-        debuglogstdio(LCF_FILEIO | LCF_JOYSTICK, "  event device detected");
+    if (is_evdev(file) >= 0) {
         return open_evdev(file, oflag);
     }
 
@@ -253,6 +247,19 @@ int access(const char *name, int type) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
 
+    /* Check if joystick device */
+    int joy = is_jsdev(name);
+    if (joy == -1) joy = is_evdev(name);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
+
     /* Check for savefile. */
     if (SaveFileList::getSaveFileFd(name) != 0) {
         if (SaveFileList::isSaveFileRemoved(name)) {
@@ -275,6 +282,19 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
         return orig::__xstat(ver, path, buf);
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if joystick device */
+    int joy = is_jsdev(path);
+    if (joy == -1) joy = is_evdev(path);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
 
     /* Check if savefile. */
     if (SaveFileList::getSaveFileFd(path) != 0) {
@@ -300,6 +320,19 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+    /* Check if joystick device */
+    int joy = is_jsdev(path);
+    if (joy == -1) joy = is_evdev(path);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
+
     /* Check if savefile. */
     if (SaveFileList::getSaveFileFd(path) != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
@@ -324,6 +357,19 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+    /* Check if joystick device */
+    int joy = is_jsdev(path);
+    if (joy == -1) joy = is_evdev(path);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
+
     /* Check if savefile. */
     if (SaveFileList::getSaveFileFd(path) != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
@@ -347,6 +393,19 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
         return orig::__lxstat64(ver, path, buf);
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    /* Check if joystick device */
+    int joy = is_jsdev(path);
+    if (joy == -1) joy = is_evdev(path);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
 
     /* Check if savefile. */
     if (SaveFileList::getSaveFileFd(path) != 0) {

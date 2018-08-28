@@ -25,6 +25,11 @@
 
 namespace libtas {
 
+/* Is the file a valid jsdev path. Returns -1 for not a jsdev, 0 for a jsdev
+ * with invalid number and 1 for valid number
+ */
+int is_jsdev(const char* source);
+
 /* Open a fake jsdev file using SYS_memfd_create, and write the init data */
 int open_jsdev(const char* source, int flags);
 

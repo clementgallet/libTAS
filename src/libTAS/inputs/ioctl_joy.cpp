@@ -71,14 +71,14 @@ int ioctl(int fd, unsigned long request, ...) throw()
 
     if (request == JSIOCGBUTTONS) {
         debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGBUTTONS on fd ", fd);
-        int* buttons = static_cast<int*>(argp);
+        char* buttons = static_cast<char*>(argp);
         *buttons = 11;
         return 0;
     }
 
     if (request == JSIOCGAXES) {
         debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGAXES on fd ", fd);
-        int* axes = static_cast<int*>(argp);
+        char* axes = static_cast<char*>(argp);
         *axes = 8;
         return 0;
     }
