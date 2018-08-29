@@ -67,17 +67,25 @@ void GameLoop::launchGameThread()
         setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
     }
 
-    /* Change the working directory if the user set one */
-    if (!context->config.rundir.empty()) {
-        if (0 != chdir(context->config.rundir.c_str())) {
-            std::cerr << "Could not change the working directory to " << context->config.rundir << std::endl;
-        }
-
-        /* Set PWD environment variable because games may use it and chdir
-         * does not update it.
-         */
-        setenv("PWD", context->config.rundir.c_str(), 1);
+    /* Change the working directory to the user-defined one or game directory */
+    std::string newdir = context->config.rundir;
+    if (newdir.empty()) {
+        /* Get the game directory from path */
+        size_t sep = context->gamepath.find_last_of("/");
+        if (sep != std::string::npos)
+            newdir = context->gamepath.substr(0, sep);
+        else
+            newdir = ""; // Should not happen
     }
+
+    if (0 != chdir(newdir.c_str())) {
+        std::cerr << "Could not change the working directory to " << newdir << std::endl;
+    }
+
+    /* Set PWD environment variable because games may use it and chdir
+     * does not update it.
+     */
+    setenv("PWD", newdir.c_str(), 1);
 
     /* Set where stderr of the game is redirected */
     int fd;
