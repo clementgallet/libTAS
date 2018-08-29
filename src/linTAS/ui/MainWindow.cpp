@@ -70,6 +70,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     ramWatchWindow = new RamWatchWindow(c, this);
     inputEditorWindow = new InputEditorWindow(c, this);
     osdWindow = new OsdWindow(c, this);
+    annotationsWindow = new AnnotationsWindow(c, this);
 
     connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -568,6 +569,11 @@ void MainWindow::createMenus()
 
     movieMenu->addSeparator();
 
+    annotateMovieAction = movieMenu->addAction(tr("Annotations..."), annotationsWindow, &AnnotationsWindow::show);
+    annotateMovieAction->setEnabled(false);
+
+    movieMenu->addSeparator();
+
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
@@ -919,16 +925,16 @@ void MainWindow::setListFromRadio(const QActionGroup *actionGroup, int &value)
 
 void MainWindow::updateMovieParams()
 {
-    MovieFile tempmovie(context);
-    if (tempmovie.extractMovie() == 0) {
-        movieFrameCount->setValue(tempmovie.nbFramesConfig());
-        rerecordCount->setValue(tempmovie.nbRerecords());
-        authorField->setText(tempmovie.authors().c_str());
+    int ret = gameLoop->movie.loadMovie();
+    if (ret == 0) {
+        movieFrameCount->setValue(context->config.sc.movie_framecount);
+        rerecordCount->setValue(context->rerecord_count);
+        authorField->setText(context->authors.c_str());
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        int sec, nsec;
-        tempmovie.lengthConfig(sec, nsec);
+        int sec = context->config.sc.movie_framecount * context->config.sc.framerate_den / context->config.sc.framerate_num;
+        int nsec = (int) ((1000000000.0f * (double)((context->config.sc.movie_framecount * context->config.sc.framerate_den) % context->config.sc.framerate_num)) / context->config.sc.framerate_num);
         movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
 
         moviePlayback->setChecked(true);
@@ -936,6 +942,7 @@ void MainWindow::updateMovieParams()
             context->config.sc.recording = SharedConfig::RECORDING_READ;
             context->config.sc_modified = true;
         }
+        annotationsWindow->update();
     }
     else {
         movieFrameCount->setValue(0);
@@ -949,6 +956,7 @@ void MainWindow::updateMovieParams()
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             context->config.sc_modified = true;
         }
+        annotationsWindow->clear();
     }
 }
 
@@ -1268,6 +1276,8 @@ void MainWindow::slotMovieEnable(bool checked)
     else {
         context->config.sc.recording = SharedConfig::NO_RECORDING;
     }
+
+    annotateMovieAction->setEnabled(checked);
     context->config.sc_modified = true;
 }
 

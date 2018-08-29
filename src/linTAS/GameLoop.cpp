@@ -50,7 +50,9 @@
 # define personality(pers) ((long)syscall(SYS_personality, pers))
 #endif
 
-GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
+GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {
+    movie = MovieFile(context);
+}
 
 void GameLoop::launchGameThread()
 {

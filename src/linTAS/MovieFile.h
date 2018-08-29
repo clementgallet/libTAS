@@ -52,6 +52,9 @@ public:
      */
     bool modifiedSinceLastSave;
 
+    /* Annotations to be saved inside the movie file */
+    std::string annotations;
+
     MovieFile() {};
 
     /* Prepare a movie file from the context */
@@ -78,23 +81,11 @@ public:
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
     int saveMovie(const std::string& moviefile, unsigned int frame_nb);
 
-    /* Get the number of frames from a moviefile config. It must be extracted first */
-    unsigned int nbFramesConfig();
-
     /* Get the number of frames of the current movie */
     unsigned int nbFrames();
 
     /* Get the frame count of the associated savestate if any */
     unsigned int savestateFramecount() const;
-
-    /* Get the number of rerecords from a moviefile. It must be extracted first */
-    unsigned int nbRerecords();
-
-    /* Get the length of a moviefile. It must be extracted first */
-    void lengthConfig(int &sec, int& nsec);
-
-    /* Get the authors of the movie file */
-    std::string authors();
 
     /* Set inputs in the current frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, bool keep_inputs);

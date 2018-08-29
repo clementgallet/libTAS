@@ -57,6 +57,9 @@ const char* MovieFile::errorString(int error_code) {
 
 int MovieFile::extractMovie(const std::string& moviefile)
 {
+	if (moviefile.empty())
+		return ENOMOVIE;
+
 	/* Check that the moviefile exists */
 	if (access(moviefile.c_str(), F_OK) != 0)
 		return ENOMOVIE;
@@ -64,8 +67,10 @@ int MovieFile::extractMovie(const std::string& moviefile)
 	/* Empty the temp directory */
 	std::string configfile = context->config.tempmoviedir + "/config.ini";
 	std::string inputfile = context->config.tempmoviedir + "/inputs";
+	std::string annotationsfile = context->config.tempmoviedir + "/annotations.txt";
 	unlink(configfile.c_str());
 	unlink(inputfile.c_str());
+	unlink(annotationsfile.c_str());
 
     /* Uncompress the movie file into out temp directory */
     TAR *tar;
@@ -163,6 +168,18 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	}
 
     input_stream.close();
+
+	/* Load annotations if available */
+	std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    std::ifstream annotations_stream(annotations_file);
+	if (annotations_stream) {
+		annotations = std::string((std::istreambuf_iterator<char>(annotations_stream)),
+	                 std::istreambuf_iterator<char>());
+	}
+	else {
+		annotations = "";
+	}
+
 	return 0;
 }
 
@@ -199,6 +216,10 @@ int MovieFile::loadInputs(const std::string& moviefile)
 
 int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 {
+	/* Skip empty moviefiles, if user tested the annotations without specifying a movie */
+	if (moviefile.empty())
+		return ENOMOVIE;
+
     /* Format and write input frames into the input file */
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ofstream input_stream(input_file, std::ofstream::trunc);
@@ -251,6 +272,12 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
     config.sync();
 
+	/* Save annotations */
+	std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    std::ofstream annotations_stream(annotations_file);
+	annotations_stream << annotations;
+	annotations_stream.close();
+
     /* Compress the files into the final movie file */
     TAR *tar;
     int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
@@ -268,6 +295,11 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
     char* config_ptr = const_cast<char*>(config_file.c_str());
     char savename2[13] = "config.ini";
     ret = tar_append_file(tar, config_ptr, savename2);
+	if (ret == -1) return EBADARCHIVE;
+
+    char* annot_ptr = const_cast<char*>(annotations_file.c_str());
+    char savename3[16] = "annotations.txt";
+    ret = tar_append_file(tar, annot_ptr, savename3);
 	if (ret == -1) return EBADARCHIVE;
 
     ret = tar_append_eof(tar);
@@ -401,18 +433,6 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-unsigned int MovieFile::nbFramesConfig()
-{
-	/* Load the config file into the context struct */
-	QString configfile = context->config.tempmoviedir.c_str();
-	configfile += "/config.ini";
-
-	QSettings config(configfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
-
-	return config.value("frame_count").toUInt();
-}
-
 unsigned int MovieFile::nbFrames()
 {
 	return input_list.size();
@@ -429,54 +449,6 @@ unsigned int MovieFile::savestateFramecount() const
 
 	return config.value("savestate_frame_count").toUInt();
 }
-
-unsigned int MovieFile::nbRerecords()
-{
-    /* Load the config file into the context struct */
-	QString configfile = context->config.tempmoviedir.c_str();
-	configfile += "/config.ini";
-
-	QSettings config(configfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
-
-	return config.value("rerecord_count").toUInt();
-}
-
-void MovieFile::lengthConfig(int &sec, int& nsec)
-{
-    /* Load the config file into the context struct */
-	QString configfile = context->config.tempmoviedir.c_str();
-	configfile += "/config.ini";
-
-	QSettings config(configfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
-
-	unsigned int movie_framecount = config.value("frame_count").toUInt();
-	unsigned int framerate_num = config.value("framerate_num").toUInt();
-	unsigned int framerate_den = config.value("framerate_den").toUInt();
-	/* Compatibility with older movie format */
-	if (!framerate_num) {
-		framerate_num = config.value("framerate").toUInt();
-		framerate_den = 1;
-	}
-
-
-	sec = movie_framecount * framerate_den / framerate_num;
-	nsec = (int) ((1000000000.0f * (double)((movie_framecount * framerate_den) % framerate_num)) / framerate_num);
-}
-
-std::string MovieFile::authors()
-{
-    /* Load the config file into the context struct */
-	QString configfile = context->config.tempmoviedir.c_str();
-	configfile += "/config.ini";
-
-	QSettings config(configfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
-
-	return config.value("authors").toString().toStdString();
-}
-
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
 {

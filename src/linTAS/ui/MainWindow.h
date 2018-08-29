@@ -41,6 +41,7 @@
 #include "RamWatchWindow.h"
 #include "InputEditorWindow.h"
 #include "OsdWindow.h"
+#include "AnnotationsWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
@@ -67,12 +68,14 @@ public:
     RamWatchWindow* ramWatchWindow;
     InputEditorWindow* inputEditorWindow;
     OsdWindow* osdWindow;
+    AnnotationsWindow* annotationsWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
 
     QAction *saveMovieAction;
     QAction *exportMovieAction;
+    QAction *annotateMovieAction;
 
     QActionGroup *movieEndGroup;
     QActionGroup *screenResGroup;
