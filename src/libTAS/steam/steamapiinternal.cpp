@@ -34,6 +34,7 @@ void * SteamInternal_ContextInit( void *pContextInitData )
 {
     DEBUGLOGCALL(LCF_STEAM);
     static CSteamAPIContext context;
+    GlobalNoLog gnl;
     context.m_pSteamClient = SteamClient();
     context.m_pSteamUser = SteamUser();
     context.m_pSteamUserStats = SteamUserStats();
@@ -55,6 +56,7 @@ void * SteamInternal_CreateInterface( const char *ver )
 bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
 {
     DEBUGLOGCALL(LCF_STEAM);
+    GlobalNoLog gnl;
     context->m_pSteamClient = SteamClient();
     context->m_pSteamUser = SteamUser();
     context->m_pSteamUserStats = SteamUserStats();

@@ -61,7 +61,7 @@ const char *ISteamApps::GetAvailableGameLanguages()
 bool ISteamApps::BIsSubscribedApp( AppId_t appID )
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return false;
+	return true;
 }
 
 }

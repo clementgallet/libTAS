@@ -38,40 +38,40 @@ public:
 	// gets the status of the current user
 	virtual EPersonaState GetPersonaState();
 
-	// // friend iteration
-	// // takes a set of k_EFriendFlags, and returns the number of users the client knows about who meet that criteria
-	// // then GetFriendByIndex() can then be used to return the id's of each of those users
-	// virtual int GetFriendCount( int iFriendFlags );
+	// friend iteration
+	// takes a set of k_EFriendFlags, and returns the number of users the client knows about who meet that criteria
+	// then GetFriendByIndex() can then be used to return the id's of each of those users
+	virtual int GetFriendCount( int iFriendFlags );
+
+	// returns the steamID of a user
+	// iFriend is a index of range [0, GetFriendCount())
+	// iFriendsFlags must be the same value as used in GetFriendCount()
+	// the returned CSteamID can then be used by all the functions below to access details about the user
+	virtual CSteamID GetFriendByIndex( int iFriend, int iFriendFlags );
+
+	// returns a relationship to a user
+	virtual EFriendRelationship GetFriendRelationship( CSteamID steamIDFriend );
+
+	// returns the current status of the specified user
+	// this will only be known by the local user if steamIDFriend is in their friends list; on the same game server; in a chat room or lobby; or in a small group with the local user
+	virtual EPersonaState GetFriendPersonaState( CSteamID steamIDFriend );
+
+	// returns the name another user - guaranteed to not be NULL.
+	// same rules as GetFriendPersonaState() apply as to whether or not the user knowns the name of the other user
+	// note that on first joining a lobby, chat room or game server the local user will not known the name of the other users automatically; that information will arrive asyncronously
 	//
-	// // returns the steamID of a user
-	// // iFriend is a index of range [0, GetFriendCount())
-	// // iFriendsFlags must be the same value as used in GetFriendCount()
-	// // the returned CSteamID can then be used by all the functions below to access details about the user
-	// virtual CSteamID GetFriendByIndex( int iFriend, int iFriendFlags );
-	//
-	// // returns a relationship to a user
-	// virtual EFriendRelationship GetFriendRelationship( CSteamID steamIDFriend );
-	//
-	// // returns the current status of the specified user
-	// // this will only be known by the local user if steamIDFriend is in their friends list; on the same game server; in a chat room or lobby; or in a small group with the local user
-	// virtual EPersonaState GetFriendPersonaState( CSteamID steamIDFriend );
-	//
-	// // returns the name another user - guaranteed to not be NULL.
-	// // same rules as GetFriendPersonaState() apply as to whether or not the user knowns the name of the other user
-	// // note that on first joining a lobby, chat room or game server the local user will not known the name of the other users automatically; that information will arrive asyncronously
-	// //
-	// virtual const char *GetFriendPersonaName( CSteamID steamIDFriend );
-	//
-	// // returns true if the friend is actually in a game, and fills in pFriendGameInfo with an extra details
-	// virtual bool GetFriendGamePlayed( CSteamID steamIDFriend, OUT_STRUCT() FriendGameInfo_t *pFriendGameInfo );
-	// // accesses old friends names - returns an empty string when their are no more items in the history
-	// virtual const char *GetFriendPersonaNameHistory( CSteamID steamIDFriend, int iPersonaName );
-	// // friends steam level
-	// virtual int GetFriendSteamLevel( CSteamID steamIDFriend );
-	//
-	// // Returns nickname the current user has set for the specified player. Returns NULL if the no nickname has been set for that player.
-	// virtual const char *GetPlayerNickname( CSteamID steamIDPlayer );
-	//
+	virtual const char *GetFriendPersonaName( CSteamID steamIDFriend );
+
+	// returns true if the friend is actually in a game, and fills in pFriendGameInfo with an extra details
+	virtual bool GetFriendGamePlayed( CSteamID steamIDFriend, FriendGameInfo_t *pFriendGameInfo );
+	// accesses old friends names - returns an empty string when their are no more items in the history
+	virtual const char *GetFriendPersonaNameHistory( CSteamID steamIDFriend, int iPersonaName );
+	// friends steam level
+	virtual int GetFriendSteamLevel( CSteamID steamIDFriend );
+
+	// Returns nickname the current user has set for the specified player. Returns NULL if the no nickname has been set for that player.
+	virtual const char *GetPlayerNickname( CSteamID steamIDPlayer );
+
 	// // friend grouping (tag) apis
 	// // returns the number of friends groups
 	// virtual int GetFriendsGroupCount();

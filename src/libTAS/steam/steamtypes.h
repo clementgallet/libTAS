@@ -31,6 +31,8 @@ typedef uint64_t UGCUpdateHandle_t;
 typedef uint32_t AccountID_t;
 typedef uint32_t PartnerId_t;
 typedef void SteamUGCDetails_t;
+typedef void FriendGameInfo_t;
+typedef void LeaderboardEntry_t;
 
 typedef int EVoiceResult;
 typedef int EBeginAuthSessionResult;
@@ -58,6 +60,7 @@ typedef int EItemPreviewType;
 typedef int EItemUpdateStatus;
 typedef int ERemoteStoragePublishedFileVisibility;
 typedef int EWorkshopFileType;
+typedef int ELeaderboardUploadScoreMethod;
 
 
 
