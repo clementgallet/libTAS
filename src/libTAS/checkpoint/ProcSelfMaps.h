@@ -34,8 +34,8 @@ class ProcSelfMaps
         void reset();
 
     private:
-        intptr_t readDec();
-        intptr_t readHex();
+        uintptr_t readDec();
+        uintptr_t readHex();
 
         char *data;
         size_t dataIdx;

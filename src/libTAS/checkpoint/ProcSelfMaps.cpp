@@ -57,9 +57,9 @@ void ProcSelfMaps::reset()
     dataIdx = 0;
 }
 
-intptr_t ProcSelfMaps::readDec()
+uintptr_t ProcSelfMaps::readDec()
 {
-    intptr_t v = 0;
+    uintptr_t v = 0;
 
     while (1) {
         char c = data[dataIdx];
@@ -74,9 +74,9 @@ intptr_t ProcSelfMaps::readDec()
     return v;
 }
 
-intptr_t ProcSelfMaps::readHex()
+uintptr_t ProcSelfMaps::readHex()
 {
-    intptr_t v = 0;
+    uintptr_t v = 0;
 
     while (1) {
         char c = data[dataIdx];
@@ -103,13 +103,13 @@ bool ProcSelfMaps::getNextArea(Area *area)
         return false;
     }
 
-    intptr_t addr = readHex();
+    uintptr_t addr = readHex();
     MYASSERT(addr != 0)
     area->addr = reinterpret_cast<void*>(addr);
 
     MYASSERT(data[dataIdx++] == '-')
 
-    intptr_t endAddr = readHex();
+    uintptr_t endAddr = readHex();
     MYASSERT(endAddr != 0)
     area->endAddr = reinterpret_cast<void*>(endAddr);
 
