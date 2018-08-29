@@ -85,10 +85,12 @@ OVERRIDE int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE size_t snd_pcm_hw_params_sizeof(void);
 OVERRIDE int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr);
 OVERRIDE void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj);
+OVERRIDE void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src);
 OVERRIDE int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access);
 OVERRIDE int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
 OVERRIDE int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
 OVERRIDE int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
+OVERRIDE int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
 OVERRIDE int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
@@ -112,6 +114,18 @@ OVERRIDE int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_pa
 // int snd_pcm_sw_params_set_silence_size(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
 // int snd_pcm_sw_params_get_silence_size(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
 
+// snd_pcm_chmap_query_t **snd_pcm_query_chmaps(snd_pcm_t *pcm);
+// snd_pcm_chmap_query_t **snd_pcm_query_chmaps_from_hw(int card, int dev, int subdev, snd_pcm_stream_t stream);
+// void snd_pcm_free_chmaps(snd_pcm_chmap_query_t **maps);
+OVERRIDE snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm);
+// int snd_pcm_set_chmap(snd_pcm_t *pcm, const snd_pcm_chmap_t *map);
+
+// const char *snd_pcm_chmap_type_name(enum snd_pcm_chmap_type val);
+// const char *snd_pcm_chmap_name(enum snd_pcm_chmap_position val);
+// const char *snd_pcm_chmap_long_name(enum snd_pcm_chmap_position val);
+// int snd_pcm_chmap_print(const snd_pcm_chmap_t *map, size_t maxlen, char *buf);
+// unsigned int snd_pcm_chmap_from_string(const char *str);
+// snd_pcm_chmap_t *snd_pcm_chmap_parse_string(const char *str);
 
 }
 

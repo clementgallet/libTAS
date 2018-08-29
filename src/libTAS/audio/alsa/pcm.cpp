@@ -39,12 +39,14 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_any);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_size_near);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_channels);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_free);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy);
 DEFINE_ORIG_POINTER(snd_pcm_prepare);
 DEFINE_ORIG_POINTER(snd_pcm_writei);
 DEFINE_ORIG_POINTER(snd_pcm_readi);
@@ -59,6 +61,8 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_avail_min);
+
+DEFINE_ORIG_POINTER(snd_pcm_get_chmap);
 
 static int get_latency();
 
@@ -337,6 +341,16 @@ void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj)
     DEBUGLOGCALL(LCF_SOUND);
 }
 
+void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_copy, nullptr);
+        return orig::snd_pcm_hw_params_copy(dst, src);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+}
+
 int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access)
 {
     if (GlobalState::isNative()) {
@@ -413,6 +427,21 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
     return 0;
 }
 
+int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_set_rate_near, nullptr);
+        return orig::snd_pcm_hw_params_set_rate_near(pcm, params, val, dir);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with rate ", *val);
+
+    auto buffer = sourceAlsa->buffer_queue[0];
+    buffer->frequency = *val;
+
+    return 0;
+}
+
 int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir)
 {
     if (GlobalState::isNative()) {
@@ -479,6 +508,23 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
 
     debuglog(LCF_SOUND, __func__, " call with val ", val);
     return 0;
+}
+
+snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_get_chmap, nullptr);
+        return orig::snd_pcm_get_chmap(pcm);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    int channels = 2; // TODO!!
+    snd_pcm_chmap_t *map = static_cast<snd_pcm_chmap_t*>(malloc(sizeof(int) * (channels + 1)));
+    map->channels = channels;
+    map->pos[0] = SND_CHMAP_FL;
+    map->pos[1] = SND_CHMAP_FR;
+
+    return map;
 }
 
 }
