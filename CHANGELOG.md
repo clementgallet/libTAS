@@ -1,10 +1,18 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.3.1] - 2018-08-30
+### Added
 - Xlib cursor and pointer warping functions
 - Force FMOD to output to ALSA, and removed PulseAudio hooks
 - Kill button to terminate a hanging game process
 - Hook SDL text input
 - Copy/cut/paste options in the input editor
+- Start implementing Steam API to support some Steam games
+- Support pthread keys for recycled threads, add add an option to disable thread recycling
+- Movies can store annotations
 
 ### Changed
 - Remove all ffmpeg API, and use a pipe to send video/audio using nut muxer
@@ -16,6 +24,9 @@
 - Encode the first frame when starting encode before the game is launched
 - Encode non-draw frames at game startup as blank frames
 - Add encode segment number in encode filename
+- Memory region permission is set when loading a savestate
+- Fix some pointers overflow on 32-bit arch
+- Audio buffers are cleared before calling the callback (SDL1 Audio)
 
 ## [1.3.0] - 2018-07-30
 ### Added
