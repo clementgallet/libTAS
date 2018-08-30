@@ -1130,7 +1130,7 @@ void MainWindow::slotStop()
 {
     if (context->status == Context::QUITTING) {
         /* Terminate the game process */
-        kill(context->game_pid, SIGTERM);
+        kill(context->game_pid, SIGKILL);
         return;
     }
 
