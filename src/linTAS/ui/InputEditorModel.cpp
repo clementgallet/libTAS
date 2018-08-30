@@ -322,7 +322,8 @@ int InputEditorModel::pasteInputs(int row)
     int insertedFrames = row + paste_ais.size() - movie->input_list.size();
 
     if (insertedFrames > 0) {
-        beginInsertRows(QModelIndex(), row, row + insertedFrames);
+        beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
+        movie->input_list.resize(movie->input_list.size() + insertedFrames);
     }
 
     for (size_t r = 0; r < paste_ais.size(); r++) {
@@ -364,7 +365,7 @@ int InputEditorModel::pasteInsertInputs(int row)
         }
     }
 
-    beginInsertRows(QModelIndex(), row, row + paste_ais.size());
+    beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
 
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->insertInputsBefore(paste_ais[r], row + r);
