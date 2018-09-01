@@ -1,6 +1,9 @@
 ## [Unreleased]
 ### Added
 ### Changed
+
+* Use system command for compressing/decompressing instead of tar/zlib libraries
+
 ### Fixed
 
 ## [1.3.1] - 2018-08-30

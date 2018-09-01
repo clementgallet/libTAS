@@ -21,18 +21,14 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
-#include <libtar.h>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
-#include <zlib.h>
 #include <X11/X.h> // ButtonXMask
 #include <errno.h>
+#include <unistd.h>
 
 #include "MovieFile.h"
 #include "utils.h"
 #include "../shared/version.h"
-
-static tartype_t gztype = { (openfunc_t) gzopen_wrapper, (closefunc_t) gzclose_wrapper,
-	(readfunc_t) gzread_wrapper, (writefunc_t) gzwrite_wrapper};
 
 MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), context(c) {}
 
@@ -72,17 +68,20 @@ int MovieFile::extractMovie(const std::string& moviefile)
 	unlink(inputfile.c_str());
 	unlink(annotationsfile.c_str());
 
-    /* Uncompress the movie file into out temp directory */
-    TAR *tar;
-    int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_RDONLY, 0644, 0);
-	if (ret == -1) return EBADARCHIVE;
+    /* Build the tar command */
+	std::ostringstream oss;
+	/* Piping gzip -> tar to avoid gzip warnings on old movie files */
+	oss << "gzip -dq < ";
+	oss << moviefile;
+	oss << " | tar -xUf - -C ";
+	oss << context->config.tempmoviedir;
 
-    char* md = const_cast<char*>(context->config.tempmoviedir.c_str());
-    ret = tar_extract_all(tar, md);
-	if (ret == -1) return EBADARCHIVE;
+	/* Execute the tar command */
+	// std::cout << oss.str() << std::endl;
+	int ret = system(oss.str().c_str());
 
-    ret = tar_close(tar);
-	if (ret == -1) return EBADARCHIVE;
+	if (!WIFEXITED(ret) || (WEXITSTATUS(ret) != 0))
+		return EBADARCHIVE;
 
 	/* Check the presence of the inputs and config files */
 	if (access(configfile.c_str(), F_OK) != 0)
@@ -278,35 +277,20 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	annotations_stream << annotations;
 	annotations_stream.close();
 
-    /* Compress the files into the final movie file */
-    TAR *tar;
-    int ret = tar_open(&tar, moviefile.c_str(), &gztype, O_WRONLY | O_CREAT, 0644, 0);
-	if (ret == -1) return EBADARCHIVE;
+	/* Build the tar command */
+	std::ostringstream oss;
+	oss << "tar -czUf ";
+	oss << moviefile;
+	oss << " -C ";
+	oss << context->config.tempmoviedir;
+	oss << " inputs config.ini annotations.txt";
 
-    /* I would like to use tar_append_tree but it saves files with their path */
-    //tar_append_tree(tar, md, save_dir);
+	/* Execute the tar command */
+	// std::cout << oss.str() << std::endl;
+	int ret = system(oss.str().c_str());
 
-    char* input_ptr = const_cast<char*>(input_file.c_str());
-    char savename[7] = "inputs";
-    ret = tar_append_file(tar, input_ptr, savename);
-	if (ret == -1) return EBADARCHIVE;
-
-    std::string config_file = context->config.tempmoviedir + "/config.ini";
-    char* config_ptr = const_cast<char*>(config_file.c_str());
-    char savename2[13] = "config.ini";
-    ret = tar_append_file(tar, config_ptr, savename2);
-	if (ret == -1) return EBADARCHIVE;
-
-    char* annot_ptr = const_cast<char*>(annotations_file.c_str());
-    char savename3[16] = "annotations.txt";
-    ret = tar_append_file(tar, annot_ptr, savename3);
-	if (ret == -1) return EBADARCHIVE;
-
-    ret = tar_append_eof(tar);
-	if (ret == -1) return EBADARCHIVE;
-
-    ret = tar_close(tar);
-	if (ret == -1) return EBADARCHIVE;
+	if (!WIFEXITED(ret) || (WEXITSTATUS(ret) != 0))
+		return EBADARCHIVE;
 
 	return 0;
 }

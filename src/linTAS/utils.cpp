@@ -22,8 +22,7 @@
 #include <cerrno> // errno
 #include <cstring> // strerror
 #include <iostream>
-#include <zlib.h>
-#include <fcntl.h> // O_RDONLY, O_WRONLY, O_ACCMODE, O_CREAT
+#include <unistd.h> // unlink
 
 int create_dir(std::string& path)
 {
@@ -48,62 +47,6 @@ int create_dir(std::string& path)
         return -1;
     }
     return 0;
-}
-
-/* We store the gz struct so it can be used across all wrapper functions.
- * We need to do this because standard open/read/write/close functions use a
- * file descriptor (int), but gzopen/gzread/gzwrite/gzclose functions use a
- * pointer to a struct, which is larger than an int on some archs.
- */
-gzFile gzf;
-
-int gzopen_wrapper(const char *pathname, int oflags, int mode)
-{
-	const char *gzoflags;
-
-	switch (oflags & O_ACCMODE) {
-	case O_WRONLY:
-		gzoflags = "wb1";
-		break;
-	case O_RDONLY:
-		gzoflags = "rb";
-		break;
-	default:
-		errno = EINVAL;
-		return -1;
-	}
-
-	int fd = open(pathname, oflags, mode);
-	if (fd == -1)
-		return -1;
-
-	if ((oflags & O_CREAT) && fchmod(fd, mode)) {
-		close(fd);
-		return -1;
-	}
-
-	gzf = gzdopen(fd, gzoflags);
-	if (!gzf) {
-		errno = ENOMEM;
-		return -1;
-	}
-
-	return fd;
-}
-
-ssize_t gzread_wrapper(int, void *buf, size_t count)
-{
-    return gzread(gzf, buf, count);
-}
-
-ssize_t gzwrite_wrapper(int, const void *buf, size_t count)
-{
-    return gzwrite(gzf, buf, count);
-}
-
-int gzclose_wrapper(int)
-{
-    return gzclose(gzf);
 }
 
 void remove_savestates(Context* context)

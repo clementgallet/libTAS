@@ -26,15 +26,6 @@
 /* Create a directory if it does not exist already */
 int create_dir(std::string& path);
 
-/* Wrapper for gz* to be used with libtar.
- * Code of gzopen_wrapper was taken from libtar demo driver
- * https://github.com/tklauser/libtar
- */
-int gzopen_wrapper(const char *pathname, int oflags, int mode);
-ssize_t gzread_wrapper(int, void *buf, size_t count);
-ssize_t gzwrite_wrapper(int, const void *buf, size_t count);
-int gzclose_wrapper(int);
-
 /* Remove savestate files */
 void remove_savestates(Context* context);
 

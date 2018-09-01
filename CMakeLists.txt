@@ -47,10 +47,6 @@ else()
 endif(Qt5Widgets_FOUND)
 target_link_libraries (linTAS Qt5::Widgets)
 
-# Add TAR lib
-find_library(TAR_LIB tar)
-target_link_libraries(linTAS ${TAR_LIB})
-
 # Add pthread
 find_package(Threads REQUIRED)
 target_link_libraries(linTAS Threads::Threads)
@@ -74,11 +70,6 @@ find_package(X11 REQUIRED)
 include_directories(${X11_X11_INCLUDE_DIRS})
 target_link_libraries (linTAS ${X11_X11_LIB})
 target_link_libraries (TAS ${X11_X11_LIB})
-
-# Add zlib library
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries(linTAS ${ZLIB_LIBRARIES})
 
 # Add optional features
 find_package(PkgConfig REQUIRED)
