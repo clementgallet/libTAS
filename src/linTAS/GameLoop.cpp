@@ -418,7 +418,6 @@ bool GameLoop::startFrameMessages()
         switch (message) {
         case MSGB_WINDOW_ID:
             receiveData(&context->game_window, sizeof(Window));
-            /* FIXME: Don't do this if the ui option is unchecked  */
             if (context->game_window != 0)
             {
                 const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE };
@@ -428,8 +427,6 @@ bool GameLoop::startFrameMessages()
                     std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
                 }
             }
-            // XSelectInput(context->display, context->game_window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
-            // std::cout << "Received window id " << context->game_window << std::endl;
             break;
 
         case MSGB_ALERT_MSG:
@@ -1123,9 +1120,6 @@ void GameLoop::endFrameMessages(AllInputs &ai)
 
 bool GameLoop::haveFocus()
 {
-    if (context->inputs_focus & Context::FOCUS_ALL)
-        return true;
-
     xcb_window_t window;
 
     xcb_generic_error_t* error;
@@ -1138,15 +1132,7 @@ bool GameLoop::haveFocus()
     window = focus_reply->focus;
     free(focus_reply);
 
-    if ((context->inputs_focus & Context::FOCUS_GAME) &&
-        (window == context->game_window))
-        return true;
-
-    if ((context->inputs_focus & Context::FOCUS_UI) &&
-        (window == context->ui_window))
-        return true;
-
-    return false;
+    return (window == context->game_window);
 }
 
 void GameLoop::loopExit()

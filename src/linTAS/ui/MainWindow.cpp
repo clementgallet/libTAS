@@ -527,22 +527,6 @@ void MainWindow::createActions()
     addActionCheckable(joystickGroup, tr("2"), 2);
     addActionCheckable(joystickGroup, tr("3"), 3);
     addActionCheckable(joystickGroup, tr("4"), 4);
-
-    hotkeyFocusGroup = new QActionGroup(this);
-    hotkeyFocusGroup->setExclusive(false);
-    connect(hotkeyFocusGroup, &QActionGroup::triggered, this, &MainWindow::slotHotkeyFocus);
-
-    addActionCheckable(hotkeyFocusGroup, tr("Game has focus"), Context::FOCUS_GAME);
-    addActionCheckable(hotkeyFocusGroup, tr("UI has focus"), Context::FOCUS_UI);
-    addActionCheckable(hotkeyFocusGroup, tr("Always (not working)"), Context::FOCUS_ALL);
-
-    inputFocusGroup = new QActionGroup(this);
-    inputFocusGroup->setExclusive(false);
-    connect(inputFocusGroup, &QActionGroup::triggered, this, &MainWindow::slotInputFocus);
-
-    addActionCheckable(inputFocusGroup, tr("Game has focus"), Context::FOCUS_GAME);
-    addActionCheckable(inputFocusGroup, tr("UI has focus"), Context::FOCUS_UI);
-    addActionCheckable(inputFocusGroup, tr("Always (not working)"), Context::FOCUS_ALL);
 }
 
 void MainWindow::createMenus()
@@ -714,15 +698,6 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(joystickMenu);
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
-
-    inputMenu->addSeparator();
-
-    QMenu *hotkeyFocusMenu = inputMenu->addMenu(tr("Enable hotkeys when"));
-    hotkeyFocusMenu->addActions(hotkeyFocusGroup->actions());
-
-    QMenu *inputFocusMenu = inputMenu->addMenu(tr("Enable inputs when"));
-    inputFocusMenu->addActions(inputFocusGroup->actions());
-
 }
 
 void MainWindow::updateStatus()
@@ -1013,9 +988,6 @@ void MainWindow::updateUIFromConfig()
     for (auto& action : timeSecGroup->actions()) {
         action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
-
-    setCheckboxesFromMask(hotkeyFocusGroup, context->hotkeys_focus);
-    setCheckboxesFromMask(inputFocusGroup, context->inputs_focus);
 
     renderSoftAction->setChecked(context->config.opengl_soft);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
@@ -1362,36 +1334,6 @@ void MainWindow::slotLoggingExclude()
 {
     setMaskFromCheckboxes(loggingExcludeGroup, context->config.sc.excludeFlags);
     context->config.sc_modified = true;
-}
-
-void MainWindow::slotHotkeyFocus()
-{
-    setMaskFromCheckboxes(hotkeyFocusGroup, context->hotkeys_focus);
-
-    /* If the game was not launched, don't do anything */
-    if (context->game_window ) {
-        if (context->hotkeys_focus & Context::FOCUS_GAME) {
-            const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
-            xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
-        }
-        else {
-            const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE};
-            xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_EVENT_MASK, values);
-        }
-    }
-    // if (context->hotkeys_focus & Context::FOCUS_UI) {
-    //     const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE };
-    //     xcb_change_window_attributes (context->conn, context->ui_window, XCB_CW_EVENT_MASK, values);
-    // }
-    // else {
-    //     const static uint32_t values[] = { XCB_EVENT_MASK_FOCUS_CHANGE };
-    //     xcb_change_window_attributes (context->conn, context->ui_window, XCB_CW_EVENT_MASK, values);
-    // }
-}
-
-void MainWindow::slotInputFocus()
-{
-    setMaskFromCheckboxes(inputFocusGroup, context->inputs_focus);
 }
 
 void MainWindow::slotSlowdown()

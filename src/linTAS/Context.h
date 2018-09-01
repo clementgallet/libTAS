@@ -53,10 +53,6 @@ struct Context {
         FOCUS_ALL = 0x04
     };
 
-    /* When are hotkeys/inputs accepted */
-    int hotkeys_focus = FOCUS_GAME;
-    int inputs_focus = FOCUS_GAME;
-
     /* frame count */
     unsigned int framecount = 0;
 

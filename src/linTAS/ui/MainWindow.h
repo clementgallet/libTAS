@@ -115,10 +115,6 @@ public:
     QAction *mouseAction;
     QActionGroup *joystickGroup;
 
-    QActionGroup *hotkeyFocusGroup;
-    QActionGroup *inputFocusGroup;
-
-
 
     QLineEdit *gamePath;
     QPushButton *browseGamePath;
@@ -250,8 +246,6 @@ private slots:
     void slotDebugState();
     void slotLoggingPrint();
     void slotLoggingExclude();
-    void slotHotkeyFocus();
-    void slotInputFocus();
     void slotSlowdown();
     void slotFastforwardMode();
     void slotScreenRes();
