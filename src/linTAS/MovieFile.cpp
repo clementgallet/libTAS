@@ -71,9 +71,9 @@ int MovieFile::extractMovie(const std::string& moviefile)
     /* Build the tar command */
 	std::ostringstream oss;
 	/* Piping gzip -> tar to avoid gzip warnings on old movie files */
-	oss << "gzip -dq < ";
+	oss << "gzip -dq < \"";
 	oss << moviefile;
-	oss << " | tar -xUf - -C ";
+	oss << "\" | tar -xUf - -C ";
 	oss << context->config.tempmoviedir;
 
 	/* Execute the tar command */
