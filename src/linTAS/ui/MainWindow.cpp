@@ -400,6 +400,18 @@ void MainWindow::createActions()
     addActionCheckable(channelGroup, tr("Mono"), 1);
     addActionCheckable(channelGroup, tr("Stereo"), 2);
 
+    localeGroup = new QActionGroup(this);
+
+    addActionCheckable(localeGroup, tr("English"), SharedConfig::LOCALE_ENGLISH);
+    addActionCheckable(localeGroup, tr("Japanese"), SharedConfig::LOCALE_JAPANESE);
+    addActionCheckable(localeGroup, tr("Korean"), SharedConfig::LOCALE_KOREAN);
+    addActionCheckable(localeGroup, tr("Chinese"), SharedConfig::LOCALE_CHINESE);
+    addActionCheckable(localeGroup, tr("Spanish"), SharedConfig::LOCALE_SPANISH);
+    addActionCheckable(localeGroup, tr("German"), SharedConfig::LOCALE_GERMAN);
+    addActionCheckable(localeGroup, tr("French"), SharedConfig::LOCALE_FRENCH);
+    addActionCheckable(localeGroup, tr("Italian"), SharedConfig::LOCALE_ITALIAN);
+    addActionCheckable(localeGroup, tr("Native"), SharedConfig::LOCALE_NATIVE);
+
     timeMainGroup = new QActionGroup(this);
     timeMainGroup->setExclusive(false);
 
@@ -604,6 +616,9 @@ void MainWindow::createMenus()
 
     /* Runtime Menu */
     QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
+
+    QMenu *localeMenu = runtimeMenu->addMenu(tr("Force locale"));
+    localeMenu->addActions(localeGroup->actions());
 
     QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
     disabledWidgetsOnStart.append(timeMenu);
@@ -981,6 +996,8 @@ void MainWindow::updateUIFromConfig()
     osdEncodeAction->setChecked(context->config.sc.osd_encode);
 #endif
 
+    setRadioFromList(localeGroup, context->config.sc.locale);
+
     for (auto& action : timeMainGroup->actions()) {
         action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
     }
@@ -1056,6 +1073,8 @@ void MainWindow::slotLaunch()
     context->config.sc.keyboard_support = keyboardAction->isChecked();
     context->config.sc.mouse_support = mouseAction->isChecked();
     setListFromRadio(joystickGroup, context->config.sc.nb_controllers);
+
+    setListFromRadio(localeGroup, context->config.sc.locale);
 
     for (const auto& action : timeMainGroup->actions()) {
         int index = action->data().toInt();

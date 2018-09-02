@@ -180,6 +180,23 @@ struct SharedConfig {
     int debug_state = 0;
 
     bool recycle_threads = true;
+
+    /* An enum indicating which lang are we enforcing */
+    enum LocaleType
+    {
+        LOCALE_ENGLISH,
+        LOCALE_JAPANESE,
+        LOCALE_KOREAN,
+        LOCALE_CHINESE,
+        LOCALE_SPANISH,
+        LOCALE_GERMAN,
+        LOCALE_FRENCH,
+        LOCALE_ITALIAN,
+        LOCALE_NATIVE
+    };
+
+    int locale = LOCALE_ENGLISH;
+
 };
 
 #endif

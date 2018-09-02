@@ -100,6 +100,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("video_bitrate", sc.video_bitrate);
     settings.setValue("audio_codec", sc.audio_codec);
     settings.setValue("audio_bitrate", sc.audio_bitrate);
+    settings.setValue("locale", sc.locale);
 
     settings.beginWriteArray("main_gettimes_threshold");
     for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
@@ -197,6 +198,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_channels = settings.value("audio_channels", sc.audio_channels).toInt();
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
+    sc.locale = settings.value("locale", sc.locale).toInt();
 
     sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();

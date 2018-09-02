@@ -90,6 +90,8 @@ public:
     QActionGroup *channelGroup;
     QAction *muteAction;
 
+    QActionGroup *localeGroup;
+
     QActionGroup *timeMainGroup;
     QActionGroup *timeSecGroup;
 

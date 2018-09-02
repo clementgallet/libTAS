@@ -28,24 +28,55 @@ namespace libtas {
 DEFINE_ORIG_POINTER(setlocale)
 DEFINE_ORIG_POINTER(getenv)
 
+static const char* config_locale()
+{
+    switch (shared_config.locale) {
+    case SharedConfig::LOCALE_ENGLISH:
+        return "en_US.utf8";
+    case SharedConfig::LOCALE_JAPANESE:
+        return "ja_JP.utf8";
+    case SharedConfig::LOCALE_KOREAN:
+        return "ko_KR.utf8";
+    case SharedConfig::LOCALE_CHINESE:
+        return "zh_CN.utf8";
+    case SharedConfig::LOCALE_SPANISH:
+        return "es_ES.utf8";
+    case SharedConfig::LOCALE_GERMAN:
+        return "de_DE.utf8";
+    case SharedConfig::LOCALE_FRENCH:
+        return "fr_FR.utf8";
+    case SharedConfig::LOCALE_ITALIAN:
+        return "it_IT.utf8";
+    case SharedConfig::LOCALE_NATIVE:
+        return "";
+    default:
+        return "";
+    }
+}
+
 /* Override */ char *setlocale (int category, const char *locale) throw()
 {
     // static char enlocale[] = "en_US.utf8";
     debuglog(LCF_LOCALE, __func__, " called with category ", category, " and locale ", locale);
-    LINK_NAMESPACE_GLOBAL(setlocale);
-    char* ret = orig::setlocale(category, locale);
-    debuglog(LCF_LOCALE, "  returning ", ret);
-    return ret;
+    char* mylocale = const_cast<char*>(config_locale());
+    if (mylocale[0] == '\0') {
+        /* Return native locale */
+        LINK_NAMESPACE_GLOBAL(setlocale);
+        return orig::setlocale(category, locale);
+    }
+    return mylocale;
 }
 
 char *getenv (const char *name) throw()
 {
-    static char lang_en[] = "en_US.utf8";
     debuglog(LCF_LOCALE, __func__, " called with name ", name);
-    LINK_NAMESPACE_GLOBAL(getenv);
     if (0 == strncmp(name, "LANG", 4)) {
-        return lang_en;
+        char* mylocale = const_cast<char*>(config_locale());
+        if (mylocale[0] != '\0') {
+            return mylocale;
+        }
     }
+    LINK_NAMESPACE_GLOBAL(getenv);
     char* ret = orig::getenv(name);
     debuglog(LCF_LOCALE, "  returning ", ret);
 
