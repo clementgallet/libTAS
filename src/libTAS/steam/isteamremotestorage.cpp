@@ -19,36 +19,67 @@
 
 #include "isteamremotestorage.h"
 #include "../logging.h"
+#include "../Utils.h"
+
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace libtas {
 
 bool ISteamRemoteStorage::FileWrite( const char *pchFile, const void *pvData, int cubData )
 {
     DEBUGLOGCALL(LCF_STEAM);
+
+    /* Store the file locally, in /tmp for now */
+    std::string path = "/tmp/";
+    path += pchFile;
+    int fd = open(path.c_str(), O_WRONLY | O_TRUNC);
+    if (fd < 0)
+        return false;
+
+    Utils::writeAll(fd, pvData, cubData);
+
+    if (close(fd) < 0)
+        return false;
 	return true;
 }
 
 int	ISteamRemoteStorage::FileRead( const char *pchFile, void *pvData, int cubDataToRead )
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return 0;
+
+    /* Read the file from /tmp for now */
+    std::string path = "/tmp/";
+    path += pchFile;
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0)
+        return 0;
+
+    int ret = Utils::readAll(fd, pvData, cubDataToRead);
+
+    if (close(fd) < 0)
+        return 0;
+	return ret;
 }
 
 SteamAPICall_t ISteamRemoteStorage::FileWriteAsync( const char *pchFile, const void *pvData, unsigned int cubData )
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return 1;
+    /* Calling the sync version */
+	FileWrite(pchFile, pvData, cubData);
 }
+
+static int asyncfd = 0;
 
 SteamAPICall_t ISteamRemoteStorage::FileReadAsync( const char *pchFile, unsigned int nOffset, unsigned int cubToRead )
 {
-    DEBUGLOGCALL(LCF_STEAM);
-	return 1;
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    return 1;
 }
 
 bool ISteamRemoteStorage::FileReadAsyncComplete( SteamAPICall_t hReadCall, void *pvBuffer, unsigned int cubToRead )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return true;
 }
 
@@ -61,6 +92,10 @@ bool ISteamRemoteStorage::FileForget( const char *pchFile )
 bool ISteamRemoteStorage::FileDelete( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
+    /* Read the file from /tmp for now */
+    std::string path = "/tmp/";
+    path += pchFile;
+    unlink(path.c_str());
 	return true;
 }
 
@@ -78,32 +113,35 @@ bool ISteamRemoteStorage::SetSyncPlatforms( const char *pchFile, ERemoteStorageP
 
 UGCFileWriteStreamHandle_t ISteamRemoteStorage::FileWriteStreamOpen( const char *pchFile )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return 1;
 }
 
 bool ISteamRemoteStorage::FileWriteStreamWriteChunk( UGCFileWriteStreamHandle_t writeHandle, const void *pvData, int cubData )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return true;
 }
 
 bool ISteamRemoteStorage::FileWriteStreamClose( UGCFileWriteStreamHandle_t writeHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return true;
 }
 
 bool ISteamRemoteStorage::FileWriteStreamCancel( UGCFileWriteStreamHandle_t writeHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return true;
 }
 
 bool ISteamRemoteStorage::FileExists( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return false;
+    /* Read the file from /tmp for now */
+    std::string path = "/tmp/";
+    path += pchFile;
+    return (access(path.c_str(), F_OK) == 0);
 }
 
 bool ISteamRemoteStorage::FilePersisted( const char *pchFile )
@@ -115,12 +153,27 @@ bool ISteamRemoteStorage::FilePersisted( const char *pchFile )
 int	ISteamRemoteStorage::GetFileSize( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return 0;
+    /* Read the file from /tmp for now */
+    std::string path = "/tmp/";
+    path += pchFile;
+
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0)
+        return 0;
+
+    int ret = lseek(fd, 0, SEEK_END);
+
+    close(fd);
+
+    if (ret < 0)
+        return 0;
+
+	return ret;
 }
 
 int64_t ISteamRemoteStorage::GetFileTimestamp( const char *pchFile )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return 0;
 }
 
@@ -132,13 +185,13 @@ ERemoteStoragePlatform ISteamRemoteStorage::GetSyncPlatforms( const char *pchFil
 
 int ISteamRemoteStorage::GetFileCount()
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return 0;
 }
 
 const char *ISteamRemoteStorage::GetFileNameAndSize( int iFile, int *pnFileSizeInBytes )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
 	return "";
 }
 

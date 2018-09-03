@@ -20,11 +20,9 @@
 */
 
 #include "Utils.h"
-#include "../logging.h"
+#include "logging.h"
 #include <fcntl.h>
 #include <unistd.h>
-// #include <sys/mman.h>
-// #include <sys/syscall.h>
 
 namespace libtas {
 
