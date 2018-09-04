@@ -253,7 +253,7 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
             ab->update();
             break;
         default:
-            debuglog(LCF_OPENAL, "  Operation not supported");
+            debuglog(LCF_OPENAL, "  Operation not supported: ", param);
             return;
     }
 }
@@ -414,6 +414,15 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             debuglog(LCF_OPENAL, "  Set gain of ", value);
             break;
         case AL_PITCH:
+            if (value != 1.0) {
+                debuglog(LCF_OPENAL, "  Set pitch to ", value, ". Operation not supported");
+            }
+            break;
+        case AL_REFERENCE_DISTANCE:
+            if (value != 1.0) {
+                debuglog(LCF_OPENAL, "  Set reference distance to ", value, ". Operation not supported");
+            }
+            break;
         case AL_MIN_GAIN:
         case AL_MAX_GAIN:
         case AL_MAX_DISTANCE:
@@ -421,9 +430,8 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         case AL_CONE_OUTER_GAIN:
         case AL_CONE_INNER_ANGLE:
         case AL_CONE_OUTER_ANGLE:
-        case AL_REFERENCE_DISTANCE:
         case AL_AUXILIARY_SEND_FILTER:
-            debuglog(LCF_OPENAL, "Operation not supported");
+            debuglog(LCF_OPENAL, "Operation not supported: ", param);
             break;
         case AL_SEC_OFFSET:
             /* We fetch the buffer format of the source.
@@ -527,7 +535,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         case AL_DIRECT_FILTER_GAINHF_AUTO:
         case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
         case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
-            debuglog(LCF_OPENAL, "Operation not supported");
+            debuglog(LCF_OPENAL, "Operation not supported: ", param);
             break;
         case AL_SEC_OFFSET:
             /* We fetch the buffer format of the source.
@@ -614,7 +622,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
         case AL_AIR_ABSORPTION_FACTOR:
         case AL_ROOM_ROLLOFF_FACTOR:
         case AL_CONE_OUTER_GAINHF:
-            debuglog(LCF_OPENAL, "Operation not supported");
+            debuglog(LCF_OPENAL, "Operation not supported: ", param);
             break;
         case AL_SEC_OFFSET:
             /* We fetch the buffer format of the source.
@@ -726,7 +734,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         case AL_DIRECT_FILTER_GAINHF_AUTO:
         case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
         case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
-            debuglog(LCF_OPENAL, "Operation not supported");
+            debuglog(LCF_OPENAL, "Operation not supported: ", param);
             break;
         case AL_BUFFERS_QUEUED:
             *value = as->nbQueue();
@@ -947,13 +955,26 @@ void alListenerf(ALenum param, ALfloat value)
 void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    debuglog(LCF_OPENAL, "Operation not supported");
+    switch(param) {
+    case AL_POSITION:
+        debuglog(LCF_OPENAL, "   Set Position to: ", v1, ", ", v2, ", ", v3);
+        break;
+    case AL_VELOCITY:
+        debuglog(LCF_OPENAL, "   Set Velocity to: ", v1, ", ", v2, ", ", v3);
+        break;
+    }
+    debuglog(LCF_OPENAL, "Operation not supported: ", param);
 }
 
 void alListenerfv(ALenum param, ALfloat *values)
 {
     DEBUGLOGCALL(LCF_OPENAL);
-    debuglog(LCF_OPENAL, "Operation not supported");
+    switch(param) {
+    case AL_ORIENTATION:
+        debuglog(LCF_OPENAL, "   Set Orientation to: ", values[0], ", ", values[1], ", ", values[2], ", ", values[3], ", ", values[4], ", ", values[5]);
+        break;
+    }
+    debuglog(LCF_OPENAL, "Operation not supported: ", param);
 }
 
 void alListeneri(ALenum param, ALint value)

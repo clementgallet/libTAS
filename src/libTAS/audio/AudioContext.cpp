@@ -142,6 +142,7 @@ int AudioContext::createSource(void)
     if (!sources_pool.empty()) {
         sources.push_front(sources_pool.front());
         sources_pool.pop_front();
+        sources.front()->init();
         return sources.front()->id;
     }
 
