@@ -238,7 +238,7 @@ void GameLoop::start()
 
         /* Pause if needed */
         if ((context->pause_frame == (context->framecount + 1)) ||
-            ((context->config.sc.recording == SharedConfig::RECORDING_READ) &&
+            ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
             ((context->config.sc.movie_framecount + context->pause_frame) == (context->framecount + 1)))) {
 
             /* Disable pause */
