@@ -95,6 +95,12 @@ struct Context {
     /* Can we use incremental savestates? */
     bool is_soft_dirty = false;
 
+    /* MD5 hash of the game executable */
+    std::string md5_game;
+
+    /* MD5 hash of the game executable that is stored in the movie */
+    std::string md5_movie;
+
 };
 
 #endif

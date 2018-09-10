@@ -127,6 +127,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	}
 	context->rerecord_count = config.value("rerecord_count").toUInt();
 	context->authors = config.value("authors").toString().toStdString();
+	context->md5_movie = config.value("md5").toString().toStdString();
 
 	config.beginGroup("mainthread_timetrack");
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
@@ -251,6 +252,13 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("libtas_patch_version", PATCHVERSION);
 	config.setValue("savestate_frame_count", nb_frames);
 
+	/* Store the md5 that was extracted from the movie, or store the game
+	 * binary movie if not. */
+	if (!context->md5_movie.empty())
+		config.setValue("md5", context->md5_movie.c_str());
+	else if (!context->md5_game.empty())
+		config.setValue("md5", context->md5_game.c_str());
+
 	config.beginGroup("mainthread_timetrack");
 	config.setValue("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
 	config.setValue("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
@@ -279,9 +287,9 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 
 	/* Build the tar command */
 	std::ostringstream oss;
-	oss << "tar -czUf ";
+	oss << "tar -czUf \"";
 	oss << moviefile;
-	oss << " -C ";
+	oss << "\" -C ";
 	oss << context->config.tempmoviedir;
 	oss << " inputs config.ini annotations.txt";
 

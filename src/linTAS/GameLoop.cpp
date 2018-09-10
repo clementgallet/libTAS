@@ -296,6 +296,20 @@ void GameLoop::init()
 
     current_savestate = -1;
 
+    /* Compute the MD5 hash of the game binary */
+    context->md5_game.clear();
+    std::ostringstream cmd;
+    cmd << "md5sum -b \"" << context->gamepath << "\" 2> /dev/null";
+
+    FILE *md5str = popen(cmd.str().c_str(), "r");
+    if (md5str != NULL) {
+        std::array<char,33> buf;
+        if (fgets(buf.data(), buf.size(), md5str) != nullptr) {
+            context->md5_game.assign(buf.data());
+        }
+        pclose(md5str);
+    }
+
     /* Opening a movie, which imports the inputs and parameters if in read mode,
      * or prepare a movie if in write mode.
      */
@@ -312,6 +326,11 @@ void GameLoop::init()
             /* Update the UI accordingly */
             emit configChanged();
         }
+
+        /* Check md5 match */
+        if ((!context->md5_movie.empty()) && (context->md5_game.compare(context->md5_movie) != 0))
+            emit alertToShow(QString("Game executable hash does not match with the hash stored in the movie!"));
+
     }
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         /* Add one blank frame in every movie corresponding to the input
