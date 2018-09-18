@@ -64,4 +64,11 @@ bool ISteamApps::BIsSubscribedApp( AppId_t appID )
 	return true;
 }
 
+bool ISteamApps::BIsDlcInstalled( AppId_t appID )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return true;
+}
+
+
 }

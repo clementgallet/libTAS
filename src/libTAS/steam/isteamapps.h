@@ -28,9 +28,9 @@ public:
 	// only use this member if you need to check ownership of another game related to yours, a demo for example
 	virtual bool BIsSubscribedApp( AppId_t appID );
 
-	// // Takes AppID of DLC and checks if the user owns the DLC & if the DLC is installed
-	// virtual bool BIsDlcInstalled( AppId_t appID );
-	//
+	// Takes AppID of DLC and checks if the user owns the DLC & if the DLC is installed
+	virtual bool BIsDlcInstalled( AppId_t appID );
+
 	// // returns the Unix time of the purchase of the app
 	// virtual unsigned int GetEarliestPurchaseUnixTime( AppId_t nAppID );
 	//

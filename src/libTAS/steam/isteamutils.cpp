@@ -83,4 +83,57 @@ unsigned int ISteamUtils::GetAppID()
 	return 1234;
 }
 
+void ISteamUtils::SetOverlayNotificationPosition( ENotificationPosition eNotificationPosition )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+bool ISteamUtils::IsAPICallCompleted( SteamAPICall_t hSteamAPICall, bool *pbFailed )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return true;
+}
+
+ESteamAPICallFailure ISteamUtils::GetAPICallFailureReason( SteamAPICall_t hSteamAPICall )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return 0;
+}
+
+bool ISteamUtils::GetAPICallResult( SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return true;
+}
+
+void ISteamUtils::RunFrame()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+unsigned int ISteamUtils::GetIPCCallCount()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return 0;
+}
+
+void ISteamUtils::SetWarningMessageHook( SteamAPIWarningMessageHook_t pFunction )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+bool ISteamUtils::IsOverlayEnabled()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return true;
+}
+
+bool ISteamUtils::BOverlayNeedsPresent()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return false;
+}
+
+
+
 }
