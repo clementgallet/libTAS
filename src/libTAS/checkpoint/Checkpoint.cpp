@@ -875,10 +875,10 @@ static void writeAllAreas(bool base)
         if (!shared_config.incremental_savestates) {
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
-            unlink(pagemappath);
+            NATIVECALL(unlink(pagemappath));
             NATIVECALL(pmfd = creat(pagemappath, 0644));
 
-            unlink(pagespath);
+            NATIVECALL(unlink(pagespath));
             NATIVECALL(pfd = creat(pagespath, 0644));
         }
         else if (base) {
@@ -896,10 +896,10 @@ static void writeAllAreas(bool base)
 
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
 
-            unlink(temppagemappath);
+            NATIVECALL(unlink(temppagemappath));
             NATIVECALL(pmfd = creat(temppagemappath, 0644));
 
-            unlink(temppagespath);
+            NATIVECALL(unlink(temppagespath));
             NATIVECALL(pfd = creat(temppagespath, 0644));
         }
     }
@@ -1003,8 +1003,8 @@ static void writeAllAreas(bool base)
             setPagesFd(current_ss_index, pfd);
         }
         else {
-            rename(temppagemappath, pagemappath);
-            rename(temppagespath, pagespath);
+            NATIVECALL(rename(temppagemappath, pagemappath));
+            NATIVECALL(rename(temppagespath, pagespath));
         }
     }
 }
