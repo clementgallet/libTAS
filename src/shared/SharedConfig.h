@@ -197,6 +197,9 @@ struct SharedConfig {
 
     int locale = LOCALE_ENGLISH;
 
+    /* Simulates a virtual Steam client */
+    bool virtual_steam = false;
+
 };
 
 #endif

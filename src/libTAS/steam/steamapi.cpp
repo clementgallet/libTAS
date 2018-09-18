@@ -26,13 +26,13 @@ namespace libtas {
 bool SteamAPI_Init()
 {
     debuglog(LCF_STEAM, __func__, " call.");
-	return true;
+	return shared_config.virtual_steam;
 }
 
 bool SteamAPI_InitSafe()
 {
     debuglog(LCF_STEAM, __func__, " call.");
-	return true;
+	return shared_config.virtual_steam;
 }
 
 void SteamAPI_Shutdown()
@@ -44,7 +44,7 @@ void SteamAPI_Shutdown()
 bool SteamAPI_IsSteamRunning()
 {
     debuglog(LCF_STEAM, __func__, " call.");
-	return true;
+	return shared_config.virtual_steam;
 }
 
 bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )

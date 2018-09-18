@@ -653,6 +653,9 @@ void MainWindow::createMenus()
     recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
     recycleThreadsAction->setCheckable(true);
     disabledActionsOnStart.append(recycleThreadsAction);
+    steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, &MainWindow::slotSteam);
+    steamAction->setCheckable(true);
+    disabledActionsOnStart.append(steamAction);
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
@@ -1010,6 +1013,7 @@ void MainWindow::updateUIFromConfig()
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
+    steamAction->setChecked(context->config.sc.virtual_steam);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
@@ -1408,6 +1412,13 @@ void MainWindow::slotRecycleThreads(bool checked)
     context->config.sc.recycle_threads = checked;
     context->config.sc_modified = true;
 }
+
+void MainWindow::slotSteam(bool checked)
+{
+    context->config.sc.virtual_steam = checked;
+    context->config.sc_modified = true;
+}
+
 
 void MainWindow::slotMovieEnd()
 {

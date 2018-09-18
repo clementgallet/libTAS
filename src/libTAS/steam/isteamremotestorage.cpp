@@ -33,7 +33,7 @@ bool ISteamRemoteStorage::FileWrite( const char *pchFile, const void *pvData, in
     /* Store the file locally, in /tmp for now */
     std::string path = "/tmp/";
     path += pchFile;
-    int fd = open(path.c_str(), O_WRONLY | O_TRUNC);
+    int fd = open(path.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0666);
     if (fd < 0)
         return false;
 

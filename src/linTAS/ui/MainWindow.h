@@ -101,6 +101,7 @@ public:
 
     QAction *incrementalStateAction;
     QAction *ramStateAction;
+    QAction *steamAction;
 
     QActionGroup *debugStateGroup;
     QActionGroup *loggingOutputGroup;
@@ -260,6 +261,8 @@ private slots:
     void slotIncrementalState(bool checked);
     void slotRamState(bool checked);
     void slotRecycleThreads(bool checked);
+    void slotSteam(bool checked);
+
 };
 
 #endif
