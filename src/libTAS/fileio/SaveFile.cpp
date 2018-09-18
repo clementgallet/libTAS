@@ -78,13 +78,12 @@ FILE* SaveFile::open(const char *modes) {
 
         if (strstr(modes, "w") == nullptr) {
             /* Append the content of the file to the stream if the file exists */
+            GlobalNative gn;
             struct stat filestat;
             int rv = stat(filename.c_str(), &filestat);
 
             if (rv == 0) {
                 /* The file exists, copying the content to the stream */
-                GlobalNative gn;
-
                 FILE* f = fopen(filename.c_str(), "rb");
 
                 if (f != nullptr) {
@@ -206,19 +205,20 @@ int SaveFile::remove()
         return -1;
     }
 
+    removed = true;
+
     if (stream) {
         NATIVECALL(fclose(stream));
+        stream = nullptr;
         free(stream_buffer);
         stream_buffer = nullptr;
         stream_size = 0;
-        removed = true;
         return 0;
     }
 
     if (fd != 0) {
         NATIVECALL(close(fd));
         fd = 0;
-        removed = true;
         return 0;
     }
 

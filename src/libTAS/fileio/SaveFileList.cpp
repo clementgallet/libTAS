@@ -31,6 +31,8 @@
 #include <vector>
 #include <memory>
 #include <cstring>
+#include <unistd.h>
+#include <algorithm> // remove_if
 
 namespace libtas {
 
@@ -88,6 +90,7 @@ bool isSaveFile(const char *file)
     /* Check if file is a dev file */
     GlobalNative gn;
     struct stat filestat;
+
     int rv = stat(file, &filestat);
 
     if (rv == -1) {
@@ -172,17 +175,43 @@ int removeSaveFile(const char *file)
         }
     }
 
+    /* If the file is not registered, create a removed savefile */
+    if (shared_config.prevent_savefiles) {
+        savefiles.emplace_back(new SaveFile(file));
+        savefiles.back()->remove();
+
+        GlobalNative gn;
+        return access(file, W_OK);
+    }
+
     return 1;
 }
 
 int renameSaveFile(const char *oldfile, const char *newfile)
 {
-    std::string oldfilestr(oldfile);
+    const std::string oldfilestr(oldfile);
+    const std::string newfilestr(newfile);
+
+    /* Remove the newfile if present */
+    savefiles.erase( std::remove_if(savefiles.begin(), savefiles.end(),
+        [newfilestr](const std::unique_ptr<SaveFile>& s) { return (s->filename.compare(newfilestr) == 0);}),
+        savefiles.end());
+
     for (const auto& savefile : savefiles) {
         if (savefile->filename.compare(oldfilestr) == 0) {
-            savefile->filename = std::string(newfile);
+            savefile->filename = newfile;
             return 0;
         }
+    }
+
+    /* If the file is not registered, create a savefile */
+    if (shared_config.prevent_savefiles) {
+        savefiles.emplace_back(new SaveFile(oldfile));
+        savefiles.back()->open("rb");
+        savefiles.back()->filename = newfile;
+
+        GlobalNative gn;
+        return access(oldfile, W_OK);
     }
 
     return 1;
@@ -190,7 +219,7 @@ int renameSaveFile(const char *oldfile, const char *newfile)
 
 int getSaveFileFd(const char *file)
 {
-    std::string filestr(file);
+    const std::string filestr(file);
     for (const auto& savefile : savefiles) {
         if (savefile->filename.compare(filestr) == 0) {
             return savefile->fd;
