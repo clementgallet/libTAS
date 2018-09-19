@@ -45,6 +45,12 @@ void InputEditorWindow::update()
     inputEditorView->update();
 }
 
+void InputEditorWindow::resetInputs()
+{
+    inputEditorView->resetInputs();
+}
+
+
 void InputEditorWindow::isWindowVisible(bool &visible)
 {
     visible = isVisible();

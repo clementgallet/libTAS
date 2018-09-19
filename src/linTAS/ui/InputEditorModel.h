@@ -47,6 +47,9 @@ public:
     /* Update the content of the table */
     void update();
 
+    /* Reset the content of the table */
+    void resetInputs();
+
     /* Build the unique set of inputs present in the movie */
     void buildInputSet();
 
@@ -64,6 +67,9 @@ public:
 
     /* Add all new input columns from an AllInput object */
     void addUniqueInputs(const AllInputs &ai);
+
+    /* Clear a single input from the entire movie */
+    void clearUniqueInput(int column);
 
     /* Clear input */
     void clearInput(int row);

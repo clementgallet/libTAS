@@ -755,6 +755,8 @@ void MainWindow::updateStatus()
             stopButton->setText("Stop");
             stopButton->setEnabled(false);
 
+            inputEditorWindow->resetInputs();
+
             updateMovieParams();
             break;
 

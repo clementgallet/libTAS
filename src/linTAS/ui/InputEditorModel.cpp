@@ -429,6 +429,20 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
     }
 }
 
+void InputEditorModel::clearUniqueInput(int column)
+{
+    SingleInput si = input_set[column-1];
+
+    beginRemoveColumns(QModelIndex(), column+1, column+1);
+
+    for (AllInputs &ai : movie->input_list) {
+        ai.setInput(si, 0);
+    }
+    input_set.erase(input_set.begin()+column-1);
+
+    endRemoveColumns();
+}
+
 void InputEditorModel::clearInput(int row)
 {
     movie->input_list[row].emptyInputs();
@@ -470,7 +484,6 @@ void InputEditorModel::endEditInputs()
     addUniqueInputs(movie->input_list[context->framecount]);
 }
 
-
 void InputEditorModel::update()
 {
     if (input_set.empty()) {
@@ -481,4 +494,11 @@ void InputEditorModel::update()
     else {
         emit dataChanged(createIndex(0,0), createIndex(rowCount(),columnCount()));
     }
+}
+
+void InputEditorModel::resetInputs()
+{
+    beginResetModel();
+    input_set.clear();
+    endResetModel();
 }

@@ -54,6 +54,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
     horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
+    horMenu->addAction(tr("Clear input column"), this, &InputEditorView::clearInputColumn);
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
@@ -86,6 +87,11 @@ void InputEditorView::update()
     QModelIndex index = inputEditorModel->index(context->framecount-1, 0);
     if (index.isValid())
         scrollTo(index, QAbstractItemView::PositionAtCenter);
+}
+
+void InputEditorView::resetInputs()
+{
+    inputEditorModel->resetInputs();
 }
 
 void InputEditorView::mousePressEvent(QMouseEvent *event)
@@ -180,6 +186,15 @@ void InputEditorView::addInputColumn()
         inputEditorModel->addUniqueInput(si);
     }
 }
+
+void InputEditorView::clearInputColumn()
+{
+    if (contextSection == 0)
+        return;
+
+    inputEditorModel->clearUniqueInput(contextSection);
+}
+
 
 void InputEditorView::mainMenu(QPoint pos)
 {

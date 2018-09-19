@@ -34,6 +34,7 @@ public:
     InputEditorView(Context *c, QWidget *parent = Q_NULLPTR);
 
     void update();
+    void resetInputs();
     InputEditorModel *inputEditorModel;
 
 public slots:
@@ -41,6 +42,7 @@ public slots:
     void horizontalMenu(QPoint pos);
     void renameLabel();
     void addInputColumn();
+    void clearInputColumn();
 
     void mainMenu(QPoint pos);
     void insertInput();
