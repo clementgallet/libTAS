@@ -32,7 +32,7 @@
 #include <inttypes.h>
 #include <cmath> // std::isfinite
 
-template <typename T> static inline const char* fmt_from_type(bool hex) {return hex?"%x":"%d";}
+template <typename T> static inline const char* fmt_from_type(bool hex) {return hex?"%x":(std::is_unsigned<T>::value?"%u":"%d");}
 template <> inline const char* fmt_from_type<float>(bool hex) {return hex?"%a":"%g";}
 template <> inline const char* fmt_from_type<double>(bool hex) {return hex?"%la":"%lg";}
 template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?"%" PRIx64:"%" PRId64;}

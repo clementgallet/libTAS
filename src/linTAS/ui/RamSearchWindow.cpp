@@ -259,10 +259,10 @@ void RamSearchWindow::slotNew()
             ramSearchModel->newWatches<int>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 6:
-            ramSearchModel->newWatches<int64_t>(memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<uint64_t>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 7:
-            ramSearchModel->newWatches<uint64_t>(memregions, compare_type, compare_operator, compare_value);
+            ramSearchModel->newWatches<int64_t>(memregions, compare_type, compare_operator, compare_value);
             break;
         case 8:
             ramSearchModel->newWatches<float>(memregions, compare_type, compare_operator, compare_value);

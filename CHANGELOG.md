@@ -1,10 +1,21 @@
 ## [Unreleased]
 ### Added
+
+* Add locale setting
+* Store md5 hash of game executable in movies
+* Option to enable/disable dummy Steam client
+
 ### Changed
 
 * Use system command for compressing/decompressing instead of tar/zlib libraries
+* Implement more of the Steam API
+* Register removed files as savefiles
 
 ### Fixed
+
+* Initialize audio sources that are reused
+* Fix controller sliders
+* Fix unsigned ints showed as signed in RAM Search
 
 ## [1.3.1] - 2018-08-30
 ### Added

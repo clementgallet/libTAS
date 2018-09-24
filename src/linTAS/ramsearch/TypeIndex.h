@@ -28,8 +28,8 @@ template <> inline int type_index<unsigned short>() {return 2;}
 template <> inline int type_index<short>() {return 3;}
 template <> inline int type_index<unsigned int>() {return 4;}
 template <> inline int type_index<int>() {return 5;}
-template <> inline int type_index<int64_t>() {return 6;}
-template <> inline int type_index<uint64_t>() {return 7;}
+template <> inline int type_index<uint64_t>() {return 6;}
+template <> inline int type_index<int64_t>() {return 7;}
 template <> inline int type_index<float>() {return 8;}
 template <> inline int type_index<double>() {return 9;}
 
