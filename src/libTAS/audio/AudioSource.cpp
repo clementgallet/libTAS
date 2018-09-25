@@ -219,7 +219,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     int convOutSamples = 0;
     uint8_t* begSamples;
-    int availableSamples = curBuf->getSamples(begSamples, inNbSamples, oldPosition);
+    int availableSamples = curBuf->getSamples(begSamples, inNbSamples, oldPosition, (source == SOURCE_STATIC) && looping);
 
     if (availableSamples == inNbSamples) {
         /* We did not reach the end of the buffer, easy case */
@@ -252,7 +252,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 detTimer.fakeAdvanceTimer({static_cast<time_t>(extraTicks / 1000000000), static_cast<long>(extraTicks % 1000000000)});
                 callback(*curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});
-                availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0);
+                availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0, false);
                 if (!skipMixing) {
                     swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                 }
@@ -277,8 +277,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             if (looping) {
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
-                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
-                    debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
+                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, loopbuf->loop_point_beg, (source == SOURCE_STATIC) && looping);
+                    debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range ", loopbuf->loop_point_beg, " - ", availableSamples);
 
                     if (!skipMixing) {
                         swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
@@ -286,7 +286,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
                     if (remainingSamples == availableSamples) {
                         finalIndex = i;
-                        finalPos = availableSamples;
+                        finalPos = loopbuf->loop_point_beg + availableSamples;
                     }
                     remainingSamples -= availableSamples;
                 }
@@ -294,7 +294,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             else {
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
-                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0);
+                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
                     debuglog(LCF_SOUND | LCF_FRAME, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 
                     if (!skipMixing) {

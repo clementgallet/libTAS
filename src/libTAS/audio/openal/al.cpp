@@ -271,7 +271,27 @@ void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
         alSetError(AL_INVALID_VALUE);
         return;
     }
-    alBufferi(buffer, param, *values);
+
+    auto ab = audiocontext.getBuffer(buffer);
+    if (ab == nullptr) {
+        alSetError(AL_INVALID_NAME);
+        return;
+    }
+
+    switch(param) {
+        case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
+            alBufferi(buffer, param, *values);
+            break;
+        case AL_LOOP_POINTS_SOFT:
+            /* TODO: Generate the errors */
+            debuglog(LCF_OPENAL, "  Set loop points ", values[0], " -> ", values[1]);
+            ab->loop_point_beg = values[0];
+            ab->loop_point_end = values[1];
+            break;
+        default:
+            debuglog(LCF_OPENAL, "  Operation not supported: ", param);
+            return;
+    }
 }
 
 
@@ -349,6 +369,11 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
             *values = ab->size;
             debuglog(LCF_OPENAL, "  Get size of ", *values);
             return;
+        case AL_LOOP_POINTS_SOFT:
+            values[0] = ab->loop_point_beg;
+            values[1] = ab->loop_point_end;
+            debuglog(LCF_OPENAL, "  Get loop points ", values[0], " -> ", values[1]);
+            break;
         default:
             alSetError(AL_INVALID_VALUE);
             return;

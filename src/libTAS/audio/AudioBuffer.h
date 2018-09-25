@@ -43,9 +43,10 @@ class AudioBuffer
          * @param [in]  outNbSamples  number of samples to get
          * @param [in]  position      position (in samples) from where to
          *                            get samples
+         * @param [in]  loopstatic    is the source looping and as a static buffer?
          * @return                    the effective number of samples returned
          */
-        int getSamples( uint8_t* &outSamples, int outNbSamples, int position);
+        int getSamples( uint8_t* &outSamples, int outNbSamples, int position, bool loopstatic);
 
         /* Identifier of the buffer */
         int id;
@@ -79,6 +80,12 @@ class AudioBuffer
 
         /* Audio samples */
         std::vector<uint8_t> samples;
+
+        /* Begin of looping section. 0 means disabled */
+        int loop_point_beg;
+
+        /* End of looping section. 0 means disabled */
+        int loop_point_end;
 
         /*** Derived parameters, computed by update function ***/
 

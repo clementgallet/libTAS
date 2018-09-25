@@ -317,6 +317,7 @@ typedef void ALvoid;
 #define AL_PENDING                               0x2011
 #define AL_PROCESSED                             0x2012
 
+#define AL_LOOP_POINTS_SOFT                      0x2015
 
 /** No error. */
 #define AL_NO_ERROR                              0

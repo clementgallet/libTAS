@@ -36,6 +36,8 @@ AudioBuffer::AudioBuffer(void)
     sampleSize = 0;
     blockSamples = 0;
     blockSize = 0;
+    loop_point_beg = 0;
+    loop_point_end = 0;
 }
 
 void AudioBuffer::makeSilent() {
@@ -111,7 +113,7 @@ bool AudioBuffer::checkSize(void)
     return true;
 }
 
-int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
+int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, bool loopstatic)
 {
     switch (format) {
         case SAMPLE_FMT_NB:
@@ -123,6 +125,17 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position)
         case SAMPLE_FMT_DBL:
             /* Simple case, we just return a position in our sample buffer */
             outSamples = &samples[position*alignSize];
+
+            /* Check if we must consider loop points */
+            if (loopstatic && (loop_point_end != 0)) {
+                if ((loop_point_end - position) >= nbSamples)
+                    /* We can return the number of samples asked */
+                    return nbSamples;
+                else
+                    /* We reach the end of the loop point */
+                    return loop_point_end - position;
+            }
+
             if ((sampleSize - position) >= nbSamples)
                 /* We can return the number of samples asked */
                 return nbSamples;

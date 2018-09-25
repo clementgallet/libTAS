@@ -4,6 +4,7 @@
 * Add locale setting
 * Store md5 hash of game executable in movies
 * Option to enable/disable dummy Steam client
+* Implement OpenAL loop points
 
 ### Changed
 
