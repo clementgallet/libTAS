@@ -17,6 +17,7 @@
 * Initialize audio sources that are reused
 * Fix controller sliders
 * Fix unsigned ints showed as signed in RAM Search
+* Recreate texture/fbo when a new GL context is created
 
 ## [1.3.1] - 2018-08-30
 ### Added

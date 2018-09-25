@@ -45,13 +45,20 @@ DEFINE_ORIG_POINTER(glUseProgram)
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;
 
-RenderHUD_GL::RenderHUD_GL() : RenderHUD()
+RenderHUD_GL::RenderHUD_GL() : RenderHUD() {}
+
+RenderHUD_GL::~RenderHUD_GL() {
+    fini();
+}
+
+void RenderHUD_GL::init()
 {
     if (texture == 0) {
         LINK_NAMESPACE(glGenTextures, "libGL");
         LINK_NAMESPACE(glGetIntegerv, "libGL");
         LINK_NAMESPACE(glActiveTexture, "libGL");
         LINK_NAMESPACE(glDeleteTextures, "libGL");
+        LINK_NAMESPACE(glBindTexture, "libGL");
 
         LINK_NAMESPACE(glGenFramebuffers, "libGL");
         LINK_NAMESPACE(glBindFramebuffer, "libGL");
@@ -59,23 +66,28 @@ RenderHUD_GL::RenderHUD_GL() : RenderHUD()
         LINK_NAMESPACE(glDeleteFramebuffers, "libGL");
 
 
-        // /* Get previous active texture */
-        // GLint oldActiveTex;
-        // orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
+        /* Get previous active texture */
+        GLint oldTex;
+        orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
+        GLint oldActiveTex;
+        orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
 
         orig::glActiveTexture(GL_TEXTURE0);
         orig::glGenTextures(1, &texture);
 
         orig::glGenFramebuffers(1, &fbo);
 
-        // /* Restore previous active texture */
-        // if (oldActiveTex != 0) {
-        //     orig::glActiveTexture(oldActiveTex);
-        // }
+        if (oldTex != 0) {
+            orig::glBindTexture(GL_TEXTURE_2D, oldTex);
+        }
+        /* Restore previous active texture */
+        if (oldActiveTex != 0) {
+            orig::glActiveTexture(oldActiveTex);
+        }
     }
 }
 
-RenderHUD_GL::~RenderHUD_GL()
+void RenderHUD_GL::fini()
 {
     if (texture != 0) {
         orig::glDeleteTextures(1, &texture);
@@ -101,6 +113,7 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     GLint oldProgram;
     orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);
     orig::glUseProgram(0);
+
 
     /* Save previous binded texture and active texture unit */
     GLint oldTex;

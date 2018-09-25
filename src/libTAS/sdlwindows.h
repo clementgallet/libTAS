@@ -120,6 +120,13 @@ OVERRIDE int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags);
 OVERRIDE void* SDL_GL_CreateContext(SDL_Window *window);
 
 /**
+ *  \brief Delete an OpenGL context.
+ *
+ *  \sa SDL_GL_CreateContext()
+ */
+OVERRIDE void SDL_GL_DeleteContext(SDL_GLContext context);
+
+/**
  *  \brief Set the swap interval for the current OpenGL context.
  *
  *  \param interval 0 for immediate updates, 1 for updates synchronized with the

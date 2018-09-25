@@ -39,6 +39,11 @@
 
 namespace libtas {
 
+#ifdef LIBTAS_ENABLE_HUD
+static RenderHUD_GL renderHUD_GL;
+#endif
+
+
 /*
  * Store the game window pointer
  * We assume the game never open multiple windows at a time
@@ -52,6 +57,7 @@ DEFINE_ORIG_POINTER(SDL_GetWindowFlags);
 DEFINE_ORIG_POINTER(SDL_SetWindowTitle);
 DEFINE_ORIG_POINTER(SDL_WM_SetCaption);
 DEFINE_ORIG_POINTER(SDL_GL_CreateContext);
+DEFINE_ORIG_POINTER(SDL_GL_DeleteContext);
 DEFINE_ORIG_POINTER(SDL_GL_SetSwapInterval);
 DEFINE_ORIG_POINTER(SDL_DestroyWindow);
 DEFINE_ORIG_POINTER(SDL_SetWindowSize);
@@ -91,8 +97,7 @@ DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
-    static RenderHUD_GL renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD);
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL);
 #else
     frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);});
 #endif
@@ -117,7 +122,25 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init(window);
 
+#ifdef LIBTAS_ENABLE_HUD
+    /* Create texture and fbo in the OSD */
+    renderHUD_GL.init();
+#endif
+
     return context;
+}
+
+void SDL_GL_DeleteContext(SDL_GLContext context)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_GL_DeleteContext);
+
+    #ifdef LIBTAS_ENABLE_HUD
+        /* Delete texture and fbo in the OSD */
+        renderHUD_GL.fini();
+    #endif
+
+    orig::SDL_GL_DeleteContext(context);
 }
 
 static int swapInterval = 0;
