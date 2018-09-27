@@ -47,6 +47,68 @@ DEFINE_ORIG_POINTER(SDL_FilterEvents);
 DEFINE_ORIG_POINTER(SDL_EventState);
 DEFINE_ORIG_POINTER(SDL_RegisterEvents);
 
+/* Return if the SDL 2 event must be passed to the game or be filtered */
+static bool isBannedEvent(SDL_Event *event)
+{
+    switch(event->type) {
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEWHEEL:
+        case SDL_JOYAXISMOTION:
+        case SDL_JOYBALLMOTION:
+        case SDL_JOYHATMOTION:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        case SDL_JOYDEVICEADDED:
+        case SDL_JOYDEVICEREMOVED:
+        case SDL_CONTROLLERAXISMOTION:
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_CONTROLLERDEVICEREMAPPED:
+            return true;
+        case SDL_WINDOWEVENT:
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL_WINDOWEVENT_SHOWN:
+                case SDL_WINDOWEVENT_EXPOSED:
+                case SDL_WINDOWEVENT_ENTER:
+                case SDL_WINDOWEVENT_LEAVE:
+                case SDL_WINDOWEVENT_TAKE_FOCUS:
+                    return true;
+                default:
+                    return false;
+            }
+        default:
+            return false;
+    }
+}
+
+/* Return if the SDL 1 event must be passed to the game or be filtered */
+static bool isBannedEvent(SDL1::SDL_Event *event)
+{
+    switch(event->type) {
+        case SDL1::SDL_KEYDOWN:
+        case SDL1::SDL_KEYUP:
+        case SDL1::SDL_MOUSEMOTION:
+        case SDL1::SDL_MOUSEBUTTONDOWN:
+        case SDL1::SDL_MOUSEBUTTONUP:
+        case SDL1::SDL_JOYAXISMOTION:
+        case SDL1::SDL_JOYBALLMOTION:
+        case SDL1::SDL_JOYHATMOTION:
+        case SDL1::SDL_JOYBUTTONDOWN:
+        case SDL1::SDL_JOYBUTTONUP:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void pushNativeEvents(void)
 {
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
@@ -74,7 +136,7 @@ void pushNativeEvents(void)
             if (ev.type == SDL1::SDL_QUIT) {
                 is_exiting = true;
             }
-            if (! filterSDL1Event(&ev))
+            if (! isBannedEvent(&ev))
                 sdlEventQueue.insert(&ev);
         }
     }
@@ -85,7 +147,7 @@ void pushNativeEvents(void)
             if (ev.type == SDL_QUIT) {
                 is_exiting = true;
             }
-            if (! filterSDL2Event(&ev))
+            if (! isBannedEvent(&ev))
                 sdlEventQueue.insert(&ev);
         }
     }
@@ -124,18 +186,33 @@ void pushNativeEvents(void)
         events1 = reinterpret_cast<SDL1::SDL_Event*>(events);
     }
 
+    int nevents = 0;
     switch (action) {
         case SDL_ADDEVENT:
             debuglog(LCF_SDL | LCF_EVENTS, "The game wants to add ", numevents, " events");
             for (int i=0; i<numevents; i++) {
-                if (SDLver == 1)
-                    if (! filterSDL1Event(&events1[i]))
-                        sdlEventQueue.insert(&events1[i]);
-                if (SDLver == 2)
-                    if (! filterSDL2Event(&events[i]))
-                        sdlEventQueue.insert(&events[i]);
+                if (SDLver == 1) {
+                    if (! isBannedEvent(&events1[i])) {
+                        int ret = sdlEventQueue.insert(&events1[i]);
+                        if (ret == 0) nevents++;
+                    }
+                    else {
+                        nevents++;
+                    }
+                }
+                if (SDLver == 2) {
+                    if (! isBannedEvent(&events[i])) {
+                        int ret = sdlEventQueue.insert(&events[i]);
+                        /* Return -1 if the queue is fulled */
+                        if (ret == -1) return -1;
+                        else nevents += ret;
+                    }
+                    else {
+                        nevents++;
+                    }
+                }
             }
-            break;
+            return nevents;
         case SDL_PEEKEVENT:
             debuglog(LCF_SDL | LCF_EVENTS, "The game wants to peek at ", numevents, " events");
             if (SDLver == 1)
@@ -310,27 +387,25 @@ void pushNativeEvents(void)
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event* ev1 = reinterpret_cast<SDL1::SDL_Event*>(event);
-        sdlEventQueue.insert(ev1);
-        /* TODO: Support event queue full */
+        int ret = sdlEventQueue.insert(ev1);
 
         if (ev1->type == SDL1::SDL_QUIT) {
             is_exiting = true;
         }
 
-        return 0; // success
+        return ret; // success
     }
 
-    if (filterSDL2Event(event))
+    if (isBannedEvent(event))
         return 0;
 
-    sdlEventQueue.insert(event);
-    /* TODO: Support event queue full */
+    int ret = sdlEventQueue.insert(event);
 
     if (event->type == SDL_QUIT) {
         is_exiting = true;
     }
 
-    return 1; // success
+    return ret;
 }
 
 /* Override */ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
@@ -442,66 +517,6 @@ void pushNativeEvents(void)
     }
 
     return SDL_USEREVENT;
-}
-
-bool filterSDL2Event(SDL_Event *event)
-{
-    switch(event->type) {
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-        case SDL_MOUSEMOTION:
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEWHEEL:
-        case SDL_JOYAXISMOTION:
-        case SDL_JOYBALLMOTION:
-        case SDL_JOYHATMOTION:
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-        case SDL_JOYDEVICEADDED:
-        case SDL_JOYDEVICEREMOVED:
-        case SDL_CONTROLLERAXISMOTION:
-        case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERDEVICEADDED:
-        case SDL_CONTROLLERDEVICEREMOVED:
-        case SDL_CONTROLLERDEVICEREMAPPED:
-            return true;
-        case SDL_WINDOWEVENT:
-            switch (event->window.event) {
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-                case SDL_WINDOWEVENT_SHOWN:
-                case SDL_WINDOWEVENT_EXPOSED:
-                case SDL_WINDOWEVENT_ENTER:
-                case SDL_WINDOWEVENT_LEAVE:
-                case SDL_WINDOWEVENT_TAKE_FOCUS:
-                    return true;
-                default:
-                    return false;
-            }
-        default:
-            return false;
-    }
-}
-
-bool filterSDL1Event(SDL1::SDL_Event *event)
-{
-    switch(event->type) {
-        case SDL1::SDL_KEYDOWN:
-        case SDL1::SDL_KEYUP:
-        case SDL1::SDL_MOUSEMOTION:
-        case SDL1::SDL_MOUSEBUTTONDOWN:
-        case SDL1::SDL_MOUSEBUTTONUP:
-        case SDL1::SDL_JOYAXISMOTION:
-        case SDL1::SDL_JOYBALLMOTION:
-        case SDL1::SDL_JOYHATMOTION:
-        case SDL1::SDL_JOYBUTTONDOWN:
-        case SDL1::SDL_JOYBUTTONUP:
-            return true;
-        default:
-            return false;
-    }
 }
 
 void logEvent(SDL_Event *event)

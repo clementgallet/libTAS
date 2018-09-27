@@ -31,12 +31,6 @@ namespace libtas {
  */
 void pushNativeEvents(void);
 
-/* Return if the SDL 1 event must be passed to the game or be filtered */
-bool filterSDL1Event(SDL1::SDL_Event *event);
-
-/* Return if the SDL 2 event must be passed to the game or be filtered */
-bool filterSDL2Event(SDL_Event *event);
-
 /* Print which event type is it */
 void logEvent(SDL_Event *event);
 

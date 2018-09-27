@@ -65,19 +65,19 @@ bool EventQueue::isEnabled(int type)
 
 #define EVENTQUEUE_MAXLEN 1024
 
-void EventQueue::insert(SDL_Event* event)
+int EventQueue::insert(SDL_Event* event)
 {
     /* Before inserting the event, we have some checks in a specific order */
 
     /* 1. Check that the event type is enabled */
     if (!isEnabled(event->type))
-        return;
+        return 0;
 
     /* 2. Run the event filter if set, and check the returned value */
     if (filterFunc != nullptr) {
         int isInserted = filterFunc(filterData, event);
         if (!isInserted)
-            return;
+            return 0;
     }
 
     /* 3. Call all watchers on the event */
@@ -86,37 +86,41 @@ void EventQueue::insert(SDL_Event* event)
     }
 
     /* 4. Check the size of the queue */
-    if (eventQueue.size() > 1024)
+    if (eventQueue.size() > 1024) {
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
+        return -1;
+    }
 
     /* Building a dynamically allocated event */
-    /* TODO: Hmmm... creating and destroying objects that many times
-     * does not seem like a good pattern...
-     */
     SDL_Event* ev = new SDL_Event;
     memcpy(ev, event, sizeof(SDL_Event));
 
     /* Push the event at the end of the queue */
     eventQueue.push_back(ev);
+
+    return 1;
 }
 
-void EventQueue::insert(SDL1::SDL_Event* event)
+int EventQueue::insert(SDL1::SDL_Event* event)
 {
     /* Before inserting the event, we have some checks in a specific order */
 
     /* 1. Check that the event type is enabled */
     if (!isEnabled(event->type))
-        return;
+        return -1;
 
     /* 2. Run the event filter if set, and check the returned value */
     if (filterFunc1 != nullptr) {
         int isInserted = filterFunc1(event);
         if (!isInserted)
-            return;
+            return -1;
     }
 
-    if (eventQueue.size() > 1024)
+    /* 3. Check the size of the queue */
+    if (eventQueue.size() > 1024) {
         debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
+        return -1;
+    }
 
     /* Building a dynamically allocated event */
     SDL1::SDL_Event* ev = new SDL1::SDL_Event;
@@ -124,6 +128,8 @@ void EventQueue::insert(SDL1::SDL_Event* event)
 
     /* Push the event at the end of the queue */
     eventQueue.push_back(ev);
+
+    return 0;
 }
 
 int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
@@ -296,6 +302,66 @@ void EventQueue::delWatch(SDL_EventFilter filter, void* userdata)
     std::set<std::pair<SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
     if (it != watches.end())
         watches.erase(it);
+}
+
+bool EventQueue::isBannedEvent(SDL_Event *event)
+{
+    switch(event->type) {
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEWHEEL:
+        case SDL_JOYAXISMOTION:
+        case SDL_JOYBALLMOTION:
+        case SDL_JOYHATMOTION:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        case SDL_JOYDEVICEADDED:
+        case SDL_JOYDEVICEREMOVED:
+        case SDL_CONTROLLERAXISMOTION:
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_CONTROLLERDEVICEREMAPPED:
+            return true;
+        case SDL_WINDOWEVENT:
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL_WINDOWEVENT_SHOWN:
+                case SDL_WINDOWEVENT_EXPOSED:
+                case SDL_WINDOWEVENT_ENTER:
+                case SDL_WINDOWEVENT_LEAVE:
+                case SDL_WINDOWEVENT_TAKE_FOCUS:
+                    return true;
+                default:
+                    return false;
+            }
+        default:
+            return false;
+    }
+}
+
+bool EventQueue::isBannedEvent(SDL1::SDL_Event *event)
+{
+    switch(event->type) {
+        case SDL1::SDL_KEYDOWN:
+        case SDL1::SDL_KEYUP:
+        case SDL1::SDL_MOUSEMOTION:
+        case SDL1::SDL_MOUSEBUTTONDOWN:
+        case SDL1::SDL_MOUSEBUTTONUP:
+        case SDL1::SDL_JOYAXISMOTION:
+        case SDL1::SDL_JOYBALLMOTION:
+        case SDL1::SDL_JOYHATMOTION:
+        case SDL1::SDL_JOYBUTTONDOWN:
+        case SDL1::SDL_JOYBUTTONUP:
+            return true;
+        default:
+            return false;
+    }
 }
 
 }

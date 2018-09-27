@@ -41,9 +41,15 @@ class EventQueue
 
         void init();
 
-        /* Try to insert an event in the queue if conditions are met */
-        void insert(SDL1::SDL_Event* event);
-        void insert(SDL_Event* event);
+        /* Try to insert an event in the queue if conditions are met.
+         * For SDL1 events, returns 0 if event was inserted and -1 if not.
+         */
+        int insert(SDL1::SDL_Event* event);
+
+        /* For SDL2 events, returns 1 if event was inserted, 0 if event was
+         * filtered and -1 if event queue is full.
+         */
+        int insert(SDL_Event* event);
 
         /* Return a number of events from the queue.
          * @param events [OUT]  array of events to write to
@@ -98,6 +104,10 @@ class EventQueue
         SDL1::SDL_EventFilter filterFunc1 = nullptr;
         SDL_EventFilter filterFunc = nullptr;
         void* filterData = nullptr;
+
+        /* We don't want some events to be pushed by the game */
+        bool isBannedEvent(SDL_Event *event);
+        bool isBannedEvent(SDL1::SDL_Event *event);
 };
 
 extern EventQueue sdlEventQueue;

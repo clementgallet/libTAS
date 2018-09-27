@@ -274,9 +274,6 @@ const char* ScreenCapture::getPixelFormat()
 
     if (game_info.video & GameInfo::SDL2) {
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl_window);
-        /* TODO: There are probably helper functions to build pixel
-         * format constants from channel masks
-         */
         switch (sdlpixfmt) {
             case SDL_PIXELFORMAT_RGBA8888:
                 debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
