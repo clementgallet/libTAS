@@ -189,6 +189,8 @@ static void *pthread_start(void *arg)
     }
 
     ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::waitForThreadsToFinishInitialization();
+
     debuglog(LCF_THREAD, "Joining thread ", ThreadManager::getThreadTid(pthread_id));
 
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
@@ -228,6 +230,8 @@ static void *pthread_start(void *arg)
     }
 
     ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::waitForThreadsToFinishInitialization();
+
     debuglog(LCF_THREAD, "Detaching thread ", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
@@ -259,6 +263,8 @@ static void *pthread_start(void *arg)
     }
 
     ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::waitForThreadsToFinishInitialization();
+
     debuglog(LCF_THREAD, "Try to join thread ", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
@@ -307,6 +313,8 @@ static void *pthread_start(void *arg)
     }
 
     ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::waitForThreadsToFinishInitialization();
+
     debuglog(LCF_THREAD | LCF_TODO, "Try to join thread in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
 
     if (abstime->tv_sec < 0 || abstime->tv_nsec >= 1000000000) {
