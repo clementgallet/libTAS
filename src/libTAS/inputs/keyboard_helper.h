@@ -34,12 +34,6 @@ namespace libtas {
 SDL_Keycode X11_TranslateKeysym(KeySym kc);
 SDL1::SDLKey X11_Translate1Keysym(KeySym xsym);
 
-/* Helper functions to translate from a SDL 1 SDLKey or
- * a SDL 2 Keycode to a SDL Scancode
- */
-SDL_Scancode GetScanFromKey(SDL_Keycode);
-SDL_Scancode GetScanFromKey1(SDL1::SDLKey key);
-
 void X11_InitKeymap(void);
 
 /* Fill the keyboard array that SDL functions are expected,

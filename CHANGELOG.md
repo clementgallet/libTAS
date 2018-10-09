@@ -5,6 +5,7 @@
 * Store md5 hash of game executable in movies
 * Option to enable/disable dummy Steam client
 * Implement OpenAL loop points
+* Hook Xlib window resize
 
 ### Changed
 
@@ -18,6 +19,8 @@
 * Fix controller sliders
 * Fix unsigned ints showed as signed in RAM Search
 * Recreate texture/fbo when a new GL context is created
+* Fix SDL1 keyboard layout
+* Wait for threads to register
 
 ## [1.3.1] - 2018-08-30
 ### Added
