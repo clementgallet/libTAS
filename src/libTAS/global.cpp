@@ -25,3 +25,4 @@ volatile bool libtas::is_exiting = false;
 bool libtas::skipping_draw = false;
 Display* libtas::gameDisplay = nullptr;
 Window libtas::gameXWindow = 0;
+SDL_Window* libtas::gameSDLWindow = nullptr;

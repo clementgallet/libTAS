@@ -35,10 +35,10 @@ class RenderHUD_GL : public RenderHUD
         ~RenderHUD_GL();
 
         /* Initialize texture and fbo */
-        void init();
+        static void init();
 
         /* Deallocate texture and fbo */
-        void fini();
+        static void fini();
 
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
     private:

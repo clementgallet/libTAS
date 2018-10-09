@@ -67,9 +67,10 @@ SteamAPICall_t ISteamRemoteStorage::FileWriteAsync( const char *pchFile, const v
     DEBUGLOGCALL(LCF_STEAM);
     /* Calling the sync version */
 	FileWrite(pchFile, pvData, cubData);
+    return 1;
 }
 
-static int asyncfd = 0;
+// static int asyncfd = 0;
 
 SteamAPICall_t ISteamRemoteStorage::FileReadAsync( const char *pchFile, unsigned int nOffset, unsigned int cubToRead )
 {

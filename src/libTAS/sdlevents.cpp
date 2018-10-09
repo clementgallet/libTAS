@@ -21,7 +21,6 @@
 #include "logging.h"
 #include "hook.h"
 #include "sdlversion.h"
-#include "sdlwindows.h" // for gameWindow variable
 #include "EventQueue.h"
 #include "sleepwrappers.h"
 #include "GlobalState.h"

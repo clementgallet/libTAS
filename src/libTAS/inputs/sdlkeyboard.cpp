@@ -23,7 +23,6 @@
 #include "keyboard_helper.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
-#include "../sdlwindows.h" // SDL_Window and gameWindow
 
 namespace libtas {
 
@@ -56,7 +55,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 /* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
 {
     debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
-    return gameWindow;
+    return gameSDLWindow;
 }
 
 }

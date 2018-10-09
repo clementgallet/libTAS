@@ -50,7 +50,7 @@ DEFINE_ORIG_POINTER(SDL_RenderGetScale);
 
     SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
 
-    ScreenCapture::init(window);
+    ScreenCapture::init();
 
     return renderer;
 }
@@ -84,7 +84,7 @@ int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
      */
-    SDL_SetWindowSize(gameWindow, w, h);
+    SDL_SetWindowSize(gameSDLWindow, w, h);
     logical_w = w;
     logical_h = h;
 

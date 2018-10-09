@@ -39,6 +39,10 @@
 
 namespace libtas {
 
+#ifdef LIBTAS_ENABLE_HUD
+static RenderHUD_GL renderHUD_GL;
+#endif
+
 DEFINE_ORIG_POINTER(glXGetProcAddress);
 DEFINE_ORIG_POINTER(glXGetProcAddressARB);
 DEFINE_ORIG_POINTER(glXGetProcAddressEXT);
@@ -216,17 +220,26 @@ void* glXGetProcAddressEXT (const GLubyte *procName)
 
 Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 {
-    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
     LINK_NAMESPACE(glXMakeCurrent, "libGL");
 
     Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
+    if (GlobalState::isNative())
+        return ret;
 
-    if (drawable) {
+    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
+
+    if (drawable && (gameXWindow != 0)) {
+
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;
 
         /* Now that the context is created, we can init the screen capture */
-        ScreenCapture::init(nullptr);
+        ScreenCapture::init();
+
+#ifdef LIBTAS_ENABLE_HUD
+        /* Create texture and fbo in the OSD */
+        RenderHUD_GL::init();
+#endif
     }
 
     /* Disable VSync */

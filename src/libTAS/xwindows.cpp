@@ -24,6 +24,7 @@
 #include "../shared/messages.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
+#include "encoding/AVEncoder.h"
 
 
 namespace libtas {
@@ -37,7 +38,8 @@ DEFINE_ORIG_POINTER(XStoreName);
 DEFINE_ORIG_POINTER(XSetWMName);
 DEFINE_ORIG_POINTER(XInternAtom);
 DEFINE_ORIG_POINTER(XSelectInput);
-
+DEFINE_ORIG_POINTER(XResizeWindow);
+DEFINE_ORIG_POINTER(XConfigureWindow);
 
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
@@ -170,6 +172,95 @@ int XSelectInput(Display *display, Window w, long event_mask)
     LINK_NAMESPACE(XSelectInput, nullptr);
 
     return orig::XSelectInput(display, w, event_mask);
+}
+
+int XMoveWindow(Display* display, Window w, int x, int y)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    /* Preventing the game to change the window position */
+    return 0;
+}
+
+int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height)
+{
+    LINK_NAMESPACE_GLOBAL(XResizeWindow);
+    int ret = orig::XResizeWindow(display, w, width, height);
+
+    if (GlobalState::isNative())
+        return ret;
+
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", width, " x ", height);
+
+    int old_width, old_height;
+    ScreenCapture::getDimensions(old_width, old_height);
+    if ((old_width != width) || (old_height != height)) {
+        ScreenCapture::reinit();
+
+        /* We need to close the dumping if needed, and open a new one */
+        if (shared_config.av_dumping) {
+            debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
+            avencoder.reset(new AVEncoder());
+        }
+    }
+    return ret;
+}
+
+int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int width, unsigned int height)
+{
+    LINK_NAMESPACE_GLOBAL(XResizeWindow);
+    int ret = orig::XResizeWindow(display, w, width, height);
+
+    if (GlobalState::isNative())
+        return ret;
+
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    debuglog(LCF_SDL | LCF_WINDOW, "    New position: ", x, " - ", y, " new size: ", width, " x ", height);
+
+    /* Check if size has changed */
+    int old_width, old_height;
+    ScreenCapture::getDimensions(old_width, old_height);
+    if ((old_width != width) || (old_height != height)) {
+        ScreenCapture::reinit();
+
+        /* We need to close the dumping if needed, and open a new one */
+        if (shared_config.av_dumping) {
+            debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
+            avencoder.reset(new AVEncoder());
+        }
+    }
+    return ret;
+}
+
+int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values)
+{
+    LINK_NAMESPACE_GLOBAL(XConfigureWindow);
+    if (GlobalState::isNative())
+        return orig::XConfigureWindow(display, w, value_mask, values);
+
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    if ((value_mask & CWWidth) && (value_mask & CWHeight)) {
+        debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", values->width, " x ", values->height);
+    }
+
+    /* Disable window movement */
+    value_mask &= ~(CWX | CWY);
+
+    int ret = orig::XConfigureWindow(display, w, value_mask, values);
+
+    /* Check if size has changed */
+    int old_width, old_height;
+    ScreenCapture::getDimensions(old_width, old_height);
+    if ((value_mask & CWWidth) && (value_mask & CWHeight) && ((values->width != old_width) || (values->height != old_height))) {
+        ScreenCapture::reinit();
+
+        /* We need to close the dumping if needed, and open a new one */
+        if (shared_config.av_dumping) {
+            debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
+            avencoder.reset(new AVEncoder());
+        }
+    }
+    return ret;
 }
 
 

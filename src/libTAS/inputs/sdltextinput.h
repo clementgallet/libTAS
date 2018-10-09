@@ -22,7 +22,6 @@
 
 #include <SDL2/SDL.h>
 #include "../global.h"
-#include "../sdlwindows.h" // SDL_Window and gameWindow
 
 namespace libtas {
 

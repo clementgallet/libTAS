@@ -44,6 +44,15 @@ OVERRIDE void XSetWMName(Display *display, Window w, XTextProperty *text_prop);
 OVERRIDE Atom XInternAtom(Display* display, const char*	atom_name, Bool only_if_exists);
 
 OVERRIDE int XSelectInput(Display *display, Window w, long event_mask);
+
+OVERRIDE int XMoveWindow(Display* display, Window w, int x, int y);
+
+OVERRIDE int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int width, unsigned int height);
+
+OVERRIDE int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height);
+
+OVERRIDE int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values);
+
 }
 
 #endif

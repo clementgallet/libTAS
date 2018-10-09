@@ -22,8 +22,8 @@
 
 #include "../shared/SharedConfig.h"
 #include "../shared/GameInfo.h"
-//#include <X11/X.h>
 #include <X11/Xlib.h>
+#include <SDL2/SDL.h>
 
 /* Include this file in every source code that override functions of the game */
 
@@ -53,6 +53,8 @@ namespace libtas {
     /* Game window (we suppose there is only one) */
     extern Window gameXWindow;
 
+    /* SDL2 game window (we suppose there is only one) */
+    extern SDL_Window* gameSDLWindow;
 }
 
 #endif

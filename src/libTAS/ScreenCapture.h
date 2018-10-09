@@ -31,13 +31,13 @@ namespace ScreenCapture {
 /* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
  */
-int init(SDL_Window* window);
+int init();
 
 /* Called when screen is closed */
 void fini();
 
 /* Called when screen is resized */
-void reinit(SDL_Window* window);
+void reinit();
 
 bool isInited();
 

@@ -37,9 +37,6 @@ DEFINE_ORIG_POINTER(SDL_Quit);
 /* Override */ int SDL_Init(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
 
-    /* Get and remember which sdl version we are using. */
-    int SDLver = get_sdlversion();
-
     LINK_NAMESPACE_SDLX(SDL_Init);
 
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),

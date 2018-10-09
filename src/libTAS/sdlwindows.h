@@ -26,8 +26,6 @@
 
 namespace libtas {
 
-extern SDL_Window* gameWindow;
-
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.
@@ -172,6 +170,21 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 OVERRIDE int SDL_CreateWindowAndRenderer(
                  int width, int height, Uint32 window_flags,
                  SDL_Window **window, SDL_Renderer **renderer);
+
+/**
+ *  \brief Set the position of a window.
+ *
+ *  \param window   The window to reposition.
+ *  \param x        The x coordinate of the window in screen coordinates, or
+ *                  ::SDL_WINDOWPOS_CENTERED or ::SDL_WINDOWPOS_UNDEFINED.
+ *  \param y        The y coordinate of the window in screen coordinates, or
+ *                  ::SDL_WINDOWPOS_CENTERED or ::SDL_WINDOWPOS_UNDEFINED.
+ *
+ *  \note The window coordinate origin is the upper left of the display.
+ *
+ *  \sa SDL_GetWindowPosition()
+ */
+OVERRIDE void SDL_SetWindowPosition(SDL_Window * window, int x, int y);
 
 /**
  *  \brief Get the position of a window.
