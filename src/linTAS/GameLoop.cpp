@@ -504,9 +504,18 @@ bool GameLoop::startFrameMessages()
 uint8_t GameLoop::nextEvent(struct HotKey &hk)
 {
     static xcb_keycode_t last_pressed_key = 0;
+    static xcb_generic_event_t *next_event = nullptr;
 
     while (true) {
-        xcb_generic_event_t *event = xcb_poll_for_event(context->conn);
+        xcb_generic_event_t *event;
+
+        if (next_event) {
+            event = next_event;
+            next_event = nullptr;
+        }
+        else {
+            event = xcb_poll_for_event(context->conn);
+        }
 
         if (!event) {
             if (context->hotkey_queue.empty()) {
@@ -527,11 +536,39 @@ uint8_t GameLoop::nextEvent(struct HotKey &hk)
                 xcb_key_press_event_t* key_event = reinterpret_cast<xcb_key_press_event_t*>(event);
                 xcb_keycode_t kc = key_event->detail;
 
-                /* Detecting auto-repeat if pressed event from the same key as
-                 * the last pressed key, without a key release.
+                /* Detecting auto-repeat, either if detectable auto-repeat is
+                 * supported or not by the X server.
+                 * If detectable auto-repeat is supported, we detect if pressed
+                 * event is from the same key as the last pressed key, without
+                 * a key release.
+                 * If detectable auto-repeat is not supported, we detect if a
+                 * released event is followed by a pressed event with the same
+                 * sequence number. If not, we must keep the later event for
+                 * the next call (xcb does not support peeking events).
                  */
                 if (kc == last_pressed_key) {
                     if (response_type == XCB_KEY_RELEASE) {
+                        /* Check the next event. We wait a bit for the next
+                         * event to be generated if auto-repeat. There are still
+                         * are few cases where we would have to wait a significantly
+                         * longer time.
+                         */
+                        usleep(500);
+                        next_event = xcb_poll_for_event(context->conn);
+                        xcb_key_press_event_t* next_key_event = reinterpret_cast<xcb_key_press_event_t*>(next_event);
+
+                        if (next_event &&
+                           ((next_event->response_type & ~0x80) == XCB_KEY_PRESS) &&
+                           (next_key_event->detail = kc) &&
+                           ((next_key_event->time - key_event->time) < 5)) {
+
+                            /* Found an auto-repeat sequence, discard both events */
+                            free(event);
+                            free(next_event);
+                            next_event = nullptr;
+                            continue;
+                        }
+
                         /* Normal key release */
                         last_pressed_key = 0;
                     }

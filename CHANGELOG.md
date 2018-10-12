@@ -21,6 +21,7 @@
 * Recreate texture/fbo when a new GL context is created
 * Fix SDL1 keyboard layout
 * Wait for threads to register
+* Detect auto-repeat cases when detectable auto-repeat is not supported by the server
 
 ## [1.3.1] - 2018-08-30
 ### Added
