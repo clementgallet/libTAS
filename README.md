@@ -4,7 +4,7 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 ## Supported Games
 
-Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, Steam games **won't** work because Steam messes up with our code injection, so you must check if a drm-free version of the game exists. For more details, check the [Game Compatibility](https://github.com/clementgallet/libTAS/wiki/Game-Compatibility) page.
+Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, Steam games **won't** work because Steam messes up with our code injection, so you must check if a drm-free version of the game exists. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
 
 ## Install
 
@@ -51,9 +51,9 @@ To run this program, just type:
 
 You can type `./linTAS -h` to have a description of the program options.
 
-The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://github.com/clementgallet/libTAS/wiki/Menu-Options)
+The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](http://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
 
-There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://github.com/clementgallet/libTAS/wiki/Usage).
+There are a few things to take care before being able to run a game. You might want to look at the software [usage](http://tasvideos.org/EmulatorResources/libTAS/Usage.html).
 
 Here are the default controls when the game has started:
 
