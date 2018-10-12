@@ -486,7 +486,7 @@ void InputEditorModel::endEditInputs()
 
 void InputEditorModel::update()
 {
-    if (input_set.empty()) {
+    if (context->framecount == 1) {
         beginResetModel();
         buildInputSet();
         endResetModel();
