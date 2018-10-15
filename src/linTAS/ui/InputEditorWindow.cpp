@@ -37,7 +37,8 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent, Qt::WindowFlag
 
 QSize InputEditorWindow::sizeHint() const
 {
-    return QSize(600, 600);
+    QSize viewSize = inputEditorView->sizeHint();
+    return QSize(viewSize.width(), 600);
 }
 
 void InputEditorWindow::update()

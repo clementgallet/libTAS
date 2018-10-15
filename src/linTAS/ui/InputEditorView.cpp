@@ -28,6 +28,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(true);
+    setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 
     MovieFile *movie = nullptr;
     MainWindow *mw = qobject_cast<MainWindow*>(parent->parent());
@@ -40,7 +42,12 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     // connect(this, &QAbstractItemView::pressed, this, &InputEditorView::toggleInput);
 
     /* Horizontal header */
-    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    horizontalHeader()->setResizeContentsPrecision(1);
+    /* Frame column is fixed */
+    horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    horizontalHeader()->resizeSection(0, 80);
+
     horizontalHeader()->setSectionsMovable(true);
     horizontalHeader()->setHighlightSections(false);
     horizontalHeader()->setDropIndicatorShown(true);

@@ -104,6 +104,9 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
+        if (index.row() >= movie->input_list.size()) {
+            return QVariant();
+        }
         if (index.column() == 0) {
             return index.row();
         }
@@ -127,6 +130,9 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::EditRole) {
+        if (index.row() >= movie->input_list.size()) {
+            return QVariant();
+        }
         if (index.column() == 0) {
             return QVariant();
         }
@@ -469,7 +475,7 @@ void InputEditorModel::endAddInputs()
     endInsertRows();
 
     /* We have to check if new inputs were added */
-    addUniqueInputs(movie->input_list.back());
+    addUniqueInputs(movie->input_list[movie->nbFrames()-1]);
 }
 
 void InputEditorModel::beginEditInputs()
