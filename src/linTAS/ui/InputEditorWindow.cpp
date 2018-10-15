@@ -41,11 +41,6 @@ QSize InputEditorWindow::sizeHint() const
     return QSize(viewSize.width(), 600);
 }
 
-void InputEditorWindow::update()
-{
-    inputEditorView->update();
-}
-
 void InputEditorWindow::resetInputs()
 {
     inputEditorView->resetInputs();

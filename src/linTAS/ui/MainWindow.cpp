@@ -81,6 +81,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
+    connect(gameLoop, &GameLoop::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
 
     /* Menu */
     createActions();
@@ -877,7 +878,7 @@ void MainWindow::updateRam()
 void MainWindow::updateInputEditor()
 {
     // if (inputEditorWindow->isVisible()) {
-    inputEditorWindow->update();
+    inputEditorWindow->inputEditorView->update();
     // }
 }
 

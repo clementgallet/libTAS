@@ -765,6 +765,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             current_savestate = statei;
 
+            emit savestatePerformed(statei, context->framecount);
+
             return false;
         }
 

@@ -22,6 +22,7 @@
 
 #include <QAbstractTableModel>
 #include <vector>
+#include <array>
 
 #include "../Context.h"
 #include "../MovieFile.h"
@@ -108,12 +109,18 @@ public slots:
     /* End edit inputs */
     void endEditInputs();
 
+    /* Register a savestate for display */
+    void registerSavestate(int slot, int frame);
+
 private:
     Context *context;
     MovieFile *movie;
 
     /* Set of inputs present in the movie */
     std::vector<SingleInput> input_set;
+
+    /* Array of framecount for savestates */
+    std::array<int, 10> savestate_frames;
 
 signals:
     void frameCountChanged();

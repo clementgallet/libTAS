@@ -26,7 +26,10 @@
 
 #include "InputEditorModel.h"
 
-InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
+InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m)
+{
+    savestate_frames.fill(-1);
+}
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
@@ -35,7 +38,7 @@ int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return input_set.size() + 1;
+    return input_set.size() + 2;
 }
 
 Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
@@ -43,13 +46,13 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return QAbstractItemModel::flags(index);
 
-    if (index.column() == 0)
+    if (index.column() < 2)
         return QAbstractItemModel::flags(index);
 
     if (index.row() < static_cast<int>(context->framecount))
         return QAbstractItemModel::flags(index);
 
-    const SingleInput si = input_set[index.column()-1];
+    const SingleInput si = input_set[index.column()-2];
     if (si.isAnalog())
         return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 
@@ -61,12 +64,11 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
     if (role == Qt::DisplayRole) {
         if (orientation == Qt::Horizontal) {
             if (section == 0)
+                return QString(tr(""));
+            if (section == 1)
                 return QString(tr("Frame"));
-            return QString(input_set[section-1].description.c_str());
+            return QString(input_set[section-2].description.c_str());
         }
-        // if (orientation == Qt::Vertical) {
-        //     return section;
-        // }
     }
     return QVariant();
 }
@@ -82,6 +84,10 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (index.row() > static_cast<int>(context->framecount))
             return QBrush(QColor(0xff, 0xfe, 0xee));
 
+        /* Return white-ish for savestate column */
+        if (index.column() == 0)
+            return QBrush(QColor(0xff, 0xfe, 0xee));
+
         QColor color;
 
         /* Main color */
@@ -91,7 +97,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             color.setRgb(0xd2, 0xf9, 0xd3);
 
         /* Frame column */
-        if (index.column() == 0) {
+        if (index.column() == 1) {
             color = color.lighter(105);
         }
 
@@ -108,11 +114,19 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
         if (index.column() == 0) {
+            for (unsigned int i=0; i<savestate_frames.size(); i++) {
+                if (savestate_frames[i] == index.row()) {
+                    return i;
+                }
+            }
+            return QString("");
+        }
+        if (index.column() == 1) {
             return index.row();
         }
 
         const AllInputs ai = movie->input_list[index.row()];
-        const SingleInput si = input_set[index.column()-1];
+        const SingleInput si = input_set[index.column()-2];
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -133,12 +147,12 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (index.row() >= movie->input_list.size()) {
             return QVariant();
         }
-        if (index.column() == 0) {
+        if (index.column() < 2) {
             return QVariant();
         }
 
         const AllInputs ai = movie->input_list[index.row()];
-        const SingleInput si = input_set[index.column()-1];
+        const SingleInput si = input_set[index.column()-2];
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -155,14 +169,14 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
 {
     if (index.isValid() && role == Qt::EditRole) {
 
-        if (index.column() == 0)
+        if (index.column() < 2)
             return false;
 
         if (index.row() < static_cast<int>(context->framecount))
             return false;
 
         AllInputs &ai = movie->input_list[index.row()];
-        const SingleInput si = input_set[index.column()-1];
+        const SingleInput si = input_set[index.column()-2];
         int ivalue = value.toInt();
 
         ai.setInput(si, ivalue);
@@ -201,15 +215,15 @@ void InputEditorModel::buildInputSet()
 
 bool InputEditorModel::toggleInput(const QModelIndex &index)
 {
-    /* Don't toggle frame count */
-    if (index.column() == 0)
+    /* Don't toggle savestate / frame count */
+    if (index.column() < 2)
         return false;
 
     /* Don't toggle past inputs */
     if (index.row() < static_cast<int>(context->framecount))
         return false;
 
-    SingleInput si = input_set[index.column()-1];
+    SingleInput si = input_set[index.column()-2];
     AllInputs &ai = movie->input_list[index.row()];
 
     int value = ai.toggleInput(si);
@@ -220,19 +234,19 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
 
 std::string InputEditorModel::inputLabel(int column)
 {
-    return input_set[column-1].description;
+    return input_set[column-2].description;
 }
 
 void InputEditorModel::renameLabel(int column, std::string label)
 {
-    input_set[column-1].description = label;
+    input_set[column-2].description = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
 }
 
 
 std::string InputEditorModel::inputDescription(int column)
 {
-    SingleInput si = input_set[column-1];
+    SingleInput si = input_set[column-2];
 
     /* Gather input description */
     for (SingleInput ti : context->config.km.input_list) {
@@ -437,14 +451,14 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 
 void InputEditorModel::clearUniqueInput(int column)
 {
-    SingleInput si = input_set[column-1];
+    SingleInput si = input_set[column-2];
 
     beginRemoveColumns(QModelIndex(), column+1, column+1);
 
     for (AllInputs &ai : movie->input_list) {
         ai.setInput(si, 0);
     }
-    input_set.erase(input_set.begin()+column-1);
+    input_set.erase(input_set.begin()+column-2);
 
     endRemoveColumns();
 }
@@ -498,7 +512,8 @@ void InputEditorModel::update()
         endResetModel();
     }
     else {
-        emit dataChanged(createIndex(0,0), createIndex(rowCount(),columnCount()));
+        emit dataChanged(createIndex(context->framecount,0), createIndex(context->framecount,columnCount()));
+        // emit dataChanged(createIndex(0,0), createIndex(rowCount(),columnCount()));
     }
 }
 
@@ -506,5 +521,12 @@ void InputEditorModel::resetInputs()
 {
     beginResetModel();
     input_set.clear();
+    savestate_frames.fill(-1);
     endResetModel();
+}
+
+void InputEditorModel::registerSavestate(int slot, int frame)
+{
+    savestate_frames[slot] = frame;
+    emit dataChanged(createIndex(frame,0), createIndex(frame,0));
 }

@@ -44,9 +44,14 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     /* Horizontal header */
     horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     horizontalHeader()->setResizeContentsPrecision(1);
-    /* Frame column is fixed */
+
+    /* Savestate column is fixed */
     horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    horizontalHeader()->resizeSection(0, 80);
+    horizontalHeader()->resizeSection(0, 20);
+
+    /* Frame column is fixed */
+    horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+    horizontalHeader()->resizeSection(1, 80);
 
     horizontalHeader()->setSectionsMovable(true);
     horizontalHeader()->setHighlightSections(false);
