@@ -21,6 +21,7 @@
 
 #include "Checkpoint.h"
 #include "ThreadManager.h"
+#include "AltStack.h"
 #include "../logging.h"
 #include "ProcMapsArea.h"
 #include "ProcSelfMaps.h"
@@ -308,6 +309,9 @@ void Checkpoint::handler(int signum)
 
         /* Restore the entire xcb connection struct */
         memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
+
+        /* We must restore the current stack frame from the savestate */
+        AltStack::restoreStackFrame();
     }
     else {
         /* Check that base savestate exists, otherwise save it */
@@ -325,6 +329,9 @@ void Checkpoint::handler(int signum)
                 }
             }
         }
+
+        /* We must store the current stack frame in the savestate */
+        AltStack::saveStackFrame();
 
         writeAllAreas(false);
     }
