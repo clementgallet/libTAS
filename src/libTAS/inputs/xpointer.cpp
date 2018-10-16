@@ -111,7 +111,11 @@ namespace libtas {
     struct timespec time = detTimer.getTicks();
     event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i]) {
+            OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, 0, &event));
+        }
+    }
     debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
 
     /* Update the pointer coordinates */

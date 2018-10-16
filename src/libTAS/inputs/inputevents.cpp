@@ -117,10 +117,14 @@ void generateKeyUpEvents(void)
                 XEvent event;
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplay, old_ai.keyboard[i]));
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
-                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+                for (int d=0; d<GAMEDISPLAYNUM; d++) {
+                    if (gameDisplays[d]) {
+                        NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
+                        OWNCALL(XSendEvent(gameDisplays[d], gameXWindow, False, 0, &event));
+                    }
+                }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode ", event.xkey.keycode);
             }
@@ -196,11 +200,15 @@ void generateKeyDownEvents(void)
                 XEvent event;
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplay, ai.keyboard[i]));
                 event.xkey.window = gameXWindow;
                 event.xkey.time = timestamp;
                 event.xkey.same_screen = 1;
-                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+                for (int d=0; d<GAMEDISPLAYNUM; d++) {
+                    if (gameDisplays[d]) {
+                        NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
+                        OWNCALL(XSendEvent(gameDisplays[d], gameXWindow, False, 0, &event));
+                    }
+                }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
             }
@@ -597,7 +605,11 @@ void generateMouseMotionEvents(void)
         event.xmotion.window = gameXWindow;
         event.xmotion.time = timestamp;
 
-        OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
+                OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, 0, &event));
+            }
+        }
         debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
@@ -679,7 +691,11 @@ void generateMouseButtonEvents(void)
                 event.xbutton.y_root = event.xbutton.y;
                 event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
 
-                OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, 0, &event));
+                for (int i=0; i<GAMEDISPLAYNUM; i++) {
+                    if (gameDisplays[i]) {
+                        OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, 0, &event));
+                    }
+                }
             }
 
             /* Upload the old AllInput struct */

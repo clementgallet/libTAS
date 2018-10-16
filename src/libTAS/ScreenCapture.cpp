@@ -96,10 +96,15 @@ int ScreenCapture::init()
 
     /* Get the window dimensions */
     LINK_NAMESPACE_GLOBAL(XGetGeometry);
-    unsigned int w, h, border_width, depth;
+    unsigned int w = 0, h = 0, border_width, depth;
     int x, y;
     Window root;
-    orig::XGetGeometry(gameDisplay, gameXWindow, &root, &x, &y, &w, &h, &border_width, &depth);
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i]) {
+            orig::XGetGeometry(gameDisplays[i], gameXWindow, &root, &x, &y, &w, &h, &border_width, &depth);
+            break;
+        }
+    }
     width = w;
     height = h;
 

@@ -27,6 +27,9 @@
 
 namespace libtas {
 
+OVERRIDE Display *XOpenDisplay(const char *display_name);
+OVERRIDE int XCloseDisplay(Display *display);
+
 OVERRIDE Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);
 
 OVERRIDE Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background);

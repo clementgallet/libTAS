@@ -256,23 +256,21 @@ bool Checkpoint::checkRestore()
 
 void Checkpoint::handler(int signum)
 {
-    /* Access the X Window identifier from the SDL_Window struct */
-    Display *display = gameDisplay;
-    if (!display) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Could not access connection to X11");
-        return;
-    }
-
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
      */
+    Display *display = gameDisplays[0];
     if ((&display < ReservedMemory::getAddr(0)) ||
         (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
         return;
     }
 
-    XSync(display, false);
+    /* Sync all X server connections */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i])
+            XSync(gameDisplays[i], false);
+    }
 
     if (ThreadManager::restoreInProgress) {
         /* Before reading from the savestate, we must keep some values from
@@ -280,35 +278,46 @@ void Checkpoint::handler(int signum)
          * consistency of requests. We can store them in this (alternate) stack
          * which will be preserved.
          */
+        uint64_t last_request_read[GAMEDISPLAYNUM];
+        uint64_t request[GAMEDISPLAYNUM];
+        xcb_connection_t xcb_conn[GAMEDISPLAYNUM];
 
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
 #ifdef X_DPY_GET_LAST_REQUEST_READ
-        uint64_t last_request_read = X_DPY_GET_LAST_REQUEST_READ(display);
-        uint64_t request = X_DPY_GET_REQUEST(display);
+                last_request_read[i] = X_DPY_GET_LAST_REQUEST_READ(gameDisplays[i]);
+                request[i] = X_DPY_GET_REQUEST(gameDisplays[i]);
 #else
-        uint64_t last_request_read = static_cast<uint64_t>(display->last_request_read);
-        uint64_t request = static_cast<uint64_t>(display->request);
+                last_request_read[i] = static_cast<uint64_t>(gameDisplays[i]->last_request_read);
+                request[i] = static_cast<uint64_t>(gameDisplays[i]->request);
 #endif
 
-        /* Copy the entire xcb connection struct */
-        xcb_connection_t xcb_conn;
-        xcb_connection_t *cur_xcb_conn = XGetXCBConnection(display);
-        memcpy(&xcb_conn, cur_xcb_conn, sizeof(xcb_connection_t));
+                /* Copy the entire xcb connection struct */
+                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(gameDisplays[i]);
+                memcpy(&xcb_conn[i], cur_xcb_conn, sizeof(xcb_connection_t));
+            }
+        }
 
         readAllAreas();
         /* restoreInProgress was overwritten, putting the right value again */
         ThreadManager::restoreInProgress = true;
 
         /* Restoring the display values */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
 #ifdef X_DPY_SET_LAST_REQUEST_READ
-        X_DPY_SET_LAST_REQUEST_READ(display, last_request_read);
-        X_DPY_SET_REQUEST(display, request);
+                X_DPY_SET_LAST_REQUEST_READ(gameDisplays[i], last_request_read[i]);
+                X_DPY_SET_REQUEST(gameDisplays[i], request[i]);
 #else
-        display->last_request_read = static_cast<unsigned long>(last_request_read);
-        display->request = static_cast<unsigned long>(request);
+                gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
+                gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
 #endif
 
-        /* Restore the entire xcb connection struct */
-        memcpy(cur_xcb_conn, &xcb_conn, sizeof(xcb_connection_t));
+                /* Restore the entire xcb connection struct */
+                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(gameDisplays[i]);
+                memcpy(cur_xcb_conn, &xcb_conn[i], sizeof(xcb_connection_t));
+            }
+        }
 
         /* We must restore the current stack frame from the savestate */
         AltStack::restoreStackFrame();

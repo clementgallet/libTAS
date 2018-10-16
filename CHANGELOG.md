@@ -24,6 +24,7 @@
 * Detect auto-repeat cases when detectable auto-repeat is not supported by the server
 * Fix crash when loading a savestate on a non-draw frame
 * End screen capture when SDL renderer is destroyed
+* Register all connections to X server (for savestates) instead of just one
 
 ## [1.3.1] - 2018-08-30
 ### Added

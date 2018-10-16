@@ -23,6 +23,6 @@ SharedConfig libtas::shared_config;
 GameInfo libtas::game_info;
 volatile bool libtas::is_exiting = false;
 bool libtas::skipping_draw = false;
-Display* libtas::gameDisplay = nullptr;
+Display* libtas::gameDisplays[GAMEDISPLAYNUM] = {};
 Window libtas::gameXWindow = 0;
 SDL_Window* libtas::gameSDLWindow = nullptr;

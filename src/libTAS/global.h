@@ -33,6 +33,8 @@
     #define OVERRIDE extern "C"
 #endif
 
+#define GAMEDISPLAYNUM 10
+
 namespace libtas {
 
     /* Configuration parameters that are shared between the program and the game */
@@ -47,8 +49,8 @@ namespace libtas {
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
 
-    /* Connection to the Xlib server */
-    extern Display* gameDisplay;
+    /* Connections to the Xlib server */
+    extern Display* gameDisplays[GAMEDISPLAYNUM];
 
     /* Game window (we suppose there is only one) */
     extern Window gameXWindow;

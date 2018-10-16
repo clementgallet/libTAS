@@ -348,8 +348,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         /* Sync Xlib event queue, so that we are sure the input events will be
          * pulled by the game on the next frame.
          */
-        if (gameDisplay) {
-            XSync(gameDisplay, False);
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
+                XSync(gameDisplays[i], False);
+            }
         }
     }
 
@@ -382,11 +384,16 @@ static void pushQuitEvent(void)
         XEvent xev;
         xev.xclient.type = ClientMessage;
         xev.xclient.window = gameXWindow;
-        xev.xclient.message_type = XInternAtom(gameDisplay, "WM_PROTOCOLS", true);
         xev.xclient.format = 32;
-        xev.xclient.data.l[0] = XInternAtom(gameDisplay, "WM_DELETE_WINDOW", False);
         xev.xclient.data.l[1] = CurrentTime;
-        OWNCALL(XSendEvent(gameDisplay, gameXWindow, False, NoEventMask, &xev));
+
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
+                xev.xclient.message_type = XInternAtom(gameDisplays[i], "WM_PROTOCOLS", true);
+                xev.xclient.data.l[0] = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
+                OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev));
+            }
+        }
     }
 }
 

@@ -25,10 +25,12 @@
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
-
+#include "backtrace.h"
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(XOpenDisplay);
+DEFINE_ORIG_POINTER(XCloseDisplay);
 DEFINE_ORIG_POINTER(XCreateWindow);
 DEFINE_ORIG_POINTER(XCreateSimpleWindow);
 DEFINE_ORIG_POINTER(XDestroyWindow);
@@ -41,6 +43,42 @@ DEFINE_ORIG_POINTER(XSelectInput);
 DEFINE_ORIG_POINTER(XResizeWindow);
 DEFINE_ORIG_POINTER(XConfigureWindow);
 
+Display *XOpenDisplay(const char *display_name)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE_GLOBAL(XOpenDisplay);
+
+    Display* display = orig::XOpenDisplay(display_name);
+
+    int i;
+    for (i=0; i<GAMEDISPLAYNUM; i++) {
+        if (!gameDisplays[i]) {
+            gameDisplays[i] = display;
+            break;
+        }
+    }
+    if (i == GAMEDISPLAYNUM) {
+        debuglog(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
+    }
+
+    return display;
+}
+
+int XCloseDisplay(Display *display)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE_GLOBAL(XCloseDisplay);
+
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i] == display) {
+            gameDisplays[i] = nullptr;
+            break;
+        }
+    }
+
+    return orig::XCloseDisplay(display);
+}
+
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
     debuglog(LCF_WINDOW, __func__, " call with dimensions ", width, "x", height);
@@ -52,7 +90,6 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
      * some dummy windows for testing.
      */
     if ((gameXWindow == 0) && (width > 32) && (height > 32)) {
-        gameDisplay = display;
         gameXWindow = w;
     }
 
@@ -70,7 +107,6 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
      * some dummy windows for testing.
      */
     if ((gameXWindow == 0) && (width > 32) && (height > 32)) {
-        gameDisplay = display;
         gameXWindow = w;
     }
 
