@@ -23,6 +23,7 @@
 * Wait for threads to register
 * Detect auto-repeat cases when detectable auto-repeat is not supported by the server
 * Fix crash when loading a savestate on a non-draw frame
+* End screen capture when SDL renderer is destroyed
 
 ## [1.3.1] - 2018-08-30
 ### Added

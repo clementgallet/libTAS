@@ -28,6 +28,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_CreateRenderer);
+DEFINE_ORIG_POINTER(SDL_DestroyRenderer);
 DEFINE_ORIG_POINTER(SDL_RenderPresent);
 DEFINE_ORIG_POINTER(SDL_RenderSetViewport);
 DEFINE_ORIG_POINTER(SDL_RenderGetViewport);
@@ -53,6 +54,16 @@ DEFINE_ORIG_POINTER(SDL_RenderGetScale);
     ScreenCapture::init();
 
     return renderer;
+}
+
+/* Override */ void SDL_DestroyRenderer(SDL_Renderer * renderer)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LINK_NAMESPACE_SDL2(SDL_DestroyRenderer);
+
+    ScreenCapture::fini();
+
+    orig::SDL_DestroyRenderer(renderer);
 }
 
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)

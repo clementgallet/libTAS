@@ -42,6 +42,15 @@ namespace libtas {
 OVERRIDE SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
 
 /**
+ *  \brief Destroy the rendering context for a window and free associated
+ *         textures.
+ *
+ *  \sa SDL_CreateRenderer()
+ */
+OVERRIDE void SDL_DestroyRenderer(SDL_Renderer * renderer);
+
+
+/**
  *  \brief Update the screen with rendering performed.
  */
 OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
