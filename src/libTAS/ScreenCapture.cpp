@@ -34,9 +34,15 @@ namespace libtas {
 
 /* Original function pointers */
 namespace orig {
+    static void (*SDL_FreeSurface)(SDL1::SDL_Surface *surface);
     static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
     static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
+    static int (*SDL_BlitSurface)(SDL1::SDL_Surface *src, SDL1::SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL1::SDL_Rect *dstrect);
+    static uint8_t (*SDL_SetClipRect)(SDL1::SDL_Surface *surface, const SDL1::SDL_Rect *rect);
+    static void (*SDL_GetClipRect)(SDL1::SDL_Surface *surface, SDL1::SDL_Rect *rect);
+    static int (*SDL_SetAlpha)(SDL1::SDL_Surface *surface, Uint32 flag, Uint8 alpha);
+    static SDL1::SDL_Surface *(*SDL_DisplayFormat)(SDL1::SDL_Surface *surface);
 }
 
 DEFINE_ORIG_POINTER(SDL_RenderReadPixels);
@@ -77,6 +83,9 @@ static GLuint screenFBO = 0;
 
 /* OpenGL render buffer */
 static GLuint screenRBO = 0;
+
+/* SDL1 screen surface */
+static SDL1::SDL_Surface* screenSDLSurf = nullptr;
 
 /* SDL2 screen texture */
 static SDL_Texture* screenSDLTex = nullptr;
@@ -163,7 +172,19 @@ int ScreenCapture::init()
         glpixels.resize(size);
     }
 
-    else if (game_info.video & GameInfo::SDL1) {}
+    else if (game_info.video & GameInfo::SDL1) {
+        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+        LINK_NAMESPACE_SDL1(SDL_SetAlpha);
+        LINK_NAMESPACE_SDL1(SDL_DisplayFormat);
+
+        SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
+        screenSDLSurf = orig::SDL_DisplayFormat(surf);
+
+        /* Disable alpha blending for that texture */
+        if (screenSDLSurf->flags & SDL1::SDL1_SRCALPHA) {
+            orig::SDL_SetAlpha(screenSDLSurf, 0, 0);
+        }
+    }
 
     else if (game_info.video & GameInfo::SDL2) {
         LINK_NAMESPACE_SDL2(SDL_GetRenderer);
@@ -206,6 +227,13 @@ void ScreenCapture::fini()
         screenRBO = 0;
     }
 
+    /* Delete the SDL1 screen surface */
+    if (screenSDLSurf) {
+        LINK_NAMESPACE_SDL1(SDL_FreeSurface);
+        orig::SDL_FreeSurface(screenSDLSurf);
+        screenSDLSurf = nullptr;
+    }
+
     /* Delete the SDL2 screen texture */
     if (screenSDLTex) {
         LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
@@ -243,9 +271,17 @@ const char* ScreenCapture::getPixelFormat()
     }
 
     if (game_info.video & GameInfo::SDL1) {
-        // SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
-        debuglog(LCF_DUMP | LCF_SDL | LCF_TODO, "We assumed pixel format is RGBA");
-        return "RGBA"; // TODO
+        switch (screenSDLSurf->format->Rmask) {
+            case 0x000000ff:
+                return "RGBA";
+            case 0x0000ff00:
+                return "ARGB";
+            case 0x00ff0000:
+                return "BGRA";
+            case 0xff000000:
+                return "ABGR";
+        }
+        return "RGBA";
     }
 
     if (game_info.video & GameInfo::SDL2) {
@@ -334,6 +370,8 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
             LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
             LINK_NAMESPACE_SDL1(SDL_LockSurface);
             LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
+            LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+            LINK_NAMESPACE_SDL1(SDL_SetAlpha);
 
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
@@ -346,18 +384,29 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
                 return -1;
             }
 
-            /* We must lock the surface before accessing the raw pixels */
-            int ret = orig::SDL_LockSurface(surf1);
-            if (ret != 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
-                return -1;
+            if (surf1->flags & SDL1::SDL1_SRCALPHA) {
+                orig::SDL_SetAlpha(surf1, 0, 0);
+                orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
+                orig::SDL_SetAlpha(surf1, SDL1::SDL1_SRCALPHA, 0);
+            }
+            else {
+                orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
             }
 
-            /* I know memcpy is not recommended for vectors... */
-            memcpy(winpixels.data(), surf1->pixels, size);
+            if (pixels) {
+                /* We must lock the surface before accessing the raw pixels */
+                int ret = orig::SDL_LockSurface(screenSDLSurf);
+                if (ret != 0) {
+                    debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
+                    return -1;
+                }
 
-            /* Unlock surface */
-            orig::SDL_UnlockSurface(surf1);
+                /* I know memcpy is not recommended for vectors... */
+                memcpy(winpixels.data(), screenSDLSurf->pixels, size);
+
+                /* Unlock surface */
+                orig::SDL_UnlockSurface(screenSDLSurf);
+            }
         }
 
         if (game_info.video & GameInfo::SDL2) {
@@ -373,11 +422,9 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
     return size;
 }
 
-int ScreenCapture::setPixels(bool same) {
+int ScreenCapture::setPixels() {
     if (!inited)
         return 0;
-
-    static bool last_same = false;
 
     if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glBindFramebuffer, "libGL");
@@ -394,6 +441,9 @@ int ScreenCapture::setPixels(bool same) {
             LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
             LINK_NAMESPACE_SDL1(SDL_LockSurface);
             LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
+            LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+            LINK_NAMESPACE_SDL1(SDL_GetClipRect);
+            LINK_NAMESPACE_SDL1(SDL_SetClipRect);
 
             /* Not tested !! */
             debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL1_Surface pixels");
@@ -401,26 +451,13 @@ int ScreenCapture::setPixels(bool same) {
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
-            /* Checking for a size modification */
-            int cw = surf1->w;
-            int ch = surf1->h;
-            if ((cw != width) || (ch != height)) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
-                return -1;
-            }
+            /* Save and restore the clip rectangle */
+            SDL1::SDL_Rect clip_rect;
+            orig::SDL_GetClipRect(surf1, &clip_rect);
+            orig::SDL_SetClipRect(surf1, nullptr);
+            orig::SDL_BlitSurface(screenSDLSurf, nullptr, surf1, nullptr);
+            orig::SDL_SetClipRect(surf1, &clip_rect);
 
-            /* We must lock the surface before accessing the raw pixels */
-            int ret = orig::SDL_LockSurface(surf1);
-            if (ret != 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
-                return -1;
-            }
-
-            /* I know memcpy is not recommended for vectors... */
-            memcpy(surf1->pixels, winpixels.data(), size);
-
-            /* Unlock surface */
-            orig::SDL_UnlockSurface(surf1);
         }
 
         if (game_info.video & GameInfo::SDL2) {
@@ -428,16 +465,6 @@ int ScreenCapture::setPixels(bool same) {
             LINK_NAMESPACE_SDL2(SDL_RenderCopy);
 
             int ret;
-
-            /* Check if we need to update our texture */
-            if (!same || !last_same) {
-                /* We must set our pixels into an SDL texture before drawing on screen */
-                ret = orig::SDL_UpdateTexture(screenSDLTex, NULL, winpixels.data(), pitch);
-                if (ret < 0) {
-                    debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_UpdateTexture failed: ", orig::SDL_GetError());
-                }
-                last_same = same;
-            }
 
             ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
             if (ret < 0) {

@@ -284,6 +284,33 @@ OVERRIDE SDL1::SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uin
  */
 OVERRIDE void SDL_GL_SwapBuffers(void);
 
+/** @name SDL_Update Functions
+ * These functions should not be called while 'screen' is locked.
+ */
+/*@{*/
+/**
+ * Makes sure the given list of rectangles is updated on the given screen.
+ */
+OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL_Rect *rects);
+
+/**
+ * If 'x', 'y', 'w' and 'h' are all 0, SDL_UpdateRect will update the entire
+ * screen.
+ */
+OVERRIDE void SDL_UpdateRect(SDL1::SDL_Surface *screen, Sint32 x, Sint32 y, Uint32 w, Uint32 h);
+/*@}*/
+
+/**
+ * Sets the color key (transparent pixel) in a blittable surface.
+ * If 'flag' is SDL_SRCCOLORKEY (optionally OR'd with SDL_RLEACCEL),
+ * 'key' will be the transparent pixel in the source image of a blit.
+ * SDL_RLEACCEL requests RLE acceleration for the surface if present,
+ * and removes RLE acceleration if absent.
+ * If 'flag' is 0, this function clears any current color key.
+ * This function returns 0, or -1 if there was an error.
+ */
+OVERRIDE int SDL_SetColorKey(SDL_Surface *surface, int flag, Uint32 key);
+
 /**
  * On hardware that supports double-buffering, this function sets up a flip
  * and returns.  The hardware will wait for vertical retrace, and then swap

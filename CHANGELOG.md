@@ -6,6 +6,7 @@
 * Option to enable/disable dummy Steam client
 * Implement OpenAL loop points
 * Hook Xlib window resize
+* Support for SDL1 rendering using surface blitting
 
 ### Changed
 
@@ -25,6 +26,7 @@
 * Fix crash when loading a savestate on a non-draw frame
 * End screen capture when SDL renderer is destroyed
 * Register all connections to X server (for savestates) instead of just one
+* Fix screen capture of SDL1 surface
 
 ## [1.3.1] - 2018-08-30
 ### Added

@@ -56,10 +56,8 @@ int storePixels();
  */
 int getPixels(uint8_t **pixels, bool draw);
 
-/* Set the screen pixels from our buffers.
- * @param same  if true, the screen did not change since last call with same==true
- */
-int setPixels(bool same);
+/* Set the screen pixels from our buffers. */
+int setPixels();
 
 }
 }

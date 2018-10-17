@@ -602,6 +602,27 @@ namespace SDL1 {
         int refcount;				/**< Read-mostly */
     } SDL_Surface;
 
+    enum {
+    	SDL1_SWSURFACE = 0x00000000,  /**< Surface is in system memory */
+    	SDL1_HWSURFACE = 0x00000001,  /**< Surface is in video memory */
+        SDL1_ASYNCBLIT = 0x00000004,  /**< Use asynchronous blits if possible */
+        SDL1_ANYFORMAT = 0x10000000,  /**< Allow any video depth/pixel-format */
+        SDL1_HWPALETTE = 0x20000000,  /**< Surface has exclusive palette */
+        SDL1_DOUBLEBUF = 0x40000000,  /**< Set up double-buffered video mode */
+        SDL1_FULLSCREEN = 0x80000000,  /**< Surface is a full screen display */
+        SDL1_OPENGL = 0x00000002,      /**< Create an OpenGL rendering context */
+        SDL1_OPENGLBLIT = 0x0000000A,  /**< Create an OpenGL rendering context and use it for blitting */
+        SDL1_RESIZABLE = 0x00000010,  /**< This video mode may be resized */
+        SDL1_NOFRAME = 0x00000020,  /**< No window caption or edge frame */
+        SDL1_HWACCEL = 0x00000100,  /**< Blit uses hardware acceleration */
+        SDL1_SRCCOLORKEY = 0x00001000,  /**< Blit uses a source color key */
+        SDL1_RLEACCELOK = 0x00002000,  /**< Private flag */
+        SDL1_RLEACCEL = 0x00004000,  /**< Surface is RLE encoded */
+        SDL1_SRCALPHA = 0x00010000,  /**< Blit uses source alpha blending */
+        SDL1_PREALLOC = 0x01000000,  /**< Surface uses preallocated memory */
+    };
+
+
     typedef int (*SDL_EventFilter)(const SDL_Event *event);
 
     typedef enum {

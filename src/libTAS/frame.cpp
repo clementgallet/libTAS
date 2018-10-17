@@ -166,9 +166,9 @@ static bool skipDraw(float fps)
 }
 
 #ifdef LIBTAS_ENABLE_HUD
-void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
+void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud, bool restore_screen)
 #else
-void frameBoundary(bool drawFB, std::function<void()> draw)
+void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 #endif
 {
     static float fps, lfps = 0;
@@ -322,6 +322,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         NATIVECALL(draw());
     }
 
+    if (restore_screen) {
+        if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
+            ScreenCapture::setPixels();
+        }
+    }
+
     /* Receive messages from the program */
     #ifdef LIBTAS_ENABLE_HUD
         receive_messages(draw, hud);
@@ -405,7 +411,7 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 #endif
 {
     if (!skipping_draw && shared_config.save_screenpixels) {
-        ScreenCapture::setPixels(false);
+        ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD
         hud.resetOffsets();
@@ -538,11 +544,8 @@ static void receive_messages(std::function<void()> draw)
                     struct timespec ticks = detTimer.getTicks();
                     sendData(&ticks, sizeof(struct timespec));
 
-                    /* Screen should have changed after loading, so update
-                     * the internal screen memory.
-                     */
-                    ScreenCapture::setPixels(true);
-
+                    /* Screen should have changed after loading */
+                    ScreenCapture::setPixels();
                 }
 
                 break;

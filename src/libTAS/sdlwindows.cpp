@@ -54,6 +54,9 @@ DEFINE_ORIG_POINTER(SDL_CreateWindowAndRenderer);
 DEFINE_ORIG_POINTER(SDL_SetVideoMode);
 DEFINE_ORIG_POINTER(SDL_GL_SwapBuffers);
 DEFINE_ORIG_POINTER(SDL_Flip);
+DEFINE_ORIG_POINTER(SDL_SetColorKey);
+DEFINE_ORIG_POINTER(SDL_UpdateRects);
+DEFINE_ORIG_POINTER(SDL_UpdateRect);
 DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
 
 /* SDL 1.2 */
@@ -69,9 +72,9 @@ DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL, false);
 #else
-    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();});
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, false);
 #endif
 }
 
@@ -87,9 +90,9 @@ DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL);
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL, false);
 #else
-    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);});
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, false);
 #endif
 }
 
@@ -368,6 +371,13 @@ static int swapInterval = 0;
     return surf;
 }
 
+/* Override */ int SDL_SetColorKey(SDL_Surface *surface, int flag, Uint32 key)
+{
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flag ", flag, " and key ", key);
+    LINK_NAMESPACE_SDLX(SDL_SetColorKey);
+    return orig::SDL_SetColorKey(surface, flag, key);
+}
+
 /* Override */ int SDL_Flip(SDL1::SDL_Surface *screen)
 {
     LINK_NAMESPACE_SDL1(SDL_Flip);
@@ -380,12 +390,49 @@ static int swapInterval = 0;
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, renderHUD);
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, renderHUD, false);
 #else
-    frameBoundary(true, [&] () {orig::SDL_Flip(screen);});
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, false);
 #endif
 
     return 0;
+}
+
+OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL_Rect *rects)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_SDL1(SDL_UpdateRects);
+        return orig::SDL_UpdateRects(screen, numrects, rects);
+    }
+
+    LINK_NAMESPACE_SDL1(SDL_UpdateRect);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, __func__, " call with ", numrects, " rects");
+
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_SDL1 renderHUD;
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD, true);
+#else
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, true);
+#endif
+}
+
+/* Override */ void SDL_UpdateRect(SDL1::SDL_Surface *screen, Sint32 x, Sint32 y, Uint32 w, Uint32 h)
+{
+    LINK_NAMESPACE_SDL1(SDL_UpdateRect);
+
+    if (GlobalState::isNative())
+        return orig::SDL_UpdateRect(screen, x, y, w, h);
+
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
+
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_SDL1 renderHUD;
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD, true);
+#else
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, true);
+#endif
 }
 
 /* Override */ SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode)

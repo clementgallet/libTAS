@@ -262,9 +262,9 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
-    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD);
+    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD, false);
 #else
-    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);});
+    frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, false);
 #endif
 }
 
