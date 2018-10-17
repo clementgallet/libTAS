@@ -322,18 +322,18 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
         NATIVECALL(draw());
     }
 
-    if (restore_screen) {
-        if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
-            ScreenCapture::setPixels();
-        }
-    }
-
     /* Receive messages from the program */
     #ifdef LIBTAS_ENABLE_HUD
         receive_messages(draw, hud);
     #else
         receive_messages(draw);
     #endif
+
+    if (restore_screen) {
+        if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
+            ScreenCapture::setPixels();
+        }
+    }
 
     /*** Process inputs and events ***/
     if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {

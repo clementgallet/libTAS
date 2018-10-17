@@ -406,7 +406,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     }
 
     LINK_NAMESPACE_SDL1(SDL_UpdateRect);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, __func__, " call with ", numrects, " rects");
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with ", numrects, " rects");
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD

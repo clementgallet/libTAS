@@ -130,6 +130,9 @@ int ScreenCapture::init()
     else if (game_info.video & GameInfo::SDL1) {
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
+        if (!surf) {
+            return -1;
+        }
         pixelSize = surf->format->BytesPerPixel;
     }
     else if (game_info.video & GameInfo::SDL2) {
