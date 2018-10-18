@@ -262,7 +262,7 @@ private slots:
     void slotRamState(bool checked);
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
-
+    void slotCalibrateMouse();
 };
 
 #endif

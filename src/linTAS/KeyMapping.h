@@ -66,6 +66,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADSTATE8,
     HOTKEY_LOADSTATE9,
     HOTKEY_TOGGLE_ENCODE, // Start/stop audio/video encoding
+    HOTKEY_CALIBRATE_MOUSE, // Calibrate mouse cursor position
     HOTKEY_LEN
 };
 

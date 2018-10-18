@@ -12,7 +12,7 @@ You can download the latest version of the software in the [Releases](https://gi
 
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
-* `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xkb1`
+* `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xkb1`, `libxcb-cursor0`
 * `ffmpeg`
 * `libswresample2`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
@@ -31,7 +31,7 @@ If you want to compile it yourself, you will need `cmake`. From the root directo
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libasound2-dev`, `libswresample-dev`
+The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libxcb-cursor-dev`, `libasound2-dev`, `libswresample-dev`
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 

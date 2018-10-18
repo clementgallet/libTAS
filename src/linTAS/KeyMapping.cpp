@@ -95,6 +95,7 @@ void KeyMapping::init(xcb_connection_t* conn)
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8}, HOTKEY_LOADSTATE8, "Load State 8"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9}, HOTKEY_LOADSTATE9, "Load State 9"});
     hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_CALIBRATE_MOUSE, "Calibrate Mouse"});
 
     /* Set default hotkeys */
     default_hotkeys();

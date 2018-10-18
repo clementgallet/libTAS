@@ -7,6 +7,7 @@
 * Implement OpenAL loop points
 * Hook Xlib window resize
 * Support for SDL1 rendering using surface blitting
+* Mouse position recalibration to match game cursor position
 
 ### Changed
 

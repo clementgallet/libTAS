@@ -46,6 +46,9 @@ struct Context {
     /* Main UI window */
     xcb_window_t ui_window = 0;
 
+    /* Crosshair cursor */
+    xcb_cursor_t crosshair_cursor;
+
     /* Recording status */
     enum FocusState {
         FOCUS_GAME = 0x01,

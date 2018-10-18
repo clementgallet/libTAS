@@ -1000,6 +1000,64 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             emit sharedConfigChanged();
             return false;
 
+        /* Recalibrate the mouse cursor position */
+        case HOTKEY_CALIBRATE_MOUSE:
+            if (context->game_window == 0) {
+                break;
+            }
+            {
+
+                /* Change the cursor shape */
+                uint32_t value_list = context->crosshair_cursor;
+                xcb_void_cookie_t cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_CURSOR, &value_list);
+                xcb_generic_error_t *error = xcb_request_check(context->conn, cwa_cookie);
+                if (error) {
+                    std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
+                }
+
+                /* Wait for a mouse press. We cannot use mouse press events
+                 * because only one window can select mouse press events.
+                 * So we are using the mouse query function.
+                 */
+                usleep(500*1000);
+
+                xcb_query_pointer_cookie_t pointer_cookie = xcb_query_pointer(context->conn, context->game_window);
+                xcb_query_pointer_reply_t* pointer_reply = xcb_query_pointer_reply(context->conn, pointer_cookie, nullptr);
+
+                while (!(pointer_reply->mask & XCB_BUTTON_MASK_1)) {
+                    free(pointer_reply);
+                    usleep(10*1000);
+                    pointer_cookie = xcb_query_pointer(context->conn, context->game_window);
+                    pointer_reply = xcb_query_pointer_reply(context->conn, pointer_cookie, nullptr);
+                }
+
+                /* Wait for mouse release */
+                while (pointer_reply->mask & XCB_BUTTON_MASK_1) {
+                    free(pointer_reply);
+                    usleep(10*1000);
+                    pointer_cookie = xcb_query_pointer(context->conn, context->game_window);
+                    pointer_reply = xcb_query_pointer_reply(context->conn, pointer_cookie, nullptr);
+                }
+
+                sendMessage(MSGN_CALIBRATE_MOUSE);
+                int pointer_x = pointer_reply->win_x;
+                int pointer_y = pointer_reply->win_y;
+
+                sendData(&pointer_x, sizeof(int));
+                sendData(&pointer_y, sizeof(int));
+
+                free(pointer_reply);
+
+                /* Switch back to default cursor */
+                value_list = 0;
+                cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_CURSOR, &value_list);
+                error = xcb_request_check(context->conn, cwa_cookie);
+                if (error) {
+                    std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
+                }
+            }
+            return false;
+
         } /* switch(hk.type) */
 
     case XCB_KEY_RELEASE:

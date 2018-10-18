@@ -717,6 +717,8 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(joystickMenu);
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
+
+    inputMenu->addAction(tr("Recalibrate mouse position"), this, &MainWindow::slotCalibrateMouse);
 }
 
 void MainWindow::updateStatus()
@@ -1252,6 +1254,13 @@ void MainWindow::slotPause(bool checked)
     else {
         /* Else, let the game thread set the value */
         context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
+    }
+}
+
+void MainWindow::slotCalibrateMouse()
+{
+    if (context->status == Context::ACTIVE) {
+        context->hotkey_queue.push(HOTKEY_CALIBRATE_MOUSE);
     }
 }
 

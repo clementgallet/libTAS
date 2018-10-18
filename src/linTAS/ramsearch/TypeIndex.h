@@ -21,7 +21,7 @@
 #define LINTAS_TYPEINDEX_H_INCLUDED
 
 /* This looks aaawwwful */
-template <typename T> static inline int type_index() {}
+template <typename T> static inline int type_index() {return 0;}
 template <> inline int type_index<unsigned char>() {return 0;}
 template <> inline int type_index<char>() {return 1;}
 template <> inline int type_index<unsigned short>() {return 2;}
