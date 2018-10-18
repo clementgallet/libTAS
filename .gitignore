@@ -1,2 +1,9 @@
 build/
 build32/
+obj*
+debian/libtas/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/libtas.debhelper.log
+debian/libtas.substvars
