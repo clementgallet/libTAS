@@ -367,10 +367,6 @@ static bool skipArea(const Area *area)
     }
     #endif // ifdef __x86_64__
 
-    if (strstr(area->name, "(deleted)")) {
-        return true;
-    }
-
     if (area->size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */
         return true;
@@ -385,11 +381,6 @@ static bool skipArea(const Area *area)
 
     /* Don't save our reserved memory */
     if ((area->addr == ReservedMemory::getAddr(0)) && (area->size == ReservedMemory::getSize())) {
-        return true;
-    }
-
-    /* Don't save shared memory */
-    if (area->flags & MAP_SHARED) {
         return true;
     }
 
