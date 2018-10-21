@@ -44,6 +44,7 @@ static void* callbackArg;
 static std::shared_ptr<AudioSource> sourceSDL;
 
 static const char* dummySDLDevice = "libTAS device";
+static std::string curDriver;
 
 /* Override */ int SDL_GetNumAudioDrivers(void)
 {
@@ -72,15 +73,16 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
     return namebuf;
 }
 
-const char* curDriver = NULL;
-
 /* Override */ int SDL_AudioInit(const char *driver_name)
 {
-    if (driver_name == NULL)
+    if (driver_name == NULL) {
         debuglog(LCF_SDL | LCF_SOUND, "Init SDL Audio with default driver");
-    else
+        curDriver = dummySDLDevice;
+    }
+    else {
         debuglog(LCF_SDL | LCF_SOUND, "Init SDL Audio with driver ", driver_name);
-    curDriver = driver_name;
+        curDriver = driver_name;
+    }
     return 0;
 }
 
@@ -92,7 +94,10 @@ const char* curDriver = NULL;
 /* Override */ const char *SDL_GetCurrentAudioDriver(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    return curDriver;
+    if (! curDriver.empty()) {
+        return curDriver.c_str();
+    }
+    return nullptr;
 }
 
 /* Function that is called by an AudioSource when the played sound buffer

@@ -76,6 +76,7 @@ DEFINE_ORIG_POINTER(SDL_Quit);
 
     if (flags & SDL_INIT_AUDIO) {
         debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
+        SDL_AudioInit(nullptr);
         game_info.audio = sdl_flag;
     }
 
