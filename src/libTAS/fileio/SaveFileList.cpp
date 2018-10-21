@@ -113,6 +113,10 @@ bool isSaveFile(const char *file)
     if (S_TYPEISMQ(&filestat) || S_TYPEISSEM(&filestat) || S_TYPEISSHM(&filestat))
         return false;
 
+    /* Check if the file lies in shared memory */
+    if (strstr(file, "/dev/shm"))
+        return false;
+
     return true;
 }
 
@@ -146,8 +150,7 @@ int closeSaveFile(int fd)
 {
     for (const auto& savefile : savefiles) {
         if (savefile->fd == fd) {
-            /* For now, do nothing */
-            return 0;
+            return savefile->closeFile();
         }
     }
 
@@ -158,8 +161,7 @@ int closeSaveFile(FILE *stream)
 {
     for (const auto& savefile : savefiles) {
         if (savefile->stream == stream) {
-            /* For now, do nothing */
-            return 0;
+            return savefile->closeFile();
         }
     }
 

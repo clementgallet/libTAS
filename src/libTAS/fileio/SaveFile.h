@@ -42,12 +42,16 @@ public:
     int fd;
 
     bool removed = false;
+    bool closed = true;
 
     /* Open and return a FILE stream of the savefile */
     FILE* open(const char *modes);
 
     /* Open and return a file descriptor of the savefile */
     int open(int flags);
+
+    /* Flag the file as closed */
+    int closeFile();
 
     /* Remove a savefile and return 0 for success and -1 for error (+ errno set) */
     int remove();

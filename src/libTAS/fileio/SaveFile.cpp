@@ -35,8 +35,8 @@ namespace libtas {
 
 SaveFile::SaveFile(const char *file) {
     filename = std::string(file);
-    // opened = false;
     removed = false;
+    closed = true;
     stream = nullptr;
     fd = 0;
 }
@@ -57,11 +57,14 @@ FILE* SaveFile::open(const char *modes) {
      * open_memstream. Save the stream buffer and size.
      */
 
+    closed = false;
+
     /* Check if file was removed by the game */
     if (removed) {
         if (strstr(modes, "r") != nullptr) {
             /* File was removed and opened in read-only mode */
             errno = ENOENT;
+            closed = true;
             return nullptr;
         }
         else {
@@ -136,6 +139,8 @@ int SaveFile::open(int flags)
      * the file again.
      */
 
+    closed = false;
+
     /* Do we need to overwrite the content of the file ? */
     bool overwrite = ((flags & O_TRUNC) != 0);
 
@@ -149,6 +154,7 @@ int SaveFile::open(int flags)
         if (flags & O_RDONLY) {
             /* File was removed and opened in read-only mode */
             errno = ENOENT;
+            closed = true;
             return -1;
         }
         else {
@@ -198,6 +204,35 @@ int SaveFile::open(int flags)
     return fd;
 }
 
+int SaveFile::closeFile()
+{
+    if (closed) {
+        errno = EBADF;
+        return -1;
+    }
+
+    closed = true;
+
+    /* If the file wasn't removed, do nothing */
+    if (!removed)
+        return 0;
+
+    if (stream) {
+        NATIVECALL(fclose(stream));
+        stream = nullptr;
+        free(stream_buffer);
+        stream_buffer = nullptr;
+        stream_size = 0;
+    }
+
+    if (fd != 0) {
+        NATIVECALL(close(fd));
+        fd = 0;
+    }
+
+    return 0;
+}
+
 int SaveFile::remove()
 {
     if (removed) {
@@ -207,23 +242,24 @@ int SaveFile::remove()
 
     removed = true;
 
+    /* If the file wasn't closed, do nothing */
+    if (!closed)
+        return 0;
+
     if (stream) {
         NATIVECALL(fclose(stream));
         stream = nullptr;
         free(stream_buffer);
         stream_buffer = nullptr;
         stream_size = 0;
-        return 0;
     }
 
     if (fd != 0) {
         NATIVECALL(close(fd));
         fd = 0;
-        return 0;
     }
 
-    errno = ENOENT;
-    return -1;
+    return 0;
 }
 
 }
