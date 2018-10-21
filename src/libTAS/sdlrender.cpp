@@ -113,7 +113,11 @@ void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
 
 int SDL_RenderSetViewport(SDL_Renderer * renderer, const SDL_Rect * rect)
 {
-    debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with new size: ", rect->w, " x ", rect->h);
+    if (rect)
+        debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with new size: ", rect->w, " x ", rect->h);
+    else
+        debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with native size");
+
     LINK_NAMESPACE_SDL2(SDL_RenderSetViewport);
     return orig::SDL_RenderSetViewport(renderer, rect);
 }
