@@ -111,7 +111,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	QSettings config(configfile, QSettings::IniFormat);
 	config.setFallbacksEnabled(false);
 
-	context->config.sc.movie_framecount = config.value("frame_count").toUInt();
+	context->config.sc.movie_framecount = config.value("frame_count").toULongLong();
 	context->config.sc.keyboard_support = config.value("keyboard_support").toBool();
 	context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
@@ -214,7 +214,7 @@ int MovieFile::loadInputs(const std::string& moviefile)
 	return 0;
 }
 
-int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
+int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
 {
 	/* Skip empty moviefiles, if user tested the annotations without specifying a movie */
 	if (moviefile.empty())
@@ -237,7 +237,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setFallbacksEnabled(false);
 
 	config.setValue("game_name", context->gamename.c_str());
-	config.setValue("frame_count", static_cast<unsigned int>(input_list.size()));
+	config.setValue("frame_count", static_cast<unsigned long long>(input_list.size()));
 	config.setValue("keyboard_support", context->config.sc.keyboard_support);
 	config.setValue("mouse_support", context->config.sc.mouse_support);
 	config.setValue("nb_controllers", context->config.sc.nb_controllers);
@@ -250,7 +250,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned int nb_frames)
 	config.setValue("libtas_major_version", MAJORVERSION);
 	config.setValue("libtas_minor_version", MINORVERSION);
 	config.setValue("libtas_patch_version", PATCHVERSION);
-	config.setValue("savestate_frame_count", nb_frames);
+	config.setValue("savestate_frame_count", static_cast<unsigned long long>(nb_frames));
 
 	/* Store the md5 that was extracted from the movie, or store the game
 	 * binary movie if not. */
@@ -425,12 +425,12 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-unsigned int MovieFile::nbFrames()
+unsigned long MovieFile::nbFrames()
 {
 	return input_list.size();
 }
 
-unsigned int MovieFile::savestateFramecount() const
+unsigned long MovieFile::savestateFramecount() const
 {
 	/* Load the config file into the context struct */
 	QString configfile = context->config.tempmoviedir.c_str();
@@ -439,7 +439,7 @@ unsigned int MovieFile::savestateFramecount() const
 	QSettings config(configfile, QSettings::IniFormat);
 	config.setFallbacksEnabled(false);
 
-	return config.value("savestate_frame_count").toUInt();
+	return config.value("savestate_frame_count").toULongLong();
 }
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
@@ -488,7 +488,7 @@ int MovieFile::getInputs(AllInputs& inputs)
     return 0;
 }
 
-void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned int pos)
+void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned long pos)
 {
 	if (pos > input_list.size())
 		return;
@@ -497,7 +497,7 @@ void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned int pos)
 	modifiedSinceLastSave = true;
 }
 
-void MovieFile::deleteInputs(unsigned int pos)
+void MovieFile::deleteInputs(unsigned long pos)
 {
 	if (pos >= input_list.size())
 		return;
@@ -506,7 +506,7 @@ void MovieFile::deleteInputs(unsigned int pos)
 	modifiedSinceLastSave = true;
 }
 
-void MovieFile::truncateInputs(int size)
+void MovieFile::truncateInputs(unsigned long size)
 {
 	input_list.resize(size);
 }

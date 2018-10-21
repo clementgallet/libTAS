@@ -49,7 +49,7 @@ struct SharedConfig {
     };
     int recording = NO_RECORDING;
 
-    unsigned int movie_framecount = 0;
+    unsigned long movie_framecount = 0;
 
     /* Log status */
     enum LogStatus {

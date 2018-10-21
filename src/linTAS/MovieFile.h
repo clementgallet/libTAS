@@ -79,13 +79,13 @@ public:
     int saveMovie(const std::string& moviefile);
 
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
-    int saveMovie(const std::string& moviefile, unsigned int frame_nb);
+    int saveMovie(const std::string& moviefile, unsigned long frame_nb);
 
     /* Get the number of frames of the current movie */
-    unsigned int nbFrames();
+    unsigned long nbFrames();
 
     /* Get the frame count of the associated savestate if any */
-    unsigned int savestateFramecount() const;
+    unsigned long savestateFramecount() const;
 
     /* Set inputs in the current frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, bool keep_inputs);
@@ -94,13 +94,13 @@ public:
     int getInputs(AllInputs& inputs);
 
     /* Insert inputs before the requested pos */
-    void insertInputsBefore(const AllInputs& inputs, unsigned int pos);
+    void insertInputsBefore(const AllInputs& inputs, unsigned long pos);
 
     /* Delete inputs at the requested pos */
-    void deleteInputs(unsigned int pos);
+    void deleteInputs(unsigned long pos);
 
     /* Truncate inputs to a frame number */
-    void truncateInputs(int size);
+    void truncateInputs(unsigned long size);
 
     /* Close the moviefile */
     void close();

@@ -117,7 +117,7 @@ void PointerScanModel::locatePointers()
 
 void PointerScanModel::findPointerChain(uintptr_t addr, int ml, int max_offset)
 {
-    static unsigned int last_scan_frame = 1 << 30;
+    static unsigned long last_scan_frame = 1 << 30;
     /* Don't locate pointers again if this is the same frame */
     if (last_scan_frame != context->framecount) {
         locatePointers();

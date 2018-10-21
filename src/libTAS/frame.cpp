@@ -44,7 +44,7 @@ namespace libtas {
 unsigned long framecount = 0;
 
 /* Store the number of nondraw frames */
-static unsigned int nondraw_framecount = 0;
+static unsigned long nondraw_framecount = 0;
 
 #ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);

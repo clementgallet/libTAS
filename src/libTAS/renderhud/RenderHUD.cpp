@@ -172,7 +172,7 @@ void RenderHUD::resetOffsets()
     memset(offsets, 0, 9 * sizeof(int));
 }
 
-void RenderHUD::renderFrame(unsigned int framecount)
+void RenderHUD::renderFrame(unsigned long framecount)
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -194,7 +194,7 @@ void RenderHUD::renderFrame(unsigned int framecount)
     renderText(framestr.c_str(), fg_color, bg_color, x, y);
 }
 
-void RenderHUD::renderNonDrawFrame(unsigned int nondraw_framecount)
+void RenderHUD::renderNonDrawFrame(unsigned long nondraw_framecount)
 {
     Color red_color = {255, 0, 0, 0};
     Color bg_color = {0, 0, 0, 0};

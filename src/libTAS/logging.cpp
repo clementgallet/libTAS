@@ -69,7 +69,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     }
     size = strlen(s);
 
-    snprintf(s + size, maxsize-size-1, "[libTAS f:%ld] ", framecount);
+    snprintf(s + size, maxsize-size-1, "[libTAS f:%lu] ", framecount);
     size = strlen(s);
 
     pid_t tid = ThreadManager::getThreadTid();
