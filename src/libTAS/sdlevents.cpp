@@ -237,7 +237,10 @@ void pushNativeEvents(void)
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PollEvent);
-        return orig::SDL_PollEvent(event);
+        int ret = orig::SDL_PollEvent(event);
+        if (event && (ret == 1))
+            logEvent(event);
+        return ret;
     }
 
     int SDLver = get_sdlversion();
@@ -542,6 +545,7 @@ void logEvent(SDL_Event *event)
                     debuglog(LCF_SDL | LCF_EVENTS, "Window ", event->window.windowID, " closed.");
                     break;
                 default:
+                    debuglog(LCF_SDL | LCF_EVENTS, "Window event ", (int)event->window.event);
                     break;
             }
             break;
