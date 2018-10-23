@@ -23,6 +23,7 @@
 #define LIBTAS_SAVESTATE_H
 
 #include "ProcMapsArea.h"
+#include "StateHeader.h"
 
 namespace libtas {
 class SaveState
@@ -31,24 +32,40 @@ class SaveState
         SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd);
         ~SaveState();
 
+	// Also resets back to first area
+	void readHeader(StateHeader& sh);
+
+	Area& getArea();
+	void nextArea();
+
+	// Reset back to first area
+	void restart();
+
         char getPageFlag(char* addr);
-        char* getPage(char flag);
-        int getPageFd();
-        void skipPage(char flag);
+	char getNextPageFlag();
+	void queuePageLoad(char* addr);
+	void finishLoad();
 
         explicit operator bool() const {
             return (pmfd != -1);
         }
 
-        char page[4096];
-
     private:
+	char nextFlag();
+
+	char flags[4096];
+	int flag_i;
+	int flags_remaining;
+
         int pmfd, pfd;
 
         Area area;
         char* current_addr;
+	off_t next_pfd_offset;
 
-
+	char* queued_addr;
+	off_t queued_offset;
+	int queued_size;
 };
 }
 
