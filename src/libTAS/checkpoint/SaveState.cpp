@@ -112,9 +112,9 @@ void SaveState::nextArea()
     current_addr = static_cast<char*>(area.addr);
     flag_i = 4096;
     if (area.skip) {
-	flags_remaining = 0;
+        flags_remaining = 0;
     } else {
-	flags_remaining = area.size / 4096;
+        flags_remaining = area.size / 4096;
     }
 }
 
@@ -127,7 +127,7 @@ char SaveState::getPageFlag(char* addr)
 {
     while ((area.addr != nullptr) && (addr >= static_cast<char*>(area.endAddr))) {
         /* Skip areas until the one we are interested in */
-	nextArea();
+        nextArea();
     }
 
     // debuglogstdio(LCF_CHECKPOINT, "Savestate addr query %p, current area %p and size %d, with current addr %p", addr, area.addr, area.size, current_addr);
@@ -145,11 +145,11 @@ char SaveState::getPageFlag(char* addr)
 
     char flag;
     do {
-	flag = nextFlag();
+        flag = nextFlag();
         if (flag == Area::FULL_PAGE) {
-	    next_pfd_offset += 4096;
+            next_pfd_offset += 4096;
         }
-	current_addr += 4096;
+        current_addr += 4096;
     } while (current_addr <= addr);
 
     return flag;
@@ -161,7 +161,7 @@ char SaveState::getNextPageFlag()
 {
     char flag = nextFlag();
     if (flag == Area::FULL_PAGE) {
-	next_pfd_offset += 4096;
+        next_pfd_offset += 4096;
     }
     current_addr += 4096;
     return flag;
@@ -170,9 +170,9 @@ char SaveState::getNextPageFlag()
 void SaveState::finishLoad()
 {
     if (queued_size > 0) {
-	lseek(pfd, queued_offset, SEEK_SET);
-	Utils::readAll(pfd, queued_addr, queued_size);
-	queued_size = 0;
+        lseek(pfd, queued_offset, SEEK_SET);
+        Utils::readAll(pfd, queued_addr, queued_size);
+        queued_size = 0;
     }
 }
 
@@ -181,13 +181,13 @@ void SaveState::queuePageLoad(char* addr)
     MYASSERT(addr + 4096 == current_addr);
 
     if (queued_size > 0) {
-	if ((next_pfd_offset - 4096) == queued_offset + queued_size &&
-	    addr == queued_addr + queued_size) {
-	    queued_size += 4096;
-	    return;
-	} else {
-	    finishLoad();
-	}
+    	if ((next_pfd_offset - 4096) == queued_offset + queued_size &&
+    	    addr == queued_addr + queued_size) {
+            queued_size += 4096;
+            return;
+    	} else {
+            finishLoad();
+    	}
     }
 
     queued_offset = (next_pfd_offset - 4096);

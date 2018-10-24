@@ -401,7 +401,7 @@ static bool skipArea(const Area *area)
 
 static void readAllAreas()
 {
-    SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagemapFd(ss_index));
+    SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
     int spmfd, crfd;
     if (shared_config.incremental_savestates) {
@@ -456,7 +456,7 @@ static void readAllAreas()
 
     while (saved_area.addr != nullptr) {
         readAnArea(saved_state, spmfd, parent_state, base_state);
-	saved_state.nextArea();
+        saved_state.nextArea();
     }
 
     if (shared_config.incremental_savestates) {
@@ -471,7 +471,7 @@ static void readAllAreas()
         if (!saved_area.skip) {
             MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
         }
-	saved_state.nextArea();
+        saved_state.nextArea();
     }
 
     if (shared_config.incremental_savestates) {
@@ -704,12 +704,6 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
     /* Current index in the pagemaps array */
     int pagemap_i = 512;
 
-    /* Chunk of savestate pagemap values */
-    char ss_pagemaps[4096];
-
-    /* Current index in the savestate pagemap array */
-    int ss_pagemap_i = 4096;
-
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
@@ -726,17 +720,17 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
         if (flag == Area::NO_PAGE) {
         }
         else if (flag == Area::ZERO_PAGE) {
-	    /* Check if we know the page is already zero,
-	       so we can skip the memset. */
+            /* Check if we know the page is already zero,
+               so we can skip the memset. */
 
-	    /* Gather the flag for the page map */
-	    uint64_t page = pagemaps[pagemap_i];
-	    bool soft_dirty = page & (0x1ull << 55);
+            /* Gather the flag for the page map */
+            uint64_t page = pagemaps[pagemap_i];
+            bool soft_dirty = page & (0x1ull << 55);
 
-	    if (soft_dirty ||
-		parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
-		memset(static_cast<void*>(curAddr), 0, 4096);
-	    }
+            if (soft_dirty ||
+    		parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
+                memset(static_cast<void*>(curAddr), 0, 4096);
+    	    }
         }
         else if (flag == Area::BASE_PAGE) {
             /* The memory page of the loading savestate is the same as the base
@@ -752,7 +746,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                  */
                 char base_flag = base_state.getPageFlag(curAddr);
                 MYASSERT(base_flag == Area::FULL_PAGE);
-		base_state.queuePageLoad(curAddr);
+                base_state.queuePageLoad(curAddr);
             }
             else {
                 /* Gather the flag for the page map */
@@ -765,12 +759,12 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                      */
                     char base_flag = base_state.getPageFlag(curAddr);
                     MYASSERT(base_flag == Area::FULL_PAGE);
-		    base_state.queuePageLoad(curAddr);
+                    base_state.queuePageLoad(curAddr);
                 }
             }
         }
         else {
-	    saved_state.queuePageLoad(curAddr);
+            saved_state.queuePageLoad(curAddr);
         }
     }
     base_state.finishLoad();
