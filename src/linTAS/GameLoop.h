@@ -112,7 +112,7 @@ signals:
     void getRamWatch(std::string &watch);
 
     /* register a savestate */
-    void savestatePerformed(int slot, int frame);
+    void savestatePerformed(int slot, unsigned long frame);
 };
 
 #endif

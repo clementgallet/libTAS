@@ -20,6 +20,7 @@
 #include <QBrush>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QFont>
 #include <sstream>
 
 #include <set>
@@ -79,31 +80,44 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         return Qt::AlignCenter;
     }
 
+    if (role == Qt::FontRole) {
+        QFont font;
+        if ((index.column() == 0) && (index.row() == last_savestate)) {
+            font.setBold(true);
+        }
+        return font;
+    }
+
     if (role == Qt::BackgroundRole) {
         /* Return white-ish for future inputs */
-        if (index.row() > static_cast<int>(context->framecount))
-            return QBrush(QColor(0xff, 0xfe, 0xee));
+        // if (index.row() > static_cast<int>(context->framecount))
+        //     return QBrush(QColor(0xff, 0xfe, 0xee));
 
         /* Return white-ish for savestate column */
-        if (index.column() == 0)
-            return QBrush(QColor(0xff, 0xfe, 0xee));
+        // if (index.column() == 0)
+        //     return QBrush(QColor(0xff, 0xfe, 0xee));
 
         QColor color;
 
         /* Main color */
         if (index.row() == static_cast<int>(context->framecount))
             color.setRgb(0xb5, 0xe7, 0xf7);
-        else
+        else if (index.row() < static_cast<int>(context->framecount))
             color.setRgb(0xd2, 0xf9, 0xd3);
+        else
+            color.setRgb(0xfe, 0xfe, 0xe8);
 
         /* Frame column */
-        if (index.column() == 1) {
+        if (index.column() <= 1) {
             color = color.lighter(105);
         }
 
-        /* Alternating colors */
-        if (index.row() % 5 == 0) {
-            color = color.darker(105);
+        /* Frame containing a savestate */
+        for (unsigned int i=0; i<savestate_frames.size(); i++) {
+            if (savestate_frames[i] == index.row()) {
+                color = color.darker(105);
+                break;
+            }
         }
 
         return QBrush(color);
@@ -525,8 +539,15 @@ void InputEditorModel::resetInputs()
     endResetModel();
 }
 
-void InputEditorModel::registerSavestate(int slot, int frame)
+/* Register a savestate. If saved, frame contains the framecount of the
+ * savestate slot. It loaded, frame contains 0.
+ */
+void InputEditorModel::registerSavestate(int slot, unsigned long frame)
 {
-    savestate_frames[slot] = frame;
-    emit dataChanged(createIndex(frame,0), createIndex(frame,0));
+    if (frame > 0)
+        savestate_frames[slot] = frame;
+    int old_savestate = last_savestate;
+    last_savestate = savestate_frames[slot];
+    emit dataChanged(createIndex(old_savestate,0), createIndex(old_savestate,0));
+    emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
 }

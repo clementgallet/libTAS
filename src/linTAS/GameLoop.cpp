@@ -921,6 +921,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 message = receiveMessage();
 
                 current_savestate = statei;
+
+                emit savestatePerformed(statei, 0);
             }
 
             /* The frame count has changed, we must get the new one */

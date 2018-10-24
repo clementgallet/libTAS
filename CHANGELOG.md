@@ -8,6 +8,7 @@
 * Hook Xlib window resize
 * Support for SDL1 rendering using surface blitting
 * Mouse position recalibration to match game cursor position
+* Add savestate slot to input editor
 
 ### Changed
 
