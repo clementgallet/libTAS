@@ -383,12 +383,11 @@ void GameLoop::initProcessMessages()
 
     /* Build and send the base savestate path/index */
     if (context->config.sc.incremental_savestates) {
-        if (context->config.sc.savestates_in_ram) {
-            sendMessage(MSGN_BASE_SAVESTATE_INDEX);
-            int index = 0;
-            sendData(&index, sizeof(int));
-        }
-        else {
+        sendMessage(MSGN_BASE_SAVESTATE_INDEX);
+        int index = 0;
+        sendData(&index, sizeof(int));
+
+        if (!context->config.sc.savestates_in_ram) {
             std::string basesavestatepath = context->config.savestatedir + '/';
             basesavestatepath += context->gamename;
             basesavestatepath += ".state0";
@@ -720,11 +719,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             /* Send the savestate path/index */
-            if (context->config.sc.savestates_in_ram) {
-                sendMessage(MSGN_SAVESTATE_INDEX);
-                sendData(&statei, sizeof(int));
-            }
-            else {
+            sendMessage(MSGN_SAVESTATE_INDEX);
+            sendData(&statei, sizeof(int));
+            if (! context->config.sc.savestates_in_ram) {
                 std::string savestatepath = context->config.savestatedir + '/';
                 savestatepath += context->gamename;
                 savestatepath += ".state" + std::to_string(statei);
@@ -741,11 +738,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             /* Send the parent savestate path/index */
             if (context->config.sc.incremental_savestates && (current_savestate > 0)) {
-                if (context->config.sc.savestates_in_ram) {
-                    sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-                    sendData(&current_savestate, sizeof(int));
-                }
-                else {
+                sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
+                sendData(&current_savestate, sizeof(int));
+                if (! context->config.sc.savestates_in_ram) {
                     std::string parentsavestatepath = context->config.savestatedir + '/';
                     parentsavestatepath += context->gamename;
                     parentsavestatepath += ".state" + std::to_string(current_savestate);
@@ -803,11 +798,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
 
             /* Building the savestate path */
-            if (context->config.sc.savestates_in_ram) {
-                sendMessage(MSGN_SAVESTATE_INDEX);
-                sendData(&statei, sizeof(int));
-            }
-            else {
+            sendMessage(MSGN_SAVESTATE_INDEX);
+            sendData(&statei, sizeof(int));
+            if (! context->config.sc.savestates_in_ram) {
                 std::string savestatepath = context->config.savestatedir + '/';
                 savestatepath += context->gamename;
                 savestatepath += ".state" + std::to_string(statei);
@@ -875,11 +868,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     std::cerr << "No parent savestate when loading ??" << std::endl;
                 }
 
-                if (context->config.sc.savestates_in_ram) {
-                    sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-                    sendData(&current_savestate, sizeof(int));
-                }
-                else {
+                sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
+                sendData(&current_savestate, sizeof(int));
+                if (! context->config.sc.savestates_in_ram) {
                     std::string parentsavestatepath = context->config.savestatedir + '/';
                     parentsavestatepath += context->gamename;
                     parentsavestatepath += ".state" + std::to_string(current_savestate);

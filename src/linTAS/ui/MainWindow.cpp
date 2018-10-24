@@ -451,11 +451,11 @@ void MainWindow::createActions()
     connect(loggingPrintGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingPrint);
 
     addActionCheckable(loggingPrintGroup, tr("Untested"), LCF_UNTESTED);
-    addActionCheckable(loggingPrintGroup, tr("Desync"), LCF_DESYNC);
     addActionCheckable(loggingPrintGroup, tr("Frequent"), LCF_FREQUENT);
     addActionCheckable(loggingPrintGroup, tr("Error"), LCF_ERROR);
+    addActionCheckable(loggingPrintGroup, tr("Warning"), LCF_WARNING);
+    addActionCheckable(loggingPrintGroup, tr("Info"), LCF_INFO);
     addActionCheckable(loggingPrintGroup, tr("ToDo"), LCF_TODO);
-    addActionCheckable(loggingPrintGroup, tr("Frame"), LCF_FRAME);
     addActionCheckable(loggingPrintGroup, tr("Hook"), LCF_HOOK);
     addActionCheckable(loggingPrintGroup, tr("Time Set"), LCF_TIMESET);
     addActionCheckable(loggingPrintGroup, tr("Time Get"), LCF_TIMEGET);
@@ -487,11 +487,11 @@ void MainWindow::createActions()
     connect(loggingExcludeGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingExclude);
 
     addActionCheckable(loggingExcludeGroup, tr("Untested"), LCF_UNTESTED);
-    addActionCheckable(loggingExcludeGroup, tr("Desync"), LCF_DESYNC);
     addActionCheckable(loggingExcludeGroup, tr("Frequent"), LCF_FREQUENT);
     addActionCheckable(loggingExcludeGroup, tr("Error"), LCF_ERROR);
+    addActionCheckable(loggingExcludeGroup, tr("Warning"), LCF_WARNING);
+    addActionCheckable(loggingExcludeGroup, tr("Info"), LCF_INFO);
     addActionCheckable(loggingExcludeGroup, tr("ToDo"), LCF_TODO);
-    addActionCheckable(loggingExcludeGroup, tr("Frame"), LCF_FRAME);
     addActionCheckable(loggingExcludeGroup, tr("Hook"), LCF_HOOK);
     addActionCheckable(loggingExcludeGroup, tr("Time Set"), LCF_TIMESET);
     addActionCheckable(loggingExcludeGroup, tr("Time Get"), LCF_TIMEGET);

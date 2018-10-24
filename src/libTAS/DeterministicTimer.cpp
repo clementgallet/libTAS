@@ -166,7 +166,7 @@ void DeterministicTimer::flushDelay()
 void DeterministicTimer::exitFrameBoundary()
 {
     //std::lock_guard<std::mutex> lock(mutex);
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
+    DEBUGLOGCALL(LCF_TIMEGET);
 
     /* Reset the counts of each time get function */
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
@@ -210,7 +210,7 @@ void DeterministicTimer::exitFrameBoundary()
 void DeterministicTimer::enterFrameBoundary()
 {
     //std::lock_guard<std::mutex> lock(mutex);
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
+    DEBUGLOGCALL(LCF_TIMEGET);
 
     insideFrameBoundary = true;
 
@@ -238,7 +238,7 @@ void DeterministicTimer::enterFrameBoundary()
     if (timeIncrement > addedDelay) {
         TimeHolder deltaTicks = timeIncrement - addedDelay;
         ticks += deltaTicks;
-        debuglog(LCF_TIMESET | LCF_FRAME, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
+        debuglog(LCF_TIMESET, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
         addedDelay = {0, 0};
     }
     else {

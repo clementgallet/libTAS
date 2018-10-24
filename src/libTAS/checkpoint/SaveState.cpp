@@ -106,7 +106,7 @@ char SaveState::nextFlag()
 void SaveState::nextArea()
 {
     if (flags_remaining > 0)
-	lseek(pmfd, flags_remaining, SEEK_CUR);
+        lseek(pmfd, flags_remaining, SEEK_CUR);
     Utils::readAll(pmfd, &area, sizeof(Area));
     next_pfd_offset = area.page_offset;
     current_addr = static_cast<char*>(area.addr);

@@ -67,7 +67,7 @@ DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapBuffers();
 
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
+    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -85,7 +85,7 @@ DEFINE_ORIG_POINTER(SDL_GL_SetAttribute);
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapWindow(window);
 
-    debuglog(LCF_SDL | LCF_FRAME | LCF_OGL | LCF_WINDOW, __func__, " call.");
+    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call.");
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -395,7 +395,7 @@ static int swapInterval = 0;
     if (GlobalState::isNative())
         return orig::SDL_Flip(screen);
 
-    debuglog(LCF_SDL | LCF_FRAME | LCF_WINDOW, __func__, " call.");
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call.");
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD

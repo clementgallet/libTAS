@@ -60,7 +60,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
         if (lcf & LCF_ERROR)
             /* Write the header text in red */
             strncat(s, ANSI_COLOR_RED, maxsize-size-1);
-        else if (lcf & LCF_TODO)
+        else if (lcf & LCF_WARNING)
             /* Write the header text in light red */
             strncat(s, ANSI_COLOR_LIGHT_RED, maxsize-size-1);
         else

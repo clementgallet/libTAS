@@ -154,7 +154,7 @@ void pushNativeEvents(void)
 
 /* Override */ void SDL_PumpEvents(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PumpEvents);
         return orig::SDL_PumpEvents();
@@ -163,7 +163,7 @@ void pushNativeEvents(void)
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PeepEvents);
@@ -233,7 +233,7 @@ void pushNativeEvents(void)
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_FRAME);
+    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PollEvent);

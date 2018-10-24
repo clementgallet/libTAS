@@ -616,8 +616,8 @@ void ThreadManager::stopThisThread(int signum)
     stack_t altstack = current_thread->altstack;
     if ((&altstack < altstack.ss_sp) ||
         (&altstack >= (void*)((char*)altstack.ss_sp + altstack.ss_size))) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Thread suspend is not running on alternate stack");
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
+        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Thread suspend is not running on alternate stack");
+        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
     }
 
     /* Make sure we don't get called twice for same thread */

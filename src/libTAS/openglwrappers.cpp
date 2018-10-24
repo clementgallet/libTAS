@@ -257,7 +257,7 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     if (GlobalState::isNative())
         return orig::glXSwapBuffers(dpy, drawable);
 
-    DEBUGLOGCALL(LCF_FRAME | LCF_WINDOW | LCF_OGL);
+    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD

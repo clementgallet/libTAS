@@ -77,24 +77,24 @@ DEFINE_ORIG_POINTER(clock_gettime);
 {
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call - returning ", msec);
+    debuglog(LCF_SDL | LCF_TIMEGET, __func__, " call - returning ", msec);
 
     return msec;
 }
 
 /* Override */ Uint64 SDL_GetPerformanceFrequency(void)
 {
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, __func__, " call.");
+    debuglog(LCF_SDL | LCF_TIMEGET, __func__, " call.");
     return 1000000000;
 }
 
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET | LCF_FRAME);
+    DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 
-    debuglog(LCF_SDL | LCF_TIMEGET | LCF_FRAME, "  returning ", counter);
+    debuglog(LCF_SDL | LCF_TIMEGET, "  returning ", counter);
     return counter;
 }
 

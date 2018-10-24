@@ -173,12 +173,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 {
     static float fps, lfps = 0;
 
-    debuglog(LCF_FRAME, "Enter frame boundary");
     ThreadManager::setMainThread();
 
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
-        debuglog(LCF_FRAME, "Game is exiting: skipping frame boundary");
         detTimer.flushDelay();
         NATIVECALL(draw());
         return;
@@ -192,7 +190,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     /* Compute new FPS values */
     if (drawFB) {
         computeFPS(fps, lfps);
-        debuglog(LCF_FRAME, "fps: ", std::fixed, std::setprecision(1), fps, " lfps: ", lfps);
     }
 
     /* Update the deterministic timer, sleep if necessary and mix audio */
@@ -367,8 +364,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     skipping_draw = skipDraw(fps);
 
     detTimer.exitFrameBoundary();
-
-    debuglog(LCF_FRAME, "Leave frame boundary");
 }
 
 static void pushQuitEvent(void)
@@ -463,9 +458,9 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_DUMP_FILE:
-                debuglog(LCF_SOCKET | LCF_FRAME, "Receiving dump filename");
+                debuglog(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
-                debuglog(LCF_SOCKET | LCF_FRAME, "File ", AVEncoder::dumpfile);
+                debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
 
@@ -595,7 +590,7 @@ static void receive_messages(std::function<void()> draw)
                 return;
 
             default:
-                debuglog(LCF_ERROR | LCF_SOCKET | LCF_FRAME, "Unknown message received");
+                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown message received");
                 return;
         }
     }

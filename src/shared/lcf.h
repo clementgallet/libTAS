@@ -29,11 +29,11 @@ typedef int LogCategoryFlag; enum
 
     /* Log status, should be combined with a log category */
 	LCF_UNTESTED = 1 << 0, // things that have significant but not-yet-tested implementations.
-	LCF_DESYNC   = 1 << 1, // things considered worth inspecting in cases of desync.
-	LCF_FREQUENT = 1 << 2, // things that tend to get called very often (more than once per frame).
-	LCF_ERROR    = 1 << 3, // things that shouldn't happen.
-	LCF_TODO     = 1 << 4, // things known to require further implementation in the future.
-	LCF_FRAME    = 1 << 5, // things that are called once every frame.
+	LCF_FREQUENT = 1 << 1, // things that tend to get called very often (more than once per frame).
+	LCF_ERROR    = 1 << 2, // things that shouldn't happen.
+	LCF_WARNING  = 1 << 3, // things that users should be warned about.
+	LCF_INFO     = 1 << 4, // things that users may want to know about.
+	LCF_TODO     = 1 << 5, // things known to require further implementation in the future.
 
     /* Log category */
 	LCF_HOOK     = 1 << 6, // hooking notifications

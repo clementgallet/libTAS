@@ -68,8 +68,8 @@ static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveState &saved_area, int spmfd, SaveState &parent_state, SaveState &base_state);
 
-static void writeAllAreas(bool base);
-static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state);
+static size_t writeAllAreas(bool base);
+static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -298,7 +298,13 @@ void Checkpoint::handler(int signum)
             }
         }
 
+        TimeHolder old_time, new_time, delta_time;
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
         readAllAreas();
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+        delta_time = new_time - old_time;
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+
         /* restoreInProgress was overwritten, putting the right value again */
         ThreadManager::restoreInProgress = true;
 
@@ -328,13 +334,23 @@ void Checkpoint::handler(int signum)
             if (shared_config.savestates_in_ram) {
                 int fd = getPagemapFd(base_ss_index);
                 if (!fd) {
-                    writeAllAreas(true);
+                    TimeHolder old_time, new_time, delta_time;
+                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
+                    size_t savestate_size = writeAllAreas(true);
+                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+                    delta_time = new_time - old_time;
+                    debuglogstdio(LCF_INFO, "Saved base state of size %lld in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
                 }
             }
             else {
                 struct stat sb;
                 if (stat(basepagemappath, &sb) == -1) {
-                    writeAllAreas(true);
+                    TimeHolder old_time, new_time, delta_time;
+                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
+                    size_t savestate_size = writeAllAreas(true);
+                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+                    delta_time = new_time - old_time;
+                    debuglogstdio(LCF_INFO, "Saved base state of size %lld in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
                 }
             }
         }
@@ -342,9 +358,13 @@ void Checkpoint::handler(int signum)
         /* We must store the current stack frame in the savestate */
         AltStack::saveStackFrame();
 
-        writeAllAreas(false);
+        TimeHolder old_time, new_time, delta_time;
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
+        size_t savestate_size = writeAllAreas(false);
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+        delta_time = new_time - old_time;
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Saved state %d of size %lld in %f seconds", ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
     }
-    debuglogstdio(LCF_CHECKPOINT, "End restore.");
 }
 
 static bool skipArea(const Area *area)
@@ -777,9 +797,11 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 }
 
 
-static void writeAllAreas(bool base)
+static size_t writeAllAreas(bool base)
 {
     int pmfd, pfd;
+
+    size_t savestate_size = 0;
 
     /* Storing the savestate index in stack */
     int current_ss_index = ss_index;
@@ -890,6 +912,7 @@ static void writeAllAreas(bool base)
     }
     sh.thread_count = n;
     Utils::writeAll(pmfd, &sh, sizeof(sh));
+    savestate_size += sizeof(sh);
 
     /* Load the parent savestate if any. */
     SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
@@ -916,9 +939,10 @@ static void writeAllAreas(bool base)
         if (skipArea(&area)) {
             area.skip = true;
             Utils::writeAll(pmfd, &area, sizeof(area));
+            savestate_size += sizeof(area);
         }
         else {
-            writeAnArea(pmfd, pfd, spmfd, area, parent_state);
+            savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state);
         }
     }
 
@@ -926,6 +950,7 @@ static void writeAllAreas(bool base)
     area.addr = nullptr; // End of data
     area.size = 0; // End of data
     Utils::writeAll(pmfd, &area, sizeof(area));
+    savestate_size += sizeof(area);
 
     if (shared_config.incremental_savestates) {
         /* Clear soft-dirty bits */
@@ -969,11 +994,15 @@ static void writeAllAreas(bool base)
             NATIVECALL(rename(temppagespath, pagespath));
         }
     }
+
+    return savestate_size;
 }
 
-static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state)
+/* Write a memory area into the savestate. Returns the size of the area in bytes */
+static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state)
 {
 //    area.print("Save");
+    size_t area_size = 0;
 
     /* Save the position of the first area page in the pages file */
     area.page_offset = lseek(pfd, 0, SEEK_CUR);
@@ -981,6 +1010,7 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
 
     /* Write the area struct */
     Utils::writeAll(pmfd, &area, sizeof(area));
+    area_size += sizeof(area);
 
     /* Seek at the beginning of the area pagemap */
     MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
@@ -1010,6 +1040,7 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
         if (ss_pagemap_i >= 4096) {
             Utils::writeAll(pmfd, ss_pagemaps, 4096);
             ss_pagemap_i = 0;
+            area_size += 4096;
         }
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
@@ -1045,11 +1076,13 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area with soft-dirty cleared but no parent page !?");
                     ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
+                    area_size += 4096;
                 }
                 else if (parent_flag == Area::FULL_PAGE) {
                     /* Parent state stores the memory page, we must store it too */
                     ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
+                    area_size += 4096;
                 }
                 else {
                     ss_pagemaps[ss_pagemap_i++] = parent_flag;
@@ -1062,12 +1095,15 @@ static void writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &par
         else {
             ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
             Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
+            area_size += 4096;
         }
     }
 
     /* Writing the last savestate pagemap chunk */
     Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
+    area_size += ss_pagemap_i;
 
+    return area_size;
 }
 
 }

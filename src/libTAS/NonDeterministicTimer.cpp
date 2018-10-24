@@ -90,7 +90,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
 void NonDeterministicTimer::enterFrameBoundary()
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
+    DEBUGLOGCALL(LCF_TIMEGET);
     getTicks();
     inFB = true;
 
@@ -107,7 +107,7 @@ void NonDeterministicTimer::enterFrameBoundary()
 
 void NonDeterministicTimer::exitFrameBoundary()
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FRAME);
+    DEBUGLOGCALL(LCF_TIMEGET);
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastExitTime));
     inFB = false;
 }

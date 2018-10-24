@@ -199,7 +199,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
 {
     /* Check that ticks is positive! */
     if (ticks.tv_sec < 0) {
-        debuglog(LCF_SOUND | LCF_FRAME | LCF_ERROR, "Negative number of ticks for audio mixing!");
+        debuglog(LCF_SOUND | LCF_ERROR, "Negative number of ticks for audio mixing!");
         return;
     }
 
@@ -207,7 +207,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
   	/* Save the actual number of samples and size */
   	outNbSamples = outBytes / outAlignSize;
 
-    debuglog(LCF_SOUND | LCF_FRAME, "Start mixing about ", outNbSamples, " samples");
+    debuglog(LCF_SOUND, "Start mixing about ", outNbSamples, " samples");
 
     /* Silent the output buffer */
     if (outBitDepth == 8) // Unsigned 8-bit samples

@@ -367,7 +367,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
     else {
         /* Not tested !! */
-        debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Access SDL_Surface pixels for video dump");
+        debuglog(LCF_DUMP | LCF_UNTESTED, "Access SDL_Surface pixels for video dump");
 
         if (game_info.video & GameInfo::SDL1) {
             LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
@@ -449,7 +449,7 @@ int ScreenCapture::setPixels() {
             LINK_NAMESPACE_SDL1(SDL_SetClipRect);
 
             /* Not tested !! */
-            debuglog(LCF_DUMP | LCF_UNTESTED | LCF_FRAME, "Set SDL1_Surface pixels");
+            debuglog(LCF_DUMP | LCF_UNTESTED, "Set SDL1_Surface pixels");
 
             /* Get surface from window */
             SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
