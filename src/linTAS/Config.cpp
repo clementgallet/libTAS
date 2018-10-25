@@ -19,6 +19,8 @@
 
 #include <QSettings>
 #include "Config.h"
+#include <fcntl.h>
+#include <unistd.h> // access
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
@@ -33,6 +35,32 @@ QString Config::iniPath(const std::string& gamepath) const {
 }
 
 void Config::save(const std::string& gamepath) {
+    /* Save only if game file exists */
+    if (access(gamepath.c_str(), F_OK) != 0)
+        return;
+
+    /* Save the gamepath in recent gamepaths */
+    for (auto iter = recent_gamepaths.begin(); iter != recent_gamepaths.end(); iter++) {
+        if (iter->compare(gamepath) == 0) {
+            recent_gamepaths.erase(iter);
+            break;
+        }
+    }
+    recent_gamepaths.push_front(gamepath);
+
+    /* Open the general preferences */
+    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    general_settings.setFallbacksEnabled(false);
+
+    general_settings.remove("recent_gamepaths");
+    general_settings.beginWriteArray("recent_gamepaths");
+    int i = 0;
+    for (auto& path : recent_gamepaths) {
+        general_settings.setArrayIndex(i++);
+        general_settings.setValue("gamepath", path.c_str());
+        if (i > 10) break;
+    }
+    general_settings.endArray();
 
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
@@ -51,7 +79,7 @@ void Config::save(const std::string& gamepath) {
 
     settings.remove("hotkeys");
     settings.beginWriteArray("hotkeys");
-    int i = 0;
+    i = 0;
     for (auto& hmap : km.hotkey_mapping) {
         settings.setArrayIndex(i++);
         settings.setValue("keysym", hmap.first);
@@ -126,6 +154,20 @@ void Config::save(const std::string& gamepath) {
 
 void Config::load(const std::string& gamepath) {
 
+    /* Open the general preferences */
+    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    general_settings.setFallbacksEnabled(false);
+
+    int size = general_settings.beginReadArray("recent_gamepaths");
+    if (size > 0)
+        recent_gamepaths.clear();
+    for (int i = 0; i < size; ++i) {
+        general_settings.setArrayIndex(i);
+        std::string path = general_settings.value("gamepath").toString().toStdString();
+        recent_gamepaths.push_back(path);
+    }
+    general_settings.endArray();
+
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
@@ -150,7 +192,7 @@ void Config::load(const std::string& gamepath) {
 
     settings.beginGroup("keymapping");
 
-    int size = settings.beginReadArray("hotkeys");
+    size = settings.beginReadArray("hotkeys");
     if (size > 0)
         km.hotkey_mapping.clear();
     for (int i = 0; i < size; ++i) {

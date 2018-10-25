@@ -30,6 +30,7 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QGroupBox>
+#include <QComboBox>
 #include <forward_list>
 
 #include "EncodeWindow.h"
@@ -119,7 +120,7 @@ public:
     QActionGroup *joystickGroup;
 
 
-    QLineEdit *gamePath;
+    QComboBox *gamePath;
     QPushButton *browseGamePath;
     QLineEdit *cmdOptions;
 
@@ -201,6 +202,9 @@ private:
 
     /* Update movie parameters from movie file */
     void updateMovieParams();
+
+    /* Update the list of recent gamepaths */
+    void updateRecentGamepaths();
 
     /* Helper function to create a checkable action inside an action group */
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);

@@ -89,10 +89,15 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     menuBar()->setNativeMenuBar(false);
 
     /* Game Executable */
-    gamePath = new QLineEdit();
+    gamePath = new QComboBox();
     gamePath->setMinimumWidth(400);
-    connect(gamePath, &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
+    gamePath->setEditable(true);
+    // connect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
+    connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
+    gamePath->setInsertPolicy(QComboBox::NoInsert);
+    // connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
     disabledWidgetsOnStart.append(gamePath);
+    updateRecentGamepaths();
 
     browseGamePath = new QPushButton("Browse...");
     connect(browseGamePath, &QAbstractButton::clicked, this, &MainWindow::slotBrowseGamePath);
@@ -827,6 +832,21 @@ void MainWindow::updateSharedConfigChanged()
     }
 }
 
+void MainWindow::updateRecentGamepaths()
+{
+    /* We don't want to fire a signal by changing the combobox content */
+    // disconnect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
+    disconnect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
+
+    gamePath->clear();
+    for (const auto& path : context->config.recent_gamepaths) {
+        gamePath->addItem(QString(path.c_str()));
+    }
+
+    // connect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
+    connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
+}
+
 void MainWindow::updateFrameCountTime()
 {
     /* Update frame count */
@@ -960,7 +980,11 @@ void MainWindow::updateMovieParams()
 
 void MainWindow::updateUIFromConfig()
 {
-    gamePath->setText(context->gamepath.c_str());
+    /* We don't want to trigger the signal here */
+    disconnect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
+    gamePath->setEditText(context->gamepath.c_str());
+    connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
+
     cmdOptions->setText(context->config.gameargs.c_str());
     moviePath->setText(context->config.moviefile.c_str());
     fpsNumField->setValue(context->config.sc.framerate_num);
@@ -1150,16 +1174,15 @@ void MainWindow::slotBrowseGamePath()
     if (filename.isNull())
         return;
 
-    /* Save the previous config if game file exists */
-    if (access(context->gamepath.c_str(), F_OK) == 0) {
-        context->config.save(context->gamepath);
-    }
+    context->config.save(context->gamepath);
 
-    gamePath->setText(filename);
+    gamePath->setEditText(filename);
     context->gamepath = filename.toStdString();
 
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
+
+    updateRecentGamepaths();
 
     if (!context->is_soft_dirty) {
         context->config.sc.incremental_savestates = false;
@@ -1175,15 +1198,15 @@ void MainWindow::slotBrowseGamePath()
 
 void MainWindow::slotGamePathChanged()
 {
-    /* Save the previous config if game file exists */
-    if (access(context->gamepath.c_str(), F_OK) == 0) {
-        context->config.save(context->gamepath);
-    }
+    /* Save the previous config */
+    context->config.save(context->gamepath);
 
-    context->gamepath = gamePath->text().toStdString();
+    context->gamepath = gamePath->currentText().toStdString();
 
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
+
+    updateRecentGamepaths();
 
     if (!context->is_soft_dirty) {
         context->config.sc.incremental_savestates = false;

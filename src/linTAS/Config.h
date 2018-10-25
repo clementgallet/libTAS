@@ -23,6 +23,7 @@
 #include <QString>
 #include <string>
 #include <memory>
+#include <list>
 
 #include "../shared/SharedConfig.h"
 #include "KeyMapping.h"
@@ -88,6 +89,9 @@ public:
     };
 
     int on_movie_end = MOVIEEND_READ;
+
+    /* List of recent existing gamepaths */
+    std::list<std::string> recent_gamepaths;
 
     /* Save the config into the config file */
     void save(const std::string& gamepath);
