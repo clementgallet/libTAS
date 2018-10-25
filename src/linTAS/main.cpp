@@ -192,8 +192,7 @@ int main(int argc, char **argv)
     }
 
     /* Now that we have the config dir, we load the game-specific config */
-    if (!context.gamepath.empty())
-        context.config.load(context.gamepath);
+    context.config.load(context.gamepath);
 
     /* If the config file set custom directories for the remaining working dir,
      * we create these directories (if not already created).

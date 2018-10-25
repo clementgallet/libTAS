@@ -168,6 +168,9 @@ void Config::load(const std::string& gamepath) {
     }
     general_settings.endArray();
 
+    if (gamepath.empty())
+        return;
+
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
