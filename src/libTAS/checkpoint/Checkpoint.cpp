@@ -58,9 +58,9 @@ static char basepagemappath[1024] = "\0";
 static char basepagespath[1024] = "\0";
 
 /* Savestate indexes (for RAM storing) */
-static int ss_index;
-static int parent_ss_index;
-static int base_ss_index;
+static int ss_index = -1;
+static int parent_ss_index = -1;
+static int base_ss_index = -1;
 
 static bool skipArea(const Area *area);
 
@@ -115,12 +115,14 @@ void Checkpoint::setParentSavestateIndex(int index)
 
 static int getPagemapFd(int index)
 {
+    if (index < 0) return 0;
     int* pagemaps = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
     return pagemaps[index];
 }
 
 static int getPagesFd(int index)
 {
+    if (index < 0) return 0;
     int* pages = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGES_ADDR));
     return pages[index];
 }
