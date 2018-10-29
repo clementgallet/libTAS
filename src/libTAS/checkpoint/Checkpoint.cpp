@@ -456,7 +456,7 @@ static void readAllAreas()
         int cmp = reallocateArea(&saved_area, &current_area);
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
-	    saved_state.nextArea();
+            saved_state.nextArea();
             not_eof = procSelfMaps.getNextArea(&current_area);
         }
         if (cmp > 0) {
@@ -465,7 +465,7 @@ static void readAllAreas()
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
-	    saved_state.nextArea();
+            saved_state.nextArea();
         }
     }
 
@@ -476,24 +476,18 @@ static void readAllAreas()
     SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
     SaveState base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
 
+    /* If the loading savestate and the parent savestate are the same, pass the
+     * same SaveState object to readAnArea because two SaveState objects
+     * handling the same file descriptor will mess up the file offset. */
+    bool same_state = (ss_index == parent_ss_index);
     while (saved_area.addr != nullptr) {
-        readAnArea(saved_state, spmfd, parent_state, base_state);
+        readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
         saved_state.nextArea();
     }
 
     if (shared_config.incremental_savestates) {
         /* Clear soft-dirty bits */
         Utils::writeAll(crfd, "4\n", 2);
-    }
-
-    /* Recover write permission to all areas */
-    saved_state.restart();
-
-    while (saved_area.addr != nullptr) {
-        if (!saved_area.skip) {
-            MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
-        }
-        saved_state.nextArea();
     }
 
     if (shared_config.incremental_savestates) {
@@ -817,7 +811,7 @@ static size_t writeAllAreas(bool base)
 
     if (shared_config.savestates_in_ram) {
         if (!shared_config.incremental_savestates) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot ", ss_index);
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
 
             pmfd = getPagemapFd(ss_index);
             if (pmfd) {
@@ -842,7 +836,7 @@ static size_t writeAllAreas(bool base)
             }
         }
         else if (base) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", base_ss_index);
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", base_ss_index);
 
             /* Create new memfds */
             pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
@@ -852,6 +846,7 @@ static size_t writeAllAreas(bool base)
             setPagesFd(base_ss_index, pfd);
         }
         else {
+            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
             /* Creating new memfds for temp state */
             pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
             pfd = syscall(SYS_memfd_create, "pagesstate", 0);
@@ -1003,7 +998,7 @@ static size_t writeAllAreas(bool base)
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
 static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state)
 {
-//    area.print("Save");
+    area.print("Save");
     size_t area_size = 0;
 
     /* Save the position of the first area page in the pages file */

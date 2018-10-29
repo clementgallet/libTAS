@@ -41,26 +41,27 @@ class SaveState
 	// Reset back to first area
 	void restart();
 
-        char getPageFlag(char* addr);
+    char getPageFlag(char* addr);
 	char getNextPageFlag();
 	void queuePageLoad(char* addr);
 	void finishLoad();
 
-        explicit operator bool() const {
-            return (pmfd != -1);
-        }
+    explicit operator bool() const {
+        return (pmfd != -1);
+    }
 
     private:
 	char nextFlag();
 
 	char flags[4096];
+    char current_flag;
 	int flag_i;
 	int flags_remaining;
 
-        int pmfd, pfd;
+    int pmfd, pfd;
 
-        Area area;
-        char* current_addr;
+    Area area;
+    char* current_addr;
 	off_t next_pfd_offset;
 
 	char* queued_addr;

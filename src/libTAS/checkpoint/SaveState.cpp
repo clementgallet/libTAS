@@ -90,17 +90,18 @@ void SaveState::restart()
 char SaveState::nextFlag()
 {
     if (flag_i == 4096) {
-	MYASSERT(flags_remaining > 0);
+    	MYASSERT(flags_remaining > 0);
 
-	int size = (flags_remaining > 4096 ? 4096 : flags_remaining);
+    	int size = (flags_remaining > 4096 ? 4096 : flags_remaining);
 
-	Utils::readAll(pmfd, flags, size);
-	flags_remaining -= size;
+    	Utils::readAll(pmfd, flags, size);
+    	flags_remaining -= size;
 
-	flag_i = 0;
+    	flag_i = 0;
     }
 
-    return flags[flag_i++];
+    current_flag = flags[flag_i++];
+    return current_flag;
 }
 
 void SaveState::nextArea()
@@ -125,6 +126,12 @@ Area& SaveState::getArea()
 
 char SaveState::getPageFlag(char* addr)
 {
+    MYASSERT(addr >= (current_addr - 4096));
+
+    /* If we already gathered the flag for this address, return it again */
+    if (addr == (current_addr - 4096))
+        return current_flag;
+
     while ((area.addr != nullptr) && (addr >= static_cast<char*>(area.endAddr))) {
         /* Skip areas until the one we are interested in */
         nextArea();
@@ -140,8 +147,6 @@ char SaveState::getPageFlag(char* addr)
 
     if (area.skip)
         return Area::NONE;
-
-    MYASSERT(current_addr <= addr);
 
     char flag;
     do {
