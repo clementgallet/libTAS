@@ -581,11 +581,6 @@ static void receive_messages(std::function<void()> draw)
 #endif
                 break;
 
-            case MSGN_CALIBRATE_MOUSE:
-                receiveData(&old_ai.pointer_x, sizeof(int));
-                receiveData(&old_ai.pointer_y, sizeof(int));
-                break;
-
             case MSGN_END_FRAMEBOUNDARY:
                 return;
 

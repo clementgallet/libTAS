@@ -235,6 +235,7 @@ void GameLoop::start()
 
         AllInputs ai;
         processInputs(ai);
+        prev_ai = ai;
 
         /* Pause if needed */
         if ((context->pause_frame == (context->framecount + 1)) ||
@@ -341,6 +342,9 @@ void GameLoop::init()
         ai.emptyInputs();
         movie.setInputs(ai, false);
     }
+
+    pointer_offset_x = 0;
+    pointer_offset_y = 0;
 
     emit rerecordChanged();
 }
@@ -996,8 +1000,12 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             if (context->game_window == 0) {
                 break;
             }
-            {
 
+            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+                break;
+            }
+
+            {
                 /* Change the cursor shape */
                 uint32_t value_list = context->crosshair_cursor;
                 xcb_void_cookie_t cwa_cookie = xcb_change_window_attributes (context->conn, context->game_window, XCB_CW_CURSOR, &value_list);
@@ -1030,14 +1038,14 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     pointer_reply = xcb_query_pointer_reply(context->conn, pointer_cookie, nullptr);
                 }
 
-                sendMessage(MSGN_CALIBRATE_MOUSE);
                 int pointer_x = pointer_reply->win_x;
                 int pointer_y = pointer_reply->win_y;
 
-                sendData(&pointer_x, sizeof(int));
-                sendData(&pointer_y, sizeof(int));
-
                 free(pointer_reply);
+
+                /* Set our calibration offsets */
+                pointer_offset_x = prev_ai.pointer_x - pointer_x;
+                pointer_offset_y = prev_ai.pointer_y - pointer_y;
 
                 /* Switch back to default cursor */
                 value_list = 0;
@@ -1098,6 +1106,8 @@ void GameLoop::sleepSendPreview()
     /* Format the keyboard and mouse state and save it in the AllInputs struct */
     static AllInputs preview_ai, last_preview_ai;
     context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
+    preview_ai.pointer_x += pointer_offset_x;
+    preview_ai.pointer_y += pointer_offset_y;
     emit inputsToBeSent(preview_ai);
 
     /* Send inputs if changed */
@@ -1128,6 +1138,8 @@ void GameLoop::processInputs(AllInputs &ai)
             if (haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
                 context->config.km.buildAllInputs(ai, context->conn, context->game_window, keysyms.get(), context->config.sc);
+                ai.pointer_x += pointer_offset_x;
+                ai.pointer_y += pointer_offset_y;
                 emit inputsToBeSent(ai);
             }
 

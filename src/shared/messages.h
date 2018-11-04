@@ -214,12 +214,6 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_RAMWATCH,
-
-    /*
-     * Send coords of new mouse location
-     * Arguments: two ints 
-     */
-    MSGN_CALIBRATE_MOUSE,
 };
 
 #endif

@@ -53,6 +53,13 @@ private:
     /* Last saved/loaded savestate */
     int current_savestate;
 
+    /* Inputs from the previous frame */
+    AllInputs prev_ai;
+
+    /* Calibration offsets */
+    int pointer_offset_x;
+    int pointer_offset_y;
+
     void init();
 
     void initProcessMessages();
