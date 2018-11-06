@@ -40,6 +40,7 @@ class AudioSource
 {
     public:
         AudioSource();
+        ~AudioSource();
 
         /* Identifier of the buffer */
         int id;
@@ -84,6 +85,9 @@ class AudioSource
         /* Is the audio buffer looping? */
         bool looping;
 
+        /* Pitch multiplier of the played audio */
+        float pitch;
+
         /* Is the source playing? */
         enum SourceState {
             SOURCE_INITIAL,
@@ -120,6 +124,9 @@ class AudioSource
 
         /* Rewind source to the beginning of the first buffer */
         void rewind();
+
+        /* Some parameters have changed, so we must set a new resample context */
+        void dirty();
 
         /* Returns the number of buffers in its queue */
         int nbQueue();

@@ -424,7 +424,7 @@ ALboolean alIsSource(ALuint source)
 
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
@@ -439,9 +439,11 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             debuglog(LCF_OPENAL, "  Set gain of ", value);
             break;
         case AL_PITCH:
-            if (value != 1.0) {
-                debuglog(LCF_OPENAL, "  Set pitch to ", value, ". Operation not supported");
+            if (as->pitch != value) {
+                as->dirty();
             }
+            as->pitch = value;
+            debuglog(LCF_OPENAL, "  Set pitch of ", value);
             break;
         case AL_REFERENCE_DISTANCE:
             if (value != 1.0) {
@@ -493,13 +495,13 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
 
 void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     debuglog(LCF_OPENAL, "Operation not supported");
 }
 
 void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     if (values == nullptr) {
         alSetError(AL_INVALID_VALUE);
         return;
@@ -509,7 +511,7 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
@@ -597,7 +599,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 
 void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     switch(param) {
         case AL_AUXILIARY_SEND_FILTER:
             debuglog(LCF_OPENAL, "Operation not supported");
@@ -608,7 +610,7 @@ void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 
 void alSourceiv(ALuint source, ALenum param, ALint *values)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
     if (values == nullptr) {
         alSetError(AL_INVALID_VALUE);
         return;
@@ -636,6 +638,9 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             debuglog(LCF_OPENAL, "  Get gain of ", *value);
             break;
         case AL_PITCH:
+            *value = as->pitch;
+            debuglog(LCF_OPENAL, "  Get pitch of ", *value);
+            break;
         case AL_MIN_GAIN:
         case AL_MAX_GAIN:
         case AL_MAX_DISTANCE:

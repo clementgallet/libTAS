@@ -49,7 +49,13 @@ AudioSource::AudioSource(void)
     swr = swr_alloc();
 
     volume = 1.0f;
+    pitch = 1.0f;
     init();
+}
+
+AudioSource::~AudioSource(void)
+{
+    swr_free(&swr);
 }
 
 void AudioSource::init(void)
@@ -66,6 +72,12 @@ void AudioSource::rewind(void)
     position = 0;
     samples_frac = 0;
     queue_index = 0;
+    if (swr_is_initialized(swr))
+        swr_close(swr);
+}
+
+void AudioSource::dirty(void)
+{
     if (swr_is_initialized(swr))
         swr_close(swr);
 }
@@ -170,22 +182,26 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 outFormat = AV_SAMPLE_FMT_S16;
 
             /* Set channel layout */
-            if (curBuf->nbChannels == 1)
-                av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0);
-            if (curBuf->nbChannels == 2)
-                av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-            if (outNbChannels == 1)
-                av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
-            if (outNbChannels == 2)
-                av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
+            if (curBuf->nbChannels == 1) {
+                MYASSERT(0 == av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0));
+            }
+            if (curBuf->nbChannels == 2) {
+                MYASSERT(0 == av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+            }
+            if (outNbChannels == 1) {
+                MYASSERT(0 == av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0));
+            }
+            if (outNbChannels == 2) {
+                MYASSERT(0 == av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+            }
 
             /* Set sample format */
-            av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0);
-            av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0);
+            MYASSERT(0 == av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0));
+            MYASSERT(0 == av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0));
 
             /* Set sampling frequency */
-            av_opt_set_int(swr, "in_sample_rate", curBuf->frequency, 0);
-            av_opt_set_int(swr, "out_sample_rate", outFrequency, 0);
+            MYASSERT(0 == av_opt_set_int(swr, "in_sample_rate", static_cast<int>(curBuf->frequency*pitch), 0));
+            MYASSERT(0 == av_opt_set_int(swr, "out_sample_rate", outFrequency, 0));
 
             /* Open the context */
             if (swr_init(swr) < 0) {
@@ -207,7 +223,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int rvas = (int)(resultVolume * 65536.0f);
 
     /* Number of samples to advance in the buffer. */
-    int inNbSamples = ticksToSamples(ticks, curBuf->frequency);
+    int inNbSamples = ticksToSamples(ticks, static_cast<int>(curBuf->frequency*pitch));
 
     int oldPosition = position;
     int newPosition = position + inNbSamples;
