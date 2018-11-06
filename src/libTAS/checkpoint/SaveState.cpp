@@ -25,13 +25,13 @@
 #include "../logging.h"
 #include <fcntl.h>
 #include <unistd.h>
-// #include <sys/mman.h>
-// #include <cstring>
 
 namespace libtas {
 
 SaveState::SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd)
 {
+    queued_size = 0;
+
     if (shared_config.savestates_in_ram) {
         pmfd = pagemapfd;
         pfd = pagesfd;
@@ -55,8 +55,6 @@ SaveState::SaveState(char* pagemappath, char* pagespath, int pagemapfd, int page
         NATIVECALL(pfd = open(pagespath, O_RDONLY));
         MYASSERT(pfd != -1)
     }
-
-    queued_size = 0;
 
     restart();
 }
