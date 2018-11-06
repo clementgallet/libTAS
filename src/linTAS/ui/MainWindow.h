@@ -256,8 +256,10 @@ private slots:
     void slotSlowdown();
     void slotFastforwardMode();
     void slotScreenRes();
+#ifdef LIBTAS_ENABLE_HUD
     void slotOsd();
     void slotOsdEncode(bool checked);
+#endif
     void slotSaveScreen(bool checked);
     void slotPreventSavefile(bool checked);
     void slotMovieEnd();

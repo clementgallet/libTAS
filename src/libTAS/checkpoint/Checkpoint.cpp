@@ -171,7 +171,9 @@ bool Checkpoint::checkCheckpoint()
         unsigned long available_size = devData.f_bavail * devData.f_bsize;
         if (savestate_size > available_size) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Not enough available space to store the savestate");
+#endif
             return false;
         }
     }
@@ -184,23 +186,35 @@ bool Checkpoint::checkRestore()
     /* Check that the savestate files exist */
     if (shared_config.savestates_in_ram) {
         if (!getPagemapFd(ss_index)) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
+#endif
             return false;
         }
 
         if (!getPagesFd(ss_index)) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
+#endif
             return false;
         }
     }
     else {
         struct stat sb;
         if (stat(pagemappath, &sb) == -1) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
+#endif
             return false;
         }
         if (stat(pagespath, &sb) == -1) {
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
+#endif
             return false;
         }
     }
@@ -242,14 +256,18 @@ bool Checkpoint::checkRestore()
         if (t == sh.thread_count) {
             /* We didn't find a match */
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
+#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
+#endif
             return false;
         }
     }
 
     if (n != sh.thread_count) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
+#ifdef LIBTAS_ENABLE_HUD
         RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
+#endif
         return false;
     }
 

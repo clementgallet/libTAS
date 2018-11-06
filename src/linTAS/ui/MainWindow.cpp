@@ -375,6 +375,7 @@ void MainWindow::createActions()
     addActionCheckable(renderPerfGroup, tr("disable depth buffering entirely"), "no_depth");
     addActionCheckable(renderPerfGroup, tr("disable alpha testing"), "no_alphatest");
 
+#ifdef LIBTAS_ENABLE_HUD
     osdGroup = new QActionGroup(this);
     osdGroup->setExclusive(false);
     connect(osdGroup, &QActionGroup::triggered, this, &MainWindow::slotOsd);
@@ -383,6 +384,7 @@ void MainWindow::createActions()
     addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
     addActionCheckable(osdGroup, tr("Messages"), SharedConfig::OSD_MESSAGES);
     addActionCheckable(osdGroup, tr("Ram Watches"), SharedConfig::OSD_RAMWATCHES);
+#endif
 
     frequencyGroup = new QActionGroup(this);
 
@@ -598,6 +600,7 @@ void MainWindow::createMenus()
     renderPerfMenu->installEventFilter(this);
     disabledWidgetsOnStart.append(renderPerfMenu);
 
+#ifdef LIBTAS_ENABLE_HUD
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
     osdMenu->addActions(osdGroup->actions());
     osdMenu->addAction(tr("OSD Options..."), osdWindow, &OsdWindow::exec);
@@ -605,6 +608,10 @@ void MainWindow::createMenus()
     osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, &MainWindow::slotOsdEncode);
     osdEncodeAction->setCheckable(true);
     osdMenu->installEventFilter(this);
+#else
+    QMenu *osdMenu = videoMenu->addMenu(tr("OSD (disabled)"));
+    osdMenu->setEnabled(false);
+#endif
 
     /* Sound Menu */
     QMenu *soundMenu = menuBar()->addMenu(tr("Sound"));

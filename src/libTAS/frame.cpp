@@ -227,13 +227,17 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
+#ifdef LIBTAS_ENABLE_HUD
     /* Get ramwatches from the program */
     RenderHUD::resetWatches();
+#endif
 
     int message = receiveMessage();
     while (message == MSGN_RAMWATCH) {
         std::string ramwatch = receiveString();
+#ifdef LIBTAS_ENABLE_HUD
         RenderHUD::insertWatch(ramwatch);
+#endif
         message = receiveMessage();
     }
 
@@ -573,8 +577,8 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_OSD_MSG:
-                RenderHUD::insertMessage(receiveString().c_str());
 #ifdef LIBTAS_ENABLE_HUD
+                RenderHUD::insertMessage(receiveString().c_str());
                 screen_redraw(draw, hud, preview_ai);
 #else
                 screen_redraw(draw, preview_ai);
