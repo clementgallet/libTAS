@@ -121,6 +121,14 @@ public:
     static void stopThisThread(int signum);
 
     static void waitForAllRestored(ThreadInfo *thread);
+
+    /* A function called from pthread_start() to fix current_thread
+     * after pthread_start() erases all thread_local variables.
+     */
+    static void setCurrentThread(ThreadInfo *thread) {
+      current_thread = thread;
+    }
+
 };
 }
 
