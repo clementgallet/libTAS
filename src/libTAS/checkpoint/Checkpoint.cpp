@@ -757,14 +757,18 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
             /* Check if we know the page is already zero,
                so we can skip the memset. */
 
-            /* Gather the flag for the page map */
-            uint64_t page = pagemaps[pagemap_i];
-            bool soft_dirty = page & (0x1ull << 55);
+	    if (shared_config.incremental_savestates) {
+                /* Gather the flag for the page map */
+                uint64_t page = pagemaps[pagemap_i];
+                bool soft_dirty = page & (0x1ull << 55);
 
-            if (soft_dirty ||
-    		parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
-                memset(static_cast<void*>(curAddr), 0, 4096);
-    	    }
+                if (soft_dirty ||
+                parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
+	            memset(static_cast<void*>(curAddr), 0, 4096);
+                }
+
+            }
+
         }
         else if (flag == Area::BASE_PAGE) {
             /* The memory page of the loading savestate is the same as the base
