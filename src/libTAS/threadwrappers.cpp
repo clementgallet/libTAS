@@ -76,6 +76,33 @@ class ThreadExitException {
     orig::SDL_WaitThread(thread, status);
 }
 
+extern "C" {
+  // Declare an extern reference to the internal, undocumented
+  // function that glibc uses to set (or reset) thread-local storage
+  // to its initial state.
+
+  // This function (effectively) takes a pthread_t argument on
+  // 32-bit and 64-bit x86 Linux, but for some other architectures
+  // it does not.  If you search the glibc source code for TLS_TCB_AT_TP,
+  // architectures that define it as 1 should work with this;
+  // architectures that define it as 0 would require a different
+  // code path.
+
+  // Even though this function is internal and undocumented, I don't think
+  // it's likely to change; it's part of the ABI between libpthread.so
+  // and ld-linux.so.
+  extern void _dl_allocate_tls_init(pthread_t pt);
+
+  // Another internal, undocumented libc function, that calls C++
+  // destructors on thread-local storage.
+  extern void __call_tls_dtors();
+
+  // Another internal, undocumented libc function, that cleans up
+  // any libc internal state in thread-local storage.
+  extern void __libc_thread_freeres();
+}
+
+
 static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
@@ -106,9 +133,36 @@ static void *pthread_start(void *arg)
             debuglog(LCF_THREAD, "End of thread code");
 
             /* Because we recycle this thread, we must unset all TLS values
-             * and call destructors ourselves.
+             * and call destructors ourselves.  First, we unset the values
+	     * from the older, pthread_key_create()-based implementation
+	     * of TLS.
              */
             clear_pthread_keys();
+	    /* Next we deal with the newer linker-based TLS
+	     * implementation accessed via thread_local in C11/C++11
+	     * and later.  For that, first we need to run any C++
+	     * destructors for values in thread-local storage, using
+	     * an internal libc function.
+	     */
+	    __call_tls_dtors();
+	    /* Next, we clean up any libc state in thread-local storage,
+	     * using an internal libc function.
+	     */
+	    __libc_thread_freeres();
+	    /* Finally, we reset all thread-local storage back to its
+	     * initial value, using a third internal libc function.
+	     * This is architecture-specific; it works on 32-bit and
+	     * 64-bit x86, but not on all Linux architectures.  See
+	     * above, where this function is declared.
+	     */
+	    _dl_allocate_tls_init(thread->pthread_id);
+	    /* This has just reset any libTAS thread-local storage
+	     * for this thread.  Most libTAS TLS is either transient
+	     * anyway, or irrelevant while the thread is waiting
+	     * to be recycled.  But one value is important:
+	     * we need to fix ThreadManager::current_thread .
+	     */
+	    ThreadManager::setCurrentThread(thread);
 
             ThreadManager::threadExit(ret);
 
