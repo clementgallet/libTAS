@@ -43,6 +43,7 @@
 #include "InputEditorWindow.h"
 #include "OsdWindow.h"
 #include "AnnotationsWindow.h"
+#include "AutoSaveWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
@@ -70,6 +71,7 @@ public:
     InputEditorWindow* inputEditorWindow;
     OsdWindow* osdWindow;
     AnnotationsWindow* annotationsWindow;
+    AutoSaveWindow* autoSaveWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;

@@ -90,6 +90,18 @@ public:
 
     int on_movie_end = MOVIEEND_READ;
 
+    /* Do we enable autosaving? */
+    bool autosave = true;
+
+    /* Minimum delay between two autosaves */
+    double autosave_delay_sec = 300;
+
+    /* Minimum number of frames between two autosaves */
+    int autosave_frames = 1000;
+
+    /* Maximum number of autosaves for one movie */
+    int autosave_count = 20;
+
     /* List of recent existing gamepaths */
     std::list<std::string> recent_gamepaths;
 

@@ -74,6 +74,10 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("rundir", rundir.c_str());
     settings.setValue("opengl_soft", opengl_soft);
     settings.setValue("on_movie_end", on_movie_end);
+    settings.setValue("autosave", autosave);
+    settings.setValue("autosave_delay_sec", autosave_delay_sec);
+    settings.setValue("autosave_frames", autosave_frames);
+    settings.setValue("autosave_count", autosave_count);
 
     settings.beginGroup("keymapping");
 
@@ -190,6 +194,10 @@ void Config::load(const std::string& gamepath) {
 
     opengl_soft = settings.value("opengl_soft", opengl_soft).toBool();
     on_movie_end = settings.value("on_movie_end", on_movie_end).toInt();
+    autosave = settings.value("autosave", autosave).toBool();
+    autosave_delay_sec = settings.value("autosave_delay_sec", autosave_delay_sec).toDouble();
+    autosave_frames = settings.value("autosave_frames", autosave_frames).toInt();
+    autosave_count = settings.value("autosave_count", autosave_count).toInt();
 
     /* Load key mapping */
 

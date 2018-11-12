@@ -71,6 +71,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     inputEditorWindow = new InputEditorWindow(c, this);
     osdWindow = new OsdWindow(c, this);
     annotationsWindow = new AnnotationsWindow(c, this);
+    autoSaveWindow = new AutoSaveWindow(c, this);
 
     connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -575,6 +576,10 @@ void MainWindow::createMenus()
 
     annotateMovieAction = movieMenu->addAction(tr("Annotations..."), annotationsWindow, &AnnotationsWindow::show);
     annotateMovieAction->setEnabled(false);
+
+    movieMenu->addSeparator();
+
+    movieMenu->addAction(tr("Autosave..."), autoSaveWindow, &AutoSaveWindow::show);
 
     movieMenu->addSeparator();
 
@@ -1181,26 +1186,8 @@ void MainWindow::slotBrowseGamePath()
     if (filename.isNull())
         return;
 
-    context->config.save(context->gamepath);
-
     gamePath->setEditText(filename);
-    context->gamepath = filename.toStdString();
-
-    /* Try to load the game-specific pref file */
-    context->config.load(context->gamepath);
-
-    updateRecentGamepaths();
-
-    if (!context->is_soft_dirty) {
-        context->config.sc.incremental_savestates = false;
-    }
-
-    /* Update the UI accordingly */
-    updateUIFromConfig();
-    encodeWindow->update_config();
-    executableWindow->update_config();
-    inputWindow->update();
-    osdWindow->update_config();
+    slotGamePathChanged();
 }
 
 void MainWindow::slotGamePathChanged()
@@ -1225,6 +1212,7 @@ void MainWindow::slotGamePathChanged()
     executableWindow->update_config();
     inputWindow->update();
     osdWindow->update_config();
+    autoSaveWindow->update_config();
 }
 
 void MainWindow::slotBrowseMoviePath()

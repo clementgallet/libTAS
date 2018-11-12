@@ -17,18 +17,35 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LINTAS_AUTOSAVE_H_INCLUDED
-#define LINTAS_AUTOSAVE_H_INCLUDED
+#ifndef LINTAS_AUTOSAVEWINDOW_H_INCLUDED
+#define LINTAS_AUTOSAVEWINDOW_H_INCLUDED
 
-#include "MovieFile.h"
-#include "Context.h"
+#include <QDialog>
+#include <QGroupBox>
+#include <QDoubleSpinBox>
+#include <QSpinBox>
 
-#include <string>
-#include <ctime>
+#include "../Context.h"
 
-namespace AutoSave {
-    void update(Context* context, MovieFile& movie);
-    void removeOldSaves(Context* context, const char* moviename);
+class AutoSaveWindow : public QDialog {
+    Q_OBJECT
+
+public:
+    AutoSaveWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+
+    /* Update UI elements when the config has changed */
+    void update_config();
+
+private:
+    Context *context;
+
+    QGroupBox *autosaveBox;
+    QDoubleSpinBox *autosaveDelay;
+    QSpinBox *autosaveFrames;
+    QSpinBox *autosaveCount;
+
+private slots:
+    void slotOk();
 };
 
 #endif
