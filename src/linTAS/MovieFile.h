@@ -52,6 +52,9 @@ public:
      */
     bool modifiedSinceLastSave;
 
+    /* Flag storing if the movie has been modified since last autosave. */
+    bool modifiedSinceLastAutoSave;
+
     /* Annotations to be saved inside the movie file */
     std::string annotations;
 
@@ -87,11 +90,17 @@ public:
     /* Get the frame count of the associated savestate if any */
     unsigned long savestateFramecount() const;
 
+    /* Set inputs for a certain frame, and truncate if keep_inputs is false */
+    int setInputs(const AllInputs& inputs, unsigned long pos, bool keep_inputs);
+
     /* Set inputs in the current frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, bool keep_inputs);
 
+    /* Load inputs from a certain frame */
+    int getInputs(AllInputs& inputs, unsigned long pos) const;
+
     /* Load inputs from the current frame */
-    int getInputs(AllInputs& inputs);
+    int getInputs(AllInputs& inputs) const;
 
     /* Insert inputs before the requested pos */
     void insertInputsBefore(const AllInputs& inputs, unsigned long pos);
@@ -101,6 +110,9 @@ public:
 
     /* Truncate inputs to a frame number */
     void truncateInputs(unsigned long size);
+
+    /* Helper function called when the movie has been modified */
+    void wasModified();
 
     /* Close the moviefile */
     void close();

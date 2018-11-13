@@ -194,6 +194,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         int ivalue = value.toInt();
 
         ai.setInput(si, ivalue);
+        movie->wasModified();
         emit dataChanged(index, index, {role});
         return true;
     }
@@ -241,8 +242,12 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     AllInputs &ai = movie->input_list[index.row()];
 
     int value = ai.toggleInput(si);
+    movie->wasModified();
 
     emit dataChanged(index, index);
+
+    movie->modifiedSinceLastSave = true;
+    movie->modifiedSinceLastAutoSave = true;
     return value;
 }
 
@@ -357,11 +362,10 @@ int InputEditorModel::pasteInputs(int row)
 
     if (insertedFrames > 0) {
         beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
-        movie->input_list.resize(movie->input_list.size() + insertedFrames);
     }
 
     for (size_t r = 0; r < paste_ais.size(); r++) {
-        movie->input_list[row + r] = paste_ais[r];
+        movie->setInputs(paste_ais[r], row + r, true);
         addUniqueInputs(paste_ais[r]);
     }
 
@@ -474,6 +478,8 @@ void InputEditorModel::clearUniqueInput(int column)
     }
     input_set.erase(input_set.begin()+column-2);
 
+    movie->wasModified();
+
     endRemoveColumns();
 }
 
@@ -481,6 +487,8 @@ void InputEditorModel::clearInput(int row)
 {
     movie->input_list[row].emptyInputs();
     emit dataChanged(createIndex(row, 0), createIndex(row, columnCount()));
+
+    movie->wasModified();
 }
 
 void InputEditorModel::beginModifyInputs()

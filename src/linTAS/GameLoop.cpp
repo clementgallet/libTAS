@@ -1203,6 +1203,8 @@ void GameLoop::processInputs(AllInputs &ai)
                         break;
                 }
             }
+
+            AutoSave::update(context, movie);
             break;
     }
 }

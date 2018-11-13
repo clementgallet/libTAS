@@ -30,7 +30,7 @@
 #include "utils.h"
 #include "../shared/version.h"
 
-MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), context(c) {}
+MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLastAutoSave(false), context(c) {}
 
 const char* MovieFile::errorString(int error_code) {
 	static std::string err;
@@ -444,43 +444,53 @@ unsigned long MovieFile::savestateFramecount() const
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
 {
+	return setInputs(inputs, context->framecount, keep_inputs);
+}
+
+int MovieFile::setInputs(const AllInputs& inputs, unsigned long pos, bool keep_inputs)
+{
     /* Check that we are writing to the next frame */
-    if (context->framecount == input_list.size()) {
+    if (pos == input_list.size()) {
         input_list.push_back(inputs);
-		modifiedSinceLastSave = true;
+		wasModified();
         return 0;
     }
-    else if (context->framecount < input_list.size()) {
+    else if (pos < input_list.size()) {
         /* Writing to a frame that is before the last one. if keep_inputs is
 		 * false, we resize the input list accordingly and append the frame at
 		 * the end.
          */
 		if (keep_inputs) {
-			input_list[context->framecount] = inputs;
+			input_list[pos] = inputs;
 		}
 		else {
-	        input_list.resize(context->framecount);
+	        input_list.resize(pos);
 	        input_list.push_back(inputs);
 		}
-		modifiedSinceLastSave = true;
+		wasModified();
         return 0;
     }
     else {
-        std::cerr << "Writing to a frame " << context->framecount << " higher than the current list " << input_list.size() << std::endl;
+        std::cerr << "Writing to a frame " << pos << " higher than the current list " << input_list.size() << std::endl;
         return 1;
     }
 }
 
-int MovieFile::getInputs(AllInputs& inputs)
+int MovieFile::getInputs(AllInputs& inputs) const
 {
-    if (context->framecount >= input_list.size()) {
+	return getInputs(inputs, context->framecount);
+}
+
+int MovieFile::getInputs(AllInputs& inputs, unsigned long pos) const
+{
+    if (pos >= input_list.size()) {
         inputs.emptyInputs();
         return 0;
     }
 
-	inputs = input_list[context->framecount];
+	inputs = input_list[pos];
 
-    if ((context->framecount + 1) == input_list.size()) {
+    if ((pos + 1) == input_list.size()) {
         /* We are reading the last frame of the movie, notify the caller */
         return 1;
     }
@@ -494,7 +504,7 @@ void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned long pos)
 		return;
 
 	input_list.insert(input_list.begin() + pos, inputs);
-	modifiedSinceLastSave = true;
+	wasModified();
 }
 
 void MovieFile::deleteInputs(unsigned long pos)
@@ -503,12 +513,13 @@ void MovieFile::deleteInputs(unsigned long pos)
 		return;
 
 	input_list.erase(input_list.begin() + pos);
-	modifiedSinceLastSave = true;
+	wasModified();
 }
 
 void MovieFile::truncateInputs(unsigned long size)
 {
 	input_list.resize(size);
+	wasModified();
 }
 
 void MovieFile::close()
@@ -526,4 +537,10 @@ bool MovieFile::isPrefix(const MovieFile& movie)
         return false;
 
     return std::equal(movie.input_list.begin(), movie.input_list.begin() + fc, input_list.begin());
+}
+
+void MovieFile::wasModified()
+{
+	modifiedSinceLastSave = true;
+	modifiedSinceLastAutoSave = true;
 }

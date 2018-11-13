@@ -32,6 +32,10 @@ void AutoSave::update(Context* context, MovieFile& movie)
 	if (!context->config.autosave)
 		return;
 
+	/* Check if the movie was modified */
+	if (!movie.modifiedSinceLastAutoSave)
+		return;
+
 	/* Update the frame counter and check if we must auto-save */
 	if ((++nb_frame_advance > context->config.autosave_frames) &&
 		(difftime(time(nullptr), last_time_saved) > context->config.autosave_delay_sec))
@@ -66,6 +70,8 @@ void AutoSave::update(Context* context, MovieFile& movie)
 
 		/* Save the movie */
 		movie.saveMovie(moviename);
+
+		movie.modifiedSinceLastAutoSave = false;
 	}
 }
 
