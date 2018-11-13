@@ -55,6 +55,10 @@ public:
     /* Flag storing if the movie has been modified since last autosave. */
     bool modifiedSinceLastAutoSave;
 
+    /* Flag storing if the movie has been modified since last state loading.
+     * Used to determine when a state loading increments the rerecord count. */
+    bool modifiedSinceLastStateLoad;
+
     /* Annotations to be saved inside the movie file */
     std::string annotations;
 

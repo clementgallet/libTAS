@@ -32,6 +32,7 @@
 * Register all connections to X server (for savestates) instead of just one
 * Fix screen capture of SDL1 surface
 * Autosave and exit save when movie is modified in the input editor
+* Increment rerecord count if the movie was modified in the input editor
 
 ## [1.3.1] - 2018-08-30
 ### Added

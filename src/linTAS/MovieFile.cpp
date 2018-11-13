@@ -30,7 +30,7 @@
 #include "utils.h"
 #include "../shared/version.h"
 
-MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLastAutoSave(false), context(c) {}
+MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLastAutoSave(false), modifiedSinceLastStateLoad(false), context(c) {}
 
 const char* MovieFile::errorString(int error_code) {
 	static std::string err;
@@ -543,4 +543,5 @@ void MovieFile::wasModified()
 {
 	modifiedSinceLastSave = true;
 	modifiedSinceLastAutoSave = true;
+	modifiedSinceLastStateLoad = true;
 }

@@ -905,10 +905,14 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                      * with the savestate.
                      */
                     movie.loadInputs(moviepath);
+                }
 
-                    /* Increment rerecord count */
+                /* If the movie was modified since last state load, increment
+                 * the rerecord count. */
+                if (movie.modifiedSinceLastStateLoad) {
                     context->rerecord_count++;
                     emit rerecordChanged();
+                    movie.modifiedSinceLastStateLoad = false;
                 }
 
                 message = receiveMessage();
