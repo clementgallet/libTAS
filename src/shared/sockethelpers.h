@@ -26,10 +26,10 @@
 /* Remove the socker file */
 void removeSocket();
 
-/* Initiate a socket connection with libTAS */
+/* Initiate a socket connection with the game */
 bool initSocketProgram(void);
 
-/* Initiate a socket connection with linTAS */
+/* Initiate a socket connection with libTAS */
 bool initSocketGame(void);
 
 /* Close the socket connection */

@@ -27,7 +27,7 @@ typedef unsigned long int KeySym;
 #include <array>
 #include <set>
 
-/* Input structure that is filled by linTAS and send to libTAS every frame
+/* Input structure that is filled by libTAS and send to the game every frame
  * Structure is inspired by SDL.
  */
 class AllInputs {

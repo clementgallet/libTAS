@@ -17,6 +17,7 @@
 * Use system command for compressing/decompressing instead of tar/zlib libraries
 * Implement more of the Steam API
 * Register removed files as savefiles
+* Rename program linTAS into libTAS
 
 ### Fixed
 

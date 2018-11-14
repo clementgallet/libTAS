@@ -46,9 +46,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 To run this program, just type:
 
-    linTAS [game_executable_path [game_cmdline_arguments]]
+    libTAS [game_executable_path [game_cmdline_arguments]]
 
-You can type `linTAS -h` to have a description of the program options.
+You can type `libTAS -h` to have a description of the program options.
 
 The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](http://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
 
