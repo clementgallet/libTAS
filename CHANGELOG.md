@@ -11,6 +11,7 @@
 * Add savestate slot to input editor
 * Old autosaves are removed
 * Autosave configuration window
+* Desktop entry file
 
 ### Changed
 

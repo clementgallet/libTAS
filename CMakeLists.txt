@@ -246,4 +246,8 @@ else()
     message(WARNING "HUD is disabled")
 endif()
 
+# Install program and library
 install(TARGETS libTAS tas DESTINATION bin)
+
+# Install desktop entry
+install(FILES libTAS.desktop DESTINATION share/applications)
