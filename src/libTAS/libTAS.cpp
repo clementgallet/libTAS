@@ -71,7 +71,6 @@ void __attribute__((constructor)) init(void)
     int message;
     receiveData(&message, sizeof(int));
     while (message != MSGN_END_INIT) {
-        std::string libstring;
         std::string basesavestatepath;
         int index;
         switch (message) {
@@ -92,12 +91,6 @@ void __attribute__((constructor)) init(void)
             case MSGN_BASE_SAVESTATE_INDEX:
                 receiveData(&index, sizeof(int));
                 Checkpoint::setBaseSavestateIndex(index);
-                break;
-            case MSGN_LIB_FILE:
-                debuglog(LCF_SOCKET, "Receiving lib filename");
-                libstring = receiveString();
-                //add_lib(libstring);
-                debuglog(LCF_SOCKET, "Lib ", libstring.c_str());
                 break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);

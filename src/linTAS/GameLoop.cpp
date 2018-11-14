@@ -400,32 +400,6 @@ void GameLoop::initProcessMessages()
         }
     }
 
-    /* Get the shared libs of the game executable */
-    std::vector<std::string> linked_libs;
-    std::ostringstream libcmd;
-    libcmd << "ldd '" << context->gamepath << "' | cut -d'>' -f2 -s | cut -d'(' -f1 | sed 's/^[ \t]*//;s/[ \t]*$//'";
-    //std::cout << "Execute: " << libcmd.str() << std::endl;
-
-    FILE *libstr = popen(libcmd.str().c_str(), "r");
-    if (libstr != NULL) {
-        std::array<char,1000> buf;
-        while (fgets(buf.data(), buf.size(), libstr) != 0) {
-            std::string lib(buf.data());
-            /* Remove trailing newline if any */
-            if (lib.back() == '\n')
-                lib.pop_back();
-            linked_libs.push_back(lib);
-        }
-        pclose(libstr);
-    }
-    // linked_libs.insert(linked_libs.end(), shared_libs.begin(), shared_libs.end());
-
-    /* Send shared library names */
-    for (auto &name : linked_libs) {
-        sendMessage(MSGN_LIB_FILE);
-        sendString(name);
-    }
-
     /* End message */
     sendMessage(MSGN_END_INIT);
 }

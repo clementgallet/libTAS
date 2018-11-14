@@ -102,12 +102,6 @@ enum {
     MSGN_DUMP_FILE,
 
     /*
-     * Send the name of a shared library used by the game
-     * Arguments: size_t (string length) then char[len]
-     */
-    MSGN_LIB_FILE,
-
-    /*
      * Send the X11 window identifier of the game to the program
      * Argument: int
      */
