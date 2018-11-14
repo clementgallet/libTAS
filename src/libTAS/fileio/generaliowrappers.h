@@ -20,8 +20,6 @@
 #ifndef LIBTAS_GENERALIO_H_INCLUDED
 #define LIBTAS_GENERALIO_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../global.h"
 #include <cstdio>
 
@@ -37,5 +35,4 @@ OVERRIDE int remove (const char *filename) throw();
 OVERRIDE int unlink (const char *name) throw();
 }
 
-#endif
 #endif

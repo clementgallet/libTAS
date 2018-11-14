@@ -20,8 +20,6 @@
 #ifndef LIBTAS_STDIO_H_INCLUDED
 #define LIBTAS_STDIO_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../global.h"
 #include <cstdio> // FILE
 
@@ -36,5 +34,4 @@ OVERRIDE int fclose (FILE *stream);
 
 }
 
-#endif
 #endif

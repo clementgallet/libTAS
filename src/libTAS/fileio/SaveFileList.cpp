@@ -19,8 +19,6 @@
 
 #include "SaveFileList.h"
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "SaveFile.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
@@ -247,5 +245,3 @@ bool isSaveFileRemoved(const char *file)
 }
 
 }
-
-#endif

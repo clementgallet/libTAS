@@ -19,8 +19,6 @@
 
 #include "posixiowrappers.h"
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../logging.h"
 #include "../hook.h"
 #include "SaveFileList.h"
@@ -458,5 +456,3 @@ int dup2 (int fd, int fd2) throw()
 }
 
 }
-
-#endif

@@ -20,8 +20,6 @@
 #ifndef LIBTAS_SAVEFILE_H_INCLUDED
 #define LIBTAS_SAVEFILE_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include <string>
 #include <cstdio> // FILE
 
@@ -60,5 +58,4 @@ public:
 
 }
 
-#endif
 #endif

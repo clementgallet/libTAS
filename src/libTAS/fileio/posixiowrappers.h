@@ -20,8 +20,6 @@
 #ifndef LIBTAS_POSIXIO_H_INCLUDED
 #define LIBTAS_POSIXIO_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../global.h"
 #include <sys/types.h> // mode_t
 #include <sys/stat.h>
@@ -71,5 +69,4 @@ OVERRIDE int dup2 (int fd, int fd2) throw();
 
 }
 
-#endif
 #endif

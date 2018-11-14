@@ -19,8 +19,6 @@
 
 #include "generaliowrappers.h"
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../logging.h"
 #include "../hook.h"
 #include "SaveFileList.h"
@@ -89,5 +87,3 @@ int unlink (const char *name) throw()
 }
 
 }
-
-#endif

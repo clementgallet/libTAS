@@ -4,7 +4,7 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 ## Supported Games
 
-Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, Steam games **won't** work because Steam messes up with our code injection, so you must check if a drm-free version of the game exists. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, running Steam games require to enable the dummy Steam client, which is only partially implemented. If possible, use a drm-free version of the game. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
 
 ## Install
 
@@ -20,7 +20,7 @@ You can download the latest version of the software in the [Releases](https://gi
 
 Installing with the debian package will install all the required packages as well.
 
-If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu) whose architecture matches a supported architecture of the game you want to run (in most cases amd64, sometimes only i386 is available). Note for Ubuntu users that you need a recent version (17.10 minimum).
+If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games (using the corresponding version of libTAS). Note for Ubuntu users that you need a recent version (17.10 minimum).
 
 ## Compile
 
@@ -39,7 +39,6 @@ Cmake will detect the presence of these libraries and disable the corresponding 
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
 
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
-- `-DENABLE_FILEIO_HOOKING=ON/OFF`: enable/disable file opening/closing hooks to handle savefiles
 
 Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. You could also try to cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. However, many users failed to do this due to some libraries that don't like this operation.
 
@@ -47,9 +46,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 To run this program, just type:
 
-    ./linTAS [game_executable_path [game_cmdline_arguments]]
+    linTAS [game_executable_path [game_cmdline_arguments]]
 
-You can type `./linTAS -h` to have a description of the program options.
+You can type `linTAS -h` to have a description of the program options.
 
 The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](http://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
 

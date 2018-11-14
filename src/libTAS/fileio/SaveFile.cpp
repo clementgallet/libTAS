@@ -19,8 +19,6 @@
 
 #include "SaveFile.h"
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
 #include <cstring>
@@ -263,5 +261,3 @@ int SaveFile::remove()
 }
 
 }
-
-#endif

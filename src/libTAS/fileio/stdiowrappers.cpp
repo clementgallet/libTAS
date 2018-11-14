@@ -19,8 +19,6 @@
 
 #include "stdiowrappers.h"
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include "../logging.h"
 #include "../hook.h"
 #include "SaveFileList.h"
@@ -103,5 +101,3 @@ int fclose (FILE *stream)
 }
 
 }
-
-#endif

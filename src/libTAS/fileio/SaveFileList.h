@@ -20,8 +20,6 @@
 #ifndef LIBTAS_SAVEFILELIST_H_INCLUDED
 #define LIBTAS_SAVEFILELIST_H_INCLUDED
 
-#ifdef LIBTAS_ENABLE_FILEIO_HOOKING
-
 #include <cstdio> // FILE
 
 namespace libtas {
@@ -66,5 +64,4 @@ bool isSaveFileRemoved(const char *file);
 
 }
 
-#endif
 #endif
