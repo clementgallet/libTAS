@@ -25,6 +25,8 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(fluid_settings_getstr_default);
 DEFINE_ORIG_POINTER(fluid_settings_setstr);
+DEFINE_ORIG_POINTER(new_fluid_settings);
+DEFINE_ORIG_POINTER(fluid_audio_driver_register);
 
 static const char* alsa_driver = "alsa";
 
@@ -58,4 +60,25 @@ int fluid_settings_setstr(fluid_settings_t *settings, const char *name, const ch
 
     return ret;
 }
+
+fluid_settings_t* new_fluid_settings(void)
+{
+    DEBUGLOGCALL(LCF_SOUND);
+
+    /* Before creating the settings, we unregister every audio drivers except ALSA */
+    LINK_NAMESPACE(fluid_audio_driver_register, "libfluidsynth");
+    const char* alsadriver = "alsa";
+    const char* adrivers[2] = {alsadriver, nullptr};
+    int ret = orig::fluid_audio_driver_register(adrivers);
+
+    if (ret != 0) {
+        debuglogstdio(LCF_SOUND | LCF_WARNING, "Could not register alsa driver");
+    } // FLUID_OK
+
+    /* Then return the original function */
+    LINK_NAMESPACE(new_fluid_settings, "libfluidsynth");
+    return orig::new_fluid_settings();
+}
+
+
 }

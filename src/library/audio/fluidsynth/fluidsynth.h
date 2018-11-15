@@ -28,6 +28,8 @@ typedef void fluid_settings_t;
 
 OVERRIDE int fluid_settings_getstr_default(fluid_settings_t *settings, const char *name, char ** def);
 OVERRIDE int fluid_settings_setstr(fluid_settings_t *settings, const char *name, const char *str);
+OVERRIDE fluid_settings_t* new_fluid_settings(void);
+OVERRIDE int fluid_audio_driver_register(const char **adrivers);
 
 }
 
