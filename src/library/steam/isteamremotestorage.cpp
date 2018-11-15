@@ -39,8 +39,10 @@ bool ISteamRemoteStorage::FileWrite( const char *pchFile, const void *pvData, in
 
     Utils::writeAll(fd, pvData, cubData);
 
-    if (close(fd) < 0)
-        return false;
+    if (close(fd) < 0) {
+        return false;        
+    }
+
 	return true;
 }
 
@@ -57,8 +59,10 @@ int	ISteamRemoteStorage::FileRead( const char *pchFile, void *pvData, int cubDat
 
     int ret = Utils::readAll(fd, pvData, cubDataToRead);
 
-    if (close(fd) < 0)
+    if (close(fd) < 0) {
         return 0;
+    }
+
 	return ret;
 }
 
@@ -166,8 +170,9 @@ int	ISteamRemoteStorage::GetFileSize( const char *pchFile )
 
     close(fd);
 
-    if (ret < 0)
+    if (ret < 0) {
         return 0;
+    }
 
 	return ret;
 }

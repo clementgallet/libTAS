@@ -52,30 +52,30 @@ struct ThreadInfo {
 
     ThreadState state = ST_UNINITIALIZED; // thread state
     ThreadState orig_state = ST_UNINITIALIZED; // thread state before savestate
-    pthread_t pthread_id; // tid of the thread
-    pid_t tid; // tid of the thread
-    void *(*start)(void *); // original start function of the thread
-    void *arg; // original argument of the start function
-    bool detached; // flag to keep track if the thread was detached
+    pthread_t pthread_id = 0; // tid of the thread
+    pid_t tid = 0; // tid of the thread
+    void *(*start)(void *) = nullptr; // original start function of the thread
+    void *arg = nullptr; // original argument of the start function
+    bool detached = false; // flag to keep track if the thread was detached
     std::ptrdiff_t routine_id; // mostly unique identifier of a start function,
                                // constant across instances of the game
     ucontext_t savctx; // context of the thread (registers)
     ThreadTLSInfo tlsInfo; // thread local storage information not stored in
                            // memory (registers)
     void* retval; // return value of the original start function
-    bool initial_native; // initial value of the global native state
-    bool initial_owncode; // initial value of the global owncode state
-    bool initial_nolog; // initial value of the global nolog state
+    bool initial_native = false; // initial value of the global native state
+    bool initial_owncode = false; // initial value of the global owncode state
+    bool initial_nolog = false; // initial value of the global nolog state
 
-    stack_t altstack; // altstack to be used when suspending threads
+    stack_t altstack = {nullptr, 0, 0}; // altstack to be used when suspending threads
 
     std::mutex mutex; // mutex to notify a thread for a new routing
     std::condition_variable cv; // associated conditional variable
 
     bool quit = false; // is game quitting
 
-    ThreadInfo *next; // next thread info in the linked list
-    ThreadInfo *prev; // previous thread info in the linked list
+    ThreadInfo *next = nullptr; // next thread info in the linked list
+    ThreadInfo *prev = nullptr; // previous thread info in the linked list
 };
 }
 

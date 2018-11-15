@@ -1036,6 +1036,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             return false;
 
         } /* switch(hk.type) */
+        break;
 
     case XCB_KEY_RELEASE:
 
@@ -1056,6 +1057,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
     default:
         return false;
     } /* switch (type) */
+    return false;
 }
 
 

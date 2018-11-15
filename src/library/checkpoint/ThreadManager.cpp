@@ -132,7 +132,6 @@ ThreadInfo* ThreadManager::getNewThread()
     /* No free thread, create a new one */
     if (!thread) {
         thread = new ThreadInfo;
-        memset(thread, 0, sizeof(ThreadInfo));
         debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
     }
 
