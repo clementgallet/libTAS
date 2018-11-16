@@ -34,6 +34,13 @@ class TimeHolder : public timespec
 {
     public:
 
+        TimeHolder() {};
+        TimeHolder(const timespec& th)
+        {
+            this->tv_sec = th.tv_sec;
+            this->tv_nsec = th.tv_nsec;
+        }
+
         TimeHolder &operator=(const timespec& th)
         {
             this->tv_sec = th.tv_sec;

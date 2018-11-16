@@ -25,11 +25,12 @@
 #include <time.h> //nanosleep
 #include "../../GlobalState.h"
 #include "../../hook.h"
+#include "../../DeterministicTimer.h"
 
 namespace libtas {
 
 static std::shared_ptr<AudioSource> sourceAlsa;
-static int buffer_size = 4096;
+static int buffer_size = 4096; // in samples
 
 DEFINE_ORIG_POINTER(snd_pcm_open);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_current);
@@ -38,10 +39,23 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_sizeof);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_any);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format);
+
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample);
+
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_size);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_time_min);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_size_near);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_periods_near);
+
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_time_max);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_time_near);
+
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_max);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_channels);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc);
@@ -53,9 +67,13 @@ DEFINE_ORIG_POINTER(snd_pcm_readi);
 DEFINE_ORIG_POINTER(snd_pcm_nonblock);
 DEFINE_ORIG_POINTER(snd_pcm_close);
 
+DEFINE_ORIG_POINTER(snd_pcm_mmap_begin);
+DEFINE_ORIG_POINTER(snd_pcm_mmap_commit);
 
 DEFINE_ORIG_POINTER(snd_pcm_start);
 DEFINE_ORIG_POINTER(snd_pcm_resume);
+DEFINE_ORIG_POINTER(snd_pcm_wait);
+DEFINE_ORIG_POINTER(snd_pcm_delay);
 DEFINE_ORIG_POINTER(snd_pcm_avail_update);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof);
@@ -148,6 +166,48 @@ int snd_pcm_resume(snd_pcm_t *pcm)
     return 0;
 }
 
+int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_wait, nullptr);
+        return orig::snd_pcm_wait(pcm, timeout);
+    }
+    debuglog(LCF_SOUND, __func__, " called with timeout ", timeout);
+
+    /* Check for no more available samples */
+    int delta_ms = -1;
+    if ((buffer_size - get_latency()) <= 0) {
+        /* Wait for timeout or available samples */
+        TimeHolder initial_time = detTimer.getTicks();
+        do {
+            struct timespec mssleep = {0, 1000*1000};
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            TimeHolder delta_time = detTimer.getTicks();
+            delta_time -= initial_time;
+            delta_ms = delta_time.tv_sec * 1000 + delta_time.tv_nsec / 1000000;
+        } while (!is_exiting && (get_latency() >= buffer_size) && ((timeout < 0) || (delta_ms < timeout)));
+    }
+
+    if ((buffer_size - get_latency()) > 0)
+        return 1;
+
+    /* Timeout */
+    return 0;
+}
+
+int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_delay, nullptr);
+        return orig::snd_pcm_delay(pcm, delayp);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *delayp = get_latency();
+    debuglog(LCF_SOUND, "   return ", *delayp);
+    return 0;
+}
+
 snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
@@ -156,7 +216,11 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
-    return get_latency();
+    snd_pcm_sframes_t avail = buffer_size - get_latency();
+    if (avail<0)
+        avail = 0;
+    debuglog(LCF_SOUND, "   return ", avail);
+    return avail;
 }
 
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
@@ -242,8 +306,8 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
     /* Blocking if latency is too high */
     do {
         struct timespec mssleep = {0, 1000*1000};
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 10 ms before trying again
-    } while (!is_exiting && get_latency() > buffer_size);
+        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+    } while (!is_exiting && (get_latency() > buffer_size));
 
     if (is_exiting) return 0;
 
@@ -296,6 +360,95 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
     debuglog(LCF_SOUND, __func__, " call with ", size, " bytes");
     return static_cast<snd_pcm_sframes_t>(size);
 }
+
+int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_mmap_begin, nullptr);
+        return orig::snd_pcm_mmap_begin(pcm, areas, offset, frames);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with ", *frames, " frames");
+
+    /* Getting the available samples, don't return more frames than that */
+    snd_pcm_sframes_t avail = buffer_size - get_latency();
+    if (avail < 0)
+        avail = 0;
+
+    if (*frames > avail)
+        *frames = avail;
+
+    debuglog(LCF_SOUND, "  returning ", *frames, " frames");
+
+    /* We should lock the audio mutex until snd_pcm_mmap_commit() is called,
+     * but for some reason, FTL doesn't call snd_pcm_mmap_commit() the first
+     * time, resulting in a deadlock. So for now we only lock inside this
+     * function.
+     */
+    // audiocontext.mutex.lock();
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+    /* We try to reuse a buffer that has been processed from the source */
+    std::shared_ptr<AudioBuffer> ab;
+    if (sourceAlsa->nbQueueProcessed() > 0) {
+        /* Removing first buffer */
+        ab = sourceAlsa->buffer_queue[0];
+        sourceAlsa->buffer_queue.erase(sourceAlsa->buffer_queue.begin());
+        sourceAlsa->queue_index--;
+    }
+    else {
+        /* Building a new buffer */
+        int bufferId = audiocontext.createBuffer();
+        ab = audiocontext.getBuffer(bufferId);
+
+        /* Getting the parameters of the buffer from one of the queue */
+        if (sourceAlsa->buffer_queue.empty()) {
+            debuglog(LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
+            return -1;
+        }
+
+        auto ref = sourceAlsa->buffer_queue[0];
+        ab->format = ref->format;
+        ab->nbChannels = ref->nbChannels;
+        ab->frequency = ref->frequency;
+    }
+
+    /* Configuring the buffer */
+    ab->update(); // Compute alignSize
+    ab->sampleSize = *frames;
+    ab->size = *frames * ab->alignSize;
+    ab->samples.resize(ab->size);
+    sourceAlsa->buffer_queue.push_back(ab);
+
+    /* Fill the area info */
+    static snd_pcm_channel_area_t my_areas[2];
+    my_areas[0].addr = ab->samples.data();
+    my_areas[0].first = 0;
+    my_areas[0].step = ab->alignSize * 8; // in bits
+
+    my_areas[1].addr = ab->samples.data();
+    my_areas[1].first = ab->bitDepth; // in bits
+    my_areas[1].step = ab->alignSize * 8; // in bits
+
+    *areas = my_areas;
+    *offset = 0;
+    return 0;
+}
+
+snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, snd_pcm_uframes_t frames)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_mmap_commit, nullptr);
+        return orig::snd_pcm_mmap_commit(pcm, offset, frames);
+    }
+
+    /* We should unlock the audio mutex here, but we don't (see above comment) */
+    // audiocontext.mutex.unlock();
+
+    debuglog(LCF_SOUND, __func__, " call with frames ", frames);
+    return frames;
+}
+
 
 int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
@@ -351,16 +504,16 @@ void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t 
     DEBUGLOGCALL(LCF_SOUND);
 }
 
-int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access)
+int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access)
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(snd_pcm_hw_params_set_access, nullptr);
-        return orig::snd_pcm_hw_params_set_access(pcm, params, _access);
+        return orig::snd_pcm_hw_params_set_access(pcm, params, access);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with access ", _access);
-    if (_access != SND_PCM_ACCESS_RW_INTERLEAVED) {
-        debuglog(LCF_SOUND, LCF_ERROR, "    Unsupported access!");
+    debuglog(LCF_SOUND, __func__, " call with access ", access);
+    if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
+        debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported access ", access);
     }
     return 0;
 }
@@ -394,6 +547,34 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
             return -1;
     }
 
+    return 0;
+}
+
+int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned int *val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_channels, nullptr);
+        return orig::snd_pcm_hw_params_get_channels(params, val);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    auto buffer = sourceAlsa->buffer_queue[0];
+    *val = buffer->nbChannels;
+
+    return 0;
+}
+
+int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsigned int *val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_channels_max, nullptr);
+        return orig::snd_pcm_hw_params_get_channels_max(params, val);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    *val = 2;
     return 0;
 }
 
@@ -442,6 +623,47 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
     return 0;
 }
 
+int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_set_rate_resample, nullptr);
+        return orig::snd_pcm_hw_params_set_rate_resample(pcm, params, val);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with val ", val);
+
+    /* Not sure what should we do here */
+    return 0;
+}
+
+static int periods = 2;
+
+int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_period_size, nullptr);
+        return orig::snd_pcm_hw_params_get_period_size(params, frames, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *frames = buffer_size / periods;
+
+    return 0;
+}
+
+int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_period_time_min, nullptr);
+        return orig::snd_pcm_hw_params_get_period_time_min(params, val, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = 0;
+
+    return 0;
+}
+
 int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir)
 {
     if (GlobalState::isNative()) {
@@ -450,6 +672,45 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     }
 
     debuglog(LCF_SOUND, __func__, " call with period size ", *val, " and dir ", dir?*dir:-2);
+    return 0;
+}
+
+int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_set_periods_near, nullptr);
+        return orig::snd_pcm_hw_params_set_periods_near(pcm, params, val, dir);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with period ", *val, " and dir ", dir?*dir:-2);
+    periods = *val;
+    return 0;
+}
+
+int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_buffer_size, nullptr);
+        return orig::snd_pcm_hw_params_get_buffer_size(params, val);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = buffer_size;
+    return 0;
+}
+
+int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_get_buffer_time_max, nullptr);
+        return orig::snd_pcm_hw_params_get_buffer_time_max(params, val, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    auto buffer = sourceAlsa->buffer_queue[0];
+
+    *val = buffer_size * 1000000 / buffer->frequency;
     return 0;
 }
 
@@ -462,6 +723,29 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
     debuglog(LCF_SOUND, __func__, " call with buffer size ", *val);
     buffer_size = *val;
+    return 0;
+}
+
+int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE(snd_pcm_hw_params_set_buffer_time_near, nullptr);
+        return orig::snd_pcm_hw_params_set_buffer_time_near(pcm, params, val, dir);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with buffer time ", *val);
+
+    auto buffer = sourceAlsa->buffer_queue[0];
+
+    /* Special case for 0, return the default value */
+    if (*val == 0) {
+        *val = buffer_size * 1000000 / buffer->frequency;
+        return 0;
+    }
+
+    if (buffer->frequency != 0) {
+        buffer_size = *val * buffer->frequency / 1000000;
+    }
     return 0;
 }
 

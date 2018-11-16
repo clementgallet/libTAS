@@ -12,6 +12,7 @@
 * Old autosaves are removed
 * Autosave configuration window
 * Desktop entry file
+* ALSA mmap writing
 
 ### Changed
 
