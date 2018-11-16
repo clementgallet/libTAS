@@ -1,3 +1,37 @@
+libtas (1.3.2) unstable; urgency=medium
+
+  * Add locale setting
+  * Store md5 hash of game executable in movies
+  * Option to enable/disable dummy Steam client
+  * Implement OpenAL loop points
+  * Hook Xlib window resize
+  * Support for SDL1 rendering using surface blitting
+  * Mouse position recalibration to match game cursor position
+  * Add savestate slot to input editor
+  * Old autosaves are removed
+  * Autosave configuration window
+  * Desktop entry file
+  * ALSA mmap writing
+  * Use system command for compressing/decompressing instead of tar/zlib libraries
+  * Implement more of the Steam API
+  * Register removed files as savefiles
+  * Rename program linTAS into libTAS
+  * Initialize audio sources that are reused
+  * Fix controller sliders
+  * Fix unsigned ints showed as signed in RAM Search
+  * Recreate texture/fbo when a new GL context is created
+  * Fix SDL1 keyboard layout
+  * Wait for threads to register
+  * Detect auto-repeat cases when detectable auto-repeat is not supported by the server
+  * Fix crash when loading a savestate on a non-draw frame
+  * End screen capture when SDL renderer is destroyed
+  * Register all connections to X server (for savestates) instead of just one
+  * Fix screen capture of SDL1 surface
+  * Autosave and exit save when movie is modified in the input editor
+  * Increment rerecord count if the movie was modified in the input editor
+
+ -- clement <clement@debian.home>  Fri, 16 Nov 2018 16:46:34 +0100
+
 libtas (1.3.1) unstable; urgency=medium
 
   * Xlib cursor and pointer warping functions

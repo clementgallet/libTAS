@@ -16,7 +16,6 @@ You can download the latest version of the software in the [Releases](https://gi
 * `ffmpeg`
 * `libswresample2`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
-* `libtar0`, `zlib1g`
 
 Installing with the debian package will install all the required packages as well.
 
@@ -31,7 +30,7 @@ If you want to compile it yourself, you will need `cmake`. From the root directo
     cmake ..
     make
 
-The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libtar-dev`, `zlib1g-dev`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libxcb-cursor-dev`, `libasound2-dev`, `libswresample-dev`
+The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libxcb-cursor-dev`, `libasound2-dev`, `libswresample-dev`
 
 To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 

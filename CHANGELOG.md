@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.3.2] - 2018-11-16
+### Added
 
 * Add locale setting
 * Store md5 hash of game executable in movies
