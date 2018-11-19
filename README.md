@@ -21,23 +21,37 @@ Installing with the debian package will install all the required packages as wel
 
 If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games (using the corresponding version of libTAS). Note for Ubuntu users that you need a recent version (17.10 minimum).
 
-## Compile
+## Building
 
-If you want to compile it yourself, you will need `cmake`. From the root directory just type:
+An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/packages/libtas/).
 
-    mkdir build
-    cd build
+### Dependancies
+
+You will need to download and install the following to build libTAS:
+
+* Deb: `apt-get install build-essential cmake extra-cmake-modules libx11-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libasound2-dev libswresample-dev ffmpeg`
+* Arch: `pacman -S base-devel cmake extra-cmake-modules qt5-base xcb-util-cursor alsa-lib ffmpeg`
+
+To enable HUD on the game screen, you will also need:
+
+* Deb: `apt-get install libfreetype6-dev libfontconfig1-dev`
+* Arch: `pacman -S fontconfig freetype2`
+
+### Cloning
+
+    git clone https://github.com/clementgallet/libTAS.git
+    cd libTAS
+
+### Building
+
+    mkdir build && cd build
     cmake ..
     make
-
-The current mandatory dependancies so far are `libx11-dev`, `qtbase5-dev`, `qt5-default`, `libsdl2-dev`, `extra-cmake-modules`, `libxcb1-dev`, `libxcb-keysyms1-dev`, `libxcb-xkb-dev`, `libxcb-cursor-dev`, `libasound2-dev`, `libswresample-dev`
-
-To enable HUD on the game screen, you will need `libfreetype6-dev`, `libfontconfig1-dev`
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add just after the `cmake` command:
 
-- `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on top of the game screen
+- `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on the game screen
 
 Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. You could also try to cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. However, many users failed to do this due to some libraries that don't like this operation.
 
