@@ -32,6 +32,10 @@ OVERRIDE KeyCode XKeysymToKeycode( Display* display, KeySym keysym);
 
 OVERRIDE KeySym XkbKeycodeToKeysym(Display *dpy, KeyCode kc, int group, int level);
 
+OVERRIDE int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out);
+
+OVERRIDE KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return);
+
 }
 
 #endif

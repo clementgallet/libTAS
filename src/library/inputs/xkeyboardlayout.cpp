@@ -114,4 +114,26 @@ static const KeySym Xlib_default_keymap[256] = {
     return kc;
 }
 
+/* Override */ int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out)
+{
+    debuglog(LCF_KEYBOARD, __func__, " called with keycode ", event_struct->keycode);
+    KeyCode keycode = event_struct->keycode;
+    *keysym_return = Xlib_default_keymap[keycode];
+    char* string = XKeysymToString(*keysym_return);
+    strncpy(buffer_return, string, bytes_buffer);
+    return 0;
+}
+
+/* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
+{
+    debuglog(LCF_KEYBOARD, __func__, " called with keycode_count ", keycode_count);
+    *keysyms_per_keycode_return = 1;
+    KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
+    for (int c=0; c<keycode_count; c++) {
+        keysyms[c] = Xlib_default_keymap[c+first_keycode];
+    }
+    return keysyms;
+}
+
+
 }

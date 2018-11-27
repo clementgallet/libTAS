@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Implement more Xlib keyboard mapping functions
+
 ### Changed
 ### Fixed
 
