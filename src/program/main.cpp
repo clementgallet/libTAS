@@ -64,6 +64,8 @@ int main(int argc, char **argv)
     char buf[PATH_MAX];
     char* abspath;
     std::ofstream o;
+    std::string moviefile;
+    
     // std::string libname;
     while ((c = getopt (argc, argv, "+r:w:d:h")) != -1) {
         switch (c) {
@@ -73,12 +75,12 @@ int main(int argc, char **argv)
 
                 /* We must be sure that the file exists, otherwise the following call
                  * to realpath will fail. */
-                o.open(optarg);
+                o.open(optarg, std::ofstream::app);
                 o.close();
 
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.config.moviefile = abspath;
+                    moviefile = abspath;
                     context.config.sc.recording = (c == 'r')?SharedConfig::RECORDING_READ:SharedConfig::RECORDING_WRITE;
                 }
                 break;
@@ -193,6 +195,11 @@ int main(int argc, char **argv)
 
     /* Now that we have the config dir, we load the game-specific config */
     context.config.load(context.gamepath);
+
+    /* Overwrite the movie path if specified in commandline */
+    if (! moviefile.empty()) {
+        context.config.moviefile = moviefile;
+    }
 
     /* If the config file set custom directories for the remaining working dir,
      * we create these directories (if not already created).
