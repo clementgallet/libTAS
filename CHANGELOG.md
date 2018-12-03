@@ -6,6 +6,8 @@
 ### Changed
 ### Fixed
 
+* Fix zeroing pages when incremental savestates feature is disabled
+
 ## [1.3.2] - 2018-11-16
 ### Added
 
