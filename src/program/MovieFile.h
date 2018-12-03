@@ -121,7 +121,11 @@ public:
     /* Close the moviefile */
     void close();
 
-    /* Check if another movie starts with the same inputs as this movie */
+    /* Check if another movie starts with the same inputs as this movie, up to
+     * a specified frame count. */
+    bool isPrefix(const MovieFile& movie, unsigned int frame);
+
+    /* Same, but using the movie savestate framecount parameter. */
     bool isPrefix(const MovieFile& movie);
 
     /* Write a single frame of inputs into the input stream */

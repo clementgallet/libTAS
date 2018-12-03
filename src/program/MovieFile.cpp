@@ -527,16 +527,20 @@ void MovieFile::close()
 	input_list.clear();
 }
 
-bool MovieFile::isPrefix(const MovieFile& movie)
+bool MovieFile::isPrefix(const MovieFile& movie, unsigned int frame)
 {
-	/* We only care about frame up to the savestate point */
-	unsigned int fc = movie.savestateFramecount();
-
     /* Not a prefix if the size is greater */
-    if (fc > input_list.size())
+    if (frame > input_list.size())
         return false;
 
-    return std::equal(movie.input_list.begin(), movie.input_list.begin() + fc, input_list.begin());
+    return std::equal(movie.input_list.begin(), movie.input_list.begin() + frame, input_list.begin());
+}
+
+bool MovieFile::isPrefix(const MovieFile& movie)
+{
+	/* Recover the frame of the savestate */
+	unsigned int fc = movie.savestateFramecount();
+	return isPrefix(movie, fc);
 }
 
 void MovieFile::wasModified()

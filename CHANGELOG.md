@@ -2,6 +2,7 @@
 ### Added
 
 * Implement more Xlib keyboard mapping functions
+* When loading a savestate of previous game iteration, the movie is loaded
 
 ### Changed
 ### Fixed

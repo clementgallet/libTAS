@@ -696,15 +696,26 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 movie.saveMovie(moviepath, context->framecount);
             }
 
-            /* Send the savestate path/index */
+            /* Send the savestate index */
             sendMessage(MSGN_SAVESTATE_INDEX);
             sendData(&statei, sizeof(int));
+
+            /* Send the savestate path */
+            std::string savestatepath = context->config.savestatedir + '/';
+            savestatepath += context->gamename;
+            savestatepath += ".state" + std::to_string(statei);
             if (! context->config.sc.savestates_in_ram) {
-                std::string savestatepath = context->config.savestatedir + '/';
-                savestatepath += context->gamename;
-                savestatepath += ".state" + std::to_string(statei);
                 sendMessage(MSGN_SAVESTATE_PATH);
                 sendString(savestatepath);
+            }
+            else {
+                /* Create empty savestate files if stored in RAM */
+                std::string pagemappath = savestatepath + ".pm";
+                std::string pagespath = savestatepath + ".p";
+                std::ofstream opm(pagemappath);
+                opm.close();
+                std::ofstream op(pagespath);
+                op.close();
             }
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
@@ -775,19 +786,81 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Slot number */
             int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
 
-            /* Building the savestate path */
+            /* Send the savestate index */
             sendMessage(MSGN_SAVESTATE_INDEX);
             sendData(&statei, sizeof(int));
-            if (! context->config.sc.savestates_in_ram) {
-                std::string savestatepath = context->config.savestatedir + '/';
-                savestatepath += context->gamename;
-                savestatepath += ".state" + std::to_string(statei);
 
-                /* Check that the savestate exists */
-                struct stat sb;
-                std::string pagemappath = savestatepath + ".pm";
-                std::string pagespath = savestatepath + ".p";
-                if ((stat(pagemappath.c_str(), &sb) == -1) || (stat(pagespath.c_str(), &sb) == -1)) {
+            /* Building the movie path */
+            std::string moviepath = context->config.savestatedir + '/';
+            moviepath += context->gamename;
+            moviepath += ".movie" + std::to_string(statei) + ".ltm";
+
+            /* Building the savestate path */
+            std::string savestatepath = context->config.savestatedir + '/';
+            savestatepath += context->gamename;
+            savestatepath += ".state" + std::to_string(statei);
+
+            /* Check that the savestate exists */
+            std::string pagemappath = savestatepath + ".pm";
+            std::string pagespath = savestatepath + ".p";
+            if ((access(pagemappath.c_str(), F_OK) != 0) || (access(pagespath.c_str(), F_OK) != 0)) {
+                /* If there is no savestate but a movie file, offer to load
+                 * the movie and fast-forward to the savestate movie frame.
+                 */
+                if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
+                    (access(moviepath.c_str(), F_OK) == 0)) {
+
+                    /* Ask the user if they want to load the movie, and get the answer.
+                     * Prompting a alert window must be done by the UI thread, so we are
+                     * using std::future/std::promise mechanism.
+                     */
+                    std::promise<bool> answer;
+                    std::future<bool> future = answer.get_future();
+                    emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
+
+                    if (! future.get()) {
+                        /* User answered no */
+                        return false;
+                    }
+
+                    /* Load the savestate movie */
+                    MovieFile savedmovie(context);
+                    int ret = savedmovie.loadInputs(moviepath);
+                    if (ret < 0) {
+                        emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
+                        return false;
+                    }
+
+                    /* Checking if our movie is a prefix of the savestate movie */
+                    if (!savedmovie.isPrefix(movie, context->framecount)) {
+                        /* Not a prefix, we don't allow loading */
+                        emit alertToShow(QString("We already diverged from the savestate movie"));
+                        return false;
+                    }
+
+                    /* Loading the movie */
+                    emit inputsToBeChanged();
+                    movie.loadInputs(moviepath);
+                    emit inputsChanged();
+
+                    /* Return if we already are on the correct frame */
+                    if (context->framecount == movie.savestateFramecount())
+                        return false;
+
+                    /* Fast-forward to savestate frame */
+                    context->config.sc.recording = SharedConfig::RECORDING_READ;
+                    context->config.sc.movie_framecount = movie.nbFrames();
+                    context->pause_frame = movie.savestateFramecount();
+                    context->config.sc.running = true;
+                    context->config.sc.fastforward = true;
+                    context->config.sc_modified = true;
+
+                    emit sharedConfigChanged();
+
+                    return false;
+                }
+
+                else {
                     if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                         std::string message = "No savestate in slot ";
                         message += std::to_string(statei);
@@ -799,15 +872,14 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     }
                     return false;
                 }
+            }
 
+            /* Send savestate path */
+            if (! context->config.sc.savestates_in_ram) {
                 sendMessage(MSGN_SAVESTATE_PATH);
                 sendString(savestatepath);
             }
 
-            /* Building the movie path */
-            std::string moviepath = context->config.savestatedir + '/';
-            moviepath += context->gamename;
-            moviepath += ".movie" + std::to_string(statei) + ".ltm";
 
             /* When loading in read mode, we don't allow loading a non-prefix movie */
             if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
@@ -1246,7 +1318,7 @@ void GameLoop::loopExit()
          */
         std::promise<bool> saveAnswer;
         std::future<bool> futureSave = saveAnswer.get_future();
-        emit askMovieSaved(&saveAnswer);
+        emit askToShow(QString("Do you want to save the movie file?"), &saveAnswer);
 
         if (futureSave.get()) {
             /* User answered yes */

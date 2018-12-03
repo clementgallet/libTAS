@@ -498,6 +498,7 @@ void InputEditorModel::beginModifyInputs()
 
 void InputEditorModel::endModifyInputs()
 {
+    buildInputSet();
     endResetModel();
 }
 

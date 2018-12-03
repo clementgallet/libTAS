@@ -58,7 +58,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
     connect(gameLoop, &GameLoop::fpsChanged, this, &MainWindow::updateFps);
-    connect(gameLoop, &GameLoop::askMovieSaved, this, &MainWindow::alertSave);
+    connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer);
 
     /* Create other windows */
     encodeWindow = new EncodeWindow(c, this);
@@ -1467,10 +1467,10 @@ void MainWindow::slotRamState(bool checked)
     context->config.sc_modified = true;
 }
 
-void MainWindow::alertSave(void* promise)
+void MainWindow::alertOffer(QString alert_msg, void* promise)
 {
     std::promise<bool>* saveAnswer = static_cast<std::promise<bool>*>(promise);
-    QMessageBox::StandardButton btn = QMessageBox::question(this, "Save movie", QString("Do you want to save the movie file?"), QMessageBox::Yes | QMessageBox::No);
+    QMessageBox::StandardButton btn = QMessageBox::question(this, "", alert_msg, QMessageBox::Yes | QMessageBox::No);
     saveAnswer->set_value(btn == QMessageBox::Yes);
 }
 

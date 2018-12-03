@@ -101,7 +101,7 @@ signals:
     void frameCountChanged();
     void sharedConfigChanged();
     void fpsChanged(float fps, float lfps);
-    void askMovieSaved(void* promise);
+    void askToShow(QString str, void* promise);
 
     void controllerButtonToggled(int controller_id, int button, bool pressed);
     void inputsToBeSent(AllInputs &allinputs);

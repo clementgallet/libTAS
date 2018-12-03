@@ -163,41 +163,6 @@ public:
     /* Event filter function to prevent menu close when a checkable option is clicked */
     bool eventFilter(QObject *obj, QEvent *event);
 
-    /* Update UI elements (mainly enable/disable) depending on
-     * the game status (running/stopped), to prevent modifying values that
-     * are not supposed to be modified when the game is running.
-     */
-    void updateStatus();
-
-    /* Update UI elements when the shared config has changed (pause, fastforward,
-     * encode, etc.
-     */
-    void updateSharedConfigChanged();
-
-    /* Update frame count and time */
-    void updateFrameCountTime();
-
-    /* Update rerecord count */
-    void updateRerecordCount();
-
-    /* Update fps values */
-    void updateFps(float fps, float lfps);
-
-    /* Update ramsearch and ramwatch values if window is shown */
-    void updateRam();
-
-    /* Update input editor if window is shown */
-    void updateInputEditor();
-
-    /* Update UI elements when a config file is loaded */
-    void updateUIFromConfig();
-
-    /* Show an alert dialog containing alert_msg as text */
-    void alertDialog(QString alert_msg);
-
-    /* Show an alert dialog asking the user if we wants to save the movie file */
-    void alertSave(void* promise);
-
 private:
     /* Update the status bar */
     void updateStatusBar();
@@ -236,6 +201,43 @@ private:
     void setListFromRadio(const QActionGroup *actionGroup, int &value);
 
 private slots:
+
+    /* Update UI elements (mainly enable/disable) depending on
+     * the game status (running/stopped), to prevent modifying values that
+     * are not supposed to be modified when the game is running.
+     */
+    void updateStatus();
+
+    /* Update UI elements when the shared config has changed (pause, fastforward,
+     * encode, etc.
+     */
+    void updateSharedConfigChanged();
+
+    /* Update frame count and time */
+    void updateFrameCountTime();
+
+    /* Update rerecord count */
+    void updateRerecordCount();
+
+    /* Update fps values */
+    void updateFps(float fps, float lfps);
+
+    /* Update ramsearch and ramwatch values if window is shown */
+    void updateRam();
+
+    /* Update input editor if window is shown */
+    void updateInputEditor();
+
+    /* Update UI elements when a config file is loaded */
+    void updateUIFromConfig();
+
+    /* Show an alert dialog containing alert_msg as text */
+    void alertDialog(QString alert_msg);
+
+    /* Show an alert dialog asking the user a question, and get the answer */
+    void alertOffer(QString alert_msg, void* promise);
+
+
 
     void slotLaunch();
     void slotStop();
