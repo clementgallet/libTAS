@@ -37,6 +37,7 @@
 #include <fstream>
 #include <iostream>
 #include <fcntl.h>
+#include <getopt.h>
 
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -65,9 +66,19 @@ int main(int argc, char **argv)
     char* abspath;
     std::ofstream o;
     std::string moviefile;
-    
+
+    static struct option long_options[] =
+    {
+        {"read", required_argument, nullptr, 'r'},
+        {"write", required_argument, nullptr, 'w'},
+        {"dump", required_argument, nullptr, 'd'},
+        {"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}
+    };
+    int option_index = 0;
+
     // std::string libname;
-    while ((c = getopt (argc, argv, "+r:w:d:h")) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:h", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
