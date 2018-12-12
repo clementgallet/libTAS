@@ -303,6 +303,14 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     setCentralWidget(centralWidget);
 
     updateUIFromConfig();
+
+    /* We are dumping from the command line */
+    if (context->config.dumping) {
+        slotToggleEncode();
+        slotPause(false);
+	slotFastForward(true);
+        slotLaunch();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -1332,7 +1340,7 @@ void MainWindow::slotToggleEncode()
     /* Prompt a confirmation message for overwriting an encode file */
     if (!context->config.sc.av_dumping) {
         struct stat sb;
-        if (stat(context->config.dumpfile.c_str(), &sb) == 0) {
+        if (stat(context->config.dumpfile.c_str(), &sb) == 0 && sb.st_size != 0) {
             /* Pause the game during the choice */
             context->config.sc.running = false;
             context->config.sc_modified = true;

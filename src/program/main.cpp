@@ -102,8 +102,8 @@ int main(int argc, char **argv)
 
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.config.sc.av_dumping = true;
                     context.config.dumpfile = abspath;
+                    context.config.dumping = true;
                 }
                 break;
             case '?':

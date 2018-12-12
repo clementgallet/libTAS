@@ -61,6 +61,9 @@ public:
     /* Was the dump file modified */
     bool dumpfile_modified;
 
+    /* Were we started up with the -d option? */
+    bool dumping;
+
     /* Path of the libraries used by the game */
     std::string libdir;
 
