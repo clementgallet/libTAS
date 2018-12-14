@@ -68,6 +68,7 @@ FILE* SaveFile::open(const char *modes) {
         else {
             /* File was removed and opened in write mode */
             stream = open_memstream(&stream_buffer, &stream_size);
+            fd = fileno(stream);
             return stream;
         }
     }
@@ -76,6 +77,7 @@ FILE* SaveFile::open(const char *modes) {
 
         /* Open a new memory stream using pointers to these entries */
         stream = open_memstream(&stream_buffer, &stream_size);
+        fd = fileno(stream);
 
         if (strstr(modes, "w") == nullptr) {
             /* Append the content of the file to the stream if the file exists */
@@ -115,6 +117,7 @@ FILE* SaveFile::open(const char *modes) {
         free(stream_buffer);
 
         stream = open_memstream(&stream_buffer, &stream_size);
+        fd = fileno(stream);
         return stream;
     }
     else if (strstr(modes, "a") != nullptr) {
@@ -157,12 +160,12 @@ int SaveFile::open(int flags)
         }
         else {
             /* File was removed and opened in write mode */
-            fd = syscall(SYS_memfd_create, filename.c_str(), 0);
+            open("wb");
         }
     }
     else {
         /* Create an anonymous file and store its file descriptor using memfd_create syscall. */
-        fd = syscall(SYS_memfd_create, filename.c_str(), 0);
+        open("wb");
 
         if (!overwrite) {
             /* Append the content of the file to the newly created memfile
@@ -221,6 +224,7 @@ int SaveFile::closeFile()
         free(stream_buffer);
         stream_buffer = nullptr;
         stream_size = 0;
+        fd = 0;
     }
 
     if (fd != 0) {
@@ -250,6 +254,7 @@ int SaveFile::remove()
         free(stream_buffer);
         stream_buffer = nullptr;
         stream_size = 0;
+        fd = 0;
     }
 
     if (fd != 0) {
