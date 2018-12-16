@@ -44,9 +44,6 @@ SaveFile::~SaveFile() {
         NATIVECALL(fclose(stream));
         free(stream_buffer);
     }
-    if (fd != 0) {
-        NATIVECALL(close(fd));
-    }
 }
 
 FILE* SaveFile::open(const char *modes) {
@@ -160,12 +157,12 @@ int SaveFile::open(int flags)
         }
         else {
             /* File was removed and opened in write mode */
-            open("wb");
+            open("w");
         }
     }
     else {
         /* Create an anonymous file and store its file descriptor using memfd_create syscall. */
-        open("wb");
+        open("w");
 
         if (!overwrite) {
             /* Append the content of the file to the newly created memfile
@@ -227,11 +224,6 @@ int SaveFile::closeFile()
         fd = 0;
     }
 
-    if (fd != 0) {
-        NATIVECALL(close(fd));
-        fd = 0;
-    }
-
     return 0;
 }
 
@@ -254,11 +246,6 @@ int SaveFile::remove()
         free(stream_buffer);
         stream_buffer = nullptr;
         stream_size = 0;
-        fd = 0;
-    }
-
-    if (fd != 0) {
-        NATIVECALL(close(fd));
         fd = 0;
     }
 
