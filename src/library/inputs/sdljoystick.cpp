@@ -57,6 +57,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
 
 #define MAX_SDLJOYS 4
 static int joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
+static int refids[4] = {0, 0, 0, 0}; // joystick open/close is ref-counted
 
 /* Helper functions */
 static bool isIdValid(SDL_Joystick* joy)
@@ -79,7 +80,6 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     return true;
 }
 
-
 /* Override */ SDL_Joystick *SDL_JoystickOpen(int device_index)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
@@ -87,12 +87,13 @@ static bool isIdValidOpen(SDL_Joystick* joy)
         return NULL;
     if (device_index >= shared_config.nb_controllers)
         return NULL;
-    if (joyids[device_index] != -1)
-        /* Device already opened */
-        return NULL;
 
     /* Opening the joystick device */
     joyids[device_index] = device_index;
+
+    /* Increment ref count */
+    refids[device_index]++;
+
     return reinterpret_cast<SDL_Joystick*>(&joyids[device_index]);
 }
 
@@ -422,7 +423,12 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
-    joyids[*joyid] = -1;
+    /* Decrease the ref count */
+    refids[*joyid]--;
+
+    /* If no more ref, close the joystick */
+    if (refids[*joyid] == 0)
+        joyids[*joyid] = -1;
 }
 
 /* Override */ SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick)

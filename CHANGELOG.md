@@ -11,6 +11,7 @@
 * Fix zeroing pages when incremental savestates feature is disabled
 * Specifying a movie in commandline does not truncate the file anymore
 * Fix a crash when renaming the frame column in input editor
+* Fix behavior when SDL_JoystickOpen is called multiple times
 
 ## [1.3.2] - 2018-11-16
 ### Added
