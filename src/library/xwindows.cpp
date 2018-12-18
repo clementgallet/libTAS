@@ -231,7 +231,7 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((old_width != width) || (old_height != height)) {
-        ScreenCapture::reinit();
+        ScreenCapture::resize(width, height);
 
         /* We need to close the dumping if needed, and open a new one */
         if (shared_config.av_dumping) {
@@ -257,7 +257,7 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((old_width != width) || (old_height != height)) {
-        ScreenCapture::reinit();
+        ScreenCapture::resize(width, height);
 
         /* We need to close the dumping if needed, and open a new one */
         if (shared_config.av_dumping) {
@@ -288,7 +288,7 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((value_mask & CWWidth) && (value_mask & CWHeight) && ((values->width != old_width) || (values->height != old_height))) {
-        ScreenCapture::reinit();
+        ScreenCapture::resize(values->width, values->height);
 
         /* We need to close the dumping if needed, and open a new one */
         if (shared_config.av_dumping) {

@@ -343,7 +343,7 @@ static int swapInterval = 0;
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((old_width != w) || (old_height != h)) {
-        ScreenCapture::reinit();
+        ScreenCapture::resize(w, h);
 
         /* We need to close the dumping if needed, and open a new one */
         if (shared_config.av_dumping) {

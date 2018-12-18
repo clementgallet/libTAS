@@ -149,6 +149,16 @@ int ScreenCapture::init()
 
     winpixels.resize(size);
 
+    initScreenSurface();
+
+    debuglog(LCF_WINDOW, "Inited Screen Capture with dimensions (", width, ",", height, ")");
+
+    inited = true;
+    return 0;
+}
+
+void ScreenCapture::initScreenSurface()
+{
     /* Set up a backup surface/framebuffer */
     if (game_info.video & GameInfo::OPENGL) {
         /* Generate FBO and RBO */
@@ -206,18 +216,21 @@ int ScreenCapture::init()
             }
         }
     }
-
-    debuglog(LCF_WINDOW, "Inited Screen Capture with dimensions (", width, ",", height, ")");
-
-    inited = true;
-    return 0;
 }
+
 
 void ScreenCapture::fini()
 {
     winpixels.clear();
     glpixels.clear();
 
+    destroyScreenSurface();
+
+    inited = false;
+}
+
+void ScreenCapture::destroyScreenSurface()
+{
     /* Delete openGL framebuffers */
     if (screenFBO != 0) {
         LINK_NAMESPACE(glDeleteFramebuffers, "libGL");
@@ -243,16 +256,22 @@ void ScreenCapture::fini()
         orig::SDL_DestroyTexture(screenSDLTex);
         screenSDLTex = nullptr;
     }
-
-    inited = false;
 }
 
-void ScreenCapture::reinit()
+void ScreenCapture::resize(int w, int h)
 {
-    if (inited) {
-        fini();
-        init();
-    }
+    destroyScreenSurface();
+
+    width = w;
+    height = h;
+    size = width * height * pixelSize;
+    pitch = pixelSize * width;
+
+    winpixels.resize(size);
+
+    initScreenSurface();
+
+    debuglog(LCF_WINDOW, "Resize Screen Capture with new dimensions (", width, ",", height, ")");
 }
 
 bool ScreenCapture::isInited()

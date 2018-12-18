@@ -33,20 +33,25 @@ namespace ScreenCapture {
  */
 int init();
 
+/* Create the screen buffer/surface/texture */
+void initScreenSurface();
+
 /* Called when screen is closed */
 void fini();
 
-/* Called when screen is resized */
-void reinit();
+/* Destroy the screen buffer/surface/texture */
+void destroyScreenSurface();
+
+/* Called when the screen has been resized */
+void resize(int w, int h);
 
 bool isInited();
 
+/* Get the current dimensions of the screen */
 void getDimensions(int& w, int& h);
-
 
 /* Get the pixel format as an string used by nut muxer. */
 const char* getPixelFormat();
-
 
 /* Capture the pixels from the screen. */
 int storePixels();
