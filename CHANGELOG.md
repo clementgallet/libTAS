@@ -3,6 +3,7 @@
 
 * Implement more Xlib keyboard mapping functions
 * When loading a savestate of previous game iteration, the movie is loaded
+* Improve the support of virtual screen resolution for non-SDL games
 
 ### Changed
 ### Fixed

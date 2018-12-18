@@ -71,7 +71,10 @@ set(LIBRARY_SOURCES
     src/library/tlswrappers.cpp
     src/library/Utils.cpp
     src/library/WindowTitle.cpp
+    src/library/xdisplay.cpp
     src/library/xevents.cpp
+    src/library/xf86vidmode.cpp
+    src/library/xrandr.cpp
     src/library/xwindows.cpp
     src/library/audio/AudioBuffer.cpp
     src/library/audio/AudioContext.cpp
@@ -206,6 +209,16 @@ find_package(X11 REQUIRED)
 include_directories(${X11_X11_INCLUDE_DIRS})
 target_link_libraries (libTAS ${X11_X11_LIB})
 target_link_libraries (tas ${X11_X11_LIB})
+
+# Add xf86vidmode wrapper if the extension is present
+if (X11_xf86vmode_FOUND)
+    add_definitions(-DLIBTAS_HAS_XF86VMODE)
+endif()
+
+# Add xrandr wrapper if the extension is present
+if (X11_Xrandr_FOUND)
+    add_definitions(-DLIBTAS_HAS_XRANDR)
+endif()
 
 # Add optional features
 find_package(PkgConfig REQUIRED)
