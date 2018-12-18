@@ -120,7 +120,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
         return QTableView::mousePressEvent(event);
     }
 
-    if (index.column() == 0) {
+    if (index.column() < 2) {
         return QTableView::mousePressEvent(event);
     }
 
@@ -175,7 +175,7 @@ void InputEditorView::horizontalMenu(QPoint pos)
 
 void InputEditorView::renameLabel()
 {
-    if (contextSection == 0)
+    if (contextSection < 2)
         return;
 
     QString text = QString("New label for input %1 is: ").arg(inputEditorModel->inputDescription(contextSection).c_str());
@@ -201,7 +201,7 @@ void InputEditorView::addInputColumn()
 
 void InputEditorView::clearInputColumn()
 {
-    if (contextSection == 0)
+    if (contextSection < 2)
         return;
 
     inputEditorModel->clearUniqueInput(contextSection);
