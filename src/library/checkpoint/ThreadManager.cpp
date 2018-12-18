@@ -156,7 +156,7 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
     return 0;
 }
 
-bool ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
+bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
     bool isRecycled = thread->state == ThreadInfo::ST_RECYCLED;
@@ -187,17 +187,10 @@ bool ThreadManager::initThread(ThreadInfo* thread, void * (* start_routine) (voi
     return isRecycled;
 }
 
-void ThreadManager::update(ThreadInfo* thread)
+void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 {
     thread->pthread_id = getThreadId();
     thread->tid = syscall(SYS_gettid);
-
-    /* If a thread that is in native state is creating another thread, we
-     * consider that the entire new thread is in native mode (e.g. audio thread)
-     */
-    if (thread->initial_native) GlobalState::setNative(true);
-    if (thread->initial_owncode) GlobalState::setOwnCode(true);
-    if (thread->initial_nolog) GlobalState::setNoLog(true);
 
     current_thread = thread;
     addToList(thread);
@@ -225,6 +218,16 @@ void ThreadManager::update(ThreadInfo* thread)
         GlobalNative gn;
         MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
     }
+}
+
+void ThreadManager::update(ThreadInfo* thread)
+{
+    /* If a thread that is in native state is creating another thread, we
+     * consider that the entire new thread is in native mode (e.g. audio thread)
+     */
+    if (thread->initial_native) GlobalState::setNative(true);
+    if (thread->initial_owncode) GlobalState::setOwnCode(true);
+    if (thread->initial_nolog) GlobalState::setNoLog(true);
 }
 
 void ThreadManager::addToList(ThreadInfo* thread)

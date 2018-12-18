@@ -109,14 +109,14 @@ static void *pthread_start(void *arg)
 
     std::unique_lock<std::mutex> lock(thread->mutex);
 
-    do {
+    ThreadManager::initThreadFromChild(thread);
+    ThreadSync::decrementUninitializedThreadCount();
 
+    do {
         /* Check if there is a function to execute */
         if (thread->state == ThreadInfo::ST_RUNNING) {
             ThreadManager::update(thread);
             debuglog(LCF_THREAD, "Beginning of thread code ", thread->routine_id);
-
-            ThreadSync::decrementUninitializedThreadCount();
 
             /* We need to handle the case where the thread calls pthread_exit to
              * terminate. Because we recycle thread routines, we must continue
@@ -193,7 +193,7 @@ static void *pthread_start(void *arg)
      * The rest (like thread->tid) will be filled by the child thread.
      */
     ThreadInfo* thread = ThreadManager::getNewThread();
-    bool isRecycled = ThreadManager::initThread(thread, start_routine, arg, __builtin_return_address(0));
+    bool isRecycled = ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
 
     int ret = 0;
     if (isRecycled) {

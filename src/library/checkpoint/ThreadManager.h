@@ -77,10 +77,13 @@ public:
     /* Get the ThreadInfo struct from the thread id, or null if not there */
     static ThreadInfo* getThread(pthread_t pthread_id);
 
-    /* Init the ThreadInfo with values passed in pthread_create, and return if
-     * the thread was recycled or not.
+    /* Init the ThreadInfo by the parent thread with values passed in
+     * pthread_create, and return if the thread was recycled or not.
      */
-    static bool initThread(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
+    static bool initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
+
+    /* Finish the initialization of the ThreadInfo struct by the child thread */
+    static void initThreadFromChild(ThreadInfo* thread);
 
     /* Update the ThreadInfo struct by the child thread */
     static void update(ThreadInfo* thread);
