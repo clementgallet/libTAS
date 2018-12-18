@@ -221,6 +221,19 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
         return orig::XSendEvent(display, w, propagate, event_mask, event_send);
     }
     DEBUGLOGCALL(LCF_EVENTS);
+
+    /* Detect and disable fullscreen switching */
+    if (event_send->type == ClientMessage) {
+        static Atom state = XInternAtom(display, "_NET_WM_STATE", True);
+        static Atom state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", True);
+
+        if ((event_send->xclient.message_type == state) &&
+            (event_send->xclient.data.l[0] == 1) &&
+            (event_send->xclient.data.l[1] == state_fullscreen)) {
+            return 0;
+        }
+    }
+
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);
 }
 
