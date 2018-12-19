@@ -42,7 +42,9 @@ SaveFile::SaveFile(const char *file) {
 SaveFile::~SaveFile() {
     if (stream) {
         NATIVECALL(fclose(stream));
-        free(stream_buffer);
+    }
+    else if (fd != 0) {
+        NATIVECALL(close(fd));
     }
 }
 
@@ -64,8 +66,8 @@ FILE* SaveFile::open(const char *modes) {
         }
         else {
             /* File was removed and opened in write mode */
-            stream = open_memstream(&stream_buffer, &stream_size);
-            fd = fileno(stream);
+            this->open(O_RDWR); // creates a file descriptor
+            NATIVECALL(stream = fdopen(fd, modes));
             return stream;
         }
     }
@@ -73,31 +75,8 @@ FILE* SaveFile::open(const char *modes) {
     if (stream == nullptr) {
 
         /* Open a new memory stream using pointers to these entries */
-        stream = open_memstream(&stream_buffer, &stream_size);
-        fd = fileno(stream);
-
-        if (strstr(modes, "w") == nullptr) {
-            /* Append the content of the file to the stream if the file exists */
-            GlobalNative gn;
-            struct stat filestat;
-            int rv = stat(filename.c_str(), &filestat);
-
-            if (rv == 0) {
-                /* The file exists, copying the content to the stream */
-                FILE* f = fopen(filename.c_str(), "rb");
-
-                if (f != nullptr) {
-                    char tmp_buf[4096];
-                    size_t s;
-                    do {
-                        s = fread(tmp_buf, 1, 4096, f);
-                        fwrite(tmp_buf, 1, s, stream);
-                    } while(s != 0);
-
-                    fclose(f);
-                }
-            }
-        }
+        this->open(O_RDWR); // creates a file descriptor
+        NATIVECALL(stream = fdopen(fd, modes));
 
         return stream;
     }
@@ -106,15 +85,12 @@ FILE* SaveFile::open(const char *modes) {
      * If we already opened the savefile:
      *   if opening in read, we seek at the beginning of the file
      *   if opening in append mode, we seek at the end of the file
-     *   if opening in write mode, we create a new memstream (we cannot
-     *   truncate the current one).
+     *   if opening in write mode, we seek at the beginning of the file and
+     *   truncate the file descriptor.
      */
     if (strstr(modes, "w") != nullptr) {
-        fclose(stream);
-        free(stream_buffer);
-
-        stream = open_memstream(&stream_buffer, &stream_size);
-        fd = fileno(stream);
+        fseek(stream, 0, SEEK_SET);
+        ftruncate(fd, 0);
         return stream;
     }
     else if (strstr(modes, "a") != nullptr) {
@@ -157,12 +133,12 @@ int SaveFile::open(int flags)
         }
         else {
             /* File was removed and opened in write mode */
-            open("w");
+            fd = syscall(SYS_memfd_create, filename.c_str(), 0);
         }
     }
     else {
         /* Create an anonymous file and store its file descriptor using memfd_create syscall. */
-        open("w");
+        fd = syscall(SYS_memfd_create, filename.c_str(), 0);
 
         if (!overwrite) {
             /* Append the content of the file to the newly created memfile
@@ -216,11 +192,12 @@ int SaveFile::closeFile()
         return 0;
 
     if (stream) {
-        NATIVECALL(fclose(stream));
+        NATIVECALL(fclose(stream)); // closes both the stream and fd
         stream = nullptr;
-        free(stream_buffer);
-        stream_buffer = nullptr;
-        stream_size = 0;
+        fd = 0;
+    }
+    else if (fd != 0) {
+        NATIVECALL(close(fd));
         fd = 0;
     }
 
@@ -241,11 +218,12 @@ int SaveFile::remove()
         return 0;
 
     if (stream) {
-        NATIVECALL(fclose(stream));
+        NATIVECALL(fclose(stream)); // closes both the stream and fd
         stream = nullptr;
-        free(stream_buffer);
-        stream_buffer = nullptr;
-        stream_size = 0;
+        fd = 0;
+    }
+    else if (fd != 0) {
+        NATIVECALL(close(fd));
         fd = 0;
     }
 

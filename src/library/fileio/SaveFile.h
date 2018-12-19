@@ -34,8 +34,6 @@ public:
     std::string filename;
 
     FILE* stream;
-    char* stream_buffer;
-    size_t stream_size;
 
     int fd;
 
