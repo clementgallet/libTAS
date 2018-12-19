@@ -30,7 +30,7 @@ DEFINE_ORIG_POINTER(XRRGetCrtcInfo);
 OVERRIDE XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE_GLOBAL(XRRGetCrtcInfo);
+    LINK_NAMESPACE(XRRGetCrtcInfo, "libXrandr");
 
     XRRCrtcInfo *crtcInfo = orig::XRRGetCrtcInfo(dpy, resources, crtc);
 
