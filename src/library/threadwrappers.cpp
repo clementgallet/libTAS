@@ -110,12 +110,13 @@ static void *pthread_start(void *arg)
     std::unique_lock<std::mutex> lock(thread->mutex);
 
     ThreadManager::initThreadFromChild(thread);
-    ThreadSync::decrementUninitializedThreadCount();
 
     do {
         /* Check if there is a function to execute */
         if (thread->state == ThreadInfo::ST_RUNNING) {
             ThreadManager::update(thread);
+            ThreadSync::decrementUninitializedThreadCount();
+
             debuglog(LCF_THREAD, "Beginning of thread code ", thread->routine_id);
 
             /* We need to handle the case where the thread calls pthread_exit to
