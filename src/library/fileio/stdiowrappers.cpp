@@ -29,10 +29,11 @@ namespace libtas {
 DEFINE_ORIG_POINTER(fopen)
 DEFINE_ORIG_POINTER(fopen64)
 DEFINE_ORIG_POINTER(fclose)
+DEFINE_ORIG_POINTER(fileno)
 
 FILE *fopen (const char *filename, const char *modes)
 {
-    LINK_NAMESPACE(fopen, nullptr);
+    LINK_NAMESPACE_GLOBAL(fopen);
 
     if (GlobalState::isNative())
         return orig::fopen(filename, modes);
@@ -60,7 +61,7 @@ FILE *fopen (const char *filename, const char *modes)
 
 FILE *fopen64 (const char *filename, const char *modes)
 {
-    LINK_NAMESPACE(fopen64, nullptr);
+    LINK_NAMESPACE_GLOBAL(fopen64);
 
     if (GlobalState::isNative())
         return orig::fopen64(filename, modes);
@@ -84,12 +85,12 @@ FILE *fopen64 (const char *filename, const char *modes)
 
 int fclose (FILE *stream)
 {
-    LINK_NAMESPACE(fclose, nullptr);
+    LINK_NAMESPACE_GLOBAL(fclose);
 
     if (GlobalState::isNative())
         return orig::fclose(stream);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    DEBUGLOGCALL(LCF_FILEIO);
 
     int ret = SaveFileList::closeSaveFile(stream);
     if (ret != 1)
@@ -98,6 +99,18 @@ int fclose (FILE *stream)
     int rv = orig::fclose(stream);
 
     return rv;
+}
+
+int fileno (FILE *stream) throw()
+{
+    LINK_NAMESPACE_GLOBAL(fileno);
+
+    if (GlobalState::isNative())
+        return orig::fileno(stream);
+
+    DEBUGLOGCALL(LCF_FILEIO);
+
+    return orig::fileno(stream);
 }
 
 }
