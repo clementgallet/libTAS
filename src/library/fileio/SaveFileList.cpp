@@ -22,6 +22,7 @@
 #include "SaveFile.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
+#include "../logging.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -41,9 +42,8 @@ std::vector<std::unique_ptr<SaveFile>> savefiles;
 /* Check if the file open permission allows for write operation */
 bool isSaveFile(const char *file, const char *modes)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return true;
         }
     }
@@ -56,9 +56,8 @@ bool isSaveFile(const char *file, const char *modes)
 
 bool isSaveFile(const char *file, int oflag)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return true;
         }
     }
@@ -120,9 +119,8 @@ bool isSaveFile(const char *file)
 
 FILE *openSaveFile(const char *file, const char *modes)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return savefile->open(modes);
         }
     }
@@ -133,9 +131,8 @@ FILE *openSaveFile(const char *file, const char *modes)
 
 int openSaveFile(const char *file, int oflag)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return savefile->open(oflag);
         }
     }
@@ -168,9 +165,8 @@ int closeSaveFile(FILE *stream)
 
 int removeSaveFile(const char *file)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return savefile->remove();
         }
     }
@@ -189,17 +185,18 @@ int removeSaveFile(const char *file)
 
 int renameSaveFile(const char *oldfile, const char *newfile)
 {
-    const std::string oldfilestr(oldfile);
-    const std::string newfilestr(newfile);
+    char* canonnewfile = SaveFile::canonicalizeFile(newfile);
+    std::string newfilestr(canonnewfile);
+    free(canonnewfile);
 
     /* Remove the newfile if present */
     savefiles.erase( std::remove_if(savefiles.begin(), savefiles.end(),
-        [newfilestr](const std::unique_ptr<SaveFile>& s) { return (s->filename.compare(newfilestr) == 0);}),
+        [newfile](const std::unique_ptr<SaveFile>& s) { return (s->isSameFile(newfile));}),
         savefiles.end());
 
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(oldfilestr) == 0) {
-            savefile->filename = newfile;
+        if (savefile->isSameFile(oldfile)) {
+            savefile->filename = newfilestr;
             return 0;
         }
     }
@@ -208,7 +205,7 @@ int renameSaveFile(const char *oldfile, const char *newfile)
     if (shared_config.prevent_savefiles) {
         savefiles.emplace_back(new SaveFile(oldfile));
         savefiles.back()->open("rb");
-        savefiles.back()->filename = newfile;
+        savefiles.back()->filename = newfilestr;
 
         GlobalNative gn;
         return access(oldfile, W_OK);
@@ -219,9 +216,8 @@ int renameSaveFile(const char *oldfile, const char *newfile)
 
 int getSaveFileFd(const char *file)
 {
-    const std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return savefile->fd;
         }
     }
@@ -231,9 +227,8 @@ int getSaveFileFd(const char *file)
 
 bool isSaveFileRemoved(const char *file)
 {
-    std::string filestr(file);
     for (const auto& savefile : savefiles) {
-        if (savefile->filename.compare(filestr) == 0) {
+        if (savefile->isSameFile(file)) {
             return savefile->removed;
         }
     }

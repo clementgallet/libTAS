@@ -34,13 +34,18 @@ public:
     std::string filename;
 
     FILE* stream;
-    char* stream_buffer;
-    size_t stream_size;
 
     int fd;
 
     bool removed = false;
     bool closed = true;
+
+
+    /* Remove duplicate /, /./ and /../ from a path */
+    static char* canonicalizeFile(const char *file);
+
+    /* Return if the current savefile is the same as the given file */
+    bool isSameFile(const char *file);
 
     /* Open and return a FILE stream of the savefile */
     FILE* open(const char *modes);

@@ -21,6 +21,7 @@
 
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
+#include "../logging.h"
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -28,11 +29,16 @@
 #include <vector>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <limits.h> //PATH_MAX
 
 namespace libtas {
 
 SaveFile::SaveFile(const char *file) {
-    filename = std::string(file);
+    /* Storing the canonicalized path so that we can compare paths. Only works
+     * if the file actually exists. */
+    char* canonfile = canonicalizeFile(file);
+    filename = std::string(canonfile);
+    free(canonfile);
     removed = false;
     closed = true;
     stream = nullptr;
@@ -42,11 +48,99 @@ SaveFile::SaveFile(const char *file) {
 SaveFile::~SaveFile() {
     if (stream) {
         NATIVECALL(fclose(stream));
-        free(stream_buffer);
     }
-    if (fd != 0) {
+    else if (fd != 0) {
         NATIVECALL(close(fd));
     }
+}
+
+#define ISSLASH(c) ((c) == '/')
+
+char* SaveFile::canonicalizeFile(const char *file)
+{
+    /* Code taken from gnulib canonicalize_filename_mode() function */
+    char *rname, *dest;
+    char const *start;
+    char const *end;
+    char const *rname_limit;
+
+    if (!file)
+        return nullptr;
+
+    if (file[0] == '\0')
+        return nullptr;
+
+    /* TODO: Deal with relative paths */
+
+    rname = static_cast<char*>(malloc (PATH_MAX));
+    rname_limit = rname + PATH_MAX;
+    dest = rname;
+    *dest++ = '/';
+    start = file;
+
+    for ( ; *start; start = end)
+      {
+        /* Skip sequence of multiple file name separators.  */
+        while (ISSLASH (*start))
+          ++start;
+
+        /* Find end of component.  */
+        for (end = start; *end && !ISSLASH (*end); ++end)
+          /* Nothing.  */;
+
+        if (end - start == 0)
+          break;
+        else if (end - start == 1 && start[0] == '.')
+          /* nothing */;
+        else if (end - start == 2 && start[0] == '.' && start[1] == '.')
+          {
+            /* Back up to previous component, ignore if at root already.  */
+            if (dest > rname + 1)
+              for (--dest; dest > rname && !ISSLASH (dest[-1]); --dest)
+                continue;
+          }
+        else
+          {
+
+            if (!ISSLASH (dest[-1]))
+              *dest++ = '/';
+
+            if (dest + (end - start) >= rname_limit)
+              {
+                ptrdiff_t dest_offset = dest - rname;
+                size_t new_size = rname_limit - rname;
+
+                if (end - start + 1 > PATH_MAX)
+                  new_size += end - start + 1;
+                else
+                  new_size += PATH_MAX;
+                rname = static_cast<char*>(realloc (rname, new_size));
+                rname_limit = rname + new_size;
+
+                dest = rname + dest_offset;
+              }
+
+            dest = static_cast<char*>(memcpy (dest, start, end - start));
+            dest += end - start;
+            *dest = '\0';
+          }
+      }
+    if (dest > rname + 1 && ISSLASH (dest[-1]))
+      --dest;
+    *dest = '\0';
+    if (rname_limit != dest + 1)
+      rname = static_cast<char*>(realloc (rname, dest - rname + 1));
+    return rname;
+}
+
+
+bool SaveFile::isSameFile(const char *file)
+{
+    /* Try comparing the canonilized paths */
+    char* canonfile = canonicalizeFile(file);
+    const std::string filestr(canonfile);
+    free(canonfile);
+    return (filename.compare(filestr) == 0);
 }
 
 FILE* SaveFile::open(const char *modes) {
@@ -67,7 +161,8 @@ FILE* SaveFile::open(const char *modes) {
         }
         else {
             /* File was removed and opened in write mode */
-            stream = open_memstream(&stream_buffer, &stream_size);
+            this->open(O_RDWR); // creates a file descriptor
+            NATIVECALL(stream = fdopen(fd, modes));
             return stream;
         }
     }
@@ -75,30 +170,8 @@ FILE* SaveFile::open(const char *modes) {
     if (stream == nullptr) {
 
         /* Open a new memory stream using pointers to these entries */
-        stream = open_memstream(&stream_buffer, &stream_size);
-
-        if (strstr(modes, "w") == nullptr) {
-            /* Append the content of the file to the stream if the file exists */
-            GlobalNative gn;
-            struct stat filestat;
-            int rv = stat(filename.c_str(), &filestat);
-
-            if (rv == 0) {
-                /* The file exists, copying the content to the stream */
-                FILE* f = fopen(filename.c_str(), "rb");
-
-                if (f != nullptr) {
-                    char tmp_buf[4096];
-                    size_t s;
-                    do {
-                        s = fread(tmp_buf, 1, 4096, f);
-                        fwrite(tmp_buf, 1, s, stream);
-                    } while(s != 0);
-
-                    fclose(f);
-                }
-            }
-        }
+        this->open(O_RDWR); // creates a file descriptor
+        NATIVECALL(stream = fdopen(fd, modes));
 
         return stream;
     }
@@ -107,14 +180,12 @@ FILE* SaveFile::open(const char *modes) {
      * If we already opened the savefile:
      *   if opening in read, we seek at the beginning of the file
      *   if opening in append mode, we seek at the end of the file
-     *   if opening in write mode, we create a new memstream (we cannot
-     *   truncate the current one).
+     *   if opening in write mode, we seek at the beginning of the file and
+     *   truncate the file descriptor.
      */
     if (strstr(modes, "w") != nullptr) {
-        fclose(stream);
-        free(stream_buffer);
-
-        stream = open_memstream(&stream_buffer, &stream_size);
+        fseek(stream, 0, SEEK_SET);
+        ftruncate(fd, 0);
         return stream;
     }
     else if (strstr(modes, "a") != nullptr) {
@@ -216,14 +287,11 @@ int SaveFile::closeFile()
         return 0;
 
     if (stream) {
-        NATIVECALL(fclose(stream));
+        NATIVECALL(fclose(stream)); // closes both the stream and fd
         stream = nullptr;
-        free(stream_buffer);
-        stream_buffer = nullptr;
-        stream_size = 0;
+        fd = 0;
     }
-
-    if (fd != 0) {
+    else if (fd != 0) {
         NATIVECALL(close(fd));
         fd = 0;
     }
@@ -245,14 +313,11 @@ int SaveFile::remove()
         return 0;
 
     if (stream) {
-        NATIVECALL(fclose(stream));
+        NATIVECALL(fclose(stream)); // closes both the stream and fd
         stream = nullptr;
-        free(stream_buffer);
-        stream_buffer = nullptr;
-        stream_size = 0;
+        fd = 0;
     }
-
-    if (fd != 0) {
+    else if (fd != 0) {
         NATIVECALL(close(fd));
         fd = 0;
     }

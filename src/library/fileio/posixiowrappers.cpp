@@ -295,13 +295,14 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
     }
 
     /* Check if savefile. */
-    if (SaveFileList::getSaveFileFd(path) != 0) {
+    int fd = SaveFileList::getSaveFileFd(path);
+    if (fd != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
             errno = ENOENT;
             return -1;
         }
         else {
-            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            NATIVECALL(__fxstat(ver, fd, buf));
             return 0;
         }
     }
@@ -332,13 +333,14 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
     }
 
     /* Check if savefile. */
-    if (SaveFileList::getSaveFileFd(path) != 0) {
+    int fd = SaveFileList::getSaveFileFd(path);
+    if (fd != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
             errno = ENOENT;
             return -1;
         }
         else {
-            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            NATIVECALL(__fxstat64(ver, fd, buf));
             return 0;
         }
     }
@@ -369,13 +371,14 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
     }
 
     /* Check if savefile. */
-    if (SaveFileList::getSaveFileFd(path) != 0) {
+    int fd = SaveFileList::getSaveFileFd(path);
+    if (fd != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
             errno = ENOENT;
             return -1;
         }
         else {
-            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            NATIVECALL(__fxstat(ver, fd, buf));
             return 0;
         }
     }
@@ -406,13 +409,14 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
     }
 
     /* Check if savefile. */
-    if (SaveFileList::getSaveFileFd(path) != 0) {
+    int fd = SaveFileList::getSaveFileFd(path);
+    if (fd != 0) {
         if (SaveFileList::isSaveFileRemoved(path)) {
             errno = ENOENT;
             return -1;
         }
         else {
-            debuglogstdio(LCF_FILEIO | LCF_TODO, "    stat struct is not filled!");
+            NATIVECALL(__fxstat64(ver, fd, buf));
             return 0;
         }
     }
