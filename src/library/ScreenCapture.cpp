@@ -260,7 +260,7 @@ void ScreenCapture::destroyScreenSurface()
 
 void ScreenCapture::resize(int w, int h)
 {
-    if (inited) {
+    if (!inited) {
         return;
     }
 
