@@ -21,6 +21,7 @@
 
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
+#include "../logging.h"
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -28,11 +29,16 @@
 #include <vector>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <limits.h> //PATH_MAX
 
 namespace libtas {
 
 SaveFile::SaveFile(const char *file) {
-    filename = std::string(file);
+    /* Storing the canonicalized path so that we can compare paths. Only works
+     * if the file actually exists. */
+    char* canonfile = canonicalizeFile(file);
+    filename = std::string(canonfile);
+    free(canonfile);
     removed = false;
     closed = true;
     stream = nullptr;
@@ -46,6 +52,95 @@ SaveFile::~SaveFile() {
     else if (fd != 0) {
         NATIVECALL(close(fd));
     }
+}
+
+#define ISSLASH(c) ((c) == '/')
+
+char* SaveFile::canonicalizeFile(const char *file)
+{
+    /* Code taken from gnulib canonicalize_filename_mode() function */
+    char *rname, *dest;
+    char const *start;
+    char const *end;
+    char const *rname_limit;
+
+    if (!file)
+        return nullptr;
+
+    if (file[0] == '\0')
+        return nullptr;
+
+    /* TODO: Deal with relative paths */
+
+    rname = static_cast<char*>(malloc (PATH_MAX));
+    rname_limit = rname + PATH_MAX;
+    dest = rname;
+    *dest++ = '/';
+    start = file;
+
+    for ( ; *start; start = end)
+      {
+        /* Skip sequence of multiple file name separators.  */
+        while (ISSLASH (*start))
+          ++start;
+
+        /* Find end of component.  */
+        for (end = start; *end && !ISSLASH (*end); ++end)
+          /* Nothing.  */;
+
+        if (end - start == 0)
+          break;
+        else if (end - start == 1 && start[0] == '.')
+          /* nothing */;
+        else if (end - start == 2 && start[0] == '.' && start[1] == '.')
+          {
+            /* Back up to previous component, ignore if at root already.  */
+            if (dest > rname + 1)
+              for (--dest; dest > rname && !ISSLASH (dest[-1]); --dest)
+                continue;
+          }
+        else
+          {
+
+            if (!ISSLASH (dest[-1]))
+              *dest++ = '/';
+
+            if (dest + (end - start) >= rname_limit)
+              {
+                ptrdiff_t dest_offset = dest - rname;
+                size_t new_size = rname_limit - rname;
+
+                if (end - start + 1 > PATH_MAX)
+                  new_size += end - start + 1;
+                else
+                  new_size += PATH_MAX;
+                rname = static_cast<char*>(realloc (rname, new_size));
+                rname_limit = rname + new_size;
+
+                dest = rname + dest_offset;
+              }
+
+            dest = static_cast<char*>(memcpy (dest, start, end - start));
+            dest += end - start;
+            *dest = '\0';
+          }
+      }
+    if (dest > rname + 1 && ISSLASH (dest[-1]))
+      --dest;
+    *dest = '\0';
+    if (rname_limit != dest + 1)
+      rname = static_cast<char*>(realloc (rname, dest - rname + 1));
+    return rname;
+}
+
+
+bool SaveFile::isSameFile(const char *file)
+{
+    /* Try comparing the canonilized paths */
+    char* canonfile = canonicalizeFile(file);
+    const std::string filestr(canonfile);
+    free(canonfile);
+    return (filename.compare(filestr) == 0);
 }
 
 FILE* SaveFile::open(const char *modes) {
