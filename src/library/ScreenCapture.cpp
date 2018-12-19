@@ -260,6 +260,15 @@ void ScreenCapture::destroyScreenSurface()
 
 void ScreenCapture::resize(int w, int h)
 {
+    if (inited) {
+        return;
+    }
+
+    /* Don't resize if window is not registered */
+    if (gameXWindow == 0) {
+        return;
+    }
+
     destroyScreenSurface();
 
     width = w;
