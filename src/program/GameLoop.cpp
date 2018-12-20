@@ -262,11 +262,16 @@ void GameLoop::init()
     /* Unvalidate the game window id */
     context->game_window = 0;
 
-    /* Reset the frame count */
-    context->framecount = 0;
+    /* Reset the frame count if not restarting */
+    if (context->status != Context::RESTARTING)
+        context->framecount = 0;
 
-    /* Reset the rerecord count */
-    context->rerecord_count = 0;
+    /* Set the initial frame count for the game */
+    context->config.sc.initial_framecount = context->framecount;
+
+    /* Reset the rerecord count if not restarting */
+    if (context->status != Context::RESTARTING)
+        context->rerecord_count = 0;
 
     /* Extract the game executable name from the game executable path */
     size_t sep = context->gamepath.find_last_of("/");
@@ -274,10 +279,6 @@ void GameLoop::init()
         context->gamename = context->gamepath.substr(sep + 1);
     else
         context->gamename = context->gamepath;
-
-    context->status = Context::ACTIVE;
-
-    emit statusChanged();
 
     /* Remove savestates again in case we did not exist cleanly the previous time */
     remove_savestates(context);
@@ -311,28 +312,34 @@ void GameLoop::init()
         pclose(md5str);
     }
 
-    /* Opening a movie, which imports the inputs and parameters if in read mode,
-     * or prepare a movie if in write mode.
-     */
-    movie = MovieFile(context);
-    if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-        int ret = movie.loadMovie();
-        if (ret < 0) {
-            emit alertToShow(MovieFile::errorString(ret));
-            context->config.sc.recording = SharedConfig::NO_RECORDING;
+
+    /* Only open the movie if we did not restart */
+    if (context->status != Context::RESTARTING) {
+        /* Opening a movie, which imports the inputs and parameters if in read mode,
+         * or prepare a movie if in write mode.
+         */
+        movie = MovieFile(context);
+        if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+            int ret = movie.loadMovie();
+            if (ret < 0) {
+                emit alertToShow(MovieFile::errorString(ret));
+                context->config.sc.recording = SharedConfig::NO_RECORDING;
+            }
+            else {
+                context->config.sc.movie_framecount = movie.nbFrames();
+
+                /* Update the UI accordingly */
+                emit configChanged();
+            }
+
+            /* Check md5 match */
+            if ((!context->md5_movie.empty()) && (context->md5_game.compare(context->md5_movie) != 0))
+                emit alertToShow(QString("Game executable hash does not match with the hash stored in the movie!"));
+
         }
-        else {
-            context->config.sc.movie_framecount = movie.nbFrames();
-
-            /* Update the UI accordingly */
-            emit configChanged();
-        }
-
-        /* Check md5 match */
-        if ((!context->md5_movie.empty()) && (context->md5_game.compare(context->md5_movie) != 0))
-            emit alertToShow(QString("Game executable hash does not match with the hash stored in the movie!"));
-
     }
+
+    /* We must add a blank frame in either case */
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         /* Add one blank frame in every movie corresponding to the input
          * between the game startup and the first screen draw, which is for now
@@ -347,6 +354,9 @@ void GameLoop::init()
     pointer_offset_y = 0;
 
     emit rerecordChanged();
+
+    context->status = Context::ACTIVE;
+    emit statusChanged();
 }
 
 void GameLoop::initProcessMessages()
@@ -1310,6 +1320,29 @@ bool GameLoop::haveFocus()
 
 void GameLoop::loopExit()
 {
+    /* Check if we need to restart the game:
+     * - auto-restart is set
+     * - we are playing or recording a movie
+     * - the user didn't use the Stop button to stop the game
+     */
+
+    if (context->config.auto_restart &&
+        (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
+        (context->status != Context::QUITTING)) {
+
+        /* We keep the movie opened and indicate the main thread to restart the game */
+
+        closeSocket();
+
+        /* Remove savestates because they are invalid on future instances of the game */
+        remove_savestates(context);
+
+        context->status = Context::RESTARTING;
+        emit statusChanged();
+
+        return;
+    }
+
     if (movie.modifiedSinceLastSave) {
 
         /* Ask the user if he wants to save the movie, and get the answer.

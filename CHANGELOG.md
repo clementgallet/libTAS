@@ -5,6 +5,7 @@
 * When loading a savestate of previous game iteration, the movie is loaded
 * Improve the support of virtual screen resolution for non-SDL games
 * Prevent Xlib games to switch to fullscreen
+* Implement an auto-restart feature
 
 ### Changed
 ### Fixed

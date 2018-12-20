@@ -584,6 +584,10 @@ void MainWindow::createMenus()
     movieMenu->addSeparator();
 
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
+    autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, &MainWindow::slotAutoRestart);
+    autoRestartAction->setCheckable(true);
+    disabledActionsOnStart.append(autoRestartAction);
+
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
     movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
@@ -805,6 +809,17 @@ void MainWindow::updateStatus()
         case Context::QUITTING:
             stopButton->setText("Kill");
             break;
+
+        case Context::RESTARTING:
+
+            /* Check that there might be a thread from a previous game execution */
+            if (game_thread.joinable())
+                game_thread.join();
+
+            /* Restart game */
+            game_thread = std::thread{&GameLoop::start, gameLoop};
+            break;
+
         default:
             break;
     }
@@ -1062,6 +1077,8 @@ void MainWindow::updateUIFromConfig()
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
+
+    autoRestartAction->setChecked(context->config.auto_restart);
 
     updateStatusBar();
 }
@@ -1465,6 +1482,11 @@ void MainWindow::slotRamState(bool checked)
 {
     context->config.sc.savestates_in_ram = checked;
     context->config.sc_modified = true;
+}
+
+void MainWindow::slotAutoRestart(bool checked)
+{
+    context->config.auto_restart = checked;
 }
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)

@@ -49,7 +49,11 @@ struct SharedConfig {
     };
     int recording = NO_RECORDING;
 
+    /* Movie framecount */
     unsigned long movie_framecount = 0;
+
+    /* Frame count at the start of the game. Used when game has restarted */
+    unsigned long initial_framecount = 0;
 
     /* Log status */
     enum LogStatus {

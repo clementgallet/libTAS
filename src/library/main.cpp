@@ -34,6 +34,7 @@
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
 #include <unistd.h> // getpid()
+#include "frame.h" // framecount
 
 extern char**environ;
 
@@ -98,6 +99,9 @@ void __attribute__((constructor)) init(void)
         }
         receiveData(&message, sizeof(int));
     }
+
+    /* Set the frame count to the initial frame count */
+    framecount = shared_config.initial_framecount;
 
     ai.emptyInputs();
     old_ai.emptyInputs();

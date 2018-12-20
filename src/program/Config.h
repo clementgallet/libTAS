@@ -105,6 +105,9 @@ public:
     /* List of recent existing gamepaths */
     std::list<std::string> recent_gamepaths;
 
+    /* Do we restart the game when it exits? */
+    bool auto_restart = false;
+
     /* Save the config into the config file */
     void save(const std::string& gamepath);
 

@@ -34,6 +34,7 @@ struct Context {
         STARTING,
         ACTIVE,
         QUITTING,
+        RESTARTING,
     };
     volatile RunStatus status = INACTIVE;
 

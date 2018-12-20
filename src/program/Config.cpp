@@ -78,6 +78,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("autosave_delay_sec", autosave_delay_sec);
     settings.setValue("autosave_frames", autosave_frames);
     settings.setValue("autosave_count", autosave_count);
+    settings.setValue("auto_restart", auto_restart);
 
     settings.beginGroup("keymapping");
 
@@ -198,6 +199,7 @@ void Config::load(const std::string& gamepath) {
     autosave_delay_sec = settings.value("autosave_delay_sec", autosave_delay_sec).toDouble();
     autosave_frames = settings.value("autosave_frames", autosave_frames).toInt();
     autosave_count = settings.value("autosave_count", autosave_count).toInt();
+    auto_restart = settings.value("auto_restart", auto_restart).toBool();
 
     /* Load key mapping */
 

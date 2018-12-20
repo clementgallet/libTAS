@@ -345,7 +345,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     /* Push generated events. This must be done after getting the new inputs. */
     generateKeyUpEvents();
     generateKeyDownEvents();
-    if (framecount == 1)
+    if (framecount == (shared_config.initial_framecount + 1))
         generateControllerAdded();
     generateControllerEvents();
     generateMouseMotionEvents();

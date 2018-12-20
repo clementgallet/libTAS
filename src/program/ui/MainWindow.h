@@ -80,6 +80,7 @@ public:
     QAction *exportMovieAction;
     QAction *annotateMovieAction;
 
+    QAction *autoRestartAction;
     QActionGroup *movieEndGroup;
     QActionGroup *screenResGroup;
 
@@ -273,6 +274,7 @@ private slots:
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotCalibrateMouse();
+    void slotAutoRestart(bool checked);
 };
 
 #endif
