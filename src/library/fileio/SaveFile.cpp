@@ -37,6 +37,9 @@ SaveFile::SaveFile(const char *file) {
     /* Storing the canonicalized path so that we can compare paths. Only works
      * if the file actually exists. */
     char* canonfile = canonicalizeFile(file);
+    if (! canonfile) {
+        return;
+    }
     filename = std::string(canonfile);
     free(canonfile);
     removed = false;
@@ -138,12 +141,19 @@ bool SaveFile::isSameFile(const char *file)
 {
     /* Try comparing the canonilized paths */
     char* canonfile = canonicalizeFile(file);
+    if (!canonfile)
+        return false;
+
     const std::string filestr(canonfile);
     free(canonfile);
     return (filename.compare(filestr) == 0);
 }
 
 FILE* SaveFile::open(const char *modes) {
+
+    if (filename.empty())
+        return nullptr;
+
     /*
      * Create a memory stream with a copy of the content of the file using
      * open_memstream. Save the stream buffer and size.
@@ -200,6 +210,9 @@ FILE* SaveFile::open(const char *modes) {
 
 int SaveFile::open(int flags)
 {
+    if (filename.empty())
+        return -1;
+
     /*
      * Create an anonymous file with a copy of the content of the file using
      * memfd_create, and save the file descriptor.

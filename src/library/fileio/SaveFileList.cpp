@@ -186,6 +186,8 @@ int removeSaveFile(const char *file)
 int renameSaveFile(const char *oldfile, const char *newfile)
 {
     char* canonnewfile = SaveFile::canonicalizeFile(newfile);
+    if (!canonnewfile)
+        return -1;
     std::string newfilestr(canonnewfile);
     free(canonnewfile);
 
