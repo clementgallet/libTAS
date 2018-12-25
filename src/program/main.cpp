@@ -51,6 +51,7 @@ static void print_usage(void)
     std::cout << "  -d, --dump FILE     Start a audio/video encode into the specified FILE" << std::endl;
     std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
     std::cout << "  -w, --write MOVIE   Record game inputs into the specified MOVIE file" << std::endl;
+    std::cout << "  -p PATH             Send inputs to the specified serial port PATH" << std::endl;
     std::cout << "  -h, --help          Show this message" << std::endl;
 }
 
@@ -65,9 +66,9 @@ int main(int argc, char **argv)
     char* abspath;
     std::ofstream o;
     std::string moviefile;
-    
+
     // std::string libname;
-    while ((c = getopt (argc, argv, "+r:w:d:h")) != -1) {
+    while ((c = getopt (argc, argv, "+r:w:d:p:h")) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -94,6 +95,9 @@ int main(int argc, char **argv)
                     context.config.sc.av_dumping = true;
                     context.config.dumpfile = abspath;
                 }
+                break;
+            case 'p':
+                context.serial_port = optarg;
                 break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;

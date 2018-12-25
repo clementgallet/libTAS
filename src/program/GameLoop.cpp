@@ -24,6 +24,7 @@
 #include "GameLoop.h"
 #include "utils.h"
 #include "AutoSave.h"
+#include "Serial.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -186,10 +187,13 @@ void GameLoop::start()
     init();
     initProcessMessages();
 
+    int fd = openSerial(context->serial_port, 2000000);
+
     while (1)
     {
         bool exitMsg = startFrameMessages();
         if (exitMsg) {
+            closeSerial(fd);
             loopExit();
             return;
         }
@@ -205,6 +209,7 @@ void GameLoop::start()
             int ret = waitpid(context->game_pid, nullptr, WNOHANG);
             if (ret == context->game_pid) {
                 emit alertToShow(QString("Game did not exit normally..."));
+                closeSerial(fd);
                 loopExit();
                 return;
             }
@@ -235,6 +240,7 @@ void GameLoop::start()
 
         AllInputs ai;
         processInputs(ai);
+        sendInputsSerial(fd, ai, prev_ai);
         prev_ai = ai;
 
         /* Pause if needed */

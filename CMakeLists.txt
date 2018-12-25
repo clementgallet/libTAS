@@ -9,6 +9,7 @@ set(PROGRAM_SOURCES
     src/program/KeyMapping.cpp
     src/program/main.cpp
     src/program/MovieFile.cpp
+    src/program/Serial.cpp
     src/program/utils.cpp
     src/program/ui/AnnotationsWindow.cpp
     src/program/ui/AutoSaveWindow.cpp

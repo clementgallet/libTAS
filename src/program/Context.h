@@ -105,6 +105,9 @@ struct Context {
     /* MD5 hash of the game executable that is stored in the movie */
     std::string md5_movie;
 
+    /* Serial port path*/
+    std::string serial_port = "";
+
 };
 
 #endif
