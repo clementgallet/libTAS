@@ -52,7 +52,7 @@ public:
     std::vector<std::pair<uintptr_t, std::vector<int>>> pointer_chains;
 
     /* Max size of pointer chain */
-    int max_level;
+    int max_level = 5;
 
     /* Store all pointers from the game memory into a map */
     void locatePointers();
