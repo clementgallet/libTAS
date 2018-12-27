@@ -6,6 +6,7 @@
 * Improve the support of virtual screen resolution for non-SDL games
 * Prevent Xlib games to switch to fullscreen
 * Implement an auto-restart feature
+* Manually add audio latency for better playback 
 
 ### Changed
 ### Fixed
