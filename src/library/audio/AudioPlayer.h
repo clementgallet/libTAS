@@ -32,6 +32,8 @@ class AudioPlayer
     /* Connection to the sound system */
     static snd_pcm_t *phandle;
 
+    static std::vector<char> silence;
+    
     public:
         // AudioPlayer();
         // ~AudioPlayer();

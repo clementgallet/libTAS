@@ -28,6 +28,7 @@ namespace libtas {
 
 snd_pcm_t *AudioPlayer::phandle;
 bool AudioPlayer::inited = false;
+std::vector<char> AudioPlayer::silence;
 
 bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
 {
@@ -105,6 +106,17 @@ bool AudioPlayer::play(AudioContext& ac)
             format = SND_PCM_FORMAT_S16_LE;
         if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency)))
             return false;
+
+        /* Build a 50 ms silence buffer */
+        int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
+
+        if (ac.outBitDepth == 8) {
+            silence.assign(sil_bytes, 0x80);
+        }
+        if (ac.outBitDepth == 16) {
+            silence.assign(sil_bytes, 0x00);
+        }
+        
         inited = true;
     }
 
@@ -131,6 +143,8 @@ bool AudioPlayer::play(AudioContext& ac)
             else {
                 {
                     GlobalNative gn;
+                    /* Send silence bytes first */
+                    snd_pcm_writei(phandle, silence.data(), silence.size()/ac.outAlignSize);
                     snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
                 }
             }
