@@ -233,7 +233,7 @@ int SaveFile::open(int flags)
         }
     }
     else if (removed) {
-        if (flags & O_RDONLY) {
+        if ((flags & O_ACCMODE) == O_RDONLY) {
             /* File was removed and opened in read-only mode */
             errno = ENOENT;
             closed = true;
