@@ -1065,7 +1065,7 @@ void MainWindow::updateUIFromConfig()
         action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
 
-    renderSoftAction->setChecked(context->config.opengl_soft);
+    renderSoftAction->setChecked(context->config.sc.opengl_soft);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
@@ -1089,7 +1089,7 @@ void MainWindow::updateStatusBar()
     statusBar()->removeWidget(statusSoft);
     statusBar()->removeWidget(statusMute);
 
-    if (!context->config.opengl_soft) {
+    if (!context->config.sc.opengl_soft) {
         statusBar()->addWidget(statusIcon);
         statusIcon->show();
         statusBar()->addWidget(statusSoft);
@@ -1383,7 +1383,7 @@ void MainWindow::slotMuteSound(bool checked)
 
 void MainWindow::slotRenderSoft(bool checked)
 {
-    context->config.opengl_soft = checked;
+    context->config.sc.opengl_soft = checked;
     updateStatusBar();
 }
 

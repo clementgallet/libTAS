@@ -107,7 +107,7 @@ void GameLoop::launchGameThread()
     }
 
     /* Set additional environment variables regarding Mesa configuration */
-    if (context->config.opengl_soft)
+    if (context->config.sc.opengl_soft)
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
     else
         unsetenv("LIBGL_ALWAYS_SOFTWARE");
@@ -982,7 +982,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             if (message != MSGB_FRAMECOUNT_TIME) {
                 std::cerr << "Got wrong message after state loading" << std::endl;
 
-                if (!context->config.opengl_soft) {
+                if (!context->config.sc.opengl_soft) {
                     emit alertToShow(QString("Crash after loading the savestate. Savestates are unstable unless you check Video>Force software rendering"));
                 }
 

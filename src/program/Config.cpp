@@ -72,7 +72,6 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("ffmpegoptions", ffmpegoptions.c_str());
     settings.setValue("libdir", libdir.c_str());
     settings.setValue("rundir", rundir.c_str());
-    settings.setValue("opengl_soft", opengl_soft);
     settings.setValue("on_movie_end", on_movie_end);
     settings.setValue("autosave", autosave);
     settings.setValue("autosave_delay_sec", autosave_delay_sec);
@@ -135,6 +134,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_bitrate", sc.audio_bitrate);
     settings.setValue("locale", sc.locale);
     settings.setValue("virtual_steam", sc.virtual_steam);
+    settings.setValue("opengl_soft", sc.opengl_soft);
 
     settings.beginWriteArray("main_gettimes_threshold");
     for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
@@ -193,7 +193,6 @@ void Config::load(const std::string& gamepath) {
     libdir = settings.value("libdir", "").toString().toStdString();
     rundir = settings.value("rundir", "").toString().toStdString();
 
-    opengl_soft = settings.value("opengl_soft", opengl_soft).toBool();
     on_movie_end = settings.value("on_movie_end", on_movie_end).toInt();
     autosave = settings.value("autosave", autosave).toBool();
     autosave_delay_sec = settings.value("autosave_delay_sec", autosave_delay_sec).toDouble();
@@ -264,6 +263,7 @@ void Config::load(const std::string& gamepath) {
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
     sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
     sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();
+    sc.opengl_soft = settings.value("opengl_soft", sc.opengl_soft).toBool();
 
     size = settings.beginReadArray("main_gettimes_threshold");
     for (int t=0; t<size; t++) {

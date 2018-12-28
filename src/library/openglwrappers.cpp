@@ -55,6 +55,7 @@ DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
 
+DEFINE_ORIG_POINTER(glGetString);
 DEFINE_ORIG_POINTER(glClear);
 DEFINE_ORIG_POINTER(glBegin);
 DEFINE_ORIG_POINTER(glEnd);
@@ -119,6 +120,31 @@ DEFINE_ORIG_POINTER(glMultiDrawElementsEXT);
 DEFINE_ORIG_POINTER(glDrawArraysEXT);
 
 DEFINE_ORIG_POINTER(glBlitFramebuffer);
+
+void checkMesa()
+{
+    /* Check only once */
+    static bool checked = false;
+    if (checked) return;
+    checked = true;
+
+    /* Get OpenGL vendor and renderer */
+    LINK_NAMESPACE(glGetString, "libGL");
+    const char* vendor = reinterpret_cast<const char*>(orig::glGetString(GL_VENDOR));
+    const char* renderer = reinterpret_cast<const char*>(orig::glGetString(GL_RENDERER));
+
+    debuglog(LCF_OGL | LCF_INFO, "OpenGL vendor: ", vendor);
+    debuglog(LCF_OGL | LCF_INFO, "OpenGL renderer: ", renderer);
+
+    /* Check that we are using llvm driver */
+    if (shared_config.opengl_soft && (strstr(renderer, "llvmpipe") == nullptr)) {
+        /* Alert the user that software rendering is not enabled */
+        std::string alertMsg = "Software rendering was enabled, but the OpenGL renderer currently used (";
+        alertMsg += renderer;
+        alertMsg += ") does not match. Check if you have a Mesa-compatible GPU driver installed. At the moment, it is likely that savestates will crash";
+        setAlertMsg(alertMsg);
+    }
+}
 
 /* If the game uses the glXGetProcAddressXXX functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -240,6 +266,8 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
         /* Create texture and fbo in the OSD */
         RenderHUD_GL::init();
 #endif
+
+        checkMesa();
     }
 
     /* Disable VSync */

@@ -29,6 +29,8 @@
 
 namespace libtas {
 
+void checkMesa();
+
 OVERRIDE void(*glXGetProcAddress (const GLubyte *procName))();
 OVERRIDE __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName);
 OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
@@ -50,6 +52,8 @@ OVERRIDE int glXGetSwapIntervalMESA(void);
 OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
 
 OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
+
+OVERRIDE const GLubyte* glGetString( GLenum name);
 
 /* A lot of openGL draw commands that are NOPed when fastforwarding */
 

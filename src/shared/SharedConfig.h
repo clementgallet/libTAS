@@ -204,6 +204,9 @@ struct SharedConfig {
     /* Simulates a virtual Steam client */
     bool virtual_steam = false;
 
+    /* Force Mesa software OpenGL driver */
+    bool opengl_soft = true;
+
 };
 
 #endif

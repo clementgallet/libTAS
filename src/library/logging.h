@@ -117,7 +117,7 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
  * shown on a dialog box. We also need some synchronization to access the set
  * of error messages.
  */
-void setAlertMsg(const char* alert, int size);
+void setAlertMsg(const std::string alert);
 bool getAlertMsg(std::string& alert);
 
 }
