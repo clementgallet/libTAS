@@ -128,6 +128,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->rerecord_count = config.value("rerecord_count").toUInt();
 	context->authors = config.value("authors").toString().toStdString();
 	context->md5_movie = config.value("md5").toString().toStdString();
+	context->config.auto_restart = config.value("auto_restart").toBool();
 
 	config.beginGroup("mainthread_timetrack");
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
@@ -251,6 +252,7 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
 	config.setValue("libtas_minor_version", MINORVERSION);
 	config.setValue("libtas_patch_version", PATCHVERSION);
 	config.setValue("savestate_frame_count", static_cast<unsigned long long>(nb_frames));
+	config.setValue("auto_restart", context->config.auto_restart);
 
 	/* Store the md5 that was extracted from the movie, or store the game
 	 * binary movie if not. */
