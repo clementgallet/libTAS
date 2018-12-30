@@ -237,22 +237,33 @@ void GameLoop::start()
         processInputs(ai);
         prev_ai = ai;
 
+        bool shouldQuit = false;
+
         /* Pause if needed */
         if ((context->pause_frame == (context->framecount + 1)) ||
             ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
             ((context->config.sc.movie_framecount + context->pause_frame) == (context->framecount + 1)))) {
 
-            /* Disable pause */
-            context->pause_frame = 0;
+            if (context->config.dumping) {
+                /* If we're dumping from the command line, we are done */
+                shouldQuit = true;
+            } else {
+                /* Disable pause */
+                context->pause_frame = 0;
 
-            /* Pause and disable fast-forward */
-            context->config.sc.running = false;
-            context->config.sc.fastforward = false;
-            context->config.sc_modified = true;
-            emit sharedConfigChanged();
+                /* Pause and disable fast-forward */
+                context->config.sc.running = false;
+                context->config.sc.fastforward = false;
+                context->config.sc_modified = true;
+                emit sharedConfigChanged();
+            }
         }
 
         endFrameMessages(ai);
+
+        if (shouldQuit) {
+            context->status = Context::QUITTING;
+        }
 
     }
 }
@@ -464,6 +475,10 @@ bool GameLoop::startFrameMessages()
             emit fpsChanged(fps, lfps);
             break;
         case MSGB_QUIT:
+            if (context->config.dumping) {
+                /* Finished running a dump from the command line */
+                exit(0);
+            }
             return true;
         default:
             std::cerr << "Got unknown message!!!" << std::endl;
