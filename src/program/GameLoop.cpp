@@ -108,7 +108,7 @@ void GameLoop::launchGameThread()
     }
 
     /* Set additional environment variables regarding Mesa configuration */
-    if (context->config.opengl_soft)
+    if (context->config.sc.opengl_soft)
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
     else
         unsetenv("LIBGL_ALWAYS_SOFTWARE");
@@ -243,22 +243,33 @@ void GameLoop::start()
         sendInputsSerial(fd, ai, prev_ai);
         prev_ai = ai;
 
+        bool shouldQuit = false;
+
         /* Pause if needed */
         if ((context->pause_frame == (context->framecount + 1)) ||
             ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
             ((context->config.sc.movie_framecount + context->pause_frame) == (context->framecount + 1)))) {
 
-            /* Disable pause */
-            context->pause_frame = 0;
+            if (context->config.dumping) {
+                /* If we're dumping from the command line, we are done */
+                shouldQuit = true;
+            } else {
+                /* Disable pause */
+                context->pause_frame = 0;
 
-            /* Pause and disable fast-forward */
-            context->config.sc.running = false;
-            context->config.sc.fastforward = false;
-            context->config.sc_modified = true;
-            emit sharedConfigChanged();
+                /* Pause and disable fast-forward */
+                context->config.sc.running = false;
+                context->config.sc.fastforward = false;
+                context->config.sc_modified = true;
+                emit sharedConfigChanged();
+            }
         }
 
         endFrameMessages(ai);
+
+        if (shouldQuit) {
+            context->status = Context::QUITTING;
+        }
 
     }
 }
@@ -470,6 +481,10 @@ bool GameLoop::startFrameMessages()
             emit fpsChanged(fps, lfps);
             break;
         case MSGB_QUIT:
+            if (context->config.dumping) {
+                /* Finished running a dump from the command line */
+                exit(0);
+            }
             return true;
         default:
             std::cerr << "Got unknown message!!!" << std::endl;
@@ -988,7 +1003,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             if (message != MSGB_FRAMECOUNT_TIME) {
                 std::cerr << "Got wrong message after state loading" << std::endl;
 
-                if (!context->config.opengl_soft) {
+                if (!context->config.sc.opengl_soft) {
                     emit alertToShow(QString("Crash after loading the savestate. Savestates are unstable unless you check Video>Force software rendering"));
                 }
 

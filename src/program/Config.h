@@ -61,14 +61,14 @@ public:
     /* Was the dump file modified */
     bool dumpfile_modified;
 
+    /* Were we started up with the -d option? */
+    bool dumping;
+
     /* Path of the libraries used by the game */
     std::string libdir;
 
     /* Path where the game needs to run */
     std::string rundir;
-
-    /* Force Mesa software OpenGL driver */
-    bool opengl_soft = true;
 
     /* Directory holding our config files */
     std::string configdir;

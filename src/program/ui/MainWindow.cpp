@@ -303,6 +303,14 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     setCentralWidget(centralWidget);
 
     updateUIFromConfig();
+
+    /* We are dumping from the command line */
+    if (context->config.dumping) {
+        slotToggleEncode();
+        slotPause(false);
+	slotFastForward(true);
+        slotLaunch();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -1065,7 +1073,7 @@ void MainWindow::updateUIFromConfig()
         action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
 
-    renderSoftAction->setChecked(context->config.opengl_soft);
+    renderSoftAction->setChecked(context->config.sc.opengl_soft);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
@@ -1089,7 +1097,7 @@ void MainWindow::updateStatusBar()
     statusBar()->removeWidget(statusSoft);
     statusBar()->removeWidget(statusMute);
 
-    if (!context->config.opengl_soft) {
+    if (!context->config.sc.opengl_soft) {
         statusBar()->addWidget(statusIcon);
         statusIcon->show();
         statusBar()->addWidget(statusSoft);
@@ -1349,7 +1357,7 @@ void MainWindow::slotToggleEncode()
     /* Prompt a confirmation message for overwriting an encode file */
     if (!context->config.sc.av_dumping) {
         struct stat sb;
-        if (stat(context->config.dumpfile.c_str(), &sb) == 0) {
+        if (stat(context->config.dumpfile.c_str(), &sb) == 0 && sb.st_size != 0) {
             /* Pause the game during the choice */
             context->config.sc.running = false;
             context->config.sc_modified = true;
@@ -1383,7 +1391,7 @@ void MainWindow::slotMuteSound(bool checked)
 
 void MainWindow::slotRenderSoft(bool checked)
 {
-    context->config.opengl_soft = checked;
+    context->config.sc.opengl_soft = checked;
     updateStatusBar();
 }
 

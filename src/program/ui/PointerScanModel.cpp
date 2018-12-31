@@ -167,7 +167,7 @@ void PointerScanModel::recursiveFind(uintptr_t addr, int level, int offsets[], i
 
 int PointerScanModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return pointer_chains.size();
+    return pointer_chains.size();
 }
 
 int PointerScanModel::columnCount(const QModelIndex & /*parent*/) const

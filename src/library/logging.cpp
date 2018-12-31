@@ -118,10 +118,10 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 static std::list<std::string> alert_messages;
 static std::mutex mutex;
 
-void setAlertMsg(const char* alert, int size)
+void setAlertMsg(const std::string alert)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    alert_messages.push_back(std::string(alert, size));
+    alert_messages.push_back(alert);
 }
 
 bool getAlertMsg(std::string& alert)

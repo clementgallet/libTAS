@@ -34,6 +34,7 @@
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
 #include "EventQueue.h"
+#include "openglwrappers.h" // checkMesa()
 // #include <string>
 // #include <X11/Xlib.h> // Display
 
@@ -121,6 +122,8 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     RenderHUD_GL::init();
 #endif
 
+    checkMesa();
+    
     return context;
 }
 

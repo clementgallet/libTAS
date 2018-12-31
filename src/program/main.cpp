@@ -37,6 +37,7 @@
 #include <fstream>
 #include <iostream>
 #include <fcntl.h>
+#include <getopt.h>
 
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
@@ -67,8 +68,19 @@ int main(int argc, char **argv)
     std::ofstream o;
     std::string moviefile;
 
+    static struct option long_options[] =
+    {
+        {"read", required_argument, nullptr, 'r'},
+        {"write", required_argument, nullptr, 'w'},
+        {"dump", required_argument, nullptr, 'd'},
+        {"port", required_argument, nullptr, 'p'},
+        {"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}
+    };
+    int option_index = 0;
+
     // std::string libname;
-    while ((c = getopt (argc, argv, "+r:w:d:p:h")) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:p:h", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -92,8 +104,8 @@ int main(int argc, char **argv)
 
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.config.sc.av_dumping = true;
                     context.config.dumpfile = abspath;
+                    context.config.dumping = true;
                 }
                 break;
             case 'p':
