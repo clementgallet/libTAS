@@ -119,9 +119,18 @@ static const KeySym Xlib_default_keymap[256] = {
     debuglog(LCF_KEYBOARD, __func__, " called with keycode ", event_struct->keycode);
     KeyCode keycode = event_struct->keycode;
     *keysym_return = Xlib_default_keymap[keycode];
-    char* string = XKeysymToString(*keysym_return);
+    const char* string = XKeysymToString(*keysym_return);
+    if (*keysym_return == XK_space) {
+        string = " ";
+    } else if (*keysym_return == XK_Tab) {
+        string = "\t";
+    } else if (*keysym_return == XK_Return || *keysym_return == XK_KP_Enter) {
+        string = "\r";
+    } else if (strlen(string) != 1) {
+        string = "";
+    }
     strncpy(buffer_return, string, bytes_buffer);
-    return 0;
+    return strlen(string);
 }
 
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
