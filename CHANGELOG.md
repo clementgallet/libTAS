@@ -6,7 +6,7 @@
 * Improve the support of virtual screen resolution for non-SDL games
 * Prevent Xlib games to switch to fullscreen
 * Implement an auto-restart feature
-* Manually add audio latency for better playback 
+* Manually add audio latency for better playback
 
 ### Changed
 ### Fixed
@@ -15,6 +15,7 @@
 * Specifying a movie in commandline does not truncate the file anymore
 * Fix a crash when renaming the frame column in input editor
 * Fix behavior when SDL_JoystickOpen is called multiple times
+* Print the correct char for common keys when typing text (non-SDL)
 
 ## [1.3.2] - 2018-11-16
 ### Added

@@ -83,6 +83,61 @@ static const KeySym Xlib_default_keymap[256] = {
     NoSymbol
 };
 
+static const char Xlib_default_char[256] = {
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '1', '2', '3', '4', '5',
+    '6', '7', '8', '9', '0',
+    '-', '=', '\0', '\t', 'q',
+    'w', 'e', 'r', 't', 'y',
+    'u', 'i', 'o', 'p', '[',
+    ']', '\r', '\0', 'a', 's',
+    'd', 'f', 'g', 'h', 'j',
+    'k', 'l', ';', '\'', '`',
+    '\0', '\\', 'z', 'x', 'c',
+    'v', 'b', 'n', 'm', ',',
+    '.', '/', '\0', '*', '\0',
+    ' ', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '-', '\0', '\0',
+    '\0', '+', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '<',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\r',
+    '\0', '/', '\0', '\0', '\n',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '=', '+', '\0', '\0', '.',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0', '\0',
+    '\0'
+};
+
 /* Override */ KeySym XKeycodeToKeysym(Display* display, KeyCode keycode, int index)
 {
     debuglog(LCF_KEYBOARD, __func__, " called with keycode ", (int)keycode);
@@ -119,9 +174,14 @@ static const KeySym Xlib_default_keymap[256] = {
     debuglog(LCF_KEYBOARD, __func__, " called with keycode ", event_struct->keycode);
     KeyCode keycode = event_struct->keycode;
     *keysym_return = Xlib_default_keymap[keycode];
-    char* string = XKeysymToString(*keysym_return);
-    strncpy(buffer_return, string, bytes_buffer);
-    return 0;
+    char c = Xlib_default_char[keycode];
+    if (c == '\0') {
+        buffer_return[0] = '\0';
+        return 0;
+    }
+    buffer_return[0] = c;
+    buffer_return[1] = '\0';
+    return 1;
 }
 
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
