@@ -22,6 +22,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "SaveFileList.h"
+#include "FileHandleList.h"
 #include "../GlobalState.h"
 #include "../inputs/jsdev.h"
 #include "../inputs/evdev.h"
@@ -83,7 +84,12 @@ int open (const char *file, int oflag, ...)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::open(file, oflag, mode);
+    int fd = orig::open(file, oflag, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
 int open64 (const char *file, int oflag, ...)
@@ -119,10 +125,15 @@ int open64 (const char *file, int oflag, ...)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::open64(file, oflag, mode);
+    int fd = orig::open64(file, oflag, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
-int openat (int fd, const char *file, int oflag, ...)
+int openat (int dirfd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat, nullptr);
 
@@ -137,7 +148,7 @@ int openat (int fd, const char *file, int oflag, ...)
     }
 
     if (GlobalState::isNative())
-        return orig::openat(fd, file, oflag, mode);
+        return orig::openat(dirfd, file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
@@ -146,10 +157,15 @@ int openat (int fd, const char *file, int oflag, ...)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::openat(fd, file, oflag, mode);
+    int fd = orig::openat(dirfd, file, oflag, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
-int openat64 (int fd, const char *file, int oflag, ...)
+int openat64 (int dirfd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE(openat64, nullptr);
 
@@ -164,7 +180,7 @@ int openat64 (int fd, const char *file, int oflag, ...)
     }
 
     if (GlobalState::isNative())
-        return orig::openat64(fd, file, oflag, mode);
+        return orig::openat64(dirfd, file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
@@ -173,7 +189,12 @@ int openat64 (int fd, const char *file, int oflag, ...)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::openat64(fd, file, oflag, mode);
+    int fd = orig::openat64(dirfd, file, oflag, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
 int creat (const char *file, mode_t mode)
@@ -195,7 +216,12 @@ int creat (const char *file, mode_t mode)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::creat(file, mode);
+    int fd = orig::creat(file, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
 int creat64 (const char *file, mode_t mode)
@@ -214,7 +240,12 @@ int creat64 (const char *file, mode_t mode)
         return SaveFileList::openSaveFile(file, oflag);
     }
 
-    return orig::creat64(file, mode);
+    int fd = orig::creat64(file, mode);
+
+    /* Store the file descriptor */
+    FileHandleList::openFile(file, fd);
+
+    return fd;
 }
 
 int close (int fd)
@@ -233,7 +264,13 @@ int close (int fd)
     if (ret != 1)
         return ret;
 
-    return orig::close(fd);
+    /* Check if we must actually close the file */
+    bool doClose = FileHandleList::closeFile(fd);
+
+    if (doClose)
+        return orig::close(fd);
+
+    return 0;
 }
 
 int access(const char *name, int type) throw()

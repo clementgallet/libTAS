@@ -16,6 +16,7 @@
 * Fix a crash when renaming the frame column in input editor
 * Fix behavior when SDL_JoystickOpen is called multiple times
 * Print the correct char for common keys when typing text (non-SDL)
+* Restore file offsets and close files when loading a savestate
 
 ## [1.3.2] - 2018-11-16
 ### Added

@@ -17,23 +17,31 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STDIO_H_INCLUDED
-#define LIBTAS_STDIO_H_INCLUDED
+#ifndef LIBTAS_FILEHANDLELIST_H_INCLUDED
+#define LIBTAS_FILEHANDLELIST_H_INCLUDED
 
-#include "../global.h"
-#include <cstdio> // FILE
+// #include <cstdio> // FILE
 
 namespace libtas {
 
-/* Open a file and create a new stream for it. */
-OVERRIDE FILE *fopen (const char *filename, const char *modes);
-OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
+namespace FileHandleList {
 
-/* Close STREAM. */
-OVERRIDE int fclose (FILE *stream);
+/* Register an opened file and file descriptor */
+void openFile(const char* file, int fd);
 
-/* Return the system file descriptor for STREAM.  */
-// OVERRIDE int fileno (FILE *stream) throw();
+/* Register a file closing, and returns if we must actually close the file */
+bool closeFile(int fd);
+
+/* Mark all files as tracked, and save their offset */
+void trackAllFiles();
+
+/* Recover the offset of all tracked files */
+void recoverAllFiles();
+
+/* Close all untracked files before restoring a savestate */
+void closeUntrackedFiles();
+
+}
 
 }
 

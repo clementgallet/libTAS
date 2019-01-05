@@ -37,6 +37,7 @@
 #include "AltStack.h"
 #include "CustomSignals.h"
 #include "ReservedMemory.h"
+#include "../fileio/FileHandleList.h"
 
 namespace libtas {
 
@@ -363,6 +364,9 @@ void ThreadManager::checkpoint()
     /* Sending a suspend signal to all threads */
     suspendThreads();
 
+    /* We flag all opened files as tracked and store their offset. */
+    FileHandleList::trackAllFiles();
+
     /* We set the alternate stack to our reserved memory. The game might
      * register its own alternate stack, so we set our own just before the
      * checkpoint and we restore the game's alternate stack just after.
@@ -379,6 +383,9 @@ void ThreadManager::checkpoint()
 
     /* Restoring the game alternate stack (if any) */
     AltStack::restoreStack();
+
+    /* We recover the offset of all opened files */
+    FileHandleList::recoverAllFiles();
 
     resumeThreads();
 
@@ -420,6 +427,10 @@ void ThreadManager::restore()
     suspendThreads();
 
     restoreInProgress = true;
+
+    /* We close all untracked files, because by definition they are closed when
+     * the savestate will be loaded. */
+    FileHandleList::closeUntrackedFiles();
 
     /* We set the alternate stack to our reserved memory. The game might
      * register its own alternate stack, so we set our own just before the

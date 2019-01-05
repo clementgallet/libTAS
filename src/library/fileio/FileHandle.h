@@ -17,23 +17,29 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_STDIO_H_INCLUDED
-#define LIBTAS_STDIO_H_INCLUDED
+#ifndef LIBTAS_FILEHANDLE_H_INCLUDED
+#define LIBTAS_FILEHANDLE_H_INCLUDED
 
-#include "../global.h"
-#include <cstdio> // FILE
+#include <string>
 
 namespace libtas {
 
-/* Open a file and create a new stream for it. */
-OVERRIDE FILE *fopen (const char *filename, const char *modes);
-OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
+struct FileHandle {
+    /* Path of the file */
+    std::string filename;
 
-/* Close STREAM. */
-OVERRIDE int fclose (FILE *stream);
+    /* File descriptor */
+    int fd = -1;
 
-/* Return the system file descriptor for STREAM.  */
-// OVERRIDE int fileno (FILE *stream) throw();
+    /* Saved offset in the file */
+    off_t offset;
+
+    /* Are we tracking this file? */
+    bool tracked = false;
+
+    /* Was the file closed? */
+    bool closed = false;
+};
 
 }
 
