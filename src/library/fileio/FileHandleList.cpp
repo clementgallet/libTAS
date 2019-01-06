@@ -148,7 +148,7 @@ void closeUntrackedFiles()
             /* We don't bother updating the file handle list, because it will be
              * replaced with the list from the loaded savestate.
              */
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Close untracked file %s (fd=%d)", fh.filename.c_str(), fh.fd);
+            debuglogstdio(LCF_FILEIO, "Close untracked file %s (fd=%d)", fh.filename.c_str(), fh.fd);
         }
     }
 }

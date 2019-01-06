@@ -42,15 +42,13 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     // connect(this, &QAbstractItemView::pressed, this, &InputEditorView::toggleInput);
 
     /* Horizontal header */
-    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     horizontalHeader()->setResizeContentsPrecision(1);
 
     /* Savestate column is fixed */
-    horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
     horizontalHeader()->resizeSection(0, 20);
 
     /* Frame column is fixed */
-    horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
     horizontalHeader()->resizeSection(1, 80);
 
     horizontalHeader()->setSectionsMovable(true);
@@ -91,6 +89,13 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     keyDialog = new KeyPressedDialog(this);
 }
 
+void InputEditorView::resizeAllColumns()
+{
+    resizeColumnsToContents();
+    horizontalHeader()->resizeSection(0, 20);
+    horizontalHeader()->resizeSection(1, 80);
+}
+
 void InputEditorView::update()
 {
     inputEditorModel->update();
@@ -99,11 +104,16 @@ void InputEditorView::update()
     QModelIndex index = inputEditorModel->index(context->framecount-1, 0);
     if (index.isValid())
         scrollTo(index, QAbstractItemView::PositionAtCenter);
+
+    if (context->framecount == 1) {
+        resizeAllColumns();
+    }
 }
 
 void InputEditorView::resetInputs()
 {
     inputEditorModel->resetInputs();
+    resizeAllColumns();
 }
 
 void InputEditorView::mousePressEvent(QMouseEvent *event)
@@ -183,6 +193,7 @@ void InputEditorView::renameLabel()
 
     if (!newLabel.isEmpty()) {
         inputEditorModel->renameLabel(contextSection, newLabel.toStdString());
+        resizeColumnToContents(contextSection);
     }
 }
 
@@ -196,6 +207,7 @@ void InputEditorView::addInputColumn()
         SingleInput si = context->config.km.input_mapping[ks];
         si.description = context->config.km.input_description(ks);
         inputEditorModel->addUniqueInput(si);
+        resizeColumnToContents(inputEditorModel->columnCount()-1);
     }
 }
 
@@ -332,6 +344,7 @@ void InputEditorView::pasteInputs()
     QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    resizeAllColumns();
 }
 
 void InputEditorView::pasteInsertInputs()
@@ -349,4 +362,5 @@ void InputEditorView::pasteInsertInputs()
     QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    resizeAllColumns();
 }
