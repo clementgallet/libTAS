@@ -32,8 +32,8 @@ namespace libtas {
 namespace ReservedMemory {
     enum Addresses {
         PAGEMAPS_ADDR = 0,
-        PAGES_ADDR = 10*sizeof(int),
-        PSM_ADDR = 20*sizeof(int),
+        PAGES_ADDR = 11*sizeof(int),
+        PSM_ADDR = 22*sizeof(int),
         STACK_ADDR = ONE_MB,
     };
     enum Sizes {

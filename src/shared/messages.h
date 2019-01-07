@@ -150,10 +150,10 @@ enum {
     MSGN_BASE_SAVESTATE_PATH,
 
     /*
-     * Send to the game the path of the parent savestate
+     * Send to the game the path of the backtrack savestate
      * Argument: size_t (string length) then char[len]
      */
-    MSGN_PARENT_SAVESTATE_PATH,
+    MSGN_BACKTRACK_SAVESTATE_PATH,
 
     /*
      * Send to the game the index of the savestate
@@ -162,16 +162,16 @@ enum {
     MSGN_SAVESTATE_INDEX,
 
     /*
-     * Send to the game the index of the savestate
-     * Argument: int
-     */
-    MSGN_PARENT_SAVESTATE_INDEX,
-
-    /*
-     * Send to the game the index of the savestate
+     * Send to the game the index of the base savestate
      * Argument: int
      */
     MSGN_BASE_SAVESTATE_INDEX,
+
+    /*
+     * Send to the game the index of the backtrack savestate
+     * Argument: int
+     */
+    MSGN_BACKTRACK_SAVESTATE_INDEX,
 
     /*
      * Notify the program that encoding failed

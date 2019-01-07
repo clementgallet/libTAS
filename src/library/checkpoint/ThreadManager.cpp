@@ -134,6 +134,7 @@ ThreadInfo* ThreadManager::getNewThread()
     if (!thread) {
         thread = new ThreadInfo;
         debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
+        saveBacktrack = true;
     }
 
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
@@ -276,6 +277,8 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
         free(thread->altstack.ss_sp);
     }
     delete(thread);
+
+    saveBacktrack = true;
 }
 
 void ThreadManager::threadDetach(pthread_t pthread_id)

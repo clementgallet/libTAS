@@ -175,6 +175,9 @@ struct SharedConfig {
     /* Storing savestates in RAM */
     bool savestates_in_ram = false;
 
+    /* Saving a backtrack savestate each time a thread is created/destroyed */
+    bool backtrack_savestate = true;
+
     /* Debug flags */
     enum DebugFlags {
         DEBUG_UNCONTROLLED_TIME = 0x01, // Using undeterministic timer

@@ -19,10 +19,17 @@
 
 #include "global.h"
 
-SharedConfig libtas::shared_config;
-GameInfo libtas::game_info;
-volatile bool libtas::is_exiting = false;
-bool libtas::skipping_draw = false;
-Display* libtas::gameDisplays[GAMEDISPLAYNUM] = {};
-Window libtas::gameXWindow = 0;
-SDL_Window* libtas::gameSDLWindow = nullptr;
+namespace libtas {
+
+SharedConfig shared_config;
+GameInfo game_info;
+volatile bool is_exiting = false;
+bool skipping_draw = false;
+Display* gameDisplays[GAMEDISPLAYNUM] = {};
+Window gameXWindow = 0;
+SDL_Window* gameSDLWindow = nullptr;
+bool saveBacktrack = false;
+std::string backtracksavestatepath;
+int backtracksavestateindex = -1;
+
+}

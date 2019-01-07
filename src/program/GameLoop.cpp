@@ -315,8 +315,6 @@ void GameLoop::init()
     ar_delay = 50;
     ar_freq = 2;
 
-    current_savestate = -1;
-
     /* Compute the MD5 hash of the game binary */
     context->md5_game.clear();
     std::ostringstream cmd;
@@ -367,7 +365,7 @@ void GameLoop::init()
         if (context->framecount == movie.nbFrames()) {
             AllInputs ai;
             ai.emptyInputs();
-            movie.setInputs(ai, false);            
+            movie.setInputs(ai, false);
         }
     }
 
@@ -433,6 +431,21 @@ void GameLoop::initProcessMessages()
             basesavestatepath += context->gamename;
             basesavestatepath += ".state0";
             sendMessage(MSGN_BASE_SAVESTATE_PATH);
+            sendString(basesavestatepath);
+        }
+    }
+
+    /* Build and send the backtrack savestate path/index */
+    if (context->config.sc.backtrack_savestate) {
+        sendMessage(MSGN_BACKTRACK_SAVESTATE_INDEX);
+        int index = 10;
+        sendData(&index, sizeof(int));
+
+        if (!context->config.sc.savestates_in_ram) {
+            std::string basesavestatepath = context->config.savestatedir + '/';
+            basesavestatepath += context->gamename;
+            basesavestatepath += ".state10";
+            sendMessage(MSGN_BACKTRACK_SAVESTATE_PATH);
             sendString(basesavestatepath);
         }
     }
@@ -766,29 +779,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
-            /* Send the parent savestate path/index */
-            if (context->config.sc.incremental_savestates && (current_savestate > 0)) {
-                sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-                sendData(&current_savestate, sizeof(int));
-                if (! context->config.sc.savestates_in_ram) {
-                    std::string parentsavestatepath = context->config.savestatedir + '/';
-                    parentsavestatepath += context->gamename;
-                    parentsavestatepath += ".state" + std::to_string(current_savestate);
-                    sendMessage(MSGN_PARENT_SAVESTATE_PATH);
-                    sendString(parentsavestatepath);
-                }
-            }
-
             sendMessage(MSGN_SAVESTATE);
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string message = "Saved state ";
+                std::string message = "State ";
                 message += std::to_string(statei);
+                message += " saved";
                 sendMessage(MSGN_OSD_MSG);
                 sendString(message);
             }
-
-            current_savestate = statei;
 
             emit savestatePerformed(statei, context->framecount);
 
@@ -804,6 +803,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
         case HOTKEY_LOADSTATE7:
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
+        case HOTKEY_LOADSTATE_BACKTRACK:
 
             /* Load a savestate:
              * - check for an existing savestate in the slot
@@ -947,26 +947,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string msg = "Loading state ";
-                msg += std::to_string(statei);
+                std::string msg;
+                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
+                    msg = "Loading backtrack state ";
+                }
+                else {
+                    msg = "Loading state ";
+                    msg += std::to_string(statei);
+                }
                 sendMessage(MSGN_OSD_MSG);
                 sendString(msg);
-            }
-
-            /* Building the parent savestate path */
-            if (current_savestate < 0) {
-                std::cerr << "No parent savestate when loading ??" << std::endl;
-            }
-
-            sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-            sendData(&current_savestate, sizeof(int));
-            if (! context->config.sc.savestates_in_ram) {
-                std::string parentsavestatepath = context->config.savestatedir + '/';
-                parentsavestatepath += context->gamename;
-                parentsavestatepath += ".state" + std::to_string(current_savestate);
-
-                sendMessage(MSGN_PARENT_SAVESTATE_PATH);
-                sendString(parentsavestatepath);
             }
 
             sendMessage(MSGN_LOADSTATE);
@@ -1004,8 +994,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 message = receiveMessage();
 
-                current_savestate = statei;
-
                 emit savestatePerformed(statei, 0);
             }
 
@@ -1029,8 +1017,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             emit frameCountChanged();
 
             if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
-                std::string msg = "Loaded state ";
-                msg += std::to_string(statei);
+                std::string msg;
+                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
+                    msg = "Backtrack state loaded";
+                }
+                else {
+                    msg = "State ";
+                    msg += std::to_string(statei);
+                    msg += " loaded";
+                }
                 sendMessage(MSGN_OSD_MSG);
                 sendString(msg);
             }

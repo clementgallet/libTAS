@@ -445,9 +445,41 @@ static void receive_messages(std::function<void()> draw)
     std::string savestatepath;
     int index;
 
+    /* Did we do at least one savestate? */
+    static bool didASavestate = false;
+
     while (1)
     {
-        int message = receiveMessage();
+        int message;
+
+        /* Check if we must perform a backtrack savestate */
+        if (saveBacktrack) {
+            /* Only save a backtrack savestate if we did at least one savestate.
+             * This prevent incremental savestating from being inefficient if a
+             * backtrack savestate is performed at the very beginning of the game.
+             */
+            if (shared_config.backtrack_savestate && didASavestate) {
+#ifdef LIBTAS_ENABLE_HUD
+                RenderHUD::insertMessage("Saving backtrack state");
+                screen_redraw(draw, hud, preview_ai);
+#endif
+                Checkpoint::setSavestatePath(backtracksavestatepath);
+                Checkpoint::setSavestateIndex(backtracksavestateindex);
+                message = MSGN_SAVESTATE;
+
+                /* Don't set saveBacktrack to false here, delay until the
+                 * savestate is performed to display the osd message.
+                 */
+            }
+            else {
+                saveBacktrack = false;
+                message = receiveMessage();
+            }
+        }
+        else {
+            message = receiveMessage();
+        }
+
         std::string str;
 
         switch (message)
@@ -490,31 +522,25 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_SAVESTATE_PATH:
-                /* Get the parent savestate path */
+                /* Get the savestate path */
                 savestatepath = receiveString();
                 Checkpoint::setSavestatePath(savestatepath);
                 break;
 
             case MSGN_SAVESTATE_INDEX:
-                /* Get the parent savestate index */
+                /* Get the savestate index */
                 receiveData(&index, sizeof(int));
                 Checkpoint::setSavestateIndex(index);
                 break;
 
-            case MSGN_PARENT_SAVESTATE_PATH:
-                /* Get the parent savestate path */
-                savestatepath = receiveString();
-                Checkpoint::setParentSavestatePath(savestatepath);
-                break;
-
-            case MSGN_PARENT_SAVESTATE_INDEX:
-                /* Get the parent savestate index */
-                receiveData(&index, sizeof(int));
-                Checkpoint::setParentSavestateIndex(index);
-                break;
-
             case MSGN_SAVESTATE:
                 ThreadManager::checkpoint();
+
+                /* Current savestate is now the parent savestate */
+                Checkpoint::setCurrentToParent();
+
+                /* We did at least one savestate, used for backtrack savestate */
+                didASavestate = true;
 
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from ThreadManager::restore() under.
@@ -546,6 +572,17 @@ static void receive_messages(std::function<void()> draw)
                     /* Screen should have changed after loading */
                     ScreenCapture::setPixels();
                 }
+                else {
+                    /* Just for the case of backtrack savestate, print the OSD
+                     * message. */
+                    if (saveBacktrack) {
+#ifdef LIBTAS_ENABLE_HUD
+                        RenderHUD::insertMessage("Backtrack state saved");
+                        screen_redraw(draw, hud, preview_ai);
+#endif
+                    }
+                }
+                saveBacktrack = false;
 
                 break;
 
@@ -580,8 +617,6 @@ static void receive_messages(std::function<void()> draw)
 #ifdef LIBTAS_ENABLE_HUD
                 RenderHUD::insertMessage(receiveString().c_str());
                 screen_redraw(draw, hud, preview_ai);
-#else
-                screen_redraw(draw, preview_ai);
 #endif
                 break;
 

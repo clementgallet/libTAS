@@ -8,6 +8,7 @@
 * Implement an auto-restart feature
 * Manually add audio latency for better playback
 * Add a restart input
+* Add an option to make a savestate each time the thread set has changed
 
 ### Changed
 ### Fixed

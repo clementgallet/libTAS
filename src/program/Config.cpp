@@ -153,6 +153,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("save_screenpixels", sc.save_screenpixels);
     settings.setValue("incremental_savestates", sc.incremental_savestates);
     settings.setValue("savestates_in_ram", sc.savestates_in_ram);
+    settings.setValue("backtrack_savestate", sc.backtrack_savestate);
 
     settings.endGroup();
 }
@@ -263,6 +264,7 @@ void Config::load(const std::string& gamepath) {
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
     sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
     sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();
+    sc.backtrack_savestate = settings.value("backtrack_savestate", sc.backtrack_savestate).toBool();
     sc.opengl_soft = settings.value("opengl_soft", sc.opengl_soft).toBool();
 
     size = settings.beginReadArray("main_gettimes_threshold");
