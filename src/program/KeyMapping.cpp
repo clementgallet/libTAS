@@ -136,6 +136,9 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_POINTER_B4, 1, "Mouse button 4"});
     input_list.push_back({SingleInput::IT_POINTER_B5, 1, "Mouse button 5"});
 
+    /* Add restart mapping */
+    input_list.push_back({SingleInput::IT_RESTART, 1, "Restart"});
+
     /* Add controller mapping */
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Joy1 A"});
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_B, 1, "Joy1 B"});
@@ -411,13 +414,17 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
                     ai.keyboard[keysym_i++] = si.value;
                 }
 
-                if (si.type & SingleInput::IT_CONTROLLER_ID_MASK) {
+                if (si.type == SingleInput::IT_RESTART) {
+                    ai.restart = true;
+                }
+
+                if (si.inputTypeIsController()) {
                     /* Key is mapped to a game controller */
 
                     /* Getting Controller id
                      * Arithmetic on enums is bad, no?
                      */
-                    int controller_i = ((si.type & SingleInput::IT_CONTROLLER_ID_MASK) >> SingleInput::IT_CONTROLLER_ID_SHIFT) - 1;
+                    int controller_i = (si.type >> SingleInput::IT_CONTROLLER_ID_SHIFT) - 1;
 
                     /* Check if we support this joystick */
                     if (controller_i >= sc.nb_controllers)

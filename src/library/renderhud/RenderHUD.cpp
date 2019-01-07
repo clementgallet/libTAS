@@ -220,6 +220,11 @@ void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
 {
     std::ostringstream oss;
 
+    /* Restart */
+    if (ai.restart) {
+        oss << "[Restart] ";
+    }
+
     /* Keyboard */
     if (shared_config.keyboard_support) {
         for (int i=0; i<AllInputs::MAXKEYS; i++) {

@@ -7,6 +7,7 @@
 * Prevent Xlib games to switch to fullscreen
 * Implement an auto-restart feature
 * Manually add audio latency for better playback
+* Add a restart input
 
 ### Changed
 ### Fixed

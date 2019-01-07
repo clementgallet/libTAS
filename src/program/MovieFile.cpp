@@ -364,7 +364,11 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
         input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
-    input_stream << '|' << std::endl;
+	/* Write restart input */
+    input_stream << '|';
+	input_stream.put(inputs.restart?'R':'.');
+
+	input_stream << '|' << std::endl;
 
     return 1;
 }
@@ -423,6 +427,13 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
             if (d != '.') inputs.controller_buttons[joy] |= (1 << b);
         }
     }
+
+	/* Read restart input */
+	input_string >> d;
+	input_string >> d;
+	if (d == 'R') {
+		inputs.restart = true;
+	}
 
     return 1;
 }

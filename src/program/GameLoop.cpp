@@ -237,6 +237,11 @@ void GameLoop::start()
         processInputs(ai);
         prev_ai = ai;
 
+        /* Set the status to restart */
+        if (ai.restart) {
+            context->status = Context::RESTARTING;
+        }
+
         bool shouldQuit = false;
 
         /* Pause if needed */
@@ -264,7 +269,6 @@ void GameLoop::start()
         if (shouldQuit) {
             context->status = Context::QUITTING;
         }
-
     }
 }
 
@@ -354,15 +358,17 @@ void GameLoop::init()
         }
     }
 
-    /* We must add a blank frame in either case */
+    /* We must add a blank frame in most cases */
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         /* Add one blank frame in every movie corresponding to the input
          * between the game startup and the first screen draw, which is for now
-         * impossible to set
+         * impossible to set. Exception is if we restarted.
          */
-        AllInputs ai;
-        ai.emptyInputs();
-        movie.setInputs(ai, false);
+        if (context->framecount == movie.nbFrames()) {
+            AllInputs ai;
+            ai.emptyInputs();
+            movie.setInputs(ai, false);            
+        }
     }
 
     pointer_offset_x = 0;
@@ -1318,7 +1324,7 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     sendMessage(MSGN_ALL_INPUTS);
     sendData(&ai, sizeof(AllInputs));
 
-    if (context->status == Context::QUITTING) {
+    if ((context->status == Context::QUITTING) || (context->status == Context::RESTARTING)) {
         sendMessage(MSGN_USERQUIT);
     }
 
@@ -1345,15 +1351,16 @@ bool GameLoop::haveFocus()
 
 void GameLoop::loopExit()
 {
-    /* Check if we need to restart the game:
+    /* We need to restart the game if we got a restart input, or if:
      * - auto-restart is set
      * - we are playing or recording a movie
      * - the user didn't use the Stop button to stop the game
      */
 
-    if (context->config.auto_restart &&
+    if ((context->status == Context::RESTARTING) ||
+        (context->config.auto_restart &&
         (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-        (context->status != Context::QUITTING)) {
+        (context->status != Context::QUITTING))) {
 
         /* We keep the movie opened and indicate the main thread to restart the game */
 

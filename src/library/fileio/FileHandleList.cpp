@@ -22,14 +22,8 @@
 #include "FileHandle.h"
 #include "../logging.h"
 
-// #include <fcntl.h>
-// #include <sys/stat.h>
-// #include <errno.h>
 #include <list>
-// #include <memory>
-// #include <cstring>
 #include <unistd.h> // lseek
-// #include <algorithm> // remove_if
 
 namespace libtas {
 
@@ -87,7 +81,7 @@ bool closeFile(int fd)
         }
     }
 
-    debuglogstdio(LCF_FILEIO | LCF_WARNING, "Unknown file descriptor %d", fd);
+    debuglogstdio(LCF_FILEIO, "Unknown file descriptor %d", fd);
     return true;
 }
 
