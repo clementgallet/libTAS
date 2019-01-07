@@ -308,7 +308,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     if (context->config.dumping) {
         slotToggleEncode();
         slotPause(false);
-	slotFastForward(true);
+        slotFastForward(true);
         slotLaunch();
     }
 }

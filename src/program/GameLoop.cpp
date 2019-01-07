@@ -280,6 +280,10 @@ void GameLoop::init()
     /* Set the initial frame count for the game */
     context->config.sc.initial_framecount = context->framecount;
 
+    /* Set the current time to the initial time, except when restarting */
+    if (context->status != Context::RESTARTING)
+        context->current_time = context->config.sc.initial_time;
+
     /* Reset the rerecord count if not restarting */
     if (context->status != Context::RESTARTING)
         context->rerecord_count = 0;
@@ -396,8 +400,14 @@ void GameLoop::initProcessMessages()
     /* Send informations to the game */
 
     /* Send shared config */
+
+    /* This is a bit hackish, change the initial time to the current time before
+     * sending so that the game gets the correct time after restarting. */
+    struct timespec it = context->config.sc.initial_time;
+    context->config.sc.initial_time = context->current_time;
     sendMessage(MSGN_CONFIG);
     sendData(&context->config.sc, sizeof(SharedConfig));
+    context->config.sc.initial_time = it;
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {
