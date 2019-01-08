@@ -24,6 +24,7 @@
 #include "../shared/GameInfo.h"
 #include <X11/Xlib.h>
 #include <SDL2/SDL.h>
+#include <string>
 
 /* Include this file in every source code that override functions of the game */
 
@@ -57,6 +58,13 @@ namespace libtas {
 
     /* SDL2 game window (we suppose there is only one) */
     extern SDL_Window* gameSDLWindow;
+
+    /* Should we perform a backtrack savestate? */
+    extern bool saveBacktrack;
+
+    /* Path/index of the backtrack savestate */
+    extern std::string backtracksavestatepath;
+    extern int backtracksavestateindex;
 }
 
 #endif

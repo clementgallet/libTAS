@@ -15,30 +15,32 @@
 
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-    Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
-*/
-
-#ifndef LIBTAS_CHECKPOINT_H
-#define LIBTAS_CHECKPOINT_H
+#ifndef LIBTAS_FILEHANDLE_H_INCLUDED
+#define LIBTAS_FILEHANDLE_H_INCLUDED
 
 #include <string>
 
 namespace libtas {
-namespace Checkpoint
-{
-    void setSavestatePath(std::string path);
-    void setBaseSavestatePath(std::string path);
 
-    void setSavestateIndex(int index);
-    void setBaseSavestateIndex(int index);
+struct FileHandle {
+    /* Path of the file */
+    std::string filename;
 
-    void setCurrentToParent();
+    /* File descriptor */
+    int fd = -1;
 
-    bool checkCheckpoint();
-    bool checkRestore();
-    void handler(int signum);
+    /* Saved offset in the file */
+    off_t offset;
+
+    /* Are we tracking this file? */
+    bool tracked = false;
+
+    /* Was the file closed? */
+    bool closed = false;
 };
+
 }
 
 #endif

@@ -114,6 +114,11 @@ void* SDL_GL_CreateContext(SDL_Window *window)
         debuglog(LCF_WINDOW, "Disable vsync !!");
     }
 
+    /* If the context creation failed, we stop here */
+    if (!context) {
+        return context;
+    }
+
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init();
 
@@ -122,8 +127,9 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     RenderHUD_GL::init();
 #endif
 
+    /* Alerting the user if software rendering is not active */
     checkMesa();
-    
+
     return context;
 }
 

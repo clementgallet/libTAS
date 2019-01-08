@@ -133,6 +133,11 @@ void checkMesa()
     const char* vendor = reinterpret_cast<const char*>(orig::glGetString(GL_VENDOR));
     const char* renderer = reinterpret_cast<const char*>(orig::glGetString(GL_RENDERER));
 
+    if (!vendor) {
+        checked = false;
+        return;
+    }
+
     debuglog(LCF_OGL | LCF_INFO, "OpenGL vendor: ", vendor);
     debuglog(LCF_OGL | LCF_INFO, "OpenGL renderer: ", renderer);
 

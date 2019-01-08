@@ -64,7 +64,6 @@ public:
 
     static const int IT_CONTROLLER_TYPE_MASK = 0x7F;
     static const int IT_CONTROLLER_ID_SHIFT = 8;
-    static const int IT_CONTROLLER_ID_MASK = 0xF00;
     static const int IT_CONTROLLER_AXIS_MASK = 0x80;
 
     /* Input type */
@@ -80,6 +79,9 @@ public:
         IT_POINTER_B3 = 3 + POINTER_B3,
         IT_POINTER_B4 = 3 + POINTER_B4,
         IT_POINTER_B5 = 3 + POINTER_B5,
+
+        /* Restart game */
+        IT_RESTART = 10,
 
         /* Controller 1 */
         IT_CONTROLLER1_BUTTON_A = (1 << IT_CONTROLLER_ID_SHIFT) + BUTTON_A,

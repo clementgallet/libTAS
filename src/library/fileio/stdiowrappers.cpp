@@ -22,6 +22,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "SaveFileList.h"
+#include "FileHandleList.h"
 #include "../GlobalState.h"
 
 namespace libtas {
@@ -29,7 +30,7 @@ namespace libtas {
 DEFINE_ORIG_POINTER(fopen)
 DEFINE_ORIG_POINTER(fopen64)
 DEFINE_ORIG_POINTER(fclose)
-DEFINE_ORIG_POINTER(fileno)
+// DEFINE_ORIG_POINTER(fileno)
 
 FILE *fopen (const char *filename, const char *modes)
 {
@@ -47,14 +48,17 @@ FILE *fopen (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    FILE* f;
-
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        f = SaveFileList::openSaveFile(filename, modes);
+        return SaveFileList::openSaveFile(filename, modes);
     }
-    else
-        f = orig::fopen(filename, modes);
+
+    FILE* f = orig::fopen(filename, modes);
+
+    /* Store the file descriptor */
+    if (f) {
+        FileHandleList::openFile(filename, fileno(f));
+    }
 
     return f;
 }
@@ -71,14 +75,17 @@ FILE *fopen64 (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    FILE* f;
-
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        f = SaveFileList::openSaveFile(filename, modes);
+        return SaveFileList::openSaveFile(filename, modes);
     }
-    else
-        f = orig::fopen64(filename, modes);
+
+    FILE* f = orig::fopen64(filename, modes);
+
+    /* Store the file descriptor */
+    if (f) {
+        FileHandleList::openFile(filename, fileno(f));
+    }
 
     return f;
 }
@@ -96,21 +103,26 @@ int fclose (FILE *stream)
     if (ret != 1)
         return ret;
 
-    int rv = orig::fclose(stream);
+    /* Check if we must actually close the file */
+    bool doClose = FileHandleList::closeFile(fileno(stream));
 
-    return rv;
+    if (doClose) {
+        return orig::fclose(stream);
+    }
+
+    return 0;
 }
 
-int fileno (FILE *stream) throw()
-{
-    LINK_NAMESPACE_GLOBAL(fileno);
-
-    if (GlobalState::isNative())
-        return orig::fileno(stream);
-
-    DEBUGLOGCALL(LCF_FILEIO);
-
-    return orig::fileno(stream);
-}
+// int fileno (FILE *stream) throw()
+// {
+//     LINK_NAMESPACE_GLOBAL(fileno);
+//
+//     if (GlobalState::isNative())
+//         return orig::fileno(stream);
+//
+//     DEBUGLOGCALL(LCF_FILEIO);
+//
+//     return orig::fileno(stream);
+// }
 
 }

@@ -308,7 +308,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     if (context->config.dumping) {
         slotToggleEncode();
         slotPause(false);
-	slotFastForward(true);
+        slotFastForward(true);
         slotLaunch();
     }
 }
@@ -675,6 +675,10 @@ void MainWindow::createMenus()
     ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
     ramStateAction->setCheckable(true);
     disabledActionsOnStart.append(ramStateAction);
+
+    backtrackStateAction = savestateMenu->addAction(tr("Backtrack savestate"), this, &MainWindow::slotBacktrackState);
+    backtrackStateAction->setCheckable(true);
+    disabledActionsOnStart.append(backtrackStateAction);
 
     saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
     saveScreenAction->setCheckable(true);
@@ -1081,6 +1085,7 @@ void MainWindow::updateUIFromConfig()
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
+    backtrackStateAction->setChecked(context->config.sc.backtrack_savestate);
 
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
 
@@ -1307,11 +1312,13 @@ void MainWindow::slotCalibrateMouse()
     }
 }
 
-void MainWindow::slotFastForward(bool checked)
-{
-    context->config.sc.fastforward = checked;
-    context->config.sc_modified = true;
-}
+#define BOOLSLOT(slot, parameter) void MainWindow::slot(bool checked)\
+{\
+    parameter = checked;\
+    context->config.sc_modified = true;\
+}\
+
+BOOLSLOT(slotFastForward, context->config.sc.fastforward)
 
 void MainWindow::slotMovieEnable(bool checked)
 {
@@ -1443,59 +1450,24 @@ void MainWindow::slotOsd()
     context->config.sc_modified = true;
 }
 
-void MainWindow::slotOsdEncode(bool checked)
-{
-    context->config.sc.osd_encode = checked;
-    context->config.sc_modified = true;
-}
+BOOLSLOT(slotOsdEncode, context->config.sc.osd_encode)
+
 #endif
 
-void MainWindow::slotSaveScreen(bool checked)
-{
-    context->config.sc.save_screenpixels = checked;
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotPreventSavefile(bool checked)
-{
-    context->config.sc.prevent_savefiles = checked;
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotRecycleThreads(bool checked)
-{
-    context->config.sc.recycle_threads = checked;
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotSteam(bool checked)
-{
-    context->config.sc.virtual_steam = checked;
-    context->config.sc_modified = true;
-}
-
+BOOLSLOT(slotSaveScreen, context->config.sc.save_screenpixels)
+BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
+BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)
+BOOLSLOT(slotSteam, context->config.sc.virtual_steam)
 
 void MainWindow::slotMovieEnd()
 {
     setListFromRadio(movieEndGroup, context->config.on_movie_end);
 }
 
-void MainWindow::slotIncrementalState(bool checked)
-{
-    context->config.sc.incremental_savestates = checked;
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotRamState(bool checked)
-{
-    context->config.sc.savestates_in_ram = checked;
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotAutoRestart(bool checked)
-{
-    context->config.auto_restart = checked;
-}
+BOOLSLOT(slotIncrementalState, context->config.sc.incremental_savestates)
+BOOLSLOT(slotRamState, context->config.sc.savestates_in_ram)
+BOOLSLOT(slotBacktrackState, context->config.sc.backtrack_savestate)
+BOOLSLOT(slotAutoRestart, context->config.auto_restart)
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {

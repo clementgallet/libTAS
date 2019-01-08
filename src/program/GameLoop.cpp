@@ -243,6 +243,11 @@ void GameLoop::start()
         sendInputsSerial(fd, ai, prev_ai);
         prev_ai = ai;
 
+        /* Set the status to restart */
+        if (ai.restart) {
+            context->status = Context::RESTARTING;
+        }
+
         bool shouldQuit = false;
 
         /* Pause if needed */
@@ -270,7 +275,6 @@ void GameLoop::start()
         if (shouldQuit) {
             context->status = Context::QUITTING;
         }
-
     }
 }
 
@@ -285,6 +289,10 @@ void GameLoop::init()
 
     /* Set the initial frame count for the game */
     context->config.sc.initial_framecount = context->framecount;
+
+    /* Set the current time to the initial time, except when restarting */
+    if (context->status != Context::RESTARTING)
+        context->current_time = context->config.sc.initial_time;
 
     /* Reset the rerecord count if not restarting */
     if (context->status != Context::RESTARTING)
@@ -312,8 +320,6 @@ void GameLoop::init()
     ar_ticks = -1;
     ar_delay = 50;
     ar_freq = 2;
-
-    current_savestate = -1;
 
     /* Compute the MD5 hash of the game binary */
     context->md5_game.clear();
@@ -356,15 +362,17 @@ void GameLoop::init()
         }
     }
 
-    /* We must add a blank frame in either case */
+    /* We must add a blank frame in most cases */
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         /* Add one blank frame in every movie corresponding to the input
          * between the game startup and the first screen draw, which is for now
-         * impossible to set
+         * impossible to set. Exception is if we restarted.
          */
-        AllInputs ai;
-        ai.emptyInputs();
-        movie.setInputs(ai, false);
+        if (context->framecount == movie.nbFrames()) {
+            AllInputs ai;
+            ai.emptyInputs();
+            movie.setInputs(ai, false);
+        }
     }
 
     pointer_offset_x = 0;
@@ -402,8 +410,14 @@ void GameLoop::initProcessMessages()
     /* Send informations to the game */
 
     /* Send shared config */
+
+    /* This is a bit hackish, change the initial time to the current time before
+     * sending so that the game gets the correct time after restarting. */
+    struct timespec it = context->config.sc.initial_time;
+    context->config.sc.initial_time = context->current_time;
     sendMessage(MSGN_CONFIG);
     sendData(&context->config.sc, sizeof(SharedConfig));
+    context->config.sc.initial_time = it;
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {
@@ -423,6 +437,21 @@ void GameLoop::initProcessMessages()
             basesavestatepath += context->gamename;
             basesavestatepath += ".state0";
             sendMessage(MSGN_BASE_SAVESTATE_PATH);
+            sendString(basesavestatepath);
+        }
+    }
+
+    /* Build and send the backtrack savestate path/index */
+    if (context->config.sc.backtrack_savestate) {
+        sendMessage(MSGN_BACKTRACK_SAVESTATE_INDEX);
+        int index = 10;
+        sendData(&index, sizeof(int));
+
+        if (!context->config.sc.savestates_in_ram) {
+            std::string basesavestatepath = context->config.savestatedir + '/';
+            basesavestatepath += context->gamename;
+            basesavestatepath += ".state10";
+            sendMessage(MSGN_BACKTRACK_SAVESTATE_PATH);
             sendString(basesavestatepath);
         }
     }
@@ -756,29 +785,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendString(msg);
             }
 
-            /* Send the parent savestate path/index */
-            if (context->config.sc.incremental_savestates && (current_savestate > 0)) {
-                sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-                sendData(&current_savestate, sizeof(int));
-                if (! context->config.sc.savestates_in_ram) {
-                    std::string parentsavestatepath = context->config.savestatedir + '/';
-                    parentsavestatepath += context->gamename;
-                    parentsavestatepath += ".state" + std::to_string(current_savestate);
-                    sendMessage(MSGN_PARENT_SAVESTATE_PATH);
-                    sendString(parentsavestatepath);
-                }
-            }
-
             sendMessage(MSGN_SAVESTATE);
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string message = "Saved state ";
+                std::string message = "State ";
                 message += std::to_string(statei);
+                message += " saved";
                 sendMessage(MSGN_OSD_MSG);
                 sendString(message);
             }
-
-            current_savestate = statei;
 
             emit savestatePerformed(statei, context->framecount);
 
@@ -794,6 +809,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
         case HOTKEY_LOADSTATE7:
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
+        case HOTKEY_LOADSTATE_BACKTRACK:
 
             /* Load a savestate:
              * - check for an existing savestate in the slot
@@ -937,26 +953,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string msg = "Loading state ";
-                msg += std::to_string(statei);
+                std::string msg;
+                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
+                    msg = "Loading backtrack state ";
+                }
+                else {
+                    msg = "Loading state ";
+                    msg += std::to_string(statei);
+                }
                 sendMessage(MSGN_OSD_MSG);
                 sendString(msg);
-            }
-
-            /* Building the parent savestate path */
-            if (current_savestate < 0) {
-                std::cerr << "No parent savestate when loading ??" << std::endl;
-            }
-
-            sendMessage(MSGN_PARENT_SAVESTATE_INDEX);
-            sendData(&current_savestate, sizeof(int));
-            if (! context->config.sc.savestates_in_ram) {
-                std::string parentsavestatepath = context->config.savestatedir + '/';
-                parentsavestatepath += context->gamename;
-                parentsavestatepath += ".state" + std::to_string(current_savestate);
-
-                sendMessage(MSGN_PARENT_SAVESTATE_PATH);
-                sendString(parentsavestatepath);
             }
 
             sendMessage(MSGN_LOADSTATE);
@@ -994,8 +1000,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 message = receiveMessage();
 
-                current_savestate = statei;
-
                 emit savestatePerformed(statei, 0);
             }
 
@@ -1019,8 +1023,15 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             emit frameCountChanged();
 
             if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
-                std::string msg = "Loaded state ";
-                msg += std::to_string(statei);
+                std::string msg;
+                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
+                    msg = "Backtrack state loaded";
+                }
+                else {
+                    msg = "State ";
+                    msg += std::to_string(statei);
+                    msg += " loaded";
+                }
                 sendMessage(MSGN_OSD_MSG);
                 sendString(msg);
             }
@@ -1314,7 +1325,7 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     sendMessage(MSGN_ALL_INPUTS);
     sendData(&ai, sizeof(AllInputs));
 
-    if (context->status == Context::QUITTING) {
+    if ((context->status == Context::QUITTING) || (context->status == Context::RESTARTING)) {
         sendMessage(MSGN_USERQUIT);
     }
 
@@ -1341,15 +1352,16 @@ bool GameLoop::haveFocus()
 
 void GameLoop::loopExit()
 {
-    /* Check if we need to restart the game:
+    /* We need to restart the game if we got a restart input, or if:
      * - auto-restart is set
      * - we are playing or recording a movie
      * - the user didn't use the Stop button to stop the game
      */
 
-    if (context->config.auto_restart &&
+    if ((context->status == Context::RESTARTING) ||
+        (context->config.auto_restart &&
         (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-        (context->status != Context::QUITTING)) {
+        (context->status != Context::QUITTING))) {
 
         /* We keep the movie opened and indicate the main thread to restart the game */
 

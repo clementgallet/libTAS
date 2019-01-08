@@ -102,6 +102,7 @@ set(LIBRARY_SOURCES
     src/library/checkpoint/ThreadSync.cpp
     src/library/encoding/AVEncoder.cpp
     src/library/encoding/NutMuxer.cpp
+    src/library/fileio/FileHandleList.cpp
     src/library/fileio/generaliowrappers.cpp
     src/library/fileio/posixiowrappers.cpp
     src/library/fileio/SaveFile.cpp

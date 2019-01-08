@@ -105,6 +105,7 @@ public:
 
     QAction *incrementalStateAction;
     QAction *ramStateAction;
+    QAction *backtrackStateAction;
     QAction *steamAction;
 
     QActionGroup *debugStateGroup;
@@ -271,6 +272,7 @@ private slots:
     void slotPauseMovie();
     void slotIncrementalState(bool checked);
     void slotRamState(bool checked);
+    void slotBacktrackState(bool checked);
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotCalibrateMouse();

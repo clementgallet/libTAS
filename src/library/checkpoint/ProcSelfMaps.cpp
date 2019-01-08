@@ -34,7 +34,8 @@ ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
     numAreas(0),
     numBytes(0)
 {
-    int fd = open("/proc/self/maps", O_RDONLY);
+    int fd;
+    NATIVECALL(fd = open("/proc/self/maps", O_RDONLY));
     MYASSERT(fd != -1);
 
     data = static_cast<char*>(restoreAddr);
@@ -43,7 +44,7 @@ ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
     MYASSERT(numBytes > 0)
     MYASSERT(numBytes < restoreLength)
 
-    close(fd);
+    NATIVECALL(close(fd));
 
     for (size_t i = 0; i < numBytes; i++) {
         if (data[i] == '\n') {

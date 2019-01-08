@@ -89,15 +89,6 @@ void Checkpoint::setBaseSavestatePath(std::string path)
     strncpy(basepagespath, ppath.c_str(), 1023);
 }
 
-void Checkpoint::setParentSavestatePath(std::string path)
-{
-    std::string pmpath = path + ".pm";
-    strncpy(parentpagemappath, pmpath.c_str(), 1023);
-
-    std::string ppath = path + ".p";
-    strncpy(parentpagespath, ppath.c_str(), 1023);
-}
-
 void Checkpoint::setSavestateIndex(int index)
 {
     ss_index = index;
@@ -108,9 +99,11 @@ void Checkpoint::setBaseSavestateIndex(int index)
     base_ss_index = index;
 }
 
-void Checkpoint::setParentSavestateIndex(int index)
+void Checkpoint::setCurrentToParent()
 {
-    parent_ss_index = index;
+    strncpy(parentpagemappath, pagemappath, 1023);
+    strncpy(parentpagespath, pagespath, 1023);
+    parent_ss_index = ss_index;
 }
 
 static int getPagemapFd(int index)
