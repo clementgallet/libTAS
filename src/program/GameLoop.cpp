@@ -292,6 +292,10 @@ void GameLoop::init()
     if (context->status != Context::RESTARTING)
         context->rerecord_count = 0;
 
+    /* Reset the encoding segment if not restarting */
+    if (context->status != Context::RESTARTING)
+        context->encoding_segment = 0;
+
     /* Extract the game executable name from the game executable path */
     size_t sep = context->gamepath.find_last_of("/");
     if (sep != std::string::npos)
@@ -450,6 +454,9 @@ void GameLoop::initProcessMessages()
         }
     }
 
+    sendMessage(MSGN_ENCODING_SEGMENT);
+    sendData(&context->encoding_segment, sizeof(int));
+
     /* End message */
     sendMessage(MSGN_END_INIT);
 }
@@ -502,6 +509,9 @@ bool GameLoop::startFrameMessages()
             receiveData(&fps, sizeof(float));
             receiveData(&lfps, sizeof(float));
             emit fpsChanged(fps, lfps);
+            break;
+        case MSGB_ENCODING_SEGMENT:
+            receiveData(&context->encoding_segment, sizeof(int));
             break;
         case MSGB_QUIT:
             if (context->config.dumping) {

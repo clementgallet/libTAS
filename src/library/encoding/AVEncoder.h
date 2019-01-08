@@ -56,8 +56,8 @@ class AVEncoder {
         /* ffmpeg options */
         static char ffmpeg_options[4096];
 
-    private:
         static int segment_number;
+    private:
         FILE *ffmpeg_pipe = nullptr;
         NutMuxer* nutMuxer = nullptr;
 

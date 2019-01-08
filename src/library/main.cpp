@@ -99,6 +99,9 @@ void __attribute__((constructor)) init(void)
             case MSGN_BACKTRACK_SAVESTATE_INDEX:
                 receiveData(&backtracksavestateindex, sizeof(int));
                 break;
+            case MSGN_ENCODING_SEGMENT:
+                receiveData(&AVEncoder::segment_number, sizeof(int));
+                break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);
                 exit(1);

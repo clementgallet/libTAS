@@ -105,6 +105,8 @@ struct Context {
     /* MD5 hash of the game executable that is stored in the movie */
     std::string md5_movie;
 
+    /* Current encoding segment. Sent when game is restarted */
+    int encoding_segment = 0;
 };
 
 #endif

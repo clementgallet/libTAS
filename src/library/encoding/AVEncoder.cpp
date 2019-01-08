@@ -24,6 +24,8 @@
 #include "../audio/AudioContext.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
+#include "../../shared/sockethelpers.h"
+#include "../../shared/messages.h"
 
 #include <cstdint>
 #include <unistd.h> // usleep
@@ -65,6 +67,8 @@ AVEncoder::AVEncoder() {
     }
 
     segment_number++;
+    sendMessage(MSGB_ENCODING_SEGMENT);
+    sendData(&segment_number, sizeof(int));
 }
 
 void AVEncoder::initMuxer() {

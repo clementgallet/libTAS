@@ -208,6 +208,18 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_RAMWATCH,
+
+    /*
+     * Send the current segment of video encoding to the program.
+     * Argument: int
+     */
+    MSGB_ENCODING_SEGMENT,
+
+    /*
+    * Send the current segment of video encoding to the game.
+     * Argument: int
+     */
+    MSGN_ENCODING_SEGMENT,
 };
 
 #endif
