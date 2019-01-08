@@ -54,6 +54,11 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
         return QAbstractItemModel::flags(index);
 
     const SingleInput si = input_set[index.column()-2];
+
+    /* Don't edit locked input */
+    if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+        return QAbstractItemModel::flags(index);
+
     if (si.isAnalog())
         return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 
@@ -111,6 +116,15 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (index.column() <= 1) {
             color = color.lighter(105);
         }
+        else {
+            /* Check for locked input */
+            if (!movie->locked_inputs.empty()) {
+                const SingleInput si = input_set[index.column()-2];
+                if (movie->locked_inputs.find(si) != movie->locked_inputs.end()) {
+                    color = color.darker(150);
+                }
+            }
+        }
 
         /* Frame containing a savestate */
         for (unsigned int i=0; i<savestate_frames.size(); i++) {
@@ -165,8 +179,13 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
 
-        const AllInputs ai = movie->input_list[index.row()];
         const SingleInput si = input_set[index.column()-2];
+
+        /* Don't edit locked input */
+        if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+            return QVariant();
+
+        const AllInputs ai = movie->input_list[index.row()];
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -189,8 +208,14 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (index.row() < static_cast<int>(context->framecount))
             return false;
 
-        AllInputs &ai = movie->input_list[index.row()];
         const SingleInput si = input_set[index.column()-2];
+
+        /* Don't edit locked input */
+        if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+            return false;
+
+        AllInputs &ai = movie->input_list[index.row()];
+
         int ivalue = value.toInt();
 
         ai.setInput(si, ivalue);
@@ -239,6 +264,11 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
         return false;
 
     SingleInput si = input_set[index.column()-2];
+
+    /* Don't toggle locked input */
+    if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+        return false;
+
     AllInputs &ai = movie->input_list[index.row()];
 
     int value = ai.toggleInput(si);
@@ -482,6 +512,39 @@ void InputEditorModel::clearUniqueInput(int column)
 
     endRemoveColumns();
 }
+
+bool InputEditorModel::isLockedUniqueInput(int column)
+{
+    if (column < 2)
+        return false;
+
+    SingleInput si = input_set[column-2];
+
+    if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+        return true;
+
+    return false;
+}
+
+
+void InputEditorModel::lockUniqueInput(int column, bool locked)
+{
+    if (column < 2)
+        return;
+
+    SingleInput si = input_set[column-2];
+
+    if (locked) {
+        movie->locked_inputs.insert(si);
+    }
+    else {
+        movie->locked_inputs.erase(si);
+    }
+
+    /* Update the input column */
+    emit dataChanged(createIndex(0,column), createIndex(rowCount()-1,column));
+}
+
 
 void InputEditorModel::clearInput(int row)
 {

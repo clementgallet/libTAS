@@ -27,6 +27,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <set>
 
 class MovieFile {
 public:
@@ -45,6 +46,9 @@ public:
      * check if another movie is a prefix
      */
     std::vector<AllInputs> input_list;
+
+    /* List of locked single inputs. They won't be modified even in recording mode */
+    std::set<SingleInput> locked_inputs;
 
     /* Flag storing if the movie has been modified since last save.
      * Used for prompting a message when the game exits if the user wants
@@ -114,6 +118,9 @@ public:
 
     /* Truncate inputs to a frame number */
     void truncateInputs(unsigned long size);
+
+    /* Copy locked inputs from the current inputs to the inputs in argument */
+    void setLockedInputs(AllInputs& inputs);
 
     /* Helper function called when the movie has been modified */
     void wasModified();

@@ -38,11 +38,11 @@ public:
     InputEditorModel *inputEditorModel;
 
 public slots:
-    // void toggleInput(const QModelIndex &index);
     void horizontalMenu(QPoint pos);
     void renameLabel();
     void addInputColumn();
     void clearInputColumn();
+    void lockInputColumn(bool checked);
 
     void mainMenu(QPoint pos);
     void insertInput();
@@ -71,6 +71,7 @@ private:
     bool mouseValue;
     KeyPressedDialog* keyDialog;
 
+    QAction *lockAction;
 };
 
 #endif

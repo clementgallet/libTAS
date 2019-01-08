@@ -72,6 +72,13 @@ public:
     /* Clear a single input from the entire movie */
     void clearUniqueInput(int column);
 
+    /* Get lock status of a single input */
+    bool isLockedUniqueInput(int column);
+
+
+    /* Lock or unlock a single input */
+    void lockUniqueInput(int column, bool locked);
+
     /* Clear input */
     void clearInput(int row);
 

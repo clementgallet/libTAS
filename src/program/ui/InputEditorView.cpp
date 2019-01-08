@@ -39,7 +39,6 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
 
     inputEditorModel = new InputEditorModel(context, movie);
     setModel(inputEditorModel);
-    // connect(this, &QAbstractItemView::pressed, this, &InputEditorView::toggleInput);
 
     /* Horizontal header */
     horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -65,6 +64,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
     horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
     horMenu->addAction(tr("Clear input column"), this, &InputEditorView::clearInputColumn);
+    lockAction = horMenu->addAction(tr("Lock input column"), this, &InputEditorView::lockInputColumn);
+    lockAction->setCheckable(true);
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
@@ -179,6 +180,12 @@ void InputEditorView::horizontalMenu(QPoint pos)
     /* Storing the index of the section where context menu was shown */
     contextSection = horizontalHeader()->logicalIndexAt(pos);
 
+    if (contextSection < 2)
+        return;
+
+    /* Update the status of the lock action */
+    lockAction->setChecked(inputEditorModel->isLockedUniqueInput(contextSection));
+
     /* Display the context menu */
     horMenu->popup(horizontalHeader()->viewport()->mapToGlobal(pos));
 }
@@ -219,6 +226,13 @@ void InputEditorView::clearInputColumn()
     inputEditorModel->clearUniqueInput(contextSection);
 }
 
+void InputEditorView::lockInputColumn(bool checked)
+{
+    if (contextSection < 2)
+        return;
+
+    inputEditorModel->lockUniqueInput(contextSection, checked);
+}
 
 void InputEditorView::mainMenu(QPoint pos)
 {

@@ -535,9 +535,23 @@ void MovieFile::truncateInputs(unsigned long size)
 	wasModified();
 }
 
+void MovieFile::setLockedInputs(AllInputs& inputs)
+{
+	if (locked_inputs.empty())
+		return;
+		
+	AllInputs movie_inputs;
+	getInputs(movie_inputs);
+	for (SingleInput si : locked_inputs) {
+		int value = movie_inputs.getInput(si);
+		inputs.setInput(si, value);
+	}
+}
+
 void MovieFile::close()
 {
 	input_list.clear();
+	locked_inputs.clear();
 }
 
 bool MovieFile::isPrefix(const MovieFile& movie, unsigned int frame)

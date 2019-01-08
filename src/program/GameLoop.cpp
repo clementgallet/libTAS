@@ -1252,6 +1252,12 @@ void GameLoop::processInputs(AllInputs &ai)
                     emit inputsToBeAdded();
                 }
 
+                /* If some inputs are locked, copy the inputs from the movie.
+                 * Only do this if the input editor is opened, and if there are
+                 * inputs to copy. */
+                if (keep_inputs && past_inputs)
+                    movie.setLockedInputs(ai);
+
                 /* Save inputs to moviefile */
                 movie.setInputs(ai, keep_inputs);
 
