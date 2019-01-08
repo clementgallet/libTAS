@@ -284,10 +284,6 @@ void GameLoop::init()
     /* Set the initial frame count for the game */
     context->config.sc.initial_framecount = context->framecount;
 
-    /* Set the current time to the initial time, except when restarting */
-    if (context->status != Context::RESTARTING)
-        context->current_time = context->config.sc.initial_time;
-
     /* Reset the rerecord count if not restarting */
     if (context->status != Context::RESTARTING)
         context->rerecord_count = 0;
@@ -333,7 +329,6 @@ void GameLoop::init()
         pclose(md5str);
     }
 
-
     /* Only open the movie if we did not restart */
     if (context->status != Context::RESTARTING) {
         /* Opening a movie, which imports the inputs and parameters if in read mode,
@@ -372,6 +367,10 @@ void GameLoop::init()
             movie.setInputs(ai, false);
         }
     }
+
+    /* Set the current time to the initial time, except when restarting */
+    if (context->status != Context::RESTARTING)
+        context->current_time = context->config.sc.initial_time;
 
     pointer_offset_x = 0;
     pointer_offset_y = 0;
