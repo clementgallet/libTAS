@@ -107,8 +107,8 @@ int openSerial(std::string portname, int speed)
 
     std::cout << "--- Sending start command to device" << std::endl;
 
-    /* command 1 (play), 16-bits, 2 port, 2 datalines, sync, no window 1, no window 2 */
-    unsigned char start_cmd[7] = {0x01, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00};
+    /* command 1 (play), 16-bits, 1 port, 1 dataline, sync, no window 1, no window 2 */
+    unsigned char start_cmd[7] = {0x01, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00};
     wlen = write(fd, start_cmd, 7);
     if (wlen != 7) {
         std::cerr << "!!! Could not write to device:" << strerror(errno) << std::endl;
