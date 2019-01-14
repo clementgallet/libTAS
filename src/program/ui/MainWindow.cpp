@@ -156,10 +156,10 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Initial time */
     initialTimeSec = new QSpinBox();
-    initialTimeSec->setMaximum(1000000000);
+    initialTimeSec->setMaximum(2147483647);
     initialTimeSec->setMinimumWidth(50);
     initialTimeNsec = new QSpinBox();
-    initialTimeNsec->setMaximum(1000000000);
+    initialTimeNsec->setMaximum(999999999);
     initialTimeNsec->setMinimumWidth(50);
     disabledWidgetsOnStart.append(initialTimeSec);
     disabledWidgetsOnStart.append(initialTimeNsec);
