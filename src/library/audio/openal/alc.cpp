@@ -160,6 +160,10 @@ static ALCenum alcError = ALC_NO_ERROR;
         return ALC_TRUE;
     }
 
+    if (strcmp(extname, "ALC_SOFT_HRTF") == 0) {
+        return ALC_FALSE;
+    }
+
     debuglog(LCF_OPENAL | LCF_ERROR, "Extension ", extname, " not supported, but we will still return yes because some games crash if we return no");
     return ALC_TRUE;
 }
@@ -171,8 +175,6 @@ static ALCenum alcError = ALC_NO_ERROR;
         ALCSETERROR(ALC_INVALID_VALUE);
         return NULL;
     }
-
-    debuglog(LCF_OPENAL | LCF_ERROR, "Requesting function ", funcname);
 
     if (strcmp(funcname, "alcSetThreadContext") == 0) {
         return reinterpret_cast<void*>(myalcSetThreadContext);
@@ -189,6 +191,14 @@ static ALCenum alcError = ALC_NO_ERROR;
     if (strcmp(funcname, "alcRenderSamplesSOFT") == 0) {
         return reinterpret_cast<void*>(myalcRenderSamplesSOFT);
     }
+    if (strcmp(funcname, "alcGetStringiSOFT") == 0) {
+        return reinterpret_cast<void*>(myalcGetStringiSOFT);
+    }
+    if (strcmp(funcname, "alcResetDeviceSOFT") == 0) {
+        return reinterpret_cast<void*>(myalcResetDeviceSOFT);
+    }
+
+    debuglog(LCF_OPENAL | LCF_ERROR, "Requesting function ", funcname);
 
     return NULL;
 }
@@ -345,6 +355,18 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
             debuglog(LCF_OPENAL | LCF_TODO, "Request max auxiliary sends");
             values[0] = 2;
             return;
+        case ALC_NUM_HRTF_SPECIFIERS_SOFT:
+            debuglog(LCF_OPENAL | LCF_TODO, "Request number of HRTFs");
+            values[0] = 0;
+            return;
+        case ALC_HRTF_SOFT:
+            debuglog(LCF_OPENAL | LCF_TODO, "Request HRTF state");
+            values[0] = ALC_FALSE;
+            return;
+        case ALC_HRTF_STATUS_SOFT:
+            debuglog(LCF_OPENAL | LCF_TODO, "Request HRTF status");
+            values[0] = ALC_HRTF_DISABLED_SOFT;
+            return;
         default:
             debuglog(LCF_OPENAL | LCF_TODO, "Unknown param ", param);
             values[0] = 2;
@@ -386,6 +408,18 @@ void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples
     DEBUGLOGCALL(LCF_OPENAL | LCF_TODO | LCF_UNTESTED);
     audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
     memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
+}
+
+const ALCchar* myalcGetStringiSOFT(ALCdevice *device, ALCenum paramName, ALCsizei index)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    return "";
+}
+
+ALCboolean myalcResetDeviceSOFT(ALCdevice *device, const ALCint *attribs)
+{
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    return ALC_TRUE;
 }
 
 }
