@@ -43,7 +43,7 @@ SDL_bool SDL_IsTextInputActive(void)
 void SDL_StopTextInput(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
-    isTextInputActive = true;
+    isTextInputActive = false;
 }
 
 void SDL_SetTextInputRect(SDL_Rect *rect)
