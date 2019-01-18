@@ -37,6 +37,7 @@ void alSetError(ALenum error)
 
 ALenum alGetError(ALvoid)
 {
+    debuglog(LCF_OPENAL, __func__, " call, returning ", alError);
     ALenum err = alError;
     alError = AL_NO_ERROR;
     return err;
@@ -391,7 +392,10 @@ void alGenSources(ALsizei n, ALuint *sources)
 		if (id > 0) {
 			sources[i] = (ALuint) id;
         }
-		/* TODO: else generate an error */
+        else {
+            alSetError(AL_INVALID_VALUE);
+            return;
+        }
 	}
 }
 
@@ -496,7 +500,17 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
 void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
     debuglogstdio(LCF_OPENAL, "%s called with source %d", __func__, source);
-    debuglog(LCF_OPENAL, "Operation not supported");
+    switch(param) {
+        case AL_DIRECTION:
+            debuglogstdio(LCF_OPENAL, "Setting direction not supported");
+            break;
+        case AL_VELOCITY:
+            debuglogstdio(LCF_OPENAL, "Setting velocity not supported");
+            break;
+        default:
+            debuglog(LCF_OPENAL, "Operation not supported");
+            break;
+    }
 }
 
 void alSourcefv(ALuint source, ALenum param, ALfloat *values)
@@ -506,7 +520,15 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
         alSetError(AL_INVALID_VALUE);
         return;
     }
-    alSourcef(source, param, *values);
+
+    switch(param) {
+        case AL_POSITION:
+            debuglogstdio(LCF_OPENAL, "Setting position not supported");
+            break;
+        default:
+            alSourcef(source, param, *values);
+            break;
+    }
 }
 
 void alSourcei(ALuint source, ALenum param, ALint value)
