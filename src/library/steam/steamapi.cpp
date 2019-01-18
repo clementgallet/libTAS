@@ -71,6 +71,8 @@ void SteamAPI_UnregisterCallback( void *pCallback )
 ISteamClient *SteamClient()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamClient steamclient;
     return &steamclient;
@@ -79,6 +81,8 @@ ISteamClient *SteamClient()
 ISteamUserStats *SteamUserStats()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamUserStats steamuserstats;
     return &steamuserstats;
@@ -87,6 +91,8 @@ ISteamUserStats *SteamUserStats()
 ISteamUser *SteamUser()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamUser steamuser;
     return &steamuser;
@@ -95,6 +101,8 @@ ISteamUser *SteamUser()
 ISteamUtils *SteamUtils()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamUtils steamutils;
     return &steamutils;
@@ -103,6 +111,8 @@ ISteamUtils *SteamUtils()
 ISteamRemoteStorage *SteamRemoteStorage()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamRemoteStorage steamremotestorage;
     return &steamremotestorage;
@@ -111,6 +121,8 @@ ISteamRemoteStorage *SteamRemoteStorage()
 ISteamApps *SteamApps()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamApps steamapps;
     return &steamapps;
@@ -119,6 +131,8 @@ ISteamApps *SteamApps()
 ISteamFriends *SteamFriends()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamFriends steamfriends;
     return &steamfriends;
@@ -127,6 +141,8 @@ ISteamFriends *SteamFriends()
 ISteamScreenshots *SteamScreenshots()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamScreenshots steamscreenshots;
     return &steamscreenshots;
@@ -135,6 +151,8 @@ ISteamScreenshots *SteamScreenshots()
 ISteamUGC *SteamUGC()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
 
     static ISteamUGC steamugc;
     return &steamugc;
