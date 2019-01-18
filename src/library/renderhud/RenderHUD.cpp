@@ -43,6 +43,7 @@ RenderHUD::RenderHUD()
     if (!fg_font || !bg_font) {
         /* Find an installed regular font in the system using fontconfig */
         /* Code taken from http://stackoverflow.com/questions/10542832 */
+        GlobalNative gn;
         FcConfig* config = FcInitLoadConfigAndFonts();
         FcPattern* pat = FcPatternCreate();
         FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));

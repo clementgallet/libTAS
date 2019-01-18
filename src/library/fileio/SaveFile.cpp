@@ -22,6 +22,7 @@
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
 #include "../logging.h"
+#include "../Utils.h"
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -49,6 +50,23 @@ SaveFile::SaveFile(const char *file) {
 }
 
 SaveFile::~SaveFile() {
+    /* Save back data into the file */
+    if (shared_config.write_savefiles_on_exit && (fd != 0)) {
+        debuglogstdio(LCF_FILEIO, "Save back into file %s", filename.c_str());
+        GlobalNative gn;
+        lseek(fd, 0, SEEK_SET);
+        int file_fd = creat(filename.c_str(), 00777);
+        if (file_fd >= 0) {
+            char tmp_buf[4096];
+            ssize_t s;
+            do {
+                s = Utils::readAll(fd, tmp_buf, 4096);
+                Utils::writeAll(file_fd, tmp_buf, 4096);
+            } while(s > 0);
+            close(file_fd);
+        }
+    }
+
     if (stream) {
         NATIVECALL(fclose(stream));
     }

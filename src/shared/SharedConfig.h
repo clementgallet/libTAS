@@ -122,6 +122,11 @@ struct SharedConfig {
      * savefiles unmodified and save the content in savestates */
     bool prevent_savefiles = true;
 
+    /* Write back the content of backup savefiles into their file when the game
+     * quits. This is necessary if the game is restarted.
+     */
+    bool write_savefiles_on_exit = false;
+
     /** Sound config **/
     /* Bit depth of the buffer (usually 8 or 16) */
     int audio_bitdepth = 16;

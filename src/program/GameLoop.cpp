@@ -375,6 +375,11 @@ void GameLoop::init()
     pointer_offset_x = 0;
     pointer_offset_y = 0;
 
+    /* If auto-restart is set, write back savefiles on game exit */
+    context->config.sc.write_savefiles_on_exit =
+        (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
+        (context->config.auto_restart);
+
     emit rerecordChanged();
 
     context->status = Context::ACTIVE;
@@ -517,6 +522,9 @@ bool GameLoop::startFrameMessages()
                 /* Finished running a dump from the command line */
                 exit(0);
             }
+            return true;
+        case -1:
+            std::cerr << "The connection to the game was lost. Exiting" << std::endl;
             return true;
         default:
             std::cerr << "Got unknown message!!!" << std::endl;
@@ -1314,6 +1322,19 @@ void GameLoop::processInputs(AllInputs &ai)
 
 void GameLoop::endFrameMessages(AllInputs &ai)
 {
+    /* If the user stopped the game with the Stop button, don't write back
+     * savefiles.*/
+    if (context->status == Context::QUITTING) {
+        context->config.sc.write_savefiles_on_exit = false;
+        context->config.sc_modified = true;
+    }
+
+    /* If the game was restarted, write back savefiles.*/
+    if (context->status == Context::RESTARTING) {
+        context->config.sc.write_savefiles_on_exit = true;
+        context->config.sc_modified = true;
+    }
+
     /* Send shared config if modified */
     if (context->config.sc_modified) {
         /* Send config */
