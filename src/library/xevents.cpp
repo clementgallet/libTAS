@@ -71,6 +71,7 @@ static void filterEventQueue(Display *display)
     LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
     XEvent event;
     XPointer arg = nullptr;
+    GlobalNative gn;
     while (True == XCheckIfEvent(display, &event, isEventFiltered, arg)) {}
 }
 
@@ -211,6 +212,22 @@ int XPending(Display *display)
 
     int ret = orig::XPending(display);
     debuglog(LCF_EVENTS, "    returns ", ret);
+    return ret;
+}
+
+Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(), XPointer arg)
+{
+    LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
+    if (GlobalState::isNative()) {
+        return orig::XCheckIfEvent(display, event_return, predicate, arg);
+    }
+    DEBUGLOGCALL(LCF_EVENTS);
+    filterEventQueue(display);
+
+    Bool ret = orig::XCheckIfEvent(display, event_return, predicate, arg);
+
+    if (ret)
+        catchCloseEvent(display, event_return);
     return ret;
 }
 
