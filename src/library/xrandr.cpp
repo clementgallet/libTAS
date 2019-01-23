@@ -38,6 +38,13 @@ OVERRIDE XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resource
         /* Change the settings. */
         crtcInfo->width = shared_config.screen_width;
         crtcInfo->height = shared_config.screen_height;
+        for (int i = 0; i < resources->nmode; i++) {
+            if (resources->modes[i].width == shared_config.screen_width &&
+                resources->modes[i].height == shared_config.screen_height) {
+                crtcInfo->mode = i;
+                break;
+            }
+        }
     }
 
     return crtcInfo;
