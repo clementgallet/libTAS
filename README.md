@@ -25,7 +25,7 @@ If you don't have a Linux system beforehand, an easy way is to use a virtual mac
 
 An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/packages/libtas/).
 
-### Dependancies
+### Dependencies
 
 You will need to download and install the following to build libTAS:
 
