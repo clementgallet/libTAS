@@ -22,6 +22,7 @@
 namespace libtas {
 
 OVERRIDE HSteamUser SteamAPI_GetHSteamUser();
+OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
 OVERRIDE void * SteamInternal_ContextInit( void *pContextInitData );
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 

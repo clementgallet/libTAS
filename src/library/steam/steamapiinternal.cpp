@@ -21,13 +21,22 @@
 #include "../logging.h"
 #include "steamapi.h"
 // #include <signal.h>
+#include <dlfcn.h>
 
 namespace libtas {
 
 HSteamUser SteamAPI_GetHSteamUser()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (auto *user = SteamUser())
+        return user->GetHSteamUser();
     return 0;
+}
+
+HSteamPipe SteamAPI_GetHSteamPipe()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return shared_config.virtual_steam;
 }
 
 void * SteamInternal_ContextInit( void *pContextInitData )
@@ -49,7 +58,24 @@ void * SteamInternal_ContextInit( void *pContextInitData )
 
 void * SteamInternal_CreateInterface( const char *ver )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    debuglog(LCF_STEAM, __func__, " called with ", ver);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    /* The expected return from this function is a pointer to a C++ class with
+     * specific virtual functions.  The format of our argument is the name
+     * of the corresponding C function that has already been hooked to return
+     * the correct value, followed by some numbers that are probably used for
+     * version checking.  As a quick hack, just lookup the symbol and call it.
+     */
+    std::string symbol = ver;
+    /* Strip numbers at the end */
+    auto end = symbol.find_last_not_of("0123456789");
+    if (end != std::string::npos)
+        symbol.resize(end + 1);
+    void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
+    if (func)
+        return func();
     return nullptr;
 }
 

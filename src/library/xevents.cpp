@@ -215,7 +215,7 @@ int XPending(Display *display)
     return ret;
 }
 
-Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(), XPointer arg)
+Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
     LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
     if (GlobalState::isNative()) {
