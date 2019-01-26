@@ -39,7 +39,7 @@ int fluid_settings_getstr_default(fluid_settings_t *settings, const char *name, 
         return 0; // FLUID_OK
     }
 
-    LINK_NAMESPACE(fluid_settings_getstr_default, "libfluidsynth");
+    LINK_NAMESPACE(fluid_settings_getstr_default, "fluidsynth");
     return orig::fluid_settings_getstr_default(settings, name, def);
 }
 
@@ -47,7 +47,7 @@ int fluid_settings_setstr(fluid_settings_t *settings, const char *name, const ch
 {
     debuglogstdio(LCF_SOUND, "%s called with name %s", __func__, name);
 
-    LINK_NAMESPACE(fluid_settings_setstr, "libfluidsynth");
+    LINK_NAMESPACE(fluid_settings_setstr, "fluidsynth");
 
     int ret;
 
@@ -66,7 +66,7 @@ fluid_settings_t* new_fluid_settings(void)
     DEBUGLOGCALL(LCF_SOUND);
 
     /* Before creating the settings, we unregister every audio drivers except ALSA */
-    LINK_NAMESPACE(fluid_audio_driver_register, "libfluidsynth");
+    LINK_NAMESPACE(fluid_audio_driver_register, "fluidsynth");
     const char* alsadriver = "alsa";
     const char* adrivers[2] = {alsadriver, nullptr};
     int ret = orig::fluid_audio_driver_register(adrivers);
@@ -76,7 +76,7 @@ fluid_settings_t* new_fluid_settings(void)
     } // FLUID_OK
 
     /* Then return the original function */
-    LINK_NAMESPACE(new_fluid_settings, "libfluidsynth");
+    LINK_NAMESPACE(new_fluid_settings, "fluidsynth");
     return orig::new_fluid_settings();
 }
 

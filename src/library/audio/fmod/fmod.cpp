@@ -33,8 +33,8 @@ int FMOD_System_Create(void **system)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
-    LINK_NAMESPACE(FMOD_System_Create, "libfmod");
-    LINK_NAMESPACE(FMOD_System_SetOutput, "libfmod");
+    LINK_NAMESPACE(FMOD_System_Create, "fmod");
+    LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
 
     int ret = orig::FMOD_System_Create(system);
 
@@ -48,9 +48,9 @@ int FMOD_EventSystem_Create(void **eventsystem)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
-    LINK_NAMESPACE(FMOD_EventSystem_Create, "libfmod");
-    LINK_NAMESPACE(FMOD_EventSystem_GetSystemObject, "libfmod");
-    LINK_NAMESPACE(FMOD_System_SetOutput, "libfmod");
+    LINK_NAMESPACE(FMOD_EventSystem_Create, "fmod");
+    LINK_NAMESPACE(FMOD_EventSystem_GetSystemObject, "fmod");
+    LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
 
     int ret = orig::FMOD_EventSystem_Create(eventsystem);
 
@@ -66,7 +66,7 @@ int FMOD_System_SetOutput(void *system, int)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
-    LINK_NAMESPACE(FMOD_System_SetOutput, "libfmod");
+    LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
 
     /* We force the output to be ALSA */
     return orig::FMOD_System_SetOutput(system, 11 /* FMOD_OUTPUTTYPE_ALSA */);
@@ -76,7 +76,7 @@ int _ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE(void *system, int output)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
-    LINK_NAMESPACE(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE, "libfmod");
+    LINK_NAMESPACE(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE, "fmod");
 
     /* We force the output to be ALSA */
     return orig::_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE(system, 11 /* FMOD_OUTPUTTYPE_ALSA */);

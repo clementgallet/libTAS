@@ -41,7 +41,7 @@ DEFINE_ORIG_POINTER(ioctl);
 int ioctl(int fd, unsigned long request, ...) throw()
 {
     //debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
-    LINK_NAMESPACE(ioctl, nullptr);
+    LINK_NAMESPACE_GLOBAL(ioctl);
 
     va_list arg_list;
     void* argp;

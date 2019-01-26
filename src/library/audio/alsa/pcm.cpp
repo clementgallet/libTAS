@@ -87,7 +87,7 @@ static int get_latency();
 int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int mode)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_open, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_open);
         return orig::snd_pcm_open(pcm, name, stream, mode);
     }
 
@@ -121,7 +121,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 int snd_pcm_close(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_close, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_close);
         return orig::snd_pcm_close(pcm);
     }
 
@@ -132,7 +132,7 @@ int snd_pcm_close(snd_pcm_t *pcm)
 int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_nonblock, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_nonblock);
         return orig::snd_pcm_nonblock(pcm, nonblock);
     }
 
@@ -143,7 +143,7 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
 int snd_pcm_start(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_start, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_start);
         return orig::snd_pcm_start(pcm);
     }
 
@@ -156,7 +156,7 @@ int snd_pcm_start(snd_pcm_t *pcm)
 int snd_pcm_resume(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_resume, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_resume);
         return orig::snd_pcm_resume(pcm);
     }
 
@@ -169,7 +169,7 @@ int snd_pcm_resume(snd_pcm_t *pcm)
 int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_wait, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_wait);
         return orig::snd_pcm_wait(pcm, timeout);
     }
     debuglog(LCF_SOUND, __func__, " called with timeout ", timeout);
@@ -198,7 +198,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_delay, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_delay);
         return orig::snd_pcm_delay(pcm, delayp);
     }
 
@@ -211,7 +211,7 @@ int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_avail_update, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_avail_update);
         return orig::snd_pcm_avail_update(pcm);
     }
 
@@ -226,7 +226,7 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params);
         return orig::snd_pcm_hw_params(pcm, params);
     }
 
@@ -246,7 +246,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_sw_params_current, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_current);
         return orig::snd_pcm_sw_params_current(pcm, params);
     }
 
@@ -257,7 +257,7 @@ int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_sw_params, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params);
         return orig::snd_pcm_sw_params(pcm, params);
     }
 
@@ -277,7 +277,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 int snd_pcm_prepare(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_prepare, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_prepare);
         return orig::snd_pcm_prepare(pcm);
     }
 
@@ -295,7 +295,7 @@ static int get_latency()
 snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t size)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_writei, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_writei);
         return orig::snd_pcm_writei(pcm, buffer, size);
     }
 
@@ -353,7 +353,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t size)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_readi, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_readi);
         return orig::snd_pcm_readi(pcm, buffer, size);
     }
 
@@ -364,7 +364,7 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
 int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_mmap_begin, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_mmap_begin);
         return orig::snd_pcm_mmap_begin(pcm, areas, offset, frames);
     }
 
@@ -438,7 +438,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
 snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, snd_pcm_uframes_t frames)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_mmap_commit, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_mmap_commit);
         return orig::snd_pcm_mmap_commit(pcm, offset, frames);
     }
 
@@ -453,7 +453,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
 int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_any, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_any);
         return orig::snd_pcm_hw_params_any(pcm, params);
     }
 
@@ -464,7 +464,7 @@ int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 size_t snd_pcm_hw_params_sizeof(void)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_sizeof, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_sizeof);
         return orig::snd_pcm_hw_params_sizeof();
     }
 
@@ -475,7 +475,7 @@ size_t snd_pcm_hw_params_sizeof(void)
 int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_malloc, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_malloc);
         return orig::snd_pcm_hw_params_malloc(ptr);
     }
 
@@ -487,7 +487,7 @@ int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr)
 void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_free, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_free);
         return orig::snd_pcm_hw_params_free(obj);
     }
 
@@ -497,7 +497,7 @@ void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj)
 void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_copy, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_copy);
         return orig::snd_pcm_hw_params_copy(dst, src);
     }
 
@@ -507,7 +507,7 @@ void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t 
 int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_access, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_access);
         return orig::snd_pcm_hw_params_set_access(pcm, params, access);
     }
 
@@ -521,7 +521,7 @@ int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_format, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_format);
         return orig::snd_pcm_hw_params_set_format(pcm, params, val);
     }
 
@@ -553,7 +553,7 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_channels, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_channels);
         return orig::snd_pcm_hw_params_get_channels(params, val);
     }
 
@@ -568,7 +568,7 @@ int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned i
 int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_channels_max, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_channels_max);
         return orig::snd_pcm_hw_params_get_channels_max(params, val);
     }
 
@@ -581,7 +581,7 @@ int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsign
 int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_channels, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_channels);
         return orig::snd_pcm_hw_params_set_channels(pcm, params, val);
     }
 
@@ -596,7 +596,7 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
 int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_rate, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate);
         return orig::snd_pcm_hw_params_set_rate(pcm, params, val, dir);
     }
 
@@ -611,7 +611,7 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
 int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_rate_near, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate_near);
         return orig::snd_pcm_hw_params_set_rate_near(pcm, params, val, dir);
     }
 
@@ -626,7 +626,7 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
 int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_rate_resample, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate_resample);
         return orig::snd_pcm_hw_params_set_rate_resample(pcm, params, val);
     }
 
@@ -641,7 +641,7 @@ static int periods = 2;
 int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_period_size, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_period_size);
         return orig::snd_pcm_hw_params_get_period_size(params, frames, dir);
     }
 
@@ -654,7 +654,7 @@ int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm
 int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_period_time_min, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_period_time_min);
         return orig::snd_pcm_hw_params_get_period_time_min(params, val, dir);
     }
 
@@ -667,7 +667,7 @@ int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, uns
 int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_period_size_near, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_period_size_near);
         return orig::snd_pcm_hw_params_set_period_size_near(pcm, params, val, dir);
     }
 
@@ -678,7 +678,7 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_periods_near, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_periods_near);
         return orig::snd_pcm_hw_params_set_periods_near(pcm, params, val, dir);
     }
 
@@ -690,7 +690,7 @@ int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *para
 int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_buffer_size, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size);
         return orig::snd_pcm_hw_params_get_buffer_size(params, val);
     }
 
@@ -702,7 +702,7 @@ int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm
 int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_get_buffer_time_max, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_time_max);
         return orig::snd_pcm_hw_params_get_buffer_time_max(params, val, dir);
     }
 
@@ -717,7 +717,7 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
 int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_buffer_size_near, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_buffer_size_near);
         return orig::snd_pcm_hw_params_set_buffer_size_near(pcm, params, val);
     }
 
@@ -729,7 +729,7 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_set_buffer_time_near, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_buffer_time_near);
         return orig::snd_pcm_hw_params_set_buffer_time_near(pcm, params, val, dir);
     }
 
@@ -752,7 +752,7 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_hw_params_test_rate, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_rate);
         return orig::snd_pcm_hw_params_test_rate(pcm, params, val, dir);
     }
 
@@ -763,7 +763,7 @@ int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, uns
 size_t snd_pcm_sw_params_sizeof(void)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_sw_params_sizeof, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_sizeof);
         return orig::snd_pcm_sw_params_sizeof();
     }
 
@@ -775,7 +775,7 @@ size_t snd_pcm_sw_params_sizeof(void)
 int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_sw_params_set_start_threshold, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_start_threshold);
         return orig::snd_pcm_sw_params_set_start_threshold(pcm, params, val);
     }
 
@@ -786,7 +786,7 @@ int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *p
 int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_sw_params_set_avail_min, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_avail_min);
         return orig::snd_pcm_sw_params_set_avail_min(pcm, params, val);
     }
 
@@ -797,7 +797,7 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
 snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(snd_pcm_get_chmap, nullptr);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_get_chmap);
         return orig::snd_pcm_get_chmap(pcm);
     }
 

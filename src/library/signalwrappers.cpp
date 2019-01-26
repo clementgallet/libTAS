@@ -50,7 +50,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ sighandler_t signal (int sig, sighandler_t handler) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL);
-    LINK_NAMESPACE(signal, nullptr);
+    LINK_NAMESPACE_GLOBAL(signal);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -74,7 +74,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigblock (int mask) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL);
-    LINK_NAMESPACE(sigblock, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigblock);
 
     static const int bannedMask = sigmask(SIGUSR1) | sigmask(SIGUSR2);
 
@@ -93,7 +93,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigsetmask (int mask) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL);
-    LINK_NAMESPACE(sigsetmask, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigsetmask);
 
     static const int bannedMask = sigmask(SIGUSR1) | sigmask(SIGUSR2);
 
@@ -113,7 +113,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int siggetmask (void) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL);
-    LINK_NAMESPACE(siggetmask, nullptr);
+    LINK_NAMESPACE_GLOBAL(siggetmask);
 
     int oldmask = orig::siggetmask();
 
@@ -127,7 +127,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL);
-    LINK_NAMESPACE(sigprocmask, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigprocmask);
 
     if (GlobalState::isNative())
         return orig::sigprocmask(how, set, oset);
@@ -168,7 +168,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigsuspend (const sigset_t *set)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE(sigsuspend, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigsuspend);
 
     sigset_t tmp;
     if (set) {
@@ -184,7 +184,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigaction (int sig, const struct sigaction *act,
     struct sigaction *oact) throw()
 {
-    LINK_NAMESPACE(sigaction, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigaction);
 
     if (GlobalState::isNative()) {
         return orig::sigaction(sig, act, oact);
@@ -220,21 +220,21 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigpending (sigset_t *set) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE(sigpending, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigpending);
     return orig::sigpending(set);
 }
 
 /* Override */ int sigwait (const sigset_t *set, int *sig)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE(sigwait, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigwait);
     return orig::sigwait(set, sig);
 }
 
 /* Override */ int sigwaitinfo (const sigset_t *set, siginfo_t *info)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE(sigwaitinfo, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigwaitinfo);
     return orig::sigwaitinfo(set, info);
 }
 
@@ -242,13 +242,13 @@ static thread_local int origUsrMaskThread = 0;
     siginfo_t *info, const struct timespec *timeout)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE(sigtimedwait, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigtimedwait);
     return orig::sigtimedwait(set, info, timeout);
 }
 
 /* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) throw()
 {
-    LINK_NAMESPACE(sigaltstack, nullptr);
+    LINK_NAMESPACE_GLOBAL(sigaltstack);
 
     if (GlobalState::isNative()) {
         return orig::sigaltstack(ss, oss);
@@ -279,7 +279,7 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t *oldmask) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
-    LINK_NAMESPACE(pthread_sigmask, nullptr);
+    LINK_NAMESPACE_GLOBAL(pthread_sigmask);
 
     /* This is a bit of a workaround. We still want native threads
      * (like pulseaudio thread) to be able to be suspended, but we also want
@@ -349,7 +349,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int pthread_kill (pthread_t threadid, int signo) throw()
 {
-    LINK_NAMESPACE(pthread_kill, nullptr);
+    LINK_NAMESPACE_GLOBAL(pthread_kill);
 
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
@@ -372,7 +372,7 @@ static thread_local int origUsrMaskThread = 0;
                  const union sigval value) throw()
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
-    LINK_NAMESPACE(pthread_sigqueue, nullptr);
+    LINK_NAMESPACE_GLOBAL(pthread_sigqueue);
     return orig::pthread_sigqueue(threadid, signo, value);
 }
 

@@ -53,7 +53,7 @@ DEFINE_ORIG_POINTER(dup2)
 
 int open (const char *file, int oflag, ...)
 {
-    LINK_NAMESPACE(open, nullptr);
+    LINK_NAMESPACE_GLOBAL(open);
 
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
@@ -94,7 +94,7 @@ int open (const char *file, int oflag, ...)
 
 int open64 (const char *file, int oflag, ...)
 {
-    LINK_NAMESPACE(open64, nullptr);
+    LINK_NAMESPACE_GLOBAL(open64);
 
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
@@ -135,7 +135,7 @@ int open64 (const char *file, int oflag, ...)
 
 int openat (int dirfd, const char *file, int oflag, ...)
 {
-    LINK_NAMESPACE(openat, nullptr);
+    LINK_NAMESPACE_GLOBAL(openat);
 
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
@@ -167,7 +167,7 @@ int openat (int dirfd, const char *file, int oflag, ...)
 
 int openat64 (int dirfd, const char *file, int oflag, ...)
 {
-    LINK_NAMESPACE(openat64, nullptr);
+    LINK_NAMESPACE_GLOBAL(openat64);
 
     mode_t mode;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
@@ -199,7 +199,7 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
 
 int creat (const char *file, mode_t mode)
 {
-    LINK_NAMESPACE(creat, nullptr);
+    LINK_NAMESPACE_GLOBAL(creat);
 
     if (GlobalState::isNative())
         return orig::creat(file, mode);
@@ -226,7 +226,7 @@ int creat (const char *file, mode_t mode)
 
 int creat64 (const char *file, mode_t mode)
 {
-    LINK_NAMESPACE(creat64, nullptr);
+    LINK_NAMESPACE_GLOBAL(creat64);
 
     if (GlobalState::isNative())
         return orig::creat64(file, mode);
@@ -250,7 +250,7 @@ int creat64 (const char *file, mode_t mode)
 
 int close (int fd)
 {
-    LINK_NAMESPACE(close, nullptr);
+    LINK_NAMESPACE_GLOBAL(close);
 
     if (GlobalState::isNative())
         return orig::close(fd);
@@ -275,7 +275,7 @@ int close (int fd)
 
 int access(const char *name, int type) throw()
 {
-    LINK_NAMESPACE(access, nullptr);
+    LINK_NAMESPACE_GLOBAL(access);
 
     if (GlobalState::isNative())
         return orig::access(name, type);
@@ -311,7 +311,7 @@ int access(const char *name, int type) throw()
 
 int __xstat(int ver, const char *path, struct stat *buf) throw()
 {
-    LINK_NAMESPACE(__xstat, nullptr);
+    LINK_NAMESPACE_GLOBAL(__xstat);
 
     if (GlobalState::isNative())
         return orig::__xstat(ver, path, buf);
@@ -349,7 +349,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
 
 int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
 {
-    LINK_NAMESPACE(__xstat64, nullptr);
+    LINK_NAMESPACE_GLOBAL(__xstat64);
 
     if (GlobalState::isNative())
         return orig::__xstat64(ver, path, buf);
@@ -387,7 +387,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
 
 int __lxstat(int ver, const char *path, struct stat *buf) throw()
 {
-    LINK_NAMESPACE(__lxstat, nullptr);
+    LINK_NAMESPACE_GLOBAL(__lxstat);
 
     if (GlobalState::isNative())
         return orig::__lxstat(ver, path, buf);
@@ -425,7 +425,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
 
 int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
 {
-    LINK_NAMESPACE(__lxstat64, nullptr);
+    LINK_NAMESPACE_GLOBAL(__lxstat64);
 
     if (GlobalState::isNative())
         return orig::__lxstat64(ver, path, buf);
@@ -463,7 +463,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
 
 int __fxstat(int ver, int fd, struct stat *buf) throw()
 {
-    LINK_NAMESPACE(__fxstat, nullptr);
+    LINK_NAMESPACE_GLOBAL(__fxstat);
 
     if (GlobalState::isNative())
         return orig::__fxstat(ver, fd, buf);
@@ -474,7 +474,7 @@ int __fxstat(int ver, int fd, struct stat *buf) throw()
 
 int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
 {
-    LINK_NAMESPACE(__fxstat64, nullptr);
+    LINK_NAMESPACE_GLOBAL(__fxstat64);
 
     if (GlobalState::isNative())
         return orig::__fxstat64(ver, fd, buf);
@@ -486,7 +486,7 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
 int dup2 (int fd, int fd2) throw()
 {
     debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
-    LINK_NAMESPACE(dup2, nullptr);
+    LINK_NAMESPACE_GLOBAL(dup2);
 
     if (fd2 == 2) {
         /* Prevent the game from redirecting stderr (2) to a file */

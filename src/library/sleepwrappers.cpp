@@ -36,7 +36,7 @@ DEFINE_ORIG_POINTER(pselect);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    LINK_NAMESPACE(nanosleep, nullptr);
+    LINK_NAMESPACE_GLOBAL(nanosleep);
 
     struct timespec ts;
     ts.tv_sec = sleep / 1000;
@@ -64,7 +64,7 @@ DEFINE_ORIG_POINTER(pselect);
 
 /* Override */ int usleep(useconds_t usec)
 {
-    LINK_NAMESPACE(nanosleep, nullptr);
+    LINK_NAMESPACE_GLOBAL(nanosleep);
 
     struct timespec ts;
     ts.tv_sec = usec / 1000000;
@@ -91,7 +91,7 @@ DEFINE_ORIG_POINTER(pselect);
 
 /* Override */ int nanosleep (const struct timespec *requested_time, struct timespec *remaining)
 {
-    LINK_NAMESPACE(nanosleep, nullptr);
+    LINK_NAMESPACE_GLOBAL(nanosleep);
 
     if (GlobalState::isNative()) {
         return orig::nanosleep(requested_time, remaining);
@@ -116,7 +116,7 @@ DEFINE_ORIG_POINTER(pselect);
 			    const struct timespec *req,
 			    struct timespec *rem)
 {
-    LINK_NAMESPACE(clock_nanosleep, nullptr);
+    LINK_NAMESPACE_GLOBAL(clock_nanosleep);
     if (GlobalState::isNative()) {
         return orig::clock_nanosleep(clock_id, flags, req, rem);
     }
@@ -152,7 +152,7 @@ DEFINE_ORIG_POINTER(pselect);
 
 /* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
 {
-    LINK_NAMESPACE(select, nullptr);
+    LINK_NAMESPACE_GLOBAL(select);
 
     /* select can be used to sleep the cpu if feed with all null parameters
      * except for timeout. In this case we replace it with what we did for
@@ -189,7 +189,7 @@ DEFINE_ORIG_POINTER(pselect);
 /* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	const struct timespec *timeout, const __sigset_t *sigmask)
 {
-    LINK_NAMESPACE(pselect, nullptr);
+    LINK_NAMESPACE_GLOBAL(pselect);
 
     /* select can be used to sleep the cpu if feed with all null parameters
      * except for timeout. In this case we replace it with what we did for

@@ -162,12 +162,12 @@ void ScreenCapture::initScreenSurface()
     /* Set up a backup surface/framebuffer */
     if (game_info.video & GameInfo::OPENGL) {
         /* Generate FBO and RBO */
-        LINK_NAMESPACE(glGenFramebuffers, "libGL");
-        LINK_NAMESPACE(glBindFramebuffer, "libGL");
-        LINK_NAMESPACE(glGenRenderbuffers, "libGL");
-        LINK_NAMESPACE(glBindRenderbuffer, "libGL");
-        LINK_NAMESPACE(glRenderbufferStorage, "libGL");
-        LINK_NAMESPACE(glFramebufferRenderbuffer, "libGL");
+        LINK_NAMESPACE(glGenFramebuffers, "GL");
+        LINK_NAMESPACE(glBindFramebuffer, "GL");
+        LINK_NAMESPACE(glGenRenderbuffers, "GL");
+        LINK_NAMESPACE(glBindRenderbuffer, "GL");
+        LINK_NAMESPACE(glRenderbufferStorage, "GL");
+        LINK_NAMESPACE(glFramebufferRenderbuffer, "GL");
 
         if (screenFBO == 0) {
             orig::glGenFramebuffers(1, &screenFBO);
@@ -233,12 +233,12 @@ void ScreenCapture::destroyScreenSurface()
 {
     /* Delete openGL framebuffers */
     if (screenFBO != 0) {
-        LINK_NAMESPACE(glDeleteFramebuffers, "libGL");
+        LINK_NAMESPACE(glDeleteFramebuffers, "GL");
         orig::glDeleteFramebuffers(1, &screenFBO);
         screenFBO = 0;
     }
     if (screenRBO != 0) {
-        LINK_NAMESPACE(glDeleteRenderbuffers, "libGL");
+        LINK_NAMESPACE(glDeleteRenderbuffers, "GL");
         orig::glDeleteRenderbuffers(1, &screenRBO);
         screenRBO = 0;
     }
@@ -363,9 +363,9 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         return size;
 
     if (game_info.video & GameInfo::OPENGL) {
-        LINK_NAMESPACE(glReadPixels, "libGL");
-        LINK_NAMESPACE(glBindFramebuffer, "libGL");
-        LINK_NAMESPACE(glBlitFramebuffer, "libGL");
+        LINK_NAMESPACE(glReadPixels, "GL");
+        LINK_NAMESPACE(glBindFramebuffer, "GL");
+        LINK_NAMESPACE(glBlitFramebuffer, "GL");
 
         /* Copy the default framebuffer to our FBO */
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -458,8 +458,8 @@ int ScreenCapture::setPixels() {
         return 0;
 
     if (game_info.video & GameInfo::OPENGL) {
-        LINK_NAMESPACE(glBindFramebuffer, "libGL");
-        LINK_NAMESPACE(glBlitFramebuffer, "libGL");
+        LINK_NAMESPACE(glBindFramebuffer, "GL");
+        LINK_NAMESPACE(glBlitFramebuffer, "GL");
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

@@ -56,7 +56,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ long int random (void) throw()
 {
     static int count = 0;
-    LINK_NAMESPACE(random, nullptr);
+    LINK_NAMESPACE_GLOBAL(random);
     long int ret = orig::random();
     debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
     return ret;
@@ -65,7 +65,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ void srandom (unsigned int seed) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
-    LINK_NAMESPACE(srandom, nullptr);
+    LINK_NAMESPACE_GLOBAL(srandom);
     return orig::srandom(seed);
 }
 
@@ -73,14 +73,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
             size_t statelen) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
-    LINK_NAMESPACE(initstate, nullptr);
+    LINK_NAMESPACE_GLOBAL(initstate);
     return orig::initstate(seed, statebuf, statelen);
 }
 
 /* Override */ char *setstate (char *statebuf) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(setstate, nullptr);
+    LINK_NAMESPACE_GLOBAL(setstate);
     return orig::setstate(statebuf);
 }
 
@@ -88,14 +88,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
              int32_t *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(random_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(random_r);
     return orig::random_r(buf, result);
 }
 
 /* Override */ int srandom_r (unsigned int seed, struct random_data *buf) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
-    LINK_NAMESPACE(srandom_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(srandom_r);
     return orig::srandom_r(seed, buf);
 }
 
@@ -103,21 +103,21 @@ DEFINE_ORIG_POINTER(lcong48_r)
             struct random_data *buf) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
-    LINK_NAMESPACE(initstate_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(initstate_r);
     return orig::initstate_r(seed, statebuf, statelen, buf);
 }
 
 /* Override */ int setstate_r (char *statebuf, struct random_data *buf) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(setstate_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(setstate_r);
     return orig::setstate_r(statebuf, buf);
 }
 
 /* Override */ int rand (void) throw()
 {
     static int count = 0;
-    LINK_NAMESPACE(rand, nullptr);
+    LINK_NAMESPACE_GLOBAL(rand);
     int ret = orig::rand();
     debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
     return ret;
@@ -126,84 +126,84 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ void srand (unsigned int seed) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
-    LINK_NAMESPACE(srand, nullptr);
+    LINK_NAMESPACE_GLOBAL(srand);
     return orig::srand(seed);
 }
 
 /* Override */ int rand_r (unsigned int *seed) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(rand_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(rand_r);
     return orig::rand_r(seed);
 }
 
 /* Override */ double drand48 (void) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(drand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(drand48);
     return orig::drand48();
 }
 
 /* Override */ double erand48 (unsigned short int xsubi[3]) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(erand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(erand48);
     return orig::erand48(xsubi);
 }
 
 /* Override */ long int lrand48 (void) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(lrand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(lrand48);
     return orig::lrand48();
 }
 
 /* Override */ long int nrand48 (unsigned short int xsubi[3]) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(nrand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(nrand48);
     return orig::nrand48(xsubi);
 }
 
 /* Override */ long int mrand48 (void) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(mrand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(mrand48);
     return orig::mrand48();
 }
 
 /* Override */ long int jrand48 (unsigned short int xsubi[3]) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(jrand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(jrand48);
     return orig::jrand48(xsubi);
 }
 
 /* Override */ void srand48 (long int seedval) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seedval);
-    LINK_NAMESPACE(srand48, nullptr);
+    LINK_NAMESPACE_GLOBAL(srand48);
     return orig::srand48(seedval);
 }
 
 /* Override */ unsigned short int *seed48 (unsigned short int seed16v[3]) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed16v[0], " ", seed16v[1], " ", seed16v[2]);
-    LINK_NAMESPACE(seed48, nullptr);
+    LINK_NAMESPACE_GLOBAL(seed48);
     return orig::seed48(seed16v);
 }
 
 /* Override */ void lcong48 (unsigned short int param[7]) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(lcong48, nullptr);
+    LINK_NAMESPACE_GLOBAL(lcong48);
     return orig::lcong48(param);
 }
 
 /* Override */ int drand48_r (struct drand48_data *buffer, double *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(drand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(drand48_r);
     return orig::drand48_r(buffer, result);
 }
 
@@ -211,14 +211,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
               struct drand48_data *buffer, double *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(erand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(erand48_r);
     return orig::erand48_r(xsubi, buffer, result);
 }
 
 /* Override */ int lrand48_r (struct drand48_data *buffer, long int *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(lrand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(lrand48_r);
     return orig::lrand48_r(buffer, result);
 }
 
@@ -226,14 +226,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
               struct drand48_data *buffer, long int *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(nrand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(nrand48_r);
     return orig::nrand48_r(xsubi, buffer, result);
 }
 
 /* Override */ int mrand48_r (struct drand48_data *buffer, long int *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(mrand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(mrand48_r);
     return orig::mrand48_r(buffer, result);
 }
 
@@ -241,14 +241,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
               struct drand48_data *buffer, long int *result) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(jrand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(jrand48_r);
     return orig::jrand48_r(xsubi, buffer, result);
 }
 
 /* Override */ int srand48_r (long int seedval, struct drand48_data *buffer) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seedval);
-    LINK_NAMESPACE(srand48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(srand48_r);
     return orig::srand48_r(seedval, buffer);
 }
 
@@ -256,7 +256,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
              struct drand48_data *buffer) throw()
 {
     debuglog(LCF_RANDOM, __func__, " call with seed ", seed16v[0], " ", seed16v[1], " ", seed16v[2]);
-    LINK_NAMESPACE(seed48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(seed48_r);
     return orig::seed48_r(seed16v, buffer);
 }
 
@@ -264,7 +264,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
               struct drand48_data *buffer) throw()
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE(lcong48_r, nullptr);
+    LINK_NAMESPACE_GLOBAL(lcong48_r);
     return orig::lcong48_r(param, buffer);
 }
 

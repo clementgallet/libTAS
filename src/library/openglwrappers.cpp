@@ -129,7 +129,7 @@ void checkMesa()
     checked = true;
 
     /* Get OpenGL vendor and renderer */
-    LINK_NAMESPACE(glGetString, "libGL");
+    LINK_NAMESPACE(glGetString, "GL");
     const char* vendor = reinterpret_cast<const char*>(orig::glGetString(GL_VENDOR));
     const char* renderer = reinterpret_cast<const char*>(orig::glGetString(GL_RENDERER));
 
@@ -222,7 +222,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 void(*glXGetProcAddress (const GLubyte *procName))()
 {
     debuglog(LCF_OGL, __func__, " call with symbol ", procName);
-    LINK_NAMESPACE(glXGetProcAddress, "libGL");
+    LINK_NAMESPACE(glXGetProcAddress, "GL");
 
     if (!orig::glXGetProcAddress) return nullptr;
 
@@ -232,7 +232,7 @@ void(*glXGetProcAddress (const GLubyte *procName))()
 __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 {
     debuglog(LCF_OGL, __func__, " call with symbol ", procName);
-    LINK_NAMESPACE(glXGetProcAddressARB, "libGL");
+    LINK_NAMESPACE(glXGetProcAddressARB, "GL");
 
     if (!orig::glXGetProcAddressARB) return nullptr;
 
@@ -242,7 +242,7 @@ __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 void* glXGetProcAddressEXT (const GLubyte *procName)
 {
     debuglog(LCF_OGL, __func__, " call with symbol ", procName);
-    LINK_NAMESPACE(glXGetProcAddressEXT, "libGL");
+    LINK_NAMESPACE(glXGetProcAddressEXT, "GL");
 
     if (!orig::glXGetProcAddressEXT) return nullptr;
 
@@ -251,7 +251,7 @@ void* glXGetProcAddressEXT (const GLubyte *procName)
 
 Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 {
-    LINK_NAMESPACE(glXMakeCurrent, "libGL");
+    LINK_NAMESPACE(glXMakeCurrent, "GL");
 
     Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
     if (GlobalState::isNative())
@@ -276,7 +276,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     }
 
     /* Disable VSync */
-    //LINK_NAMESPACE(glXGetProcAddressARB, "libGL");
+    //LINK_NAMESPACE(glXGetProcAddressARB, "GL");
     //orig::glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)orig::glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
     //orig::glXSwapIntervalEXT(dpy, drawable, 0);
 
@@ -285,7 +285,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
 void glXSwapBuffers( Display *dpy, XID drawable )
 {
-    LINK_NAMESPACE(glXSwapBuffers, "libGL");
+    LINK_NAMESPACE(glXSwapBuffers, "GL");
 
     if (GlobalState::isNative())
         return orig::glXSwapBuffers(dpy, drawable);
@@ -306,7 +306,7 @@ static int swapInterval = 0;
 void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 {
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
-    LINK_NAMESPACE(glXSwapIntervalEXT, "libGL");
+    LINK_NAMESPACE(glXSwapIntervalEXT, "GL");
 
     swapInterval = interval;
 
@@ -323,7 +323,7 @@ void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 int glXSwapIntervalSGI (int interval)
 {
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
-    LINK_NAMESPACE(glXSwapIntervalSGI, "libGL");
+    LINK_NAMESPACE(glXSwapIntervalSGI, "GL");
 
     swapInterval = interval;
 
@@ -339,7 +339,7 @@ int glXSwapIntervalSGI (int interval)
 int glXSwapIntervalMESA (unsigned int interval)
 {
     debuglog(LCF_OGL, __func__, " call with interval ", interval);
-    LINK_NAMESPACE(glXSwapIntervalMESA, "libGL");
+    LINK_NAMESPACE(glXSwapIntervalMESA, "GL");
 
     swapInterval = interval;
 
@@ -371,14 +371,14 @@ void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigne
         return;
     }
 
-    LINK_NAMESPACE(glXQueryDrawable, "libGL");
+    LINK_NAMESPACE(glXQueryDrawable, "GL");
     return orig::glXQueryDrawable(dpy, draw, attribute, value);
 }
 
 GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glXCreateContextAttribsARB, "libGL");
+    LINK_NAMESPACE(glXCreateContextAttribsARB, "GL");
     int i = 0;
     while (attrib_list[i] != 0) {
         if (attrib_list[i] == GLX_CONTEXT_MAJOR_VERSION_ARB) {
@@ -411,7 +411,7 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
 void glClear(GLbitfield mask)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glClear, "libGL");
+    LINK_NAMESPACE(glClear, "GL");
     if (!skipping_draw)
         return orig::glClear(mask);
 }
@@ -427,7 +427,7 @@ void myglClear(GLbitfield mask)
 void glBegin(GLenum mode)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glBegin, "libGL");
+    LINK_NAMESPACE(glBegin, "GL");
     if (!skipping_draw)
         return orig::glBegin(mode);
 }
@@ -435,7 +435,7 @@ void glBegin(GLenum mode)
 void glEnd(void)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glEnd, "libGL");
+    LINK_NAMESPACE(glEnd, "GL");
     if (!skipping_draw)
         return orig::glEnd();
 }
@@ -443,7 +443,7 @@ void glEnd(void)
 void glVertex2d( GLdouble x, GLdouble y )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2d, "libGL");
+    LINK_NAMESPACE(glVertex2d, "GL");
     if (!skipping_draw)
         return orig::glVertex2d(x, y);
 }
@@ -451,7 +451,7 @@ void glVertex2d( GLdouble x, GLdouble y )
 void glVertex2f( GLfloat x, GLfloat y )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2f, "libGL");
+    LINK_NAMESPACE(glVertex2f, "GL");
     if (!skipping_draw)
         return orig::glVertex2f(x, y);
 }
@@ -459,7 +459,7 @@ void glVertex2f( GLfloat x, GLfloat y )
 void glVertex2i( GLint x, GLint y )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2i, "libGL");
+    LINK_NAMESPACE(glVertex2i, "GL");
     if (!skipping_draw)
         return orig::glVertex2i(x, y);
 }
@@ -467,7 +467,7 @@ void glVertex2i( GLint x, GLint y )
 void glVertex2s( GLshort x, GLshort y )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2s, "libGL");
+    LINK_NAMESPACE(glVertex2s, "GL");
     if (!skipping_draw)
         return orig::glVertex2s(x, y);
 }
@@ -475,7 +475,7 @@ void glVertex2s( GLshort x, GLshort y )
 void glVertex3d( GLdouble x, GLdouble y, GLdouble z )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3d, "libGL");
+    LINK_NAMESPACE(glVertex3d, "GL");
     if (!skipping_draw)
         return orig::glVertex3d(x, y, z);
 }
@@ -483,7 +483,7 @@ void glVertex3d( GLdouble x, GLdouble y, GLdouble z )
 void glVertex3f( GLfloat x, GLfloat y, GLfloat z )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3f, "libGL");
+    LINK_NAMESPACE(glVertex3f, "GL");
     if (!skipping_draw)
         return orig::glVertex3f(x, y, z);
 }
@@ -491,7 +491,7 @@ void glVertex3f( GLfloat x, GLfloat y, GLfloat z )
 void glVertex3i( GLint x, GLint y, GLint z )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3i, "libGL");
+    LINK_NAMESPACE(glVertex3i, "GL");
     if (!skipping_draw)
         return orig::glVertex3i(x, y, z);
 }
@@ -499,7 +499,7 @@ void glVertex3i( GLint x, GLint y, GLint z )
 void glVertex3s( GLshort x, GLshort y, GLshort z )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3s, "libGL");
+    LINK_NAMESPACE(glVertex3s, "GL");
     if (!skipping_draw)
         return orig::glVertex3s(x, y, z);
 }
@@ -507,7 +507,7 @@ void glVertex3s( GLshort x, GLshort y, GLshort z )
 void glVertex4d( GLdouble x, GLdouble y, GLdouble z, GLdouble w )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4d, "libGL");
+    LINK_NAMESPACE(glVertex4d, "GL");
     if (!skipping_draw)
         return orig::glVertex4d(x, y, z, w);
 }
@@ -515,7 +515,7 @@ void glVertex4d( GLdouble x, GLdouble y, GLdouble z, GLdouble w )
 void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4f, "libGL");
+    LINK_NAMESPACE(glVertex4f, "GL");
     if (!skipping_draw)
         return orig::glVertex4f(x, y, z, w);
 }
@@ -523,7 +523,7 @@ void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w )
 void glVertex4i( GLint x, GLint y, GLint z, GLint w )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4i, "libGL");
+    LINK_NAMESPACE(glVertex4i, "GL");
     if (!skipping_draw)
         return orig::glVertex4i(x, y, z, w);
 }
@@ -531,7 +531,7 @@ void glVertex4i( GLint x, GLint y, GLint z, GLint w )
 void glVertex4s( GLshort x, GLshort y, GLshort z, GLshort w )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4s, "libGL");
+    LINK_NAMESPACE(glVertex4s, "GL");
     if (!skipping_draw)
         return orig::glVertex4s(x, y, z, w);
 }
@@ -539,7 +539,7 @@ void glVertex4s( GLshort x, GLshort y, GLshort z, GLshort w )
 void glVertex2dv( const GLdouble *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2dv, "libGL");
+    LINK_NAMESPACE(glVertex2dv, "GL");
     if (!skipping_draw)
         return orig::glVertex2dv(v);
 }
@@ -547,7 +547,7 @@ void glVertex2dv( const GLdouble *v )
 void glVertex2fv( const GLfloat *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2fv, "libGL");
+    LINK_NAMESPACE(glVertex2fv, "GL");
     if (!skipping_draw)
         return orig::glVertex2fv(v);
 }
@@ -555,7 +555,7 @@ void glVertex2fv( const GLfloat *v )
 void glVertex2iv( const GLint *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2iv, "libGL");
+    LINK_NAMESPACE(glVertex2iv, "GL");
     if (!skipping_draw)
         return orig::glVertex2iv(v);
 }
@@ -563,7 +563,7 @@ void glVertex2iv( const GLint *v )
 void glVertex2sv( const GLshort *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2sv, "libGL");
+    LINK_NAMESPACE(glVertex2sv, "GL");
     if (!skipping_draw)
         return orig::glVertex2sv(v);
 }
@@ -571,7 +571,7 @@ void glVertex2sv( const GLshort *v )
 void glVertex3dv( const GLdouble *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3dv, "libGL");
+    LINK_NAMESPACE(glVertex3dv, "GL");
     if (!skipping_draw)
         return orig::glVertex3dv(v);
 }
@@ -579,7 +579,7 @@ void glVertex3dv( const GLdouble *v )
 void glVertex3fv( const GLfloat *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3fv, "libGL");
+    LINK_NAMESPACE(glVertex3fv, "GL");
     if (!skipping_draw)
         return orig::glVertex3fv(v);
 }
@@ -587,7 +587,7 @@ void glVertex3fv( const GLfloat *v )
 void glVertex3iv( const GLint *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3iv, "libGL");
+    LINK_NAMESPACE(glVertex3iv, "GL");
     if (!skipping_draw)
         return orig::glVertex3iv(v);
 }
@@ -595,7 +595,7 @@ void glVertex3iv( const GLint *v )
 void glVertex3sv( const GLshort *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3sv, "libGL");
+    LINK_NAMESPACE(glVertex3sv, "GL");
     if (!skipping_draw)
         return orig::glVertex3sv(v);
 }
@@ -604,7 +604,7 @@ void glVertex3sv( const GLshort *v )
 void glVertex4dv( const GLdouble *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4dv, "libGL");
+    LINK_NAMESPACE(glVertex4dv, "GL");
     if (!skipping_draw)
         return orig::glVertex4dv(v);
 }
@@ -612,7 +612,7 @@ void glVertex4dv( const GLdouble *v )
 void glVertex4fv( const GLfloat *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4fv, "libGL");
+    LINK_NAMESPACE(glVertex4fv, "GL");
     if (!skipping_draw)
         return orig::glVertex4fv(v);
 }
@@ -620,7 +620,7 @@ void glVertex4fv( const GLfloat *v )
 void glVertex4iv( const GLint *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4iv, "libGL");
+    LINK_NAMESPACE(glVertex4iv, "GL");
     if (!skipping_draw)
         return orig::glVertex4iv(v);
 }
@@ -628,7 +628,7 @@ void glVertex4iv( const GLint *v )
 void glVertex4sv( const GLshort *v )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4sv, "libGL");
+    LINK_NAMESPACE(glVertex4sv, "GL");
     if (!skipping_draw)
         return orig::glVertex4sv(v);
 }
@@ -636,7 +636,7 @@ void glVertex4sv( const GLshort *v )
 void glDrawArrays( GLenum mode, GLint first, GLsizei count )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glDrawArrays, "libGL");
+    LINK_NAMESPACE(glDrawArrays, "GL");
     if (!skipping_draw)
         return orig::glDrawArrays(mode, first, count);
 }
@@ -644,7 +644,7 @@ void glDrawArrays( GLenum mode, GLint first, GLsizei count )
 void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices )
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glDrawElements, "libGL");
+    LINK_NAMESPACE(glDrawElements, "GL");
     if (!skipping_draw)
         return orig::glDrawElements(mode, count, type, indices);
 }
@@ -820,7 +820,7 @@ void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count)
 void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glBlitFramebuffer, "libGL");
+    LINK_NAMESPACE(glBlitFramebuffer, "GL");
     if (!skipping_draw)
         return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
