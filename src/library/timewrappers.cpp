@@ -63,7 +63,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp) throw()
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE(clock_gettime, nullptr);
+        LINK_NAMESPACE_GLOBAL(clock_gettime);
         return orig::clock_gettime(clock_id, tp);
     }
 

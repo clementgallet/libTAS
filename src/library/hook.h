@@ -46,11 +46,11 @@ namespace orig { \
     static decltype(&FUNC) FUNC; \
 }
 
-#define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)
-#define LINK_NAMESPACE_GLOBAL(FUNC) LINK_NAMESPACE(FUNC, nullptr)
-#define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, LIB, V)
-#define LINK_NAMESPACE_SDL1(FUNC) LINK_NAMESPACE(FUNC,"libSDL-1.2.so.0")
-#define LINK_NAMESPACE_SDL2(FUNC) LINK_NAMESPACE(FUNC,"libSDL2-2.0.so.0")
+#define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so")
+#define LINK_NAMESPACE_GLOBAL(FUNC) link_function((void**)&orig::FUNC, #FUNC, nullptr)
+#define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so", V)
+#define LINK_NAMESPACE_SDL1(FUNC) LINK_NAMESPACE(FUNC,"SDL-1.2")
+#define LINK_NAMESPACE_SDL2(FUNC) LINK_NAMESPACE(FUNC,"SDL2-2.0")
 #define LINK_NAMESPACE_SDLX(FUNC) (get_sdlversion()==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)
 
 

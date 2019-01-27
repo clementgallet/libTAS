@@ -31,7 +31,7 @@ DEFINE_ORIG_POINTER(XF86VidModeGetAllModeLines);
 Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidModeModeLine* modeline)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XF86VidModeGetModeLine, "libXxf86vm");
+    LINK_NAMESPACE(XF86VidModeGetModeLine, "Xxf86vm");
 
     Bool ret = orig::XF86VidModeGetModeLine(dpy, screen, dotclock, modeline);
 
@@ -55,7 +55,7 @@ Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidMode
 Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XF86VidModeGetAllModeLines, "libXxf86vm");
+    LINK_NAMESPACE(XF86VidModeGetAllModeLines, "Xxf86vm");
 
     Bool ret = orig::XF86VidModeGetAllModeLines(dpy, screen, modecount_return, modesinfo);
 

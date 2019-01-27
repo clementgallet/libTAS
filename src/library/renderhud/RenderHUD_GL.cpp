@@ -54,16 +54,16 @@ RenderHUD_GL::~RenderHUD_GL() {
 void RenderHUD_GL::init()
 {
     if (texture == 0) {
-        LINK_NAMESPACE(glGenTextures, "libGL");
-        LINK_NAMESPACE(glGetIntegerv, "libGL");
-        LINK_NAMESPACE(glActiveTexture, "libGL");
-        LINK_NAMESPACE(glDeleteTextures, "libGL");
-        LINK_NAMESPACE(glBindTexture, "libGL");
+        LINK_NAMESPACE(glGenTextures, "GL");
+        LINK_NAMESPACE(glGetIntegerv, "GL");
+        LINK_NAMESPACE(glActiveTexture, "GL");
+        LINK_NAMESPACE(glDeleteTextures, "GL");
+        LINK_NAMESPACE(glBindTexture, "GL");
 
-        LINK_NAMESPACE(glGenFramebuffers, "libGL");
-        LINK_NAMESPACE(glBindFramebuffer, "libGL");
-        LINK_NAMESPACE(glFramebufferTexture2D, "libGL");
-        LINK_NAMESPACE(glDeleteFramebuffers, "libGL");
+        LINK_NAMESPACE(glGenFramebuffers, "GL");
+        LINK_NAMESPACE(glBindFramebuffer, "GL");
+        LINK_NAMESPACE(glFramebufferTexture2D, "GL");
+        LINK_NAMESPACE(glDeleteFramebuffers, "GL");
 
 
         /* Get previous active texture */
@@ -101,13 +101,13 @@ void RenderHUD_GL::fini()
 
 void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
-    LINK_NAMESPACE(glBindTexture, "libGL");
-    LINK_NAMESPACE(glTexImage2D, "libGL");
-    LINK_NAMESPACE(glTexParameteri, "libGL");
+    LINK_NAMESPACE(glBindTexture, "GL");
+    LINK_NAMESPACE(glTexImage2D, "GL");
+    LINK_NAMESPACE(glTexParameteri, "GL");
 
-    LINK_NAMESPACE(glBlitFramebuffer, "libGL");
-    LINK_NAMESPACE(glUseProgram, "libGL");
-    LINK_NAMESPACE(glGetIntegerv, "libGL");
+    LINK_NAMESPACE(glBlitFramebuffer, "GL");
+    LINK_NAMESPACE(glUseProgram, "GL");
+    LINK_NAMESPACE(glGetIntegerv, "GL");
 
     /* Save the previous program */
     GLint oldProgram;

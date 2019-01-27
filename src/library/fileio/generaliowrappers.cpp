@@ -32,7 +32,7 @@ DEFINE_ORIG_POINTER(unlink)
 
 int rename (const char *oldf, const char *newf) throw()
 {
-    LINK_NAMESPACE(rename, nullptr);
+    LINK_NAMESPACE_GLOBAL(rename);
 
     if (GlobalState::isNative())
         return orig::rename(oldf, newf);
@@ -51,7 +51,7 @@ int rename (const char *oldf, const char *newf) throw()
 /* Remove file FILENAME.  */
 int remove (const char *filename) throw()
 {
-    LINK_NAMESPACE(remove, nullptr);
+    LINK_NAMESPACE_GLOBAL(remove);
 
     if (GlobalState::isNative())
         return orig::remove(filename);
@@ -70,7 +70,7 @@ int remove (const char *filename) throw()
 /* Remove the link NAME.  */
 int unlink (const char *name) throw()
 {
-    LINK_NAMESPACE(unlink, nullptr);
+    LINK_NAMESPACE_GLOBAL(unlink);
 
     if (GlobalState::isNative())
         return orig::unlink(name);

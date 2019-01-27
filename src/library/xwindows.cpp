@@ -99,7 +99,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background)
 {
     debuglog(LCF_WINDOW, __func__, " call with dimensions ", width, "x", height);
-    LINK_NAMESPACE(XCreateSimpleWindow, nullptr);
+    LINK_NAMESPACE_GLOBAL(XCreateSimpleWindow);
 
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
 
@@ -116,7 +116,7 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
 int XDestroyWindow(Display *display, Window w)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XDestroyWindow, nullptr);
+    LINK_NAMESPACE_GLOBAL(XDestroyWindow);
 
     ScreenCapture::fini();
 
@@ -133,7 +133,7 @@ int XDestroyWindow(Display *display, Window w)
 int XMapWindow(Display *display, Window w)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XMapWindow, nullptr);
+    LINK_NAMESPACE_GLOBAL(XMapWindow);
 
     int ret = orig::XMapWindow(display, w);
 
@@ -152,7 +152,7 @@ int XMapWindow(Display *display, Window w)
 int XMapRaised(Display *display, Window w)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XMapRaised, nullptr);
+    LINK_NAMESPACE_GLOBAL(XMapRaised);
 
     int ret = orig::XMapRaised(display, w);
 
@@ -171,7 +171,7 @@ int XMapRaised(Display *display, Window w)
 int XStoreName(Display *display, Window w, const char *window_name)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XStoreName, nullptr);
+    LINK_NAMESPACE_GLOBAL(XStoreName);
 
     WindowTitle::setOriginalTitle(window_name);
     WindowTitle::setUpdateFunc([display, w] (const char* t) {orig::XStoreName(display, w, t);});
@@ -182,7 +182,7 @@ int XStoreName(Display *display, Window w, const char *window_name)
 void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 {
     debuglog(LCF_WINDOW, __func__, " call with name ", text_prop->value, " and format ", text_prop->format);
-    LINK_NAMESPACE(XSetWMName, nullptr);
+    LINK_NAMESPACE_GLOBAL(XSetWMName);
     Atom encoding = text_prop->encoding;
 
     WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
@@ -198,14 +198,14 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
 {
     debuglog(LCF_WINDOW, __func__, " call with atom ", atom_name);
-    LINK_NAMESPACE(XInternAtom, nullptr);
+    LINK_NAMESPACE_GLOBAL(XInternAtom);
     return orig::XInternAtom(display, atom_name, only_if_exists);
 }
 
 int XSelectInput(Display *display, Window w, long event_mask)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XSelectInput, nullptr);
+    LINK_NAMESPACE_GLOBAL(XSelectInput);
 
     return orig::XSelectInput(display, w, event_mask);
 }

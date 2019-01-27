@@ -46,7 +46,7 @@ DEFINE_ORIG_POINTER(libtasTestFunc3);
 /* Override */ int libtasTestFunc2()
 {
     DEBUGLOGCALL(LCF_HOOK);
-    LINK_NAMESPACE(libtasTestFunc2, "libhooklib2.so");
+    LINK_NAMESPACE(libtasTestFunc2, "hooklib2");
     if (!orig::libtasTestFunc2) {
         debuglog(LCF_HOOK | LCF_ERROR, "   Couldn't get original function");
     }
@@ -62,7 +62,7 @@ DEFINE_ORIG_POINTER(libtasTestFunc3);
 /* Override */ int libtasTestFunc3()
 {
     DEBUGLOGCALL(LCF_HOOK);
-    LINK_NAMESPACE(libtasTestFunc3, "libhooklib3.so");
+    LINK_NAMESPACE(libtasTestFunc3, "hooklib3");
     if (!orig::libtasTestFunc3) {
         debuglog(LCF_HOOK | LCF_ERROR, "   Couldn't get original function");
     }
