@@ -46,7 +46,7 @@ OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm,
     // 			      snd_async_callback_t callback, void *private_data);
     // snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
-    // int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
+OVERRIDE int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
     // int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
     // int snd_pcm_hw_free(snd_pcm_t *pcm);
@@ -59,7 +59,7 @@ OVERRIDE int snd_pcm_start(snd_pcm_t *pcm);
     // int snd_pcm_drop(snd_pcm_t *pcm);
     // int snd_pcm_drain(snd_pcm_t *pcm);
     // int snd_pcm_pause(snd_pcm_t *pcm, int enable);
-    // snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm);
+OVERRIDE snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm);
     // int snd_pcm_hwsync(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp);
 OVERRIDE int snd_pcm_resume(snd_pcm_t *pcm);
@@ -92,8 +92,10 @@ OVERRIDE void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj);
 OVERRIDE void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src);
 OVERRIDE int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access);
 OVERRIDE int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
+OVERRIDE void snd_pcm_hw_params_get_format_mask(snd_pcm_hw_params_t *params, snd_pcm_format_mask_t *mask);
 
 OVERRIDE int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned int *val);
+OVERRIDE int snd_pcm_hw_params_get_channels_min(const snd_pcm_hw_params_t *params, unsigned int *val);
 OVERRIDE int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsigned int *val);
 OVERRIDE int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
 
@@ -103,8 +105,10 @@ OVERRIDE int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_para
 
 OVERRIDE int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir);
 OVERRIDE int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
+OVERRIDE int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
+OVERRIDE int snd_pcm_hw_params_get_periods(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 
 OVERRIDE int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
 OVERRIDE int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
@@ -144,6 +148,17 @@ OVERRIDE snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm);
 // int snd_pcm_chmap_print(const snd_pcm_chmap_t *map, size_t maxlen, char *buf);
 // unsigned int snd_pcm_chmap_from_string(const char *str);
 // snd_pcm_chmap_t *snd_pcm_chmap_parse_string(const char *str);
+
+OVERRIDE int snd_pcm_format_mask_malloc(snd_pcm_format_mask_t **ptr);
+OVERRIDE void snd_pcm_format_mask_free(snd_pcm_format_mask_t *obj);
+// void snd_pcm_format_mask_copy(snd_pcm_format_mask_t *dst, const snd_pcm_format_mask_t *src);
+// void snd_pcm_format_mask_none(snd_pcm_format_mask_t *mask);
+// void snd_pcm_format_mask_any(snd_pcm_format_mask_t *mask);
+OVERRIDE int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t val);
+// int snd_pcm_format_mask_empty(const snd_pcm_format_mask_t *mask);
+// void snd_pcm_format_mask_set(snd_pcm_format_mask_t *mask, snd_pcm_format_t val);
+// void snd_pcm_format_mask_reset(snd_pcm_format_mask_t *mask, snd_pcm_format_t val);
+
 
 }
 
