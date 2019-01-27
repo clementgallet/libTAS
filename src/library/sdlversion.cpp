@@ -19,6 +19,7 @@
 
 #include "hook.h"
 #include "logging.h"
+#include <dlfcn.h>
 
 #include <SDL2/SDL.h> // SDL_version
 
@@ -33,6 +34,7 @@ namespace orig {
 
 int get_sdlversion(void)
 {
+    /* We save the version major so that we can return it in a future calls */
     static int SDLver = -1;
 
     if (SDLver != -1)
@@ -41,12 +43,9 @@ int get_sdlversion(void)
     /* Determine SDL version */
     SDL_version ver = {0, 0, 0};
 
-    {
-        /* Remove logging to not alert user on an expected error */
-        GlobalNoLog gnl;
-        LINK_NAMESPACE(SDL_GetVersion, "SDL");
-        LINK_NAMESPACE(SDL_Linked_Version, "SDL");
-    }
+    /* First look if symbols are already accessible */
+    NATIVECALL(orig::SDL_GetVersion = (decltype(orig::SDL_GetVersion)) dlsym(RTLD_NEXT, "SDL_GetVersion"));
+    NATIVECALL(orig::SDL_Linked_Version = (decltype(orig::SDL_Linked_Version)) dlsym(RTLD_NEXT, "SDL_Linked_Version"));
 
     if (orig::SDL_GetVersion) {
         orig::SDL_GetVersion(&ver);
@@ -62,23 +61,33 @@ int get_sdlversion(void)
         debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "Both SDL versions were detected! Taking SDL1 in priority");
     }
 
-    if (!orig::SDL_GetVersion && !orig::SDL_Linked_Version) {
-        /* No SDL lib was found among libraries opened by the game.
-         * As a fallback, we link to our SDL2 library.
-         */
-        LINK_NAMESPACE_SDL2(SDL_GetVersion);
-
-        if (orig::SDL_GetVersion) {
-            orig::SDL_GetVersion(&ver);
-        }
-    }
-
     if (ver.major > 0) {
+        SDLver = ver.major;
         debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", static_cast<int>(ver.major), ".", static_cast<int>(ver.minor), ".", static_cast<int>(ver.patch));
+        return SDLver;
     }
 
-    /* We save the version major so that we can return it in a future calls */
-    SDLver = ver.major;
+    /* If not, determine which library was already dynamically loaded. */
+    void *sdl1, *sdl2;
+    NATIVECALL(sdl1 = dlopen("libSDL-1.2.so.0", RTLD_NOLOAD));
+    NATIVECALL(sdl2 = dlopen("libSDL2-2.0.so.0", RTLD_NOLOAD));
+    if (sdl1 && !sdl2) {
+        dlclose(sdl1);
+        SDLver = 1;
+    }
+    else if (!sdl1 && sdl2) {
+        dlclose(sdl2);
+        SDLver = 2;
+    }
+    else if (sdl1 && sdl2) {
+        dlclose(sdl1);
+        dlclose(sdl2);
+        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "Multiple SDL versions were detected!");
+    }
+    else {
+        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "No SDL versions were detected!");
+    }
+
     return SDLver;
 }
 
