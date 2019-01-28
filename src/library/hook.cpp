@@ -32,9 +32,9 @@ bool link_function(void** function, const char* source, const char* library, con
 
     /* First try to link it from the global namespace */
     if (version)
-        *function = dlvsym(RTLD_NEXT, source, version);
+        *function = dlvsym(RTLD_DEFAULT, source, version);
     else
-        NATIVECALL(*function = dlsym(RTLD_NEXT, source));
+        NATIVECALL(*function = dlsym(RTLD_DEFAULT, source));
 
     if (*function != nullptr) {
 
@@ -49,7 +49,7 @@ bool link_function(void** function, const char* source, const char* library, con
             if (libpath.length() >= libtasstr.length() &&
                 libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
 
-                debuglog(LCF_ERROR | LCF_HOOK, "   we could not find the real function ", source, " using RTLD_NEXT. Trying RTLD_DEFAULT");
+                debuglog(LCF_HOOK, "   we could not find the real function ", source, " using RTLD_DEFAULT. Trying RTLD_NEXT");
 
                 if (version)
                     *function = dlvsym(RTLD_NEXT, source, version);
@@ -58,8 +58,10 @@ bool link_function(void** function, const char* source, const char* library, con
             }
         }
 
-        debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
-        return true;
+        if (*function != nullptr) {
+            debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
+            return true;
+        }
     }
 
     if (library != nullptr) {
