@@ -29,7 +29,5 @@ Display* gameDisplays[GAMEDISPLAYNUM] = {};
 Window gameXWindow = 0;
 SDL_Window* gameSDLWindow = nullptr;
 bool saveBacktrack = false;
-std::string backtracksavestatepath;
-int backtracksavestateindex = -1;
 
 }

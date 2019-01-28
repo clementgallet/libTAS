@@ -56,6 +56,7 @@ typedef int HotKeyType; enum
     HOTKEY_SAVESTATE7,
     HOTKEY_SAVESTATE8,
     HOTKEY_SAVESTATE9,
+    HOTKEY_SAVESTATE_BACKTRACK,
     HOTKEY_LOADSTATE1, // Load the entire state of the game
     HOTKEY_LOADSTATE2,
     HOTKEY_LOADSTATE3,

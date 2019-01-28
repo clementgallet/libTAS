@@ -61,10 +61,6 @@ namespace libtas {
 
     /* Should we perform a backtrack savestate? */
     extern bool saveBacktrack;
-
-    /* Path/index of the backtrack savestate */
-    extern std::string backtracksavestatepath;
-    extern int backtracksavestateindex;
 }
 
 #endif

@@ -85,6 +85,7 @@ void KeyMapping::init(xcb_connection_t* conn)
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE7, "Save State 7"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE8, "Save State 8"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Shift_L_Flag}, HOTKEY_SAVESTATE9, "Save State 9"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SAVESTATE_BACKTRACK, "Save Backtrack State"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1}, HOTKEY_LOADSTATE1, "Load State 1"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2}, HOTKEY_LOADSTATE2, "Load State 2"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3}, HOTKEY_LOADSTATE3, "Load State 3"});

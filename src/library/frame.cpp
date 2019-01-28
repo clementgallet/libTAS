@@ -46,6 +46,9 @@ unsigned long framecount = 0;
 /* Store the number of nondraw frames */
 static unsigned long nondraw_framecount = 0;
 
+/* Did we do at least one savestate? */
+static bool didASavestate = false;
+
 #ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
 #else
@@ -223,6 +226,18 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     sendMessage(MSGB_FPS);
     sendData(&fps, sizeof(float));
     sendData(&lfps, sizeof(float));
+
+    /* Ask the program to perform a backtrack savestate */
+    if (saveBacktrack) {
+        /* Only save a backtrack savestate if we did at least one savestate.
+         * This prevent incremental savestating from being inefficient if a
+         * backtrack savestate is performed at the very beginning of the game.
+         */
+        if (shared_config.backtrack_savestate && didASavestate) {
+            sendMessage(MSGB_DO_BACKTRACK_SAVESTATE);
+        }
+        saveBacktrack = false;
+    }
 
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
@@ -445,43 +460,11 @@ static void receive_messages(std::function<void()> draw)
     std::string savestatepath;
     int index;
 
-    /* Did we do at least one savestate? */
-    static bool didASavestate = false;
-
     while (1)
     {
-        int message;
-
-        /* Check if we must perform a backtrack savestate */
-        if (saveBacktrack) {
-            /* Only save a backtrack savestate if we did at least one savestate.
-             * This prevent incremental savestating from being inefficient if a
-             * backtrack savestate is performed at the very beginning of the game.
-             */
-            if (shared_config.backtrack_savestate && didASavestate) {
-#ifdef LIBTAS_ENABLE_HUD
-                RenderHUD::insertMessage("Saving backtrack state");
-                screen_redraw(draw, hud, preview_ai);
-#endif
-                Checkpoint::setSavestatePath(backtracksavestatepath);
-                Checkpoint::setSavestateIndex(backtracksavestateindex);
-                message = MSGN_SAVESTATE;
-
-                /* Don't set saveBacktrack to false here, delay until the
-                 * savestate is performed to display the osd message.
-                 */
-            }
-            else {
-                saveBacktrack = false;
-                message = receiveMessage();
-            }
-        }
-        else {
-            message = receiveMessage();
-        }
+        int message = receiveMessage();
 
         std::string str;
-
         switch (message)
         {
             case MSGN_USERQUIT:
@@ -572,17 +555,6 @@ static void receive_messages(std::function<void()> draw)
                     /* Screen should have changed after loading */
                     ScreenCapture::setPixels();
                 }
-                else {
-                    /* Just for the case of backtrack savestate, print the OSD
-                     * message. */
-                    if (saveBacktrack) {
-#ifdef LIBTAS_ENABLE_HUD
-                        RenderHUD::insertMessage("Backtrack state saved");
-                        screen_redraw(draw, hud, preview_ai);
-#endif
-                    }
-                }
-                saveBacktrack = false;
 
                 break;
 

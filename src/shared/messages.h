@@ -150,12 +150,6 @@ enum {
     MSGN_BASE_SAVESTATE_PATH,
 
     /*
-     * Send to the game the path of the backtrack savestate
-     * Argument: size_t (string length) then char[len]
-     */
-    MSGN_BACKTRACK_SAVESTATE_PATH,
-
-    /*
      * Send to the game the index of the savestate
      * Argument: int
      */
@@ -166,12 +160,6 @@ enum {
      * Argument: int
      */
     MSGN_BASE_SAVESTATE_INDEX,
-
-    /*
-     * Send to the game the index of the backtrack savestate
-     * Argument: int
-     */
-    MSGN_BACKTRACK_SAVESTATE_INDEX,
 
     /*
      * Notify the program that encoding failed
@@ -216,10 +204,16 @@ enum {
     MSGB_ENCODING_SEGMENT,
 
     /*
-    * Send the current segment of video encoding to the game.
+     * Send the current segment of video encoding to the game.
      * Argument: int
      */
     MSGN_ENCODING_SEGMENT,
+
+    /*
+     * Notify that a backtrack savestate must be performed.
+     * Argument: none
+     */
+    MSGB_DO_BACKTRACK_SAVESTATE,
 };
 
 #endif

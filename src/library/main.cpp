@@ -93,12 +93,6 @@ void __attribute__((constructor)) init(void)
                 receiveData(&index, sizeof(int));
                 Checkpoint::setBaseSavestateIndex(index);
                 break;
-            case MSGN_BACKTRACK_SAVESTATE_PATH:
-                backtracksavestatepath = receiveString();
-                break;
-            case MSGN_BACKTRACK_SAVESTATE_INDEX:
-                receiveData(&backtracksavestateindex, sizeof(int));
-                break;
             case MSGN_ENCODING_SEGMENT:
                 receiveData(&AVEncoder::segment_number, sizeof(int));
                 break;

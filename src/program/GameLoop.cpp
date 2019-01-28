@@ -443,21 +443,6 @@ void GameLoop::initProcessMessages()
         }
     }
 
-    /* Build and send the backtrack savestate path/index */
-    if (context->config.sc.backtrack_savestate) {
-        sendMessage(MSGN_BACKTRACK_SAVESTATE_INDEX);
-        int index = 10;
-        sendData(&index, sizeof(int));
-
-        if (!context->config.sc.savestates_in_ram) {
-            std::string basesavestatepath = context->config.savestatedir + '/';
-            basesavestatepath += context->gamename;
-            basesavestatepath += ".state10";
-            sendMessage(MSGN_BACKTRACK_SAVESTATE_PATH);
-            sendString(basesavestatepath);
-        }
-    }
-
     sendMessage(MSGN_ENCODING_SEGMENT);
     sendData(&context->encoding_segment, sizeof(int));
 
@@ -516,6 +501,9 @@ bool GameLoop::startFrameMessages()
             break;
         case MSGB_ENCODING_SEGMENT:
             receiveData(&context->encoding_segment, sizeof(int));
+            break;
+        case MSGB_DO_BACKTRACK_SAVESTATE:
+            context->hotkey_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
             break;
         case MSGB_QUIT:
             if (context->config.dumping) {
@@ -742,6 +730,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
         case HOTKEY_SAVESTATE7:
         case HOTKEY_SAVESTATE8:
         case HOTKEY_SAVESTATE9:
+        case HOTKEY_SAVESTATE_BACKTRACK:
         {
             /* Perform a savestate:
              * - save the moviefile if we are recording
@@ -790,8 +779,14 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string msg = "Saving state ";
-                msg += std::to_string(statei);
+                std::string msg;
+                if (hk.type == HOTKEY_SAVESTATE_BACKTRACK) {
+                    msg = "Saving backtrack state";
+                }
+                else {
+                    msg = "Saving state ";
+                    msg += std::to_string(statei);
+                }
                 sendMessage(MSGN_OSD_MSG);
                 sendString(msg);
             }
@@ -799,11 +794,17 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             sendMessage(MSGN_SAVESTATE);
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string message = "State ";
-                message += std::to_string(statei);
-                message += " saved";
+                std::string msg;
+                if (hk.type == HOTKEY_SAVESTATE_BACKTRACK) {
+                    msg = "Backtrack state saved";
+                }
+                else {
+                    msg = "State ";
+                    msg += std::to_string(statei);
+                    msg += " saved";
+                }
                 sendMessage(MSGN_OSD_MSG);
-                sendString(message);
+                sendString(msg);
             }
 
             emit savestatePerformed(statei, context->framecount);
