@@ -26,9 +26,9 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_CreateRGBSurfaceFrom)
-DEFINE_ORIG_POINTER(SDL_RenderCopy)
-DEFINE_ORIG_POINTER(SDL_CreateTextureFromSurface)
+DECLARE_ORIG_POINTER(SDL_CreateRGBSurfaceFrom)
+DECLARE_ORIG_POINTER(SDL_RenderCopy)
+DECLARE_ORIG_POINTER(SDL_CreateTextureFromSurface)
 
 RenderHUD_SDL2::~RenderHUD_SDL2()
 {

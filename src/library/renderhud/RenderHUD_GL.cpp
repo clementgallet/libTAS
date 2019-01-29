@@ -38,7 +38,7 @@ DEFINE_ORIG_POINTER(glGenFramebuffers)
 DEFINE_ORIG_POINTER(glBindFramebuffer)
 DEFINE_ORIG_POINTER(glFramebufferTexture2D)
 DEFINE_ORIG_POINTER(glDeleteFramebuffers)
-DEFINE_ORIG_POINTER(glBlitFramebuffer)
+DECLARE_ORIG_POINTER(glBlitFramebuffer)
 
 DEFINE_ORIG_POINTER(glUseProgram)
 

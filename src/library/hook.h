@@ -41,9 +41,13 @@ bool link_function(void** function, const char* source, const char* library, con
 /* Declare the function pointer using decltype to deduce the
  * type of the function pointer from the function signature.
  */
+#define DECLARE_ORIG_POINTER(FUNC) \
+namespace orig { \
+    extern decltype(&FUNC) FUNC; \
+}
 #define DEFINE_ORIG_POINTER(FUNC) \
 namespace orig { \
-    static decltype(&FUNC) FUNC; \
+    decltype(&FUNC) FUNC; \
 }
 
 #define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so")

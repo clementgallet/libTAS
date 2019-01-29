@@ -56,6 +56,7 @@ set(LIBRARY_SOURCES
     src/library/randomwrappers.cpp
     src/library/ScreenCapture.cpp
     src/library/sdldisplay.cpp
+    src/library/sdldynapi.cpp
     src/library/sdlevents.cpp
     src/library/sdlmain.cpp
     src/library/sdlmutex.cpp
