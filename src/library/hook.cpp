@@ -32,36 +32,13 @@ bool link_function(void** function, const char* source, const char* library, con
 
     /* First try to link it from the global namespace */
     if (version)
-        *function = dlvsym(RTLD_DEFAULT, source, version);
+        *function = dlvsym(RTLD_NEXT, source, version);
     else
-        NATIVECALL(*function = dlsym(RTLD_DEFAULT, source));
+        NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {
-
-        /* Now checking that this function does not come from our library.
-         * Otherwise this would usually lead to a call loop.
-         */
-        Dl_info info;
-        int res = dladdr(*function, &info);
-        if (res != 0) {
-            std::string libpath = info.dli_fname;
-            std::string libtasstr = "libtas.so"; // bad!
-            if (libpath.length() >= libtasstr.length() &&
-                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
-
-                debuglog(LCF_HOOK, "   we could not find the real function ", source, " using RTLD_DEFAULT. Trying RTLD_NEXT");
-
-                if (version)
-                    *function = dlvsym(RTLD_NEXT, source, version);
-                else
-                    NATIVECALL(*function = dlsym(RTLD_NEXT, source));
-            }
-        }
-
-        if (*function != nullptr) {
-            debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
-            return true;
-        }
+        debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
+        return true;
     }
 
     if (library != nullptr) {
