@@ -174,13 +174,15 @@ static const char Xlib_default_char[256] = {
     debuglog(LCF_KEYBOARD, __func__, " called with keycode ", event_struct->keycode);
     KeyCode keycode = event_struct->keycode;
     *keysym_return = Xlib_default_keymap[keycode];
-    char c = Xlib_default_char[keycode];
-    if (c == '\0') {
-        buffer_return[0] = '\0';
-        return 0;
+    if (buffer_return && (bytes_buffer > 1)) {
+        char c = Xlib_default_char[keycode];
+        if (c == '\0') {
+            buffer_return[0] = '\0';
+            return 0;
+        }
+        buffer_return[0] = c;
+        buffer_return[1] = '\0';
     }
-    buffer_return[0] = c;
-    buffer_return[1] = '\0';
     return 1;
 }
 
