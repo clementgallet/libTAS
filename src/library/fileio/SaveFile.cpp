@@ -191,6 +191,7 @@ FILE* SaveFile::open(const char *modes) {
             /* File was removed and opened in write mode */
             this->open(O_RDWR); // creates a file descriptor
             NATIVECALL(stream = fdopen(fd, modes));
+            setvbuf(stream, nullptr, _IONBF, 0);
             return stream;
         }
     }
@@ -200,7 +201,7 @@ FILE* SaveFile::open(const char *modes) {
         /* Open a new memory stream using pointers to these entries */
         this->open(O_RDWR); // creates a file descriptor
         NATIVECALL(stream = fdopen(fd, modes));
-
+        setvbuf(stream, nullptr, _IONBF, 0);
         return stream;
     }
 
