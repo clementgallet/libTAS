@@ -34,8 +34,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_CreateThread);
-DEFINE_ORIG_POINTER(SDL_WaitThread);
+DECLARE_ORIG_POINTER(SDL_CreateThread);
+DECLARE_ORIG_POINTER(SDL_WaitThread);
 
 DEFINE_ORIG_POINTER(pthread_create);
 DEFINE_ORIG_POINTER(pthread_exit);

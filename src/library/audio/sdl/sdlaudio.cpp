@@ -27,8 +27,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_MixAudioFormat);
-DEFINE_ORIG_POINTER(SDL_MixAudio);
+DECLARE_ORIG_POINTER(SDL_MixAudioFormat);
+DECLARE_ORIG_POINTER(SDL_MixAudio);
 
 static const char* dummySDLDriver = "libtas";
 

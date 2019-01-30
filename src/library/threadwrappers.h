@@ -79,7 +79,7 @@ OVERRIDE void SDL_WaitThread(SDL_Thread * thread, int *status);
  *
  *  It is safe to pass NULL to this function; it is a no-op.
  */
-OVERRIDE void SDL_DetachThread(SDL_Thread * thread);
+/*OVERRIDE void SDL_DetachThread(SDL_Thread * thread);*/
 
 /* Create a new thread, starting with execution of START-ROUTINE
    getting passed ARG.  Creation attributed come from ATTR.  The new

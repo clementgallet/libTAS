@@ -23,19 +23,19 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_GetNumVideoDisplays);
-DEFINE_ORIG_POINTER(SDL_GetDisplayName);
-DEFINE_ORIG_POINTER(SDL_GetDisplayBounds);
-DEFINE_ORIG_POINTER(SDL_GetDisplayDPI);
-DEFINE_ORIG_POINTER(SDL_GetDisplayUsableBounds);
-DEFINE_ORIG_POINTER(SDL_GetNumDisplayModes);
-DEFINE_ORIG_POINTER(SDL_GetDisplayMode);
-DEFINE_ORIG_POINTER(SDL_GetDesktopDisplayMode);
-DEFINE_ORIG_POINTER(SDL_GetCurrentDisplayMode);
-DEFINE_ORIG_POINTER(SDL_GetClosestDisplayMode);
-DEFINE_ORIG_POINTER(SDL_GetWindowDisplayIndex);
-DEFINE_ORIG_POINTER(SDL_SetWindowDisplayMode);
-DEFINE_ORIG_POINTER(SDL_GetWindowDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetNumVideoDisplays);
+DECLARE_ORIG_POINTER(SDL_GetDisplayName);
+DECLARE_ORIG_POINTER(SDL_GetDisplayBounds);
+DECLARE_ORIG_POINTER(SDL_GetDisplayDPI);
+DECLARE_ORIG_POINTER(SDL_GetDisplayUsableBounds);
+DECLARE_ORIG_POINTER(SDL_GetNumDisplayModes);
+DECLARE_ORIG_POINTER(SDL_GetDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetDesktopDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetCurrentDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetClosestDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetWindowDisplayIndex);
+DECLARE_ORIG_POINTER(SDL_SetWindowDisplayMode);
+DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode);
 
 /* Override */ int SDL_GetNumVideoDisplays(void)
 {

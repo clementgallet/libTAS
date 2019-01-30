@@ -27,13 +27,13 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_CreateRenderer);
-DEFINE_ORIG_POINTER(SDL_DestroyRenderer);
-DEFINE_ORIG_POINTER(SDL_RenderPresent);
-DEFINE_ORIG_POINTER(SDL_RenderSetViewport);
-DEFINE_ORIG_POINTER(SDL_RenderGetViewport);
-DEFINE_ORIG_POINTER(SDL_RenderSetScale);
-DEFINE_ORIG_POINTER(SDL_RenderGetScale);
+DECLARE_ORIG_POINTER(SDL_CreateRenderer);
+DECLARE_ORIG_POINTER(SDL_DestroyRenderer);
+DECLARE_ORIG_POINTER(SDL_RenderPresent);
+DECLARE_ORIG_POINTER(SDL_RenderSetViewport);
+DECLARE_ORIG_POINTER(SDL_RenderGetViewport);
+DECLARE_ORIG_POINTER(SDL_RenderSetScale);
+DECLARE_ORIG_POINTER(SDL_RenderGetScale);
 
 /* Override */ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {

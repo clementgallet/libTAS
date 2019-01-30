@@ -25,7 +25,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_GetVersion);
+DECLARE_ORIG_POINTER(SDL_GetVersion);
 
 namespace orig {
     /* SDL 1.2 specific function */
@@ -44,8 +44,9 @@ int get_sdlversion(void)
     SDL_version ver = {0, 0, 0};
 
     /* First look if symbols are already accessible */
-    NATIVECALL(orig::SDL_GetVersion = (decltype(orig::SDL_GetVersion)) dlsym(RTLD_NEXT, "SDL_GetVersion"));
-    NATIVECALL(orig::SDL_Linked_Version = (decltype(orig::SDL_Linked_Version)) dlsym(RTLD_NEXT, "SDL_Linked_Version"));
+    if (orig::SDL_GetVersion == nullptr)
+        NATIVECALL(orig::SDL_GetVersion = (decltype(orig::SDL_GetVersion)) dlsym(RTLD_DEFAULT, "SDL_GetVersion"));
+    NATIVECALL(orig::SDL_Linked_Version = (decltype(orig::SDL_Linked_Version)) dlsym(RTLD_DEFAULT, "SDL_Linked_Version"));
 
     if (orig::SDL_GetVersion) {
         orig::SDL_GetVersion(&ver);

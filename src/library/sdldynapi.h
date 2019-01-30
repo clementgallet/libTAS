@@ -17,28 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sdltimer.h"
-#include "logging.h"
-#include "DeterministicTimer.h"
-#include "hook.h"
+#ifndef LIBTAS_SDLDYNAPI_H_INCLUDED
+#define LIBTAS_SDLDYNAPI_H_INCLUDED
+
+#include <SDL2/SDL.h>
+#include "global.h"
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_AddTimer);
-DECLARE_ORIG_POINTER(SDL_RemoveTimer);
-
-/* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
-{
-    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
-    LINK_NAMESPACE_SDLX(SDL_AddTimer);
-    return orig::SDL_AddTimer(interval, callback, param);
-}
-
-/* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
-{
-    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
-    LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
-    return orig::SDL_RemoveTimer(id);
-}
+/**
+ * This function initializes the SDL jump table.
+ */
+OVERRIDE Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize);
 
 }
+
+#endif

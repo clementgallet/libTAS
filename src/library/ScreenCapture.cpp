@@ -45,25 +45,25 @@ namespace orig {
     static SDL1::SDL_Surface *(*SDL_DisplayFormat)(SDL1::SDL_Surface *surface);
 }
 
-DEFINE_ORIG_POINTER(SDL_RenderReadPixels);
-DEFINE_ORIG_POINTER(SDL_GetWindowPixelFormat);
-DEFINE_ORIG_POINTER(SDL_GetRenderer);
-DEFINE_ORIG_POINTER(SDL_CreateTexture);
-DEFINE_ORIG_POINTER(SDL_UpdateTexture);
-DEFINE_ORIG_POINTER(SDL_RenderCopy);
-DEFINE_ORIG_POINTER(SDL_DestroyTexture);
-DEFINE_ORIG_POINTER(SDL_GetError);
+DECLARE_ORIG_POINTER(SDL_RenderReadPixels);
+DECLARE_ORIG_POINTER(SDL_GetWindowPixelFormat);
+DECLARE_ORIG_POINTER(SDL_GetRenderer);
+DECLARE_ORIG_POINTER(SDL_CreateTexture);
+DECLARE_ORIG_POINTER(SDL_UpdateTexture);
+DECLARE_ORIG_POINTER(SDL_RenderCopy);
+DECLARE_ORIG_POINTER(SDL_DestroyTexture);
+DECLARE_ORIG_POINTER(SDL_GetError);
 
 DEFINE_ORIG_POINTER(glReadPixels);
-DEFINE_ORIG_POINTER(glGenFramebuffers);
-DEFINE_ORIG_POINTER(glBindFramebuffer);
-DEFINE_ORIG_POINTER(glDeleteFramebuffers);
+DECLARE_ORIG_POINTER(glGenFramebuffers);
+DECLARE_ORIG_POINTER(glBindFramebuffer);
+DECLARE_ORIG_POINTER(glDeleteFramebuffers);
 DEFINE_ORIG_POINTER(glGenRenderbuffers);
 DEFINE_ORIG_POINTER(glBindRenderbuffer);
 DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
 DEFINE_ORIG_POINTER(glRenderbufferStorage);
 DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
-DEFINE_ORIG_POINTER(glBlitFramebuffer);
+DECLARE_ORIG_POINTER(glBlitFramebuffer);
 
 DEFINE_ORIG_POINTER(XGetGeometry);
 

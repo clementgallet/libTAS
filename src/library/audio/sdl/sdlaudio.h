@@ -259,11 +259,11 @@ OVERRIDE void SDL_MixAudio(Uint8 * dst, const Uint8 * src,
  *  using the format of audio device 1. Thus it can be used when no audio
  *  device is open at all.
  */
-OVERRIDE void SDL_MixAudioFormat(Uint8 * dst,
+/*OVERRIDE void SDL_MixAudioFormat(Uint8 * dst,
                                                 const Uint8 * src,
                                                 SDL_AudioFormat format,
                                                 Uint32 len, int volume);
-
+*/
 /**
  *  Queue more audio on non-callback devices.
  *
