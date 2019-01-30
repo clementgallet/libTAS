@@ -49,7 +49,8 @@ DECLARE_ORIG_POINTER(SDL_RenderReadPixels);
 DECLARE_ORIG_POINTER(SDL_GetWindowPixelFormat);
 DECLARE_ORIG_POINTER(SDL_GetRenderer);
 DECLARE_ORIG_POINTER(SDL_CreateTexture);
-DECLARE_ORIG_POINTER(SDL_UpdateTexture);
+DECLARE_ORIG_POINTER(SDL_LockTexture);
+DECLARE_ORIG_POINTER(SDL_UnlockTexture);
 DECLARE_ORIG_POINTER(SDL_RenderCopy);
 DECLARE_ORIG_POINTER(SDL_DestroyTexture);
 DECLARE_ORIG_POINTER(SDL_GetError);
@@ -124,7 +125,12 @@ int ScreenCapture::init()
     }
 
     /* Get window color depth */
-    if (game_info.video & GameInfo::OPENGL) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
+        LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
+        pixelSize = sdlpixfmt & 0xFF;
+    }
+    else if (game_info.video & GameInfo::OPENGL) {
         pixelSize = 4;
     }
     else if (game_info.video & GameInfo::SDL1) {
@@ -134,11 +140,6 @@ int ScreenCapture::init()
             return -1;
         }
         pixelSize = surf->format->BytesPerPixel;
-    }
-    else if (game_info.video & GameInfo::SDL2) {
-        LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
-        pixelSize = sdlpixfmt & 0xFF;
     }
     else {
         pixelSize = depth / 8; /* depth is in bits/pixels */
@@ -160,7 +161,28 @@ int ScreenCapture::init()
 void ScreenCapture::initScreenSurface()
 {
     /* Set up a backup surface/framebuffer */
-    if (game_info.video & GameInfo::OPENGL) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
+        LINK_NAMESPACE_SDL2(SDL_GetRenderer);
+        LINK_NAMESPACE_SDL2(SDL_CreateTexture);
+        LINK_NAMESPACE_SDL2(SDL_GetError);
+        LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
+
+        /* Create the screen texture */
+        sdl_renderer = orig::SDL_GetRenderer(gameSDLWindow);
+        if (!sdl_renderer) {
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: ", orig::SDL_GetError());
+        }
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
+        if (!screenSDLTex) {
+            screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
+                SDL_TEXTUREACCESS_STREAMING, width, height);
+            if (!screenSDLTex) {
+                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: ", orig::SDL_GetError());
+            }
+        }
+    }
+
+    else if (game_info.video & GameInfo::OPENGL) {
         /* Generate FBO and RBO */
         LINK_NAMESPACE(glGenFramebuffers, "GL");
         LINK_NAMESPACE(glBindFramebuffer, "GL");
@@ -196,24 +218,6 @@ void ScreenCapture::initScreenSurface()
         /* Disable alpha blending for that texture */
         if (screenSDLSurf->flags & SDL1::SDL1_SRCALPHA) {
             orig::SDL_SetAlpha(screenSDLSurf, 0, 0);
-        }
-    }
-
-    else if (game_info.video & GameInfo::SDL2) {
-        LINK_NAMESPACE_SDL2(SDL_GetRenderer);
-        LINK_NAMESPACE_SDL2(SDL_CreateTexture);
-        LINK_NAMESPACE_SDL2(SDL_GetError);
-        LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-
-        /* Create the screen texture */
-        sdl_renderer = orig::SDL_GetRenderer(gameSDLWindow);
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
-        if (!screenSDLTex) {
-            screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
-                SDL_TEXTUREACCESS_STREAMING, width, height);
-            if (!screenSDLTex) {
-                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: ", orig::SDL_GetError());
-            }
         }
     }
 }
@@ -297,25 +301,7 @@ const char* ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
-    if (game_info.video & GameInfo::OPENGL) {
-        return "RGBA";
-    }
-
-    if (game_info.video & GameInfo::SDL1) {
-        switch (screenSDLSurf->format->Rmask) {
-            case 0x000000ff:
-                return "RGBA";
-            case 0x0000ff00:
-                return "ARGB";
-            case 0x00ff0000:
-                return "BGRA";
-            case 0xff000000:
-                return "ABGR";
-        }
-        return "RGBA";
-    }
-
-    if (game_info.video & GameInfo::SDL2) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         switch (sdlpixfmt) {
@@ -342,6 +328,24 @@ const char* ScreenCapture::getPixelFormat()
         }
     }
 
+    else if (game_info.video & GameInfo::OPENGL) {
+        return "RGBA";
+    }
+
+    else if (game_info.video & GameInfo::SDL1) {
+        switch (screenSDLSurf->format->Rmask) {
+            case 0x000000ff:
+                return "RGBA";
+            case 0x0000ff00:
+                return "ARGB";
+            case 0x00ff0000:
+                return "BGRA";
+            case 0xff000000:
+                return "ABGR";
+        }
+        return "RGBA";
+    }
+
     return "RGBA";
 }
 
@@ -362,7 +366,23 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
     if (!draw)
         return size;
 
-    if (game_info.video & GameInfo::OPENGL) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
+        LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
+        LINK_NAMESPACE_SDL2(SDL_LockTexture);
+        LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
+
+        int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
+        if (ret < 0) {
+            debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: ", orig::SDL_GetError());
+        }
+        void* tex_pixels;
+        int tex_pitch;
+        orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+        memcpy(tex_pixels, winpixels.data(), size);
+        orig::SDL_UnlockTexture(screenSDLTex);
+    }
+
+    else if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glReadPixels, "GL");
         LINK_NAMESPACE(glBindFramebuffer, "GL");
         LINK_NAMESPACE(glBlitFramebuffer, "GL");
@@ -393,60 +413,49 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         }
     }
 
-    else {
+    else if (game_info.video & GameInfo::SDL1) {
         /* Not tested !! */
         debuglog(LCF_DUMP | LCF_UNTESTED, "Access SDL_Surface pixels for video dump");
 
-        if (game_info.video & GameInfo::SDL1) {
-            LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-            LINK_NAMESPACE_SDL1(SDL_LockSurface);
-            LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
-            LINK_NAMESPACE_SDL1(SDL_BlitSurface);
-            LINK_NAMESPACE_SDL1(SDL_SetAlpha);
+        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+        LINK_NAMESPACE_SDL1(SDL_LockSurface);
+        LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
+        LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+        LINK_NAMESPACE_SDL1(SDL_SetAlpha);
 
-            /* Get surface from window */
-            SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
+        /* Get surface from window */
+        SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
-            /* Checking for a size modification */
-            int cw = surf1->w;
-            int ch = surf1->h;
-            if ((cw != width) || (ch != height)) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
+        /* Checking for a size modification */
+        int cw = surf1->w;
+        int ch = surf1->h;
+        if ((cw != width) || (ch != height)) {
+            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
+            return -1;
+        }
+
+        if (surf1->flags & SDL1::SDL1_SRCALPHA) {
+            orig::SDL_SetAlpha(surf1, 0, 0);
+            orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
+            orig::SDL_SetAlpha(surf1, SDL1::SDL1_SRCALPHA, 0);
+        }
+        else {
+            orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
+        }
+
+        if (pixels) {
+            /* We must lock the surface before accessing the raw pixels */
+            int ret = orig::SDL_LockSurface(screenSDLSurf);
+            if (ret != 0) {
+                debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
                 return -1;
             }
 
-            if (surf1->flags & SDL1::SDL1_SRCALPHA) {
-                orig::SDL_SetAlpha(surf1, 0, 0);
-                orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
-                orig::SDL_SetAlpha(surf1, SDL1::SDL1_SRCALPHA, 0);
-            }
-            else {
-                orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
-            }
+            /* I know memcpy is not recommended for vectors... */
+            memcpy(winpixels.data(), screenSDLSurf->pixels, size);
 
-            if (pixels) {
-                /* We must lock the surface before accessing the raw pixels */
-                int ret = orig::SDL_LockSurface(screenSDLSurf);
-                if (ret != 0) {
-                    debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
-                    return -1;
-                }
-
-                /* I know memcpy is not recommended for vectors... */
-                memcpy(winpixels.data(), screenSDLSurf->pixels, size);
-
-                /* Unlock surface */
-                orig::SDL_UnlockSurface(screenSDLSurf);
-            }
-        }
-
-        if (game_info.video & GameInfo::SDL2) {
-            LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
-
-            int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
-            if (ret < 0) {
-                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: ", orig::SDL_GetError());
-            }
+            /* Unlock surface */
+            orig::SDL_UnlockSurface(screenSDLSurf);
         }
     }
 
@@ -457,7 +466,18 @@ int ScreenCapture::setPixels() {
     if (!inited)
         return 0;
 
-    if (game_info.video & GameInfo::OPENGL) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
+        LINK_NAMESPACE_SDL2(SDL_RenderCopy);
+
+        int ret;
+
+        ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
+        if (ret < 0) {
+            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: ", orig::SDL_GetError());
+        }
+    }
+
+    else if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glBindFramebuffer, "GL");
         LINK_NAMESPACE(glBlitFramebuffer, "GL");
 
@@ -467,41 +487,27 @@ int ScreenCapture::setPixels() {
         orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    else {
-        if (game_info.video & GameInfo::SDL1) {
-            LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-            LINK_NAMESPACE_SDL1(SDL_LockSurface);
-            LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
-            LINK_NAMESPACE_SDL1(SDL_BlitSurface);
-            LINK_NAMESPACE_SDL1(SDL_GetClipRect);
-            LINK_NAMESPACE_SDL1(SDL_SetClipRect);
+    else if (game_info.video & GameInfo::SDL1) {
+        LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
+        LINK_NAMESPACE_SDL1(SDL_LockSurface);
+        LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
+        LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+        LINK_NAMESPACE_SDL1(SDL_GetClipRect);
+        LINK_NAMESPACE_SDL1(SDL_SetClipRect);
 
-            /* Not tested !! */
-            debuglog(LCF_DUMP | LCF_UNTESTED, "Set SDL1_Surface pixels");
+        /* Not tested !! */
+        debuglog(LCF_DUMP | LCF_UNTESTED, "Set SDL1_Surface pixels");
 
-            /* Get surface from window */
-            SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
+        /* Get surface from window */
+        SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
-            /* Save and restore the clip rectangle */
-            SDL1::SDL_Rect clip_rect;
-            orig::SDL_GetClipRect(surf1, &clip_rect);
-            orig::SDL_SetClipRect(surf1, nullptr);
-            orig::SDL_BlitSurface(screenSDLSurf, nullptr, surf1, nullptr);
-            orig::SDL_SetClipRect(surf1, &clip_rect);
+        /* Save and restore the clip rectangle */
+        SDL1::SDL_Rect clip_rect;
+        orig::SDL_GetClipRect(surf1, &clip_rect);
+        orig::SDL_SetClipRect(surf1, nullptr);
+        orig::SDL_BlitSurface(screenSDLSurf, nullptr, surf1, nullptr);
+        orig::SDL_SetClipRect(surf1, &clip_rect);
 
-        }
-
-        if (game_info.video & GameInfo::SDL2) {
-            LINK_NAMESPACE_SDL2(SDL_UpdateTexture);
-            LINK_NAMESPACE_SDL2(SDL_RenderCopy);
-
-            int ret;
-
-            ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
-            if (ret < 0) {
-                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: ", orig::SDL_GetError());
-            }
-        }
     }
 
     return 0;

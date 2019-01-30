@@ -12,6 +12,9 @@
 * Lock inputs in the input editor
 
 ### Changed
+
+* Take advantage of SDL2 dynamic linking mechanism for better SDL2 hooking
+
 ### Fixed
 
 * Fix zeroing pages when incremental savestates feature is disabled

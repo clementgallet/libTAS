@@ -313,10 +313,10 @@ static int swapInterval = 0;
     /* Disable high DPI mode */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
+    game_info.video |= GameInfo::SDL2_RENDERER;
+
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     gameSDLWindow = *window;
-
-    game_info.video &= ~GameInfo::OPENGL;
 
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
@@ -386,6 +386,11 @@ static int swapInterval = 0;
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
     ScreenCapture::init();
+
+#ifdef LIBTAS_ENABLE_HUD
+    /* Create texture and fbo in the OSD */
+    RenderHUD_GL::init();
+#endif
 
     return surf;
 }

@@ -51,6 +51,8 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale);
 
     SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
 
+    game_info.video |=  GameInfo::SDL2_RENDERER;
+
     ScreenCapture::init();
 
     return renderer;
