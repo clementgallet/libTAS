@@ -40,7 +40,12 @@ DEFINE_ORIG_POINTER(ioctl);
 
 int ioctl(int fd, unsigned long request, ...) throw()
 {
-    //debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+    if (fd < 0) {
+        errno = EBADF;
+        return -1;
+    }
+
+    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE_GLOBAL(ioctl);
 
     va_list arg_list;
@@ -131,7 +136,7 @@ int ioctl(int fd, unsigned long request, ...) throw()
         char* name = static_cast<char*>(argp);
         debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len ", len, " on fd ", fd);
         strncpy(name, "Microsoft X-Box 360 pad", len);
-        return 0;
+        return strnlen(name, len);
 
         // debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len ", len, " on fd ", fd);
         // int ret = orig::ioctl(fd, request, argp);

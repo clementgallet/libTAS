@@ -64,6 +64,9 @@ void openFile(const char* file, int fd)
 
 bool closeFile(int fd)
 {
+    if (fd < 0)
+        return true;
+
     std::list<FileHandle>& filehandles = getFileList();
 
     /* Check if we track the file */
