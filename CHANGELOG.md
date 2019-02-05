@@ -14,6 +14,7 @@
 ### Changed
 
 * Take advantage of SDL2 dynamic linking mechanism for better SDL2 hooking
+* Store files in $XDG_DATA_HOME and $XDG_CONFIG_HOME (usually ~/.local/share and ~/.config)
 
 ### Fixed
 

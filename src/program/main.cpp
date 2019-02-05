@@ -191,14 +191,12 @@ int main(int argc, char **argv)
     context.libtaspath += "/libtas.so";
 
     /* Create the working directories */
-    std::string base_dir = getenv("HOME");
-    base_dir += "/.libtas";
-    if (create_dir(base_dir) < 0) {
-        std::cerr << "Cannot create dir " << base_dir << std::endl;
-        return -1;
+    context.config.configdir = getenv("XDG_CONFIG_HOME");
+    if (context.config.configdir.empty()) {
+        context.config.configdir = getenv("HOME");
+        context.config.configdir += "/.config";
     }
-
-    context.config.configdir = base_dir + "/config";
+    context.config.configdir += "/libTAS";
     if (create_dir(context.config.configdir) < 0) {
         std::cerr << "Cannot create dir " << context.config.configdir << std::endl;
         return -1;
@@ -215,8 +213,20 @@ int main(int argc, char **argv)
     /* If the config file set custom directories for the remaining working dir,
      * we create these directories (if not already created).
      * Otherwise, we set and create the default ones. */
+    std::string data_dir = getenv("XDG_DATA_HOME");
+    if (data_dir.empty()) {
+        data_dir = getenv("HOME");
+        data_dir += "/.local/share";
+    }
+    data_dir += "/libTAS";
+
+    if (create_dir(data_dir) < 0) {
+        std::cerr << "Cannot create dir " << data_dir << std::endl;
+        return -1;
+    }
+
     if (context.config.tempmoviedir.empty()) {
-        context.config.tempmoviedir = base_dir + "/movie";
+        context.config.tempmoviedir = data_dir + "/movie";
     }
     if (create_dir(context.config.tempmoviedir) < 0) {
         std::cerr << "Cannot create dir " << context.config.tempmoviedir << std::endl;
@@ -224,7 +234,7 @@ int main(int argc, char **argv)
     }
 
     if (context.config.savestatedir.empty()) {
-        context.config.savestatedir = base_dir + "/states";
+        context.config.savestatedir = data_dir + "/states";
     }
     if (create_dir(context.config.savestatedir) < 0) {
         std::cerr << "Cannot create dir " << context.config.savestatedir << std::endl;
