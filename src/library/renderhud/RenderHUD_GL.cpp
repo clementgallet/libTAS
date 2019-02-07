@@ -41,6 +41,7 @@ DEFINE_ORIG_POINTER(glDeleteFramebuffers)
 DECLARE_ORIG_POINTER(glBlitFramebuffer)
 
 DEFINE_ORIG_POINTER(glUseProgram)
+DEFINE_ORIG_POINTER(glPixelStorei)
 
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;
@@ -108,12 +109,21 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     LINK_NAMESPACE(glBlitFramebuffer, "GL");
     LINK_NAMESPACE(glUseProgram, "GL");
     LINK_NAMESPACE(glGetIntegerv, "GL");
+    LINK_NAMESPACE(glPixelStorei, "GL");
 
     /* Save the previous program */
     GLint oldProgram;
     orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);
-    orig::glUseProgram(0);
+    if (oldProgram != 0) {
+        orig::glUseProgram(0);
+    }
 
+    /* Save previous unpack row length */
+    GLint oldUnpackRow;
+    orig::glGetIntegerv(GL_UNPACK_ROW_LENGTH, &oldUnpackRow);
+    if (oldUnpackRow != 0) {
+        orig::glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    }
 
     /* Save previous binded texture and active texture unit */
     GLint oldTex;
@@ -154,6 +164,11 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     }
     if (oldActiveTex != 0) {
         orig::glActiveTexture(oldActiveTex);
+    }
+
+    /* Restore unpack row length */
+    if (oldUnpackRow != 0) {
+        orig::glPixelStorei(GL_UNPACK_ROW_LENGTH, oldUnpackRow);
     }
 
     /* Restore the previous program */
