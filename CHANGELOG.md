@@ -1,5 +1,11 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+
+## [1.3.3] - 2019-02-08
+### Added
 
 * Implement more Xlib keyboard mapping functions
 * When loading a savestate of previous game iteration, the movie is loaded
@@ -26,6 +32,7 @@
 * Restore file offsets and close files when loading a savestate
 * Fix a freeze in the input editor
 * Fix a typo in SDL text input
+* Make savefiles streams unbuffered to avoid data loss
 
 ## [1.3.2] - 2018-11-16
 ### Added

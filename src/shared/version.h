@@ -22,6 +22,6 @@
 
 static const int MAJORVERSION = 1;
 static const int MINORVERSION = 3;
-static const int PATCHVERSION = 2;
+static const int PATCHVERSION = 3;
 
 #endif
