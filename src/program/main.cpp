@@ -191,8 +191,11 @@ int main(int argc, char **argv)
     context.libtaspath += "/libtas.so";
 
     /* Create the working directories */
-    context.config.configdir = getenv("XDG_CONFIG_HOME");
-    if (context.config.configdir.empty()) {
+    char *path = getenv("XDG_CONFIG_HOME");
+    if (path) {
+        context.config.configdir = path;
+    }
+    else {
         context.config.configdir = getenv("HOME");
         context.config.configdir += "/.config";
     }
@@ -213,8 +216,12 @@ int main(int argc, char **argv)
     /* If the config file set custom directories for the remaining working dir,
      * we create these directories (if not already created).
      * Otherwise, we set and create the default ones. */
-    std::string data_dir = getenv("XDG_DATA_HOME");
-    if (data_dir.empty()) {
+    std::string data_dir;
+    path = getenv("XDG_DATA_HOME");
+    if (path) {
+        data_dir = path;
+    }
+    else {
         data_dir = getenv("HOME");
         data_dir += "/.local/share";
     }
