@@ -4,6 +4,7 @@
 ### Fixed
 
 * Fix SDL_BlitSurface hooking
+* Fix a race condition on file handle list
 
 ## [1.3.3] - 2019-02-08
 ### Added

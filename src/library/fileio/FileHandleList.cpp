@@ -24,6 +24,7 @@
 
 #include <list>
 #include <unistd.h> // lseek
+#include <mutex>
 
 namespace libtas {
 
@@ -41,12 +42,19 @@ static std::list<FileHandle>& getFileList() {
     return filehandles;
 }
 
+/* Mutex to protect the file list */
+static std::mutex& getFileListMutex() {
+    static std::mutex mutex;
+    return mutex;
+}
+
 void openFile(const char* file, int fd)
 {
     if (fd < 0)
         return;
 
     std::list<FileHandle>& filehandles = getFileList();
+    std::lock_guard<std::mutex> lock(getFileListMutex());
 
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
@@ -68,6 +76,7 @@ bool closeFile(int fd)
         return true;
 
     std::list<FileHandle>& filehandles = getFileList();
+    std::lock_guard<std::mutex> lock(getFileListMutex());
 
     /* Check if we track the file */
     for (auto iter = filehandles.begin(); iter != filehandles.end(); iter++) {
@@ -92,6 +101,7 @@ bool closeFile(int fd)
 void trackAllFiles()
 {
     std::list<FileHandle>& filehandles = getFileList();
+    std::lock_guard<std::mutex> lock(getFileListMutex());
 
     for (FileHandle &fh : filehandles) {
         debuglogstdio(LCF_FILEIO, "Track file %s (fd=%d)", fh.filename.c_str(), fh.fd);
@@ -107,6 +117,7 @@ void trackAllFiles()
 void recoverAllFiles()
 {
     std::list<FileHandle>& filehandles = getFileList();
+    std::lock_guard<std::mutex> lock(getFileListMutex());
 
     for (FileHandle &fh : filehandles) {
 
@@ -138,6 +149,7 @@ void recoverAllFiles()
 void closeUntrackedFiles()
 {
     std::list<FileHandle>& filehandles = getFileList();
+    std::lock_guard<std::mutex> lock(getFileListMutex());
 
     for (FileHandle &fh : filehandles) {
         if (! fh.tracked) {
