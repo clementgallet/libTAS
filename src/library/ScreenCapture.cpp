@@ -38,7 +38,7 @@ namespace orig {
     static SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
     static int (*SDL_LockSurface)(SDL1::SDL_Surface* surface);
     static void (*SDL_UnlockSurface)(SDL1::SDL_Surface* surface);
-    static int (*SDL_BlitSurface)(SDL1::SDL_Surface *src, SDL1::SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL1::SDL_Rect *dstrect);
+    static int (*SDL_UpperBlit)(SDL1::SDL_Surface *src, SDL1::SDL_Rect *srcrect, SDL1::SDL_Surface *dst, SDL1::SDL_Rect *dstrect);
     static uint8_t (*SDL_SetClipRect)(SDL1::SDL_Surface *surface, const SDL1::SDL_Rect *rect);
     static void (*SDL_GetClipRect)(SDL1::SDL_Surface *surface, SDL1::SDL_Rect *rect);
     static int (*SDL_SetAlpha)(SDL1::SDL_Surface *surface, Uint32 flag, Uint8 alpha);
@@ -420,7 +420,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         LINK_NAMESPACE_SDL1(SDL_LockSurface);
         LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
-        LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+        LINK_NAMESPACE_SDL1(SDL_UpperBlit);
         LINK_NAMESPACE_SDL1(SDL_SetAlpha);
 
         /* Get surface from window */
@@ -436,11 +436,11 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
         if (surf1->flags & SDL1::SDL1_SRCALPHA) {
             orig::SDL_SetAlpha(surf1, 0, 0);
-            orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
+            orig::SDL_UpperBlit(surf1, nullptr, screenSDLSurf, nullptr);
             orig::SDL_SetAlpha(surf1, SDL1::SDL1_SRCALPHA, 0);
         }
         else {
-            orig::SDL_BlitSurface(surf1, nullptr, screenSDLSurf, nullptr);
+            orig::SDL_UpperBlit(surf1, nullptr, screenSDLSurf, nullptr);
         }
 
         if (pixels) {
@@ -491,7 +491,7 @@ int ScreenCapture::setPixels() {
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         LINK_NAMESPACE_SDL1(SDL_LockSurface);
         LINK_NAMESPACE_SDL1(SDL_UnlockSurface);
-        LINK_NAMESPACE_SDL1(SDL_BlitSurface);
+        LINK_NAMESPACE_SDL1(SDL_UpperBlit);
         LINK_NAMESPACE_SDL1(SDL_GetClipRect);
         LINK_NAMESPACE_SDL1(SDL_SetClipRect);
 
@@ -505,7 +505,7 @@ int ScreenCapture::setPixels() {
         SDL1::SDL_Rect clip_rect;
         orig::SDL_GetClipRect(surf1, &clip_rect);
         orig::SDL_SetClipRect(surf1, nullptr);
-        orig::SDL_BlitSurface(screenSDLSurf, nullptr, surf1, nullptr);
+        orig::SDL_UpperBlit(screenSDLSurf, nullptr, surf1, nullptr);
         orig::SDL_SetClipRect(surf1, &clip_rect);
 
     }

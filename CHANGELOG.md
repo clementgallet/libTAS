@@ -3,6 +3,7 @@
 ### Changed
 ### Fixed
 
+* Fix SDL_BlitSurface hooking
 
 ## [1.3.3] - 2019-02-08
 ### Added
