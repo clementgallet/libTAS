@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Add an extra row in the input editor to add frames and copy at the end
+
 ### Changed
 ### Fixed
 

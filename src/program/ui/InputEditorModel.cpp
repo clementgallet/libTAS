@@ -34,7 +34,7 @@ InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : 
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
-    return movie->nbFrames();
+    return movie->nbFrames() + 1;
 }
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
@@ -214,6 +214,11 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
             return false;
 
+        /* Add a row if necessary */
+        if (index.row() == movie->input_list.size()) {
+            insertRows(movie->input_list.size(), 1, QModelIndex());
+        }
+
         AllInputs &ai = movie->input_list[index.row()];
 
         int ivalue = value.toInt();
@@ -268,6 +273,11 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     /* Don't toggle locked input */
     if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
         return false;
+
+    /* Add a row if necessary */
+    if (index.row() == movie->input_list.size()) {
+        insertRows(movie->input_list.size(), 1, QModelIndex());
+    }
 
     AllInputs &ai = movie->input_list[index.row()];
 
