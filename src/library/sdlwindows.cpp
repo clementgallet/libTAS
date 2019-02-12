@@ -189,6 +189,12 @@ static int swapInterval = 0;
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
 
+    if (shared_config.screen_width && w > shared_config.screen_width)
+        w = shared_config.screen_width;
+
+    if (shared_config.screen_height && h > shared_config.screen_height)
+        h = shared_config.screen_height;
+
     gameSDLWindow = orig::SDL_CreateWindow(title, x, y, w, h, flags); // Save the game window
 
     if (flags & SDL_WINDOW_OPENGL) {
