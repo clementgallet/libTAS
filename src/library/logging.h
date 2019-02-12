@@ -106,11 +106,11 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
 }
 
 /* If we only want to print the function name... */
-#define DEBUGLOGCALL(lcf) debuglogstdio(lcf, "%s call.", __func__)
+#define DEBUGLOGCALL(lcf) libtas::debuglogstdio(lcf, "%s call.", __func__)
 
 /* Macro of an assert */
 #define MYASSERT(term) if ((term)) {} \
-    else {debuglogstdio(LCF_ERROR, "%s failed in %s", #term, __func__); \
+    else {libtas::debuglogstdio(LCF_ERROR, "%s failed in %s", #term, __func__); \
     exit(1);}
 
 /* We want to store and send error messages to the program so that they can be
