@@ -196,6 +196,15 @@ static void *pthread_start(void *arg)
     ThreadInfo* thread = ThreadManager::getNewThread();
     bool isRecycled = ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
 
+    /* Threads can be created in detached state */
+    int detachstate = PTHREAD_CREATE_JOINABLE; // default
+    if (attr) {
+        pthread_attr_getdetachstate(attr, &detachstate);
+        debuglog(LCF_THREAD, "Detached state is ", detachstate);
+        debuglog(LCF_THREAD, "Default state is ", PTHREAD_CREATE_JOINABLE);
+    }
+    thread->detached = (detachstate == PTHREAD_CREATE_DETACHED);
+
     int ret = 0;
     if (isRecycled) {
         debuglog(LCF_THREAD, "Recycling thread ", thread->tid);
