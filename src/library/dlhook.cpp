@@ -64,6 +64,11 @@ void *dlopen(const char *file, int mode) throw() {
         return orig::dlopen(file, mode);
     }
 
+    if (file != nullptr && std::string(file).find("libpulse") != std::string::npos) {
+        debuglog(LCF_HOOK, __func__, " blocked access to library ", file);
+        return nullptr;
+    }
+
     debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
 
     void *result = orig::dlopen(file, mode);
