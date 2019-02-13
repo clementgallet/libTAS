@@ -97,6 +97,14 @@ void write_jsdev(struct js_event ev, int jsnum)
         write(jsdevfds[jsnum][1], &ev, sizeof(ev));
 }
 
+int get_js_number(int fd)
+{
+    for (int i=0; i<AllInputs::MAXJOYS; i++)
+        if (jsdevfds[i][0] == fd)
+            return i;
+    return -1;
+}
+
 int close_jsdev(int fd)
 {
     for (int i=0; i<AllInputs::MAXJOYS; i++) {

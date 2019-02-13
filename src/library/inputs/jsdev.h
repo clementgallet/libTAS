@@ -36,6 +36,9 @@ int open_jsdev(const char* source, int flags);
 /* Write an js event in the file */
 void write_jsdev(struct js_event ev, int jsnum);
 
+/* Get the joystick number from the file descriptor */
+int get_js_number(int fd);
+
 /* Unregister the file descriptor when file is closed */
 int close_jsdev(int fd);
 
