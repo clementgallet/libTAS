@@ -121,6 +121,7 @@ set(LIBRARY_SOURCES
     src/library/inputs/sdlkeyboardlayout.cpp
     src/library/inputs/sdlpointer.cpp
     src/library/inputs/sdltextinput.cpp
+    src/library/inputs/udevwrappers.cpp
     src/library/inputs/xcbkeyboard.cpp
     src/library/inputs/xkeyboard.cpp
     src/library/inputs/xkeyboardlayout.cpp
