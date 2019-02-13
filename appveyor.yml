@@ -7,6 +7,7 @@ image: Ubuntu1804
 install:
 - sh: >-
     sudo apt update
+    
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
 build_script:
 - sudo dpkg-buildpackage -us -uc -j2
