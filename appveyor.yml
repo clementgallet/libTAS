@@ -6,9 +6,9 @@ skip_tags: true
 image: Ubuntu1804
 install:
 - sudo apt update
-- sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
+- sh: sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
 build_script:
-- sudo dpkg-buildpackage -us -uc -j2  
+- sudo dpkg-buildpackage -us -uc -j2
 after_build:
 - sudo mv ../libtas*.deb ./
 artifacts:
