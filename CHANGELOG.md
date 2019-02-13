@@ -2,6 +2,7 @@
 ### Added
 
 * Add an extra row in the input editor to add frames and copy at the end
+* Use appveyor for automated building
 
 ### Changed
 ### Fixed

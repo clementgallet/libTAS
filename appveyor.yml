@@ -1,0 +1,27 @@
+version: 1.0.{build}
+branches:
+  only:
+  - master
+skip_tags: true
+image: Ubuntu1804
+install:
+- sudo apt update
+- sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
+build_script:
+- sudo dpkg-buildpackage -us -uc -j2  
+after_build:
+- sudo mv ../libtas*.deb ./
+artifacts:
+- path: libtas_*.deb
+  name: libtas
+deploy:
+- provider: GitHub
+  tag: interim
+  release: Interim
+  description: Automatic build
+  auth_token:
+    secure: PVPcCFJMbCa1q0wUp3yGm9YHyB5cvqDqfaZwgiNKOwf20a1GWux0+ULyVRE6DsPN
+  artifact: libtas
+  force_update: true
+  on:
+    branch: master
