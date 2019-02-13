@@ -40,7 +40,7 @@ void write_evdev(struct input_event ev, int jsnum);
 int get_ev_number(int fd);
 
 /* Unregister the file descriptor when file is closed */
-void close_evdev(int fd);
+int close_evdev(int fd);
 
 }
 

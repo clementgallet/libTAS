@@ -37,7 +37,7 @@ int open_jsdev(const char* source, int flags);
 void write_jsdev(struct js_event ev, int jsnum);
 
 /* Unregister the file descriptor when file is closed */
-void close_jsdev(int fd);
+int close_jsdev(int fd);
 
 }
 
