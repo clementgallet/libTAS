@@ -4,7 +4,7 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 ## Supported Games
 
-Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial developpement to support other game engines (some Unity games should work). Also, running Steam games require to enable the dummy Steam client, which is only partially implemented. If possible, use a drm-free version of the game. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial development to support other game engines (some Unity games should work). Also, running Steam games require to enable the dummy Steam client, which is only partially implemented. If possible, use a drm-free version of the game. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
 
 ## Install
 
