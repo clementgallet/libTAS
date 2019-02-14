@@ -215,6 +215,9 @@ struct SharedConfig {
     /* Force Mesa software OpenGL driver */
     bool opengl_soft = true;
 
+    /* Wait for events to be processed in a separate thread before starting frame */
+    bool async_events = false;
+
 };
 
 #endif

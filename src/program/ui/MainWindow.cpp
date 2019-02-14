@@ -690,6 +690,9 @@ void MainWindow::createMenus()
     steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, &MainWindow::slotSteam);
     steamAction->setCheckable(true);
     disabledActionsOnStart.append(steamAction);
+    asyncEventsAction = runtimeMenu->addAction(tr("Asynchronous events"), this, &MainWindow::slotAsyncEvents);
+    asyncEventsAction->setCheckable(true);
+    disabledActionsOnStart.append(asyncEventsAction);
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
@@ -1082,6 +1085,7 @@ void MainWindow::updateUIFromConfig()
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
     steamAction->setChecked(context->config.sc.virtual_steam);
+    asyncEventsAction->setChecked(context->config.sc.async_events);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
@@ -1458,6 +1462,7 @@ BOOLSLOT(slotSaveScreen, context->config.sc.save_screenpixels)
 BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
 BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)
 BOOLSLOT(slotSteam, context->config.sc.virtual_steam)
+BOOLSLOT(slotAsyncEvents, context->config.sc.async_events)
 
 void MainWindow::slotMovieEnd()
 {

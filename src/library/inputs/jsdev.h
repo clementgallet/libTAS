@@ -36,8 +36,14 @@ int open_jsdev(const char* source, int flags);
 /* Write an js event in the file */
 void write_jsdev(struct js_event ev, int jsnum);
 
+/* Block, waiting for the js event queue to become empty */
+void sync_jsdev(int jsnum);
+
+/* Get the joystick number from the file descriptor */
+int get_js_number(int fd);
+
 /* Unregister the file descriptor when file is closed */
-void close_jsdev(int fd);
+bool unref_jsdev(int fd);
 
 }
 

@@ -42,6 +42,9 @@ void generateMouseMotionEvents(void);
 /* Same as above with the MouseButton event */
 void generateMouseButtonEvents(void);
 
+/* Ensure that the game will receive any events on the next frame */
+void syncEvents(void);
+
 }
 
 #endif

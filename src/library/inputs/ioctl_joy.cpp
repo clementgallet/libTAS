@@ -21,6 +21,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "evdev.h" // get_ev_number
+#include "jsdev.h" // get_js_number
 #include "inputs.h" // game_ai
 #include "../../shared/SingleInput.h"
 #include <linux/joystick.h>
@@ -196,6 +197,8 @@ int ioctl(int fd, unsigned long request, ...) throw()
 
         /* Get the joystick number from the file descriptor */
         int jsnum = get_ev_number(fd);
+        if (jsnum < 0)
+            jsnum = get_js_number(fd);
         if (jsnum < 0) {
             errno = ENOTTY;
             return -1;
@@ -313,6 +316,8 @@ int ioctl(int fd, unsigned long request, ...) throw()
 
             /* Get the joystick number from the file descriptor */
             int jsnum = get_ev_number(fd);
+            if (jsnum < 0)
+                jsnum = get_js_number(fd);
             if (jsnum < 0) {
                 debuglog(LCF_JOYSTICK, "   joystick not found!");
                 errno = ENOTTY;

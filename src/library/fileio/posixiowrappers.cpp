@@ -257,10 +257,8 @@ int close (int fd)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    close_jsdev(fd);
-    close_evdev(fd);
-
     int ret = SaveFileList::closeSaveFile(fd);
+
     if (ret != 1)
         return ret;
 

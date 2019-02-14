@@ -34,13 +34,16 @@ int is_evdev(const char* source);
 int open_evdev(const char* source, int flags);
 
 /* Write an input event in the file */
-void write_evdev(struct input_event ev, int jsnum);
+void write_evdev(struct input_event ev, int evnum);
+
+/* Block, waiting for the input event queue to become empty */
+void sync_evdev(int evnum);
 
 /* Get the joystick number from the file descriptor */
 int get_ev_number(int fd);
 
 /* Unregister the file descriptor when file is closed */
-void close_evdev(int fd);
+bool unref_evdev(int fd);
 
 }
 

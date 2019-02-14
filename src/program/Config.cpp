@@ -135,6 +135,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("locale", sc.locale);
     settings.setValue("virtual_steam", sc.virtual_steam);
     settings.setValue("opengl_soft", sc.opengl_soft);
+    settings.setValue("async_events", sc.async_events);
 
     settings.beginWriteArray("main_gettimes_threshold");
     for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
@@ -256,6 +257,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
     sc.locale = settings.value("locale", sc.locale).toInt();
     sc.virtual_steam = settings.value("virtual_steam", sc.virtual_steam).toBool();
+    sc.async_events = settings.value("async_events", sc.async_events).toBool();
 
     sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();

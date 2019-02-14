@@ -21,22 +21,22 @@
 #include "../logging.h"
 #include <cstdio>
 #include <cerrno>
+#include <utility>
 #include "../DeterministicTimer.h"
+#include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/SingleInput.h"
-#include <unistd.h>
-#include <sys/syscall.h>
+#include <unistd.h> /* write */
 
 namespace libtas {
 
-static int jsdevfds[AllInputs::MAXJOYS] = {0};
+/* The tuple contains pipe in fd, pipe out fd, and then refcount. */
+static std::pair<std::pair<int, int>, int> jsdevfds[AllInputs::MAXJOYS];
 
 int is_jsdev(const char* source)
 {
     /* Extract the js number from the dev filename */
     int jsnum;
     int ret = sscanf(source, "/dev/input/js%d", &jsnum);
-
     if (ret != 1)
         return -1;
 
@@ -62,121 +62,77 @@ int open_jsdev(const char* source, int flags)
 
     debuglog(LCF_JOYSTICK, "   jsdev device ", jsnum, " detected");
 
-    if (jsdevfds[jsnum] != 0) {
-        debuglog(LCF_JOYSTICK | LCF_ERROR, "Warning, jsdev ", source, " opened multiple times!");
+    if (jsdevfds[jsnum].second++ == 0) {
+        /* Register that we use JSDEV for joystick inputs */
+        game_info.joystick = GameInfo::JSDEV;
+        game_info.tosend = true;
+
+        /* Create an unnamed pipe */
+        jsdevfds[jsnum].first = FileHandleList::createPipe();
+
+        /* Write the synthetic events corresponding to the initial state of the
+         * joystick. */
+        struct js_event ev;
+
+        struct timespec ts = detTimer.getTicks();
+        ev.time = ts.tv_sec*1000 + ts.tv_nsec/1000000;
+        ev.value = 0;
+        for (int button = 0; button < 11; button++) {
+            ev.type = JS_EVENT_BUTTON | JS_EVENT_INIT;
+            ev.number = button;
+            write_jsdev(ev, jsnum);
+        }
+        for (int axis = 0; axis < 8; axis++) {
+            ev.type = JS_EVENT_AXIS | JS_EVENT_INIT;
+            ev.number = axis;
+            write_jsdev(ev, jsnum);
+        }
     }
 
-    /* Register that we use JSDEV for joystick inputs */
-    game_info.joystick = GameInfo::JSDEV;
-    game_info.tosend = true;
-
-    /* Create an anonymous file and store its file descriptor using the
-     * recent memfd_create syscall.
-     */
-    int fd = syscall(SYS_memfd_create, source, 0);
-    jsdevfds[jsnum] = fd;
-
-    /* Write the synthetic events corresponding to the initial state of the
-     * joystick. */
-    struct js_event ev;
-
-    struct timespec ts = detTimer.getTicks();
-    ev.time = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    ev.value = 0;
-    for (int button = 0; button < 11; button++) {
-        ev.type = JS_EVENT_BUTTON | JS_EVENT_INIT;
-        ev.number = button;
-        write_jsdev(ev, jsnum);
-    }
-    for (int axis = 0; axis < 8; axis++) {
-        ev.type = JS_EVENT_AXIS | JS_EVENT_INIT;
-        ev.number = axis;
-        write_jsdev(ev, jsnum);
-    }
-
-    return fd;
+    return jsdevfds[jsnum].first.first;
 }
 
 void write_jsdev(struct js_event ev, int jsnum)
 {
-    int fd = jsdevfds[jsnum];
-
-    if (fd == 0)
+    if (jsdevfds[jsnum].second == 0)
         return;
 
-    /* We must simulate a queue using our memfd structure (basically a file).
-     * Of course, we must not grow our file too much.
-     * One thing that helps us is that we can insert events of the same frame
-     * at any order. To acheive that, we insert the event backward from
-     * the file position if the next event is from the same frame (or eof).
-     *
-     *    <---------------------|~~~~~~~~~~~~~~~~~~~|------------------------>
-     *            read         new       new       old         unread
-     *                       position   event    position
-     *
-     * For any other case, we append at the end.
-     *
-     *    <|---------------------------------------------------|+++++++++++++>
-     *  old/new                 unread                            new event
-     *  position
-     *
-     */
-
-    off_t curpos = lseek(fd, 0, SEEK_CUR);
-    MYASSERT(curpos >= 0)
-
-    off_t jsev_size = static_cast<off_t>(sizeof(struct js_event));
-
-    if (curpos > 0) {
-        MYASSERT(curpos >= jsev_size)
-
-        /* Check if we have an event stored after this one */
-        off_t lastpos = lseek(fd, 0, SEEK_END);
-        MYASSERT(lastpos >= 0)
-
-        if (lastpos == curpos) {
-            /* EOF, insert this event backward */
-            lseek(fd, lastpos - jsev_size, SEEK_SET);
-            write(jsdevfds[jsnum], &ev, jsev_size);
-            lseek(fd, lastpos - jsev_size, SEEK_SET);
-            debuglog(LCF_JOYSTICK | LCF_EVENTS, "    Wrote jsdev event at offset ", lastpos - jsev_size);
-            return;
-        }
-
-        /* Read the next event and check if time match */
-        MYASSERT((lastpos - curpos) >= jsev_size)
-        struct js_event next_ev;
-        lseek(fd, curpos, SEEK_SET);
-        read(fd, &next_ev, sizeof(next_ev));
-
-        if (next_ev.time == ev.time) {
-            /* Events are from the same frame, insert this event backward */
-            lseek(fd, curpos - jsev_size, SEEK_SET);
-            write(jsdevfds[jsnum], &ev, jsev_size);
-            lseek(fd, curpos - jsev_size, SEEK_SET);
-            debuglog(LCF_JOYSTICK | LCF_EVENTS, "    Wrote jsdev event at offset ", curpos - jsev_size);
-            return;
-        }
-    }
-
-    /* In any other case, insert the event at the end of the file */
-    off_t writepos = lseek(fd, 0, SEEK_END);
-    write(jsdevfds[jsnum], &ev, jsev_size);
-    debuglog(LCF_JOYSTICK | LCF_EVENTS, "    Wrote jsdev event at offset ", writepos);
-    lseek(fd, curpos, SEEK_SET);
+    write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
 }
 
-void close_jsdev(int fd)
+void sync_jsdev(int jsnum)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++) {
-        if (jsdevfds[i] == fd) {
-            jsdevfds[i] = 0;
-            //return close(fd);
-        }
-    }
+    if (jsdevfds[jsnum].second == 0)
+        return;
 
-//    debuglog(LCF_JOYSTICK | LCF_ERROR, "Could not find the joyfd to close!");
-//    return close(fd);
+    int attempts = 0, count = 0;
+    do {
+        ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count);
+        if (count > 0) {
+            if (++attempts > 10 * 100) {
+                debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "jsdev sync took too long, were asynchronous events incorrectly enabled?");
+                return;
+            }
+            struct timespec sleepTime = { 0, 10 * 1000 };
+            NATIVECALL(nanosleep(&sleepTime, NULL));
+        }
+    } while (count > 0);
+}
+
+int get_js_number(int fd)
+{
+    for (int i=0; i<AllInputs::MAXJOYS; i++)
+        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
+            return i;
+    return -1;
+}
+
+bool unref_jsdev(int fd)
+{
+    for (int i=0; i<AllInputs::MAXJOYS; i++)
+        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
+            return --jsdevfds[i].second == 0;
+    return true;
 }
 
 }

@@ -107,6 +107,7 @@ public:
     QAction *ramStateAction;
     QAction *backtrackStateAction;
     QAction *steamAction;
+    QAction *asyncEventsAction;
 
     QActionGroup *debugStateGroup;
     QActionGroup *loggingOutputGroup;
@@ -275,6 +276,7 @@ private slots:
     void slotBacktrackState(bool checked);
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
+    void slotAsyncEvents(bool checked);
     void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
 };

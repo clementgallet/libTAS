@@ -705,4 +705,74 @@ void generateMouseButtonEvents(void)
     game_ai.pointer_mask = ai.pointer_mask;
 }
 
+static void syncControllerEvents(bool report)
+{
+    if (!shared_config.async_events)
+        return;
+
+    if (!(game_info.joystick & (GameInfo::JSDEV | GameInfo::EVDEV)))
+        return;
+
+    /* Wait for queues to become empty */
+    for (int i = 0; i < shared_config.nb_controllers; i++) {
+        if (game_info.joystick & GameInfo::JSDEV)
+            sync_jsdev(i);
+
+        if (game_info.joystick & GameInfo::EVDEV)
+            sync_evdev(i);
+    }
+
+    if (!report)
+        return;
+
+    /* Send a synchronize report event */
+    struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    for (int i = 0; i < shared_config.nb_controllers; i++) {
+        if (game_info.joystick & GameInfo::JSDEV) {
+            struct js_event ev;
+            ev.time = timestamp;
+            ev.type = 0;
+            ev.number = 0;
+            ev.value = 0;
+            write_jsdev(ev, i);
+        }
+
+        if (game_info.joystick & GameInfo::EVDEV) {
+            struct input_event ev;
+            ev.time.tv_sec = time.tv_sec;
+            ev.time.tv_usec = time.tv_nsec / 1000;
+            ev.type = EV_SYN;
+            ev.code = SYN_REPORT;
+            ev.value = 0;
+            write_evdev(ev, i);
+        }
+    }
+}
+
+void syncEvents(void)
+{
+    /* First, wait for queues to become empty.
+     * Next, send another event that does not affect the game.
+     */
+    syncControllerEvents(true);
+
+    if ((game_info.keyboard & GameInfo::XEVENTS) || (game_info.mouse & GameInfo::XEVENTS)) {
+        /* Sync Xlib event queue, so that we are sure the input events will be
+         * pulled by the game on the next frame.
+         */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i]) {
+                XSync(gameDisplays[i], False);
+            }
+        }
+    }
+
+    /* Lastly, wait for queues to become empty again, ensuring that the events
+     * have finished being processed.
+     */
+    syncControllerEvents(false);
+}
+
 }

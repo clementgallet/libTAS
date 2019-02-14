@@ -367,7 +367,9 @@ void ThreadManager::checkpoint()
     /* Sending a suspend signal to all threads */
     suspendThreads();
 
-    /* We flag all opened files as tracked and store their offset. */
+    /* We flag all opened files as tracked and store their offset. This must be
+     * done AFTER suspending threads.
+     */
     FileHandleList::trackAllFiles();
 
     /* We set the alternate stack to our reserved memory. The game might
@@ -387,7 +389,9 @@ void ThreadManager::checkpoint()
     /* Restoring the game alternate stack (if any) */
     AltStack::restoreStack();
 
-    /* We recover the offset of all opened files */
+    /* We recover the offset of all opened files. This must also be done BEFORE
+     * resuming threads.
+     */
     FileHandleList::recoverAllFiles();
 
     resumeThreads();
