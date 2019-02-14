@@ -338,6 +338,23 @@ OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
  */
 OVERRIDE int SDL_GL_SetAttribute(SDL_GLattr attr, int value);
 
+/**
+ *  \brief Copy the window surface to the screen.
+ *
+ *  \return 0 on success, or -1 on error.
+ */
+OVERRIDE int SDL_UpdateWindowSurface(SDL_Window * window);
+
+/**
+ *  \brief Copy a number of rectangles on the window surface to the screen.
+ *
+ *  \return 0 on success, or -1 on error.
+ */
+OVERRIDE int SDL_UpdateWindowSurfaceRects(SDL_Window * window,
+                                                         const SDL_Rect * rects,
+                                                         int numrects);
+
+
 }
 
 #endif

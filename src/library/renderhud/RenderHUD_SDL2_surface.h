@@ -19,22 +19,17 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#ifndef LIBTAS_RENDERHUD_SDL2_H_INCL
-#define LIBTAS_RENDERHUD_SDL2_H_INCL
+#ifndef LIBTAS_RENDERHUD_SDL2_SURFACE_H_INCL
+#define LIBTAS_RENDERHUD_SDL2_SURFACE_H_INCL
 
 #include "RenderHUD.h"
-#include <SDL2/SDL.h> // SDL_Renderer
 
 namespace libtas {
-class RenderHUD_SDL2 : public RenderHUD
+class RenderHUD_SDL2_surface : public RenderHUD
 {
     public:
-        ~RenderHUD_SDL2();
-        void setRenderer(SDL_Renderer* r);
+        ~RenderHUD_SDL2_surface();
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
-
-    private:
-        SDL_Renderer* renderer;
 };
 }
 

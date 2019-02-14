@@ -27,7 +27,7 @@
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL1.h"
-#include "renderhud/RenderHUD_SDL2.h"
+#include "renderhud/RenderHUD_SDL2_surface.h"
 #include "timewrappers.h"
 #include "ScreenCapture.h"
 #include "DeterministicTimer.h"
@@ -59,6 +59,9 @@ DECLARE_ORIG_POINTER(SDL_SetColorKey);
 DEFINE_ORIG_POINTER(SDL_UpdateRects);
 DEFINE_ORIG_POINTER(SDL_UpdateRect);
 DECLARE_ORIG_POINTER(SDL_GL_SetAttribute);
+DECLARE_ORIG_POINTER(SDL_UpdateWindowSurface);
+DECLARE_ORIG_POINTER(SDL_UpdateWindowSurfaceRects);
+
 
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
@@ -511,5 +514,55 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
     return orig::SDL_GL_SetAttribute(attr, value);
 }
+
+/* Override */ int SDL_UpdateWindowSurface(SDL_Window * window)
+{
+    LINK_NAMESPACE_SDL2(SDL_UpdateWindowSurface);
+
+    if (GlobalState::isNative())
+        return orig::SDL_UpdateWindowSurface(window);
+
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    game_info.video |= GameInfo::SDL2_SURFACE;
+    /* We can't guess that the game will use SDL2 surface before updating it.
+     * so we initialize our screen capture here. */
+    ScreenCapture::init();
+
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_SDL2_surface renderHUD;
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD, true);
+#else
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, true);
+#endif
+
+    return 0;
+}
+
+/* Override */ int SDL_UpdateWindowSurfaceRects(SDL_Window * window, const SDL_Rect * rects, int numrects)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_SDL2(SDL_UpdateWindowSurfaceRects);
+        return orig::SDL_UpdateWindowSurfaceRects(window, rects, numrects);
+    }
+
+    LINK_NAMESPACE_SDL2(SDL_UpdateWindowSurface);
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    game_info.video |= GameInfo::SDL2_SURFACE;
+    /* We can't guess that the game will use SDL2 surface before updating it.
+     * so we initialize our screen capture here. */
+    ScreenCapture::init();
+
+    /* Start the frame boundary and pass the function to draw */
+#ifdef LIBTAS_ENABLE_HUD
+    static RenderHUD_SDL2_surface renderHUD;
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD, true);
+#else
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, true);
+#endif
+
+    return 0;
+}
+
 
 }

@@ -57,6 +57,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.video & GameInfo::SDL2_RENDERER) {
         videoStr = "SDL 2 renderer";
     }
+    else if (game_info.video & GameInfo::SDL2_SURFACE) {
+        videoStr = "SDL 2 surface";
+    }
     else if (game_info.video & GameInfo::SDL2) {
         videoStr = "SDL 2";
     }

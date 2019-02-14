@@ -19,7 +19,7 @@
 
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "RenderHUD_SDL2.h"
+#include "RenderHUD_SDL2_renderer.h"
 #include "../logging.h"
 #include "../hook.h"
 #include "../ScreenCapture.h"
@@ -30,16 +30,16 @@ DECLARE_ORIG_POINTER(SDL_CreateRGBSurfaceFrom)
 DECLARE_ORIG_POINTER(SDL_RenderCopy)
 DECLARE_ORIG_POINTER(SDL_CreateTextureFromSurface)
 
-RenderHUD_SDL2::~RenderHUD_SDL2()
+RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
 }
 
-void RenderHUD_SDL2::setRenderer(SDL_Renderer* r)
+void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
 {
     renderer = r;
 }
 
-void RenderHUD_SDL2::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
+void RenderHUD_SDL2_renderer::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     LINK_NAMESPACE_SDL2(SDL_CreateRGBSurfaceFrom);
     LINK_NAMESPACE_SDL2(SDL_CreateTextureFromSurface);

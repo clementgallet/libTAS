@@ -128,7 +128,8 @@ set(LIBRARY_SOURCES
     src/library/inputs/xpointer.cpp
     src/library/renderhud/RenderHUD_GL.cpp
     src/library/renderhud/RenderHUD_SDL1.cpp
-    src/library/renderhud/RenderHUD_SDL2.cpp
+    src/library/renderhud/RenderHUD_SDL2_renderer.cpp
+    src/library/renderhud/RenderHUD_SDL2_surface.cpp
     src/library/renderhud/RenderHUD.cpp
     src/library/renderhud/sdl_ttf.cpp
     src/library/renderhud/SurfaceARGB.cpp

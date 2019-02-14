@@ -3,6 +3,7 @@
 
 * Add an extra row in the input editor to add frames and copy at the end
 * Use appveyor for automated building
+* Add support for SDL_UpdateWindowSurface() screen update
 
 ### Changed
 ### Fixed

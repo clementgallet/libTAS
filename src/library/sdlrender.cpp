@@ -22,7 +22,7 @@
 #include "hook.h"
 #include "logging.h"
 #include "frame.h"
-#include "renderhud/RenderHUD_SDL2.h"
+#include "renderhud/RenderHUD_SDL2_renderer.h"
 #include "ScreenCapture.h"
 
 namespace libtas {
@@ -79,7 +79,7 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
-    static RenderHUD_SDL2 renderHUD;
+    static RenderHUD_SDL2_renderer renderHUD;
     renderHUD.setRenderer(renderer);
     frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, renderHUD, true);
 #else
