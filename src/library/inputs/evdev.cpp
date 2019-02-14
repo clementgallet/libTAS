@@ -94,8 +94,29 @@ int open_evdev(const char* source, int flags)
 
 void write_evdev(struct input_event ev, int evnum)
 {
-    if (evdevfds[evnum].second != 0)
-        write(evdevfds[evnum].first.second, &ev, sizeof(ev));
+    if (evdevfds[evnum].second == 0)
+        return;
+
+    write(evdevfds[evnum].first.second, &ev, sizeof(ev));
+}
+
+void sync_evdev(int evnum)
+{
+    if (evdevfds[evnum].second == 0)
+        return;
+
+    int attempts = 0, count = 0;
+    do {
+        ioctl(evdevfds[evnum].first.first, FIONREAD, &count);
+        if (count > 0) {
+            if (++attempts > 100 * 100) {
+                debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "evdev sync took too long, were asynchronous events incorrectly enabled?");
+                return;
+            }
+            struct timespec sleepTime = { 0, 10 * 1000 };
+            NATIVECALL(nanosleep(&sleepTime, NULL));
+        }
+    } while (count > 0);
 }
 
 int get_ev_number(int fd)

@@ -94,8 +94,29 @@ int open_jsdev(const char* source, int flags)
 
 void write_jsdev(struct js_event ev, int jsnum)
 {
-    if (jsdevfds[jsnum].second != 0)
-        write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
+    if (jsdevfds[jsnum].second == 0)
+        return;
+
+    write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
+}
+
+void sync_jsdev(int jsnum)
+{
+    if (jsdevfds[jsnum].second == 0)
+        return;
+
+    int attempts = 0, count = 0;
+    do {
+        ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count);
+        if (count > 0) {
+            if (++attempts > 10 * 100) {
+                debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "jsdev sync took too long, were asynchronous events incorrectly enabled?");
+                return;
+            }
+            struct timespec sleepTime = { 0, 10 * 1000 };
+            NATIVECALL(nanosleep(&sleepTime, NULL));
+        }
+    } while (count > 0);
 }
 
 int get_js_number(int fd)
