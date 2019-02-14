@@ -21,14 +21,16 @@
 #include "../logging.h"
 #include <cstdio>
 #include <cerrno>
+#include <utility>
 #include "../DeterministicTimer.h"
+#include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
-#include <unistd.h>
+#include <unistd.h> /* write */
 
 namespace libtas {
 
-/* The subarray contains pipe in fd, pipe out fd, and refcount. */
-static int evdevfds[AllInputs::MAXJOYS][3] = {{0}};
+/* The tuple contains pipe in fd, pipe out fd, and then refcount. */
+static std::pair<std::pair<int, int>, int> evdevfds[AllInputs::MAXJOYS];
 
 int is_evdev(const char* source)
 {
@@ -60,13 +62,13 @@ int open_evdev(const char* source, int flags)
 
     debuglog(LCF_JOYSTICK, "   evdev device ", evnum, " detected");
 
-    if (evdevfds[evnum][2]++ == 0) {
+    if (evdevfds[evnum].second++ == 0) {
         /* Register that we use EVDEV for joystick inputs */
         game_info.joystick = GameInfo::EVDEV;
         game_info.tosend = true;
 
         /* Create an unnamed pipe. */
-        MYASSERT(pipe(evdevfds[evnum]) == 0);
+        evdevfds[evnum].first = FileHandleList::createPipe();
 
         /* Write the synthetic events corresponding to the initial state of the
          * joystick. */
@@ -87,35 +89,29 @@ int open_evdev(const char* source, int flags)
         // }
     }
 
-    return evdevfds[evnum][0];
+    return evdevfds[evnum].first.first;
 }
 
 void write_evdev(struct input_event ev, int evnum)
 {
-    if (evdevfds[evnum][2] != 0)
-        write(evdevfds[evnum][1], &ev, sizeof(ev));
+    if (evdevfds[evnum].second != 0)
+        write(evdevfds[evnum].first.second, &ev, sizeof(ev));
 }
 
 int get_ev_number(int fd)
 {
     for (int i=0; i<AllInputs::MAXJOYS; i++)
-        if (evdevfds[i][0] == fd)
+        if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd)
             return i;
     return -1;
 }
 
-
-int close_evdev(int fd)
+bool unref_evdev(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++) {
-        if (evdevfds[i][0] == fd && evdevfds[i][2] != 0 && --evdevfds[i][2] == 0) {
-            GlobalNative gn;
-            close(evdevfds[i][0]);
-            close(evdevfds[i][1]);
-            return 0;
-        }
-    }
-    return 1;
+    for (int i=0; i<AllInputs::MAXJOYS; i++)
+        if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd)
+            return --evdevfds[i].second == 0;
+    return true;
 }
 
 }

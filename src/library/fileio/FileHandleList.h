@@ -20,7 +20,7 @@
 #ifndef LIBTAS_FILEHANDLELIST_H_INCLUDED
 #define LIBTAS_FILEHANDLELIST_H_INCLUDED
 
-// #include <cstdio> // FILE
+#include <utility>
 
 namespace libtas {
 
@@ -28,6 +28,9 @@ namespace FileHandleList {
 
 /* Register an opened file and file descriptor */
 void openFile(const char* file, int fd);
+
+/* Open and register an unnamed pipe */
+std::pair<int, int> createPipe(int flags = 0);
 
 /* Register a file closing, and returns if we must actually close the file */
 bool closeFile(int fd);

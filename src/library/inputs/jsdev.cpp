@@ -21,15 +21,16 @@
 #include "../logging.h"
 #include <cstdio>
 #include <cerrno>
+#include <utility>
 #include "../DeterministicTimer.h"
+#include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
-#include "../../shared/SingleInput.h"
-#include <unistd.h>
+#include <unistd.h> /* write */
 
 namespace libtas {
 
-/* The subarray contains pipe in fd, pipe out fd, and refcount. */
-static int jsdevfds[AllInputs::MAXJOYS][3] = {{0}};
+/* The tuple contains pipe in fd, pipe out fd, and then refcount. */
+static std::pair<std::pair<int, int>, int> jsdevfds[AllInputs::MAXJOYS];
 
 int is_jsdev(const char* source)
 {
@@ -61,13 +62,13 @@ int open_jsdev(const char* source, int flags)
 
     debuglog(LCF_JOYSTICK, "   jsdev device ", jsnum, " detected");
 
-    if (jsdevfds[jsnum][2]++ == 0) {
+    if (jsdevfds[jsnum].second++ == 0) {
         /* Register that we use JSDEV for joystick inputs */
         game_info.joystick = GameInfo::JSDEV;
         game_info.tosend = true;
 
         /* Create an unnamed pipe */
-        MYASSERT(pipe(jsdevfds[jsnum]) == 0);
+        jsdevfds[jsnum].first = FileHandleList::createPipe();
 
         /* Write the synthetic events corresponding to the initial state of the
          * joystick. */
@@ -88,34 +89,29 @@ int open_jsdev(const char* source, int flags)
         }
     }
 
-    return jsdevfds[jsnum][0];;
+    return jsdevfds[jsnum].first.first;
 }
 
 void write_jsdev(struct js_event ev, int jsnum)
 {
-    if (jsdevfds[jsnum][2] != 0)
-        write(jsdevfds[jsnum][1], &ev, sizeof(ev));
+    if (jsdevfds[jsnum].second != 0)
+        write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
 }
 
 int get_js_number(int fd)
 {
     for (int i=0; i<AllInputs::MAXJOYS; i++)
-        if (jsdevfds[i][0] == fd)
+        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
             return i;
     return -1;
 }
 
-int close_jsdev(int fd)
+bool unref_jsdev(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++) {
-        if (jsdevfds[i][0] == fd && jsdevfds[i][2] != 0 && --jsdevfds[i][2] == 0) {
-            GlobalNative gn;
-            close(jsdevfds[i][0]);
-            close(jsdevfds[i][1]);
-            return 0;
-        }
-    }
-    return 1;
+    for (int i=0; i<AllInputs::MAXJOYS; i++)
+        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
+            return --jsdevfds[i].second == 0;
+    return true;
 }
 
 }

@@ -20,25 +20,43 @@
 #ifndef LIBTAS_FILEHANDLE_H_INCLUDED
 #define LIBTAS_FILEHANDLE_H_INCLUDED
 
-#include <string>
+#include <cstdlib>
+#include <cstring>
 
 namespace libtas {
 
 struct FileHandle {
+    FileHandle(const char *file, int fd)
+        : fds{fd, -1}, fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
+          tracked(false), closed(false) {}
+    FileHandle(int fds[2])
+        : fds{fds[0], fds[1]}, fileNameOrPipeContents(nullptr), pipeSize(-1),
+          tracked(false), closed(false) {}
+    ~FileHandle() { std::free(fileNameOrPipeContents); }
+    bool isPipe() const { return fds[1] != -1; }
+    const char *fileName() const { return isPipe() ? "pipe" : fileNameOrPipeContents; }
+    off_t offset() const { return isPipe() ? fileOffset : pipeSize; }
+
+    /* File descriptor(s) */
+    int fds[2];
+
     /* Path of the file */
-    std::string filename;
+    /* or Saved contents of the pipe */
+    char *fileNameOrPipeContents;
 
-    /* File descriptor */
-    int fd = -1;
+    union {
+        /* Saved offset in the file */
+        off_t fileOffset;
 
-    /* Saved offset in the file */
-    off_t offset;
+        /* Saved size of the pipe */
+        int pipeSize;
+    };
 
     /* Are we tracking this file? */
-    bool tracked = false;
+    bool tracked;
 
     /* Was the file closed? */
-    bool closed = false;
+    bool closed;
 };
 
 }

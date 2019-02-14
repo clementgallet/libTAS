@@ -21,6 +21,7 @@
 
 #include "../logging.h"
 #include "../DeterministicTimer.h"
+#include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 
@@ -37,9 +38,12 @@
 #include <fnmatch.h>
 #include <errno.h>
 #include <fcntl.h> /* O_NONBLOCK */
-#include <unistd.h> /* pipe */
+#include <unistd.h> /* close */
 #include <sys/sysmacros.h> /* makedev */
 
+using namespace libtas;
+
+namespace libtas {
 namespace {
 
 class String {
@@ -344,6 +348,28 @@ template<typename Type> Type *new_from_udev(struct udev *udev) {
     return new Type(*udev);
 }
 
+struct InactiveQueue {
+    unsigned refs;
+    struct udev &udev;
+    /* We use a non-blocking always-empty pipe to simulate a queue that never
+     * produces any events.
+     */
+    int fd;
+    InactiveQueue(struct udev &udev)
+        : refs(1), udev(ref(udev)), fd(FileHandleList::createPipe(O_NONBLOCK).first) {}
+    /* We are a base class and have a non-virtual destructor, so protect it so
+     * that we can only be destructed through our derived type.
+     */
+protected:
+    ~InactiveQueue() {
+        /* Closing the read end automatically closes the write end in our close hook,
+           so this should NOT be a native call. */
+        ::close(fd);
+        unref(udev);
+    }
+};
+
+}
 }
 
 struct udev {
@@ -358,6 +384,7 @@ struct udev_list_entry {
     operator bool() const { return name; }
 };
 
+namespace libtas {
 namespace {
 
 class Device {
@@ -712,7 +739,7 @@ Device::Device() : parent(), valid() {
     Device &hub = hcd.newChild("usb1");
     hub.setUsb(1, 1);
 
-    for (int num = 0; num < libtas::shared_config.nb_controllers; ++num) {
+    for (int num = 0; num < shared_config.nb_controllers; ++num) {
         int devNum = 2 + num;
         char numStr[2], devStr[2];
         std::snprintf(numStr, sizeof(numStr), "%d", num);
@@ -931,6 +958,7 @@ const Device *Device::parentWithSubsystemDevtype(const String &subsystem, const 
 }
 
 }
+}
 
 struct udev_device {
     unsigned refs;
@@ -939,18 +967,15 @@ struct udev_device {
     const Device &device;
     udev_device(struct udev &udev, const Device &device)
         : refs(1), udev(ref(udev)),
-          parent(device.parent && device.parent->isValid() ? new struct udev_device(udev, *device.parent)
-                                                           : nullptr), device(device) {}
-    ~udev_device() { unref(parent); unref(udev); }
+          parent(device.parent && device.parent->isValid() ?
+                 new struct udev_device(udev, *device.parent) : nullptr), device(device) {}
+    ~udev_device() {
+        unref(parent);
+        unref(udev);
+    }
 };
 
-struct udev_monitor {
-    unsigned refs;
-    struct udev &udev;
-    int fds[2];
-    udev_monitor(struct udev &udev) : refs(1), udev(ref(udev)) { if (pipe2(fds, O_NONBLOCK)) fds[0] = fds[1] = -errno; }
-    ~udev_monitor() { for (int fd : fds) if (fd >= 0) close(fd); unref(udev); }
-};
+struct udev_monitor : InactiveQueue { using InactiveQueue::InactiveQueue; };
 
 struct udev_enumerate {
     typedef std::set<std::reference_wrapper<const Device>> DeviceSet;
@@ -1099,18 +1124,9 @@ struct udev_list_entry *udev_enumerate::results() {
     return resultsList.empty() ? errno = ENODATA, nullptr : resultsList.data();
 }
 
-struct udev_queue {
-    unsigned refs;
-    struct udev &udev;
-    int fds[2];
-    udev_queue(struct udev &udev) : refs(1), udev(ref(udev)) { if (pipe2(fds, O_NONBLOCK)) fds[0] = fds[1] = -errno; }
-    ~udev_queue() { for (int fd : fds) if (fd >= 0) close(fd); unref(udev); }
-};
+struct udev_queue : InactiveQueue { using InactiveQueue::InactiveQueue; };
 
-struct udev_hwdb {
-    unsigned refs;
-    udev_hwdb() : refs(1) {}
-};
+struct udev_hwdb { unsigned refs; udev_hwdb() : refs(1) {} };
 
 namespace libtas {
 
@@ -1357,7 +1373,7 @@ namespace libtas {
 /* Override */ int udev_monitor_get_fd(struct udev_monitor *udev_monitor) {
     if (!udev_monitor)
         return -EINVAL;
-    return udev_monitor->fds[0];
+    return udev_monitor->fd;
 }
 /* Override */ struct udev_device *udev_monitor_receive_device(struct udev_monitor *udev_monitor) {
     if (!udev_monitor)
@@ -1503,7 +1519,7 @@ namespace libtas {
 /* Override */ int udev_queue_get_fd(struct udev_queue *udev_queue) {
     if (!udev_queue)
         return -EINVAL;
-    return udev_queue->fds[0];
+    return udev_queue->fd;
 }
 /* Override */ int udev_queue_flush(struct udev_queue *udev_queue) {
     if (!udev_queue)

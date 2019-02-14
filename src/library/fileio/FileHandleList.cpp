@@ -21,10 +21,14 @@
 
 #include "FileHandle.h"
 #include "../logging.h"
+#include "../inputs/evdev.h"
+#include "../inputs/jsdev.h"
 
-#include <list>
-#include <unistd.h> // lseek
+#include <cstdlib>
+#include <forward_list>
 #include <mutex>
+#include <unistd.h> // lseek
+#include <sys/ioctl.h>
 
 namespace libtas {
 
@@ -37,8 +41,8 @@ namespace FileHandleList {
  * constructed (because some other libraries will initialize and open some files),
  * resulting in a crash.
  */
-static std::list<FileHandle>& getFileList() {
-    static std::list<FileHandle> filehandles;
+static std::forward_list<FileHandle>& getFileList() {
+    static std::forward_list<FileHandle> filehandles;
     return filehandles;
 }
 
@@ -53,21 +57,28 @@ void openFile(const char* file, int fd)
     if (fd < 0)
         return;
 
-    std::list<FileHandle>& filehandles = getFileList();
     std::lock_guard<std::mutex> lock(getFileListMutex());
+    auto& filehandles = getFileList();
 
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
-        if (fh.fd == fd) {
+        if (fh.fds[0] == fd) {
             debuglogstdio(LCF_FILEIO | LCF_ERROR, "Opened file descriptor %d was already registered!", fd);
             return;
         }
     }
 
-    FileHandle fh;
-    fh.filename = file;
-    fh.fd = fd;
-    filehandles.push_back(fh);
+    filehandles.emplace_front(file, fd);
+}
+
+std::pair<int, int> createPipe(int flags) {
+    int fds[2];
+    if (pipe2(fds, flags) != 0)
+        return std::make_pair(-1, -1);
+
+    std::lock_guard<std::mutex> lock(getFileListMutex());
+    getFileList().emplace_front(fds);
+    return std::make_pair(fds[0], fds[1]);
 }
 
 bool closeFile(int fd)
@@ -75,19 +86,25 @@ bool closeFile(int fd)
     if (fd < 0)
         return true;
 
-    std::list<FileHandle>& filehandles = getFileList();
     std::lock_guard<std::mutex> lock(getFileListMutex());
+    auto& filehandles = getFileList();
 
     /* Check if we track the file */
-    for (auto iter = filehandles.begin(); iter != filehandles.end(); iter++) {
-        if (iter->fd == fd) {
+    for (auto prev = filehandles.before_begin(), iter = filehandles.begin(); iter != filehandles.end(); prev = iter++) {
+        if (iter->fds[0] == fd) {
             if (iter->tracked) {
                 /* Just mark the file as closed, and tells to not close the file */
                 iter->closed = true;
                 return false;
             }
             else {
-                filehandles.erase(iter);
+                if (!unref_evdev(iter->fds[0]) || !unref_jsdev(iter->fds[0])) {
+                    return false;
+                }
+                if (iter->isPipe()) {
+                    NATIVECALL(close(iter->fds[1]));
+                }
+                filehandles.erase_after(prev);
                 return true;
             }
         }
@@ -100,29 +117,41 @@ bool closeFile(int fd)
 
 void trackAllFiles()
 {
-    std::list<FileHandle>& filehandles = getFileList();
     std::lock_guard<std::mutex> lock(getFileListMutex());
 
-    for (FileHandle &fh : filehandles) {
-        debuglogstdio(LCF_FILEIO, "Track file %s (fd=%d)", fh.filename.c_str(), fh.fd);
+    for (FileHandle &fh : getFileList()) {
+        debuglogstdio(LCF_FILEIO, "Track file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
         fh.tracked = true;
         /* Save the file offset */
         if (!fh.closed) {
-            fh.offset = lseek(fh.fd, 0, SEEK_CUR);
-            debuglogstdio(LCF_FILEIO, "Save file offset: %d", fh.offset);
+            if (fh.isPipe()) {
+                /* By now all the threads are suspended, so we don't have to worry about
+                 * racing to empty the pipe and possibly blocking.
+                 */
+                MYASSERT(ioctl(fh.fds[0], FIONREAD, &fh.pipeSize) == 0);
+                debuglogstdio(LCF_FILEIO, "Save pipe size: %d", fh.pipeSize);
+                if (fh.pipeSize > 0) {
+                    std::free(fh.fileNameOrPipeContents);
+                    fh.fileNameOrPipeContents = static_cast<char *>(std::malloc(fh.pipeSize));
+                    read(fh.fds[0], fh.fileNameOrPipeContents, fh.pipeSize);
+                }
+            }
+            else {
+                fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+                debuglogstdio(LCF_FILEIO, "Save file offset: %d", fh.offset());
+            }
         }
     }
 }
 
 void recoverAllFiles()
 {
-    std::list<FileHandle>& filehandles = getFileList();
     std::lock_guard<std::mutex> lock(getFileListMutex());
 
-    for (FileHandle &fh : filehandles) {
+    for (FileHandle &fh : getFileList()) {
 
         if (! fh.tracked) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "File %s (fd=%d) not tracked when recovering", fh.filename.c_str(), fh.fd);
+            debuglogstdio(LCF_FILEIO | LCF_ERROR, "File %s (fd=%d,%d) not tracked when recovering", fh.fileName(), fh.fds[0], fh.fds[1]);
             continue;
         }
 
@@ -131,33 +160,50 @@ void recoverAllFiles()
             continue;
         }
 
-        /* Only seek if we have a valid offset */
-        if (fh.offset == -1) {
-            continue;
-        }
-
-        int ret = lseek(fh.fd, fh.offset, SEEK_SET);
-        if (ret == -1) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Error seeking %d bytes into file %s (fd=%d)", fh.offset, fh.filename.c_str(), fh.fd);
+        int offset = fh.offset();
+        ssize_t ret;
+        if (fh.isPipe()) {
+            /* Only recover if we have valid contents */
+            if (!fh.fileNameOrPipeContents || fh.pipeSize < 0) {
+                continue;
+            }
+            ret = write(fh.fds[1], fh.fileNameOrPipeContents, fh.pipeSize);
+            std::free(fh.fileNameOrPipeContents);
+            fh.fileNameOrPipeContents = nullptr;
+            fh.pipeSize = -1;
         }
         else {
-            debuglogstdio(LCF_FILEIO, "Restore file %s (fd=%d) offset to %d", fh.filename.c_str(), fh.fd, fh.offset);
+            /* Only seek if we have a valid offset */
+            if (fh.fileOffset == -1) {
+                continue;
+            }
+
+            ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
+            fh.fileOffset = -1;
+        }
+
+        if (ret == -1) {
+            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Error recovering %d bytes into file %s (fd=%d,%d)", offset, fh.fileName(), fh.fds[0], fh.fds[1]);
+        }
+        else {
+            debuglogstdio(LCF_FILEIO, "Restore file %s (fd=%d,%d) offset to %d", fh.fileName(), fh.fds[0], fh.fds[1], offset);
         }
     }
 }
 
 void closeUntrackedFiles()
 {
-    std::list<FileHandle>& filehandles = getFileList();
     std::lock_guard<std::mutex> lock(getFileListMutex());
 
-    for (FileHandle &fh : filehandles) {
+    for (FileHandle &fh : getFileList()) {
         if (! fh.tracked) {
-            NATIVECALL(close(fh.fd));
+            NATIVECALL(close(fh.fds[0]));
+            if (fh.isPipe())
+                NATIVECALL(close(fh.fds[1]));
             /* We don't bother updating the file handle list, because it will be
              * replaced with the list from the loaded savestate.
              */
-            debuglogstdio(LCF_FILEIO, "Close untracked file %s (fd=%d)", fh.filename.c_str(), fh.fd);
+            debuglogstdio(LCF_FILEIO, "Close untracked file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
         }
     }
 }
