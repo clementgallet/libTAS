@@ -358,8 +358,8 @@ int SingleInput::toDevHatY(int buttons)
 {
     int haty = 0;
     if (buttons & (1 << BUTTON_DPAD_UP))
-        haty = 1;
-    else if (buttons & (1 << BUTTON_DPAD_DOWN))
         haty = -1;
+    else if (buttons & (1 << BUTTON_DPAD_DOWN))
+        haty = 1;
     return haty;
 }

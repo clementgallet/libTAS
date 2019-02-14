@@ -499,7 +499,8 @@ void generateControllerEvents(void)
                 /* Hat status is represented as 7th and 8th axes */
 
                 int hatx = SingleInput::toDevHatX(buttons);
-                if (hatx != 0) {
+                int oldhatx = SingleInput::toDevHatX(old_buttons);
+                if (hatx != oldhatx) {
                     struct js_event ev;
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
@@ -510,7 +511,8 @@ void generateControllerEvents(void)
                 }
 
                 int haty = SingleInput::toDevHatY(buttons);
-                if (haty != 0) {
+                int oldhaty = SingleInput::toDevHatY(old_buttons);
+                if (haty != oldhaty) {
                     struct js_event ev;
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
@@ -525,7 +527,8 @@ void generateControllerEvents(void)
                 /* Hat status is represented as 7th and 8th axes */
 
                 int hatx = SingleInput::toDevHatX(buttons);
-                if (hatx != 0) {
+                int oldhatx = SingleInput::toDevHatX(old_buttons);
+                if (hatx != oldhatx) {
                     struct input_event ev;
                     ev.time.tv_sec = time.tv_sec;
                     ev.time.tv_usec = time.tv_nsec / 1000;
@@ -537,7 +540,8 @@ void generateControllerEvents(void)
                 }
 
                 int haty = SingleInput::toDevHatY(buttons);
-                if (haty != 0) {
+                int oldhaty = SingleInput::toDevHatY(old_buttons);
+                if (haty != oldhaty) {
                     struct input_event ev;
                     ev.time.tv_sec = time.tv_sec;
                     ev.time.tv_usec = time.tv_nsec / 1000;

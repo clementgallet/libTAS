@@ -6,6 +6,9 @@
 * Add support for SDL_UpdateWindowSurface() screen update
 
 ### Changed
+
+* Implement evdev/jsdev with pipes
+
 ### Fixed
 
 * Fix SDL_BlitSurface hooking
