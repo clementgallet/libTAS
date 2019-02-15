@@ -238,9 +238,9 @@ if (NOT FFMPEG)
 endif()
 
 # Add commit number if automated build
-if(DEFINED ENV{APPVEYOR_REPO_COMMIT})
-    message(STATUS "Building interim commit " $ENV{APPVEYOR_REPO_COMMIT})
-    add_definitions(-DLIBTAS_INTERIM="$ENV{APPVEYOR_REPO_COMMIT}")
+if(DEFINED ENV{LIBTAS_INTERIM})
+    message(STATUS "Building interim commit " $ENV{LIBTAS_INTERIM})
+    add_definitions(-DLIBTAS_INTERIM="$ENV{LIBTAS_INTERIM}")
 endif()
 
 # Sound playback
