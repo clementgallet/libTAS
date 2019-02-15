@@ -237,6 +237,12 @@ if (NOT FFMPEG)
     message(WARNING "ffmpeg was not found. Encoding won't work")
 endif()
 
+# Add commit number if automated build
+if(DEFINED ENV{APPVEYOR_REPO_COMMIT})
+    message(STATUS "Building interim commit " $ENV{APPVEYOR_REPO_COMMIT})
+    add_definitions(-DLIBTAS_INTERIM="$ENV{APPVEYOR_REPO_COMMIT}")
+endif()
+
 # Sound playback
 pkg_check_modules(ALSA REQUIRED alsa)
 target_include_directories(tas PUBLIC ${ALSA_INCLUDE_DIRS})

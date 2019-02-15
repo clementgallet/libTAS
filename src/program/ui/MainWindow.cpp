@@ -43,6 +43,9 @@
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
+#ifdef LIBTAS_INTERIM
+    title.append(" - interim ").append(LIBTAS_INTERIM);
+#endif
     setWindowTitle(title);
 
     /* Create the object that will launch and communicate with the game,
@@ -682,7 +685,7 @@ void MainWindow::createMenus()
 
     saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
     saveScreenAction->setCheckable(true);
-    preventSavefileAction = runtimeMenu->addAction(tr("Backup savefiles in memory"), this, &MainWindow::slotPreventSavefile);
+    preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
     recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
     recycleThreadsAction->setCheckable(true);
