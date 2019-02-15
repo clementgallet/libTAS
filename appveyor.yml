@@ -10,8 +10,7 @@ install:
 
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
 build_script:
-- sh: export LIBTAS_INTERIM=$APPVEYOR_REPO_COMMIT
-- sh: sudo dpkg-buildpackage -us -uc -j2
+- sh: sudo LIBTAS_INTERIM="$APPVEYOR_REPO_COMMIT" dpkg-buildpackage -us -uc -j2
 after_build:
 - sudo mv ../libtas*.deb ./
 artifacts:
