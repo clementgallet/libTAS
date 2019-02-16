@@ -191,7 +191,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         int value = ai.getInput(si);
 
         if (si.isAnalog()) {
-            return QString().setNum(value);
+            return QVariant(value);
         }
     }
 

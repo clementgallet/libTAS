@@ -68,7 +68,7 @@ private:
     QMenu *menu;
     int contextSection;
     int mouseSection;
-    bool mouseValue;
+    int mouseValue;
     KeyPressedDialog* keyDialog;
 
     QAction *lockAction;

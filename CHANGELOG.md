@@ -4,6 +4,9 @@
 * Add an extra row in the input editor to add frames and copy at the end
 * Use appveyor for automated building
 * Add support for SDL_UpdateWindowSurface() screen update
+* Hook udev to populate joystick information
+* Block access to pulseaudio, so that games fallback on alsa
+* Drag analog inputs in the input editor
 
 ### Changed
 
@@ -13,6 +16,7 @@
 
 * Fix SDL_BlitSurface hooking
 * Fix a race condition on file handle list
+* Fix evdev/jsdev hat inputs
 
 ## [1.3.3] - 2019-02-08
 ### Added
