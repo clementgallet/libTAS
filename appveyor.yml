@@ -10,9 +10,10 @@ install:
 
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
 build_script:
-- sh: sudo LIBTAS_INTERIM="$APPVEYOR_REPO_COMMIT" dpkg-buildpackage -us -uc -j2
+- sh: sudo dpkg-buildpackage -us -uc -j2
 after_build:
-- sudo mv ../libtas*.deb ./
+- sh: sudo mv ../libtas*.deb ./
+- sh: for f in libtas*.deb; do mv $f ${f/_amd/~${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
 artifacts:
 - path: libtas*.deb
   name: libtas

@@ -171,13 +171,6 @@ target_compile_features(libTAS PRIVATE cxx_auto_type cxx_range_for)
 target_compile_options(tas PUBLIC -fvisibility=hidden)
 target_compile_options(libTAS PUBLIC -Wno-float-equal)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
-
-# Add librt for shm_open
-#find_library(RT_LIB rt)
-#target_link_libraries (libTAS ${RT_LIB})
-
-#target_link_libraries(tas ${CMAKE_DL_LIBS})
 
 # Add Qt5 lib
 find_package(Qt5Widgets REQUIRED)
@@ -237,10 +230,22 @@ if (NOT FFMPEG)
     message(WARNING "ffmpeg was not found. Encoding won't work")
 endif()
 
-# Add commit number if automated build
-if(DEFINED ENV{LIBTAS_INTERIM})
-    message(STATUS "Building interim commit " $ENV{LIBTAS_INTERIM})
-    add_definitions(-DLIBTAS_INTERIM="$ENV{LIBTAS_INTERIM}")
+# Interim
+option(INTERIM_VERSION "Interim version" ON)
+if (INTERIM_VERSION)
+
+    # Get the latest abbreviated commit hash of the working branch
+    execute_process(
+        COMMAND git log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    # Add commit number as macro
+    message(STATUS "Building interim commit " ${GIT_COMMIT_HASH})
+    add_definitions(-DLIBTAS_INTERIM="${GIT_COMMIT_HASH}")
+
 endif()
 
 # Sound playback

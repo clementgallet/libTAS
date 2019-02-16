@@ -57,6 +57,10 @@ static void print_usage(void)
 
 int main(int argc, char **argv)
 {
+#ifdef LIBTAS_INTERIM
+    std::cout << "Interim " << LIBTAS_INTERIM << std::endl;
+#endif
+
     qRegisterMetaTypeStreamOperators<HotKey>("HotKey");
     qRegisterMetaTypeStreamOperators<SingleInput>("SingleInput");
 
