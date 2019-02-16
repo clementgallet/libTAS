@@ -30,7 +30,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_DYNAPI_entry);
 #define SDL_LINK(FUNC) DEFINE_ORIG_POINTER(FUNC);
-#define SDL_HOOK(FUNC) SDL_LINK(FUNC)
+#define SDL_HOOK(FUNC)
 #include "sdlhooks.h"
 
 namespace index {
@@ -61,8 +61,9 @@ enum {
 
     /* Now save original pointers while replacing them with our hooks. */
     void **entries = static_cast<void **>(table);
-#define SDL_LINK(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]);
-#define SDL_HOOK(FUNC) SDL_LINK(FUNC); entries[index::FUNC] = reinterpret_cast<void *>(FUNC);
+#define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
+#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol ", #FUNC);
+#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(FUNC);
 #include "sdlhooks.h"
 
     return res;
