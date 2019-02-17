@@ -228,6 +228,10 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", width, " x ", height);
 
+    /* We assume that a resized window is the game window */
+    if (gameXWindow == 0)
+        gameXWindow = w;
+
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((old_width != width) || (old_height != height)) {
@@ -252,6 +256,10 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
 
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     debuglog(LCF_SDL | LCF_WINDOW, "    New position: ", x, " - ", y, " new size: ", width, " x ", height);
+
+    /* We assume that a resized window is the game window */
+    if (gameXWindow == 0)
+        gameXWindow = w;
 
     /* Check if size has changed */
     int old_width, old_height;
