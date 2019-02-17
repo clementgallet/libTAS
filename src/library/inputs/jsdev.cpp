@@ -64,7 +64,7 @@ int open_jsdev(const char* source, int flags)
 
     if (jsdevfds[jsnum].second++ == 0) {
         /* Register that we use JSDEV for joystick inputs */
-        game_info.joystick = GameInfo::JSDEV;
+        game_info.joystick |= GameInfo::JSDEV;
         game_info.tosend = true;
 
         /* Create an unnamed pipe */
@@ -97,26 +97,42 @@ void write_jsdev(struct js_event ev, int jsnum)
     if (jsdevfds[jsnum].second == 0)
         return;
 
-    write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
+    /* Check pipe size and don't write if too big */
+    int pipeSize;
+    NATIVECALL(MYASSERT(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &pipeSize) == 0));
+
+    if (pipeSize < (64*sizeof(ev)))
+        write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
+    else {
+        debuglog(LCF_JOYSTICK | LCF_WARNING, "did not write jsdev event, too many already.");
+    }
 }
 
-void sync_jsdev(int jsnum)
+bool sync_jsdev(int jsnum)
 {
     if (jsdevfds[jsnum].second == 0)
-        return;
+        return false;
 
+    /* Do not attempt to sync if the pipe is already full */
     int attempts = 0, count = 0;
+    NATIVECALL(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count));
+
+    if (count >= (64*sizeof(struct js_event)))
+        return false;
+
     do {
-        ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count);
+        NATIVECALL(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count));
         if (count > 0) {
             if (++attempts > 10 * 100) {
                 debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "jsdev sync took too long, were asynchronous events incorrectly enabled?");
-                return;
+                return false;
             }
             struct timespec sleepTime = { 0, 10 * 1000 };
             NATIVECALL(nanosleep(&sleepTime, NULL));
         }
     } while (count > 0);
+
+    return true;
 }
 
 int get_js_number(int fd)

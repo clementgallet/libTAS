@@ -709,7 +709,7 @@ void generateMouseButtonEvents(void)
     game_ai.pointer_mask = ai.pointer_mask;
 }
 
-static void syncControllerEvents(bool report)
+static void syncControllerEvents()
 {
     if (!shared_config.async_events)
         return;
@@ -717,50 +717,49 @@ static void syncControllerEvents(bool report)
     if (!(game_info.joystick & (GameInfo::JSDEV | GameInfo::EVDEV)))
         return;
 
-    /* Wait for queues to become empty */
-    for (int i = 0; i < shared_config.nb_controllers; i++) {
-        if (game_info.joystick & GameInfo::JSDEV)
-            sync_jsdev(i);
-
-        if (game_info.joystick & GameInfo::EVDEV)
-            sync_evdev(i);
-    }
-
-    if (!report)
-        return;
-
-    /* Send a synchronize report event */
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < shared_config.nb_controllers; i++) {
         if (game_info.joystick & GameInfo::JSDEV) {
-            struct js_event ev;
-            ev.time = timestamp;
-            ev.type = 0;
-            ev.number = 0;
-            ev.value = 0;
-            write_jsdev(ev, i);
+            /* Wait for queue to become empty */
+            if (sync_jsdev(i)) {
+                /* If queue was emptied, send a synchronize report event */
+                struct js_event ev;
+                ev.time = timestamp;
+                ev.type = 0;
+                ev.number = 0;
+                ev.value = 0;
+                write_jsdev(ev, i);
+
+                /* Lastly, wait for queue to become empty again, ensuring that
+                 * the event have finished being processed.
+                 */
+                sync_jsdev(i);
+            }
         }
 
+        /* Same for evdev */
         if (game_info.joystick & GameInfo::EVDEV) {
-            struct input_event ev;
-            ev.time.tv_sec = time.tv_sec;
-            ev.time.tv_usec = time.tv_nsec / 1000;
-            ev.type = EV_SYN;
-            ev.code = SYN_REPORT;
-            ev.value = 0;
-            write_evdev(ev, i);
+            if (sync_evdev(i)) {
+                struct input_event ev;
+                ev.time.tv_sec = time.tv_sec;
+                ev.time.tv_usec = time.tv_nsec / 1000;
+                ev.type = EV_SYN;
+                ev.code = SYN_REPORT;
+                ev.value = 0;
+                write_evdev(ev, i);
+
+                sync_evdev(i);
+            }
         }
     }
 }
 
 void syncEvents(void)
 {
-    /* First, wait for queues to become empty.
-     * Next, send another event that does not affect the game.
-     */
-    syncControllerEvents(true);
+    /* Wait for queues to become empty and events to be processed. */
+    syncControllerEvents();
 
     if ((game_info.keyboard & GameInfo::XEVENTS) || (game_info.mouse & GameInfo::XEVENTS)) {
         /* Sync Xlib event queue, so that we are sure the input events will be
@@ -772,11 +771,6 @@ void syncEvents(void)
             }
         }
     }
-
-    /* Lastly, wait for queues to become empty again, ensuring that the events
-     * have finished being processed.
-     */
-    syncControllerEvents(false);
 }
 
 }

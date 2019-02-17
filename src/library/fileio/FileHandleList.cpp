@@ -29,6 +29,7 @@
 #include <mutex>
 #include <unistd.h> // lseek
 #include <sys/ioctl.h>
+#include <fcntl.h>
 
 namespace libtas {
 
@@ -76,6 +77,7 @@ std::pair<int, int> createPipe(int flags) {
     if (pipe2(fds, flags) != 0)
         return std::make_pair(-1, -1);
 
+    fcntl(fds[1], F_SETFL, O_NONBLOCK);
     std::lock_guard<std::mutex> lock(getFileListMutex());
     getFileList().emplace_front(fds);
     return std::make_pair(fds[0], fds[1]);
