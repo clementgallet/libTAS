@@ -78,6 +78,16 @@ ISteamClient *SteamClient()
     return &steamclient;
 }
 
+ISteamController *SteamController()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    static ISteamController steamcontroller;
+    return &steamcontroller;
+}
+
 ISteamUserStats *SteamUserStats()
 {
     DEBUGLOGCALL(LCF_STEAM);

@@ -17,6 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// FIXME used for getcwd, replace me with a dir from the config --GM
+#include <unistd.h>
+
 #include "isteamuser.h"
 #include "../logging.h"
 
@@ -38,6 +41,46 @@ CSteamID ISteamUser::GetSteamID()
 {
     DEBUGLOGCALL(LCF_STEAM);
     return 1;
+}
+
+int ISteamUser::InitiateGameConnection( void *pAuthBlob, int cbMaxAuthBlob, CSteamID steamIDGameServer, unsigned int unIPServer, uint16_t usPortServer, bool bSecure )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+
+    if(!pAuthBlob || cbMaxAuthBlob < 1)
+        return 0;
+
+    *(char *)pAuthBlob = 0;
+    return 1;
+}
+
+void ISteamUser::TerminateGameConnection( unsigned int unIPServer, uint16_t usPortServer )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+void ISteamUser::TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const char *pchExtraInfo )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+bool ISteamUser::GetUserDataFolder( char *pchBuffer, int cubBuffer )
+{
+    // FIXME replace me with a dir from the config --GM
+    char cwdbuf[2048];
+    DEBUGLOGCALL(LCF_STEAM);
+    debuglogstdio(LCF_STEAM, "user data folder, cwd = \"%s\".", getcwd(cwdbuf, sizeof(cwdbuf)-1));
+    return true;
+}
+
+void ISteamUser::StartVoiceRecording()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+void ISteamUser::StopVoiceRecording()
+{
+    DEBUGLOGCALL(LCF_STEAM);
 }
 
 }

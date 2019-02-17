@@ -17,6 +17,7 @@
 #include "isteamfriends.h"
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
+#include "isteamcontroller.h"
 
 namespace libtas {
 
@@ -24,7 +25,6 @@ typedef void ISteamMatchmaking;
 typedef void ISteamMatchmakingServers;
 typedef void ISteamNetworking;
 typedef void ISteamHTTP;
-typedef void ISteamController;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

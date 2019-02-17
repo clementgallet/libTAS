@@ -18,6 +18,7 @@
  */
 
 #include "isteamclient.h"
+#include "isteamcontroller.h"
 #include "steamapi.h"
 #include "../logging.h"
 
@@ -172,7 +173,7 @@ void *ISteamClient::DEPRECATED_GetISteamUnifiedMessages( HSteamUser hSteamuser, 
 ISteamController *ISteamClient::GetISteamController( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamController();
 }
 
 ISteamUGC *ISteamClient::GetISteamUGC( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
