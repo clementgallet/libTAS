@@ -70,6 +70,7 @@ bool ISteamUser::GetUserDataFolder( char *pchBuffer, int cubBuffer )
     char cwdbuf[2048];
     DEBUGLOGCALL(LCF_STEAM);
     debuglogstdio(LCF_STEAM, "user data folder, cwd = \"%s\".", getcwd(cwdbuf, sizeof(cwdbuf)-1));
+    strncpy(pchBuffer, cwdbuf, cubBuffer-1);
     return true;
 }
 
