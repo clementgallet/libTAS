@@ -21,7 +21,7 @@
 #include "inputs.h"
 #include "../logging.h"
 #include "../sdlversion.h"
-#include "../EventQueue.h"
+#include "../SDLEventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <stdlib.h>

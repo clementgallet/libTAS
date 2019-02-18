@@ -26,6 +26,7 @@
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
 #include "backtrace.h"
+#include "inputs/xinput.h"
 
 namespace libtas {
 
@@ -42,6 +43,21 @@ DEFINE_ORIG_POINTER(XInternAtom);
 DEFINE_ORIG_POINTER(XSelectInput);
 DEFINE_ORIG_POINTER(XResizeWindow);
 DEFINE_ORIG_POINTER(XConfigureWindow);
+DEFINE_ORIG_POINTER(XQueryExtension);
+
+Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
+    debuglog(LCF_WINDOW, __func__, " called with name ", name);
+    LINK_NAMESPACE_GLOBAL(XQueryExtension);
+    Bool ret = orig::XQueryExtension(display, name, major_opcode_return, first_event_return, first_error_return);
+
+#ifdef LIBTAS_HAS_XINPUT
+    /* Gather Xi opcode */
+    if (ret && (0 == strcmp(name, "XInputExtension"))) {
+        xinput_opcode = *major_opcode_return;
+    }
+#endif
+
+}
 
 Display *XOpenDisplay(const char *display_name)
 {

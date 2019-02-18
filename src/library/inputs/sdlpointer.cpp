@@ -24,7 +24,7 @@
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h" // detTimer
 #include <X11/X.h>
-#include "../EventQueue.h"
+#include "../SDLEventQueue.h"
 
 namespace libtas {
 
