@@ -202,6 +202,9 @@ void XlibEventQueue::delayedDeleteCookie(XEvent* event)
     if (event->type == GenericEvent) {
         cookieData = event->xcookie.data;
     }
+    else {
+        cookieData = nullptr;
+    }
 }
 #endif
 }

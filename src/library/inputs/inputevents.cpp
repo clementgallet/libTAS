@@ -128,7 +128,7 @@ void generateKeyUpEvents(void)
 #ifdef LIBTAS_HAS_XINPUT
             if (game_info.keyboard & GameInfo::XIEVENTS) {
                 XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(malloc(sizeof(XIDeviceEvent)));
+                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 event.xcookie.evtype = XI_KeyRelease;
@@ -138,7 +138,7 @@ void generateKeyUpEvents(void)
                 dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
-                        NOLOGCALL(dev->detail = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
+                        NOLOGCALL(dev->detail = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
                         dev->root = XRootWindow(gameDisplays[d], 0);
                         xlibEventQueue.insert(&event);
                     }
@@ -149,7 +149,7 @@ void generateKeyUpEvents(void)
 
             if (game_info.keyboard & GameInfo::XIRAWEVENTS) {
                 XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(malloc(sizeof(XIRawEvent)));
+                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 event.xcookie.evtype = XI_RawKeyRelease;
@@ -158,7 +158,7 @@ void generateKeyUpEvents(void)
                 rev->time = timestamp; // TODO: Wrong! timestamp is from X server start
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
-                        NOLOGCALL(rev->detail = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
+                        NOLOGCALL(rev->detail = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
                         xlibEventQueue.insert(&event);
                     }
                 }
@@ -270,7 +270,7 @@ void generateKeyDownEvents(void)
 #ifdef LIBTAS_HAS_XINPUT
             if (game_info.keyboard & GameInfo::XIEVENTS) {
                 XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(malloc(sizeof(XIDeviceEvent)));
+                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 event.xcookie.evtype = XI_KeyPress;
@@ -291,7 +291,7 @@ void generateKeyDownEvents(void)
 
             if (game_info.keyboard & GameInfo::XIRAWEVENTS) {
                 XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(malloc(sizeof(XIRawEvent)));
+                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 event.xcookie.evtype = XI_RawKeyPress;
@@ -714,7 +714,7 @@ void generateMouseMotionEvents(void)
 #ifdef LIBTAS_HAS_XINPUT
     if (game_info.mouse & GameInfo::XIEVENTS) {
         XEvent event;
-        XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(malloc(sizeof(XIDeviceEvent)));
+        XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
         event.xcookie.extension = xinput_opcode;
         event.xcookie.evtype = XI_Motion;
@@ -734,12 +734,12 @@ void generateMouseMotionEvents(void)
             }
         }
 
-        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent KeyPress with keycode ", dev->detail);
+        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_Motion");
     }
 
     if (game_info.mouse & GameInfo::XIRAWEVENTS) {
         XEvent event;
-        XIRawEvent *rev = static_cast<XIRawEvent*>(malloc(sizeof(XIRawEvent)));
+        XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
         event.xcookie.type = GenericEvent;
         event.xcookie.extension = xinput_opcode;
         event.xcookie.evtype = XI_RawMotion;
@@ -763,7 +763,7 @@ void generateMouseMotionEvents(void)
             }
         }
 
-        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyPress with keycode ", rev->detail);
+        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawMotion");
     }
 #endif
 
@@ -856,7 +856,7 @@ void generateMouseButtonEvents(void)
 #ifdef LIBTAS_HAS_XINPUT
             if (game_info.mouse & GameInfo::XIEVENTS) {
                 XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(malloc(sizeof(XIDeviceEvent)));
+                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
@@ -894,7 +894,7 @@ void generateMouseButtonEvents(void)
 
             if (game_info.mouse & GameInfo::XIRAWEVENTS) {
                 XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(malloc(sizeof(XIRawEvent)));
+                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
