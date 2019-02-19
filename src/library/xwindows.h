@@ -27,6 +27,8 @@
 
 namespace libtas {
 
+OVERRIDE Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return);
+
 OVERRIDE Display *XOpenDisplay(const char *display_name);
 OVERRIDE int XCloseDisplay(Display *display);
 

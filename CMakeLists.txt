@@ -42,7 +42,6 @@ set(LIBRARY_SOURCES
     src/library/backtrace.cpp
     src/library/DeterministicTimer.cpp
     src/library/dlhook.cpp
-    src/library/EventQueue.cpp
     src/library/frame.cpp
     src/library/global.cpp
     src/library/GlobalState.cpp
@@ -55,6 +54,7 @@ set(LIBRARY_SOURCES
     src/library/openglwrappers.cpp
     src/library/randomwrappers.cpp
     src/library/ScreenCapture.cpp
+    src/library/SDLEventQueue.cpp
     src/library/sdldisplay.cpp
     src/library/sdldynapi.cpp
     src/library/sdlevents.cpp
@@ -72,6 +72,7 @@ set(LIBRARY_SOURCES
     src/library/tlswrappers.cpp
     src/library/Utils.cpp
     src/library/WindowTitle.cpp
+    src/library/XlibEventQueue.cpp
     src/library/xdisplay.cpp
     src/library/xevents.cpp
     src/library/xf86vidmode.cpp
@@ -125,6 +126,7 @@ set(LIBRARY_SOURCES
     src/library/inputs/xcbkeyboard.cpp
     src/library/inputs/xkeyboard.cpp
     src/library/inputs/xkeyboardlayout.cpp
+    src/library/inputs/xinput.cpp
     src/library/inputs/xpointer.cpp
     src/library/renderhud/RenderHUD_GL.cpp
     src/library/renderhud/RenderHUD_SDL1.cpp
@@ -216,6 +218,11 @@ endif()
 # Add xrandr wrapper if the extension is present
 if (X11_Xrandr_FOUND)
     add_definitions(-DLIBTAS_HAS_XRANDR)
+endif()
+
+# Add xrandr wrapper if the extension is present
+if (X11_Xi_FOUND)
+    add_definitions(-DLIBTAS_HAS_XINPUT)
 endif()
 
 # Add optional features

@@ -29,7 +29,7 @@ namespace libtas {
 /* Pull all events from the SDL event queue and push them into our
  * emulated event queue, filtering unwanted events (input events mainly).
  */
-void pushNativeEvents(void);
+void pushNativeSDLEvents(void);
 
 /* Print which event type is it */
 void logEvent(SDL_Event *event);

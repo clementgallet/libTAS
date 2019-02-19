@@ -33,7 +33,7 @@
 #include "DeterministicTimer.h"
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
-#include "EventQueue.h"
+#include "SDLEventQueue.h"
 #include "openglwrappers.h" // checkMesa()
 // #include <string>
 // #include <X11/Xlib.h> // Display

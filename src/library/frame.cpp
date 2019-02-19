@@ -36,7 +36,8 @@
 #include "checkpoint/Checkpoint.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
-#include "EventQueue.h"
+#include "SDLEventQueue.h"
+#include "xevents.h"
 
 namespace libtas {
 
@@ -354,8 +355,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     /*** Process inputs and events ***/
     if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
         /* Push native SDL events into our emulated event queue */
-        pushNativeEvents();
+        pushNativeSDLEvents();
     }
+    pushNativeXlibEvents();
 
     /* Push generated events. This must be done after getting the new inputs. */
     generateKeyUpEvents();
@@ -401,7 +403,8 @@ static void pushQuitEvent(void)
             if (gameDisplays[i]) {
                 xev.xclient.message_type = XInternAtom(gameDisplays[i], "WM_PROTOCOLS", true);
                 xev.xclient.data.l[0] = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
-                OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev));
+                XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev);
+                XSync(gameDisplays[i], false);
             }
         }
     }

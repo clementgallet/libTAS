@@ -17,35 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_JSDEV_H_INCL
-#define LIBTAS_JSDEV_H_INCL
+#ifndef LIBTAS_XINPUT_H_INCL
+#define LIBTAS_XINPUT_H_INCL
+
+#ifdef LIBTAS_HAS_XINPUT
 
 #include "../global.h"
-#include <linux/joystick.h>
+#include <X11/extensions/XInput2.h>
 
 namespace libtas {
 
-/* Is the file a valid jsdev path. Returns -1 for not a jsdev, 0 for a jsdev
- * with invalid number and 1 for valid number
- */
-int is_jsdev(const char* source);
+extern int xinput_opcode;
 
-/* Open a fake jsdev file using SYS_memfd_create, and write the init data */
-int open_jsdev(const char* source, int flags);
-
-/* Write an js event in the file */
-void write_jsdev(struct js_event ev, int jsnum);
-
-/* Block, waiting for the js event queue to become empty. Return true if
- * queue is empty. */
-bool sync_jsdev(int jsnum);
-
-/* Get the joystick number from the file descriptor */
-int get_js_number(int fd);
-
-/* Unregister the file descriptor when file is closed */
-bool unref_jsdev(int fd);
+OVERRIDE int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks);
+OVERRIDE XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return);
 
 }
 
+#endif
 #endif

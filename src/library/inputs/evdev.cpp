@@ -64,29 +64,11 @@ int open_evdev(const char* source, int flags)
 
     if (evdevfds[evnum].second++ == 0) {
         /* Register that we use EVDEV for joystick inputs */
-        game_info.joystick = GameInfo::EVDEV;
+        game_info.joystick |= GameInfo::EVDEV;
         game_info.tosend = true;
 
         /* Create an unnamed pipe. */
         evdevfds[evnum].first = FileHandleList::createPipe();
-
-        /* Write the synthetic events corresponding to the initial state of the
-         * joystick. */
-        // struct js_event ev;
-        //
-        // struct timespec ts = detTimer.getTicks();
-        // ev.time = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-        // ev.value = 0;
-        // for (int button = 0; button < 11; button++) {
-        //     ev.type = JS_EVENT_BUTTON | JS_EVENT_INIT;
-        //     ev.number = button;
-        //     write_jsdev(ev, jsnum);
-        // }
-        // for (int axis = 0; axis < 8; axis++) {
-        //     ev.type = JS_EVENT_AXIS | JS_EVENT_INIT;
-        //     ev.number = axis;
-        //     write_jsdev(ev, jsnum);
-        // }
     }
 
     return evdevfds[evnum].first.first;
@@ -97,26 +79,41 @@ void write_evdev(struct input_event ev, int evnum)
     if (evdevfds[evnum].second == 0)
         return;
 
-    write(evdevfds[evnum].first.second, &ev, sizeof(ev));
+    /* Check pipe size and don't write if too big */
+    int pipeSize;
+    NATIVECALL(MYASSERT(ioctl(evdevfds[evnum].first.first, FIONREAD, &pipeSize) == 0));
+
+    if (pipeSize < (64*sizeof(ev)))
+        write(evdevfds[evnum].first.second, &ev, sizeof(ev));
+    else {
+        debuglog(LCF_JOYSTICK | LCF_WARNING, "did not write evdev event, too many already.");
+    }
 }
 
-void sync_evdev(int evnum)
+bool sync_evdev(int evnum)
 {
     if (evdevfds[evnum].second == 0)
-        return;
+        return false;
 
     int attempts = 0, count = 0;
+    NATIVECALL(ioctl(evdevfds[evnum].first.first, FIONREAD, &count));
+
+    if (count >= (64*sizeof(struct input_event)))
+        return false;
+
     do {
-        ioctl(evdevfds[evnum].first.first, FIONREAD, &count);
+        NATIVECALL(ioctl(evdevfds[evnum].first.first, FIONREAD, &count));
         if (count > 0) {
             if (++attempts > 100 * 100) {
                 debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "evdev sync took too long, were asynchronous events incorrectly enabled?");
-                return;
+                return false;
             }
             struct timespec sleepTime = { 0, 10 * 1000 };
             NATIVECALL(nanosleep(&sleepTime, NULL));
         }
     } while (count > 0);
+
+    return true;
 }
 
 int get_ev_number(int fd)

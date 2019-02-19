@@ -41,12 +41,6 @@ DEFINE_ORIG_POINTER(ioctl);
 
 int ioctl(int fd, unsigned long request, ...) throw()
 {
-    if (fd < 0) {
-        errno = EBADF;
-        return -1;
-    }
-
-    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
     LINK_NAMESPACE_GLOBAL(ioctl);
 
     va_list arg_list;
@@ -55,6 +49,16 @@ int ioctl(int fd, unsigned long request, ...) throw()
     va_start(arg_list, request);
     argp = va_arg(arg_list, void*);
     va_end(arg_list);
+
+    if (GlobalState::isNative())
+        return orig::ioctl(fd, request, argp);
+
+    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+
+    if (fd < 0) {
+        errno = EBADF;
+        return -1;
+    }
 
     if (request == JSIOCGVERSION) {
         debuglog(LCF_JOYSTICK, "ioctl access to JSIOCGVERSION on fd ", fd);

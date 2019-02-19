@@ -26,6 +26,11 @@
 
 namespace libtas {
 
+/* Pull all events from the xlib event queue and push them into our
+ * emulated event queue, filtering unwanted events (input events mainly).
+ */
+void pushNativeXlibEvents(void);
+
 OVERRIDE int XNextEvent(Display *display, XEvent *event_return);
 OVERRIDE int XPeekEvent(Display *display, XEvent *event_return);
 OVERRIDE int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return);
@@ -38,6 +43,9 @@ OVERRIDE int XEventsQueued(Display* display, int mode);
 OVERRIDE int XPending(Display *display);
 OVERRIDE Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg);
 OVERRIDE Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
+
+OVERRIDE Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie);
+OVERRIDE void XFreeEventData(Display* dpy, XGenericEventCookie* cookie);
 
 }
 

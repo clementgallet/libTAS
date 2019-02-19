@@ -20,6 +20,11 @@
 #include "xevents.h"
 #include "logging.h"
 #include "hook.h"
+#include "XlibEventQueue.h"
+
+#ifdef LIBTAS_HAS_XINPUT
+#include <X11/extensions/XInput2.h>
+#endif
 
 namespace libtas {
 
@@ -37,16 +42,14 @@ DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
 
 /* Function to indicate if an event is filtered */
-static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
+static Bool isEventFiltered (XEvent *event) {
     switch (event->type) {
         case KeyPress:
         case KeyRelease:
         case ButtonPress:
         case ButtonRelease:
         case MotionNotify:
-            if (event->xany.send_event == True) {
-                return False;
-            }
+        case GenericEvent:
         case FocusIn:
         case FocusOut:
         case Expose:
@@ -54,189 +57,165 @@ static Bool isEventFiltered (Display *display, XEvent *event, XPointer arg) {
         case EnterNotify:
         case LeaveNotify:
         case ReparentNotify:
-        case GenericEvent:
             return True;
         default:
             return False;
     }
 }
 
-/* Removes all filtered events from the event queue */
-static void filterEventQueue(Display *display)
+void pushNativeXlibEvents(void)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return;
-    }
+    LINK_NAMESPACE_GLOBAL(XPending);
+    LINK_NAMESPACE_GLOBAL(XNextEvent);
 
-    LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
-    XEvent event;
-    XPointer arg = nullptr;
-    GlobalNative gn;
-    while (True == XCheckIfEvent(display, &event, isEventFiltered, arg)) {}
-}
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i]) {
+            while (orig::XPending(gameDisplays[i]) > 0) {
+                XEvent event;
+                orig::XNextEvent(gameDisplays[i], &event);
 
+                /* Catch the close event */
+                if (event.type == ClientMessage) {
+                    static Atom dwAtom = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
+                    if ((Atom) event.xclient.data.l[0] == dwAtom) {
+                        debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
+                        is_exiting = true;
+                    }
+                }
 
-static void catchCloseEvent(Display *display, XEvent *event)
-{
-    if (event->type == ClientMessage) {
-        // debuglog(LCF_EVENTS | LCF_WINDOW, "    got a ClientMessage event");
-        if ((Atom) event->xclient.data.l[0] == XInternAtom(display, "WM_DELETE_WINDOW", False)) {
-            debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
-            is_exiting = true;
+                if (!isEventFiltered(&event) || (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+                    xlibEventQueue.insert(&event);
+                }
+            }
         }
     }
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
 {
-    LINK_NAMESPACE_GLOBAL(XNextEvent);
+    // LINK_NAMESPACE_GLOBAL(XNextEvent);
     DEBUGLOGCALL(LCF_EVENTS);
-    filterEventQueue(display);
-    int ret = orig::XNextEvent(display, event_return);
 
-    catchCloseEvent(display, event_return);
+    bool isEvent = xlibEventQueue.pop(event_return, true);
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+    }
 
-    return ret;
+    return 0;
+
+    // debuglog(LCF_KEYBOARD, "    got event ", event_return->type);
+    //
+    // if (event_return && (event_return->type == KeyPress)) {
+    //     event_return->xkey.time = 0;
+    //     event_return->xkey.x = 0;
+    //     event_return->xkey.y = 0;
+    //     event_return->xkey.x_root = 0;
+    //     event_return->xkey.y_root = 0;
+    //     event_return->xkey.send_event = 0;
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent send_event", event_return->xkey.send_event);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent display", event_return->xkey.display);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent type", event_return->xkey.type);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent state", event_return->xkey.state);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent window", event_return->xkey.window);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent time", event_return->xkey.time);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent same_screen", event_return->xkey.same_screen);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent keycode", event_return->xkey.keycode);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent root", event_return->xkey.root);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent subwindow", event_return->xkey.subwindow);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent x", event_return->xkey.x);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent y", event_return->xkey.y);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent x_root", event_return->xkey.x_root);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent y_root", event_return->xkey.y_root);
+    //     debuglog(LCF_KEYBOARD, "    xkeyevent keycode", event_return->xkey.keycode);
+    // }
 }
 
 int XPeekEvent(Display *display, XEvent *event_return)
 {
-    LINK_NAMESPACE_GLOBAL(XPeekEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XPeekEvent(display, event_return);
+    DEBUGLOGCALL(LCF_EVENTS);
+
+    bool isEvent = xlibEventQueue.pop(event_return, false);
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
-    filterEventQueue(display);
-    int ret = orig::XPeekEvent(display, event_return);
-
-    catchCloseEvent(display, event_return);
-    return ret;
+    return 0;
 }
 
 int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XWindowEvent);
-    filterEventQueue(display);
-    int ret = orig::XWindowEvent(display, w, event_mask, event_return);
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+    }
+    return 0;
 }
 
 Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
-    filterEventQueue(display);
-    if (GlobalState::isOwnCode()) {
-        return orig::XCheckWindowEvent(display, w, event_mask, event_return);
-    }
-
-    Bool ret = orig::XCheckWindowEvent(display, w, event_mask, event_return);
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+    return isEvent?True:False;
 }
 
 int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XMaskEvent);
-    filterEventQueue(display);
-    int ret = orig::XMaskEvent(display, event_mask, event_return);
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+    }
+    return 0;
 }
 
 Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XCheckMaskEvent(display, event_mask, event_return);
-    }
-    filterEventQueue(display);
-
-    Bool ret = orig::XCheckMaskEvent(display, event_mask, event_return);
-
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+    return isEvent?True:False;
 }
 
 Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XCheckTypedEvent(display, event_type, event_return);
-    }
-    filterEventQueue(display);
-
-    Bool ret = orig::XCheckTypedEvent(display, event_type, event_return);
-
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, 0, event_type);
+    return isEvent?True:False;
 }
 
 Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
-    }
-    filterEventQueue(display);
-
-    Bool ret = orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
-
-    catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, w, event_type);
+    return isEvent?True:False;
 }
 
 int XEventsQueued(Display* display, int mode)
 {
-    LINK_NAMESPACE_GLOBAL(XEventsQueued);
     DEBUGLOGCALL(LCF_EVENTS);
-    filterEventQueue(display);
-
-    int ret = orig::XEventsQueued(display, mode);
+    int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
 }
 
 int XPending(Display *display)
 {
-    LINK_NAMESPACE_GLOBAL(XPending);
     DEBUGLOGCALL(LCF_EVENTS);
-    filterEventQueue(display);
-
-    int ret = orig::XPending(display);
+    int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
 }
 
 Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
-    LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
-    if (GlobalState::isNative()) {
-        return orig::XCheckIfEvent(display, event_return, predicate, arg);
-    }
     DEBUGLOGCALL(LCF_EVENTS);
-    filterEventQueue(display);
-
-    Bool ret = orig::XCheckIfEvent(display, event_return, predicate, arg);
-
-    if (ret)
-        catchCloseEvent(display, event_return);
-    return ret;
+    bool isEvent = xlibEventQueue.pop(event_return, predicate, arg);
+    return isEvent?True:False;
 }
 
 Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send)
 {
     LINK_NAMESPACE_GLOBAL(XSendEvent);
-    if (GlobalState::isOwnCode()) {
-        return orig::XSendEvent(display, w, propagate, event_mask, event_send);
-    }
     DEBUGLOGCALL(LCF_EVENTS);
 
     /* Detect and disable fullscreen switching */
@@ -253,5 +232,18 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);
 }
+
+Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
+{
+    DEBUGLOGCALL(LCF_EVENTS);
+    /* Data from our cookies are already present */
+    return True;
+}
+
+void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
+{
+    DEBUGLOGCALL(LCF_EVENTS);
+}
+
 
 }

@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_EVENTQUEUE_H_INCLUDED
-#define LIBTAS_EVENTQUEUE_H_INCLUDED
+#ifndef LIBTAS_SDLEVENTQUEUE_H_INCLUDED
+#define LIBTAS_SDLEVENTQUEUE_H_INCLUDED
 
 #include <list>
 #include <set>
@@ -34,10 +34,10 @@ namespace libtas {
  * by having more control of what is inside the queue.
  * Also, it supports both SDL1 and SDL2 events.
  */
-class EventQueue
+class SDLEventQueue
 {
     public:
-        ~EventQueue();
+        ~SDLEventQueue();
 
         void init();
 
@@ -110,7 +110,7 @@ class EventQueue
         bool isBannedEvent(SDL1::SDL_Event *event);
 };
 
-extern EventQueue sdlEventQueue;
+extern SDLEventQueue sdlEventQueue;
 
 }
 

@@ -17,16 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "EventQueue.h"
+#include "SDLEventQueue.h"
 #include "logging.h"
 #include "string.h"
 #include "global.h" // game_info
 
 namespace libtas {
 
-EventQueue sdlEventQueue;
+SDLEventQueue sdlEventQueue;
 
-EventQueue::~EventQueue()
+SDLEventQueue::~SDLEventQueue()
 {
     for (auto ev: eventQueue) {
         if (game_info.video & GameInfo::SDL1)
@@ -36,7 +36,7 @@ EventQueue::~EventQueue()
     }
 }
 
-void EventQueue::init(void)
+void SDLEventQueue::init(void)
 {
     if (game_info.video & GameInfo::SDL2) {
         /* Insert default filters */
@@ -46,26 +46,26 @@ void EventQueue::init(void)
     }
 }
 
-void EventQueue::disable(int type)
+void SDLEventQueue::disable(int type)
 {
     droppedEvents.insert(type);
 }
 
-void EventQueue::enable(int type)
+void SDLEventQueue::enable(int type)
 {
     std::set<int>::iterator it = droppedEvents.find(type);
     if (it != droppedEvents.end())
         droppedEvents.erase(it);
 }
 
-bool EventQueue::isEnabled(int type)
+bool SDLEventQueue::isEnabled(int type)
 {
     return droppedEvents.find(type) == droppedEvents.end();
 }
 
 #define EVENTQUEUE_MAXLEN 1024
 
-int EventQueue::insert(SDL_Event* event)
+int SDLEventQueue::insert(SDL_Event* event)
 {
     /* Before inserting the event, we have some checks in a specific order */
 
@@ -101,7 +101,7 @@ int EventQueue::insert(SDL_Event* event)
     return 1;
 }
 
-int EventQueue::insert(SDL1::SDL_Event* event)
+int SDLEventQueue::insert(SDL1::SDL_Event* event)
 {
     /* Before inserting the event, we have some checks in a specific order */
 
@@ -132,7 +132,7 @@ int EventQueue::insert(SDL1::SDL_Event* event)
     return 0;
 }
 
-int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
+int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
 {
     int evi = 0;
 
@@ -172,7 +172,7 @@ int EventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, 
 
 }
 
-int EventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
+int SDLEventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
 {
     int evi = 0;
 
@@ -212,7 +212,7 @@ int EventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
 
 }
 
-void EventQueue::flush(Uint32 minType, Uint32 maxType)
+void SDLEventQueue::flush(Uint32 minType, Uint32 maxType)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
@@ -230,7 +230,7 @@ void EventQueue::flush(Uint32 minType, Uint32 maxType)
     }
 }
 
-void EventQueue::flush(Uint32 mask)
+void SDLEventQueue::flush(Uint32 mask)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
@@ -248,7 +248,7 @@ void EventQueue::flush(Uint32 mask)
     }
 }
 
-void EventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
@@ -267,18 +267,18 @@ void EventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
     }
 }
 
-void EventQueue::setFilter(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::setFilter(SDL_EventFilter filter, void* userdata)
 {
     filterFunc = filter;
     filterData = userdata;
 }
 
-void EventQueue::setFilter(SDL1::SDL_EventFilter filter)
+void SDLEventQueue::setFilter(SDL1::SDL_EventFilter filter)
 {
     filterFunc1 = filter;
 }
 
-bool EventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
+bool SDLEventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
 {
     if (filterFunc == nullptr)
         return false;
@@ -287,24 +287,24 @@ bool EventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
     return true;
 }
 
-SDL1::SDL_EventFilter EventQueue::getFilter(void)
+SDL1::SDL_EventFilter SDLEventQueue::getFilter(void)
 {
     return filterFunc1;
 }
 
-void EventQueue::addWatch(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::addWatch(SDL_EventFilter filter, void* userdata)
 {
     watches.insert(std::make_pair(filter, userdata));
 }
 
-void EventQueue::delWatch(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::delWatch(SDL_EventFilter filter, void* userdata)
 {
     std::set<std::pair<SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
     if (it != watches.end())
         watches.erase(it);
 }
 
-bool EventQueue::isBannedEvent(SDL_Event *event)
+bool SDLEventQueue::isBannedEvent(SDL_Event *event)
 {
     switch(event->type) {
         case SDL_KEYDOWN:
@@ -345,7 +345,7 @@ bool EventQueue::isBannedEvent(SDL_Event *event)
     }
 }
 
-bool EventQueue::isBannedEvent(SDL1::SDL_Event *event)
+bool SDLEventQueue::isBannedEvent(SDL1::SDL_Event *event)
 {
     switch(event->type) {
         case SDL1::SDL_KEYDOWN:

@@ -22,7 +22,7 @@
 #include "inputs.h"
 #include "../logging.h"
 #include "../hook.h"
-#include "../EventQueue.h"
+#include "../SDLEventQueue.h"
 #include "../../shared/AllInputs.h"
 #include <cstring>
 #include "../GlobalState.h"

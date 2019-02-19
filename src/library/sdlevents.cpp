@@ -21,7 +21,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "sdlversion.h"
-#include "EventQueue.h"
+#include "SDLEventQueue.h"
 #include "sleepwrappers.h"
 #include "GlobalState.h"
 
@@ -108,7 +108,7 @@ static bool isBannedEvent(SDL1::SDL_Event *event)
     }
 }
 
-void pushNativeEvents(void)
+void pushNativeSDLEvents(void)
 {
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
@@ -331,7 +331,7 @@ void pushNativeEvents(void)
     if (event) {
         while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeEvents();
+            pushNativeSDLEvents();
         }
         return 1;
     }
@@ -339,7 +339,7 @@ void pushNativeEvents(void)
         SDL_Event ev;
         while (! sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false)) {
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeEvents();
+            pushNativeSDLEvents();
         }
         return 1;
     }
@@ -361,7 +361,7 @@ void pushNativeEvents(void)
             if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
                 break;
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeEvents();
+            pushNativeSDLEvents();
         }
         return (t<timeout);
     }
@@ -371,7 +371,7 @@ void pushNativeEvents(void)
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeEvents();
+            pushNativeSDLEvents();
         }
         return (t<timeout);
     }
