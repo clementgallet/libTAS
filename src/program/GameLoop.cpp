@@ -448,6 +448,12 @@ void GameLoop::initProcessMessages()
         }
     }
 
+    /* Send the Steam user data path */
+    if (context->config.sc.virtual_steam) {
+        sendMessage(MSGN_STEAM_USER_DATA_PATH);
+        sendString(context->config.steamuserdir);
+    }
+
     sendMessage(MSGN_ENCODING_SEGMENT);
     sendData(&context->encoding_segment, sizeof(int));
 

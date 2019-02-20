@@ -40,6 +40,10 @@ extern char**environ;
 
 namespace libtas {
 
+// FIXME: should be declared in a header somewhere
+// (implementation at library/steam/isteamuser.cpp)
+void SteamUser_SetUserDataFolder(std::string path);
+
 void __attribute__((constructor)) init(void)
 {
     /* Hacking `environ` to disable LD_PRELOAD for future processes */
@@ -73,6 +77,7 @@ void __attribute__((constructor)) init(void)
     receiveData(&message, sizeof(int));
     while (message != MSGN_END_INIT) {
         std::string basesavestatepath;
+        std::string steamuserdatapath;
         int index;
         switch (message) {
             case MSGN_CONFIG:
@@ -95,6 +100,10 @@ void __attribute__((constructor)) init(void)
                 break;
             case MSGN_ENCODING_SEGMENT:
                 receiveData(&AVEncoder::segment_number, sizeof(int));
+                break;
+            case MSGN_STEAM_USER_DATA_PATH:
+                steamuserdatapath = receiveString();
+                SteamUser_SetUserDataFolder(steamuserdatapath);
                 break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);

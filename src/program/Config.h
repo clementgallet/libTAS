@@ -73,6 +73,9 @@ public:
     /* Directory holding our config files */
     std::string configdir;
 
+    /* Path for the Steam user data folder */
+    std::string steamuserdir;
+
     /* Directory holding temporary files for building movies */
     std::string tempmoviedir;
 

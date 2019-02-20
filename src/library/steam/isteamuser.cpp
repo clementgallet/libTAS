@@ -17,13 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// FIXME used for getcwd, replace me with a dir from the config --GM
-#include <unistd.h>
-
 #include "isteamuser.h"
 #include "../logging.h"
 
 namespace libtas {
+
+char steamuserdir[2048] = "/NOTVALID";
+
+// FIXME: prototype for this function should be declared in a header somewhere
+// (used by library/main.cpp)
+void SteamUser_SetUserDataFolder(std::string path)
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    strncpy(steamuserdir, path.c_str(), sizeof(steamuserdir)-1);
+}
 
 HSteamUser ISteamUser::GetHSteamUser()
 {
@@ -66,11 +73,9 @@ void ISteamUser::TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const c
 
 bool ISteamUser::GetUserDataFolder( char *pchBuffer, int cubBuffer )
 {
-    // FIXME replace me with a dir from the config --GM
-    char cwdbuf[2048];
     DEBUGLOGCALL(LCF_STEAM);
-    debuglogstdio(LCF_STEAM, "user data folder, cwd = \"%s\".", getcwd(cwdbuf, sizeof(cwdbuf)-1));
-    strncpy(pchBuffer, cwdbuf, cubBuffer-1);
+    strncpy(pchBuffer, steamuserdir, cubBuffer-1);
+    debuglogstdio(LCF_STEAM, "user data folder = \"%s\".", steamuserdir);
     return true;
 }
 
