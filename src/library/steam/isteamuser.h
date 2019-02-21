@@ -43,28 +43,28 @@ public:
 	//
 	// return value - returns the number of bytes written to pBlob. If the return is 0, then the buffer passed in was too small, and the call has failed
 	// The contents of pBlob should then be sent to the game server, for it to use to complete the authentication process.
-	// virtual int InitiateGameConnection( void *pAuthBlob, int cbMaxAuthBlob, CSteamID steamIDGameServer, unsigned int unIPServer, uint16_t usPortServer, bool bSecure );
+	virtual int InitiateGameConnection( void *pAuthBlob, int cbMaxAuthBlob, CSteamID steamIDGameServer, unsigned int unIPServer, uint16_t usPortServer, bool bSecure );
 
 	// notify of disconnect
 	// needs to occur when the game client leaves the specified game server, needs to match with the InitiateGameConnection() call
-	// virtual void TerminateGameConnection( unsigned int unIPServer, uint16_t usPortServer );
+	virtual void TerminateGameConnection( unsigned int unIPServer, uint16_t usPortServer );
 
 	// Legacy functions
 
 	// used by only a few games to track usage events
-	// virtual void TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const char *pchExtraInfo = "" );
+	virtual void TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const char *pchExtraInfo = "" );
 
 	// get the local storage folder for current Steam account to write application data, e.g. save games, configs etc.
 	// this will usually be something like "C:\Progam Files\Steam\userdata\<SteamID>\<AppID>\local"
-	// virtual bool GetUserDataFolder( char *pchBuffer, int cubBuffer );
+	virtual bool GetUserDataFolder( char *pchBuffer, int cubBuffer );
 
 	// Starts voice recording. Once started, use GetVoice() to get the data
-	// virtual void StartVoiceRecording( );
+	virtual void StartVoiceRecording( );
 
 	// Stops voice recording. Because people often release push-to-talk keys early, the system will keep recording for
 	// a little bit after this function is called. GetVoice() should continue to be called until it returns
 	// k_eVoiceResultNotRecording
-	// virtual void StopVoiceRecording( );
+	virtual void StopVoiceRecording( );
 
 	// Determine the size of captured audio data that is available from GetVoice.
 	// Most applications will only use compressed data and should ignore the other

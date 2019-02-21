@@ -137,6 +137,7 @@ set(LIBRARY_SOURCES
     src/library/renderhud/SurfaceARGB.cpp
     src/library/steam/isteamapps.cpp
     src/library/steam/isteamclient.cpp
+    src/library/steam/isteamcontroller.cpp
     src/library/steam/isteamfriends.cpp
     src/library/steam/isteamremotestorage.cpp
     src/library/steam/isteamscreenshots.cpp

@@ -22,6 +22,7 @@
 
 #include "../global.h"
 #include "isteamclient.h"
+#include "isteamcontroller.h"
 #include "isteamuser.h"
 #include "isteamuserstats.h"
 #include "isteamutils.h"
@@ -73,6 +74,7 @@ OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 
 
 OVERRIDE ISteamClient *SteamClient();
+OVERRIDE ISteamController *SteamController();
 OVERRIDE ISteamUserStats *SteamUserStats();
 OVERRIDE ISteamUser *SteamUser();
 OVERRIDE ISteamUtils *SteamUtils();

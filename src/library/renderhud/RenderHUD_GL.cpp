@@ -111,6 +111,10 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     LINK_NAMESPACE(glGetIntegerv, "GL");
     LINK_NAMESPACE(glPixelStorei, "GL");
 
+    LINK_NAMESPACE(glActiveTexture, "GL");
+    LINK_NAMESPACE(glBindFramebuffer, "GL");
+    LINK_NAMESPACE(glFramebufferTexture2D, "GL");
+
     /* Save the previous program */
     GLint oldProgram;
     orig::glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgram);

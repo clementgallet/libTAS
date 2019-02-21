@@ -217,7 +217,6 @@ struct SharedConfig {
 
     /* Wait for events to be processed in a separate thread before starting frame */
     bool async_events = false;
-
 };
 
 #endif

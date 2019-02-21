@@ -214,6 +214,12 @@ enum {
      * Argument: none
      */
     MSGB_DO_BACKTRACK_SAVESTATE,
+
+    /*
+     * Send to the game the location of the Steam user data folder.
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_STEAM_USER_DATA_PATH,
 };
 
 #endif

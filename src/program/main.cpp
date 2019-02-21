@@ -236,6 +236,14 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    if (context.config.steamuserdir.empty()) {
+        context.config.steamuserdir = data_dir + "/steam";
+    }
+    if (create_dir(context.config.steamuserdir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.steamuserdir << std::endl;
+        return -1;
+    }
+
     if (context.config.tempmoviedir.empty()) {
         context.config.tempmoviedir = data_dir + "/movie";
     }
