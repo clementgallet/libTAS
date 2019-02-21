@@ -34,25 +34,31 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (XIMaskIsSet(masks->mask, XI_KeyPress)) {
-        debuglog(LCF_KEYBOARD, "   selecting XI keyboard events");
-        game_info.keyboard |= GameInfo::XIEVENTS;
-        game_info.tosend = true;
+    /* Only check if not using SDL */
+    if (!(game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2))) {
+        if (XIMaskIsSet(masks->mask, XI_KeyPress)) {
+            debuglog(LCF_KEYBOARD, "   selecting XI keyboard events");
+            game_info.keyboard |= GameInfo::XIEVENTS;
+            game_info.tosend = true;
+        }
+        if (XIMaskIsSet(masks->mask, XI_RawKeyPress)) {
+            debuglog(LCF_KEYBOARD, "   selecting XI raw keyboard events");
+            game_info.keyboard |= GameInfo::XIRAWEVENTS;
+            game_info.tosend = true;
+        }
     }
-    if (XIMaskIsSet(masks->mask, XI_RawKeyPress)) {
-        debuglog(LCF_KEYBOARD, "   selecting XI raw keyboard events");
-        game_info.keyboard |= GameInfo::XIRAWEVENTS;
-        game_info.tosend = true;
-    }
-    if (XIMaskIsSet(masks->mask, XI_Motion) || XIMaskIsSet(masks, XI_ButtonPress)) {
-        debuglog(LCF_MOUSE, "   selecting XI mouse events");
-        game_info.mouse |= GameInfo::XIEVENTS;
-        game_info.tosend = true;
-    }
-    if (XIMaskIsSet(masks->mask, XI_RawMotion) || XIMaskIsSet(masks, XI_RawButtonPress)) {
-        debuglog(LCF_MOUSE, "   selecting XI raw mouse events");
-        game_info.mouse |= GameInfo::XIRAWEVENTS;
-        game_info.tosend = true;
+
+    if (!(game_info.mouse & (GameInfo::SDL1 | GameInfo::SDL2))) {
+        if (XIMaskIsSet(masks->mask, XI_Motion) || XIMaskIsSet(masks, XI_ButtonPress)) {
+            debuglog(LCF_MOUSE, "   selecting XI mouse events");
+            game_info.mouse |= GameInfo::XIEVENTS;
+            game_info.tosend = true;
+        }
+        if (XIMaskIsSet(masks->mask, XI_RawMotion) || XIMaskIsSet(masks, XI_RawButtonPress)) {
+            debuglog(LCF_MOUSE, "   selecting XI raw mouse events");
+            game_info.mouse |= GameInfo::XIRAWEVENTS;
+            game_info.tosend = true;
+        }
     }
 
     LINK_NAMESPACE(XISelectEvents, "Xi");
