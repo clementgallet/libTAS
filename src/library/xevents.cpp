@@ -29,6 +29,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XCheckIfEvent);
+DEFINE_ORIG_POINTER(XIfEvent);
 DEFINE_ORIG_POINTER(XNextEvent);
 DEFINE_ORIG_POINTER(XPeekEvent);
 DEFINE_ORIG_POINTER(XWindowEvent);
@@ -235,6 +236,24 @@ int XPending(Display *display)
     int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
+}
+
+int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
+{
+    DEBUGLOGCALL(LCF_EVENTS);
+    bool isEvent = false;
+    for (int r=0; r<1000; r++) {
+        isEvent = xlibEventQueue.pop(event_return, predicate, arg);
+        if (isEvent)
+            break;
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXlibEvents();
+    }
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+    }
+    return 0;
 }
 
 Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
