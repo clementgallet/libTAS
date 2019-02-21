@@ -40,6 +40,7 @@ DEFINE_ORIG_POINTER(XCheckTypedWindowEvent);
 DEFINE_ORIG_POINTER(XEventsQueued);
 DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
+DEFINE_ORIG_POINTER(XSync);
 
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (XEvent *event) {
@@ -67,9 +68,11 @@ void pushNativeXlibEvents(void)
 {
     LINK_NAMESPACE_GLOBAL(XPending);
     LINK_NAMESPACE_GLOBAL(XNextEvent);
+    LINK_NAMESPACE_GLOBAL(XSync);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (gameDisplays[i]) {
+            XSync(gameDisplays[i], False);
             while (orig::XPending(gameDisplays[i]) > 0) {
                 XEvent event;
                 orig::XNextEvent(gameDisplays[i], &event);
@@ -95,12 +98,18 @@ int XNextEvent(Display *display, XEvent *event_return)
 {
     // LINK_NAMESPACE_GLOBAL(XNextEvent);
     DEBUGLOGCALL(LCF_EVENTS);
-
-    bool isEvent = xlibEventQueue.pop(event_return, true);
-    if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+    bool isEvent = false;
+    for (int r=0; r<1000; r++) {
+        isEvent = xlibEventQueue.pop(event_return, true);
+        if (isEvent)
+            break;
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXlibEvents();
     }
-
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+    }
     return 0;
 
     // debuglog(LCF_KEYBOARD, "    got event ", event_return->type);
@@ -133,21 +142,35 @@ int XNextEvent(Display *display, XEvent *event_return)
 int XPeekEvent(Display *display, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-
-    bool isEvent = xlibEventQueue.pop(event_return, false);
-    if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+    bool isEvent = false;
+    for (int r=0; r<1000; r++) {
+        isEvent = xlibEventQueue.pop(event_return, false);
+        if (isEvent)
+            break;
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXlibEvents();
     }
-
+    if (!isEvent) {
+        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+    }
     return 0;
 }
 
 int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    bool isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+    bool isEvent = false;
+    for (int r=0; r<1000; r++) {
+        isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+        if (isEvent)
+            break;
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXlibEvents();
+    }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }
@@ -162,9 +185,17 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
 int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
-    bool isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+    bool isEvent = false;
+    for (int r=0; r<1000; r++) {
+        isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+        if (isEvent)
+            break;
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXlibEvents();
+    }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_WARNING | LCF_TODO, "    blocking!");
+        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }

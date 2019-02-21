@@ -23,6 +23,7 @@
 #include "inputs.h"
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h"
+#include "../XlibEventQueue.h"
 
 namespace libtas {
 
@@ -127,7 +128,7 @@ DEFINE_ORIG_POINTER(XQueryPointer);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (gameDisplays[i]) {
-            OWNCALL(XSendEvent(gameDisplays[i], gameXWindow, False, 0, &event));
+            xlibEventQueue.insert(&event);
         }
     }
     debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
