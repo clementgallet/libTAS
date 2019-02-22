@@ -19,6 +19,8 @@ You can download the latest version of the software in the [Releases](https://gi
 
 Installing with the debian package will install all the required packages as well.
 
+There is also an [automated build](https://ci.appveyor.com/project/clementgallet/libtas/build/artifacts) available for the last interim version, 64-bit only.
+
 If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games (using the corresponding version of libTAS). Note for Ubuntu users that you need a recent version (17.10 minimum).
 
 ## Building

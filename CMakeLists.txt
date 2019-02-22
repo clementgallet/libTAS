@@ -252,7 +252,11 @@ if (INTERIM_VERSION)
 
     # Add commit number as macro
     message(STATUS "Building interim commit " ${GIT_COMMIT_HASH})
-    add_definitions(-DLIBTAS_INTERIM="${GIT_COMMIT_HASH}")
+    add_definitions(-DLIBTAS_INTERIM_COMMIT="${GIT_COMMIT_HASH}")
+
+    # Add build date as macro
+    string(TIMESTAMP TODAY "%Y-%m-%d")
+    add_definitions(-DLIBTAS_INTERIM_DATE="${TODAY}")
 
 endif()
 

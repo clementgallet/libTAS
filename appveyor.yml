@@ -17,15 +17,3 @@ after_build:
 artifacts:
 - path: libtas*.deb
   name: libtas
-deploy:
-- provider: GitHub
-  tag: interim
-  release: Interim
-  description: Automatic build, commit $(APPVEYOR_REPO_COMMIT)
-  auth_token:
-    secure: PVPcCFJMbCa1q0wUp3yGm9YHyB5cvqDqfaZwgiNKOwf20a1GWux0+ULyVRE6DsPN
-  artifact: libtas
-  force_update: true
-  prerelease: true
-  on:
-    branch: master
