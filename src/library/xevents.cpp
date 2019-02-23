@@ -276,6 +276,11 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
         if ((event_send->xclient.message_type == state) &&
             (event_send->xclient.data.l[0] == 1) &&
             (event_send->xclient.data.l[1] == state_fullscreen)) {
+            debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+            if (event_send->xclient.window != gameXWindow) {
+                debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");                
+            }
+            XResizeWindow(display, event_send->xclient.window, XDisplayWidth(display, 0), XDisplayHeight(display, 0));
             return 0;
         }
     }
