@@ -55,7 +55,6 @@ static Bool isEventFiltered (XEvent *event) {
         case FocusIn:
         case FocusOut:
         case Expose:
-        case ConfigureNotify:
         case EnterNotify:
         case LeaveNotify:
         case ReparentNotify:
@@ -278,7 +277,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
             (event_send->xclient.data.l[1] == state_fullscreen)) {
             debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
             if (event_send->xclient.window != gameXWindow) {
-                debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");                
+                debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
             }
             XResizeWindow(display, event_send->xclient.window, XDisplayWidth(display, 0), XDisplayHeight(display, 0));
             return 0;
