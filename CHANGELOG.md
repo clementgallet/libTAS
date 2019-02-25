@@ -8,6 +8,7 @@
 * Block access to pulseaudio, so that games fallback on alsa
 * Drag analog inputs in the input editor
 * Implement XI2 inputs
+* Add some tooltips
 
 ### Changed
 

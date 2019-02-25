@@ -344,11 +344,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 /* We are going to do this a lot, so this is a helper function to insert
  * checkable actions into an action group with data.
  */
-void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata)
+void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata, const QString& toolTip)
 {
     QAction *action = group->addAction(text);
     action->setCheckable(true);
     action->setData(qdata);
+    if (!toolTip.isEmpty())
+        action->setToolTip(toolTip);
+}
+
+void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata) {
+    return addActionCheckable(group, text, qdata, "");
 }
 
 void MainWindow::createActions()
@@ -456,8 +462,8 @@ void MainWindow::createActions()
     debugStateGroup->setExclusive(false);
     connect(debugStateGroup, &QActionGroup::triggered, this, &MainWindow::slotDebugState);
 
-    addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME);
-    addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS);
+    addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME, "Let the game access to the real system time, only for debugging purpose");
+    addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS, "Let the game access to the real system events, only for debugging purpose");
 
     loggingOutputGroup = new QActionGroup(this);
 
@@ -575,6 +581,7 @@ void MainWindow::createMenus()
 
     /* Movie Menu */
     QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));
+    movieMenu->setToolTipsVisible(true);
 
     action = movieMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
     disabledActionsOnStart.append(action);
@@ -597,6 +604,7 @@ void MainWindow::createMenus()
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
     autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, &MainWindow::slotAutoRestart);
     autoRestartAction->setCheckable(true);
+    autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
@@ -606,6 +614,7 @@ void MainWindow::createMenus()
 
     /* Video Menu */
     QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
+    videoMenu->setToolTipsVisible(true);
 
     QMenu *screenResMenu = videoMenu->addMenu(tr("Virtual screen resolution"));
     screenResMenu->addActions(screenResGroup->actions());
@@ -613,10 +622,12 @@ void MainWindow::createMenus()
 
     renderSoftAction = videoMenu->addAction(tr("Force software rendering"), this, &MainWindow::slotRenderSoft);
     renderSoftAction->setCheckable(true);
+    renderSoftAction->setToolTip("Enforce the use of Mesa's OpenGL software driver, which is necessary for savestates to work correctly");
     disabledActionsOnStart.append(renderSoftAction);
 
     QMenu *renderPerfMenu = videoMenu->addMenu(tr("Add performance flags to software rendering"));
     renderPerfMenu->addActions(renderPerfGroup->actions());
+    renderPerfMenu->setToolTip("If you have issues with slow software rendering, some options here can provide a small speed-up");
     renderPerfMenu->installEventFilter(this);
     disabledWidgetsOnStart.append(renderPerfMenu);
 
@@ -649,6 +660,7 @@ void MainWindow::createMenus()
 
     /* Runtime Menu */
     QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
+    runtimeMenu->setToolTipsVisible(true);
 
     QMenu *localeMenu = runtimeMenu->addMenu(tr("Force locale"));
     localeMenu->addActions(localeGroup->actions());
@@ -656,13 +668,16 @@ void MainWindow::createMenus()
     QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
     disabledWidgetsOnStart.append(timeMenu);
     timeMenu->addActions(timeMainGroup->actions());
+    timeMenu->setToolTip("Enable a hack to prevent softlocks when the game waits for time to advance. Only check the necessary one(s)");
     timeMenu->installEventFilter(this);
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
+    savestateMenu->setToolTipsVisible(true);
 
     if (context->is_soft_dirty) {
         incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
         incrementalStateAction->setCheckable(true);
+        incrementalStateAction->setToolTip("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing");
         disabledActionsOnStart.append(incrementalStateAction);
     }
     else {
@@ -673,23 +688,30 @@ void MainWindow::createMenus()
 
     ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
     ramStateAction->setCheckable(true);
+    ramStateAction->setToolTip("Storing savestates in RAM can provide a speed-up, but beware of your available memory");
     disabledActionsOnStart.append(ramStateAction);
 
     backtrackStateAction = savestateMenu->addAction(tr("Backtrack savestate"), this, &MainWindow::slotBacktrackState);
     backtrackStateAction->setCheckable(true);
+    backtrackStateAction->setToolTip("Save a state whenether a thread is created/destroyed, so that you can rewind to the earliest time possible");
     disabledActionsOnStart.append(backtrackStateAction);
 
     saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
     saveScreenAction->setCheckable(true);
+    saveScreenAction->setToolTip("Save the screen pixels on memory, used for video encode, OSD, etc. You probably want this to be checked except if the screen is going black");
     preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
+    preventSavefileAction->setToolTip("Prevent the game from writing files on disk, but write in memory instead. May cause issues in some games");
     recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
+    recycleThreadsAction->setToolTip("Recycle threads when they finish, to make savestates more useable. Can crash on some games");
     recycleThreadsAction->setCheckable(true);
     disabledActionsOnStart.append(recycleThreadsAction);
     steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, &MainWindow::slotSteam);
+    steamAction->setToolTip("Implement a dummy Steam client, to be able to launch some Steam games");
     steamAction->setCheckable(true);
     disabledActionsOnStart.append(steamAction);
     asyncEventsAction = runtimeMenu->addAction(tr("Asynchronous events"), this, &MainWindow::slotAsyncEvents);
+    asyncEventsAction->setToolTip("Only useful if the game pulls events asynchronously. We wait until all events are processed at the beginning of each frame");
     asyncEventsAction->setCheckable(true);
     disabledActionsOnStart.append(asyncEventsAction);
 
@@ -742,6 +764,8 @@ void MainWindow::createMenus()
 
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
+    inputMenu->setToolTipsVisible(true);
+
     inputMenu->addAction(tr("Configure mapping..."), inputWindow, &InputWindow::exec);
 
     keyboardAction = inputMenu->addAction(tr("Keyboard support"));
@@ -757,7 +781,8 @@ void MainWindow::createMenus()
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
 
-    inputMenu->addAction(tr("Recalibrate mouse position"), this, &MainWindow::slotCalibrateMouse);
+    action = inputMenu->addAction(tr("Recalibrate mouse position"), this, &MainWindow::slotCalibrateMouse);
+    action->setToolTip("If there is an offset between the system cursor and the game cursor, select this while paused, then click on the game cursor to register an offset. This does not affect movie sync");
 }
 
 void MainWindow::updateStatus()

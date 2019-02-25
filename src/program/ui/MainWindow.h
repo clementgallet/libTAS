@@ -177,6 +177,7 @@ private:
     void updateRecentGamepaths();
 
     /* Helper function to create a checkable action inside an action group */
+    void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data, const QString& toolTip);
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
 
     /* Create the main window actions that will go in the menus */
