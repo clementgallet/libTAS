@@ -1244,9 +1244,6 @@ void MainWindow::slotStop()
 
     if (context->status == Context::ACTIVE) {
         context->status = Context::QUITTING;
-        context->config.sc.running = true;
-        context->config.sc_modified = true;
-        updateSharedConfigChanged();
         updateStatus();
         game_thread.detach();
     }

@@ -231,7 +231,8 @@ void GameLoop::start()
                 hasFrameAdvanced = processEvent(eventType, hk);
             }
 
-            endInnerLoop = context->config.sc.running || ar_advance || hasFrameAdvanced;
+            endInnerLoop = context->config.sc.running || ar_advance ||
+                hasFrameAdvanced || (context->status == Context::QUITTING);
 
             if (!endInnerLoop) {
                 sleepSendPreview();
