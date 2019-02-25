@@ -49,9 +49,9 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale);
     if (flags & SDL_RENDERER_TARGETTEXTURE)
         debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
 
-    SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
-
     game_info.video |=  GameInfo::SDL2_RENDERER;
+
+    SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
 
     ScreenCapture::init();
 
