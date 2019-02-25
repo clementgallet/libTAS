@@ -144,13 +144,6 @@ void Config::save(const std::string& gamepath) {
     }
     settings.endArray();
 
-    settings.beginWriteArray("sec_gettimes_threshold");
-    for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
-        settings.setArrayIndex(t);
-        settings.setValue("value", sc.sec_gettimes_threshold[t]);
-    }
-    settings.endArray();
-
     settings.setValue("save_screenpixels", sc.save_screenpixels);
     settings.setValue("incremental_savestates", sc.incremental_savestates);
     settings.setValue("savestates_in_ram", sc.savestates_in_ram);
@@ -273,13 +266,6 @@ void Config::load(const std::string& gamepath) {
     for (int t=0; t<size; t++) {
         settings.setArrayIndex(t);
         sc.main_gettimes_threshold[t] = settings.value("value", sc.main_gettimes_threshold[t]).toInt();
-    }
-    settings.endArray();
-
-    size = settings.beginReadArray("sec_gettimes_threshold");
-    for (int t=0; t<size; t++) {
-        settings.setArrayIndex(t);
-        sc.sec_gettimes_threshold[t] = settings.value("value", sc.sec_gettimes_threshold[t]).toInt();
     }
     settings.endArray();
 

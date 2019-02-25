@@ -7,10 +7,12 @@
 * Hook udev to populate joystick information
 * Block access to pulseaudio, so that games fallback on alsa
 * Drag analog inputs in the input editor
+* Implement XI2 inputs
 
 ### Changed
 
 * Implement evdev/jsdev with pipes
+* Remove time tracking all threads from movies/config
 
 ### Fixed
 

@@ -139,15 +139,6 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
 	config.endGroup();
 
-	config.beginGroup("secondarythread_timetrack");
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toInt();
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toInt();
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toInt();
-	context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
-	config.endGroup();
-
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ifstream input_stream(input_file);
@@ -268,15 +259,6 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
 	config.setValue("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
 	config.setValue("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
 	config.setValue("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
-	config.endGroup();
-
-	config.beginGroup("secondarythread_timetrack");
-	config.setValue("time", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
-	config.setValue("gettimeofday", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
-	config.setValue("clock", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-	config.setValue("clock_gettime", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
-	config.setValue("sdl_getticks", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
-	config.setValue("sdl_getperformancecounter", context->config.sc.sec_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
 	config.endGroup();
 
     config.sync();
@@ -539,7 +521,7 @@ void MovieFile::setLockedInputs(AllInputs& inputs)
 {
 	if (locked_inputs.empty())
 		return;
-		
+
 	AllInputs movie_inputs;
 	getInputs(movie_inputs);
 	for (SingleInput si : locked_inputs) {

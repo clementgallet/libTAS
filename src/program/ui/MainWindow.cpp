@@ -655,12 +655,8 @@ void MainWindow::createMenus()
 
     QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
     disabledWidgetsOnStart.append(timeMenu);
-    QMenu *timeMainMenu = timeMenu->addMenu(tr("Main thread"));
-    timeMainMenu->addActions(timeMainGroup->actions());
-    timeMainMenu->installEventFilter(this);
-    QMenu *timeSecMenu = timeMenu->addMenu(tr("Secondary thread"));
-    timeSecMenu->addActions(timeSecGroup->actions());
-    timeSecMenu->installEventFilter(this);
+    timeMenu->addActions(timeMainGroup->actions());
+    timeMenu->installEventFilter(this);
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
 
@@ -700,6 +696,10 @@ void MainWindow::createMenus()
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
     debugMenu->addActions(debugStateGroup->actions());
+
+    QMenu *timeSecMenu = debugMenu->addMenu(tr("Time tracking all threads"));
+    timeSecMenu->addActions(timeSecGroup->actions());
+    timeSecMenu->installEventFilter(this);
 
     debugMenu->addSeparator();
 
@@ -767,8 +767,13 @@ void MainWindow::updateStatus()
     switch (context->status) {
 
         case Context::INACTIVE:
-            for (QWidget* w : disabledWidgetsOnStart)
-                w->setEnabled(true);
+            for (QWidget* w : disabledWidgetsOnStart) {
+                if (!w->actions().empty())
+                    for (QAction* a : w->actions())
+                        a->setEnabled(true);
+                else
+                    w->setEnabled(true);
+            }
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(true);
 
@@ -803,8 +808,13 @@ void MainWindow::updateStatus()
             break;
 
         case Context::STARTING:
-            for (QWidget* w : disabledWidgetsOnStart)
-                w->setEnabled(false);
+            for (QWidget* w : disabledWidgetsOnStart) {
+                if (!w->actions().empty())
+                    for (QAction* a : w->actions())
+                        a->setEnabled(false);
+                else
+                    w->setEnabled(false);
+            }
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
 
