@@ -31,7 +31,6 @@
 #include "sdlevents.h"
 #include <iomanip>
 #include "timewrappers.h" // clock_gettime
-#include "threadwrappers.h" // isMainThread()
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "ScreenCapture.h"

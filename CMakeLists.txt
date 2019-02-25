@@ -52,6 +52,7 @@ set(LIBRARY_SOURCES
     src/library/mallocwrappers.cpp
     src/library/NonDeterministicTimer.cpp
     src/library/openglwrappers.cpp
+    src/library/pthreadwrappers.cpp
     src/library/randomwrappers.cpp
     src/library/ScreenCapture.cpp
     src/library/SDLEventQueue.cpp
@@ -61,12 +62,12 @@ set(LIBRARY_SOURCES
     src/library/sdlmain.cpp
     src/library/sdlmutex.cpp
     src/library/sdlrender.cpp
+    src/library/sdlthreads.cpp
     src/library/sdltimer.cpp
     src/library/sdlversion.cpp
     src/library/sdlwindows.cpp
     src/library/signalwrappers.cpp
     src/library/sleepwrappers.cpp
-    src/library/threadwrappers.cpp
     src/library/TimeHolder.cpp
     src/library/timewrappers.cpp
     src/library/tlswrappers.cpp

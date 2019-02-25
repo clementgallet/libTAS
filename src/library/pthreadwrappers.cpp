@@ -17,25 +17,24 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "threadwrappers.h"
+#include "pthreadwrappers.h"
 #include "logging.h"
-#include <errno.h>
-#include <unistd.h>
-#include <cstring>
-#include <atomic>
-#include <memory>
-#include <exception>
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
 #include "DeterministicTimer.h"
 #include "tlswrappers.h"
 #include "backtrace.h"
+#include "hook.h"
+
+#include <errno.h>
+#include <unistd.h>
+#include <cstring>
+#include <atomic>
+#include <memory>
+#include <exception>
 
 namespace libtas {
-
-DECLARE_ORIG_POINTER(SDL_CreateThread);
-DECLARE_ORIG_POINTER(SDL_WaitThread);
 
 DEFINE_ORIG_POINTER(pthread_create);
 DEFINE_ORIG_POINTER(pthread_exit);
@@ -61,20 +60,6 @@ class ThreadExitException {
     	return "Thread exit";
     }
 };
-
-/* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
-{
-    debuglog(LCF_THREAD, "SDL Thread ", name, " was created.");
-    LINK_NAMESPACE_SDLX(SDL_CreateThread);
-    return orig::SDL_CreateThread(fn, name, data);
-}
-
-/* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
-{
-    DEBUGLOGCALL(LCF_THREAD);
-    LINK_NAMESPACE_SDLX(SDL_WaitThread);
-    orig::SDL_WaitThread(thread, status);
-}
 
 extern "C" {
   // Declare an extern reference to the internal, undocumented

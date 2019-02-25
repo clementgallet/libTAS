@@ -18,15 +18,9 @@
  */
 
 #include "sdlmain.h"
-#include "sdltimer.h"
-//#include "sdlwindows.h"
-#include "sdlevents.h"
-#include "../shared/sockethelpers.h"
 #include "logging.h"
-#include "../shared/messages.h"
 #include "hook.h"
 #include "sdlversion.h"
-#include "threadwrappers.h"
 
 namespace libtas {
 

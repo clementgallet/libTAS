@@ -20,10 +20,8 @@
 #include "timewrappers.h"
 #include "logging.h"
 #include "frame.h"
-#include "threadwrappers.h"
 #include <iomanip> // std::setw
 #include "DeterministicTimer.h"
-// #include "backtrace.h"
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
 

@@ -22,7 +22,6 @@
 
 #include <time.h>
 #include "TimeHolder.h"
-#include "threadwrappers.h"
 
 namespace libtas {
 

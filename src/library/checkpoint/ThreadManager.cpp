@@ -30,9 +30,7 @@
 #include "ThreadSync.h"
 #include "Checkpoint.h"
 #include "../timewrappers.h" // clock_gettime
-#include "../threadwrappers.h" // getThreadId
 #include "../logging.h"
-// #include "../backtrace.h"
 #include "../audio/AudioPlayer.h"
 #include "AltStack.h"
 #include "CustomSignals.h"
