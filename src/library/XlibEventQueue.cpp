@@ -49,8 +49,8 @@ int XlibEventQueue::insert(XEvent* event)
     XEvent* ev = new XEvent;
     memcpy(ev, event, sizeof(XEvent));
 
-    /* Push the event at the end of the queue */
-    eventQueue.push_back(ev);
+    /* Push the event at the beginning of the queue */
+    eventQueue.push_front(ev);
 
     return 1;
 }
