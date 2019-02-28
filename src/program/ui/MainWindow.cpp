@@ -372,6 +372,7 @@ void MainWindow::createActions()
     addActionCheckable(screenResGroup, tr("1024x768 (4:3)"), (1024 << 16) | 768);
     addActionCheckable(screenResGroup, tr("1280x720 (16:9)"), (1280 << 16) | 720);
     addActionCheckable(screenResGroup, tr("1280x800 (16:10)"), (1280 << 16) | 800);
+    addActionCheckable(screenResGroup, tr("1400x1050 (4:3)"), (1400 << 16) | 1050);
     addActionCheckable(screenResGroup, tr("1440x900 (16:10)"), (1440 << 16) | 900);
     addActionCheckable(screenResGroup, tr("1600x900 (16:9)"), (1600 << 16) | 900);
     addActionCheckable(screenResGroup, tr("1680x1050 (16:10)"), (1680 << 16) | 1050);
@@ -457,6 +458,12 @@ void MainWindow::createActions()
     addActionCheckable(timeSecGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
     addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+
+    waitGroup = new QActionGroup(this);
+    addActionCheckable(waitGroup, tr("Native waits"), SharedConfig::WAIT_NATIVE, "Don't modify wait calls");
+    addActionCheckable(waitGroup, tr("Infinite waits"), SharedConfig::WAIT_INFINITE, "Waits have infinite timeout. Sync-proof, but may softlock");
+    addActionCheckable(waitGroup, tr("Full infinite waits"), SharedConfig::WAIT_FULL_INFINITE, "Advance time for the full timeout and wait infinitely. Sync-proof, but may still softlock and may advance time too much resulting in incorrect frame boundaries");
+    addActionCheckable(waitGroup, tr("Finite waits"), SharedConfig::WAIT_FINITE, "Try to wait, and advance time if we get a timeout. Prevent softlocks but not perfectly sync-proof");
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);
@@ -670,6 +677,10 @@ void MainWindow::createMenus()
     timeMenu->addActions(timeMainGroup->actions());
     timeMenu->setToolTip("Enable a hack to prevent softlocks when the game waits for time to advance. Only check the necessary one(s)");
     timeMenu->installEventFilter(this);
+
+    QMenu *waitMenu = runtimeMenu->addMenu(tr("Wait timeout"));
+    disabledWidgetsOnStart.append(waitMenu);
+    waitMenu->addActions(waitGroup->actions());
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
     savestateMenu->setToolTipsVisible(true);
@@ -1118,6 +1129,8 @@ void MainWindow::updateUIFromConfig()
         action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
 
+    setRadioFromList(waitGroup, context->config.sc.wait_timeout);
+
     renderSoftAction->setChecked(context->config.sc.opengl_soft);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
@@ -1211,6 +1224,8 @@ void MainWindow::slotLaunch()
             context->config.sc.sec_gettimes_threshold[index] = -1;
         }
     }
+
+    setListFromRadio(waitGroup, context->config.sc.wait_timeout);
 
     context->config.gameargs = cmdOptions->text().toStdString();
 

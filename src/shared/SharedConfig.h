@@ -217,6 +217,19 @@ struct SharedConfig {
 
     /* Wait for events to be processed in a separate thread before starting frame */
     bool async_events = false;
+
+    /* An enum indicating which wait are we doing */
+    enum WaitType
+    {
+        WAIT_NATIVE,
+        WAIT_INFINITE,
+        WAIT_FULL_INFINITE,
+        WAIT_FINITE,
+    };
+
+    /* How are we handling waits */
+    int wait_timeout = WAIT_NATIVE;
+
 };
 
 #endif

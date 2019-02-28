@@ -108,6 +108,7 @@ public:
     QAction *backtrackStateAction;
     QAction *steamAction;
     QAction *asyncEventsAction;
+    QActionGroup *waitGroup;
 
     QActionGroup *debugStateGroup;
     QActionGroup *loggingOutputGroup;

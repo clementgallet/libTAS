@@ -25,11 +25,12 @@
 namespace libtas {
 
 /* For now, we define the glib types ourselves */
-typedef bool gboolean;
+typedef int gboolean;
 typedef void GCond;
 typedef void GMutex;
 typedef int64_t gint64;
 
+OVERRIDE void g_cond_wait (GCond *cond, GMutex *mutex);
 OVERRIDE gboolean g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time);
 
 }

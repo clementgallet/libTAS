@@ -27,19 +27,59 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(g_cond_wait);
 DEFINE_ORIG_POINTER(g_cond_wait_until);
+
+/* Override */ void g_cond_wait (GCond *cond, GMutex *mutex)
+{
+    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT);
+    LINK_NAMESPACE(g_cond_wait, "glib-2.0");
+    return orig::g_cond_wait(cond, mutex);
+}
 
 /* Override */ gboolean g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
 {
-    debuglog(LCF_THREAD, __func__, " called with end_time ", end_time);
+    debuglog(LCF_THREAD | LCF_WAIT, __func__, " called with end_time ", end_time);
     LINK_NAMESPACE(g_cond_wait_until, "glib-2.0");
 
     /* If not main thread, do not change the behavior */
-    if (!ThreadManager::isMainThread()) {
+    if (!ThreadManager::isMainThread())
         return orig::g_cond_wait_until(cond, mutex, end_time);
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
+        return orig::g_cond_wait_until(cond, mutex, end_time);
+
+    TimeHolder now = detTimer.getTicks();
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+        /* Wait for 0.1 sec, arbitrary */
+        gint64 new_end_time = (static_cast<gint64>(now.tv_sec) * 1000000) + (now.tv_nsec / 1000) + 100*1000;
+        gboolean ret = orig::g_cond_wait_until(cond, mutex, new_end_time);
+        if (ret)
+            return ret;
     }
 
-    return orig::g_cond_wait_until(cond, mutex, end_time);
+    if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
+        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
+        /* Transfer time to our deterministic timer */
+        TimeHolder end;
+        end.tv_sec = end_time / (1000*1000);
+        end.tv_nsec = (end_time % (1000*1000)) * 1000;
+        TimeHolder delay = end - now;
+        detTimer.addDelay(delay);
+    }
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+        /* Wait again for 0.1 sec, arbitrary */
+        now = detTimer.getTicks();
+        gint64 new_end_time = (static_cast<gint64>(now.tv_sec) * 1000000) + (now.tv_nsec / 1000) + 100*1000;
+        return orig::g_cond_wait_until(cond, mutex, new_end_time);
+    }
+
+    /* Infinite wait */
+    LINK_NAMESPACE(g_cond_wait, "glib-2.0");
+    orig::g_cond_wait(cond, mutex);
+    return 1;
 }
 
 }

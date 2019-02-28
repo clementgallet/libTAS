@@ -43,6 +43,7 @@ set(LIBRARY_SOURCES
     src/library/DeterministicTimer.cpp
     src/library/dlhook.cpp
     src/library/frame.cpp
+    src/library/glibwrappers.cpp
     src/library/global.cpp
     src/library/GlobalState.cpp
     src/library/hook.cpp
