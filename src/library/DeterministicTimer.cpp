@@ -40,8 +40,6 @@ struct timespec DeterministicTimer::getTicks()
 
 struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-
     /* If we are in the native global state, just return the real time */
     if (GlobalState::isNative()) {
         struct timespec realtime;
@@ -53,11 +51,14 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return nonDetTimer.getTicks(); // disable deterministic time
     }
 
-    bool mainT = ThreadManager::isMainThread();
+    if (type == SharedConfig::TIMETYPE_UNTRACKED) {
+        TimeHolder fakeTicks = ticks + fakeExtraTicks;
+        return fakeTicks;
+    }
 
-    /* If it is our own code calling this, we don't need to track the call */
-    if (GlobalState::isOwnCode())
-        type = SharedConfig::TIMETYPE_UNTRACKED;
+    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+
+    bool mainT = ThreadManager::isMainThread();
 
     /* Update the count of time query calls, and advance time if reached the
      * limit. We use different counts for main and secondary threads because
@@ -70,7 +71,6 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
                           : shared_config.sec_gettimes_threshold[type];
 
     if (!insideFrameBoundary && /* Don't track is already inside a frame boundary */
-        type != SharedConfig::TIMETYPE_UNTRACKED &&
         gettimes_threshold >= 0) {
 
         /* We actually track this time call */
