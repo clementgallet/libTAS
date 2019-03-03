@@ -59,6 +59,7 @@ static Bool isEventFiltered (XEvent *event) {
         case Expose:
         case EnterNotify:
         case LeaveNotify:
+        case PropertyNotify:
         case ReparentNotify:
             return True;
         default:
