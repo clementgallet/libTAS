@@ -73,4 +73,20 @@ namespace libtas {
     return 0;
 }
 
+/* Override */ int XGetInputFocus(Display* display, Window* focus_return, int* revert_to_return)
+{
+    DEBUGLOGCALL(LCF_KEYBOARD);
+    /* Returing the game Xlib window */
+    if (focus_return) {
+        *focus_return = gameXWindow;
+    }
+    return 0;
+}
+
+/* Override */ int XSetInputFocus(Display* display, Window focus, int revert_to, Time time)
+{
+    debuglog(LCF_KEYBOARD, __func__, " called with window ", focus);
+    return 0;
+}
+
 }

@@ -59,6 +59,19 @@ OVERRIDE int XUngrabKeyboard(
     Time		/* time */
 );
 
+OVERRIDE int XGetInputFocus(
+    Display*        /* display */,
+    Window*     /* focus_return */,
+    int*        /* revert_to_return */
+);
+
+OVERRIDE int XSetInputFocus(
+    Display*        /* display */,
+    Window      /* focus */,
+    int         /* revert_to */,
+    Time        /* time */
+);
+
 }
 
 #endif
