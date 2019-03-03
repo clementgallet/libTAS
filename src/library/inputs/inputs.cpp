@@ -18,6 +18,7 @@
  */
 
 #include "inputs.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -32,5 +33,24 @@ AllInputs old_ai;
  * - when the game warps the mouse cursor
  */
 AllInputs game_ai;
+
+void updateGameInputs()
+{
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        game_ai.keyboard[i] = ai.keyboard[i];
+    }
+
+    game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+    game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+    game_ai.pointer_mask = ai.pointer_mask;
+
+    for (int ji=0; ji<shared_config.nb_controllers; ji++) {
+        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
+            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+        }
+        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
+    }
+
+}
 
 }

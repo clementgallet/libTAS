@@ -183,8 +183,6 @@ void generateKeyDownEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
-        game_ai.keyboard[i] = ai.keyboard[i];
-
         if (!ai.keyboard[i]) {
             continue;
         }
@@ -379,9 +377,6 @@ void generateControllerEvents(void)
         }
 
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-            /* Update game_ai axes */
-            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
-
             /* Check for axes change */
             if (ai.controller_axes[ji][axis] != old_ai.controller_axes[ji][axis]) {
                 /* We got a change in a controller axis value */
@@ -444,9 +439,6 @@ void generateControllerEvents(void)
                 old_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
             }
         }
-
-        /* Update game_ai buttons */
-        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
 
         /* Check for button change */
         unsigned short buttons = ai.controller_buttons[ji];
@@ -671,8 +663,8 @@ void generateMouseMotionEvents(void)
         event2.motion.state = SingleInput::toSDL2PointerMask(ai.pointer_mask);
         event2.motion.xrel = ai.pointer_x - old_ai.pointer_x;
         event2.motion.yrel = ai.pointer_y - old_ai.pointer_y;
-        event2.motion.x = game_ai.pointer_x + event2.motion.xrel;
-        event2.motion.y = game_ai.pointer_y + event2.motion.yrel;
+        event2.motion.x = game_ai.pointer_x;
+        event2.motion.y = game_ai.pointer_y;
         sdlEventQueue.insert(&event2);
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
@@ -686,8 +678,8 @@ void generateMouseMotionEvents(void)
         event1.motion.state = SingleInput::toSDL1PointerMask(ai.pointer_mask);
         event1.motion.xrel = (Sint16)(ai.pointer_x - old_ai.pointer_x);
         event1.motion.yrel = (Sint16)(ai.pointer_y - old_ai.pointer_y);
-        event1.motion.x = (Uint16) (game_ai.pointer_x + event1.motion.xrel);
-        event1.motion.y = (Uint16) (game_ai.pointer_y + event1.motion.yrel);
+        event1.motion.x = (Uint16) game_ai.pointer_x;
+        event1.motion.y = (Uint16) game_ai.pointer_y;
         sdlEventQueue.insert(&event1);
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
@@ -696,8 +688,8 @@ void generateMouseMotionEvents(void)
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
-        event.xmotion.x = game_ai.pointer_x + ai.pointer_x - old_ai.pointer_x;
-        event.xmotion.y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
+        event.xmotion.x = game_ai.pointer_x;
+        event.xmotion.y = game_ai.pointer_y;
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
         event.xmotion.window = gameXWindow;
@@ -722,8 +714,8 @@ void generateMouseMotionEvents(void)
         dev->evtype = XI_Motion;
         dev->event = gameXWindow;
         dev->time = timestamp;
-        dev->event_x = game_ai.pointer_x + ai.pointer_x - old_ai.pointer_x;
-        dev->event_y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
+        dev->event_x = game_ai.pointer_x;
+        dev->event_y = game_ai.pointer_y;
         dev->root_x = dev->event_x;
         dev->root_y = dev->event_y;
         dev->detail = 0;
@@ -768,8 +760,6 @@ void generateMouseMotionEvents(void)
 #endif
 
     /* Upload the old AllInput struct */
-    game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
-    game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
     old_ai.pointer_x = ai.pointer_x;
     old_ai.pointer_y = ai.pointer_y;
 }
@@ -872,8 +862,8 @@ void generateMouseButtonEvents(void)
                 event.xcookie.data = dev;
                 dev->event = gameXWindow;
                 dev->time = timestamp;
-                dev->event_x = game_ai.pointer_x + ai.pointer_x - old_ai.pointer_x;
-                dev->event_y = game_ai.pointer_y + ai.pointer_y - old_ai.pointer_y;
+                dev->event_x = game_ai.pointer_x;
+                dev->event_y = game_ai.pointer_y;
                 dev->root_x = dev->event_x;
                 dev->root_y = dev->event_y;
                 dev->detail = bi; // Not sure...
@@ -922,7 +912,6 @@ void generateMouseButtonEvents(void)
             old_ai.pointer_mask ^= (1 << buttons[bi]);
         }
     }
-    game_ai.pointer_mask = ai.pointer_mask;
 }
 
 static void syncControllerEvents()

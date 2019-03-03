@@ -345,6 +345,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
         receive_messages(draw);
     #endif
 
+    /* Some methods of drawing on screen don't always update the full screen.
+     * Our current screen may be dirty with OSD, so in that case, we must
+     * restore the screen to its original content so that the next frame will
+     * be correct.
+     */
     if (restore_screen) {
         if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
             ScreenCapture::setPixels();
@@ -352,20 +357,36 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     }
 
     /*** Process inputs and events ***/
+
+    /* This part may disappear entirely if we manage to completely emulate
+     * the event system. For now, we push some native events that the game might
+     * expect to prevent some softlocks or other unexpected behaviors.
+     */
     if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
         /* Push native SDL events into our emulated event queue */
         pushNativeSDLEvents();
     }
-    pushNativeXlibEvents();
+
+    if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+        pushNativeXlibEvents();
+    }
+
+    /* Update game inputs based on current and previous inputs. This must be
+     * done after getting the new inputs (obviously) and before pushing events,
+     * because they used the new game inputs. */
+    updateGameInputs();
 
     /* Push generated events. This must be done after getting the new inputs. */
-    generateKeyUpEvents();
-    generateKeyDownEvents();
-    if (framecount == (shared_config.initial_framecount + 1))
-        generateControllerAdded();
-    generateControllerEvents();
-    generateMouseMotionEvents();
-    generateMouseButtonEvents();
+    if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+        generateKeyUpEvents();
+        generateKeyDownEvents();
+        if (framecount == (shared_config.initial_framecount + 1))
+            generateControllerAdded();
+        generateControllerEvents();
+        generateMouseMotionEvents();
+        generateMouseButtonEvents();
+    }
+
     syncEvents();
 
     /* Decide if we skip drawing the next frame because of fastforward.

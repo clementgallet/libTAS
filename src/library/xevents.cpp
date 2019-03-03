@@ -42,6 +42,8 @@ DEFINE_ORIG_POINTER(XEventsQueued);
 DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
 DEFINE_ORIG_POINTER(XSync);
+DEFINE_ORIG_POINTER(XGetEventData);
+DEFINE_ORIG_POINTER(XFreeEventData);
 
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (XEvent *event) {
@@ -86,7 +88,7 @@ void pushNativeXlibEvents(void)
                     }
                 }
 
-                if (!isEventFiltered(&event) || (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+                if (!isEventFiltered(&event)) {
                     xlibEventQueue.insert(&event);
                 }
             }
@@ -96,8 +98,12 @@ void pushNativeXlibEvents(void)
 
 int XNextEvent(Display *display, XEvent *event_return)
 {
-    // LINK_NAMESPACE_GLOBAL(XNextEvent);
     DEBUGLOGCALL(LCF_EVENTS);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XNextEvent);
+        return orig::XNextEvent(display, event_return);
+    }
+
     bool isEvent = false;
     for (int r=0; r<1000; r++) {
         isEvent = xlibEventQueue.pop(event_return, true);
@@ -142,6 +148,12 @@ int XNextEvent(Display *display, XEvent *event_return)
 int XPeekEvent(Display *display, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XPeekEvent);
+        return orig::XPeekEvent(display, event_return);
+    }
+
     bool isEvent = false;
     for (int r=0; r<1000; r++) {
         isEvent = xlibEventQueue.pop(event_return, false);
@@ -160,6 +172,12 @@ int XPeekEvent(Display *display, XEvent *event_return)
 int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XWindowEvent);
+        return orig::XWindowEvent(display, w, event_mask, event_return);
+    }
+
     bool isEvent = false;
     for (int r=0; r<1000; r++) {
         isEvent = xlibEventQueue.pop(event_return, w, event_mask);
@@ -178,6 +196,12 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
 Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
+        return orig::XCheckWindowEvent(display, w, event_mask, event_return);
+    }
+
     bool isEvent = xlibEventQueue.pop(event_return, w, event_mask);
     return isEvent?True:False;
 }
@@ -185,6 +209,12 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
 int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XMaskEvent);
+        return orig::XMaskEvent(display, event_mask, event_return);
+    }
+
     bool isEvent = false;
     for (int r=0; r<1000; r++) {
         isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
@@ -203,6 +233,12 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
+        return orig::XCheckMaskEvent(display, event_mask, event_return);
+    }
+
     bool isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
     return isEvent?True:False;
 }
@@ -210,6 +246,12 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
 Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
+        return orig::XCheckTypedEvent(display, event_type, event_return);
+    }
+
     bool isEvent = xlibEventQueue.pop(event_return, 0, event_type);
     return isEvent?True:False;
 }
@@ -217,6 +259,12 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
 Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
+        return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
+    }
+
     bool isEvent = xlibEventQueue.pop(event_return, w, event_type);
     return isEvent?True:False;
 }
@@ -224,6 +272,12 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
 int XEventsQueued(Display* display, int mode)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XEventsQueued);
+        return orig::XEventsQueued(display, mode);
+    }
+
     int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
@@ -232,6 +286,12 @@ int XEventsQueued(Display* display, int mode)
 int XPending(Display *display)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XPending);
+        return orig::XPending(display);
+    }
+
     int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     return ret;
@@ -240,6 +300,12 @@ int XPending(Display *display)
 int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XIfEvent);
+        return orig::XIfEvent(display, event_return, predicate, arg);
+    }
+
     bool isEvent = false;
     for (int r=0; r<1000; r++) {
         isEvent = xlibEventQueue.pop(event_return, predicate, arg);
@@ -258,6 +324,12 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
 Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
+        return orig::XCheckIfEvent(display, event_return, predicate, arg);
+    }
+
     bool isEvent = xlibEventQueue.pop(event_return, predicate, arg);
     return isEvent?True:False;
 }
@@ -290,13 +362,23 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XGetEventData);
+        return orig::XGetEventData(dpy, cookie);
+    }
     /* Data from our cookies are already present */
-    return True;
+    if (cookie->type == GenericEvent)
+        return True;
+    return False;
 }
 
 void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
 {
     DEBUGLOGCALL(LCF_EVENTS);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XFreeEventData);
+        orig::XFreeEventData(dpy, cookie);
+    }
 }
 
 

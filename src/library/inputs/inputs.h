@@ -38,6 +38,8 @@ extern AllInputs old_ai;
  */
 extern AllInputs game_ai;
 
+void updateGameInputs();
+
 }
 
 #endif
