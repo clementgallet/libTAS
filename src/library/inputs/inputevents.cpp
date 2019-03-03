@@ -697,6 +697,7 @@ void generateMouseMotionEvents(void)
 
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (gameDisplays[i]) {
+                event.xbutton.display = gameDisplays[i];
                 xlibEventQueue.insert(&event);
             }
         }
@@ -823,11 +824,11 @@ void generateMouseButtonEvents(void)
                 XEvent event;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
-                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonPress with button ", SingleInput::toXlibPointerMask(ai.pointer_mask));
+                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonPress with button ", SingleInput::toXlibPointerButton(buttons[bi]));
                 }
                 else {
                     event.xbutton.type = ButtonRelease;
-                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonRelease with button ", SingleInput::toXlibPointerMask(ai.pointer_mask));
+                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonRelease with button ", SingleInput::toXlibPointerButton(buttons[bi]));
                 }
                 event.xbutton.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
                 event.xbutton.x = game_ai.pointer_x;
@@ -835,9 +836,11 @@ void generateMouseButtonEvents(void)
                 event.xbutton.x_root = event.xbutton.x;
                 event.xbutton.y_root = event.xbutton.y;
                 event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
+                event.xbutton.window = gameXWindow;
 
                 for (int i=0; i<GAMEDISPLAYNUM; i++) {
                     if (gameDisplays[i]) {
+                        event.xbutton.display = gameDisplays[i];
                         xlibEventQueue.insert(&event);
                     }
                 }
@@ -850,12 +853,12 @@ void generateMouseButtonEvents(void)
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
-                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonPress with button ", bi);
+                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonPress with button ", bi+1);
                     event.xcookie.evtype = XI_ButtonPress;
                     dev->evtype = XI_ButtonPress;
                 }
                 else {
-                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonRelease with button ", bi);
+                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonRelease with button ", bi+1);
                     event.xcookie.evtype = XI_ButtonRelease;
                     dev->evtype = XI_ButtonRelease;
                 }
@@ -866,7 +869,7 @@ void generateMouseButtonEvents(void)
                 dev->event_y = game_ai.pointer_y;
                 dev->root_x = dev->event_x;
                 dev->root_y = dev->event_y;
-                dev->detail = bi; // Not sure...
+                dev->detail = bi+1;
                 dev->buttons.mask = static_cast<unsigned char*>(malloc(1*sizeof(unsigned char)));
                 dev->buttons.mask_len = 1;
                 for (int bj=0; bj<5; bj++) {
@@ -888,18 +891,18 @@ void generateMouseButtonEvents(void)
                 event.xcookie.type = GenericEvent;
                 event.xcookie.extension = xinput_opcode;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
-                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonPress with button ", bi);
+                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonPress with button ", bi+1);
                     event.xcookie.evtype = XI_RawButtonPress;
                     rev->evtype = XI_RawButtonPress;
                 }
                 else {
-                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonRelease with button ", bi);
+                    debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonRelease with button ", bi+1);
                     event.xcookie.evtype = XI_RawButtonRelease;
                     rev->evtype = XI_RawButtonRelease;
                 }
                 event.xcookie.data = rev;
                 rev->time = timestamp;
-                rev->detail = bi;
+                rev->detail = bi+1;
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
                         xlibEventQueue.insert(&event);
