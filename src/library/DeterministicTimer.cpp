@@ -101,7 +101,9 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     if (ticksExtra) {
         /* Delay by ticksExtra ms. Arbitrary */
         struct timespec delay = {0, ticksExtra * 1000000};
+        bool oldSleepCalled = sleepCalled; /* Avoid generating spurious vsync frames */
         addDelay(delay);
+        sleepCalled = oldSleepCalled;
     }
 
     TimeHolder fakeTicks = ticks + fakeExtraTicks;
