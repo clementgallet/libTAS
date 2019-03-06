@@ -56,7 +56,7 @@ public:
     struct timespec getTicks(SharedConfig::TimeCallType type);
 
     /* Returns true if the current frame boundary is acceptable for require_vsync mode */
-    bool isFrameBoundary() { return insideFrameBoundary || sleepCalled; }
+    bool isFrameBoundary();
 
     /* Function called when entering a frame boundary */
     void enterFrameBoundary(void);

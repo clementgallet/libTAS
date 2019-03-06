@@ -133,6 +133,11 @@ void DeterministicTimer::addDelay(struct timespec delayTicks, bool isSynthesized
      * otherwise it could easily build up and make us freeze (in some games)
      */
     TimeHolder maxDeferredDelay = baseTimeIncrement;
+
+    /* Wait an extra frame before declaring it to be a lag frame in vsync mode. */
+    if (shared_config.require_vsync)
+        maxDeferredDelay += baseTimeIncrement;
+
     {
         std::lock_guard<std::mutex> lock(mutex);
 
@@ -170,6 +175,11 @@ void DeterministicTimer::addDelay(struct timespec delayTicks, bool isSynthesized
 void DeterministicTimer::flushDelay()
 {
     addedDelay = {0, 0};
+}
+
+bool DeterministicTimer::isFrameBoundary()
+{
+    return insideFrameBoundary || sleepCalled || addedDelay > baseTimeIncrement;
 }
 
 void DeterministicTimer::exitFrameBoundary()
@@ -214,7 +224,6 @@ void DeterministicTimer::exitFrameBoundary()
 
     insideFrameBoundary = false;
 }
-
 
 void DeterministicTimer::enterFrameBoundary()
 {
