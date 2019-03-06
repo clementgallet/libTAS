@@ -65,7 +65,7 @@ public:
     void exitFrameBoundary(void);
 
     /* Add a delay in the timer, and sleep */
-    void addDelay(struct timespec delayTicks);
+    void addDelay(struct timespec delayTicks, bool isSynthesized = false);
 
     /* Flush the accumulated timer delay. Used when game is exiting */
     void flushDelay();
