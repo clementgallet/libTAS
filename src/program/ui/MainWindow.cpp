@@ -733,6 +733,10 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(asyncMenu);
     asyncMenu->addActions(asyncGroup->actions());
 
+    requireVsyncAction = runtimeMenu->addAction(tr("Require vsync to advance frame"), this, &MainWindow::slotRequireVsync);
+    requireVsyncAction->setCheckable(true);
+    disabledActionsOnStart.append(requireVsyncAction);
+
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
     debugMenu->addActions(debugStateGroup->actions());
@@ -1144,6 +1148,7 @@ void MainWindow::updateUIFromConfig()
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
     steamAction->setChecked(context->config.sc.virtual_steam);
     setCheckboxesFromMask(asyncGroup, context->config.sc.async_events);
+    requireVsyncAction->setChecked(context->config.sc.require_vsync);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
@@ -1521,6 +1526,7 @@ BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
 BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)
 BOOLSLOT(slotSteam, context->config.sc.virtual_steam)
 BOOLSLOT(slotAsyncEvents, context->config.sc.async_events)
+BOOLSLOT(slotRequireVsync, context->config.sc.require_vsync)
 
 void MainWindow::slotMovieEnd()
 {

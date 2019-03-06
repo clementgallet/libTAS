@@ -238,6 +238,9 @@ struct SharedConfig {
     /* How are we handling waits */
     int wait_timeout = WAIT_NATIVE;
 
+    /* Require vsync or sleep to advance the frame counter */
+    bool require_vsync = false;
+
 };
 
 #endif

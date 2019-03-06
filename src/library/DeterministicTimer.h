@@ -55,6 +55,9 @@ public:
     struct timespec getTicks();
     struct timespec getTicks(SharedConfig::TimeCallType type);
 
+    /* Returns true if the current frame boundary is acceptable for require_vsync mode */
+    bool isFrameBoundary() { return insideFrameBoundary || sleepCalled; }
+
     /* Function called when entering a frame boundary */
     void enterFrameBoundary(void);
 
@@ -62,10 +65,10 @@ public:
     void exitFrameBoundary(void);
 
     /* Add a delay in the timer, and sleep */
-	void addDelay(struct timespec delayTicks);
+    void addDelay(struct timespec delayTicks);
 
     /* Flush the accumulated timer delay. Used when game is exiting */
-	void flushDelay();
+    void flushDelay();
 
     /* In specific situations, we must fake advancing timer.
      * This function temporarily fake adding ticks to the timer.
@@ -113,8 +116,11 @@ private:
     int main_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
     int sec_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
 
-    /* Are we inside a frame boudary */
+    /* Are we inside a frame boundary */
     bool insideFrameBoundary = false;
+
+    /* Was sleep called at all since the last frame boundary */
+    bool sleepCalled = false;
 
     /* Mutex to protect access to the ticks value */
     std::mutex mutex;

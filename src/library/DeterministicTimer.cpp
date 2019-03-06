@@ -112,6 +112,8 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
+    sleepCalled = true;
+
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.addDelay(delayTicks);
 
@@ -213,6 +215,7 @@ void DeterministicTimer::enterFrameBoundary()
     DEBUGLOGCALL(LCF_TIMEGET);
 
     insideFrameBoundary = true;
+    sleepCalled = false;
 
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.enterFrameBoundary();

@@ -107,6 +107,7 @@ public:
     QAction *ramStateAction;
     QAction *backtrackStateAction;
     QAction *steamAction;
+    QAction *requireVsyncAction;
     QActionGroup *waitGroup;
     QActionGroup *asyncGroup;
 
@@ -279,6 +280,7 @@ private slots:
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotAsyncEvents(bool checked);
+    void slotRequireVsync(bool checked);
     void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
 };
