@@ -23,6 +23,7 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "ScreenCapture.h"
 #include "frame.h"
+#include "DeterministicTimer.h"
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
@@ -286,12 +287,19 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     return ret;
 }
 
+static int swapInterval = 0;
+
 void glXSwapBuffers( Display *dpy, XID drawable )
 {
     LINK_NAMESPACE(glXSwapBuffers, "GL");
 
     if (GlobalState::isNative())
         return orig::glXSwapBuffers(dpy, drawable);
+
+    if (swapInterval) {
+        struct timespec dummy{0, 0};
+        detTimer.addDelay(dummy);
+    }
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
@@ -303,8 +311,6 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     frameBoundary(true, [&] () {orig::glXSwapBuffers(dpy, drawable);}, false);
 #endif
 }
-
-static int swapInterval = 0;
 
 void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 {
