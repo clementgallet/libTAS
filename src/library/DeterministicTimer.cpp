@@ -113,8 +113,11 @@ void DeterministicTimer::addDelay(struct timespec delayTicks, bool isSynthesized
 {
     debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
 
-    if (!isSynthesized)
+    if (!isSynthesized && !sleepCalled) {
+        /* Reset any accumulated synthesized sleep */
+        addedDelay = {0, 0};
         sleepCalled = true;
+    }
 
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.addDelay(delayTicks);
@@ -146,20 +149,20 @@ void DeterministicTimer::addDelay(struct timespec delayTicks, bool isSynthesized
     /* We only allow the main thread to trigger a frame boundary! */
     bool mainT = ThreadManager::isMainThread();
 
-    if (mainT && !isSynthesized) {
+    if (mainT) {
         while(addedDelay > maxDeferredDelay) {
             /* We have built up too much delay. We must enter a frame boundary,
              * to advance the time.
              * This decrements addedDelay by (basically) how much it advances ticks
              */
+            sleepCalled = true; /* always consider lag frames to be "real" */
+
     #ifdef LIBTAS_ENABLE_HUD
             static RenderHUD dummy;
             frameBoundary(false, [] () {}, dummy, false);
     #else
             frameBoundary(false, [] () {}, false);
     #endif
-	    /* We are still in the same vsync interval */
-	    sleepCalled = true;
         }
     }
 }
