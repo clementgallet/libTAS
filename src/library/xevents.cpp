@@ -97,6 +97,25 @@ void pushNativeXlibEvents(void)
     }
 }
 
+bool syncXEvents()
+{
+    int attempts = 0, count = 0;
+    do {
+        count = xlibEventQueue.size();
+        if (count > 0) {
+            if (++attempts > 10 * 100) {
+                debuglog(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
+                return false;
+            }
+            struct timespec sleepTime = { 0, 10 * 1000 };
+            NATIVECALL(nanosleep(&sleepTime, NULL));
+        }
+    } while (count > 0);
+
+    return true;
+}
+
+
 int XNextEvent(Display *display, XEvent *event_return)
 {
     DEBUGLOGCALL(LCF_EVENTS);

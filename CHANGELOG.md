@@ -10,6 +10,7 @@
 * Implement XI2 inputs
 * Add some tooltips
 * Handle wait timeouts
+* Add an option to enforce determinism when events are pulled asynchronously
 
 ### Changed
 

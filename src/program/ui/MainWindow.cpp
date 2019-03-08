@@ -465,6 +465,12 @@ void MainWindow::createActions()
     addActionCheckable(waitGroup, tr("Full infinite waits"), SharedConfig::WAIT_FULL_INFINITE, "Advance time for the full timeout and wait infinitely. Sync-proof, but may still softlock and may advance time too much resulting in incorrect frame boundaries");
     addActionCheckable(waitGroup, tr("Finite waits"), SharedConfig::WAIT_FINITE, "Try to wait, and advance time if we get a timeout. Prevent softlocks but not perfectly sync-proof");
 
+    asyncGroup = new QActionGroup(this);
+    asyncGroup->setExclusive(false);
+    addActionCheckable(asyncGroup, tr("jsdev"), SharedConfig::ASYNC_JSDEV);
+    addActionCheckable(asyncGroup, tr("evdev"), SharedConfig::ASYNC_EVDEV);
+    addActionCheckable(asyncGroup, tr("XEvents"), SharedConfig::ASYNC_XEVENTS);
+
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);
     connect(debugStateGroup, &QActionGroup::triggered, this, &MainWindow::slotDebugState);
@@ -721,10 +727,11 @@ void MainWindow::createMenus()
     steamAction->setToolTip("Implement a dummy Steam client, to be able to launch some Steam games");
     steamAction->setCheckable(true);
     disabledActionsOnStart.append(steamAction);
-    asyncEventsAction = runtimeMenu->addAction(tr("Asynchronous events"), this, &MainWindow::slotAsyncEvents);
-    asyncEventsAction->setToolTip("Only useful if the game pulls events asynchronously. We wait until all events are processed at the beginning of each frame");
-    asyncEventsAction->setCheckable(true);
-    disabledActionsOnStart.append(asyncEventsAction);
+
+    QMenu *asyncMenu = runtimeMenu->addMenu(tr("Asynchronous events"));
+    asyncMenu->setToolTip("Only useful if the game pulls events asynchronously. We wait until all events are processed at the beginning of each frame");
+    disabledWidgetsOnStart.append(asyncMenu);
+    asyncMenu->addActions(asyncGroup->actions());
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 
@@ -1136,7 +1143,7 @@ void MainWindow::updateUIFromConfig()
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
     steamAction->setChecked(context->config.sc.virtual_steam);
-    asyncEventsAction->setChecked(context->config.sc.async_events);
+    setCheckboxesFromMask(asyncGroup, context->config.sc.async_events);
 
     incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
     ramStateAction->setChecked(context->config.sc.savestates_in_ram);
@@ -1226,6 +1233,7 @@ void MainWindow::slotLaunch()
     }
 
     setListFromRadio(waitGroup, context->config.sc.wait_timeout);
+    setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
 
     context->config.gameargs = cmdOptions->text().toStdString();
 

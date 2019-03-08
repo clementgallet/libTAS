@@ -37,6 +37,7 @@
 #include "../global.h" // game_info
 #include "xinput.h"
 #include "../XlibEventQueue.h"
+#include "../xevents.h"
 
 #include <stdlib.h>
 #include <SDL2/SDL.h>
@@ -929,7 +930,7 @@ static void syncControllerEvents()
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < shared_config.nb_controllers; i++) {
-        if (game_info.joystick & GameInfo::JSDEV) {
+        if (shared_config.async_events & SharedConfig::ASYNC_JSDEV) {
             /* Wait for queue to become empty */
             if (sync_jsdev(i)) {
                 /* If queue was emptied, send a synchronize report event */
@@ -948,7 +949,7 @@ static void syncControllerEvents()
         }
 
         /* Same for evdev */
-        if (game_info.joystick & GameInfo::EVDEV) {
+        if (shared_config.async_events & SharedConfig::ASYNC_EVDEV) {
             if (sync_evdev(i)) {
                 struct input_event ev;
                 ev.time.tv_sec = time.tv_sec;
@@ -968,6 +969,21 @@ void syncEvents(void)
 {
     /* Wait for queues to become empty and events to be processed. */
     syncControllerEvents();
+
+    if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS) {
+        /* Wait for queue to become empty */
+        if (syncXEvents()) {
+            /* If queue was emptied, send a dummy event */
+            XEvent xev;
+            xev.type = LASTEvent; // let's hope this won't trigger an error
+            xlibEventQueue.insert(&xev);
+
+            /* Lastly, wait for queue to become empty again, ensuring that
+             * the event have finished being processed.
+             */
+            syncXEvents();
+        }
+    }
 }
 
 }

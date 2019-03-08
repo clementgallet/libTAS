@@ -215,8 +215,16 @@ struct SharedConfig {
     /* Force Mesa software OpenGL driver */
     bool opengl_soft = true;
 
-    /* Wait for events to be processed in a separate thread before starting frame */
-    bool async_events = false;
+    /* An enum indicating which wait are we doing */
+    enum AsyncType
+    {
+        ASYNC_JSDEV = 0x01,
+        ASYNC_EVDEV = 0x02,
+        ASYNC_XEVENTS = 0x04,
+    };
+
+    /* Wait for specific events to be processed in a separate thread before starting frame */
+    int async_events = 0;
 
     /* An enum indicating which wait are we doing */
     enum WaitType

@@ -251,7 +251,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
     sc.locale = settings.value("locale", sc.locale).toInt();
     sc.virtual_steam = settings.value("virtual_steam", sc.virtual_steam).toBool();
-    sc.async_events = settings.value("async_events", sc.async_events).toBool();
+    sc.async_events = settings.value("async_events", sc.async_events).toInt();
     sc.wait_timeout = settings.value("wait_timeout", sc.wait_timeout).toInt();
 
     sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
