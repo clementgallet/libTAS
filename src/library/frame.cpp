@@ -187,6 +187,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 
     /* Make sure we actually want to advance the frame counter */
     if (shared_config.require_vsync && !detTimer.isFrameBoundary()) {
+        detTimer.flushDelay();
         NATIVECALL(draw());
         return;
     }
