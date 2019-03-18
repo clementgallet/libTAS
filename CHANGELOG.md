@@ -11,6 +11,7 @@
 * Add some tooltips
 * Handle wait timeouts
 * Add an option to enforce determinism when events are pulled asynchronously
+* Show recording/playback toggle in the OSD messages
 
 ### Changed
 

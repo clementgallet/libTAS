@@ -1071,6 +1071,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             case SharedConfig::RECORDING_WRITE:
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
                 context->config.sc.movie_framecount = movie.nbFrames();
+                {
+                    std::string msg = "Switched to playback mode";
+                    sendMessage(MSGN_OSD_MSG);
+                    sendString(msg);
+                }
                 break;
             case SharedConfig::RECORDING_READ:
                 /* Check if we reached the end of the movie already. */
@@ -1081,6 +1086,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                     emit inputsToBeChanged();
                     context->config.sc.recording = SharedConfig::RECORDING_WRITE;
                     emit inputsChanged();
+                    {
+                        std::string msg = "Switched to recording mode";
+                        sendMessage(MSGN_OSD_MSG);
+                        sendString(msg);
+                    }
                 }
                 break;
             default:
