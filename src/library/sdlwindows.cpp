@@ -381,6 +381,12 @@ static int swapInterval = 0;
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
+    /* The game may call SDL_SetVideoMode() multiple times to resize the game
+     * window, which invalidates all previous textures, so we destroy all our
+     * textures before this call and so we call recreate valid ones after.
+     */
+    ScreenCapture::fini();
+
     /* Call real function, but do not return yet */
     SDL1::SDL_Surface *surf = orig::SDL_SetVideoMode(width, height, bpp, flags);
 
