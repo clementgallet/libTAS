@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 
 class MovieFile {
 public:
@@ -49,6 +50,9 @@ public:
 
     /* List of locked single inputs. They won't be modified even in recording mode */
     std::set<SingleInput> locked_inputs;
+
+    /* List of non-default input names */
+    std::map<SingleInput, std::string> input_names;
 
     /* Flag storing if the movie has been modified since last save.
      * Used for prompting a message when the game exits if the user wants

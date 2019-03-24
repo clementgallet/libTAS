@@ -139,6 +139,17 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
 	config.endGroup();
 
+	int size = config.beginReadArray("input_names");
+    if (size > 0)
+        input_names.clear();
+    for (int i = 0; i < size; ++i) {
+        config.setArrayIndex(i);
+        SingleInput si = config.value("input").value<SingleInput>();
+        std::string name = config.value("name").toString().toStdString();
+        input_names[si] = name;
+    }
+    config.endArray();
+
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ifstream input_stream(input_file);
@@ -260,6 +271,17 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
 	config.setValue("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
 	config.setValue("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
 	config.endGroup();
+
+	config.remove("input_names");
+    config.beginWriteArray("input_names");
+    int i = 0;
+    for (auto& in : input_names) {
+        config.setArrayIndex(i++);
+        config.setValue("input", QVariant::fromValue(in.first));
+        config.setValue("name", in.second.c_str());
+    }
+    config.endArray();
+
 
     config.sync();
 

@@ -244,13 +244,21 @@ void InputEditorModel::buildInputSet()
     input_set.clear();
     for (SingleInput si : new_input_set) {
 
-        /* Gather input description */
-        for (SingleInput ti : context->config.km.input_list) {
-            if (si == ti) {
-                si.description = ti.description;
-                break;
+        /* Gather input name in the movie if there is one */
+        auto it = movie->input_names.find(si);
+        if (it != movie->input_names.end()) {
+            si.description = it->second;
+        }
+        else {
+            /* Gather input description */
+            for (SingleInput ti : context->config.km.input_list) {
+                if (si == ti) {
+                    si.description = ti.description;
+                    break;
+                }
             }
         }
+
 
         /* Insert input */
         input_set.push_back(si);
@@ -299,6 +307,7 @@ std::string InputEditorModel::inputLabel(int column)
 void InputEditorModel::renameLabel(int column, std::string label)
 {
     input_set[column-2].description = label;
+    movie->input_names[input_set[column-2]] = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
 }
 
@@ -494,11 +503,18 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
         /* Insert input if new */
         if (new_input) {
 
-            /* Gather input description */
-            for (SingleInput ti : context->config.km.input_list) {
-                if (si == ti) {
-                    si.description = ti.description;
-                    break;
+            /* Gather input name in the movie if there is one */
+            auto it = movie->input_names.find(si);
+            if (it != movie->input_names.end()) {
+                si.description = it->second;
+            }
+            else {
+                /* Gather input description */
+                for (SingleInput ti : context->config.km.input_list) {
+                    if (si == ti) {
+                        si.description = ti.description;
+                        break;
+                    }
                 }
             }
 
