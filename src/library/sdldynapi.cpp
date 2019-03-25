@@ -60,12 +60,19 @@ enum {
     }
 
     /* Now save original pointers while replacing them with our hooks. */
+    void *libtas = dlopen("libtas.so", RTLD_LAZY | RTLD_NOLOAD);
+    if (libtas == nullptr) {
+        debuglog(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
+        return 1;
+    }
+
     void **entries = static_cast<void **>(table);
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
 #define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol ", #FUNC);
-#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(FUNC);
+#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtas, #FUNC));
 #include "sdlhooks.h"
 
+    dlclose(libtas);
     return res;
 }
 
