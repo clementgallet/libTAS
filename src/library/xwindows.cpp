@@ -59,6 +59,7 @@ Bool XQueryExtension(Display* display, const char* name, int* major_opcode_retur
     }
 #endif
 
+    return ret;
 }
 
 Display *XOpenDisplay(const char *display_name)
