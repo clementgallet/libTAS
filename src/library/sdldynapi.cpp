@@ -24,7 +24,10 @@
 #include "inputs/sdljoystick.h"
 
 #include "logging.h"
+#include "dlhook.h"
 #include "hook.h"
+
+#include <dlfcn.h>
 
 namespace libtas {
 
@@ -45,6 +48,11 @@ enum {
 
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
     DEBUGLOGCALL(LCF_SDL);
+
+    /* First try to use functions from the main executable in case it is
+     * statically linked with a modified version of SDL.  If this fails, the
+     * LINK_NAMESPACE below will use the dynamic library instead. */
+    orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(find_sym("SDL_DYNAPI_entry", true));
 
     /* We cannot call any SDL functions until dynapi is setup, including the
      * get_sdlversion in LINK_NAMESPACE_SDLX.  However, dynapi was not

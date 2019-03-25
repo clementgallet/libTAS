@@ -66,6 +66,12 @@ namespace libtas {
  */
 std::string find_lib(const char* library);
 
+/* Try to locate a symbol.  If original is true then only return
+ * symbols that are not from libtas.so, otherwise only return
+ * symbols that are from libtas.so.
+ */
+void *find_sym(const char* name, bool original = false);
+
 OVERRIDE void *dlopen(const char *file, int mode) throw();
 OVERRIDE void *dlsym(void *handle, const char *name) throw();
 
