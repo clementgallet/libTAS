@@ -527,16 +527,15 @@ void InputEditorModel::clearUniqueInput(int column)
 {
     SingleInput si = input_set[column-2];
 
-    beginRemoveColumns(QModelIndex(), column+1, column+1);
+    /* Don't clear locked input */
+    if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+        return;
 
-    for (AllInputs &ai : movie->input_list) {
-        ai.setInput(si, 0);
+    for (int f = static_cast<int>(context->framecount); f < movie->input_list.size(); f++) {
+        movie->input_list[f].setInput(si, 0);
     }
-    input_set.erase(input_set.begin()+column-2);
 
     movie->wasModified();
-
-    endRemoveColumns();
 }
 
 bool InputEditorModel::isLockedUniqueInput(int column)
