@@ -47,44 +47,40 @@ struct timespec NonDeterministicTimer::getTicks(void)
     if (inFB)
         return ticks;
 
-    bool isFrameThread = ThreadManager::isMainThread();
+    std::lock_guard<std::mutex> lock(mutex);
 
-    /* Only the main thread can modify the timer */
-    /* Could this be a problem...? */
-    if(isFrameThread) {
+    /* Get the real clock time */
+    TimeHolder realtime;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &realtime));
 
-        /* Get the real clock time */
-        TimeHolder realtime;
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &realtime));
+    /* Compute the difference from the last call */
+    TimeHolder delta = realtime - lasttime;
 
-        /* Compute the difference from the last call */
-        TimeHolder delta = realtime - lasttime;
-
-        if(shared_config.fastforward) { // fast-forward
-            delta = delta * 3; // arbitrary
-        }
-
-        /* If we paused at a frame boudary, we should not count that time */
-        TimeHolder frameBoundaryDur = lastExitTime - lastEnterTime;
-
-        /* If we just have the game running,
-         * do not count the normal frame boundary duration,
-         * as it would delay more and more the timer
-         */
-        if(frameBoundaryDur.tv_sec > 0 || ((frameBoundaryDur.tv_sec >= 0) && (frameBoundaryDur.tv_nsec > 50000000)))
-        {
-            /* Remove the duration of the frame boundary from the elapsed time */
-            delta -= frameBoundaryDur;
-
-            /* Frame duration can only be used once per frame */
-            lastEnterTime = lastExitTime;
-        }
-
-        ticks += delta;
-        debuglog(LCF_TIMESET|LCF_FREQUENT, __func__, " added ", delta.tv_sec * 1000000000 + delta.tv_nsec, " nsec ");
-
-        lasttime = realtime;
+    if(shared_config.fastforward) { // fast-forward
+        delta = delta * 3; // arbitrary
     }
+
+    /* If we paused at a frame boudary, we should not count that time */
+    TimeHolder frameBoundaryDur = lastExitTime - lastEnterTime;
+
+    /* If we just have the game running,
+     * do not count the normal frame boundary duration,
+     * as it would delay more and more the timer
+     */
+    if(frameBoundaryDur.tv_sec > 0 || ((frameBoundaryDur.tv_sec >= 0) && (frameBoundaryDur.tv_nsec > 50000000)))
+    {
+        /* Remove the duration of the frame boundary from the elapsed time */
+        delta -= frameBoundaryDur;
+
+        /* Frame duration can only be used once per frame */
+        lastEnterTime = lastExitTime;
+    }
+
+    ticks += delta;
+    debuglog(LCF_TIMESET|LCF_FREQUENT, __func__, " added ", delta.tv_sec * 1000000000 + delta.tv_nsec, " nsec ");
+
+    lasttime = realtime;
+
     return ticks;
 }
 

@@ -21,6 +21,7 @@
 #define LIBTAS_NONDETERMINISTICTIMER_H_INCL
 
 #include <time.h>
+#include <mutex>
 #include "TimeHolder.h"
 
 namespace libtas {
@@ -80,6 +81,9 @@ private:
 
     /* The real time of the last frame boundary exit */
     TimeHolder lastExitTime;
+
+    /* Mutex to protect access to the ticks value */
+    std::mutex mutex;
 };
 
 extern NonDeterministicTimer nonDetTimer;
