@@ -82,6 +82,26 @@ void *dlopen(const char *file, int mode) throw() {
     return result;
 }
 
+void *find_sym(const char *name, bool original) {
+    dlerror(); // Clear pending errors
+    void *addr;
+    NATIVECALL(addr = dlsym(RTLD_DEFAULT, name));
+    if (dlerror() == nullptr) {
+        Dl_info info;
+        int res = dladdr(addr, &info);
+        if (res != 0) {
+            std::string libpath = info.dli_fname;
+            std::string libtasstr = "libtas.so"; // bad!
+            bool fromLibtas = libpath.length() >= libtasstr.length() &&
+                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            if (original == fromLibtas) {
+                addr = nullptr;
+            }
+        }
+    }
+    return addr;
+}
+
 void *dlsym(void *handle, const char *name) throw() {
     if (!orig::dlsym) {
         /* Again, we use the internal `_dl_sym` function to access to the
@@ -121,30 +141,10 @@ void *dlsym(void *handle, const char *name) throw() {
      * some arithmetic pointer shenanigan?
      */
 
-    /* Correct way of using dlsym is with dlerror */
-    dlerror(); // Reseting the internal buffer
-
-    /* Try to link to an already defined function first */
-    void *addr = orig::dlsym(RTLD_DEFAULT, name);
-    char* error = dlerror();
-    if (error == nullptr) {
-        /* We found a matching symbol. Now checking that this symbol comes
-         * from our library and not another linked library.
-         */
-        Dl_info info;
-        int res = dladdr(addr, &info);
-        if (res != 0) {
-            std::string libpath = info.dli_fname;
-            std::string libtasstr = "libtas.so"; // bad!
-            if (libpath.length() >= libtasstr.length() &&
-                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0) {
-                debuglog(LCF_HOOK, "   function ", name, " is overriden!");
-                return addr;
-            }
-        }
+    void *addr = find_sym(name);
+    if (addr == nullptr) {
+        addr = orig::dlsym(handle, name);
     }
-
-    addr = orig::dlsym(handle, name);
     return addr;
 }
 

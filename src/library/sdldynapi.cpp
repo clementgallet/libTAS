@@ -24,7 +24,10 @@
 #include "inputs/sdljoystick.h"
 
 #include "logging.h"
+#include "dlhook.h"
 #include "hook.h"
+
+#include <dlfcn.h>
 
 namespace libtas {
 
@@ -46,6 +49,11 @@ enum {
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
     DEBUGLOGCALL(LCF_SDL);
 
+    /* First try to use functions from the main executable in case it is
+     * statically linked with a modified version of SDL.  If this fails, the
+     * LINK_NAMESPACE below will use the dynamic library instead. */
+    orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(find_sym("SDL_DYNAPI_entry", true));
+
     /* We cannot call any SDL functions until dynapi is setup, including the
      * get_sdlversion in LINK_NAMESPACE_SDLX.  However, dynapi was not
      * introduced until 2.0.2, so we can assume SDL2 for now.
@@ -60,12 +68,19 @@ enum {
     }
 
     /* Now save original pointers while replacing them with our hooks. */
+    void *libtas = dlopen("libtas.so", RTLD_LAZY | RTLD_NOLOAD);
+    if (libtas == nullptr) {
+        debuglog(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
+        return 1;
+    }
+
     void **entries = static_cast<void **>(table);
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
 #define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglog(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol ", #FUNC);
-#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(FUNC);
+#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtas, #FUNC));
 #include "sdlhooks.h"
 
+    dlclose(libtas);
     return res;
 }
 
