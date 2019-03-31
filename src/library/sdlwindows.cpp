@@ -35,6 +35,7 @@
 #include "encoding/AVEncoder.h"
 #include "SDLEventQueue.h"
 #include "openglwrappers.h" // checkMesa()
+#include "checkpoint/ThreadManager.h"
 // #include <string>
 // #include <X11/Xlib.h> // Display
 
@@ -181,6 +182,8 @@ static int swapInterval = 0;
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
+    ThreadManager::setMainThread();
+
     WindowTitle::setOriginalTitle(title);
 
     /* Disable fullscreen */
@@ -313,6 +316,8 @@ static int swapInterval = 0;
     debuglog(LCF_SDL | LCF_WINDOW, "  size ", width, " x ", height);
     LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
 
+    ThreadManager::setMainThread();
+
     /* Disable fullscreen */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
@@ -377,6 +382,8 @@ static int swapInterval = 0;
     LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
 
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
+
+    ThreadManager::setMainThread();
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);

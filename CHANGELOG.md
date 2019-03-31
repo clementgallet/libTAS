@@ -13,12 +13,14 @@
 * Add an option to enforce determinism when events are pulled asynchronously
 * Show recording/playback toggle in the OSD messages
 * Store custom input names from the input editor in movies
+* A thread creating a window is considered as the main thread
 
 ### Changed
 
 * Implement evdev/jsdev with pipes
 * Remove time tracking all threads from movies/config
 * Only offer to load a previous savestate movie if it's possible
+* Remove the main thread condition in nondeterministic timer
 
 ### Fixed
 

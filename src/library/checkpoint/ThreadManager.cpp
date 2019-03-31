@@ -97,7 +97,18 @@ pid_t ThreadManager::getThreadTid()
 
 void ThreadManager::setMainThread()
 {
-    main_pthread_id = getThreadId();
+    pthread_t pthread_id = getThreadId();
+
+    if (main_pthread_id && (main_pthread_id != pthread_id)) {
+        /* Switching main thread */
+        debuglog(LCF_THREAD | LCF_WARNING, "Switching main thread from ", main_pthread_id, " to ", pthread_id);
+
+        ThreadInfo* old_thread = getThread(pthread_id);
+        if (old_thread && (old_thread->state == ThreadInfo::ST_CKPNTHREAD)) {
+            old_thread->state = ThreadInfo::ST_RUNNING;
+        }
+    }
+    main_pthread_id = pthread_id;
     current_thread->state = ThreadInfo::ST_CKPNTHREAD;
 }
 
