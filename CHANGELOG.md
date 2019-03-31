@@ -18,6 +18,7 @@
 
 * Implement evdev/jsdev with pipes
 * Remove time tracking all threads from movies/config
+* Only offer to load a previous savestate movie if it's possible
 
 ### Fixed
 

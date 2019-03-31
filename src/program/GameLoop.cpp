@@ -878,71 +878,62 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 /* If there is no savestate but a movie file, offer to load
                  * the movie and fast-forward to the savestate movie frame.
                  */
+
                 if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
                     (access(moviepath.c_str(), F_OK) == 0)) {
-
-                    /* Ask the user if they want to load the movie, and get the answer.
-                     * Prompting a alert window must be done by the UI thread, so we are
-                     * using std::future/std::promise mechanism.
-                     */
-                    std::promise<bool> answer;
-                    std::future<bool> future = answer.get_future();
-                    emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
-
-                    if (! future.get()) {
-                        /* User answered no */
-                        return false;
-                    }
 
                     /* Load the savestate movie */
                     MovieFile savedmovie(context);
                     int ret = savedmovie.loadInputs(moviepath);
-                    if (ret < 0) {
-                        emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
-                        return false;
-                    }
 
                     /* Checking if our movie is a prefix of the savestate movie */
-                    if (!savedmovie.isPrefix(movie, context->framecount)) {
-                        /* Not a prefix, we don't allow loading */
-                        emit alertToShow(QString("We already diverged from the savestate movie"));
+                    if ((ret == 0) && savedmovie.isPrefix(movie, context->framecount)) {
+
+                        /* Ask the user if they want to load the movie, and get the answer.
+                         * Prompting a alert window must be done by the UI thread, so we are
+                         * using std::future/std::promise mechanism.
+                         */
+                        std::promise<bool> answer;
+                        std::future<bool> future = answer.get_future();
+                        emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
+
+                        if (! future.get()) {
+                            /* User answered no */
+                            return false;
+                        }
+
+                        /* Loading the movie */
+                        emit inputsToBeChanged();
+                        movie.loadInputs(moviepath);
+                        emit inputsChanged();
+
+                        /* Return if we already are on the correct frame */
+                        if (context->framecount == movie.savestateFramecount())
+                            return false;
+
+                        /* Fast-forward to savestate frame */
+                        context->config.sc.recording = SharedConfig::RECORDING_READ;
+                        context->config.sc.movie_framecount = movie.nbFrames();
+                        context->pause_frame = movie.savestateFramecount();
+                        context->config.sc.running = true;
+                        context->config.sc_modified = true;
+
+                        emit sharedConfigChanged();
+
                         return false;
                     }
-
-                    /* Loading the movie */
-                    emit inputsToBeChanged();
-                    movie.loadInputs(moviepath);
-                    emit inputsChanged();
-
-                    /* Return if we already are on the correct frame */
-                    if (context->framecount == movie.savestateFramecount())
-                        return false;
-
-                    /* Fast-forward to savestate frame */
-                    context->config.sc.recording = SharedConfig::RECORDING_READ;
-                    context->config.sc.movie_framecount = movie.nbFrames();
-                    context->pause_frame = movie.savestateFramecount();
-                    context->config.sc.running = true;
-                    context->config.sc.fastforward = true;
-                    context->config.sc_modified = true;
-
-                    emit sharedConfigChanged();
-
-                    return false;
                 }
 
+                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+                    std::string message = "No savestate in slot ";
+                    message += std::to_string(statei);
+                    sendMessage(MSGN_OSD_MSG);
+                    sendString(message);
+                }
                 else {
-                    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                        std::string message = "No savestate in slot ";
-                        message += std::to_string(statei);
-                        sendMessage(MSGN_OSD_MSG);
-                        sendString(message);
-                    }
-                    else {
-                        emit alertToShow(QString("There is no savestate to load in this slot"));
-                    }
-                    return false;
+                    emit alertToShow(QString("There is no savestate to load in this slot"));
                 }
+                return false;
             }
 
             /* Send savestate path */
