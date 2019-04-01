@@ -79,16 +79,45 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     connect(this, &QWidget::customContextMenuRequested, this, &InputEditorView::mainMenu);
 
     menu = new QMenu(this);
-    menu->addAction(tr("Insert"), this, &InputEditorView::insertInput);
+    QAction* a = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
+
+    /* Shortcuts for context menus are special, they won't work by default
+     * because the menu is hidden, so actions need to be added to the View as
+     * well. Also, starting Qt 5.10, shortcuts are hidden in context menus
+     * for almost all platform styles (except KDE apparently?), and
+     * the option to globally enable them (AA_DontShowShortcutsInContextMenus)
+     * is buggy, so we must enable for every single action.
+     */
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
     menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
-    menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput);
+
+    a = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
     menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
-    menu->addAction(tr("Clear"), this, &InputEditorView::clearInput);
+    a = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence(Qt::Key_Delete));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
     menu->addSeparator();
-    menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs);
-    menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs);
-    menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs);
-    menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs);
+    a = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence(Qt::CTRL + Qt::Key_C));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
+    a = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence(Qt::CTRL + Qt::Key_X));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
+    a = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence(Qt::CTRL + Qt::Key_V));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
+
+    a = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+    a->setShortcutVisibleInContextMenu(true);
+    this->addAction(a);
 
     keyDialog = new KeyPressedDialog(this);
 }
@@ -290,6 +319,11 @@ void InputEditorView::deleteInput()
         max_row = (index.row()>max_row)?index.row():max_row;
     }
     inputEditorModel->removeRows(min_row, max_row-min_row+1);
+
+    /* Select the next frame */
+    QModelIndex newSel = inputEditorModel->index(min_row, 0);
+    selectionModel()->clear();
+    selectionModel()->select(QItemSelection(newSel, newSel), QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }
 
 void InputEditorView::truncateInputs()

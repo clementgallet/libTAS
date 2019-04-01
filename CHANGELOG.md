@@ -14,6 +14,7 @@
 * Show recording/playback toggle in the OSD messages
 * Store custom input names from the input editor in movies
 * A thread creating a window is considered as the main thread
+* Add shortcuts to some input editor options
 
 ### Changed
 
