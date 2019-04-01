@@ -98,20 +98,20 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     this->addAction(a);
 
     menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
-    a = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence(Qt::Key_Delete));
+    a = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence::Delete);
     a->setShortcutVisibleInContextMenu(true);
     this->addAction(a);
 
     menu->addSeparator();
-    a = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence(Qt::CTRL + Qt::Key_C));
+    a = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence::Copy);
     a->setShortcutVisibleInContextMenu(true);
     this->addAction(a);
 
-    a = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence(Qt::CTRL + Qt::Key_X));
+    a = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence::Cut);
     a->setShortcutVisibleInContextMenu(true);
     this->addAction(a);
 
-    a = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence(Qt::CTRL + Qt::Key_V));
+    a = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence::Paste);
     a->setShortcutVisibleInContextMenu(true);
     this->addAction(a);
 
