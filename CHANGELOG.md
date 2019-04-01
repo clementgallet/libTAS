@@ -27,6 +27,8 @@
 * Fix SDL_BlitSurface hooking
 * Fix a race condition on file handle list
 * Fix evdev/jsdev hat inputs
+* Enforce a minimum column size for analog inputs in the input editor
+* Resize columns when it is needed
 
 ## [1.3.3] - 2019-02-08
 ### Added

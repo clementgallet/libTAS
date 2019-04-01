@@ -309,6 +309,7 @@ void InputEditorModel::renameLabel(int column, std::string label)
     input_set[column-2].description = label;
     movie->input_names[input_set[column-2]] = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
+    emit inputSetChanged();
 }
 
 
@@ -324,6 +325,15 @@ std::string InputEditorModel::inputDescription(int column)
     }
 
     return "";
+}
+
+bool InputEditorModel::isInputAnalog(int column)
+{
+    if (column < 2)
+        return false;
+
+    const SingleInput si = input_set[column-2];
+    return si.isAnalog();
 }
 
 bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -430,6 +440,8 @@ int InputEditorModel::pasteInputs(int row)
     /* Update the paste inputs view */
     emit dataChanged(createIndex(row,0), createIndex(row+paste_ais.size()-1,columnCount()));
 
+    emit inputSetChanged();
+
     return paste_ais.size();
 }
 
@@ -466,6 +478,8 @@ int InputEditorModel::pasteInsertInputs(int row)
     context->config.sc_modified = true;
     emit frameCountChanged();
 
+    emit inputSetChanged();
+
     return paste_ais.size();
 }
 
@@ -482,6 +496,7 @@ void InputEditorModel::addUniqueInput(const SingleInput &si)
     beginInsertColumns(QModelIndex(), columnCount(), columnCount());
     input_set.push_back(si);
     endInsertColumns();
+    emit inputSetChanged();
 }
 
 void InputEditorModel::addUniqueInputs(const AllInputs &ai)
@@ -521,6 +536,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
             addUniqueInput(si);
         }
     }
+    emit inputSetChanged();
 }
 
 void InputEditorModel::clearUniqueInput(int column)
@@ -588,6 +604,7 @@ void InputEditorModel::endModifyInputs()
 {
     buildInputSet();
     endResetModel();
+    emit inputSetChanged();
 }
 
 void InputEditorModel::beginAddInputs()
@@ -621,6 +638,7 @@ void InputEditorModel::update()
         beginResetModel();
         buildInputSet();
         endResetModel();
+        emit inputSetChanged();
     }
     else {
         emit dataChanged(createIndex(context->framecount,0), createIndex(context->framecount,columnCount()));
@@ -634,6 +652,7 @@ void InputEditorModel::resetInputs()
     input_set.clear();
     savestate_frames.fill(-1);
     endResetModel();
+    emit inputSetChanged();
 }
 
 /* Register a savestate. If saved, frame contains the framecount of the

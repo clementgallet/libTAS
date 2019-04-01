@@ -60,9 +60,10 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
 
-private:
+private slots:
     void resizeAllColumns();
 
+private:
     Context *context;
     QMenu *horMenu;
     QMenu *menu;

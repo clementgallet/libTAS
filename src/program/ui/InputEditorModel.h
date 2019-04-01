@@ -63,6 +63,9 @@ public:
     /* Return the original description of an input */
     std::string inputDescription(int column);
 
+    /* Return if a column contains an analog input */
+    bool isInputAnalog(int column);
+
     /* Add an input column */
     void addUniqueInput(const SingleInput &si);
 
@@ -134,6 +137,7 @@ private:
 
 signals:
     void frameCountChanged();
+    void inputSetChanged();
 
 };
 

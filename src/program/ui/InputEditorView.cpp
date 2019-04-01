@@ -40,7 +40,10 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     inputEditorModel = new InputEditorModel(context, movie);
     setModel(inputEditorModel);
 
+    connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
+
     /* Horizontal header */
+    // horizontalHeader()->setMinimumSectionSize(20);
     horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     horizontalHeader()->setResizeContentsPrecision(1);
 
@@ -92,9 +95,19 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
 
 void InputEditorView::resizeAllColumns()
 {
+
     resizeColumnsToContents();
     horizontalHeader()->resizeSection(0, 20);
     horizontalHeader()->resizeSection(1, 80);
+
+    /* Resize analog columns to a fixed value */
+    for (int c = 2; c < inputEditorModel->columnCount(); c++)
+        if (inputEditorModel->isInputAnalog(c)) {
+            int size = horizontalHeader()->sectionSize(c);
+            if (size < 70)
+                horizontalHeader()->resizeSection(c, 70);
+        }
+
 }
 
 void InputEditorView::update()
@@ -105,16 +118,11 @@ void InputEditorView::update()
     QModelIndex index = inputEditorModel->index(context->framecount-1, 0);
     if (index.isValid())
         scrollTo(index, QAbstractItemView::PositionAtCenter);
-
-    if (context->framecount == 1) {
-        resizeAllColumns();
-    }
 }
 
 void InputEditorView::resetInputs()
 {
     inputEditorModel->resetInputs();
-    resizeAllColumns();
 }
 
 void InputEditorView::mousePressEvent(QMouseEvent *event)
@@ -199,7 +207,6 @@ void InputEditorView::renameLabel()
 
     if (!newLabel.isEmpty()) {
         inputEditorModel->renameLabel(contextSection, newLabel.toStdString());
-        resizeColumnToContents(contextSection);
     }
 }
 
@@ -213,7 +220,6 @@ void InputEditorView::addInputColumn()
         SingleInput si = context->config.km.input_mapping[ks];
         si.description = context->config.km.input_description(ks);
         inputEditorModel->addUniqueInput(si);
-        resizeColumnToContents(inputEditorModel->columnCount()-1);
     }
 }
 
@@ -357,7 +363,6 @@ void InputEditorView::pasteInputs()
     QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-    resizeAllColumns();
 }
 
 void InputEditorView::pasteInsertInputs()
@@ -375,5 +380,4 @@ void InputEditorView::pasteInsertInputs()
     QModelIndex bottom = inputEditorModel->index(index.row()+nbFrames-1, 0);
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-    resizeAllColumns();
 }
