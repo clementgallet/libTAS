@@ -55,7 +55,14 @@ If you want to manually enable/disable a feature, you must add just after the `c
 
 - `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on the game screen
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. You could also try to cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. However, many users failed to do this due to some libraries that don't like this operation.
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. 
+
+#### Cross-Compiling
+Alternatively, you could also try to cross-compile the code to i386. To do that, you will need to use the provided toolchain file as when running the cmake command: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. 
+
+You will also need to have the i686 cross-compiler set up beforehand. On Ubuntu, for example, this can be obtained with `apt-get install gcc-i686-linux-gnu g++-i686-linux-gnu cpp-i686-linux-gnu binutils-i686-linux-gnu libc6-dev-i386-cross` .
+
+When installing the dependencies for cross-compilation, it's important to ensure that all of them have their 32-bit versions installed. On APT based systems such as Ubuntu, this is accomplished by appending `:i386` to the package name, for example `apt-get libswresample-dev` would become `apt-get libswresample-dev:i386` .
 
 ## Run
 
