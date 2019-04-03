@@ -205,6 +205,7 @@ void XlibEventQueue::delayedDeleteCookie(XEvent* event)
     else {
         cookieData = nullptr;
     }
-}
 #endif
+}
+
 }
