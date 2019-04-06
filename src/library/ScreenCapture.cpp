@@ -64,9 +64,9 @@ DECLARE_ORIG_POINTER(SDL_UnlockSurface);
 DECLARE_ORIG_POINTER(SDL_UpperBlit)
 
 DEFINE_ORIG_POINTER(glReadPixels);
-DECLARE_ORIG_POINTER(glGenFramebuffers);
-DECLARE_ORIG_POINTER(glBindFramebuffer);
-DECLARE_ORIG_POINTER(glDeleteFramebuffers);
+DEFINE_ORIG_POINTER(glGenFramebuffers);
+DEFINE_ORIG_POINTER(glBindFramebuffer);
+DEFINE_ORIG_POINTER(glDeleteFramebuffers);
 DEFINE_ORIG_POINTER(glGenRenderbuffers);
 DEFINE_ORIG_POINTER(glBindRenderbuffer);
 DEFINE_ORIG_POINTER(glDeleteRenderbuffers);

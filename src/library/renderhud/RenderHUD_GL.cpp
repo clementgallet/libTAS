@@ -34,10 +34,10 @@ DEFINE_ORIG_POINTER(glTexParameteri)
 DEFINE_ORIG_POINTER(glTexImage2D)
 DEFINE_ORIG_POINTER(glActiveTexture)
 
-DEFINE_ORIG_POINTER(glGenFramebuffers)
-DEFINE_ORIG_POINTER(glBindFramebuffer)
+DECLARE_ORIG_POINTER(glGenFramebuffers)
+DECLARE_ORIG_POINTER(glBindFramebuffer)
 DEFINE_ORIG_POINTER(glFramebufferTexture2D)
-DEFINE_ORIG_POINTER(glDeleteFramebuffers)
+DECLARE_ORIG_POINTER(glDeleteFramebuffers)
 DECLARE_ORIG_POINTER(glBlitFramebuffer)
 
 DEFINE_ORIG_POINTER(glUseProgram)
