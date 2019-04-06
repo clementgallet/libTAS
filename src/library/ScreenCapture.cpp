@@ -73,6 +73,9 @@ DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
 DEFINE_ORIG_POINTER(glRenderbufferStorage);
 DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
 DECLARE_ORIG_POINTER(glBlitFramebuffer);
+DEFINE_ORIG_POINTER(glEnable);
+DEFINE_ORIG_POINTER(glDisable);
+DEFINE_ORIG_POINTER(glIsEnabled);
 
 DEFINE_ORIG_POINTER(XGetGeometry);
 
@@ -458,8 +461,14 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         LINK_NAMESPACE(glReadPixels, "GL");
         LINK_NAMESPACE(glBindFramebuffer, "GL");
         LINK_NAMESPACE(glBlitFramebuffer, "GL");
+        LINK_NAMESPACE(glEnable, "GL");
+        LINK_NAMESPACE(glDisable, "GL");
+        LINK_NAMESPACE(glIsEnabled, "GL");
 
         /* Copy the default framebuffer to our FBO */
+        GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
+        if (isFramebufferSrgb)
+            orig::glDisable(GL_FRAMEBUFFER_SRGB);
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screenFBO);
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -483,6 +492,9 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
                 memcpy(&winpixels[pos], &glpixels[(size-pos)-pitch], pitch);
             }
         }
+
+        if (isFramebufferSrgb)
+            orig::glEnable(GL_FRAMEBUFFER_SRGB);
     }
 
     else if (game_info.video & GameInfo::SDL1) {
@@ -571,11 +583,19 @@ int ScreenCapture::setPixels() {
     else if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glBindFramebuffer, "GL");
         LINK_NAMESPACE(glBlitFramebuffer, "GL");
+        LINK_NAMESPACE(glEnable, "GL");
+        LINK_NAMESPACE(glDisable, "GL");
+        LINK_NAMESPACE(glIsEnabled, "GL");
 
+        GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
+        if (isFramebufferSrgb)
+            orig::glDisable(GL_FRAMEBUFFER_SRGB);
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        if (isFramebufferSrgb)
+            orig::glEnable(GL_FRAMEBUFFER_SRGB);
     }
 
     else if (game_info.video & GameInfo::SDL1) {
