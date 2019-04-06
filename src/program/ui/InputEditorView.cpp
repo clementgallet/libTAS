@@ -88,35 +88,50 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
      * the option to globally enable them (AA_DontShowShortcutsInContextMenus)
      * is buggy, so we must enable for every single action.
      */
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
+
     this->addAction(a);
 
     menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
     a = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
     a = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence::Delete);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     menu->addSeparator();
     a = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence::Copy);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     a = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence::Cut);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     a = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence::Paste);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     a = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     a->setShortcutVisibleInContextMenu(true);
+#endif
     this->addAction(a);
 
     keyDialog = new KeyPressedDialog(this);
