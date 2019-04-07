@@ -47,7 +47,7 @@ To enable HUD on the game screen, you will also need:
 ### Building
 
     mkdir build && cd build
-    cmake ..
+    cmake -DCMAKE_BUILD_TYPE=Release ..
     make
 
 Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
