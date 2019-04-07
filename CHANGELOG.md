@@ -30,6 +30,7 @@
 * Fix evdev/jsdev hat inputs
 * Enforce a minimum column size for analog inputs in the input editor
 * Resize columns when it is needed
+* Prevent zombie game processes
 
 ## [1.3.3] - 2019-02-08
 ### Added

@@ -1413,11 +1413,10 @@ void GameLoop::loopExit()
 
         /* Remove savestates because they are invalid on future instances of the game */
         remove_savestates(context);
-        
-        /* wait on the previous process one last time to try to prevent it leaving a zombie */
-        usleep(50*1000);
-        waitpid(context->game_pid, nullptr, WNOHANG);
-        
+
+        /* wait on the game process to terminate */
+        wait(nullptr);
+
         context->status = Context::RESTARTING;
         emit statusChanged();
 
@@ -1446,10 +1445,9 @@ void GameLoop::loopExit()
     /* Remove savestates because they are invalid on future instances of the game */
     remove_savestates(context);
 
-    /* wait on the previous process one last time to try to prevent it leaving a zombie */
-        usleep(50*1000);
-        waitpid(context->game_pid, nullptr, WNOHANG);
-        
+    /* wait on the game process to terminate */
+    wait(nullptr);
+
     context->status = Context::INACTIVE;
     emit statusChanged();
 }
