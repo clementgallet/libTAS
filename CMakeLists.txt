@@ -177,6 +177,10 @@ target_compile_options(tas PUBLIC -fvisibility=hidden)
 target_compile_options(libTAS PUBLIC -Wno-float-equal)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -Wall -Wextra -Wmissing-include-dirs -Wmissing-declarations -Wfloat-equal -Wundef -Wcast-align -Winit-self -Wshadow -Wno-unused-parameter -Wno-missing-field-initializers")
 
+# Set optimization flags for release
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fweb -flto=1 -fno-stack-protector")
+set(CMAKE_CFLAGS_RELEASE "-O2 -DNDEBUG -fweb -flto=1 -fno-stack-protector")
+
 # Add Qt5 lib
 find_package(Qt5Widgets REQUIRED)
 if (Qt5Widgets_FOUND)
