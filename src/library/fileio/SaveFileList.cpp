@@ -27,7 +27,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <vector>
+#include <forward_list>
 #include <memory>
 #include <cstring>
 #include <unistd.h>
@@ -37,11 +37,15 @@ namespace libtas {
 
 namespace SaveFileList {
 
-std::vector<std::unique_ptr<SaveFile>> savefiles;
+static std::forward_list<std::unique_ptr<SaveFile>>& getSaveFileList() {
+    static std::forward_list<std::unique_ptr<SaveFile>> savefiles;
+    return savefiles;
+}
 
 /* Check if the file open permission allows for write operation */
 bool isSaveFile(const char *file, const char *modes)
 {
+    const auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return true;
@@ -56,6 +60,7 @@ bool isSaveFile(const char *file, const char *modes)
 
 bool isSaveFile(const char *file, int oflag)
 {
+    const auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return true;
@@ -119,30 +124,33 @@ bool isSaveFile(const char *file)
 
 FILE *openSaveFile(const char *file, const char *modes)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return savefile->open(modes);
         }
     }
 
-    savefiles.emplace_back(new SaveFile(file));
-    return savefiles.back()->open(modes);
+    savefiles.emplace_front(new SaveFile(file));
+    return savefiles.front()->open(modes);
 }
 
 int openSaveFile(const char *file, int oflag)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return savefile->open(oflag);
         }
     }
 
-    savefiles.emplace_back(new SaveFile(file));
-    return savefiles.back()->open(oflag);
+    savefiles.emplace_front(new SaveFile(file));
+    return savefiles.front()->open(oflag);
 }
 
 int closeSaveFile(int fd)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->fd == fd) {
             return savefile->closeFile();
@@ -154,6 +162,7 @@ int closeSaveFile(int fd)
 
 int closeSaveFile(FILE *stream)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->stream == stream) {
             return savefile->closeFile();
@@ -165,6 +174,7 @@ int closeSaveFile(FILE *stream)
 
 int removeSaveFile(const char *file)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return savefile->remove();
@@ -173,8 +183,8 @@ int removeSaveFile(const char *file)
 
     /* If the file is not registered, create a removed savefile */
     if (shared_config.prevent_savefiles) {
-        savefiles.emplace_back(new SaveFile(file));
-        savefiles.back()->remove();
+        savefiles.emplace_front(new SaveFile(file));
+        savefiles.front()->remove();
 
         GlobalNative gn;
         return access(file, W_OK);
@@ -192,9 +202,8 @@ int renameSaveFile(const char *oldfile, const char *newfile)
     free(canonnewfile);
 
     /* Remove the newfile if present */
-    savefiles.erase( std::remove_if(savefiles.begin(), savefiles.end(),
-        [newfile](const std::unique_ptr<SaveFile>& s) { return (s->isSameFile(newfile));}),
-        savefiles.end());
+    auto& savefiles = getSaveFileList();
+    savefiles.remove_if([newfile](const std::unique_ptr<SaveFile>& s) { return (s->isSameFile(newfile));});
 
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(oldfile)) {
@@ -205,9 +214,9 @@ int renameSaveFile(const char *oldfile, const char *newfile)
 
     /* If the file is not registered, create a savefile */
     if (shared_config.prevent_savefiles) {
-        savefiles.emplace_back(new SaveFile(oldfile));
-        savefiles.back()->open("rb");
-        savefiles.back()->filename = newfilestr;
+        savefiles.emplace_front(new SaveFile(oldfile));
+        savefiles.front()->open("rb");
+        savefiles.front()->filename = newfilestr;
 
         GlobalNative gn;
         return access(oldfile, W_OK);
@@ -218,6 +227,7 @@ int renameSaveFile(const char *oldfile, const char *newfile)
 
 int getSaveFileFd(const char *file)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return savefile->fd;
@@ -229,6 +239,7 @@ int getSaveFileFd(const char *file)
 
 bool isSaveFileRemoved(const char *file)
 {
+    auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
             return savefile->removed;
