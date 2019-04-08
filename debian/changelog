@@ -1,3 +1,32 @@
+libtas (1.3.4) unstable; urgency=medium
+
+  * Add an extra row in the input editor to add frames and copy at the end
+  * Use appveyor for automated building
+  * Add support for SDL_UpdateWindowSurface() screen update
+  * Hook udev to populate joystick information
+  * Block access to pulseaudio, so that games fallback on alsa
+  * Drag analog inputs in the input editor
+  * Implement XI2 inputs
+  * Add some tooltips
+  * Handle wait timeouts
+  * Add an option to enforce determinism when events are pulled asynchronously
+  * Show recording/playback toggle in the OSD messages
+  * Store custom input names from the input editor in movies
+  * A thread creating a window is considered as the main thread
+  * Add shortcuts to some input editor options
+  * Implement evdev/jsdev with pipes
+  * Remove time tracking all threads from movies/config
+  * Only offer to load a previous savestate movie if it's possible
+  * Remove the main thread condition in nondeterministic timer
+  * Fix SDL_BlitSurface hooking
+  * Fix a race condition on file handle list
+  * Fix evdev/jsdev hat inputs
+  * Enforce a minimum column size for analog inputs in the input editor
+  * Resize columns when it is needed
+  * Prevent zombie game processes
+
+ -- clement <clement.gallet@ens-lyon.org>  Mon, 08 Apr 2019 10:42:33 +0200
+
 libtas (1.3.3) unstable; urgency=medium
 
   * Implement more Xlib keyboard mapping functions

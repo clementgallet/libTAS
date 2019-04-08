@@ -1,5 +1,11 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+
+## [1.3.4] - 2019-04-08
+### Added
 
 * Add an extra row in the input editor to add frames and copy at the end
 * Use appveyor for automated building
