@@ -179,11 +179,21 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     ThreadManager::setMainThread();
 
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
-    // if (is_exiting) {
-    //     detTimer.flushDelay();
-    //     NATIVECALL(draw());
-    //     return;
-    // }
+    if (is_exiting) {
+        detTimer.flushDelay();
+        NATIVECALL(draw());
+
+        /* Still push native events so that the game can exit properly */
+        if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
+            pushNativeSDLEvents();
+        }
+
+        if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+            pushNativeXlibEvents();
+        }
+
+        return;
+    }
 
     /*** Update time ***/
 
