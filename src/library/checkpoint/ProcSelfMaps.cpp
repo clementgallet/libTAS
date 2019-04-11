@@ -196,8 +196,8 @@ bool ProcSelfMaps::getNextArea(Area *area)
         bool valid = getNextArea(&next_area); // recursive call
         if (valid && (strcmp(next_area.name, "[heap]") == 0)) {
             MYASSERT(area->endAddr == next_area.addr)
-            MYASSERT(area->prot == next_area.prot)
             MYASSERT(area->flags == next_area.flags)
+            area->prot |= next_area.prot;
             area->endAddr = next_area.endAddr;
             area->size += next_area.size;
         }
