@@ -417,29 +417,85 @@ static void *pthread_start(void *arg)
 /* Override */ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
     LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    if (GlobalState::isNative())
+        return orig::pthread_cond_wait(cond, mutex);
+
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
 
 /* Override */ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime)
 {
     LINK_NAMESPACE_VERSION(pthread_cond_timedwait, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
-    return orig::pthread_cond_timedwait(cond, mutex, abstime);
+    if (GlobalState::isNative())
+        return orig::pthread_cond_timedwait(cond, mutex, abstime);
+
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+
+    /* If not main thread, do not change the behavior */
+    if (!ThreadManager::isMainThread())
+        return orig::pthread_cond_timedwait(cond, mutex, abstime);
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
+        return orig::pthread_cond_timedwait(cond, mutex, abstime);
+
+    TimeHolder now = detTimer.getTicks();
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+        /* Wait for 0.1 sec, arbitrary */
+        TimeHolder delta_time;
+        delta_time.tv_sec = 0;
+        delta_time.tv_nsec = 100*1000*1000;
+        TimeHolder new_end_time = now + delta_time;
+        int ret = orig::pthread_cond_timedwait(cond, mutex, &new_end_time);
+        if (ret == 0)
+            return ret;
+    }
+
+    if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
+        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
+        /* Transfer time to our deterministic timer */
+        TimeHolder end = *abstime;
+        // end.tv_sec = end_time / (1000*1000);
+        // end.tv_nsec = (end_time % (1000*1000)) * 1000;
+        TimeHolder delay = end - now;
+        detTimer.addDelay(delay);
+    }
+
+    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+        /* Wait again for 0.1 sec, arbitrary */
+        now = detTimer.getTicks();
+        TimeHolder delta_time;
+        delta_time.tv_sec = 0;
+        delta_time.tv_nsec = 100*1000*1000;
+        TimeHolder new_end_time = now + delta_time;
+
+        // gint64 new_end_time = (static_cast<gint64>(now.tv_sec) * 1000000) + (now.tv_nsec / 1000) + 100*1000;
+        return orig::pthread_cond_timedwait(cond, mutex, &new_end_time);
+    }
+
+    /* Infinite wait */
+    LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
+    return orig::pthread_cond_wait(cond, mutex);
 }
 
 /* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond));
+    if (GlobalState::isNative())
+        return orig::pthread_cond_signal(cond);
+
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
     return orig::pthread_cond_signal(cond);
 }
 
 /* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
-    debuglog(LCF_WAIT | LCF_TODO | (ThreadManager::isMainThread()?0:LCF_FREQUENT), __func__, " call with cond ", static_cast<void*>(cond));
-//    if (ThreadManager::isMainThread()) printBacktrace();
+    if (GlobalState::isNative())
+        return orig::pthread_cond_broadcast(cond);
+
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
     return orig::pthread_cond_broadcast(cond);
 }
 
@@ -474,6 +530,9 @@ static void *pthread_start(void *arg)
 int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
     LINK_NAMESPACE(sem_timedwait, "pthread");
+    if (GlobalState::isNative())
+        return orig::sem_timedwait(sem, abstime);
+
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     return orig::sem_timedwait(sem, abstime);
 }
@@ -481,6 +540,9 @@ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 int sem_trywait (sem_t *sem) throw()
 {
     LINK_NAMESPACE(sem_trywait, "pthread");
+    if (GlobalState::isNative())
+        return orig::sem_trywait(sem);
+
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     return orig::sem_trywait(sem);
 }
