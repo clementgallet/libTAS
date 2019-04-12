@@ -667,7 +667,7 @@ void generateMouseMotionEvents(void)
         event2.motion.x = game_ai.pointer_x;
         event2.motion.y = game_ai.pointer_y;
         sdlEventQueue.insert(&event2);
-        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
     if (game_info.mouse & GameInfo::SDL1) {
@@ -682,7 +682,7 @@ void generateMouseMotionEvents(void)
         event1.motion.x = (Uint16) game_ai.pointer_x;
         event1.motion.y = (Uint16) game_ai.pointer_y;
         sdlEventQueue.insert(&event1);
-        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+        debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
     if (game_info.mouse & GameInfo::XEVENTS) {
@@ -702,7 +702,7 @@ void generateMouseMotionEvents(void)
                 xlibEventQueue.insert(&event);
             }
         }
-        debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", ai.pointer_x, ",", ai.pointer_y,")");
+        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
 #ifdef LIBTAS_HAS_XINPUT
@@ -785,12 +785,12 @@ void generateMouseButtonEvents(void)
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event2.type = SDL_MOUSEBUTTONDOWN;
                     event2.button.state = SDL_PRESSED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 else {
                     event2.type = SDL_MOUSEBUTTONUP;
                     event2.button.state = SDL_RELEASED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 event2.button.timestamp = timestamp;
                 event2.button.windowID = 0;
@@ -807,12 +807,12 @@ void generateMouseButtonEvents(void)
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
                     event1.button.state = SDL_PRESSED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
                 }
                 else {
                     event1.type = SDL1::SDL_MOUSEBUTTONUP;
                     event1.button.state = SDL_RELEASED;
-                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
+                    debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL1PointerButton(buttons[bi]));
                 }
                 event1.button.which = 0; // TODO: Same as above...
                 event1.button.button = SingleInput::toSDL1PointerButton(buttons[bi]);
@@ -825,11 +825,11 @@ void generateMouseButtonEvents(void)
                 XEvent event;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
-                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonPress with button ", SingleInput::toXlibPointerButton(buttons[bi]));
+                    debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonPress with button ", SingleInput::toXlibPointerButton(buttons[bi]));
                 }
                 else {
                     event.xbutton.type = ButtonRelease;
-                    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event ButtonRelease with button ", SingleInput::toXlibPointerButton(buttons[bi]));
+                    debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonRelease with button ", SingleInput::toXlibPointerButton(buttons[bi]));
                 }
                 event.xbutton.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
                 event.xbutton.x = game_ai.pointer_x;

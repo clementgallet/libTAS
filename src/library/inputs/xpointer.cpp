@@ -131,7 +131,7 @@ DEFINE_ORIG_POINTER(XQueryPointer);
             xlibEventQueue.insert(&event);
         }
     }
-    debuglog(LCF_EVENTS | LCF_MOUSE | LCF_UNTESTED, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+    debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
 
     /* Update the pointer coordinates */
     game_ai.pointer_x = event.xmotion.x;

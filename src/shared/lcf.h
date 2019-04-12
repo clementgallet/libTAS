@@ -28,7 +28,7 @@ typedef int LogCategoryFlag; enum
 	LCF_NONE     = 0,
 
     /* Log status, should be combined with a log category */
-	LCF_UNTESTED = 1 << 0, // things that have significant but not-yet-tested implementations.
+	LCF_MAINTHREAD = 1 << 0, // things that are executed by the main thread.
 	LCF_FREQUENT = 1 << 1, // things that tend to get called very often (more than once per frame).
 	LCF_ERROR    = 1 << 2, // things that shouldn't happen.
 	LCF_WARNING  = 1 << 3, // things that users should be warned about.

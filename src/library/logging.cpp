@@ -31,6 +31,10 @@ namespace libtas {
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
+    if ((shared_config.includeFlags & LCF_MAINTHREAD) &&
+        !ThreadManager::isMainThread())
+        return;
+    
     if ((!(lcf & shared_config.includeFlags)  ||
           (lcf & shared_config.excludeFlags)) &&
          !(lcf & LCF_ALERT))

@@ -391,7 +391,7 @@ ALCcontext* myalcGetThreadContext(void)
 
 ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO | LCF_UNTESTED);
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
     game_info.audio |= GameInfo::OPENAL;
     game_info.tosend = true;
     return &dummyDevice;
@@ -399,13 +399,13 @@ ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 
 ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type)
 {
-    debuglog(LCF_OPENAL | LCF_TODO | LCF_UNTESTED, __func__, " call with freq ", freq, ", channels ", channels, " and type ", type);
+    debuglog(LCF_OPENAL | LCF_TODO, __func__, " call with freq ", freq, ", channels ", channels, " and type ", type);
     return ALC_TRUE;
 }
 
 void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO | LCF_UNTESTED);
+    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
     audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
     memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
 }

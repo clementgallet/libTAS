@@ -22,6 +22,7 @@
 
 #include "../shared/lcf.h"
 #include "global.h" // shared_config
+#include "checkpoint/ThreadManager.h" // isMainThread()
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -95,6 +96,10 @@ inline void debuglog(LogCategoryFlag lcf, Args ...args)
     /* We also check this in debuglogstdio(), but doing it here avoid building
      * all strings, because as a fraction of these will be printed.
      */
+    if ((shared_config.includeFlags & LCF_MAINTHREAD) &&
+        !ThreadManager::isMainThread())
+        return;
+
     if ((!(lcf & shared_config.includeFlags) ||
           (lcf & shared_config.excludeFlags)) &&
          !(lcf & LCF_ALERT))

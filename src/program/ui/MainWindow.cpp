@@ -488,7 +488,7 @@ void MainWindow::createActions()
     loggingPrintGroup->setExclusive(false);
     connect(loggingPrintGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingPrint);
 
-    addActionCheckable(loggingPrintGroup, tr("Untested"), LCF_UNTESTED);
+    addActionCheckable(loggingPrintGroup, tr("Main Thread"), LCF_MAINTHREAD);
     addActionCheckable(loggingPrintGroup, tr("Frequent"), LCF_FREQUENT);
     addActionCheckable(loggingPrintGroup, tr("Error"), LCF_ERROR);
     addActionCheckable(loggingPrintGroup, tr("Warning"), LCF_WARNING);
@@ -524,7 +524,7 @@ void MainWindow::createActions()
     loggingExcludeGroup->setExclusive(false);
     connect(loggingExcludeGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingExclude);
 
-    addActionCheckable(loggingExcludeGroup, tr("Untested"), LCF_UNTESTED);
+    // addActionCheckable(loggingExcludeGroup, tr("Main Thread"), LCF_MAINTHREAD);
     addActionCheckable(loggingExcludeGroup, tr("Frequent"), LCF_FREQUENT);
     addActionCheckable(loggingExcludeGroup, tr("Error"), LCF_ERROR);
     addActionCheckable(loggingExcludeGroup, tr("Warning"), LCF_WARNING);

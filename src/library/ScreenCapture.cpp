@@ -499,7 +499,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
     else if (game_info.video & GameInfo::SDL1) {
         /* Not tested !! */
-        debuglog(LCF_DUMP | LCF_UNTESTED, "Access SDL_Surface pixels for video dump");
+        debuglog(LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         link_function((void**)&orig::SDL1_LockSurface, "SDL_LockSurface", "libSDL-1.2.so.0");
@@ -607,7 +607,7 @@ int ScreenCapture::setPixels() {
         link_function((void**)&orig::SDL1_UpperBlit, "SDL_UpperBlit", "libSDL-1.2.so.0");
 
         /* Not tested !! */
-        debuglog(LCF_DUMP | LCF_UNTESTED, "Set SDL1_Surface pixels");
+        debuglog(LCF_DUMP, "Set SDL1_Surface pixels");
 
         /* Get surface from window */
         SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
