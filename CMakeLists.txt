@@ -292,14 +292,8 @@ else()
     message(WARNING "HUD is disabled")
 endif()
 
-#add helper script to build directory.
-configure_file(libTasConcat.sh ./libTasConcat.sh COPYONLY)
-
 # Install program and library
 install(TARGETS libTAS tas DESTINATION bin)
-
-# Install dump segment automerge helper script
-install(FILES libTasConcat.sh DESTINATION bin)
 
 # Install desktop entry
 install(FILES libTAS.desktop DESTINATION share/applications)
