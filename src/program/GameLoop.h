@@ -91,6 +91,8 @@ private:
     bool haveFocus();
 
     void loopExit();
+    
+    void mergeSegments();
 
 signals:
     void statusChanged();

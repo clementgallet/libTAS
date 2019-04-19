@@ -25,6 +25,8 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
+#include <QCheckBox>
+
 
 #include "../Context.h"
 
@@ -47,11 +49,14 @@ private:
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
     QLineEdit *ffmpegOptions;
+    QCheckBox *mergeCheck;
+
 
 private slots:
     void slotBrowseEncodePath();
     void slotUpdate();
     void slotOk();
+    void slotMerge(bool checked);
 };
 
 #endif

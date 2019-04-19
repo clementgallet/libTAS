@@ -36,13 +36,18 @@
 #include <sstream>
 #include <iostream>
 #include <cerrno>
-#include <unistd.h> // fork()
+#include <unistd.h> // fork(), readlink, getpid
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
 #include <csignal> // kill
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 #include <X11/X.h>
+
+#include <stdio.h> //sprintf
+#include <limits.h> //PATH_MAX
+#include <libgen.h> //dirname
+#include <algorithm> //std::min
 
 #include <sys/personality.h>
 #ifndef HAVE_PERSONALITY
@@ -1108,6 +1113,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                  * allows to start a new encode on the same frame
                  */
                 sendMessage(MSGN_STOP_ENCODE);
+                if (context->config.merge_dump_segments)
+                  mergeSegments();
             }
             emit sharedConfigChanged();
             return false;
@@ -1421,7 +1428,10 @@ void GameLoop::loopExit()
         emit statusChanged();
 
         return;
-    }
+    } 
+    /* If we're not restarting, then check if we need to merge the dumps */
+    else if (context->config.sc.av_dumping && context->config.merge_dump_segments)
+        mergeSegments();
 
     if (movie.modifiedSinceLastSave) {
 
@@ -1450,4 +1460,24 @@ void GameLoop::loopExit()
 
     context->status = Context::INACTIVE;
     emit statusChanged();
+}
+
+void GameLoop::mergeSegments()
+{
+    /*expect script to be in the same directory as executable. This uses a method from
+    https://stackoverflow.com/questions/143174/how-do-i-get-the-directory-that-a-program-is-running-from#198099
+    which was tweaked until the compiler stopped complaining */
+    const ssize_t len = PATH_MAX;
+    char szTmp[32];
+    char exe[len];
+    sprintf(szTmp, "/proc/%d/exe", getpid());
+    const ssize_t bytes = std::min(readlink(szTmp, exe, len), len - 1);
+    if(bytes >= 0)
+        exe[bytes] = '\0';    
+    std::ostringstream mergeCommand;
+    mergeCommand << dirname(exe);
+    mergeCommand << "/libTasConcat.sh ";
+    mergeCommand << context->config.dumpfile;
+    sleep(2); //make sure encode has time to finish before merging
+    system(mergeCommand.str().c_str());
 }

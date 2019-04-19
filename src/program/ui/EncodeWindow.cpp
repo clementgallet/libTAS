@@ -71,6 +71,9 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     connect(audioBitrate, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &EncodeWindow::slotUpdate);
 
     ffmpegOptions = new QLineEdit();
+    
+    mergeCheck = new QCheckBox("Automatically merge dump segments");
+    connect(mergeCheck, &QAbstractButton::clicked, this, &EncodeWindow::slotMerge);
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
     QGridLayout *encodeCodecLayout = new QGridLayout;
@@ -86,6 +89,8 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
     encodeCodecLayout->addWidget(new QLabel(tr("ffmpeg options:")), 2, 0);
     encodeCodecLayout->addWidget(ffmpegOptions, 2, 1, 1, 4);
+    encodeCodecLayout->addWidget(mergeCheck, 3, 1, 1, 4);
+    
 
     encodeCodecLayout->setColumnMinimumWidth(2, 50);
     encodeCodecLayout->setColumnStretch(2, 1);
@@ -128,6 +133,8 @@ void EncodeWindow::update_config()
 
     /* Set ffmpeg options */
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
+    
+    mergeCheck->setChecked(context->config.merge_dump_segments);
 
     if (context->config.ffmpegoptions.empty()) {
         slotUpdate();
@@ -166,4 +173,9 @@ void EncodeWindow::slotBrowseEncodePath()
     QString filename = QFileDialog::getSaveFileName(this, tr("Choose an encode filename"), encodePath->text());
     if (!filename.isNull())
         encodePath->setText(filename);
+}
+
+void EncodeWindow::slotMerge(bool checked)
+{
+        context->config.merge_dump_segments = checked;
 }

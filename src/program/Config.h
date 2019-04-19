@@ -63,6 +63,9 @@ public:
 
     /* Were we started up with the -d option? */
     bool dumping;
+    
+    /* Were we started up with the -d option? */
+    bool merge_dump_segments = false;
 
     /* Path of the libraries used by the game */
     std::string libdir;
