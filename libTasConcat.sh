@@ -20,4 +20,4 @@ getChunks(){
 }
 
 sync
-yes | ffmpeg -f concat -safe 0 -i <(getChunks) -c copy $VID_DIR/$VID_NAME-merged.mkv
+ffmpeg -f concat -safe 0 -i <(getChunks) -c copy -y $VID_DIR/$VID_NAME-merged.mkv
