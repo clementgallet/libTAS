@@ -64,7 +64,7 @@ public:
     /* Were we started up with the -d option? */
     bool dumping;
     
-    /* Were we started up with the -d option? */
+    /* Are we supposed to merge the segments after dumping? */
     bool merge_dump_segments = false;
 
     /* Path of the libraries used by the game */
