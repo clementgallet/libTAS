@@ -44,6 +44,7 @@
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 #include <X11/X.h>
+#include <stdlib.h> //system()
 
 #include <sys/personality.h>
 #ifndef HAVE_PERSONALITY
