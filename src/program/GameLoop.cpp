@@ -37,7 +37,7 @@
 #include <sstream>
 #include <iostream>
 #include <cerrno>
-#include <unistd.h> // fork(), readlink, getpid
+#include <unistd.h> // fork()
 #include <fcntl.h> // O_RDWR, O_CREAT
 #include <future>
 #include <csignal> // kill
