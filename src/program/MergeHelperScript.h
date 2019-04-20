@@ -40,11 +40,6 @@ VID_DIR=$(dirname $VID_PATH)
 VID_NAME=$(basename -s $VID_EXT $VID_PATH)
 
 getChunks(){
-    #first video is a special case
-    echo file $VID_PATH
-    
-    #sort command can ensure the rest are in order
-    temp_var="$VID_DIR"/"$VID_NAME"_
     for i in $(ls -v "$VID_DIR"/"$VID_NAME"_*"$VID_EXT")
     do
       echo file $i
