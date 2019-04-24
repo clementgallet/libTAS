@@ -362,10 +362,10 @@ bool ThreadManager::checkpoint()
     AudioPlayer::close();
 
     /* Perform a series of checks before attempting to checkpoint */
-    // if (!Checkpoint::checkCheckpoint()) {
+    if (!Checkpoint::checkCheckpoint()) {
         ThreadSync::releaseLocks();
         return false;
-    // }
+    }
 
     /* Before suspending threads, we must also register our signal handlers */
     CustomSignals::registerHandlers();
