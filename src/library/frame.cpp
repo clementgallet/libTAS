@@ -486,7 +486,7 @@ static void receive_messages(std::function<void()> draw)
     while (1)
     {
         int message = receiveMessage();
-
+        bool succeeded;
         std::string str;
         switch (message)
         {
@@ -540,13 +540,15 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_SAVESTATE:
-                ThreadManager::checkpoint();
+                succeeded = ThreadManager::checkpoint();
 
-                /* Current savestate is now the parent savestate */
-                Checkpoint::setCurrentToParent();
+                if (succeeded) {
+                    /* Current savestate is now the parent savestate */
+                    Checkpoint::setCurrentToParent();
 
-                /* We did at least one savestate, used for backtrack savestate */
-                didASavestate = true;
+                    /* We did at least one savestate, used for backtrack savestate */
+                    didASavestate = true;
+                }
 
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from ThreadManager::restore() under.
@@ -577,6 +579,14 @@ static void receive_messages(std::function<void()> draw)
 
                     /* Screen should have changed after loading */
                     ScreenCapture::setPixels();
+                }
+                else if (succeeded) {
+                    /* Tell the program that the saving succeeded */
+                    sendMessage(MSGB_SAVING_SUCCEEDED);
+                }
+                else {
+                    /* A bit hackish, we must send something */
+                    sendMessage(-1);
                 }
 
                 break;

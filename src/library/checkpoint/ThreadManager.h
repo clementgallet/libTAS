@@ -105,10 +105,10 @@ public:
     /* Deallocate all ThreadInfo structs from the free list */
     static void deallocateThreads();
 
-    /* Checkpoint */
-    static void checkpoint();
+    /* Save a savestate and returns if succeeded */
+    static bool checkpoint();
 
-    /* Restore */
+    /* Restore a savestate */
     static void restore();
 
     /* Safely try to change a ThreadInfo state and return if done */

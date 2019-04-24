@@ -132,6 +132,12 @@ enum {
     MSGN_LOADSTATE,
 
     /*
+     * Tells the program that the saving succeeded
+     * Argument: none
+     */
+    MSGB_SAVING_SUCCEEDED,
+
+    /*
      * Tells the program that the loading succeeded
      * Argument: none
      */
