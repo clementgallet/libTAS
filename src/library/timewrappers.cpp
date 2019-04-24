@@ -53,7 +53,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
-    clock_t clk = static_cast<clock_t>((static_cast<double>(ts.tv_sec) + static_cast<double>(ts.tv_nsec) / 1000000000.0) * CLOCKS_PER_SEC);
+    clock_t clk = static_cast<clock_t>(ts.tv_sec) * CLOCKS_PER_SEC + (static_cast<clock_t>(ts.tv_nsec) * CLOCKS_PER_SEC) / 1000000000;
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", clk);
     return clk;
 }
