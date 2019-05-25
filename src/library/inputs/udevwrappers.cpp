@@ -1337,7 +1337,7 @@ namespace libtas {
         return errno = EINVAL, nullptr;
     return udev_device->device.sysattrPathValue(sysattr).c_str();
 }
-/* Override */ int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, char *value) {
+/* Override */ int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, const char *value) {
     if (!udev_device || !sysattr)
         return -EINVAL;
     return udev_device->device.hasSysattr(sysattr) ? -EPERM : -ENOENT;

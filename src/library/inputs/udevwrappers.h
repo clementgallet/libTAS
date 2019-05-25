@@ -91,7 +91,7 @@ OVERRIDE const char *udev_device_get_action(struct udev_device *udev_device);
 OVERRIDE unsigned long long int udev_device_get_seqnum(struct udev_device *udev_device);
 OVERRIDE unsigned long long int udev_device_get_usec_since_initialized(struct udev_device *udev_device);
 OVERRIDE const char *udev_device_get_sysattr_value(struct udev_device *udev_device, const char *sysattr);
-OVERRIDE int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, char *value);
+OVERRIDE int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, const char *value);
 OVERRIDE int udev_device_has_tag(struct udev_device *udev_device, const char *tag);
 
 /*
