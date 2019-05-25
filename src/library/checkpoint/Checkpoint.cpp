@@ -908,7 +908,10 @@ static size_t writeAllAreas(bool base)
 
     int spmfd;
     NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
-    MYASSERT(spmfd != -1);
+    if (shared_config.incremental_savestates) {
+        /* We need /proc/self/pagemap for incremental savestates */
+        MYASSERT(spmfd != -1);
+    }
 
     int crfd;
     if (shared_config.incremental_savestates) {
@@ -985,7 +988,9 @@ static size_t writeAllAreas(bool base)
         NATIVECALL(close(crfd));
     }
 
-    NATIVECALL(close(spmfd));
+    if (spmfd != -1) {
+        NATIVECALL(close(spmfd));        
+    }
 
     /* Closing the savestate files */
     if (!shared_config.savestates_in_ram) {
@@ -1027,8 +1032,10 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     Utils::writeAll(pmfd, &area, sizeof(area));
     area_size += sizeof(area);
 
-    /* Seek at the beginning of the area pagemap */
-    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
+    if (spmfd != -1) {
+        /* Seek at the beginning of the area pagemap */
+        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));        
+    }
 
     /* Number of pages in the area */
     int nb_pages = area.size / 4096;
@@ -1059,14 +1066,14 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
         }
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if (pagemap_i >= 512) {
+        if ((spmfd != -1) && (pagemap_i >= 512)) {
             size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
         }
 
         /* Gather the flag for the current pagemap. */
-        uint64_t page = pagemaps[pagemap_i++];
+        uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
         bool page_present = page & (0x1ull << 63);
         bool soft_dirty = page & (0x1ull << 55);
 
