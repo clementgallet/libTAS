@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "xinput.h"
 #ifdef LIBTAS_HAS_XINPUT
 
-#include "xinput.h"
 #include "../hook.h"
 #include "../logging.h"
 

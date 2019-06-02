@@ -20,6 +20,8 @@
 #ifndef LIBTAS_XF86VIDMODE_H_INCL
 #define LIBTAS_XF86VIDMODE_H_INCL
 
+#include "config.h"
+
 #ifdef LIBTAS_HAS_XF86VMODE
 
 #include "global.h"

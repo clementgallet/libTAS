@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "xrandr.h"
 #ifdef LIBTAS_HAS_XRANDR
 
-#include "xrandr.h"
 #include "hook.h"
 #include "logging.h"
 

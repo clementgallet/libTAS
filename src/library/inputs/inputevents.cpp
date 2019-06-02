@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"

@@ -20,6 +20,7 @@
 #ifndef LIBTAS_XINPUT_H_INCL
 #define LIBTAS_XINPUT_H_INCL
 
+#include "config.h"
 #ifdef LIBTAS_HAS_XINPUT
 
 #include "../global.h"

@@ -17,9 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "xf86vidmode.h"
+
 #ifdef LIBTAS_HAS_XF86VMODE
 
-#include "xf86vidmode.h"
 #include "hook.h"
 #include "logging.h"
 

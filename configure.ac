@@ -1,3 +1,5 @@
+dnl **** Initialization ****
+
 AC_INIT([libTAS], [1.3.4], [clement.gallet@ens-lyon.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_PROG_CXX
@@ -8,11 +10,32 @@ AC_CONFIG_FILES([
  src/program/Makefile
  src/library/Makefile
 ])
+AC_CANONICAL_HOST
+
+dnl **** Configure options ****
 
 AC_ARG_ENABLE([hud], AS_HELP_STRING([--disable-hud], [Disable the HUD]))
+AC_ARG_ENABLE([i386], AS_HELP_STRING([--enable-i386],[Build libTAS for 32-bit executables]))
 
-AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debugging, default: no]))
-AM_CONDITIONAL(DEBUG, [test "x$enable_debug" == "xyes"])
+case $host in
+  x86_64*|amd64*)
+    if test "x$enable_i386" == "xyes"
+    then
+       AC_LANG_PUSH([C++])
+       CXX="$CXX -m32"
+       AC_MSG_CHECKING(for i386 cross-compiling)
+       AC_LINK_IFELSE([AC_LANG_PROGRAM()],[AC_MSG_RESULT(yes); cxx_m32=yes],[AC_MSG_RESULT(no)])
+       test "x$cxx_m32" == "xyes" || AC_MSG_ERROR([Cannot build a 32-bit program, you need to install 32-bit development libraries.])
+       AC_LANG_POP([C++])
+       PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-/usr/lib/i386-linux-gnu/pkgconfig:/usr/lib/pkgconfig}
+       export PKG_CONFIG_PATH
+    fi
+    ;;
+esac
+
+AC_ARG_ENABLE([release-build], AS_HELP_STRING([--enable-release-build], [Build a release]))
+
+dnl **** Check for libraries and headers ****
 
 PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
 AC_SUBST([QT5_CFLAGS])
@@ -57,6 +80,17 @@ AS_IF([test "x$enable_hud" != "xno"], [
 
 AS_IF([test "x$enable_hud" == "xno"], [
 	AC_MSG_WARN(HUD is disabled)
+])
+
+AS_IF([test "x$enable_release_build" != "xyes"], [
+    dnl Get the latest abbreviated commit hash of the working branch
+    git_commit_hash=`git log -1 --format=%h`
+    AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_COMMIT], ["$git_commit_hash"], [Git commit])
+    AC_MSG_NOTICE([git commit is $git_commit_hash])
+    
+    dnl Add build date as macro
+    today=`date +%Y-%m-%d`
+    AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$today"], [Git commit])
 ])
 
 AC_OUTPUT
