@@ -31,8 +31,8 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential cmake extra-cmake-modules libx11-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libasound2-dev libswresample-dev ffmpeg`
-* Arch: `pacman -S base-devel cmake extra-cmake-modules qt5-base xcb-util-cursor alsa-lib ffmpeg`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libasound2-dev libswresample-dev ffmpeg`
+* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib ffmpeg`
 
 To enable HUD on the game screen, you will also need:
 
@@ -46,20 +46,22 @@ To enable HUD on the game screen, you will also need:
 
 ### Building
 
-    mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    make
+    ./build.sh
 
-Cmake will detect the presence of these libraries and disable the corresponding features if necessary.
-If you want to manually enable/disable a feature, you must add just after the `cmake` command:
+autoconf will detect the presence of these libraries and disable the corresponding features if necessary.
+If you want to manually enable/disable a feature, you must add at the end of the `build.sh` command:
 
-- `-DENABLE_HUD=ON/OFF`: enable/disable displaying informations on the game screen
+- `--disable-hud`: enable/disable displaying informations on the game screen
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, the easiest way is to build a virtual machine with a i386 system. You could also try to cross-compile the code to i386. To do that, use the provided toolchain file as followed: `cmake -DCMAKE_TOOLCHAIN_FILE=../32bit.toolchain.cmake ..`. However, many users failed to do this due to some libraries that don't like this operation.
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, you can cross-compile the code to i386. To do that, add the following option: `--enable-i386`. You need to install the 32-bit version of the required libraries.
+
+### Install
+
+    sudo make install
 
 ## Run
 
-To run this program, just type:
+To run this program, you can use the program shortcut in your system menu, or open a terminal and enter:
 
     libTAS [game_executable_path [game_cmdline_arguments]]
 

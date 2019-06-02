@@ -3,6 +3,7 @@
 ### Changed
 
 * Don't require /proc/self/pagemap to exist for savestating
+* Switch to autotools
 
 ### Fixed
 
