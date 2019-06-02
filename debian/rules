@@ -13,12 +13,6 @@ export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 # package maintainers to append LDFLAGS
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-#disable building debugging symbols
-export DEB_CFLAGS_MAINT_STRIP  = -g
-export DEB_CXXFLAGS_MAINT_STRIP  = -g
-export DEB_LDFLAGS_MAINT_STRIP = -g
-
-
 %:
 	dh $@
 
@@ -27,4 +21,4 @@ export DEB_LDFLAGS_MAINT_STRIP = -g
 
 # Use target Release instead of None
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DINTERIM_VERSION=Off
+	dh_auto_configure -- --enable-release-build
