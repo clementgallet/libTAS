@@ -21,9 +21,9 @@
 #define LIBTAS_SHAREDCONFIG_H_INCLUDED
 
 #include "lcf.h"
-#include <time.h>
+#include <cstdint>
 
-struct SharedConfig {
+struct alignas(16) SharedConfig {
     /* Is the game running or on pause */
     bool running = false;
 
@@ -50,10 +50,10 @@ struct SharedConfig {
     int recording = NO_RECORDING;
 
     /* Movie framecount */
-    unsigned long movie_framecount = 0;
+    uint64_t movie_framecount = 0;
 
     /* Frame count at the start of the game. Used when game has restarted */
-    unsigned long initial_framecount = 0;
+    uint64_t initial_framecount = 0;
 
     /* Log status */
     enum LogStatus {
@@ -168,8 +168,11 @@ struct SharedConfig {
     bool save_screenpixels = true;
 
     /* Initial system time at game startup */
-    struct timespec initial_time = {1, 0};
-
+    /* We don't use struct timespec because it contains longs so the size
+     * depends on the arch.*/
+    uint64_t initial_time_sec = 1;
+    uint64_t initial_time_nsec = 0;
+    
     /* Virtual monitor resolution */
     int screen_width = 0;
     int screen_height = 0;

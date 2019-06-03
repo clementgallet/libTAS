@@ -257,7 +257,8 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
 
 void DeterministicTimer::initialize(void)
 {
-    ticks = shared_config.initial_time;
+    ticks.tv_sec = shared_config.initial_time_sec;
+    ticks.tv_nsec = shared_config.initial_time_nsec;
 
     if (shared_config.framerate_num > 0) {
         baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;

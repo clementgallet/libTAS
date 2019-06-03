@@ -829,8 +829,8 @@ void MainWindow::updateStatus()
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
-            initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
-            initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
+            initialTimeSec->setValue(context->config.sc.initial_time_sec);
+            initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
             if (context->config.sc.av_dumping) {
                 context->config.sc.av_dumping = false;
@@ -952,8 +952,8 @@ void MainWindow::updateFrameCountTime()
     movieFrameCount->setValue(context->config.sc.movie_framecount);
 
     /* Update time */
-    initialTimeSec->setValue(context->current_time.tv_sec);
-    initialTimeNsec->setValue(context->current_time.tv_nsec);
+    initialTimeSec->setValue(context->current_time_sec);
+    initialTimeNsec->setValue(context->current_time_nsec);
 
     /* Update movie time */
     if (context->config.sc.framerate_num > 0) {
@@ -1089,8 +1089,8 @@ void MainWindow::updateUIFromConfig()
     fpsDenField->setValue(context->config.sc.framerate_den);
     authorField->setText(context->authors.c_str());
 
-    initialTimeSec->setValue(context->config.sc.initial_time.tv_sec);
-    initialTimeNsec->setValue(context->config.sc.initial_time.tv_nsec);
+    initialTimeSec->setValue(context->config.sc.initial_time_sec);
+    initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
     movieBox->setChecked(!(context->config.sc.recording == SharedConfig::NO_RECORDING));
 
@@ -1198,8 +1198,8 @@ void MainWindow::slotLaunch()
     /* Set a few parameters */
     context->config.sc.framerate_num = fpsNumField->value();
     context->config.sc.framerate_den = fpsDenField->value();
-    context->config.sc.initial_time.tv_sec = initialTimeSec->value();
-    context->config.sc.initial_time.tv_nsec = initialTimeNsec->value();
+    context->config.sc.initial_time_sec = initialTimeSec->value();
+    context->config.sc.initial_time_nsec = initialTimeNsec->value();
 
     setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
     setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);

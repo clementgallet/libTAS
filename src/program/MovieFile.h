@@ -94,34 +94,34 @@ public:
     int saveMovie(const std::string& moviefile);
 
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
-    int saveMovie(const std::string& moviefile, unsigned long frame_nb);
+    int saveMovie(const std::string& moviefile, uint64_t frame_nb);
 
     /* Get the number of frames of the current movie */
-    unsigned long nbFrames();
+    uint64_t nbFrames();
 
     /* Get the frame count of the associated savestate if any */
-    unsigned long savestateFramecount() const;
+    uint64_t savestateFramecount() const;
 
     /* Set inputs for a certain frame, and truncate if keep_inputs is false */
-    int setInputs(const AllInputs& inputs, unsigned long pos, bool keep_inputs);
+    int setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs);
 
     /* Set inputs in the current frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, bool keep_inputs);
 
     /* Load inputs from a certain frame */
-    int getInputs(AllInputs& inputs, unsigned long pos) const;
+    int getInputs(AllInputs& inputs, uint64_t pos) const;
 
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs) const;
 
     /* Insert inputs before the requested pos */
-    void insertInputsBefore(const AllInputs& inputs, unsigned long pos);
+    void insertInputsBefore(const AllInputs& inputs, uint64_t pos);
 
     /* Delete inputs at the requested pos */
-    void deleteInputs(unsigned long pos);
+    void deleteInputs(uint64_t pos);
 
     /* Truncate inputs to a frame number */
-    void truncateInputs(unsigned long size);
+    void truncateInputs(uint64_t size);
 
     /* Copy locked inputs from the current inputs to the inputs in argument */
     void setLockedInputs(AllInputs& inputs);

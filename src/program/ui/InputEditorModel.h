@@ -120,7 +120,7 @@ public slots:
     void endEditInputs();
 
     /* Register a savestate for display */
-    void registerSavestate(int slot, unsigned long frame);
+    void registerSavestate(int slot, uint64_t frame);
 
 private:
     Context *context;
@@ -130,10 +130,10 @@ private:
     std::vector<SingleInput> input_set;
 
     /* Array of framecount for savestates */
-    std::array<unsigned long, 10> savestate_frames;
+    std::array<uint64_t, 10> savestate_frames;
 
     /* Last saved/loaded state */
-    unsigned long last_savestate = 0;
+    uint64_t last_savestate = 0;
 
 signals:
     void frameCountChanged();

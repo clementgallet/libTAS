@@ -238,7 +238,7 @@ void KeyMapping::init(xcb_connection_t* conn)
     default_inputs();
 }
 
-std::string KeyMapping::input_description(KeySym ks)
+std::string KeyMapping::input_description(xcb_keysym_t ks)
 {
     for (auto iter : input_list) {
         if (iter.type == SingleInput::IT_KEYBOARD) {
@@ -306,7 +306,7 @@ void KeyMapping::default_input(int input_index)
         input_mapping[si.value] = si;
 }
 
-void KeyMapping::reassign_hotkey(int hotkey_index, KeySym ks)
+void KeyMapping::reassign_hotkey(int hotkey_index, xcb_keysym_t ks)
 {
     /* Hotkey selected */
     HotKey hk = hotkey_list[hotkey_index];
@@ -323,7 +323,7 @@ void KeyMapping::reassign_hotkey(int hotkey_index, KeySym ks)
         hotkey_mapping[ks] = hk;
 }
 
-void KeyMapping::reassign_input(int input_index, KeySym ks)
+void KeyMapping::reassign_input(int input_index, xcb_keysym_t ks)
 {
     /* Input selected */
     SingleInput si = input_list[input_index];

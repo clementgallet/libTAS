@@ -22,8 +22,6 @@
 
 #include "SingleInput.h"
 
-/* I'm typedef'ing KeySym here because including <X11/X.h> messes up with Qt */
-typedef unsigned long int KeySym;
 #include <array>
 #include <set>
 
@@ -52,7 +50,7 @@ class AllInputs {
          * position and equivalent KeySym.
          */
 
-        std::array<KeySym,MAXKEYS> keyboard;
+        std::array<uint32_t,MAXKEYS> keyboard;
 
         /* Pointer coordinates relative to the origin of the game window */
         int pointer_x;

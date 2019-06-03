@@ -36,7 +36,7 @@ enum {
 
     /*
      * The game sends the frame number and time
-     * Argument: unsigned long, struct timespec
+     * Argument: 3 uint64_t
      */
     MSGB_FRAMECOUNT_TIME,
 

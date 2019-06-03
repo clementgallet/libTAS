@@ -41,10 +41,10 @@
 namespace libtas {
 
 /* Frame counter */
-unsigned long framecount = 0;
+uint64_t framecount = 0;
 
 /* Store the number of nondraw frames */
-static unsigned long nondraw_framecount = 0;
+static uint64_t nondraw_framecount = 0;
 
 /* Did we do at least one savestate? */
 static bool didASavestate = false;
@@ -67,7 +67,7 @@ static void computeFPS(float& fps, float& lfps)
     /* Computations include values from past n calls */
     static const int history_length = 10;
 
-    static std::array<unsigned long, history_length> lastFrames;
+    static std::array<uint64_t, history_length> lastFrames;
     static std::array<TimeHolder, history_length> lastTimes;
     static std::array<TimeHolder, history_length> lastTicks;
 
@@ -83,7 +83,7 @@ static void computeFPS(float& fps, float& lfps)
         refresh_counter = 0;
 
         /* Update frame */
-        unsigned long lastFrame = lastFrames[compute_counter];
+        uint64_t lastFrame = lastFrames[compute_counter];
         lastFrames[compute_counter] = framecount;
 
         /* Update current time */
@@ -94,7 +94,7 @@ static void computeFPS(float& fps, float& lfps)
         TimeHolder lastTick = lastTicks[compute_counter];
         lastTicks[compute_counter] = detTimer.getTicks();
 
-        unsigned long deltaFrames = framecount - lastFrame;
+        uint64_t deltaFrames = framecount - lastFrame;
 
         /* Compute real fps (number of drawn screens per second) */
         TimeHolder deltaTime = lastTimes[compute_counter] - lastTime;
@@ -221,9 +221,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 
     /* Send framecount and internal time */
     sendMessage(MSGB_FRAMECOUNT_TIME);
-    sendData(&framecount, sizeof(unsigned long));
+    sendData(&framecount, sizeof(uint64_t));
     struct timespec ticks = detTimer.getTicks();
-    sendData(&ticks, sizeof(struct timespec));
+    uint64_t ticks_val = ticks.tv_sec;
+    sendData(&ticks_val, sizeof(uint64_t));
+    ticks_val = ticks.tv_nsec;
+    sendData(&ticks_val, sizeof(uint64_t));
 
     /* Send GameInfo struct if needed */
     if (game_info.tosend) {
@@ -573,9 +576,12 @@ static void receive_messages(std::function<void()> draw)
                      * probably has changed.
                      */
                     sendMessage(MSGB_FRAMECOUNT_TIME);
-                    sendData(&framecount, sizeof(unsigned long));
+                    sendData(&framecount, sizeof(uint64_t));
                     struct timespec ticks = detTimer.getTicks();
-                    sendData(&ticks, sizeof(struct timespec));
+                    uint64_t ticks_val = ticks.tv_sec;
+                    sendData(&ticks_val, sizeof(uint64_t));
+                    ticks_val = ticks.tv_nsec;
+                    sendData(&ticks_val, sizeof(uint64_t));
 
                     /* Screen should have changed after loading */
                     ScreenCapture::setPixels();
@@ -599,10 +605,13 @@ static void receive_messages(std::function<void()> draw)
                  * message in either case.
                  */
                 sendMessage(MSGB_FRAMECOUNT_TIME);
-                sendData(&framecount, sizeof(unsigned long));
+                sendData(&framecount, sizeof(uint64_t));
                 {
                     struct timespec ticks = detTimer.getTicks();
-                    sendData(&ticks, sizeof(struct timespec));
+                    uint64_t ticks_val = ticks.tv_sec;
+                    sendData(&ticks_val, sizeof(uint64_t));
+                    ticks_val = ticks.tv_nsec;
+                    sendData(&ticks_val, sizeof(uint64_t));
                 }
 
                 break;

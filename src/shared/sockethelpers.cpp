@@ -114,7 +114,8 @@ void sendMessage(int message)
 void sendString(const std::string& str)
 {
     size_t str_size = str.size();
-    sendData(&str_size, sizeof(size_t));
+    int str_size_int = static_cast<int>(str_size);
+    sendData(&str_size_int, sizeof(int));
     sendData(str.c_str(), str_size);
 }
 
@@ -134,8 +135,9 @@ int receiveMessage()
 
 std::string receiveString()
 {
-    size_t str_size;
-    receiveData(&str_size, sizeof(size_t));
+    int str_size_int;
+    receiveData(&str_size_int, sizeof(int));
+    size_t str_size = str_size_int;
 
     /* TODO: There might be a better way to do this...? */
     std::vector<char> buf(str_size, 0x00);
@@ -147,8 +149,9 @@ std::string receiveString()
 
 void receiveCString(char* str)
 {
-    size_t str_size;
-    receiveData(&str_size, sizeof(size_t));
+    int str_size_int;
+    receiveData(&str_size_int, sizeof(int));
+    size_t str_size = str_size_int;
     receiveData(str, str_size);
     str[str_size] = '\0';
 }

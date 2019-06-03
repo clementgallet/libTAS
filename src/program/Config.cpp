@@ -205,7 +205,7 @@ void Config::load(const std::string& gamepath) {
         km.hotkey_mapping.clear();
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
-        KeySym keysym = settings.value("keysym").toInt();
+        xcb_keysym_t keysym = settings.value("keysym").toInt();
         HotKey hotkey = settings.value("hotkey").value<HotKey>();
         km.hotkey_mapping[keysym] = hotkey;
     }
@@ -216,7 +216,7 @@ void Config::load(const std::string& gamepath) {
         km.input_mapping.clear();
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
-        KeySym keysym = settings.value("keysym").toInt();
+        xcb_keysym_t keysym = settings.value("keysym").toInt();
         SingleInput si = settings.value("input").value<SingleInput>();
         km.input_mapping[keysym] = si;
     }

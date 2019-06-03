@@ -43,7 +43,7 @@ int AllInputs::getInput(const SingleInput &si) const
 {
     /* Keyboard inputs */
     if (si.type == SingleInput::IT_KEYBOARD) {
-        for (const KeySym& ks : keyboard) {
+        for (const uint32_t& ks : keyboard) {
             if (si.value == ks) {
                 return 1;
             }
@@ -168,7 +168,7 @@ int AllInputs::toggleInput(const SingleInput &si)
 
 void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
 {
-    for (const KeySym& ks : keyboard) {
+    for (const uint32_t& ks : keyboard) {
         if (ks) {
             SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
             input_set.insert(si);

@@ -31,20 +31,20 @@ namespace libtas {
 /* Helper functions to translate from a Xlib KeySym to
  * a SDL 1 SDLKey or a SDL 2 Keycode
  */
-SDL_Keycode X11_TranslateKeysym(KeySym kc);
-SDL1::SDLKey X11_Translate1Keysym(KeySym xsym);
+SDL_Keycode X11_TranslateKeysym(unsigned int kc);
+SDL1::SDLKey X11_Translate1Keysym(unsigned int xsym);
 
 void X11_InitKeymap(void);
 
 /* Fill the keyboard array that SDL functions are expected,
  * based on the KeySym set we get from our AllInputs struct.
  */
-void xkeyboardToSDLkeyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
-void xkeyboardToSDL1keyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
+void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
+void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
 
 /* Fill the SDL 1 or SDL 2 full key struct based on a Xlib KeySym */
-void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym);
-void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym);
+void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym);
+void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym);
 
 }
 

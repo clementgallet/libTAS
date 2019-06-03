@@ -218,7 +218,7 @@ void X11_InitKeymap(void)
 }
 
 /* Get the translated SDL virtual keysym */
-SDL_Keycode X11_TranslateKeysym(KeySym xsym)
+SDL_Keycode X11_TranslateKeysym(unsigned int xsym)
 {
     static int keymap_inited = 0;
     if (! keymap_inited) {
@@ -262,7 +262,7 @@ SDL_Keycode X11_TranslateKeysym(KeySym xsym)
 }
 
 /* Get the translated SDL 1.2 virtual keysym */
-SDL1::SDLKey X11_Translate1Keysym(KeySym xsym)
+SDL1::SDLKey X11_Translate1Keysym(unsigned int xsym)
 {
     static int keymap_inited = 0;
     if (! keymap_inited) {
@@ -304,7 +304,7 @@ SDL1::SDLKey X11_Translate1Keysym(KeySym xsym)
 	return key;
 }
 
-void xkeyboardToSDLkeyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
+void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL_NUM_SCANCODES);
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
@@ -314,7 +314,7 @@ void xkeyboardToSDLkeyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboa
     }
 }
 
-void xkeyboardToSDL1keyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
+void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL1::SDLK_LAST);
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
@@ -324,14 +324,14 @@ void xkeyboardToSDL1keyboard(const std::array<KeySym,AllInputs::MAXKEYS>& Xkeybo
     }
 }
 
-void xkeysymToSDL(SDL_Keysym *keysym, KeySym xkeysym) {
+void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym) {
     keysym->sym = X11_TranslateKeysym(xkeysym);
     keysym->scancode = GetScanFromKey(keysym->sym);
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unused = 0;
 }
 
-void xkeysymToSDL1(SDL1::SDL_keysym *keysym, KeySym xkeysym) {
+void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym) {
     keysym->sym = X11_Translate1Keysym(xkeysym);
     keysym->scancode = GetScanFromKey1(keysym->sym);
     keysym->mod = KMOD_NONE; /* TODO: Add the modifier */

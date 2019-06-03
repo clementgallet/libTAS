@@ -58,10 +58,11 @@ struct Context {
     };
 
     /* frame count */
-    unsigned long framecount = 0;
+    uint64_t framecount = 0;
 
     /* current time */
-    struct timespec current_time;
+    uint64_t current_time_sec;
+    uint64_t current_time_nsec;
 
     /* config */
     Config config;
@@ -94,7 +95,7 @@ struct Context {
     std::string authors;
 
     /* A frame number when the game pauses */
-    unsigned long pause_frame = 0;
+    uint64_t pause_frame = 0;
 
     /* Can we use incremental savestates? */
     bool is_soft_dirty = false;

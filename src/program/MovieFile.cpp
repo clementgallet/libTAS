@@ -116,8 +116,8 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
 	context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
-	context->config.sc.initial_time.tv_sec = config.value("initial_time_sec").toInt();
-	context->config.sc.initial_time.tv_nsec = config.value("initial_time_nsec").toInt();
+	context->config.sc.initial_time_sec = config.value("initial_time_sec").toULongLong();
+	context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toULongLong();
 	context->config.sc.framerate_num = config.value("framerate_num").toUInt();
 	context->config.sc.framerate_den = config.value("framerate_den").toUInt();
 	/* Compatibility with older movie format */
@@ -217,7 +217,7 @@ int MovieFile::loadInputs(const std::string& moviefile)
 	return 0;
 }
 
-int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
+int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 {
 	/* Skip empty moviefiles, if user tested the annotations without specifying a movie */
 	if (moviefile.empty())
@@ -244,8 +244,8 @@ int MovieFile::saveMovie(const std::string& moviefile, unsigned long nb_frames)
 	config.setValue("keyboard_support", context->config.sc.keyboard_support);
 	config.setValue("mouse_support", context->config.sc.mouse_support);
 	config.setValue("nb_controllers", context->config.sc.nb_controllers);
-	config.setValue("initial_time_sec", static_cast<int>(context->config.sc.initial_time.tv_sec));
-	config.setValue("initial_time_nsec", static_cast<int>(context->config.sc.initial_time.tv_nsec));
+	config.setValue("initial_time_sec", static_cast<unsigned long long>(context->config.sc.initial_time_sec));
+	config.setValue("initial_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_time_nsec));
 	config.setValue("framerate_num", context->config.sc.framerate_num);
 	config.setValue("framerate_den", context->config.sc.framerate_den);
 	config.setValue("rerecord_count", context->rerecord_count);
@@ -442,12 +442,12 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
     return 1;
 }
 
-unsigned long MovieFile::nbFrames()
+uint64_t MovieFile::nbFrames()
 {
 	return input_list.size();
 }
 
-unsigned long MovieFile::savestateFramecount() const
+uint64_t MovieFile::savestateFramecount() const
 {
 	/* Load the config file into the context struct */
 	QString configfile = context->config.tempmoviedir.c_str();
@@ -464,7 +464,7 @@ int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
 	return setInputs(inputs, context->framecount, keep_inputs);
 }
 
-int MovieFile::setInputs(const AllInputs& inputs, unsigned long pos, bool keep_inputs)
+int MovieFile::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
 {
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
@@ -498,7 +498,7 @@ int MovieFile::getInputs(AllInputs& inputs) const
 	return getInputs(inputs, context->framecount);
 }
 
-int MovieFile::getInputs(AllInputs& inputs, unsigned long pos) const
+int MovieFile::getInputs(AllInputs& inputs, uint64_t pos) const
 {
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
@@ -515,7 +515,7 @@ int MovieFile::getInputs(AllInputs& inputs, unsigned long pos) const
     return 0;
 }
 
-void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned long pos)
+void MovieFile::insertInputsBefore(const AllInputs& inputs, uint64_t pos)
 {
 	if (pos > input_list.size())
 		return;
@@ -524,7 +524,7 @@ void MovieFile::insertInputsBefore(const AllInputs& inputs, unsigned long pos)
 	wasModified();
 }
 
-void MovieFile::deleteInputs(unsigned long pos)
+void MovieFile::deleteInputs(uint64_t pos)
 {
 	if (pos >= input_list.size())
 		return;
@@ -533,7 +533,7 @@ void MovieFile::deleteInputs(unsigned long pos)
 	wasModified();
 }
 
-void MovieFile::truncateInputs(unsigned long size)
+void MovieFile::truncateInputs(uint64_t size)
 {
 	input_list.resize(size);
 	wasModified();

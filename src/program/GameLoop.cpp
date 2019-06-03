@@ -375,8 +375,10 @@ void GameLoop::init()
     }
 
     /* Set the current time to the initial time, except when restarting */
-    if (context->status != Context::RESTARTING)
-        context->current_time = context->config.sc.initial_time;
+    if (context->status != Context::RESTARTING) {
+        context->current_time_sec = context->config.sc.initial_time_sec;
+        context->current_time_nsec = context->config.sc.initial_time_nsec;
+    }
 
     pointer_offset_x = 0;
     pointer_offset_y = 0;
@@ -421,11 +423,14 @@ void GameLoop::initProcessMessages()
 
     /* This is a bit hackish, change the initial time to the current time before
      * sending so that the game gets the correct time after restarting. */
-    struct timespec it = context->config.sc.initial_time;
-    context->config.sc.initial_time = context->current_time;
+    struct timespec it = {context->config.sc.initial_time_sec, context->config.sc.initial_time_nsec};
+    context->config.sc.initial_time_sec = context->current_time_sec;
+    context->config.sc.initial_time_nsec = context->current_time_nsec;
     sendMessage(MSGN_CONFIG);
+    std::cout << "sizeof sharedconfig " << sizeof(SharedConfig) << std::endl;
     sendData(&context->config.sc, sizeof(SharedConfig));
-    context->config.sc.initial_time = it;
+    context->config.sc.initial_time_sec = it.tv_sec;
+    context->config.sc.initial_time_nsec = it.tv_nsec;
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {
@@ -495,11 +500,12 @@ bool GameLoop::startFrameMessages()
             emit sharedConfigChanged();
             break;
         case MSGB_FRAMECOUNT_TIME:
-            receiveData(&context->framecount, sizeof(unsigned long));
+            receiveData(&context->framecount, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 context->config.sc.movie_framecount = context->framecount;
             }
-            receiveData(&context->current_time, sizeof(struct timespec));
+            receiveData(&context->current_time_sec, sizeof(uint64_t));
+            receiveData(&context->current_time_nsec, sizeof(uint64_t));
             emit frameCountChanged();
             break;
         case MSGB_GAMEINFO:
@@ -1039,11 +1045,12 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 return false;
             }
-            receiveData(&context->framecount, sizeof(unsigned long));
+            receiveData(&context->framecount, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 context->config.sc.movie_framecount = context->framecount;
             }
-            receiveData(&context->current_time, sizeof(struct timespec));
+            receiveData(&context->current_time_sec, sizeof(uint64_t));
+            receiveData(&context->current_time_nsec, sizeof(uint64_t));
 
             emit inputsChanged();
             emit frameCountChanged();
