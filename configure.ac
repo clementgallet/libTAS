@@ -27,31 +27,38 @@ case $host in
        AC_LINK_IFELSE([AC_LANG_PROGRAM()],[AC_MSG_RESULT(yes); cxx_m32=yes],[AC_MSG_RESULT(no)])
        test "x$cxx_m32" == "xyes" || AC_MSG_ERROR([Cannot build a 32-bit program, you need to install 32-bit development libraries.])
        AC_LANG_POP([C++])
-       PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-/usr/lib/i386-linux-gnu/pkgconfig:/usr/lib/pkgconfig}
-       export PKG_CONFIG_PATH
+       AC_SUBST(LIBSUFFIX, "32")
+    else
+       AC_SUBST(LIBSUFFIX, "")
     fi
     ;;
 esac
+AM_CONDITIONAL([BUILD32LIB], [test "x$enable_i386" == "xyes"])
 
 AC_ARG_ENABLE([release-build], AS_HELP_STRING([--enable-release-build], [Build a release]))
 
-dnl **** Check for libraries and headers ****
+dnl **** Check for libraries and headers for libTAS program ****
 
-PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
-AC_SUBST([QT5_CFLAGS])
-AC_SUBST([QT5_LIBS])
-AC_CHECK_PROGS(MOC, [moc])
+AS_IF([test "x$enable_i386" != "xyes"], [
+    PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
+    AC_SUBST([QT5_CFLAGS])
+    AC_SUBST([QT5_LIBS])
+    AC_CHECK_PROGS(MOC, [moc])
+    AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
+    AC_CHECK_LIB(xcb, xcb_connect, [], AC_MSG_ERROR(The xcb library is required!))
+    AC_CHECK_LIB(xcb-xkb, xcb_xkb_use_extension, [], AC_MSG_ERROR(The xcb-xkb library is required!))
+    AC_CHECK_LIB(xcb-cursor, xcb_cursor_context_new, [], AC_MSG_ERROR(The xcb-cursor library is required!))
+    AC_CHECK_LIB(xcb-keysyms, xcb_key_symbols_alloc, [], AC_MSG_ERROR(The xcb-keysyms library is required!))
+    AC_CHECK_PROG([FFMPEG], [ffmpeg])
+])
+
+dnl **** Check for libraries and headers for libTAS library ****
 
 AC_SEARCH_LIBS([dlopen], [dl dld])
-
-AC_CHECK_HEADERS([X11/Xlib.h X11/Xlib-xcb.h xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some X11/xcb headers are missing!))
+AC_CHECK_HEADERS([X11/Xlib.h X11/Xlib-xcb.h], [], AC_MSG_ERROR(Some X11 headers are missing!))
 
 AC_CHECK_LIB(X11, XOpenDisplay, [], AC_MSG_ERROR(The x11 library is required!))
 AC_CHECK_LIB(X11-xcb, XGetXCBConnection, [], AC_MSG_ERROR(The x11-xcb library is required!))
-AC_CHECK_LIB(xcb, xcb_connect, [], AC_MSG_ERROR(The xcb library is required!))
-AC_CHECK_LIB(xcb-xkb, xcb_xkb_use_extension, [], AC_MSG_ERROR(The xcb-xkb library is required!))
-AC_CHECK_LIB(xcb-cursor, xcb_cursor_context_new, [], AC_MSG_ERROR(The xcb-cursor library is required!))
-AC_CHECK_LIB(xcb-keysyms, xcb_key_symbols_alloc, [], AC_MSG_ERROR(The xcb-keysyms library is required!))
 
 AC_CHECK_HEADERS([SDL2/SDL.h], [], AC_MSG_ERROR(The SDL2 headers are required!))
 
@@ -68,8 +75,6 @@ AC_CHECK_LIB(asound, snd_pcm_open, [], AC_MSG_ERROR(The asound library is requir
 AC_CHECK_HEADERS([libswresample/swresample.h libavutil/avutil.h], [], AC_MSG_ERROR(The swresample headers are required!))
 AC_CHECK_LIB(swresample, swr_init, [], AC_MSG_ERROR(The swresmaple library is required!))
 AC_CHECK_LIB(avutil, av_opt_set_sample_fmt, [], AC_MSG_ERROR(The avutil library is required!))
-
-AC_CHECK_PROG(FFMPEG, ffmpeg)
 
 AS_IF([test "x$enable_hud" != "xno"], [
 	CPPFLAGS='-I/usr/include/freetype2'
