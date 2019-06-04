@@ -187,24 +187,6 @@ private:
     /* Create the main window menus */
     void createMenus();
 
-    /* Check all checkboxes from a list of actions whose associated flag data
-     * is present in the value
-     */
-    void setCheckboxesFromMask(const QActionGroup *actionGroup, int value);
-
-    /* For each checkbox of the action group that is checked, set the
-     * corresponding flag in the value.
-     */
-    void setMaskFromCheckboxes(const QActionGroup *actionGroup, int &value);
-
-    /* Check the radio from a list of actions whose associated data is equal
-     * to the value.
-     */
-    void setRadioFromList(const QActionGroup *actionGroup, int value);
-
-    /* Set the value to the data of the checked radio from the action group. */
-    void setListFromRadio(const QActionGroup *actionGroup, int &value);
-
 private slots:
 
     /* Update UI elements (mainly enable/disable) depending on

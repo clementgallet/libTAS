@@ -38,7 +38,7 @@ void closeSocket(void);
 /* Send data over the socket. Data is stored at the beginning of
  * pointer elem, and has the specified size in bytes.
  */
-void sendData(const void* elem, size_t size);
+void sendData(const void* elem, unsigned int size);
 
 /* Send a string object through the socket. It first sends the string length,
  * followed by the char array.
@@ -49,7 +49,7 @@ void sendString(const std::string& str);
 void sendMessage(int message);
 
 /* Receive data from the socket. Same arguments as sendData() */
-int receiveData(void* elem, size_t size);
+int receiveData(void* elem, unsigned int size);
 
 /* Receive a message */
 int receiveMessage();

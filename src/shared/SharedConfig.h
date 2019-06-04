@@ -23,15 +23,9 @@
 #include "lcf.h"
 #include <cstdint>
 
-struct alignas(16) SharedConfig {
-    /* Is the game running or on pause */
-    bool running = false;
-
+struct __attribute__((packed, aligned(8))) SharedConfig {
     /* By how much is the speed reduced */
     int speed_divisor = 1;
-
-    /* Is fastforward enabled */
-    bool fastforward = false;
 
     /* Fastforward mode */
     enum FastForwardMode {
@@ -65,13 +59,10 @@ struct alignas(16) SharedConfig {
     int logging_status = LOGGING_TO_CONSOLE;
 
     /* Which flags trigger a debug message */
-    LogCategoryFlag includeFlags = LCF_ERROR | LCF_WARNING | LCF_INFO;
+    LogCategoryFlag includeFlags = LCF_ALL;
 
     /* Which flags prevent triggering a debug message */
     LogCategoryFlag excludeFlags = LCF_NONE;
-
-    /* Are we dumping audio and video? */
-    bool av_dumping = false;
 
     /* Framerate at which the game is running, as a fraction
      * Set to 0 to use the nondeterministic timer
@@ -79,12 +70,6 @@ struct alignas(16) SharedConfig {
      */
     unsigned int framerate_num = 60;
     unsigned int framerate_den = 1;
-
-    /* Are we recording and sending keyboard inputs to the game? */
-    bool keyboard_support = true;
-
-    /* Are we recording and sending mouse inputs to the game? */
-    bool mouse_support = true;
 
     /* Number of SDL controllers to (virtually) plug in */
     int nb_controllers = 0;
@@ -99,9 +84,6 @@ struct alignas(16) SharedConfig {
 
     /* Elements to be displayed on the OSD */
     int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES;
-
-    /* Display OSD in the video encode */
-    bool osd_encode = false;
 
     /* OSD text location */
     enum OSDLocation {
@@ -118,15 +100,6 @@ struct alignas(16) SharedConfig {
     int osd_messages_location = OSD_RIGHT | OSD_BOTTOM;
     int osd_ramwatches_location = OSD_RIGHT | OSD_TOP;
 
-    /* Use a backup of savefiles in memory, which leaves the original
-     * savefiles unmodified and save the content in savestates */
-    bool prevent_savefiles = true;
-
-    /* Write back the content of backup savefiles into their file when the game
-     * quits. This is necessary if the game is restarted.
-     */
-    bool write_savefiles_on_exit = false;
-
     /** Sound config **/
     /* Bit depth of the buffer (usually 8 or 16) */
     int audio_bitdepth = 16;
@@ -136,9 +109,6 @@ struct alignas(16) SharedConfig {
 
     /* Frequency of buffer in Hz */
     int audio_frequency = 44100;
-
-    /* Mute audio */
-    bool audio_mute = true;
 
     /* Encode config */
     int video_codec = 0;
@@ -165,8 +135,6 @@ struct alignas(16) SharedConfig {
     int main_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
     int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1};
 
-    bool save_screenpixels = true;
-
     /* Initial system time at game startup */
     /* We don't use struct timespec because it contains longs so the size
      * depends on the arch.*/
@@ -177,15 +145,6 @@ struct alignas(16) SharedConfig {
     int screen_width = 0;
     int screen_height = 0;
 
-    /* Using incremental savestates */
-    bool incremental_savestates = true;
-
-    /* Storing savestates in RAM */
-    bool savestates_in_ram = false;
-
-    /* Saving a backtrack savestate each time a thread is created/destroyed */
-    bool backtrack_savestate = true;
-
     /* Debug flags */
     enum DebugFlags {
         DEBUG_UNCONTROLLED_TIME = 0x01, // Using undeterministic timer
@@ -193,8 +152,6 @@ struct alignas(16) SharedConfig {
     };
 
     int debug_state = 0;
-
-    bool recycle_threads = true;
 
     /* An enum indicating which lang are we enforcing */
     enum LocaleType
@@ -211,12 +168,6 @@ struct alignas(16) SharedConfig {
     };
 
     int locale = LOCALE_ENGLISH;
-
-    /* Simulates a virtual Steam client */
-    bool virtual_steam = false;
-
-    /* Force Mesa software OpenGL driver */
-    bool opengl_soft = true;
 
     /* An enum indicating which wait are we doing */
     enum AsyncType
@@ -240,6 +191,56 @@ struct alignas(16) SharedConfig {
 
     /* How are we handling waits */
     int wait_timeout = WAIT_NATIVE;
+
+    /* Is the game running or on pause */
+    bool running = false;
+
+    /* Is fastforward enabled */
+    bool fastforward = false;
+
+    /* Are we dumping audio and video? */
+    bool av_dumping = false;
+
+    /* Are we recording and sending keyboard inputs to the game? */
+    bool keyboard_support = true;
+
+    /* Are we recording and sending mouse inputs to the game? */
+    bool mouse_support = true;
+
+    /* Display OSD in the video encode */
+    bool osd_encode = false;
+
+    /* Use a backup of savefiles in memory, which leaves the original
+     * savefiles unmodified and save the content in savestates */
+    bool prevent_savefiles = true;
+
+    /* Write back the content of backup savefiles into their file when the game
+     * quits. This is necessary if the game is restarted.
+     */
+    bool write_savefiles_on_exit = false;
+
+    /* Mute audio */
+    bool audio_mute = true;
+
+    bool save_screenpixels = true;
+
+    /* Using incremental savestates */
+    bool incremental_savestates = true;
+
+    /* Storing savestates in RAM */
+    bool savestates_in_ram = false;
+
+    /* Saving a backtrack savestate each time a thread is created/destroyed */
+    bool backtrack_savestate = true;
+
+    bool recycle_threads = true;
+
+    /* Simulates a virtual Steam client */
+    bool virtual_steam = false;
+
+    /* Force Mesa software OpenGL driver */
+    bool opengl_soft = true;
+
 
 };
 

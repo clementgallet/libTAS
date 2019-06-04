@@ -23,6 +23,7 @@
 #include <unistd.h> // For isatty
 #include <cstdarg>
 #include <cstring>
+#include <inttypes.h> // PRI stuff
 #include "frame.h" // For framecount
 #include <mutex>
 #include <list>
@@ -73,7 +74,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     }
     size = strlen(s);
 
-    snprintf(s + size, maxsize-size-1, "[libTAS f:%lu] ", framecount);
+    snprintf(s + size, maxsize-size-1, "[libTAS f:%" PRIu64 "] ", framecount);
     size = strlen(s);
 
     pid_t tid = ThreadManager::getThreadTid();

@@ -1002,42 +1002,52 @@ void MainWindow::updateInputEditor()
     // }
 }
 
-void MainWindow::setCheckboxesFromMask(const QActionGroup *actionGroup, int value)
-{
-    for (auto& action : actionGroup->actions()) {
-        action->setChecked(value & action->data().toInt());
-    }
-}
+/* Check all checkboxes from a list of actions whose associated flag data
+ * is present in the value
+ */
+#define setCheckboxesFromMask(actionGroup, value)\
+do {\
+    for (auto& action : actionGroup->actions()) {\
+        action->setChecked(value & action->data().toInt());\
+    }\
+} while(false)
 
-void MainWindow::setMaskFromCheckboxes(const QActionGroup *actionGroup, int &value)
-{
-    value = 0;
-    for (const auto& action : actionGroup->actions()) {
-        if (action->isChecked()) {
-            value |= action->data().toInt();
-        }
-    }
-}
+/* For each checkbox of the action group that is checked, set the
+ * corresponding flag in the value.
+ */
+#define setMaskFromCheckboxes(actionGroup, value)\
+do {\
+    value = 0;\
+    for (const auto& action : actionGroup->actions()) {\
+        if (action->isChecked()) {\
+            value |= action->data().toInt();\
+        }\
+    }\
+} while(false)
 
-void MainWindow::setRadioFromList(const QActionGroup *actionGroup, int value)
-{
-    for (auto& action : actionGroup->actions()) {
-        if (value == action->data().toInt()) {
-            action->setChecked(true);
-            return;
-        }
-    }
-}
+/* Check the radio from a list of actions whose associated data is equal
+ * to the value.
+ */
+#define setRadioFromList(actionGroup, value)\
+do {\
+    for (auto& action : actionGroup->actions()) {\
+        if (value == action->data().toInt()) {\
+            action->setChecked(true);\
+            break;\
+        }\
+    }\
+} while(false)
 
-void MainWindow::setListFromRadio(const QActionGroup *actionGroup, int &value)
-{
-    for (const auto& action : actionGroup->actions()) {
-        if (action->isChecked()) {
-            value = action->data().toInt();
-            return;
-        }
-    }
-}
+/* Set the value to the data of the checked radio from the action group. */
+#define setListFromRadio(actionGroup, value)\
+do {\
+    for (const auto& action : actionGroup->actions()) {\
+        if (action->isChecked()) {\
+            value = action->data().toInt();\
+            break;\
+        }\
+    }\
+} while(false)
 
 void MainWindow::updateMovieParams()
 {
@@ -1182,6 +1192,7 @@ void MainWindow::updateStatusBar()
 
 void MainWindow::slotLaunch()
 {
+
     /* Do we attach gdb ? */
     QPushButton* button = static_cast<QPushButton*>(sender());
     context->attach_gdb = (button == launchGdbButton);
@@ -1201,7 +1212,9 @@ void MainWindow::slotLaunch()
     context->config.sc.initial_time_sec = initialTimeSec->value();
     context->config.sc.initial_time_nsec = initialTimeNsec->value();
 
+    std::cout << "slotlaunch" << std::endl;
     setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
+    std::cout << "listfromradio" << std::endl;
     setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);
     setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
@@ -1252,9 +1265,11 @@ void MainWindow::slotLaunch()
         game_thread.join();
 
     /* Start game */
+    std::cout << "Will start thread" << std::endl;
     context->status = Context::STARTING;
     updateStatus();
     game_thread = std::thread{&GameLoop::start, gameLoop};
+    std::cout << "Started thread" << std::endl;
 }
 
 void MainWindow::slotStop()

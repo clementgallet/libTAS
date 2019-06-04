@@ -101,7 +101,7 @@ void closeSocket(void)
     close(socket_fd);
 }
 
-void sendData(const void* elem, size_t size)
+void sendData(const void* elem, unsigned int size)
 {
     send(socket_fd, elem, size, 0);
 }
@@ -113,13 +113,12 @@ void sendMessage(int message)
 
 void sendString(const std::string& str)
 {
-    size_t str_size = str.size();
-    int str_size_int = static_cast<int>(str_size);
-    sendData(&str_size_int, sizeof(int));
+    unsigned int str_size = str.size();
+    sendData(&str_size, sizeof(unsigned int));
     sendData(str.c_str(), str_size);
 }
 
-int receiveData(void* elem, size_t size)
+int receiveData(void* elem, unsigned int size)
 {
     return recv(socket_fd, elem, size, 0);
 }
@@ -135,9 +134,8 @@ int receiveMessage()
 
 std::string receiveString()
 {
-    int str_size_int;
-    receiveData(&str_size_int, sizeof(int));
-    size_t str_size = str_size_int;
+    unsigned int str_size;
+    receiveData(&str_size, sizeof(unsigned int));
 
     /* TODO: There might be a better way to do this...? */
     std::vector<char> buf(str_size, 0x00);
@@ -149,9 +147,8 @@ std::string receiveString()
 
 void receiveCString(char* str)
 {
-    int str_size_int;
-    receiveData(&str_size_int, sizeof(int));
-    size_t str_size = str_size_int;
+    unsigned int str_size;
+    receiveData(&str_size, sizeof(unsigned int));
     receiveData(str, str_size);
     str[str_size] = '\0';
 }
