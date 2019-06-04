@@ -1,5 +1,9 @@
 ## [Unreleased]
 ### Added
+
+* Both 32-bit and 64-bit libtas.so libraries can be installed, and the program
+  will select the correct one depending on the game arch
+
 ### Changed
 
 * Don't require /proc/self/pagemap to exist for savestating

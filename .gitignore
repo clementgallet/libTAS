@@ -7,6 +7,11 @@ debian/debhelper-build-stamp
 debian/files
 debian/libtas.debhelper.log
 debian/libtas.substvars
+*.o
+*_moc.cpp
+src/library/libtas.so
+src/library/libtas32.so
+src/program/libTAS
 
 autom4te.cache
 aclocal.m4

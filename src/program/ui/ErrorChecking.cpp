@@ -36,7 +36,7 @@ bool ErrorChecking::allChecks(Context* context)
         if (!checkMovieWriteable(context->config.moviefile))
             return false;
 
-    if (!checkArchType(context->gamepath, context->libtaspath))
+    if (!checkArchType(context))
         return false;
 
     return true;
@@ -158,29 +158,46 @@ static int extractFileArch(std::string path)
     return 0;
 }
 
-bool ErrorChecking::checkArchType(std::string gamepath, std::string libtaspath)
+bool ErrorChecking::checkArchType(Context* context)
 {
     /* Checking that the game binary exists (again) */
-    if (access(gamepath.c_str(), F_OK) != 0) {
-        QMessageBox::critical(nullptr, "Error", QString("Game path %1 was not found").arg(gamepath.c_str()));
+    if (access(context->gamepath.c_str(), F_OK) != 0) {
+        QMessageBox::critical(nullptr, "Error", QString("Game path %1 was not found").arg(context->gamepath.c_str()));
         return false;
     }
 
     /* Checking that the libtas.so library path is correct */
-    if (access(libtaspath.c_str(), F_OK) != 0) {
-        QMessageBox::critical(nullptr, "Error", QString("libtas.so library at %1 was not found. Make sure that the file libtas.so is in the same directory as libTAS file").arg(libtaspath.c_str()));
+    if (access(context->libtaspath.c_str(), F_OK) != 0) {
+        QMessageBox::critical(nullptr, "Error", QString("libtas.so library at %1 was not found. Make sure that the file libtas.so is in the same directory as libTAS file").arg(context->libtaspath.c_str()));
         return false;
     }
 
-    int gameArch = extractFileArch(gamepath);
-    int libtasArch = extractFileArch(libtaspath);
+    int gameArch = extractFileArch(context->gamepath);
+    int libtasArch = extractFileArch(context->libtaspath);
 
     if ((gameArch <= 0) || (libtasArch <= 0))
         /* Alert messages where already prompted in the extractFileArch function */
         return false;
-
+        
+    /* Check for a possible libtas alternate file */
+    if ((gameArch == 32) && (libtasArch == 64)) {
+        std::string lib32path = context->libtaspath;
+        std::string libname("libtas.so");
+        size_t pos = context->libtaspath.find(libname);
+        lib32path.replace(pos, libname.length(), "libtas32.so");
+        
+        /* Checking that libtas32.so exists */
+        if (access(lib32path.c_str(), F_OK) == 0) {
+            /* Replace libtas path with the 32-bit version */
+            context->libtaspath = lib32path;
+            
+            /* Just in case, check the arch */
+            libtasArch = extractFileArch(context->libtaspath);
+        }        
+    }
+    
     if (gameArch != libtasArch) {
-        QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg(libtasArch).arg(gamepath.c_str()).arg(gameArch));
+        QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg(libtasArch).arg(context->gamepath.c_str()).arg(gameArch));
         return false;
     }
 

@@ -1,6 +1,6 @@
 bin_PROGRAMS = libTAS
 
-libTAS_QTSOURCES = GameLoop.h ui/AnnotationsWindow.h ui/AutoSaveWindow.h ui/ControllerAxisWidget.h ui/ControllerTabWindow.h ui/ControllerWidget.h ui/EncodeWindow.h ui/ErrorChecking.h ui/ExecutableWindow.h ui/GameInfoWindow.h ui/InputEditorModel.h ui/InputEditorView.h ui/InputEditorWindow.h ui/InputWindow.h ui/KeyPressedDialog.h ui/MainWindow.h ui/OsdWindow.h ui/PointerScanModel.h ui/PointerScanWindow.h ui/RamSearchModel.h ui/RamSearchWindow.h ui/RamWatchEditWindow.h ui/RamWatchModel.h ui/RamWatchWindow.h
+libTAS_QTSOURCES = GameLoop.h ui/AnnotationsWindow.h ui/AutoSaveWindow.h ui/ControllerAxisWidget.h ui/ControllerTabWindow.h ui/ControllerWidget.h ui/EncodeWindow.h ui/ExecutableWindow.h ui/GameInfoWindow.h ui/InputEditorModel.h ui/InputEditorView.h ui/InputEditorWindow.h ui/InputWindow.h ui/KeyPressedDialog.h ui/MainWindow.h ui/OsdWindow.h ui/PointerScanModel.h ui/PointerScanWindow.h ui/RamSearchModel.h ui/RamSearchWindow.h ui/RamWatchEditWindow.h ui/RamWatchModel.h ui/RamWatchWindow.h
 
 libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 

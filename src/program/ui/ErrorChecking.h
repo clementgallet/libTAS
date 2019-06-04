@@ -44,7 +44,7 @@ namespace ErrorChecking {
     /* Check if the libtas.so library and the game executable where compiled
      * for the same arch.
      */
-    bool checkArchType(std::string gamepath, std::string libtaspath);
+    bool checkArchType(Context* context);
 };
 
 #endif
