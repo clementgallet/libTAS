@@ -61,6 +61,7 @@ AC_CHECK_LIB(X11, XOpenDisplay, [], AC_MSG_ERROR(The x11 library is required!))
 AC_CHECK_LIB(X11-xcb, XGetXCBConnection, [], AC_MSG_ERROR(The x11-xcb library is required!))
 
 AC_CHECK_HEADERS([SDL2/SDL.h], [], AC_MSG_ERROR(The SDL2 headers are required!))
+AC_CHECK_HEADERS([libudev.h], [], AC_MSG_ERROR(The udev headers are required!))
 
 AC_CHECK_HEADER([X11/extensions/xf86vmode.h], [AC_DEFINE([LIBTAS_HAS_XF86VMODE], [1], [Extension xf86vmode is present])], [], [#include <X11/Xlib.h>])
 AC_CHECK_HEADER([X11/extensions/Xrandr.h], [AC_DEFINE([LIBTAS_HAS_XRANDR], [1], [Extension Xrandr is present])])
