@@ -42,6 +42,7 @@ DEFINE_ORIG_POINTER(XCheckTypedWindowEvent);
 DEFINE_ORIG_POINTER(XEventsQueued);
 DEFINE_ORIG_POINTER(XPending);
 DEFINE_ORIG_POINTER(XSendEvent);
+DEFINE_ORIG_POINTER(XFlush);
 DEFINE_ORIG_POINTER(XSync);
 DEFINE_ORIG_POINTER(XGetEventData);
 DEFINE_ORIG_POINTER(XFreeEventData);
@@ -72,11 +73,10 @@ void pushNativeXlibEvents(void)
 {
     LINK_NAMESPACE_GLOBAL(XPending);
     LINK_NAMESPACE_GLOBAL(XNextEvent);
-    LINK_NAMESPACE_GLOBAL(XSync);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (gameDisplays[i]) {
-            XSync(gameDisplays[i], False);
+            NATIVECALL(XSync(gameDisplays[i], False));
             while (orig::XPending(gameDisplays[i]) > 0) {
                 XEvent event;
                 orig::XNextEvent(gameDisplays[i], &event);
@@ -130,6 +130,8 @@ int XNextEvent(Display *display, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, true);
         if (isEvent)
             break;
+        else
+            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -180,6 +182,8 @@ int XPeekEvent(Display *display, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, false);
         if (isEvent)
             break;
+        else
+            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -204,6 +208,8 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         isEvent = xlibEventQueue.pop(event_return, w, event_mask);
         if (isEvent)
             break;
+        else
+            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -241,6 +247,8 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
         if (isEvent)
             break;
+        else
+            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -301,6 +309,9 @@ int XEventsQueued(Display* display, int mode)
 
     int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
+    if ((ret == 0) && (mode != QueuedAlready))
+        pushNativeXlibEvents();
+
     return ret;
 }
 
@@ -315,6 +326,8 @@ int XPending(Display *display)
 
     int ret = xlibEventQueue.size();
     debuglog(LCF_EVENTS, "    returns ", ret);
+    if (ret == 0)
+        pushNativeXlibEvents();
     return ret;
 }
 
@@ -332,6 +345,8 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         isEvent = xlibEventQueue.pop(event_return, predicate, arg);
         if (isEvent)
             break;
+        else
+            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -358,6 +373,10 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
 Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send)
 {
     LINK_NAMESPACE_GLOBAL(XSendEvent);
+
+    if (GlobalState::isNative())
+        return orig::XSendEvent(display, w, propagate, event_mask, event_send);
+    
     DEBUGLOGCALL(LCF_EVENTS);
 
     /* Detect and disable fullscreen switching */
@@ -378,6 +397,32 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
     }
 
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);
+}
+
+int XFlush(Display *display)
+{
+    DEBUGLOGCALL(LCF_EVENTS);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(XFlush);
+        return orig::XFlush(display);
+    }
+
+    pushNativeXlibEvents();
+    return 0;
+}
+
+int XSync(Display *display, Bool discard)
+{
+    LINK_NAMESPACE_GLOBAL(XSync);
+    if (GlobalState::isNative() || (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS))
+        return orig::XSync(display, discard);
+
+    DEBUGLOGCALL(LCF_EVENTS);
+
+    int ret = orig::XSync(display, discard);
+    pushNativeXlibEvents();
+    return ret;
 }
 
 Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)

@@ -436,8 +436,8 @@ static void pushQuitEvent(void)
             if (gameDisplays[i]) {
                 xev.xclient.message_type = XInternAtom(gameDisplays[i], "WM_PROTOCOLS", true);
                 xev.xclient.data.l[0] = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
-                XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev);
-                XSync(gameDisplays[i], false);
+                NATIVECALL(XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev));
+                NATIVECALL(XSync(gameDisplays[i], false));
             }
         }
     }

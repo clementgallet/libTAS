@@ -48,6 +48,9 @@ OVERRIDE int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(
 OVERRIDE Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg);
 OVERRIDE Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
 
+OVERRIDE int XFlush(Display *display);
+OVERRIDE int XSync(Display *display, Bool discard);
+
 OVERRIDE Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie);
 OVERRIDE void XFreeEventData(Display* dpy, XGenericEventCookie* cookie);
 

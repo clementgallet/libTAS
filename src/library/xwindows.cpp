@@ -113,8 +113,6 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
         gameXWindow = w;
     }
 
-    pushNativeXlibEvents();
-
     return w;
 }
 
@@ -132,8 +130,6 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
         gameXWindow = w;
     }
 
-    pushNativeXlibEvents();
-
     return w;
 }
 
@@ -150,8 +146,6 @@ int XDestroyWindow(Display *display, Window w)
     sendMessage(MSGB_WINDOW_ID);
     sendData(&gameXWindow, sizeof(Window));
     debuglog(LCF_WINDOW, "Sent X11 window id 0");
-
-    pushNativeXlibEvents();
 
     return orig::XDestroyWindow(display, w);
 }
@@ -172,8 +166,6 @@ int XMapWindow(Display *display, Window w)
         debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
 
-    pushNativeXlibEvents();
-
     return ret;
 }
 
@@ -183,8 +175,6 @@ int XUnmapWindow(Display *display, Window w)
     LINK_NAMESPACE_GLOBAL(XUnmapWindow);
 
     int ret = orig::XUnmapWindow(display, w);
-
-    pushNativeXlibEvents();
 
     return ret;
 }
@@ -204,8 +194,6 @@ int XMapRaised(Display *display, Window w)
         sendData(&w, sizeof(Window));
         debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
-
-    pushNativeXlibEvents();
 
     return ret;
 }
@@ -285,7 +273,6 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
             avencoder.reset(new AVEncoder());
         }
     }
-    pushNativeXlibEvents();
     return ret;
 }
 
@@ -316,7 +303,6 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
             avencoder.reset(new AVEncoder());
         }
     }
-    pushNativeXlibEvents();
     return ret;
 }
 
@@ -348,7 +334,6 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
             avencoder.reset(new AVEncoder());
         }
     }
-    pushNativeXlibEvents();
     return ret;
 }
 

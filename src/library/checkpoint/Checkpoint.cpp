@@ -282,7 +282,7 @@ void Checkpoint::handler(int signum)
     /* Sync all X server connections */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (gameDisplays[i])
-            XSync(gameDisplays[i], false);
+            NATIVECALL(XSync(gameDisplays[i], false));
     }
 
     if (ThreadManager::restoreInProgress) {
