@@ -58,6 +58,10 @@ OVERRIDE int XResizeWindow(Display* display, Window w, unsigned int width, unsig
 
 OVERRIDE int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values);
 
+OVERRIDE int XChangeProperty(Display* display, Window w, Atom property, Atom type, int format, int mode,const unsigned char* data, int nelements);
+
+OVERRIDE int XSetWMHints(Display* display, Window w, XWMHints* wm_hints);
+
 }
 
 #endif

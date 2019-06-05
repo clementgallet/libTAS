@@ -71,6 +71,10 @@ static Bool isEventFiltered (XEvent *event) {
 
 void pushNativeXlibEvents(void)
 {
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return;
+    }
+
     LINK_NAMESPACE_GLOBAL(XPending);
     LINK_NAMESPACE_GLOBAL(XNextEvent);
 
