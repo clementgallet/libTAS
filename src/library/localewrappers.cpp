@@ -69,6 +69,11 @@ static const char* config_locale()
 
 char *getenv (const char *name) throw()
 {
+    LINK_NAMESPACE_GLOBAL(getenv);
+    if (GlobalState::isNative()) {
+        return orig::getenv(name);
+    }
+
     debuglog(LCF_LOCALE, __func__, " called with name ", name);
     if (0 == strncmp(name, "LANG", 4)) {
         char* mylocale = const_cast<char*>(config_locale());
@@ -76,7 +81,6 @@ char *getenv (const char *name) throw()
             return mylocale;
         }
     }
-    LINK_NAMESPACE_GLOBAL(getenv);
     char* ret = orig::getenv(name);
     debuglog(LCF_LOCALE, "  returning ", ret);
 

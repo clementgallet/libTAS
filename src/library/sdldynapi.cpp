@@ -68,7 +68,9 @@ enum {
     }
 
     /* Now save original pointers while replacing them with our hooks. */
-    void *libtas = dlopen("libtas.so", RTLD_LAZY | RTLD_NOLOAD);
+    char* libtaspath;
+    NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
+    void *libtas = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD);
     if (libtas == nullptr) {
         debuglog(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
         return 1;

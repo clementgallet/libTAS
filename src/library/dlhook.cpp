@@ -91,7 +91,8 @@ void *find_sym(const char *name, bool original) {
         int res = dladdr(addr, &info);
         if (res != 0) {
             std::string libpath = info.dli_fname;
-            std::string libtasstr = "libtas.so"; // bad!
+            std::string libtasstr;
+            NATIVECALL(libtasstr = getenv("SDL_DYNAMIC_API"));
             bool fromLibtas = libpath.length() >= libtasstr.length() &&
                 libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
             if (original == fromLibtas) {
