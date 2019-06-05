@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RenderHUD.h"
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "RenderHUD.h"
 #include "../logging.h"
 #include "../hook.h"
 #include <sstream>

@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "SurfaceARGB.h"
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "SurfaceARGB.h"
 #include "../logging.h"
 
 namespace libtas {

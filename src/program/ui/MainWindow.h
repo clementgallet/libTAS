@@ -33,6 +33,7 @@
 #include <QComboBox>
 #include <forward_list>
 
+#include "config.h"
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"

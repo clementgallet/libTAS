@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #ifdef LIBTAS_ENABLE_HUD
 
 #ifndef LIBTAS_RENDERHUD_SDL2_RENDERER_H_INCL

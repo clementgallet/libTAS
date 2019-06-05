@@ -84,8 +84,9 @@ AS_IF([test "x$enable_hud" != "xno"], [
 	AC_CHECK_LIB(freetype, FT_Open_Face, [], [enable_hud=no])
 ])
 
-AS_IF([test "x$enable_hud" == "xno"], [
-	AC_MSG_WARN(HUD is disabled)
+AS_IF([test "x$enable_hud" != "xno"], [
+    AC_DEFINE([LIBTAS_ENABLE_HUD], [1], [HUD is enabled])
+    AC_MSG_NOTICE([HUD is enabled])
 ])
 
 AS_IF([test "x$enable_release_build" != "xyes"], [

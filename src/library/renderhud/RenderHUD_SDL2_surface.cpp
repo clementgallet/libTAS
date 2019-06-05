@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RenderHUD_SDL2_surface.h"
 #ifdef LIBTAS_ENABLE_HUD
 
-#include "RenderHUD_SDL2_surface.h"
 #include "../logging.h"
 #include "../hook.h"
 #include "../global.h" // gameSDLWindow

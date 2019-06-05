@@ -21,6 +21,7 @@
 
 /* Code modified by Clément Gallet */
 
+#include "sdl_ttf.h"
 #ifdef LIBTAS_ENABLE_HUD
 
 #include <math.h>
@@ -35,8 +36,6 @@
 #include FT_STROKER_H
 #include FT_GLYPH_H
 #include FT_TRUETYPE_IDS_H
-
-#include "sdl_ttf.h"
 
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using
    supports 256 shades of gray, but we should instead key off of num_grays

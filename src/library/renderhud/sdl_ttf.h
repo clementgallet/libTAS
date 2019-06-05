@@ -31,6 +31,7 @@
 #ifndef _SDL_TTF_H
 #define _SDL_TTF_H
 
+#include "config.h"
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "SurfaceARGB.h"

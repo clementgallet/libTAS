@@ -21,6 +21,7 @@
 
 // #include "ui/MainWindow.h"
 
+#include "config.h"
 #include "GameLoop.h"
 #include "utils.h"
 #include "AutoSave.h"
