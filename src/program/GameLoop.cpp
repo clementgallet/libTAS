@@ -123,6 +123,10 @@ void GameLoop::launchGameThread()
 
     setenv("LIBTAS_START_FRAME", std::to_string(context->framecount).c_str(), 1);
 
+    /* Sometimes we want to delay libtas hooking when the game process
+     * uses fork/exec. */
+    setenv("LIBTAS_DELAY_INIT", "1", 1);
+
     /* Disable Address Space Layout Randomization for the game, so that ram
      * watch addresses do not change on game restart.
      * Source: https://stackoverflow.com/questions/5194666/disable-randomization-of-memory-addresses/30385370#30385370
@@ -428,7 +432,6 @@ void GameLoop::initProcessMessages()
     context->config.sc.initial_time_sec = context->current_time_sec;
     context->config.sc.initial_time_nsec = context->current_time_nsec;
     sendMessage(MSGN_CONFIG);
-    std::cout << "sizeof sharedconfig " << sizeof(SharedConfig) << std::endl;
     sendData(&context->config.sc, sizeof(SharedConfig));
     context->config.sc.initial_time_sec = it.tv_sec;
     context->config.sc.initial_time_nsec = it.tv_nsec;

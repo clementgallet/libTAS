@@ -48,6 +48,16 @@ void __attribute__((constructor)) init(void)
 {
     /* Hacking `environ` to disable LD_PRELOAD for future processes */
     /* Taken from <https://stackoverflow.com/a/3275799> */
+    
+    char* delay_str;
+    NATIVECALL(delay_str = getenv("LIBTAS_DELAY_INIT"));
+    if (delay_str && (delay_str[0] > '0')) {
+        delay_str[0] -= 1;
+        setenv("LIBTAS_DELAY_INIT", delay_str, 1);
+        debuglog(LCF_INFO, "Skipping libtas init");
+        return;
+    }
+    
     for (int i=0; environ[i]; i++) {
         if ( strstr(environ[i], "LD_PRELOAD=") ) {
              environ[i][0] = 'D';
