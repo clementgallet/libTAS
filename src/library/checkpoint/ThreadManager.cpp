@@ -312,7 +312,8 @@ void ThreadManager::threadExit(void* retval)
 {
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     current_thread->retval = retval;
-    MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING))
+    MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
+             updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
     if (current_thread->detached) {
         debuglog(LCF_THREAD, "Detached thread ", current_thread->tid, " exited");
         MYASSERT(updateState(current_thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
