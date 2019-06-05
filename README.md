@@ -31,7 +31,7 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libasound2-dev libswresample-dev ffmpeg`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libudev-dev libasound2-dev libswresample-dev ffmpeg`
 * Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib ffmpeg`
 
 To enable HUD on the game screen, you will also need:
@@ -53,11 +53,15 @@ If you want to manually enable/disable a feature, you must add at the end of the
 
 - `--disable-hud`: enable/disable displaying informations on the game screen
 
-Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, you can cross-compile the code to i386. To do that, add the following option: `--enable-i386`. You need to install the 32-bit version of the required libraries.
+Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, you can cross-compile the code to i386 (see below).
 
 ### Install
 
     sudo make install
+
+### Dual-arch
+
+If you have an amd64 system and you want to run both i386 or amd64 games, you can install libTAS 32-bit library together with the amd64 build. To do that, after installing the amd64 build, start another build using `./build.sh --enable-i386`, which will produce a `libtas32.so` library. It will not build the libTAS GUI, so you need the 32-bit version of the required dependancies, except for all `Qt` and `xcb` packages. Then install it as shown above. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
 
 ## Run
 
