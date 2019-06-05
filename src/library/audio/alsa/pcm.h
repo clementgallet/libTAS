@@ -27,12 +27,12 @@ namespace libtas {
 
 OVERRIDE int snd_pcm_open(snd_pcm_t **pcm, const char *name,
     		 snd_pcm_stream_t stream, int mode);
-    // int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
-    // 		       snd_pcm_stream_t stream, int mode,
-    // 		       snd_config_t *lconf);
-    // int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
-    // 			  const char *name, const char *orig_name,
-    // 			  snd_pcm_stream_t stream, int mode);
+OVERRIDE int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
+    		       snd_pcm_stream_t stream, int mode,
+    		       snd_config_t *lconf);
+OVERRIDE int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
+    			  const char *name, const char *orig_name,
+    			  snd_pcm_stream_t stream, int mode);
 
 OVERRIDE int snd_pcm_close(snd_pcm_t *pcm);
     // const char *snd_pcm_name(snd_pcm_t *pcm);
@@ -56,7 +56,7 @@ OVERRIDE int snd_pcm_prepare(snd_pcm_t *pcm);
     // int snd_pcm_reset(snd_pcm_t *pcm);
     // int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
 OVERRIDE int snd_pcm_start(snd_pcm_t *pcm);
-    // int snd_pcm_drop(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_drop(snd_pcm_t *pcm);
     // int snd_pcm_drain(snd_pcm_t *pcm);
     // int snd_pcm_pause(snd_pcm_t *pcm, int enable);
 OVERRIDE snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm);
@@ -68,7 +68,7 @@ OVERRIDE int snd_pcm_resume(snd_pcm_t *pcm);
 OVERRIDE snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm);
     // int snd_pcm_avail_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *availp, snd_pcm_sframes_t *delayp);
     // snd_pcm_sframes_t snd_pcm_rewindable(snd_pcm_t *pcm);
-    // snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames);
+OVERRIDE snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames);
     // snd_pcm_sframes_t snd_pcm_forwardable(snd_pcm_t *pcm);
     // snd_pcm_sframes_t snd_pcm_forward(snd_pcm_t *pcm, snd_pcm_uframes_t frames);
 OVERRIDE snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t size);
@@ -102,6 +102,8 @@ OVERRIDE int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t 
 OVERRIDE int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
 OVERRIDE int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
+OVERRIDE int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
+OVERRIDE int snd_pcm_hw_params_get_rate_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 
 OVERRIDE int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir);
 OVERRIDE int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
@@ -129,7 +131,7 @@ OVERRIDE int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t
 // int snd_pcm_sw_params_get_period_event(const snd_pcm_sw_params_t *params, int *val);
 OVERRIDE int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
 // int snd_pcm_sw_params_get_start_threshold(const snd_pcm_sw_params_t *paramsm, snd_pcm_uframes_t *val);
-// int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
+OVERRIDE int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
 // int snd_pcm_sw_params_get_stop_threshold(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
 // int snd_pcm_sw_params_set_silence_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
 // int snd_pcm_sw_params_get_silence_threshold(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);

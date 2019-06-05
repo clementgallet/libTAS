@@ -33,6 +33,9 @@ static std::shared_ptr<AudioSource> sourceAlsa;
 static int buffer_size = 4096; // in samples
 
 DEFINE_ORIG_POINTER(snd_pcm_open);
+DEFINE_ORIG_POINTER(snd_pcm_open_lconf);
+DEFINE_ORIG_POINTER(snd_pcm_open_fallback);
+
 DEFINE_ORIG_POINTER(snd_pcm_info);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_current);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params);
@@ -45,6 +48,8 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_min);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_max);
 
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_size);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_time_min);
@@ -76,14 +81,17 @@ DEFINE_ORIG_POINTER(snd_pcm_mmap_begin);
 DEFINE_ORIG_POINTER(snd_pcm_mmap_commit);
 
 DEFINE_ORIG_POINTER(snd_pcm_start);
+DEFINE_ORIG_POINTER(snd_pcm_drop);
 DEFINE_ORIG_POINTER(snd_pcm_state);
 DEFINE_ORIG_POINTER(snd_pcm_resume);
 DEFINE_ORIG_POINTER(snd_pcm_wait);
 DEFINE_ORIG_POINTER(snd_pcm_delay);
 DEFINE_ORIG_POINTER(snd_pcm_avail_update);
+DEFINE_ORIG_POINTER(snd_pcm_rewind);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold);
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_stop_threshold);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_avail_min);
 
 DEFINE_ORIG_POINTER(snd_pcm_get_chmap);
@@ -126,6 +134,32 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
     sourceAlsa->source = AudioSource::SOURCE_STREAMING;
 
     return 0;
+}
+
+int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
+    		       snd_pcm_stream_t stream, int mode,
+    		       snd_config_t *lconf)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_open_lconf);
+        return orig::snd_pcm_open_lconf(pcm, name, stream, mode, lconf);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return snd_pcm_open(pcm, name, stream, mode);
+}
+
+int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
+    			  const char *name, const char *orig_name,
+    			  snd_pcm_stream_t stream, int mode)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_open_fallback);
+        return orig::snd_pcm_open_fallback(pcm, root, name, orig_name, stream, mode);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return snd_pcm_open(pcm, name, stream, mode);
 }
 
 int snd_pcm_close(snd_pcm_t *pcm)
@@ -171,6 +205,18 @@ int snd_pcm_start(snd_pcm_t *pcm)
     DEBUGLOGCALL(LCF_SOUND);
     sourceAlsa->state = AudioSource::SOURCE_PLAYING;
 
+    return 0;
+}
+
+int snd_pcm_drop(snd_pcm_t *pcm)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_drop);
+        return orig::snd_pcm_drop(pcm);
+    }
+    
+    DEBUGLOGCALL(LCF_SOUND);
+    sourceAlsa->setPosition(sourceAlsa->queueSize());
     return 0;
 }
 
@@ -263,6 +309,22 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
         avail = 0;
     debuglog(LCF_SOUND, "   return ", avail);
     return avail;
+}
+
+snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_rewind);
+        return orig::snd_pcm_rewind(pcm, frames);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    int pos = sourceAlsa->getPosition();
+    if (frames <= pos) {
+        sourceAlsa->setPosition(pos - frames);
+        return 0;
+    }
+    return -1;
 }
 
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
@@ -701,6 +763,31 @@ int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
     return 0;
 }
 
+int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate_min);
+        return orig::snd_pcm_hw_params_get_rate_min(params, val, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = 11025;
+    return 0;
+}
+
+int snd_pcm_hw_params_get_rate_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate_max);
+        return orig::snd_pcm_hw_params_get_rate_max(params, val, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = 48000;
+    return 0;
+}
+
+
 static int periods = 2;
 
 int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir)
@@ -868,6 +955,17 @@ int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *p
     }
 
     debuglog(LCF_SOUND, __func__, " call with start threshold ", val);
+    return 0;
+}
+
+int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_stop_threshold);
+        return orig::snd_pcm_sw_params_set_stop_threshold(pcm, params, val);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with stop threshold ", val);
     return 0;
 }
 
