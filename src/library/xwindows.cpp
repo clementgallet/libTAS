@@ -211,7 +211,7 @@ int XStoreName(Display *display, Window w, const char *window_name)
     LINK_NAMESPACE_GLOBAL(XStoreName);
 
     WindowTitle::setOriginalTitle(window_name);
-    WindowTitle::setUpdateFunc([display, w] (const char* t) {orig::XStoreName(display, w, t);});
+    WindowTitle::setUpdateFunc([display] (const char* t) {if (gameXWindow) orig::XStoreName(display, gameXWindow, t);});
 
     return orig::XStoreName(display, w, window_name);
 }
@@ -223,10 +223,12 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
     Atom encoding = text_prop->encoding;
 
     WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
-    WindowTitle::setUpdateFunc([display, w, encoding] (const char* t) {
-        XTextProperty prop;
-        XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
-        orig::XSetWMName(display, w, &prop);
+    WindowTitle::setUpdateFunc([display, encoding] (const char* t) {
+        if (gameXWindow) {
+            XTextProperty prop;
+            XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
+            orig::XSetWMName(display, gameXWindow, &prop);            
+        }
     });
 
     return orig::XSetWMName(display, w, text_prop);
