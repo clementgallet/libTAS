@@ -61,7 +61,9 @@ static Bool isEventFiltered (XEvent *event) {
         case Expose:
         case EnterNotify:
         case LeaveNotify:
-        case PropertyNotify:
+        // case PropertyNotify:
+        /* TODO: Re-enable this to filter unfocus events, but we must unfilter
+         * this as Wine is looking for an event with WM_STATE atom */
         case ReparentNotify:
             return True;
         default:
@@ -134,8 +136,6 @@ int XNextEvent(Display *display, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, true);
         if (isEvent)
             break;
-        else
-            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -186,8 +186,6 @@ int XPeekEvent(Display *display, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, false);
         if (isEvent)
             break;
-        else
-            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -212,8 +210,6 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         isEvent = xlibEventQueue.pop(event_return, w, event_mask);
         if (isEvent)
             break;
-        else
-            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -251,8 +247,6 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
         if (isEvent)
             break;
-        else
-            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
@@ -349,8 +343,6 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         isEvent = xlibEventQueue.pop(event_return, predicate, arg);
         if (isEvent)
             break;
-        else
-            pushNativeXlibEvents();
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents();
