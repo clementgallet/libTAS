@@ -52,6 +52,8 @@ DEFINE_ORIG_POINTER(pthread_cancel);
 DEFINE_ORIG_POINTER(pthread_testcancel);
 DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
+DEFINE_ORIG_POINTER(pthread_attr_setstack);
+
 
 /* We create a specific exception for thread exit calls */
 class ThreadExitException {
@@ -545,6 +547,19 @@ int sem_trywait (sem_t *sem) throw()
 
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     return orig::sem_trywait(sem);
+}
+
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize)
+{
+    LINK_NAMESPACE(pthread_attr_setstack, "pthread");
+    if (GlobalState::isNative())
+        return orig::pthread_attr_setstack(attr, stackaddr, stacksize);
+
+    debuglog(LCF_THREAD, __func__, " called with addr ", stackaddr, " and size ", stacksize);
+    // int ret = orig::pthread_attr_setstack(attr, stackaddr, stacksize);
+    // debuglog(LCF_THREAD, "  returns ", ret);
+    // return ret;
+    return 0;
 }
 
 }

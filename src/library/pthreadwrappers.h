@@ -106,6 +106,8 @@ OVERRIDE int sem_timedwait (sem_t *sem, const struct timespec *abstime);
 /* Test whether SEM is posted.  */
 OVERRIDE int sem_trywait (sem_t *__sem) throw();
 
+OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize);
+
 }
 
 #endif
