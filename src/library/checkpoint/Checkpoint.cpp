@@ -137,7 +137,7 @@ bool Checkpoint::checkCheckpoint()
         return true;
 
     /* Get an estimation of the savestate space */
-    size_t savestate_size = 0;
+    uint64_t savestate_size = 0;
 
     ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
 
@@ -161,9 +161,9 @@ bool Checkpoint::checkCheckpoint()
     struct statvfs devData;
     int ret;
     if ((ret = statvfs(savestate_str.c_str(), &devData)) >= 0) {
-        unsigned long available_size = devData.f_bavail * devData.f_bsize;
+        uint64_t available_size = static_cast<uint64_t>(devData.f_bavail) * devData.f_bsize;
         if (savestate_size > available_size) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate");
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate (s " PRIu64 " / av " PRIu64 ")", savestate_size, available_size);
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Not enough available space to store the savestate");
 #endif
@@ -352,7 +352,7 @@ void Checkpoint::handler(int signum)
                     size_t savestate_size = writeAllAreas(true);
                     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
                     delta_time = new_time - old_time;
-                    debuglogstdio(LCF_INFO, "Saved base state of size %lld in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+                    debuglogstdio(LCF_INFO, "Saved base state of size %zu in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
                 }
             }
             else {
@@ -363,7 +363,7 @@ void Checkpoint::handler(int signum)
                     size_t savestate_size = writeAllAreas(true);
                     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
                     delta_time = new_time - old_time;
-                    debuglogstdio(LCF_INFO, "Saved base state of size %lld in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+                    debuglogstdio(LCF_INFO, "Saved base state of size %zu in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
                 }
             }
         }
@@ -376,7 +376,7 @@ void Checkpoint::handler(int signum)
         size_t savestate_size = writeAllAreas(false);
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
         delta_time = new_time - old_time;
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Saved state %d of size %lld in %f seconds", ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Saved state %d of size %zu in %f seconds", ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
     }
 }
 
