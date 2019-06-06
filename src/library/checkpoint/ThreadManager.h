@@ -49,6 +49,10 @@ class ThreadManager {
     static int numThreads;
 
 public:
+    /* Which signals are we using */
+    static int sig_suspend_threads;
+    static int sig_checkpoint;
+
     static ThreadInfo* thread_list;
 
     static volatile bool restoreInProgress;
@@ -129,7 +133,7 @@ public:
      * after pthread_start() erases all thread_local variables.
      */
     static void setCurrentThread(ThreadInfo *thread) {
-      current_thread = thread;
+        current_thread = thread;
     }
 
 };

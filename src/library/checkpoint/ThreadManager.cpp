@@ -33,7 +33,6 @@
 #include "../logging.h"
 #include "../audio/AudioPlayer.h"
 #include "AltStack.h"
-#include "CustomSignals.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
 
@@ -49,6 +48,8 @@ sem_t ThreadManager::semNotifyCkptThread;
 sem_t ThreadManager::semWaitForCkptThreadSignal;
 volatile bool ThreadManager::restoreInProgress = false;
 int ThreadManager::numThreads;
+int ThreadManager::sig_suspend_threads = SIGPWR;
+int ThreadManager::sig_checkpoint = SIGSYS;
 
 void ThreadManager::init()
 {
@@ -63,8 +64,17 @@ void ThreadManager::init()
 
     sigset_t mask;
     sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR2);
+    sigaddset(&mask, sig_checkpoint);
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
+
+    struct sigaction sigcheckpoint;
+    sigfillset(&sigcheckpoint.sa_mask);
+    sigcheckpoint.sa_flags = SA_ONSTACK;
+    sigcheckpoint.sa_handler = Checkpoint::handler;
+    {
+        GlobalNative gn;
+        MYASSERT(sigaction(sig_checkpoint, &sigcheckpoint, nullptr) == 0)
+    }
 
     sem_init(&semNotifyCkptThread, 0, 0);
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
@@ -208,7 +218,7 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 
     sigset_t mask;
     sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR1);
+    sigaddset(&mask, sig_suspend_threads);
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 
     /* The signal handler for the thread suspend must be registered on *each*
@@ -221,13 +231,13 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
         debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "stack starts at ", thread->altstack.ss_sp);
     }
 
-    struct sigaction sigusr1;
-    sigfillset(&sigusr1.sa_mask);
-    sigusr1.sa_flags = SA_RESTART | SA_ONSTACK;
-    sigusr1.sa_handler = stopThisThread;
+    struct sigaction sigsuspend;
+    sigfillset(&sigsuspend.sa_mask);
+    sigsuspend.sa_flags = SA_RESTART | SA_ONSTACK;
+    sigsuspend.sa_handler = stopThisThread;
     {
         GlobalNative gn;
-        MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
+        MYASSERT(sigaction(sig_suspend_threads, &sigsuspend, nullptr) == 0)
     }
 }
 
@@ -368,9 +378,6 @@ bool ThreadManager::checkpoint()
         return false;
     }
 
-    /* Before suspending threads, we must also register our signal handlers */
-    CustomSignals::registerHandlers();
-
     /* We save the alternate stack if the game did set one */
     AltStack::saveStack();
 
@@ -394,7 +401,7 @@ bool ThreadManager::checkpoint()
      * and safely writing to the original stack.
      */
 
-    raise(SIGUSR2);
+    raise(sig_checkpoint);
 
     /* Restoring the game alternate stack (if any) */
     AltStack::restoreStack();
@@ -405,9 +412,6 @@ bool ThreadManager::checkpoint()
     FileHandleList::recoverAllFiles();
 
     resumeThreads();
-
-    /* Restoring the original signal handlers */
-    CustomSignals::restoreHandlers();
 
     /* Wait for all other threads to finish being restored before resuming */
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
@@ -435,9 +439,6 @@ void ThreadManager::restore()
         return;
     }
 
-    /* Before suspending threads, we must also register our signal handlers */
-    CustomSignals::registerHandlers();
-
     /* We save the alternate stack if the game did set one */
     AltStack::saveStack();
 
@@ -458,12 +459,12 @@ void ThreadManager::restore()
     AltStack::prepareStack();
 
     /* Here is where we load all the memory and stuff */
-    raise(SIGUSR2);
+    raise(sig_checkpoint);
 
     /* It seems that when restoring the original stack at the end of the
      * signal handler function, the program pulls from the stack the address
      * to return to. Because we replace the stack memory with the checkpointed
-     * stack, we will return to after `raise(SIGUSR2)` call in
+     * stack, we will return to after `raise(sig_checkpoint)` call in
      * ThreadManager::checkpoint(). We may even not have to use
      * getcontext/setcontext for this thread!
      */
@@ -475,9 +476,6 @@ void ThreadManager::restore()
      AltStack::restoreStack();
 
      resumeThreads();
-
-     /* Restoring the original signal handlers */
-     CustomSignals::restoreHandlers();
 
      waitForAllRestored(current_thread);
 
@@ -564,7 +562,7 @@ void ThreadManager::suspendThreads()
                     // }
 
                     /* Send the suspend signal to the thread */
-                    NATIVECALL(ret = pthread_kill(thread->pthread_id, SIGUSR1));
+                    NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
 
                     if (ret == 0) {
                         needrescan = true;

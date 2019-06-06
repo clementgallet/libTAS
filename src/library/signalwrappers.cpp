@@ -22,6 +22,7 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include "checkpoint/ThreadSync.h"
+#include "checkpoint/ThreadManager.h" // checkpoint signals
 
 #include <cstring>
 #include <csignal>
@@ -60,7 +61,7 @@ static thread_local int origUsrMaskThread = 0;
     debuglog(LCF_SIGNAL, "    Setting handler ", reinterpret_cast<void*>(handler),
         " for signal ", strsignal(sig));
 
-    if ((sig == SIGUSR1) || (sig == SIGUSR2)) {
+    if ((sig == ThreadManager::sig_suspend_threads) || (sig == ThreadManager::sig_checkpoint)) {
         return SIG_IGN;
     }
 
@@ -76,7 +77,7 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
 
-    static const int bannedMask = sigmask(SIGUSR1) | sigmask(SIGUSR2);
+    static const int bannedMask = sigmask(ThreadManager::sig_suspend_threads) | sigmask(ThreadManager::sig_checkpoint);
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigblock(mask & ~bannedMask);
@@ -95,7 +96,7 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
 
-    static const int bannedMask = sigmask(SIGUSR1) | sigmask(SIGUSR2);
+    static const int bannedMask = sigmask(ThreadManager::sig_suspend_threads) | sigmask(ThreadManager::sig_checkpoint);
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigsetmask(mask & ~bannedMask);
@@ -135,24 +136,24 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t newset;
     if (set) {
         newset = *set;
-        sigdelset(&newset, SIGUSR1);
-        sigdelset(&newset, SIGUSR2);
+        sigdelset(&newset, ThreadManager::sig_suspend_threads);
+        sigdelset(&newset, ThreadManager::sig_checkpoint);
     }
 
     int ret = orig::sigprocmask(how, set?&newset:set, oset);
 
     if (ret != -1) {
         if (oset) {
-            if (origUsrMaskProcess & SIGUSR1)
-                sigaddset(oset, SIGUSR1);
-            if (origUsrMaskProcess & SIGUSR2)
-                sigaddset(oset, SIGUSR2);
+            if (origUsrMaskProcess & ThreadManager::sig_suspend_threads)
+                sigaddset(oset, ThreadManager::sig_suspend_threads);
+            if (origUsrMaskProcess & ThreadManager::sig_checkpoint)
+                sigaddset(oset, ThreadManager::sig_checkpoint);
         }
 
         if (set) {
             int mask = 0;
-            if (sigismember(set, SIGUSR1) == 1) mask |= sigmask(SIGUSR1);
-            if (sigismember(set, SIGUSR2) == 1) mask |= sigmask(SIGUSR2);
+            if (sigismember(set, ThreadManager::sig_suspend_threads) == 1) mask |= sigmask(ThreadManager::sig_suspend_threads);
+            if (sigismember(set, ThreadManager::sig_checkpoint) == 1) mask |= sigmask(ThreadManager::sig_checkpoint);
 
             if (how == SIG_BLOCK)
                 origUsrMaskProcess |= mask;
@@ -173,8 +174,8 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t tmp;
     if (set) {
         tmp = *set;
-        sigdelset(&tmp, SIGUSR1);
-        sigdelset(&tmp, SIGUSR2);
+        sigdelset(&tmp, ThreadManager::sig_suspend_threads);
+        sigdelset(&tmp, ThreadManager::sig_checkpoint);
         set = &tmp;
     }
 
@@ -291,11 +292,11 @@ static thread_local int origUsrMaskThread = 0;
 
     if (newmask) {
         if (how == SIG_BLOCK)
-            debuglog(LCF_SIGNAL, "    Blocking signals:");
+            debuglog(LCF_SIGNAL | LCF_THREAD, "    Blocking signals:");
         if (how == SIG_UNBLOCK)
-            debuglog(LCF_SIGNAL, "    Unblocking signals:");
+            debuglog(LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
         if (how == SIG_SETMASK)
-            debuglog(LCF_SIGNAL, "    Setting signals to block:");
+            debuglog(LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
         for (int s=1; s<NSIG; s++) {
             if (sigismember(newmask, s) == 1)
                 /* I encountered a deadlock here when using strsignal() to print
@@ -306,34 +307,34 @@ static thread_local int origUsrMaskThread = 0;
                  *
                  * So I don't use any function that is making memory allocation.
                  */
-                debuglogstdio(LCF_SIGNAL, "        %d", s);
+                debuglogstdio(LCF_SIGNAL | LCF_THREAD, "        %d", s);
         }
     }
     else if (oldmask) {
-        debuglogstdio(LCF_SIGNAL, "    Getting blocked signals");
+        debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Getting blocked signals");
     }
 
     sigset_t tmpmask;
     if (newmask) {
         tmpmask = *newmask;
-        sigdelset(&tmpmask, SIGUSR1);
-        sigdelset(&tmpmask, SIGUSR2);
+        sigdelset(&tmpmask, ThreadManager::sig_suspend_threads);
+        sigdelset(&tmpmask, ThreadManager::sig_checkpoint);
     }
 
     int ret = orig::pthread_sigmask(how, (newmask==nullptr)?nullptr:&tmpmask, oldmask);
 
     if (ret != -1) {
         if (oldmask) {
-            if (origUsrMaskThread & SIGUSR1)
-                sigaddset(oldmask, SIGUSR1);
-            if (origUsrMaskThread & SIGUSR2)
-                sigaddset(oldmask, SIGUSR2);
+            if (origUsrMaskThread & ThreadManager::sig_suspend_threads)
+                sigaddset(oldmask, ThreadManager::sig_suspend_threads);
+            if (origUsrMaskThread & ThreadManager::sig_checkpoint)
+                sigaddset(oldmask, ThreadManager::sig_checkpoint);
         }
 
         if (newmask) {
             int mask = 0;
-            if (sigismember(newmask, SIGUSR1) == 1) mask |= sigmask(SIGUSR1);
-            if (sigismember(newmask, SIGUSR2) == 1) mask |= sigmask(SIGUSR2);
+            if (sigismember(newmask, ThreadManager::sig_suspend_threads) == 1) mask |= sigmask(ThreadManager::sig_suspend_threads);
+            if (sigismember(newmask, ThreadManager::sig_checkpoint) == 1) mask |= sigmask(ThreadManager::sig_checkpoint);
 
             if (how == SIG_BLOCK)
                 origUsrMaskThread |= mask;
