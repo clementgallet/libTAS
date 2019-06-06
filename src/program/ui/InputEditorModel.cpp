@@ -658,11 +658,11 @@ void InputEditorModel::resetInputs()
 /* Register a savestate. If saved, frame contains the framecount of the
  * savestate slot. It loaded, frame contains 0.
  */
-void InputEditorModel::registerSavestate(int slot, uint64_t frame)
+void InputEditorModel::registerSavestate(int slot, unsigned long long frame)
 {
     if (frame > 0)
         savestate_frames[slot] = frame;
-    uint64_t old_savestate = last_savestate;
+    unsigned long long old_savestate = last_savestate;
     last_savestate = savestate_frames[slot];
     emit dataChanged(createIndex(old_savestate,0), createIndex(old_savestate,0));
     emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
