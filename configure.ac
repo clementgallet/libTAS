@@ -11,6 +11,7 @@ AC_CONFIG_FILES([
  src/library/Makefile
 ])
 AC_CANONICAL_HOST
+AM_SILENT_RULES([yes])
 
 dnl **** Configure options ****
 
