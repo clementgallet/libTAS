@@ -1212,9 +1212,7 @@ void MainWindow::slotLaunch()
     context->config.sc.initial_time_sec = initialTimeSec->value();
     context->config.sc.initial_time_nsec = initialTimeNsec->value();
 
-    std::cout << "slotlaunch" << std::endl;
     setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
-    std::cout << "listfromradio" << std::endl;
     setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);
     setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
@@ -1265,11 +1263,9 @@ void MainWindow::slotLaunch()
         game_thread.join();
 
     /* Start game */
-    std::cout << "Will start thread" << std::endl;
     context->status = Context::STARTING;
     updateStatus();
     game_thread = std::thread{&GameLoop::start, gameLoop};
-    std::cout << "Started thread" << std::endl;
 }
 
 void MainWindow::slotStop()

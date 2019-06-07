@@ -51,11 +51,10 @@ namespace libtas {
 class RenderHUD
 {
     public:
-        RenderHUD();
         virtual ~RenderHUD();
 
         /* Initialize the font located at the given path */
-        virtual void initFonts(const char* path);
+        static void initFonts();
 
         /* Main function to render some text on the screen.
          * This function does nothing in this class and must be overridden.
@@ -111,8 +110,8 @@ class RenderHUD
          * text color */
         void renderInputs(AllInputs& ai, Color fg_color);
 
-        int outline_size;
-        int font_size;
+        static int outline_size;
+        static int font_size;
 
         static TTF_Font* fg_font;
         static TTF_Font* bg_font;

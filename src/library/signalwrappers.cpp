@@ -297,8 +297,8 @@ static thread_local int origUsrMaskThread = 0;
             debuglog(LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
         if (how == SIG_SETMASK)
             debuglog(LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
-        for (int s=1; s<NSIG; s++) {
-            if (sigismember(newmask, s) == 1)
+        // for (int s=1; s<NSIG; s++) {
+        //     if (sigismember(newmask, s) == 1)
                 /* I encountered a deadlock here when using strsignal() to print
                  * the signal name with the following pattern:
                  * malloc() -> acquires lock -> signal handler called ->
@@ -307,8 +307,8 @@ static thread_local int origUsrMaskThread = 0;
                  *
                  * So I don't use any function that is making memory allocation.
                  */
-                debuglogstdio(LCF_SIGNAL | LCF_THREAD, "        %d", s);
-        }
+                // debuglogstdio(LCF_SIGNAL | LCF_THREAD, "        %d", s);
+        // }
     }
     else if (oldmask) {
         debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Getting blocked signals");

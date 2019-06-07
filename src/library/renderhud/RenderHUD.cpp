@@ -34,12 +34,25 @@ TTF_Font* RenderHUD::fg_font = nullptr;
 TTF_Font* RenderHUD::bg_font = nullptr;
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 std::list<std::string> RenderHUD::watches;
+int RenderHUD::outline_size = 1;
+int RenderHUD::font_size = 20;
 
-RenderHUD::RenderHUD()
+RenderHUD::~RenderHUD()
 {
-    outline_size = 1;
-    font_size = 20;
+    if (fg_font) {
+        TTF_CloseFont(fg_font);
+        fg_font = nullptr;
+    }
+    if (bg_font) {
+        TTF_CloseFont(bg_font);
+        bg_font = nullptr;
+    }
+    if (TTF_WasInit())
+        TTF_Quit();
+}
 
+void RenderHUD::initFonts()
+{
     if (!fg_font || !bg_font) {
         /* Find an installed regular font in the system using fontconfig */
         /* Code taken from http://stackoverflow.com/questions/10542832 */
@@ -81,7 +94,25 @@ RenderHUD::RenderHUD()
 
         if (fontFile) {
             debuglog(LCF_WINDOW, "Picking font: ", fontFile);
-            initFonts(fontFile);
+            /* Initialize SDL TTF */
+            if(TTF_Init() == -1) {
+                debuglog(LCF_ERROR, "Couldn't init SDL TTF.");
+                return;
+            }
+
+            fg_font = TTF_OpenFont(fontFile, 20);
+            if (fg_font == NULL) {
+                debuglog(LCF_ERROR, "Couldn't load font");
+                return;
+            }
+
+            bg_font = TTF_OpenFont(fontFile, 20);
+            if (bg_font == NULL) {
+                debuglog(LCF_ERROR, "Couldn't load font");
+                return;
+            }
+
+            TTF_SetFontOutline(bg_font, outline_size);
         }
         else {
             debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
@@ -89,45 +120,6 @@ RenderHUD::RenderHUD()
 
         if (fs) FcFontSetDestroy(fs);
     }
-}
-
-RenderHUD::~RenderHUD()
-{
-    if (fg_font) {
-        TTF_CloseFont(fg_font);
-        fg_font = nullptr;
-    }
-    if (bg_font) {
-        TTF_CloseFont(bg_font);
-        bg_font = nullptr;
-    }
-    if (TTF_WasInit())
-        TTF_Quit();
-}
-
-void RenderHUD::initFonts(const char* path)
-{
-    debuglog(LCF_WINDOW, "Try opening font ", path);
-
-    /* Initialize SDL TTF */
-    if(TTF_Init() == -1) {
-        debuglog(LCF_ERROR, "Couldn't init SDL TTF.");
-        return;
-    }
-
-    fg_font = TTF_OpenFont(path, 20);
-    if (fg_font == NULL) {
-        debuglog(LCF_ERROR, "Couldn't load font");
-        return;
-    }
-
-    bg_font = TTF_OpenFont(path, 20);
-    if (bg_font == NULL) {
-        debuglog(LCF_ERROR, "Couldn't load font");
-        return;
-    }
-
-    TTF_SetFontOutline(bg_font, outline_size);
 }
 
 std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
