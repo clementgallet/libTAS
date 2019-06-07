@@ -33,6 +33,7 @@
 #include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
+#include "renderhud/RenderHUD.h"
 #include <unistd.h> // getpid()
 #include "frame.h" // framecount
 
@@ -43,6 +44,8 @@ namespace libtas {
 // FIXME: should be declared in a header somewhere
 // (implementation at library/steam/isteamuser.cpp)
 void SteamUser_SetUserDataFolder(std::string path);
+
+static bool is_inited = false;
 
 void __attribute__((constructor)) init(void)
 {
@@ -74,9 +77,12 @@ void __attribute__((constructor)) init(void)
     /* Send information to the program */
 
     /* Send game process pid */
-    debuglog(LCF_SOCKET, "Send pid to program");
     sendMessage(MSGB_PID);
     pid_t mypid = getpid();
+    debuglogstdio(LCF_SOCKET, "Send pid to program: %d", mypid);
+    /* If I replace with the line below, then wine+SuperMeatBoy crashes on
+     * on startup... */
+    // debuglog(LCF_SOCKET, "Send pid to program: ", mypid);
     sendData(&mypid, sizeof(pid_t));
 
     /* End message */
@@ -137,17 +143,23 @@ void __attribute__((constructor)) init(void)
 
     /* Initialize sound parameters */
     audiocontext.init();
+    
+#ifdef LIBTAS_ENABLE_HUD
+    /* Load HUD fonts */
+    RenderHUD::initFonts();
+#endif
+
+    is_inited = true;
 }
 
 void __attribute__((destructor)) term(void)
 {
-    ThreadManager::deallocateThreads();
-
-    sendMessage(MSGB_QUIT);
-
-    closeSocket();
-
-    debuglog(LCF_SOCKET, "Exiting.");
+    if (is_inited) {
+        ThreadManager::deallocateThreads();
+        sendMessage(MSGB_QUIT);
+        closeSocket();
+        debuglog(LCF_SOCKET, "Exiting.");
+    }
 }
 
 }
