@@ -37,6 +37,7 @@
 #include "WindowTitle.h"
 #include "SDLEventQueue.h"
 #include "xevents.h"
+#include "xatom.h"
 
 namespace libtas {
 
@@ -434,8 +435,8 @@ static void pushQuitEvent(void)
 
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (gameDisplays[i]) {
-                xev.xclient.message_type = XInternAtom(gameDisplays[i], "WM_PROTOCOLS", true);
-                xev.xclient.data.l[0] = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
+                xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
+                xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
                 NATIVECALL(XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev));
                 NATIVECALL(XSync(gameDisplays[i], false));
             }

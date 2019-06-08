@@ -17,20 +17,39 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_XDISPLAY_H_INCL
-#define LIBTAS_XDISPLAY_H_INCL
-
-#include "global.h"
-#include <X11/Xlib.h>
+#include "xatom.h"
+#include "hook.h"
+#include "logging.h"
 
 namespace libtas {
 
-OVERRIDE Display *XOpenDisplay(const char *display_name);
-OVERRIDE int XCloseDisplay(Display *display);
+DEFINE_ORIG_POINTER(XInternAtom);
 
-OVERRIDE int XDisplayHeight(Display* display, int screen_number);
-OVERRIDE int XDisplayWidth(Display* display, int screen_number);
-
+Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
+{
+    debuglog(LCF_WINDOW, __func__, " call with atom ", atom_name);
+    LINK_NAMESPACE_GLOBAL(XInternAtom);
+    return orig::XInternAtom(display, atom_name, only_if_exists);
 }
 
-#endif
+static const char * const atom_names[NB_XATOMS] =
+{
+    "WM_PROTOCOLS",
+    "WM_TAKE_FOCUS",
+    "WM_DELETE_WINDOW",
+    "_NET_WM_STATE",
+    "_NET_WM_STATE_FULLSCREEN",
+};
+
+Atom X11Atoms[NB_XATOMS];
+
+void initX11Atoms(Display* display)
+{
+    static bool atoms_inited = false;
+    if (!atoms_inited) {
+        XInternAtoms( display, (char **)atom_names, NB_XATOMS, False, X11Atoms );
+        atoms_inited = true;
+    }
+}
+
+}

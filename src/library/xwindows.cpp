@@ -29,11 +29,10 @@
 #include "encoding/AVEncoder.h"
 #include "backtrace.h"
 #include "inputs/xinput.h"
+#include "xatom.h"
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XOpenDisplay);
-DEFINE_ORIG_POINTER(XCloseDisplay);
 DEFINE_ORIG_POINTER(XCreateWindow);
 DEFINE_ORIG_POINTER(XCreateSimpleWindow);
 DEFINE_ORIG_POINTER(XDestroyWindow);
@@ -42,7 +41,6 @@ DEFINE_ORIG_POINTER(XUnmapWindow);
 DEFINE_ORIG_POINTER(XMapRaised);
 DEFINE_ORIG_POINTER(XStoreName);
 DEFINE_ORIG_POINTER(XSetWMName);
-DEFINE_ORIG_POINTER(XInternAtom);
 DEFINE_ORIG_POINTER(XSelectInput);
 DEFINE_ORIG_POINTER(XResizeWindow);
 DEFINE_ORIG_POINTER(XConfigureWindow);
@@ -63,42 +61,6 @@ Bool XQueryExtension(Display* display, const char* name, int* major_opcode_retur
 #endif
 
     return ret;
-}
-
-Display *XOpenDisplay(const char *display_name)
-{
-    DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE_GLOBAL(XOpenDisplay);
-
-    Display* display = orig::XOpenDisplay(display_name);
-
-    int i;
-    for (i=0; i<GAMEDISPLAYNUM; i++) {
-        if (!gameDisplays[i]) {
-            gameDisplays[i] = display;
-            break;
-        }
-    }
-    if (i == GAMEDISPLAYNUM) {
-        debuglog(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
-    }
-
-    return display;
-}
-
-int XCloseDisplay(Display *display)
-{
-    DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE_GLOBAL(XCloseDisplay);
-
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i] == display) {
-            gameDisplays[i] = nullptr;
-            break;
-        }
-    }
-
-    return orig::XCloseDisplay(display);
 }
 
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
@@ -234,13 +196,6 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
     return orig::XSetWMName(display, w, text_prop);
 }
 
-Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
-{
-    debuglog(LCF_WINDOW, __func__, " call with atom ", atom_name);
-    LINK_NAMESPACE_GLOBAL(XInternAtom);
-    return orig::XInternAtom(display, atom_name, only_if_exists);
-}
-
 int XSelectInput(Display *display, Window w, long event_mask)
 {
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
@@ -357,21 +312,18 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
 
     /* Prevent games from intercepting ClientMessage focus events */
-    static Atom wm_protocol = XInternAtom(display, "WM_PROTOCOLS", True);
-    static Atom take_focus = XInternAtom(display, "WM_TAKE_FOCUS", True);
-
-    if (property == wm_protocol) {
+    if (property == x11_atom(WM_PROTOCOLS)) {
         const Atom* atoms = reinterpret_cast<const Atom*>(data);
         for (int i=0; i<nelements; i++) {
-            if (atoms[i] == take_focus) {
+            if (atoms[i] == x11_atom(WM_TAKE_FOCUS)) {
                 debuglog(LCF_WINDOW, "   removing WM_TAKE_FOCUS protocol");
                 Atom newatoms[nelements-1];
                 for (int j=0; j<nelements-1; j++) {
                     if (j<i) {
-                        newatoms[j] = atoms[i];
+                        newatoms[j] = atoms[j];
                     }
                     else {
-                        newatoms[j] = atoms[i+1];
+                        newatoms[j] = atoms[j+1];
                     }
                 }
                 return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms), nelements-1);

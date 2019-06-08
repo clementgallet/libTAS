@@ -17,19 +17,33 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_XDISPLAY_H_INCL
-#define LIBTAS_XDISPLAY_H_INCL
+#ifndef LIBTAS_XATOM_H_INCL
+#define LIBTAS_XATOM_H_INCL
 
 #include "global.h"
 #include <X11/Xlib.h>
 
 namespace libtas {
 
-OVERRIDE Display *XOpenDisplay(const char *display_name);
-OVERRIDE int XCloseDisplay(Display *display);
+OVERRIDE Atom XInternAtom(Display* display, const char*	atom_name, Bool only_if_exists);
 
-OVERRIDE int XDisplayHeight(Display* display, int screen_number);
-OVERRIDE int XDisplayWidth(Display* display, int screen_number);
+/* atoms */
+
+void initX11Atoms(Display* display);
+
+enum x11_atoms
+{
+    XATOM_WM_PROTOCOLS,
+    XATOM_WM_TAKE_FOCUS,
+    XATOM_WM_DELETE_WINDOW,
+    XATOM__NET_WM_STATE,
+    XATOM__NET_WM_STATE_FULLSCREEN,
+    NB_XATOMS
+};
+
+extern Atom X11Atoms[NB_XATOMS];
+
+#define x11_atom(name) (X11Atoms[XATOM_##name])
 
 }
 

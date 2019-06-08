@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "XlibEventQueue.h"
+#include "xatom.h"
 
 #ifdef LIBTAS_HAS_XINPUT
 #include <X11/extensions/XInput2.h>
@@ -89,8 +90,7 @@ void pushNativeXlibEvents(void)
 
                 /* Catch the close event */
                 if (event.type == ClientMessage) {
-                    static Atom dwAtom = XInternAtom(gameDisplays[i], "WM_DELETE_WINDOW", False);
-                    if ((Atom) event.xclient.data.l[0] == dwAtom) {
+                    if ((Atom) event.xclient.data.l[0] == x11_atom(WM_DELETE_WINDOW)) {
                         debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                         is_exiting = true;
                     }
@@ -377,12 +377,9 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
     /* Detect and disable fullscreen switching */
     if (event_send->type == ClientMessage) {
-        static Atom state = XInternAtom(display, "_NET_WM_STATE", True);
-        static Atom state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", True);
-
-        if ((event_send->xclient.message_type == state) &&
+        if ((event_send->xclient.message_type == x11_atom(_NET_WM_STATE)) &&
             (event_send->xclient.data.l[0] == 1) &&
-            (event_send->xclient.data.l[1] == state_fullscreen)) {
+            (event_send->xclient.data.l[1] == x11_atom(_NET_WM_STATE_FULLSCREEN))) {
             debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
             if (event_send->xclient.window != gameXWindow) {
                 debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");

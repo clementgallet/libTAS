@@ -20,11 +20,53 @@
 #include "xdisplay.h"
 #include "hook.h"
 #include "logging.h"
+#include "xatom.h"
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(XOpenDisplay);
+DEFINE_ORIG_POINTER(XCloseDisplay);
 DEFINE_ORIG_POINTER(XDisplayHeight);
 DEFINE_ORIG_POINTER(XDisplayWidth);
+
+Display *XOpenDisplay(const char *display_name)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE_GLOBAL(XOpenDisplay);
+
+    Display* display = orig::XOpenDisplay(display_name);
+
+    int i;
+    for (i=0; i<GAMEDISPLAYNUM; i++) {
+        if (!gameDisplays[i]) {
+            gameDisplays[i] = display;
+            break;
+        }
+    }
+    if (i == GAMEDISPLAYNUM) {
+        debuglog(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
+    }
+
+    /* Initialize atoms */
+    initX11Atoms(display);
+    
+    return display;
+}
+
+int XCloseDisplay(Display *display)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    LINK_NAMESPACE_GLOBAL(XCloseDisplay);
+
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i] == display) {
+            gameDisplays[i] = nullptr;
+            break;
+        }
+    }
+
+    return orig::XCloseDisplay(display);
+}
 
 int XDisplayHeight(Display* display, int screen_number)
 {
