@@ -57,6 +57,8 @@ OVERRIDE int XChangeProperty(Display* display, Window w, Atom property, Atom typ
 
 OVERRIDE int XSetWMHints(Display* display, Window w, XWMHints* wm_hints);
 
+OVERRIDE Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int src_x, int src_y, int* dest_x_return, int* dest_y_return, Window* child_return);
+
 }
 
 #endif

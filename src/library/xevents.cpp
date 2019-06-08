@@ -67,6 +67,17 @@ static Bool isEventFiltered (XEvent *event) {
          * this as Wine is looking for an event with WM_STATE atom */
         case ReparentNotify:
             return True;
+        case ConfigureNotify:
+            {
+                XConfigureEvent* xce = reinterpret_cast<XConfigureEvent*>(event);
+                xce->x = 0;
+                xce->y = 0;
+            }
+            return False;
+        case ClientMessage:
+            if (static_cast<Atom>(reinterpret_cast<XClientMessageEvent*>(event)->data.l[0]) == x11_atom(WM_TAKE_FOCUS))
+                return True;
+            return False;
         default:
             return False;
     }

@@ -47,6 +47,7 @@ DEFINE_ORIG_POINTER(XConfigureWindow);
 DEFINE_ORIG_POINTER(XQueryExtension);
 DEFINE_ORIG_POINTER(XChangeProperty);
 DEFINE_ORIG_POINTER(XSetWMHints);
+DEFINE_ORIG_POINTER(XTranslateCoordinates);
 
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
     debuglog(LCF_WINDOW, __func__, " called with name ", name);
@@ -347,6 +348,23 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
     }
     
     return orig::XSetWMHints(display, w, wm_hints);
+}
+
+Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int src_x, int src_y, int* dest_x_return, int* dest_y_return, Window* child_return)
+{
+    LINK_NAMESPACE_GLOBAL(XTranslateCoordinates);
+    if (GlobalState::isNative())
+        return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
+
+    debuglog(LCF_WINDOW, __func__, " called with src_w ", src_w, " dest_w ", dest_w, " src_x ", src_x, " src_y ", src_y);
+
+    if (dest_w == DefaultRootWindow(display)) {
+        *dest_x_return = src_x;
+        *dest_y_return = src_y;
+        if (child_return) *child_return = src_w;
+        return True;
+    }    
+    return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
 }
 
 }
