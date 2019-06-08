@@ -28,7 +28,16 @@
 
 namespace libtas {
 
+OVERRIDE XRRScreenResources *XRRGetScreenResourcesCurrent (Display *dpy, Window window);
+OVERRIDE XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window);
+OVERRIDE void XRRFreeScreenResources (XRRScreenResources *resources);
+
+OVERRIDE XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output);
+OVERRIDE void XRRFreeOutputInfo (XRROutputInfo *outputInfo);
+
 OVERRIDE XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc);
+OVERRIDE void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo);
+
 
 }
 

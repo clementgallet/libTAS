@@ -25,29 +25,133 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(XRRGetScreenResources);
+DEFINE_ORIG_POINTER(XRRGetScreenResourcesCurrent);
+DEFINE_ORIG_POINTER(XRRFreeScreenResources);
+DEFINE_ORIG_POINTER(XRRGetOutputInfo);
+DEFINE_ORIG_POINTER(XRRFreeOutputInfo);
 DEFINE_ORIG_POINTER(XRRGetCrtcInfo);
+DEFINE_ORIG_POINTER(XRRFreeCrtcInfo);
 
-OVERRIDE XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
+static const char *output_name = "libTAS fake XRR output";
+static const char *mode_name = "libTAS fake XRR mode";
+
+XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XRRGetCrtcInfo, "Xrandr");
+    if (shared_config.screen_width) {
+        static XRRScreenResources sr;
+        sr.ncrtc = 1;
+        static RRCrtc sr_crtcs = 1;
+        sr.crtcs = &sr_crtcs;
 
-    XRRCrtcInfo *crtcInfo = orig::XRRGetCrtcInfo(dpy, resources, crtc);
+        sr.noutput = 1;
+        static RROutput sr_outputs = 1;
+        sr.outputs = &sr_outputs;
+
+        sr.nmode = 1;
+        static XRRModeInfo sr_mode;
+        sr_mode.id = 1;
+        sr_mode.width = shared_config.screen_width;
+        sr_mode.height = shared_config.screen_height;
+        
+        sr_mode.hSyncStart = shared_config.screen_height + 88;
+        sr_mode.hSyncEnd = shared_config.screen_height + 132;
+        sr_mode.hTotal = shared_config.screen_height + 280;
+        sr_mode.vSyncStart = shared_config.screen_width + 4;
+        sr_mode.vSyncEnd = shared_config.screen_width + 9;
+        sr_mode.vTotal = shared_config.screen_width + 45;
+        unsigned int dots = sr_mode.hTotal * sr_mode.vTotal;
+        unsigned int refresh = 60;
+        sr_mode.dotClock = dots * refresh - dots / 2;
+        sr_mode.name = const_cast<char*>(mode_name);
+        sr_mode.nameLength = strlen(mode_name);        
+        
+        sr.modes = &sr_mode;
+        return &sr;
+    }
+    LINK_NAMESPACE(XRRGetScreenResources, "Xrandr");
+    return orig::XRRGetScreenResources(dpy, window);
+}
+
+XRRScreenResources *XRRGetScreenResourcesCurrent (Display *dpy, Window window)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    return XRRGetScreenResources(dpy, window);
+}
+
+void XRRFreeScreenResources (XRRScreenResources *resources)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    if (!shared_config.screen_width) {
+        LINK_NAMESPACE(XRRFreeScreenResources, "Xrandr");
+        return orig::XRRFreeScreenResources(resources);
+    }    
+}
+
+XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    if (shared_config.screen_width) {
+        static XRROutputInfo output_info;        
+        output_info.crtc = 1;
+        output_info.name = const_cast<char*>(output_name);
+        output_info.nameLen = strlen(output_name);
+        output_info.ncrtc = 1;
+        static RRCrtc output_crtcs = 1;
+        output_info.crtcs = &output_crtcs;
+        output_info.nmode = 1;
+        static RRMode output_mode = 1;
+        output_info.modes = &output_mode;
+        return &output_info;
+    }
+    LINK_NAMESPACE(XRRGetOutputInfo, "Xrandr");
+    return orig::XRRGetOutputInfo(dpy, resources, output);
+}
+
+void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    if (!shared_config.screen_width) {
+        LINK_NAMESPACE(XRRFreeOutputInfo, "Xrandr");
+        return orig::XRRFreeOutputInfo(outputInfo);
+    }    
+}
+
+XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
 
     if (shared_config.screen_width) {
-        /* Change the settings. */
-        crtcInfo->width = shared_config.screen_width;
-        crtcInfo->height = shared_config.screen_height;
-        for (int i = 0; i < resources->nmode; i++) {
-            if (resources->modes[i].width == shared_config.screen_width &&
-                resources->modes[i].height == shared_config.screen_height) {
-                crtcInfo->mode = i;
-                break;
-            }
-        }
-    }
+        static XRRCrtcInfo crtcInfo;
+        crtcInfo.x = 0;
+        crtcInfo.y = 0;        
+        crtcInfo.width = shared_config.screen_width;
+        crtcInfo.height = shared_config.screen_height;
+        crtcInfo.mode = 1;
+        crtcInfo.noutput = 1;
+        
+        crtcInfo.noutput = 1;
+        static RROutput crtc_outputs = 1;
+        crtcInfo.outputs = &crtc_outputs;
 
-    return crtcInfo;
+        crtcInfo.npossible = 1;
+        static RROutput crtc_possible = 1;
+        crtcInfo.possible = &crtc_possible;
+
+        return &crtcInfo;
+    }
+    LINK_NAMESPACE(XRRGetCrtcInfo, "Xrandr");
+    return orig::XRRGetCrtcInfo(dpy, resources, crtc);
+}
+
+void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    if (!shared_config.screen_width) {
+        LINK_NAMESPACE(XRRFreeCrtcInfo, "Xrandr");
+        return orig::XRRFreeCrtcInfo(crtcInfo);
+    }    
 }
 
 }
