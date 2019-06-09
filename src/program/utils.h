@@ -29,4 +29,16 @@ int create_dir(std::string& path);
 /* Remove savestate files */
 void remove_savestates(Context* context);
 
+/* List of error codes */
+enum BinaryType {
+    BT_UNKNOWN,
+    BT_ELF32,
+    BT_ELF64,
+    BT_PE32,
+    BT_PE32P,
+};
+
+/* Run the `file` command from a shell and extract the output of the command. */
+int extractBinaryType(std::string path);
+
 #endif

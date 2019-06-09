@@ -107,6 +107,51 @@ void GameLoop::launchGameThread()
             break;
     }
 
+    /* Change settings based on game arch */
+    int gameArch = extractBinaryType(context->gamepath);
+    int libtasArch = extractBinaryType(context->libtaspath);
+
+    /* Switch to libtas32.so if required */
+    if (((gameArch == BT_ELF32) || (gameArch == BT_PE32)) && (libtasArch == BT_ELF64)) {
+        std::string libname("libtas.so");
+        size_t pos = context->libtaspath.find(libname);
+        context->libtaspath.replace(pos, libname.length(), "libtas32.so");
+        /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
+        libtasArch = extractBinaryType(context->libtaspath);
+    }
+    
+    /* Detect Windows executables and launch wine */
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+        /* Move the game executable to the command-line argument */
+        
+        /* Wine can fail if not specifying a Windows path */
+        context->gamepath.insert(0, "Z:");
+        
+        context->gamepath += " ";
+        context->config.gameargs.insert(0, context->gamepath);
+        
+        /* Change the executable to wine */
+        std::string winename = "wine";
+        if (gameArch == BT_PE32P)
+            winename += "64";
+            
+        /* wine[64] presence was already checked in ui/ErrorChecking.cpp */
+        std::string cmd = "which ";
+        cmd += winename;
+        FILE *output = popen(cmd.c_str(), "r");
+        if (output != NULL) {
+            std::array<char,256> buf;
+            if (fgets(buf.data(), buf.size(), output) != 0) {
+                context->gamepath = std::string(buf.data());
+                context->gamepath.pop_back(); // remove trailing newline
+            }
+            pclose(output);
+        }
+        
+        /* We need to delay libtas hooking for wine process. */
+        setenv("LIBTAS_DELAY_INIT", "1", 1);
+    }
+
     /* Set additional environment variables regarding Mesa configuration */
     if (context->config.sc.opengl_soft)
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
@@ -123,9 +168,6 @@ void GameLoop::launchGameThread()
 
     setenv("LIBTAS_START_FRAME", std::to_string(context->framecount).c_str(), 1);
 
-    /* Sometimes we want to delay libtas hooking when the game process
-     * uses fork/exec. */
-    setenv("LIBTAS_DELAY_INIT", "1", 1);
 
     /* Disable Address Space Layout Randomization for the game, so that ram
      * watch addresses do not change on game restart.

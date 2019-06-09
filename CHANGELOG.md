@@ -3,6 +3,8 @@
 
 * Both 32-bit and 64-bit libtas.so libraries can be installed, and the program
   will select the correct one depending on the game arch
+* Hook Xinerama for games gathering the monitor resolution
+* Detect Windows executable and transparently call wine on it
 
 ### Changed
 

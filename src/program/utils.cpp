@@ -60,3 +60,40 @@ void remove_savestates(Context* context)
         unlink(savestatepspath.c_str());
     }
 }
+
+int extractBinaryType(std::string path)
+{
+    std::string cmd = "file -b \"";
+    cmd += path;
+    cmd += "\"";
+
+    std::string outputstr("");
+
+    FILE *output = popen(cmd.c_str(), "r");
+    if (output != NULL) {
+        std::array<char,1000> buf;
+        if (fgets(buf.data(), buf.size(), output) != 0) {
+            outputstr = std::string(buf.data());
+        }
+        pclose(output);
+    }
+
+    if (outputstr.find("ELF 32-bit") != std::string::npos) {
+        return BT_ELF32;
+    }
+    
+    if (outputstr.find("ELF 64-bit") != std::string::npos) {
+        return BT_ELF64;
+    }
+
+    if (outputstr.find("PE32 executable") != std::string::npos) {
+        return BT_PE32;
+    }
+
+    if (outputstr.find("PE32+ executable") != std::string::npos) {
+        return BT_PE32P;
+    }
+
+    return BT_UNKNOWN;
+}
+
