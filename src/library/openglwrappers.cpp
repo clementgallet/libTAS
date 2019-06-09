@@ -268,11 +268,6 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
         if (!(game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER))) {
             /* Now that the context is created, we can init the screen capture */
             ScreenCapture::init();
-
-#ifdef LIBTAS_ENABLE_HUD
-            /* Create texture and fbo in the OSD */
-            RenderHUD_GL::init();
-#endif
         }
 
         checkMesa();

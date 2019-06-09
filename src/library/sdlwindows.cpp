@@ -126,11 +126,6 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init();
 
-#ifdef LIBTAS_ENABLE_HUD
-    /* Create texture and fbo in the OSD */
-    RenderHUD_GL::init();
-#endif
-
     /* Alerting the user if software rendering is not active */
     checkMesa();
 
@@ -408,11 +403,6 @@ static int swapInterval = 0;
     /* If we are going to save the screen when savestating, we need to init
      * our pixel access routine */
     ScreenCapture::init();
-
-#ifdef LIBTAS_ENABLE_HUD
-    /* Create texture and fbo in the OSD */
-    RenderHUD_GL::init();
-#endif
 
     return surf;
 }

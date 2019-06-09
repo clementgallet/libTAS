@@ -59,7 +59,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     int logging_status = LOGGING_TO_CONSOLE;
 
     /* Which flags trigger a debug message */
-    LogCategoryFlag includeFlags = LCF_ALL;
+    LogCategoryFlag includeFlags = LCF_ERROR | LCF_WARNING | LCF_INFO;
 
     /* Which flags prevent triggering a debug message */
     LogCategoryFlag excludeFlags = LCF_NONE;
