@@ -111,7 +111,7 @@ static void *pthread_start(void *arg)
              * the execution past the routine, so we are using the exception
              * feature for that.
              */
-            void *ret;
+            void *ret = nullptr;
             try {
                 /* Execute the function */
                 ret = thread->start(thread->arg);

@@ -27,21 +27,21 @@
 
 namespace libtas {
 
-/* Override */ xcb_query_keymap_cookie_t xcb_query_keymap(xcb_connection_t *conn)
+/* Override */ xcb_query_keymap_cookie_t xcb_query_keymap(xcb_connection_t *)
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_query_keymap_cookie_t keymap_cookie;
+    xcb_query_keymap_cookie_t keymap_cookie = {0};
     return keymap_cookie;
 }
 
-/* Override */ xcb_query_keymap_cookie_t xcb_query_keymap_unchecked(xcb_connection_t *conn)
+/* Override */ xcb_query_keymap_cookie_t xcb_query_keymap_unchecked(xcb_connection_t *)
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_query_keymap_cookie_t keymap_cookie;
+    xcb_query_keymap_cookie_t keymap_cookie = {0};
     return keymap_cookie;
 }
 
-/* Override */ xcb_query_keymap_reply_t* xcb_query_keymap_reply(xcb_connection_t *conn, xcb_query_keymap_cookie_t cookie, xcb_generic_error_t** error)
+/* Override */ xcb_query_keymap_reply_t* xcb_query_keymap_reply(xcb_connection_t *, xcb_query_keymap_cookie_t , xcb_generic_error_t** )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
 
@@ -67,35 +67,35 @@ namespace libtas {
 }
 
 /* Override */ xcb_grab_keyboard_cookie_t
-xcb_grab_keyboard (xcb_connection_t *c,
-                   uint8_t           owner_events,
-                   xcb_window_t      grab_window,
-                   xcb_timestamp_t   time,
-                   uint8_t           pointer_mode,
-                   uint8_t           keyboard_mode)
+xcb_grab_keyboard (xcb_connection_t *,
+                   uint8_t           ,
+                   xcb_window_t      ,
+                   xcb_timestamp_t   ,
+                   uint8_t           ,
+                   uint8_t           )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_grab_keyboard_cookie_t keyboard_grab_cookie;
+    xcb_grab_keyboard_cookie_t keyboard_grab_cookie = {0};
     return keyboard_grab_cookie;
 }
 
 /* Override */ xcb_grab_keyboard_cookie_t
-xcb_grab_keyboard_unchecked (xcb_connection_t *c,
-                             uint8_t           owner_events,
-                             xcb_window_t      grab_window,
-                             xcb_timestamp_t   time,
-                             uint8_t           pointer_mode,
-                             uint8_t           keyboard_mode)
+xcb_grab_keyboard_unchecked (xcb_connection_t *,
+                             uint8_t           ,
+                             xcb_window_t      ,
+                             xcb_timestamp_t   ,
+                             uint8_t           ,
+                             uint8_t           )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_grab_keyboard_cookie_t keyboard_grab_cookie;
+    xcb_grab_keyboard_cookie_t keyboard_grab_cookie = {0};
     return keyboard_grab_cookie;
 }
 
 /* Override */ xcb_grab_keyboard_reply_t *
-xcb_grab_keyboard_reply (xcb_connection_t            *c,
-                         xcb_grab_keyboard_cookie_t   cookie  /**< */,
-                         xcb_generic_error_t        **e)
+xcb_grab_keyboard_reply (xcb_connection_t            *,
+                         xcb_grab_keyboard_cookie_t     /**< */,
+                         xcb_generic_error_t        **)
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
     xcb_grab_keyboard_reply_t *reply = new xcb_grab_keyboard_reply_t;
@@ -107,70 +107,70 @@ xcb_grab_keyboard_reply (xcb_connection_t            *c,
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_ungrab_keyboard_checked (xcb_connection_t *c,
-                             xcb_timestamp_t   time)
+xcb_ungrab_keyboard_checked (xcb_connection_t *,
+                             xcb_timestamp_t   )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t keyboard_ungrab_cookie;
+    xcb_void_cookie_t keyboard_ungrab_cookie = {0};
     return keyboard_ungrab_cookie;
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_ungrab_keyboard (xcb_connection_t *c,
-                     xcb_timestamp_t   time)
+xcb_ungrab_keyboard (xcb_connection_t *,
+                     xcb_timestamp_t   )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t keyboard_ungrab_cookie;
+    xcb_void_cookie_t keyboard_ungrab_cookie = {0};
     return keyboard_ungrab_cookie;
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_grab_key_checked (xcb_connection_t *c,
-                      uint8_t           owner_events,
-                      xcb_window_t      grab_window,
-                      uint16_t          modifiers,
-                      xcb_keycode_t     key,
-                      uint8_t           pointer_mode,
-                      uint8_t           keyboard_mode)
+xcb_grab_key_checked (xcb_connection_t *,
+                      uint8_t           ,
+                      xcb_window_t      ,
+                      uint16_t          ,
+                      xcb_keycode_t     ,
+                      uint8_t           ,
+                      uint8_t           )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t key_grab_cookie;
+    xcb_void_cookie_t key_grab_cookie = {0};
     return key_grab_cookie;
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_grab_key (xcb_connection_t *c,
-              uint8_t           owner_events,
-              xcb_window_t      grab_window,
-              uint16_t          modifiers,
-              xcb_keycode_t     key,
-              uint8_t           pointer_mode,
-              uint8_t           keyboard_mode)
+xcb_grab_key (xcb_connection_t *,
+              uint8_t           ,
+              xcb_window_t      ,
+              uint16_t          ,
+              xcb_keycode_t     ,
+              uint8_t           ,
+              uint8_t           )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t key_grab_cookie;
+    xcb_void_cookie_t key_grab_cookie = {0};
     return key_grab_cookie;
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_ungrab_key_checked (xcb_connection_t *c,
-                        xcb_keycode_t     key,
-                        xcb_window_t      grab_window,
-                        uint16_t          modifiers)
+xcb_ungrab_key_checked (xcb_connection_t *,
+                        xcb_keycode_t     ,
+                        xcb_window_t      ,
+                        uint16_t          )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t key_ungrab_cookie;
+    xcb_void_cookie_t key_ungrab_cookie = {0};
     return key_ungrab_cookie;
 }
 
 /* Override */ xcb_void_cookie_t
-xcb_ungrab_key (xcb_connection_t *c,
-                xcb_keycode_t     key,
-                xcb_window_t      grab_window,
-                uint16_t          modifiers)
+xcb_ungrab_key (xcb_connection_t *,
+                xcb_keycode_t     ,
+                xcb_window_t      ,
+                uint16_t          )
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
-    xcb_void_cookie_t key_ungrab_cookie;
+    xcb_void_cookie_t key_ungrab_cookie = {0};
     return key_ungrab_cookie;
 }
 

@@ -177,7 +177,7 @@ void pushNativeSDLEvents(void)
      */
 
     Uint32 mask;
-    SDL1::SDL_Event* events1;
+    SDL1::SDL_Event* events1 = nullptr;
 
     int SDLver = get_sdlversion();
     if (SDLver == 1) {

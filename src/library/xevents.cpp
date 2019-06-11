@@ -390,7 +390,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
     if (event_send->type == ClientMessage) {
         if ((event_send->xclient.message_type == x11_atom(_NET_WM_STATE)) &&
             (event_send->xclient.data.l[0] == 1) &&
-            (event_send->xclient.data.l[1] == x11_atom(_NET_WM_STATE_FULLSCREEN))) {
+            (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN))) {
             debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
             if (event_send->xclient.window != gameXWindow) {
                 debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");

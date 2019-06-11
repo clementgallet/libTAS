@@ -61,8 +61,8 @@ struct Context {
     uint64_t framecount = 0;
 
     /* current time */
-    uint64_t current_time_sec;
-    uint64_t current_time_nsec;
+    int64_t current_time_sec;
+    int64_t current_time_nsec;
 
     /* config */
     Config config;

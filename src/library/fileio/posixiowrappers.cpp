@@ -55,7 +55,7 @@ int open (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE_GLOBAL(open);
 
-    mode_t mode;
+    mode_t mode = 0;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -96,7 +96,7 @@ int open64 (const char *file, int oflag, ...)
 {
     LINK_NAMESPACE_GLOBAL(open64);
 
-    mode_t mode;
+    mode_t mode = 0;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -137,7 +137,7 @@ int openat (int dirfd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE_GLOBAL(openat);
 
-    mode_t mode;
+    mode_t mode = 0;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;
@@ -169,7 +169,7 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
 {
     LINK_NAMESPACE_GLOBAL(openat64);
 
-    mode_t mode;
+    mode_t mode = 0;
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
     {
         va_list arg_list;

@@ -102,7 +102,7 @@ public:
         if (compare_type == CompareType::Previous) {
             compare_value = previous_value;
         }
-        if (compare_type == CompareType::Value) {
+        else { // CompareType::Value
             compare_value = static_cast<T>(compare_value_db);
         }
 

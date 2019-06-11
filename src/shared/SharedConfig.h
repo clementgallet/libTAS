@@ -138,8 +138,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Initial system time at game startup */
     /* We don't use struct timespec because it contains longs so the size
      * depends on the arch.*/
-    uint64_t initial_time_sec = 1;
-    uint64_t initial_time_nsec = 0;
+    int64_t initial_time_sec = 1;
+    int64_t initial_time_nsec = 0;
     
     /* Virtual monitor resolution */
     int screen_width = 0;

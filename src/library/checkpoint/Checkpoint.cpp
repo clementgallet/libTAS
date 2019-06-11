@@ -436,7 +436,7 @@ static void readAllAreas()
 {
     SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
-    int spmfd, crfd;
+    int spmfd = -1, crfd = -1;
     if (shared_config.incremental_savestates) {
         NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
         MYASSERT(spmfd != -1);
@@ -906,14 +906,14 @@ static size_t writeAllAreas(bool base)
     MYASSERT(pmfd != -1)
     MYASSERT(pfd != -1)
 
-    int spmfd;
+    int spmfd = -1;
     NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
     if (shared_config.incremental_savestates) {
         /* We need /proc/self/pagemap for incremental savestates */
         MYASSERT(spmfd != -1);
     }
 
-    int crfd;
+    int crfd = -1;
     if (shared_config.incremental_savestates) {
         NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
         MYASSERT(crfd != -1);

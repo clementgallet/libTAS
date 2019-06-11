@@ -236,6 +236,8 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
             return SND_PCM_STATE_RUNNING;
         case AudioSource::SOURCE_PAUSED:
             return SND_PCM_STATE_PAUSED;
+        case AudioSource::SOURCE_STOPPED:
+            return SND_PCM_STATE_XRUN;
     }
 
     return SND_PCM_STATE_OPEN;

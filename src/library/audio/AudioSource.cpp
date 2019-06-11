@@ -286,8 +286,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         }
         else {
             int queue_size = buffer_queue.size();
-            int finalIndex;
-            int finalPos;
+            int finalIndex = queue_index+1;
+            int finalPos = 0;
 
             /* Our for loop conditions are different if we are looping or not */
             if (looping) {
