@@ -48,7 +48,7 @@ sem_t ThreadManager::semNotifyCkptThread;
 sem_t ThreadManager::semWaitForCkptThreadSignal;
 volatile bool ThreadManager::restoreInProgress = false;
 int ThreadManager::numThreads;
-int ThreadManager::sig_suspend_threads = SIGPWR;
+int ThreadManager::sig_suspend_threads = SIGXFSZ;
 int ThreadManager::sig_checkpoint = SIGSYS;
 
 void ThreadManager::init()
