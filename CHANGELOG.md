@@ -15,6 +15,7 @@
 
 * Don't assume heap segments have the same protection
 * Handle when state saving failed
+* Fix insert frame not working after delete frame
 
 ## [1.3.4] - 2019-04-08
 ### Added
