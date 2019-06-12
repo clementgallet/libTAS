@@ -897,6 +897,16 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
         case HOTKEY_LOADSTATE_BACKTRACK:
+        case HOTKEY_LOADBRANCH1:
+        case HOTKEY_LOADBRANCH2:
+        case HOTKEY_LOADBRANCH3:
+        case HOTKEY_LOADBRANCH4:
+        case HOTKEY_LOADBRANCH5:
+        case HOTKEY_LOADBRANCH6:
+        case HOTKEY_LOADBRANCH7:
+        case HOTKEY_LOADBRANCH8:
+        case HOTKEY_LOADBRANCH9:
+        case HOTKEY_LOADBRANCH_BACKTRACK:
 
             /* Load a savestate:
              * - check for an existing savestate in the slot
@@ -917,8 +927,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 return false;
             }
 
+            /* Loading branch? */
+            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH_BACKTRACK);
+
             /* Slot number */
-            int statei = hk.type - HOTKEY_LOADSTATE1 + 1;
+            int statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
 
             /* Send the savestate index */
             sendMessage(MSGN_SAVESTATE_INDEX);
@@ -1006,8 +1019,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
 
-            /* When loading in read mode, we don't allow loading a non-prefix movie */
-            if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+            /* When loading in read mode and not branch, we don't allow loading a non-prefix movie */
+            if ((context->config.sc.recording == SharedConfig::RECORDING_READ) && (!load_branch)) {
 
                 /* Checking if the savestate movie is a prefix of our movie */
                 MovieFile savedmovie(context);
@@ -1032,11 +1045,13 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                 std::string msg;
-                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
-                    msg = "Loading backtrack state ";
+                if ((hk.type == HOTKEY_LOADSTATE_BACKTRACK) || (hk.type == HOTKEY_LOADBRANCH_BACKTRACK)) {
+                    msg = "Loading backtrack ";
+                    msg += load_branch?"branch ":"state ";
                 }
                 else {
-                    msg = "Loading state ";
+                    msg = "Loading ";
+                    msg += load_branch?"branch ":"state ";
                     msg += std::to_string(statei);
                 }
                 sendMessage(MSGN_OSD_MSG);
@@ -1061,9 +1076,9 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 sendMessage(MSGN_CONFIG);
                 sendData(&context->config.sc, sizeof(SharedConfig));
 
-                if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                    /* When in writing move, we load the movie associated
-                     * with the savestate.
+                if ((context->config.sc.recording == SharedConfig::RECORDING_WRITE) || load_branch) {
+                    /* When in writing move or loading a branch,
+                     * we load the movie associated with the savestate.
                      */
                     movie.loadInputs(moviepath);
                 }
@@ -1103,11 +1118,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
             if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
                 std::string msg;
-                if (hk.type == HOTKEY_LOADSTATE_BACKTRACK) {
-                    msg = "Backtrack state loaded";
+                if ((hk.type == HOTKEY_LOADSTATE_BACKTRACK) || (hk.type == HOTKEY_LOADBRANCH_BACKTRACK)) {
+                    msg = load_branch?"Backtrack branch loaded":"Backtrack state loaded";
                 }
                 else {
-                    msg = "State ";
+                    msg = load_branch?"Branch ":"State ";
                     msg += std::to_string(statei);
                     msg += " loaded";
                 }

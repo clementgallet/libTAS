@@ -5,6 +5,7 @@
   will select the correct one depending on the game arch
 * Hook Xinerama for games gathering the monitor resolution
 * Detect Windows executable and transparently call wine on it
+* Add a loadbranch hotkey to load the entire savestate movie in playback mode
 
 ### Changed
 
