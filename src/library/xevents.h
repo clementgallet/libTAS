@@ -34,6 +34,9 @@ void pushNativeXlibEvents(void);
 /* Wait for the xevent queue to become empty (returns true) or timeout (returns false) */
 bool syncXEvents();
 
+/* Answer ping message from the window manager */
+void answerPingMessage();
+
 OVERRIDE int XNextEvent(Display *display, XEvent *event_return);
 OVERRIDE int XPeekEvent(Display *display, XEvent *event_return);
 OVERRIDE int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return);

@@ -54,6 +54,9 @@ int receiveData(void* elem, unsigned int size);
 /* Receive a message */
 int receiveMessage();
 
+/* Receive a message or returns -1 if no message available */
+int receiveMessageNonBlocking();
+
 /* Receive a string object from the socket. */
 std::string receiveString();
 

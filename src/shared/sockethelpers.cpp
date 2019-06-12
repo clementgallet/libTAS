@@ -120,13 +120,22 @@ void sendString(const std::string& str)
 
 int receiveData(void* elem, unsigned int size)
 {
-    return recv(socket_fd, elem, size, 0);
+    return recv(socket_fd, elem, size, MSG_WAITALL);
 }
 
 int receiveMessage()
 {
     int msg;
     int ret = receiveData(&msg, sizeof(int));
+    if (ret < 0)
+        return ret;
+    return msg;
+}
+
+int receiveMessageNonBlocking()
+{
+    int msg;
+    int ret = recv(socket_fd, &msg, sizeof(int), MSG_WAITALL | MSG_DONTWAIT);
     if (ret < 0)
         return ret;
     return msg;

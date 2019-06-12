@@ -489,11 +489,19 @@ static void receive_messages(std::function<void()> draw)
 
     while (1)
     {
-        int message = receiveMessage();
+        int message = receiveMessageNonBlocking();
+        /* We need to answer to ping messages from the window manager,
+         * otherwise the game will appear as unresponsive. */
+        if (message < 0) {
+            answerPingMessage();
+            NATIVECALL(usleep(100));
+        }
         bool succeeded;
         std::string str;
         switch (message)
         {
+            case -1:
+                break;
             case MSGN_USERQUIT:
                 pushQuitEvent();
                 is_exiting = true;

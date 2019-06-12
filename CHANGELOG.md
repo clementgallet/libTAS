@@ -6,6 +6,7 @@
 * Hook Xinerama for games gathering the monitor resolution
 * Detect Windows executable and transparently call wine on it
 * Add a loadbranch hotkey to load the entire savestate movie in playback mode
+* Prevent the game screen from appearing unresponsive when the game is paused
 
 ### Changed
 
