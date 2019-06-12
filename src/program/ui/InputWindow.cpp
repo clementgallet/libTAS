@@ -111,6 +111,11 @@ InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : Q
     setLayout(mainLayout);
 }
 
+QSize InputWindow::sizeHint() const
+{
+    return QSize(600, 700);
+}
+
 void InputWindow::updateHotkeyRow(int row)
 {
     /* Check if a key is mapped to this hotkey */

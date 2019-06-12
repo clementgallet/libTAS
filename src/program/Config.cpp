@@ -201,8 +201,7 @@ void Config::load(const std::string& gamepath) {
     settings.beginGroup("keymapping");
 
     size = settings.beginReadArray("hotkeys");
-    if (size > 0)
-        km.hotkey_mapping.clear();
+    km.default_hotkeys();
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
         xcb_keysym_t keysym = settings.value("keysym").toInt();

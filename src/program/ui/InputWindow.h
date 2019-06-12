@@ -33,6 +33,8 @@ public:
     InputWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
     Context *context;
 
+    QSize sizeHint() const override;
+
     void update();
 
 private:
