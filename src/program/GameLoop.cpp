@@ -119,38 +119,6 @@ void GameLoop::launchGameThread()
         /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
         libtasArch = extractBinaryType(context->libtaspath);
     }
-    
-    /* Detect Windows executables and launch wine */
-    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
-        /* Move the game executable to the command-line argument */
-        
-        /* Wine can fail if not specifying a Windows path */
-        context->gamepath.insert(0, "Z:");
-        
-        context->gamepath += " ";
-        context->config.gameargs.insert(0, context->gamepath);
-        
-        /* Change the executable to wine */
-        std::string winename = "wine";
-        if (gameArch == BT_PE32P)
-            winename += "64";
-            
-        /* wine[64] presence was already checked in ui/ErrorChecking.cpp */
-        std::string cmd = "which ";
-        cmd += winename;
-        FILE *output = popen(cmd.c_str(), "r");
-        if (output != NULL) {
-            std::array<char,256> buf;
-            if (fgets(buf.data(), buf.size(), output) != 0) {
-                context->gamepath = std::string(buf.data());
-                context->gamepath.pop_back(); // remove trailing newline
-            }
-            pclose(output);
-        }
-        
-        /* We need to delay libtas hooking for wine process. */
-        setenv("LIBTAS_DELAY_INIT", "1", 1);
-    }
 
     /* Set additional environment variables regarding Mesa configuration */
     if (context->config.sc.opengl_soft)
@@ -212,7 +180,39 @@ void GameLoop::launchGameThread()
         /* Set the LD_PRELOAD environment variable to inject our lib to the game */
         setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
     }
-    arg_list.push_back(context->gamepath);
+
+    /* Detect Windows executables and launch wine */
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+        /* Change the executable to wine */
+        std::string winename = "wine";
+        if (gameArch == BT_PE32P)
+            winename += "64";
+
+        /* wine[64] presence was already checked in ui/ErrorChecking.cpp */
+        std::string cmd = "which ";
+        cmd += winename;
+        FILE *output = popen(cmd.c_str(), "r");
+        if (output != NULL) {
+            std::array<char,256> buf;
+            if (fgets(buf.data(), buf.size(), output) != 0) {
+                std::string winepath = std::string(buf.data());
+                winepath.pop_back(); // remove trailing newline
+                arg_list.push_back(winepath);
+            }
+            pclose(output);
+        }
+
+        /* Push the game executable as the first command-line argument */
+        /* Wine can fail if not specifying a Windows path */
+        context->gamepath.insert(0, "Z:");
+        arg_list.push_back(context->gamepath);
+
+        /* We need to delay libtas hooking for wine process. */
+        setenv("LIBTAS_DELAY_INIT", "1", 1);
+    }
+    else {
+        arg_list.push_back(context->gamepath);
+    }
 
     /* Parse the game command-line arguments */
     std::istringstream iss(context->config.gameargs);
