@@ -38,6 +38,7 @@ OVERRIDE void XRRFreeOutputInfo (XRROutputInfo *outputInfo);
 OVERRIDE XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc);
 OVERRIDE void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo);
 
+OVERRIDE Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop);
 
 }
 

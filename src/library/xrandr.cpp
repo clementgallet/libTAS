@@ -32,6 +32,7 @@ DEFINE_ORIG_POINTER(XRRGetOutputInfo);
 DEFINE_ORIG_POINTER(XRRFreeOutputInfo);
 DEFINE_ORIG_POINTER(XRRGetCrtcInfo);
 DEFINE_ORIG_POINTER(XRRFreeCrtcInfo);
+DEFINE_ORIG_POINTER(XRRListOutputProperties);
 
 static const char *output_name = "libTAS fake XRR output";
 static const char *mode_name = "libTAS fake XRR mode";
@@ -65,8 +66,8 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
         unsigned int refresh = 60;
         sr_mode.dotClock = dots * refresh - dots / 2;
         sr_mode.name = const_cast<char*>(mode_name);
-        sr_mode.nameLength = strlen(mode_name);        
-        
+        sr_mode.nameLength = strlen(mode_name);
+
         sr.modes = &sr_mode;
         return &sr;
     }
@@ -86,14 +87,14 @@ void XRRFreeScreenResources (XRRScreenResources *resources)
     if (!shared_config.screen_width) {
         LINK_NAMESPACE(XRRFreeScreenResources, "Xrandr");
         return orig::XRRFreeScreenResources(resources);
-    }    
+    }
 }
 
 XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     if (shared_config.screen_width) {
-        static XRROutputInfo output_info;        
+        static XRROutputInfo output_info;
         output_info.crtc = 1;
         output_info.name = const_cast<char*>(output_name);
         output_info.nameLen = strlen(output_name);
@@ -115,7 +116,7 @@ void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
     if (!shared_config.screen_width) {
         LINK_NAMESPACE(XRRFreeOutputInfo, "Xrandr");
         return orig::XRRFreeOutputInfo(outputInfo);
-    }    
+    }
 }
 
 XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
@@ -125,12 +126,12 @@ XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc
     if (shared_config.screen_width) {
         static XRRCrtcInfo crtcInfo;
         crtcInfo.x = 0;
-        crtcInfo.y = 0;        
+        crtcInfo.y = 0;
         crtcInfo.width = shared_config.screen_width;
         crtcInfo.height = shared_config.screen_height;
         crtcInfo.mode = 1;
         crtcInfo.noutput = 1;
-        
+
         crtcInfo.noutput = 1;
         static RROutput crtc_outputs = 1;
         crtcInfo.outputs = &crtc_outputs;
@@ -151,8 +152,23 @@ void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
     if (!shared_config.screen_width) {
         LINK_NAMESPACE(XRRFreeCrtcInfo, "Xrandr");
         return orig::XRRFreeCrtcInfo(crtcInfo);
-    }    
+    }
 }
+
+Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    if (!shared_config.screen_width) {
+        LINK_NAMESPACE(XRRListOutputProperties, "Xrandr");
+        return orig::XRRListOutputProperties(dpy, output, nprop);
+    }
+    *nprop = 0;
+
+    /* We need to return something that will be called with XFree(), and it
+     * cannot be NULL, so we use some function that allocates an Xlib object */
+    return reinterpret_cast<Atom*>(XAllocIconSize());
+}
+
 
 }
 
