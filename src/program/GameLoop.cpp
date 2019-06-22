@@ -522,7 +522,10 @@ bool GameLoop::startFrameMessages()
         float fps, lfps;
         switch (message) {
         case MSGB_WINDOW_ID:
-            receiveData(&context->game_window, sizeof(Window));
+        {
+            uint32_t int_window;
+            receiveData(&int_window, sizeof(uint32_t));
+            context->game_window = (Window)int_window;
             if (context->game_window != 0)
             {
                 const static uint32_t values[] = { XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_EXPOSURE };
@@ -533,6 +536,7 @@ bool GameLoop::startFrameMessages()
                 }
             }
             break;
+        }
 
         case MSGB_ALERT_MSG:
             /* Ask the UI thread to display the alert. He is in charge of
