@@ -140,7 +140,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
      * depends on the arch.*/
     int64_t initial_time_sec = 1;
     int64_t initial_time_nsec = 0;
-    
+
     /* Virtual monitor resolution */
     int screen_width = 0;
     int screen_height = 0;
@@ -233,7 +233,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Saving a backtrack savestate each time a thread is created/destroyed */
     bool backtrack_savestate = true;
 
-    bool recycle_threads = true;
+    /* Recycle threads when they terminate */
+    bool recycle_threads = false;
 
     /* Simulates a virtual Steam client */
     bool virtual_steam = false;
