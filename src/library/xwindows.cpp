@@ -100,6 +100,12 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     return w;
 }
 
+void sendXWindow(Window w)
+{
+    uint32_t i = (uint32_t)w;
+    sendData(&i, sizeof(i));
+}
+
 int XDestroyWindow(Display *display, Window w)
 {
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
@@ -112,7 +118,7 @@ int XDestroyWindow(Display *display, Window w)
 
         /* Tells the program we don't have a window anymore to gather inputs */
         sendMessage(MSGB_WINDOW_ID);
-        sendData(&gameXWindow, sizeof(Window));
+        sendXWindow(gameXWindow);
         debuglog(LCF_WINDOW, "Sent X11 window id 0");        
     }
 
@@ -132,7 +138,7 @@ int XMapWindow(Display *display, Window w)
      */
     if ((gameXWindow != 0) && (gameXWindow == w)) {
         sendMessage(MSGB_WINDOW_ID);
-        sendData(&w, sizeof(Window));
+        sendXWindow(w);
         debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
 
@@ -161,7 +167,7 @@ int XMapRaised(Display *display, Window w)
      */
     if (gameXWindow != 0) {
         sendMessage(MSGB_WINDOW_ID);
-        sendData(&w, sizeof(Window));
+        sendXWindow(w);
         debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
 
