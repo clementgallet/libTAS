@@ -31,6 +31,8 @@
 #include "MainWindow.h"
 #include "../ramsearch/CompareEnums.h"
 
+#include <limits>
+
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
 {
     setWindowTitle("Ram Search");
@@ -94,7 +96,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     comparePreviousButton->setChecked(true);
     compareValueButton = new QRadioButton("Specific Value:");
     comparingValueBox = new QDoubleSpinBox();
-    comparingValueBox->setRange(-1000000000,1000000000);
+    comparingValueBox->setRange(std::numeric_limits<double>::lowest(),std::numeric_limits<double>::max());
 
     QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
     QVBoxLayout *compareLayout = new QVBoxLayout;

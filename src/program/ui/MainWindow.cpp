@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <csignal> // kill
 #include <unistd.h> // access
+#include <limits>
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -131,11 +132,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Frame count */
     frameCount = new QSpinBox();
     frameCount->setReadOnly(true);
-    frameCount->setMaximum(1000000000);
+    frameCount->setMaximum(std::numeric_limits<int>::max());
 
     movieFrameCount = new QSpinBox();
     movieFrameCount->setReadOnly(true);
-    movieFrameCount->setMaximum(1000000000);
+    movieFrameCount->setMaximum(std::numeric_limits<int>::max());
 
     /* Current/movie length */
     currentLength = new QLabel("Current time: -");
@@ -143,11 +144,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Frames per second */
     fpsNumField = new QSpinBox();
-    fpsNumField->setMaximum(100000);
+    fpsNumField->setMaximum(std::numeric_limits<int>::max());
     disabledWidgetsOnStart.append(fpsNumField);
 
     fpsDenField = new QSpinBox();
-    fpsDenField->setMaximum(100000);
+    fpsDenField->setMaximum(std::numeric_limits<int>::max());
     disabledWidgetsOnStart.append(fpsDenField);
 
     fpsValues = new QLabel("Current FPS: - / -");
@@ -155,14 +156,14 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Re-record count */
     rerecordCount = new QSpinBox();
     rerecordCount->setReadOnly(true);
-    rerecordCount->setMaximum(1000000000);
+    rerecordCount->setMaximum(std::numeric_limits<int>::max());
 
     /* Initial time */
     initialTimeSec = new QSpinBox();
-    initialTimeSec->setMaximum(1000000000);
+    initialTimeSec->setMaximum(std::numeric_limits<int>::max());
     initialTimeSec->setMinimumWidth(50);
     initialTimeNsec = new QSpinBox();
-    initialTimeNsec->setMaximum(1000000000);
+    initialTimeNsec->setMaximum(std::numeric_limits<int>::max());
     initialTimeNsec->setMinimumWidth(50);
     disabledWidgetsOnStart.append(initialTimeSec);
     disabledWidgetsOnStart.append(initialTimeNsec);
