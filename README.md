@@ -8,7 +8,7 @@ Most work has been done to support games using the SDL library (which is the cas
 
 ## Install
 
-You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependancies are:
+You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependencies are:
 
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
