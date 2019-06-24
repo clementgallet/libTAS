@@ -53,7 +53,7 @@ OVERRIDE int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
 OVERRIDE int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
 OVERRIDE int snd_pcm_prepare(snd_pcm_t *pcm);
-    // int snd_pcm_reset(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_reset(snd_pcm_t *pcm);
     // int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
 OVERRIDE int snd_pcm_start(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_drop(snd_pcm_t *pcm);
@@ -79,6 +79,7 @@ OVERRIDE int snd_pcm_wait(snd_pcm_t *pcm, int timeout);
     //
     // int snd_pcm_link(snd_pcm_t *pcm1, snd_pcm_t *pcm2);
     // int snd_pcm_unlink(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent);
 
 
 OVERRIDE int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames);

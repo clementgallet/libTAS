@@ -88,9 +88,10 @@ class AudioSource
         /* Pitch multiplier of the played audio */
         float pitch;
 
-        /* Is the source playing? */
+        /* State of the source */
         enum SourceState {
             SOURCE_INITIAL,
+            SOURCE_PREPARED,
             SOURCE_PLAYING,
             SOURCE_STOPPED,
             SOURCE_PAUSED,

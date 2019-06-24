@@ -749,6 +749,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
                     *value = AL_INITIAL;
                     debuglog(LCF_OPENAL, "  Get source state INITIAL");
                     break;
+                case AudioSource::SOURCE_PREPARED:
                 case AudioSource::SOURCE_PLAYING:
                     *value = AL_PLAYING;
                     debuglog(LCF_OPENAL, "  Get source state PLAYING");

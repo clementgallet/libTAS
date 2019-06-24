@@ -76,6 +76,8 @@ DEFINE_ORIG_POINTER(snd_pcm_writei);
 DEFINE_ORIG_POINTER(snd_pcm_readi);
 DEFINE_ORIG_POINTER(snd_pcm_nonblock);
 DEFINE_ORIG_POINTER(snd_pcm_close);
+DEFINE_ORIG_POINTER(snd_pcm_recover);
+DEFINE_ORIG_POINTER(snd_pcm_reset);
 
 DEFINE_ORIG_POINTER(snd_pcm_mmap_begin);
 DEFINE_ORIG_POINTER(snd_pcm_mmap_commit);
@@ -214,7 +216,7 @@ int snd_pcm_drop(snd_pcm_t *pcm)
         LINK_NAMESPACE_GLOBAL(snd_pcm_drop);
         return orig::snd_pcm_drop(pcm);
     }
-    
+
     DEBUGLOGCALL(LCF_SOUND);
     sourceAlsa->setPosition(sourceAlsa->queueSize());
     return 0;
@@ -232,6 +234,8 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
     switch (sourceAlsa->state) {
         case AudioSource::SOURCE_INITIAL:
             return SND_PCM_STATE_OPEN;
+        case AudioSource::SOURCE_PREPARED:
+            return SND_PCM_STATE_PREPARED;
         case AudioSource::SOURCE_PLAYING:
             return SND_PCM_STATE_RUNNING;
         case AudioSource::SOURCE_PAUSED:
@@ -329,6 +333,29 @@ snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
     return -1;
 }
 
+int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_recover);
+        return orig::snd_pcm_recover(pcm, err, silent);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
+int snd_pcm_reset(snd_pcm_t *pcm)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_reset);
+        return orig::snd_pcm_reset(pcm);
+    }
+
+    sourceAlsa->setPosition(sourceAlsa->queueSize());
+    DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
     if (GlobalState::isNative()) {
@@ -344,7 +371,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
     buffer->update();
 
     /* snd_pcm_hw_params calls snd_pcm_prepare, so we start playing here */
-    sourceAlsa->state = AudioSource::SOURCE_PLAYING;
+    sourceAlsa->state = AudioSource::SOURCE_PREPARED;
 
     return 0;
 }
@@ -375,7 +402,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
     buffer->update();
 
     /* snd_pcm_sw_params calls snd_pcm_prepare, so we start playing here */
-    sourceAlsa->state = AudioSource::SOURCE_PLAYING;
+    sourceAlsa->state = AudioSource::SOURCE_PREPARED;
 
     return 0;
 }
@@ -388,6 +415,7 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
+    sourceAlsa->state = AudioSource::SOURCE_PREPARED;
 
     return 0;
 }
@@ -407,7 +435,14 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 
     debuglog(LCF_SOUND, __func__, " call with ", size, " frames");
 
-    // return static_cast<snd_pcm_sframes_t>(size);
+    if (sourceAlsa->state == AudioSource::SOURCE_PREPARED) {
+        /* Start playback */
+        sourceAlsa->state = AudioSource::SOURCE_PLAYING;
+    }
+
+    if (sourceAlsa->state != AudioSource::SOURCE_PLAYING) {
+        return -EBADFD;
+    }
 
     /* Blocking if latency is too high */
     do {

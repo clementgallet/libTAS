@@ -118,18 +118,26 @@ void AudioSource::setPosition(int pos)
         pos %= queueSize();
     }
 
-    for (auto& buffer : buffer_queue) {
+    int bi = 0;
+    for (const auto& buffer : buffer_queue) {
         if (pos < buffer->sampleSize) {
             /* We set the position in this buffer */
+            queue_index = bi;
             position = pos;
             samples_frac = 0;
-            break;
+            return;
         }
         else {
             /* We traverse the buffer */
             pos -= buffer->sampleSize;
         }
+        bi++;
     }
+
+    /* We set position to the end of the source */
+    queue_index = buffer_queue.size() - 1;
+    position = buffer_queue[queue_index]->sampleSize;;
+    samples_frac = 0;
 }
 
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
