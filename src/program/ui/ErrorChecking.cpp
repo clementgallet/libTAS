@@ -51,12 +51,6 @@ bool ErrorChecking::checkGameExists(std::string gamepath)
         return false;
     }
 
-    /* Checking that the game can be executed by the user */
-    if (access(gamepath.c_str(), X_OK) != 0) {
-        QMessageBox::critical(nullptr, "Error", QString("Game %1 is not executable by the user").arg(gamepath.c_str()));
-        return false;
-    }
-
     return true;
 }
 
@@ -142,6 +136,12 @@ bool ErrorChecking::checkArchType(Context* context)
     int libtasArch = extractBinaryType(context->libtaspath);
     if (libtasArch <= 0) {
         QMessageBox::critical(nullptr, "Error", QString("Could not determine arch of file %1").arg(context->libtaspath.c_str()));
+        return false;
+    }
+
+    /* Checking that the game can be executed by the user */
+    if (gameArch != BT_PE32 && gameArch != BT_PE32P && access(context->gamepath.c_str(), X_OK) != 0) {
+        QMessageBox::critical(nullptr, "Error", QString("Game %1 is not executable by the user").arg(context->gamepath.c_str()));
         return false;
     }
 
