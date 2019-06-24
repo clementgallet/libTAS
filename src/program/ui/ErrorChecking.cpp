@@ -132,7 +132,7 @@ bool ErrorChecking::checkArchType(Context* context)
         QMessageBox::critical(nullptr, "Error", QString("Could not determine arch of file %1").arg(context->gamepath.c_str()));
         return false;
     }
-    
+
     int libtasArch = extractBinaryType(context->libtaspath);
     if (libtasArch <= 0) {
         QMessageBox::critical(nullptr, "Error", QString("Could not determine arch of file %1").arg(context->libtaspath.c_str()));
@@ -151,23 +151,20 @@ bool ErrorChecking::checkArchType(Context* context)
         std::string libname("libtas.so");
         size_t pos = context->libtaspath.find(libname);
         lib32path.replace(pos, libname.length(), "libtas32.so");
-        
+
         /* Checking that libtas32.so exists */
         if (access(lib32path.c_str(), F_OK) == 0) {
-            /* Replace libtas path with the 32-bit version */
-            context->libtaspath = lib32path;
-            
             /* Just in case, check the arch */
-            libtasArch = extractBinaryType(context->libtaspath);
-        }        
+            libtasArch = extractBinaryType(lib32path);
+        }
     }
-    
+
     /* Check for wine presence in case of Windows executables */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
         std::string winename = "wine";
         if (gameArch == BT_PE32P)
             winename += "64";
-            
+
         std::string cmd = "which ";
         cmd += winename;
         FILE *output = popen(cmd.c_str(), "r");
@@ -183,10 +180,10 @@ bool ErrorChecking::checkArchType(Context* context)
         }
         else {
             QMessageBox::critical(nullptr, "Error", QString("Coundn't popen to locate wine"));
-            return false;            
+            return false;
         }
     }
-    
+
     /* Arithmetic on enums is ugly but much shorter */
     if (gameArch != libtasArch && ((gameArch-2) != libtasArch)) {
         QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg((libtasArch%2)?64:32).arg(context->gamepath.c_str()).arg((gameArch%2)?64:32));
