@@ -171,8 +171,12 @@ static void *pthread_start(void *arg)
 
 /* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
 {
-    debuglog(LCF_THREAD, "Thread is created with routine ", (void*)start_routine);
     LINK_NAMESPACE(pthread_create, "pthread");
+
+    if (GlobalState::isNative())
+        return orig::pthread_create(tid_p, attr, start_routine, arg);
+
+    debuglog(LCF_THREAD, "Thread is created with routine ", (void*)start_routine);
 
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::incrementUninitializedThreadCount();
@@ -217,6 +221,10 @@ static void *pthread_start(void *arg)
 /* Override */ void pthread_exit (void *retval)
 {
     LINK_NAMESPACE(pthread_exit, "pthread");
+
+    if (GlobalState::isNative())
+        return orig::pthread_exit(retval);
+
     debuglog(LCF_THREAD, "Thread has exited.");
 
     if (shared_config.recycle_threads) {
