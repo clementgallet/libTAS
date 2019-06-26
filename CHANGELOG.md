@@ -8,6 +8,7 @@
 * Add a loadbranch hotkey to load the entire savestate movie in playback mode
 * Prevent the game screen from appearing unresponsive when the game is paused
 * Don't scroll input editor after manual scrolling, until current frame is not visible
+* Prevent monitor resolution change
 
 ### Changed
 

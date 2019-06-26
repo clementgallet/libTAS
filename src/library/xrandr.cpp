@@ -33,6 +33,10 @@ DEFINE_ORIG_POINTER(XRRFreeOutputInfo);
 DEFINE_ORIG_POINTER(XRRGetCrtcInfo);
 DEFINE_ORIG_POINTER(XRRFreeCrtcInfo);
 DEFINE_ORIG_POINTER(XRRListOutputProperties);
+DEFINE_ORIG_POINTER(XRRSetCrtcConfig);
+DEFINE_ORIG_POINTER(XRRSetScreenConfig);
+DEFINE_ORIG_POINTER(XRRSetScreenConfigAndRate);
+DEFINE_ORIG_POINTER(XRRSetScreenSize);
 
 static const char *output_name = "libTAS fake XRR output";
 static const char *mode_name = "libTAS fake XRR mode";
@@ -55,7 +59,7 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
         sr_mode.id = 1;
         sr_mode.width = shared_config.screen_width;
         sr_mode.height = shared_config.screen_height;
-        
+
         sr_mode.hSyncStart = shared_config.screen_height + 88;
         sr_mode.hSyncEnd = shared_config.screen_height + 132;
         sr_mode.hTotal = shared_config.screen_height + 280;
@@ -168,6 +172,31 @@ Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
      * cannot be NULL, so we use some function that allocates an Xlib object */
     return reinterpret_cast<Atom*>(XAllocIconSize());
 }
+
+Status XRRSetCrtcConfig (Display *dpy, XRRScreenResources *resources, RRCrtc crtc, Time timestamp, int x, int y, RRMode mode, Rotation rotation, RROutput *outputs, int noutputs)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    return RRSetConfigSuccess;
+}
+
+Status XRRSetScreenConfig (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, Time timestamp)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    return RRSetConfigSuccess;
+}
+
+Status XRRSetScreenConfigAndRate (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, short rate, Time timestamp)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    return RRSetConfigSuccess;
+}
+
+void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int mmWidth, int mmHeight)
+{
+    DEBUGLOGCALL(LCF_WINDOW);
+    /* We prevent games from changing the screen size */
+}
+
 
 
 }

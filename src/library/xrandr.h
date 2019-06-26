@@ -40,6 +40,12 @@ OVERRIDE void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo);
 
 OVERRIDE Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop);
 
+OVERRIDE Status XRRSetCrtcConfig (Display *dpy, XRRScreenResources *resources, RRCrtc crtc, Time timestamp, int x, int y, RRMode mode, Rotation rotation, RROutput *outputs, int noutputs);
+OVERRIDE Status XRRSetScreenConfig (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, Time timestamp);
+OVERRIDE Status XRRSetScreenConfigAndRate (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, short rate, Time timestamp);
+OVERRIDE void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int mmWidth, int mmHeight);
+
+
 }
 
 #endif
