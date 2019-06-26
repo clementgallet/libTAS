@@ -16,42 +16,40 @@ AM_SILENT_RULES([yes])
 dnl **** Configure options ****
 
 AC_ARG_ENABLE([hud], AS_HELP_STRING([--disable-hud], [Disable the HUD]))
-AC_ARG_ENABLE([i386], AS_HELP_STRING([--enable-i386],[Build libTAS for 32-bit executables]))
+AC_ARG_WITH([i386], AS_HELP_STRING([--with-i386],[Build libTAS with support for 32-bit executables]))
+
+save_CXX="$CXX"
 
 case $host in
   x86_64*|amd64*)
-    if test "x$enable_i386" == "xyes"
+    if test "x$with_i386" == "xyes"
     then
        AC_LANG_PUSH([C++])
        CXX="$CXX -m32"
        AC_MSG_CHECKING(for i386 cross-compiling)
        AC_LINK_IFELSE([AC_LANG_PROGRAM()],[AC_MSG_RESULT(yes); cxx_m32=yes],[AC_MSG_RESULT(no)])
        test "x$cxx_m32" == "xyes" || AC_MSG_ERROR([Cannot build a 32-bit program, you need to install 32-bit development libraries.])
+       CXX="$save_CXX"
        AC_LANG_POP([C++])
-       AC_SUBST(LIBSUFFIX, "32")
-    else
-       AC_SUBST(LIBSUFFIX, "")
     fi
     ;;
 esac
-AM_CONDITIONAL([BUILD32LIB], [test "x$enable_i386" == "xyes"])
+AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" == "xyes"])
 
 AC_ARG_ENABLE([release-build], AS_HELP_STRING([--enable-release-build], [Build a release]))
 
 dnl **** Check for libraries and headers for libTAS program ****
 
-AS_IF([test "x$enable_i386" != "xyes"], [
-    PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
-    AC_SUBST([QT5_CFLAGS])
-    AC_SUBST([QT5_LIBS])
-    AC_CHECK_PROGS(MOC, [moc])
-    AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
-    AC_CHECK_LIB(xcb, xcb_connect, [], AC_MSG_ERROR(The xcb library is required!))
-    AC_CHECK_LIB(xcb-xkb, xcb_xkb_use_extension, [], AC_MSG_ERROR(The xcb-xkb library is required!))
-    AC_CHECK_LIB(xcb-cursor, xcb_cursor_context_new, [], AC_MSG_ERROR(The xcb-cursor library is required!))
-    AC_CHECK_LIB(xcb-keysyms, xcb_key_symbols_alloc, [], AC_MSG_ERROR(The xcb-keysyms library is required!))
-    AC_CHECK_PROG([FFMPEG], [ffmpeg])
-])
+PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
+AC_SUBST([QT5_CFLAGS])
+AC_SUBST([QT5_LIBS])
+AC_CHECK_PROGS(MOC, [moc])
+AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
+AC_CHECK_LIB(xcb, xcb_connect, [], AC_MSG_ERROR(The xcb library is required!))
+AC_CHECK_LIB(xcb-xkb, xcb_xkb_use_extension, [], AC_MSG_ERROR(The xcb-xkb library is required!))
+AC_CHECK_LIB(xcb-cursor, xcb_cursor_context_new, [], AC_MSG_ERROR(The xcb-cursor library is required!))
+AC_CHECK_LIB(xcb-keysyms, xcb_key_symbols_alloc, [], AC_MSG_ERROR(The xcb-keysyms library is required!))
+AC_CHECK_PROG([FFMPEG], [ffmpeg])
 
 dnl **** Check for libraries and headers for libTAS library ****
 
@@ -96,7 +94,7 @@ AS_IF([test "x$enable_release_build" != "xyes"], [
     git_commit_hash=`git log -1 --format=%h`
     AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_COMMIT], ["$git_commit_hash"], [Git commit])
     AC_MSG_NOTICE([git commit is $git_commit_hash])
-    
+
     dnl Add build date as macro
     today=`date +%Y-%m-%d`
     AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$today"], [Git commit])
