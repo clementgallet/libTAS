@@ -30,6 +30,7 @@
 #include "backtrace.h"
 #include "inputs/xinput.h"
 #include "xatom.h"
+#include "../external/mwm.h"
 
 namespace libtas {
 
@@ -119,7 +120,7 @@ int XDestroyWindow(Display *display, Window w)
         /* Tells the program we don't have a window anymore to gather inputs */
         sendMessage(MSGB_WINDOW_ID);
         sendXWindow(gameXWindow);
-        debuglog(LCF_WINDOW, "Sent X11 window id 0");        
+        debuglog(LCF_WINDOW, "Sent X11 window id 0");
     }
 
 
@@ -196,7 +197,7 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
         if (gameXWindow) {
             XTextProperty prop;
             XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
-            orig::XSetWMName(display, gameXWindow, &prop);            
+            orig::XSetWMName(display, gameXWindow, &prop);
         }
     });
 
@@ -337,6 +338,17 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
             }
         }
     }
+
+    /* Always display window borders/title/menu/etc */
+    if (property == x11_atom(_MOTIF_WM_HINTS)) {
+        MwmHints mwm_hints = *reinterpret_cast<const MwmHints*>(data);
+        if (mwm_hints.decorations == 0) {
+            debuglog(LCF_WINDOW, "   adding motif decorations");
+            mwm_hints.decorations = MWM_DECOR_TITLE | MWM_DECOR_BORDER | MWM_DECOR_MENU | MWM_DECOR_MINIMIZE;
+            return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(&mwm_hints), nelements);
+        }
+    }
+
     return orig::XChangeProperty(display, w, property, type, format, mode, data, nelements);
 }
 
@@ -352,7 +364,7 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
         debuglog(LCF_WINDOW, "   switch input hint to True");
         wm_hints->input = True;
     }
-    
+
     return orig::XSetWMHints(display, w, wm_hints);
 }
 
@@ -369,7 +381,7 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
         *dest_y_return = src_y;
         if (child_return) *child_return = src_w;
         return True;
-    }    
+    }
     return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
 }
 

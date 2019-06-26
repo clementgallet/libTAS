@@ -40,6 +40,7 @@ static const char * const atom_names[NB_XATOMS] =
     "_NET_WM_STATE",
     "_NET_WM_STATE_FULLSCREEN",
     "_NET_WM_PING",
+    "_MOTIF_WM_HINTS",
 };
 
 Atom X11Atoms[NB_XATOMS];

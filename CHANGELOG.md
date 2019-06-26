@@ -9,6 +9,7 @@
 * Prevent the game screen from appearing unresponsive when the game is paused
 * Don't scroll input editor after manual scrolling, until current frame is not visible
 * Prevent monitor resolution change
+* Add border/title on fullscreen window
 
 ### Changed
 
