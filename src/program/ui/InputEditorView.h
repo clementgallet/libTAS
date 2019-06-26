@@ -56,6 +56,8 @@ public slots:
     void pasteInputs();
     void pasteInsertInputs();
 
+    void manualScroll(int value);
+
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -73,6 +75,8 @@ private:
     KeyPressedDialog* keyDialog;
 
     QAction *lockAction;
+
+    bool autoScroll = true;
 };
 
 #endif
