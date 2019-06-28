@@ -226,6 +226,13 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_STEAM_USER_DATA_PATH,
+
+    /*
+     * Send the git commit hash.
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGB_GIT_COMMIT,
+
 };
 
 #endif

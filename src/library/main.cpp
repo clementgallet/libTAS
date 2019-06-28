@@ -91,6 +91,13 @@ void __attribute__((constructor)) init(void)
     // debuglog(LCF_SOCKET, "Send pid to program: ", mypid);
     sendData(&mypid, sizeof(pid_t));
 
+    /* Send interim commit hash if one */
+#ifdef LIBTAS_INTERIM_COMMIT
+    std::string commit_hash = LIBTAS_INTERIM_COMMIT;
+    sendMessage(MSGB_GIT_COMMIT);
+    sendString(commit_hash);
+#endif
+
     /* End message */
     sendMessage(MSGB_END_INIT);
 

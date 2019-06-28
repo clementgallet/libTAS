@@ -456,6 +456,20 @@ void GameLoop::initProcessMessages()
                 receiveData(&context->game_pid, sizeof(pid_t));
                 break;
 
+            case MSGB_GIT_COMMIT:
+                {
+                    std::string lib_commit = receiveString();
+#ifdef LIBTAS_INTERIM_COMMIT
+                    std::string gui_commit = LIBTAS_INTERIM_COMMIT;
+                    if (lib_commit.compare(gui_commit) != 0) {
+                        std::cerr << "Interim commit of GUI (" << gui_commit << ") does not match commit of library (" << lib_commit << ")!" << std::endl;
+                    }
+#else
+                    std::cerr << "Library has interim commit (" << lib_commit << ") but not GUI!" << std::endl;
+#endif
+                }
+                break;
+
             default:
                 // ui_print("Message init: unknown message\n");
                 loopExit();

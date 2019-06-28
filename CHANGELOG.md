@@ -10,6 +10,7 @@
 * Don't scroll input editor after manual scrolling, until current frame is not visible
 * Prevent monitor resolution change
 * Add border/title on fullscreen window
+* Check that GUI and library git commit match
 
 ### Changed
 
