@@ -186,7 +186,7 @@ bool ErrorChecking::checkArchType(Context* context)
 
     /* Arithmetic on enums is ugly but much shorter */
     if (gameArch != libtasArch && ((gameArch-2) != libtasArch)) {
-        QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg((libtasArch%2)?64:32).arg(context->gamepath.c_str()).arg((gameArch%2)?64:32));
+        QMessageBox::critical(nullptr, "Error", QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg((libtasArch%2)?32:64).arg(context->gamepath.c_str()).arg((gameArch%2)?32:64));
         return false;
     }
 
