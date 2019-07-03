@@ -37,7 +37,7 @@
 #include "evdev.h"
 #include "../global.h" // game_info
 #include "xinput.h"
-#include "../XlibEventQueue.h"
+#include "../XlibEventQueueList.h"
 #include "../xevents.h"
 
 #include <stdlib.h>
@@ -119,8 +119,7 @@ void generateKeyUpEvents(void)
                     if (gameDisplays[d]) {
                         NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
                         event.xkey.root = XRootWindow(gameDisplays[d], 0);
-                        event.xkey.display = gameDisplays[d];
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -142,7 +141,7 @@ void generateKeyUpEvents(void)
                     if (gameDisplays[d]) {
                         NOLOGCALL(dev->detail = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
                         dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -161,7 +160,7 @@ void generateKeyUpEvents(void)
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
                         NOLOGCALL(rev->detail = XKeysymToKeycode(gameDisplays[d], old_ai.keyboard[i]));
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -259,8 +258,7 @@ void generateKeyDownEvents(void)
                     if (gameDisplays[d]) {
                         NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
                         event.xkey.root = XRootWindow(gameDisplays[d], 0);
-                        event.xkey.display = gameDisplays[d];
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -282,7 +280,7 @@ void generateKeyDownEvents(void)
                     if (gameDisplays[d]) {
                         NOLOGCALL(dev->detail = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
                         dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -301,7 +299,7 @@ void generateKeyDownEvents(void)
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
                         NOLOGCALL(rev->detail = XKeysymToKeycode(gameDisplays[d], ai.keyboard[i]));
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
 
@@ -697,12 +695,7 @@ void generateMouseMotionEvents(void)
         event.xmotion.window = gameXWindow;
         event.xmotion.time = timestamp;
 
-        for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (gameDisplays[i]) {
-                event.xbutton.display = gameDisplays[i];
-                xlibEventQueue.insert(&event);
-            }
-        }
+        xlibEventQueueList.insert(&event);
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
@@ -725,7 +718,7 @@ void generateMouseMotionEvents(void)
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (gameDisplays[d]) {
                 dev->root = XRootWindow(gameDisplays[d], 0);
-                xlibEventQueue.insert(&event);
+                xlibEventQueueList.insert(gameDisplays[d], &event);
             }
         }
 
@@ -752,11 +745,7 @@ void generateMouseMotionEvents(void)
         XISetMask(rev->valuators.mask, 0);
         XISetMask(rev->valuators.mask, 1);
         rev->valuators.mask_len = 1;
-        for (int d=0; d<GAMEDISPLAYNUM; d++) {
-            if (gameDisplays[d]) {
-                xlibEventQueue.insert(&event);
-            }
-        }
+        xlibEventQueueList.insert(&event);
 
         debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawMotion");
     }
@@ -840,12 +829,7 @@ void generateMouseButtonEvents(void)
                 event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
                 event.xbutton.window = gameXWindow;
 
-                for (int i=0; i<GAMEDISPLAYNUM; i++) {
-                    if (gameDisplays[i]) {
-                        event.xbutton.display = gameDisplays[i];
-                        xlibEventQueue.insert(&event);
-                    }
-                }
+                xlibEventQueueList.insert(&event);
             }
 
 #ifdef LIBTAS_HAS_XINPUT
@@ -882,7 +866,7 @@ void generateMouseButtonEvents(void)
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
                         dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueue.insert(&event);
+                        xlibEventQueueList.insert(gameDisplays[d], &event);
                     }
                 }
             }
@@ -905,11 +889,7 @@ void generateMouseButtonEvents(void)
                 event.xcookie.data = rev;
                 rev->time = timestamp;
                 rev->detail = bi+1;
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        xlibEventQueue.insert(&event);
-                    }
-                }
+                xlibEventQueueList.insert(&event);
             }
 #endif
 
@@ -977,7 +957,7 @@ void syncEvents(void)
             /* If queue was emptied, send a dummy event */
             XEvent xev;
             xev.type = LASTEvent; // let's hope this won't trigger an error
-            xlibEventQueue.insert(&xev);
+            xlibEventQueueList.insert(&xev);
 
             /* Lastly, wait for queue to become empty again, ensuring that
              * the event have finished being processed.

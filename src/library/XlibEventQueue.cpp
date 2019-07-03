@@ -27,7 +27,7 @@
 
 namespace libtas {
 
-XlibEventQueue xlibEventQueue;
+XlibEventQueue::XlibEventQueue(Display* d) : display(d) {}
 
 XlibEventQueue::~XlibEventQueue()
 {
@@ -49,6 +49,9 @@ int XlibEventQueue::insert(XEvent* event)
     /* Building a dynamically allocated event */
     XEvent* ev = new XEvent;
     memcpy(ev, event, sizeof(XEvent));
+
+    /* Specify the display */
+    ev->xany.display = display;
 
     /* Push the event at the beginning of the queue */
     eventQueue.push_front(ev);

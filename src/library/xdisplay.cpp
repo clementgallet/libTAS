@@ -21,6 +21,7 @@
 #include "hook.h"
 #include "logging.h"
 #include "xatom.h"
+#include "XlibEventQueueList.h"
 
 namespace libtas {
 
@@ -49,7 +50,10 @@ Display *XOpenDisplay(const char *display_name)
 
     /* Initialize atoms */
     initX11Atoms(display);
-    
+
+    /* Create event queue */
+    xlibEventQueueList.newQueue(display);
+
     return display;
 }
 
@@ -64,6 +68,9 @@ int XCloseDisplay(Display *display)
             break;
         }
     }
+
+    /* Delete event queue */
+    xlibEventQueueList.deleteQueue(display);
 
     return orig::XCloseDisplay(display);
 }

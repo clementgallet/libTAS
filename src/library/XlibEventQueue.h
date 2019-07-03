@@ -29,7 +29,10 @@ namespace libtas {
 class XlibEventQueue
 {
     public:
+        XlibEventQueue(Display* display);
         ~XlibEventQueue();
+
+        Display* display;
 
         void init();
 

@@ -21,7 +21,7 @@
 #include "xevents.h"
 #include "logging.h"
 #include "hook.h"
-#include "XlibEventQueue.h"
+#include "XlibEventQueueList.h"
 #include "xatom.h"
 
 #ifdef LIBTAS_HAS_XINPUT
@@ -108,7 +108,7 @@ void pushNativeXlibEvents(void)
                 }
 
                 if (!isEventFiltered(&event)) {
-                    xlibEventQueue.insert(&event);
+                    xlibEventQueueList.insert(gameDisplays[i], &event);
                 }
             }
         }
@@ -117,19 +117,23 @@ void pushNativeXlibEvents(void)
 
 bool syncXEvents()
 {
-    int attempts = 0, count = 0;
-    do {
-        count = xlibEventQueue.size();
-        if (count > 0) {
-            if (++attempts > 10 * 100) {
-                debuglog(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
-                return false;
-            }
-            struct timespec sleepTime = { 0, 10 * 1000 };
-            NATIVECALL(nanosleep(&sleepTime, NULL));
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i]) {
+            std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(gameDisplays[i]);
+            int attempts = 0, count = 0;
+            do {
+                count = queue->size();
+                if (count > 0) {
+                    if (++attempts > 10 * 100) {
+                        debuglog(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
+                        return false;
+                    }
+                    struct timespec sleepTime = { 0, 10 * 1000 };
+                    NATIVECALL(nanosleep(&sleepTime, NULL));
+                }
+            } while (count > 0);
         }
-    } while (count > 0);
-
+    }
     return true;
 }
 
@@ -171,8 +175,9 @@ int XNextEvent(Display *display, XEvent *event_return)
     }
 
     bool isEvent = false;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     for (int r=0; r<1000; r++) {
-        isEvent = xlibEventQueue.pop(event_return, true);
+        isEvent = queue->pop(event_return, true);
         if (isEvent)
             break;
         struct timespec st = {0, 1000*1000};
@@ -221,8 +226,9 @@ int XPeekEvent(Display *display, XEvent *event_return)
     }
 
     bool isEvent = false;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     for (int r=0; r<1000; r++) {
-        isEvent = xlibEventQueue.pop(event_return, false);
+        isEvent = queue->pop(event_return, false);
         if (isEvent)
             break;
         struct timespec st = {0, 1000*1000};
@@ -245,8 +251,9 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
     }
 
     bool isEvent = false;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     for (int r=0; r<1000; r++) {
-        isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+        isEvent = queue->pop(event_return, w, event_mask);
         if (isEvent)
             break;
         struct timespec st = {0, 1000*1000};
@@ -268,7 +275,8 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
 
-    bool isEvent = xlibEventQueue.pop(event_return, w, event_mask);
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    bool isEvent = queue->pop(event_return, w, event_mask);
     return isEvent?True:False;
 }
 
@@ -282,8 +290,9 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
     }
 
     bool isEvent = false;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     for (int r=0; r<1000; r++) {
-        isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+        isEvent = queue->pop(event_return, 0, event_mask);
         if (isEvent)
             break;
         struct timespec st = {0, 1000*1000};
@@ -305,7 +314,8 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
 
-    bool isEvent = xlibEventQueue.pop(event_return, 0, event_mask);
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    bool isEvent = queue->pop(event_return, 0, event_mask);
     return isEvent?True:False;
 }
 
@@ -318,7 +328,8 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
 
-    bool isEvent = xlibEventQueue.pop(event_return, 0, event_type);
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    bool isEvent = queue->pop(event_return, 0, event_type);
     return isEvent?True:False;
 }
 
@@ -331,7 +342,8 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
 
-    bool isEvent = xlibEventQueue.pop(event_return, w, event_type);
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    bool isEvent = queue->pop(event_return, w, event_type);
     return isEvent?True:False;
 }
 
@@ -344,7 +356,8 @@ int XEventsQueued(Display* display, int mode)
         return orig::XEventsQueued(display, mode);
     }
 
-    int ret = xlibEventQueue.size();
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    int ret = queue->size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     if ((ret == 0) && (mode != QueuedAlready))
         pushNativeXlibEvents();
@@ -361,7 +374,8 @@ int XPending(Display *display)
         return orig::XPending(display);
     }
 
-    int ret = xlibEventQueue.size();
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    int ret = queue->size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     if (ret == 0)
         pushNativeXlibEvents();
@@ -378,8 +392,9 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
     }
 
     bool isEvent = false;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     for (int r=0; r<1000; r++) {
-        isEvent = xlibEventQueue.pop(event_return, predicate, arg);
+        isEvent = queue->pop(event_return, predicate, arg);
         if (isEvent)
             break;
         struct timespec st = {0, 1000*1000};
@@ -401,7 +416,8 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
         return orig::XCheckIfEvent(display, event_return, predicate, arg);
     }
 
-    bool isEvent = xlibEventQueue.pop(event_return, predicate, arg);
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    bool isEvent = queue->pop(event_return, predicate, arg);
     return isEvent?True:False;
 }
 
