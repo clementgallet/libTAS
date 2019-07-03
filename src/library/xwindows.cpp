@@ -31,6 +31,7 @@
 #include "inputs/xinput.h"
 #include "xatom.h"
 #include "../external/mwm.h"
+#include "XlibEventQueueList.h"
 
 namespace libtas {
 
@@ -45,6 +46,7 @@ DEFINE_ORIG_POINTER(XSetWMName);
 DEFINE_ORIG_POINTER(XSelectInput);
 DEFINE_ORIG_POINTER(XResizeWindow);
 DEFINE_ORIG_POINTER(XConfigureWindow);
+DEFINE_ORIG_POINTER(XChangeWindowAttributes);
 DEFINE_ORIG_POINTER(XQueryExtension);
 DEFINE_ORIG_POINTER(XChangeProperty);
 DEFINE_ORIG_POINTER(XSetWMHints);
@@ -72,6 +74,12 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
     debuglog(LCF_WINDOW, __func__, "   window id is ", w);
+
+    /* Add the mask in our event queue */
+    if (valuemask & CWEventMask) {
+        std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+        queue->setMask(w, attributes->event_mask);
+    }
 
     /* Only save the Window identifier for real resolutions, because SDL creates
      * some dummy windows for testing.
@@ -208,6 +216,10 @@ int XSelectInput(Display *display, Window w, long event_mask)
 {
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
     LINK_NAMESPACE_GLOBAL(XSelectInput);
+
+    /* Add the mask in our event queue */
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    queue->setMask(w, event_mask);
 
     return orig::XSelectInput(display, w, event_mask);
 }
@@ -383,6 +395,23 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
         return True;
     }
     return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
+}
+
+int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask, XSetWindowAttributes *attributes)
+{
+    LINK_NAMESPACE_GLOBAL(XChangeWindowAttributes);
+    if (GlobalState::isNative())
+        return orig::XChangeWindowAttributes(display, w, valuemask, attributes);
+
+    debuglog(LCF_WINDOW, __func__, " called with window ", w);
+
+    /* Add the mask in our event queue */
+    if (valuemask & CWEventMask) {
+        std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+        queue->setMask(w, attributes->event_mask);
+    }
+
+    return orig::XChangeWindowAttributes(display, w, valuemask, attributes);
 }
 
 }

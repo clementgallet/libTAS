@@ -21,6 +21,7 @@
 #define LIBTAS_XLIBEVENTQUEUE_H_INCLUDED
 
 #include <list>
+#include <map>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
@@ -32,9 +33,8 @@ class XlibEventQueue
         XlibEventQueue(Display* display);
         ~XlibEventQueue();
 
-        Display* display;
-
-        void init();
+        /* Set an event mask for a window */
+        void setMask(Window w, long event_mask);
 
         /* Insert an event in the queue */
         int insert(XEvent* event);
@@ -61,14 +61,23 @@ class XlibEventQueue
         /* Return the size of the queue */
         int size();
 
+        Display* display;
+
     private:
+        /* Event queue */
         std::list<XEvent*> eventQueue;
+
+        /* Event mask for each Window */
+        std::map<Window, long> eventMasks;
 
         /* Generic Event cookie data to delete */
         void* cookieData;
 
         /* Register a Generic event cookie to be deleted */
         void delayedDeleteCookie(XEvent* event);
+
+        /* Does a type belong to an event mask?*/
+        bool isTypeOfMask(int type, long event_mask);
 };
 
 extern XlibEventQueue xlibEventQueue;

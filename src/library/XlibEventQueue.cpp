@@ -36,10 +36,25 @@ XlibEventQueue::~XlibEventQueue()
     }
 }
 
+void XlibEventQueue::setMask(Window w, long event_mask)
+{
+    eventMasks[w] = event_mask;
+}
+
 #define EVENTQUEUE_MAXLEN 1024
 
 int XlibEventQueue::insert(XEvent* event)
 {
+    /* Check if the window can produce such event */
+    auto mask = eventMasks.find(event->xany.window);
+    if (mask != eventMasks.end()) {
+        if (!isTypeOfMask(event->xany.type, mask->second))
+            return 0;
+    }
+    else {
+        return 0;        
+    }
+
     /* Check the size of the queue */
     if (eventQueue.size() > 1024) {
         debuglog(LCF_EVENTS, "We reached the limit of the event queue size!");
@@ -85,32 +100,8 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
             continue;
 
         /* Check if event type match the mask */
-        if ((type == MotionNotify) && !(event_mask & ButtonMotionMask)) continue;
-        else if ((type == ButtonPress) && !(event_mask & ButtonPressMask)) continue;
-        else if ((type == ButtonRelease) && !(event_mask & ButtonReleaseMask)) continue;
-        else if ((type == ColormapNotify) && !(event_mask & ColormapChangeMask)) continue;
-        else if ((type == EnterNotify) && !(event_mask & EnterWindowMask)) continue;
-        else if ((type == LeaveNotify) && !(event_mask & LeaveWindowMask)) continue;
-        else if ((type == Expose) && !(event_mask & ExposureMask)) continue;
-        else if ((type == FocusIn) && !(event_mask & FocusChangeMask)) continue;
-        else if ((type == FocusOut) && !(event_mask & FocusChangeMask)) continue;
-        else if ((type == KeymapNotify) && !(event_mask & KeymapStateMask)) continue;
-        else if ((type == KeyPress) && !(event_mask & KeyPressMask)) continue;
-        else if ((type == KeyRelease) && !(event_mask & KeyReleaseMask)) continue;
-        else if ((type == MotionNotify) && !(event_mask & PointerMotionMask)) continue;
-        else if ((type == PropertyNotify) && !(event_mask & PropertyChangeMask)) continue;
-        else if ((type == ResizeRequest) && !(event_mask & ResizeRedirectMask)) continue;
-        else if ((type == CirculateNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == ConfigureNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == DestroyNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == GravityNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == MapNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == ReparentNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == UnmapNotify) && !(event_mask & (StructureNotifyMask|SubstructureNotifyMask))) continue;
-        else if ((type == CirculateRequest) && !(event_mask & SubstructureRedirectMask)) continue;
-        else if ((type == ConfigureRequest) && !(event_mask & SubstructureRedirectMask)) continue;
-        else if ((type == MapRequest) && !(event_mask & SubstructureRedirectMask)) continue;
-        else if ((type == VisibilityNotify) && !(event_mask & VisibilityChangeMask)) continue;
+        if (!isTypeOfMask(type, event_mask))
+            continue;
 
         /* We found a match */
         memcpy(event, ev, sizeof(XEvent));
@@ -211,5 +202,65 @@ void XlibEventQueue::delayedDeleteCookie(XEvent* event)
     }
 #endif
 }
+
+bool XlibEventQueue::isTypeOfMask(int type, long event_mask)
+{
+    switch (type) {
+        case MotionNotify:
+            return event_mask & (ButtonMotionMask|PointerMotionMask);
+        case ButtonPress:
+            return event_mask & ButtonPressMask;
+        case ButtonRelease:
+            return event_mask & ButtonReleaseMask;
+        case ColormapNotify:
+            return event_mask & ColormapChangeMask;
+        case EnterNotify:
+            return event_mask & EnterWindowMask;
+        case LeaveNotify:
+            return event_mask & LeaveWindowMask;
+        case Expose:
+            return event_mask & ExposureMask;
+        case FocusIn:
+            return event_mask & FocusChangeMask;
+        case FocusOut:
+            return event_mask & FocusChangeMask;
+        case KeymapNotify:
+            return event_mask & KeymapStateMask;
+        case KeyPress:
+            return event_mask & KeyPressMask;
+        case KeyRelease:
+            return event_mask & KeyReleaseMask;
+        case PropertyNotify:
+            return event_mask & PropertyChangeMask;
+        case ResizeRequest:
+            return event_mask & ResizeRedirectMask;
+        case CirculateNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case ConfigureNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case DestroyNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case GravityNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case MapNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case ReparentNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case UnmapNotify:
+            return event_mask & (StructureNotifyMask|SubstructureNotifyMask);
+        case CirculateRequest:
+            return event_mask & SubstructureRedirectMask;
+        case ConfigureRequest:
+            return event_mask & SubstructureRedirectMask;
+        case MapRequest:
+            return event_mask & SubstructureRedirectMask;
+        case VisibilityNotify:
+            return event_mask & VisibilityChangeMask;
+        default:
+            return false;
+    }
+    return false;
+}
+
 
 }
