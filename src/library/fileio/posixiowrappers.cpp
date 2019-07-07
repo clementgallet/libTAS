@@ -49,6 +49,7 @@ DEFINE_ORIG_POINTER(__fxstat)
 DEFINE_ORIG_POINTER(__xstat64)
 DEFINE_ORIG_POINTER(__lxstat64)
 DEFINE_ORIG_POINTER(__fxstat64)
+DEFINE_ORIG_POINTER(dup)
 DEFINE_ORIG_POINTER(dup2)
 
 int open (const char *file, int oflag, ...)
@@ -479,6 +480,16 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
     return orig::__fxstat64(ver, fd, buf);
+}
+
+int dup (int fd) throw()
+{
+    debuglogstdio(LCF_FILEIO, "%s call on %d", __func__, fd);
+    LINK_NAMESPACE_GLOBAL(dup);
+
+    int newfd = orig::dup(fd);
+    debuglogstdio(LCF_FILEIO, "   new fd: %d", newfd);
+    return newfd;
 }
 
 int dup2 (int fd, int fd2) throw()

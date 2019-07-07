@@ -65,6 +65,7 @@ OVERRIDE int __fxstat64(int ver, int fd, struct stat64 *buf) throw();
 // OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) throw();
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
+OVERRIDE int dup (int fd) throw();
 OVERRIDE int dup2 (int fd, int fd2) throw();
 
 }
