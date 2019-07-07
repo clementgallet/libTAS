@@ -40,6 +40,12 @@ struct timespec DeterministicTimer::getTicks()
 
 struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 {
+    /* If we didn't initialized yet, return a non-zero value. A value of
+     * zero breaks some code. */
+    if (!inited) {
+        return {1, 0};
+    }
+
     /* If we are in the native global state, just return the real time */
     if (GlobalState::isNative()) {
         struct timespec realtime;
@@ -276,6 +282,8 @@ void DeterministicTimer::initialize(void)
 
     addedDelay = {0, 0};
     fakeExtraTicks = {0, 0};
+
+    inited = true;
 }
 
 DeterministicTimer detTimer;

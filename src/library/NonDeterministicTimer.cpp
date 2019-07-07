@@ -37,11 +37,18 @@ void NonDeterministicTimer::initialize(void)
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;
+    inited = true;
 }
 
 struct timespec NonDeterministicTimer::getTicks(void)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+
+    /* If we didn't initialized yet, return a non-zero value. A value of
+     * zero breaks some code. */
+    if (!inited) {
+        return {1, 0};
+    }
 
     /* During a frame boundary, we freeze the timer */
     if (inFB)
