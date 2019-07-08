@@ -26,6 +26,7 @@ namespace libtas {
 
 DECLARE_ORIG_POINTER(SDL_Init);
 DECLARE_ORIG_POINTER(SDL_InitSubSystem);
+DECLARE_ORIG_POINTER(SDL_WasInit);
 DECLARE_ORIG_POINTER(SDL_Quit);
 
 /* Override */ int SDL_Init(Uint32 flags){
@@ -53,6 +54,8 @@ DECLARE_ORIG_POINTER(SDL_Quit);
      */
     return SDL_InitSubSystem(flags);
 }
+
+static Uint32 init_flags = 0;
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
     DEBUGLOGCALL(LCF_SDL);
@@ -99,6 +102,10 @@ DECLARE_ORIG_POINTER(SDL_Quit);
 
     game_info.tosend = true;
 
+    /* Save the inited flags before modifying them */
+    /* TODO: inited subsystem are refcounted! */
+    init_flags |= flags;
+
     /* Disabling Joystick subsystem, we don't need any initialization from SDL */
     flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;
 
@@ -114,7 +121,18 @@ DECLARE_ORIG_POINTER(SDL_Quit);
     return orig::SDL_InitSubSystem(flags);
 }
 
-/* Override */ void SDL_Quit(){
+Uint32 SDL_WasInit(Uint32 flags)
+{
+    debuglog(LCF_SDL, __func__, " with flags ", flags);
+
+    if (flags == 0)
+        flags = SDL_INIT_EVERYTHING;
+
+    return flags & init_flags;
+}
+
+/* Override */ void SDL_Quit()
+{
     DEBUGLOGCALL(LCF_SDL);
     orig::SDL_Quit();
 }

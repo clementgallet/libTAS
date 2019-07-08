@@ -42,6 +42,14 @@ OVERRIDE int SDL_Init(Uint32 flags);
 OVERRIDE int SDL_InitSubSystem(Uint32 flags);
 
 /**
+ *  This function returns a mask of the specified subsystems which have
+ *  previously been initialized.
+ *
+ *  If \c flags is 0, it returns a mask of all initialized subsystems.
+ */
+OVERRIDE Uint32 SDL_WasInit(Uint32 flags);
+
+/**
  *  This function cleans up all initialized subsystems. You should
  *  call it upon all exit conditions.
  */
