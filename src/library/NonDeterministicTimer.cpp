@@ -28,12 +28,13 @@
 
 namespace libtas {
 
+bool NonDeterministicTimer::inited = false;
+
 void NonDeterministicTimer::initialize(void)
 {
-    ticks.tv_sec = 0;
-    ticks.tv_nsec = 0;
-    lastEnterTicks = ticks;
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lasttime));
+    ticks = lasttime;
+    lastEnterTicks = ticks;
     inFB = false;
     lastEnterTime = lasttime;
     lastExitTime = lasttime;

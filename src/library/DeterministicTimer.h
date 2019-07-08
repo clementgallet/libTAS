@@ -119,7 +119,7 @@ private:
     /* Mutex to protect access to the ticks value */
     std::mutex mutex;
 
-    bool inited = false;
+    static bool inited;
 };
 
 extern DeterministicTimer detTimer;

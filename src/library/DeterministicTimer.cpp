@@ -33,6 +33,8 @@
 
 namespace libtas {
 
+bool DeterministicTimer::inited = false;
+
 struct timespec DeterministicTimer::getTicks()
 {
     return getTicks(SharedConfig::TIMETYPE_UNTRACKED);
