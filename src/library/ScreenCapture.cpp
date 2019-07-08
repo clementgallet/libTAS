@@ -224,6 +224,7 @@ void ScreenCapture::initScreenSurface()
 
         orig::glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
         orig::glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, screenRBO);
+        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glpixels.resize(size);
     }
