@@ -84,6 +84,41 @@ OVERRIDE ISteamFriends *SteamFriends();
 OVERRIDE ISteamScreenshots *SteamScreenshots();
 OVERRIDE ISteamUGC *SteamUGC();
 
+typedef void ISteamMatchmaking;
+typedef void ISteamNetworking;
+typedef void ISteamMatchmakingServers;
+typedef void ISteamHTTP;
+typedef void ISteamAppList;
+typedef void ISteamMusic;
+typedef void ISteamMusicRemote;
+typedef void ISteamHTMLSurface;
+typedef void ISteamInventory;
+typedef void ISteamVideo;
+typedef void ISteamParentalSettings;
+
+OVERRIDE ISteamMatchmaking *SteamMatchmaking();
+OVERRIDE ISteamNetworking *SteamNetworking();
+OVERRIDE ISteamMatchmakingServers *SteamMatchmakingServers();
+OVERRIDE ISteamHTTP *SteamHTTP();
+OVERRIDE ISteamAppList *SteamAppList();
+OVERRIDE ISteamMusic *SteamMusic();
+OVERRIDE ISteamMusicRemote *SteamMusicRemote();
+OVERRIDE ISteamHTMLSurface *SteamHTMLSurface();
+OVERRIDE ISteamInventory *SteamInventory();
+OVERRIDE ISteamVideo *SteamVideo();
+OVERRIDE ISteamParentalSettings *SteamParentalSettings();
+
+// inline ISteamClient *SteamGameServerClient();
+// inline ISteamGameServer *SteamGameServer();
+// inline ISteamUtils *SteamGameServerUtils();
+// inline ISteamNetworking *SteamGameServerNetworking();
+// inline ISteamGameServerStats *SteamGameServerStats();
+// inline ISteamHTTP *SteamGameServerHTTP();
+// inline ISteamInventory *SteamGameServerInventory();
+// inline ISteamUGC *SteamGameServerUGC();
+// inline ISteamApps *SteamGameServerApps();
+
+
 }
 
 #endif

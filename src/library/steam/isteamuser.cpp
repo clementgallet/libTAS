@@ -89,4 +89,51 @@ void ISteamUser::StopVoiceRecording()
     DEBUGLOGCALL(LCF_STEAM);
 }
 
+EVoiceResult ISteamUser::GetAvailableVoice( unsigned int *pcbCompressed, unsigned int *pcbUncompressed_Deprecated, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated)
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return 3; //k_EVoiceResultNoData
+}
+
+EVoiceResult ISteamUser::GetVoice( bool bWantCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, bool bWantUncompressed_Deprecated, void *pUncompressedDestBuffer_Deprecated, unsigned int cbUncompressedDestBufferSize_Deprecated, unsigned int *nUncompressBytesWritten_Deprecated, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated)
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return 3; //k_EVoiceResultNoData
+}
+
+EVoiceResult ISteamUser::DecompressVoice( const void *pCompressed, unsigned int cbCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, unsigned int nDesiredSampleRate )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return 3; //k_EVoiceResultNoData
+}
+
+unsigned int ISteamUser::GetVoiceOptimalSampleRate()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return 44100;
+}
+
+HAuthTicket ISteamUser::GetAuthSessionTicket( void *pTicket, int cbMaxTicket, unsigned int *pcbTicket )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    *pcbTicket = 8;
+    return 1;
+}
+
+EBeginAuthSessionResult ISteamUser::BeginAuthSession( const void *pAuthTicket, int cbAuthTicket, CSteamID steamID )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    return 0; //k_EBeginAuthSessionResultOK;
+}
+
+void ISteamUser::EndAuthSession( CSteamID steamID )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
+void ISteamUser::CancelAuthTicket( HAuthTicket hAuthTicket )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+}
+
 }

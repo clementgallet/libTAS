@@ -168,4 +168,103 @@ ISteamUGC *SteamUGC()
     return &steamugc;
 }
 
+ISteamMatchmaking *SteamMatchmaking()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamNetworking *SteamNetworking()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamMatchmakingServers *SteamMatchmakingServers()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamHTTP *SteamHTTP()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamAppList *SteamAppList()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamMusic *SteamMusic()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamMusicRemote *SteamMusicRemote()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamHTMLSurface *SteamHTMLSurface()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamInventory *SteamInventory()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamVideo *SteamVideo()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
+ISteamParentalSettings *SteamParentalSettings()
+{
+    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    if (!shared_config.virtual_steam)
+        return nullptr;
+
+    return nullptr;
+}
+
 }

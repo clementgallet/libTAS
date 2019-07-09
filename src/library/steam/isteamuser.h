@@ -70,7 +70,7 @@ public:
 	// Most applications will only use compressed data and should ignore the other
 	// parameters, which exist primarily for backwards compatibility. See comments
 	// below for further explanation of "uncompressed" data.
-	// virtual EVoiceResult GetAvailableVoice( unsigned int *pcbCompressed, unsigned int *pcbUncompressed_Deprecated = 0, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated = 0 );
+	virtual EVoiceResult GetAvailableVoice( unsigned int *pcbCompressed, unsigned int *pcbUncompressed_Deprecated = 0, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated = 0 );
 
 	// ---------------------------------------------------------------------------
 	// NOTE: "uncompressed" audio is a deprecated feature and should not be used
@@ -93,7 +93,7 @@ public:
 	// compressed data and should pass NULL/zero for the "uncompressed" parameters.
 	// Compressed data can be transmitted by your application and decoded into raw
 	// using the DecompressVoice function below.
-	// virtual EVoiceResult GetVoice( bool bWantCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, bool bWantUncompressed_Deprecated = false, void *pUncompressedDestBuffer_Deprecated = 0, unsigned int cbUncompressedDestBufferSize_Deprecated = 0, unsigned int *nUncompressBytesWritten_Deprecated = 0, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated = 0 );
+	virtual EVoiceResult GetVoice( bool bWantCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, bool bWantUncompressed_Deprecated = false, void *pUncompressedDestBuffer_Deprecated = 0, unsigned int cbUncompressedDestBufferSize_Deprecated = 0, unsigned int *nUncompressBytesWritten_Deprecated = 0, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated = 0 );
 
 	// Decodes the compressed voice data returned by GetVoice. The output data is
 	// raw single-channel 16-bit PCM audio. The decoder supports any sample rate
@@ -101,7 +101,7 @@ public:
 	// If the output buffer is not large enough, then *nBytesWritten will be set
 	// to the required buffer size, and k_EVoiceResultBufferTooSmall is returned.
 	// It is suggested to start with a 20kb buffer and reallocate as necessary.
-	// virtual EVoiceResult DecompressVoice( const void *pCompressed, unsigned int cbCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, unsigned int nDesiredSampleRate );
+	virtual EVoiceResult DecompressVoice( const void *pCompressed, unsigned int cbCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, unsigned int nDesiredSampleRate );
 
 	// This returns the native sample rate of the Steam voice decompressor; using
 	// this sample rate for DecompressVoice will perform the least CPU processing.
@@ -110,21 +110,21 @@ public:
 	// You may find that you get the best audio output quality when you ignore
 	// this function and use the native sample rate of your audio output device,
 	// which is usually 48000 or 44100.
-	// virtual unsigned int GetVoiceOptimalSampleRate();
+	virtual unsigned int GetVoiceOptimalSampleRate();
 
 	// Retrieve ticket to be sent to the entity who wishes to authenticate you.
 	// pcbTicket retrieves the length of the actual ticket.
-	// virtual HAuthTicket GetAuthSessionTicket( void *pTicket, int cbMaxTicket, unsigned int *pcbTicket );
+	virtual HAuthTicket GetAuthSessionTicket( void *pTicket, int cbMaxTicket, unsigned int *pcbTicket );
 
 	// Authenticate ticket from entity steamID to be sure it is valid and isnt reused
 	// Registers for callbacks if the entity goes offline or cancels the ticket ( see ValidateAuthTicketResponse_t callback and EAuthSessionResponse )
-	// virtual EBeginAuthSessionResult BeginAuthSession( const void *pAuthTicket, int cbAuthTicket, CSteamID steamID );
+	virtual EBeginAuthSessionResult BeginAuthSession( const void *pAuthTicket, int cbAuthTicket, CSteamID steamID );
 
 	// Stop tracking started by BeginAuthSession - called when no longer playing game with this entity
-	// virtual void EndAuthSession( CSteamID steamID );
+	virtual void EndAuthSession( CSteamID steamID );
 
 	// Cancel auth ticket from GetAuthSessionTicket, called when no longer playing game with the entity you gave the ticket to
-	// virtual void CancelAuthTicket( HAuthTicket hAuthTicket );
+	virtual void CancelAuthTicket( HAuthTicket hAuthTicket );
 
 	// After receiving a user's authentication data, and passing it to BeginAuthSession, use this function
 	// to determine if the user owns downloadable content specified by the provided AppID.
