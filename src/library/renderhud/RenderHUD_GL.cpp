@@ -103,7 +103,7 @@ void RenderHUD_GL::fini()
 void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     RenderHUD_GL::init();
-    
+
     LINK_NAMESPACE(glBindTexture, "GL");
     LINK_NAMESPACE(glTexImage2D, "GL");
     LINK_NAMESPACE(glTexParameteri, "GL");
@@ -141,6 +141,11 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     orig::glActiveTexture(GL_TEXTURE0);
     orig::glBindTexture(GL_TEXTURE_2D, texture);
 
+    /* Copy the original draw/read framebuffers */
+    GLint draw_buffer, read_buffer;
+    orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+    orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+
     orig::glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
@@ -162,7 +167,10 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     orig::glBlitFramebuffer(0, 0, surf->w, surf->h, x, height-y, x+surf->w, height-(y+surf->h),
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+    /* Restore the original draw/read framebuffers */
+    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
+    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
 
     /* Restore previous binded texture and active texture unit */
     if (oldTex != 0) {

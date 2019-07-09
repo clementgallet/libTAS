@@ -76,6 +76,7 @@ DECLARE_ORIG_POINTER(glBlitFramebuffer);
 DEFINE_ORIG_POINTER(glEnable);
 DEFINE_ORIG_POINTER(glDisable);
 DEFINE_ORIG_POINTER(glIsEnabled);
+DECLARE_ORIG_POINTER(glGetIntegerv);
 
 DEFINE_ORIG_POINTER(XGetGeometry);
 
@@ -211,6 +212,11 @@ void ScreenCapture::initScreenSurface()
         LINK_NAMESPACE(glBindRenderbuffer, "GL");
         LINK_NAMESPACE(glRenderbufferStorage, "GL");
         LINK_NAMESPACE(glFramebufferRenderbuffer, "GL");
+        LINK_NAMESPACE(glGetIntegerv, "GL");
+
+        GLint draw_buffer, read_buffer;
+        orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+        orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
 
         if (screenFBO == 0) {
             orig::glGenFramebuffers(1, &screenFBO);
@@ -224,7 +230,9 @@ void ScreenCapture::initScreenSurface()
 
         orig::glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
         orig::glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, screenRBO);
-        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
 
         glpixels.resize(size);
     }
@@ -465,22 +473,32 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         LINK_NAMESPACE(glEnable, "GL");
         LINK_NAMESPACE(glDisable, "GL");
         LINK_NAMESPACE(glIsEnabled, "GL");
+        LINK_NAMESPACE(glGetIntegerv, "GL");
 
         /* Copy the default framebuffer to our FBO */
         GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
         if (isFramebufferSrgb)
             orig::glDisable(GL_FRAMEBUFFER_SRGB);
+
+        /* Copy the original draw/read framebuffers */
+        GLint draw_buffer, read_buffer;
+        orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+        orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screenFBO);
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        /* Restore the original draw/read framebuffers */
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
 
         if (pixels) {
 
             /* We need to recover the pixels for encoding */
             orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
             orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
-            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
 
             /*
              * Flip image horizontally
@@ -587,14 +605,25 @@ int ScreenCapture::setPixels() {
         LINK_NAMESPACE(glEnable, "GL");
         LINK_NAMESPACE(glDisable, "GL");
         LINK_NAMESPACE(glIsEnabled, "GL");
+        LINK_NAMESPACE(glGetIntegerv, "GL");
 
         GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
         if (isFramebufferSrgb)
             orig::glDisable(GL_FRAMEBUFFER_SRGB);
+
+        /* Copy the original draw/read framebuffers */
+        GLint draw_buffer, read_buffer;
+        orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+        orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        orig::glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        /* Restore the original draw/read framebuffers */
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
+
         if (isFramebufferSrgb)
             orig::glEnable(GL_FRAMEBUFFER_SRGB);
     }
