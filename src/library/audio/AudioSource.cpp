@@ -140,6 +140,28 @@ void AudioSource::setPosition(int pos)
     samples_frac = 0;
 }
 
+bool AudioSource::willEnd(struct timespec ticks)
+{
+    if (state != SOURCE_PLAYING)
+        return false;
+
+    if (buffer_queue.empty())
+        return true;
+
+    if (looping)
+        return false;
+
+    std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
+
+    /* Number of samples to advance in the buffer. */
+    int inNbSamples = ticksToSamples(ticks, static_cast<int>(curBuf->frequency*pitch));
+
+    int size = queueSize();
+    int pos = getPosition();
+    return ((pos + inNbSamples) > size);
+}
+
+
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
     if (state != SOURCE_PLAYING)

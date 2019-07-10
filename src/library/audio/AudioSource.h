@@ -155,6 +155,9 @@ class AudioSource
          */
         void setPosition(int pos);
 
+        /* Check if reading a number of ticks will reach the end of the source */
+        bool willEnd(struct timespec ticks);
+
         /* Mix the buffer with an external buffer of the given format.
          * The number of samples to mix correspond to the number of ticks given.
          * The function returns the number of samples written in the output buffer.

@@ -26,6 +26,7 @@
 #include "../../GlobalState.h"
 #include "../../hook.h"
 #include "../../DeterministicTimer.h"
+#include "../../checkpoint/ThreadManager.h"
 
 namespace libtas {
 
@@ -434,6 +435,9 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
     }
 
     debuglog(LCF_SOUND, __func__, " call with ", size, " frames");
+
+    /* Fill audio thread id */
+    audiocontext.audio_thread = ThreadManager::getThreadId();
 
     if (sourceAlsa->state == AudioSource::SOURCE_PREPARED) {
         /* Start playback */

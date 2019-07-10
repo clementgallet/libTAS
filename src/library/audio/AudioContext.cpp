@@ -66,6 +66,7 @@ static struct timespec samplesToTicks(int nbSamples, int frequency)
 AudioContext::AudioContext(void)
 {
     outVolume = 1.0f;
+    audio_thread = 0;
     init();
 }
 
@@ -215,8 +216,30 @@ void AudioContext::mixAllSources(struct timespec ticks)
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
 
-    std::lock_guard<std::mutex> lock(mutex);
+    pthread_t mix_thread = ThreadManager::getThreadId();
+
     for (auto& source : sources) {
+        /* If audio source is filled asynchronously, wand we will underrun,
+         * try to wait until the source is filled.
+         */
+        if ((source->source == AudioSource::SOURCE_STREAMING) &&
+            audio_thread &&
+            (mix_thread != audio_thread) &&
+            source->willEnd(ticks)) {
+
+            debuglog(LCF_SOUND | LCF_WARNING, "Audio mixing will underrun, waiting for the game to send audio samples");
+            int i;
+            for (i=0; i<1000; i++) {
+                NATIVECALL(usleep(100));
+                if (!source->willEnd(ticks))
+                    break;
+            }
+            if (i == 1000) {
+                debuglog(LCF_SOUND | LCF_WARNING, "    Timeout");
+            }
+        }
+
+        std::lock_guard<std::mutex> lock(mutex);
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 

@@ -103,6 +103,9 @@ class AudioContext
         /* Mutex to protect access to all audio objects */
         std::mutex mutex;
 
+        /* Game thread that fills audio buffer */
+        pthread_t audio_thread;
+
     private:
         std::list<std::shared_ptr<AudioBuffer>> buffers;
         std::list<std::shared_ptr<AudioSource>> sources;
