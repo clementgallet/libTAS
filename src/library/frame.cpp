@@ -405,18 +405,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     /* Wait for events to be processed by the game, in case of async event handling */
     syncEvents();
 
-    /* Send an Expose event. Some games don't render otherwise */
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) && gameXWindow) {
-        XEvent event;
-        event.xexpose.type = Expose;
-        event.xexpose.window = gameXWindow;
-        event.xexpose.x = 0;
-        event.xexpose.y = 0;
-        ScreenCapture::getDimensions(event.xexpose.width, event.xexpose.height);
-        event.xexpose.count = 0;
-        xlibEventQueueList.insert(&event);
-    }
-
     /* Decide if we skip drawing the next frame because of fastforward.
      * It is stored in an extern so that we can disable opengl draws.
      */
