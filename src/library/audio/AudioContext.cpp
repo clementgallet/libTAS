@@ -162,7 +162,7 @@ void AudioContext::deleteSource(int id)
     sources.remove_if([id,this](std::shared_ptr<AudioSource> const& source)
         {
             if (source->id == id) {
-                /* Push the deleted buffer into the pool */
+                /* Push the deleted source into the pool */
                 sources_pool.push_front(source);
                 return true;
             }
@@ -219,7 +219,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     pthread_t mix_thread = ThreadManager::getThreadId();
 
     for (auto& source : sources) {
-        /* If audio source is filled asynchronously, wand we will underrun,
+        /* If an audio source is filled asynchronously, and we will underrun,
          * try to wait until the source is filled.
          */
         if ((source->source == AudioSource::SOURCE_STREAMING) &&

@@ -115,7 +115,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
     DEBUGLOGCALL(LCF_SOUND);
 
     if (stream != SND_PCM_STREAM_PLAYBACK) {
-        debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported stream direction ", stream);
+        debuglog(LCF_SOUND | LCF_WARNING, "    Unsupported stream direction ", stream);
         return -1;
     }
     game_info.audio |= GameInfo::ALSA;
@@ -173,6 +173,17 @@ int snd_pcm_close(snd_pcm_t *pcm)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+    /* Delete source buffers and source */
+    if (sourceAlsa) {
+        for (auto& buffer : sourceAlsa->buffer_queue)
+            audiocontext.deleteBuffer(buffer->id);
+
+        audiocontext.deleteSource(sourceAlsa->id);
+    }
+    sourceAlsa.reset();
+
     return 0;
 }
 
