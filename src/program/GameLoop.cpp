@@ -176,10 +176,6 @@ void GameLoop::launchGameThread()
         arg_list.push_back("run");
         arg_list.push_back("--args");
     }
-    else {
-        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
-        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
-    }
 
     /* Detect Windows executables and launch wine */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
@@ -228,6 +224,12 @@ void GameLoop::launchGameThread()
         arg_vect.push_back(const_cast<char*>(elem.c_str()));
     }
     arg_vect.push_back(NULL);
+
+    /* Set LD_PRELOAD just before execv, so we don't preload other processes */
+    if (!context->attach_gdb) {
+        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
+        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+    }
 
     /* Run the actual game */
     execv(arg_vect[0], &arg_vect[0]);
