@@ -12,7 +12,7 @@ install:
 
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
 
-    sudo apt install --yes g++-multilib libc6-dev-i386 libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil55:i386, libswresample2:i386 libfreetype6:i386 libfontconfig1:i386
+    sudo apt install --yes g++-multilib libc6-dev-i386 libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil55:i386 libswresample2:i386 libfreetype6:i386 libfontconfig1:i386
 build_script:
 - sh: sudo dpkg-buildpackage -us -uc -b
 after_build:
