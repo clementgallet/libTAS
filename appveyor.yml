@@ -9,6 +9,8 @@ install:
     sudo apt update
 
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g')
+
+    sudo apt install --yes $(dpkg-checkbuilddeps -a i386 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g' | sed 's/$/:i386/g')
 build_script:
 - sh: sudo dpkg-buildpackage -us -uc -b
 after_build:
