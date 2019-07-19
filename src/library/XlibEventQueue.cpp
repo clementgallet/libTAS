@@ -20,6 +20,7 @@
 #include "config.h"
 #include "XlibEventQueue.h"
 #include "logging.h"
+#include "inputs/inputs.h"
 
 #ifdef LIBTAS_HAS_XINPUT
 #include <X11/extensions/XInput2.h>
@@ -39,6 +40,32 @@ XlibEventQueue::~XlibEventQueue()
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
     eventMasks[w] = event_mask;
+
+    /* If the game is interested in the EnterNotify event, send one immediately */
+    if (event_mask & EnterWindowMask) {
+        XEvent ev;
+        ev.type = EnterNotify;
+        ev.xcrossing.window = w;
+        ev.xcrossing.x = game_ai.pointer_x;
+        ev.xcrossing.y = game_ai.pointer_y;
+        ev.xcrossing.x_root = game_ai.pointer_x;
+        ev.xcrossing.y_root = game_ai.pointer_y;
+        ev.xcrossing.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+
+        debuglog(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event");
+        insert(&ev);
+    }
+
+    /* If the game is interested in the FocusIn event, send one immediately */
+    if (event_mask & FocusChangeMask) {
+        XEvent ev;
+        ev.type = FocusIn;
+        ev.xfocus.window = w;
+
+        debuglog(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
+        insert(&ev);
+    }
+
 }
 
 #define EVENTQUEUE_MAXLEN 1024
@@ -52,7 +79,7 @@ int XlibEventQueue::insert(XEvent* event)
             return 0;
     }
     else {
-        return 0;        
+        return 0;
     }
 
     /* Check the size of the queue */

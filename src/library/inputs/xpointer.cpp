@@ -37,22 +37,20 @@ DEFINE_ORIG_POINTER(XQueryPointer);
 {
     DEBUGLOGCALL(LCF_MOUSE);
     if (gameXWindow == 0) {
-      LINK_NAMESPACE_GLOBAL(XQueryPointer);
-      return orig::XQueryPointer(display, w, root_return, child_return,
-                                 root_x_return, root_y_return,
-                                 win_x_return, win_y_return, mask_return);
+        LINK_NAMESPACE_GLOBAL(XQueryPointer);
+        return orig::XQueryPointer(display, w, root_return, child_return,
+                                   root_x_return, root_y_return,
+                                   win_x_return, win_y_return, mask_return);
     }
-    XWindowAttributes wAttr, gameAttr;
-    MYASSERT(XGetWindowAttributes(display, w, &wAttr) != 0 &&
-             XGetWindowAttributes(display, gameXWindow, &gameAttr) != 0)
-    Bool sameScreen = wAttr.screen == gameAttr.screen;
+    XWindowAttributes gameAttr;
+    NATIVECALL(MYASSERT(XGetWindowAttributes(display, gameXWindow, &gameAttr) != 0));
     *root_return = gameAttr.root;
-    *root_x_return = gameAttr.x + game_ai.pointer_x;
-    *root_y_return = gameAttr.y + game_ai.pointer_y;
-    *child_return = sameScreen ? gameXWindow : None;
-    *win_x_return = sameScreen ? game_ai.pointer_x : 0;
-    *win_y_return = sameScreen ? game_ai.pointer_y : 0;
-    return sameScreen;
+    *root_x_return = game_ai.pointer_x;
+    *root_y_return = game_ai.pointer_y;
+    *child_return = gameXWindow;
+    *win_x_return = game_ai.pointer_x;
+    *win_y_return = game_ai.pointer_y;
+    return 1;
 }
 
 /* Override */ int XGrabPointer(Display*, Window, Bool, unsigned int, int, int,
