@@ -13,7 +13,7 @@ build_script:
 - sh: sudo dpkg-buildpackage -us -uc -b
 after_build:
 - sh: sudo mv ../libtas*.deb ./
-- sh: for f in libtas*.deb; do mv $f ${f/_amd/~${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
+- sh: for f in libtas*.deb; do mv $f ${f/_amd/_${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
 artifacts:
 - path: libtas*.deb
   name: libtas
