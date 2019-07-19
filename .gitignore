@@ -7,6 +7,8 @@ debian/debhelper-build-stamp
 debian/files
 debian/libtas.debhelper.log
 debian/libtas.substvars
+debian/autoreconf.after
+debian/autoreconf.before
 *.o
 *_moc.cpp
 src/library/libtas.so
