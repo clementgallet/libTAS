@@ -178,9 +178,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 {
     static float fps, lfps = 0;
 
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
-        ThreadManager::setMainThread();
-    }
+    ThreadManager::setMainThread();
 
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {

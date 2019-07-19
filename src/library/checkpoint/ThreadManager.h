@@ -60,6 +60,9 @@ public:
     // Called from SDL_init, assumed to be main thread
     static void init();
 
+    /* Initialize the signal handler for the checkpoint thread */
+    static void initCheckpointThread();
+
     /* Get the pthread id */
     static pthread_t getThreadId();
 

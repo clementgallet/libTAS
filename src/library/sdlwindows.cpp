@@ -177,9 +177,7 @@ static int swapInterval = 0;
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
-        ThreadManager::setMainThread();
-    }
+    ThreadManager::setMainThread();
 
     WindowTitle::setOriginalTitle(title);
 
@@ -313,9 +311,7 @@ static int swapInterval = 0;
     debuglog(LCF_SDL | LCF_WINDOW, "  size ", width, " x ", height);
     LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
 
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
-        ThreadManager::setMainThread();
-    }
+    ThreadManager::setMainThread();
 
     /* Disable fullscreen */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -382,9 +378,7 @@ static int swapInterval = 0;
 
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
 
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
-        ThreadManager::setMainThread();
-    }
+    ThreadManager::setMainThread();
 
     /* Disable fullscreen */
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);

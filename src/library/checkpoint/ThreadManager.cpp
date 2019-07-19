@@ -56,11 +56,20 @@ void ThreadManager::init()
     /* Create a ThreadInfo struct for this thread */
     ThreadInfo* thread = ThreadManager::getNewThread();
     thread->state = ThreadInfo::ST_RUNNING;
-    thread->pthread_id = getThreadId();
-    thread->tid = syscall(SYS_gettid);
     thread->detached = false;
-    current_thread = thread;
-    addToList(thread);
+    initThreadFromChild(thread);
+
+    sem_init(&semNotifyCkptThread, 0, 0);
+    sem_init(&semWaitForCkptThreadSignal, 0, 0);
+
+    ReservedMemory::init();
+
+    setMainThread();
+}
+
+void ThreadManager::initCheckpointThread()
+{
+    current_thread->state = ThreadInfo::ST_CKPNTHREAD;
 
     sigset_t mask;
     sigemptyset(&mask);
@@ -75,13 +84,6 @@ void ThreadManager::init()
         GlobalNative gn;
         MYASSERT(sigaction(sig_checkpoint, &sigcheckpoint, nullptr) == 0)
     }
-
-    sem_init(&semNotifyCkptThread, 0, 0);
-    sem_init(&semWaitForCkptThreadSignal, 0, 0);
-
-    ReservedMemory::init();
-
-    setMainThread();
 }
 
 DEFINE_ORIG_POINTER(pthread_self);
@@ -109,17 +111,27 @@ void ThreadManager::setMainThread()
 {
     pthread_t pthread_id = getThreadId();
 
-    if (main_pthread_id && (main_pthread_id != pthread_id)) {
-        /* Switching main thread */
-        debuglog(LCF_THREAD | LCF_WARNING, "Switching main thread from ", main_pthread_id, " to ", pthread_id);
+    if (!main_pthread_id) {
+        main_pthread_id = pthread_id;
+        initCheckpointThread();
+        return;
+    }
 
-        ThreadInfo* old_thread = getThread(pthread_id);
+    if (main_pthread_id != pthread_id) {
+        initCheckpointThread();
+
+        /* Remove state of old checkpoint thread */
+        ThreadInfo* old_thread = getThread(main_pthread_id);
         if (old_thread && (old_thread->state == ThreadInfo::ST_CKPNTHREAD)) {
             old_thread->state = ThreadInfo::ST_RUNNING;
         }
+
+        if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
+            /* Switching main thread */
+            debuglog(LCF_THREAD | LCF_WARNING, "Switching main thread from ", main_pthread_id, " to ", pthread_id);
+            main_pthread_id = pthread_id;
+        }
     }
-    main_pthread_id = pthread_id;
-    current_thread->state = ThreadInfo::ST_CKPNTHREAD;
 }
 
 bool ThreadManager::isMainThread()
@@ -195,12 +207,6 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
         thread->pthread_id = 0;
         thread->tid = 0;
 
-        if (!thread->altstack.ss_sp) {
-            thread->altstack.ss_size = 64*1024;
-            thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
-            thread->altstack.ss_flags = 0;
-        }
-
         thread->next = nullptr;
         thread->prev = nullptr;
     }
@@ -224,6 +230,12 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
     /* The signal handler for the thread suspend must be registered on *each*
      * thread, because it runs on a custom stack.
      */
+    if (!thread->altstack.ss_sp) {
+        thread->altstack.ss_size = 64*1024;
+        thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
+        thread->altstack.ss_flags = 0;
+    }
+
     int ret;
     NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
     if (ret < 0) {
