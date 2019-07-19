@@ -117,7 +117,8 @@ private:
     bool insideFrameBoundary = false;
 
     /* Mutex to protect access to the ticks value */
-    std::mutex mutex;
+    std::mutex ticks_mutex;
+    std::mutex frame_mutex;
 
     static bool inited;
 };

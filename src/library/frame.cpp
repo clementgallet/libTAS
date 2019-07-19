@@ -178,7 +178,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 {
     static float fps, lfps = 0;
 
-    ThreadManager::setMainThread();
+    if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
+        ThreadManager::setMainThread();
+    }
 
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
@@ -197,6 +199,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
         return;
     }
 
+    /* Update the deterministic timer, sleep if necessary and mix audio */
+    detTimer.enterFrameBoundary();
+
     /*** Update time ***/
 
     /* First, increase the frame count */
@@ -206,9 +211,6 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     if (drawFB) {
         computeFPS(fps, lfps);
     }
-
-    /* Update the deterministic timer, sleep if necessary and mix audio */
-    detTimer.enterFrameBoundary();
 
     /* Send information to the game and notify for the beginning of the frame
      * boundary.

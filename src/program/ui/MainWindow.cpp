@@ -478,6 +478,7 @@ void MainWindow::createActions()
 
     addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME, "Let the game access to the real system time, only for debugging purpose");
     addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS, "Let the game access to the real system events, only for debugging purpose");
+    addActionCheckable(debugStateGroup, tr("Keep main first thread"), SharedConfig::DEBUG_MAIN_FIRST_THREAD, "Keep main thread as first thread, when rendering is done in another thread. Breaks determinism");
 
     loggingOutputGroup = new QActionGroup(this);
 

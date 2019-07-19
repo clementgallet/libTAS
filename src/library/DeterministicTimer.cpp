@@ -82,7 +82,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         gettimes_threshold >= 0) {
 
         /* We actually track this time call */
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(ticks_mutex);
         debuglog(LCF_TIMESET | LCF_FREQUENT, "subticks ", type, " increased");
         int* gettimes_count = mainT ? &main_gettimes[type] : &sec_gettimes[type];
         (*gettimes_count)++;
@@ -135,7 +135,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
      */
     TimeHolder maxDeferredDelay = baseTimeIncrement;
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(ticks_mutex);
 
         addedDelay += delayTicks;
         ticks += delayTicks;
@@ -150,7 +150,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     /* We only allow the main thread to trigger a frame boundary! */
     bool mainT = ThreadManager::isMainThread();
 
-    if (mainT) {
+    if (mainT && !insideFrameBoundary) {
         while(addedDelay > maxDeferredDelay) {
             /* We have built up too much delay. We must enter a frame boundary,
              * to advance the time.
@@ -173,7 +173,6 @@ void DeterministicTimer::flushDelay()
 
 void DeterministicTimer::exitFrameBoundary()
 {
-    //std::lock_guard<std::mutex> lock(mutex);
     DEBUGLOGCALL(LCF_TIMEGET);
 
     /* Reset the counts of each time get function */
@@ -212,12 +211,13 @@ void DeterministicTimer::exitFrameBoundary()
     }
 
     insideFrameBoundary = false;
+    frame_mutex.unlock();
 }
 
 
 void DeterministicTimer::enterFrameBoundary()
 {
-    //std::lock_guard<std::mutex> lock(mutex);
+    frame_mutex.lock();
     DEBUGLOGCALL(LCF_TIMEGET);
 
     insideFrameBoundary = true;
