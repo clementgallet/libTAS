@@ -158,6 +158,11 @@ static const char Xlib_default_char[256] = {
 {
     debuglog(LCF_KEYBOARD, __func__, " called with keysym ", keysym);
     KeyCode kc = 0;
+    /* Translate from uppercase letter to lowercase */
+    if ((keysym >= XK_A) && (keysym <= XK_Z)) {
+        keysym += (XK_a - XK_A);
+    }
+
     for (int i=0; i<256; i++) {
         if (Xlib_default_keymap[i] == keysym) {
             kc = static_cast<KeyCode>(i);
