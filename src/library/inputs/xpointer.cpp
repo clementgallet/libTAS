@@ -50,6 +50,7 @@ DEFINE_ORIG_POINTER(XQueryPointer);
     *child_return = gameXWindow;
     *win_x_return = game_ai.pointer_x;
     *win_y_return = game_ai.pointer_y;
+    *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
     return 1;
 }
 
