@@ -134,7 +134,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
     sourceAlsa = audiocontext.getSource(sourceId);
 
     sourceAlsa->buffer_queue.push_back(buffer);
-    sourceAlsa->source = AudioSource::SOURCE_STREAMING;
+    sourceAlsa->source = AudioSource::SOURCE_STREAMING_CONTINUOUS;
 
     return 0;
 }
@@ -427,7 +427,9 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
-    sourceAlsa->state = AudioSource::SOURCE_PREPARED;
+    if ((sourceAlsa->state == AudioSource::SOURCE_INITIAL) ||
+        (sourceAlsa->state == AudioSource::SOURCE_STOPPED))
+        sourceAlsa->state = AudioSource::SOURCE_PREPARED;
 
     return 0;
 }
@@ -517,6 +519,9 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
     return static_cast<snd_pcm_sframes_t>(size);
 }
 
+/* Pointer to buffer used for mmap writing */
+std::shared_ptr<AudioBuffer> mmap_ab;
+
 int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames)
 {
     if (GlobalState::isNative()) {
@@ -545,17 +550,16 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source */
-    std::shared_ptr<AudioBuffer> ab;
     if (sourceAlsa->nbQueueProcessed() > 0) {
         /* Removing first buffer */
-        ab = sourceAlsa->buffer_queue[0];
+        mmap_ab = sourceAlsa->buffer_queue[0];
         sourceAlsa->buffer_queue.erase(sourceAlsa->buffer_queue.begin());
         sourceAlsa->queue_index--;
     }
     else {
         /* Building a new buffer */
         int bufferId = audiocontext.createBuffer();
-        ab = audiocontext.getBuffer(bufferId);
+        mmap_ab = audiocontext.getBuffer(bufferId);
 
         /* Getting the parameters of the buffer from one of the queue */
         if (sourceAlsa->buffer_queue.empty()) {
@@ -564,27 +568,26 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
         }
 
         auto ref = sourceAlsa->buffer_queue[0];
-        ab->format = ref->format;
-        ab->nbChannels = ref->nbChannels;
-        ab->frequency = ref->frequency;
+        mmap_ab->format = ref->format;
+        mmap_ab->nbChannels = ref->nbChannels;
+        mmap_ab->frequency = ref->frequency;
     }
 
     /* Configuring the buffer */
-    ab->update(); // Compute alignSize
-    ab->sampleSize = *frames;
-    ab->size = *frames * ab->alignSize;
-    ab->samples.resize(ab->size);
-    sourceAlsa->buffer_queue.push_back(ab);
+    mmap_ab->update(); // Compute alignSize
+    mmap_ab->sampleSize = *frames;
+    mmap_ab->size = *frames * mmap_ab->alignSize;
+    mmap_ab->samples.resize(mmap_ab->size);
 
     /* Fill the area info */
     static snd_pcm_channel_area_t my_areas[2];
-    my_areas[0].addr = ab->samples.data();
+    my_areas[0].addr = mmap_ab->samples.data();
     my_areas[0].first = 0;
-    my_areas[0].step = ab->alignSize * 8; // in bits
+    my_areas[0].step = mmap_ab->alignSize * 8; // in bits
 
-    my_areas[1].addr = ab->samples.data();
-    my_areas[1].first = ab->bitDepth; // in bits
-    my_areas[1].step = ab->alignSize * 8; // in bits
+    my_areas[1].addr = mmap_ab->samples.data();
+    my_areas[1].first = mmap_ab->bitDepth; // in bits
+    my_areas[1].step = mmap_ab->alignSize * 8; // in bits
 
     *areas = my_areas;
     *offset = 0;
@@ -597,6 +600,9 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
         LINK_NAMESPACE_GLOBAL(snd_pcm_mmap_commit);
         return orig::snd_pcm_mmap_commit(pcm, offset, frames);
     }
+
+    /* Push the mmap buffer to the source */
+    sourceAlsa->buffer_queue.push_back(mmap_ab);
 
     /* We should unlock the audio mutex here, but we don't (see above comment) */
     // audiocontext.mutex.unlock();

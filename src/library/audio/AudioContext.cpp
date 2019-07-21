@@ -222,7 +222,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
         /* If an audio source is filled asynchronously, and we will underrun,
          * try to wait until the source is filled.
          */
-        if ((source->source == AudioSource::SOURCE_STREAMING) &&
+        if ((source->source == AudioSource::SOURCE_STREAMING_CONTINUOUS) &&
             audio_thread &&
             (mix_thread != audio_thread) &&
             source->willEnd(ticks)) {

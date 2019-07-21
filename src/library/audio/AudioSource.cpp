@@ -316,8 +316,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         }
         else {
             int queue_size = buffer_queue.size();
-            int finalIndex = queue_index+1;
-            int finalPos = 0;
+            int finalIndex = queue_index;
+            int finalPos = oldPosition + availableSamples;
 
             /* Our for loop conditions are different if we are looping or not */
             if (looping) {
@@ -360,7 +360,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
 
-            if (remainingSamples > 0) {
+            if ((remainingSamples > 0) && (source != SOURCE_STREAMING_CONTINUOUS)) {
                 /* We reached the end of the buffer queue */
                 rewind();
                 state = SOURCE_STOPPED;
@@ -386,7 +386,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int sumL = otherL + ((myL * lvas) >> 16) - 256;
                 outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
                 if ((sumL < 0) || (sumL > UINT8_MAX))
-                    debuglog(LCF_SOUND, "Saturation during mixing");
+                    debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
 
                 if (outNbChannels == 2) {
                     int myR = mixedSamples[s+1];
@@ -394,7 +394,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     int sumR = otherR + ((myR * rvas) >> 16) - 256;
                     outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
                     if ((sumR < 0) || (sumR > UINT8_MAX))
-                        debuglog(LCF_SOUND, "Saturation during mixing");
+                        debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
                 }
             }
         }
@@ -408,7 +408,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int sumL = otherL + ((myL * lvas) >> 16);
                 outSamples16[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
                 if ((sumL < INT16_MIN) || (sumL > INT16_MAX))
-                    debuglog(LCF_SOUND, "Saturation during mixing");
+                    debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
 
                 if (outNbChannels == 2) {
                     int myR = mixedSamples16[s+1];
@@ -416,7 +416,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     int sumR = otherR + ((myR * rvas) >> 16);
                     outSamples16[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
                     if ((sumR < INT16_MIN) || (sumR > INT16_MAX))
-                        debuglog(LCF_SOUND, "Saturation during mixing");
+                        debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
                 }
             }
         }

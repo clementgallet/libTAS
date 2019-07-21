@@ -75,6 +75,11 @@ class AudioSource
             */
             SOURCE_STREAMING,
 
+            /* Same as streaming, but the source does not stop when reaching
+            * the end, it keeps waiting for new data.
+            */
+            SOURCE_STREAMING_CONTINUOUS,
+
             /* Source stores only one audio buffer. When it is finished reading,
             * it calls a callback function that refills the audio buffer
             */
