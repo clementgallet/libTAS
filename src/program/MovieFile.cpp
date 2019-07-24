@@ -368,10 +368,17 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
         input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
-	/* Write restart input */
+	/* Write flag inputs */
     input_stream << '|';
-	input_stream.put(inputs.restart?'R':'.');
-
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_RESTART))?'R':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED))?'1':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED))?'2':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED))?'3':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED))?'4':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_REMOVED))?'I':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_REMOVED))?'L':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_REMOVED))?'U':'.');
+	input_stream.put((inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED))?'O':'.');
 	input_stream << '|' << std::endl;
 
     return 1;
@@ -435,10 +442,23 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
 	/* Read restart input */
 	input_string >> d;
 	input_string >> d;
-	if (d == 'R') {
-		inputs.restart = true;
-	}
-
+	if (d == 'R') inputs.flags |= (1 << SingleInput::FLAG_RESTART);
+	input_string >> d;
+	if (d == '1') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED);
+	input_string >> d;
+	if (d == '2') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED);
+	input_string >> d;
+	if (d == '3') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED);
+	input_string >> d;
+	if (d == '4') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED);
+	input_string >> d;
+	if (d == 'I') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_REMOVED);
+	input_string >> d;
+	if (d == 'L') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_REMOVED);
+	input_string >> d;
+	if (d == 'U') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_REMOVED);
+	input_string >> d;
+	if (d == 'O') inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_REMOVED);
     return 1;
 }
 

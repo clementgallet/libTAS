@@ -11,6 +11,7 @@
 * Prevent monitor resolution change
 * Add border/title on fullscreen window
 * Check that GUI and library git commit match
+* Controller connect/disconnect inputs
 
 ### Changed
 

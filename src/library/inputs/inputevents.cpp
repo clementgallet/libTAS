@@ -326,17 +326,84 @@ void generateControllerAdded(void)
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    for (int i = 0; i < shared_config.nb_controllers; i++) {
-        SDL_Event ev;
-        ev.type = SDL_CONTROLLERDEVICEADDED;
-        ev.cdevice.timestamp = timestamp;
-        ev.cdevice.which = i;
-        sdlEventQueue.insert(&ev);
+    static bool init_added = false;
 
-        ev.type = SDL_JOYDEVICEADDED;
-        ev.jdevice.timestamp = timestamp;
-        ev.jdevice.which = i;
-        sdlEventQueue.insert(&ev);
+    if (!init_added) {
+        init_added = true;
+        for (int i = 0; i < shared_config.nb_controllers; i++) {
+            SDL_Event ev;
+            ev.type = SDL_CONTROLLERDEVICEADDED;
+            ev.cdevice.timestamp = timestamp;
+            ev.cdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy ", i);
+
+            ev.type = SDL_JOYDEVICEADDED;
+            ev.jdevice.timestamp = timestamp;
+            ev.jdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy ", i);
+        }
+    }
+
+    if (!ai.flags) return;
+
+    int added_flags[4] = {
+        SingleInput::FLAG_CONTROLLER1_ADDED,
+        SingleInput::FLAG_CONTROLLER2_ADDED,
+        SingleInput::FLAG_CONTROLLER3_ADDED,
+        SingleInput::FLAG_CONTROLLER4_ADDED,
+    };
+
+    for (int i=0; i<4; i++) {
+        if ((ai.flags & (1<<added_flags[i])) &&
+            (shared_config.nb_controllers >= i)) {
+            SDL_Event ev;
+            ev.type = SDL_CONTROLLERDEVICEADDED;
+            ev.cdevice.timestamp = timestamp;
+            ev.cdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy ", i);
+
+            ev.type = SDL_JOYDEVICEADDED;
+            ev.jdevice.timestamp = timestamp;
+            ev.jdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy ", i);
+        }
+    }
+
+    int removed_flags[4] = {
+        SingleInput::FLAG_CONTROLLER1_REMOVED,
+        SingleInput::FLAG_CONTROLLER2_REMOVED,
+        SingleInput::FLAG_CONTROLLER3_REMOVED,
+        SingleInput::FLAG_CONTROLLER4_REMOVED,
+    };
+
+    for (int i=0; i<4; i++) {
+        if ((ai.flags & (1<<removed_flags[i])) &&
+            (shared_config.nb_controllers >= i)) {
+            SDL_Event ev;
+            ev.type = SDL_CONTROLLERDEVICEREMOVED;
+            ev.cdevice.timestamp = timestamp;
+            ev.cdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEREMOVED with joy ", i);
+
+            ev.type = SDL_JOYDEVICEREMOVED;
+            ev.jdevice.timestamp = timestamp;
+            ev.jdevice.which = i;
+            sdlEventQueue.insert(&ev);
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy ", i);
+
+            /* Disconnect connected joystick */
+            GlobalNoLog gnl;
+            while (SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&i)))
+                SDL_GameControllerClose(reinterpret_cast<SDL_GameController*>(&i));
+
+            while (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&i)))
+                SDL_JoystickClose(reinterpret_cast<SDL_Joystick*>(&i));
+        }
     }
 }
 
@@ -356,7 +423,6 @@ void generateControllerEvents(void)
         bool genGC = true, genJoy = true;
 
         if (game_info.joystick & GameInfo::SDL2) {
-            GlobalOwnCode toc;
             GlobalNoLog gnl;
             genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
             //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
@@ -368,7 +434,6 @@ void generateControllerEvents(void)
         }
 
         if (game_info.joystick & GameInfo::SDL1) {
-            GlobalOwnCode toc;
             GlobalNoLog gnl;
             genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji));
 

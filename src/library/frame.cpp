@@ -395,8 +395,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
     if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
         generateKeyUpEvents();
         generateKeyDownEvents();
-        if (framecount == (shared_config.initial_framecount + 1))
-            generateControllerAdded();
+        generateControllerAdded();
         generateControllerEvents();
         generateMouseMotionEvents();
         generateMouseButtonEvents();

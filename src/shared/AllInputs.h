@@ -69,8 +69,8 @@ class AllInputs {
          */
         std::array<unsigned short,MAXJOYS> controller_buttons;
 
-        /* Should we restart the game? */
-        bool restart = false;
+        /* Flags */
+        uint32_t flags;
 
         /* Operator needed for comparing movies */
         inline bool operator==(const AllInputs& other) const
@@ -81,7 +81,7 @@ class AllInputs {
                 (pointer_mask == other.pointer_mask) &&
                 (controller_axes == other.controller_axes) &&
                 (controller_buttons == other.controller_buttons) &&
-                (restart == other.restart));
+                (flags == other.flags));
         }
 
         /* Empty the state, set axes to neutral position. */

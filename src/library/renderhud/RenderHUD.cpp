@@ -213,9 +213,17 @@ void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
 {
     std::ostringstream oss;
 
-    /* Restart */
-    if (ai.restart) {
+    /* Flags */
+    if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {
         oss << "[Restart] ";
+    }
+    for (int i=0; i<4; i++) {
+        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED+i))) {
+            oss << "[J" << i << " added] ";
+        }
+        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_REMOVED+i))) {
+            oss << "[J" << i << " removed] ";
+        }
     }
 
     /* Keyboard */

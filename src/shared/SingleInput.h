@@ -62,6 +62,19 @@ public:
         AXIS_TRIGGERRIGHT
     };
 
+    /* Flags */
+    enum {
+        FLAG_RESTART,
+        FLAG_CONTROLLER1_ADDED,
+        FLAG_CONTROLLER2_ADDED,
+        FLAG_CONTROLLER3_ADDED,
+        FLAG_CONTROLLER4_ADDED,
+        FLAG_CONTROLLER1_REMOVED,
+        FLAG_CONTROLLER2_REMOVED,
+        FLAG_CONTROLLER3_REMOVED,
+        FLAG_CONTROLLER4_REMOVED,
+    };
+
     static const int IT_CONTROLLER_TYPE_MASK = 0x7F;
     static const int IT_CONTROLLER_ID_SHIFT = 8;
     static const int IT_CONTROLLER_AXIS_MASK = 0x80;
@@ -80,8 +93,8 @@ public:
         IT_POINTER_B4 = 3 + POINTER_B4,
         IT_POINTER_B5 = 3 + POINTER_B5,
 
-        /* Restart game */
-        IT_RESTART = 10,
+        /* Single flag */
+        IT_FLAG = 10,
 
         /* Controller 1 */
         IT_CONTROLLER1_BUTTON_A = (1 << IT_CONTROLLER_ID_SHIFT) + BUTTON_A,

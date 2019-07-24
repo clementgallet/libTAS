@@ -36,7 +36,7 @@ void AllInputs::emptyInputs() {
         controller_buttons[i] = 0;
     }
 
-    restart = false;
+    flags = 0;
 }
 
 int AllInputs::getInput(const SingleInput &si) const
@@ -62,9 +62,9 @@ int AllInputs::getInput(const SingleInput &si) const
         return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
     }
 
-    /* Restart input */
-    if (si.type == SingleInput::IT_RESTART) {
-        return restart?1:0;
+    /* Flag inputs */
+    if (si.type == SingleInput::IT_FLAG) {
+        return (flags >> si.value) & 0x1;
     }
 
     /* Controller inputs */
@@ -132,8 +132,8 @@ void AllInputs::setInput(const SingleInput &si, int value)
     }
 
     /* Restart input */
-    if (si.type == SingleInput::IT_RESTART) {
-        restart = true;
+    if (si.type == SingleInput::IT_FLAG) {
+        flags |= (value & 0x1) << si.value;
     }
 
     /* Controller inputs */
@@ -193,9 +193,14 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
         }
     }
 
-    if (restart) {
-        SingleInput si = {SingleInput::IT_RESTART, 1, ""};
-        input_set.insert(si);
+    if (flags) {
+        uint32_t temp_flags = flags;
+        for (int i=0; temp_flags!=0; i++, temp_flags >>= 1) {
+            if (temp_flags & 0x1) {
+                SingleInput si = {SingleInput::IT_FLAG, i, ""};
+                input_set.insert(si);
+            }
+        }
     }
 
     for (int c = 0; c < AllInputs::MAXJOYS; c++) {

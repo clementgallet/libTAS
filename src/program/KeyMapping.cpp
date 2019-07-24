@@ -148,8 +148,16 @@ void KeyMapping::init(xcb_connection_t* conn)
     input_list.push_back({SingleInput::IT_POINTER_B4, 1, "Mouse button 4"});
     input_list.push_back({SingleInput::IT_POINTER_B5, 1, "Mouse button 5"});
 
-    /* Add restart mapping */
-    input_list.push_back({SingleInput::IT_RESTART, 1, "Restart"});
+    /* Add flags mapping */
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_RESTART, "Restart"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_ADDED, "Joy1 Added"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_ADDED, "Joy2 Added"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_ADDED, "Joy3 Added"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_ADDED, "Joy4 Added"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_REMOVED, "Joy1 Removed"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_REMOVED, "Joy2 Removed"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_REMOVED, "Joy3 Removed"});
+    input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_REMOVED, "Joy4 Removed"});
 
     /* Add controller mapping */
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Joy1 A"});
@@ -426,8 +434,8 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
                     ai.keyboard[keysym_i++] = si.value;
                 }
 
-                if (si.type == SingleInput::IT_RESTART) {
-                    ai.restart = true;
+                if (si.type == SingleInput::IT_FLAG) {
+                    ai.flags |= (1 << si.value);
                 }
 
                 if (si.inputTypeIsController()) {

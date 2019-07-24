@@ -293,7 +293,7 @@ void GameLoop::start()
         prev_ai = ai;
 
         /* Set the status to restart */
-        if (ai.restart) {
+        if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {
             context->status = Context::RESTARTING;
         }
 
