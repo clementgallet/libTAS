@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), cookieData(nullptr) {}
 
 XlibEventQueue::~XlibEventQueue()
 {
