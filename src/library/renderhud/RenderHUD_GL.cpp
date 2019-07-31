@@ -66,6 +66,7 @@ void RenderHUD_GL::init()
         LINK_NAMESPACE(glFramebufferTexture2D, "GL");
         LINK_NAMESPACE(glDeleteFramebuffers, "GL");
 
+        GlobalNative gn;
 
         /* Get previous active texture */
         GLint oldTex;
@@ -90,6 +91,8 @@ void RenderHUD_GL::init()
 
 void RenderHUD_GL::fini()
 {
+    GlobalNative gn;
+
     if (texture != 0) {
         orig::glDeleteTextures(1, &texture);
         texture = 0;
@@ -116,6 +119,8 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
     LINK_NAMESPACE(glActiveTexture, "GL");
     LINK_NAMESPACE(glBindFramebuffer, "GL");
     LINK_NAMESPACE(glFramebufferTexture2D, "GL");
+
+    GlobalNative gn;
 
     /* Save the previous program */
     GLint oldProgram;

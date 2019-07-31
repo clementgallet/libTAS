@@ -444,6 +444,8 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
     if (!draw)
         return size;
 
+    GlobalNative gn;
+
     if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
         LINK_NAMESPACE_SDL2(SDL_LockTexture);
@@ -620,6 +622,8 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 int ScreenCapture::setPixels() {
     if (!inited)
         return 0;
+
+    GlobalNative gn;
 
     if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderCopy);

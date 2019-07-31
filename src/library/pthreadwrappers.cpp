@@ -53,7 +53,7 @@ DEFINE_ORIG_POINTER(pthread_testcancel);
 DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
 DEFINE_ORIG_POINTER(pthread_attr_setstack);
-
+DEFINE_ORIG_POINTER(pthread_setname_np);
 
 /* We create a specific exception for thread exit calls */
 class ThreadExitException {
@@ -489,6 +489,7 @@ static void *pthread_start(void *arg)
     return orig::pthread_cond_wait(cond, mutex);
 }
 
+#include "backtrace.h"
 /* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
@@ -496,6 +497,7 @@ static void *pthread_start(void *arg)
         return orig::pthread_cond_signal(cond);
 
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    printBacktrace();
     return orig::pthread_cond_signal(cond);
 }
 
@@ -568,6 +570,23 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
     // debuglog(LCF_THREAD, "  returns ", ret);
     // return ret;
     return 0;
+}
+
+int pthread_setname_np (pthread_t target_thread, const char *name) throw()
+{
+    LINK_NAMESPACE(pthread_setname_np, "pthread");
+    if (GlobalState::isNative())
+        return orig::pthread_setname_np(target_thread, name);
+
+    debuglog(LCF_THREAD, __func__, " called with target_thread ", target_thread, " and name ", name);
+
+    /* Check if the thread is one of the llvm ones, and make it native and disable log */
+    if (strncmp(name, "llvmpipe-", 9) == 0) {
+        GlobalState::setNative(true);
+        GlobalState::setNoLog(true);
+    }
+
+    return orig::pthread_setname_np(target_thread, name);
 }
 
 }

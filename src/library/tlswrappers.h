@@ -40,12 +40,6 @@ OVERRIDE int pthread_key_create (pthread_key_t *key, void (*destr_function) (voi
 /* Destroy KEY.  */
 OVERRIDE int pthread_key_delete (pthread_key_t key) throw();
 
-/* Return current value of the thread-specific data slot identified by KEY.  */
-OVERRIDE void *pthread_getspecific (pthread_key_t key) throw();
-
-/* Store POINTER in the thread-specific data slot identified by KEY. */
-OVERRIDE int pthread_setspecific (pthread_key_t key, const void *pointer) throw();
-
 }
 
 #endif

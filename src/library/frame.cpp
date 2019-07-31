@@ -473,6 +473,7 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
             hud.renderWatches();
 #endif
 
+        GlobalNoLog gnl;
         NATIVECALL(draw());
     }
 }

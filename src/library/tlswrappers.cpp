@@ -28,14 +28,20 @@ DEFINE_ORIG_POINTER(pthread_key_delete);
 DEFINE_ORIG_POINTER(pthread_getspecific);
 DEFINE_ORIG_POINTER(pthread_setspecific);
 
-static std::map<pthread_key_t, void(*)(void*)> *pthread_keys;
+/* We declare our map static inside a function, so that we ensure it is
+ * constructed when we call the function. */
+static std::map<pthread_key_t, void(*)(void*)>& getPthreadKeys() {
+    static std::map<pthread_key_t, void(*)(void*)> pthread_keys;
+    return pthread_keys;
+}
 
 void clear_pthread_keys()
 {
     LINK_NAMESPACE(pthread_getspecific, "pthread");
     LINK_NAMESPACE(pthread_setspecific, "pthread");
 
-    for( const auto& pair : *pthread_keys ) {
+    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
+    for( const auto& pair : pthread_keys ) {
         if (orig::pthread_getspecific(pair.first)) {
             debuglog(LCF_THREAD, "  removing value from key ", pair.first);
             orig::pthread_setspecific(pair.first, nullptr);
@@ -46,58 +52,41 @@ void clear_pthread_keys()
     }
 }
 
-
-
 int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) throw()
 {
-    DEBUGLOGCALL(LCF_THREAD);
     LINK_NAMESPACE(pthread_key_create, "pthread");
+    if (GlobalState::isNative()) {
+        return orig::pthread_key_create(key, destr_function);
+    }
 
+    DEBUGLOGCALL(LCF_THREAD);
     int ret = orig::pthread_key_create(key, destr_function);
 
     debuglog(LCF_THREAD, "   returning ", *key);
 
-    /* Using initialization on first use idiom because this object could be
-     * used before static object have a chance to initialize.
-     */
-    if (!pthread_keys) {
-        pthread_keys = new std::map<pthread_key_t, void(*)(void *)>;
-    }
-
-    pthread_keys->insert(std::pair<pthread_key_t, void(*)(void*)>(*key,destr_function));
+    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
+    pthread_keys.insert(std::pair<pthread_key_t, void(*)(void*)>(*key,destr_function));
 
     return ret;
 }
 
 int pthread_key_delete (pthread_key_t key) throw()
 {
-    debuglog(LCF_THREAD, __func__, " called on key ", key);
     LINK_NAMESPACE(pthread_key_delete, "pthread");
+    if (GlobalState::isNative()) {
+        return orig::pthread_key_delete(key);
+    }
 
+    debuglog(LCF_THREAD, __func__, " called on key ", key);
     int ret = orig::pthread_key_delete(key);
 
-    auto it = pthread_keys->find(key);
-    if (it != pthread_keys->end()) {
-        pthread_keys->erase (it);
+    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
+    auto it = pthread_keys.find(key);
+    if (it != pthread_keys.end()) {
+        pthread_keys.erase (it);
     }
 
     return ret;
-}
-
-void *pthread_getspecific (pthread_key_t key) throw()
-{
-    debuglog(LCF_THREAD | LCF_FREQUENT, __func__, " called on key ", key);
-    LINK_NAMESPACE(pthread_getspecific, "pthread");
-
-    return orig::pthread_getspecific(key);
-}
-
-int pthread_setspecific (pthread_key_t key, const void *pointer) throw()
-{
-    debuglog(LCF_THREAD | LCF_FREQUENT, __func__, " called on key ", key, " and pointer ", pointer);
-    LINK_NAMESPACE(pthread_setspecific, "pthread");
-
-    return orig::pthread_setspecific(key, pointer);
 }
 
 }

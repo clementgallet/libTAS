@@ -51,6 +51,8 @@ void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color
     LINK_NAMESPACE_SDL1(SDL_SetClipRect);
     LINK_NAMESPACE_SDL1(SDL_GetClipRect);
 
+    GlobalNative gn;
+
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
     SDL1::SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
