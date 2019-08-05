@@ -489,7 +489,6 @@ static void *pthread_start(void *arg)
     return orig::pthread_cond_wait(cond, mutex);
 }
 
-#include "backtrace.h"
 /* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
@@ -497,7 +496,6 @@ static void *pthread_start(void *arg)
         return orig::pthread_cond_signal(cond);
 
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
-    printBacktrace();
     return orig::pthread_cond_signal(cond);
 }
 
