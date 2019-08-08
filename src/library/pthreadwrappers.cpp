@@ -440,7 +440,21 @@ static void *pthread_start(void *arg)
     if (GlobalState::isNative())
         return orig::pthread_cond_timedwait(cond, mutex, abstime);
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
+
+    /* Convert the abstime variable because pthread_cond_timedwait() is using
+     * the real system time. */
+    TimeHolder abs_timeout = *abstime;
+    TimeHolder real_time;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
+    TimeHolder rel_timeout = abs_timeout - real_time;
+    if (rel_timeout.tv_sec < 0) {
+        /* Change the reference time to real system time */
+        TimeHolder fake_time = detTimer.getTicks();
+        TimeHolder new_rel_timeout = abs_timeout - fake_time;
+        TimeHolder new_abs_timeout = real_time + new_rel_timeout;
+        abstime = &new_abs_timeout;
+    }
 
     /* If not main thread, do not change the behavior */
     if (!ThreadManager::isMainThread())
