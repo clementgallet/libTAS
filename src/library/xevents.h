@@ -30,6 +30,7 @@ namespace libtas {
  * emulated event queue, filtering unwanted events (input events mainly).
  */
 void pushNativeXlibEvents(void);
+void pushNativeXlibEvents(Display *display);
 
 /* Wait for the xevent queue to become empty (returns true) or timeout (returns false) */
 bool syncXEvents();

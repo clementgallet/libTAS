@@ -92,25 +92,35 @@ void pushNativeXlibEvents(void)
     LINK_NAMESPACE_GLOBAL(XPending);
     LINK_NAMESPACE_GLOBAL(XNextEvent);
 
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i]) {
-            NATIVECALL(XSync(gameDisplays[i], False));
-            while (orig::XPending(gameDisplays[i]) > 0) {
-                XEvent event;
-                orig::XNextEvent(gameDisplays[i], &event);
+    for (int i=0; i<GAMEDISPLAYNUM; i++)
+        if (gameDisplays[i])
+            pushNativeXlibEvents(gameDisplays[i]);
+}
 
-                /* Catch the close event */
-                if (event.type == ClientMessage) {
-                    if ((Atom) event.xclient.data.l[0] == x11_atom(WM_DELETE_WINDOW)) {
-                        debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
-                        is_exiting = true;
-                    }
-                }
+void pushNativeXlibEvents(Display *display)
+{
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return;
+    }
 
-                if (!isEventFiltered(&event)) {
-                    xlibEventQueueList.insert(gameDisplays[i], &event);
-                }
+    LINK_NAMESPACE_GLOBAL(XPending);
+    LINK_NAMESPACE_GLOBAL(XNextEvent);
+
+    NATIVECALL(XSync(display, False));
+    while (orig::XPending(display) > 0) {
+        XEvent event;
+        orig::XNextEvent(display, &event);
+
+        /* Catch the close event */
+        if (event.type == ClientMessage) {
+            if ((Atom) event.xclient.data.l[0] == x11_atom(WM_DELETE_WINDOW)) {
+                debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
+                is_exiting = true;
             }
+        }
+
+        if (!isEventFiltered(&event)) {
+            xlibEventQueueList.insert(display, &event);
         }
     }
 }
@@ -182,7 +192,7 @@ int XNextEvent(Display *display, XEvent *event_return)
             break;
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     }
     if (!isEvent) {
         debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
@@ -233,7 +243,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
             break;
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     }
     if (!isEvent) {
         debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
@@ -258,7 +268,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
             break;
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     }
     if (!isEvent) {
         debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
@@ -297,7 +307,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
             break;
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     }
     if (!isEvent) {
         debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
@@ -360,7 +370,7 @@ int XEventsQueued(Display* display, int mode)
     int ret = queue->size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     if ((ret == 0) && (mode != QueuedAlready))
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
 
     return ret;
 }
@@ -378,7 +388,7 @@ int XPending(Display *display)
     int ret = queue->size();
     debuglog(LCF_EVENTS, "    returns ", ret);
     if (ret == 0)
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     return ret;
 }
 
@@ -399,7 +409,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
             break;
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
-        pushNativeXlibEvents();
+        pushNativeXlibEvents(display);
     }
     if (!isEvent) {
         debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
@@ -456,7 +466,7 @@ int XFlush(Display *display)
         return orig::XFlush(display);
     }
 
-    pushNativeXlibEvents();
+    pushNativeXlibEvents(display);
     return 0;
 }
 
@@ -469,7 +479,7 @@ int XSync(Display *display, Bool discard)
     DEBUGLOGCALL(LCF_EVENTS);
 
     int ret = orig::XSync(display, discard);
-    pushNativeXlibEvents();
+    pushNativeXlibEvents(display);
     return ret;
 }
 
