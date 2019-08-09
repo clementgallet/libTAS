@@ -19,6 +19,7 @@
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
 #include "isteamcontroller.h"
+#include "isteammatchmaking.h"
 
 namespace libtas {
 
@@ -27,8 +28,6 @@ OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
 OVERRIDE void * SteamInternal_ContextInit( void *pContextInitData );
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 
-typedef void ISteamMatchmaking;
-typedef void ISteamMatchmakingServers;
 typedef void ISteamNetworking;
 typedef void ISteamHTTP;
 typedef void ISteamAppList;
