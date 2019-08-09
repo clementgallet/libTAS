@@ -18,11 +18,10 @@
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
 #include "isteamcontroller.h"
+#include "isteammatchmaking.h"
 
 namespace libtas {
 
-typedef void ISteamMatchmaking;
-typedef void ISteamMatchmakingServers;
 typedef void ISteamNetworking;
 typedef void ISteamHTTP;
 typedef void ISteamAppList;

@@ -62,7 +62,21 @@ typedef int ERemoteStoragePublishedFileVisibility;
 typedef int EWorkshopFileType;
 typedef int ELeaderboardUploadScoreMethod;
 
+typedef int ELobbyType;
+typedef int ELobbyComparison;
+typedef int ELobbyDistanceFilter;
 
+typedef void* HServerListRequest;
+typedef int HServerQuery;
+
+typedef uint8_t EChatEntryType;
+typedef void MatchMakingKeyValuePair_t;
+typedef void ISteamMatchmakingServerListResponse;
+typedef void ISteamMatchmakingPingResponse;
+typedef void ISteamMatchmakingPlayersResponse;
+typedef void ISteamMatchmakingRulesResponse;
+typedef void gameserveritem_t;
+typedef int EMatchMakingServerResponse;
 
 typedef void (*SteamAPIWarningMessageHook_t)(int, const char *);
 typedef uint32_t ( *SteamAPI_CheckCallbackRegistered_t )( int iCallbackNum );

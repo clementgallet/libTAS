@@ -56,8 +56,7 @@ static const char* config_locale()
 
 /* Override */ char *setlocale (int category, const char *locale) throw()
 {
-    // static char enlocale[] = "en_US.utf8";
-    debuglog(LCF_LOCALE, __func__, " called with category ", category, " and locale ", locale);
+    debuglog(LCF_LOCALE, __func__, " called with category ", category, " and locale ", locale?locale:"<NULL>");
     char* mylocale = const_cast<char*>(config_locale());
     if (mylocale[0] == '\0') {
         /* Return native locale */

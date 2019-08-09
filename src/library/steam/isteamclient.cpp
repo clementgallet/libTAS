@@ -85,13 +85,13 @@ ISteamUtils *ISteamClient::GetISteamUtils( HSteamPipe hSteamPipe, const char *pc
 ISteamMatchmaking *ISteamClient::GetISteamMatchmaking( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamMatchmaking();
 }
 
 ISteamMatchmakingServers *ISteamClient::GetISteamMatchmakingServers( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamMatchmakingServers();
 }
 
 void *ISteamClient::GetISteamGenericInterface( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )

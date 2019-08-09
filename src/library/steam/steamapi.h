@@ -31,6 +31,7 @@
 #include "isteamfriends.h"
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
+#include "isteammatchmaking.h"
 
 namespace libtas {
 
@@ -84,9 +85,7 @@ OVERRIDE ISteamFriends *SteamFriends();
 OVERRIDE ISteamScreenshots *SteamScreenshots();
 OVERRIDE ISteamUGC *SteamUGC();
 
-typedef void ISteamMatchmaking;
 typedef void ISteamNetworking;
-typedef void ISteamMatchmakingServers;
 typedef void ISteamHTTP;
 typedef void ISteamAppList;
 typedef void ISteamMusic;

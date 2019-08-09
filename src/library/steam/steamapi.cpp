@@ -174,7 +174,8 @@ ISteamMatchmaking *SteamMatchmaking()
     if (!shared_config.virtual_steam)
         return nullptr;
 
-    return nullptr;
+    static ISteamMatchmaking steammatchmaking;
+    return &steammatchmaking;
 }
 
 ISteamNetworking *SteamNetworking()
@@ -192,7 +193,8 @@ ISteamMatchmakingServers *SteamMatchmakingServers()
     if (!shared_config.virtual_steam)
         return nullptr;
 
-    return nullptr;
+    static ISteamMatchmakingServers steammatchmakingservers;
+    return &steammatchmakingservers;
 }
 
 ISteamHTTP *SteamHTTP()
