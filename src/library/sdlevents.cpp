@@ -357,16 +357,20 @@ void pushNativeSDLEvents(void)
     int t;
     struct timespec mssleep = {0, 1000000};
     if (event) {
+        if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
+            return 1;
         for (t=0; t<timeout; t++) {
-            if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
-                break;
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
             pushNativeSDLEvents();
+            if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
+                break;
         }
         return (t<timeout);
     }
     else {
         SDL_Event ev;
+        if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
+            return 1;
         for (t=0; t<timeout; t++) {
             if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
                 break;
