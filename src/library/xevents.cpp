@@ -111,11 +111,22 @@ void pushNativeXlibEvents(Display *display)
         XEvent event;
         orig::XNextEvent(display, &event);
 
-        /* Catch the close event */
         if (event.type == ClientMessage) {
+            /* Catch the close event */
             if ((Atom) event.xclient.data.l[0] == x11_atom(WM_DELETE_WINDOW)) {
                 debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                 is_exiting = true;
+            }
+
+            /* Catch a ping event */
+            if ((event.xclient.message_type == x11_atom(WM_PROTOCOLS)) &&
+                (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(_NET_WM_PING))) {
+
+                debuglog(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
+                XEvent reply = event;
+                reply.xclient.window = DefaultRootWindow(display);
+                NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
+                    SubstructureNotifyMask | SubstructureRedirectMask, &reply));
             }
         }
 
@@ -146,35 +157,6 @@ bool syncXEvents()
     }
     return true;
 }
-
-void answerPingMessage()
-{
-    LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
-    XEvent event;
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i]) {
-            int ret = orig::XCheckIfEvent(gameDisplays[i], &event, [](Display *display, XEvent *ev, XPointer arg) {
-                if (ev->type == ClientMessage) {
-                    if ((ev->xclient.message_type == x11_atom(WM_PROTOCOLS)) &&
-                        (static_cast<Atom>(ev->xclient.data.l[0]) == x11_atom(_NET_WM_PING))) {
-                        return True;
-                    }
-                }
-                return False;
-            }, nullptr);
-
-            if (ret == True) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
-                XEvent reply = event;
-                reply.xclient.window = DefaultRootWindow(gameDisplays[i]);
-                NATIVECALL(XSendEvent(gameDisplays[i], DefaultRootWindow(gameDisplays[i]), False,
-                    SubstructureNotifyMask | SubstructureRedirectMask, &reply));
-            }
-
-        }
-    }
-}
-
 
 int XNextEvent(Display *display, XEvent *event_return)
 {

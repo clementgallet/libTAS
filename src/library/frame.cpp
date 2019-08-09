@@ -495,7 +495,7 @@ static void receive_messages(std::function<void()> draw)
         /* We need to answer to ping messages from the window manager,
          * otherwise the game will appear as unresponsive. */
         if (message < 0) {
-            answerPingMessage();
+            pushNativeXlibEvents();
             NATIVECALL(usleep(100));
         }
         bool succeeded;
