@@ -79,7 +79,9 @@ int XlibEventQueue::insert(XEvent* event)
             return 0;
     }
     else {
-        return 0;
+        /* Check unmaskable events */
+        if (!isTypeOfMask(event->xany.type, 0))
+            return 0;
     }
 
     /* Check the size of the queue */
@@ -284,9 +286,10 @@ bool XlibEventQueue::isTypeOfMask(int type, long event_mask)
         case VisibilityNotify:
             return event_mask & VisibilityChangeMask;
         default:
-            return false;
+            /* If no mask, it's an unmaskable event */
+            return true;
     }
-    return false;
+    return true;
 }
 
 

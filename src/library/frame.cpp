@@ -180,6 +180,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
 
     ThreadManager::setMainThread();
 
+    /* Update the deterministic timer, sleep if necessary and mix audio */
+    detTimer.enterFrameBoundary();
+
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
         detTimer.flushDelay();
@@ -194,11 +197,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
             pushNativeXlibEvents();
         }
 
+        detTimer.exitFrameBoundary();
         return;
     }
-
-    /* Update the deterministic timer, sleep if necessary and mix audio */
-    detTimer.enterFrameBoundary();
 
     /*** Update time ***/
 
