@@ -57,7 +57,7 @@ FILE *fopen (const char *filename, const char *modes)
 
     /* Store the file descriptor */
     if (f) {
-        FileHandleList::openFile(filename, fileno(f));
+        FileHandleList::openFile(filename, f);
     }
 
     return f;
@@ -84,7 +84,7 @@ FILE *fopen64 (const char *filename, const char *modes)
 
     /* Store the file descriptor */
     if (f) {
-        FileHandleList::openFile(filename, fileno(f));
+        FileHandleList::openFile(filename, f);
     }
 
     return f;

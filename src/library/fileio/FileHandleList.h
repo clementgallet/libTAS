@@ -21,13 +21,15 @@
 #define LIBTAS_FILEHANDLELIST_H_INCLUDED
 
 #include <utility>
+#include <cstdio>
 
 namespace libtas {
 
 namespace FileHandleList {
 
-/* Register an opened file and file descriptor */
+/* Register an opened file and file descriptor/stream */
 void openFile(const char* file, int fd);
+void openFile(const char* file, FILE* f);
 
 /* Open and register an unnamed pipe */
 std::pair<int, int> createPipe(int flags = 0);

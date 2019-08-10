@@ -21,16 +21,20 @@
 #define LIBTAS_FILEHANDLE_H_INCLUDED
 
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 
 namespace libtas {
 
 struct FileHandle {
     FileHandle(const char *file, int fd)
-        : fds{fd, -1}, fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
+        : fds{fd, -1}, stream(nullptr), fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
+          tracked(false), closed(false) {}
+    FileHandle(const char *file, FILE* f)
+        : fds{fileno(f), -1}, stream(f), fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
           tracked(false), closed(false) {}
     FileHandle(int fds[2])
-        : fds{fds[0], fds[1]}, fileNameOrPipeContents(nullptr), pipeSize(-1),
+        : fds{fds[0], fds[1]}, stream(nullptr), fileNameOrPipeContents(nullptr), pipeSize(-1),
           tracked(false), closed(false) {}
     ~FileHandle() { std::free(fileNameOrPipeContents); }
     bool isPipe() const { return fds[1] != -1; }
@@ -39,6 +43,9 @@ struct FileHandle {
 
     /* File descriptor(s) */
     int fds[2];
+
+    /* File stream if one */
+    FILE* stream;
 
     /* Path of the file */
     /* or Saved contents of the pipe */

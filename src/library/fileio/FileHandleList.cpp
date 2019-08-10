@@ -72,6 +72,25 @@ void openFile(const char* file, int fd)
     filehandles.emplace_front(file, fd);
 }
 
+void openFile(const char* file, FILE* f)
+{
+    if (!f)
+        return;
+
+    std::lock_guard<std::mutex> lock(getFileListMutex());
+    auto& filehandles = getFileList();
+
+    /* Check if we already registered the file */
+    for (const FileHandle &fh : filehandles) {
+        if (fh.stream == f) {
+            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Opened file %p was already registered!", f);
+            return;
+        }
+    }
+
+    filehandles.emplace_front(file, f);
+}
+
 std::pair<int, int> createPipe(int flags) {
     int fds[2];
     if (pipe2(fds, flags) != 0)
@@ -139,7 +158,13 @@ void trackAllFiles()
                 }
             }
             else {
-                fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+                if (fh.stream) {
+                    fflush(fh.stream);
+                    fh.fileOffset = ftell(fh.stream);
+                }
+                else {
+                    fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+                }
                 debuglogstdio(LCF_FILEIO, "Save file offset: %d", fh.offset());
             }
         }
@@ -180,7 +205,12 @@ void recoverAllFiles()
                 continue;
             }
 
-            ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
+            if (fh.stream) {
+                ret = fseek(fh.stream, fh.fileOffset, SEEK_SET);
+            }
+            else {
+                ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
+            }
             fh.fileOffset = -1;
         }
 
@@ -199,9 +229,16 @@ void closeUntrackedFiles()
 
     for (FileHandle &fh : getFileList()) {
         if (! fh.tracked) {
-            NATIVECALL(close(fh.fds[0]));
-            if (fh.isPipe())
+            if (fh.isPipe()) {
+                NATIVECALL(close(fh.fds[0]));
                 NATIVECALL(close(fh.fds[1]));
+            }
+            else {
+                if (fh.stream)
+                    NATIVECALL(fclose(fh.stream));
+                else
+                    NATIVECALL(close(fh.fds[0]));
+            }
             /* We don't bother updating the file handle list, because it will be
              * replaced with the list from the loaded savestate.
              */
