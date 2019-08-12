@@ -29,8 +29,8 @@
 #include <QDialogButtonBox>
 #include <memory> // std::unique_ptr
 
-#include "../ramsearch/IRamWatch.h"
 #include "../ramsearch/IRamWatchDetailed.h"
+#include "../ramsearch/RamWatch.h"
 
 class RamWatchEditWindow : public QDialog {
     Q_OBJECT
@@ -40,7 +40,7 @@ public:
 
     void clear();
     void fill(std::unique_ptr<IRamWatchDetailed> &watch);
-    void fill(std::unique_ptr<IRamWatch> &watch);
+    void fill(const RamWatch &watch);
 
     std::unique_ptr<IRamWatchDetailed> ramwatch;
 

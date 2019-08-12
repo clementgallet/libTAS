@@ -240,39 +240,8 @@ void RamSearchWindow::slotNew()
     searchProgress->show();
     searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
 
-    /* Call the RamSearch new function using the right type as template */
-    switch (typeBox->currentIndex()) {
-        case 0:
-            ramSearchModel->newWatches<unsigned char>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 1:
-            ramSearchModel->newWatches<char>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 2:
-            ramSearchModel->newWatches<unsigned short>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 3:
-            ramSearchModel->newWatches<short>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 4:
-            ramSearchModel->newWatches<unsigned int>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 5:
-            ramSearchModel->newWatches<int>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 6:
-            ramSearchModel->newWatches<uint64_t>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 7:
-            ramSearchModel->newWatches<int64_t>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 8:
-            ramSearchModel->newWatches<float>(memregions, compare_type, compare_operator, compare_value);
-            break;
-        case 9:
-            ramSearchModel->newWatches<double>(memregions, compare_type, compare_operator, compare_value);
-            break;
-    }
+    /* Call the RamSearch new function using the right type */
+    ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value);
 
     searchProgress->hide();
     watchCount->show();

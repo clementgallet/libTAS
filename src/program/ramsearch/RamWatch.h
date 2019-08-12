@@ -21,145 +21,56 @@
 #define LIBTAS_RAMWATCH_H_INCLUDED
 
 #include "CompareEnums.h"
-#include "TypeIndex.h"
-#include "IRamWatch.h"
 #include <cstdint>
 #include <sys/types.h>
-#include <sys/uio.h>
-#include <cerrno>
-#include <iostream>
-#include <sstream>
-#include <inttypes.h>
-#include <cmath> // std::isfinite
 
-template <typename T> static inline const char* fmt_from_type(bool hex) {return hex?"%x":(std::is_unsigned<T>::value?"%u":"%d");}
-template <> inline const char* fmt_from_type<float>(bool hex) {return hex?"%a":"%g";}
-template <> inline const char* fmt_from_type<double>(bool hex) {return hex?"%la":"%lg";}
-template <> inline const char* fmt_from_type<int64_t>(bool hex) {return hex?"%" PRIx64:"%" PRId64;}
-template <> inline const char* fmt_from_type<uint64_t>(bool hex) {return hex?"%" PRIx64:"%" PRIu64;}
-
-
-template <class T>
-class RamWatch : public virtual IRamWatch {
+class RamWatch {
 public:
-    T previous_value;
+    uintptr_t address;
+    uint64_t previous_value;
 
-    RamWatch(uintptr_t addr) : IRamWatch(addr) {};
+    static bool isValid;
+    static pid_t game_pid;
+    static int type;
+    static int type_size;
 
-    const char* tostring(bool hex)
-    {
-        static char str[30];
-        /* Use snprintf instead of ostringstream for a good speedup */
-        snprintf(str, 30, fmt_from_type<T>(hex), previous_value);
-        return str;
-    }
+    enum RamType {
+        RamUnsignedChar,
+        RamChar,
+        RamUnsignedShort,
+        RamShort,
+        RamUnsignedInt,
+        RamInt,
+        RamUnsignedLong,
+        RamLong,
+        RamFloat,
+        RamDouble,
+    };
 
-    const char* tostring_current(bool hex)
-    {
-        static char str[30];
-        /* Use snprintf instead of ostringstream for a good speedup */
-        snprintf(str, 30, fmt_from_type<T>(hex), get_value());
-        return str;
-    }
+    RamWatch(uintptr_t addr) : address(addr) {};
 
-    T get_value()
-    {
-        struct iovec local, remote;
-        T value = 0;
-        local.iov_base = static_cast<void*>(&value);
-        local.iov_len = sizeof(T);
-        remote.iov_base = reinterpret_cast<void*>(address);
-        remote.iov_len = sizeof(T);
+    /* Format number into a string */
+    const char* tostring(bool hex, uint64_t value) const;
 
-        isValid = (process_vm_readv(game_pid, &local, 1, &remote, 1, 0) == sizeof(T));
+    /* Get the current value */
+    uint64_t get_value() const;
 
-        return value;
-    }
+    /* Store the current value and returns if succeeded */
+    bool query();
 
-    bool query()
-    {
-        T value = get_value();
-        if (!isValid)
-            return true;
+    /* Compare function */
+    bool check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
 
-        previous_value = value;
+    /* Check the current value against a condition, and store the value */
+    bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
 
-        /* Check NaN/Inf for float/double */
-        if (!std::isfinite(value))
-            return true;
+    /* Check the current value against a condition without storing it */
+    bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
 
-        return false;
-    }
+    static int type_to_size();
 
-    bool check(T value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
-    {
-        /* Check NaN/Inf for float/double */
-        if (!std::isfinite(value))
-            return true;
-
-        T compare_value;
-
-        if (compare_type == CompareType::Previous) {
-            compare_value = previous_value;
-        }
-        else { // CompareType::Value
-            compare_value = static_cast<T>(compare_value_db);
-        }
-
-        switch(compare_operator) {
-            case CompareOperator::Equal:
-                if (value != compare_value)
-                    return true;
-                break;
-            case CompareOperator::NotEqual:
-                if (value == compare_value)
-                    return true;
-                break;
-            case CompareOperator::Less:
-                if (value >= compare_value)
-                    return true;
-                break;
-            case CompareOperator::Greater:
-                if (value <= compare_value)
-                    return true;
-                break;
-            case CompareOperator::LessEqual:
-                if (value > compare_value)
-                    return true;
-                break;
-            case CompareOperator::GreaterEqual:
-                if (value < compare_value)
-                    return true;
-                break;
-        }
-
-        return false;
-    }
-
-    bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
-    {
-        T value = get_value();
-        if (!isValid)
-            return true;
-
-        bool res = check(value, compare_type, compare_operator, compare_value_db);
-        previous_value = value;
-        return res;
-    }
-
-    bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
-    {
-        T value = get_value();
-        if (!isValid)
-            return true;
-
-        return check(value, compare_type, compare_operator, compare_value_db);
-    }
-
-    int type()
-    {
-        return type_index<T>();
-    }
+private:
+    static const char* type_to_fmt(bool hex);
 
 };
 

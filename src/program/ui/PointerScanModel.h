@@ -31,9 +31,6 @@
 #include <iostream>
 
 #include "../Context.h"
-// #include "../ramsearch/IRamWatch.h"
-// #include "../ramsearch/CompareEnums.h"
-// #include "../ramsearch/RamWatch.h"
 #include "../ramsearch/MemSection.h"
 
 class PointerScanModel : public QAbstractTableModel {
