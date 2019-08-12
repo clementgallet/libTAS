@@ -141,7 +141,7 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
 
         /* Read values in chunks of 4096 bytes so we lower the number
          * of `process_vm_readv` calls. */
-        uint8_t chunk[4096+8];
+        uint8_t chunk[4096];
         local.iov_base = static_cast<void*>(chunk);
         local.iov_len = 4096;
         remote.iov_len = 4096;
@@ -155,14 +155,14 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
                 continue;
             }
 
-            for (unsigned int i = 0; i < readValues; i += RamWatch::type_size, cur_size += RamWatch::type_size) {
+            for (int i = 0; i < readValues; i += RamWatch::type_size, cur_size += RamWatch::type_size) {
 
                 if (!(cur_size & 0xfff)) {
                     emit signalProgress(cur_size);
                 }
 
                 ramwatches.emplace_back(addr+i);
-                ramwatches.back().previous_value = *reinterpret_cast<uint64_t*>(chunk+i);
+                memcpy(&ramwatches.back().previous_value, chunk+i, RamWatch::type_size);
 
                 /* If only insert watches that match the compare */
                 if (compare_type == CompareType::Value) {
