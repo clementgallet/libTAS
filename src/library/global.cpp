@@ -26,7 +26,7 @@ GameInfo game_info;
 volatile bool is_exiting = false;
 bool skipping_draw = false;
 Display* gameDisplays[GAMEDISPLAYNUM] = {};
-Window gameXWindow = 0;
+std::list<Window> gameXWindows;
 SDL_Window* gameSDLWindow = nullptr;
 bool saveBacktrack = false;
 

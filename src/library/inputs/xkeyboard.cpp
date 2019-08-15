@@ -77,8 +77,8 @@ namespace libtas {
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
     /* Returing the game Xlib window */
-    if (focus_return) {
-        *focus_return = gameXWindow;
+    if (focus_return && !gameXWindows.empty()) {
+        *focus_return = gameXWindows.front();
     }
     return 0;
 }

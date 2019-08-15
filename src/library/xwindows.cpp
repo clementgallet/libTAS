@@ -82,25 +82,24 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
         queue->setMask(w, attributes->event_mask);
     }
 
-    if (gameXWindow == 0) {
-        /* Only save the Window identifier for real resolutions, because SDL creates
-         * some dummy windows for testing.
-         */
-        if ((width > 32) && (height > 32)) {
+    /* Only save the Window identifier for real resolutions, because SDL creates
+     * some dummy windows for testing.
+     */
+    if ((width > 32) && (height > 32)) {
 
-            /* Only save the Window identifier for top-level windows */
-            Window root_return = 0;
-            Window parent_return = 0;
-            Window *children_return = nullptr;
-            unsigned int nchildren_return = 0;
-            XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
-            if (children_return) XFree(children_return);
+        /* Only save the Window identifier for top-level windows */
+        Window root_return = 0;
+        Window parent_return = 0;
+        Window *children_return = nullptr;
+        unsigned int nchildren_return = 0;
+        XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+        if (children_return) XFree(children_return);
 
-            if (root_return == parent) {
-                /* Saving top-level window */
+        if (root_return == parent) {
+            /* Saving top-level window */
+            if (gameXWindows.empty())
                 debuglog(LCF_WINDOW, "   set game window to ", w);
-                gameXWindow = w;
-            }
+            gameXWindows.push_back(w);
         }
     }
 
@@ -115,25 +114,24 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
     debuglog(LCF_WINDOW, "   window id is ", w);
 
-    if (gameXWindow == 0) {
-        /* Only save the Window identifier for real resolutions, because SDL creates
-         * some dummy windows for testing.
-         */
-        if ((width > 32) && (height > 32)) {
+    /* Only save the Window identifier for real resolutions, because SDL creates
+     * some dummy windows for testing.
+     */
+    if ((width > 32) && (height > 32)) {
 
-            /* Only save the Window identifier for top-level windows */
-            Window root_return = 0;
-            Window parent_return = 0;
-            Window *children_return = nullptr;
-            unsigned int nchildren_return = 0;
-            XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
-            if (children_return) XFree(children_return);
+        /* Only save the Window identifier for top-level windows */
+        Window root_return = 0;
+        Window parent_return = 0;
+        Window *children_return = nullptr;
+        unsigned int nchildren_return = 0;
+        XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+        if (children_return) XFree(children_return);
 
-            if (root_return == parent) {
-                /* Saving top-level window */
+        if (root_return == parent) {
+            /* Saving top-level window */
+            if (gameXWindows.empty())
                 debuglog(LCF_WINDOW, "   set game window to ", w);
-                gameXWindow = w;
-            }
+            gameXWindows.push_back(w);
         }
     }
 
@@ -143,7 +141,9 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
 void sendXWindow(Window w)
 {
     uint32_t i = (uint32_t)w;
+    sendMessage(MSGB_WINDOW_ID);
     sendData(&i, sizeof(i));
+    debuglog(LCF_WINDOW, "Sent X11 window id ", w);
 }
 
 int XDestroyWindow(Display *display, Window w)
@@ -151,16 +151,31 @@ int XDestroyWindow(Display *display, Window w)
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
     LINK_NAMESPACE_GLOBAL(XDestroyWindow);
 
-    if (gameXWindow == w) {
+    /* If current game window, switch to another one on the list */
+    if (!gameXWindows.empty() && w == gameXWindows.front()) {
         ScreenCapture::fini();
-        gameXWindow = 0;
 
-        /* Tells the program we don't have a window anymore to gather inputs */
-        sendMessage(MSGB_WINDOW_ID);
-        sendXWindow(gameXWindow);
-        debuglog(LCF_WINDOW, "Sent X11 window id 0");
+        gameXWindows.pop_front();
+        if (gameXWindows.empty()) {
+            /* Tells the program we don't have a window anymore to gather inputs */
+            sendXWindow(0);
+        }
+        else {
+            /* Switch to the next game window */
+            debuglog(LCF_WINDOW, "   set game window to ", gameXWindows.front());
+            sendXWindow(gameXWindows.front());
+            ScreenCapture::init();
+        }
     }
-
+    else {
+        /* If another game window, remove it from the list */
+        for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+            if (w == *iter) {
+                gameXWindows.erase(iter);
+                break;
+            }
+        }
+    }
 
     return orig::XDestroyWindow(display, w);
 }
@@ -175,10 +190,8 @@ int XMapWindow(Display *display, Window w)
     /* We must wait until the window is mapped to send it to the program.
      * We are checking the content of gameXWindow to see if we must send it
      */
-    if ((gameXWindow != 0) && (gameXWindow == w)) {
-        sendMessage(MSGB_WINDOW_ID);
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         sendXWindow(w);
-        debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
 
     return ret;
@@ -204,10 +217,8 @@ int XMapRaised(Display *display, Window w)
     /* We must wait until the window is mapped to send it to the program.
      * We are checking the content of gameXWindow to see if we must send it
      */
-    if (gameXWindow != 0) {
-        sendMessage(MSGB_WINDOW_ID);
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         sendXWindow(w);
-        debuglog(LCF_WINDOW, "Sent X11 window id: ", w);
     }
 
     return ret;
@@ -218,9 +229,9 @@ int XStoreName(Display *display, Window w, const char *window_name)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XStoreName);
 
-    if (gameXWindow == w) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         WindowTitle::setOriginalTitle(window_name);
-        WindowTitle::setUpdateFunc([display] (const char* t) {if (gameXWindow) orig::XStoreName(display, gameXWindow, t);});
+        WindowTitle::setUpdateFunc([display] (const char* t) {if (!gameXWindows.empty()) orig::XStoreName(display, gameXWindows.front(), t);});
     }
 
     return orig::XStoreName(display, w, window_name);
@@ -231,14 +242,14 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
     debuglog(LCF_WINDOW, __func__, " call with name ", text_prop->value, " and format ", text_prop->format);
     LINK_NAMESPACE_GLOBAL(XSetWMName);
 
-    if (gameXWindow == w) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         Atom encoding = text_prop->encoding;
         WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
         WindowTitle::setUpdateFunc([display, encoding] (const char* t) {
-            if (gameXWindow) {
+            if (!gameXWindows.empty()) {
                 XTextProperty prop;
                 XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
-                orig::XSetWMName(display, gameXWindow, &prop);
+                orig::XSetWMName(display, gameXWindows.front(), &prop);
             }
         });
     }
@@ -262,12 +273,12 @@ int XMoveWindow(Display* display, Window w, int x, int y)
 {
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
     /* Preventing the game to change the game window position */
-    if (w != gameXWindow) {
-        LINK_NAMESPACE_GLOBAL(XMoveWindow);
-        return orig::XMoveWindow(display, w, x, y);
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+        return 0;
     }
 
-    return 0;
+    LINK_NAMESPACE_GLOBAL(XMoveWindow);
+    return orig::XMoveWindow(display, w, x, y);
 }
 
 int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height)
@@ -281,11 +292,6 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
 
     DEBUGLOGCALL(LCF_WINDOW);
     debuglog(LCF_WINDOW, "    New size: ", width, " x ", height);
-
-    /* We assume that a resized window is the game window */
-    // if (gameXWindow == 0)
-    //     gameXWindow = w;
-
 
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
@@ -313,12 +319,8 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
     DEBUGLOGCALL(LCF_WINDOW);
     debuglog(LCF_WINDOW, __func__, " called with window ", w, ", new position: ", x, " - ", y, " new size: ", width, " x ", height);
 
-    /* We assume that a resized window is the game window */
-    // if (gameXWindow == 0)
-    //     gameXWindow = w;
-
     /* Check if size has changed */
-    if (w == gameXWindow) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         int old_width, old_height;
         ScreenCapture::getDimensions(old_width, old_height);
         if ((old_width != width) || (old_height != height)) {
@@ -341,19 +343,18 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
         return orig::XConfigureWindow(display, w, value_mask, values);
 
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
-    debuglog(LCF_WINDOW, "    game window is ", gameXWindow);
     if ((value_mask & CWWidth) && (value_mask & CWHeight)) {
         debuglog(LCF_WINDOW, "    New size: ", values->width, " x ", values->height);
     }
 
     /* Disable window movement */
-    if (w == gameXWindow)
+    if (!gameXWindows.empty() && (gameXWindows.front() == w))
         value_mask &= ~(CWX | CWY);
 
     int ret = orig::XConfigureWindow(display, w, value_mask, values);
 
     /* Check if size has changed */
-    if (w == gameXWindow) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
         int old_width, old_height;
         ScreenCapture::getDimensions(old_width, old_height);
         if ((value_mask & CWWidth) && (value_mask & CWHeight) && ((values->width != old_width) || (values->height != old_height))) {
@@ -398,7 +399,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     }
 
     /* Always display window borders/title/menu/etc */
-    if ((w == gameXWindow) && (property == x11_atom(_MOTIF_WM_HINTS))) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w) && (property == x11_atom(_MOTIF_WM_HINTS))) {
         MwmHints mwm_hints = *reinterpret_cast<const MwmHints*>(data);
         if (mwm_hints.decorations == 0) {
             debuglog(LCF_WINDOW, "   adding motif decorations");
@@ -418,7 +419,7 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
 
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
 
-    if ((w == gameXWindow) && (wm_hints->input == False)) {
+    if (!gameXWindows.empty() && (gameXWindows.front() == w) && (wm_hints->input == False)) {
         debuglog(LCF_WINDOW, "   switch input hint to True");
         wm_hints->input = True;
     }

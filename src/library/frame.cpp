@@ -428,10 +428,13 @@ static void pushQuitEvent(void)
     }
 
     else {
+        if (gameXWindows.empty())
+            return;
+
         GlobalNoLog gnl;
         XEvent xev;
         xev.xclient.type = ClientMessage;
-        xev.xclient.window = gameXWindow;
+        xev.xclient.window = gameXWindows.front();
         xev.xclient.format = 32;
         xev.xclient.data.l[1] = CurrentTime;
 
@@ -439,7 +442,7 @@ static void pushQuitEvent(void)
             if (gameDisplays[i]) {
                 xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
                 xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
-                NATIVECALL(XSendEvent(gameDisplays[i], gameXWindow, False, NoEventMask, &xev));
+                NATIVECALL(XSendEvent(gameDisplays[i], gameXWindows.front(), False, NoEventMask, &xev));
                 NATIVECALL(XSync(gameDisplays[i], false));
             }
         }

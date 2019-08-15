@@ -259,7 +259,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
-    if (drawable && (gameXWindow != 0)) {
+    if (drawable && (!gameXWindows.empty())) {
 
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;

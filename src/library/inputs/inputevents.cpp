@@ -109,11 +109,11 @@ void generateKeyUpEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
-            if (game_info.keyboard & GameInfo::XEVENTS) {
+            if ((game_info.keyboard & GameInfo::XEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = gameXWindow;
+                event.xkey.window = gameXWindows.front();
                 event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
@@ -127,7 +127,7 @@ void generateKeyUpEvents(void)
             }
 
 #ifdef LIBTAS_HAS_XINPUT
-            if (game_info.keyboard & GameInfo::XIEVENTS) {
+            if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -135,7 +135,7 @@ void generateKeyUpEvents(void)
                 event.xcookie.evtype = XI_KeyRelease;
                 event.xcookie.data = dev;
                 dev->evtype = XI_KeyRelease;
-                dev->event = gameXWindow;
+                dev->event = gameXWindows.front();
                 dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
@@ -247,11 +247,11 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
-            if (game_info.keyboard & GameInfo::XEVENTS) {
+            if ((game_info.keyboard & GameInfo::XEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = gameXWindow;
+                event.xkey.window = gameXWindows.front();
                 event.xkey.time = timestamp;
                 event.xkey.same_screen = 1;
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
@@ -266,7 +266,7 @@ void generateKeyDownEvents(void)
             }
 
 #ifdef LIBTAS_HAS_XINPUT
-            if (game_info.keyboard & GameInfo::XIEVENTS) {
+            if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -274,7 +274,7 @@ void generateKeyDownEvents(void)
                 event.xcookie.evtype = XI_KeyPress;
                 event.xcookie.data = dev;
                 dev->evtype = XI_KeyPress;
-                dev->event = gameXWindow;
+                dev->event = gameXWindows.front();
                 dev->time = timestamp;
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
@@ -749,7 +749,7 @@ void generateMouseMotionEvents(void)
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEMOTION with new position (", ai.pointer_x, ",", ai.pointer_y,")");
     }
 
-    if (game_info.mouse & GameInfo::XEVENTS) {
+    if ((game_info.mouse & GameInfo::XEVENTS) && !gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
@@ -757,7 +757,7 @@ void generateMouseMotionEvents(void)
         event.xmotion.y = game_ai.pointer_y;
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
-        event.xmotion.window = gameXWindow;
+        event.xmotion.window = gameXWindows.front();
         event.xmotion.time = timestamp;
 
         xlibEventQueueList.insert(&event);
@@ -765,7 +765,7 @@ void generateMouseMotionEvents(void)
     }
 
 #ifdef LIBTAS_HAS_XINPUT
-    if (game_info.mouse & GameInfo::XIEVENTS) {
+    if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
@@ -773,7 +773,7 @@ void generateMouseMotionEvents(void)
         event.xcookie.evtype = XI_Motion;
         event.xcookie.data = dev;
         dev->evtype = XI_Motion;
-        dev->event = gameXWindow;
+        dev->event = gameXWindows.front();
         dev->time = timestamp;
         dev->event_x = game_ai.pointer_x;
         dev->event_y = game_ai.pointer_y;
@@ -876,7 +876,7 @@ void generateMouseButtonEvents(void)
                 sdlEventQueue.insert(&event1);
             }
 
-            if (game_info.mouse & GameInfo::XEVENTS) {
+            if ((game_info.mouse & GameInfo::XEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 if (ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
@@ -892,13 +892,13 @@ void generateMouseButtonEvents(void)
                 event.xbutton.x_root = event.xbutton.x;
                 event.xbutton.y_root = event.xbutton.y;
                 event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
-                event.xbutton.window = gameXWindow;
+                event.xbutton.window = gameXWindows.front();
 
                 xlibEventQueueList.insert(&event);
             }
 
 #ifdef LIBTAS_HAS_XINPUT
-            if (game_info.mouse & GameInfo::XIEVENTS) {
+            if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -914,7 +914,7 @@ void generateMouseButtonEvents(void)
                     dev->evtype = XI_ButtonRelease;
                 }
                 event.xcookie.data = dev;
-                dev->event = gameXWindow;
+                dev->event = gameXWindows.front();
                 dev->time = timestamp;
                 dev->event_x = game_ai.pointer_x;
                 dev->event_y = game_ai.pointer_y;

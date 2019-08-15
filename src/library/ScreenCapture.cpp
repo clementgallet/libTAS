@@ -117,7 +117,7 @@ int ScreenCapture::init()
     }
 
     /* Don't initialize if window is not registered */
-    if (gameXWindow == 0)
+    if (gameXWindows.empty())
         return 0;
 
     /* Get the window dimensions */
@@ -127,7 +127,7 @@ int ScreenCapture::init()
     Window root;
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (gameDisplays[i]) {
-            orig::XGetGeometry(gameDisplays[i], gameXWindow, &root, &x, &y, &w, &h, &border_width, &depth);
+            orig::XGetGeometry(gameDisplays[i], gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
             break;
         }
     }
@@ -335,7 +335,7 @@ void ScreenCapture::resize(int w, int h)
     }
 
     /* Don't resize if window is not registered */
-    if (gameXWindow == 0) {
+    if (gameXWindows.empty()) {
         return;
     }
 

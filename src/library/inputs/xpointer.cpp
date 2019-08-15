@@ -36,18 +36,18 @@ DEFINE_ORIG_POINTER(XQueryPointer);
         unsigned int* mask_return)
 {
     DEBUGLOGCALL(LCF_MOUSE);
-    if (gameXWindow == 0) {
+    if (!gameXWindows.empty()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
                                    root_x_return, root_y_return,
                                    win_x_return, win_y_return, mask_return);
     }
     XWindowAttributes gameAttr;
-    NATIVECALL(MYASSERT(XGetWindowAttributes(display, gameXWindow, &gameAttr) != 0));
+    NATIVECALL(MYASSERT(XGetWindowAttributes(display, gameXWindows.front(), &gameAttr) != 0));
     *root_return = gameAttr.root;
     *root_x_return = game_ai.pointer_x;
     *root_y_return = game_ai.pointer_y;
-    *child_return = gameXWindow;
+    *child_return = gameXWindows.front();
     *win_x_return = game_ai.pointer_x;
     *win_y_return = game_ai.pointer_y;
     *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -105,32 +105,42 @@ DEFINE_ORIG_POINTER(XQueryPointer);
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dest_w, " and dest_x ", dest_x, " and dest_y ", dest_y);
 
     /* We have to generate an MotionNotify event. */
-    XEvent event;
-    event.xmotion.type = MotionNotify;
-    event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+    if (!gameXWindows.empty()) {
+        XEvent event;
+        event.xmotion.type = MotionNotify;
+        event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+        if (dest_w == None) {
+            /* Relative warp */
+            event.xmotion.x = game_ai.pointer_x + dest_x;
+            event.xmotion.y = game_ai.pointer_y + dest_y;
+        }
+        else {
+            /* Absolute warp */
+            event.xmotion.x = dest_x;
+            event.xmotion.y = dest_y;
+        }
+        event.xmotion.x_root = event.xmotion.x;
+        event.xmotion.y_root = event.xmotion.y;
+        event.xmotion.window = gameXWindows.front();
+
+        struct timespec time = detTimer.getTicks();
+        event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+        xlibEventQueueList.insert(&event);
+        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+    }
+
+    /* Update the pointer coordinates */
     if (dest_w == None) {
         /* Relative warp */
-        event.xmotion.x = game_ai.pointer_x + dest_x;
-        event.xmotion.y = game_ai.pointer_y + dest_y;
+        game_ai.pointer_x += dest_x;
+        game_ai.pointer_y += dest_y;
     }
     else {
         /* Absolute warp */
-        event.xmotion.x = dest_x;
-        event.xmotion.y = dest_y;
+        game_ai.pointer_x = dest_x;
+        game_ai.pointer_y = dest_y;
     }
-    event.xmotion.x_root = event.xmotion.x;
-    event.xmotion.y_root = event.xmotion.y;
-    event.xmotion.window = gameXWindow;
-
-    struct timespec time = detTimer.getTicks();
-    event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-
-    xlibEventQueueList.insert(&event);
-    debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
-
-    /* Update the pointer coordinates */
-    game_ai.pointer_x = event.xmotion.x;
-    game_ai.pointer_y = event.xmotion.y;
 
     return 0; // Not sure what to return
 }

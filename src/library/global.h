@@ -25,6 +25,7 @@
 #include <X11/Xlib.h>
 #include <SDL2/SDL.h>
 #include <string>
+#include <list>
 
 /* Include this file in every source code that override functions of the game */
 
@@ -54,7 +55,7 @@ namespace libtas {
     extern Display* gameDisplays[GAMEDISPLAYNUM];
 
     /* Game window (we suppose there is only one) */
-    extern Window gameXWindow;
+    extern std::list<Window> gameXWindows;
 
     /* SDL2 game window (we suppose there is only one) */
     extern SDL_Window* gameSDLWindow;
