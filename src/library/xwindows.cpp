@@ -82,25 +82,19 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
         queue->setMask(w, attributes->event_mask);
     }
 
-    /* Only save the Window identifier for real resolutions, because SDL creates
-     * some dummy windows for testing.
-     */
-    if ((width > 32) && (height > 32)) {
+    /* Only save the Window identifier for top-level windows */
+    Window root_return = 0;
+    Window parent_return = 0;
+    Window *children_return = nullptr;
+    unsigned int nchildren_return = 0;
+    XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+    if (children_return) XFree(children_return);
 
-        /* Only save the Window identifier for top-level windows */
-        Window root_return = 0;
-        Window parent_return = 0;
-        Window *children_return = nullptr;
-        unsigned int nchildren_return = 0;
-        XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
-        if (children_return) XFree(children_return);
-
-        if (root_return == parent) {
-            /* Saving top-level window */
-            if (gameXWindows.empty())
-                debuglog(LCF_WINDOW, "   set game window to ", w);
-            gameXWindows.push_back(w);
-        }
+    if (root_return == parent) {
+        /* Saving top-level window */
+        if (gameXWindows.empty())
+            debuglog(LCF_WINDOW, "   set game window to ", w);
+        gameXWindows.push_back(w);
     }
 
     return w;
@@ -114,25 +108,19 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
     debuglog(LCF_WINDOW, "   window id is ", w);
 
-    /* Only save the Window identifier for real resolutions, because SDL creates
-     * some dummy windows for testing.
-     */
-    if ((width > 32) && (height > 32)) {
+    /* Only save the Window identifier for top-level windows */
+    Window root_return = 0;
+    Window parent_return = 0;
+    Window *children_return = nullptr;
+    unsigned int nchildren_return = 0;
+    XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+    if (children_return) XFree(children_return);
 
-        /* Only save the Window identifier for top-level windows */
-        Window root_return = 0;
-        Window parent_return = 0;
-        Window *children_return = nullptr;
-        unsigned int nchildren_return = 0;
-        XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
-        if (children_return) XFree(children_return);
-
-        if (root_return == parent) {
-            /* Saving top-level window */
-            if (gameXWindows.empty())
-                debuglog(LCF_WINDOW, "   set game window to ", w);
-            gameXWindows.push_back(w);
-        }
+    if (root_return == parent) {
+        /* Saving top-level window */
+        if (gameXWindows.empty())
+            debuglog(LCF_WINDOW, "   set game window to ", w);
+        gameXWindows.push_back(w);
     }
 
     return w;
@@ -188,10 +176,14 @@ int XMapWindow(Display *display, Window w)
     int ret = orig::XMapWindow(display, w);
 
     /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of gameXWindow to see if we must send it
-     */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
-        sendXWindow(w);
+     * We are checking the content of gameXWindows to see if we must send it */
+    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        if (w == *iter) {
+            gameXWindows.erase(iter);
+            gameXWindows.push_front(w);
+            sendXWindow(w);
+            break;
+        }
     }
 
     return ret;
@@ -217,8 +209,13 @@ int XMapRaised(Display *display, Window w)
     /* We must wait until the window is mapped to send it to the program.
      * We are checking the content of gameXWindow to see if we must send it
      */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
-        sendXWindow(w);
+    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        if (w == *iter) {
+            gameXWindows.erase(iter);
+            gameXWindows.push_front(w);
+            sendXWindow(w);
+            break;
+        }
     }
 
     return ret;
