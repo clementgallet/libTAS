@@ -281,15 +281,12 @@ int XMoveWindow(Display* display, Window w, int x, int y)
 int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height)
 {
     LINK_NAMESPACE_GLOBAL(XResizeWindow);
-    debuglog(LCF_WINDOW, __func__, " called with window ", w);
     int ret = orig::XResizeWindow(display, w, width, height);
 
     if (GlobalState::isNative())
         return ret;
 
-    DEBUGLOGCALL(LCF_WINDOW);
-    debuglog(LCF_WINDOW, "    New size: ", width, " x ", height);
-
+    debuglog(LCF_WINDOW, __func__, " called with window ", w, ", new size: ", width, " x ", height);
     int old_width, old_height;
     ScreenCapture::getDimensions(old_width, old_height);
     if ((old_width != width) || (old_height != height)) {
@@ -306,14 +303,12 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
 
 int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int width, unsigned int height)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", w);
     LINK_NAMESPACE_GLOBAL(XResizeWindow);
     int ret = orig::XResizeWindow(display, w, width, height);
 
     if (GlobalState::isNative())
         return ret;
 
-    DEBUGLOGCALL(LCF_WINDOW);
     debuglog(LCF_WINDOW, __func__, " called with window ", w, ", new position: ", x, " - ", y, " new size: ", width, " x ", height);
 
     /* Check if size has changed */

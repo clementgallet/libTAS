@@ -28,6 +28,10 @@
 #include <X11/extensions/XInput2.h>
 #endif
 
+#ifdef LIBTAS_HAS_XRANDR
+#include <X11/extensions/Xrandr.h>
+#endif
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XCheckIfEvent);
@@ -431,7 +435,13 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
             if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
                 debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
             }
-            XResizeWindow(display, event_send->xclient.window, XDisplayWidth(display, 0), XDisplayHeight(display, 0));
+#ifdef LIBTAS_HAS_XRANDR
+            /* Change the window size to monitor size */
+            int nsizes;
+            XRRScreenSize *sizes = XRRSizes(display, 0, &nsizes);
+            XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
+#endif
+
             return 0;
         }
     }
