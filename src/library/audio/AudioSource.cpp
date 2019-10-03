@@ -26,10 +26,23 @@ extern "C" {
     #include <libavutil/opt.h>
     #include <libavutil/channel_layout.h>
 }
+#include "hook.h"
 #include <stdlib.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 
 namespace libtas {
+
+/* Link dynamically to avutil/swresample functions, because there are different
+ * library versions depending on your distro.
+ */
+DEFINE_ORIG_POINTER(swr_alloc);
+DEFINE_ORIG_POINTER(swr_free);
+DEFINE_ORIG_POINTER(swr_is_initialized);
+DEFINE_ORIG_POINTER(swr_close);
+DEFINE_ORIG_POINTER(av_opt_set_int);
+DEFINE_ORIG_POINTER(av_opt_set_sample_fmt);
+DEFINE_ORIG_POINTER(swr_init);
+DEFINE_ORIG_POINTER(swr_convert);
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
@@ -46,7 +59,8 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 
 AudioSource::AudioSource(void)
 {
-    swr = swr_alloc();
+    LINK_NAMESPACE(swr_alloc, "swresample");
+    swr = orig::swr_alloc();
 
     volume = 1.0f;
     pitch = 1.0f;
@@ -55,7 +69,8 @@ AudioSource::AudioSource(void)
 
 AudioSource::~AudioSource(void)
 {
-    swr_free(&swr);
+    LINK_NAMESPACE(swr_free, "swresample");
+    orig::swr_free(&swr);
 }
 
 void AudioSource::init(void)
@@ -72,14 +87,15 @@ void AudioSource::rewind(void)
     position = 0;
     samples_frac = 0;
     queue_index = 0;
-    if (swr_is_initialized(swr))
-        swr_close(swr);
+    dirty();
 }
 
 void AudioSource::dirty(void)
 {
-    if (swr_is_initialized(swr))
-        swr_close(swr);
+    LINK_NAMESPACE(swr_is_initialized, "swresample");
+    LINK_NAMESPACE(swr_close, "swresample");
+    if (orig::swr_is_initialized(swr))
+        orig::swr_close(swr);
 }
 
 int AudioSource::nbQueue()
@@ -164,6 +180,12 @@ bool AudioSource::willEnd(struct timespec ticks)
 
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
+    LINK_NAMESPACE(swr_is_initialized, "swresample");
+    LINK_NAMESPACE(av_opt_set_int, "avutil");
+    LINK_NAMESPACE(av_opt_set_sample_fmt, "avutil");
+    LINK_NAMESPACE(swr_init, "swresample");
+    LINK_NAMESPACE(swr_convert, "swresample");
+
     if (state != SOURCE_PLAYING)
         return -1;
 
@@ -181,7 +203,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* Check if SWR context is initialized.
          * If not, set parameters and init it
          */
-        if (! swr_is_initialized(swr)) {
+        if (! orig::swr_is_initialized(swr)) {
             /* Get the sample format */
             AVSampleFormat inFormat = AV_SAMPLE_FMT_U8;
             AVSampleFormat outFormat = AV_SAMPLE_FMT_U8;
@@ -213,28 +235,28 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             /* Set channel layout */
             if (curBuf->nbChannels == 1) {
-                MYASSERT(0 == av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0));
+                MYASSERT(0 == orig::av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0));
             }
             if (curBuf->nbChannels == 2) {
-                MYASSERT(0 == av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+                MYASSERT(0 == orig::av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0));
             }
             if (outNbChannels == 1) {
-                MYASSERT(0 == av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0));
+                MYASSERT(0 == orig::av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0));
             }
             if (outNbChannels == 2) {
-                MYASSERT(0 == av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+                MYASSERT(0 == orig::av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0));
             }
 
             /* Set sample format */
-            MYASSERT(0 == av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0));
-            MYASSERT(0 == av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0));
+            MYASSERT(0 == orig::av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0));
+            MYASSERT(0 == orig::av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0));
 
             /* Set sampling frequency */
-            MYASSERT(0 == av_opt_set_int(swr, "in_sample_rate", static_cast<int>(curBuf->frequency*pitch), 0));
-            MYASSERT(0 == av_opt_set_int(swr, "out_sample_rate", outFrequency, 0));
+            MYASSERT(0 == orig::av_opt_set_int(swr, "in_sample_rate", static_cast<int>(curBuf->frequency*pitch), 0));
+            MYASSERT(0 == orig::av_opt_set_int(swr, "out_sample_rate", outFrequency, 0));
 
             /* Open the context */
-            if (swr_init(swr) < 0) {
+            if (orig::swr_init(swr) < 0) {
                 debuglog(LCF_SOUND | LCF_ERROR, "Error initializing swr context");
                 return 0;
             }
@@ -273,7 +295,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         position = newPosition;
         debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
         if (!skipMixing) {
-            convOutSamples = swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
+            convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
         }
     }
     else {
@@ -281,7 +303,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
         if (!skipMixing) {
             if (availableSamples > 0)
-                swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
         }
 
         int remainingSamples = inNbSamples - availableSamples;
@@ -300,7 +322,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0, false);
                 if (!skipMixing) {
-                    swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                 }
 
                 debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " is read again from 0 to ", availableSamples);
@@ -311,7 +333,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (!skipMixing) {
                 /* Get the mixed samples */
-                convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+                convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
         }
         else {
@@ -327,7 +349,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     debuglog(LCF_SOUND, "  Buffer ", loopbuf->id, " in read in range ", loopbuf->loop_point_beg, " - ", availableSamples);
 
                     if (!skipMixing) {
-                        swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                        orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
 
                     if (remainingSamples == availableSamples) {
@@ -344,7 +366,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     debuglog(LCF_SOUND, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
 
                     if (!skipMixing) {
-                        swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                        orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                     }
 
                     if (remainingSamples == availableSamples) {
@@ -357,7 +379,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (!skipMixing) {
                 /* Get the mixed samples */
-                convOutSamples = swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
+                convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
 
             if ((remainingSamples > 0) && (source != SOURCE_STREAMING_CONTINUOUS)) {

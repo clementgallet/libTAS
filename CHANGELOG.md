@@ -25,6 +25,7 @@
 * Handle when state saving failed
 * Fix insert frame not working after delete frame
 * Better ALSA implementation
+* Don't require specific swresample or avutil version
 
 ## [1.3.4] - 2019-04-08
 ### Added
