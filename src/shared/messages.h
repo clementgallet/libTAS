@@ -228,6 +228,12 @@ enum {
     MSGN_STEAM_USER_DATA_PATH,
 
     /*
+     * Send to the game the location of the game's Steam remote storage path.
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_STEAM_REMOTE_STORAGE,
+
+    /*
      * Send the git commit hash.
      * Argument: size_t (string length) then char[len]
      */

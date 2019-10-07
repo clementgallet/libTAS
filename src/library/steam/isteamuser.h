@@ -8,9 +8,12 @@
 #define LIBTAS_ISTEAMUSER_H_INCL
 
 #include <stdint.h>
+#include <string>
 #include "steamtypes.h"
 
 namespace libtas {
+
+void SteamSetUserDataFolder(std::string path);
 
 class ISteamUser
 {

@@ -36,14 +36,13 @@
 #include "renderhud/RenderHUD.h"
 #include <unistd.h> // getpid()
 #include "frame.h" // framecount
+#include "steam/isteamuser.h" // SteamSetUserDataFolder
+#include "steam/isteamremotestorage.h" // SteamSetRemoteStorageFolder
+
 
 extern char**environ;
 
 namespace libtas {
-
-// FIXME: should be declared in a header somewhere
-// (implementation at library/steam/isteamuser.cpp)
-void SteamUser_SetUserDataFolder(std::string path);
 
 static bool is_inited = false;
 
@@ -107,6 +106,7 @@ void __attribute__((constructor)) init(void)
     while (message != MSGN_END_INIT) {
         std::string basesavestatepath;
         std::string steamuserdatapath;
+        std::string steamremotestorage;
         int index;
         switch (message) {
             case MSGN_CONFIG:
@@ -132,7 +132,11 @@ void __attribute__((constructor)) init(void)
                 break;
             case MSGN_STEAM_USER_DATA_PATH:
                 steamuserdatapath = receiveString();
-                SteamUser_SetUserDataFolder(steamuserdatapath);
+                SteamSetUserDataFolder(steamuserdatapath);
+                break;
+            case MSGN_STEAM_REMOTE_STORAGE:
+                steamremotestorage = receiveString();
+                SteamSetRemoteStorageFolder(steamremotestorage);
                 break;
             default:
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);

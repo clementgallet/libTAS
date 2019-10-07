@@ -12,6 +12,7 @@
 * Add border/title on fullscreen window
 * Check that GUI and library git commit match
 * Controller connect/disconnect inputs
+* Save Steam Remote Storage files to a game-specific directory
 
 ### Changed
 

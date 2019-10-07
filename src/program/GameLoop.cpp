@@ -516,10 +516,17 @@ void GameLoop::initProcessMessages()
         }
     }
 
-    /* Send the Steam user data path */
+    /* Send the Steam user data path and remote storage */
     if (context->config.sc.virtual_steam) {
         sendMessage(MSGN_STEAM_USER_DATA_PATH);
         sendString(context->config.steamuserdir);
+        std::string remotestorage = context->config.steamuserdir + "/";
+        remotestorage += context->gamename;
+        if (create_dir(remotestorage) < 0) {
+            std::cerr << "Cannot create dir " << remotestorage << std::endl;
+        }
+        sendMessage(MSGN_STEAM_REMOTE_STORAGE);
+        sendString(remotestorage);
     }
 
     sendMessage(MSGN_ENCODING_SEGMENT);

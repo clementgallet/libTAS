@@ -24,9 +24,7 @@ namespace libtas {
 
 char steamuserdir[2048] = "/NOTVALID";
 
-// FIXME: prototype for this function should be declared in a header somewhere
-// (used by library/main.cpp)
-void SteamUser_SetUserDataFolder(std::string path)
+void SteamSetUserDataFolder(std::string path)
 {
     DEBUGLOGCALL(LCF_STEAM);
     strncpy(steamuserdir, path.c_str(), sizeof(steamuserdir)-1);

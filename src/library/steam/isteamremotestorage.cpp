@@ -26,13 +26,25 @@
 
 namespace libtas {
 
+char steamremotestorage[2048] = "/NOTVALID";
+
+void SteamSetRemoteStorageFolder(std::string path)
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    strncpy(steamremotestorage, path.c_str(), sizeof(steamremotestorage)-1);
+}
+
 bool ISteamRemoteStorage::FileWrite( const char *pchFile, const void *pvData, int cubData )
 {
     DEBUGLOGCALL(LCF_STEAM);
 
-    /* Store the file locally, in /tmp for now */
-    std::string path = "/tmp/";
+    /* Store the file locally */
+    std::string path = steamremotestorage;
+    path += "/";
     path += pchFile;
+
+    /* We don't use the native `open` function, so that we handle the
+     * "prevent writing to disk" feature without extra work. */
     int fd = open(path.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0666);
     if (fd < 0)
         return false;
@@ -40,7 +52,7 @@ bool ISteamRemoteStorage::FileWrite( const char *pchFile, const void *pvData, in
     Utils::writeAll(fd, pvData, cubData);
 
     if (close(fd) < 0) {
-        return false;        
+        return false;
     }
 
 	return true;
@@ -50,8 +62,8 @@ int	ISteamRemoteStorage::FileRead( const char *pchFile, void *pvData, int cubDat
 {
     DEBUGLOGCALL(LCF_STEAM);
 
-    /* Read the file from /tmp for now */
-    std::string path = "/tmp/";
+    std::string path = steamremotestorage;
+    path += "/";
     path += pchFile;
     int fd = open(path.c_str(), O_RDONLY);
     if (fd < 0)
@@ -97,8 +109,9 @@ bool ISteamRemoteStorage::FileForget( const char *pchFile )
 bool ISteamRemoteStorage::FileDelete( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    /* Read the file from /tmp for now */
-    std::string path = "/tmp/";
+
+    std::string path = steamremotestorage;
+    path += "/";
     path += pchFile;
     unlink(path.c_str());
 	return true;
@@ -143,8 +156,8 @@ bool ISteamRemoteStorage::FileWriteStreamCancel( UGCFileWriteStreamHandle_t writ
 bool ISteamRemoteStorage::FileExists( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    /* Read the file from /tmp for now */
-    std::string path = "/tmp/";
+    std::string path = steamremotestorage;
+    path += "/";
     path += pchFile;
     return (access(path.c_str(), F_OK) == 0);
 }
@@ -158,8 +171,8 @@ bool ISteamRemoteStorage::FilePersisted( const char *pchFile )
 int	ISteamRemoteStorage::GetFileSize( const char *pchFile )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    /* Read the file from /tmp for now */
-    std::string path = "/tmp/";
+    std::string path = steamremotestorage;
+    path += "/";
     path += pchFile;
 
     int fd = open(path.c_str(), O_RDONLY);

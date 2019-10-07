@@ -8,9 +8,12 @@
 #define LIBTAS_ISTEAMREMOTESTORAGE_H_INCL
 
 #include <stdint.h>
+#include <string>
 #include "steamtypes.h"
 
 namespace libtas {
+
+void SteamSetRemoteStorageFolder(std::string path);
 
 //-----------------------------------------------------------------------------
 // Purpose: Functions for accessing, reading and writing files stored remotely
