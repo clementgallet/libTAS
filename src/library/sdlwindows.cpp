@@ -39,6 +39,10 @@
 // #include <string>
 // #include <X11/Xlib.h> // Display
 
+#ifdef LIBTAS_HAS_XRANDR
+#include <X11/extensions/Xrandr.h>
+#endif
+
 namespace libtas {
 
 DECLARE_ORIG_POINTER(SDL_GL_SwapWindow);
@@ -62,6 +66,9 @@ DEFINE_ORIG_POINTER(SDL_UpdateRect);
 DECLARE_ORIG_POINTER(SDL_GL_SetAttribute);
 DECLARE_ORIG_POINTER(SDL_UpdateWindowSurface);
 DECLARE_ORIG_POINTER(SDL_UpdateWindowSurfaceRects);
+#ifdef LIBTAS_HAS_XRANDR
+DECLARE_ORIG_POINTER(XRRSizes);
+#endif
 
 
 /* SDL 1.2 */
@@ -294,6 +301,30 @@ static int swapInterval = 0;
 /* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
     debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flags ", flags);
+
+    if (flags == 0) // Windowed
+        return 0;
+
+    /* Resize the window to the screen or fake resolution */
+    if (shared_config.screen_width) {
+        SDL_SetWindowSize(window, shared_config.screen_width, shared_config.screen_height);
+    }
+    else {
+#ifdef LIBTAS_HAS_XRANDR
+        /* Change the window size to monitor size */
+        LINK_NAMESPACE(XRRSizes, "Xrandr");
+        int nsizes;
+        XRRScreenSize *sizes;
+        for (int d=0; d<GAMEDISPLAYNUM; d++) {
+            if (gameDisplays[d]) {
+                sizes = orig::XRRSizes(gameDisplays[d], 0, &nsizes);
+                SDL_SetWindowSize(window, sizes[0].width, sizes[0].height);
+                break;
+            }
+        }
+#endif
+    }
+
     return 0; // success
 }
 

@@ -439,13 +439,20 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
             if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
                 debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
             }
+
+            /* Resize the window to the screen or fake resolution */
+            if (shared_config.screen_width) {
+                XResizeWindow(display, event_send->xclient.window, shared_config.screen_width, shared_config.screen_height);
+            }
+            else {
 #ifdef LIBTAS_HAS_XRANDR
-            /* Change the window size to monitor size */
-            LINK_NAMESPACE(XRRSizes, "Xrandr");
-            int nsizes;
-            XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
-            XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
+                /* Change the window size to monitor size */
+                LINK_NAMESPACE(XRRSizes, "Xrandr");
+                int nsizes;
+                XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
+                XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
 #endif
+            }
 
             return 0;
         }
