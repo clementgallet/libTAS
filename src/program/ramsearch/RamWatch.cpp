@@ -173,6 +173,14 @@ uint64_t RamWatch::get_value() const
     return value;
 }
 
+#define CHECK_NAN(T) \
+{\
+T typed_value;\
+memcpy(&typed_value, &value, type_size);\
+if (typed_value != typed_value)\
+    return true;\
+}
+
 bool RamWatch::query()
 {
     uint64_t value = get_value();
@@ -181,9 +189,15 @@ bool RamWatch::query()
 
     previous_value = value;
 
-    /* Check NaN/Inf for float/double */
-    // if (!std::isfinite(value))
-    //     return true;
+    /* Check NaN for float/double */
+    switch(type) {
+        case RamFloat:
+            CHECK_NAN(float)
+            break;
+        case RamDouble:
+            CHECK_NAN(double)
+            break;
+    }
 
     return false;
 }
@@ -215,10 +229,6 @@ switch(compare_operator) {\
 
 bool RamWatch::check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
 {
-    /* Check NaN/Inf for float/double */
-    // if (!std::isfinite(value))
-    //     return true;
-
     switch(type) {
         case RamChar:
             CHECK_TYPED(int8_t)
@@ -237,8 +247,10 @@ bool RamWatch::check(uint64_t value, CompareType compare_type, CompareOperator c
         case RamUnsignedLong:
             CHECK_TYPED(uint64_t)
         case RamFloat:
+            CHECK_NAN(float)
             CHECK_TYPED(float)
         case RamDouble:
+            CHECK_NAN(double)
             CHECK_TYPED(double)
     }
 
