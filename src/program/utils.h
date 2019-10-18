@@ -24,7 +24,7 @@
 #include "Context.h"
 
 /* Create a directory if it does not exist already */
-int create_dir(std::string& path);
+int create_dir(const std::string& path);
 
 /* Remove savestate files */
 void remove_savestates(Context* context);

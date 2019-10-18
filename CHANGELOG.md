@@ -27,6 +27,7 @@
 * Fix insert frame not working after delete frame
 * Better ALSA implementation
 * Don't require specific swresample or avutil version
+* Recursively create parent directories when creating a directory
 
 ## [1.3.4] - 2019-04-08
 ### Added

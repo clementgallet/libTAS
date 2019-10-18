@@ -24,28 +24,41 @@
 #include <iostream>
 #include <unistd.h> // unlink
 
-int create_dir(std::string& path)
+int create_dir(const std::string& path)
 {
-    struct stat sb;
-    if (stat(path.c_str(), &sb) == -1) {
-        if (errno == ENOENT) {
-            /* The directory does not exist, try to create it */
-            int dir_err = mkdir(path.c_str(), S_IRWXU);
-            if (dir_err == -1) {
-                std::cerr << "Error creating directory " << path << ": " << strerror(errno) << std::endl;
+    int ret = mkdir(path.c_str(), S_IRWXU);
+    if (ret == 0)
+        return 0;
+
+    switch (errno) {
+    case ENOENT:
+        {
+            /* parent didn't exist, try to create it */
+            size_t pos = path.find_last_of('/');
+            if (pos == std::string::npos)
+                return -1;
+            if (create_dir(path.substr(0, pos)) == -1)
+                return -1;
+
+            return mkdir(path.c_str(), S_IRWXU);
+        }
+
+    case EEXIST:
+        {
+            struct stat sb;
+            stat(path.c_str(), &sb);
+            if (!S_ISDIR(sb.st_mode))
+            {
+                std::cerr << "Something has the same name as the directory to be created: " << path << std::endl;
                 return -1;
             }
+            return 0;
         }
-        else {
-            std::cerr << "Error accessing directory " << path << ": " << strerror(errno) << std::endl;
-            return -1;
-        }
-    }
-    else if (!S_ISDIR(sb.st_mode))
-    {
-        std::cerr << "Something has the same name as our prefs directory " << path << std::endl;
+    default:
+        std::cerr << "The following directory could not be created: " << path << std::endl;
         return -1;
     }
+
     return 0;
 }
 
@@ -81,7 +94,7 @@ int extractBinaryType(std::string path)
     if (outputstr.find("ELF 32-bit") != std::string::npos) {
         return BT_ELF32;
     }
-    
+
     if (outputstr.find("ELF 64-bit") != std::string::npos) {
         return BT_ELF64;
     }
@@ -96,4 +109,3 @@ int extractBinaryType(std::string path)
 
     return BT_UNKNOWN;
 }
-
