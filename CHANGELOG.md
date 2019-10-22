@@ -13,6 +13,7 @@
 * Check that GUI and library git commit match
 * Controller connect/disconnect inputs
 * Save Steam Remote Storage files to a game-specific directory
+* Implement non-callback SDL Audio
 
 ### Changed
 
@@ -28,6 +29,7 @@
 * Better ALSA implementation
 * Don't require specific swresample or avutil version
 * Recursively create parent directories when creating a directory
+* Sanitize SDL Audio specs
 
 ## [1.3.4] - 2019-04-08
 ### Added

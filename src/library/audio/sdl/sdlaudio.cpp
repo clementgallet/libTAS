@@ -117,6 +117,52 @@ void fillBufferCallback(AudioBuffer& ab)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
+    int bufferId = audiocontext.createBuffer();
+    auto buffer = audiocontext.getBuffer(bufferId);
+
+    /* Sanity check done by SDL */
+    if (!desired->freq) desired->freq = 22050;
+    buffer->frequency = desired->freq;
+    debuglog(LCF_SDL | LCF_SOUND, "Frequency ",buffer->frequency, " Hz");
+
+    /* Sanity check done by SDL */
+    if (!desired->format) desired->format = AUDIO_S16LSB;
+
+    switch(desired->format) {
+        case AUDIO_U8:
+            buffer->format = AudioBuffer::SAMPLE_FMT_U8;
+            break;
+        case AUDIO_S16LSB:
+            buffer->format = AudioBuffer::SAMPLE_FMT_S16;
+            break;
+        case AUDIO_S32LSB:
+            buffer->format = AudioBuffer::SAMPLE_FMT_S32;
+            break;
+        case AUDIO_F32LSB:
+            buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
+            break;
+        default:
+            debuglog(LCF_SDL | LCF_SOUND, "Unsupported audio format");
+            return -1;
+    }
+    /* Sanity check done by SDL */
+    if (!desired->channels) desired->channels = 2;
+    buffer->nbChannels = desired->channels;
+    debuglog(LCF_SDL | LCF_SOUND, "Channels ",buffer->nbChannels);
+
+    buffer->update();
+    debuglog(LCF_SDL | LCF_SOUND, "Format ",buffer->bitDepth," bits");
+
+    buffer->size = desired->samples * buffer->alignSize;
+    buffer->update(); // Yes, a second time, to fill sampleSize based on size.
+    buffer->samples.resize(buffer->size);
+
+    /* Push buffers in a source */
+    int sourceId = audiocontext.createSource();
+    sourceSDL = audiocontext.getSource(sourceId);
+
+    sourceSDL->buffer_queue.push_back(buffer);
+
     if (desired->callback != NULL) {
         /* We are using the callback mechanism.
          * When the buffer is depleted, we are supposed to call the
@@ -126,65 +172,32 @@ void fillBufferCallback(AudioBuffer& ab)
          * it calls the callback function to fill the buffer again.
          */
 
-        int bufferId = audiocontext.createBuffer();
-        auto buffer = audiocontext.getBuffer(bufferId);
-
-        buffer->frequency = desired->freq;
-
-        switch(desired->format) {
-            case AUDIO_U8:
-                buffer->format = AudioBuffer::SAMPLE_FMT_U8;
-                break;
-            case AUDIO_S16LSB:
-                buffer->format = AudioBuffer::SAMPLE_FMT_S16;
-                break;
-            case AUDIO_S32LSB:
-                buffer->format = AudioBuffer::SAMPLE_FMT_S32;
-                break;
-            case AUDIO_F32LSB:
-                buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
-                break;
-            default:
-                debuglog(LCF_SDL | LCF_SOUND, "Unsupported audio format");
-                return -1;
-        }
-        buffer->nbChannels = desired->channels;
-        buffer->update();
-
-        debuglog(LCF_SDL | LCF_SOUND, "Format ",buffer->bitDepth," bits");
-        debuglog(LCF_SDL | LCF_SOUND, "Frequency ",buffer->frequency, " Hz");
-        debuglog(LCF_SDL | LCF_SOUND, "Channels ",buffer->nbChannels);
-
-        buffer->size = desired->samples * buffer->alignSize;
-        buffer->update(); // Yes, a second time, to fill sampleSize based on size.
-        buffer->samples.resize(buffer->size);
-
-        /* Push buffers in a source */
-        int sourceId = audiocontext.createSource();
-        sourceSDL = audiocontext.getSource(sourceId);
-
-        sourceSDL->buffer_queue.push_back(buffer);
         sourceSDL->source = AudioSource::SOURCE_CALLBACK;
         sourceSDL->callback = fillBufferCallback;
-        /* We simulate an empty buffer by setting the position at the end */
-        sourceSDL->position = buffer->sampleSize;
-
-        /* We must fill some information in the structs */
-        desired->size = buffer->size;
-
-        /* Filling silence value. Not sure what to put here */
-        desired->silence = (buffer->format==AudioBuffer::SAMPLE_FMT_U8)?0x80:0x00;
-
         audioCallback = desired->callback;
         callbackArg = desired->userdata;
-
-        if (obtained != NULL) {
-            memmove(obtained, desired, sizeof(SDL_AudioSpec));
-        }
-
-        /* Keep a copy of the audio format */
-        audioFormat = desired->format;
     }
+    else {
+        /* We are using the push mechanism. The game will use
+         * SDL_QueueAudio() to push audio buffers.
+         */
+        sourceSDL->source = AudioSource::SOURCE_STREAMING_CONTINUOUS;
+    }
+    /* We simulate an empty buffer by setting the position at the end */
+    sourceSDL->position = buffer->sampleSize;
+
+    /* We must fill some information in the structs */
+    desired->size = buffer->size;
+
+    /* Filling silence value. Not sure what to put here */
+    desired->silence = (buffer->format==AudioBuffer::SAMPLE_FMT_U8)?0x80:0x00;
+
+    if (obtained != NULL) {
+        memmove(obtained, desired, sizeof(SDL_AudioSpec));
+    }
+
+    /* Keep a copy of the audio format */
+    audioFormat = desired->format;
 
     return 0;
 }
@@ -293,7 +306,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
-    /* We try to reuse a buffer that has been processed from the source*/
+    /* We try to reuse a buffer that has been processed from the source */
     std::shared_ptr<AudioBuffer> ab;
     if (sourceSDL->nbQueueProcessed() > 0) {
         /* Removing first buffer */
