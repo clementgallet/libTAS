@@ -297,5 +297,7 @@ SDL_HOOK(SDL_JoystickGetProduct)
 SDL_HOOK(SDL_JoystickGetProductVersion)
 SDL_HOOK(SDL_JoystickGetDeviceType)
 SDL_HOOK(SDL_JoystickGetType)
+SDL_HOOK(SDL_GameControllerRumble)
+SDL_HOOK(SDL_JoystickRumble)
 #undef SDL_HOOK
 #undef SDL_LINK

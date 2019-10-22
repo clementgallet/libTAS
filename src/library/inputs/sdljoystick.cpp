@@ -415,6 +415,12 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     return (game_ai.controller_buttons[*joyid] >> button) & 0x1;
 }
 
+/* Override */ int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    return -1;
+}
+
 /* Override */ void SDL_JoystickClose(SDL_Joystick * joystick)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);

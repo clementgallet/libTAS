@@ -14,6 +14,7 @@
 * Controller connect/disconnect inputs
 * Save Steam Remote Storage files to a game-specific directory
 * Implement non-callback SDL Audio
+* Implement SDL_GameControllerRumble and SDL_JoystickRumble
 
 ### Changed
 

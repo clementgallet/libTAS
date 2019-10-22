@@ -233,6 +233,12 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 }
 
+/* Override */ int SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+{
+    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    return -1;    
+}
+
 /* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller)
 {
     debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with id ", gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
