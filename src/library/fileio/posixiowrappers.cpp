@@ -85,7 +85,11 @@ int open (const char *file, int oflag, ...)
             time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
             char* datestr = asctime(gmtime(&tsec));
             debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
+
             write(fd, datestr, strlen(datestr));
+            char buf[256];
+            sprintf(buf, "%0*d", 255, 0);
+            write(fd, buf, 255);
             lseek(fd, 0, SEEK_SET);
         }
         else {
@@ -178,6 +182,9 @@ int open64 (const char *file, int oflag, ...)
             char* datestr = asctime(gmtime(&tsec));
             debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
             write(fd, datestr, strlen(datestr));
+            char buf[256];
+            sprintf(buf, "%0*d", 255, 0);
+            write(fd, buf, 255);
             lseek(fd, 0, SEEK_SET);
         }
         else {

@@ -62,6 +62,9 @@ FILE *fopen (const char *filename, const char *modes)
             char* datestr = asctime(gmtime(&tsec));
             debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, datestr);
             fwrite(datestr, sizeof(char), strlen(datestr), f);
+            char buf[256];
+            sprintf(buf, "%0*d", 255, 0);
+            fwrite(buf, sizeof(char), 255, f);
             fseek(f, 0, SEEK_SET);
         }
         else {
@@ -140,6 +143,9 @@ FILE *fopen64 (const char *filename, const char *modes)
             char* datestr = asctime(gmtime(&tsec));
             debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, datestr);
             fwrite(datestr, sizeof(char), strlen(datestr), f);
+            char buf[256];
+            sprintf(buf, "%0*d", 255, 0);
+            fwrite(buf, sizeof(char), 255, f);
             fseek(f, 0, SEEK_SET);
         }
         else {
