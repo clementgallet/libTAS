@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <cstdarg>
 #include <cstring>
+#include <unistd.h>
 
 namespace libtas {
 
@@ -70,6 +71,57 @@ int open (const char *file, int oflag, ...)
         return orig::open(file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
+        int fd = 0;
+        if (SaveFileList::getSaveFileFd(file) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
+
+            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
+            char* datestr = asctime(gmtime(&tsec));
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
+            write(fd, datestr, strlen(datestr));
+            lseek(fd, 0, SEEK_SET);
+        }
+        else {
+            fd = SaveFileList::openSaveFile(file, oflag);
+        }
+        return fd;
+    }
+
+    if (strcmp(file, "/proc/uptime") == 0) {
+        int fd = 0;
+        if (SaveFileList::getSaveFileFd(file) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
+
+            std::ostringstream datestr;
+            datestr << shared_config.initial_time_sec << ".";
+            datestr << std::setfill ('0') << std::setw (2);
+            datestr << shared_config.initial_time_nsec / 10000000;
+
+            std::string s = datestr.str();
+
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
+            write(fd, s.c_str(), s.size());
+            write(fd, " ", 1);
+            write(fd, s.c_str(), s.size());
+            lseek(fd, 0, SEEK_SET);
+        }
+        else {
+            fd = SaveFileList::openSaveFile(file, oflag);
+        }
+        return fd;
+    }
 
     /* Check if joystick device */
     if (is_jsdev(file) >= 0) {
@@ -111,6 +163,57 @@ int open64 (const char *file, int oflag, ...)
         return orig::open64(file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+
+    if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
+        int fd = 0;
+        if (SaveFileList::getSaveFileFd(file) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
+
+            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
+            char* datestr = asctime(gmtime(&tsec));
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
+            write(fd, datestr, strlen(datestr));
+            lseek(fd, 0, SEEK_SET);
+        }
+        else {
+            fd = SaveFileList::openSaveFile(file, oflag);
+        }
+        return fd;
+    }
+
+    if (strcmp(file, "/proc/uptime") == 0) {
+        int fd = 0;
+        if (SaveFileList::getSaveFileFd(file) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
+
+            std::ostringstream datestr;
+            datestr << shared_config.initial_time_sec << ".";
+            datestr << std::setfill ('0') << std::setw (2);
+            datestr << shared_config.initial_time_nsec / 10000000;
+
+            std::string s = datestr.str();
+
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
+            write(fd, s.c_str(), s.size());
+            write(fd, " ", 1);
+            write(fd, s.c_str(), s.size());
+            lseek(fd, 0, SEEK_SET);
+        }
+        else {
+            fd = SaveFileList::openSaveFile(file, oflag);
+        }
+        return fd;
+    }
 
     /* Check if joystick device */
     if (is_jsdev(file) >= 0) {

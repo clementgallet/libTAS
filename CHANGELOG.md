@@ -15,6 +15,8 @@
 * Save Steam Remote Storage files to a game-specific directory
 * Implement non-callback SDL Audio
 * Implement SDL_GameControllerRumble and SDL_JoystickRumble
+* Implement custom /dev/urandom and /dev/random Unity's UnityEngine.Random
+* Implement custom /proc/uptime used by Unity's System.Random
 
 ### Changed
 

@@ -48,6 +48,57 @@ FILE *fopen (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
+    if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
+        FILE* f = nullptr;
+        if (SaveFileList::getSaveFileFd(filename) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            f = SaveFileList::openSaveFile(filename, "w");
+
+            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
+            char* datestr = asctime(gmtime(&tsec));
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, datestr);
+            fwrite(datestr, sizeof(char), strlen(datestr), f);
+            fseek(f, 0, SEEK_SET);
+        }
+        else {
+            f = SaveFileList::openSaveFile(filename, modes);
+        }
+        return f;
+    }
+
+    if (strcmp(filename, "/proc/uptime") == 0) {
+        FILE* f = nullptr;
+        if (SaveFileList::getSaveFileFd(filename) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            f = SaveFileList::openSaveFile(filename, "w");
+
+            std::ostringstream datestr;
+            datestr << shared_config.initial_time_sec << ".";
+            datestr << std::setfill ('0') << std::setw (2);
+            datestr << shared_config.initial_time_nsec / 10000000;
+
+            std::string s = datestr.str();
+
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
+            fwrite(s.c_str(), sizeof(char), s.size(), f);
+            fwrite(" ", sizeof(char), 1, f);
+            fwrite(s.c_str(), sizeof(char), s.size(), f);
+            fseek(f, 0, SEEK_SET);
+        }
+        else {
+            f = SaveFileList::openSaveFile(filename, modes);
+        }
+        return f;
+    }
+
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
         return SaveFileList::openSaveFile(filename, modes);
@@ -74,6 +125,57 @@ FILE *fopen64 (const char *filename, const char *modes)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
+
+    if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
+        FILE* f = nullptr;
+        if (SaveFileList::getSaveFileFd(filename) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            f = SaveFileList::openSaveFile(filename, "w");
+
+            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
+            char* datestr = asctime(gmtime(&tsec));
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, datestr);
+            fwrite(datestr, sizeof(char), strlen(datestr), f);
+            fseek(f, 0, SEEK_SET);
+        }
+        else {
+            f = SaveFileList::openSaveFile(filename, modes);
+        }
+        return f;
+    }
+
+    if (strcmp(filename, "/proc/uptime") == 0) {
+        FILE* f = nullptr;
+        if (SaveFileList::getSaveFileFd(filename) == 0) {
+            /* Create a file with memory storage (reusing the savefile code),
+             * and fill it with values from the initial time, so that, for
+             * games that use it as PRNG seed, tweaking the initial time will
+             * change the seed value.
+             */
+            f = SaveFileList::openSaveFile(filename, "w");
+
+            std::ostringstream datestr;
+            datestr << shared_config.initial_time_sec << ".";
+            datestr << std::setfill ('0') << std::setw (2);
+            datestr << shared_config.initial_time_nsec / 10000000;
+
+            std::string s = datestr.str();
+
+            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
+            fwrite(s.c_str(), sizeof(char), s.size(), f);
+            fwrite(" ", sizeof(char), 1, f);
+            fwrite(s.c_str(), sizeof(char), s.size(), f);
+            fseek(f, 0, SEEK_SET);
+        }
+        else {
+            f = SaveFileList::openSaveFile(filename, modes);
+        }
+        return f;
+    }
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
