@@ -84,9 +84,9 @@ DECLARE_ORIG_POINTER(XRRSizes);
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL, false);
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
 #else
-    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();}, false);
+    frameBoundary(true, [] () {orig::SDL_GL_SwapBuffers();});
 #endif
 }
 
@@ -102,9 +102,9 @@ DECLARE_ORIG_POINTER(XRRSizes);
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL, false);
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL);
 #else
-    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);}, false);
+    frameBoundary(true, [&] () {orig::SDL_GL_SwapWindow(window);});
 #endif
 }
 
@@ -457,9 +457,9 @@ static int swapInterval = 0;
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, renderHUD, false);
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_Flip(screen);}, false);
+    frameBoundary(true, [&] () {orig::SDL_Flip(screen);});
 #endif
 
     return 0;
@@ -478,9 +478,9 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);});
 #endif
 }
 
@@ -496,9 +496,9 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);});
 #endif
 }
 
@@ -565,9 +565,9 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_surface renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);});
 #endif
 
     return 0;
@@ -590,9 +590,9 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_surface renderHUD;
-    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);}, true);
+    frameBoundary(true, [&] () {orig::SDL_UpdateWindowSurface(window);});
 #endif
 
     return 0;

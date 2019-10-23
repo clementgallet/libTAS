@@ -36,14 +36,11 @@ extern uint64_t framecount;
  * It is mainly called during a screen refresh (drawFB == true),
  * but can be called also by the timer when we need to advance time to avoid a
  * game softlock (game expect time to pass).
- * Parameter restore_screen tells if we must redraw the original screen at the
- * end of the frame boundary. Useful for draw commands that only update part
- * of the screen.
  */
 #ifdef LIBTAS_ENABLE_HUD
-void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud, bool restore_screen);
+void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud);
 #else
-void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen);
+void frameBoundary(bool drawFB, std::function<void()> draw);
 #endif
 
 }

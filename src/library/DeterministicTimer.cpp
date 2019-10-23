@@ -158,9 +158,9 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
              */
     #ifdef LIBTAS_ENABLE_HUD
             static RenderHUD dummy;
-            frameBoundary(false, [] () {}, dummy, false);
+            frameBoundary(false, [] () {}, dummy);
     #else
-            frameBoundary(false, [] () {}, false);
+            frameBoundary(false, [] () {});
     #endif
         }
     }

@@ -171,9 +171,9 @@ static bool skipDraw(float fps)
 }
 
 #ifdef LIBTAS_ENABLE_HUD
-void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud, bool restore_screen)
+void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
 #else
-void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
+void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 {
     static float fps, lfps = 0;
@@ -365,11 +365,11 @@ void frameBoundary(bool drawFB, std::function<void()> draw, bool restore_screen)
      * Our current screen may be dirty with OSD, so in that case, we must
      * restore the screen to its original content so that the next frame will
      * be correct.
+     * It is also the case for double buffer draw methods when the game does
+     * not clean the back buffer.
      */
-    if (restore_screen) {
-        if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
-            ScreenCapture::setPixels();
-        }
+    if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
+        ScreenCapture::setPixels();
     }
 
     /*** Process inputs and events ***/

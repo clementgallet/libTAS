@@ -33,6 +33,7 @@
 * Don't require specific swresample or avutil version
 * Recursively create parent directories when creating a directory
 * Sanitize SDL Audio specs
+* Restore the game screen everytime, to avoid dirty buffers to be drawn
 
 ## [1.3.4] - 2019-04-08
 ### Added

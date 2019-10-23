@@ -81,9 +81,9 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale);
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_renderer renderHUD;
     renderHUD.setRenderer(renderer);
-    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, renderHUD, true);
+    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);}, true);
+    frameBoundary(true, [&] () {orig::SDL_RenderPresent(renderer);});
 #endif
 }
 
