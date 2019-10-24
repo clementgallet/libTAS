@@ -39,6 +39,7 @@ static const char * const atom_names[NB_XATOMS] =
     "WM_DELETE_WINDOW",
     "_NET_WM_STATE",
     "_NET_WM_STATE_FULLSCREEN",
+    "_NET_WM_STATE_ABOVE",
     "_NET_WM_PING",
     "_MOTIF_WM_HINTS",
 };

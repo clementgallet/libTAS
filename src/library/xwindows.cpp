@@ -33,6 +33,10 @@
 #include "../external/mwm.h"
 #include "XlibEventQueueList.h"
 
+#ifdef LIBTAS_HAS_XRANDR
+#include <X11/extensions/Xrandr.h>
+#endif
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XCreateWindow);
@@ -52,6 +56,9 @@ DEFINE_ORIG_POINTER(XQueryExtension);
 DEFINE_ORIG_POINTER(XChangeProperty);
 DEFINE_ORIG_POINTER(XSetWMHints);
 DEFINE_ORIG_POINTER(XTranslateCoordinates);
+#ifdef LIBTAS_HAS_XRANDR
+DECLARE_ORIG_POINTER(XRRSizes);
+#endif
 
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
     debuglog(LCF_WINDOW, __func__, " called with name ", name);
@@ -371,6 +378,42 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     debuglog(LCF_WINDOW, __func__, " called with window ", w);
 
     /* Prevent games from intercepting ClientMessage focus events */
+    if (property == x11_atom(_NET_WM_STATE)) {
+        const Atom* atoms = reinterpret_cast<const Atom*>(data);
+        Atom newatoms[nelements];
+        int j = 0;
+        for (int i=0; i<nelements; i++) {
+            if (atoms[i] == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+                debuglog(LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                if (!gameXWindows.empty() && (w != gameXWindows.front())) {
+                    debuglog(LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                }
+
+                /* Resize the window to the screen or fake resolution */
+                if (shared_config.screen_width) {
+                    XResizeWindow(display, w, shared_config.screen_width, shared_config.screen_height);
+                }
+                else {
+    #ifdef LIBTAS_HAS_XRANDR
+                    /* Change the window size to monitor size */
+                    LINK_NAMESPACE(XRRSizes, "Xrandr");
+                    int nsizes;
+                    XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
+                    XResizeWindow(display, w, sizes[0].width, sizes[0].height);
+    #endif
+                }
+            }
+            else if (atoms[i] == x11_atom(_NET_WM_STATE_ABOVE)) {
+                debuglog(LCF_WINDOW, "   prevented window always on top");
+            }
+            else {
+                newatoms[j++] = atoms[i];
+            }
+        }
+        return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms), j);
+    }
+
+    /* Detect and disable several window state changes */
     if (property == x11_atom(WM_PROTOCOLS)) {
         const Atom* atoms = reinterpret_cast<const Atom*>(data);
         for (int i=0; i<nelements; i++) {

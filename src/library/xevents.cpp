@@ -430,31 +430,39 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    /* Detect and disable fullscreen switching */
+    /* Detect and disable several window state changes */
     if (event_send->type == ClientMessage) {
         if ((event_send->xclient.message_type == x11_atom(_NET_WM_STATE)) &&
-            (event_send->xclient.data.l[0] == 1) &&
-            (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN))) {
-            debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-            if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
-                debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+            (event_send->xclient.data.l[0] == 1 /*_NET_WM_STATE_ADD*/ )) {
+
+            /* Detect and disable fullscreen switching */
+            if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
+                    debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                }
+
+                /* Resize the window to the screen or fake resolution */
+                if (shared_config.screen_width) {
+                    XResizeWindow(display, event_send->xclient.window, shared_config.screen_width, shared_config.screen_height);
+                }
+                else {
+    #ifdef LIBTAS_HAS_XRANDR
+                    /* Change the window size to monitor size */
+                    LINK_NAMESPACE(XRRSizes, "Xrandr");
+                    int nsizes;
+                    XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
+                    XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
+    #endif
+                }
+                return 0;
             }
 
-            /* Resize the window to the screen or fake resolution */
-            if (shared_config.screen_width) {
-                XResizeWindow(display, event_send->xclient.window, shared_config.screen_width, shared_config.screen_height);
+            /* Detect and disable window always on top */
+            if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_ABOVE)) {
+                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
+                return 0;
             }
-            else {
-#ifdef LIBTAS_HAS_XRANDR
-                /* Change the window size to monitor size */
-                LINK_NAMESPACE(XRRSizes, "Xrandr");
-                int nsizes;
-                XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
-                XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
-#endif
-            }
-
-            return 0;
         }
     }
 
