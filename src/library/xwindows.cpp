@@ -89,6 +89,11 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
         queue->setMask(w, attributes->event_mask);
     }
 
+    /* Don't save windows that has override-redirect (Wine invisible windows) */
+    if ((valuemask & CWOverrideRedirect) && (attributes->override_redirect == True)) {
+        return w;
+    }
+
     /* Only save the Window identifier for top-level windows */
     Window root_return = 0;
     Window parent_return = 0;
