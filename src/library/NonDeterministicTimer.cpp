@@ -55,7 +55,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     if (inFB)
         return ticks;
 
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(ticks_mutex);
 
     /* Get the real clock time */
     TimeHolder realtime;
@@ -95,6 +95,8 @@ struct timespec NonDeterministicTimer::getTicks(void)
 void NonDeterministicTimer::enterFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET);
+    frame_mutex.lock();
+
     getTicks();
     inFB = true;
 
@@ -114,6 +116,7 @@ void NonDeterministicTimer::exitFrameBoundary()
     DEBUGLOGCALL(LCF_TIMEGET);
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastExitTime));
     inFB = false;
+    frame_mutex.unlock();
 }
 
 void NonDeterministicTimer::addDelay(struct timespec delayTicks)

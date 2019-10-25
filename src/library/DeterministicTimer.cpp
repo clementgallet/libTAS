@@ -173,6 +173,9 @@ void DeterministicTimer::flushDelay()
 
 void DeterministicTimer::exitFrameBoundary()
 {
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+        return nonDetTimer.exitFrameBoundary();
+
     DEBUGLOGCALL(LCF_TIMEGET);
 
     /* Reset the counts of each time get function */
@@ -180,9 +183,6 @@ void DeterministicTimer::exitFrameBoundary()
         main_gettimes[i] = 0;
         sec_gettimes[i] = 0;
     }
-
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
-        return nonDetTimer.exitFrameBoundary();
 
     /* We sleep the right amount of time so that the game runs at normal speed */
 
@@ -217,13 +217,14 @@ void DeterministicTimer::exitFrameBoundary()
 
 void DeterministicTimer::enterFrameBoundary()
 {
+    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+        return nonDetTimer.enterFrameBoundary();
+
     frame_mutex.lock();
     DEBUGLOGCALL(LCF_TIMEGET);
 
     insideFrameBoundary = true;
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
-        return nonDetTimer.enterFrameBoundary();
 
     /*** First we update the state of the internal timer ***/
 
