@@ -138,7 +138,7 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     return w;
 }
 
-void sendXWindow(Window w)
+static void sendXWindow(Window w)
 {
     uint32_t i = (uint32_t)w;
     sendMessage(MSGB_WINDOW_ID);

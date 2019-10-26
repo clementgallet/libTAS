@@ -18,6 +18,7 @@
 * Implement custom /dev/urandom and /dev/random Unity's UnityEngine.Random
 * Implement custom /proc/uptime used by Unity's System.Random
 * Prevent game window from staying on top
+* XCB windows hooks
 
 ### Changed
 
