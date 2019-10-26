@@ -444,6 +444,7 @@ static void *pthread_start(void *arg)
 
     /* Convert the abstime variable because pthread_cond_timedwait() is using
      * the real system time. */
+    struct timespec new_abstime = *abstime;
     TimeHolder abs_timeout = *abstime;
     TimeHolder real_time;
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
@@ -453,15 +454,15 @@ static void *pthread_start(void *arg)
         TimeHolder fake_time = detTimer.getTicks();
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
-        abstime = &new_abs_timeout;
+        new_abstime = new_abs_timeout;
     }
 
     /* If not main thread, do not change the behavior */
     if (!ThreadManager::isMainThread())
-        return orig::pthread_cond_timedwait(cond, mutex, abstime);
+        return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
 
     if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
-        return orig::pthread_cond_timedwait(cond, mutex, abstime);
+        return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
 
     TimeHolder now = detTimer.getTicks();
 
@@ -479,7 +480,7 @@ static void *pthread_start(void *arg)
     if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
         (shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
         /* Transfer time to our deterministic timer */
-        TimeHolder end = *abstime;
+        TimeHolder end = new_abstime;
         // end.tv_sec = end_time / (1000*1000);
         // end.tv_nsec = (end_time % (1000*1000)) * 1000;
         TimeHolder delay = end - now;
