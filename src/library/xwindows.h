@@ -55,6 +55,8 @@ OVERRIDE int XConfigureWindow(Display* display, Window w, unsigned int value_mas
 
 OVERRIDE int XChangeProperty(Display* display, Window w, Atom property, Atom type, int format, int mode,const unsigned char* data, int nelements);
 
+OVERRIDE Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* window_attributes_return);
+
 OVERRIDE int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask, XSetWindowAttributes *attributes);
 
 OVERRIDE int XSetWMHints(Display* display, Window w, XWMHints* wm_hints);

@@ -51,6 +51,7 @@ DEFINE_ORIG_POINTER(XSelectInput);
 DEFINE_ORIG_POINTER(XMoveWindow);
 DEFINE_ORIG_POINTER(XResizeWindow);
 DEFINE_ORIG_POINTER(XConfigureWindow);
+DEFINE_ORIG_POINTER(XGetWindowAttributes);
 DEFINE_ORIG_POINTER(XChangeWindowAttributes);
 DEFINE_ORIG_POINTER(XQueryExtension);
 DEFINE_ORIG_POINTER(XChangeProperty);
@@ -482,6 +483,22 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
         return True;
     }
     return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
+}
+
+Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* window_attributes_return)
+{
+    LINK_NAMESPACE_GLOBAL(XGetWindowAttributes);
+    if (GlobalState::isNative())
+        return orig::XGetWindowAttributes(display, w, window_attributes_return);
+
+    debuglog(LCF_WINDOW, __func__, " called with window ", w);
+    Status ret = orig::XGetWindowAttributes(display, w, window_attributes_return);
+
+    /* Change the window position to 0,0 */
+    window_attributes_return->x = 0;
+    window_attributes_return->y = 0;
+
+    return ret;
 }
 
 int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask, XSetWindowAttributes *attributes)
