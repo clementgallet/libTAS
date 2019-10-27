@@ -116,6 +116,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.keyboard & GameInfo::SDL2) {
         keyboardLabel->setText(tr("yes (SDL 2)"));
     }
+    else if (game_info.keyboard & GameInfo::XCBEVENTS) {
+        keyboardLabel->setText(tr("yes (xcb)"));
+    }
     else if (game_info.keyboard & GameInfo::XEVENTS) {
         keyboardLabel->setText(tr("default (xevents)"));
     }
@@ -128,6 +131,9 @@ void GameInfoWindow::update(GameInfo game_info)
     }
     else if (game_info.mouse & GameInfo::SDL2) {
         mouseLabel->setText(tr("yes (SDL 2)"));
+    }
+    else if (game_info.mouse & GameInfo::XCBEVENTS) {
+        mouseLabel->setText(tr("yes (xcb)"));
     }
     else if (game_info.mouse & GameInfo::XEVENTS) {
         mouseLabel->setText(tr("default (xevents)"));

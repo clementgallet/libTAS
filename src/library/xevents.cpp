@@ -97,9 +97,6 @@ void pushNativeXlibEvents(void)
         return;
     }
 
-    LINK_NAMESPACE_GLOBAL(XPending);
-    LINK_NAMESPACE_GLOBAL(XNextEvent);
-
     for (int i=0; i<GAMEDISPLAYNUM; i++)
         if (gameDisplays[i])
             pushNativeXlibEvents(gameDisplays[i]);
@@ -121,7 +118,7 @@ void pushNativeXlibEvents(Display *display)
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
-            if ((Atom) event.xclient.data.l[0] == x11_atom(WM_DELETE_WINDOW)) {
+            if (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(WM_DELETE_WINDOW)) {
                 debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                 is_exiting = true;
             }

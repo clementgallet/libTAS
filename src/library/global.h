@@ -23,6 +23,7 @@
 #include "../shared/SharedConfig.h"
 #include "../shared/GameInfo.h"
 #include <X11/Xlib.h>
+#include <xcb/xcb.h>
 #include <SDL2/SDL.h>
 #include <string>
 #include <list>
@@ -36,6 +37,7 @@
 #endif
 
 #define GAMEDISPLAYNUM 10
+#define GAMECONNECTIONNUM 10
 
 namespace libtas {
 
@@ -51,8 +53,11 @@ namespace libtas {
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
 
-    /* Connections to the Xlib server */
+    /* Xlib connections to the X server */
     extern Display* gameDisplays[GAMEDISPLAYNUM];
+
+    /* xcb connections to the X server */
+    extern xcb_connection_t* gameConnections[GAMEDISPLAYNUM];
 
     /* Game window (we suppose there is only one) */
     extern std::list<Window> gameXWindows;

@@ -80,8 +80,6 @@ class XlibEventQueue
         bool isTypeOfMask(int type, long event_mask);
 };
 
-extern XlibEventQueue xlibEventQueue;
-
 }
 
 #endif

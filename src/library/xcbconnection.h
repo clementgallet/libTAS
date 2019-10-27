@@ -17,18 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBTAS_XCBCONNECTION_H_INCL
+#define LIBTAS_XCBCONNECTION_H_INCL
+
 #include "global.h"
+#include <xcb/xcb.h>
 
 namespace libtas {
 
-SharedConfig shared_config;
-GameInfo game_info;
-volatile bool is_exiting = false;
-bool skipping_draw = false;
-Display* gameDisplays[GAMEDISPLAYNUM] = {};
-xcb_connection_t* gameConnections[GAMEDISPLAYNUM] = {};
-std::list<Window> gameXWindows;
-SDL_Window* gameSDLWindow = nullptr;
-bool saveBacktrack = false;
+OVERRIDE xcb_connection_t *xcb_connect(const char *displayname, int *screenp);
+OVERRIDE void xcb_disconnect(xcb_connection_t *c);
 
 }
+
+#endif

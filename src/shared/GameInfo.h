@@ -45,6 +45,7 @@ struct GameInfo {
         EVDEV = 0x2000,
         JSDEV = 0x4000,
         ALSA = 0x8000,
+        XCBEVENTS = 0x10000,
     };
 
     int video = UNKNOWN;

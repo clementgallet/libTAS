@@ -19,6 +19,7 @@
 * Implement custom /proc/uptime used by Unity's System.Random
 * Prevent game window from staying on top
 * XCB windows hooks
+* XCB events hooks and keyboard/mouse events
 
 ### Changed
 
