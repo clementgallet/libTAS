@@ -24,11 +24,7 @@
 #include "XcbEventQueueList.h"
 #include "xatom.h"
 
-// #ifdef LIBTAS_HAS_XINPUT
-// #include <X11/extensions/XInput2.h>
-// #endif
-//
-#ifdef LIBTAS_HAS_XRANDR
+#ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>
 #endif
 
@@ -39,7 +35,7 @@ DEFINE_ORIG_POINTER(xcb_poll_for_event);
 DEFINE_ORIG_POINTER(xcb_send_event_checked);
 DEFINE_ORIG_POINTER(xcb_send_event);
 DEFINE_ORIG_POINTER(xcb_flush);
-#ifdef LIBTAS_HAS_XRANDR
+#ifdef LIBTAS_HAS_XCB_RANDR
 DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_unchecked);
 DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_reply);
 DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_sizes);
@@ -89,7 +85,7 @@ void pushNativeXcbEvents(xcb_connection_t *c)
 
     xcb_generic_event_t *event;
 
-    while (event = orig::xcb_poll_for_event (c)) {
+    while ((event = orig::xcb_poll_for_event (c))) {
 
         if (event->response_type == XCB_CLIENT_MESSAGE) {
             /* Catch the close event */
@@ -175,7 +171,7 @@ xcb_send_event_checked (xcb_connection_t *c,
     DEBUGLOGCALL(LCF_EVENTS);
 
     const xcb_generic_event_t* ev = reinterpret_cast<const xcb_generic_event_t*> (event);
-    xcb_void_cookie_t cookie;
+    xcb_void_cookie_t cookie{0};
 
     /* Detect and disable several window state changes */
     if (ev->response_type == XCB_CLIENT_MESSAGE) {
@@ -197,18 +193,18 @@ xcb_send_event_checked (xcb_connection_t *c,
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {
-#ifdef LIBTAS_HAS_XRANDR
+#ifdef LIBTAS_HAS_XCB_RANDR
                     /* Change the window size to monitor size */
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_unchecked);
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_reply);
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_sizes);
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_unchecked, "xcb-randr");
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_reply, "xcb-randr");
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_sizes, "xcb-randr");
 
                     xcb_screen_iterator_t iter = xcb_setup_roots_iterator (xcb_get_setup (c));
                     xcb_screen_t* screen = iter.data;
 
-                    xcb_randr_get_screen_info_cookie_t screen_info = xcb_randr_get_screen_info_unchecked(c, screen->root);
-                    xcb_randr_get_screen_info_reply_t *reply = xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
-                    xcb_randr_screen_size_t *sizes = xcb_randr_get_screen_info_sizes(reply);
+                    xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
+                    xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
+                    xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
                     const static uint32_t values[] = { sizes[0].width, sizes[0].height };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
 #endif
@@ -242,7 +238,7 @@ xcb_send_event (xcb_connection_t *c,
     DEBUGLOGCALL(LCF_EVENTS);
 
     const xcb_generic_event_t* ev = reinterpret_cast<const xcb_generic_event_t*> (event);
-    xcb_void_cookie_t cookie;
+    xcb_void_cookie_t cookie{0};
 
     /* Detect and disable several window state changes */
     if (ev->response_type == XCB_CLIENT_MESSAGE) {
