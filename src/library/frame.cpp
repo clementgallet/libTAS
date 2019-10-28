@@ -37,6 +37,7 @@
 #include "WindowTitle.h"
 #include "SDLEventQueue.h"
 #include "xevents.h"
+#include "xcbevents.h"
 #include "xatom.h"
 #include "XlibEventQueueList.h"
 
@@ -195,6 +196,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
         if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
             pushNativeXlibEvents();
+            pushNativeXcbEvents();
         }
 
         detTimer.exitFrameBoundary();
@@ -385,6 +387,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
         pushNativeXlibEvents();
+        pushNativeXcbEvents();
     }
 
     /* Update game inputs based on current and previous inputs. This must be
@@ -500,6 +503,7 @@ static void receive_messages(std::function<void()> draw)
          * otherwise the game will appear as unresponsive. */
         if (message < 0) {
             pushNativeXlibEvents();
+            pushNativeXcbEvents();
             NATIVECALL(usleep(100));
         }
         bool succeeded;

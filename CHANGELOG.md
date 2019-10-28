@@ -20,6 +20,7 @@
 * Prevent game window from staying on top
 * XCB windows hooks
 * XCB events hooks and keyboard/mouse events
+* XCB pointer hooks
 
 ### Changed
 
