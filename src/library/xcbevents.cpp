@@ -70,6 +70,10 @@ void pushNativeXcbEvents(void)
         return;
     }
 
+    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+        return;
+    }
+
     for (int i=0; i<GAMECONNECTIONNUM; i++)
         if (gameConnections[i])
             pushNativeXcbEvents(gameConnections[i]);
@@ -78,6 +82,10 @@ void pushNativeXcbEvents(void)
 void pushNativeXcbEvents(xcb_connection_t *c)
 {
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return;
+    }
+
+    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
         return;
     }
 
@@ -127,6 +135,11 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
         return orig::xcb_wait_for_event(c);
     }
 
+    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+        LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
+        return orig::xcb_wait_for_event(c);
+    }
+
     xcb_generic_event_t* event = nullptr;
     std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
     while (true) {
@@ -148,6 +161,11 @@ xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
     DEBUGLOGCALL(LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
+        return orig::xcb_poll_for_event(c);
+    }
+
+    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
         LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
         return orig::xcb_poll_for_event(c);
     }
@@ -295,6 +313,11 @@ int xcb_flush(xcb_connection_t *c)
     DEBUGLOGCALL(LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        LINK_NAMESPACE_GLOBAL(xcb_flush);
+        return orig::xcb_flush(c);
+    }
+
+    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
         LINK_NAMESPACE_GLOBAL(xcb_flush);
         return orig::xcb_flush(c);
     }

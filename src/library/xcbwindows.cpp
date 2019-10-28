@@ -70,6 +70,12 @@ xcb_create_window_checked (xcb_connection_t *c,
     LINK_NAMESPACE_GLOBAL(xcb_create_window_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
+    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    game_info.keyboard |= GameInfo::XCBEVENTS;
+    game_info.mouse |= GameInfo::XCBEVENTS;
+    game_info.tosend = true;
+
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
 
@@ -101,6 +107,12 @@ xcb_create_window (xcb_connection_t *c,
     debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window);
     xcb_void_cookie_t ret = orig::xcb_create_window(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
+
+    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    game_info.keyboard |= GameInfo::XCBEVENTS;
+    game_info.mouse |= GameInfo::XCBEVENTS;
+    game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
@@ -135,6 +147,12 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
+    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    game_info.keyboard |= GameInfo::XCBEVENTS;
+    game_info.mouse |= GameInfo::XCBEVENTS;
+    game_info.tosend = true;
+
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
 
@@ -166,6 +184,12 @@ xcb_create_window_aux (xcb_connection_t                     *c,
     debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
+
+    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    game_info.keyboard |= GameInfo::XCBEVENTS;
+    game_info.mouse |= GameInfo::XCBEVENTS;
+    game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;

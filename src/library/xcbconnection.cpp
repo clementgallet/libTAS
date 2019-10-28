@@ -35,12 +35,6 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 
     xcb_connection_t* c = orig::xcb_connect(displayname, screenp);
 
-    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
-    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
-    game_info.keyboard |= GameInfo::XCBEVENTS;
-    game_info.mouse |= GameInfo::XCBEVENTS;
-    game_info.tosend = true;
-
     int i;
     for (i=0; i<GAMECONNECTIONNUM; i++) {
         if (!gameConnections[i]) {
