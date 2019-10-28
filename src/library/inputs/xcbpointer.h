@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_XCBKEYBOARD_H_INCL
-#define LIBTAS_XCBKEYBOARD_H_INCL
+#ifndef LIBTAS_XCBPOINTER_H_INCL
+#define LIBTAS_XCBPOINTER_H_INCL
 
 #include "../global.h"
 #include <xcb/xcb.h>
