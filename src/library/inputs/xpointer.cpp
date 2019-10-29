@@ -36,7 +36,7 @@ DEFINE_ORIG_POINTER(XQueryPointer);
         unsigned int* mask_return)
 {
     DEBUGLOGCALL(LCF_MOUSE);
-    if (!gameXWindows.empty()) {
+    if (gameXWindows.empty()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
                                    root_x_return, root_y_return,
