@@ -278,18 +278,18 @@ xcb_send_event (xcb_connection_t *c,
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {
-#ifdef LIBTAS_HAS_XRANDR
+#ifdef LIBTAS_HAS_XCB_RANDR
                     /* Change the window size to monitor size */
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_unchecked);
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_reply);
-                    LINK_NAMESPACE_GLOBAL(xcb_randr_get_screen_info_sizes);
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_unchecked, "xcb-randr");
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_reply, "xcb-randr");
+                    LINK_NAMESPACE(xcb_randr_get_screen_info_sizes, "xcb-randr");
 
                     xcb_screen_iterator_t iter = xcb_setup_roots_iterator (xcb_get_setup (c));
                     xcb_screen_t* screen = iter.data;
 
-                    xcb_randr_get_screen_info_cookie_t screen_info = xcb_randr_get_screen_info_unchecked(c, screen->root);
-                    xcb_randr_get_screen_info_reply_t *reply = xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
-                    xcb_randr_screen_size_t *sizes = xcb_randr_get_screen_info_sizes(reply);
+                    xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
+                    xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
+                    xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
                     const static uint32_t values[] = { sizes[0].width, sizes[0].height };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
 #endif
