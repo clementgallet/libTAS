@@ -89,11 +89,11 @@ void pushNativeXcbEvents(xcb_connection_t *c)
         return;
     }
 
-    LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
+    GlobalNative gn;
 
     xcb_generic_event_t *event;
 
-    while ((event = orig::xcb_poll_for_event (c))) {
+    while ((event = xcb_poll_for_event (c))) {
 
         if (event->response_type == XCB_CLIENT_MESSAGE) {
             /* Catch the close event */
@@ -114,9 +114,9 @@ void pushNativeXcbEvents(xcb_connection_t *c)
                 xcb_screen_t* screen = iter.data;
                 reply.window = screen->root;
 
-                NATIVECALL(xcb_send_event(c, false, screen->root,
+                xcb_send_event(c, false, screen->root,
 XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
-reinterpret_cast<char*>(&reply)));
+reinterpret_cast<char*>(&reply));
             }
         }
 
@@ -128,6 +128,11 @@ reinterpret_cast<char*>(&reply)));
 
 xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
+        return orig::xcb_wait_for_event(c);
+    }
+
     DEBUGLOGCALL(LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
@@ -158,6 +163,11 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
 
 xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
+        return orig::xcb_poll_for_event(c);
+    }
+
     DEBUGLOGCALL(LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
@@ -310,6 +320,11 @@ xcb_send_event (xcb_connection_t *c,
 
 int xcb_flush(xcb_connection_t *c)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(xcb_flush);
+        return orig::xcb_flush(c);
+    }
+
     DEBUGLOGCALL(LCF_EVENTS);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
