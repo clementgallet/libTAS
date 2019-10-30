@@ -31,7 +31,6 @@ class XlibEventQueue
 {
     public:
         XlibEventQueue(Display* display);
-        ~XlibEventQueue();
 
         /* Set an event mask for a window */
         void setMask(Window w, long event_mask);
@@ -65,7 +64,7 @@ class XlibEventQueue
 
     private:
         /* Event queue */
-        std::list<XEvent*> eventQueue;
+        std::list<XEvent> eventQueue;
 
         /* Event mask for each Window */
         std::map<Window, long> eventMasks;
@@ -74,7 +73,7 @@ class XlibEventQueue
         void* cookieData;
 
         /* Register a Generic event cookie to be deleted */
-        void delayedDeleteCookie(XEvent* event);
+        void delayedDeleteCookie(XEvent event);
 
         /* Does a type belong to an event mask?*/
         bool isTypeOfMask(int type, long event_mask);

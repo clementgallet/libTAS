@@ -30,13 +30,6 @@ namespace libtas {
 
 XlibEventQueue::XlibEventQueue(Display* d) : display(d), cookieData(nullptr) {}
 
-XlibEventQueue::~XlibEventQueue()
-{
-    for (auto ev: eventQueue) {
-        delete ev;
-    }
-}
-
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
     eventMasks[w] = event_mask;
@@ -90,15 +83,11 @@ int XlibEventQueue::insert(XEvent* event)
         return -1;
     }
 
-    /* Building a dynamically allocated event */
-    XEvent* ev = new XEvent;
-    memcpy(ev, event, sizeof(XEvent));
-
     /* Specify the display */
-    ev->xany.display = display;
+    event->xany.display = display;
 
     /* Push the event at the beginning of the queue */
-    eventQueue.push_front(ev);
+    eventQueue.push_front(*event);
 
     return 1;
 }
@@ -108,11 +97,10 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
     if (eventQueue.size() == 0)
         return false;
 
-    XEvent* ev = eventQueue.back();
-    memcpy(event, ev, sizeof(XEvent));
+    XEvent ev = eventQueue.back();
+    memcpy(event, &ev, sizeof(XEvent));
     if (update) {
         delayedDeleteCookie(ev);
-        delete ev;
         eventQueue.pop_back();
     }
     return true;
@@ -121,11 +109,11 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
 bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 {
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
-        XEvent* ev = *it;
-        int type = ev->type;
+        XEvent ev = *it;
+        int type = ev.type;
 
         /* Check window match */
-        if ((w != 0) && (w != ev->xany.window))
+        if ((w != 0) && (w != ev.xany.window))
             continue;
 
         /* Check if event type match the mask */
@@ -133,9 +121,8 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
             continue;
 
         /* We found a match */
-        memcpy(event, ev, sizeof(XEvent));
+        memcpy(event, &ev, sizeof(XEvent));
         delayedDeleteCookie(ev);
-        delete ev;
         eventQueue.erase(it);
         return true;
     }
@@ -145,20 +132,19 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 {
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
-        XEvent* ev = *it;
+        XEvent ev = *it;
 
         /* Check window match */
-        if ((w != 0) && (w != ev->xany.window))
+        if ((w != 0) && (w != ev.xany.window))
             continue;
 
         /* Check if event type match */
-        if (ev->type != event_type)
+        if (ev.type != event_type)
             continue;
 
         /* We found a match */
-        memcpy(event, ev, sizeof(XEvent));
+        memcpy(event, &ev, sizeof(XEvent));
         delayedDeleteCookie(ev);
-        delete ev;
         eventQueue.erase(it);
         return true;
     }
@@ -168,14 +154,13 @@ bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
-        XEvent* ev = *it;
+        XEvent ev = *it;
 
         /* Check the predicate */
-        if (predicate(ev->xany.display, ev, arg)) {
+        if (predicate(ev.xany.display, &ev, arg)) {
             /* We found a match */
-            memcpy(event, ev, sizeof(XEvent));
+            memcpy(event, &ev, sizeof(XEvent));
             delayedDeleteCookie(ev);
-            delete ev;
             eventQueue.erase(it);
             return true;
         }
@@ -188,7 +173,7 @@ int XlibEventQueue::size()
     return eventQueue.size();
 }
 
-void XlibEventQueue::delayedDeleteCookie(XEvent* event)
+void XlibEventQueue::delayedDeleteCookie(XEvent event)
 {
 #ifdef LIBTAS_HAS_XINPUT
     if (cookieData) {
@@ -223,8 +208,8 @@ void XlibEventQueue::delayedDeleteCookie(XEvent* event)
         }
         free(cookieData);
     }
-    if (event->type == GenericEvent) {
-        cookieData = event->xcookie.data;
+    if (event.type == GenericEvent) {
+        cookieData = event.xcookie.data;
     }
     else {
         cookieData = nullptr;
