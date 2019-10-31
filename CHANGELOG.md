@@ -21,6 +21,7 @@
 * XCB windows hooks
 * XCB events hooks and keyboard/mouse events
 * XCB pointer hooks
+* Add a "No Wait" setting
 
 ### Changed
 

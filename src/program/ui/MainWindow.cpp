@@ -465,6 +465,7 @@ void MainWindow::createActions()
     addActionCheckable(waitGroup, tr("Infinite waits"), SharedConfig::WAIT_INFINITE, "Waits have infinite timeout. Sync-proof, but may softlock");
     addActionCheckable(waitGroup, tr("Full infinite waits"), SharedConfig::WAIT_FULL_INFINITE, "Advance time for the full timeout and wait infinitely. Sync-proof, but may still softlock and may advance time too much resulting in incorrect frame boundaries");
     addActionCheckable(waitGroup, tr("Finite waits"), SharedConfig::WAIT_FINITE, "Try to wait, and advance time if we get a timeout. Prevent softlocks but not perfectly sync-proof");
+    addActionCheckable(waitGroup, tr("No waits"), SharedConfig::NO_WAIT, "Wait with zero timeout.");
 
     asyncGroup = new QActionGroup(this);
     asyncGroup->setExclusive(false);

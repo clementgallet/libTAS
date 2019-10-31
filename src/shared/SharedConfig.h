@@ -188,6 +188,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         WAIT_INFINITE,
         WAIT_FULL_INFINITE,
         WAIT_FINITE,
+        NO_WAIT,
     };
 
     /* How are we handling waits */
