@@ -122,7 +122,7 @@ void pushNativeSDLEvents(void)
      */
     GlobalOwnCode toc;
 
-    orig::SDL_PumpEvents();
+    NOLOGCALL(orig::SDL_PumpEvents());
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
      * as it is the native function of getting events.

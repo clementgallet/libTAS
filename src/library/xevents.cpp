@@ -108,12 +108,16 @@ void pushNativeXlibEvents(Display *display)
         return;
     }
 
-    GlobalNative gn;
+    LINK_NAMESPACE_GLOBAL(XSync);
+    LINK_NAMESPACE_GLOBAL(XPending);
+    LINK_NAMESPACE_GLOBAL(XNextEvent);
 
-    XSync(display, False);
-    while (XPending(display) > 0) {
+    NOLOGCALL(orig::XSync(display, False));
+    int n;
+    NOLOGCALL(n = orig::XPending(display));
+    while (n > 0) {
         XEvent event;
-        XNextEvent(display, &event);
+        NOLOGCALL(orig::XNextEvent(display, &event));
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
@@ -129,14 +133,16 @@ void pushNativeXlibEvents(Display *display)
                 debuglog(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 XEvent reply = event;
                 reply.xclient.window = DefaultRootWindow(display);
-                XSendEvent(display, DefaultRootWindow(display), False,
-                    SubstructureNotifyMask | SubstructureRedirectMask, &reply);
+                NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
+                    SubstructureNotifyMask | SubstructureRedirectMask, &reply));
             }
         }
 
         if (!isEventFiltered(&event)) {
             xlibEventQueueList.insert(display, &event);
         }
+
+        NOLOGCALL(n = orig::XPending(display));
     }
 }
 

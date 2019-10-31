@@ -661,7 +661,7 @@ void generateControllerEvents(void)
                 event2.jhat.hat = 0;
                 event2.jhat.value = SingleInput::toSDLHat(buttons);
                 sdlEventQueue.insert(&event2);
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", event2.jhat.value);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)event2.jhat.value);
             }
 
             if (game_info.joystick & GameInfo::SDL1) {
@@ -672,7 +672,7 @@ void generateControllerEvents(void)
                 event1.jhat.hat = 0;
                 event1.jhat.value = SingleInput::toSDLHat(buttons);
                 sdlEventQueue.insert(&event1);
-                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", event1.jhat.value);
+                debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)event1.jhat.value);
             }
 
             if (game_info.joystick & GameInfo::JSDEV) {

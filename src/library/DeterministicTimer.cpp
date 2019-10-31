@@ -59,7 +59,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return nonDetTimer.getTicks(); // disable deterministic time
     }
 
-    if (type == SharedConfig::TIMETYPE_UNTRACKED) {
+    if ((type == SharedConfig::TIMETYPE_UNTRACKED) || GlobalState::isOwnCode()) {
         TimeHolder fakeTicks = ticks + fakeExtraTicks;
         return fakeTicks;
     }
