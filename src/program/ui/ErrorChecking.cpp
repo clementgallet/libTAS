@@ -169,14 +169,13 @@ bool ErrorChecking::checkArchType(Context* context)
         cmd += winename;
         FILE *output = popen(cmd.c_str(), "r");
         if (output != NULL) {
-            fseek(output, 0, SEEK_END);
-            long ssize = ftell(output);
-            if (ssize == 0) {
+            std::array<char,256> buf;
+            fgets(buf.data(), buf.size(), output);
+            int ret = pclose(output);
+            if (ret != 0) {
                 QMessageBox::critical(nullptr, "Error", QString("Trying to execute a Windows executable, but %1 cannot be found").arg(winename.c_str()));
-                pclose(output);
                 return false;
             }
-            pclose(output);
         }
         else {
             QMessageBox::critical(nullptr, "Error", QString("Coundn't popen to locate wine"));
