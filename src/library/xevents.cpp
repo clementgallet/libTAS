@@ -146,28 +146,6 @@ void pushNativeXlibEvents(Display *display)
     }
 }
 
-bool syncXEvents()
-{
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i]) {
-            std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(gameDisplays[i]);
-            int attempts = 0, count = 0;
-            do {
-                count = queue->size();
-                if (count > 0) {
-                    if (++attempts > 10 * 100) {
-                        debuglog(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
-                        return false;
-                    }
-                    struct timespec sleepTime = { 0, 10 * 1000 };
-                    NATIVECALL(nanosleep(&sleepTime, NULL));
-                }
-            } while (count > 0);
-        }
-    }
-    return true;
-}
-
 int XNextEvent(Display *display, XEvent *event_return)
 {
     if (GlobalState::isNative()) {

@@ -1027,9 +1027,9 @@ void generateMouseButtonEvents(void)
     }
 }
 
-static void syncControllerEvents()
+void syncControllerEvents()
 {
-    if (!shared_config.async_events)
+    if (!(shared_config.async_events & (SharedConfig::ASYNC_JSDEV | SharedConfig::ASYNC_EVDEV)))
         return;
 
     if (!(game_info.joystick & (GameInfo::JSDEV | GameInfo::EVDEV)))
@@ -1040,57 +1040,30 @@ static void syncControllerEvents()
 
     for (int i = 0; i < shared_config.nb_controllers; i++) {
         if (shared_config.async_events & SharedConfig::ASYNC_JSDEV) {
-            /* Wait for queue to become empty */
-            if (sync_jsdev(i)) {
-                /* If queue was emptied, send a synchronize report event */
-                struct js_event ev;
-                ev.time = timestamp;
-                ev.type = 0;
-                ev.number = 0;
-                ev.value = 0;
-                write_jsdev(ev, i);
+            /* Send a synchronize report event */
+            struct js_event ev;
+            ev.time = timestamp;
+            ev.type = 0;
+            ev.number = 0;
+            ev.value = 0;
+            write_jsdev(ev, i);
 
-                /* Lastly, wait for queue to become empty again, ensuring that
-                 * the event have finished being processed.
-                 */
-                sync_jsdev(i);
-            }
+            /* Wait for queue to become empty, ensuring that
+             * the event have finished being processed. */
+            sync_jsdev(i);
         }
 
         /* Same for evdev */
         if (shared_config.async_events & SharedConfig::ASYNC_EVDEV) {
-            if (sync_evdev(i)) {
-                struct input_event ev;
-                ev.time.tv_sec = time.tv_sec;
-                ev.time.tv_usec = time.tv_nsec / 1000;
-                ev.type = EV_SYN;
-                ev.code = SYN_REPORT;
-                ev.value = 0;
-                write_evdev(ev, i);
+            struct input_event ev;
+            ev.time.tv_sec = time.tv_sec;
+            ev.time.tv_usec = time.tv_nsec / 1000;
+            ev.type = EV_SYN;
+            ev.code = SYN_REPORT;
+            ev.value = 0;
+            write_evdev(ev, i);
 
-                sync_evdev(i);
-            }
-        }
-    }
-}
-
-void syncEvents(void)
-{
-    /* Wait for queues to become empty and events to be processed. */
-    syncControllerEvents();
-
-    if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS) {
-        /* Wait for queue to become empty */
-        if (syncXEvents()) {
-            /* If queue was emptied, send a dummy event */
-            XEvent xev;
-            xev.type = LASTEvent; // let's hope this won't trigger an error
-            xlibEventQueueList.insert(&xev);
-
-            /* Lastly, wait for queue to become empty again, ensuring that
-             * the event have finished being processed.
-             */
-            syncXEvents();
+            sync_evdev(i);
         }
     }
 }

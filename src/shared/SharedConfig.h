@@ -175,7 +175,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     {
         ASYNC_JSDEV = 0x01,
         ASYNC_EVDEV = 0x02,
-        ASYNC_XEVENTS = 0x04,
+        ASYNC_XEVENTS_BEG = 0x04,
+        ASYNC_XEVENTS_END = 0x08,
     };
 
     /* Wait for specific events to be processed in a separate thread before starting frame */

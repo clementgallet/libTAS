@@ -471,7 +471,8 @@ void MainWindow::createActions()
     asyncGroup->setExclusive(false);
     addActionCheckable(asyncGroup, tr("jsdev"), SharedConfig::ASYNC_JSDEV);
     addActionCheckable(asyncGroup, tr("evdev"), SharedConfig::ASYNC_EVDEV);
-    addActionCheckable(asyncGroup, tr("XEvents"), SharedConfig::ASYNC_XEVENTS);
+    addActionCheckable(asyncGroup, tr("XEvents at frame beginning"), SharedConfig::ASYNC_XEVENTS_BEG);
+    addActionCheckable(asyncGroup, tr("XEvents at frame end"), SharedConfig::ASYNC_XEVENTS_END);
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);

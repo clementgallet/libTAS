@@ -181,6 +181,10 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     ThreadManager::setMainThread();
 
+    /* Wait for events to be processed by the game */
+    if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS_END)
+        xlibEventQueueList.waitForEmpty();
+
     /* Update the deterministic timer, sleep if necessary and mix audio */
     detTimer.enterFrameBoundary();
 
@@ -395,6 +399,12 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      * because they used the new game inputs. */
     updateGameInputs();
 
+    /* Reset the empty state of each xevent queue, for async event handling */
+    if (shared_config.async_events & (SharedConfig::ASYNC_XEVENTS_BEG | SharedConfig::ASYNC_XEVENTS_END)) {
+        xlibEventQueueList.lock();
+        xlibEventQueueList.resetEmpty();
+    }
+
     /* Push generated events. This must be done after getting the new inputs. */
     if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
         generateKeyUpEvents();
@@ -405,8 +415,16 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         generateMouseButtonEvents();
     }
 
-    /* Wait for events to be processed by the game, in case of async event handling */
-    syncEvents();
+    if (shared_config.async_events & (SharedConfig::ASYNC_XEVENTS_BEG | SharedConfig::ASYNC_XEVENTS_END)) {
+        xlibEventQueueList.unlock();
+    }
+
+    /* Wait for evdev and jsdev events to be processed by the game, in case of async event handling */
+    syncControllerEvents();
+
+    /* Wait for events to be processed by the game */
+    if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS_BEG)
+        xlibEventQueueList.waitForEmpty();
 
     /* Decide if we skip drawing the next frame because of fastforward.
      * It is stored in an extern so that we can disable opengl draws.

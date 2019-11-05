@@ -22,6 +22,7 @@
 
 #include <list>
 #include <map>
+#include <mutex>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
@@ -61,6 +62,12 @@ class XlibEventQueue
         int size();
 
         Display* display;
+
+        /* Was the queue emptied? Used for asynchronous events */
+        bool emptied;
+
+        /* Mutex for protecting empied and pop() */
+        std::mutex mutex;
 
     private:
         /* Event queue */

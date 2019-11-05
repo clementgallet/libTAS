@@ -66,4 +66,46 @@ void XlibEventQueueList::insert(XEvent* event)
         queue->insert(event);
 }
 
+bool XlibEventQueueList::waitForEmpty()
+{
+    int attempts = 0;
+    bool allEmpty = false;
+
+    while (!allEmpty) {
+        allEmpty = true;
+        for (auto queue: eventQueueList) {
+            allEmpty &= queue->emptied;
+            if (!queue->emptied) {
+                if (++attempts > 10 * 100) {
+                    debuglog(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
+                    return false;
+                }
+            }
+        }
+        struct timespec sleepTime = { 0, 10 * 1000 };
+        NATIVECALL(nanosleep(&sleepTime, NULL));
+    }
+    return true;
+}
+
+/* Reset the empty state of each queue */
+void XlibEventQueueList::resetEmpty()
+{
+    for (auto queue: eventQueueList)
+        queue->emptied = false;
+}
+
+
+void XlibEventQueueList::lock()
+{
+    for (auto queue: eventQueueList)
+        queue->mutex.lock();
+}
+
+void XlibEventQueueList::unlock()
+{
+    for (auto queue: eventQueueList)
+        queue->mutex.unlock();
+}
+
 }

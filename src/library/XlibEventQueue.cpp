@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d), cookieData(nullptr) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false), cookieData(nullptr) {}
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
@@ -94,8 +94,12 @@ int XlibEventQueue::insert(XEvent* event)
 
 bool XlibEventQueue::pop(XEvent* event, bool update)
 {
-    if (eventQueue.size() == 0)
+    std::lock_guard<std::mutex> lock(mutex);
+
+    if (eventQueue.size() == 0) {
+        emptied = true;
         return false;
+    }
 
     XEvent ev = eventQueue.back();
     memcpy(event, &ev, sizeof(XEvent));
@@ -108,6 +112,8 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
 
 bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
         int type = ev.type;
@@ -126,11 +132,14 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
         eventQueue.erase(it);
         return true;
     }
+    emptied = true;
     return false;
 }
 
 bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
 
@@ -148,11 +157,14 @@ bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
         eventQueue.erase(it);
         return true;
     }
+    emptied = true;
     return false;
 }
 
 bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
 
@@ -165,12 +177,18 @@ bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, X
             return true;
         }
     }
+    emptied = true;
     return false;
 }
 
 int XlibEventQueue::size()
 {
-    return eventQueue.size();
+    std::lock_guard<std::mutex> lock(mutex);
+
+    size_t s = eventQueue.size();
+    if (s == 0)
+        emptied = true;
+    return s;
 }
 
 void XlibEventQueue::delayedDeleteCookie(XEvent event)

@@ -47,6 +47,16 @@ class XlibEventQueueList
         /* Insert an event into all queues */
         void insert(XEvent* event);
 
+        /* Wait for each queue to become empty */
+        bool waitForEmpty();
+
+        /* Reset the empty state of each queue */
+        void resetEmpty();
+
+        /* Lock and unlock the queue */
+        void lock();
+        void unlock();
+
     private:
         std::list<std::shared_ptr<XlibEventQueue>> eventQueueList;
 

@@ -22,12 +22,15 @@
 * XCB events hooks and keyboard/mouse events
 * XCB pointer hooks
 * Add a "No Wait" setting
+* Add a xevent synchronization at frame end
 
 ### Changed
 
 * Don't require /proc/self/pagemap to exist for savestating
 * Switch to autotools
 * More optimized Ram Search
+* Synchronize xevents when a pop() didn't return an event, instead of when
+  the event queue is empty (for cases when poped with event mask)
 
 ### Fixed
 
