@@ -37,7 +37,7 @@
 #include <unistd.h> // getpid()
 #include "frame.h" // framecount
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
-#include "steam/isteamremotestorage.h" // SteamSetRemoteStorageFolder
+#include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 
 
 extern char**environ;

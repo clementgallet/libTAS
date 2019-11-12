@@ -26,7 +26,7 @@
 #include "isteamuser.h"
 #include "isteamuserstats.h"
 #include "isteamutils.h"
-#include "isteamremotestorage.h"
+#include "isteamremotestorage/isteamremotestorage.h"
 #include "isteamapps.h"
 #include "isteamfriends.h"
 #include "isteamscreenshots.h"
@@ -79,7 +79,6 @@ OVERRIDE ISteamController *SteamController();
 OVERRIDE ISteamUserStats *SteamUserStats();
 OVERRIDE ISteamUser *SteamUser();
 OVERRIDE ISteamUtils *SteamUtils();
-OVERRIDE ISteamRemoteStorage *SteamRemoteStorage();
 OVERRIDE ISteamApps *SteamApps();
 OVERRIDE ISteamFriends *SteamFriends();
 OVERRIDE ISteamScreenshots *SteamScreenshots();

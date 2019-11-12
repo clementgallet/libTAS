@@ -23,6 +23,7 @@
 * XCB pointer hooks
 * Add a "No Wait" setting
 * Add a xevent synchronization at frame end
+* Support for multiple Steam class interfaces
 
 ### Changed
 

@@ -12,7 +12,7 @@
 #include "isteamuser.h"
 #include "isteamuserstats.h"
 #include "isteamutils.h"
-#include "isteamremotestorage.h"
+#include "isteamremotestorage/isteamremotestorage.h"
 #include "isteamapps.h"
 #include "isteamfriends.h"
 #include "isteamscreenshots.h"

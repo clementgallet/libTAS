@@ -61,6 +61,11 @@ typedef int EItemUpdateStatus;
 typedef int ERemoteStoragePublishedFileVisibility;
 typedef int EWorkshopFileType;
 typedef int ELeaderboardUploadScoreMethod;
+typedef int EWorkshopVote;
+typedef int EWorkshopFileAction;
+typedef int EWorkshopEnumerationType;
+typedef int EWorkshopVideoProvider;
+typedef int EUGCReadAction;
 
 typedef int ELobbyType;
 typedef int ELobbyComparison;
@@ -81,6 +86,9 @@ typedef int EMatchMakingServerResponse;
 typedef void (*SteamAPIWarningMessageHook_t)(int, const char *);
 typedef uint32_t ( *SteamAPI_CheckCallbackRegistered_t )( int iCallbackNum );
 
+typedef uint64_t UGCHandle_t;
+typedef uint64_t PublishedFileUpdateHandle_t;
+typedef uint64_t PublishedFileId_t;
 
 
 }
