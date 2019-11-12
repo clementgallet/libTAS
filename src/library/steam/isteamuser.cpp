@@ -39,7 +39,7 @@ HSteamUser ISteamUser::GetHSteamUser()
 bool ISteamUser::BLoggedOn()
 {
     DEBUGLOGCALL(LCF_STEAM);
-	return false;
+	return true;
 }
 
 CSteamID ISteamUser::GetSteamID()
