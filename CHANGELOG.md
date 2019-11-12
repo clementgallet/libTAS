@@ -24,6 +24,7 @@
 * Add a "No Wait" setting
 * Add a xevent synchronization at frame end
 * Support for multiple Steam class interfaces
+* Implement OpenAL ALC_ALL_ATTRIBUTES parameter
 
 ### Changed
 

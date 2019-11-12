@@ -324,20 +324,32 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
             return;
         case ALC_MONO_SOURCES:
             debuglog(LCF_OPENAL | LCF_TODO, "Request mono sources");
-            values[0] = 0;
+            values[0] = 255;
             return;
         case ALC_STEREO_SOURCES:
             debuglog(LCF_OPENAL | LCF_TODO, "Request stereo sources");
-            values[0] = 0;
+            values[0] = 255;
             return;
         case ALC_ATTRIBUTES_SIZE:
             debuglog(LCF_OPENAL | LCF_TODO, "Request attributes size");
-            if (device == NULL)
-            values[0] = 1;
+            //if (device == NULL)
+            values[0] = 13;
             return;
         case ALC_ALL_ATTRIBUTES:
             debuglog(LCF_OPENAL | LCF_TODO, "Request all attributes");
-            values[0] = 0;
+            values[0] = ALC_FREQUENCY;
+            values[1] = 44100;
+            values[2] = ALC_REFRESH;
+            values[3] = 60;
+            values[4] = ALC_SYNC;
+            values[5] = 0;
+            values[6] = ALC_MONO_SOURCES;
+            values[7] = 255;
+            values[8] = ALC_STEREO_SOURCES;
+            values[9] = 255;
+            values[10] = ALC_MAX_AUXILIARY_SENDS;
+            values[11] = 2;
+            values[12] = 0;
             return;
         case ALC_MAJOR_VERSION:
             debuglog(LCF_OPENAL, "Request major version");
