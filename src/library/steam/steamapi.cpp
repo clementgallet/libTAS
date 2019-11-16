@@ -204,7 +204,7 @@ bool SteamAPI_Init()
     debuglog(LCF_STEAM, __func__, " call.");
     if (shared_config.virtual_steam)
         SteamGetInterfaceVersion();
-	return shared_config.virtual_steam;
+    return shared_config.virtual_steam;
 }
 
 bool SteamAPI_InitSafe()
@@ -212,7 +212,7 @@ bool SteamAPI_InitSafe()
     debuglog(LCF_STEAM, __func__, " call.");
     if (shared_config.virtual_steam)
         SteamGetInterfaceVersion();
-	return shared_config.virtual_steam;
+    return shared_config.virtual_steam;
 }
 
 void SteamAPI_Shutdown()
