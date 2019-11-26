@@ -39,7 +39,7 @@ libtas (1.3.5) unstable; urgency=medium
   * Sanitize SDL Audio specs
   * Restore the game screen everytime, to avoid dirty buffers to be drawn
 
--- clement <clement.gallet@ens-lyon.org>  Tue, 26 Nov 2019 16:05:51 +0100
+ -- clement <clement.gallet@ens-lyon.org>  Tue, 26 Nov 2019 16:05:51 +0100
 
 libtas (1.3.4) unstable; urgency=medium
 
