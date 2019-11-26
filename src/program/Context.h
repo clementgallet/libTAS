@@ -108,6 +108,9 @@ struct Context {
 
     /* Current encoding segment. Sent when game is restarted */
     int encoding_segment = 0;
+
+    /* Content of LD_PRELOAD when libTAS is executed */
+    std::string old_ld_preload;
 };
 
 #endif

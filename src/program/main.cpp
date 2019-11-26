@@ -257,6 +257,11 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    /* Store current content of LD_PRELOAD */
+
+    char* old_preload = getenv("LD_PRELOAD");
+    if (old_preload) context.old_ld_preload = old_preload;
+
     /* Check if incremental savestates is supported by checking the soft-dirty bit */
 
     int fd = open("/proc/self/pagemap", O_RDONLY);

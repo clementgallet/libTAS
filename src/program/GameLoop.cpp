@@ -154,6 +154,10 @@ void GameLoop::launchGameThread()
         /* LD_PRELOAD must be set inside a gdb command to be effective */
         std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
         ldpreloadstr += context->libtaspath;
+        if (!context->old_ld_preload.empty()) {
+            ldpreloadstr += ":";
+            ldpreloadstr += context->old_ld_preload;
+        }
         ldpreloadstr += "'";
         arg_list.push_back(ldpreloadstr);
 
@@ -228,7 +232,15 @@ void GameLoop::launchGameThread()
     /* Set LD_PRELOAD just before execv, so we don't preload other processes */
     if (!context->attach_gdb) {
         /* Set the LD_PRELOAD environment variable to inject our lib to the game */
-        setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+        if (!context->old_ld_preload.empty()) {
+            std::string new_ld_preload = context->libtaspath;
+            new_ld_preload += ":";
+            new_ld_preload += context->old_ld_preload;
+            setenv("LD_PRELOAD", new_ld_preload.c_str(), 1);
+        }
+        else {
+            setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+        }
     }
 
     /* Run the actual game */

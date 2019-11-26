@@ -33,6 +33,7 @@
 * More optimized Ram Search
 * Synchronize xevents when a pop() didn't return an event, instead of when
   the event queue is empty (for cases when poped with event mask)
+* Old LD_PRELOAD content is preserved
 
 ### Fixed
 
