@@ -1,5 +1,11 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+
+## [1.3.5] - 2019-11-26
+### Added
 
 * Both 32-bit and 64-bit libtas.so libraries can be installed, and the program
   will select the correct one depending on the game arch
