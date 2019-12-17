@@ -66,6 +66,9 @@ namespace libtas {
  */
 std::string find_lib(const char* library);
 
+/* Add a library path to the set */
+void add_lib(const char* library);
+
 /* Try to locate a symbol.  If original is true then only return
  * symbols that are not from libtas.so, otherwise only return
  * symbols that are from libtas.so.

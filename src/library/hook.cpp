@@ -72,6 +72,9 @@ bool link_function(void** function, const char* source, const char* library, con
 
             if (*function != nullptr) {
                 debuglog(LCF_HOOK, "Imported from lib ", library, " symbol ", source, " function : ", *function);
+
+                /* Add the library to our set of libraries */
+                add_lib(library);
                 return true;
             }
         }

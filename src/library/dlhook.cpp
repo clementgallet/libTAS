@@ -27,26 +27,33 @@
 namespace libtas {
 
 /* Set of libraries that are loaded by the game using dlopen */
-/* It is stored as a pointer and created on first use because games can
- * sometimes call hooked functions very early in their execution, resulting in
- * some objects (even static) not been initialized. And using an uninitialized
- * std container triggers a crash. So for now we are dynamically initializing
- * it, but we should come up with a better solution.
+/* It is stored static inside a function, so that it will be created on first
+ * use. Indeed, it can be called very early in the program execution. If made
+ * file-static, it may not be initialized in time.
  */
-static std::set<std::string>* libraries;
+
+static std::set<std::string>& get_lib_set() {
+    static std::set<std::string> library_set;
+    return library_set;
+}
 
 std::string find_lib(const char* library)
 {
-    if (!libraries) {
-        libraries = new std::set<std::string>();
-    }
-
-    for (auto const& itr : *libraries)
+    std::set<std::string>& library_set = get_lib_set();
+    for (auto const& itr : library_set)
         if (itr.find(library) != std::string::npos)
             return itr;
 
     std::string emptystring;
     return emptystring;
+}
+
+void add_lib(const char* library)
+{
+    if (library) {
+        std::set<std::string>& library_set = get_lib_set();
+        library_set.insert(std::string(library));
+    }
 }
 
 DEFINE_ORIG_POINTER(dlopen);
@@ -73,12 +80,9 @@ void *dlopen(const char *file, int mode) throw() {
 
     void *result = orig::dlopen(file, mode);
 
-    if (!libraries) {
-        libraries = new std::set<std::string>();
-    }
+    if (result)
+        add_lib(file);
 
-    if (result && (file != nullptr))
-        libraries->insert(std::string(file));
     return result;
 }
 

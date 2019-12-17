@@ -59,7 +59,12 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 
 AudioSource::AudioSource(void)
 {
+    /* Some systems don't create the unversionned symlinks when the libraries
+     * are installed, so we add a link with the major version. */
     LINK_NAMESPACE(swr_alloc, "swresample");
+    link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
+    link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
+
     swr = orig::swr_alloc();
 
     volume = 1.0f;
@@ -182,6 +187,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 {
     LINK_NAMESPACE(swr_is_initialized, "swresample");
     LINK_NAMESPACE(av_opt_set_int, "avutil");
+    link_function((void**)&orig::av_opt_set_int, "av_opt_set_int", "libavutil.so.56");
+    link_function((void**)&orig::av_opt_set_int, "av_opt_set_int", "libavutil.so.55");
     LINK_NAMESPACE(av_opt_set_sample_fmt, "avutil");
     LINK_NAMESPACE(swr_init, "swresample");
     LINK_NAMESPACE(swr_convert, "swresample");
