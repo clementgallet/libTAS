@@ -22,10 +22,6 @@
 #include <algorithm>    // std::copy
 #include "../logging.h"
 #include "../global.h" // shared_config
-extern "C" {
-    #include <libavutil/opt.h>
-    #include <libavutil/channel_layout.h>
-}
 #include "hook.h"
 #include <stdlib.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
@@ -39,9 +35,8 @@ DEFINE_ORIG_POINTER(swr_alloc);
 DEFINE_ORIG_POINTER(swr_free);
 DEFINE_ORIG_POINTER(swr_is_initialized);
 DEFINE_ORIG_POINTER(swr_close);
-DEFINE_ORIG_POINTER(av_opt_set_int);
-DEFINE_ORIG_POINTER(av_opt_set_sample_fmt);
 DEFINE_ORIG_POINTER(swr_init);
+DEFINE_ORIG_POINTER(swr_alloc_set_opts);
 DEFINE_ORIG_POINTER(swr_convert);
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
@@ -186,12 +181,9 @@ bool AudioSource::willEnd(struct timespec ticks)
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
     LINK_NAMESPACE(swr_is_initialized, "swresample");
-    LINK_NAMESPACE(av_opt_set_int, "avutil");
-    link_function((void**)&orig::av_opt_set_int, "av_opt_set_int", "libavutil.so.56");
-    link_function((void**)&orig::av_opt_set_int, "av_opt_set_int", "libavutil.so.55");
-    LINK_NAMESPACE(av_opt_set_sample_fmt, "avutil");
     LINK_NAMESPACE(swr_init, "swresample");
     LINK_NAMESPACE(swr_convert, "swresample");
+    LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
 
     if (state != SOURCE_PLAYING)
         return -1;
@@ -240,27 +232,24 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             if (outBitDepth == 16)
                 outFormat = AV_SAMPLE_FMT_S16;
 
-            /* Set channel layout */
+            /* Get the channel layout */
+            int64_t in_ch_layout = 0;
+            int64_t out_ch_layout = 0;
+
             if (curBuf->nbChannels == 1) {
-                MYASSERT(0 == orig::av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_MONO, 0));
+                in_ch_layout = AV_CH_LAYOUT_MONO;
             }
             if (curBuf->nbChannels == 2) {
-                MYASSERT(0 == orig::av_opt_set_int(swr, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+                in_ch_layout = AV_CH_LAYOUT_MONO;
             }
             if (outNbChannels == 1) {
-                MYASSERT(0 == orig::av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_MONO, 0));
+                out_ch_layout = AV_CH_LAYOUT_MONO;
             }
             if (outNbChannels == 2) {
-                MYASSERT(0 == orig::av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0));
+                out_ch_layout = AV_CH_LAYOUT_MONO;
             }
 
-            /* Set sample format */
-            MYASSERT(0 == orig::av_opt_set_sample_fmt(swr, "in_sample_fmt", inFormat, 0));
-            MYASSERT(0 == orig::av_opt_set_sample_fmt(swr, "out_sample_fmt", outFormat, 0));
-
-            /* Set sampling frequency */
-            MYASSERT(0 == orig::av_opt_set_int(swr, "in_sample_rate", static_cast<int>(curBuf->frequency*pitch), 0));
-            MYASSERT(0 == orig::av_opt_set_int(swr, "out_sample_rate", outFrequency, 0));
+            MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outFormat, outFrequency, in_ch_layout, inFormat, static_cast<int>(curBuf->frequency*pitch), 0, nullptr));
 
             /* Open the context */
             if (orig::swr_init(swr) < 0) {
