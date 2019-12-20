@@ -1,9 +1,12 @@
 ## [Unreleased]
 ### Added
+
+* Add async SDL events handling (#166)
+
 ### Changed
 ### Fixed
 
-* Don't use libavutil functions when configuring swresample context (fix #106)
+* Don't use libavutil functions when configuring swresample context (#106)
 
 ## [1.3.5] - 2019-11-26
 ### Added

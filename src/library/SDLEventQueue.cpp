@@ -38,6 +38,7 @@ SDLEventQueue::~SDLEventQueue()
 
 void SDLEventQueue::init(void)
 {
+    emptied = false;
     if (game_info.video & GameInfo::SDL2) {
         /* Insert default filters */
         droppedEvents.insert(SDL_TEXTINPUT);
@@ -134,6 +135,7 @@ int SDLEventQueue::insert(SDL1::SDL_Event* event)
 
 int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     int evi = 0;
 
     if (num <= 0)
@@ -168,12 +170,14 @@ int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxTyp
 
     }
 
+    emptied = true;
     return evi;
 
 }
 
 int SDLEventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     int evi = 0;
 
     if (num <= 0)
@@ -208,6 +212,7 @@ int SDLEventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool updat
         }
     }
 
+    emptied = true;
     return evi;
 
 }
@@ -362,6 +367,26 @@ bool SDLEventQueue::isBannedEvent(SDL1::SDL_Event *event)
         default:
             return false;
     }
+}
+
+bool SDLEventQueue::waitForEmpty()
+{
+    int attempts = 0;
+
+    while (!emptied) {
+        if (++attempts > 10 * 100) {
+            debuglog(LCF_EVENTS | LCF_SDL | LCF_ERROR | LCF_ALERT, "SDL events sync took too long, were asynchronous events incorrectly enabled?");
+            return false;
+        }
+        struct timespec sleepTime = { 0, 10 * 1000 };
+        NATIVECALL(nanosleep(&sleepTime, NULL));
+    }
+    return true;
+}
+
+void SDLEventQueue::resetEmpty()
+{
+    emptied = false;
 }
 
 }

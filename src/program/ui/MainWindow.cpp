@@ -473,6 +473,8 @@ void MainWindow::createActions()
     addActionCheckable(asyncGroup, tr("evdev"), SharedConfig::ASYNC_EVDEV);
     addActionCheckable(asyncGroup, tr("XEvents at frame beginning"), SharedConfig::ASYNC_XEVENTS_BEG);
     addActionCheckable(asyncGroup, tr("XEvents at frame end"), SharedConfig::ASYNC_XEVENTS_END);
+    addActionCheckable(asyncGroup, tr("SDL events at frame beginning"), SharedConfig::ASYNC_SDLEVENTS_BEG);
+    addActionCheckable(asyncGroup, tr("SDL events at frame end"), SharedConfig::ASYNC_SDLEVENTS_END);
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);

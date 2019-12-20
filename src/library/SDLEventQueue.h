@@ -22,6 +22,7 @@
 
 #include <list>
 #include <set>
+#include <mutex>
 #include "../external/SDL1.h"
 #include <SDL2/SDL.h>
 #include "sdlevents.h" // SDL_EventFilter
@@ -97,6 +98,15 @@ class SDLEventQueue
         /* Remove a watch */
         void delWatch(SDL_EventFilter filter, void* userdata);
 
+        /* Wait for the queue to become empty */
+        bool waitForEmpty();
+
+        /* Reset the empty state of each queue */
+        void resetEmpty();
+
+        /* Mutex for protecting empied and pop() */
+        std::mutex mutex;
+
     private:
         std::list<void*> eventQueue;
         std::set<int> droppedEvents;
@@ -104,6 +114,9 @@ class SDLEventQueue
         SDL1::SDL_EventFilter filterFunc1 = nullptr;
         SDL_EventFilter filterFunc = nullptr;
         void* filterData = nullptr;
+
+        /* Was the queue emptied? Used for asynchronous events */
+        bool emptied;
 
         /* We don't want some events to be pushed by the game */
         bool isBannedEvent(SDL_Event *event);
