@@ -151,8 +151,14 @@ void AudioSource::setPosition(int pos)
     }
 
     /* We set position to the end of the source */
-    queue_index = buffer_queue.size() - 1;
-    position = buffer_queue[queue_index]->sampleSize;;
+    if (!buffer_queue.empty()) {
+        queue_index = buffer_queue.size() - 1;
+        position = buffer_queue[queue_index]->sampleSize;
+    }
+    else {
+        queue_index = 0;
+        position = 0;
+    }
     samples_frac = 0;
 }
 
