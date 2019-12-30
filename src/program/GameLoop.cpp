@@ -25,6 +25,7 @@
 #include "GameLoop.h"
 #include "utils.h"
 #include "AutoSave.h"
+#include "MergeHelperScript.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -44,6 +45,7 @@
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 #include <X11/X.h>
+#include <stdlib.h> //system()
 
 #include <sys/personality.h>
 #ifndef HAVE_PERSONALITY
@@ -1226,6 +1228,8 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                  * allows to start a new encode on the same frame
                  */
                 sendMessage(MSGN_STOP_ENCODE);
+                if (context->config.merge_dump_segments)
+                  mergeSegments();
             }
             emit sharedConfigChanged();
             return false;
@@ -1539,7 +1543,10 @@ void GameLoop::loopExit()
         emit statusChanged();
 
         return;
-    }
+    } 
+    /* If we're not restarting, then check if we need to merge the dumps */
+    else if (context->config.sc.av_dumping && context->config.merge_dump_segments)
+        mergeSegments();
 
     if (movie.modifiedSinceLastSave) {
 
@@ -1568,4 +1575,15 @@ void GameLoop::loopExit()
 
     context->status = Context::INACTIVE;
     emit statusChanged();
+}
+
+void GameLoop::mergeSegments()
+{  
+    std::ostringstream mergeCommand;
+    mergeCommand << "bash -c '";
+    mergeCommand << MERGE_HELPER_SCRIPT;
+    mergeCommand << "' -- ";
+    mergeCommand << context->config.dumpfile;
+    sleep(2); //make sure encode has time to finish before merging
+    system(mergeCommand.str().c_str());
 }

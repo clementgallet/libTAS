@@ -78,6 +78,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("autosave_frames", autosave_frames);
     settings.setValue("autosave_count", autosave_count);
     settings.setValue("auto_restart", auto_restart);
+    settings.setValue("merge_dump_segments", merge_dump_segments);
 
     settings.beginGroup("keymapping");
 
@@ -195,6 +196,7 @@ void Config::load(const std::string& gamepath) {
     autosave_frames = settings.value("autosave_frames", autosave_frames).toInt();
     autosave_count = settings.value("autosave_count", autosave_count).toInt();
     auto_restart = settings.value("auto_restart", auto_restart).toBool();
+    merge_dump_segments = settings.value("merge_dump_segments", merge_dump_segments).toBool();
 
     /* Load key mapping */
 
