@@ -4,6 +4,9 @@ T## [Unreleased]
 * Add async SDL events handling (#166)
 
 ### Changed
+
+* Monitor refresh rate now matches the framerate setting in libTAS
+
 ### Fixed
 
 * Don't use libavutil functions when configuring swresample context (#106)

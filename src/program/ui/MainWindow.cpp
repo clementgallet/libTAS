@@ -149,6 +149,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
+    fpsDenField->setMinimum(1);
     disabledWidgetsOnStart.append(fpsDenField);
 
     fpsValues = new QLabel("Current FPS: - / -");
@@ -368,19 +369,19 @@ void MainWindow::createActions()
 
     screenResGroup = new QActionGroup(this);
     addActionCheckable(screenResGroup, tr("Native"), 0);
-    addActionCheckable(screenResGroup, tr("640x480@60 (4:3)"), (640 << 16) | 480);
-    addActionCheckable(screenResGroup, tr("800x600@60 (4:3)"), (800 << 16) | 600);
-    addActionCheckable(screenResGroup, tr("1024x768@60 (4:3)"), (1024 << 16) | 768);
-    addActionCheckable(screenResGroup, tr("1280x720@60 (16:9)"), (1280 << 16) | 720);
-    addActionCheckable(screenResGroup, tr("1280x800@60 (16:10)"), (1280 << 16) | 800);
-    addActionCheckable(screenResGroup, tr("1400x1050@60 (4:3)"), (1400 << 16) | 1050);
-    addActionCheckable(screenResGroup, tr("1440x900@60 (16:10)"), (1440 << 16) | 900);
-    addActionCheckable(screenResGroup, tr("1600x900@60 (16:9)"), (1600 << 16) | 900);
-    addActionCheckable(screenResGroup, tr("1680x1050@60 (16:10)"), (1680 << 16) | 1050);
-    addActionCheckable(screenResGroup, tr("1920x1080@60 (16:9)"), (1920 << 16) | 1080);
-    addActionCheckable(screenResGroup, tr("1920x1200@60 (16:10)"), (1920 << 16) | 1200);
-    addActionCheckable(screenResGroup, tr("2560x1440@60 (16:9)"), (2560 << 16) | 1440);
-    addActionCheckable(screenResGroup, tr("3840x2160@60 (16:9)"), (3840 << 16) | 2160);
+    addActionCheckable(screenResGroup, tr("640x480 (4:3)"), (640 << 16) | 480);
+    addActionCheckable(screenResGroup, tr("800x600 (4:3)"), (800 << 16) | 600);
+    addActionCheckable(screenResGroup, tr("1024x768 (4:3)"), (1024 << 16) | 768);
+    addActionCheckable(screenResGroup, tr("1280x720 (16:9)"), (1280 << 16) | 720);
+    addActionCheckable(screenResGroup, tr("1280x800 (16:10)"), (1280 << 16) | 800);
+    addActionCheckable(screenResGroup, tr("1400x1050 (4:3)"), (1400 << 16) | 1050);
+    addActionCheckable(screenResGroup, tr("1440x900 (16:10)"), (1440 << 16) | 900);
+    addActionCheckable(screenResGroup, tr("1600x900 (16:9)"), (1600 << 16) | 900);
+    addActionCheckable(screenResGroup, tr("1680x1050 (16:10)"), (1680 << 16) | 1050);
+    addActionCheckable(screenResGroup, tr("1920x1080 (16:9)"), (1920 << 16) | 1080);
+    addActionCheckable(screenResGroup, tr("1920x1200 (16:10)"), (1920 << 16) | 1200);
+    addActionCheckable(screenResGroup, tr("2560x1440 (16:9)"), (2560 << 16) | 1440);
+    addActionCheckable(screenResGroup, tr("3840x2160 (16:9)"), (3840 << 16) | 2160);
     connect(screenResGroup, &QActionGroup::triggered, this, &MainWindow::slotScreenRes);
 
     renderPerfGroup = new QActionGroup(this);

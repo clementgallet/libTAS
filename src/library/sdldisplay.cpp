@@ -135,8 +135,8 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode);
         mode->format = SDL_PIXELFORMAT_RGB888;
         mode->w = shared_config.screen_width;
         mode->h = shared_config.screen_height;
-        mode->refresh_rate = 60;
     }
+    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
 
     debuglog(LCF_SDL | LCF_WINDOW, "   returns mode format: ", mode->format, ", w: ", mode->w, ", h: ", mode->h, ", refresh rate: ", mode->refresh_rate, ", data: ", mode->driverdata);
     return ret;
@@ -153,8 +153,8 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode);
         mode->format = SDL_PIXELFORMAT_RGB888;
         mode->w = shared_config.screen_width;
         mode->h = shared_config.screen_height;
-        mode->refresh_rate = 60;
     }
+    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
 
     debuglog(LCF_SDL | LCF_WINDOW, "   returns mode format: ", mode->format, ", w: ", mode->w, ", h: ", mode->h, ", refresh rate: ", mode->refresh_rate, ", data: ", mode->driverdata);
     return ret;
@@ -177,8 +177,8 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode);
         mode->format = SDL_PIXELFORMAT_RGB888;
         mode->w = shared_config.screen_width;
         mode->h = shared_config.screen_height;
-        mode->refresh_rate = 60;
     }
+    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
 
     debuglog(LCF_SDL | LCF_WINDOW, "   returns mode format: ", mode->format, ", w: ", mode->w, ", h: ", mode->h, ", refresh rate: ", mode->refresh_rate, ", data: ", mode->driverdata);
     return ret;
@@ -203,11 +203,11 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode);
             closest->format = SDL_PIXELFORMAT_RGB888;
             closest->w = shared_config.screen_width;
             closest->h = shared_config.screen_height;
-            closest->refresh_rate = 60;
 
             dm = closest;
         }
     }
+    dm->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
 
     return dm;
 }
