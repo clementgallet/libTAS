@@ -744,7 +744,10 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 
         char flag = saved_state.getNextPageFlag();
 
+        /* It seems that static memory is both zero and unmapped, so we still
+         * need to memset the region. */
         if (flag == Area::NO_PAGE) {
+            memset(static_cast<void*>(curAddr), 0, 4096);
         }
         else if (flag == Area::ZERO_PAGE) {
             if (shared_config.incremental_savestates) {
@@ -989,7 +992,7 @@ static size_t writeAllAreas(bool base)
     }
 
     if (spmfd != -1) {
-        NATIVECALL(close(spmfd));        
+        NATIVECALL(close(spmfd));
     }
 
     /* Closing the savestate files */
@@ -1034,7 +1037,7 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
     if (spmfd != -1) {
         /* Seek at the beginning of the area pagemap */
-        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));        
+        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
     }
 
     /* Number of pages in the area */

@@ -11,6 +11,7 @@ T## [Unreleased]
 
 * Don't use libavutil functions when configuring swresample context (#106)
 * Fix a crash when seeking an audio source without attached buffers
+* Memset unmapped memory when loading a savestate (#291)
 
 ## [1.3.5] - 2019-11-26
 ### Added
