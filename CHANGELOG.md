@@ -2,6 +2,7 @@ T## [Unreleased]
 ### Added
 
 * Add async SDL events handling (#166)
+* Implement relative mouse inputs
 
 ### Changed
 

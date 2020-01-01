@@ -337,6 +337,7 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
         input_stream.put('|');
         input_stream << std::dec;
         input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
+		input_stream << ((inputs.pointer_mode == SingleInput::POINTER_MODE_RELATIVE)?"R:":"A:");
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B1))?'1':'.');
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B2))?'2':'.');
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B3))?'3':'.');
@@ -417,6 +418,10 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
         input_string >> std::dec;
         input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
         input_string >> d;
+		if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
+		else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+		input_string >> d;
+		input_string >> d;
         if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
         input_string >> d;
         if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);

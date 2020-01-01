@@ -22,26 +22,27 @@
 
 namespace libtas {
 
-/* Inputs received from libTAS */
 AllInputs ai;
-
-/* Previous inputs, used to detected pressed keys, mouse delta positions, etc. */
 AllInputs old_ai;
-
-/*
- * Inputs that are seen by the game. It differs from ai in only rare cases:
- * - when the game warps the mouse cursor
- */
 AllInputs game_ai;
+AllInputs old_game_ai;
 
 void updateGameInputs()
 {
+    old_game_ai = game_ai;
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         game_ai.keyboard[i] = ai.keyboard[i];
     }
 
-    game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
-    game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+    game_ai.pointer_mode = ai.pointer_mode;
+    if (game_ai.pointer_mode == SingleInput::POINTER_MODE_RELATIVE) {
+        game_ai.pointer_x += ai.pointer_x;
+        game_ai.pointer_y += ai.pointer_y;
+    }
+    else {
+        game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+        game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+    }
     game_ai.pointer_mask = ai.pointer_mask;
 
     for (int ji=0; ji<shared_config.nb_controllers; ji++) {
@@ -50,7 +51,7 @@ void updateGameInputs()
         }
         game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
     }
-
+    old_ai = ai;
 }
 
 }

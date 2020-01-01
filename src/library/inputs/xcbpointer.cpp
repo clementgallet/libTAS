@@ -75,7 +75,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
     if (!gameXWindows.empty()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
-        event.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+        event.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
 
         if (dst_window == XCB_NONE) {
             /* Relative warp */
@@ -131,7 +131,7 @@ xcb_warp_pointer (xcb_connection_t *c,
     if (!gameXWindows.empty()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
-        event.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+        event.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
 
         if (dst_window == XCB_NONE) {
             /* Relative warp */

@@ -108,7 +108,7 @@ DEFINE_ORIG_POINTER(XQueryPointer);
     if (!gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
-        event.xmotion.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+        event.xmotion.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
         if (dest_w == None) {
             /* Relative warp */
             event.xmotion.x = game_ai.pointer_x + dest_x;

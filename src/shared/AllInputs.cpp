@@ -28,6 +28,7 @@ void AllInputs::emptyInputs() {
 
     pointer_x = 0;
     pointer_y = 0;
+    pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
     pointer_mask = 0;
 
     for (i=0; i<MAXJOYS; i++) {
@@ -57,6 +58,9 @@ int AllInputs::getInput(const SingleInput &si) const
     }
     if (si.type == SingleInput::IT_POINTER_Y) {
         return pointer_y;
+    }
+    if (si.type == SingleInput::IT_POINTER_MODE) {
+        return pointer_mode;
     }
     if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
         return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
@@ -124,6 +128,9 @@ void AllInputs::setInput(const SingleInput &si, int value)
     if (si.type == SingleInput::IT_POINTER_Y) {
         pointer_y = value;
     }
+    if (si.type == SingleInput::IT_POINTER_MODE) {
+        pointer_mode = value;
+    }
     if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
         if (value)
             pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
@@ -168,9 +175,10 @@ int AllInputs::toggleInput(const SingleInput &si)
 
 void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
 {
+    SingleInput si;
     for (const uint32_t& ks : keyboard) {
         if (ks) {
-            SingleInput si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
+            si = {SingleInput::IT_KEYBOARD, static_cast<unsigned int>(ks), std::to_string(ks)};
             input_set.insert(si);
         }
         else {
@@ -179,16 +187,18 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
 
     if (pointer_x) {
-        SingleInput si = {SingleInput::IT_POINTER_X, 1, ""};
+        si = {SingleInput::IT_POINTER_X, 1, ""};
         input_set.insert(si);
     }
     if (pointer_y) {
-        SingleInput si = {SingleInput::IT_POINTER_Y, 1, ""};
+        si = {SingleInput::IT_POINTER_Y, 1, ""};
         input_set.insert(si);
     }
+    si = {SingleInput::IT_POINTER_MODE, 1, ""};
+    input_set.insert(si);
     for (int b=0; b<5; b++) {
         if (pointer_mask & (1 << b)) {
-            SingleInput si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
+            si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
             input_set.insert(si);
         }
     }
@@ -197,7 +207,7 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
         uint32_t temp_flags = flags;
         for (int i=0; temp_flags!=0; i++, temp_flags >>= 1) {
             if (temp_flags & 0x1) {
-                SingleInput si = {SingleInput::IT_FLAG, i, ""};
+                si = {SingleInput::IT_FLAG, i, ""};
                 input_set.insert(si);
             }
         }
@@ -206,7 +216,7 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
     for (int c = 0; c < AllInputs::MAXJOYS; c++) {
         for (int a = 0; a < AllInputs::MAXAXES; a++) {
             if (controller_axes[c][a]) {
-                SingleInput si = {(((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK) + a, 1, ""};
+                si = {(((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK) + a, 1, ""};
                 input_set.insert(si);
             }
         }
@@ -217,7 +227,7 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
         else {
             for (int b=0; b<16; b++) {
                 if (controller_buttons[c] & (1 << b)) {
-                    SingleInput si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
+                    si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
                     input_set.insert(si);
                 }
             }

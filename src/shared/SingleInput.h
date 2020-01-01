@@ -24,6 +24,12 @@
 
 class SingleInput {
 public:
+    /* Pointer mode */
+    enum {
+        POINTER_MODE_ABSOLUTE,
+        POINTER_MODE_RELATIVE,
+    };
+
     /* Pointer buttons */
     enum {
         POINTER_B1,
@@ -87,11 +93,12 @@ public:
         /* Mouse */
         IT_POINTER_X = 1,
         IT_POINTER_Y = 2,
-        IT_POINTER_B1 = 3 + POINTER_B1,
-        IT_POINTER_B2 = 3 + POINTER_B2,
-        IT_POINTER_B3 = 3 + POINTER_B3,
-        IT_POINTER_B4 = 3 + POINTER_B4,
-        IT_POINTER_B5 = 3 + POINTER_B5,
+        IT_POINTER_MODE = 3,
+        IT_POINTER_B1 = 4 + POINTER_B1,
+        IT_POINTER_B2 = 4 + POINTER_B2,
+        IT_POINTER_B3 = 4 + POINTER_B3,
+        IT_POINTER_B4 = 4 + POINTER_B4,
+        IT_POINTER_B5 = 4 + POINTER_B5,
 
         /* Single flag */
         IT_FLAG = 10,

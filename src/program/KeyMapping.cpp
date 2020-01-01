@@ -142,6 +142,7 @@ void KeyMapping::init(xcb_connection_t* conn)
     /* Add mouse mapping */
     input_list.push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
     input_list.push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
+    input_list.push_back({SingleInput::IT_POINTER_MODE, 1, "Mouse rel"});
     input_list.push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});
     input_list.push_back({SingleInput::IT_POINTER_B2, 1, "Mouse button 2"});
     input_list.push_back({SingleInput::IT_POINTER_B3, 1, "Mouse button 3"});
@@ -369,9 +370,23 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
         return;
     }
 
-    /* Get keyboard inputs */
+    /* We make all xcb queries here to save a bit of time */
+
     xcb_generic_error_t* error = nullptr;
+
+    /* Get keyboard inputs */
     xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(conn);
+
+    /* Get mouse inputs */
+    xcb_query_pointer_cookie_t pointer_cookie;
+    xcb_get_geometry_cookie_t geometry_cookie;
+    if (sc.mouse_support) {
+        pointer_cookie = xcb_query_pointer(conn, window);
+        if (sc.mouse_mode_relative) {
+            geometry_cookie = xcb_get_geometry(conn, window);
+        }
+    }
+
     xcb_query_keymap_reply_t* keymap_reply = xcb_query_keymap_reply(conn, keymap_cookie, &error);
 
     if (error) {
@@ -467,7 +482,6 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
 
     if (sc.mouse_support) {
         /* Get the pointer position and mask */
-        xcb_query_pointer_cookie_t pointer_cookie = xcb_query_pointer(conn, window);
         xcb_query_pointer_reply_t* pointer_reply = xcb_query_pointer_reply(conn, pointer_cookie, &error);
 
         if (error) {
@@ -477,8 +491,23 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
             return;
         }
 
-        ai.pointer_x = pointer_reply->win_x;
-        ai.pointer_y = pointer_reply->win_y;
+        ai.pointer_mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
+        if (sc.mouse_mode_relative) {
+            xcb_get_geometry_reply_t* geometry_reply = xcb_get_geometry_reply(conn, geometry_cookie, &error);
+            if (error) {
+                std::cerr << "Could not get geometry, X error" << error->error_code << std::endl;
+                free(geometry_reply);
+                free(error);
+                return;
+            }
+            ai.pointer_x = pointer_reply->win_x - geometry_reply->width/2;
+            ai.pointer_y = pointer_reply->win_y - geometry_reply->height/2;
+        }
+        else {
+            ai.pointer_x = pointer_reply->win_x;
+            ai.pointer_y = pointer_reply->win_y;
+        }
+
         /* We only care about the five mouse buttons */
         ai.pointer_mask = 0;
         if (pointer_reply->mask & XCB_BUTTON_MASK_1)

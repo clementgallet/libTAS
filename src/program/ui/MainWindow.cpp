@@ -799,6 +799,8 @@ void MainWindow::createMenus()
     mouseAction = inputMenu->addAction(tr("Mouse support"));
     mouseAction->setCheckable(true);
     disabledActionsOnStart.append(mouseAction);
+    mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, &MainWindow::slotMouseMode);
+    mouseModeAction->setCheckable(true);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
     joystickMenu->addActions(joystickGroup->actions());
@@ -1132,6 +1134,7 @@ void MainWindow::updateUIFromConfig()
 
     keyboardAction->setChecked(context->config.sc.keyboard_support);
     mouseAction->setChecked(context->config.sc.mouse_support);
+    mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
 
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
 
@@ -1549,6 +1552,7 @@ BOOLSLOT(slotIncrementalState, context->config.sc.incremental_savestates)
 BOOLSLOT(slotRamState, context->config.sc.savestates_in_ram)
 BOOLSLOT(slotBacktrackState, context->config.sc.backtrack_savestate)
 BOOLSLOT(slotAutoRestart, context->config.auto_restart)
+BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {

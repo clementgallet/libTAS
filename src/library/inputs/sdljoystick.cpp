@@ -290,12 +290,6 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 /* Override */ void SDL_JoystickUpdate(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-
-    for (int j=0; j<shared_config.nb_controllers; j++) {
-        for (int a=0; a<AllInputs::MAXAXES; a++)
-            game_ai.controller_axes[j][a] = ai.controller_axes[j][a];
-        game_ai.controller_buttons[j] = ai.controller_buttons[j];
-    }
 }
 
 /* Override */ int SDL_JoystickEventState(int state)

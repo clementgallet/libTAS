@@ -36,7 +36,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     if (numkeys)
         *numkeys = SDL_NUM_SCANCODES;
 
-    xkeyboardToSDLkeyboard(ai.keyboard, SDL_keyboard);
+    xkeyboardToSDLkeyboard(game_ai.keyboard, SDL_keyboard);
     //*numkeys = 512;
     return SDL_keyboard;
 }
@@ -48,7 +48,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     if (numkeys)
         *numkeys = SDL1::SDLK_LAST;
 
-    xkeyboardToSDL1keyboard(ai.keyboard, SDL1_keyboard);
+    xkeyboardToSDL1keyboard(game_ai.keyboard, SDL1_keyboard);
     return SDL1_keyboard;
 }
 

@@ -212,6 +212,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Are we recording and sending mouse inputs to the game? */
     bool mouse_support = true;
 
+    /* Are we sending absolute or relative mouse movements */
+    bool mouse_mode_relative = false;
+
     /* Display OSD in the video encode */
     bool osd_encode = false;
 

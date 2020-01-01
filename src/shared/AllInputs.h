@@ -56,6 +56,9 @@ class AllInputs {
         int pointer_x;
         int pointer_y;
 
+        /* Absolute or relative mode */
+        unsigned int pointer_mode;
+
         /* Pointer buttons */
         unsigned int pointer_mask;
 

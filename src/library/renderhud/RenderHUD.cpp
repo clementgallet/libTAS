@@ -238,7 +238,9 @@ void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
     /* Mouse */
     if (shared_config.mouse_support) {
         if (ai.pointer_x != -1) {
-            oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << "] ";
+            oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << ":";
+            oss << ((ai.pointer_mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
+            oss << "] ";
         }
         if (ai.pointer_mask & (1 << SingleInput::POINTER_B1))
             oss << "[M b1] ";

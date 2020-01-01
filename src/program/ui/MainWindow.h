@@ -124,6 +124,7 @@ public:
 
     QAction *keyboardAction;
     QAction *mouseAction;
+    QAction *mouseModeAction;
     QActionGroup *joystickGroup;
 
 
@@ -264,6 +265,7 @@ private slots:
     void slotAsyncEvents(bool checked);
     void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
+    void slotMouseMode(bool checked);
 };
 
 #endif

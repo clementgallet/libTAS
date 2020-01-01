@@ -29,7 +29,7 @@ namespace libtas {
 /* Inputs that are sent from libTAS */
 extern AllInputs ai;
 
-/* Last state of the inputs, used to generate events */
+/* Last state of the inputs */
 extern AllInputs old_ai;
 
 /* Fake state of the inputs that is seen by the game.
@@ -37,6 +37,9 @@ extern AllInputs old_ai;
  * Warping the cursor position.
  */
 extern AllInputs game_ai;
+
+ /* Last state of the game inputs, used to generate events */
+extern AllInputs old_game_ai;
 
 void updateGameInputs();
 
