@@ -78,6 +78,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("autosave_frames", autosave_frames);
     settings.setValue("autosave_count", autosave_count);
     settings.setValue("auto_restart", auto_restart);
+    settings.setValue("mouse_warp", mouse_warp);
 
     settings.beginGroup("keymapping");
 
@@ -115,6 +116,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("framerate_den", sc.framerate_den);
     settings.setValue("keyboard_support", sc.keyboard_support);
     settings.setValue("mouse_support", sc.mouse_support);
+    settings.setValue("mouse_mode_relative", sc.mouse_mode_relative);
     settings.setValue("nb_controllers", sc.nb_controllers);
     settings.setValue("screen_width", sc.screen_width);
     settings.setValue("screen_height", sc.screen_height);
@@ -195,6 +197,7 @@ void Config::load(const std::string& gamepath) {
     autosave_frames = settings.value("autosave_frames", autosave_frames).toInt();
     autosave_count = settings.value("autosave_count", autosave_count).toInt();
     auto_restart = settings.value("auto_restart", auto_restart).toBool();
+    mouse_warp = settings.value("mouse_warp", mouse_warp).toBool();
 
     /* Load key mapping */
 
@@ -235,6 +238,7 @@ void Config::load(const std::string& gamepath) {
     sc.framerate_den = settings.value("framerate_den", sc.framerate_den).toUInt();
     sc.keyboard_support = settings.value("keyboard_support", sc.keyboard_support).toBool();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
+    sc.mouse_mode_relative = settings.value("mouse_mode_relative", sc.mouse_mode_relative).toBool();
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();
     sc.screen_width = settings.value("screen_width", sc.screen_width).toInt();
     sc.screen_height = settings.value("screen_height", sc.screen_height).toInt();

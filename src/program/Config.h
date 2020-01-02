@@ -111,6 +111,9 @@ public:
     /* Do we restart the game when it exits? */
     bool auto_restart = false;
 
+    /* Warp the pointer at the center of the game screen after each frame */
+    bool mouse_warp = false;
+
     /* Save the config into the config file */
     void save(const std::string& gamepath);
 

@@ -359,7 +359,7 @@ void KeyMapping::reassign_input(int input_index, xcb_keysym_t ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc){
+void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp){
     int i,j;
     int keysym_i = 0;
 
@@ -502,6 +502,12 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_windo
             }
             ai.pointer_x = pointer_reply->win_x - geometry_reply->width/2;
             ai.pointer_y = pointer_reply->win_y - geometry_reply->height/2;
+
+            /* Warp pointer if needed */
+            if (mouse_warp)
+                xcb_warp_pointer (conn, XCB_NONE, window, 0, 0, 0, 0, geometry_reply->width/2, geometry_reply->height/2);
+
+            free(geometry_reply);
         }
         else {
             ai.pointer_x = pointer_reply->win_x;

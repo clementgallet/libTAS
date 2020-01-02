@@ -801,6 +801,8 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(mouseAction);
     mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, &MainWindow::slotMouseMode);
     mouseModeAction->setCheckable(true);
+    mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, &MainWindow::slotMouseWarp);
+    mouseWarpAction->setCheckable(true);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
     joystickMenu->addActions(joystickGroup->actions());
@@ -1135,6 +1137,7 @@ void MainWindow::updateUIFromConfig()
     keyboardAction->setChecked(context->config.sc.keyboard_support);
     mouseAction->setChecked(context->config.sc.mouse_support);
     mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
+    mouseWarpAction->setChecked(context->config.mouse_warp);
 
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
 
@@ -1553,6 +1556,7 @@ BOOLSLOT(slotRamState, context->config.sc.savestates_in_ram)
 BOOLSLOT(slotBacktrackState, context->config.sc.backtrack_savestate)
 BOOLSLOT(slotAutoRestart, context->config.auto_restart)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
+BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {

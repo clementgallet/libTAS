@@ -181,8 +181,9 @@ class KeyMapping {
          * - Check if the keysym is mapped to a hotkey. If so, we skip it
          * - Check if the key is mapped to another input and fill the AllInputs struct accordingly
          * - Get the mouse state
+         * - Warp mouse pointer if needed
          */
-        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc);
+        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp);
 };
 
 #endif // KEYMAPPING_H_INCLUDED
