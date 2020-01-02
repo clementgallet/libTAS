@@ -246,13 +246,13 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 in_ch_layout = AV_CH_LAYOUT_MONO;
             }
             if (curBuf->nbChannels == 2) {
-                in_ch_layout = AV_CH_LAYOUT_MONO;
+                in_ch_layout = AV_CH_LAYOUT_STEREO;
             }
             if (outNbChannels == 1) {
                 out_ch_layout = AV_CH_LAYOUT_MONO;
             }
             if (outNbChannels == 2) {
-                out_ch_layout = AV_CH_LAYOUT_MONO;
+                out_ch_layout = AV_CH_LAYOUT_STEREO;
             }
 
             MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outFormat, outFrequency, in_ch_layout, inFormat, static_cast<int>(curBuf->frequency*pitch), 0, nullptr));
