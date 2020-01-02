@@ -248,6 +248,16 @@ void SteamAPI_UnregisterCallback( void *pCallback )
     debuglog(LCF_STEAM, __func__, " call.");
 }
 
+void SteamAPI_RegisterCallResult( void *pCallback, SteamAPICall_t hAPICall )
+{
+    debuglog(LCF_STEAM, __func__, " call.");
+}
+
+void SteamAPI_UnregisterCallResult( void *pCallback, SteamAPICall_t hAPICall )
+{
+    debuglog(LCF_STEAM, __func__, " call.");
+}
+
 ISteamClient *SteamClient()
 {
     DEBUGLOGCALL(LCF_STEAM);
@@ -373,7 +383,8 @@ ISteamHTTP *SteamHTTP()
     if (!shared_config.virtual_steam)
         return nullptr;
 
-    return nullptr;
+    static ISteamHTTP steamhttp;
+    return &steamhttp;
 }
 
 ISteamAppList *SteamAppList()

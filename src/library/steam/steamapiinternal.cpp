@@ -53,6 +53,9 @@ void * SteamInternal_ContextInit( void *pContextInitData )
     context.m_pSteamFriends = SteamFriends();
     context.m_pSteamScreenshots = SteamScreenshots();
     context.m_pSteamUGC = SteamUGC();
+    context.m_pSteamMatchmaking = SteamMatchmaking();
+    context.m_pSteamMatchmakingServers = SteamMatchmakingServers();
+    context.m_pSteamHTTP = SteamHTTP();
     return &context;
 }
 
@@ -94,6 +97,7 @@ bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
     context->m_pSteamUGC = SteamUGC();
     context->m_pSteamMatchmaking = SteamMatchmaking();
     context->m_pSteamMatchmakingServers = SteamMatchmakingServers();
+    context->m_pSteamHTTP = SteamHTTP();
     return true;
 }
 

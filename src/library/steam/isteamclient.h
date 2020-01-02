@@ -19,11 +19,11 @@
 #include "isteamugc.h"
 #include "isteamcontroller.h"
 #include "isteammatchmaking.h"
+#include "isteamhttp.h"
 
 namespace libtas {
 
 typedef void ISteamNetworking;
-typedef void ISteamHTTP;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

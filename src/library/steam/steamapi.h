@@ -32,6 +32,7 @@
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
 #include "isteammatchmaking.h"
+#include "isteamhttp.h"
 
 namespace libtas {
 
@@ -73,6 +74,10 @@ OVERRIDE void SteamAPI_RunCallbacks();
 OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
 OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
 
+// Internal functions used by the utility CCallResult objects to receive async call results
+OVERRIDE void SteamAPI_RegisterCallResult( void *pCallback, SteamAPICall_t hAPICall );
+OVERRIDE void SteamAPI_UnregisterCallResult( void *pCallback, SteamAPICall_t hAPICall );
+
 
 OVERRIDE ISteamClient *SteamClient();
 OVERRIDE ISteamController *SteamController();
@@ -85,7 +90,6 @@ OVERRIDE ISteamScreenshots *SteamScreenshots();
 OVERRIDE ISteamUGC *SteamUGC();
 
 typedef void ISteamNetworking;
-typedef void ISteamHTTP;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

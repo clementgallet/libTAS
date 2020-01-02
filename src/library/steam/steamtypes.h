@@ -21,6 +21,7 @@ typedef uint64_t CGameID;
 
 typedef unsigned int AppId_t;
 typedef uint64_t SteamAPICall_t;
+typedef uint32_t DepotId_t;
 
 typedef uint64_t PublishedFileId_t; // not sure
 typedef uint64_t SteamParamStringArray_t; // not sure
@@ -70,6 +71,11 @@ typedef int EUGCReadAction;
 typedef int ELobbyType;
 typedef int ELobbyComparison;
 typedef int ELobbyDistanceFilter;
+typedef int EGCResults;
+typedef int HTTPRequestHandle;
+typedef int HTTPCookieContainerHandle;
+typedef int EHTTPMethod;
+typedef int EHTTPStatusCode;
 
 typedef void* HServerListRequest;
 typedef int HServerQuery;

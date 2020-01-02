@@ -20,6 +20,7 @@
 #include "isteamclient.h"
 #include "isteamcontroller.h"
 #include "steamapi.h"
+#include "isteamgamecoordinator.h"
 #include "../logging.h"
 
 namespace libtas {
@@ -97,7 +98,12 @@ ISteamMatchmakingServers *ISteamClient::GetISteamMatchmakingServers( HSteamUser 
 void *ISteamClient::GetISteamGenericInterface( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    if (strcmp(pchVersion, "SteamGameCoordinator001") == 0) {
+        static ISteamGameCoordinator steamgamecoordinator;
+        return &steamgamecoordinator;
+    }
+    debuglog(LCF_STEAM | LCF_ERROR, "Invalid interface ", pchVersion);
+    return nullptr;
 }
 
 ISteamUserStats *ISteamClient::GetISteamUserStats( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
@@ -161,7 +167,7 @@ bool ISteamClient::BShutdownIfAllPipesClosed()
 ISteamHTTP *ISteamClient::GetISteamHTTP( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamHTTP();
 }
 
 void *ISteamClient::DEPRECATED_GetISteamUnifiedMessages( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )

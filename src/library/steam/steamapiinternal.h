@@ -20,6 +20,7 @@
 #include "isteamugc.h"
 #include "isteamcontroller.h"
 #include "isteammatchmaking.h"
+#include "isteamhttp.h"
 
 namespace libtas {
 
@@ -29,7 +30,6 @@ OVERRIDE void * SteamInternal_ContextInit( void *pContextInitData );
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 
 typedef void ISteamNetworking;
-typedef void ISteamHTTP;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;
