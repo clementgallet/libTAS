@@ -17,6 +17,7 @@ T## [Unreleased]
 * Memset unmapped memory when loading a savestate (#291)
 * Don't link swr_free on AudioSource destructor (#294)
 * Rearrange movie/config settings and their update on UI (#296)
+* Fix restart toggle on input editor (#292)
 
 ## [1.3.5] - 2019-11-26
 ### Added

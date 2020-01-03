@@ -138,9 +138,12 @@ void AllInputs::setInput(const SingleInput &si, int value)
             pointer_mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
     }
 
-    /* Restart input */
+    /* Flag input */
     if (si.type == SingleInput::IT_FLAG) {
-        flags |= (value & 0x1) << si.value;
+        if (value)
+            flags |= (0x1 << si.value);
+        else
+            flags &= ~(0x1 << si.value);
     }
 
     /* Controller inputs */
