@@ -60,6 +60,9 @@ AudioSource::AudioSource(void)
     link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
     link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
 
+    /* We link to swr_free here, because linking during destructor can softlock */
+    LINK_NAMESPACE(swr_free, "swresample");
+
     swr = orig::swr_alloc();
 
     volume = 1.0f;
@@ -69,7 +72,6 @@ AudioSource::AudioSource(void)
 
 AudioSource::~AudioSource(void)
 {
-    LINK_NAMESPACE(swr_free, "swresample");
     orig::swr_free(&swr);
 }
 
