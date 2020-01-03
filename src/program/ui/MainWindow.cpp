@@ -1062,11 +1062,8 @@ do {\
 
 void MainWindow::updateMovieParams()
 {
-    int ret = gameLoop->movie.loadMovie();
-    if (ret == 0) {
-        movieFrameCount->setValue(context->config.sc.movie_framecount);
-        rerecordCount->setValue(context->rerecord_count);
-        authorField->setText(context->authors.c_str());
+    if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
+        (gameLoop->movie.loadMovie() == 0)) {
         authorField->setReadOnly(true);
 
         /* Format movie length */
@@ -1075,25 +1072,39 @@ void MainWindow::updateMovieParams()
         movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
 
         moviePlayback->setChecked(true);
-        if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-            context->config.sc.recording = SharedConfig::RECORDING_READ;
-            context->config.sc_modified = true;
-        }
+        context->config.sc.recording = SharedConfig::RECORDING_READ;
+        context->config.sc_modified = true;
         annotationsWindow->update();
     }
     else {
-        movieFrameCount->setValue(0);
-        rerecordCount->setValue(0);
-        authorField->setText("");
+        context->config.sc.movie_framecount = 0;
+        context->rerecord_count = 0;
+        context->authors = "";
         authorField->setReadOnly(false);
         movieLength->setText("Movie length: -");
-
         movieRecording->setChecked(true);
         if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             context->config.sc_modified = true;
         }
         annotationsWindow->clear();
+    }
+    movieFrameCount->setValue(context->config.sc.movie_framecount);
+    rerecordCount->setValue(context->rerecord_count);
+    authorField->setText(context->authors.c_str());
+    keyboardAction->setChecked(context->config.sc.keyboard_support);
+    mouseAction->setChecked(context->config.sc.mouse_support);
+    setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
+    fpsNumField->setValue(context->config.sc.framerate_num);
+    fpsDenField->setValue(context->config.sc.framerate_den);
+    initialTimeSec->setValue(context->config.sc.initial_time_sec);
+    initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
+    autoRestartAction->setChecked(context->config.auto_restart);
+    for (auto& action : timeMainGroup->actions()) {
+        action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
+    }
+    for (auto& action : timeSecGroup->actions()) {
+        action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
     }
 }
 
@@ -1106,12 +1117,6 @@ void MainWindow::updateUIFromConfig()
 
     cmdOptions->setText(context->config.gameargs.c_str());
     moviePath->setText(context->config.moviefile.c_str());
-    fpsNumField->setValue(context->config.sc.framerate_num);
-    fpsDenField->setValue(context->config.sc.framerate_den);
-    authorField->setText(context->authors.c_str());
-
-    initialTimeSec->setValue(context->config.sc.initial_time_sec);
-    initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
     movieBox->setChecked(!(context->config.sc.recording == SharedConfig::NO_RECORDING));
 
@@ -1134,12 +1139,8 @@ void MainWindow::updateUIFromConfig()
 
     setRadioFromList(slowdownGroup, context->config.sc.speed_divisor);
 
-    keyboardAction->setChecked(context->config.sc.keyboard_support);
-    mouseAction->setChecked(context->config.sc.mouse_support);
     mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
     mouseWarpAction->setChecked(context->config.mouse_warp);
-
-    setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
 
     int screenResValue = (context->config.sc.screen_width << 16) | context->config.sc.screen_height;
     setRadioFromList(screenResGroup, screenResValue);
@@ -1150,14 +1151,6 @@ void MainWindow::updateUIFromConfig()
 #endif
 
     setRadioFromList(localeGroup, context->config.sc.locale);
-
-    for (auto& action : timeMainGroup->actions()) {
-        action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
-    }
-
-    for (auto& action : timeSecGroup->actions()) {
-        action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
-    }
 
     setRadioFromList(waitGroup, context->config.sc.wait_timeout);
 
@@ -1175,8 +1168,6 @@ void MainWindow::updateUIFromConfig()
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
-
-    autoRestartAction->setChecked(context->config.auto_restart);
 
     updateStatusBar();
 }
@@ -1419,6 +1410,7 @@ void MainWindow::slotMovieEnable(bool checked)
     else {
         context->config.sc.recording = SharedConfig::NO_RECORDING;
     }
+    updateMovieParams();
 
     annotateMovieAction->setEnabled(checked);
     context->config.sc_modified = true;
