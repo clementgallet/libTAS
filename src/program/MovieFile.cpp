@@ -417,11 +417,17 @@ int MovieFile::readFrame(std::string& line, AllInputs& inputs)
         input_string >> d;
         input_string >> std::dec;
         input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
-        input_string >> d;
-		if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
-		else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
 		input_string >> d;
-		input_string >> d;
+		if ((d == 'R') || (d == 'A')) {
+			/* Read mouse mode */
+			if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
+			else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+			input_string >> d;
+			input_string >> d;
+		}
+		else {
+			inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+		}
         if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
         input_string >> d;
         if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);
