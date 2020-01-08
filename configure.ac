@@ -82,9 +82,8 @@ AC_CHECK_LIB(pthread, pthread_create, [], AC_MSG_ERROR(The pthread library is re
 AC_CHECK_HEADERS([alsa/asoundlib.h], [], AC_MSG_ERROR(The alsa headers are required!))
 AC_CHECK_LIB(asound, snd_pcm_open, [LIBRARY_LIBS="$LIBRARY_LIBS -lasound"], AC_MSG_ERROR(The asound library is required!))
 
-AC_CHECK_HEADERS([libswresample/swresample.h libavutil/avutil.h], [], AC_MSG_ERROR(The swresample headers are required!))
+AC_CHECK_HEADERS([libswresample/swresample.h], [], AC_MSG_ERROR(The swresample header is required!))
 AC_CHECK_LIB(swresample, swr_init, [LIBRARY_LIBS=$LIBRARY_LIBS], AC_MSG_ERROR(The swresmaple library is required!))
-AC_CHECK_LIB(avutil, av_opt_set_sample_fmt, [LIBRARY_LIBS=$LIBRARY_LIBS], AC_MSG_ERROR(The avutil library is required!))
 
 AS_IF([test "x$enable_hud" != "xno"], [
 	CPPFLAGS='-I/usr/include/freetype2'
