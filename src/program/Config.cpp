@@ -79,6 +79,8 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("autosave_count", autosave_count);
     settings.setValue("auto_restart", auto_restart);
     settings.setValue("mouse_warp", mouse_warp);
+    settings.setValue("use_proton", use_proton);
+    settings.setValue("proton_path", proton_path.c_str());
 
     settings.beginGroup("keymapping");
 
@@ -198,6 +200,8 @@ void Config::load(const std::string& gamepath) {
     autosave_count = settings.value("autosave_count", autosave_count).toInt();
     auto_restart = settings.value("auto_restart", auto_restart).toBool();
     mouse_warp = settings.value("mouse_warp", mouse_warp).toBool();
+    use_proton = settings.value("use_proton", use_proton).toBool();
+    proton_path = settings.value("proton_path", "").toString().toStdString();
 
     /* Load key mapping */
 

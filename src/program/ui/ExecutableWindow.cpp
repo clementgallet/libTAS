@@ -19,7 +19,6 @@
 
 #include <QLabel>
 #include <QFileDialog>
-#include <QGroupBox>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -62,6 +61,20 @@ ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags 
     libPathLayout->addWidget(browseLibPath);
     libPathGroupBox->setLayout(libPathLayout);
 
+    /* Proton path */
+    protonPath = new QLineEdit();
+    protonPath->setMinimumWidth(400);
+    browseProtonPath = new QPushButton("Browse...");
+    connect(browseProtonPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseProtonPath);
+
+    /* Proton path layout */
+    protonPathGroupBox = new QGroupBox(tr("Proton path"));
+    protonPathGroupBox->setCheckable(true);
+    QHBoxLayout *libProtonLayout = new QHBoxLayout;
+    libProtonLayout->addWidget(protonPath);
+    libProtonLayout->addWidget(browseProtonPath);
+    protonPathGroupBox->setLayout(libProtonLayout);
+
     /* Buttons */
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -73,6 +86,7 @@ ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags 
 
     mainLayout->addWidget(runPathGroupBox);
     mainLayout->addWidget(libPathGroupBox);
+    mainLayout->addWidget(protonPathGroupBox);
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
@@ -84,12 +98,16 @@ void ExecutableWindow::update_config()
 {
     runPath->setText(context->config.rundir.c_str());
     libPath->setText(context->config.libdir.c_str());
+    protonPathGroupBox->setChecked(context->config.use_proton);
+    protonPath->setText(context->config.proton_path.c_str());
 }
 
 void ExecutableWindow::slotOk()
 {
     context->config.rundir = runPath->text().toStdString();
     context->config.libdir = libPath->text().toStdString();
+    context->config.use_proton = protonPathGroupBox->isChecked();
+    context->config.proton_path = protonPath->text().toStdString();
 
     /* Close window */
     accept();
@@ -109,4 +127,11 @@ void ExecutableWindow::slotBrowseLibPath()
     QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an library directory"), defaultPath);
     if (!dirname.isNull())
         libPath->setText(dirname);
+}
+
+void ExecutableWindow::slotBrowseProtonPath()
+{
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose a proton directory"), protonPath->text());
+    if (!dirname.isNull())
+        protonPath->setText(dirname);
 }

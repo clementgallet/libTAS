@@ -183,29 +183,65 @@ void GameLoop::launchGameThread()
 
     /* Detect Windows executables and launch wine */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
-        /* Change the executable to wine */
-        std::string winename = "wine";
-        if (gameArch == BT_PE32P)
-            winename += "64";
 
-        /* wine[64] presence was already checked in ui/ErrorChecking.cpp */
-        std::string cmd = "which ";
-        cmd += winename;
-        FILE *output = popen(cmd.c_str(), "r");
-        if (output != NULL) {
-            std::array<char,256> buf;
-            if (fgets(buf.data(), buf.size(), output) != 0) {
-                std::string winepath = std::string(buf.data());
-                winepath.pop_back(); // remove trailing newline
-                arg_list.push_back(winepath);
+        if (context->config.use_proton && !context->config.proton_path.empty()) {
+            /* Change the executable to proton */
+            std::string winepath = context->config.proton_path;
+            winepath += "/dist/bin/wine";
+            if (gameArch == BT_PE32P)
+                winepath += "64";
+            arg_list.push_back(winepath);
+
+            /* Push the game executable as the first command-line argument */
+            context->gamepath.insert(0, "Z:");
+            arg_list.push_back(context->gamepath);
+
+            /* Set the env variables needed by Proton */
+            std::string winedllpath = context->config.proton_path;
+            winedllpath += "/dist/lib64/wine:";
+            winedllpath += context->config.proton_path;
+            winedllpath += "/dist/lib/wine";
+            setenv("WINEDLLPATH", winedllpath.c_str(), 1);
+
+            char* oldlibpath = getenv("LD_LIBRARY_PATH");
+            std::string libpath = context->config.proton_path;
+            libpath += "/dist/lib64/:";
+            libpath += context->config.proton_path;
+            libpath += "/dist/lib/";
+            if (oldlibpath) {
+                libpath.append(":");
+                libpath.append(oldlibpath);
             }
-            pclose(output);
-        }
+            setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
 
-        /* Push the game executable as the first command-line argument */
-        /* Wine can fail if not specifying a Windows path */
-        context->gamepath.insert(0, "Z:");
-        arg_list.push_back(context->gamepath);
+            std::string wineprefix = context->config.proton_path;
+            wineprefix += "/dist/share/default_pfx/";
+            setenv("WINEPREFIX", wineprefix.c_str(), 1);
+        }
+        else {
+            /* Change the executable to wine */
+            std::string winename = "wine";
+            if (gameArch == BT_PE32P)
+                winename += "64";
+
+            /* wine[64] presence was already checked in ui/ErrorChecking.cpp */
+            std::string cmd = "which ";
+            cmd += winename;
+            FILE *output = popen(cmd.c_str(), "r");
+            if (output != NULL) {
+                std::array<char,256> buf;
+                if (fgets(buf.data(), buf.size(), output) != 0) {
+                    std::string winepath = std::string(buf.data());
+                    winepath.pop_back(); // remove trailing newline
+                    arg_list.push_back(winepath);
+                }
+                pclose(output);
+            }
+            /* Push the game executable as the first command-line argument */
+            /* Wine can fail if not specifying a Windows path */
+            context->gamepath.insert(0, "Z:");
+            arg_list.push_back(context->gamepath);
+        }
 
         /* We need to delay libtas hooking for wine process. */
         setenv("LIBTAS_DELAY_INIT", "1", 1);

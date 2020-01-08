@@ -114,6 +114,12 @@ public:
     /* Warp the pointer at the center of the game screen after each frame */
     bool mouse_warp = false;
 
+    /* Use proton to launch Windows executables */
+    bool use_proton = false;
+
+    /* Proton absolute path */
+    std::string proton_path;
+
     /* Save the config into the config file */
     void save(const std::string& gamepath);
 

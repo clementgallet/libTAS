@@ -23,6 +23,7 @@
 #include <QDialog>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QGroupBox>
 
 #include "../Context.h"
 
@@ -43,10 +44,15 @@ private:
     QLineEdit *libPath;
     QPushButton *browseLibPath;
 
+    QLineEdit *protonPath;
+    QPushButton *browseProtonPath;
+    QGroupBox *protonPathGroupBox;
+
 private slots:
     void slotOk();
     void slotBrowseRunPath();
     void slotBrowseLibPath();
+    void slotBrowseProtonPath();
 };
 
 #endif

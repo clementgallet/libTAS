@@ -186,6 +186,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     stopButton = new QPushButton(tr("Stop"));
     connect(stopButton, &QAbstractButton::clicked, this, &MainWindow::slotStop);
+    stopButton->setEnabled(false);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
     buttonBox->addButton(launchButton, QDialogButtonBox::ActionRole);

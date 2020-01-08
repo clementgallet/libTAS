@@ -1,10 +1,11 @@
-T## [Unreleased]
+## [Unreleased]
 ### Added
 
 * Add async SDL events handling (#166)
 * Implement relative mouse inputs
 * Add a setting to warp the pointer to the center of the screen after each frame
 * Implement SteamHTTP and SteamGameCoordinator
+* Users can use Proton instead of wine for launching Windows games
 
 ### Changed
 
