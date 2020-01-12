@@ -530,7 +530,7 @@ void logEvent(SDL_Event *event)
     switch(event->type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            debuglog(LCF_SDL | LCF_EVENTS, "Receiving KEYUP/KEYDOWN event.");
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving KEYUP/KEYDOWN event with scancode ", (int)event->key.keysym.scancode, " and sym ", event->key.keysym.sym);
             break;
 
         case SDL_QUIT:
@@ -555,11 +555,11 @@ void logEvent(SDL_Event *event)
             break;
 
         case SDL_TEXTEDITING:
-            debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text editing event.");
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text editing event.");
             break;
 
         case SDL_TEXTINPUT:
-            debuglog(LCF_SDL | LCF_EVENTS, "Receiving a keyboard text input event.");
+            debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text input event ", event->text.text);
             break;
             /*
                case SDL_KEYMAPCHANGED:

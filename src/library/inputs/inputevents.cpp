@@ -223,7 +223,7 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", event2.key.keysym.sym);
 
                 /* Generate a text input event if active */
-                if (SDL_IsTextInputActive()) {
+                if (SDL_IsTextInputActive() && ((event2.key.keysym.sym >> 8) == 0)) {
                     event2.type = SDL_TEXTINPUT;
                     event2.text.windowID = 0;
                     event2.text.timestamp = timestamp;

@@ -26,7 +26,7 @@
 
 namespace libtas {
 
-static bool isTextInputActive = false;
+static bool isTextInputActive = true;
 
 void SDL_StartTextInput(void)
 {

@@ -19,6 +19,7 @@
 * Don't link swr_free on AudioSource destructor (#294)
 * Rearrange movie/config settings and their update on UI (#296)
 * Fix restart toggle on input editor (#292)
+* SDL Text Input is activated by default
 
 ## [1.3.5] - 2019-11-26
 ### Added
