@@ -21,6 +21,7 @@
 * Rearrange movie/config settings and their update on UI (#296)
 * Fix restart toggle on input editor (#292)
 * SDL Text Input is activated by default
+* Fix input/hotkey mapping from config file (#302)
 
 ## [1.3.5] - 2019-11-26
 ### Added

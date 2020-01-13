@@ -214,7 +214,7 @@ void Config::load(const std::string& gamepath) {
         settings.setArrayIndex(i);
         xcb_keysym_t keysym = settings.value("keysym").toInt();
         HotKey hotkey = settings.value("hotkey").value<HotKey>();
-        km.hotkey_mapping[keysym] = hotkey;
+        km.reassign_hotkey(hotkey, keysym);
     }
     settings.endArray();
 
@@ -225,7 +225,7 @@ void Config::load(const std::string& gamepath) {
         settings.setArrayIndex(i);
         xcb_keysym_t keysym = settings.value("keysym").toInt();
         SingleInput si = settings.value("input").value<SingleInput>();
-        km.input_mapping[keysym] = si;
+        km.reassign_input(si, keysym);
     }
     settings.endArray();
 

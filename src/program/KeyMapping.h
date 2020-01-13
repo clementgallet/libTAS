@@ -168,9 +168,11 @@ class KeyMapping {
 
         /* Assign a new key to the hotkey */
         void reassign_hotkey(int hotkey_index, xcb_keysym_t ks);
+        void reassign_hotkey(HotKey hk, xcb_keysym_t ks);
 
         /* Assign a new key to the input */
         void reassign_input(int input_index, xcb_keysym_t ks);
+        void reassign_input(SingleInput si, xcb_keysym_t ks);
 
         /*
          * We are building the whole AllInputs structure,

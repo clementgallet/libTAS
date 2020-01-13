@@ -329,7 +329,11 @@ void KeyMapping::reassign_hotkey(int hotkey_index, xcb_keysym_t ks)
 {
     /* Hotkey selected */
     HotKey hk = hotkey_list[hotkey_index];
+    reassign_hotkey(hk, ks);
+}
 
+void KeyMapping::reassign_hotkey(HotKey hk, xcb_keysym_t ks)
+{
     /* Remove previous mapping from this key */
     for (auto iter : hotkey_mapping) {
         if (iter.second == hk) {
@@ -346,7 +350,11 @@ void KeyMapping::reassign_input(int input_index, xcb_keysym_t ks)
 {
     /* Input selected */
     SingleInput si = input_list[input_index];
+    reassign_input(si, ks);
+}
 
+void KeyMapping::reassign_input(SingleInput si, xcb_keysym_t ks)
+{
     /* Remove previous mapping from this key */
     for (auto iter : input_mapping) {
         if (iter.second == si) {
