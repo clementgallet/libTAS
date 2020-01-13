@@ -250,6 +250,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Force Mesa software OpenGL driver */
     bool opengl_soft = true;
 
+    /* Enable OpenGL performance tweaks */
+    bool opengl_performance = false;
 
 };
 

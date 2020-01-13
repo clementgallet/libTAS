@@ -82,9 +82,6 @@ public:
     /* Directory holding savestates and savestate movies */
     std::string savestatedir;
 
-    /* Directory holding savestates and savestate movies */
-    std::string llvm_perf;
-
     /* Flags when end of movie */
     enum MovieEnd {
         MOVIEEND_READ = 0,

@@ -86,7 +86,7 @@ public:
     QActionGroup *screenResGroup;
 
     QAction *renderSoftAction;
-    QActionGroup *renderPerfGroup;
+    QAction *renderPerfAction;
     QActionGroup *osdGroup;
     QAction *osdEncodeAction;
 
@@ -244,6 +244,7 @@ private slots:
     void slotToggleEncode();
     void slotMuteSound(bool checked);
     void slotRenderSoft(bool checked);
+    void slotRenderPerf(bool checked);
     void slotDebugState();
     void slotLoggingPrint();
     void slotLoggingExclude();

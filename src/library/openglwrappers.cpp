@@ -31,10 +31,10 @@
         return reinterpret_cast<void*>(libtas::str); \
     }
 
-#define STORE_RETURN_SYMBOL_CUSTOM(str,myfunc) \
+#define STORE_RETURN_SYMBOL_CUSTOM(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        return reinterpret_cast<void*>(myfunc); \
+        return reinterpret_cast<void*>(my##str); \
     }
 
 namespace libtas {
@@ -121,6 +121,16 @@ DEFINE_ORIG_POINTER(glDrawArraysEXT);
 
 DEFINE_ORIG_POINTER(glBlitFramebuffer);
 
+DEFINE_ORIG_POINTER(glTexParameterf);
+DEFINE_ORIG_POINTER(glTexParameteri);
+// DEFINE_ORIG_POINTER(glTexParameterfv);
+// DEFINE_ORIG_POINTER(glTexParameteriv);
+// DEFINE_ORIG_POINTER(glTexParameterIiv);
+// DEFINE_ORIG_POINTER(glTexParameterIuiv);
+
+DEFINE_ORIG_POINTER(glEnable);
+// DEFINE_ORIG_POINTER(glDisable);
+
 void checkMesa()
 {
     /* Check only once */
@@ -184,37 +194,47 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
      * other name. This is not a problem because games should not call these
      * opengl functions directly but by using a glGetProcAddress function.
      */
-    STORE_RETURN_SYMBOL_CUSTOM(glClear, myglClear)
+    STORE_RETURN_SYMBOL_CUSTOM(glClear)
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays, myglDrawArrays)
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElements, myglDrawElements)
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArrays, myglMultiDrawArrays)
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElements, myglMultiDrawElements)
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays)
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElements)
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArrays)
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElements)
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElements, myglDrawRangeElements);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsBaseVertex, myglDrawElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsBaseVertex, myglDrawRangeElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertex, myglDrawElementsInstancedBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsBaseVertex, myglMultiDrawElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance, myglDrawArraysInstancedBaseInstance);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance, myglDrawElementsInstancedBaseInstance);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance, myglDrawElementsInstancedBaseVertexBaseInstance);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElements);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback, myglDrawTransformFeedback);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream, myglDrawTransformFeedbackStream);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced, myglDrawTransformFeedbackInstanced);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced, myglDrawTransformFeedbackStreamInstanced);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB, myglDrawArraysInstancedARB);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB, myglDrawElementsInstancedARB);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT, myglDrawArraysInstancedEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT, myglDrawElementsInstancedEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT, myglDrawRangeElementsEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT, myglMultiDrawArraysEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT, myglMultiDrawElementsEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT, myglDrawArraysEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glBlitFramebuffer, myglBlitFramebuffer);
+    STORE_RETURN_SYMBOL_CUSTOM(glBlitFramebuffer);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glTexParameterf);
+    STORE_RETURN_SYMBOL_CUSTOM(glTexParameteri);
+    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterfv);
+    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameteriv);
+    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterIiv);
+    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterIuiv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glEnable);
+    // STORE_RETURN_SYMBOL_CUSTOM(glDisable);
 
     return real_pointer;
 }
@@ -817,10 +837,8 @@ void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count)
 
 void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
-    DEBUGLOGCALL(LCF_OGL);
     LINK_NAMESPACE(glBlitFramebuffer, "GL");
-    if (!skipping_draw)
-        return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+    return myglBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
 void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
@@ -828,6 +846,91 @@ void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GL
     DEBUGLOGCALL(LCF_OGL);
     if (!skipping_draw)
         return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+}
+
+void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
+{
+    LINK_NAMESPACE(glTexParameterf, "GL");
+    return myglTexParameterf(target, pname, param);
+}
+
+void myglTexParameterf(GLenum target, GLenum pname, GLfloat param)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (shared_config.opengl_performance) {
+        switch (pname) {
+            case GL_TEXTURE_MIN_FILTER:
+                if (param == GL_NEAREST) {}
+                else if (param == GL_LINEAR)
+                    param = GL_NEAREST;
+                else
+                    param = GL_NEAREST_MIPMAP_NEAREST;
+                break;
+            case GL_TEXTURE_MAG_FILTER:
+                param = GL_NEAREST;
+                break;
+            case GL_TEXTURE_MAX_ANISOTROPY_EXT:
+                param = 1;
+                break;
+            case GL_TEXTURE_LOD_BIAS:
+                param = 3;
+                break;
+        }
+    }
+    return orig::glTexParameterf(target, pname, param);
+}
+
+void glTexParameteri(GLenum target, GLenum pname, GLfloat param)
+{
+    LINK_NAMESPACE(glTexParameteri, "GL");
+    return myglTexParameteri(target, pname, param);
+}
+
+void myglTexParameteri(GLenum target, GLenum pname, GLint param)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (shared_config.opengl_performance) {
+        switch (pname) {
+            case GL_TEXTURE_MIN_FILTER:
+                if (param == GL_NEAREST) {}
+                else if (param == GL_LINEAR)
+                    param = GL_NEAREST;
+                else
+                    param = GL_NEAREST_MIPMAP_NEAREST;
+                break;
+            case GL_TEXTURE_MAG_FILTER:
+                param = GL_NEAREST;
+                break;
+            case GL_TEXTURE_MAX_ANISOTROPY_EXT:
+                param = 1;
+                break;
+            case GL_TEXTURE_LOD_BIAS:
+                param = 3;
+                break;
+        }
+    }
+    return orig::glTexParameteri(target, pname, param);
+}
+
+void glEnable(GLenum cap)
+{
+    LINK_NAMESPACE(glEnable, "GL");
+    return myglEnable(cap);
+}
+
+void myglEnable(GLenum cap)
+{
+    DEBUGLOGCALL(LCF_OGL);
+    if (shared_config.opengl_performance) {
+        switch (cap) {
+            case GL_MULTISAMPLE:
+            case GL_DITHER:
+            case GL_TEXTURE_CUBE_MAP_SEAMLESS:
+            // case GL_BLEND:
+                return;
+        }
+    }
+    return orig::glEnable(cap);
 }
 
 }

@@ -385,18 +385,6 @@ void MainWindow::createActions()
     addActionCheckable(screenResGroup, tr("3840x2160 (16:9)"), (3840 << 16) | 2160);
     connect(screenResGroup, &QActionGroup::triggered, this, &MainWindow::slotScreenRes);
 
-    renderPerfGroup = new QActionGroup(this);
-    renderPerfGroup->setExclusive(false);
-
-    addActionCheckable(renderPerfGroup, tr("minimize texture cache footprint"), "texmem");
-    addActionCheckable(renderPerfGroup, tr("MIP_FILTER_NONE always"), "no_mipmap");
-    addActionCheckable(renderPerfGroup, tr("FILTER_NEAREST always"), "no_linear");
-    addActionCheckable(renderPerfGroup, tr("MIP_FILTER_LINEAR ==> _NEAREST"), "no_mip_linear");
-    addActionCheckable(renderPerfGroup, tr("sample white always"), "no_tex");
-    addActionCheckable(renderPerfGroup, tr("disable blending"), "no_blend");
-    addActionCheckable(renderPerfGroup, tr("disable depth buffering entirely"), "no_depth");
-    addActionCheckable(renderPerfGroup, tr("disable alpha testing"), "no_alphatest");
-
 #ifdef LIBTAS_ENABLE_HUD
     osdGroup = new QActionGroup(this);
     osdGroup->setExclusive(false);
@@ -646,11 +634,9 @@ void MainWindow::createMenus()
     renderSoftAction->setToolTip("Enforce the use of Mesa's OpenGL software driver, which is necessary for savestates to work correctly");
     disabledActionsOnStart.append(renderSoftAction);
 
-    QMenu *renderPerfMenu = videoMenu->addMenu(tr("Add performance flags to software rendering"));
-    renderPerfMenu->addActions(renderPerfGroup->actions());
-    renderPerfMenu->setToolTip("If you have issues with slow software rendering, some options here can provide a small speed-up");
-    renderPerfMenu->installEventFilter(this);
-    disabledWidgetsOnStart.append(renderPerfMenu);
+    renderPerfAction = videoMenu->addAction(tr("Toggle performance tweaks"), this, &MainWindow::slotRenderPerf);
+    renderPerfAction->setCheckable(true);
+    renderPerfAction->setToolTip("Change some OpenGL settings to get some performance boost. Should be set on startup to be effective");
 
 #ifdef LIBTAS_ENABLE_HUD
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
@@ -1156,6 +1142,7 @@ void MainWindow::updateUIFromConfig()
     setRadioFromList(waitGroup, context->config.sc.wait_timeout);
 
     renderSoftAction->setChecked(context->config.sc.opengl_soft);
+    renderPerfAction->setChecked(context->config.sc.opengl_performance);
     saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
@@ -1252,16 +1239,6 @@ void MainWindow::slotLaunch()
     setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
 
     context->config.gameargs = cmdOptions->text().toStdString();
-
-    QString llvmStr;
-    for (const auto& action : renderPerfGroup->actions()) {
-        if (action->isChecked()) {
-            llvmStr.append(action->data().toString()).append(",");
-        }
-    }
-    /* Remove the trailing comma */
-    llvmStr.chop(1);
-    context->config.llvm_perf = llvmStr.toStdString();
 
     /* Check that there might be a thread from a previous game execution */
     if (game_thread.joinable())
@@ -1480,6 +1457,8 @@ void MainWindow::slotRenderSoft(bool checked)
     context->config.sc.opengl_soft = checked;
     updateStatusBar();
 }
+
+BOOLSLOT(slotRenderPerf, context->config.sc.opengl_performance)
 
 void MainWindow::slotDebugState()
 {

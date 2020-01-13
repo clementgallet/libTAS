@@ -134,6 +134,22 @@ void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count);
 OVERRIDE void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 
+/* Some functions to alter for performance boost */
+
+OVERRIDE void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
+void myglTexParameterf(GLenum target, GLenum pname, GLfloat param);
+OVERRIDE void glTexParameteri(GLenum target, GLenum pname, GLint param);
+void myglTexParameteri(GLenum target, GLenum pname, GLint param);
+// void myglTexParameterfv(GLenum target, GLenum pname, const GLfloat * params);
+// void myglTexParameteriv(GLenum target, GLenum pname, const GLint * params);
+// void myglTexParameterIiv(GLenum target, GLenum pname, const GLint * params);
+// void myglTexParameterIuiv(GLenum target, GLenum pname, const GLuint * params);
+
+OVERRIDE void glEnable(GLenum cap);
+void myglEnable(GLenum cap);
+// OVERRIDE void glDisable(GLenum cap);
+// void myglDisable(GLenum cap);
+
 };
 
 #endif

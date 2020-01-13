@@ -73,7 +73,7 @@ DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
 DEFINE_ORIG_POINTER(glRenderbufferStorage);
 DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
 DECLARE_ORIG_POINTER(glBlitFramebuffer);
-DEFINE_ORIG_POINTER(glEnable);
+DECLARE_ORIG_POINTER(glEnable);
 DEFINE_ORIG_POINTER(glDisable);
 DEFINE_ORIG_POINTER(glIsEnabled);
 DECLARE_ORIG_POINTER(glGetIntegerv);

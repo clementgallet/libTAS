@@ -10,6 +10,7 @@
 ### Changed
 
 * Monitor refresh rate now matches the framerate setting in libTAS
+* Simplify the OpenGL performance setting
 
 ### Fixed
 

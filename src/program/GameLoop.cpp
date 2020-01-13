@@ -126,11 +126,6 @@ void GameLoop::launchGameThread()
     else
         unsetenv("LIBGL_ALWAYS_SOFTWARE");
 
-    if (!context->config.llvm_perf.empty())
-        setenv("LP_PERF", context->config.llvm_perf.c_str(), 1);
-    else
-        unsetenv("LP_PERF");
-
     /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked. */
     setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
 
