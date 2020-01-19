@@ -197,8 +197,10 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
         si = {SingleInput::IT_POINTER_Y, 1, ""};
         input_set.insert(si);
     }
-    si = {SingleInput::IT_POINTER_MODE, 1, ""};
-    input_set.insert(si);
+    if (pointer_mode) {
+        si = {SingleInput::IT_POINTER_MODE, 1, ""};
+        input_set.insert(si);
+    }
     for (int b=0; b<5; b++) {
         if (pointer_mask & (1 << b)) {
             si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
