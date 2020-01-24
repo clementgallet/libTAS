@@ -18,6 +18,7 @@
  */
 
 #include "RamSearchModel.h"
+#include <QMessageBox>
 
 RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -161,7 +162,16 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
                     emit signalProgress(cur_size);
                 }
 
-                ramwatches.emplace_back(addr+i);
+                try {
+                    ramwatches.emplace_back(addr+i);
+                }
+                catch (const std::bad_alloc &e)
+                {
+                    ramwatches.clear();
+                    ramwatches.reserve(0);
+                    QMessageBox::critical(nullptr, tr("Error"), tr("No more available memory."));
+                    return;
+                }
                 memcpy(&ramwatches.back().previous_value, chunk+i, RamWatch::type_size);
 
                 /* If only insert watches that match the compare */
