@@ -54,16 +54,50 @@ DEFINE_ORIG_POINTER(XQueryPointer);
     return 1;
 }
 
-/* Override */ int XGrabPointer(Display*, Window, Bool, unsigned int, int, int,
-    Window, Cursor, Time)
+/* Override */ int XGrabPointer(Display* display, Window w, Bool, unsigned int event_mask, int, int,
+    Window confine_to, Cursor, Time)
 {
     DEBUGLOGCALL(LCF_MOUSE);
+
+    pointer_grab_window = w;
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    queue->setMask(w, event_mask); // TODO: only set pointer event mask!!!
+
+    if (confine_to != None) {
+        XWindowAttributes clip_attr;
+        NATIVECALL(MYASSERT(XGetWindowAttributes(display, confine_to, &clip_attr) != 0));
+        pointer_clipping = true;
+        clipping_x = clip_attr.x;
+        clipping_y = clip_attr.y;
+        clipping_w = clip_attr.width;
+        clipping_h = clip_attr.height;
+
+        if (game_ai.pointer_x < clipping_x) {
+            debuglog(LCF_MOUSE, "   warping pointer x from ", game_ai.pointer_x, " to ", clipping_x);
+            game_ai.pointer_x = clipping_x;
+        }
+        else if (game_ai.pointer_x >= (clipping_x + clipping_w)) {
+            debuglog(LCF_MOUSE, "   warping pointer x from ", game_ai.pointer_x, " to ", clipping_x + clipping_w - 1);
+            game_ai.pointer_x = clipping_x + clipping_w - 1;
+        }
+
+        if (game_ai.pointer_y < clipping_y) {
+            debuglog(LCF_MOUSE, "   warping pointer y from ", game_ai.pointer_y, " to ", clipping_y);
+            game_ai.pointer_y = clipping_y;
+        }
+        else if (game_ai.pointer_y >= (clipping_y + clipping_h)) {
+            debuglog(LCF_MOUSE, "   warping pointer y from ", game_ai.pointer_y, " to ", clipping_y + clipping_h - 1);
+            game_ai.pointer_y = clipping_y + clipping_h - 1;
+        }
+    }
     return GrabSuccess;
 }
 
 /* Override */ int XUngrabPointer(Display*, Time)
 {
     DEBUGLOGCALL(LCF_MOUSE);
+    pointer_grab_window = None;
+    pointer_clipping = false;
     return 0; // Not sure what to return
 }
 

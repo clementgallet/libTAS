@@ -23,6 +23,7 @@
 /* TODO: I don't know where to put these, so in a separate file for now */
 
 #include "../../shared/AllInputs.h"
+#include <X11/X.h>
 
 namespace libtas {
 
@@ -38,8 +39,17 @@ extern AllInputs old_ai;
  */
 extern AllInputs game_ai;
 
- /* Last state of the game inputs, used to generate events */
+/* Last state of the game inputs, used to generate events */
 extern AllInputs old_game_ai;
+
+/* Pointer grab window */
+extern Window pointer_grab_window;
+
+/* Is the pointer clipped inside a window? */
+extern bool pointer_clipping;
+
+/* Coordinates of the clipping window */
+extern int clipping_x, clipping_y, clipping_w, clipping_h;
 
 void updateGameInputs();
 

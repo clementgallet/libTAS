@@ -27,6 +27,11 @@ AllInputs old_ai;
 AllInputs game_ai;
 AllInputs old_game_ai;
 
+Window pointer_grab_window = None;
+
+bool pointer_clipping = false;
+int clipping_x, clipping_y, clipping_w, clipping_h;
+
 void updateGameInputs()
 {
     old_game_ai = game_ai;
@@ -42,6 +47,18 @@ void updateGameInputs()
     else {
         game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
         game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+    }
+
+    if (pointer_clipping) {
+        if (game_ai.pointer_x < clipping_x)
+            game_ai.pointer_x = clipping_x;
+        else if (game_ai.pointer_x >= (clipping_x + clipping_w))
+            game_ai.pointer_x = clipping_x + clipping_w - 1;
+
+        if (game_ai.pointer_y < clipping_y)
+            game_ai.pointer_y = clipping_y;
+        else if (game_ai.pointer_y >= (clipping_y + clipping_h))
+            game_ai.pointer_y = clipping_y + clipping_h - 1;
     }
     game_ai.pointer_mask = ai.pointer_mask;
 

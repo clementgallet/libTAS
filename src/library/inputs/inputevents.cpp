@@ -767,7 +767,10 @@ void generateMouseMotionEvents(void)
         event.xmotion.y = game_ai.pointer_y;
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
-        event.xmotion.window = gameXWindows.front();
+        if (pointer_grab_window != None)
+            event.xmotion.window = pointer_grab_window;
+        else
+            event.xmotion.window = gameXWindows.front();
         event.xmotion.time = timestamp;
 
         xlibEventQueueList.insert(&event);
@@ -812,7 +815,7 @@ void generateMouseMotionEvents(void)
             }
         }
 
-        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_Motion");
+        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_Motion");
     }
 
     if (game_info.mouse & GameInfo::XIRAWEVENTS) {
@@ -837,7 +840,7 @@ void generateMouseMotionEvents(void)
         rev->valuators.mask_len = 1;
         xlibEventQueueList.insert(&event);
 
-        debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawMotion");
+        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_RawMotion");
     }
 #endif
 }
@@ -913,12 +916,15 @@ void generateMouseButtonEvents(void)
                 event.xbutton.x_root = event.xbutton.x;
                 event.xbutton.y_root = event.xbutton.y;
                 event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
-                event.xbutton.window = gameXWindows.front();
+                if (pointer_grab_window != None)
+                    event.xbutton.window = pointer_grab_window;
+                else
+                    event.xbutton.window = gameXWindows.front();
 
                 xlibEventQueueList.insert(&event);
             }
 
-            if ((game_info.mouse & GameInfo::XEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.mouse & GameInfo::XCBEVENTS) && !gameXWindows.empty()) {
                 xcb_button_press_event_t event; // same as xcb_button_release_event_t
                 if (game_ai.pointer_mask & (1 << buttons[bi])) {
                     event.response_type = XCB_BUTTON_PRESS;
