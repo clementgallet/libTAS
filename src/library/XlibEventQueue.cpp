@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false), cookieData(nullptr) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false) {}
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
@@ -104,7 +104,6 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
     XEvent ev = eventQueue.back();
     memcpy(event, &ev, sizeof(XEvent));
     if (update) {
-        delayedDeleteCookie(ev);
         eventQueue.pop_back();
     }
     return true;
@@ -128,7 +127,6 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 
         /* We found a match */
         memcpy(event, &ev, sizeof(XEvent));
-        delayedDeleteCookie(ev);
         eventQueue.erase(it);
         return true;
     }
@@ -153,7 +151,6 @@ bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 
         /* We found a match */
         memcpy(event, &ev, sizeof(XEvent));
-        delayedDeleteCookie(ev);
         eventQueue.erase(it);
         return true;
     }
@@ -172,7 +169,6 @@ bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, X
         if (predicate(ev.xany.display, &ev, arg)) {
             /* We found a match */
             memcpy(event, &ev, sizeof(XEvent));
-            delayedDeleteCookie(ev);
             eventQueue.erase(it);
             return true;
         }
@@ -189,50 +185,6 @@ int XlibEventQueue::size()
     if (s == 0)
         emptied = true;
     return s;
-}
-
-void XlibEventQueue::delayedDeleteCookie(XEvent event)
-{
-#ifdef LIBTAS_HAS_XINPUT
-    if (cookieData) {
-        XIEvent* xiev = static_cast<XIEvent*>(cookieData);
-        XIRawEvent *rev;
-        XIDeviceEvent* dev;
-        switch(xiev->evtype) {
-            case XI_RawMotion:
-            case XI_RawKeyPress:
-            case XI_RawKeyRelease:
-            case XI_RawButtonPress:
-            case XI_RawButtonRelease:
-                rev = static_cast<XIRawEvent*>(cookieData);
-                /* Free allocated memory of XIRawEvent */
-                if (rev->raw_values)
-                    free(rev->raw_values);
-                if (rev->valuators.values)
-                    free(rev->valuators.values);
-                if (rev->valuators.mask)
-                    free(rev->valuators.mask);
-                break;
-            case XI_Motion:
-            case XI_KeyPress:
-            case XI_KeyRelease:
-            case XI_ButtonPress:
-            case XI_ButtonRelease:
-                dev = static_cast<XIDeviceEvent*>(cookieData);
-                /* Free allocated memory of XIRawEvent */
-                if (dev->buttons.mask)
-                    free(dev->buttons.mask);
-                break;
-        }
-        free(cookieData);
-    }
-    if (event.type == GenericEvent) {
-        cookieData = event.xcookie.data;
-    }
-    else {
-        cookieData = nullptr;
-    }
-#endif
 }
 
 bool XlibEventQueue::isTypeOfMask(int type, long event_mask)

@@ -719,13 +719,41 @@ void generateControllerEvents(void)
 
 void generateMouseMotionEvents(void)
 {
+    struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    /* XIRAWEVENTS are special because they output raw pointer events */
+#ifdef LIBTAS_HAS_XINPUT
+    if ((game_info.mouse & GameInfo::XIRAWEVENTS) &&
+        ((game_unclipped_ai.pointer_x != old_game_unclipped_ai.pointer_x) || (game_unclipped_ai.pointer_y != old_game_unclipped_ai.pointer_y))) {
+        XEvent event;
+        XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
+        event.xcookie.type = GenericEvent;
+        event.xcookie.extension = xinput_opcode;
+        event.xcookie.evtype = XI_RawMotion;
+        event.xcookie.data = rev;
+        rev->evtype = XI_RawMotion;
+        rev->time = timestamp;
+        rev->raw_values = static_cast<double*>(malloc(2*sizeof(double)));
+        rev->raw_values[0] = game_unclipped_ai.pointer_x - old_game_unclipped_ai.pointer_x;
+        rev->raw_values[1] = game_unclipped_ai.pointer_y - old_game_unclipped_ai.pointer_y;
+        rev->valuators.values = static_cast<double*>(malloc(2*sizeof(double)));
+        rev->valuators.values[0] = game_unclipped_ai.pointer_x - old_game_unclipped_ai.pointer_x;
+        rev->valuators.values[1] = game_unclipped_ai.pointer_y - old_game_unclipped_ai.pointer_y;
+        rev->valuators.mask = static_cast<unsigned char*>(malloc(1*sizeof(unsigned char)));
+        rev->valuators.mask[0] = 0;
+        XISetMask(rev->valuators.mask, 0);
+        XISetMask(rev->valuators.mask, 1);
+        rev->valuators.mask_len = 1;
+        xlibEventQueueList.insert(&event);
+
+        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_RawMotion");
+    }
+#endif
+
     /* Check if we got a change in mouse position */
     if ((game_ai.pointer_x == old_game_ai.pointer_x) && (game_ai.pointer_y == old_game_ai.pointer_y))
         return;
-
-    /* Fill the event structure */
-    struct timespec time = detTimer.getTicks();
-    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     if (game_info.mouse & GameInfo::SDL2) {
         SDL_Event event2;
@@ -818,30 +846,6 @@ void generateMouseMotionEvents(void)
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_Motion");
     }
 
-    if (game_info.mouse & GameInfo::XIRAWEVENTS) {
-        XEvent event;
-        XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
-        event.xcookie.type = GenericEvent;
-        event.xcookie.extension = xinput_opcode;
-        event.xcookie.evtype = XI_RawMotion;
-        event.xcookie.data = rev;
-        rev->evtype = XI_RawMotion;
-        rev->time = timestamp;
-        rev->raw_values = static_cast<double*>(malloc(2*sizeof(double)));
-        rev->raw_values[0] = game_ai.pointer_x - old_game_ai.pointer_x;
-        rev->raw_values[1] = game_ai.pointer_y - old_game_ai.pointer_y;
-        rev->valuators.values = static_cast<double*>(malloc(2*sizeof(double)));
-        rev->valuators.values[0] = game_ai.pointer_x - old_game_ai.pointer_x;
-        rev->valuators.values[1] = game_ai.pointer_y - old_game_ai.pointer_y;
-        rev->valuators.mask = static_cast<unsigned char*>(malloc(1*sizeof(unsigned char)));
-        rev->valuators.mask[0] = 0;
-        XISetMask(rev->valuators.mask, 0);
-        XISetMask(rev->valuators.mask, 1);
-        rev->valuators.mask_len = 1;
-        xlibEventQueueList.insert(&event);
-
-        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_RawMotion");
-    }
 #endif
 }
 

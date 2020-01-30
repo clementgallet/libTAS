@@ -42,6 +42,10 @@ extern AllInputs game_ai;
 /* Last state of the game inputs, used to generate events */
 extern AllInputs old_game_ai;
 
+/* Same as game_ai but without clipping pointer position */
+extern AllInputs game_unclipped_ai;
+extern AllInputs old_game_unclipped_ai;
+
 /* Pointer grab window */
 extern Window pointer_grab_window;
 

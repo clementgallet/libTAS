@@ -26,6 +26,8 @@ AllInputs ai;
 AllInputs old_ai;
 AllInputs game_ai;
 AllInputs old_game_ai;
+AllInputs game_unclipped_ai;
+AllInputs old_game_unclipped_ai;
 
 Window pointer_grab_window = None;
 
@@ -35,6 +37,8 @@ int clipping_x, clipping_y, clipping_w, clipping_h;
 void updateGameInputs()
 {
     old_game_ai = game_ai;
+    old_game_unclipped_ai = game_unclipped_ai;
+
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         game_ai.keyboard[i] = ai.keyboard[i];
     }
@@ -43,12 +47,26 @@ void updateGameInputs()
     if (game_ai.pointer_mode == SingleInput::POINTER_MODE_RELATIVE) {
         game_ai.pointer_x += ai.pointer_x;
         game_ai.pointer_y += ai.pointer_y;
+        game_unclipped_ai.pointer_x += ai.pointer_x;
+        game_unclipped_ai.pointer_y += ai.pointer_y;
     }
     else {
         game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
         game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+        game_unclipped_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+        game_unclipped_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
     }
 
+    game_ai.pointer_mask = ai.pointer_mask;
+
+    for (int ji=0; ji<shared_config.nb_controllers; ji++) {
+        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
+            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+        }
+        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
+    }
+
+    /* Clipping pointer inside grab window */
     if (pointer_clipping) {
         if (game_ai.pointer_x < clipping_x)
             game_ai.pointer_x = clipping_x;
@@ -60,14 +78,7 @@ void updateGameInputs()
         else if (game_ai.pointer_y >= (clipping_y + clipping_h))
             game_ai.pointer_y = clipping_y + clipping_h - 1;
     }
-    game_ai.pointer_mask = ai.pointer_mask;
 
-    for (int ji=0; ji<shared_config.nb_controllers; ji++) {
-        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
-        }
-        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
-    }
     old_ai = ai;
 }
 

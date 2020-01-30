@@ -76,12 +76,6 @@ class XlibEventQueue
         /* Event mask for each Window */
         std::map<Window, long> eventMasks;
 
-        /* Generic Event cookie data to delete */
-        void* cookieData;
-
-        /* Register a Generic event cookie to be deleted */
-        void delayedDeleteCookie(XEvent event);
-
         /* Does a type belong to an event mask?*/
         bool isTypeOfMask(int type, long event_mask);
 };
