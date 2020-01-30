@@ -24,6 +24,7 @@
 * Fix restart toggle on input editor (#292)
 * SDL Text Input is activated by default
 * Fix input/hotkey mapping from config file (#302)
+* Check mask size in XISelectEvents
 
 ## [1.3.5] - 2019-11-26
 ### Added
