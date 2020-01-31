@@ -51,10 +51,19 @@ void updateGameInputs()
         game_unclipped_ai.pointer_y += ai.pointer_y;
     }
     else {
-        game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
-        game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
-        game_unclipped_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
-        game_unclipped_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+        /* If we just switch to absolute, keep the same coords for that frame */
+        if (old_game_ai.pointer_mode == SingleInput::POINTER_MODE_RELATIVE) {
+            game_ai.pointer_x = old_game_ai.pointer_x;
+            game_ai.pointer_y = old_game_ai.pointer_y;
+            game_unclipped_ai.pointer_x = game_unclipped_ai.pointer_x;
+            game_unclipped_ai.pointer_y = game_unclipped_ai.pointer_y;
+        }
+        else {
+            game_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+            game_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+            game_unclipped_ai.pointer_x += ai.pointer_x - old_ai.pointer_x;
+            game_unclipped_ai.pointer_y += ai.pointer_y - old_ai.pointer_y;
+        }
     }
 
     game_ai.pointer_mask = ai.pointer_mask;
