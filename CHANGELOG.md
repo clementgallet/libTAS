@@ -8,6 +8,7 @@
 * Users can use Proton instead of wine for launching Windows games
 * Catch memory shortage in RAM Search
 * Implement more behaviors of pointer grabbing
+* Option to disable audio completely (some games don't accept that and quit)
 
 ### Changed
 

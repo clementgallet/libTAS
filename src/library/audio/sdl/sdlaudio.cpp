@@ -115,6 +115,9 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
+    if (shared_config.audio_disabled)
+        return -1;
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     int bufferId = audiocontext.createBuffer();
@@ -228,8 +231,8 @@ void fillBufferCallback(AudioBuffer& ab)
     if (iscapture != 0)
         return 0;
 
-    SDL_OpenAudio(const_cast<SDL_AudioSpec*>(desired), obtained); // TODO: cast probably not good
-    return 2;
+    int ret = SDL_OpenAudio(const_cast<SDL_AudioSpec*>(desired), obtained); // TODO: cast probably not good
+    return (ret==-1)?0:2;
 }
 
 /* Override */ SDL_AudioStatus SDL_GetAudioStatus(void)

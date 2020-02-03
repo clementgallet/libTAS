@@ -132,6 +132,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_channels", sc.audio_channels);
     settings.setValue("audio_frequency", sc.audio_frequency);
     settings.setValue("audio_mute", sc.audio_mute);
+    settings.setValue("audio_disabled", sc.audio_disabled);
     settings.setValue("video_codec", sc.video_codec);
     settings.setValue("video_bitrate", sc.video_bitrate);
     settings.setValue("audio_codec", sc.audio_codec);
@@ -257,6 +258,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_channels = settings.value("audio_channels", sc.audio_channels).toInt();
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
+    sc.audio_disabled = settings.value("audio_disabled", sc.audio_disabled).toBool();    
     sc.locale = settings.value("locale", sc.locale).toInt();
     sc.virtual_steam = settings.value("virtual_steam", sc.virtual_steam).toBool();
     sc.async_events = settings.value("async_events", sc.async_events).toInt();

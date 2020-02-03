@@ -114,6 +114,9 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 
     DEBUGLOGCALL(LCF_SOUND);
 
+    if (shared_config.audio_disabled)
+        return -1;
+
     if (stream != SND_PCM_STREAM_PLAYBACK) {
         debuglog(LCF_SOUND | LCF_WARNING, "    Unsupported stream direction ", stream);
         return -1;

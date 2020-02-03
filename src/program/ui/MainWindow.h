@@ -94,6 +94,7 @@ public:
     QActionGroup *bitDepthGroup;
     QActionGroup *channelGroup;
     QAction *muteAction;
+    QAction *disableAction;
 
     QActionGroup *localeGroup;
 
@@ -243,6 +244,7 @@ private slots:
     void slotMovieRecording();
     void slotToggleEncode();
     void slotMuteSound(bool checked);
+    void slotDisableSound(bool checked);
     void slotRenderSoft(bool checked);
     void slotRenderPerf(bool checked);
     void slotDebugState();

@@ -230,6 +230,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Mute audio */
     bool audio_mute = true;
 
+    /* Prevent audio device from being initialized */
+    bool audio_disabled = false;
+
     bool save_screenpixels = true;
 
     /* Using incremental savestates */

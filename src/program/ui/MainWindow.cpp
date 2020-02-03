@@ -664,6 +664,8 @@ void MainWindow::createMenus()
 
     muteAction = soundMenu->addAction(tr("Mute"), this, &MainWindow::slotMuteSound);
     muteAction->setCheckable(true);
+    disableAction = soundMenu->addAction(tr("Disable"), this, &MainWindow::slotDisableSound);
+    disableAction->setCheckable(true);
 
     /* Runtime Menu */
     QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
@@ -1117,6 +1119,7 @@ void MainWindow::updateUIFromConfig()
     setRadioFromList(channelGroup, context->config.sc.audio_channels);
 
     muteAction->setChecked(context->config.sc.audio_mute);
+    disableAction->setChecked(context->config.sc.audio_disabled);
 
     setRadioFromList(debugStateGroup, context->config.sc.debug_state);
     setRadioFromList(loggingOutputGroup, context->config.sc.logging_status);
@@ -1451,6 +1454,8 @@ void MainWindow::slotMuteSound(bool checked)
     context->config.sc_modified = true;
     updateStatusBar();
 }
+
+BOOLSLOT(slotDisableSound, context->config.sc.audio_disabled)
 
 void MainWindow::slotRenderSoft(bool checked)
 {

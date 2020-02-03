@@ -56,6 +56,10 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCcontext* alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 {
     DEBUGLOGCALL(LCF_OPENAL);
+
+    if (shared_config.audio_disabled)
+        return nullptr;
+
     if (dummyContext != -1) {
         debuglog(LCF_OPENAL | LCF_TODO, "We don't support multiple openAL contexts yet");
         return NULL;
