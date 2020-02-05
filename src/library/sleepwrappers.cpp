@@ -33,6 +33,7 @@ DEFINE_ORIG_POINTER(nanosleep);
 DEFINE_ORIG_POINTER(clock_nanosleep);
 DEFINE_ORIG_POINTER(select);
 DEFINE_ORIG_POINTER(pselect);
+DEFINE_ORIG_POINTER(sched_yield);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -55,7 +56,7 @@ DEFINE_ORIG_POINTER(pselect);
      */
     if (sleep && mainT) {
         detTimer.addDelay(ts);
-        sched_yield();
+        NATIVECALL(sched_yield());
         return;
     }
 
@@ -81,7 +82,7 @@ DEFINE_ORIG_POINTER(pselect);
      */
     if (usec && mainT) {
         detTimer.addDelay(ts);
-        sched_yield();
+        NATIVECALL(sched_yield());
         return 0;
     }
 
@@ -105,7 +106,7 @@ DEFINE_ORIG_POINTER(pselect);
      */
     if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
         detTimer.addDelay(*requested_time);
-        sched_yield();
+        NATIVECALL(sched_yield());
         return 0;
     }
 
@@ -143,7 +144,7 @@ DEFINE_ORIG_POINTER(pselect);
     if (mainT) {
 
         detTimer.addDelay(sleeptime);
-        sched_yield();
+        NATIVECALL(sched_yield());
         return 0;
     }
 
@@ -179,7 +180,7 @@ DEFINE_ORIG_POINTER(pselect);
         ts.tv_nsec = timeout->tv_usec * 1000;
         detTimer.addDelay(ts);
 
-        sched_yield();
+        NATIVECALL(sched_yield());
         return 0;
     }
 
@@ -213,11 +214,24 @@ DEFINE_ORIG_POINTER(pselect);
     if (mainT && (timeout->tv_sec || timeout->tv_nsec)) {
         detTimer.addDelay(*timeout);
 
-        sched_yield();
+        NATIVECALL(sched_yield());
         return 0;
     }
 
     return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+}
+
+/* Override */ int sched_yield(void)
+{
+    LINK_NAMESPACE_GLOBAL(sched_yield);
+
+    if (GlobalState::isNative()) {
+        return orig::sched_yield();
+    }
+
+    DEBUGLOGCALL(LCF_SLEEP);
+
+    return orig::sched_yield();
 }
 
 }

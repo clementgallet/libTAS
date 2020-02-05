@@ -70,6 +70,8 @@ OVERRIDE int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *excep
  */
 OVERRIDE void SDL_Delay(Uint32 sleep);
 
+OVERRIDE int sched_yield(void);
+
 }
 
 #endif

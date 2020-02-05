@@ -144,7 +144,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     if(!shared_config.fastforward)
     {
         /* Sleep, because the caller would have yielded at least a little */
-        sched_yield();
+        NATIVECALL(sched_yield());
     }
 
     /* We only allow the main thread to trigger a frame boundary! */
