@@ -40,6 +40,7 @@ libtas_so_SOURCES = \
     tlswrappers.cpp \
     Utils.cpp \
     WindowTitle.cpp \
+    winehook.cpp \
     XlibEventQueue.cpp \
     XlibEventQueueList.cpp \
     XcbEventQueue.cpp \

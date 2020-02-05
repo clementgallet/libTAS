@@ -9,6 +9,7 @@
 * Catch memory shortage in RAM Search
 * Implement more behaviors of pointer grabbing
 * Option to disable audio completely (some games don't accept that and quit)
+* Hook LdrGetProcedureAddress() by patching ntdll.dll.so
 
 ### Changed
 

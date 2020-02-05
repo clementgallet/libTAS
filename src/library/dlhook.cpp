@@ -20,6 +20,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include "hook.h"
+#include "winehook.h"
 #include <cstring>
 #include <set>
 #include "backtrace.h"
@@ -150,6 +151,12 @@ void *dlsym(void *handle, const char *name) throw() {
     if (addr == nullptr) {
         addr = orig::dlsym(handle, name);
     }
+
+    if (0 == strcmp(name, "__wine_process_init")) {
+        /* Hook wine LdrGetProcedureAddress function */
+        hook_ntdll();
+    }
+
     return addr;
 }
 
