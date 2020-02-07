@@ -156,8 +156,12 @@ void GameLoop::launchGameThread()
         ldpreloadstr += "'";
         arg_list.push_back(ldpreloadstr);
 
-        /* We are using SIGUSR1 and SIGUSR2 for savestates, so don't
+        /* We are using SIGSYS and SIGXFSZ for savestates, so don't
          * print and pause when one signal is sent */
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGSYS nostop noprint");
+        arg_list.push_back("-ex");
+        arg_list.push_back("handle SIGXFSZ nostop noprint");
         arg_list.push_back("-ex");
         arg_list.push_back("handle SIGUSR1 nostop noprint");
         arg_list.push_back("-ex");
