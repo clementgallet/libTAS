@@ -464,9 +464,6 @@ static void *pthread_start(void *arg)
     if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
 
-    if (shared_config.wait_timeout == SharedConfig::NO_WAIT)
-        return orig::pthread_cond_timedwait(cond, mutex, &real_time);
-
     if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait for 0.1 sec, arbitrary */
         TimeHolder delta_time;
@@ -479,7 +476,9 @@ static void *pthread_start(void *arg)
     }
 
     if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
-        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
+        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) ||
+        (shared_config.wait_timeout == SharedConfig::WAIT_FULL))
+        {
         /* Transfer time to our deterministic timer */
         TimeHolder now = detTimer.getTicks();
         TimeHolder delay = abs_timeout - now;
@@ -494,6 +493,11 @@ static void *pthread_start(void *arg)
         delta_time.tv_nsec = 100*1000*1000;
         TimeHolder new_end_time = real_time + delta_time;
         return orig::pthread_cond_timedwait(cond, mutex, &new_end_time);
+    }
+
+    if ((shared_config.wait_timeout == SharedConfig::NO_WAIT) ||
+        (shared_config.wait_timeout == SharedConfig::WAIT_FULL)) {
+        return orig::pthread_cond_timedwait(cond, mutex, &real_time);
     }
 
     /* Infinite wait */
