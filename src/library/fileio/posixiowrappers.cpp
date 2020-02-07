@@ -72,8 +72,9 @@ int open (const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
+    int fd = 0;
+
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
-        int fd = 0;
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -95,11 +96,9 @@ int open (const char *file, int oflag, ...)
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
         }
-        return fd;
     }
 
-    if (strcmp(file, "/proc/uptime") == 0) {
-        int fd = 0;
+    else if (strcmp(file, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -124,24 +123,25 @@ int open (const char *file, int oflag, ...)
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
         }
-        return fd;
     }
 
     /* Check if joystick device */
-    if (is_jsdev(file) >= 0) {
-        return open_jsdev(file, oflag);
+    else if (is_jsdev(file) >= 0) {
+        fd = open_jsdev(file, oflag);
     }
 
-    if (is_evdev(file) >= 0) {
-        return open_evdev(file, oflag);
+    else if (is_evdev(file) >= 0) {
+        fd = open_evdev(file, oflag);
     }
 
-    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
+    else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
 
-    int fd = orig::open(file, oflag, mode);
+    else {
+        fd = orig::open(file, oflag, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -168,8 +168,9 @@ int open64 (const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
+    int fd = 0;
+
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
-        int fd = 0;
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -190,11 +191,9 @@ int open64 (const char *file, int oflag, ...)
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
         }
-        return fd;
     }
 
-    if (strcmp(file, "/proc/uptime") == 0) {
-        int fd = 0;
+    else if (strcmp(file, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -219,24 +218,25 @@ int open64 (const char *file, int oflag, ...)
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
         }
-        return fd;
     }
 
     /* Check if joystick device */
-    if (is_jsdev(file) >= 0) {
-        return open_jsdev(file, oflag);
+    else if (is_jsdev(file) >= 0) {
+        fd = open_jsdev(file, oflag);
     }
 
-    if (is_evdev(file) >= 0) {
-        return open_evdev(file, oflag);
+    else if (is_evdev(file) >= 0) {
+        fd = open_evdev(file, oflag);
     }
 
-    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
+    else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
 
-    int fd = orig::open64(file, oflag, mode);
+    else {
+        fd = orig::open64(file, oflag, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -263,12 +263,16 @@ int openat (int dirfd, const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
+    int fd = 0;
+
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
 
-    int fd = orig::openat(dirfd, file, oflag, mode);
+    else {
+        fd = orig::openat(dirfd, file, oflag, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -295,12 +299,16 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
+    int fd = 0;
+
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
 
-    int fd = orig::openat64(dirfd, file, oflag, mode);
+    else {
+        fd = orig::openat64(dirfd, file, oflag, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -322,12 +330,16 @@ int creat (const char *file, mode_t mode)
      */
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
+    int fd = 0;
+
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
 
-    int fd = orig::creat(file, mode);
+    else {
+        fd = orig::creat(file, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -346,12 +358,15 @@ int creat64 (const char *file, mode_t mode)
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
+    int fd = 0;
+
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(file, oflag);
+        fd = SaveFileList::openSaveFile(file, oflag);
     }
-
-    int fd = orig::creat64(file, mode);
+    else {
+        fd = orig::creat64(file, mode);
+    }
 
     /* Store the file descriptor */
     FileHandleList::openFile(file, fd);
@@ -368,16 +383,17 @@ int close (int fd)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    int ret = SaveFileList::closeSaveFile(fd);
-
-    if (ret != 1)
-        return ret;
-
     /* Check if we must actually close the file */
     bool doClose = FileHandleList::closeFile(fd);
 
-    if (doClose)
+    if (doClose) {
+        int ret = SaveFileList::closeSaveFile(fd);
+
+        if (ret != 1)
+            return ret;
+
         return orig::close(fd);
+    }
 
     return 0;
 }

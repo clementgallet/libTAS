@@ -29,6 +29,7 @@
 * Fix input/hotkey mapping from config file (#302)
 * Check mask size in XISelectEvents
 * XI_RawMotion now uses raw inputs
+* Track handles of savefiles
 
 ## [1.3.5] - 2019-11-26
 ### Added

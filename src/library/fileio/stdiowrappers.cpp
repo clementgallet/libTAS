@@ -48,8 +48,9 @@ FILE *fopen (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
+    FILE* f = nullptr;
+
     if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
-        FILE* f = nullptr;
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -70,11 +71,9 @@ FILE *fopen (const char *filename, const char *modes)
         else {
             f = SaveFileList::openSaveFile(filename, modes);
         }
-        return f;
     }
 
-    if (strcmp(filename, "/proc/uptime") == 0) {
-        FILE* f = nullptr;
+    else if (strcmp(filename, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -99,15 +98,16 @@ FILE *fopen (const char *filename, const char *modes)
         else {
             f = SaveFileList::openSaveFile(filename, modes);
         }
-        return f;
     }
 
-    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
+    else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(filename, modes);
+        f = SaveFileList::openSaveFile(filename, modes);
     }
 
-    FILE* f = orig::fopen(filename, modes);
+    else {
+        f = orig::fopen(filename, modes);
+    }
 
     /* Store the file descriptor */
     if (f) {
@@ -129,8 +129,9 @@ FILE *fopen64 (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
+    FILE* f = nullptr;
+
     if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
-        FILE* f = nullptr;
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -151,11 +152,9 @@ FILE *fopen64 (const char *filename, const char *modes)
         else {
             f = SaveFileList::openSaveFile(filename, modes);
         }
-        return f;
     }
 
-    if (strcmp(filename, "/proc/uptime") == 0) {
-        FILE* f = nullptr;
+    else if (strcmp(filename, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -180,15 +179,16 @@ FILE *fopen64 (const char *filename, const char *modes)
         else {
             f = SaveFileList::openSaveFile(filename, modes);
         }
-        return f;
     }
 
-    if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
+    else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
-        return SaveFileList::openSaveFile(filename, modes);
+        f = SaveFileList::openSaveFile(filename, modes);
     }
 
-    FILE* f = orig::fopen64(filename, modes);
+    else {
+        f = orig::fopen64(filename, modes);
+    }
 
     /* Store the file descriptor */
     if (f) {
@@ -207,14 +207,14 @@ int fclose (FILE *stream)
 
     DEBUGLOGCALL(LCF_FILEIO);
 
-    int ret = SaveFileList::closeSaveFile(stream);
-    if (ret != 1)
-        return ret;
-
     /* Check if we must actually close the file */
     bool doClose = FileHandleList::closeFile(fileno(stream));
 
     if (doClose) {
+        int ret = SaveFileList::closeSaveFile(stream);
+        if (ret != 1)
+            return ret;
+
         return orig::fclose(stream);
     }
 
