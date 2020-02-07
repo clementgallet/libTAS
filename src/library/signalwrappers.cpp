@@ -292,11 +292,11 @@ static thread_local int origUsrMaskThread = 0;
 
     if (newmask) {
         if (how == SIG_BLOCK)
-            debuglog(LCF_SIGNAL | LCF_THREAD, "    Blocking signals:");
+            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Blocking signals:");
         if (how == SIG_UNBLOCK)
-            debuglog(LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
+            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
         if (how == SIG_SETMASK)
-            debuglog(LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
+            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
         // for (int s=1; s<NSIG; s++) {
         //     if (sigismember(newmask, s) == 1)
                 /* I encountered a deadlock here when using strsignal() to print
@@ -355,7 +355,7 @@ static thread_local int origUsrMaskThread = 0;
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
 
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
+    debuglog(LCF_SIGNAL | LCF_THREAD, __func__, " called with thread ", threadid, " and signo ", signo);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
