@@ -600,6 +600,19 @@ int pthread_setname_np (pthread_t target_thread, const char *name) throw()
         GlobalState::setNoLog(true);
     }
 
+    if (strncmp(name, "OVERWORLD_LOADE", 15) == 0) {
+        ThreadSync::detInit(7);
+    }
+    else if (strncmp(name, "LEVEL_LOADER", 12) == 0) {
+        ThreadSync::detInit(0);
+    }
+    else if (strncmp(name, "USER_IO", 7) == 0) {
+        ThreadSync::detInit(0);
+    }
+    else if (strncmp(name, "FILE_LOADING", 12) == 0) {
+        ThreadSync::detInit(0);
+    }
+
     return orig::pthread_setname_np(target_thread, name);
 }
 

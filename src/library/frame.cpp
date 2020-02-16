@@ -33,6 +33,7 @@
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/Checkpoint.h"
+#include "checkpoint/ThreadSync.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
 #include "SDLEventQueue.h"
@@ -186,6 +187,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         xlibEventQueueList.waitForEmpty();
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_END)
         sdlEventQueue.waitForEmpty();
+
+    ThreadSync::detWait();
 
     /* Update the deterministic timer, sleep if necessary and mix audio */
     detTimer.enterFrameBoundary();

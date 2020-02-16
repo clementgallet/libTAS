@@ -25,12 +25,17 @@
 #include "../GlobalState.h"
 #include <atomic>
 #include <pthread.h> // pthread_rwlock_t
+#include <mutex>
+#include <condition_variable>
 
 namespace libtas {
 
 static std::atomic<int> uninitializedThreadCount(0);
 static pthread_rwlock_t wrapperExecutionLock =
     PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
+static std::mutex detMutex;
+static std::condition_variable detCond;
+static int framesBeforeSync = -1;
 
 void ThreadSync::acquireLocks()
 {
@@ -93,6 +98,30 @@ void ThreadSync::wrapperExecutionLockUnlock()
     if (pthread_rwlock_unlock(&wrapperExecutionLock) != 0) {
         debuglog(LCF_ERROR | LCF_THREAD, "Failed to release lock!");
     }
+}
+
+void ThreadSync::detInit(int frames)
+{
+    framesBeforeSync = frames;
+}
+
+void ThreadSync::detWait()
+{
+    if (framesBeforeSync > 0){
+        framesBeforeSync--;
+        return;
+    }
+    std::unique_lock<std::mutex> lock(detMutex);
+    detCond.wait(lock, []{ return (framesBeforeSync == -1); });
+}
+
+void ThreadSync::detSignal()
+{
+    {
+        std::lock_guard<std::mutex> lock(detMutex);
+        framesBeforeSync = -1;
+    }
+    detCond.notify_all();
 }
 
 }

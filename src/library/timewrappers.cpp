@@ -68,6 +68,10 @@ DEFINE_ORIG_POINTER(clock_gettime);
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
+
+    if (ThreadManager::isMainThread())
+        detTimer.fakeAdvanceTimer({0, 0});
+
     return 0;
 }
 

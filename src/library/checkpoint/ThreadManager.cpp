@@ -332,6 +332,10 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
 
 void ThreadManager::threadExit(void* retval)
 {
+    if (current_thread->routine_id == 95412) {
+        ThreadSync::detSignal();
+    }
+
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
     current_thread->retval = retval;
     MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
@@ -344,6 +348,7 @@ void ThreadManager::threadExit(void* retval)
         }
     }
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
+
 }
 
 void ThreadManager::deallocateThreads()

@@ -231,6 +231,9 @@ DEFINE_ORIG_POINTER(sched_yield);
 
     DEBUGLOGCALL(LCF_SLEEP);
 
+    if (ThreadManager::isMainThread())
+        detTimer.fakeAdvanceTimer({0, 1000000});
+
     return orig::sched_yield();
 }
 
