@@ -430,6 +430,8 @@ static void *pthread_start(void *arg)
     if (GlobalState::isNative())
         return orig::pthread_cond_wait(cond, mutex);
 
+    ThreadSync::detSignal(false);
+
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
@@ -601,16 +603,19 @@ int pthread_setname_np (pthread_t target_thread, const char *name) throw()
     }
 
     if (strncmp(name, "OVERWORLD_LOADE", 15) == 0) {
-        ThreadSync::detInit(7);
+        ThreadSync::detInit();
     }
     else if (strncmp(name, "LEVEL_LOADER", 12) == 0) {
-        ThreadSync::detInit(0);
+        ThreadSync::detInit();
     }
     else if (strncmp(name, "USER_IO", 7) == 0) {
-        ThreadSync::detInit(0);
+        ThreadSync::detInit();
     }
     else if (strncmp(name, "FILE_LOADING", 12) == 0) {
-        ThreadSync::detInit(0);
+        ThreadSync::detInit();
+    }
+    else if (strncmp(name, "COMPLETE_LEVEL", 14) == 0) {
+        ThreadSync::detInit();
     }
 
     return orig::pthread_setname_np(target_thread, name);

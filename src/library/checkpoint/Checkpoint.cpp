@@ -21,6 +21,7 @@
 
 #include "Checkpoint.h"
 #include "ThreadManager.h"
+#include "SaveStateManager.h"
 #include "AltStack.h"
 #include "../logging.h"
 #include "ProcMapsArea.h"
@@ -232,7 +233,7 @@ bool Checkpoint::checkRestore()
 
     /* Check that the thread list is identical */
     int n=0;
-    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if ((thread->state != ThreadInfo::ST_RUNNING) &&
             (thread->state != ThreadInfo::ST_ZOMBIE) &&
             (thread->state != ThreadInfo::ST_FREE))
@@ -285,7 +286,7 @@ void Checkpoint::handler(int signum)
             NATIVECALL(XSync(gameDisplays[i], false));
     }
 
-    if (ThreadManager::restoreInProgress) {
+    if (SaveStateManager::isLoading()) {
         /* Before reading from the savestate, we must keep some values from
          * the connection to the X server, because they are used for checking
          * consistency of requests. We can store them in this (alternate) stack
@@ -318,8 +319,8 @@ void Checkpoint::handler(int signum)
         delta_time = new_time - old_time;
         debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
-        /* restoreInProgress was overwritten, putting the right value again */
-        ThreadManager::restoreInProgress = true;
+        /* Loading state was overwritten, putting the right value again */
+        SaveStateManager::setLoading();
 
         /* Restoring the display values */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
@@ -925,7 +926,7 @@ static size_t writeAllAreas(bool base)
     /* Saving the savestate header */
     StateHeader sh;
     int n=0;
-    for (ThreadInfo *thread = ThreadManager::thread_list; thread != nullptr; thread = thread->next) {
+    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if (thread->state == ThreadInfo::ST_SUSPENDED) {
             sh.pthread_ids[n] = thread->pthread_id;
             sh.tids[n++] = thread->tid;

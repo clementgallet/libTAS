@@ -22,7 +22,7 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include "checkpoint/ThreadSync.h"
-#include "checkpoint/ThreadManager.h" // checkpoint signals
+#include "checkpoint/SaveStateManager.h" // checkpoint signals
 
 #include <cstring>
 #include <csignal>
@@ -61,7 +61,7 @@ static thread_local int origUsrMaskThread = 0;
     debuglog(LCF_SIGNAL, "    Setting handler ", reinterpret_cast<void*>(handler),
         " for signal ", strsignal(sig));
 
-    if ((sig == ThreadManager::sig_suspend_threads) || (sig == ThreadManager::sig_checkpoint)) {
+    if ((sig == SaveStateManager::sigSuspend()) || (sig == SaveStateManager::sigCheckpoint())) {
         return SIG_IGN;
     }
 
@@ -77,7 +77,7 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
 
-    static const int bannedMask = sigmask(ThreadManager::sig_suspend_threads) | sigmask(ThreadManager::sig_checkpoint);
+    static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigblock(mask & ~bannedMask);
@@ -96,7 +96,7 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
 
-    static const int bannedMask = sigmask(ThreadManager::sig_suspend_threads) | sigmask(ThreadManager::sig_checkpoint);
+    static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigsetmask(mask & ~bannedMask);
@@ -136,24 +136,24 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t newset;
     if (set) {
         newset = *set;
-        sigdelset(&newset, ThreadManager::sig_suspend_threads);
-        sigdelset(&newset, ThreadManager::sig_checkpoint);
+        sigdelset(&newset, SaveStateManager::sigSuspend());
+        sigdelset(&newset, SaveStateManager::sigCheckpoint());
     }
 
     int ret = orig::sigprocmask(how, set?&newset:set, oset);
 
     if (ret != -1) {
         if (oset) {
-            if (origUsrMaskProcess & ThreadManager::sig_suspend_threads)
-                sigaddset(oset, ThreadManager::sig_suspend_threads);
-            if (origUsrMaskProcess & ThreadManager::sig_checkpoint)
-                sigaddset(oset, ThreadManager::sig_checkpoint);
+            if (origUsrMaskProcess & SaveStateManager::sigSuspend())
+                sigaddset(oset, SaveStateManager::sigSuspend());
+            if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
+                sigaddset(oset, SaveStateManager::sigCheckpoint());
         }
 
         if (set) {
             int mask = 0;
-            if (sigismember(set, ThreadManager::sig_suspend_threads) == 1) mask |= sigmask(ThreadManager::sig_suspend_threads);
-            if (sigismember(set, ThreadManager::sig_checkpoint) == 1) mask |= sigmask(ThreadManager::sig_checkpoint);
+            if (sigismember(set, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
+            if (sigismember(set, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
 
             if (how == SIG_BLOCK)
                 origUsrMaskProcess |= mask;
@@ -174,8 +174,8 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t tmp;
     if (set) {
         tmp = *set;
-        sigdelset(&tmp, ThreadManager::sig_suspend_threads);
-        sigdelset(&tmp, ThreadManager::sig_checkpoint);
+        sigdelset(&tmp, SaveStateManager::sigSuspend());
+        sigdelset(&tmp, SaveStateManager::sigCheckpoint());
         set = &tmp;
     }
 
@@ -317,24 +317,24 @@ static thread_local int origUsrMaskThread = 0;
     sigset_t tmpmask;
     if (newmask) {
         tmpmask = *newmask;
-        sigdelset(&tmpmask, ThreadManager::sig_suspend_threads);
-        sigdelset(&tmpmask, ThreadManager::sig_checkpoint);
+        sigdelset(&tmpmask, SaveStateManager::sigSuspend());
+        sigdelset(&tmpmask, SaveStateManager::sigCheckpoint());
     }
 
     int ret = orig::pthread_sigmask(how, (newmask==nullptr)?nullptr:&tmpmask, oldmask);
 
     if (ret != -1) {
         if (oldmask) {
-            if (origUsrMaskThread & ThreadManager::sig_suspend_threads)
-                sigaddset(oldmask, ThreadManager::sig_suspend_threads);
-            if (origUsrMaskThread & ThreadManager::sig_checkpoint)
-                sigaddset(oldmask, ThreadManager::sig_checkpoint);
+            if (origUsrMaskThread & SaveStateManager::sigSuspend())
+                sigaddset(oldmask, SaveStateManager::sigSuspend());
+            if (origUsrMaskThread & SaveStateManager::sigCheckpoint())
+                sigaddset(oldmask, SaveStateManager::sigCheckpoint());
         }
 
         if (newmask) {
             int mask = 0;
-            if (sigismember(newmask, ThreadManager::sig_suspend_threads) == 1) mask |= sigmask(ThreadManager::sig_suspend_threads);
-            if (sigismember(newmask, ThreadManager::sig_checkpoint) == 1) mask |= sigmask(ThreadManager::sig_checkpoint);
+            if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
+            if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
 
             if (how == SIG_BLOCK)
                 origUsrMaskThread |= mask;

@@ -34,7 +34,7 @@
 
 namespace libtas {
 class ThreadManager {
-    static ThreadInfo* free_list;
+    static ThreadInfo* thread_list;
     static thread_local ThreadInfo* current_thread;
 
     // static bool inited;
@@ -42,26 +42,10 @@ class ThreadManager {
 
     static pthread_mutex_t threadStateLock;
     static pthread_mutex_t threadListLock;
-    static pthread_rwlock_t threadResumeLock;
-    static sem_t semNotifyCkptThread;
-    static sem_t semWaitForCkptThreadSignal;
-
-    static int numThreads;
 
 public:
-    /* Which signals are we using */
-    static int sig_suspend_threads;
-    static int sig_checkpoint;
-
-    static ThreadInfo* thread_list;
-
-    static volatile bool restoreInProgress;
-
     // Called from SDL_init, assumed to be main thread
     static void init();
-
-    /* Initialize the signal handler for the checkpoint thread */
-    static void initCheckpointThread();
 
     /* Get the pthread id */
     static pthread_t getThreadId();
@@ -98,6 +82,11 @@ public:
     /* Add a thread to the thread list */
     static void addToList(ThreadInfo* thread);
 
+    /* Get the thread list */
+    static ThreadInfo* getThreadList() {
+        return thread_list;
+    }
+
     /* Remove a thread from the list and add it to the free list */
     static void threadIsDead(ThreadInfo *thread);
 
@@ -112,25 +101,13 @@ public:
     /* Deallocate all ThreadInfo structs from the free list */
     static void deallocateThreads();
 
-    /* Save a savestate and returns if succeeded */
-    static bool checkpoint();
-
-    /* Restore a savestate */
-    static void restore();
-
     /* Safely try to change a ThreadInfo state and return if done */
     static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);
 
-    /* Send a signal to suspend all threads before checkpointing */
-    static void suspendThreads();
-
-    /* Resume all threads */
-    static void resumeThreads();
-
-    /* Function executed by all secondary threads using signal SIGUSR1 */
-    static void stopThisThread(int signum);
-
-    static void waitForAllRestored(ThreadInfo *thread);
+    /* Get the current thread */
+    static ThreadInfo *getCurrentThread() {
+        return current_thread;
+    }
 
     /* A function called from pthread_start() to fix current_thread
      * after pthread_start() erases all thread_local variables.
@@ -138,6 +115,10 @@ public:
     static void setCurrentThread(ThreadInfo *thread) {
         current_thread = thread;
     }
+
+    /* Lock or unlock the mutex when modifying the thread list */
+    static void lockList();
+    static void unlockList();
 
 };
 }

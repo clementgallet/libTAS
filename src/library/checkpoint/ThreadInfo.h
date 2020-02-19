@@ -74,6 +74,9 @@ struct ThreadInfo {
 
     bool quit = false; // is game quitting
 
+    bool syncEnabled = false; // main thread needs to wait for this thread
+    bool syncGo = false; // main thread can advance for now
+
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list
 };

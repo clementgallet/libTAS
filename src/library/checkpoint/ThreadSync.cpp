@@ -35,7 +35,10 @@ static pthread_rwlock_t wrapperExecutionLock =
     PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
 static std::mutex detMutex;
 static std::condition_variable detCond;
-static int framesBeforeSync = -1;
+
+static bool syncEnabled = false;
+static bool syncGo = false;
+static pthread_t syncThread;
 
 void ThreadSync::acquireLocks()
 {
@@ -100,28 +103,35 @@ void ThreadSync::wrapperExecutionLockUnlock()
     }
 }
 
-void ThreadSync::detInit(int frames)
+void ThreadSync::detInit()
 {
-    framesBeforeSync = frames;
+    syncEnabled = true;
+    syncGo = false;
+    syncThread = ThreadManager::getThreadId();
 }
 
 void ThreadSync::detWait()
 {
-    if (framesBeforeSync > 0){
-        framesBeforeSync--;
+    if (!syncEnabled) {
         return;
     }
     std::unique_lock<std::mutex> lock(detMutex);
-    detCond.wait(lock, []{ return (framesBeforeSync == -1); });
+    detCond.wait(lock, []{ return (syncGo); });
+    syncGo = false;
 }
 
-void ThreadSync::detSignal()
+void ThreadSync::detSignal(bool stop)
 {
+    if ((!syncEnabled) || (syncThread != ThreadManager::getThreadId()))
+        return;
     {
         std::lock_guard<std::mutex> lock(detMutex);
-        framesBeforeSync = -1;
+        syncGo = true;
     }
     detCond.notify_all();
+
+    if (stop)
+        syncEnabled = false;
 }
 
 }

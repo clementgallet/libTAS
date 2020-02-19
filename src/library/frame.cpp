@@ -32,6 +32,7 @@
 #include <iomanip>
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
+#include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "checkpoint/ThreadSync.h"
 #include "ScreenCapture.h"
@@ -598,7 +599,7 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_SAVESTATE:
-                succeeded = ThreadManager::checkpoint();
+                succeeded = SaveStateManager::checkpoint();
 
                 if (succeeded) {
                     /* Current savestate is now the parent savestate */
@@ -609,11 +610,9 @@ static void receive_messages(std::function<void()> draw)
                 }
 
                 /* Don't forget that when we load a savestate, the game continues
-                 * from here and not from ThreadManager::restore() under.
-                 * To check if we did restored or returned from a checkpoint,
-                 * we look at variable ThreadManager::restoreInProgress.
+                 * from here and not from SaveStateManager::restore() under.
                  */
-                if (ThreadManager::restoreInProgress) {
+                if (SaveStateManager::isLoading()) {
                     /* Tell the program that the loading succeeded */
                     sendMessage(MSGB_LOADING_SUCCEEDED);
 
@@ -653,7 +652,7 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_LOADSTATE:
-                ThreadManager::restore();
+                SaveStateManager::restore();
 
                 /* If restoring failed, we return here. We still send the
                  * frame count and time because the program will pull a

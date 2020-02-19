@@ -31,9 +31,9 @@ namespace ThreadSync {
     void decrementUninitializedThreadCount();
     void wrapperExecutionLockLock();
     void wrapperExecutionLockUnlock();
-    void detInit(int frames);
+    void detInit();
     void detWait();
-    void detSignal();
+    void detSignal(bool stop);
 
 }
 }
