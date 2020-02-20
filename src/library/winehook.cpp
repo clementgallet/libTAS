@@ -26,11 +26,12 @@ namespace libtas {
 
 # ifdef __i386__
 static unsigned char lgpa_beg[] = {0x8d, 0x4c, 0x24, 0x04, 0x83, 0xe4, 0xf0, 0xff, 0x71, 0xfc};
+static const unsigned char jmp_instr[] = {0xff, 0x25};
 # elif defined(__x86_64__)
 static unsigned char lgpa_beg[] = {0x55, 0x48, 0x89, 0xe5, 0x41, 0x56, 0x45, 0x89, 0xc6, 0x41, 0x55, 0x4d, 0x89, 0xcd};
+static const unsigned char jmp_instr[] = {0xff, 0x25, 0x00, 0x00, 0x00, 0x00};
 # endif
 
-static const unsigned char jmp_instr[] = {0xff, 0x25, 0x00, 0x00, 0x00, 0x00};
 
 namespace orig {
 
@@ -56,7 +57,7 @@ void hook_ntdll()
 
     void* handle;
     if (ntdllpath.empty()) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Could not find ntdll.dll.so path");
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not find ntdll.dll.so path");
         return;
     }
 
@@ -64,7 +65,7 @@ void hook_ntdll()
     NATIVECALL(handle = dlopen(ntdllpath.c_str(), RTLD_LAZY));
 
     if (!handle) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Could not load ntdll.dll.so");
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load ntdll.dll.so");
         return;
     }
 
@@ -73,22 +74,22 @@ void hook_ntdll()
     NATIVECALL(orig_fun = dlsym(handle, "LdrGetProcedureAddress"));
 
     if (!orig_fun) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Could not load LdrGetProcedureAddress");
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load LdrGetProcedureAddress");
         return;
     }
 
     if (0 != memcmp(orig_fun, lgpa_beg, sizeof(lgpa_beg))) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Beginning of LdrGetProcedureAddress is different from expected");
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Beginning of LdrGetProcedureAddress is different from expected");
         return;
     }
 
     /* Overwrite the trampoline function */
-    debuglog(LCF_HOOK, "Building our trampoline function");
+    debuglogstdio(LCF_HOOK, "Building our trampoline function in %p", orig::LdrGetProcedureAddress);
 
     char *pTramp = reinterpret_cast<char *>(orig::LdrGetProcedureAddress);
-    intptr_t addrTramp = reinterpret_cast<intptr_t>(pTramp);
-    intptr_t alignedBeg = (addrTramp / 4096) * 4096;
-    intptr_t alignedEnd = ((addrTramp+sizeof(lgpa_beg)+sizeof(jmp_instr)+sizeof(intptr_t)) / 4096) * 4096;
+    uintptr_t addrTramp = reinterpret_cast<uintptr_t>(pTramp);
+    uintptr_t alignedBeg = (addrTramp / 4096) * 4096;
+    uintptr_t alignedEnd = ((addrTramp+sizeof(lgpa_beg)+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
     size_t alignedSize = alignedEnd - alignedBeg + 4096;
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
@@ -97,24 +98,36 @@ void hook_ntdll()
     pTramp += sizeof(lgpa_beg);
     memcpy(pTramp, jmp_instr, sizeof(jmp_instr));
     pTramp += sizeof(jmp_instr);
-    *(reinterpret_cast<intptr_t*>(pTramp)) = reinterpret_cast<intptr_t>(orig_fun)+sizeof(lgpa_beg);
+#ifdef __i386__
+    uintptr_t indirAddr = reinterpret_cast<uintptr_t>(pTramp+4);
+    memcpy(pTramp, &indirAddr, sizeof(uintptr_t));
+    pTramp += sizeof(uintptr_t);
+#endif
+    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(orig_fun)+sizeof(lgpa_beg);
+    memcpy(pTramp, &targetAddr, sizeof(uintptr_t));
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
 
     /* Overwrite the original function */
-    debuglog(LCF_HOOK, "Overwriting the native function");
+    debuglogstdio(LCF_HOOK, "Overwriting the native function in %p", orig_fun);
 
     char *pTarget = reinterpret_cast<char *>(orig_fun);
-    intptr_t addrTarget = reinterpret_cast<intptr_t>(pTarget);
+    uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
     alignedBeg = (addrTarget / 4096) * 4096;
-    alignedEnd = ((addrTarget+sizeof(jmp_instr)+sizeof(intptr_t)) / 4096) * 4096;
+    alignedEnd = ((addrTarget+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
     alignedSize = alignedEnd - alignedBeg + 4096;
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
 
     memcpy(pTarget, jmp_instr, sizeof(jmp_instr));
     pTarget += sizeof(jmp_instr);
-    *(reinterpret_cast<intptr_t*>(pTarget)) = reinterpret_cast<intptr_t>(LdrGetProcedureAddress);
+#ifdef __i386__
+    indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
+    memcpy(pTarget, &indirAddr, sizeof(uintptr_t));
+    pTarget += sizeof(uintptr_t);
+#endif
+    targetAddr = reinterpret_cast<uintptr_t>(LdrGetProcedureAddress);
+    memcpy(pTarget, &targetAddr, sizeof(uintptr_t));
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
 }
