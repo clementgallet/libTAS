@@ -11,6 +11,7 @@
 * Option to disable audio completely (some games don't accept that and quit)
 * Hook LdrGetProcedureAddress() by patching ntdll.dll.so
 * Add a full wait setting
+* Add thread synchronization methods
 
 ### Changed
 

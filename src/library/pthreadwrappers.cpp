@@ -602,19 +602,12 @@ int pthread_setname_np (pthread_t target_thread, const char *name) throw()
         GlobalState::setNoLog(true);
     }
 
-    if (strncmp(name, "OVERWORLD_LOADE", 15) == 0) {
-        ThreadSync::detInit();
-    }
-    else if (strncmp(name, "LEVEL_LOADER", 12) == 0) {
-        ThreadSync::detInit();
-    }
-    else if (strncmp(name, "USER_IO", 7) == 0) {
-        ThreadSync::detInit();
-    }
-    else if (strncmp(name, "FILE_LOADING", 12) == 0) {
-        ThreadSync::detInit();
-    }
-    else if (strncmp(name, "COMPLETE_LEVEL", 14) == 0) {
+    if ((strcmp(name, "OVERWORLD_LOADE") == 0) ||
+        (strcmp(name, "LEVEL_LOADER") == 0) ||
+        (strcmp(name, "USER_IO") == 0) ||
+        (strcmp(name, "FILE_LOADING") == 0) ||
+        (strcmp(name, "COMPLETE_LEVEL") == 0) ||
+        (strcmp(name, "SUMMIT_VIGNETTE") == 0)) {
         ThreadSync::detInit();
     }
 

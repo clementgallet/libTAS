@@ -36,10 +36,6 @@ static pthread_rwlock_t wrapperExecutionLock =
 static std::mutex detMutex;
 static std::condition_variable detCond;
 
-static bool syncEnabled = false;
-static bool syncGo = false;
-static pthread_t syncThread;
-
 void ThreadSync::acquireLocks()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to exit wrappers");
@@ -105,33 +101,35 @@ void ThreadSync::wrapperExecutionLockUnlock()
 
 void ThreadSync::detInit()
 {
-    syncEnabled = true;
-    syncGo = false;
-    syncThread = ThreadManager::getThreadId();
+    ThreadInfo *current_thread = ThreadManager::getCurrentThread();
+    current_thread->syncEnabled = true;
+    current_thread->syncGo = false;
 }
 
 void ThreadSync::detWait()
 {
-    if (!syncEnabled) {
-        return;
+    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
+        if (!thread->syncEnabled) continue;
+        std::unique_lock<std::mutex> lock(detMutex);
+        detCond.wait(lock, [thread]{ return (thread->syncGo); });
+        thread->syncGo = false;
     }
-    std::unique_lock<std::mutex> lock(detMutex);
-    detCond.wait(lock, []{ return (syncGo); });
-    syncGo = false;
 }
 
 void ThreadSync::detSignal(bool stop)
 {
-    if ((!syncEnabled) || (syncThread != ThreadManager::getThreadId()))
+    ThreadInfo *current_thread = ThreadManager::getCurrentThread();
+
+    if (!current_thread->syncEnabled)
         return;
     {
         std::lock_guard<std::mutex> lock(detMutex);
-        syncGo = true;
+        current_thread->syncGo = true;
     }
     detCond.notify_all();
 
     if (stop)
-        syncEnabled = false;
+        current_thread->syncEnabled = false;
 }
 
 }
