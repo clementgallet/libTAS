@@ -430,6 +430,10 @@ static void *pthread_start(void *arg)
     if (GlobalState::isNative())
         return orig::pthread_cond_wait(cond, mutex);
 
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
+        ThreadSync::detSignal(false);
+    }
+
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
@@ -598,6 +602,17 @@ int pthread_setname_np (pthread_t target_thread, const char *name) throw()
     if (strncmp(name, "llvmpipe-", 9) == 0) {
         GlobalState::setNative(true);
         GlobalState::setNoLog(true);
+    }
+
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
+        if ((strcmp(name, "OVERWORLD_LOADE") == 0) ||
+            (strcmp(name, "LEVEL_LOADER") == 0) ||
+            (strcmp(name, "USER_IO") == 0) ||
+            (strcmp(name, "FILE_LOADING") == 0) ||
+            (strcmp(name, "COMPLETE_LEVEL") == 0) ||
+            (strcmp(name, "SUMMIT_VIGNETTE") == 0)) {
+            ThreadSync::detInit();
+        }
     }
 
     return orig::pthread_setname_np(target_thread, name);

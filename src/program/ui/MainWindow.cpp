@@ -70,6 +70,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     executableWindow = new ExecutableWindow(c, this);
     controllerTabWindow = new ControllerTabWindow(c, this);
     gameInfoWindow = new GameInfoWindow(this);
+    gameSpecificWindow = new GameSpecificWindow(c, this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
     inputEditorWindow = new InputEditorWindow(c, this);
@@ -729,6 +730,8 @@ void MainWindow::createMenus()
     asyncMenu->setToolTip("Only useful if the game pulls events asynchronously. We wait until all events are processed at the beginning of each frame");
     disabledWidgetsOnStart.append(asyncMenu);
     asyncMenu->addActions(asyncGroup->actions());
+
+    runtimeMenu->addAction(tr("Game-specific settings..."), gameSpecificWindow, &GameSpecificWindow::exec);
 
     QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
 

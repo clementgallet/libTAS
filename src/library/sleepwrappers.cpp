@@ -231,6 +231,11 @@ DEFINE_ORIG_POINTER(sched_yield);
 
     DEBUGLOGCALL(LCF_SLEEP);
 
+    if (shared_config.game_specific_timing & SharedConfig::GC_SYNC_CELESTE) {
+        if (ThreadManager::isMainThread())
+            detTimer.fakeAdvanceTimer({0, 1000000});
+    }
+
     return orig::sched_yield();
 }
 

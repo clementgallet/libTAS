@@ -15,27 +15,38 @@
 
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
-
-    Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
  */
 
-#ifndef LIBTAS_THREAD_SYNC_H
-#define LIBTAS_THREAD_SYNC_H
+#ifndef LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
+#define LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
 
-namespace libtas {
-namespace ThreadSync {
-    void acquireLocks();
-    void releaseLocks();
-    void waitForThreadsToFinishInitialization();
-    void incrementUninitializedThreadCount();
-    void decrementUninitializedThreadCount();
-    void wrapperExecutionLockLock();
-    void wrapperExecutionLockUnlock();
-    void detInit();
-    void detWait();
-    void detSignal(bool stop);
+#include <QDialog>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QCheckBox>
 
-}
-}
+#include "../Context.h"
+
+class GameSpecificWindow : public QDialog {
+    Q_OBJECT
+
+public:
+    GameSpecificWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+
+    /* Update UI elements when the config has changed */
+    void update_config();
+
+private:
+    Context *context;
+
+    QCheckBox *timingCeleste;
+    QCheckBox *syncCeleste;
+
+private slots:
+    // void slotBrowseEncodePath();
+    // void slotUpdate();
+    void slotOk();
+};
 
 #endif

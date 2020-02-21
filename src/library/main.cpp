@@ -30,6 +30,7 @@
 #include "../shared/AllInputs.h"
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
+#include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
@@ -76,6 +77,7 @@ void __attribute__((constructor)) init(void)
     }
 
     ThreadManager::init();
+    SaveStateManager::init();
 
     initSocketGame();
 

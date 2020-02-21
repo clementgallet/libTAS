@@ -25,12 +25,16 @@
 #include "../GlobalState.h"
 #include <atomic>
 #include <pthread.h> // pthread_rwlock_t
+#include <mutex>
+#include <condition_variable>
 
 namespace libtas {
 
 static std::atomic<int> uninitializedThreadCount(0);
 static pthread_rwlock_t wrapperExecutionLock =
     PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
+static std::mutex detMutex;
+static std::condition_variable detCond;
 
 void ThreadSync::acquireLocks()
 {
@@ -93,6 +97,39 @@ void ThreadSync::wrapperExecutionLockUnlock()
     if (pthread_rwlock_unlock(&wrapperExecutionLock) != 0) {
         debuglog(LCF_ERROR | LCF_THREAD, "Failed to release lock!");
     }
+}
+
+void ThreadSync::detInit()
+{
+    ThreadInfo *current_thread = ThreadManager::getCurrentThread();
+    current_thread->syncEnabled = true;
+    current_thread->syncGo = false;
+}
+
+void ThreadSync::detWait()
+{
+    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
+        if (!thread->syncEnabled) continue;
+        std::unique_lock<std::mutex> lock(detMutex);
+        detCond.wait(lock, [thread]{ return (thread->syncGo); });
+        thread->syncGo = false;
+    }
+}
+
+void ThreadSync::detSignal(bool stop)
+{
+    ThreadInfo *current_thread = ThreadManager::getCurrentThread();
+
+    if (!current_thread->syncEnabled)
+        return;
+    {
+        std::lock_guard<std::mutex> lock(detMutex);
+        current_thread->syncGo = true;
+    }
+    detCond.notify_all();
+
+    if (stop)
+        current_thread->syncEnabled = false;
 }
 
 }
