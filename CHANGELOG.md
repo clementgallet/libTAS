@@ -12,6 +12,7 @@
 * Hook LdrGetProcedureAddress() by patching ntdll.dll.so
 * Add a full wait setting
 * Add thread synchronization methods
+* Introduce game-specific settings
 
 ### Changed
 

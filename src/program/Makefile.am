@@ -10,6 +10,7 @@ libTAS_QTSOURCES = \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
+    ui/GameSpecificWindow.h \
     ui/InputEditorModel.h \
     ui/InputEditorView.h \
     ui/InputEditorWindow.h \
@@ -44,6 +45,7 @@ libTAS_SOURCES = \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \
     ui/GameInfoWindow.cpp \
+    ui/GameSpecificWindow.cpp \
     ui/InputEditorModel.cpp \
     ui/InputEditorView.cpp \
     ui/InputEditorWindow.cpp \

@@ -39,6 +39,7 @@
 #include "InputWindow.h"
 #include "ControllerTabWindow.h"
 #include "GameInfoWindow.h"
+#include "GameSpecificWindow.h"
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
 #include "InputEditorWindow.h"
@@ -67,6 +68,7 @@ public:
     ExecutableWindow* executableWindow;
     ControllerTabWindow* controllerTabWindow;
     GameInfoWindow* gameInfoWindow;
+    GameSpecificWindow* gameSpecificWindow;
     RamSearchWindow* ramSearchWindow;
     RamWatchWindow* ramWatchWindow;
     InputEditorWindow* inputEditorWindow;

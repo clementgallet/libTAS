@@ -198,6 +198,24 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* How are we handling waits */
     int wait_timeout = WAIT_NATIVE;
 
+    /* An enum indicating enabled game-specific timing settings */
+    enum GameSpecificTiming
+    {
+        GC_TIMING_CELESTE = 0x01,
+    };
+
+    /* Game-specific timing settings */
+    int game_specific_timing = 0;
+
+    /* An enum indicating enabled game-specific timing settings */
+    enum GameSpecificSync
+    {
+        GC_SYNC_CELESTE = 0x01,
+    };
+
+    /* Game-specific timing settings */
+    int game_specific_sync = 0;
+
     /* Is the game running or on pause */
     bool running = false;
 

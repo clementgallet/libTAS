@@ -69,8 +69,10 @@ DEFINE_ORIG_POINTER(clock_gettime);
     *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
 
-    if (ThreadManager::isMainThread())
-        detTimer.fakeAdvanceTimer({0, 0});
+    if (shared_config.game_specific_timing & SharedConfig::GC_SYNC_CELESTE) {
+        if (ThreadManager::isMainThread())
+            detTimer.fakeAdvanceTimer({0, 0});
+    }
 
     return 0;
 }
