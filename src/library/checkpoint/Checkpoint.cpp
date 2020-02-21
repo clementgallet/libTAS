@@ -612,11 +612,8 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         }
         else {
             /* Areas are not overlapping, we unmap the whole area */
-            /* We only deallocate this section if we are interested in it */
-            if (!skipArea(current_area)) {
-                current_area->print("Deallocating");
-                MYASSERT(munmap(current_area->addr, current_area->size) == 0)
-            }
+            current_area->print("Deallocating");
+            MYASSERT(munmap(current_area->addr, current_area->size) == 0)
             return 1;
         }
     }
@@ -1077,16 +1074,16 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
         /* Gather the flag for the current pagemap. */
         uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
-        bool page_present = page & (0x1ull << 63);
+        // bool page_present = page & (0x1ull << 63);
         bool soft_dirty = page & (0x1ull << 55);
 
         /* Check if page is present */
-        if (!page_present) {
-            ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
-        }
+        // if (!page_present) {
+        //     ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
+        // }
 
         /* Check if page is zero (only check on anonymous memory)*/
-        else if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             ss_pagemaps[ss_pagemap_i++] = Area::ZERO_PAGE;
         }
 
