@@ -503,7 +503,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingPrintGroup, tr("OpenGL"), LCF_OGL);
     addActionCheckable(loggingPrintGroup, tr("AV Dumping"), LCF_DUMP);
     addActionCheckable(loggingPrintGroup, tr("SDL"), LCF_SDL);
-    addActionCheckable(loggingPrintGroup, tr("Memory"), LCF_MEMORY);
+    addActionCheckable(loggingPrintGroup, tr("Wine"), LCF_WINE);
     addActionCheckable(loggingPrintGroup, tr("Keyboard"), LCF_KEYBOARD);
     addActionCheckable(loggingPrintGroup, tr("Mouse"), LCF_MOUSE);
     addActionCheckable(loggingPrintGroup, tr("Joystick"), LCF_JOYSTICK);
@@ -539,7 +539,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingExcludeGroup, tr("OpenGL"), LCF_OGL);
     addActionCheckable(loggingExcludeGroup, tr("AV Dumping"), LCF_DUMP);
     addActionCheckable(loggingExcludeGroup, tr("SDL"), LCF_SDL);
-    addActionCheckable(loggingExcludeGroup, tr("Memory"), LCF_MEMORY);
+    addActionCheckable(loggingExcludeGroup, tr("Wine"), LCF_WINE);
     addActionCheckable(loggingExcludeGroup, tr("Keyboard"), LCF_KEYBOARD);
     addActionCheckable(loggingExcludeGroup, tr("Mouse"), LCF_MOUSE);
     addActionCheckable(loggingExcludeGroup, tr("Joystick"), LCF_JOYSTICK);

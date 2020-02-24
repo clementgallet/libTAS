@@ -20,7 +20,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include "hook.h"
-#include "winehook.h"
+#include "wine/winehook.h"
 #include <cstring>
 #include <set>
 #include "backtrace.h"

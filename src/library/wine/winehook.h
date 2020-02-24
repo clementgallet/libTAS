@@ -38,20 +38,12 @@
 # endif  /* __i386__ */
 #endif /* __stdcall */
 
-struct winstring {
-  unsigned short Length;
-  unsigned short MaximumLength;
-  char *Buffer;
-};
 
 #include "global.h"
 
 namespace libtas {
 
 void hook_ntdll();
-
-OVERRIDE long __stdcall LdrGetProcedureAddress(void *module, const winstring *name,
-                                            unsigned long ord, void **address);
 
 }
 

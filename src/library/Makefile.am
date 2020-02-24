@@ -13,6 +13,7 @@ libtas_so_SOURCES = \
     global.cpp \
     GlobalState.cpp \
     hook.cpp \
+    hookpatch.cpp \
     localewrappers.cpp \
     logging.cpp \
     main.cpp \
@@ -40,7 +41,6 @@ libtas_so_SOURCES = \
     tlswrappers.cpp \
     Utils.cpp \
     WindowTitle.cpp \
-    winehook.cpp \
     XlibEventQueue.cpp \
     XlibEventQueueList.cpp \
     XcbEventQueue.cpp \
@@ -132,6 +132,7 @@ libtas_so_SOURCES = \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \
     steam/steamapiinternal.cpp \
+    wine/winehook.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp
