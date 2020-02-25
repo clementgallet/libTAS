@@ -17,22 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "winehook.h"
+#include "wined3d.h"
 #include "../hookpatch.h"
 #include "../logging.h"
 // #include <sys/mman.h>
 
 namespace libtas {
 
-struct winstring {
-    unsigned short Length;
-    unsigned short MaximumLength;
-    char *Buffer;
-};
-
 namespace orig {
 
-static long __stdcall __attribute__((noinline)) LdrGetProcedureAddress(void *module, const winstring *name, unsigned long ord, void **address)
+static void __attribute__((noinline)) wined3d_device_update_sub_resource(void *device, void *resource,
+        unsigned int sub_resource_idx, const void *box, const void *data, unsigned int row_pitch,
+        unsigned int depth_pitch, unsigned int flags)
 {
     static long x__ = 0;
     x__++;
@@ -42,22 +38,21 @@ static long __stdcall __attribute__((noinline)) LdrGetProcedureAddress(void *mod
     }
     x__++;
     x__++;
-    return 0;
 }
 
 }
 
-long __stdcall LdrGetProcedureAddress(void *module, const winstring *name,
-                                            unsigned long ord, void **address)
+void wined3d_device_update_sub_resource(void *device, void *resource,
+        unsigned int sub_resource_idx, const void *box, const void *data, unsigned int row_pitch,
+        unsigned int depth_pitch, unsigned int flags)
 {
-    if (name) debuglog(LCF_HOOK | LCF_WINE, __func__, " called with function ", name->Buffer);
-    else debuglog(LCF_HOOK | LCF_WINE, __func__, " called with ordinal ", ord);
-    return orig::LdrGetProcedureAddress(module, name, ord, address);
+    DEBUGLOGCALL(LCF_WINE);
+    return orig::wined3d_device_update_sub_resource(device, resource, sub_resource_idx, box, data, row_pitch, depth_pitch, flags);
 }
 
-void hook_ntdll()
+void hook_wined3d()
 {
-    HOOK_PATCH_ORIG(LdrGetProcedureAddress, "ntdll.dll.so");
+    HOOK_PATCH_ORIG(wined3d_device_update_sub_resource, "wined3d.dll.so");
 }
 
 

@@ -133,6 +133,7 @@ libtas_so_SOURCES = \
     steam/steamapi.cpp \
     steam/steamapiinternal.cpp \
     wine/winehook.cpp \
+    wine/wined3d.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp

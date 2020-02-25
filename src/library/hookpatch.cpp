@@ -83,7 +83,6 @@ static int instruction_length(const unsigned char *func)
 
         // Skip opcode byte
         unsigned char opcode = *func++;
-        debuglogstdio(LCF_HOOK | LCF_WINE, "Opcode %x", opcode);
 
         // Skip mod R/M byte
         unsigned char modRM = 0xFF;
@@ -207,7 +206,7 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
 
     void* handle;
     if (libpath.empty()) {
-        debuglogstdio(LCF_HOOK | LCF_WINE | LCF_ERROR, "Could not find %s path", library);
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not find %s path", library);
         return;
     }
 
@@ -215,7 +214,7 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
     NATIVECALL(handle = dlopen(libpath.c_str(), RTLD_LAZY));
 
     if (!handle) {
-        debuglogstdio(LCF_HOOK | LCF_WINE | LCF_ERROR, "Could not load %s", library);
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load %s", library);
         return;
     }
 
@@ -241,10 +240,10 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
         offset += instruction_length(pOrig + offset);
     }
 
-    debuglogstdio(LCF_HOOK | LCF_WINE, "Saving instructions of length %d", offset);
+    debuglogstdio(LCF_HOOK, "Saving instructions of length %d", offset);
 
     /* Overwrite the trampoline function */
-    debuglogstdio(LCF_HOOK | LCF_WINE, "Building our trampoline function in %p", tramp_function);
+    debuglogstdio(LCF_HOOK, "Building our trampoline function in %p", tramp_function);
 
     char *pTramp = reinterpret_cast<char *>(tramp_function);
     uintptr_t addrTramp = reinterpret_cast<uintptr_t>(pTramp);
@@ -269,7 +268,7 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
 
     /* Overwrite the original function */
-    debuglogstdio(LCF_HOOK | LCF_WINE, "Overwriting the native function in %p", orig_fun);
+    debuglogstdio(LCF_HOOK, "Overwriting the native function in %p", orig_fun);
 
     char *pTarget = reinterpret_cast<char *>(orig_fun);
     uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);

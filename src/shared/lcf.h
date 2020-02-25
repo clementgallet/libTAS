@@ -48,7 +48,7 @@ typedef int LogCategoryFlag; enum
 	LCF_OGL      = 1 << 15, // openGL related functions
 	LCF_DUMP     = 1 << 16, // video and audio dumping
 	LCF_SDL      = 1 << 17, // call to SDL functions
-	LCF_WINE     = 1 << 18, // Wine fonctions
+	LCF_WINE     = 1 << 18, // Wine functions
 	LCF_KEYBOARD = 1 << 19, // keyboard related
 	LCF_MOUSE    = 1 << 20,
 	LCF_JOYSTICK = 1 << 21, // for both SDL_Joystick and SDL_GameController
