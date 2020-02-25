@@ -211,6 +211,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     enum GameSpecificSync
     {
         GC_SYNC_CELESTE = 0x01,
+        GC_SYNC_WITNESS = 0x02,
     };
 
     /* Game-specific timing settings */

@@ -18,17 +18,17 @@
  */
 
 #include "wined3d.h"
+#include "winehook.h"
 #include "../hookpatch.h"
 #include "../logging.h"
+#include "../checkpoint/ThreadSync.h"
 // #include <sys/mman.h>
 
 namespace libtas {
 
 namespace orig {
 
-static void __attribute__((noinline)) wined3d_device_update_sub_resource(void *device, void *resource,
-        unsigned int sub_resource_idx, const void *box, const void *data, unsigned int row_pitch,
-        unsigned int depth_pitch, unsigned int flags)
+static void* __stdcall __attribute__((noinline)) wined3d_texture_get_resource(void *texture)
 {
     static long x__ = 0;
     x__++;
@@ -38,21 +38,48 @@ static void __attribute__((noinline)) wined3d_device_update_sub_resource(void *d
     }
     x__++;
     x__++;
+    return nullptr;
+}
+
+unsigned long __attribute__((noinline)) wined3d_swapchain_present(void *swapchain, const void *src_rect,
+        const void *dst_rect, void *dst_window_override, unsigned int swap_interval, unsigned int flags)
+{
+    static long x__ = 0;
+    x__++;
+    x__++;
+    if (x__==2) {
+        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
+    }
+    x__++;
+    x__++;
+    return 0;
 }
 
 }
 
-void wined3d_device_update_sub_resource(void *device, void *resource,
-        unsigned int sub_resource_idx, const void *box, const void *data, unsigned int row_pitch,
-        unsigned int depth_pitch, unsigned int flags)
+void* __stdcall wined3d_texture_get_resource(void *texture)
 {
     DEBUGLOGCALL(LCF_WINE);
-    return orig::wined3d_device_update_sub_resource(device, resource, sub_resource_idx, box, data, row_pitch, depth_pitch, flags);
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+        ThreadSync::detSignal(true);
+    }
+    return orig::wined3d_texture_get_resource(texture);
+}
+
+unsigned long wined3d_swapchain_present(void *swapchain, const void *src_rect,
+        const void *dst_rect, void *dst_window_override, unsigned int swap_interval, unsigned int flags)
+{
+    DEBUGLOGCALL(LCF_WINE);
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+        ThreadSync::detInit();
+    }
+    return orig::wined3d_swapchain_present(swapchain, src_rect, dst_rect, dst_window_override, swap_interval, flags);
 }
 
 void hook_wined3d()
 {
-    HOOK_PATCH_ORIG(wined3d_device_update_sub_resource, "wined3d.dll.so");
+    HOOK_PATCH_ORIG(wined3d_texture_get_resource, "wined3d.dll.so");
+    HOOK_PATCH_ORIG(wined3d_swapchain_present, "wined3d.dll.so");
 }
 
 

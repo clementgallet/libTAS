@@ -1302,6 +1302,7 @@ void MainWindow::slotGamePathChanged()
     updateUIFromConfig();
     encodeWindow->update_config();
     executableWindow->update_config();
+    gameSpecificWindow->update_config();
     inputWindow->update();
     osdWindow->update_config();
     autoSaveWindow->update_config();

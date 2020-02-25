@@ -189,7 +189,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_END)
         sdlEventQueue.waitForEmpty();
 
-    ThreadSync::detWait();
+    if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) && (framecount > 11)) {
+        ThreadSync::detWait();
+    }
+
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
+        ThreadSync::detWait();
+    }
 
     /* Update the deterministic timer, sleep if necessary and mix audio */
     detTimer.enterFrameBoundary();

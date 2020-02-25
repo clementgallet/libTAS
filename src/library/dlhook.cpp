@@ -85,7 +85,7 @@ void *dlopen(const char *file, int mode) throw() {
     if (result)
         add_lib(file);
 
-    if (std::string(file).find("wined3d.dll.so") != std::string::npos) {
+    if (file != nullptr && std::string(file).find("wined3d.dll.so") != std::string::npos) {
         /* Hook wine LdrGetProcedureAddress function */
         hook_wined3d();
     }
