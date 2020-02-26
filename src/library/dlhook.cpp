@@ -22,6 +22,8 @@
 #include "hook.h"
 #include "wine/winehook.h"
 #include "wine/wined3d.h"
+#include "wine/user32.h"
+#include "wine/kernel32.h"
 #include <cstring>
 #include <set>
 #include "backtrace.h"
@@ -86,8 +88,18 @@ void *dlopen(const char *file, int mode) throw() {
         add_lib(file);
 
     if (file != nullptr && std::string(file).find("wined3d.dll.so") != std::string::npos) {
-        /* Hook wine LdrGetProcedureAddress function */
+        /* Hook wine wined3d functions */
         hook_wined3d();
+    }
+
+    if (file != nullptr && std::string(file).find("user32.dll.so") != std::string::npos) {
+        /* Hook wine user32 functions */
+        hook_user32();
+    }
+
+    if (file != nullptr && std::string(file).find("kernel32.dll.so") != std::string::npos) {
+        /* Hook wine kernel32 functions */
+        hook_kernel32();
     }
 
     return result;

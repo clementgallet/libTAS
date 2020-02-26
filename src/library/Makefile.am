@@ -100,6 +100,7 @@ libtas_so_SOURCES = \
     inputs/sdlpointer.cpp \
     inputs/sdltextinput.cpp \
     inputs/udevwrappers.cpp \
+    inputs/winekeyboardlayout.cpp \
     inputs/xcbkeyboard.cpp \
     inputs/xcbpointer.cpp \
     inputs/xkeyboard.cpp \
@@ -134,6 +135,8 @@ libtas_so_SOURCES = \
     steam/steamapiinternal.cpp \
     wine/winehook.cpp \
     wine/wined3d.cpp \
+    wine/user32.cpp \
+    wine/kernel32.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp

@@ -451,6 +451,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_BEG)
         sdlEventQueue.waitForEmpty();
 
+    // ThreadSync::detSignalGlobal(0);
+    // ThreadSync::detWaitGlobal(1);
+
     /* Decide if we skip drawing the next frame because of fastforward.
      * It is stored in an extern so that we can disable opengl draws.
      */

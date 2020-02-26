@@ -35,6 +35,8 @@ static pthread_rwlock_t wrapperExecutionLock =
     PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
 static std::mutex detMutex;
 static std::condition_variable detCond;
+static bool syncGo[10];
+
 
 void ThreadSync::acquireLocks()
 {
@@ -116,6 +118,15 @@ void ThreadSync::detWait()
     }
 }
 
+void ThreadSync::detWaitGlobal(int i)
+{
+    debuglog(LCF_THREAD, "Wait on global lock ", i);
+    std::unique_lock<std::mutex> lock(detMutex);
+    detCond.wait(lock, [i]{ return (syncGo[i]); });
+    syncGo[i] = false;
+    debuglog(LCF_THREAD, "End Wait on global lock ", i);
+}
+
 void ThreadSync::detSignal(bool stop)
 {
     ThreadInfo *current_thread = ThreadManager::getCurrentThread();
@@ -130,6 +141,16 @@ void ThreadSync::detSignal(bool stop)
 
     if (stop)
         current_thread->syncEnabled = false;
+}
+
+void ThreadSync::detSignalGlobal(int i)
+{
+    debuglog(LCF_THREAD, "Signal global lock ", i);
+    {
+        std::lock_guard<std::mutex> lock(detMutex);
+        syncGo[i] = true;
+    }
+    detCond.notify_all();
 }
 
 }

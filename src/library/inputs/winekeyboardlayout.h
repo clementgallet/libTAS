@@ -15,29 +15,20 @@
 
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
-
-    Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
  */
 
-#ifndef LIBTAS_THREAD_SYNC_H
-#define LIBTAS_THREAD_SYNC_H
+#ifndef LIBTAS_WINEKEYBOARDLAYOUT_H_INCL
+#define LIBTAS_WINEKEYBOARDLAYOUT_H_INCL
+
+#include <X11/X.h>
+
+#include "../global.h"
 
 namespace libtas {
-namespace ThreadSync {
-    void acquireLocks();
-    void releaseLocks();
-    void waitForThreadsToFinishInitialization();
-    void incrementUninitializedThreadCount();
-    void decrementUninitializedThreadCount();
-    void wrapperExecutionLockLock();
-    void wrapperExecutionLockUnlock();
-    void detInit();
-    void detWait();
-    void detWaitGlobal(int i);
-    void detSignal(bool stop);
-    void detSignalGlobal(int i);
 
-}
+KeySym VKeyToXKeysym(int vkey);
+int XKeysymToVKey(KeySym keysym);
+
 }
 
 #endif
