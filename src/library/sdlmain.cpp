@@ -66,7 +66,6 @@ static Uint32 init_flags = 0;
 
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
-    LINK_NAMESPACE_SDLX(SDL_Quit);
 
     if (flags & SDL_INIT_TIMER)
         debuglog(LCF_SDL, "    SDL_TIMER enabled.");
@@ -134,6 +133,7 @@ Uint32 SDL_WasInit(Uint32 flags)
 /* Override */ void SDL_Quit()
 {
     DEBUGLOGCALL(LCF_SDL);
+    LINK_NAMESPACE_SDLX(SDL_Quit);
     orig::SDL_Quit();
 }
 
