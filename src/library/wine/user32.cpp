@@ -38,41 +38,17 @@ namespace orig {
 
 static short __stdcall __attribute__((noinline)) GetAsyncKeyState(int key)
 {
-    static long x__ = 0;
-    x__++;
-    x__++;
-    if (x__==2) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
-    }
-    x__++;
-    x__++;
-    return 0;
+    HOOK_PLACEHOLDER_RETURN_ZERO
 }
 
 static bool __stdcall __attribute__((noinline)) GetCursorPos(POINT *pt)
 {
-    static long x__ = 0;
-    x__++;
-    x__++;
-    if (x__==2) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
-    }
-    x__++;
-    x__++;
-    return 0;
+    HOOK_PLACEHOLDER_RETURN_ZERO
 }
 
 static bool __stdcall __attribute__((noinline)) ScreenToClient(void *hWnd, POINT *lpPoint)
 {
-    static long x__ = 0;
-    x__++;
-    x__++;
-    if (x__==2) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
-    }
-    x__++;
-    x__++;
-    return 0;
+    HOOK_PLACEHOLDER_RETURN_ZERO
 }
 
 }

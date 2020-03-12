@@ -34,15 +34,7 @@ namespace orig {
 
 static long __stdcall __attribute__((noinline)) LdrGetProcedureAddress(void *module, const winstring *name, unsigned long ord, void **address)
 {
-    static long x__ = 0;
-    x__++;
-    x__++;
-    if (x__==2) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
-    }
-    x__++;
-    x__++;
-    return 0;
+    HOOK_PLACEHOLDER_RETURN_ZERO
 }
 
 }

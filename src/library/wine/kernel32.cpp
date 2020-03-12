@@ -30,15 +30,7 @@ static int __stdcall __attribute__((noinline)) WaitForMultipleObjectsEx( int cou
                                            bool wait_all, int timeout,
                                            bool alertable )
 {
-    static long x__ = 0;
-    x__++;
-    x__++;
-    if (x__==2) {
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");
-    }
-    x__++;
-    x__++;
-    return 0;
+    HOOK_PLACEHOLDER_RETURN_ZERO
 }
 
 }
