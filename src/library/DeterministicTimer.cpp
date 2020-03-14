@@ -264,6 +264,22 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
     fakeExtraTicks = extraTicks;
 }
 
+void DeterministicTimer::fakeAdvanceTimerFrame() {
+    TimeHolder timeIncrement = baseTimeIncrement;
+    unsigned int fake_fractional_part = fractional_part + fractional_increment;
+    while (fake_fractional_part >= shared_config.framerate_num)
+    {
+        timeIncrement.tv_nsec++;
+        fake_fractional_part -= shared_config.framerate_num;
+    }
+
+    timeIncrement.tv_nsec+=1000000;
+
+    if (timeIncrement > addedDelay) {
+        fakeExtraTicks = timeIncrement - addedDelay;
+    }
+}
+
 void DeterministicTimer::initialize(void)
 {
     ticks.tv_sec = shared_config.initial_time_sec;

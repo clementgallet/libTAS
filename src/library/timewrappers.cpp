@@ -24,6 +24,7 @@
 #include "DeterministicTimer.h"
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
+#include "BusyLoopDetection.h"
 
 namespace libtas {
 
@@ -32,6 +33,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 /* Override */ time_t time(time_t* t) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_TIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec);
     if (t)
@@ -42,6 +44,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", ts.tv_sec, ".", std::setw(6), ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
@@ -52,6 +55,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 /* Override */ clock_t clock (void) throw()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
     clock_t clk = static_cast<clock_t>(ts.tv_sec) * CLOCKS_PER_SEC + (static_cast<clock_t>(ts.tv_nsec) * CLOCKS_PER_SEC) / 1000000000;
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", clk);
@@ -66,6 +70,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
     }
 
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    BusyLoopDetection::increment(__builtin_return_address(0));
     *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", tp->tv_sec, ".", std::setw(9), tp->tv_nsec);
 
@@ -79,6 +84,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
+    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglog(LCF_SDL | LCF_TIMEGET, __func__, " call - returning ", msec);
@@ -95,6 +101,7 @@ DEFINE_ORIG_POINTER(clock_gettime);
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET);
+    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 

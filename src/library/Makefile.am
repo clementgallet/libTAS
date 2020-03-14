@@ -6,6 +6,7 @@ endif
 
 libtas_so_SOURCES = \
     backtrace.cpp \
+    BusyLoopDetection.cpp \
     DeterministicTimer.cpp \
     dlhook.cpp \
     frame.cpp \

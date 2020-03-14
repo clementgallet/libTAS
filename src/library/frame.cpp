@@ -42,6 +42,7 @@
 #include "xcbevents.h"
 #include "xatom.h"
 #include "XlibEventQueueList.h"
+#include "BusyLoopDetection.h"
 
 namespace libtas {
 
@@ -183,13 +184,16 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 
     ThreadManager::setMainThread();
 
+    /* Reset the busy loop detector */
+    BusyLoopDetection::reset();
+
     /* Wait for events to be processed by the game */
     if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS_END)
         xlibEventQueueList.waitForEmpty();
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_END)
         sdlEventQueue.waitForEmpty();
 
-    if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) && (framecount > 11)) {
+    if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) && (framecount > 11) && (drawFB)) {
         ThreadSync::detWait();
     }
 

@@ -682,6 +682,10 @@ void MainWindow::createMenus()
     timeMenu->setToolTip("Enable a hack to prevent softlocks when the game waits for time to advance. Only check the necessary one(s)");
     timeMenu->installEventFilter(this);
 
+    busyloopAction = runtimeMenu->addAction(tr("Busy loop detection"), this, &MainWindow::slotBusyLoop);
+    busyloopAction->setCheckable(true);
+    disabledActionsOnStart.append(busyloopAction);
+
     QMenu *waitMenu = runtimeMenu->addMenu(tr("Wait timeout"));
     disabledWidgetsOnStart.append(waitMenu);
     waitMenu->addActions(waitGroup->actions());
@@ -1146,6 +1150,8 @@ void MainWindow::updateUIFromConfig()
 
     setRadioFromList(localeGroup, context->config.sc.locale);
 
+    busyloopAction->setChecked(context->config.sc.busyloop_detection);
+
     setRadioFromList(waitGroup, context->config.sc.wait_timeout);
 
     renderSoftAction->setChecked(context->config.sc.opengl_soft);
@@ -1522,6 +1528,7 @@ BOOLSLOT(slotOsdEncode, context->config.sc.osd_encode)
 
 #endif
 
+BOOLSLOT(slotBusyLoop, context->config.sc.busyloop_detection)
 BOOLSLOT(slotSaveScreen, context->config.sc.save_screenpixels)
 BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
 BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)

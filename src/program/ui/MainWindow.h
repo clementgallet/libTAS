@@ -103,6 +103,7 @@ public:
     QActionGroup *timeMainGroup;
     QActionGroup *timeSecGroup;
 
+    QAction *busyloopAction;
     QAction *saveScreenAction;
     QAction *preventSavefileAction;
     QAction *recycleThreadsAction;
@@ -259,6 +260,7 @@ private slots:
     void slotOsd();
     void slotOsdEncode(bool checked);
 #endif
+    void slotBusyLoop(bool checked);
     void slotSaveScreen(bool checked);
     void slotPreventSavefile(bool checked);
     void slotMovieEnd();

@@ -76,6 +76,12 @@ public:
      */
     void fakeAdvanceTimer(struct timespec extraTicks);
 
+    /* Fake advance the timer so that ticks correspond to the time of the next frame */
+    void fakeAdvanceTimerFrame();
+
+    /* Are we inside a frame boudary */
+    bool insideFrameBoundary = false;
+
 private:
 
     /* By how much time do we increment the timer, excluding fractional part.
@@ -112,9 +118,6 @@ private:
      */
     int main_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
     int sec_gettimes[SharedConfig::TIMETYPE_NUMTRACKEDTYPES];
-
-    /* Are we inside a frame boudary */
-    bool insideFrameBoundary = false;
 
     /* Mutex to protect access to the ticks value */
     std::mutex ticks_mutex;
