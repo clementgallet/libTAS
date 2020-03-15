@@ -20,6 +20,7 @@
 #include <QBrush>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QPalette>
 #include <QFont>
 #include <sstream>
 
@@ -102,15 +103,29 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         // if (index.column() == 0)
         //     return QBrush(QColor(0xff, 0xfe, 0xee));
 
-        QColor color;
-
         /* Main color */
-        if (index.row() == static_cast<int>(context->framecount))
-            color.setRgb(0xb5, 0xe7, 0xf7);
-        else if (index.row() < static_cast<int>(context->framecount))
-            color.setRgb(0xd2, 0xf9, 0xd3);
-        else
-            color.setRgb(0xfe, 0xfe, 0xe8);
+        QColor color = QGuiApplication::palette().window().color();
+        int r, g, b;
+        color.getRgb(&r, &g, &b, nullptr);
+        if (color.lightness() > 128) {
+            /* Light theme */
+            if (index.row() == static_cast<int>(context->framecount))
+                color.setRgb(r - 0x30, g - 0x10, b);
+            else if (index.row() < static_cast<int>(context->framecount))
+                color.setRgb(r - 0x30, g, b - 0x30);
+            else
+                color.setRgb(r, g, b - 0x18);
+        }
+        else {
+            /* Dark theme */
+            if (index.row() == static_cast<int>(context->framecount))
+                color.setRgb(r, g + 0x10, b + 0x20);
+            else if (index.row() < static_cast<int>(context->framecount))
+                color.setRgb(r, g + 0x18, b);
+            else
+                color.setRgb(r + 0x08, g + 0x08, b);
+        }
+
 
         /* Frame column */
         if (index.column() <= 1) {

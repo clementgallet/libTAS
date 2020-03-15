@@ -13,6 +13,7 @@
 * Add a full wait setting
 * Add thread synchronization methods
 * Introduce game-specific settings
+* Input Editor colors are adapted from the chosen Qt5 theme
 
 ### Changed
 
