@@ -50,7 +50,7 @@ AS_IF([test "x$enable_i386_lib" != "xyes"], [
     PKG_CHECK_MODULES([QT5], [Qt5Core >= 5.6.0, Qt5Widgets])
     AC_SUBST([QT5_CFLAGS])
     AC_SUBST([QT5_LIBS])
-    AC_CHECK_PROGS(MOC, [moc])
+    AC_CHECK_PROGS(MOC, [moc moc-qt5])
     AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
     AC_CHECK_LIB(xcb, xcb_connect, [PROGRAM_LIBS="$PROGRAM_LIBS -lxcb"], AC_MSG_ERROR(The xcb library is required!))
     AC_CHECK_LIB(xcb-xkb, xcb_xkb_use_extension, [PROGRAM_LIBS="$PROGRAM_LIBS -lxcb-xkb"], AC_MSG_ERROR(The xcb-xkb library is required!))
@@ -82,8 +82,18 @@ AC_CHECK_LIB(pthread, pthread_create, [], AC_MSG_ERROR(The pthread library is re
 AC_CHECK_HEADERS([alsa/asoundlib.h], [], AC_MSG_ERROR(The alsa headers are required!))
 AC_CHECK_LIB(asound, snd_pcm_open, [LIBRARY_LIBS="$LIBRARY_LIBS -lasound"], AC_MSG_ERROR(The asound library is required!))
 
-AC_CHECK_HEADERS([libswresample/swresample.h], [], AC_MSG_ERROR(The swresample header is required!))
-AC_CHECK_LIB(swresample, swr_init, [LIBRARY_LIBS=$LIBRARY_LIBS], AC_MSG_ERROR(The swresmaple library is required!))
+AC_SUBST(have_libswresample, no)
+PKG_CHECK_MODULES(LIBSWRESAMPLE, [libswresample], AC_SUBST(have_libswresample, yes), AC_MSG_WARN(Cannot find libswresample using pkg-config))
+
+AS_IF([test "x$have_libswresample" != "xyes"], [
+    AC_CHECK_HEADERS([libswresample/swresample.h], [], AC_MSG_ERROR(The swresample header is required!))
+    AC_CHECK_LIB(swresample, swr_init, [LIBRARY_LIBS=$LIBRARY_LIBS], AC_MSG_ERROR(The swresmaple library is required!))
+    AC_SUBST(LIBSWRESAMPLE_CFLAGS, "")
+])
+
+AS_IF([test "x$have_libswresample" = "xyes"], [
+    AC_SUBST(LIBSWRESAMPLE_CFLAGS)
+])
 
 AS_IF([test "x$enable_hud" != "xno"], [
 	CPPFLAGS='-I/usr/include/freetype2'
