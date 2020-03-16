@@ -39,6 +39,9 @@ static std::map<uintptr_t, int>& getTimecallCount() {
 
 void BusyLoopDetection::reset()
 {
+    if (!shared_config.busyloop_detection)
+        return;
+
     /* Remove any fake ticks cause by the busy loop detector */
     detTimer.fakeAdvanceTimer({0, 0});
 
@@ -47,6 +50,8 @@ void BusyLoopDetection::reset()
 
 void BusyLoopDetection::increment(void* ret_address)
 {
+    if (!shared_config.busyloop_detection)
+        return;
     if (!ThreadManager::isMainThread())
         return;
     if (GlobalState::isNative())
