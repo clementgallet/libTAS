@@ -128,10 +128,14 @@ int open (const char *file, int oflag, ...)
     /* Check if joystick device */
     else if (is_jsdev(file) >= 0) {
         fd = open_jsdev(file, oflag);
+        /* We already stored the file descriptor */
+        return fd;
     }
 
     else if (is_evdev(file) >= 0) {
         fd = open_evdev(file, oflag);
+        /* We already stored the file descriptor */
+        return fd;
     }
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
@@ -223,10 +227,14 @@ int open64 (const char *file, int oflag, ...)
     /* Check if joystick device */
     else if (is_jsdev(file) >= 0) {
         fd = open_jsdev(file, oflag);
+        /* We already stored the file descriptor */
+        return fd;
     }
 
     else if (is_evdev(file) >= 0) {
         fd = open_evdev(file, oflag);
+        /* We already stored the file descriptor */
+        return fd;
     }
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
