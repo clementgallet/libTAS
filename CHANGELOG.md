@@ -14,6 +14,7 @@
 * Add thread synchronization methods
 * Introduce game-specific settings
 * Input Editor colors are adapted from the chosen Qt5 theme (#308)
+* Toggle every other input in editor with Ctrl+Click
 
 ### Changed
 

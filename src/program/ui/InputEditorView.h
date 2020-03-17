@@ -71,6 +71,7 @@ private:
     QMenu *menu;
     int contextSection;
     int mouseSection;
+    int mouseRow;
     int mouseValue;
     KeyPressedDialog* keyDialog;
 

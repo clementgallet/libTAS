@@ -209,6 +209,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 
     selectionModel()->clear();
     mouseSection = index.column();
+    mouseRow = index.row();
 
     /* For editable items, copy the value. Else, copy the opposite value */
     if (inputEditorModel->flags(index) & Qt::ItemIsEditable) {
@@ -239,10 +240,18 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         return QTableView::mouseMoveEvent(event);
     }
 
+    int newMouseValue = mouseValue;
+
+    /* Check if we need to alternate the input state */
+    if (event->modifiers() & Qt::ControlModifier) {
+        if ((index.row() - mouseRow) % 2)
+            newMouseValue = !newMouseValue;
+    }
+
     /* Toggle the cell with the same row as the cell under the mouse */
     QModelIndex toggle_index = inputEditorModel->index(index.row(), mouseSection);
 
-    inputEditorModel->setData(toggle_index, QVariant(mouseValue), Qt::EditRole);
+    inputEditorModel->setData(toggle_index, QVariant(newMouseValue), Qt::EditRole);
     event->accept();
 }
 
