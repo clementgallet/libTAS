@@ -221,13 +221,9 @@ static int swapInterval = 0;
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-    /* Get window id */
-    LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-    Uint32 windowID = orig::SDL_GetWindowID(gameSDLWindow);
-
     SDL_Event event;
     event.type = SDL_WINDOWEVENT;
-    event.window.windowID = windowID;
+    event.window.windowID = 1;
     event.window.timestamp = timestamp;
     event.window.event = SDL_WINDOWEVENT_SHOWN;
     sdlEventQueue.insert(&event);
@@ -265,6 +261,8 @@ static int swapInterval = 0;
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    if (gameSDLWindow == window)
+        return 1;
     LINK_NAMESPACE_SDL2(SDL_GetWindowID);
     return orig::SDL_GetWindowID(window);
 }

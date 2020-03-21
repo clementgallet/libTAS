@@ -76,7 +76,7 @@ void generateKeyUpEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYUP;
                 event2.key.state = SDL_RELEASED;
-                event2.key.windowID = 0;
+                event2.key.windowID = 1;
                 event2.key.timestamp = timestamp;
                 event2.key.repeat = 0;
 
@@ -210,7 +210,7 @@ void generateKeyDownEvents(void)
                 SDL_Event event2;
                 event2.type = SDL_KEYDOWN;
                 event2.key.state = SDL_PRESSED;
-                event2.key.windowID = 0;
+                event2.key.windowID = 1;
                 event2.key.timestamp = timestamp;
                 event2.key.repeat = 0;
 
@@ -225,7 +225,7 @@ void generateKeyDownEvents(void)
                 /* Generate a text input event if active */
                 if (SDL_IsTextInputActive() && ((event2.key.keysym.sym >> 8) == 0)) {
                     event2.type = SDL_TEXTINPUT;
-                    event2.text.windowID = 0;
+                    event2.text.windowID = 1;
                     event2.text.timestamp = timestamp;
                     /* SDL keycode is identical to its char number for common chars */
                     event2.text.text[0] = static_cast<char>(event2.key.keysym.sym & 0xff);
@@ -759,7 +759,7 @@ void generateMouseMotionEvents(void)
         SDL_Event event2;
         event2.type = SDL_MOUSEMOTION;
         event2.motion.timestamp = timestamp;
-        event2.motion.windowID = 0;
+        event2.motion.windowID = 1;
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
         /* Build up mouse state */
@@ -876,7 +876,7 @@ void generateMouseButtonEvents(void)
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button ", SingleInput::toSDL2PointerButton(buttons[bi]));
                 }
                 event2.button.timestamp = timestamp;
-                event2.button.windowID = 0;
+                event2.button.windowID = 1;
                 event2.button.which = 0; // TODO: Same as above...
                 event2.button.button = SingleInput::toSDL2PointerButton(buttons[bi]);
                 event2.button.clicks = 1;

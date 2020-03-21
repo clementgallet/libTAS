@@ -15,6 +15,7 @@
 * Introduce game-specific settings
 * Input Editor colors are adapted from the chosen Qt5 theme (#308)
 * Toggle every other input in editor with Ctrl+Click
+* Fill SDL event windowId field
 
 ### Changed
 
