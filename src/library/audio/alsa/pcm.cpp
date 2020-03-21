@@ -42,7 +42,9 @@ DEFINE_ORIG_POINTER(snd_pcm_sw_params_current);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_sizeof);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_any);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_current);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_access);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask);
 
@@ -92,6 +94,9 @@ DEFINE_ORIG_POINTER(snd_pcm_delay);
 DEFINE_ORIG_POINTER(snd_pcm_avail_update);
 DEFINE_ORIG_POINTER(snd_pcm_rewind);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_format);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_channels);
+
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_stop_threshold);
@@ -102,6 +107,8 @@ DEFINE_ORIG_POINTER(snd_pcm_get_chmap);
 DEFINE_ORIG_POINTER(snd_pcm_format_mask_malloc);
 DEFINE_ORIG_POINTER(snd_pcm_format_mask_free);
 DEFINE_ORIG_POINTER(snd_pcm_format_mask_test);
+
+DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes);
 
 static int get_latency();
 
@@ -391,6 +398,17 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
     return 0;
 }
 
+int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_current);
+        return orig::snd_pcm_hw_params_current(pcm, params);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
 int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
     if (GlobalState::isNative()) {
@@ -669,6 +687,7 @@ void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t 
     DEBUGLOGCALL(LCF_SOUND);
 }
 
+static snd_pcm_access_t current_access = SND_PCM_ACCESS_RW_INTERLEAVED;
 int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access)
 {
     if (GlobalState::isNative()) {
@@ -680,6 +699,7 @@ int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
     if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
         debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported access ", access);
     }
+    current_access = access;
     return 0;
 }
 
@@ -996,6 +1016,40 @@ int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, uns
     return 0;
 }
 
+int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_format);
+        return orig::snd_pcm_hw_params_test_format(pcm, params, val);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    return 0;
+}
+
+int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_channels);
+        return orig::snd_pcm_hw_params_test_channels(pcm, params, val);
+    }
+
+    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    return 0;
+}
+
+int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_access_t *access)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_access);
+        return orig::snd_pcm_hw_params_get_access(params, access);
+    }
+
+    *access = current_access;
+    DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
 size_t snd_pcm_sw_params_sizeof(void)
 {
     if (GlobalState::isNative()) {
@@ -1095,6 +1149,18 @@ int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t
         return 1;
 
     return 0;
+}
+
+ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_format_mask_free);
+        return orig::snd_pcm_frames_to_bytes(pcm, frames);
+    }
+
+    debuglog(LCF_SOUND, __func__, " called with frames ", frames);
+    auto buffer = sourceAlsa->buffer_queue[0];
+    return buffer->alignSize;
 }
 
 

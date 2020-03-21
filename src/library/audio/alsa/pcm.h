@@ -47,7 +47,7 @@ OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // 			      snd_async_callback_t callback, void *private_data);
     // snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
 OVERRIDE int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
-    // int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
+OVERRIDE int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
     // int snd_pcm_hw_free(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
@@ -80,6 +80,7 @@ OVERRIDE int snd_pcm_wait(snd_pcm_t *pcm, int timeout);
     // int snd_pcm_link(snd_pcm_t *pcm1, snd_pcm_t *pcm2);
     // int snd_pcm_unlink(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent);
+OVERRIDE ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames);
 
 
 OVERRIDE int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames);
@@ -92,6 +93,7 @@ OVERRIDE int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr);
 OVERRIDE void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj);
 OVERRIDE void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src);
 OVERRIDE int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t _access);
+OVERRIDE int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_access_t *_access);
 OVERRIDE int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
 OVERRIDE void snd_pcm_hw_params_get_format_mask(snd_pcm_hw_params_t *params, snd_pcm_format_mask_t *mask);
 
@@ -119,6 +121,8 @@ OVERRIDE int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_p
 OVERRIDE int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 
 OVERRIDE int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
+OVERRIDE int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
+OVERRIDE int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
 
 OVERRIDE size_t snd_pcm_sw_params_sizeof(void);
 
