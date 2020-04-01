@@ -16,11 +16,14 @@
 * Input Editor colors are adapted from the chosen Qt5 theme (#308)
 * Toggle every other input in editor with Ctrl+Click
 * Fill SDL event windowId field
+* Add a minimum value for input editor column width, because the default value
+  is too high on some systems (#316)
 
 ### Changed
 
 * Monitor refresh rate now matches the framerate setting in libTAS
 * Simplify the OpenGL performance setting
+* Add horizontal scrollbar in the input editor (#316)
 
 ### Fixed
 

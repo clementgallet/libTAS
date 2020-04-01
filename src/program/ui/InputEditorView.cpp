@@ -30,7 +30,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(true);
     setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 
     MovieFile *movie = nullptr;
     MainWindow *mw = qobject_cast<MainWindow*>(parent->parent());
@@ -44,7 +44,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
 
     /* Horizontal header */
-    // horizontalHeader()->setMinimumSectionSize(20);
+    horizontalHeader()->setMinimumSectionSize(20);
     horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     horizontalHeader()->setResizeContentsPrecision(1);
 
@@ -176,10 +176,13 @@ void InputEditorView::update()
         int firstVisibleFrame = context->framecount - 1 - visibleFrames/4;
         if (firstVisibleFrame < 0) firstVisibleFrame = 0;
 
+        /* Get the first visible column */
+        int leftcol = columnAt(rect().left());
+
         /* Scrolling triggers the signal to our manualScroll() slot, which
          * we don't want, so we disable the connection */
         disconnect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
-        scrollTo(inputEditorModel->index(firstVisibleFrame, 0), QAbstractItemView::PositionAtTop);
+        scrollTo(inputEditorModel->index(firstVisibleFrame, leftcol), QAbstractItemView::PositionAtTop);
         connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
     }
 }
