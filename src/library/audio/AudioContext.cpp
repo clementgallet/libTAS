@@ -222,6 +222,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
         /* If an audio source is filled asynchronously, and we will underrun,
          * try to wait until the source is filled.
          */
+
+        audiocontext.mutex.lock();
         if ((source->source == AudioSource::SOURCE_STREAMING_CONTINUOUS) &&
             audio_thread &&
             (mix_thread != audio_thread) &&
@@ -230,7 +232,11 @@ void AudioContext::mixAllSources(struct timespec ticks)
             debuglog(LCF_SOUND | LCF_WARNING, "Audio mixing will underrun, waiting for the game to send audio samples");
             int i;
             for (i=0; i<1000; i++) {
+
+                audiocontext.mutex.unlock();
                 NATIVECALL(usleep(100));
+                audiocontext.mutex.lock();
+
                 if (!source->willEnd(ticks))
                     break;
             }
@@ -238,6 +244,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
                 debuglog(LCF_SOUND | LCF_WARNING, "    Timeout");
             }
         }
+        audiocontext.mutex.unlock();
 
         std::lock_guard<std::mutex> lock(mutex);
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
