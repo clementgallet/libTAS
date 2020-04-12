@@ -283,8 +283,6 @@ static int swapInterval = 0;
 
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([window] (const char* t) {orig::SDL_SetWindowTitle(window, t);});
-
-    orig::SDL_SetWindowTitle(window, title);
 }
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
@@ -293,7 +291,6 @@ static int swapInterval = 0;
     LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
-    orig::SDL_WM_SetCaption(title, icon);
 }
 
 /* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)

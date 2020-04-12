@@ -244,7 +244,7 @@ int XStoreName(Display *display, Window w, const char *window_name)
         WindowTitle::setUpdateFunc([display] (const char* t) {if (!gameXWindows.empty()) orig::XStoreName(display, gameXWindows.front(), t);});
     }
 
-    return orig::XStoreName(display, w, window_name);
+    return 1;
 }
 
 void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
@@ -262,6 +262,7 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
                 orig::XSetWMName(display, gameXWindows.front(), &prop);
             }
         });
+        return;
     }
 
     return orig::XSetWMName(display, w, text_prop);
