@@ -99,7 +99,9 @@ void generateKeyUpEvents(void)
                 xkeysymToSDL1(&keysym, old_game_ai.keyboard[i]);
                 event1.key.keysym = keysym;
 
-                if (SDL_EnableUNICODE(-1)) {
+                int isUnicodeEnabled;
+                NOLOGCALL(isUnicodeEnabled = SDL_EnableUNICODE(-1));
+                if (isUnicodeEnabled) {
                     /* Add an Unicode representation of the key */
                     /* SDL keycode is identical to its char number for common chars */
                     event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
@@ -223,7 +225,9 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key ", event2.key.keysym.sym);
 
                 /* Generate a text input event if active */
-                if (SDL_IsTextInputActive() && ((event2.key.keysym.sym >> 8) == 0)) {
+                SDL_bool isTextInputActive;
+                NOLOGCALL(isTextInputActive = SDL_IsTextInputActive());
+                if ((isTextInputActive == SDL_TRUE) && ((event2.key.keysym.sym >> 8) == 0)) {
                     event2.type = SDL_TEXTINPUT;
                     event2.text.windowID = 1;
                     event2.text.timestamp = timestamp;
@@ -247,7 +251,9 @@ void generateKeyDownEvents(void)
                 xkeysymToSDL1(&keysym, game_ai.keyboard[i]);
                 event1.key.keysym = keysym;
 
-                if (SDL_EnableUNICODE(-1)) {
+                int isUnicodeEnabled;
+                NOLOGCALL(isUnicodeEnabled = SDL_EnableUNICODE(-1));
+                if (isUnicodeEnabled) {
                     /* Add an Unicode representation of the key */
                     /* SDL keycode is identical to its char number for common chars */
                     event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
