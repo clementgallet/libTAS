@@ -29,8 +29,8 @@
 namespace libtas {
 
 typedef struct tagPOINT {
-    long x;
-    long y;
+    int32_t x;
+    int32_t y;
 } POINT;
 
 
@@ -53,7 +53,7 @@ static bool __stdcall __attribute__((noinline)) ScreenToClient(void *hWnd, POINT
 
 }
 
-bool __stdcall GetCursorPos(POINT *pt)
+int __stdcall GetCursorPos(POINT *pt)
 {
     DEBUGLOGCALL(LCF_WINE | LCF_MOUSE);
 
@@ -65,13 +65,13 @@ bool __stdcall GetCursorPos(POINT *pt)
     // static bool parity = true;
     // if (parity) ThreadSync::detWaitGlobal(0);
     // parity = !parity;
-    return true;
+    return 1;
 }
 
-bool __stdcall ScreenToClient(void *hWnd, POINT *lpPoint)
+int __stdcall ScreenToClient(void *hWnd, POINT *lpPoint)
 {
     DEBUGLOGCALL(LCF_WINE | LCF_MOUSE);
-    return true;
+    return 1;
 }
 
 short __stdcall GetAsyncKeyState(int key)
