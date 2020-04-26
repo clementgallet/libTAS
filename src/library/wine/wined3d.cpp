@@ -78,9 +78,11 @@ unsigned long wined3d_resource_map(void *resource, unsigned int sub_resource_idx
 
 void hook_wined3d()
 {
-    HOOK_PATCH_ORIG(wined3d_texture_get_resource, "wined3d.dll.so");
-    HOOK_PATCH_ORIG(wined3d_swapchain_present, "wined3d.dll.so");
-    HOOK_PATCH_ORIG(wined3d_resource_map, "wined3d.dll.so");
+    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+        HOOK_PATCH_ORIG(wined3d_texture_get_resource, "wined3d.dll.so");
+        HOOK_PATCH_ORIG(wined3d_swapchain_present, "wined3d.dll.so");
+        HOOK_PATCH_ORIG(wined3d_resource_map, "wined3d.dll.so");
+    }
 }
 
 
