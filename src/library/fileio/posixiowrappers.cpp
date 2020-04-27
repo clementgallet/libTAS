@@ -23,6 +23,7 @@
 #include "../hook.h"
 #include "SaveFileList.h"
 #include "FileHandleList.h"
+#include "URandom.h"
 #include "../GlobalState.h"
 #include "../inputs/jsdev.h"
 #include "../inputs/evdev.h"
@@ -75,27 +76,7 @@ int open (const char *file, int oflag, ...)
     int fd = 0;
 
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
-        if (SaveFileList::getSaveFileFd(file) == 0) {
-            /* Create a file with memory storage (reusing the savefile code),
-             * and fill it with values from the initial time, so that, for
-             * games that use it as PRNG seed, tweaking the initial time will
-             * change the seed value.
-             */
-            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
-
-            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
-            char* datestr = asctime(gmtime(&tsec));
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
-
-            write(fd, datestr, strlen(datestr));
-            char buf[256];
-            sprintf(buf, "%0*d", 255, 0);
-            write(fd, buf, 255);
-            lseek(fd, 0, SEEK_SET);
-        }
-        else {
-            fd = SaveFileList::openSaveFile(file, oflag);
-        }
+        return urandom_create_fd();
     }
 
     else if (strcmp(file, "/proc/uptime") == 0) {
@@ -175,26 +156,7 @@ int open64 (const char *file, int oflag, ...)
     int fd = 0;
 
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
-        if (SaveFileList::getSaveFileFd(file) == 0) {
-            /* Create a file with memory storage (reusing the savefile code),
-             * and fill it with values from the initial time, so that, for
-             * games that use it as PRNG seed, tweaking the initial time will
-             * change the seed value.
-             */
-            fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
-
-            time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
-            char* datestr = asctime(gmtime(&tsec));
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, datestr);
-            write(fd, datestr, strlen(datestr));
-            char buf[256];
-            sprintf(buf, "%0*d", 255, 0);
-            write(fd, buf, 255);
-            lseek(fd, 0, SEEK_SET);
-        }
-        else {
-            fd = SaveFileList::openSaveFile(file, oflag);
-        }
+        return urandom_create_fd();
     }
 
     else if (strcmp(file, "/proc/uptime") == 0) {
@@ -390,6 +352,11 @@ int close (int fd)
         return orig::close(fd);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    /* Check for urandom */
+    if (urandom_get_fd() == fd) {
+        return 0;
+    }
 
     /* Check if we must actually close the file */
     bool doClose = FileHandleList::closeFile(fd);

@@ -87,6 +87,7 @@ libtas_so_SOURCES = \
     fileio/SaveFile.cpp \
     fileio/SaveFileList.cpp \
     fileio/stdiowrappers.cpp \
+    fileio/URandom.cpp \
     inputs/evdev.cpp \
     inputs/inputevents.cpp \
     inputs/inputs.cpp \
