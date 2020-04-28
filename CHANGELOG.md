@@ -18,6 +18,7 @@
 * Fill SDL event windowId field
 * Add a minimum value for input editor column width, because the default value
   is too high on some systems (#316)
+* Add a Dockerfile and instructions to build the container
 
 ### Changed
 
