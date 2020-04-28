@@ -1,14 +1,26 @@
 ## libTAS
 
-GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86` (not much tested). To run OpenGL games, you will need a card supporting at least OpenGL 3.0.
+GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86`. You will need the Mesa llvm OpenGL driver to support savestates for games using OpenGL.
 
 ## Supported Games
 
-Most work has been done to support games using the SDL library (which is the case of many indie games), and there is initial development to support other game engines (some Unity games should work). Also, running Steam games require to enable the dummy Steam client, which is only partially implemented. If possible, use a drm-free version of the game. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+Initial work was done to support games using the SDL library (which is the case of many indie games), but other engines are supported now.
+
+By default, you should look for a drm-free version of the game. Games installed through Steam may or may not work. Some Steam games are in fact drm-free, they work without Steam running, or they just need some simple operations. For the other games, there is a "Virtual Steam client" setting in libTAS which implements a dummy Steam client, but it doesn't support every game. Of course, all of this only applies to games that don't have any active protection measure. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+
+There is also initial support for Windows games through wine. Details are given below.
+
+## Non-linux users
+
+If you don't have a Linux system beforehand, there are several options that you can choose:
+- Install a Linux container with Docker (described below)
+- Install Linux on a virtual machine. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games. Note for Ubuntu users that you need a recent version (17.10 minimum).
+
+libTAS does not work with WSL (Windows Subsystem for Linux), because it is missing some mandatory components of the Linux system.
 
 ## Install
 
-You can download the latest version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependencies are:
+You can download the latest stable version of the software in the [Releases](https://github.com/clementgallet/libTAS/releases) page. The current dependencies are:
 
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
@@ -20,8 +32,6 @@ You can download the latest version of the software in the [Releases](https://gi
 Installing with the debian package will install all the required packages as well.
 
 There is also an [automated build](https://ci.appveyor.com/project/clementgallet/libtas/build/artifacts) available for the last interim version, 64-bit with dual-arch.
-
-If you don't have a Linux system beforehand, an easy way is to use a virtual machine to run the system. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games. Note for Ubuntu users that you need a recent version (17.10 minimum).
 
 ## Building
 
@@ -84,6 +94,20 @@ Here are the default controls when the game has started:
 - fast forward, using the `tab` key
 
 Note: the game starts up **paused**.
+
+## Run Windows games through wine
+
+This is still experimental. To launch Windows games through wine, you first need to install wine on your system (it must be located somewhere in $PATH).
+
+To get audio correctly handled, you need to open winetricks, then select "Select the default wineprefix", "Change settings" and check "sound=alsa".
+
+In the game executable field, you must set the Windows `.exe` executable (both 32-bit and 64-bit are supported, given that you have the wine version for it). It will detect a Windows executable and launch wine with the right options.
+
+There are still a lot of issues to fix:
+- "Prevent writing to disk" feature does not work, because wine delegating to another process (wine server) the file handling (#250)
+- Window focus/unfocus doesn't work sometimes and you cannot move the game window (#262). Try alt-tabbing until you get it back
+- "Virtual Steam client" does not work, because we don't hook the loading of the `steam_api.dll` file (#264)
+- Window repainting (Expose event) does not work, so if you pause the game and drag another window in front of it, it will overwrite what is displayed by the game
 
 ## Run on Windows using Docker
 
