@@ -105,7 +105,15 @@ DEFINE_ORIG_POINTER(sched_yield);
      * the timer and do not actually wait.
      */
     if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
-        detTimer.addDelay(*requested_time);
+
+        if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_HOLLOW_KNIGHT) &&
+            (requested_time->tv_sec == 0) && (requested_time->tv_nsec == 9999000)) {
+            /* Don't add to the timer, because it is sleep for loading threads */
+        }
+        else {
+            detTimer.addDelay(*requested_time);
+        }
+
         NATIVECALL(sched_yield());
         return 0;
     }

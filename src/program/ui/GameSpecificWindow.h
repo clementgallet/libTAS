@@ -43,6 +43,7 @@ private:
     QCheckBox *timingCeleste;
     QCheckBox *syncCeleste;
     QCheckBox *syncWitness;
+    QCheckBox *syncHollow;
 
 private slots:
     // void slotBrowseEncodePath();
