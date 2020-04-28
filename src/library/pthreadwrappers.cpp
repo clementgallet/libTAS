@@ -50,6 +50,7 @@ DEFINE_ORIG_POINTER(pthread_setcancelstate);
 DEFINE_ORIG_POINTER(pthread_setcanceltype);
 DEFINE_ORIG_POINTER(pthread_cancel);
 DEFINE_ORIG_POINTER(pthread_testcancel);
+DEFINE_ORIG_POINTER(sem_wait);
 DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
 DEFINE_ORIG_POINTER(pthread_attr_setstack);
@@ -557,23 +558,33 @@ static void *pthread_start(void *arg)
     return orig::pthread_testcancel();
 }
 
-int sem_timedwait (sem_t * sem, const struct timespec *abstime)
+/* Override */ int sem_wait (sem_t *sem)
+{
+    LINK_NAMESPACE(sem_wait, "pthread");
+    if (GlobalState::isNative())
+        return orig::sem_wait(sem);
+
+    debuglogstdio(LCF_THREAD | LCF_WAIT, "sem_wait call with %p", sem);
+    return orig::sem_wait(sem);
+}
+
+/* Override */ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
     LINK_NAMESPACE(sem_timedwait, "pthread");
     if (GlobalState::isNative())
         return orig::sem_timedwait(sem, abstime);
 
-    DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
+    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT | LCF_TODO);
     return orig::sem_timedwait(sem, abstime);
 }
 
-int sem_trywait (sem_t *sem) throw()
+/* Override */ int sem_trywait (sem_t *sem) throw()
 {
     LINK_NAMESPACE(sem_trywait, "pthread");
     if (GlobalState::isNative())
         return orig::sem_trywait(sem);
 
-    DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
+    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT | LCF_TODO);
     return orig::sem_trywait(sem);
 }
 
