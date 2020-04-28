@@ -133,6 +133,16 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
+    /* Check if we already have a opened pcm */
+    if (sourceAlsa) {
+        debuglog(LCF_SOUND | LCF_WARNING, "    A pcm context was already opened, overwriting the previous one");
+        for (auto& buffer : sourceAlsa->buffer_queue)
+            audiocontext.deleteBuffer(buffer->id);
+
+        audiocontext.deleteSource(sourceAlsa->id);
+    }
+    sourceAlsa.reset();
+
     /* We create an empty buffer that holds the audio parameters. That way,
      * we can guess the parameters from a previous buffer when adding a new one.
      */

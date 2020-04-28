@@ -39,6 +39,7 @@
 * XI_RawMotion now uses raw inputs
 * Track handles of savefiles
 * Fill asynchronously fake /dev/urandom for games that read a large number of bytes (#310)
+* Check for multiple opened pcm, and only keep the last opened
 
 ## [1.3.5] - 2019-11-26
 ### Added
