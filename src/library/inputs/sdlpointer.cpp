@@ -69,19 +69,19 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
     /* For the first call, just output zero deltas */
     if (first) {
-        oldx = game_ai.pointer_x;
-        oldy = game_ai.pointer_y;
+        oldx = game_unclipped_ai.pointer_x;
+        oldy = game_unclipped_ai.pointer_y;
         first = false;
     }
 
     if (x != NULL)
-        *x = game_ai.pointer_x - oldx;
+        *x = game_unclipped_ai.pointer_x - oldx;
     if (y != NULL)
-        *y = game_ai.pointer_y - oldy;
+        *y = game_unclipped_ai.pointer_y - oldy;
 
     /* Updating the old pointer coordinates */
-    oldx = game_ai.pointer_x;
-    oldy = game_ai.pointer_y;
+    oldx = game_unclipped_ai.pointer_x;
+    oldy = game_unclipped_ai.pointer_y;
 
     /* Translating pointer mask to SDL pointer state */
     return SingleInput::toSDL2PointerMask(game_ai.pointer_mask);

@@ -770,8 +770,10 @@ void generateMouseMotionEvents(void)
 
         /* Build up mouse state */
         event2.motion.state = SingleInput::toSDL2PointerMask(game_ai.pointer_mask);
-        event2.motion.xrel = game_ai.pointer_x - old_game_ai.pointer_x;
-        event2.motion.yrel = game_ai.pointer_y - old_game_ai.pointer_y;
+
+        /* Relative movement is not subject to window clipping */
+        event2.motion.xrel = game_unclipped_ai.pointer_x - old_game_unclipped_ai.pointer_x;
+        event2.motion.yrel = game_unclipped_ai.pointer_y - old_game_unclipped_ai.pointer_y;
         event2.motion.x = game_ai.pointer_x;
         event2.motion.y = game_ai.pointer_y;
         sdlEventQueue.insert(&event2);
@@ -785,8 +787,10 @@ void generateMouseMotionEvents(void)
 
         /* Build up mouse state */
         event1.motion.state = SingleInput::toSDL1PointerMask(game_ai.pointer_mask);
-        event1.motion.xrel = (Sint16)(game_ai.pointer_x - old_game_ai.pointer_x);
-        event1.motion.yrel = (Sint16)(game_ai.pointer_y - old_game_ai.pointer_y);
+
+        /* Relative movement is not subject to window clipping */
+        event1.motion.xrel = (Sint16)(game_unclipped_ai.pointer_x - old_game_unclipped_ai.pointer_x);
+        event1.motion.yrel = (Sint16)(game_unclipped_ai.pointer_y - old_game_unclipped_ai.pointer_y);
         event1.motion.x = (Uint16) game_ai.pointer_x;
         event1.motion.y = (Uint16) game_ai.pointer_y;
         sdlEventQueue.insert(&event1);
