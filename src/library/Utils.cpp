@@ -35,7 +35,7 @@ ssize_t Utils::writeAll(int fd, const void *buf, size_t count)
     do {
         ssize_t rc = write(fd, ptr + num_written, count - num_written);
         if (rc == -1) {
-            if (errno == EINTR || errno == EAGAIN) {
+            if (errno == EINTR) {
                 continue;
             } else {
                 debuglogstdio(LCF_ERROR, "Write at address %p failed with errno %d", ptr + num_written, errno);
@@ -64,7 +64,7 @@ ssize_t Utils::readAll(int fd, void *buf, size_t count)
     for (num_read = 0; num_read < count;) {
         rc = read(fd, ptr + num_read, count - num_read);
         if (rc == -1) {
-            if (errno == EINTR || errno == EAGAIN) {
+            if (errno == EINTR) {
                 continue;
             } else {
                 debuglogstdio(LCF_ERROR, "Read at address %p failed with errno %d", ptr + num_read, errno);

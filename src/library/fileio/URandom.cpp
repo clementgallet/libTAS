@@ -108,4 +108,20 @@ FILE* urandom_get_file() {
     return stream;
 }
 
+void urandom_disable_handler() {
+    GlobalNative gn;
+
+    if (writefd != -1) {
+        MYASSERT(fcntl(writefd, F_SETFL, O_NONBLOCK) != -1);
+    }
+}
+
+void urandom_enable_handler() {
+    GlobalNative gn;
+
+    if (writefd != -1) {
+        MYASSERT(fcntl(writefd, F_SETFL, O_ASYNC | O_NONBLOCK) != -1);
+    }
+}
+
 }

@@ -36,6 +36,12 @@ FILE* urandom_create_file();
 /* Returns the /dev/urandom FILE* stream */
 FILE* urandom_get_file();
 
+/* Disable the signal handling */
+void urandom_disable_handler();
+
+/* Restore the signal handling */
+void urandom_enable_handler();
+
 }
 
 #endif

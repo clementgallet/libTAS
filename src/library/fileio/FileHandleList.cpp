@@ -21,6 +21,7 @@
 
 #include "FileHandle.h"
 #include "../logging.h"
+#include "../Utils.h"
 #include "../inputs/evdev.h"
 #include "../inputs/jsdev.h"
 
@@ -154,7 +155,7 @@ void trackAllFiles()
                 if (fh.pipeSize > 0) {
                     std::free(fh.fileNameOrPipeContents);
                     fh.fileNameOrPipeContents = static_cast<char *>(std::malloc(fh.pipeSize));
-                    read(fh.fds[0], fh.fileNameOrPipeContents, fh.pipeSize);
+                    Utils::readAll(fh.fds[0], fh.fileNameOrPipeContents, fh.pipeSize);
                 }
             }
             else {
@@ -194,7 +195,17 @@ void recoverAllFiles()
             if (!fh.fileNameOrPipeContents || fh.pipeSize < 0) {
                 continue;
             }
-            ret = write(fh.fds[1], fh.fileNameOrPipeContents, fh.pipeSize);
+
+            /* Empty the pipe */
+            int pipesize;
+            MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipesize) == 0);
+            if (pipesize != 0) {
+                char* tmp = static_cast<char *>(std::malloc(pipesize));
+                Utils::readAll(fh.fds[0], tmp, pipesize);
+                std::free(tmp);
+            }
+
+            ret = Utils::writeAll(fh.fds[1], fh.fileNameOrPipeContents, fh.pipeSize);
             std::free(fh.fileNameOrPipeContents);
             fh.fileNameOrPipeContents = nullptr;
             fh.pipeSize = -1;

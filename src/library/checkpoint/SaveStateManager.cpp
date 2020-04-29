@@ -35,6 +35,7 @@
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
+#include "../fileio/URandom.h"
 
 namespace libtas {
 
@@ -142,6 +143,11 @@ bool SaveStateManager::checkpoint()
     /* Sending a suspend signal to all threads */
     suspendThreads();
 
+    /* Disable the signal that refills the fake urandom pipe. Must be done
+     * before the file tracking
+     */
+    urandom_disable_handler();
+
     /* We flag all opened files as tracked and store their offset. This must be
      * done AFTER suspending threads.
      */
@@ -168,6 +174,9 @@ bool SaveStateManager::checkpoint()
      * resuming threads.
      */
     FileHandleList::recoverAllFiles();
+
+    /* Restore the signal that refills the fake urandom pipe */
+    urandom_enable_handler();
 
     resumeThreads();
 
@@ -207,6 +216,9 @@ void SaveStateManager::restore()
 
     restoreInProgress = true;
 
+    /* Disable the signal that refills the fake urandom pipe. */
+    urandom_disable_handler();
+
     /* We close all untracked files, because by definition they are closed when
      * the savestate will be loaded. */
     FileHandleList::closeUntrackedFiles();
@@ -233,6 +245,9 @@ void SaveStateManager::restore()
 
      /* Restoring the game alternate stack (if any) */
      AltStack::restoreStack();
+
+     /* Restore the signal that refills the fake urandom pipe */
+     urandom_enable_handler();
 
      resumeThreads();
 
