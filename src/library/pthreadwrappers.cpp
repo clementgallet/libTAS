@@ -558,15 +558,15 @@ static void *pthread_start(void *arg)
     return orig::pthread_testcancel();
 }
 
-/* Override */ int sem_wait (sem_t *sem)
-{
-    LINK_NAMESPACE(sem_wait, "pthread");
-    if (GlobalState::isNative())
-        return orig::sem_wait(sem);
-
-    debuglogstdio(LCF_THREAD | LCF_WAIT, "sem_wait call with %p", sem);
-    return orig::sem_wait(sem);
-}
+// /* Override */ int sem_wait (sem_t *sem)
+// {
+//     LINK_NAMESPACE(sem_wait, "pthread");
+//     if (GlobalState::isNative())
+//         return orig::sem_wait(sem);
+//
+//     debuglogstdio(LCF_THREAD | LCF_WAIT, "sem_wait call with %p", sem);
+//     return orig::sem_wait(sem);
+// }
 
 /* Override */ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
