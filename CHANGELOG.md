@@ -20,6 +20,7 @@
   is too high on some systems (#316)
 * Add a Dockerfile and instructions to build the container
 * Add sync setting for Hollow Knight
+* Add epoll_wait hook (#321)
 
 ### Changed
 

@@ -34,6 +34,7 @@ DEFINE_ORIG_POINTER(clock_nanosleep);
 DEFINE_ORIG_POINTER(select);
 DEFINE_ORIG_POINTER(pselect);
 DEFINE_ORIG_POINTER(sched_yield);
+DEFINE_ORIG_POINTER(epoll_wait);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -227,6 +228,30 @@ DEFINE_ORIG_POINTER(sched_yield);
     }
 
     return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+}
+
+/* Override */ int epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout)
+{
+    LINK_NAMESPACE_GLOBAL(epoll_wait);
+
+    if (GlobalState::isNative()) {
+        return orig::epoll_wait(epfd, events, maxevents, timeout);
+    }
+
+    debuglog(LCF_SLEEP, __func__, " call with timeout ", timeout, " msec");
+
+    int ret = orig::epoll_wait(epfd, events, maxevents, timeout);
+
+    /* If the function was called from the main thread and the function timed out,
+     * advance the timer. */
+    if ((timeout != -1) && (ret == 0) && ThreadManager::isMainThread()) {
+        struct timespec ts;
+        ts.tv_sec = timeout / 1000;
+        ts.tv_nsec = 1000000 * (timeout % 1000);
+        detTimer.addDelay(ts);
+    }
+
+    return ret;
 }
 
 /* Override */ int sched_yield(void)
