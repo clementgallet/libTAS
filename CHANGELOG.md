@@ -47,6 +47,7 @@
 * Support multiple ALSA connections
 * SDL relative mouse movement should ignore window clipping
 * Add relative paths to savefiles
+* Protect concurrent access to SaveFileList
 
 ## [1.3.5] - 2019-11-26
 ### Added

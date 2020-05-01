@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <forward_list>
 #include <memory>
+#include <mutex>
 #include <cstring>
 #include <unistd.h>
 #include <algorithm> // remove_if
@@ -42,9 +43,17 @@ static std::forward_list<std::unique_ptr<SaveFile>>& getSaveFileList() {
     return savefiles;
 }
 
+/* Mutex to protect the savefile list */
+static std::mutex& getSaveFileListMutex() {
+    static std::mutex mutex;
+    return mutex;
+}
+
 /* Check if the file open permission allows for write operation */
 bool isSaveFile(const char *file, const char *modes)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     const auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -60,6 +69,8 @@ bool isSaveFile(const char *file, const char *modes)
 
 bool isSaveFile(const char *file, int oflag)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     const auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -124,6 +135,8 @@ bool isSaveFile(const char *file)
 
 FILE *openSaveFile(const char *file, const char *modes)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -137,6 +150,8 @@ FILE *openSaveFile(const char *file, const char *modes)
 
 int openSaveFile(const char *file, int oflag)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -150,6 +165,8 @@ int openSaveFile(const char *file, int oflag)
 
 int closeSaveFile(int fd)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->fd == fd) {
@@ -162,6 +179,8 @@ int closeSaveFile(int fd)
 
 int closeSaveFile(FILE *stream)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->stream == stream) {
@@ -174,6 +193,8 @@ int closeSaveFile(FILE *stream)
 
 int removeSaveFile(const char *file)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -195,6 +216,8 @@ int removeSaveFile(const char *file)
 
 int renameSaveFile(const char *oldfile, const char *newfile)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     char* canonnewfile = SaveFile::canonicalizeFile(newfile);
     if (!canonnewfile)
         return -1;
@@ -227,6 +250,8 @@ int renameSaveFile(const char *oldfile, const char *newfile)
 
 int getSaveFileFd(const char *file)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
@@ -239,6 +264,8 @@ int getSaveFileFd(const char *file)
 
 bool isSaveFileRemoved(const char *file)
 {
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
