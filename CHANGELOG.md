@@ -21,6 +21,7 @@
 * Add a Dockerfile and instructions to build the container
 * Add sync setting for Hollow Knight
 * Add epoll_wait hook (#321)
+* Add snd_pcm_pause hook (#321)
 
 ### Changed
 

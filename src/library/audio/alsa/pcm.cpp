@@ -87,6 +87,8 @@ DEFINE_ORIG_POINTER(snd_pcm_mmap_commit);
 DEFINE_ORIG_POINTER(snd_pcm_start);
 DEFINE_ORIG_POINTER(snd_pcm_drop);
 DEFINE_ORIG_POINTER(snd_pcm_state);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_can_pause);
+DEFINE_ORIG_POINTER(snd_pcm_pause);
 DEFINE_ORIG_POINTER(snd_pcm_resume);
 DEFINE_ORIG_POINTER(snd_pcm_wait);
 DEFINE_ORIG_POINTER(snd_pcm_delay);
@@ -252,6 +254,36 @@ int snd_pcm_drop(snd_pcm_t *pcm)
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
     source->setPosition(source->queueSize());
+    return 0;
+}
+
+int snd_pcm_hw_params_can_pause(const snd_pcm_hw_params_t *params)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_can_pause);
+        return orig::snd_pcm_hw_params_can_pause(params);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return 1;
+}
+
+int snd_pcm_pause(snd_pcm_t *pcm, int enable)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_state);
+        return orig::snd_pcm_state(pcm);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = audiocontext.getSource(sourceId);
+    if (enable)
+        source->state = AudioSource::SOURCE_PAUSED;
+    else
+        source->state = AudioSource::SOURCE_PLAYING;
+
     return 0;
 }
 
