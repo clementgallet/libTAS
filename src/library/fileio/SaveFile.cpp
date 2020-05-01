@@ -84,6 +84,7 @@ char* SaveFile::canonicalizeFile(const char *file)
     char const *start;
     char const *end;
     char const *rname_limit;
+    char *absfile = nullptr;
 
     if (!file)
         return nullptr;
@@ -91,13 +92,25 @@ char* SaveFile::canonicalizeFile(const char *file)
     if (file[0] == '\0')
         return nullptr;
 
-    /* TODO: Deal with relative paths */
+    /* Convert relative to absolute path */
+    if (!ISSLASH(file[0])) {
+        absfile = static_cast<char*>(malloc (2*PATH_MAX));
+        getcwd(absfile, PATH_MAX);
+        size_t l = strnlen(absfile, PATH_MAX);
+        absfile[l] = '/';
+        strncpy(absfile+l+1, file, PATH_MAX);
+        absfile[2*PATH_MAX-1] = '\0';
+
+        start = absfile;
+    }
+    else {
+        start = file;
+    }
 
     rname = static_cast<char*>(malloc (PATH_MAX));
     rname_limit = rname + PATH_MAX;
     dest = rname;
     *dest++ = '/';
-    start = file;
 
     for ( ; *start; start = end)
       {
@@ -149,14 +162,18 @@ char* SaveFile::canonicalizeFile(const char *file)
     if (dest > rname + 1 && ISSLASH (dest[-1]))
       --dest;
     *dest = '\0';
-    if (rname_limit != dest + 1)
-      rname = static_cast<char*>(realloc (rname, dest - rname + 1));
+
+    if (absfile)
+        free(absfile);
     return rname;
 }
 
 
 bool SaveFile::isSameFile(const char *file)
 {
+    if (filename.empty())
+        return false;
+
     /* Try comparing the canonilized paths */
     char* canonfile = canonicalizeFile(file);
     if (!canonfile)

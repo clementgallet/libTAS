@@ -46,6 +46,7 @@
 * Check for multiple opened pcm, and only keep the last opened
 * Support multiple ALSA connections
 * SDL relative mouse movement should ignore window clipping
+* Add relative paths to savefiles
 
 ## [1.3.5] - 2019-11-26
 ### Added
