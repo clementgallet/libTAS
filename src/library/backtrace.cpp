@@ -22,6 +22,7 @@
 #include <execinfo.h>
 #include <memory>
 #include <cstdio>
+#include <cstdlib>
 
 namespace libtas {
 
