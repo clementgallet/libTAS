@@ -22,6 +22,7 @@
 * Add sync setting for Hollow Knight
 * Add epoll_wait hook (#321)
 * Add snd_pcm_pause hook (#321)
+* Add a converter from .hltas inputs
 
 ### Changed
 
