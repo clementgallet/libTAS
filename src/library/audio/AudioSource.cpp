@@ -56,9 +56,18 @@ AudioSource::AudioSource(void)
 {
     /* Some systems don't create the unversionned symlinks when the libraries
      * are installed, so we add a link with the major version. */
-    LINK_NAMESPACE(swr_alloc, "swresample");
-    link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
-    link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
+
+    /* Disabling logging because we expect some of these to fail */
+    {
+        GlobalNoLog gnl;
+        LINK_NAMESPACE(swr_alloc, "swresample");
+        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
+        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
+    }
+    /* Still test if it succeeded. */
+    if (!orig::swr_alloc) {
+        debuglog(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc");
+    }
 
     /* We link to swr_free here, because linking during destructor can softlock */
     LINK_NAMESPACE(swr_free, "swresample");
