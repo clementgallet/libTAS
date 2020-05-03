@@ -139,6 +139,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     this->addAction(a);
 
     keyDialog = new KeyPressedDialog(this);
+    keyDialog->withModifiers = true;
 }
 
 void InputEditorView::resizeAllColumns()
@@ -291,12 +292,25 @@ void InputEditorView::addInputColumn()
     /* Get an input from the user */
     xcb_keysym_t ks = keyDialog->exec();
 
-    /* Get the mapped input */
-    if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
-        SingleInput si = context->config.km.input_mapping[ks];
-        si.description = context->config.km.input_description(ks);
-        inputEditorModel->addUniqueInput(si);
+    /* Remove the custom modifiers that we added in that function */
+    ks = ks & 0xffff;
+
+    /* Get the input with description if available */
+    for (auto iter : context->config.km.input_list) {
+        if (iter.type == SingleInput::IT_KEYBOARD) {
+            if (iter.value == ks) {
+                inputEditorModel->addUniqueInput(iter);
+                return;
+            }
+        }
     }
+
+    /* Didn't find the input in the list, insert it with the value as description */
+    SingleInput si;
+    si.type = SingleInput::IT_KEYBOARD;
+    si.value = ks;
+    si.description = std::to_string(ks);
+    inputEditorModel->addUniqueInput(si);
 }
 
 void InputEditorView::clearInputColumn()

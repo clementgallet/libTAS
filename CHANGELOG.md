@@ -25,6 +25,7 @@
 * Add a converter from .hltas inputs
 * Offer all common keys in the input mapping, even the ones not mapped in the
   user's keyboard layout
+* We can add raw keyboard inputs to input editor (#326)
 
 ### Changed
 
