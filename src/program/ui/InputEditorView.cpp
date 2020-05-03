@@ -384,7 +384,8 @@ void InputEditorView::deleteInput()
     /* Select the next frame */
     QModelIndex newSel = inputEditorModel->index(min_row, 0);
     selectionModel()->clear();
-    selectionModel()->select(QItemSelection(newSel, newSel), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    setCurrentIndex(newSel);
+    selectionModel()->select(newSel, QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }
 
 void InputEditorView::truncateInputs()

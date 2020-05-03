@@ -53,6 +53,7 @@
 * Add relative paths to savefiles
 * Protect concurrent access to SaveFileList
 * Support SDL_GameController* calls with null handle
+* Set current cell when removing a row in input editor so that array keys work (#329)
 
 ## [1.3.5] - 2019-11-26
 ### Added
