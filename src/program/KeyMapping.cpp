@@ -69,8 +69,10 @@ xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_key_symbols_t *
     return modifiers;
 }
 
-void KeyMapping::init(xcb_connection_t* conn)
+void KeyMapping::init(xcb_connection_t* c)
 {
+    conn = c;
+
     /* Fill hotkey list */
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
@@ -112,32 +114,41 @@ void KeyMapping::init(xcb_connection_t* conn)
     /* Set default hotkeys */
     default_hotkeys();
 
-    /* Gather the list of valid X11 KeyCode values */
-    xcb_keycode_t min_keycode = xcb_get_setup(conn)->min_keycode;
-    xcb_keycode_t max_keycode = xcb_get_setup(conn)->max_keycode;
-
     /* Build the list of keysym values to be mapped based on valid keycodes.
      * This list is dependent on the keyboard layout.
      */
-    xcb_key_symbols_t *keysyms;
     if (!(keysyms = xcb_key_symbols_alloc(conn))) {
         // std::cerr << "Could not allocate key symbols" << std::endl;
         return;
     }
 
-    for (int k=min_keycode; k<=max_keycode; k++) {
-        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
-        // KeySym ks = XkbKeycodeToKeysym(display, k, 0, 0);
-        if (ks == XCB_NO_SYMBOL) continue;
+    /* Add all keysym from LATIN1 (0x00ab) and MISC (0xffab), and check if
+     * there is a keycode mapped to it.
+     */
 
+     /* LATIN1 */
+    for (int ks = 0; ks < 256; ks++) {
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
-        si.value = static_cast<int>(ks);
-        si.description = XKeysymToString(ks); // AFAIK there is no xcb counterpart to this...
-        input_list.push_back(si);
+        si.value = 0x0000 | ks;
+        char* str = XKeysymToString(si.value); // afaik there is no xcb counterpart to this...
+        if (str) {
+            si.description = str;
+            input_list.push_back(si);
+        }
     }
 
-    xcb_key_symbols_free(keysyms);
+    /* MISC */
+    for (int ks = 0; ks < 256; ks++) {
+        SingleInput si;
+        si.type = SingleInput::IT_KEYBOARD;
+        si.value = 0xff00 | ks;
+        char* str = XKeysymToString(si.value);
+        if (str) {
+            si.description = str;
+            input_list.push_back(si);
+        }
+    }
 
     /* Add mouse mapping */
     input_list.push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
@@ -283,10 +294,21 @@ void KeyMapping::default_hotkeys()
 void KeyMapping::default_inputs()
 {
     input_mapping.clear();
-    for (auto iter : input_list) {
-        if (iter.type == SingleInput::IT_KEYBOARD) {
-            input_mapping[iter.value] = iter;
-        }
+
+    /* Map all keycode to their respective keysym. The other keysyms are unmapped. */
+
+    /* Gather the list of valid X11 KeyCode values */
+    xcb_keycode_t min_keycode = xcb_get_setup(conn)->min_keycode;
+    xcb_keycode_t max_keycode = xcb_get_setup(conn)->max_keycode;
+
+    for (int k=min_keycode; k<=max_keycode; k++) {
+        xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
+        if (ks == XCB_NO_SYMBOL) continue;
+
+        for (auto iter : input_list)
+            if (iter.type == SingleInput::IT_KEYBOARD)
+                if (iter.value == static_cast<int>(ks))
+                    input_mapping[iter.value] = iter;
     }
 }
 
@@ -321,8 +343,21 @@ void KeyMapping::default_input(int input_index)
         }
     }
 
-    if (si.type == SingleInput::IT_KEYBOARD)
-        input_mapping[si.value] = si;
+    /* Check if there's a keycode mapped to this keysym */
+    if (si.type == SingleInput::IT_KEYBOARD) {
+
+        /* Gather the list of valid X11 KeyCode values */
+        xcb_keycode_t min_keycode = xcb_get_setup(conn)->min_keycode;
+        xcb_keycode_t max_keycode = xcb_get_setup(conn)->max_keycode;
+
+        for (int k=min_keycode; k<=max_keycode; k++) {
+            xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
+            if (ks == si.value) {
+                input_mapping[si.value] = si;
+                break;
+            }
+        }
+    }
 }
 
 void KeyMapping::reassign_hotkey(int hotkey_index, xcb_keysym_t ks)
@@ -367,7 +402,7 @@ void KeyMapping::reassign_input(SingleInput si, xcb_keysym_t ks)
         input_mapping[ks] = si;
 }
 
-void KeyMapping::buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp){
+void KeyMapping::buildAllInputs(AllInputs& ai, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp){
     int i,j;
     int keysym_i = 0;
 

@@ -185,7 +185,15 @@ class KeyMapping {
          * - Get the mouse state
          * - Warp mouse pointer if needed
          */
-        void buildAllInputs(AllInputs& ai, xcb_connection_t *conn, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp);
+        void buildAllInputs(AllInputs& ai, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp);
+
+    private:
+        /* Connection to the X11 server */
+        xcb_connection_t *conn;
+
+        /* Connection to the keyboard layout */
+        xcb_key_symbols_t *keysyms;
+
 };
 
-#endif // KEYMAPPING_H_INCLUDED
+#endif // LIBTAS_KEYMAPPING_H_INCLUDED

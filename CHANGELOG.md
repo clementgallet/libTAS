@@ -23,6 +23,8 @@
 * Add epoll_wait hook (#321)
 * Add snd_pcm_pause hook (#321)
 * Add a converter from .hltas inputs
+* Offer all common keys in the input mapping, even the ones not mapped in the
+  user's keyboard layout
 
 ### Changed
 

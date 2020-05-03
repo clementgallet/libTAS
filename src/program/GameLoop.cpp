@@ -1377,7 +1377,7 @@ void GameLoop::sleepSendPreview()
 
     /* Format the keyboard and mouse state and save it in the AllInputs struct */
     static AllInputs preview_ai, last_preview_ai;
-    context->config.km.buildAllInputs(preview_ai, context->conn, context->game_window, keysyms.get(), context->config.sc, false);
+    context->config.km.buildAllInputs(preview_ai, context->game_window, keysyms.get(), context->config.sc, false);
     preview_ai.pointer_x += pointer_offset_x;
     preview_ai.pointer_y += pointer_offset_y;
     emit inputsToBeSent(preview_ai);
@@ -1409,7 +1409,7 @@ void GameLoop::processInputs(AllInputs &ai)
             /* Get inputs if we have input focus */
             if (haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                context->config.km.buildAllInputs(ai, context->conn, context->game_window, keysyms.get(), context->config.sc, context->config.mouse_warp);
+                context->config.km.buildAllInputs(ai, context->game_window, keysyms.get(), context->config.sc, context->config.mouse_warp);
                 ai.pointer_x += pointer_offset_x;
                 ai.pointer_y += pointer_offset_y;
                 emit inputsToBeSent(ai);
