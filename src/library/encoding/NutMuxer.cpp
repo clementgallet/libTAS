@@ -281,9 +281,16 @@ void NutMuxer::writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, 
 	writeVarU(payloadlen, frameheader); // data_size_msb
 
     writeBE32(nutCRC32(frameheader), frameheader); // checksum
-    fwrite(frameheader.data(), 1, frameheader.size(), underlying);
-	if (payload)
-		fwrite(payload, 1, payloadlen, underlying);
+    size_t written = fwrite(frameheader.data(), 1, frameheader.size(), underlying);
+
+	if (written != frameheader.size())
+		debuglog(LCF_DUMP | LCF_WARNING, "Incomplete header transfer to ffmpeg");
+
+	if (payload) {
+		written = fwrite(payload, 1, payloadlen, underlying);
+		if (written != payloadlen)
+			debuglog(LCF_DUMP | LCF_WARNING, "Incomplete buffer transfer to ffmpeg");
+	}
 }
 
 void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
