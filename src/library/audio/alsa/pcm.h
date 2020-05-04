@@ -38,9 +38,9 @@ OVERRIDE int snd_pcm_close(snd_pcm_t *pcm);
     // const char *snd_pcm_name(snd_pcm_t *pcm);
     // snd_pcm_type_t snd_pcm_type(snd_pcm_t *pcm);
     // snd_pcm_stream_t snd_pcm_stream(snd_pcm_t *pcm);
-    // int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm);
-    // int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int space);
-    // int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents);
+OVERRIDE int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm);
+OVERRIDE int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int space);
+OVERRIDE int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents);
 OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // static __inline__ int snd_pcm_abort(snd_pcm_t *pcm) { return snd_pcm_nonblock(pcm, 2); }
     // int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm,
@@ -124,6 +124,8 @@ OVERRIDE int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_p
 OVERRIDE int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir);
 OVERRIDE int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val);
 OVERRIDE int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
+
+OVERRIDE int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *buffer_size, snd_pcm_uframes_t *period_size);
 
 OVERRIDE size_t snd_pcm_sw_params_sizeof(void);
 

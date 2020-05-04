@@ -31,10 +31,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(nanosleep);
 DEFINE_ORIG_POINTER(clock_nanosleep);
-DEFINE_ORIG_POINTER(select);
-DEFINE_ORIG_POINTER(pselect);
 DEFINE_ORIG_POINTER(sched_yield);
-DEFINE_ORIG_POINTER(epoll_wait);
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
@@ -158,100 +155,6 @@ DEFINE_ORIG_POINTER(epoll_wait);
     }
 
     return orig::clock_nanosleep(clock_id, flags, req, rem);
-}
-
-/* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
-{
-    LINK_NAMESPACE_GLOBAL(select);
-
-    /* select can be used to sleep the cpu if feed with all null parameters
-     * except for timeout. In this case we replace it with what we did for
-     * other sleep functions. Otherwise, we call the original function.
-     */
-    if ((nfds != 0) || (readfds != nullptr) || (writefds != nullptr) || (exceptfds != nullptr))
-    {
-        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
-    }
-
-    if (GlobalState::isNative()) {
-        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
-    }
-
-    bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000 + timeout->tv_usec, " usec");
-
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (mainT && (timeout->tv_sec || timeout->tv_usec)) {
-        struct timespec ts;
-        ts.tv_sec = timeout->tv_sec;
-        ts.tv_nsec = timeout->tv_usec * 1000;
-        detTimer.addDelay(ts);
-
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::select(nfds, readfds, writefds, exceptfds, timeout);
-}
-
-/* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	const struct timespec *timeout, const __sigset_t *sigmask)
-{
-    LINK_NAMESPACE_GLOBAL(pselect);
-
-    /* select can be used to sleep the cpu if feed with all null parameters
-     * except for timeout. In this case we replace it with what we did for
-     * other sleep functions. Otherwise, we call the original function.
-     */
-    if ((nfds != 0) || (readfds != nullptr) || (writefds != nullptr) || (exceptfds != nullptr))
-    {
-        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
-    }
-
-    if (GlobalState::isNative()) {
-        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
-    }
-
-    bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000000 + timeout->tv_nsec, " nsec");
-
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (mainT && (timeout->tv_sec || timeout->tv_nsec)) {
-        detTimer.addDelay(*timeout);
-
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
-}
-
-/* Override */ int epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout)
-{
-    LINK_NAMESPACE_GLOBAL(epoll_wait);
-
-    if (GlobalState::isNative()) {
-        return orig::epoll_wait(epfd, events, maxevents, timeout);
-    }
-
-    debuglog(LCF_SLEEP, __func__, " call with timeout ", timeout, " msec");
-
-    int ret = orig::epoll_wait(epfd, events, maxevents, timeout);
-
-    /* If the function was called from the main thread and the function timed out,
-     * advance the timer. */
-    if ((timeout != -1) && (ret == 0) && ThreadManager::isMainThread()) {
-        struct timespec ts;
-        ts.tv_sec = timeout / 1000;
-        ts.tv_nsec = 1000000 * (timeout % 1000);
-        detTimer.addDelay(ts);
-    }
-
-    return ret;
 }
 
 /* Override */ int sched_yield(void)

@@ -41,6 +41,7 @@ libtas_so_SOURCES = \
     timewrappers.cpp \
     tlswrappers.cpp \
     Utils.cpp \
+    waitwrappers.cpp \
     WindowTitle.cpp \
     XlibEventQueue.cpp \
     XlibEventQueueList.cpp \

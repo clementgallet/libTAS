@@ -36,6 +36,10 @@ DEFINE_ORIG_POINTER(snd_pcm_open);
 DEFINE_ORIG_POINTER(snd_pcm_open_lconf);
 DEFINE_ORIG_POINTER(snd_pcm_open_fallback);
 
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_count);
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors);
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_revents);
+
 DEFINE_ORIG_POINTER(snd_pcm_info);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params_current);
 DEFINE_ORIG_POINTER(snd_pcm_sw_params);
@@ -73,6 +77,8 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_free);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy);
+DEFINE_ORIG_POINTER(snd_pcm_get_params);
+
 DEFINE_ORIG_POINTER(snd_pcm_prepare);
 DEFINE_ORIG_POINTER(snd_pcm_writei);
 DEFINE_ORIG_POINTER(snd_pcm_readi);
@@ -202,6 +208,52 @@ int snd_pcm_close(snd_pcm_t *pcm)
 
         audiocontext.deleteSource(sourceId);
     }
+
+    return 0;
+}
+
+int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors_count);
+        return orig::snd_pcm_poll_descriptors_count(pcm);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    return 1;
+}
+
+int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int space)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors);
+        return orig::snd_pcm_poll_descriptors(pcm, pfds, space);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    if (pfds) {
+        /* Use a magic number to identify the fake ALSA fd, and use the last
+         * field to store the source */
+        pfds[0] = {0xa15a, POLLIN, static_cast<short int>(reinterpret_cast<intptr_t>(pcm))};
+        return 1;
+    }
+
+    return 0;
+}
+
+int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors_revents);
+        return orig::snd_pcm_poll_descriptors_revents(pcm, pfds, nfds, revents);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    /* We don't handle audio capture anyway, so there's only one possible value */
+    if (revents)
+        *revents = POLLOUT;
 
     return 0;
 }
@@ -1045,7 +1097,8 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
     auto source = audiocontext.getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
-    *val = buffer_size * 1000000 / buffer->frequency;
+    /* The next operation can overflow using 32-bit ints */
+    *val = static_cast<uint64_t>(buffer_size) * 1000000 / buffer->frequency;
     return 0;
 }
 
@@ -1076,12 +1129,12 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
     /* Special case for 0, return the default value */
     if (*val == 0) {
-        *val = buffer_size * 1000000 / buffer->frequency;
+        *val = static_cast<uint64_t>(buffer_size) * 1000000 / buffer->frequency;
         return 0;
     }
 
     if (buffer->frequency != 0) {
-        buffer_size = *val * buffer->frequency / 1000000;
+        buffer_size = static_cast<uint64_t>(*val) * buffer->frequency / 1000000;
     }
     return 0;
 }
@@ -1128,6 +1181,22 @@ int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_acce
 
     *access = current_access;
     DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
+int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t *ps)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_get_params);
+        return orig::snd_pcm_get_params(pcm, bs, ps);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    /* TODO: does not support multiple pcms */
+    if (bs) *bs = buffer_size;
+    if (ps) *ps = buffer_size / periods;
+
     return 0;
 }
 
