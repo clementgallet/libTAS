@@ -33,6 +33,7 @@
 * Monitor refresh rate now matches the framerate setting in libTAS
 * Simplify the OpenGL performance setting
 * Add horizontal scrollbar in the input editor (#316)
+* Change the format of the input file, to make it more robust and adaptative (#332)
 
 ### Fixed
 

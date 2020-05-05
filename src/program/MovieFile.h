@@ -29,6 +29,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <regex>
 
 class MovieFile {
 public:
@@ -143,11 +144,34 @@ public:
     int writeFrame(std::ostream& input_stream, const AllInputs& inputs);
 
     /* Read a single frame of inputs from the line of inputs */
-    int readFrame(std::string& line, AllInputs& inputs);
+    int readFrame(const std::string& line, AllInputs& inputs);
 
 private:
     Context* context;
 
+    /* Regex for the keyboard input string */
+    std::regex rek;
+
+    /* Regex for the mouse input string */
+    std::regex rem;
+
+    /* Regex for the controller input string */
+    std::regex rec;
+
+    /* Regex for the flag input string */
+    std::regex ref;
+
+    /* Read the keyboard input string */
+    void readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
+
+    /* Read the mouse input string */
+    void readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
+
+    /* Read one controller input string */
+    void readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
+
+    /* Read the flag input string */
+    void readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
 };
 
 #endif

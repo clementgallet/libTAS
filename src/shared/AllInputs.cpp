@@ -40,6 +40,14 @@ void AllInputs::emptyInputs() {
     flags = 0;
 }
 
+bool AllInputs::isDefaultController(int j) const
+{
+    for (int a=0; a<MAXAXES; a++)
+        if (controller_axes[j][a] != 0)
+            return false;
+    return (controller_buttons[j] == 0);
+}
+
 int AllInputs::getInput(const SingleInput &si) const
 {
     /* Keyboard inputs */

@@ -90,6 +90,9 @@ class AllInputs {
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 
+        /* Check if a controller has default values */
+        bool isDefaultController(int j) const;
+
         /* Get the value of a single input, or 0/1 if the input is set/not set */
         int getInput(const SingleInput &si) const;
 
