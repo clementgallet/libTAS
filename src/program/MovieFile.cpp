@@ -33,7 +33,7 @@
 MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLastAutoSave(false), modifiedSinceLastStateLoad(false), context(c)
 {
 	rek.assign(R"(\|K([0-9a-f]*(?::[0-9a-f]+)*)\|)", std::regex::ECMAScript|std::regex::optimize);
-	rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?:[\.1][\.2][\.3][\.4][\.5])\|)", std::regex::ECMAScript|std::regex::optimize);
+	rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?[\.1-5]{5})\|)", std::regex::ECMAScript|std::regex::optimize);
 	rec.assign(R"(\|C((?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
 	ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
 }
