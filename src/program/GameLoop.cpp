@@ -1482,6 +1482,9 @@ void GameLoop::processInputs(AllInputs &ai)
                 }
             }
 
+            /* Update controller inputs if controller window is shown */
+            emit showControllerInputs(ai);
+
             AutoSave::update(context, movie);
             break;
     }

@@ -55,7 +55,8 @@ public:
         BUTTON_DPAD_UP,
         BUTTON_DPAD_DOWN,
         BUTTON_DPAD_LEFT,
-        BUTTON_DPAD_RIGHT
+        BUTTON_DPAD_RIGHT,
+        BUTTON_LAST
     };
 
     /* Controller axes */

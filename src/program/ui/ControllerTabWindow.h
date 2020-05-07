@@ -45,6 +45,7 @@ protected:
 public slots:
     void slotButtonToggle(int id, int button, bool pressed);
     void slotSetInputs(AllInputs &ai);
+    void slotGetInputs(const AllInputs &ai);
 
 };
 

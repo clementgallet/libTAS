@@ -56,6 +56,11 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
          * the controller inputs in the AllInputs object.
          */
         connect(mw->gameLoop, &GameLoop::inputsToBeSent, this, &ControllerTabWindow::slotSetInputs, Qt::DirectConnection);
+
+        /* When the game loop is playing back a movie and wants to display the
+         * controller inputs in this window.
+         */
+        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs, Qt::DirectConnection);
     }
 }
 
@@ -143,6 +148,26 @@ void ControllerTabWindow::slotSetInputs(AllInputs &ai)
         ai.controller_buttons[j] |= (controllers[j]->button_dpad_down->isChecked() << SingleInput::BUTTON_DPAD_DOWN);
         ai.controller_buttons[j] |= (controllers[j]->button_dpad_left->isChecked() << SingleInput::BUTTON_DPAD_LEFT);
         ai.controller_buttons[j] |= (controllers[j]->button_dpad_right->isChecked() << SingleInput::BUTTON_DPAD_RIGHT);
+    }
+}
+
+void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
+{
+    /* Don't grab inputs if the window is hidden */
+    if (!isVisible())
+        return;
+
+    for (int j=0; j<AllInputs::MAXJOYS; j++) {
+        /* Get controller axes */
+        controllers[j]->axis_left->slotSetAxes(ai.controller_axes[j][SingleInput::AXIS_LEFTX], ai.controller_axes[j][SingleInput::AXIS_LEFTY]);
+        controllers[j]->axis_right->slotSetAxes(ai.controller_axes[j][SingleInput::AXIS_RIGHTX], ai.controller_axes[j][SingleInput::AXIS_RIGHTY]);
+        controllers[j]->trigger_left_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERLEFT]);
+        controllers[j]->trigger_right_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERRIGHT]);
+
+        /* Get controller buttons */
+        for (int b = SingleInput::BUTTON_A; b < SingleInput::BUTTON_LAST; b++) {
+            slotButtonToggle(j, b, ai.controller_buttons[j] & (1 << b));
+        }
     }
 }
 

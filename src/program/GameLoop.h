@@ -104,6 +104,7 @@ signals:
     void askToShow(QString str, void* promise);
 
     void controllerButtonToggled(int controller_id, int button, bool pressed);
+    void showControllerInputs(const AllInputs &allinputs);
     void inputsToBeSent(AllInputs &allinputs);
     void gameInfoChanged(GameInfo game_info);
 
