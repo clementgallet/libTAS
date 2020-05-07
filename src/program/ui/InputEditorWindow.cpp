@@ -22,12 +22,12 @@
 #include "InputEditorWindow.h"
 #include "MainWindow.h"
 
-InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags)
+InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(nullptr, flags)
 {
     setWindowTitle("Input Editor");
 
     /* Table */
-    inputEditorView = new InputEditorView(c, this);
+    inputEditorView = new InputEditorView(c, this, parent);
 
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;

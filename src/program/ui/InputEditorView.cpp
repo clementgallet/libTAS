@@ -24,7 +24,7 @@
 #include "InputEditorView.h"
 #include "MainWindow.h"
 
-InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(parent), context(c)
+InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -33,7 +33,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent) : QTableView(paren
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 
     MovieFile *movie = nullptr;
-    MainWindow *mw = qobject_cast<MainWindow*>(parent->parent());
+    MainWindow *mw = qobject_cast<MainWindow*>(gp);
     if (mw) {
         movie = &mw->gameLoop->movie;
     }

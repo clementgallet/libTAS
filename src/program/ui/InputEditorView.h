@@ -31,7 +31,7 @@ class InputEditorView : public QTableView {
     Q_OBJECT
 
 public:
-    InputEditorView(Context *c, QWidget *parent = Q_NULLPTR);
+    InputEditorView(Context *c, QWidget *parent, QWidget *gp);
 
     void update();
     void resetInputs();
