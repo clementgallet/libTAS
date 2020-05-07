@@ -259,6 +259,29 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
     event->accept();
 }
 
+void InputEditorView::keyPressEvent(QKeyEvent *event)
+{
+    /* Check for the Home and End keys */
+    if ((event->key() == Qt::Key_End) && (event->modifiers() == Qt::NoModifier)) {
+        /* Select the last frame */
+        QModelIndex newSel = inputEditorModel->index(inputEditorModel->rowCount()-1, 0);
+        selectionModel()->clear();
+        setCurrentIndex(newSel);
+        selectionModel()->select(newSel, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        event->accept();
+    }
+    else if ((event->key() == Qt::Key_Home) && (event->modifiers() == Qt::NoModifier)) {
+        /* Select the first frame */
+        QModelIndex newSel = inputEditorModel->index(0, 0);
+        selectionModel()->clear();
+        setCurrentIndex(newSel);
+        selectionModel()->select(newSel, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        event->accept();
+    }
+
+    return QTableView::keyPressEvent(event);
+}
+
 void InputEditorView::horizontalMenu(QPoint pos)
 {
     /* Storing the index of the section where context menu was shown */
