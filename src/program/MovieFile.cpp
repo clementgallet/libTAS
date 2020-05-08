@@ -36,6 +36,7 @@ MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLa
 	rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?[\.1-5]{5})\|)", std::regex::ECMAScript|std::regex::optimize);
 	rec.assign(R"(\|C((?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
 	ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
+	ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
 }
 
 const char* MovieFile::errorString(int error_code) {
@@ -135,6 +136,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->authors = config.value("authors").toString().toStdString();
 	context->md5_movie = config.value("md5").toString().toStdString();
 	context->config.auto_restart = config.value("auto_restart").toBool();
+	context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
 
 	config.beginGroup("mainthread_timetrack");
 	context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
@@ -261,6 +263,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 	config.setValue("libtas_patch_version", PATCHVERSION);
 	config.setValue("savestate_frame_count", static_cast<unsigned long long>(nb_frames));
 	config.setValue("auto_restart", context->config.auto_restart);
+	config.setValue("variable_framerate", context->config.sc.variable_framerate);
 
 	/* Store the md5 that was extracted from the movie, or store the game
 	 * binary movie if not. */
@@ -381,7 +384,7 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
         input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
-	/* Write set flag inputs */
+	/* Write flag inputs */
 	if (inputs.flags) {
 		input_stream << '|';
 		input_stream << 'F';
@@ -395,6 +398,14 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_REMOVED)) input_stream.put('U');
 		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED)) input_stream.put('O');
 	}
+
+	/* Write mouse inputs */
+    if (context->config.sc.variable_framerate) {
+        input_stream.put('|');
+		input_stream.put('T');
+        input_stream << std::dec;
+        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
+    }
 	input_stream << '|' << std::endl;
 
     return 1;
@@ -446,8 +457,16 @@ int MovieFile::readFrame(const std::string& line, AllInputs& inputs)
 			readFlagFrame(flag_string, inputs);
 		}
 
+		/* Read framerate inputs */
+		if (std::regex_search(line, match, ret) && match.size() > 1) {
+			std::istringstream framerate_string(match.str(1));
+			readFramerateFrame(framerate_string, inputs);
+		}
+
 		return 1;
     }
+
+	/* Following code is for old input format (1.3.5 and earlier) */
 
 	/* Read keyboard inputs */
 	if (context->config.sc.keyboard_support) {
@@ -466,6 +485,11 @@ int MovieFile::readFrame(const std::string& line, AllInputs& inputs)
 
 	/* Read flag inputs */
 	readFlagFrame(input_string, inputs);
+
+	/* Read framerate inputs */
+	if (context->config.sc.variable_framerate) {
+		readFramerateFrame(input_string, inputs);
+	}
 
     return 1;
 }
@@ -548,6 +572,13 @@ void MovieFile::readFlagFrame(std::istringstream& input_string, AllInputs& input
 	}
 }
 
+void MovieFile::readFramerateFrame(std::istringstream& input_string, AllInputs& inputs)
+{
+	char d;
+	input_string >> std::dec;
+	input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
+}
+
 uint64_t MovieFile::nbFrames()
 {
 	return input_list.size();
@@ -608,7 +639,7 @@ int MovieFile::getInputs(AllInputs& inputs, uint64_t pos) const
 {
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
-        return 0;
+        return -1;
     }
 
 	inputs = input_list[pos];

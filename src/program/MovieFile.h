@@ -161,6 +161,9 @@ private:
     /* Regex for the flag input string */
     std::regex ref;
 
+    /* Regex for the framerate input string */
+    std::regex ret;
+
     /* Read the keyboard input string */
     void readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
 
@@ -172,6 +175,10 @@ private:
 
     /* Read the flag input string */
     void readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
+
+    /* Read the framerate input string */
+    void readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
+
 };
 
 #endif

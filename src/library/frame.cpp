@@ -580,6 +580,11 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));
+                /* Update framerate if necessary (do we actually need to?) */
+                if (shared_config.variable_framerate) {
+                    shared_config.framerate_num = ai.framerate_num;
+                    shared_config.framerate_den = ai.framerate_den;
+                }
                 break;
 
             case MSGN_EXPOSE:

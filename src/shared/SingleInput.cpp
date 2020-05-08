@@ -28,6 +28,8 @@ bool SingleInput::isAnalog() const
 {
     if ((type == IT_POINTER_X) || (type == IT_POINTER_Y))
         return true;
+    if ((type == IT_FRAMERATE_NUM) || (type == IT_FRAMERATE_DEN))
+        return true;
     if (inputTypeIsController()) {
         return inputTypeToAxisFlag();
     }

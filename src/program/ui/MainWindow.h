@@ -84,6 +84,7 @@ public:
     QAction *annotateMovieAction;
 
     QAction *autoRestartAction;
+    QAction *variableFramerateAction;
     QActionGroup *movieEndGroup;
     QActionGroup *screenResGroup;
 
@@ -231,7 +232,8 @@ private slots:
     /* Show an alert dialog asking the user a question, and get the answer */
     void alertOffer(QString alert_msg, void* promise);
 
-
+    /* Update framerate values */
+    void updateFramerate();
 
     void slotLaunch();
     void slotStop();
@@ -273,6 +275,7 @@ private slots:
     void slotAsyncEvents(bool checked);
     void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
+    void slotVariableFramerate(bool checked);
     void slotMouseMode(bool checked);
     void slotMouseWarp(bool checked);
 };

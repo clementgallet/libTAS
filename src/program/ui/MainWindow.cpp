@@ -63,6 +63,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
     connect(gameLoop, &GameLoop::fpsChanged, this, &MainWindow::updateFps);
     connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer);
+    connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate);
 
     /* Create other windows */
     encodeWindow = new EncodeWindow(c, this);
@@ -146,12 +147,12 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Frames per second */
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
-    disabledWidgetsOnStart.append(fpsNumField);
+    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->config.sc.framerate_num = i;});
 
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
-    disabledWidgetsOnStart.append(fpsDenField);
+    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->config.sc.framerate_den = i;});
 
     fpsValues = new QLabel("Current FPS: - / -");
 
@@ -618,6 +619,11 @@ void MainWindow::createMenus()
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
+    variableFramerateAction = movieMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
+    variableFramerateAction->setCheckable(true);
+    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
+    disabledActionsOnStart.append(variableFramerateAction);
+
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
     movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
@@ -837,6 +843,8 @@ void MainWindow::updateStatus()
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
+            fpsNumField->setEnabled(true);
+            fpsDenField->setEnabled(true);
             initialTimeSec->setValue(context->config.sc.initial_time_sec);
             initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
@@ -868,6 +876,11 @@ void MainWindow::updateStatus()
             }
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
+
+            if (!context->config.sc.variable_framerate) {
+                fpsNumField->setEnabled(false);
+                fpsDenField->setEnabled(false);
+            }
 
             movieBox->setCheckable(false);
             if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
@@ -1097,6 +1110,7 @@ void MainWindow::updateMovieParams()
     initialTimeSec->setValue(context->config.sc.initial_time_sec);
     initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
     autoRestartAction->setChecked(context->config.auto_restart);
+    variableFramerateAction->setChecked(context->config.sc.variable_framerate);
     for (auto& action : timeMainGroup->actions()) {
         action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
     }
@@ -1544,6 +1558,7 @@ BOOLSLOT(slotIncrementalState, context->config.sc.incremental_savestates)
 BOOLSLOT(slotRamState, context->config.sc.savestates_in_ram)
 BOOLSLOT(slotBacktrackState, context->config.sc.backtrack_savestate)
 BOOLSLOT(slotAutoRestart, context->config.auto_restart)
+BOOLSLOT(slotVariableFramerate, context->config.sc.variable_framerate)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
 BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
 
@@ -1562,4 +1577,10 @@ void MainWindow::alertDialog(QString alert_msg)
 
     /* Show alert window */
     QMessageBox::warning(this, "Warning", alert_msg);
+}
+
+void MainWindow::updateFramerate()
+{
+    fpsNumField->setValue(context->config.sc.framerate_num);
+    fpsDenField->setValue(context->config.sc.framerate_den);
 }

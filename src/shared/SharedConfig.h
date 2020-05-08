@@ -283,6 +283,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Tries to detect busy loops and advance time */
     bool busyloop_detection = false;
 
+    /* User can modify the framerate during the game execution */
+    bool variable_framerate = false;
+
 };
 
 #endif

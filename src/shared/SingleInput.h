@@ -104,6 +104,10 @@ public:
         /* Single flag */
         IT_FLAG = 10,
 
+        /* Framerate */
+        IT_FRAMERATE_NUM,
+        IT_FRAMERATE_DEN,
+
         /* Controller 1 */
         IT_CONTROLLER1_BUTTON_A = (1 << IT_CONTROLLER_ID_SHIFT) + BUTTON_A,
         IT_CONTROLLER1_BUTTON_B = (1 << IT_CONTROLLER_ID_SHIFT) + BUTTON_B,

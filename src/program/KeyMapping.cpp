@@ -171,6 +171,10 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_REMOVED, "Joy3 Removed"});
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_REMOVED, "Joy4 Removed"});
 
+    /* Add framerate mapping */
+    input_list.push_back({SingleInput::IT_FRAMERATE_NUM, 1, "Framerate num"});
+    input_list.push_back({SingleInput::IT_FRAMERATE_DEN, 1, "Framerate den"});
+
     /* Add controller mapping */
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Joy1 A"});
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_B, 1, "Joy1 B"});

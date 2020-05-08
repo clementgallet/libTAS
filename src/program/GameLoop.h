@@ -102,6 +102,7 @@ signals:
     void sharedConfigChanged();
     void fpsChanged(float fps, float lfps);
     void askToShow(QString str, void* promise);
+    void updateFramerate();
 
     void controllerButtonToggled(int controller_id, int button, bool pressed);
     void showControllerInputs(const AllInputs &allinputs);

@@ -38,6 +38,8 @@ void AllInputs::emptyInputs() {
     }
 
     flags = 0;
+    framerate_den = 0;
+    framerate_num = 0;
 }
 
 bool AllInputs::isDefaultController(int j) const
@@ -77,6 +79,14 @@ int AllInputs::getInput(const SingleInput &si) const
     /* Flag inputs */
     if (si.type == SingleInput::IT_FLAG) {
         return (flags >> si.value) & 0x1;
+    }
+
+    /* Framerate inputs */
+    if (si.type == SingleInput::IT_FRAMERATE_NUM) {
+        return framerate_num;
+    }
+    if (si.type == SingleInput::IT_FRAMERATE_DEN) {
+        return framerate_den;
     }
 
     /* Controller inputs */
@@ -154,6 +164,14 @@ void AllInputs::setInput(const SingleInput &si, int value)
             flags &= ~(0x1 << si.value);
     }
 
+    /* Framerate inputs */
+    if (si.type == SingleInput::IT_FRAMERATE_NUM) {
+        framerate_num = value;
+    }
+    if (si.type == SingleInput::IT_FRAMERATE_DEN) {
+        framerate_den = value;
+    }
+
     /* Controller inputs */
     if (si.inputTypeIsController()) {
         int controller_i = si.inputTypeToControllerNumber();
@@ -224,6 +242,15 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
                 input_set.insert(si);
             }
         }
+    }
+
+    if (framerate_num) {
+        si = {SingleInput::IT_FRAMERATE_NUM, 1, ""};
+        input_set.insert(si);
+    }
+    if (framerate_den) {
+        si = {SingleInput::IT_FRAMERATE_DEN, 1, ""};
+        input_set.insert(si);
     }
 
     for (int c = 0; c < AllInputs::MAXJOYS; c++) {

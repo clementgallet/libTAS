@@ -210,6 +210,20 @@ void DeterministicTimer::exitFrameBoundary()
         }
     }
 
+    /* Update baseTimeIncrement if variable framerate */
+    if (shared_config.variable_framerate) {
+        TimeHolder newTimeIncrement;
+        newTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
+        newTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
+
+        /* Check if we changed framerate, and reset fractional part if so. */
+        if (newTimeIncrement != baseTimeIncrement) {
+            baseTimeIncrement = newTimeIncrement;
+            fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
+            fractional_part = 0;
+        }
+    }
+
     insideFrameBoundary = false;
     frame_mutex.unlock();
 }

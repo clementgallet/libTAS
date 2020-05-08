@@ -1412,6 +1412,13 @@ void GameLoop::processInputs(AllInputs &ai)
                 context->config.km.buildAllInputs(ai, context->game_window, keysyms.get(), context->config.sc, context->config.mouse_warp);
                 ai.pointer_x += pointer_offset_x;
                 ai.pointer_y += pointer_offset_y;
+
+                /* Add framerate if necessary */
+                if (context->config.sc.variable_framerate) {
+                    ai.framerate_num = context->config.sc.framerate_num;
+                    ai.framerate_den = context->config.sc.framerate_den;
+                }
+
                 emit inputsToBeSent(ai);
             }
 
@@ -1464,7 +1471,9 @@ void GameLoop::processInputs(AllInputs &ai)
 
         case SharedConfig::RECORDING_READ:
             /* Read inputs from file */
-            if (movie.getInputs(ai) == 1) {
+            int ret = movie.getInputs(ai);
+
+            if (ret == 1) {
                 /* We are reading the last frame of the movie */
                 switch(context->config.on_movie_end) {
                     case Config::MOVIEEND_READ:
@@ -1480,6 +1489,20 @@ void GameLoop::processInputs(AllInputs &ai)
                     default:
                         break;
                 }
+            }
+
+            if (ret != -1) { // read succeeded
+                /* Update framerate */
+                if (context->config.sc.variable_framerate) {
+                    context->config.sc.framerate_num = ai.framerate_num;
+                    context->config.sc.framerate_den = ai.framerate_den;
+                    emit updateFramerate();
+                }
+            }
+            else {
+                /* ai is empty, fill the framerate values */
+                ai.framerate_num = context->config.sc.framerate_num;
+                ai.framerate_den = context->config.sc.framerate_den;
             }
 
             /* Update controller inputs if controller window is shown */
