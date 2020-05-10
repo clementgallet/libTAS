@@ -159,8 +159,10 @@ void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
 
     for (int j=0; j<AllInputs::MAXJOYS; j++) {
         /* Get controller axes */
-        controllers[j]->axis_left->slotSetAxes(ai.controller_axes[j][SingleInput::AXIS_LEFTX], ai.controller_axes[j][SingleInput::AXIS_LEFTY]);
-        controllers[j]->axis_right->slotSetAxes(ai.controller_axes[j][SingleInput::AXIS_RIGHTX], ai.controller_axes[j][SingleInput::AXIS_RIGHTY]);
+        controllers[j]->axis_left_x->setValue(ai.controller_axes[j][SingleInput::AXIS_LEFTX]);
+        controllers[j]->axis_left_y->setValue(ai.controller_axes[j][SingleInput::AXIS_LEFTY]);
+        controllers[j]->axis_right_x->setValue(ai.controller_axes[j][SingleInput::AXIS_RIGHTX]);
+        controllers[j]->axis_right_y->setValue(ai.controller_axes[j][SingleInput::AXIS_RIGHTY]);
         controllers[j]->trigger_left_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERLEFT]);
         controllers[j]->trigger_right_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERRIGHT]);
 
