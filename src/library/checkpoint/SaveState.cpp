@@ -124,8 +124,6 @@ Area& SaveState::getArea()
 
 char SaveState::getPageFlag(char* addr)
 {
-    MYASSERT(addr >= (current_addr - 4096));
-
     /* If we already gathered the flag for this address, return it again */
     if (addr == (current_addr - 4096))
         return current_flag;

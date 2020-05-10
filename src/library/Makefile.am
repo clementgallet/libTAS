@@ -37,6 +37,7 @@ libtas_so_SOURCES = \
     sdlwindows.cpp \
     signalwrappers.cpp \
     sleepwrappers.cpp \
+    Stack.cpp \
     TimeHolder.cpp \
     timewrappers.cpp \
     tlswrappers.cpp \

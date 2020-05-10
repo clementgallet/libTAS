@@ -1093,16 +1093,9 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
             /* Copy the value of the parent savestate if any */
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);
-
-                if (parent_flag == Area::NONE) {
-                    /* This is not supposed to happen, saving the full page */
-                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area with soft-dirty cleared but no parent page !?");
-                    ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
-                    Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
-                    area_size += 4096;
-                }
-                else if (parent_flag == Area::FULL_PAGE) {
-                    /* Parent state stores the memory page, we must store it too */
+                if ((parent_flag == Area::NONE) || (parent_flag == Area::FULL_PAGE)) {
+                    /* Parent does not have the page or parent stores the memory page,
+                     * saving the full page. */
                     ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
                     Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
                     area_size += 4096;

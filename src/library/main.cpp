@@ -39,6 +39,7 @@
 #include "frame.h" // framecount
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
 #include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
+#include "Stack.h"
 
 
 extern char**environ;
@@ -78,6 +79,7 @@ void __attribute__((constructor)) init(void)
 
     ThreadManager::init();
     SaveStateManager::init();
+    Stack::grow();
 
     initSocketGame();
 

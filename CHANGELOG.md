@@ -27,6 +27,7 @@
   user's keyboard layout
 * We can add raw keyboard inputs to input editor (#326)
 * Implement ALSA poll mechanism (#321)
+* Grow the stack to its maximum at startup, to avoid unintialized stack growth (#337)
 
 ### Changed
 
