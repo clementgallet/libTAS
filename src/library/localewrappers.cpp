@@ -32,21 +32,21 @@ static const char* config_locale()
 {
     switch (shared_config.locale) {
     case SharedConfig::LOCALE_ENGLISH:
-        return "en_US.utf8";
+        return "en_US.UTF-8";
     case SharedConfig::LOCALE_JAPANESE:
-        return "ja_JP.utf8";
+        return "ja_JP.UTF-8";
     case SharedConfig::LOCALE_KOREAN:
-        return "ko_KR.utf8";
+        return "ko_KR.UTF-8";
     case SharedConfig::LOCALE_CHINESE:
-        return "zh_CN.utf8";
+        return "zh_CN.UTF-8";
     case SharedConfig::LOCALE_SPANISH:
-        return "es_ES.utf8";
+        return "es_ES.UTF-8";
     case SharedConfig::LOCALE_GERMAN:
-        return "de_DE.utf8";
+        return "de_DE.UTF-8";
     case SharedConfig::LOCALE_FRENCH:
-        return "fr_FR.utf8";
+        return "fr_FR.UTF-8";
     case SharedConfig::LOCALE_ITALIAN:
-        return "it_IT.utf8";
+        return "it_IT.UTF-8";
     case SharedConfig::LOCALE_NATIVE:
         return "";
     default:
