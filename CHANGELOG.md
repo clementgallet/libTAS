@@ -60,6 +60,7 @@
 * Support SDL_GameController* calls with null handle
 * Set current cell when removing a row in input editor so that array keys work (#329)
 * Fix locale names (#267)
+* Fix when savefile was removed and re-opened (#267)
 
 ## [1.3.5] - 2019-11-26
 ### Added

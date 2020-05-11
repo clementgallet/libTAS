@@ -209,6 +209,7 @@ FILE* SaveFile::open(const char *modes) {
             this->open(O_RDWR); // creates a file descriptor
             NATIVECALL(stream = fdopen(fd, modes));
             setvbuf(stream, nullptr, _IONBF, 0);
+            removed = false;
             return stream;
         }
     }
