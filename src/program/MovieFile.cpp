@@ -132,6 +132,14 @@ int MovieFile::loadMovie(const std::string& moviefile)
 		context->config.sc.framerate_num = config.value("framerate").toUInt();
 		context->config.sc.framerate_den = 1;
 	}
+	context->movie_time_sec = config.value("length_sec").toULongLong();
+	context->movie_time_nsec = config.value("length_nsec").toULongLong();
+	/* If no movie length field, compute from frame count and framerate */
+	if (!context->movie_time_sec) {
+		context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
+		context->movie_time_nsec = 1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den / context->config.sc.framerate_num;
+	}
+
 	context->rerecord_count = config.value("rerecord_count").toUInt();
 	context->authors = config.value("authors").toString().toStdString();
 	context->md5_movie = config.value("md5").toString().toStdString();
@@ -254,6 +262,8 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 	config.setValue("nb_controllers", context->config.sc.nb_controllers);
 	config.setValue("initial_time_sec", static_cast<unsigned long long>(context->config.sc.initial_time_sec));
 	config.setValue("initial_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_time_nsec));
+	config.setValue("length_sec", static_cast<unsigned long long>(context->movie_time_sec));
+	config.setValue("length_nsec", static_cast<unsigned long long>(context->movie_time_nsec));
 	config.setValue("framerate_num", context->config.sc.framerate_num);
 	config.setValue("framerate_den", context->config.sc.framerate_den);
 	config.setValue("rerecord_count", context->rerecord_count);
@@ -594,6 +604,19 @@ uint64_t MovieFile::savestateFramecount() const
 	config.setFallbacksEnabled(false);
 
 	return config.value("savestate_frame_count").toULongLong();
+}
+
+void MovieFile::length(uint64_t* sec, uint64_t* nsec) const
+{
+	/* Load the config file into the context struct */
+	QString configfile = context->config.tempmoviedir.c_str();
+	configfile += "/config.ini";
+
+	QSettings config(configfile, QSettings::IniFormat);
+	config.setFallbacksEnabled(false);
+
+	*sec = config.value("length_sec").toULongLong();
+	*nsec = config.value("length_nsec").toULongLong();
 }
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)

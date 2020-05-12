@@ -147,6 +147,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Frames per second */
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
+    fpsNumField->setMinimum(1);
     connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->config.sc.framerate_num = i;});
 
     fpsDenField = new QSpinBox();
@@ -977,14 +978,14 @@ void MainWindow::updateFrameCountTime()
     initialTimeNsec->setValue(context->current_time_nsec);
 
     /* Update movie time */
-    if (context->config.sc.framerate_num > 0) {
-        double sec = (double)(context->framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num;
-        int imin = (int)(sec/60);
-        double dsec = sec - 60*imin;
-        currentLength->setText(QString("Current Time: %1m %2s").arg(imin).arg(dsec, 0, 'f', 2));
+    double sec = context->current_time_sec - context->config.sc.initial_time_sec + ((double)(context->current_time_nsec - context->config.sc.initial_time_nsec))/1000000000;
+    int imin = (int)(sec/60);
+    double dsec = sec - 60*imin;
+    currentLength->setText(QString("Current Time: %1m %2s").arg(imin).arg(dsec, 0, 'f', 2));
 
-        /* Format movie length */
-        double msec = (double)(context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num;
+    /* Format movie length */
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        double msec = context->movie_time_sec - context->config.sc.initial_time_sec + ((double)(context->movie_time_nsec - context->config.sc.initial_time_nsec))/1000000000;
         int immin = (int)(msec/60);
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));

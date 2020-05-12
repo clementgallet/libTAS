@@ -444,8 +444,6 @@ void GameLoop::init()
                 context->config.sc.recording = SharedConfig::NO_RECORDING;
             }
             else {
-                context->config.sc.movie_framecount = movie.nbFrames();
-
                 /* Update the UI accordingly */
                 emit configChanged();
             }
@@ -621,11 +619,13 @@ bool GameLoop::startFrameMessages()
             break;
         case MSGB_FRAMECOUNT_TIME:
             receiveData(&context->framecount, sizeof(uint64_t));
-            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                context->config.sc.movie_framecount = context->framecount;
-            }
             receiveData(&context->current_time_sec, sizeof(uint64_t));
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
+            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                context->config.sc.movie_framecount = context->framecount;
+                context->movie_time_sec = context->current_time_sec;
+                context->movie_time_nsec = context->current_time_nsec;
+            }
             emit frameCountChanged();
             break;
         case MSGB_GAMEINFO:
@@ -1064,6 +1064,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                         /* Fast-forward to savestate frame */
                         context->config.sc.recording = SharedConfig::RECORDING_READ;
                         context->config.sc.movie_framecount = movie.nbFrames();
+                        movie.length(&context->movie_time_sec, &context->movie_time_nsec);
                         context->pause_frame = movie.savestateFramecount();
                         context->config.sc.running = true;
                         context->config.sc_modified = true;
@@ -1181,11 +1182,13 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 return false;
             }
             receiveData(&context->framecount, sizeof(uint64_t));
-            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                context->config.sc.movie_framecount = context->framecount;
-            }
             receiveData(&context->current_time_sec, sizeof(uint64_t));
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
+            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+                context->config.sc.movie_framecount = context->framecount;
+                context->movie_time_sec = context->current_time_sec;
+                context->movie_time_nsec = context->current_time_nsec;
+            }
 
             emit inputsChanged();
             emit frameCountChanged();
