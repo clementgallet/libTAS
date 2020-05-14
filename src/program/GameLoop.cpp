@@ -1416,13 +1416,13 @@ void GameLoop::processInputs(AllInputs &ai)
                 ai.pointer_x += pointer_offset_x;
                 ai.pointer_y += pointer_offset_y;
 
-                /* Add framerate if necessary */
-                if (context->config.sc.variable_framerate) {
-                    ai.framerate_num = context->config.sc.framerate_num;
-                    ai.framerate_den = context->config.sc.framerate_den;
-                }
-
                 emit inputsToBeSent(ai);
+            }
+
+            /* Add framerate if necessary */
+            if (context->config.sc.variable_framerate) {
+                ai.framerate_num = context->config.sc.framerate_num;
+                ai.framerate_den = context->config.sc.framerate_den;
             }
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
