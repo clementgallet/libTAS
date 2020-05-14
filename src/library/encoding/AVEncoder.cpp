@@ -77,10 +77,14 @@ void AVEncoder::initMuxer() {
 
     const char* pixfmt = ScreenCapture::getPixelFormat();
 
-    nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+    /* Initialize the muxer with either framerate or video framerate */
+    if (shared_config.variable_framerate)
+        nutMuxer = new NutMuxer(width, height, shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+    else
+        nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
 }
 
-void AVEncoder::encodeOneFrame(bool draw) {
+void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
 
     /* If the muxer is not initialized, try to initialize it. Otherwise, store
      * that we skipped one frame and we need to encode it later.
@@ -115,12 +119,25 @@ void AVEncoder::encodeOneFrame(bool draw) {
     nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
 
     /*** Video ***/
-    debuglog(LCF_DUMP, "Encode a video frame");
+
+    /* Number of frames to encode */
+    int frames = 1;
+
+    if (shared_config.variable_framerate) {
+        /* We must send as many video frames to match the video framerate parameter */
+        frame_remainder += (frametime.tv_sec + ((double)frametime.tv_nsec) / 1000000000.0) * shared_config.video_framerate;
+
+        frames = (int)(frame_remainder + 0.5);
+        frame_remainder -= frames;
+    }
 
     /* Access to the screen pixels, or last screen pixels if not a draw frame */
     int size = ScreenCapture::getPixels(&pixels, draw);
 
-    nutMuxer->writeVideoFrame(pixels, size);
+    for (int f=0; f<frames; f++) {
+        debuglog(LCF_DUMP, "Encode a video frame");
+        nutMuxer->writeVideoFrame(pixels, size);
+    }
 }
 
 AVEncoder::~AVEncoder() {

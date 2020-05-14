@@ -53,7 +53,7 @@ public:
     struct timespec getTicks(void);
 
     /* Function called when entering a frame boundary */
-    void enterFrameBoundary(void);
+    TimeHolder enterFrameBoundary(void);
 
     /* Function called when exiting a frame boundary,
      * to take into account the time spent in it

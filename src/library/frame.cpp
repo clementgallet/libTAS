@@ -43,6 +43,7 @@
 #include "xatom.h"
 #include "XlibEventQueueList.h"
 #include "BusyLoopDetection.h"
+#include "audio/AudioContext.h"
 
 namespace libtas {
 
@@ -201,8 +202,13 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         ThreadSync::detWait();
     }
 
-    /* Update the deterministic timer, sleep if necessary and mix audio */
-    detTimer.enterFrameBoundary();
+    /* Update the deterministic timer, sleep if necessary */
+    TimeHolder timeIncrement = detTimer.enterFrameBoundary();
+
+    /* Mix audio, except if the game opened a loopback context */
+    if (! audiocontext.isLoopback) {
+        audiocontext.mixAllSources(timeIncrement);
+    }
 
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
@@ -340,7 +346,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         }
 
         /* Write the current frame */
-        avencoder->encodeOneFrame(drawFB);
+        avencoder->encodeOneFrame(drawFB, timeIncrement);
     }
     else {
         /* If there is still an encoder object, it means we just stopped

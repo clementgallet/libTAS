@@ -113,6 +113,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Encode config */
     int video_codec = 0;
     int video_bitrate = 4000;
+    int video_framerate = 60; // used when variable framerate
     int audio_codec = 0;
     int audio_bitrate = 128;
 

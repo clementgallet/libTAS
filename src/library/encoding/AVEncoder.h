@@ -21,6 +21,7 @@
 #define LIBTAS_AVDUMPING_H_INCL
 
 #include "NutMuxer.h"
+#include "../TimeHolder.h"
 #include <vector>
 #include <memory> // std::unique_ptr
 
@@ -40,8 +41,9 @@ class AVEncoder {
 
         /* Encode a video and audio frame.
          * @param draw           Is this a draw frame?
+         * @param frametime      Length of the frame, used when variable framerate
          */
-        void encodeOneFrame(bool draw);
+        void encodeOneFrame(bool draw, TimeHolder frametime);
 
         /* Close all allocated objects and close the pipe at the end of an av dump
          */
@@ -65,6 +67,9 @@ class AVEncoder {
 
         int startup_video_frames = 0;
         std::vector<uint8_t> startup_audio_bytes;
+
+        /* remainder of the number of video frames to send */
+        double frame_remainder = 0;
 };
 
 extern std::unique_ptr<AVEncoder> avencoder;

@@ -24,7 +24,6 @@
 #include "frame.h"
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
-#include "audio/AudioContext.h"
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
 #include "global.h" // shared_config
@@ -229,7 +228,7 @@ void DeterministicTimer::exitFrameBoundary()
 }
 
 
-void DeterministicTimer::enterFrameBoundary()
+TimeHolder DeterministicTimer::enterFrameBoundary()
 {
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.enterFrameBoundary();
@@ -268,10 +267,7 @@ void DeterministicTimer::enterFrameBoundary()
         addedDelay -= timeIncrement;
     }
 
-    /* Doing the audio mixing here, except if the game opened a loopback context */
-    if (! audiocontext.isLoopback) {
-        audiocontext.mixAllSources(timeIncrement);
-    }
+    return timeIncrement;
 }
 
 void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {

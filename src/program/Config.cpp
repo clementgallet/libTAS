@@ -135,6 +135,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_disabled", sc.audio_disabled);
     settings.setValue("video_codec", sc.video_codec);
     settings.setValue("video_bitrate", sc.video_bitrate);
+    settings.setValue("video_framerate", sc.video_framerate);
     settings.setValue("audio_codec", sc.audio_codec);
     settings.setValue("audio_bitrate", sc.audio_bitrate);
     settings.setValue("locale", sc.locale);
@@ -272,6 +273,7 @@ void Config::load(const std::string& gamepath) {
 
     sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();
+    sc.video_framerate = settings.value("video_framerate", sc.video_framerate).toInt();
     sc.audio_codec = settings.value("audio_codec", sc.audio_codec).toInt();
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();

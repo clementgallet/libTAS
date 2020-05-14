@@ -70,6 +70,10 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
     audioBitrate->setMaximum(1000000000);
     connect(audioBitrate, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &EncodeWindow::slotUpdate);
 
+    videoFramerate = new QSpinBox();
+    videoFramerate->setMaximum(1000000000);
+//    connect(videoFramerate, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &EncodeWindow::slotUpdate);
+
     ffmpegOptions = new QLineEdit();
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
@@ -86,6 +90,9 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) :
 
     encodeCodecLayout->addWidget(new QLabel(tr("ffmpeg options:")), 2, 0);
     encodeCodecLayout->addWidget(ffmpegOptions, 2, 1, 1, 4);
+
+    encodeCodecLayout->addWidget(new QLabel(tr("Video framerate:")), 3, 0);
+    encodeCodecLayout->addWidget(videoFramerate, 3, 1, 1, 4);
 
     encodeCodecLayout->setColumnMinimumWidth(2, 50);
     encodeCodecLayout->setColumnStretch(2, 1);
@@ -129,6 +136,9 @@ void EncodeWindow::update_config()
     /* Set ffmpeg options */
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
 
+    /* Set video framerate */
+    videoFramerate->setValue(context->config.sc.video_framerate);
+
     if (context->config.ffmpegoptions.empty()) {
         slotUpdate();
     }
@@ -154,6 +164,8 @@ void EncodeWindow::slotOk()
     context->config.sc.audio_codec = audioChoice->currentIndex();
     context->config.sc.audio_bitrate = audioBitrate->value();
     context->config.ffmpegoptions = ffmpegOptions->text().toStdString();
+
+    context->config.sc.video_framerate = videoFramerate->value();
 
     context->config.sc_modified = true;
 

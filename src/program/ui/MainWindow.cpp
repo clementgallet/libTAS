@@ -620,11 +620,6 @@ void MainWindow::createMenus()
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
-    variableFramerateAction = movieMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
-    variableFramerateAction->setCheckable(true);
-    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
-    disabledActionsOnStart.append(variableFramerateAction);
-
     QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
     movieEndMenu->addActions(movieEndGroup->actions());
     movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
@@ -659,6 +654,11 @@ void MainWindow::createMenus()
     QMenu *osdMenu = videoMenu->addMenu(tr("OSD (disabled)"));
     osdMenu->setEnabled(false);
 #endif
+
+    variableFramerateAction = videoMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
+    variableFramerateAction->setCheckable(true);
+    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
+    disabledActionsOnStart.append(variableFramerateAction);
 
     /* Sound Menu */
     QMenu *soundMenu = menuBar()->addMenu(tr("Sound"));

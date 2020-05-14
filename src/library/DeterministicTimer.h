@@ -55,8 +55,8 @@ public:
     struct timespec getTicks();
     struct timespec getTicks(SharedConfig::TimeCallType type);
 
-    /* Function called when entering a frame boundary */
-    void enterFrameBoundary(void);
+    /* Function called when entering a frame boundary, returns the frame length */
+    TimeHolder enterFrameBoundary(void);
 
     /* Function called when exiting a frame boundary */
     void exitFrameBoundary(void);

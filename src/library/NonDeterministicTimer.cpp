@@ -24,7 +24,6 @@
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
 #include "checkpoint/ThreadManager.h"
-#include "audio/AudioContext.h"
 
 namespace libtas {
 
@@ -92,7 +91,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     return ticks;
 }
 
-void NonDeterministicTimer::enterFrameBoundary()
+TimeHolder NonDeterministicTimer::enterFrameBoundary()
 {
     DEBUGLOGCALL(LCF_TIMEGET);
     frame_mutex.lock();
@@ -102,13 +101,10 @@ void NonDeterministicTimer::enterFrameBoundary()
 
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
 
-    /* Doing the audio mixing here */
-    if (! audiocontext.isLoopback) {
-        TimeHolder elapsedTicks = ticks - lastEnterTicks;
-        audiocontext.mixAllSources(elapsedTicks);
-    }
-
     lastEnterTicks = ticks;
+
+    TimeHolder elapsedTicks = ticks - lastEnterTicks;
+    return elapsedTicks;
 }
 
 void NonDeterministicTimer::exitFrameBoundary()

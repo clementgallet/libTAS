@@ -47,6 +47,7 @@ private:
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
     QLineEdit *ffmpegOptions;
+    QSpinBox *videoFramerate;
 
 private slots:
     void slotBrowseEncodePath();
