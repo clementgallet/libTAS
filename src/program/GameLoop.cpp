@@ -399,6 +399,15 @@ void GameLoop::init()
     else
         context->gamename = context->gamepath;
 
+    /* Clear the event queue and parameters */
+    xcb_generic_event_t *event;
+    do {
+        event = xcb_poll_for_event(context->conn);
+    } while (event);
+
+    last_pressed_key = 0;
+    next_event = nullptr;
+
     /* Remove savestates again in case we did not exist cleanly the previous time */
     remove_savestates(context);
 
@@ -671,9 +680,6 @@ bool GameLoop::startFrameMessages()
 
 uint8_t GameLoop::nextEvent(struct HotKey &hk)
 {
-    static xcb_keycode_t last_pressed_key = 0;
-    static xcb_generic_event_t *next_event = nullptr;
-
     while (true) {
         xcb_generic_event_t *event;
 

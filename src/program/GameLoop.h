@@ -60,6 +60,9 @@ private:
     int pointer_offset_x;
     int pointer_offset_y;
 
+    xcb_keycode_t last_pressed_key;
+    xcb_generic_event_t *next_event;
+
     void init();
 
     void initProcessMessages();

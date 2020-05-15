@@ -969,6 +969,9 @@ void MainWindow::updateRecentGamepaths()
 
 void MainWindow::updateUIFrequent()
 {
+    if (context->status != Context::ACTIVE)
+        return;
+
     /* Update frame count */
     frameCount->setValue(context->framecount);
     movieFrameCount->setValue(context->config.sc.movie_framecount);
