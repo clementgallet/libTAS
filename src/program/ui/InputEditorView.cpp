@@ -161,8 +161,15 @@ void InputEditorView::resizeAllColumns()
 
 void InputEditorView::update()
 {
+    static uint64_t last_framecount = -1;
+    if (last_framecount == context->framecount)
+        return;
+
     inputEditorModel->update();
 
+    if (!isVisible())
+        return;
+        
     /* Enable autoscroll if current frame is not visible */
     int toprow = rowAt(rect().top());
     int bottomrow = rowAt(rect().bottom());
@@ -186,6 +193,7 @@ void InputEditorView::update()
         scrollTo(inputEditorModel->index(firstVisibleFrame, leftcol), QAbstractItemView::PositionAtTop);
         connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
     }
+    last_framecount = context->framecount;
 }
 
 void InputEditorView::resetInputs()

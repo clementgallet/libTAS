@@ -295,8 +295,6 @@ void GameLoop::start()
             return;
         }
 
-        emit startFrameBoundary();
-
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
@@ -482,8 +480,6 @@ void GameLoop::init()
         (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
         (context->config.auto_restart);
 
-    emit rerecordChanged();
-
     context->status = Context::ACTIVE;
     emit statusChanged();
 }
@@ -626,16 +622,14 @@ bool GameLoop::startFrameMessages()
                 context->movie_time_sec = context->current_time_sec;
                 context->movie_time_nsec = context->current_time_nsec;
             }
-            emit frameCountChanged();
             break;
         case MSGB_GAMEINFO:
             receiveData(&context->game_info, sizeof(context->game_info));
             emit gameInfoChanged(context->game_info);
             break;
         case MSGB_FPS:
-            receiveData(&fps, sizeof(float));
-            receiveData(&lfps, sizeof(float));
-            emit fpsChanged(fps, lfps);
+            receiveData(&context->fps, sizeof(float));
+            receiveData(&context->lfps, sizeof(float));
             break;
         case MSGB_ENCODING_SEGMENT:
             receiveData(&context->encoding_segment, sizeof(int));
@@ -1162,7 +1156,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                  * the rerecord count. */
                 if (movie.modifiedSinceLastStateLoad) {
                     context->rerecord_count++;
-                    emit rerecordChanged();
                     movie.modifiedSinceLastStateLoad = false;
                 }
 
@@ -1191,7 +1184,6 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             }
 
             emit inputsChanged();
-            emit frameCountChanged();
 
             if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
                 std::string msg;
@@ -1496,7 +1488,9 @@ void GameLoop::processInputs(AllInputs &ai)
 
             if (ret != -1) { // read succeeded
                 /* Update framerate */
-                if (context->config.sc.variable_framerate) {
+                if (context->config.sc.variable_framerate &&
+                    ((context->config.sc.framerate_num != ai.framerate_num) ||
+                    (context->config.sc.framerate_den != ai.framerate_den))) {
                     context->config.sc.framerate_num = ai.framerate_num;
                     context->config.sc.framerate_den = ai.framerate_den;
                     emit updateFramerate();

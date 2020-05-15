@@ -28,6 +28,7 @@
 #include <QStatusBar>
 #include <QInputDialog>
 #include <QApplication>
+#include <QTimer>
 
 #include "MainWindow.h"
 #include "../MovieFile.h"
@@ -56,12 +57,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
-    connect(gameLoop, &GameLoop::startFrameBoundary, this, &MainWindow::updateRam);
-    connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateInputEditor);
-    connect(gameLoop, &GameLoop::rerecordChanged, this, &MainWindow::updateRerecordCount);
-    connect(gameLoop, &GameLoop::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
-    connect(gameLoop, &GameLoop::fpsChanged, this, &MainWindow::updateFps);
     connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer);
     connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate);
 
@@ -79,7 +75,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     annotationsWindow = new AnnotationsWindow(c, this);
     autoSaveWindow = new AutoSaveWindow(c, this);
 
-    connect(inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::frameCountChanged, this, &MainWindow::updateFrameCountTime);
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
     connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginAddInputs);
@@ -312,6 +307,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     setCentralWidget(centralWidget);
 
     updateUIFromConfig();
+
+    /* Periodic update timer */
+    QTimer *timer = new QTimer();
+    connect(timer, &QTimer::timeout, this, &MainWindow::updateUIFrequent);
+    timer->start(100);
 
     /* We are dumping from the command line */
     if (context->config.dumping) {
@@ -967,7 +967,7 @@ void MainWindow::updateRecentGamepaths()
     connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
 }
 
-void MainWindow::updateFrameCountTime()
+void MainWindow::updateUIFrequent()
 {
     /* Update frame count */
     frameCount->setValue(context->framecount);
@@ -990,38 +990,26 @@ void MainWindow::updateFrameCountTime()
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
     }
-}
 
-void MainWindow::updateRerecordCount()
-{
     /* Update frame count */
     rerecordCount->setValue(context->rerecord_count);
-}
 
-void MainWindow::updateFps(float fps, float lfps)
-{
     /* Update fps values */
-    if ((fps > 0) || (lfps > 0)) {
-        fpsValues->setText(QString("Current FPS: %1 / %2").arg(fps, 0, 'f', 1).arg(lfps, 0, 'f', 1));
+    if ((context->fps > 0) || (context->lfps > 0)) {
+        fpsValues->setText(QString("Current FPS: %1 / %2").arg(context->fps, 0, 'f', 1).arg(context->lfps, 0, 'f', 1));
     }
     else {
         fpsValues->setText("Current FPS: - / -");
     }
-}
 
-void MainWindow::updateRam()
-{
+    /* Update RAM watch/search */
     if (ramSearchWindow->isVisible()) {
         ramSearchWindow->update();
     }
     ramWatchWindow->update();
-}
 
-void MainWindow::updateInputEditor()
-{
-    // if (inputEditorWindow->isVisible()) {
+    /* Update input editor */
     inputEditorWindow->inputEditorView->update();
-    // }
 }
 
 /* Check all checkboxes from a list of actions whose associated flag data

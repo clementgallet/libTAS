@@ -185,6 +185,9 @@ private:
     /* Update the list of recent gamepaths */
     void updateRecentGamepaths();
 
+    /* Update UI elements that are often modified, triggered by a timer */
+    void updateUIFrequent();
+
     /* Helper function to create a checkable action inside an action group */
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data, const QString& toolTip);
     void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
@@ -207,21 +210,6 @@ private slots:
      * encode, etc.
      */
     void updateSharedConfigChanged();
-
-    /* Update frame count and time */
-    void updateFrameCountTime();
-
-    /* Update rerecord count */
-    void updateRerecordCount();
-
-    /* Update fps values */
-    void updateFps(float fps, float lfps);
-
-    /* Update ramsearch and ramwatch values if window is shown */
-    void updateRam();
-
-    /* Update input editor if window is shown */
-    void updateInputEditor();
 
     /* Update UI elements when a config file is loaded */
     void updateUIFromConfig();

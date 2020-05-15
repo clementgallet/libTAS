@@ -115,6 +115,9 @@ struct Context {
 
     /* Content of LD_PRELOAD when libTAS is executed */
     std::string old_ld_preload;
+
+    /* fps values */
+    float fps, lfps = -1;
 };
 
 #endif

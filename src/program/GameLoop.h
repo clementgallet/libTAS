@@ -96,11 +96,7 @@ signals:
     void statusChanged();
     void configChanged();
     void alertToShow(QString str);
-    void startFrameBoundary();
-    void rerecordChanged();
-    void frameCountChanged();
     void sharedConfigChanged();
-    void fpsChanged(float fps, float lfps);
     void askToShow(QString str, void* promise);
     void updateFramerate();
 
