@@ -119,6 +119,8 @@ DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes);
 
 static int get_latency(snd_pcm_t *pcm);
 
+static int last_source;
+
 int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int mode)
 {
     if (GlobalState::isNative()) {
@@ -158,6 +160,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 
     /* Fill the source id in pcm, so that you can locate the source on future calls */
     *pcm = reinterpret_cast<snd_pcm_t*>(sourceId);
+    last_source = sourceId;
 
     return 0;
 }
@@ -875,7 +878,8 @@ int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned i
 
     DEBUGLOGCALL(LCF_SOUND);
 
-    int sourceId = reinterpret_cast<intptr_t>(params);
+    /* We don't have the pcm parameter here, so using the last opened source */
+    int sourceId = last_source;
     auto source = audiocontext.getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     *val = buffer->nbChannels;
@@ -1093,7 +1097,8 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
 
     DEBUGLOGCALL(LCF_SOUND);
 
-    int sourceId = reinterpret_cast<intptr_t>(params);
+    /* We don't have the pcm parameter here, so using the last opened source */
+    int sourceId = last_source;
     auto source = audiocontext.getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
