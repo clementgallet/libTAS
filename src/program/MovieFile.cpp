@@ -623,7 +623,7 @@ uint64_t MovieFile::savestateFramecount() const
 	return config.value("savestate_frame_count").toULongLong();
 }
 
-void MovieFile::length(uint64_t* sec, uint64_t* nsec) const
+void MovieFile::length(int64_t* sec, int64_t* nsec) const
 {
 	/* Load the config file into the context struct */
 	QString configfile = context->config.tempmoviedir.c_str();
@@ -632,8 +632,8 @@ void MovieFile::length(uint64_t* sec, uint64_t* nsec) const
 	QSettings config(configfile, QSettings::IniFormat);
 	config.setFallbacksEnabled(false);
 
-	*sec = config.value("length_sec").toULongLong();
-	*nsec = config.value("length_nsec").toULongLong();
+	*sec = config.value("length_sec").toLongLong();
+	*nsec = config.value("length_nsec").toLongLong();
 }
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)
@@ -679,7 +679,9 @@ int MovieFile::getInputs(AllInputs& inputs, uint64_t pos) const
 {
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
-        return -1;
+		if (pos == input_list.size())
+			return -2;
+    	return -1;
     }
 
 	inputs = input_list[pos];

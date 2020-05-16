@@ -988,7 +988,7 @@ void MainWindow::updateUIFrequent()
 
     /* Format movie length */
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        double msec = context->movie_time_sec - context->config.sc.initial_time_sec + ((double)(context->movie_time_nsec - context->config.sc.initial_time_nsec))/1000000000;
+        double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000.0;
         int immin = (int)(msec/60);
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
@@ -1069,7 +1069,7 @@ void MainWindow::updateMovieParams()
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000;
+        double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000.0;
         int immin = (int)(msec/60);
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));

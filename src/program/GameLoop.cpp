@@ -627,8 +627,12 @@ bool GameLoop::startFrameMessages()
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 context->config.sc.movie_framecount = context->framecount;
-                context->movie_time_sec = context->current_time_sec;
-                context->movie_time_nsec = context->current_time_nsec;
+                context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
+                context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
+                if (context->movie_time_nsec < 0) {
+                    context->movie_time_nsec += 1000000000;
+                    context->movie_time_sec--;
+                }
             }
             break;
         case MSGB_GAMEINFO:
@@ -1184,8 +1188,12 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 context->config.sc.movie_framecount = context->framecount;
-                context->movie_time_sec = context->current_time_sec;
-                context->movie_time_nsec = context->current_time_nsec;
+                context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
+                context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
+                if (context->movie_time_nsec < 0) {
+                    context->movie_time_nsec += 1000000000;
+                    context->movie_time_sec--;
+                }
             }
 
             emit inputsChanged();
@@ -1477,9 +1485,6 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* We are reading the last frame of the movie */
                 switch(context->config.on_movie_end) {
                     case Config::MOVIEEND_READ:
-                        // context->config.sc.running = false;
-                        //context->config.sc_modified = true;
-                        // emit sharedConfigChanged();
                         break;
                     case Config::MOVIEEND_WRITE:
                         context->config.sc.recording = SharedConfig::RECORDING_WRITE;
@@ -1491,7 +1496,7 @@ void GameLoop::processInputs(AllInputs &ai)
                 }
             }
 
-            if (ret != -1) { // read succeeded
+            if (ret >= 0) { // read succeeded
                 /* Update framerate */
                 if (context->config.sc.variable_framerate &&
                     ((context->config.sc.framerate_num != ai.framerate_num) ||
@@ -1505,6 +1510,24 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* ai is empty, fill the framerate values */
                 ai.framerate_num = context->config.sc.framerate_num;
                 ai.framerate_den = context->config.sc.framerate_den;
+
+                /* First frame after movie end */
+                if (ret == -2) {
+                    /* Check for the moviefile length */
+                    int64_t movie_sec, movie_nsec;
+                    movie.length(&movie_sec, &movie_nsec);
+
+                    int64_t cur_sec, cur_nsec;
+                    cur_sec = context->current_time_sec - context->config.sc.initial_time_sec;
+                    cur_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
+
+                    if ((movie_sec || movie_nsec) &&
+                        ((movie_sec != cur_sec) ||
+                        (movie_nsec != cur_nsec))) {
+
+                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie_sec).arg(movie_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
+                    }
+                }
             }
 
             /* Update controller inputs if controller window is shown */

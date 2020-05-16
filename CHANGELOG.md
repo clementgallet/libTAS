@@ -30,6 +30,7 @@
 * Grow the stack to its maximum at startup, to avoid unintialized stack growth (#337)
 * Add variable framerate setting (#22)
 * Encode at fixed framerate when variable framerate (#22)
+* Check movie length at the end of playback
 
 ### Changed
 

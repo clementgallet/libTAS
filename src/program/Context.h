@@ -65,8 +65,8 @@ struct Context {
     int64_t current_time_nsec;
 
     /* movie time */
-    uint64_t movie_time_sec;
-    uint64_t movie_time_nsec;
+    int64_t movie_time_sec;
+    int64_t movie_time_nsec;
 
     /* config */
     Config config;
