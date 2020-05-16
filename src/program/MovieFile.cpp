@@ -37,6 +37,10 @@ MovieFile::MovieFile(Context* c) : modifiedSinceLastSave(false), modifiedSinceLa
 	rec.assign(R"(\|C([1-4](?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
 	ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
 	ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
+
+	/* For a new movies, will be overwritten when loading a moviefile */
+	framerate_num = context->config.sc.framerate_num;
+	framerate_den = context->config.sc.framerate_den;
 }
 
 const char* MovieFile::errorString(int error_code) {
@@ -125,13 +129,18 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
 	context->config.sc.initial_time_sec = config.value("initial_time_sec").toULongLong();
 	context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toULongLong();
-	context->config.sc.framerate_num = config.value("framerate_num").toUInt();
-	context->config.sc.framerate_den = config.value("framerate_den").toUInt();
+
+	framerate_num = config.value("framerate_num").toUInt();
+	framerate_den = config.value("framerate_den").toUInt();
 	/* Compatibility with older movie format */
-	if (!context->config.sc.framerate_num) {
-		context->config.sc.framerate_num = config.value("framerate").toUInt();
-		context->config.sc.framerate_den = 1;
+	if (!framerate_num) {
+		framerate_num = config.value("framerate").toUInt();
+		framerate_den = 1;
 	}
+
+	context->config.sc.framerate_num = framerate_num;
+	context->config.sc.framerate_den = framerate_den;
+
 	context->movie_time_sec = config.value("length_sec").toULongLong();
 	context->movie_time_nsec = config.value("length_nsec").toULongLong();
 	/* If no movie length field, compute from frame count and framerate */
@@ -264,8 +273,8 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 	config.setValue("initial_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_time_nsec));
 	config.setValue("length_sec", static_cast<unsigned long long>(context->movie_time_sec));
 	config.setValue("length_nsec", static_cast<unsigned long long>(context->movie_time_nsec));
-	config.setValue("framerate_num", context->config.sc.framerate_num);
-	config.setValue("framerate_den", context->config.sc.framerate_den);
+	config.setValue("framerate_num", framerate_num);
+	config.setValue("framerate_den", framerate_den);
 	config.setValue("rerecord_count", context->rerecord_count);
 	config.setValue("authors", context->authors.c_str());
 	config.setValue("libtas_major_version", MAJORVERSION);
@@ -411,11 +420,14 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 
 	/* Write mouse inputs */
     if (context->config.sc.variable_framerate) {
-        input_stream.put('|');
-		input_stream.put('T');
-        input_stream << std::dec;
-        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
-    }
+		/* Only store framerate if different from initial framerate */
+		if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
+	        input_stream.put('|');
+			input_stream.put('T');
+	        input_stream << std::dec;
+	        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
+    	}
+	}
 	input_stream << '|' << std::endl;
 
     return 1;
@@ -471,6 +483,11 @@ int MovieFile::readFrame(const std::string& line, AllInputs& inputs)
 		if (std::regex_search(line, match, ret) && match.size() > 1) {
 			std::istringstream framerate_string(match.str(1));
 			readFramerateFrame(framerate_string, inputs);
+		}
+		else {
+			/* Write initial framerate values */
+			inputs.framerate_num = framerate_num;
+			inputs.framerate_den = framerate_den;
 		}
 
 		return 1;

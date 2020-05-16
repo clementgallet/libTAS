@@ -1069,9 +1069,10 @@ void MainWindow::updateMovieParams()
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        int sec = context->config.sc.movie_framecount * context->config.sc.framerate_den / context->config.sc.framerate_num;
-        int nsec = (int) ((1000000000.0f * (double)((context->config.sc.movie_framecount * context->config.sc.framerate_den) % context->config.sc.framerate_num)) / context->config.sc.framerate_num);
-        movieLength->setText(QString("Movie length: %1m %2s").arg(sec/60).arg((sec%60) + (nsec/1000000000.0), 0, 'f', 2));
+        double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000;
+        int immin = (int)(msec/60);
+        double dmsec = msec - 60*immin;
+        movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
 
         moviePlayback->setChecked(true);
         context->config.sc.recording = SharedConfig::RECORDING_READ;

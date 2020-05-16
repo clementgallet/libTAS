@@ -152,6 +152,9 @@ public:
 private:
     Context* context;
 
+    /* Initial framerate values */
+    unsigned int framerate_num, framerate_den;
+
     /* Regex for the keyboard input string */
     std::regex rek;
 

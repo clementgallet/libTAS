@@ -592,7 +592,6 @@ bool GameLoop::startFrameMessages()
     int message = receiveMessage();
 
     while (message != MSGB_START_FRAMEBOUNDARY) {
-        float fps, lfps;
         switch (message) {
         case MSGB_WINDOW_ID:
         {
