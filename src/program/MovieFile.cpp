@@ -420,13 +420,16 @@ int MovieFile::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 
 	/* Write mouse inputs */
     if (context->config.sc.variable_framerate) {
-		/* Only store framerate if different from initial framerate */
-		if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
-	        input_stream.put('|');
-			input_stream.put('T');
-	        input_stream << std::dec;
-	        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
-    	}
+		/* Zero framerate is default framerate */
+		if (inputs.framerate_num) {
+			/* Only store framerate if different from initial framerate */
+			if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
+		        input_stream.put('|');
+				input_stream.put('T');
+		        input_stream << std::dec;
+		        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
+	    	}
+		}
 	}
 	input_stream << '|' << std::endl;
 
@@ -685,6 +688,12 @@ int MovieFile::getInputs(AllInputs& inputs, uint64_t pos) const
     }
 
 	inputs = input_list[pos];
+
+	/* Special case for zero framerate */
+	if (!inputs.framerate_num) {
+		inputs.framerate_num = framerate_num;
+		inputs.framerate_den = framerate_den;
+	}
 
     if ((pos + 1) == input_list.size()) {
         /* We are reading the last frame of the movie, notify the caller */
