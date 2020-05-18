@@ -44,6 +44,8 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
     mainLayout->addWidget(tabWidget);
     setLayout(mainLayout);
 
+    qRegisterMetaType<AllInputs>("AllInputs");
+
     /* We need connections to the game loop, so we access it through our parent */
     MainWindow *mw = qobject_cast<MainWindow*>(parent);
     if (mw) {
@@ -60,7 +62,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* When the game loop is playing back a movie and wants to display the
          * controller inputs in this window.
          */
-        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs, Qt::DirectConnection);
+        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs);
     }
 }
 
