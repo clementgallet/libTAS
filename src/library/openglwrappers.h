@@ -58,7 +58,6 @@ OVERRIDE const GLubyte* glGetString( GLenum name);
 /* A lot of openGL draw commands that are NOPed when fastforwarding */
 
 OVERRIDE void glClear(GLbitfield mask);
-void myglClear(GLbitfield mask);
 
 OVERRIDE void glBegin(GLenum mode);
 OVERRIDE void glEnd(void);
@@ -96,40 +95,6 @@ OVERRIDE void glVertex4sv( const GLshort *v );
 
 OVERRIDE void glDrawArrays( GLenum mode, GLint first, GLsizei count );
 OVERRIDE void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
-
-void myglDrawArrays( GLenum mode, GLint first, GLsizei count );
-void myglDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices );
-
-void myglMultiDrawArrays (GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount);
-void myglMultiDrawElements (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount);
-
-void myglDrawRangeElements (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
-
-void myglDrawElementsBaseVertex (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex);
-void myglDrawRangeElementsBaseVertex (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex);
-void myglDrawElementsInstancedBaseVertex (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex);
-void myglMultiDrawElementsBaseVertex (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount, const GLint *basevertex);
-
-void myglDrawArraysInstancedBaseInstance (GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance);
-void myglDrawElementsInstancedBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLuint baseinstance);
-void myglDrawElementsInstancedBaseVertexBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance);
-
-void myglDrawTransformFeedback (GLenum mode, GLuint id);
-void myglDrawTransformFeedbackStream (GLenum mode, GLuint id, GLuint stream);
-void myglDrawTransformFeedbackInstanced (GLenum mode, GLuint id, GLsizei instancecount);
-void myglDrawTransformFeedbackStreamInstanced (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount);
-
-void myglDrawArraysInstancedARB (GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-void myglDrawElementsInstancedARB (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
-
-void myglDrawArraysInstancedEXT (GLenum mode, GLint start, GLsizei count, GLsizei primcount);
-void myglDrawElementsInstancedEXT (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
-void myglDrawRangeElementsEXT (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
-
-void myglMultiDrawArraysEXT (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount);
-void myglMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount);
-
-void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count);
 
 OVERRIDE void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);

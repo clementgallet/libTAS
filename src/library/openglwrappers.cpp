@@ -34,6 +34,7 @@
 #define STORE_RETURN_SYMBOL_CUSTOM(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+        debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
         return reinterpret_cast<void*>(my##str); \
     }
 
@@ -56,68 +57,6 @@ DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
 
 DEFINE_ORIG_POINTER(glGetString);
-DEFINE_ORIG_POINTER(glClear);
-DEFINE_ORIG_POINTER(glBegin);
-DEFINE_ORIG_POINTER(glEnd);
-
-DEFINE_ORIG_POINTER(glVertex2d);
-DEFINE_ORIG_POINTER(glVertex2f);
-DEFINE_ORIG_POINTER(glVertex2i);
-DEFINE_ORIG_POINTER(glVertex2s);
-
-DEFINE_ORIG_POINTER(glVertex3d);
-DEFINE_ORIG_POINTER(glVertex3f);
-DEFINE_ORIG_POINTER(glVertex3i);
-DEFINE_ORIG_POINTER(glVertex3s);
-
-DEFINE_ORIG_POINTER(glVertex4d);
-DEFINE_ORIG_POINTER(glVertex4f);
-DEFINE_ORIG_POINTER(glVertex4i);
-DEFINE_ORIG_POINTER(glVertex4s);
-
-DEFINE_ORIG_POINTER(glVertex2dv);
-DEFINE_ORIG_POINTER(glVertex2fv);
-DEFINE_ORIG_POINTER(glVertex2iv);
-DEFINE_ORIG_POINTER(glVertex2sv);
-
-DEFINE_ORIG_POINTER(glVertex3dv);
-DEFINE_ORIG_POINTER(glVertex3fv);
-DEFINE_ORIG_POINTER(glVertex3iv);
-DEFINE_ORIG_POINTER(glVertex3sv);
-
-DEFINE_ORIG_POINTER(glVertex4dv);
-DEFINE_ORIG_POINTER(glVertex4fv);
-DEFINE_ORIG_POINTER(glVertex4iv);
-DEFINE_ORIG_POINTER(glVertex4sv);
-
-
-DEFINE_ORIG_POINTER(glDrawArrays);
-DEFINE_ORIG_POINTER(glDrawElements);
-DEFINE_ORIG_POINTER(glMultiDrawArrays);
-DEFINE_ORIG_POINTER(glMultiDrawElements);
-
-DEFINE_ORIG_POINTER(glDrawRangeElements);
-DEFINE_ORIG_POINTER(glDrawElementsBaseVertex);
-DEFINE_ORIG_POINTER(glDrawRangeElementsBaseVertex);
-DEFINE_ORIG_POINTER(glDrawElementsInstancedBaseVertex);
-DEFINE_ORIG_POINTER(glMultiDrawElementsBaseVertex);
-DEFINE_ORIG_POINTER(glDrawArraysInstancedBaseInstance);
-DEFINE_ORIG_POINTER(glDrawElementsInstancedBaseInstance);
-DEFINE_ORIG_POINTER(glDrawElementsInstancedBaseVertexBaseInstance);
-
-DEFINE_ORIG_POINTER(glDrawTransformFeedback);
-DEFINE_ORIG_POINTER(glDrawTransformFeedbackStream);
-DEFINE_ORIG_POINTER(glDrawTransformFeedbackInstanced);
-DEFINE_ORIG_POINTER(glDrawTransformFeedbackStreamInstanced);
-
-DEFINE_ORIG_POINTER(glDrawArraysInstancedARB);
-DEFINE_ORIG_POINTER(glDrawElementsInstancedARB);
-DEFINE_ORIG_POINTER(glDrawArraysInstancedEXT);
-DEFINE_ORIG_POINTER(glDrawElementsInstancedEXT);
-DEFINE_ORIG_POINTER(glDrawRangeElementsEXT);
-DEFINE_ORIG_POINTER(glMultiDrawArraysEXT);
-DEFINE_ORIG_POINTER(glMultiDrawElementsEXT);
-DEFINE_ORIG_POINTER(glDrawArraysEXT);
 
 DEFINE_ORIG_POINTER(glBlitFramebuffer);
 
@@ -130,6 +69,79 @@ DEFINE_ORIG_POINTER(glTexParameteri);
 
 DEFINE_ORIG_POINTER(glEnable);
 // DEFINE_ORIG_POINTER(glDisable);
+
+
+#define GLFUNCSKIPDRAW(NAME, DECL, ARGS) \
+DEFINE_ORIG_POINTER(NAME)\
+void NAME DECL\
+{\
+    DEBUGLOGCALL(LCF_OGL);\
+    LINK_NAMESPACE(NAME, "GL");\
+    if (!skipping_draw)\
+        return orig::NAME ARGS;\
+}\
+\
+void my##NAME DECL\
+{\
+    DEBUGLOGCALL(LCF_OGL);\
+    if (!skipping_draw)\
+        return orig::NAME ARGS ;\
+}
+
+GLFUNCSKIPDRAW(glClear, (GLbitfield mask), (mask))
+GLFUNCSKIPDRAW(glBegin, (GLenum mode), (mode))
+GLFUNCSKIPDRAW(glEnd, (), ())
+GLFUNCSKIPDRAW(glVertex2d, (GLdouble x, GLdouble y), (x, y))
+GLFUNCSKIPDRAW(glVertex2f, (GLfloat x, GLfloat y), (x, y))
+GLFUNCSKIPDRAW(glVertex2i, (GLint x, GLint y), (x, y))
+GLFUNCSKIPDRAW(glVertex2s, (GLshort x, GLshort y), (x, y))
+GLFUNCSKIPDRAW(glVertex3d, (GLdouble x, GLdouble y, GLdouble z), (x, y, z))
+GLFUNCSKIPDRAW(glVertex3f, (GLfloat x, GLfloat y, GLfloat z), (x, y, z))
+GLFUNCSKIPDRAW(glVertex3i, (GLint x, GLint y, GLint z), (x, y, z))
+GLFUNCSKIPDRAW(glVertex3s, (GLshort x, GLshort y, GLshort z), (x, y, z))
+GLFUNCSKIPDRAW(glVertex4d, (GLdouble x, GLdouble y, GLdouble z, GLdouble w), (x, y, z, w))
+GLFUNCSKIPDRAW(glVertex4f, (GLfloat x, GLfloat y, GLfloat z, GLfloat w), (x, y, z, w))
+GLFUNCSKIPDRAW(glVertex4i, (GLint x, GLint y, GLint z, GLint w), (x, y, z, w))
+GLFUNCSKIPDRAW(glVertex4s, (GLshort x, GLshort y, GLshort z, GLshort w), (x, y, z, w))
+GLFUNCSKIPDRAW(glVertex2dv, (const GLdouble *v), (v))
+GLFUNCSKIPDRAW(glVertex2fv, (const GLfloat *v), (v))
+GLFUNCSKIPDRAW(glVertex2iv, (const GLint *v), (v))
+GLFUNCSKIPDRAW(glVertex2sv, (const GLshort *v), (v))
+GLFUNCSKIPDRAW(glVertex3dv, (const GLdouble *v), (v))
+GLFUNCSKIPDRAW(glVertex3fv, (const GLfloat *v), (v))
+GLFUNCSKIPDRAW(glVertex3iv, (const GLint *v), (v))
+GLFUNCSKIPDRAW(glVertex3sv, (const GLshort *v), (v))
+GLFUNCSKIPDRAW(glVertex4dv, (const GLdouble *v), (v))
+GLFUNCSKIPDRAW(glVertex4fv, (const GLfloat *v), (v))
+GLFUNCSKIPDRAW(glVertex4iv, (const GLint *v), (v))
+GLFUNCSKIPDRAW(glVertex4sv, (const GLshort *v), (v))
+
+GLFUNCSKIPDRAW(glDrawArrays, (GLenum mode, GLint first, GLsizei count), (mode, first, count))
+GLFUNCSKIPDRAW(glDrawElements, (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices), (mode, count, type, indices))
+GLFUNCSKIPDRAW(glMultiDrawArrays, (GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount), (mode, first, count, drawcount))
+GLFUNCSKIPDRAW(glMultiDrawElements, (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount), (mode, count, type, indices, drawcount))
+GLFUNCSKIPDRAW(glDrawRangeElements, (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices), (mode, start, end, count, type, indices))
+GLFUNCSKIPDRAW(glDrawElementsBaseVertex, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex), (mode, count, type, indices, basevertex))
+GLFUNCSKIPDRAW(glDrawRangeElementsBaseVertex, (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex), (mode, start, end, count, type, indices, basevertex))
+GLFUNCSKIPDRAW(glDrawElementsInstancedBaseVertex, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex), (mode, count, type, indices, instancecount, basevertex))
+GLFUNCSKIPDRAW(glMultiDrawElementsBaseVertex, (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount, const GLint *basevertex), (mode, count, type, indices, drawcount, basevertex))
+GLFUNCSKIPDRAW(glDrawArraysInstancedBaseInstance, (GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance), (mode, first, count, instancecount, baseinstance))
+GLFUNCSKIPDRAW(glDrawElementsInstancedBaseInstance, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLuint baseinstance), (mode, count, type, indices, instancecount, baseinstance))
+GLFUNCSKIPDRAW(glDrawElementsInstancedBaseVertexBaseInstance, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance), (mode, count, type, indices, instancecount, basevertex, baseinstance))
+
+GLFUNCSKIPDRAW(glDrawTransformFeedback, (GLenum mode, GLuint id), (mode, id))
+GLFUNCSKIPDRAW(glDrawTransformFeedbackStream, (GLenum mode, GLuint id, GLuint stream), (mode, id, stream))
+GLFUNCSKIPDRAW(glDrawTransformFeedbackInstanced, (GLenum mode, GLuint id, GLsizei instancecount), (mode, id, instancecount))
+GLFUNCSKIPDRAW(glDrawTransformFeedbackStreamInstanced, (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount), (mode, id, stream, instancecount))
+
+GLFUNCSKIPDRAW(glDrawArraysInstancedARB, (GLenum mode, GLint first, GLsizei count, GLsizei primcount), (mode, first, count, primcount))
+GLFUNCSKIPDRAW(glDrawElementsInstancedARB, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount), (mode, count, type, indices, primcount))
+GLFUNCSKIPDRAW(glDrawArraysInstancedEXT, (GLenum mode, GLint start, GLsizei count, GLsizei primcount), (mode, start, count, primcount))
+GLFUNCSKIPDRAW(glDrawElementsInstancedEXT, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount), (mode, count, type, indices, primcount))
+GLFUNCSKIPDRAW(glDrawRangeElementsEXT, (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices), (mode, start, end, count, type, indices))
+GLFUNCSKIPDRAW(glMultiDrawArraysEXT, (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount), (mode, first, count, primcount))
+GLFUNCSKIPDRAW(glMultiDrawElementsEXT, (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount), (mode, count, type, indices, primcount))
+GLFUNCSKIPDRAW(glDrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode, first, count))
 
 void checkMesa()
 {
@@ -195,6 +207,39 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
      * opengl functions directly but by using a glGetProcAddress function.
      */
     STORE_RETURN_SYMBOL_CUSTOM(glClear)
+
+    STORE_RETURN_SYMBOL_CUSTOM(glBegin);
+    STORE_RETURN_SYMBOL_CUSTOM(glEnd);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2sv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3sv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4sv);
 
     STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays)
     STORE_RETURN_SYMBOL_CUSTOM(glDrawElements)
@@ -424,415 +469,6 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
         i += 2;
     }
     return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
-}
-
-void glClear(GLbitfield mask)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glClear, "GL");
-    if (!skipping_draw)
-        return orig::glClear(mask);
-}
-
-void myglClear(GLbitfield mask)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glClear(mask);
-}
-
-
-void glBegin(GLenum mode)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glBegin, "GL");
-    if (!skipping_draw)
-        return orig::glBegin(mode);
-}
-
-void glEnd(void)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glEnd, "GL");
-    if (!skipping_draw)
-        return orig::glEnd();
-}
-
-void glVertex2d( GLdouble x, GLdouble y )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2d, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2d(x, y);
-}
-
-void glVertex2f( GLfloat x, GLfloat y )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2f, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2f(x, y);
-}
-
-void glVertex2i( GLint x, GLint y )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2i, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2i(x, y);
-}
-
-void glVertex2s( GLshort x, GLshort y )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2s, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2s(x, y);
-}
-
-void glVertex3d( GLdouble x, GLdouble y, GLdouble z )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3d, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3d(x, y, z);
-}
-
-void glVertex3f( GLfloat x, GLfloat y, GLfloat z )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3f, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3f(x, y, z);
-}
-
-void glVertex3i( GLint x, GLint y, GLint z )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3i, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3i(x, y, z);
-}
-
-void glVertex3s( GLshort x, GLshort y, GLshort z )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3s, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3s(x, y, z);
-}
-
-void glVertex4d( GLdouble x, GLdouble y, GLdouble z, GLdouble w )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4d, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4d(x, y, z, w);
-}
-
-void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4f, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4f(x, y, z, w);
-}
-
-void glVertex4i( GLint x, GLint y, GLint z, GLint w )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4i, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4i(x, y, z, w);
-}
-
-void glVertex4s( GLshort x, GLshort y, GLshort z, GLshort w )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4s, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4s(x, y, z, w);
-}
-
-void glVertex2dv( const GLdouble *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2dv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2dv(v);
-}
-
-void glVertex2fv( const GLfloat *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2fv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2fv(v);
-}
-
-void glVertex2iv( const GLint *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2iv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2iv(v);
-}
-
-void glVertex2sv( const GLshort *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex2sv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex2sv(v);
-}
-
-void glVertex3dv( const GLdouble *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3dv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3dv(v);
-}
-
-void glVertex3fv( const GLfloat *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3fv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3fv(v);
-}
-
-void glVertex3iv( const GLint *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3iv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3iv(v);
-}
-
-void glVertex3sv( const GLshort *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex3sv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex3sv(v);
-}
-
-
-void glVertex4dv( const GLdouble *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4dv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4dv(v);
-}
-
-void glVertex4fv( const GLfloat *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4fv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4fv(v);
-}
-
-void glVertex4iv( const GLint *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4iv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4iv(v);
-}
-
-void glVertex4sv( const GLshort *v )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glVertex4sv, "GL");
-    if (!skipping_draw)
-        return orig::glVertex4sv(v);
-}
-
-void glDrawArrays( GLenum mode, GLint first, GLsizei count )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glDrawArrays, "GL");
-    if (!skipping_draw)
-        return orig::glDrawArrays(mode, first, count);
-}
-
-void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glDrawElements, "GL");
-    if (!skipping_draw)
-        return orig::glDrawElements(mode, count, type, indices);
-}
-
-void myglDrawArrays( GLenum mode, GLint first, GLsizei count )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawArrays(mode, first, count);
-}
-
-void myglDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices )
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElements(mode, count, type, indices);
-}
-
-void myglMultiDrawArrays (GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glMultiDrawArrays(mode, first, count, drawcount);
-}
-
-void myglMultiDrawElements (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glMultiDrawElements(mode, count, type, indices, drawcount);
-}
-
-void myglDrawRangeElements (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawRangeElements(mode, start, end, count, type, indices);
-}
-
-void myglDrawElementsBaseVertex (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsBaseVertex(mode, count, type, indices, basevertex);
-}
-
-void myglDrawRangeElementsBaseVertex (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawRangeElementsBaseVertex(mode, start, end, count, type, indices, basevertex);
-}
-
-void myglDrawElementsInstancedBaseVertex (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsInstancedBaseVertex(mode, count, type, indices, instancecount, basevertex);
-}
-
-void myglMultiDrawElementsBaseVertex (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount, const GLint *basevertex)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glMultiDrawElementsBaseVertex(mode, count, type, indices, drawcount, basevertex);
-}
-
-void myglDrawArraysInstancedBaseInstance (GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawArraysInstancedBaseInstance(mode, first, count, instancecount, baseinstance);
-}
-
-void myglDrawElementsInstancedBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLuint baseinstance)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsInstancedBaseInstance(mode, count, type, indices, instancecount, baseinstance);
-}
-
-void myglDrawElementsInstancedBaseVertexBaseInstance (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsInstancedBaseVertexBaseInstance(mode, count, type, indices, instancecount, basevertex, baseinstance);
-}
-
-void myglDrawTransformFeedback (GLenum mode, GLuint id)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawTransformFeedback(mode, id);
-}
-
-void myglDrawTransformFeedbackStream (GLenum mode, GLuint id, GLuint stream)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawTransformFeedbackStream(mode, id, stream);
-}
-
-void myglDrawTransformFeedbackInstanced (GLenum mode, GLuint id, GLsizei instancecount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawTransformFeedbackInstanced(mode, id, instancecount);
-}
-
-void myglDrawTransformFeedbackStreamInstanced (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawTransformFeedbackStreamInstanced(mode, id, stream, instancecount);
-}
-
-void myglDrawArraysInstancedARB (GLenum mode, GLint first, GLsizei count, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawArraysInstancedARB(mode, first, count, primcount);
-}
-
-void myglDrawElementsInstancedARB (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsInstancedARB(mode, count, type, indices, primcount);
-}
-
-void myglDrawArraysInstancedEXT (GLenum mode, GLint start, GLsizei count, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawArraysInstancedEXT(mode, start, count, primcount);
-}
-
-void myglDrawElementsInstancedEXT (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawElementsInstancedEXT(mode, count, type, indices, primcount);
-}
-
-void myglDrawRangeElementsEXT (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawRangeElementsEXT(mode, start, end, count, type, indices);
-}
-
-void myglMultiDrawArraysEXT (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glMultiDrawArraysEXT(mode, first, count, primcount);
-}
-
-void myglMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glMultiDrawElementsEXT(mode, count, type, indices, primcount);
-}
-
-void myglDrawArraysEXT (GLenum mode, GLint first, GLsizei count)
-{
-    DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
-        return orig::glDrawArraysEXT(mode, first, count);
 }
 
 void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
