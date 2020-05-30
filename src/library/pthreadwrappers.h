@@ -118,6 +118,8 @@ OVERRIDE int sem_trywait (sem_t *__sem) throw();
 
 OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize);
 
+OVERRIDE int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id);
+
 /* Set thread name visible in the kernel and its interfaces.  */
 OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) throw();
 

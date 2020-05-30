@@ -54,6 +54,7 @@ DEFINE_ORIG_POINTER(sem_wait);
 DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
 DEFINE_ORIG_POINTER(pthread_attr_setstack);
+DEFINE_ORIG_POINTER(pthread_condattr_setclock);
 DEFINE_ORIG_POINTER(pthread_setname_np);
 
 /* We create a specific exception for thread exit calls */
@@ -90,6 +91,7 @@ extern "C" {
   extern void __libc_thread_freeres();
 }
 
+static clockid_t cond_clock_id = CLOCK_REALTIME;
 
 static void *pthread_start(void *arg)
 {
@@ -452,14 +454,19 @@ static void *pthread_start(void *arg)
     struct timespec new_abstime = *abstime;
     TimeHolder abs_timeout = *abstime;
     TimeHolder real_time;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
+    NATIVECALL(clock_gettime(cond_clock_id, &real_time));
     TimeHolder rel_timeout = abs_timeout - real_time;
-    if (rel_timeout.tv_sec < 0) {
+    /* We presume that the game won't call pthread_cond_timedwait() with
+     * a negative time, or more than 10 seconds.
+     */
+    if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
         TimeHolder fake_time = detTimer.getTicks();
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
+        debuglog(LCF_WAIT, " Rel time was ", 1000*new_rel_timeout.tv_sec + new_rel_timeout.tv_nsec/1000000, " ms.");
+        debuglog(LCF_WAIT, " New abs time is ", 1000*new_abstime.tv_sec + new_abstime.tv_nsec/1000000, " ms.");
     }
 
     /* If not main thread, do not change the behavior */
@@ -599,6 +606,18 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
     // debuglog(LCF_THREAD, "  returns ", ret);
     // return ret;
     return 0;
+}
+
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
+{
+    LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
+    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT);
+
+    int ret = orig::pthread_condattr_setclock(attr, clock_id);
+    if (ret == 0)
+        cond_clock_id = clock_id;
+
+    return ret;
 }
 
 int pthread_setname_np (pthread_t target_thread, const char *name) throw()
