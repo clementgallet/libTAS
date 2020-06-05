@@ -311,7 +311,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     /* Periodic update timer */
     QTimer *timer = new QTimer();
     connect(timer, &QTimer::timeout, this, &MainWindow::updateUIFrequent);
-    timer->start(100);
+    timer->start(20);
 
     /* We are dumping from the command line */
     if (context->config.dumping) {
