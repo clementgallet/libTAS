@@ -626,12 +626,18 @@ bool GameLoop::startFrameMessages()
             receiveData(&context->current_time_sec, sizeof(uint64_t));
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                context->config.sc.movie_framecount = context->framecount;
-                context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
-                context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
-                if (context->movie_time_nsec < 0) {
-                    context->movie_time_nsec += 1000000000;
-                    context->movie_time_sec--;
+                /* If the input editor is opened, recording does not truncate inputs */
+                bool notTruncInputs = false;
+                emit isInputEditorVisible(notTruncInputs);
+
+                if (!notTruncInputs || (context->framecount > context->config.sc.movie_framecount)) {
+                    context->config.sc.movie_framecount = context->framecount;
+                    context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
+                    context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
+                    if (context->movie_time_nsec < 0) {
+                        context->movie_time_nsec += 1000000000;
+                        context->movie_time_sec--;
+                    }
                 }
             }
             break;
@@ -1514,19 +1520,18 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* First frame after movie end */
                 if (ret == -2) {
                     /* Check for the moviefile length */
-                    int64_t movie_sec, movie_nsec;
-                    movie.length(&movie_sec, &movie_nsec);
-
                     int64_t cur_sec, cur_nsec;
                     cur_sec = context->current_time_sec - context->config.sc.initial_time_sec;
                     cur_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
 
-                    if ((movie_sec || movie_nsec) &&
-                        ((movie_sec != cur_sec) ||
-                        (movie_nsec != cur_nsec))) {
+                    if ((context->movie_time_sec != -1) &&
+                        ((context->movie_time_sec != cur_sec) ||
+                        (context->movie_time_nsec != cur_nsec))) {
 
-                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie_sec).arg(movie_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
+                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(context->movie_time_sec).arg(context->movie_time_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
                     }
+                    context->movie_time_sec = cur_sec;
+                    context->movie_time_nsec = cur_nsec;
                 }
             }
 

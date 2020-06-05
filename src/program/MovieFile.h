@@ -98,13 +98,16 @@ public:
     int saveMovie(const std::string& moviefile, uint64_t frame_nb);
 
     /* Get the number of frames of the current movie */
-    uint64_t nbFrames();
+    uint64_t nbFrames() const;
 
     /* Get the frame count of the associated savestate if any */
     uint64_t savestateFramecount() const;
 
     /* Get the movie length from metadata */
     void length(int64_t* sec, int64_t* nsec) const;
+
+    /* Update movie length from movie framecount */
+    void updateLength() const;
 
     /* Set inputs for a certain frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs);

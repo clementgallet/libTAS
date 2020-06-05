@@ -369,9 +369,7 @@ bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
     endInsertRows();
 
     /* Update the movie framecount. Should it be done here ?? */
-    context->config.sc.movie_framecount = movie->nbFrames();
-    context->config.sc_modified = true;
-    emit frameCountChanged();
+    movie->updateLength();
 
     return true;
 }
@@ -390,10 +388,8 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
 
     endRemoveRows();
 
-    /* Update the movie framecount. Should it be done here ?? */
-    context->config.sc.movie_framecount = movie->nbFrames();
-    context->config.sc_modified = true;
-    emit frameCountChanged();
+    /* Update the movie framecount */
+    movie->updateLength();
 
     return true;
 }
@@ -447,10 +443,8 @@ int InputEditorModel::pasteInputs(int row)
         endInsertRows();
     }
 
-    /* Update the movie framecount. Should it be done here ?? */
-    context->config.sc.movie_framecount = movie->nbFrames();
-    context->config.sc_modified = true;
-    emit frameCountChanged();
+    /* Update the movie framecount */
+    movie->updateLength();
 
     /* Update the paste inputs view */
     emit dataChanged(createIndex(row,0), createIndex(row+paste_ais.size()-1,columnCount()));
@@ -488,10 +482,8 @@ int InputEditorModel::pasteInsertInputs(int row)
 
     endInsertRows();
 
-    /* Update the movie framecount. Should it be done here ?? */
-    context->config.sc.movie_framecount = movie->nbFrames();
-    context->config.sc_modified = true;
-    emit frameCountChanged();
+    /* Update the movie framecount */
+    movie->updateLength();
 
     emit inputSetChanged();
 

@@ -146,7 +146,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	/* If no movie length field, compute from frame count and framerate */
 	if (!context->movie_time_sec) {
 		context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
-		context->movie_time_nsec = 1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den / context->config.sc.framerate_num;
+		context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
 	}
 
 	context->rerecord_count = config.value("rerecord_count").toUInt();
@@ -489,8 +489,8 @@ int MovieFile::readFrame(const std::string& line, AllInputs& inputs)
 		}
 		else {
 			/* Write initial framerate values */
-			inputs.framerate_num = framerate_num;
-			inputs.framerate_den = framerate_den;
+			// inputs.framerate_num = framerate_num;
+			// inputs.framerate_den = framerate_den;
 		}
 
 		return 1;
@@ -609,7 +609,7 @@ void MovieFile::readFramerateFrame(std::istringstream& input_string, AllInputs& 
 	input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
 }
 
-uint64_t MovieFile::nbFrames()
+uint64_t MovieFile::nbFrames() const
 {
 	return input_list.size();
 }
@@ -637,6 +637,26 @@ void MovieFile::length(int64_t* sec, int64_t* nsec) const
 
 	*sec = config.value("length_sec").toLongLong();
 	*nsec = config.value("length_nsec").toLongLong();
+}
+
+void MovieFile::updateLength() const
+{
+	if (context->config.sc.movie_framecount != nbFrames()) {
+		context->config.sc.movie_framecount = nbFrames();
+
+		/* Unvalidate movie length when variable framerate */
+		if (context->config.sc.variable_framerate) {
+			context->movie_time_sec = -1;
+			context->movie_time_nsec = -1;
+		}
+		else {
+			/* Compute movie length from framecount */
+			context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
+			context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
+		}
+
+		context->config.sc_modified = true;
+	}
 }
 
 int MovieFile::setInputs(const AllInputs& inputs, bool keep_inputs)

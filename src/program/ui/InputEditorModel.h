@@ -136,7 +136,6 @@ private:
     unsigned long long last_savestate = 0;
 
 signals:
-    void frameCountChanged();
     void inputSetChanged();
 
 };
