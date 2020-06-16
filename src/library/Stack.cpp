@@ -61,7 +61,7 @@ void Stack::grow()
         return;
     }
 
-    debuglogstdio(LCF_INFO, "Current stack size is %d", stackArea.size);
+    // debuglogstdio(LCF_INFO, "Current stack size is %d", stackArea.size);
 
     /* Check if we need to grow it */
     if (stackSize <= stackArea.size)
@@ -86,7 +86,7 @@ void Stack::grow()
 
     /* Check if we found the stack */
     if (stackArea.addr) {
-        debuglogstdio(LCF_INFO, "New stack size is %d", stackArea.size);
+        // debuglogstdio(LCF_INFO, "New stack size is %d", stackArea.size);
         return;
     }
 

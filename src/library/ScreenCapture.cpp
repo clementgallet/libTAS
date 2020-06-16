@@ -518,6 +518,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
         orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
 
+        orig::glGetError();
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
@@ -674,6 +675,7 @@ int ScreenCapture::setPixels() {
         orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
         orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
 
+        orig::glGetError();
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
