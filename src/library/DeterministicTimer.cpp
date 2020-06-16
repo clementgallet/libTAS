@@ -132,7 +132,6 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
      * However, there must be a limit,
      * otherwise it could easily build up and make us freeze (in some games)
      */
-    TimeHolder maxDeferredDelay = baseTimeIncrement;
     {
         std::lock_guard<std::mutex> lock(ticks_mutex);
 
@@ -146,10 +145,15 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         NATIVECALL(sched_yield());
     }
 
+    /* Don't trigger a non-draw frame when game is exiting */
+    if (is_exiting)
+        return;
+
     /* We only allow the main thread to trigger a frame boundary! */
     bool mainT = ThreadManager::isMainThread();
 
     if (mainT && !insideFrameBoundary) {
+        TimeHolder maxDeferredDelay = baseTimeIncrement * 2;
         while(addedDelay > maxDeferredDelay) {
             /* We have built up too much delay. We must enter a frame boundary,
              * to advance the time.
