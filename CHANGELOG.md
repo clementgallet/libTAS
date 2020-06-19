@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.0] - 2020-06-19
+### Added
 
 * Add async SDL events handling (#166)
 * Implement relative mouse inputs

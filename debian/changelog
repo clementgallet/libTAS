@@ -1,3 +1,67 @@
+libtas (1.4.0) unstable; urgency=medium
+
+  * Add async SDL events handling (#166)
+  * Implement relative mouse inputs
+  * Add a setting to warp the pointer to the center of the screen after each frame
+  * Implement SteamHTTP and SteamGameCoordinator
+  * Users can use Proton instead of wine for launching Windows games
+  * Catch memory shortage in RAM Search
+  * Implement more behaviors of pointer grabbing
+  * Option to disable audio completely (some games don't accept that and quit)
+  * Hook LdrGetProcedureAddress() by patching ntdll.dll.so
+  * Add a full wait setting
+  * Add thread synchronization methods
+  * Introduce game-specific settings
+  * Input Editor colors are adapted from the chosen Qt5 theme (#308)
+  * Toggle every other input in editor with Ctrl+Click
+  * Fill SDL event windowId field
+  * Add a minimum value for input editor column width, because the default value
+    is too high on some systems (#316)
+  * Add a Dockerfile and instructions to build the container
+  * Add sync setting for Hollow Knight
+  * Add epoll_wait hook (#321)
+  * Add snd_pcm_pause hook (#321)
+  * Add a converter from .hltas inputs
+  * Offer all common keys in the input mapping, even the ones not mapped in the
+    user's keyboard layout
+  * We can add raw keyboard inputs to input editor (#326)
+  * Implement ALSA poll mechanism (#321)
+  * Grow the stack to its maximum at startup, to avoid unintialized stack growth (#337)
+  * Add variable framerate setting (#22)
+  * Encode at fixed framerate when variable framerate (#22)
+  * Check movie length at the end of playback
+  * Monitor refresh rate now matches the framerate setting in libTAS
+  * Simplify the OpenGL performance setting
+  * Add horizontal scrollbar in the input editor (#316)
+  * Change the format of the input file, to make it more robust and adaptative (#332)
+  * Input Editor window can get behind main window (#334, #49)
+  * Home/End keys in the input editor move to top/bottom row (#335)
+  * Use periodic UI update for performance
+  * Don't use libavutil functions when configuring swresample context (#106)
+  * Fix a crash when seeking an audio source without attached buffers
+  * Memset unmapped memory when loading a savestate (#291)
+  * Don't link swr_free on AudioSource destructor (#294)
+  * Rearrange movie/config settings and their update on UI (#296)
+  * Fix restart toggle on input editor (#292)
+  * SDL Text Input is activated by default
+  * Fix input/hotkey mapping from config file (#302)
+  * Check mask size in XISelectEvents
+  * XI_RawMotion now uses raw inputs
+  * Track handles of savefiles
+  * Fill asynchronously fake /dev/urandom for games that read a large number of bytes (#310)
+  * Check for multiple opened pcm, and only keep the last opened
+  * Support multiple ALSA connections
+  * SDL relative mouse movement should ignore window clipping
+  * Add relative paths to savefiles
+  * Protect concurrent access to SaveFileList
+  * Support SDL_GameController  * calls with null handle
+  * Set current cell when removing a row in input editor so that array keys work (#329)
+  * Fix locale names (#267)
+  * Fix when savefile was removed and re-opened (#267)
+  * Clear the event queue between game executions (#325)
+
+ -- clement <clement.gallet@ens-lyon.org>  Fri, 19 Jun 2020 17:11:28 +0100
+
 libtas (1.3.5) unstable; urgency=medium
 
   * Both 32-bit and 64-bit libtas.so libraries can be installed, and the program

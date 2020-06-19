@@ -21,7 +21,7 @@
 #define LIBTAS_VERSION_H_INCLUDED
 
 static const int MAJORVERSION = 1;
-static const int MINORVERSION = 3;
-static const int PATCHVERSION = 5;
+static const int MINORVERSION = 4;
+static const int PATCHVERSION = 0;
 
 #endif
