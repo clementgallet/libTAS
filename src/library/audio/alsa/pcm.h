@@ -126,6 +126,7 @@ OVERRIDE int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 OVERRIDE int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val);
 
 OVERRIDE int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *buffer_size, snd_pcm_uframes_t *period_size);
+OVERRIDE int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t access, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
 
 OVERRIDE size_t snd_pcm_sw_params_sizeof(void);
 

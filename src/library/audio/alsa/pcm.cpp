@@ -78,6 +78,7 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_free);
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy);
 DEFINE_ORIG_POINTER(snd_pcm_get_params);
+DEFINE_ORIG_POINTER(snd_pcm_set_params);
 
 DEFINE_ORIG_POINTER(snd_pcm_prepare);
 DEFINE_ORIG_POINTER(snd_pcm_writei);
@@ -1205,6 +1206,53 @@ int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t 
     return 0;
 }
 
+int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t access, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_set_params);
+        return orig::snd_pcm_set_params(pcm, format, access, channels, rate, soft_resample, latency);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = audiocontext.getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+
+    switch(format) {
+        case SND_PCM_FORMAT_U8:
+            buffer->format = AudioBuffer::SAMPLE_FMT_U8;
+            break;
+        case SND_PCM_FORMAT_S16_LE:
+            buffer->format = AudioBuffer::SAMPLE_FMT_S16;
+            break;
+        case SND_PCM_FORMAT_S32_LE:
+            buffer->format = AudioBuffer::SAMPLE_FMT_S32;
+            break;
+        case SND_PCM_FORMAT_FLOAT_LE:
+            buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
+            break;
+        default:
+            debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported audio format");
+            return -1;
+    }
+
+    if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
+        debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported access ", access);
+    }
+    current_access = access;
+
+    buffer->nbChannels = channels;
+    buffer->frequency = rate;
+
+    /* Special case for 0, return the default value */
+    if ((latency != 0) && (rate != 0)) {
+        buffer_size = static_cast<uint64_t>(latency) * rate / 1000000;
+    }
+
+    return 0;
+}
+
 size_t snd_pcm_sw_params_sizeof(void)
 {
     if (GlobalState::isNative()) {
@@ -1317,7 +1365,7 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
     auto buffer = source->buffer_queue[0];
-    return buffer->alignSize;
+    return buffer->alignSize * frames;
 }
 
 
