@@ -83,7 +83,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     connect(this, &QWidget::customContextMenuRequested, this, &InputEditorView::mainMenu);
 
     menu = new QMenu(this);
-    QAction* a = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
+    insertAction = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
 
     /* Shortcuts for context menus are special, they won't work by default
      * because the menu is hidden, so actions need to be added to the View as
@@ -93,50 +93,50 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
      * is buggy, so we must enable for every single action.
      */
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    insertAction->setShortcutVisibleInContextMenu(true);
 #endif
 
-    this->addAction(a);
+    this->addAction(insertAction);
 
-    menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
+    insertsAction = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
-    a = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
+    deleteAction = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    deleteAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(deleteAction);
 
-    menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
-    a = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence::Delete);
+    truncateAction = menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
+    clearAction = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence::Delete);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    clearAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(clearAction);
 
     menu->addSeparator();
-    a = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence::Copy);
+    copyAction = menu->addAction(tr("Copy"), this, &InputEditorView::copyInputs, QKeySequence::Copy);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    copyAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(copyAction);
 
-    a = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence::Cut);
+    cutAction = menu->addAction(tr("Cut"), this, &InputEditorView::cutInputs, QKeySequence::Cut);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    cutAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(cutAction);
 
-    a = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence::Paste);
+    pasteAction = menu->addAction(tr("Paste"), this, &InputEditorView::pasteInputs, QKeySequence::Paste);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    pasteAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(pasteAction);
 
-    a = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+    pasteInsertAction = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-    a->setShortcutVisibleInContextMenu(true);
+    pasteInsertAction->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(a);
+    this->addAction(pasteInsertAction);
 
     keyDialog = new KeyPressedDialog(this);
     keyDialog->withModifiers = true;
@@ -169,7 +169,7 @@ void InputEditorView::update()
 
     if (!isVisible())
         return;
-        
+
     /* Enable autoscroll if current frame is not visible */
     int toprow = rowAt(rect().top());
     int bottomrow = rowAt(rect().bottom());
@@ -205,13 +205,38 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 {
     mouseSection = -1;
 
-    if (event->button() != Qt::LeftButton) {
+    if ((event->button() != Qt::LeftButton) && (event->button() != Qt::RightButton)) {
         return QTableView::mousePressEvent(event);
     }
 
     /* Get the table cell under the mouse position */
     const QModelIndex index = indexAt(event->pos());
     if (!index.isValid()) {
+        return QTableView::mousePressEvent(event);
+    }
+
+    /* Disable some items on the context menu */
+    if (event->button() == Qt::RightButton) {
+        if (index.row() < context->framecount) {
+            insertAction->setEnabled(false);
+            insertsAction->setEnabled(false);
+            deleteAction->setEnabled(false);
+            truncateAction->setEnabled(false);
+            clearAction->setEnabled(false);
+            cutAction->setEnabled(false);
+            pasteAction->setEnabled(false);
+            pasteInsertAction->setEnabled(false);
+        }
+        else {
+            insertAction->setEnabled(true);
+            insertsAction->setEnabled(true);
+            deleteAction->setEnabled(true);
+            truncateAction->setEnabled(true);
+            clearAction->setEnabled(true);
+            cutAction->setEnabled(true);
+            pasteAction->setEnabled(true);
+            pasteInsertAction->setEnabled(true);
+        }
         return QTableView::mousePressEvent(event);
     }
 

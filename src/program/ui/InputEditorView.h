@@ -76,6 +76,16 @@ private:
     int mouseValue;
     KeyPressedDialog* keyDialog;
 
+    QAction *insertAction;
+    QAction *insertsAction;
+    QAction *deleteAction;
+    QAction *truncateAction;
+    QAction *clearAction;
+    QAction *copyAction;
+    QAction *cutAction;
+    QAction *pasteAction;
+    QAction *pasteInsertAction;
+
     QAction *lockAction;
 
     bool autoScroll = true;
