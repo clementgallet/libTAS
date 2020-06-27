@@ -164,7 +164,7 @@ bool Checkpoint::checkCheckpoint()
     if ((ret = statvfs(savestate_str.c_str(), &devData)) >= 0) {
         uint64_t available_size = static_cast<uint64_t>(devData.f_bavail) * devData.f_bsize;
         if (savestate_size > available_size) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate (s " PRIu64 " / av " PRIu64 ")", savestate_size, available_size);
+            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate (s %" PRIu64 " / av %" PRIu64 ")", savestate_size, available_size);
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Not enough available space to store the savestate");
 #endif
