@@ -181,7 +181,7 @@ static int swapInterval = 0;
 }
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title, ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
+    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title?title:"", ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
     LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
     ThreadManager::setMainThread();
@@ -192,7 +192,7 @@ static int swapInterval = 0;
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     /* Disable hidden windows */
-    flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
+    // flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
 
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
@@ -343,7 +343,7 @@ static int swapInterval = 0;
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     /* Disable hidden windows */
-    window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
+    // window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_HIDDEN;
 
     /* Disable high DPI mode */
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
