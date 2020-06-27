@@ -70,7 +70,7 @@ static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveState &saved_area, int spmfd, SaveState &parent_state, SaveState &base_state);
 
 static size_t writeAllAreas(bool base);
-static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state);
+static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -961,7 +961,7 @@ static size_t writeAllAreas(bool base)
             savestate_size += sizeof(area);
         }
         else {
-            savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state);
+            savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state, base);
         }
     }
 
@@ -1020,7 +1020,7 @@ static size_t writeAllAreas(bool base)
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
-static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state)
+static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base)
 {
     area.print("Save");
     size_t area_size = 0;
@@ -1089,7 +1089,7 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
         }
 
         /* Check if page was not modified since last savestate */
-        else if (!soft_dirty && shared_config.incremental_savestates) {
+        else if (!soft_dirty && shared_config.incremental_savestates && !base) {
             /* Copy the value of the parent savestate if any */
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);
