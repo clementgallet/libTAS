@@ -277,7 +277,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
          * This prevent incremental savestating from being inefficient if a
          * backtrack savestate is performed at the very beginning of the game.
          */
-        if (shared_config.backtrack_savestate && didASavestate) {
+        if ((shared_config.savestate_settings & SharedConfig::SS_BACKTRACK) && didASavestate) {
             sendMessage(MSGB_DO_BACKTRACK_SAVESTATE);
         }
         saveBacktrack = false;

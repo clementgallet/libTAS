@@ -62,9 +62,10 @@ class SaveState
 
     Area area;
     char* current_addr;
-	off_t next_pfd_offset;
+    off_t next_pfd_offset;
 
-	char* queued_addr;
+    int compressed_length;
+    char* queued_addr;
 	off_t queued_offset;
 	int queued_size;
 };

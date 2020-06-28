@@ -109,9 +109,7 @@ public:
     QAction *preventSavefileAction;
     QAction *recycleThreadsAction;
 
-    QAction *incrementalStateAction;
-    QAction *ramStateAction;
-    QAction *backtrackStateAction;
+    QActionGroup *savestateGroup;
     QAction *steamAction;
     QActionGroup *waitGroup;
     QActionGroup *asyncGroup;
@@ -189,8 +187,8 @@ private:
     void updateUIFrequent();
 
     /* Helper function to create a checkable action inside an action group */
-    void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data, const QString& toolTip);
-    void addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
+    QAction *addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data, const QString& toolTip);
+    QAction *addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
 
     /* Create the main window actions that will go in the menus */
     void createActions();
@@ -255,9 +253,6 @@ private slots:
     void slotPreventSavefile(bool checked);
     void slotMovieEnd();
     void slotPauseMovie();
-    void slotIncrementalState(bool checked);
-    void slotRamState(bool checked);
-    void slotBacktrackState(bool checked);
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotAsyncEvents(bool checked);

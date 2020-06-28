@@ -52,6 +52,7 @@ struct Area {
         ZERO_PAGE, /* Entire page is zero */
         FULL_PAGE, /* Area contains a copy of the page */
         BASE_PAGE, /* Page was not modified from base savestate */
+        COMPRESSED_PAGE, /* Full page but compressed */
     };
 
     void* addr;

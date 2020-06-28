@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Savestates can be compressed
+
 ### Changed
 ### Fixed
 

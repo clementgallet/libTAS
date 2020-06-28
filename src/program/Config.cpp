@@ -156,9 +156,7 @@ void Config::save(const std::string& gamepath) {
     settings.endArray();
 
     settings.setValue("save_screenpixels", sc.save_screenpixels);
-    settings.setValue("incremental_savestates", sc.incremental_savestates);
-    settings.setValue("savestates_in_ram", sc.savestates_in_ram);
-    settings.setValue("backtrack_savestate", sc.backtrack_savestate);
+    settings.setValue("savestate_settings", sc.savestate_settings);
 
     settings.endGroup();
 }
@@ -277,9 +275,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_codec = settings.value("audio_codec", sc.audio_codec).toInt();
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     sc.save_screenpixels = settings.value("save_screenpixels", sc.save_screenpixels).toBool();
-    sc.incremental_savestates = settings.value("incremental_savestates", sc.incremental_savestates).toBool();
-    sc.savestates_in_ram = settings.value("savestates_in_ram", sc.savestates_in_ram).toBool();
-    sc.backtrack_savestate = settings.value("backtrack_savestate", sc.backtrack_savestate).toBool();
+    sc.savestate_settings = settings.value("savestate_settings", sc.savestate_settings).toInt();
     sc.opengl_soft = settings.value("opengl_soft", sc.opengl_soft).toBool();
     sc.opengl_performance = settings.value("opengl_performance", sc.opengl_performance).toBool();
 

@@ -43,6 +43,7 @@
 #include "../renderhud/RenderHUD.h"
 #include "ReservedMemory.h"
 #include "SaveState.h"
+#include "../../external/lz4.h"
 
 #define ONE_MB 1024 * 1024
 
@@ -141,7 +142,7 @@ static void setPagesFd(int index, int fd)
 
 bool Checkpoint::checkCheckpoint()
 {
-    if (shared_config.savestates_in_ram)
+    if (shared_config.savestate_settings & SharedConfig::SS_RAM)
         return true;
 
     /* Get an estimation of the savestate space */
@@ -185,7 +186,7 @@ bool Checkpoint::checkCheckpoint()
 bool Checkpoint::checkRestore()
 {
     /* Check that the savestate files exist */
-    if (shared_config.savestates_in_ram) {
+    if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
         if (!getPagemapFd(ss_index)) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
 #ifdef LIBTAS_ENABLE_HUD
@@ -221,7 +222,7 @@ bool Checkpoint::checkRestore()
     }
 
     int pmfd;
-    if (shared_config.savestates_in_ram) {
+    if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
         pmfd = getPagemapFd(ss_index);
         lseek(pmfd, 0, SEEK_SET);
     }
@@ -234,7 +235,7 @@ bool Checkpoint::checkRestore()
     /* Read the savestate header */
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
-    if (!shared_config.savestates_in_ram) {
+    if (!(shared_config.savestate_settings & SharedConfig::SS_RAM)) {
         NATIVECALL(close(pmfd));
     }
 
@@ -351,8 +352,8 @@ void Checkpoint::handler(int signum)
     }
     else {
         /* Check that base savestate exists, otherwise save it */
-        if (shared_config.incremental_savestates) {
-            if (shared_config.savestates_in_ram) {
+        if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+            if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
                 int fd = getPagemapFd(base_ss_index);
                 if (!fd) {
                     TimeHolder old_time, new_time, delta_time;
@@ -446,7 +447,7 @@ static void readAllAreas()
     SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
     int spmfd = -1, crfd = -1;
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
         MYASSERT(spmfd != -1);
 
@@ -505,12 +506,12 @@ static void readAllAreas()
         saved_state.nextArea();
     }
 
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         /* Clear soft-dirty bits */
         Utils::writeAll(crfd, "4\n", 2);
     }
 
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         NATIVECALL(close(crfd));
         NATIVECALL(close(spmfd));
     }
@@ -720,7 +721,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
     }
 
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         /* Seek at the beginning of the area pagemap */
         MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
     }
@@ -742,7 +743,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
     curAddr < endAddr;
     curAddr += 4096, page_i++, pagemap_i++) {
         /* We read pagemap file in chunks to avoid too many read syscalls */
-        if (shared_config.incremental_savestates && (pagemap_i >= 512)) {
+        if ((shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && (pagemap_i >= 512)) {
             size_t remaining_pages = ((nb_pages-page_i)>512)?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
@@ -756,7 +757,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
             memset(static_cast<void*>(curAddr), 0, 4096);
         }
         else if (flag == Area::ZERO_PAGE) {
-            if (shared_config.incremental_savestates) {
+            if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
                 /* In case incremental savestates is enabled, we can guess that
                  * the page is already zero if the parent page is zero and the
                  * page was not modified since. In that case, we can skip the memset.
@@ -787,8 +788,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                 /* Memory page has been modified between the two savestates.
                  * We must read from the base savestate.
                  */
-                char base_flag = base_state.getPageFlag(curAddr);
-                MYASSERT(base_flag == Area::FULL_PAGE);
+                base_state.getPageFlag(curAddr);
                 base_state.queuePageLoad(curAddr);
             }
             else {
@@ -800,8 +800,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                     /* Memory page has been modified after parent state.
                      * We must read from the base savestate.
                      */
-                    char base_flag = base_state.getPageFlag(curAddr);
-                    MYASSERT(base_flag == Area::FULL_PAGE);
+                    base_state.getPageFlag(curAddr);
                     base_state.queuePageLoad(curAddr);
                 }
             }
@@ -836,8 +835,8 @@ static size_t writeAllAreas(bool base)
     char temppagemappath[1024];
     char temppagespath[1024];
 
-    if (shared_config.savestates_in_ram) {
-        if (!shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
+        if (!(shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
 
             pmfd = getPagemapFd(ss_index);
@@ -880,7 +879,7 @@ static size_t writeAllAreas(bool base)
         }
     }
     else {
-        if (!shared_config.incremental_savestates) {
+        if (!(shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
             NATIVECALL(unlink(pagemappath));
@@ -917,13 +916,13 @@ static size_t writeAllAreas(bool base)
 
     int spmfd = -1;
     NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         /* We need /proc/self/pagemap for incremental savestates */
         MYASSERT(spmfd != -1);
     }
 
     int crfd = -1;
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
         MYASSERT(crfd != -1);
     }
@@ -979,7 +978,7 @@ static size_t writeAllAreas(bool base)
     Utils::writeAll(pmfd, &area, sizeof(area));
     savestate_size += sizeof(area);
 
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         /* Clear soft-dirty bits */
         Utils::writeAll(crfd, "4\n", 2);
     }
@@ -993,7 +992,7 @@ static size_t writeAllAreas(bool base)
         }
     }
 
-    if (shared_config.incremental_savestates) {
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         NATIVECALL(close(crfd));
     }
 
@@ -1002,14 +1001,14 @@ static size_t writeAllAreas(bool base)
     }
 
     /* Closing the savestate files */
-    if (!shared_config.savestates_in_ram) {
+    if (!(shared_config.savestate_settings & SharedConfig::SS_RAM)) {
         NATIVECALL(close(pmfd));
         NATIVECALL(close(pfd));
     }
 
     /* Rename the savestate files */
-    if (shared_config.incremental_savestates && !base) {
-        if (shared_config.savestates_in_ram) {
+    if ((shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && !base) {
+        if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
             /* Closing the old savestate memfds and replace with the new one */
             if (getPagemapFd(current_ss_index)) {
                 NATIVECALL(close(getPagemapFd(current_ss_index)));
@@ -1064,6 +1063,9 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     /* Current index in the savestate pagemap array */
     int ss_pagemap_i = 0;
 
+    /* Compressed chunk */
+    char compressed_page[LZ4_COMPRESSBOUND(4096)];
+
     char* endAddr = static_cast<char*>(area.endAddr);
     for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
 
@@ -1083,30 +1085,43 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
         /* Gather the flag for the current pagemap. */
         uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
-        // bool page_present = page & (0x1ull << 63);
+        bool page_present = page & (0x1ull << 63);
         bool soft_dirty = page & (0x1ull << 55);
 
         /* Check if page is present */
-        // if (!page_present) {
-        //     ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
-        // }
+        if ((shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
+            ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
+        }
 
         /* Check if page is zero (only check on anonymous memory)*/
-        if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        else if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             ss_pagemaps[ss_pagemap_i++] = Area::ZERO_PAGE;
         }
 
         /* Check if page was not modified since last savestate */
-        else if (!soft_dirty && shared_config.incremental_savestates && !base) {
+        else if (!soft_dirty && (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && !base) {
             /* Copy the value of the parent savestate if any */
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);
-                if ((parent_flag == Area::NONE) || (parent_flag == Area::FULL_PAGE)) {
+                if ((parent_flag == Area::NONE) || (parent_flag == Area::FULL_PAGE) || (parent_flag == Area::COMPRESSED_PAGE)) {
                     /* Parent does not have the page or parent stores the memory page,
                      * saving the full page. */
-                    ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
-                    Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
-                    area_size += 4096;
+
+                    int compressed_size = 0;
+                    if (shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
+                        compressed_size = LZ4_compress_default(curAddr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096));
+                    }
+                    if (compressed_size != 0) {
+                        ss_pagemaps[ss_pagemap_i++] = Area::COMPRESSED_PAGE;
+                        Utils::writeAll(pfd, &compressed_size, sizeof(int));
+                        Utils::writeAll(pfd, compressed_page, compressed_size);
+                        area_size += compressed_size;
+                    }
+                    else {
+                        ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
+                        Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
+                        area_size += 4096;
+                    }
                 }
                 else {
                     ss_pagemaps[ss_pagemap_i++] = parent_flag;
@@ -1117,9 +1132,21 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
             }
         }
         else {
-            ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
-            Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
-            area_size += 4096;
+            int compressed_size = 0;
+            if (shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
+                compressed_size = LZ4_compress_default(curAddr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096));
+            }
+            if (compressed_size != 0) {
+                ss_pagemaps[ss_pagemap_i++] = Area::COMPRESSED_PAGE;
+                Utils::writeAll(pfd, &compressed_size, sizeof(int));
+                Utils::writeAll(pfd, compressed_page, compressed_size);
+                area_size += compressed_size;
+            }
+            else {
+                ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
+                Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
+                area_size += 4096;
+            }
         }
     }
 

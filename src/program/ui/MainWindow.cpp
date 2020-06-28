@@ -350,16 +350,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 /* We are going to do this a lot, so this is a helper function to insert
  * checkable actions into an action group with data.
  */
-void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata, const QString& toolTip)
+QAction *MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata, const QString& toolTip)
 {
     QAction *action = group->addAction(text);
     action->setCheckable(true);
     action->setData(qdata);
     if (!toolTip.isEmpty())
         action->setToolTip(toolTip);
+    return action;
 }
 
-void MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata) {
+QAction *MainWindow::addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &qdata) {
     return addActionCheckable(group, text, qdata, "");
 }
 
@@ -469,6 +470,21 @@ void MainWindow::createActions()
     addActionCheckable(asyncGroup, tr("XEvents at frame end"), SharedConfig::ASYNC_XEVENTS_END);
     addActionCheckable(asyncGroup, tr("SDL events at frame beginning"), SharedConfig::ASYNC_SDLEVENTS_BEG);
     addActionCheckable(asyncGroup, tr("SDL events at frame end"), SharedConfig::ASYNC_SDLEVENTS_END);
+
+    savestateGroup = new QActionGroup(this);
+    savestateGroup->setExclusive(false);
+
+    QAction *action = addActionCheckable(savestateGroup, tr("Incremental savestates"), SharedConfig::SS_INCREMENTAL, tr("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing"));
+    if (!context->is_soft_dirty) {
+        action->setEnabled(false);
+        context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
+    }
+
+    action = addActionCheckable(savestateGroup, tr("Store savestates in RAM"), SharedConfig::SS_RAM, tr("Storing savestates in RAM can provide a speed-up, but beware of your available memory"));
+    disabledActionsOnStart.append(action);
+    addActionCheckable(savestateGroup, tr("Backtrack savestate"), SharedConfig::SS_BACKTRACK, tr("Save a state whenether a thread is created/destroyed, so that you can rewind to the earliest time possible"));
+    addActionCheckable(savestateGroup, tr("Compressed savestates"), SharedConfig::SS_COMPRESSED);
+    addActionCheckable(savestateGroup, tr("Skip unmapped pages"), SharedConfig::SS_PRESENT, tr("Shorter savestates, but causes crashes in some games"));
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);
@@ -698,29 +714,8 @@ void MainWindow::createMenus()
     waitMenu->addActions(waitGroup->actions());
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
-    savestateMenu->setToolTipsVisible(true);
-
-    if (context->is_soft_dirty) {
-        incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates"), this, &MainWindow::slotIncrementalState);
-        incrementalStateAction->setCheckable(true);
-        incrementalStateAction->setToolTip("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing");
-        disabledActionsOnStart.append(incrementalStateAction);
-    }
-    else {
-        incrementalStateAction = savestateMenu->addAction(tr("Incremental savestates (unavailable)"), this, &MainWindow::slotIncrementalState);
-        incrementalStateAction->setEnabled(false);
-        context->config.sc.incremental_savestates = false;
-    }
-
-    ramStateAction = savestateMenu->addAction(tr("Store savestates in RAM"), this, &MainWindow::slotRamState);
-    ramStateAction->setCheckable(true);
-    ramStateAction->setToolTip("Storing savestates in RAM can provide a speed-up, but beware of your available memory");
-    disabledActionsOnStart.append(ramStateAction);
-
-    backtrackStateAction = savestateMenu->addAction(tr("Backtrack savestate"), this, &MainWindow::slotBacktrackState);
-    backtrackStateAction->setCheckable(true);
-    backtrackStateAction->setToolTip("Save a state whenether a thread is created/destroyed, so that you can rewind to the earliest time possible");
-    disabledActionsOnStart.append(backtrackStateAction);
+    // savestateMenu->setToolTipsVisible(true);
+    savestateMenu->addActions(savestateGroup->actions());
 
     saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
     saveScreenAction->setCheckable(true);
@@ -1179,9 +1174,7 @@ void MainWindow::updateUIFromConfig()
     steamAction->setChecked(context->config.sc.virtual_steam);
     setCheckboxesFromMask(asyncGroup, context->config.sc.async_events);
 
-    incrementalStateAction->setChecked(context->config.sc.incremental_savestates);
-    ramStateAction->setChecked(context->config.sc.savestates_in_ram);
-    backtrackStateAction->setChecked(context->config.sc.backtrack_savestate);
+    setCheckboxesFromMask(savestateGroup, context->config.sc.savestate_settings);
 
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
 
@@ -1267,6 +1260,7 @@ void MainWindow::slotLaunch()
 
     setListFromRadio(waitGroup, context->config.sc.wait_timeout);
     setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
+    setMaskFromCheckboxes(savestateGroup, context->config.sc.savestate_settings);
 
     context->config.gameargs = cmdOptions->text().toStdString();
 
@@ -1318,7 +1312,7 @@ void MainWindow::slotGamePathChanged()
     updateRecentGamepaths();
 
     if (!context->is_soft_dirty) {
-        context->config.sc.incremental_savestates = false;
+        context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
     }
 
     /* Update the UI accordingly */
@@ -1557,9 +1551,6 @@ void MainWindow::slotMovieEnd()
     setListFromRadio(movieEndGroup, context->config.on_movie_end);
 }
 
-BOOLSLOT(slotIncrementalState, context->config.sc.incremental_savestates)
-BOOLSLOT(slotRamState, context->config.sc.savestates_in_ram)
-BOOLSLOT(slotBacktrackState, context->config.sc.backtrack_savestate)
 BOOLSLOT(slotAutoRestart, context->config.auto_restart)
 BOOLSLOT(slotVariableFramerate, context->config.sc.variable_framerate)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)

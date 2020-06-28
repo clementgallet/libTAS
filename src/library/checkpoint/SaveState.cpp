@@ -25,6 +25,7 @@
 #include "../logging.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include "../../external/lz4.h"
 
 namespace libtas {
 
@@ -32,7 +33,7 @@ SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemap
 {
     queued_size = 0;
 
-    if (shared_config.savestates_in_ram) {
+    if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
         pmfd = pagemapfd;
         pfd = pagesfd;
         if (!pmfd) {
@@ -61,7 +62,7 @@ SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemap
 
 SaveState::~SaveState()
 {
-    if (!shared_config.savestates_in_ram && (pmfd > 0)) {
+    if (!(shared_config.savestate_settings & SharedConfig::SS_RAM) && (pmfd > 0)) {
         NATIVECALL(close(pmfd));
         NATIVECALL(close(pfd));
     }
@@ -150,6 +151,11 @@ char SaveState::getPageFlag(char* addr)
         if (flag == Area::FULL_PAGE) {
             next_pfd_offset += 4096;
         }
+        else if (flag == Area::COMPRESSED_PAGE) {
+            lseek(pfd, next_pfd_offset, SEEK_SET);
+            Utils::readAll(pfd, &compressed_length, sizeof(int));
+            next_pfd_offset += sizeof(int) + compressed_length;
+        }
         current_addr += 4096;
     } while (current_addr <= addr);
 
@@ -163,6 +169,11 @@ char SaveState::getNextPageFlag()
     char flag = nextFlag();
     if (flag == Area::FULL_PAGE) {
         next_pfd_offset += 4096;
+    }
+    else if (flag == Area::COMPRESSED_PAGE) {
+        lseek(pfd, next_pfd_offset, SEEK_SET);
+        Utils::readAll(pfd, &compressed_length, sizeof(int));
+        next_pfd_offset += sizeof(int) + compressed_length;
     }
     current_addr += 4096;
     return flag;
@@ -181,19 +192,25 @@ void SaveState::queuePageLoad(char* addr)
 {
     MYASSERT(addr + 4096 == current_addr);
 
-    if (queued_size > 0) {
-    	if ((next_pfd_offset - 4096) == queued_offset + queued_size &&
-    	    addr == queued_addr + queued_size) {
-            queued_size += 4096;
-            return;
-    	} else {
-            finishLoad();
-    	}
+    if (current_flag == Area::FULL_PAGE) {
+        if (queued_size > 0) {
+        	if ((next_pfd_offset - 4096) == queued_offset + queued_size &&
+        	    addr == queued_addr + queued_size) {
+                queued_size += 4096;
+                return;
+        	} else {
+                finishLoad();
+        	}
+        }
+        queued_offset = (next_pfd_offset - 4096);
+        queued_addr = addr;
+        queued_size = 4096;
     }
-
-    queued_offset = (next_pfd_offset - 4096);
-    queued_addr = addr;
-    queued_size = 4096;
+    else if (current_flag == Area::COMPRESSED_PAGE) {
+        char compressed[LZ4_COMPRESSBOUND(4096)];
+        Utils::readAll(pfd, compressed, compressed_length);
+        LZ4_decompress_safe(compressed, addr, compressed_length, 4096);
+    }
 }
 
 }

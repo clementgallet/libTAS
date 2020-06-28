@@ -222,6 +222,19 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Game-specific timing settings */
     int game_specific_sync = 0;
 
+    /* An enum indicating several savestate options */
+    enum SaveStateFlags
+    {
+        SS_INCREMENTAL = 0x01, /* Using incremental savestates */
+        SS_RAM = 0x02, /* Storing savestates in RAM */
+        SS_BACKTRACK = 0x04, /* Saving a backtrack savestate each time a thread is created/destroyed */
+        SS_COMPRESSED = 0x08, /* Compress savestates */
+        SS_PRESENT = 0x10, /* Skip unmapped pages */
+    };
+
+    /* Savestate settings */
+    int savestate_settings = SS_PRESENT;
+
     /* Is the game running or on pause */
     bool running = false;
 
@@ -259,15 +272,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     bool audio_disabled = false;
 
     bool save_screenpixels = true;
-
-    /* Using incremental savestates */
-    bool incremental_savestates = true;
-
-    /* Storing savestates in RAM */
-    bool savestates_in_ram = false;
-
-    /* Saving a backtrack savestate each time a thread is created/destroyed */
-    bool backtrack_savestate = true;
 
     /* Recycle threads when they terminate */
     bool recycle_threads = false;
