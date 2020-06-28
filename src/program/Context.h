@@ -89,8 +89,11 @@ struct Context {
     /* Rerecord count */
     unsigned int rerecord_count = 0;
 
-    /* Queue of hotkeys that where pushed by the UI, to process by the main thread */
-    ConcurrentQueue<HotKeyType> hotkey_queue;
+    /* Queue of pressed hotkeys that where pushed by the UI, to process by the main thread */
+    ConcurrentQueue<HotKeyType> hotkey_pressed_queue;
+
+    /* Queue of released hotkeys that where pushed by the UI, to process by the main thread */
+    ConcurrentQueue<HotKeyType> hotkey_released_queue;
 
     /* Store some game information sent by the game, that is shown in the UI */
     GameInfo game_info;

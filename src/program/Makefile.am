@@ -60,6 +60,7 @@ libTAS_SOURCES = \
     ui/RamWatchEditWindow.cpp \
     ui/RamWatchModel.cpp \
     ui/RamWatchWindow.cpp \
+	ui/qtutils.cpp \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
     ramsearch/MemSection.cpp \

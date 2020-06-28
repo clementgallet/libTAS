@@ -653,7 +653,7 @@ bool GameLoop::startFrameMessages()
             receiveData(&context->encoding_segment, sizeof(int));
             break;
         case MSGB_DO_BACKTRACK_SAVESTATE:
-            context->hotkey_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
+            context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
             break;
         case MSGB_QUIT:
             if (context->config.dumping) {
@@ -701,13 +701,19 @@ uint8_t GameLoop::nextEvent(struct HotKey &hk)
         }
 
         if (!event) {
-            if (context->hotkey_queue.empty()) {
-                return 0;
+
+            if (!context->hotkey_pressed_queue.empty()) {
+                /* Processing a pressed hotkey pushed by the UI */
+                context->hotkey_pressed_queue.pop(hk.type);
+                return XCB_KEY_PRESS;
+            }
+            else if (!context->hotkey_released_queue.empty()) {
+                /* Processing a pressed hotkey pushed by the UI */
+                context->hotkey_released_queue.pop(hk.type);
+                return XCB_KEY_RELEASE;
             }
             else {
-                /* Processing a hotkey pushed by the UI */
-                context->hotkey_queue.pop(hk.type);
-                return XCB_KEY_PRESS;
+                return 0;
             }
         }
         else {

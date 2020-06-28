@@ -1381,14 +1381,14 @@ void MainWindow::slotPause(bool checked)
     }
     else {
         /* Else, let the game thread set the value */
-        context->hotkey_queue.push(HOTKEY_PLAYPAUSE);
+        context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }
 }
 
 void MainWindow::slotCalibrateMouse()
 {
     if (context->status == Context::ACTIVE) {
-        context->hotkey_queue.push(HOTKEY_CALIBRATE_MOUSE);
+        context->hotkey_pressed_queue.push(HOTKEY_CALIBRATE_MOUSE);
     }
 }
 
@@ -1435,7 +1435,7 @@ void MainWindow::slotMovieRecording()
         }
     }
     else {
-        context->hotkey_queue.push(HOTKEY_READWRITE);
+        context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
     }
     context->config.sc_modified = true;
 }
@@ -1466,7 +1466,7 @@ void MainWindow::slotToggleEncode()
     }
     else {
         /* TODO: Using directly the hotkey does not check for existing file */
-        context->hotkey_queue.push(HOTKEY_TOGGLE_ENCODE);
+        context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_ENCODE);
     }
 }
 
