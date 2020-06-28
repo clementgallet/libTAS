@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-SaveState::SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd)
+SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd)
 {
     queued_size = 0;
 

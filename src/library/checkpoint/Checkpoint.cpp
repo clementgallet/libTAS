@@ -107,6 +107,13 @@ void Checkpoint::setCurrentToParent()
     parent_ss_index = ss_index;
 }
 
+static void resetParent()
+{
+    parentpagemappath[0] = '\0';
+    parentpagespath[0] = '\0';
+    parent_ss_index = -1;
+}
+
 static int getPagemapFd(int index)
 {
     if (index < 0) return 0;
@@ -359,6 +366,7 @@ void Checkpoint::handler(int signum)
             else {
                 struct stat sb;
                 if (stat(basepagemappath, &sb) == -1) {
+                    resetParent();
                     TimeHolder old_time, new_time, delta_time;
                     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
                     size_t savestate_size = writeAllAreas(true);

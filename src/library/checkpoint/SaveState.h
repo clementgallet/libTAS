@@ -29,7 +29,7 @@ namespace libtas {
 class SaveState
 {
     public:
-        SaveState(char* pagemappath, char* pagespath, int pagemapfd, int pagesfd);
+        SaveState(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd);
         ~SaveState();
 
 	// Also resets back to first area
