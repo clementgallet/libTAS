@@ -2,6 +2,8 @@
 
 GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86`. You will need the Mesa llvm OpenGL driver to support savestates for games using OpenGL.
 
+Discord server: https://discord.gg/3MBVAzU
+
 ## Supported Games
 
 Initial work was done to support games using the SDL library (which is the case of many indie games), but other engines are supported now.
@@ -136,6 +138,10 @@ You need to use the Unix syntax again for your shared folder path. Relative path
 This should open a terminal in your container. You can then enter `libTAS` to launch the program. If everything goes right, you should see the libtas window appear. If it complains about not been able to open the display, check again your ipv4 field. You can also access to your shared files located inside `/root/games` path. Because of how Docker works, everything that is modified outside of `/root/games` will not be preserved on later instances of the container, so be sure to install and save everything inside that directory.
 
 TODO: Figure out how to use Mesa OpenGL.
+
+## Logo
+
+Made by brunovalads.
 
 ## License
 
