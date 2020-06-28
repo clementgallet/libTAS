@@ -2,6 +2,7 @@
 ### Added
 
 * Savestates can be compressed
+* Middle button to reset controller axis to 0
 
 ### Changed
 ### Fixed

@@ -111,5 +111,10 @@ void ControllerAxisWidget::mouseMoveEvent(QMouseEvent *event)
 
 void ControllerAxisWidget::mousePressEvent(QMouseEvent *event)
 {
+    if (event->buttons() & Qt::MiddleButton) {
+        slotSetAxes(0, 0);
+        emit XAxisChanged(0);
+        emit YAxisChanged(0);
+    }
     return mouseMoveEvent(event);
 }
