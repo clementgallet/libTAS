@@ -748,7 +748,7 @@ uint8_t GameLoop::nextEvent(struct HotKey &hk)
 
                         if (next_event &&
                            ((next_event->response_type & ~0x80) == XCB_KEY_PRESS) &&
-                           (next_key_event->detail = kc) &&
+                           (next_key_event->detail == kc) &&
                            ((next_key_event->time - key_event->time) < 5)) {
 
                             /* Found an auto-repeat sequence, discard both events */
