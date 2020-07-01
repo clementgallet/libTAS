@@ -124,7 +124,7 @@ const char* RamWatch::tostring(bool hex, uint64_t value) const
         {
             uint32_t typed_value;
             memcpy(&typed_value, &value, type_size);
-            snprintf(str, 30, hex?"%x":"%d", typed_value);
+            snprintf(str, 30, hex?"%x":"%u", typed_value);
             return str;
         }
         case RamLong:
