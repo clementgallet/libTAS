@@ -52,7 +52,7 @@ typedef int LogCategoryFlag; enum
 	LCF_KEYBOARD = 1 << 19, // keyboard related
 	LCF_MOUSE    = 1 << 20,
 	LCF_JOYSTICK = 1 << 21, // for both SDL_Joystick and SDL_GameController
-	LCF_OPENAL   = 1 << 22, // call to openAL functions
+	LCF_SYSTEM   = 1 << 22,
 	LCF_SOUND    = 1 << 23,
 	LCF_RANDOM   = 1 << 24,
 	LCF_SIGNAL   = 1 << 25, // signals between processes/threads

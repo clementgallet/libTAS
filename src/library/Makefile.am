@@ -38,6 +38,7 @@ libtas_so_SOURCES = \
     signalwrappers.cpp \
     sleepwrappers.cpp \
     Stack.cpp \
+    systemwrappers.cpp \
     TimeHolder.cpp \
     timewrappers.cpp \
     tlswrappers.cpp \
@@ -144,7 +145,7 @@ libtas_so_SOURCES = \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
-	../external/lz4.c
+    ../external/lz4.c
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -Wall -fno-stack-protector
 libtas_so_LDFLAGS = -shared

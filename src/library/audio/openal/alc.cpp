@@ -33,7 +33,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCenum alcGetError(ALCdevice *device)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     ALCenum err = alcError;
     alcError = ALC_NO_ERROR;
     return err;
@@ -41,7 +41,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     game_info.audio |= GameInfo::OPENAL;
     game_info.tosend = true;
     return &dummyDevice;
@@ -49,24 +49,24 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCboolean alcCloseDevice(ALCdevice* deviceHandle)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     return ALC_TRUE;
 }
 
 /* Override */ ALCcontext* alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
 
     if (shared_config.audio_disabled)
         return nullptr;
 
     if (dummyContext != -1) {
-        debuglog(LCF_OPENAL | LCF_TODO, "We don't support multiple openAL contexts yet");
+        debuglog(LCF_SOUND | LCF_TODO, "We don't support multiple openAL contexts yet");
         return NULL;
     }
     if (attrlist) {
         for (int attr = 0; attrlist[attr] != 0; attr+=2) {
-            debuglog(LCF_OPENAL, "Attribute ", attrlist[attr], " is ", attrlist[attr+1]);
+            debuglog(LCF_SOUND, "Attribute ", attrlist[attr], " is ", attrlist[attr+1]);
         }
     }
 
@@ -76,7 +76,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCboolean alcMakeContextCurrent(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
 
     if (context == NULL) {
         currentContext = -1;
@@ -93,7 +93,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ void alcProcessContext(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context != dummyContext)
@@ -102,7 +102,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ void alcSuspendContext(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context != dummyContext)
@@ -111,7 +111,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ void alcDestroyContext(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context == dummyContext) {
@@ -128,7 +128,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCcontext* alcGetCurrentContext(void)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (currentContext == -1)
         return NULL;
     else
@@ -138,19 +138,19 @@ static ALCenum alcError = ALC_NO_ERROR;
 
 /* Override */ ALCdevice* alcGetContextsDevice(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     return &dummyDevice;
 }
 
 /* Override */ ALCboolean alcIsExtensionPresent(ALCdevice *device, const ALCchar *extname)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (extname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return ALC_FALSE;
     }
 
-    debuglog(LCF_OPENAL, "Extension asked is ", extname);
+    debuglog(LCF_SOUND, "Extension asked is ", extname);
 
     if (strcmp(extname, "ALC_ENUMERATION_EXT") == 0) {
         return ALC_TRUE;
@@ -168,13 +168,13 @@ static ALCenum alcError = ALC_NO_ERROR;
         return ALC_FALSE;
     }
 
-    debuglog(LCF_OPENAL | LCF_ERROR, "Extension ", extname, " not supported, but we will still return yes because some games crash if we return no");
+    debuglog(LCF_SOUND | LCF_ERROR, "Extension ", extname, " not supported, but we will still return yes because some games crash if we return no");
     return ALC_TRUE;
 }
 
 /* Override */ void* alcGetProcAddress(ALCdevice *device, const ALCchar *funcname)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (funcname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return NULL;
@@ -202,20 +202,20 @@ static ALCenum alcError = ALC_NO_ERROR;
         return reinterpret_cast<void*>(myalcResetDeviceSOFT);
     }
 
-    debuglog(LCF_OPENAL | LCF_ERROR, "Requesting function ", funcname);
+    debuglog(LCF_SOUND | LCF_ERROR, "Requesting function ", funcname);
 
     return NULL;
 }
 
 /* Override */ ALCenum alcGetEnumValue(ALCdevice *device, const ALCchar *enumname)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
     if (enumname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return 0;
     }
 
-    debuglog(LCF_OPENAL | LCF_ERROR, "Requesting enum ", enumname);
+    debuglog(LCF_SOUND | LCF_ERROR, "Requesting enum ", enumname);
     return 0;
 }
 
@@ -233,40 +233,40 @@ static const ALCchar* alcDefault = "";
 
 /* Override */ const ALCchar* alcGetString(ALCdevice *device, ALCenum param)
 {
-    //debuglog(LCF_OPENAL, __func__, " call with param ", std::hex, param, std::dec);
-    debuglog(LCF_OPENAL, __func__, " call with param ", param);
+    //debuglog(LCF_SOUND, __func__, " call with param ", std::hex, param, std::dec);
+    debuglog(LCF_SOUND, __func__, " call with param ", param);
 
     switch (param) {
         case ALC_DEFAULT_DEVICE_SPECIFIER:
-            debuglog(LCF_OPENAL, "Request default device");
+            debuglog(LCF_SOUND, "Request default device");
             return alcDeviceStr;
 
         case ALC_DEVICE_SPECIFIER:
             if (device == NULL) {
-                debuglog(LCF_OPENAL, "Request list of available devices");
+                debuglog(LCF_SOUND, "Request list of available devices");
                 return alcDeviceListStr;
             }
             else {
-                debuglog(LCF_OPENAL, "Request current device");
+                debuglog(LCF_SOUND, "Request current device");
                 return alcDeviceStr;
             }
 
         case ALC_DEFAULT_ALL_DEVICES_SPECIFIER:
-            debuglog(LCF_OPENAL, "Request default all device");
+            debuglog(LCF_SOUND, "Request default all device");
             return alcDeviceStr;
 
         case ALC_ALL_DEVICES_SPECIFIER:
             if (device == NULL) {
-                debuglog(LCF_OPENAL, "Request list of available all devices");
+                debuglog(LCF_SOUND, "Request list of available all devices");
                 return alcDeviceListStr;
             }
             else {
-                debuglog(LCF_OPENAL, "Request current device");
+                debuglog(LCF_SOUND, "Request current device");
                 return alcDeviceStr;
             }
 
         case ALC_EXTENSIONS:
-            debuglog(LCF_OPENAL, "Request list of supported extensions");
+            debuglog(LCF_SOUND, "Request list of supported extensions");
             if (device == NULL) {
                 ALCSETERROR(ALC_INVALID_DEVICE);
                 return NULL;
@@ -274,15 +274,15 @@ static const ALCchar* alcDefault = "";
             return alcExtensionsStr;
 
         case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
-            debuglog(LCF_OPENAL, "Request default capture device");
+            debuglog(LCF_SOUND, "Request default capture device");
             return NULL;
         case ALC_CAPTURE_DEVICE_SPECIFIER:
             if (device == NULL) {
-                debuglog(LCF_OPENAL, "Request list of available capture devices");
+                debuglog(LCF_SOUND, "Request list of available capture devices");
                 return alcCaptureListStr;
             }
             else {
-                debuglog(LCF_OPENAL, "Request current capture device");
+                debuglog(LCF_SOUND, "Request current capture device");
                 return NULL;
             }
 
@@ -306,7 +306,7 @@ static const ALCchar* alcDefault = "";
 
 void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values)
 {
-    DEBUGLOGCALL(LCF_OPENAL);
+    DEBUGLOGCALL(LCF_SOUND);
 
     if (values == NULL)
         return;
@@ -315,32 +315,32 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
 
     switch (param) {
         case ALC_FREQUENCY:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request frequency");
+            debuglog(LCF_SOUND | LCF_TODO, "Request frequency");
             values[0] = 44100;
             return;
         case ALC_REFRESH:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request refresh");
+            debuglog(LCF_SOUND | LCF_TODO, "Request refresh");
             values[0] = 60;
             return;
         case ALC_SYNC:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request sync");
+            debuglog(LCF_SOUND | LCF_TODO, "Request sync");
             values[0] = 0;
             return;
         case ALC_MONO_SOURCES:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request mono sources");
+            debuglog(LCF_SOUND | LCF_TODO, "Request mono sources");
             values[0] = 255;
             return;
         case ALC_STEREO_SOURCES:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request stereo sources");
+            debuglog(LCF_SOUND | LCF_TODO, "Request stereo sources");
             values[0] = 255;
             return;
         case ALC_ATTRIBUTES_SIZE:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request attributes size");
+            debuglog(LCF_SOUND | LCF_TODO, "Request attributes size");
             //if (device == NULL)
             values[0] = 13;
             return;
         case ALC_ALL_ATTRIBUTES:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request all attributes");
+            debuglog(LCF_SOUND | LCF_TODO, "Request all attributes");
             values[0] = ALC_FREQUENCY;
             values[1] = 44100;
             values[2] = ALC_REFRESH;
@@ -356,35 +356,35 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
             values[12] = 0;
             return;
         case ALC_MAJOR_VERSION:
-            debuglog(LCF_OPENAL, "Request major version");
+            debuglog(LCF_SOUND, "Request major version");
             values[0] = 1;
             return;
         case ALC_MINOR_VERSION:
-            debuglog(LCF_OPENAL, "Request minor version");
+            debuglog(LCF_SOUND, "Request minor version");
             values[0] = 1;
             return;
         case ALC_CAPTURE_SAMPLES:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request capture samples");
+            debuglog(LCF_SOUND | LCF_TODO, "Request capture samples");
             values[0] = 0;
             return;
         case ALC_MAX_AUXILIARY_SENDS:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request max auxiliary sends");
+            debuglog(LCF_SOUND | LCF_TODO, "Request max auxiliary sends");
             values[0] = 2;
             return;
         case ALC_NUM_HRTF_SPECIFIERS_SOFT:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request number of HRTFs");
+            debuglog(LCF_SOUND | LCF_TODO, "Request number of HRTFs");
             values[0] = 0;
             return;
         case ALC_HRTF_SOFT:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request HRTF state");
+            debuglog(LCF_SOUND | LCF_TODO, "Request HRTF state");
             values[0] = ALC_FALSE;
             return;
         case ALC_HRTF_STATUS_SOFT:
-            debuglog(LCF_OPENAL | LCF_TODO, "Request HRTF status");
+            debuglog(LCF_SOUND | LCF_TODO, "Request HRTF status");
             values[0] = ALC_HRTF_DISABLED_SOFT;
             return;
         default:
-            debuglog(LCF_OPENAL | LCF_TODO, "Unknown param ", param);
+            debuglog(LCF_SOUND | LCF_TODO, "Unknown param ", param);
             values[0] = 2;
             return;
     }
@@ -392,13 +392,13 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
 
 ALCboolean myalcSetThreadContext(ALCcontext *context)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     return ALC_TRUE;
 }
 
 ALCcontext* myalcGetThreadContext(void)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     if (currentContext == -1)
         return nullptr;
     else
@@ -407,7 +407,7 @@ ALCcontext* myalcGetThreadContext(void)
 
 ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     game_info.audio |= GameInfo::OPENAL;
     game_info.tosend = true;
     return &dummyDevice;
@@ -415,26 +415,26 @@ ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 
 ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type)
 {
-    debuglog(LCF_OPENAL | LCF_TODO, __func__, " call with freq ", freq, ", channels ", channels, " and type ", type);
+    debuglog(LCF_SOUND | LCF_TODO, __func__, " call with freq ", freq, ", channels ", channels, " and type ", type);
     return ALC_TRUE;
 }
 
 void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
     memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
 }
 
 const ALCchar* myalcGetStringiSOFT(ALCdevice *device, ALCenum paramName, ALCsizei index)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     return "";
 }
 
 ALCboolean myalcResetDeviceSOFT(ALCdevice *device, const ALCint *attribs)
 {
-    DEBUGLOGCALL(LCF_OPENAL | LCF_TODO);
+    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
     return ALC_TRUE;
 }
 

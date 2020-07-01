@@ -525,7 +525,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingPrintGroup, tr("Keyboard"), LCF_KEYBOARD);
     addActionCheckable(loggingPrintGroup, tr("Mouse"), LCF_MOUSE);
     addActionCheckable(loggingPrintGroup, tr("Joystick"), LCF_JOYSTICK);
-    addActionCheckable(loggingPrintGroup, tr("OpenAL"), LCF_OPENAL);
+    addActionCheckable(loggingPrintGroup, tr("System"), LCF_SYSTEM);
     addActionCheckable(loggingPrintGroup, tr("Sound"), LCF_SOUND);
     addActionCheckable(loggingPrintGroup, tr("Random"), LCF_RANDOM);
     addActionCheckable(loggingPrintGroup, tr("Signals"), LCF_SIGNAL);
@@ -561,7 +561,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingExcludeGroup, tr("Keyboard"), LCF_KEYBOARD);
     addActionCheckable(loggingExcludeGroup, tr("Mouse"), LCF_MOUSE);
     addActionCheckable(loggingExcludeGroup, tr("Joystick"), LCF_JOYSTICK);
-    addActionCheckable(loggingExcludeGroup, tr("OpenAL"), LCF_OPENAL);
+    addActionCheckable(loggingExcludeGroup, tr("System"), LCF_SYSTEM);
     addActionCheckable(loggingExcludeGroup, tr("Sound"), LCF_SOUND);
     addActionCheckable(loggingExcludeGroup, tr("Random"), LCF_RANDOM);
     addActionCheckable(loggingExcludeGroup, tr("Signals"), LCF_SIGNAL);

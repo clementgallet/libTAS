@@ -87,7 +87,8 @@ void __attribute__((constructor)) init(void)
 
     /* Send game process pid */
     sendMessage(MSGB_PID);
-    pid_t mypid = getpid();
+    pid_t mypid;
+    NATIVECALL(mypid = getpid());
     debuglogstdio(LCF_SOCKET, "Send pid to program: %d", mypid);
     /* If I replace with the line below, then wine+SuperMeatBoy crashes on
      * on startup... */
