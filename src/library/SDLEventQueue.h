@@ -117,10 +117,6 @@ class SDLEventQueue
 
         /* Was the queue emptied? Used for asynchronous events */
         bool emptied;
-
-        /* We don't want some events to be pushed by the game */
-        bool isBannedEvent(SDL_Event *event);
-        bool isBannedEvent(SDL1::SDL_Event *event);
 };
 
 extern SDLEventQueue sdlEventQueue;

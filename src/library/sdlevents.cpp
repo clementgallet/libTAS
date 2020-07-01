@@ -92,6 +92,7 @@ static bool isBannedEvent(SDL_Event *event)
 static bool isBannedEvent(SDL1::SDL_Event *event)
 {
     switch(event->type) {
+        case SDL1::SDL_ACTIVEEVENT:
         case SDL1::SDL_KEYDOWN:
         case SDL1::SDL_KEYUP:
         case SDL1::SDL_MOUSEMOTION:
@@ -393,6 +394,10 @@ void pushNativeSDLEvents(void)
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event* ev1 = reinterpret_cast<SDL1::SDL_Event*>(event);
+
+        if (isBannedEvent(ev1))
+            return 0;
+
         int ret = sdlEventQueue.insert(ev1);
 
         if (ev1->type == SDL1::SDL_QUIT) {

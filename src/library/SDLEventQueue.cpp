@@ -309,66 +309,6 @@ void SDLEventQueue::delWatch(SDL_EventFilter filter, void* userdata)
         watches.erase(it);
 }
 
-bool SDLEventQueue::isBannedEvent(SDL_Event *event)
-{
-    switch(event->type) {
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-        case SDL_MOUSEMOTION:
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEWHEEL:
-        case SDL_JOYAXISMOTION:
-        case SDL_JOYBALLMOTION:
-        case SDL_JOYHATMOTION:
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-        case SDL_JOYDEVICEADDED:
-        case SDL_JOYDEVICEREMOVED:
-        case SDL_CONTROLLERAXISMOTION:
-        case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERDEVICEADDED:
-        case SDL_CONTROLLERDEVICEREMOVED:
-        case SDL_CONTROLLERDEVICEREMAPPED:
-            return true;
-        case SDL_WINDOWEVENT:
-            switch (event->window.event) {
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-                case SDL_WINDOWEVENT_SHOWN:
-                case SDL_WINDOWEVENT_EXPOSED:
-                case SDL_WINDOWEVENT_ENTER:
-                case SDL_WINDOWEVENT_LEAVE:
-                case SDL_WINDOWEVENT_TAKE_FOCUS:
-                    return true;
-                default:
-                    return false;
-            }
-        default:
-            return false;
-    }
-}
-
-bool SDLEventQueue::isBannedEvent(SDL1::SDL_Event *event)
-{
-    switch(event->type) {
-        case SDL1::SDL_KEYDOWN:
-        case SDL1::SDL_KEYUP:
-        case SDL1::SDL_MOUSEMOTION:
-        case SDL1::SDL_MOUSEBUTTONDOWN:
-        case SDL1::SDL_MOUSEBUTTONUP:
-        case SDL1::SDL_JOYAXISMOTION:
-        case SDL1::SDL_JOYBALLMOTION:
-        case SDL1::SDL_JOYHATMOTION:
-        case SDL1::SDL_JOYBUTTONDOWN:
-        case SDL1::SDL_JOYBUTTONUP:
-            return true;
-        default:
-            return false;
-    }
-}
-
 bool SDLEventQueue::waitForEmpty()
 {
     int attempts = 0;

@@ -430,6 +430,12 @@ static int swapInterval = 0;
      * our pixel access routine */
     ScreenCapture::init();
 
+    SDL1::SDL_Event event;
+    event.type = SDL1::SDL_ACTIVEEVENT;
+    event.active.gain = 1;
+    event.active.state = 0x7;
+    sdlEventQueue.insert(&event);
+
     return surf;
 }
 
