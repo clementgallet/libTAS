@@ -52,7 +52,7 @@ OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
  */
 OVERRIDE void SDL_Delay(Uint32 sleep);
 
-OVERRIDE int sched_yield(void);
+OVERRIDE int sched_yield(void) throw();
 
 }
 

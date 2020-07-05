@@ -595,7 +595,7 @@ static void *pthread_start(void *arg)
     return orig::sem_trywait(sem);
 }
 
-int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize)
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) throw()
 {
     LINK_NAMESPACE(pthread_attr_setstack, "pthread");
     if (GlobalState::isNative())
@@ -608,7 +608,7 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
     return 0;
 }
 
-int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) throw()
 {
     LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_WAIT);

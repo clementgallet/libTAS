@@ -217,7 +217,7 @@ xcb_send_event_checked (xcb_connection_t *c,
 
                 /* Resize the window to the screen or fake resolution */
                 if (shared_config.screen_width) {
-                    const static uint32_t values[] = { shared_config.screen_width, shared_config.screen_height };
+                    const static uint32_t values[] = { static_cast<uint32_t>(shared_config.screen_width), static_cast<uint32_t>(shared_config.screen_height) };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {
@@ -284,7 +284,7 @@ xcb_send_event (xcb_connection_t *c,
 
                 /* Resize the window to the screen or fake resolution */
                 if (shared_config.screen_width) {
-                    const static uint32_t values[] = { shared_config.screen_width, shared_config.screen_height };
+                    const static uint32_t values[] = { static_cast<uint32_t>(shared_config.screen_width), static_cast<uint32_t>(shared_config.screen_height) };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {

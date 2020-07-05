@@ -290,22 +290,11 @@ private:
 inline bool operator==(const String &lhs, const String &rhs) {
     return lhs.length() == rhs.length() && std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin());
 }
-inline bool operator!=(const String &lhs, const String &rhs) { return !(lhs == rhs); }
 inline bool operator<(const String &lhs, const String &rhs) {
     return std::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
 }
-inline bool operator>(const String &lhs, const String &rhs) { return rhs < lhs; }
-inline bool operator<=(const String &lhs, const String &rhs) { return !(lhs > rhs); }
-inline bool operator>=(const String &lhs, const String &rhs) { return !(lhs < rhs); }
-inline void swap(String &lhs, String &rhs) { return lhs.swap(rhs); }
 
 inline std::string &operator+=(std::string &lhs, const String &rhs) { return lhs.append(rhs.data(), rhs.length()); }
-inline std::ostream &operator<<(std::ostream &output, const String &string) {
-    std::ostream::sentry sentry(output);
-    if (sentry)
-        output.write(string.data(), string.length());
-    return output;
-}
 
 void String::dup() const {
     if (*this) {
@@ -691,12 +680,8 @@ public:
     unsigned long long int seqnum() const { return 0; }
     unsigned long long int usecSinceInitialized() const { return 0; }
 
-    friend bool operator==(const Device &lhs, const Device &rhs) { return &lhs == &rhs; }
     friend bool operator!=(const Device &lhs, const Device &rhs) { return &lhs != &rhs; }
     friend bool operator<(const Device &lhs, const Device &rhs) { return lhs.path < rhs.path; }
-    friend bool operator>(const Device &lhs, const Device &rhs) { return lhs.path > rhs.path; }
-    friend bool operator<=(const Device &lhs, const Device &rhs) { return lhs.path <= rhs.path; }
-    friend bool operator>=(const Device &lhs, const Device &rhs) { return lhs.path >= rhs.path; }
 
     iterator begin() { return iterator(this); }
     const_iterator cbegin() const { return const_iterator(this); }

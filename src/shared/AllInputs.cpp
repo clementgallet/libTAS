@@ -236,7 +236,7 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
 
     if (flags) {
         uint32_t temp_flags = flags;
-        for (int i=0; temp_flags!=0; i++, temp_flags >>= 1) {
+        for (unsigned int i=0; temp_flags!=0; i++, temp_flags >>= 1) {
             if (temp_flags & 0x1) {
                 si = {SingleInput::IT_FLAG, i, ""};
                 input_set.insert(si);

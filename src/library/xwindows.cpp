@@ -253,9 +253,8 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
     LINK_NAMESPACE_GLOBAL(XSetWMName);
 
     if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
-        Atom encoding = text_prop->encoding;
         WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
-        WindowTitle::setUpdateFunc([display, encoding] (const char* t) {
+        WindowTitle::setUpdateFunc([display] (const char* t) {
             if (!gameXWindows.empty()) {
                 XTextProperty prop;
                 XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);

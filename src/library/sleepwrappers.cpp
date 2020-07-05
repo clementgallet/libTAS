@@ -157,7 +157,7 @@ DEFINE_ORIG_POINTER(sched_yield);
     return orig::clock_nanosleep(clock_id, flags, req, rem);
 }
 
-/* Override */ int sched_yield(void)
+/* Override */ int sched_yield(void) throw()
 {
     LINK_NAMESPACE_GLOBAL(sched_yield);
 
