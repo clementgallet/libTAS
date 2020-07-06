@@ -23,7 +23,7 @@
 #include "inputs.h"
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h"
-#include "../XlibEventQueueList.h"
+#include "../xlib/XlibEventQueueList.h"
 
 namespace libtas {
 

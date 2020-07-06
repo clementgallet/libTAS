@@ -27,8 +27,8 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
-#include "sdlwindows.h"
-#include "sdlevents.h"
+#include "sdl/sdlwindows.h"
+#include "sdl/sdlevents.h"
 #include <iomanip>
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
@@ -37,11 +37,11 @@
 #include "checkpoint/ThreadSync.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
-#include "SDLEventQueue.h"
-#include "xevents.h"
-#include "xcbevents.h"
-#include "xatom.h"
-#include "XlibEventQueueList.h"
+#include "sdl/SDLEventQueue.h"
+#include "xlib/xevents.h"
+#include "xcb/xcbevents.h"
+#include "xlib/xatom.h"
+#include "xlib/XlibEventQueueList.h"
 #include "BusyLoopDetection.h"
 #include "audio/AudioContext.h"
 

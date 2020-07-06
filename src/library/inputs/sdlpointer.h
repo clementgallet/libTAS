@@ -24,7 +24,7 @@
 #include <SDL2/SDL.h>
 #include "inputs.h"
 #include "../global.h"
-#include "../sdlwindows.h" // SDL_Window
+// #include "../sdl/sdlwindows.h" // SDL_Window
 
 namespace libtas {
 

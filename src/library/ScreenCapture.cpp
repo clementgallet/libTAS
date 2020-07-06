@@ -20,7 +20,6 @@
 #include "ScreenCapture.h"
 
 #include "hook.h"
-#include "sdlversion.h"
 #include "logging.h"
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"

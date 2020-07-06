@@ -20,7 +20,7 @@
 #include "xcbpointer.h"
 #include "../logging.h"
 #include "inputs.h"
-#include "../XcbEventQueueList.h"
+#include "../xcb/XcbEventQueueList.h"
 #include "../DeterministicTimer.h"
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"

@@ -44,7 +44,7 @@ DEFINE_ORIG_POINTER(epoll_wait);
     debuglog(LCF_WAIT, __func__, " call with ", nfds, " fds and timeout ", timeout);
 
     /* Check for the fd used by ALSA */
-    for (int i = 0; i < nfds; i++) {
+    for (nfds_t i = 0; i < nfds; i++) {
         if (fds[i].fd == 0xa15a) {
             /* Wait here until our ALSA buffer has enough bytes available */
             int ret = snd_pcm_wait(reinterpret_cast<snd_pcm_t*>(static_cast<intptr_t>(fds[i].revents)), timeout);

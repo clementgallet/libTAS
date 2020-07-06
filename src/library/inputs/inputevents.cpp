@@ -31,15 +31,15 @@
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdltextinput.h" // SDL_EnableUNICODE
-#include "../SDLEventQueue.h"
+#include "../sdl/SDLEventQueue.h"
 #include "../../external/SDL1.h"
 #include "jsdev.h"
 #include "evdev.h"
 #include "../global.h" // game_info
 #include "xinput.h"
-#include "../XlibEventQueueList.h"
-#include "../XcbEventQueueList.h"
-#include "../xevents.h"
+#include "../xlib/XlibEventQueueList.h"
+#include "../xcb/XcbEventQueueList.h"
+#include "../xlib/xevents.h"
 
 #include <stdlib.h>
 #include <SDL2/SDL.h>

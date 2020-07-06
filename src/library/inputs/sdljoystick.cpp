@@ -20,8 +20,8 @@
 #include "sdljoystick.h"
 #include "inputs.h"
 #include "../logging.h"
-#include "../sdlversion.h"
-#include "../SDLEventQueue.h"
+#include "../sdl/sdlversion.h"
+#include "../sdl/SDLEventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
 #include <stdlib.h>

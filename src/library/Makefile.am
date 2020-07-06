@@ -24,17 +24,6 @@ libtas_so_SOURCES = \
     pthreadwrappers.cpp \
     randomwrappers.cpp \
     ScreenCapture.cpp \
-    SDLEventQueue.cpp \
-    sdldisplay.cpp \
-    sdldynapi.cpp \
-    sdlevents.cpp \
-    sdlmain.cpp \
-    sdlmutex.cpp \
-    sdlrender.cpp \
-    sdlthreads.cpp \
-    sdltimer.cpp \
-    sdlversion.cpp \
-    sdlwindows.cpp \
     signalwrappers.cpp \
     sleepwrappers.cpp \
     Stack.cpp \
@@ -45,20 +34,6 @@ libtas_so_SOURCES = \
     Utils.cpp \
     waitwrappers.cpp \
     WindowTitle.cpp \
-    XlibEventQueue.cpp \
-    XlibEventQueueList.cpp \
-    XcbEventQueue.cpp \
-    XcbEventQueueList.cpp \
-    xatom.cpp \
-    xcbconnection.cpp \
-    xcbevents.cpp \
-    xcbwindows.cpp \
-    xdisplay.cpp \
-    xevents.cpp \
-    xf86vidmode.cpp \
-    xinerama.cpp \
-    xrandr.cpp \
-    xwindows.cpp \
     audio/AudioBuffer.cpp \
     audio/AudioContext.cpp \
     audio/AudioPlayer.cpp \
@@ -119,6 +94,17 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD.cpp \
     renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \
+	sdl/SDLEventQueue.cpp \
+    sdl/sdldisplay.cpp \
+    sdl/sdldynapi.cpp \
+    sdl/sdlevents.cpp \
+    sdl/sdlmain.cpp \
+    sdl/sdlmutex.cpp \
+    sdl/sdlrender.cpp \
+    sdl/sdlthreads.cpp \
+    sdl/sdltimer.cpp \
+    sdl/sdlversion.cpp \
+    sdl/sdlwindows.cpp \
     steam/isteamapps.cpp \
     steam/isteamclient.cpp \
     steam/isteamcontroller.cpp \
@@ -142,6 +128,20 @@ libtas_so_SOURCES = \
     wine/wined3d.cpp \
     wine/user32.cpp \
     wine/kernel32.cpp \
+	xcb/XcbEventQueue.cpp \
+    xcb/XcbEventQueueList.cpp \
+    xcb/xcbconnection.cpp \
+    xcb/xcbevents.cpp \
+    xcb/xcbwindows.cpp \
+	xlib/XlibEventQueue.cpp \
+    xlib/XlibEventQueueList.cpp \
+    xlib/xatom.cpp \
+    xlib/xdisplay.cpp \
+    xlib/xevents.cpp \
+    xlib/xf86vidmode.cpp \
+    xlib/xinerama.cpp \
+    xlib/xrandr.cpp \
+    xlib/xwindows.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp \

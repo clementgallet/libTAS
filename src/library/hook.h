@@ -20,7 +20,7 @@
 #ifndef LIBTAS_HOOK_H_INCLUDED
 #define LIBTAS_HOOK_H_INCLUDED
 
-#include "sdlversion.h"
+#include "sdl/sdlversion.h"
 
 namespace libtas {
 
