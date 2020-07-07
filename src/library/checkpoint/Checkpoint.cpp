@@ -44,6 +44,7 @@
 #include "ReservedMemory.h"
 #include "SaveState.h"
 #include "../../external/lz4.h"
+#include "../../shared/sockethelpers.h"
 
 #define ONE_MB 1024 * 1024
 
@@ -103,9 +104,11 @@ void Checkpoint::setBaseSavestateIndex(int index)
 
 void Checkpoint::setCurrentToParent()
 {
-    strcpy(parentpagemappath, pagemappath);
-    strcpy(parentpagespath, pagespath);
-    parent_ss_index = ss_index;
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+        strcpy(parentpagemappath, pagemappath);
+        strcpy(parentpagespath, pagespath);
+        parent_ss_index = ss_index;
+    }
 }
 
 static void resetParent()
@@ -788,6 +791,10 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 
 static size_t writeAllAreas(bool base)
 {
+    pid_t pid = fork();
+    if (pid != 0)
+        return 0;
+
     int pmfd, pfd;
 
     size_t savestate_size = 0;
@@ -983,7 +990,23 @@ static size_t writeAllAreas(bool base)
         }
     }
 
-    return savestate_size;
+    XSetIOErrorHandler([](Display *)->int{exit(0);});
+
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i])
+            NATIVECALL(close(XConnectionNumber(gameDisplays[i])));
+    }
+    closeSocket();
+    // for (int i=0; i<GAMEDISPLAYNUM; i++) {
+    //     if (gameDisplays[i])
+    //         NATIVECALL(XCloseDisplay(gameDisplays[i]));
+    // }
+
+
+    // NATIVECALL(sleep(1000));
+
+    exit(0);
+    // return savestate_size;
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
