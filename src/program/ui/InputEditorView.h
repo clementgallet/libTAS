@@ -76,15 +76,15 @@ private:
     int mouseValue;
     KeyPressedDialog* keyDialog;
 
-    QAction *insertAction;
-    QAction *insertsAction;
-    QAction *deleteAction;
-    QAction *truncateAction;
-    QAction *clearAction;
-    QAction *copyAction;
-    QAction *cutAction;
-    QAction *pasteAction;
-    QAction *pasteInsertAction;
+    QAction *insertAct;
+    QAction *insertsAct;
+    QAction *deleteAct;
+    QAction *truncateAct;
+    QAction *clearAct;
+    QAction *copyAct;
+    QAction *cutAct;
+    QAction *pasteAct;
+    QAction *pasteInsertAct;
 
     QAction *lockAction;
 

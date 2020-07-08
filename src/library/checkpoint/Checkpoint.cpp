@@ -1015,6 +1015,10 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     area.print("Save");
     size_t area_size = 0;
 
+    /* Save the position of the first area page in the pages file */
+    area.page_offset = lseek(pfd, 0, SEEK_CUR);
+    MYASSERT(area.page_offset != -1)
+
     /* Write the area struct */
     area.skip = skipArea(&area);
     Utils::writeAll(pmfd, &area, sizeof(area));
@@ -1022,10 +1026,6 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
     if (area.skip)
         return area_size;
-
-    /* Save the position of the first area page in the pages file */
-    area.page_offset = lseek(pfd, 0, SEEK_CUR);
-    MYASSERT(area.page_offset != -1)
 
     if (spmfd != -1) {
         /* Seek at the beginning of the area pagemap */
