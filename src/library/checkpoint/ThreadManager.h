@@ -43,6 +43,12 @@ class ThreadManager {
     static pthread_mutex_t threadStateLock;
     static pthread_mutex_t threadListLock;
 
+    static bool is_child_fork;
+
+    /* Offset of `tid` member in the hidden `pthread` structure */
+    static int offset_tid;
+
+
 public:
     // Called from SDL_init, assumed to be main thread
     static void init();
@@ -52,6 +58,8 @@ public:
 
     /* Get the thread tid */
     static pid_t getThreadTid();
+
+    static void restoreThreadTids();
 
     /* Set the main thread to this thread */
     static void setMainThread();
@@ -86,6 +94,10 @@ public:
     static ThreadInfo* getThreadList() {
         return thread_list;
     }
+
+    static bool isChildFork();
+
+    static void setChildFork();
 
     /* Remove a thread from the list and add it to the free list */
     static void threadIsDead(ThreadInfo *thread);

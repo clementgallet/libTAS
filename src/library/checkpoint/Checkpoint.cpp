@@ -791,9 +791,13 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 
 static size_t writeAllAreas(bool base)
 {
-    pid_t pid = fork();
-    if (pid != 0)
-        return 0;
+    if (shared_config.savestate_settings & SharedConfig::SS_FORK) {
+        pid_t pid = fork();
+        if (pid != 0)
+            return 0;
+
+        ThreadManager::restoreThreadTids();
+    }
 
     int pmfd, pfd;
 
@@ -990,23 +994,27 @@ static size_t writeAllAreas(bool base)
         }
     }
 
-    XSetIOErrorHandler([](Display *)->int{exit(0);});
+    if (shared_config.savestate_settings & SharedConfig::SS_FORK) {
+        /* Cut connections to the X server */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (gameDisplays[i])
+                NATIVECALL(close(XConnectionNumber(gameDisplays[i])));
+        }
 
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i])
-            NATIVECALL(close(XConnectionNumber(gameDisplays[i])));
+        /* Close the connection to the libTAS program */
+        closeSocket();
+
+        /* Avoid the log message when this process will exit,
+         * caused by closed connections above. */
+        XSetIOErrorHandler([](Display *)->int{exit(0);});
+
+        /* Store that we are the child, so that destructors may act differently */
+        ThreadManager::setChildFork();
+
+        exit(0);
     }
-    closeSocket();
-    // for (int i=0; i<GAMEDISPLAYNUM; i++) {
-    //     if (gameDisplays[i])
-    //         NATIVECALL(XCloseDisplay(gameDisplays[i]));
-    // }
 
-
-    // NATIVECALL(sleep(1000));
-
-    exit(0);
-    // return savestate_size;
+    return savestate_size;
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */

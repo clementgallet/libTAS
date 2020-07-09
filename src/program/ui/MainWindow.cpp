@@ -473,6 +473,7 @@ void MainWindow::createActions()
 
     savestateGroup = new QActionGroup(this);
     savestateGroup->setExclusive(false);
+    connect(savestateGroup, &QActionGroup::triggered, this, &MainWindow::slotSavestate);
 
     QAction *action = addActionCheckable(savestateGroup, tr("Incremental savestates"), SharedConfig::SS_INCREMENTAL, tr("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing"));
     if (!context->is_soft_dirty) {
@@ -485,6 +486,7 @@ void MainWindow::createActions()
     addActionCheckable(savestateGroup, tr("Backtrack savestate"), SharedConfig::SS_BACKTRACK, tr("Save a state whenether a thread is created/destroyed, so that you can rewind to the earliest time possible"));
     addActionCheckable(savestateGroup, tr("Compressed savestates"), SharedConfig::SS_COMPRESSED);
     addActionCheckable(savestateGroup, tr("Skip unmapped pages"), SharedConfig::SS_PRESENT, tr("Shorter savestates, but causes crashes in some games"));
+    addActionCheckable(savestateGroup, tr("Fork to save states"), SharedConfig::SS_FORK, tr("Game can resume immediately without waiting for the state to be saved"));
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);
@@ -1398,6 +1400,13 @@ void MainWindow::slotCalibrateMouse()
     context->config.sc_modified = true;\
 }\
 
+#define CHECKBOXSLOT(slot, group, parameter) void MainWindow::slot()\
+{\
+    setMaskFromCheckboxes(group, parameter);\
+    context->config.sc_modified = true;\
+}\
+
+
 BOOLSLOT(slotFastForward, context->config.sc.fastforward)
 
 void MainWindow::slotMovieEnable(bool checked)
@@ -1487,34 +1496,15 @@ void MainWindow::slotRenderSoft(bool checked)
 
 BOOLSLOT(slotRenderPerf, context->config.sc.opengl_performance)
 
-void MainWindow::slotDebugState()
-{
-    setMaskFromCheckboxes(debugStateGroup, context->config.sc.debug_state);
-    context->config.sc_modified = true;
-}
-
-
-void MainWindow::slotLoggingPrint()
-{
-    setMaskFromCheckboxes(loggingPrintGroup, context->config.sc.includeFlags);
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotLoggingExclude()
-{
-    setMaskFromCheckboxes(loggingExcludeGroup, context->config.sc.excludeFlags);
-    context->config.sc_modified = true;
-}
+CHECKBOXSLOT(slotSavestate, savestateGroup, context->config.sc.savestate_settings)
+CHECKBOXSLOT(slotDebugState, debugStateGroup, context->config.sc.debug_state)
+CHECKBOXSLOT(slotLoggingPrint, loggingPrintGroup, context->config.sc.includeFlags)
+CHECKBOXSLOT(slotLoggingExclude, loggingExcludeGroup, context->config.sc.excludeFlags)
+CHECKBOXSLOT(slotFastforwardMode, fastforwardGroup, context->config.sc.fastforward_mode)
 
 void MainWindow::slotSlowdown()
 {
     setListFromRadio(slowdownGroup, context->config.sc.speed_divisor);
-    context->config.sc_modified = true;
-}
-
-void MainWindow::slotFastforwardMode()
-{
-    setMaskFromCheckboxes(fastforwardGroup, context->config.sc.fastforward_mode);
     context->config.sc_modified = true;
 }
 
@@ -1529,12 +1519,7 @@ void MainWindow::slotScreenRes()
 
 #ifdef LIBTAS_ENABLE_HUD
 
-void MainWindow::slotOsd()
-{
-    setMaskFromCheckboxes(osdGroup, context->config.sc.osd);
-    context->config.sc_modified = true;
-}
-
+CHECKBOXSLOT(slotOsd, osdGroup, context->config.sc.osd)
 BOOLSLOT(slotOsdEncode, context->config.sc.osd_encode)
 
 #endif

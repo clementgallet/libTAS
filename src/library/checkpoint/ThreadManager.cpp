@@ -41,6 +41,17 @@ thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
 pthread_t ThreadManager::main_pthread_id = 0;
 pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
+bool ThreadManager::is_child_fork = false;
+
+#ifdef __i386__
+int ThreadManager::offset_tid = 26;
+#elif __x86_64__
+int ThreadManager::offset_tid = 180;
+#else
+int ThreadManager::offset_tid = 0;
+#endif
+
+
 
 void ThreadManager::init()
 {
@@ -51,6 +62,19 @@ void ThreadManager::init()
     initThreadFromChild(thread);
 
     setMainThread();
+
+    /* Identify tid offset in pthread structure */
+    int* thread_data = reinterpret_cast<int*>(thread->pthread_id);
+    if (thread_data[offset_tid] != thread->tid) {
+        for (offset_tid = 0; offset_tid < 500; offset_tid++) {
+            if (thread_data[offset_tid] == thread->tid) {
+                break;
+            }
+        }
+        if (offset_tid == 500) {
+            debuglogstdio(LCF_THREAD | LCF_ERROR, "Could not find tid member in pthread!");
+        }
+    }
 }
 
 DEFINE_ORIG_POINTER(pthread_self);
@@ -156,6 +180,15 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
     return 0;
 }
 
+void ThreadManager::restoreThreadTids()
+{
+    /* Restore tid in all threads */
+    for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next) {
+        int* thread_data = reinterpret_cast<int*>(thread->pthread_id);
+        thread_data[offset_tid] = thread->tid;
+    }
+}
+
 bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
@@ -229,6 +262,16 @@ void ThreadManager::addToList(ThreadInfo* thread)
     unlockList();
 }
 
+bool ThreadManager::isChildFork()
+{
+    return is_child_fork;
+}
+
+void ThreadManager::setChildFork()
+{
+    is_child_fork = true;
+}
+
 void ThreadManager::threadIsDead(ThreadInfo *thread)
 {
     debuglog(LCF_THREAD, "Remove thread ", thread->tid, " from list");
@@ -289,6 +332,9 @@ void ThreadManager::threadExit(void* retval)
 
 void ThreadManager::deallocateThreads()
 {
+    if (isChildFork())
+        return;
+
     lockList();
 
     ThreadInfo *next;

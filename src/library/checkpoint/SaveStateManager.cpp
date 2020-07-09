@@ -39,9 +39,9 @@
 
 namespace libtas {
 
-static pthread_rwlock_t threadResumeLock = PTHREAD_RWLOCK_INITIALIZER;
 static sem_t semNotifyCkptThread;
 static sem_t semWaitForCkptThreadSignal;
+static pthread_mutex_t threadResumeLock = PTHREAD_MUTEX_INITIALIZER;
 static volatile bool restoreInProgress = false;
 static int numThreads;
 static int sig_suspend_threads = SIGXFSZ;
@@ -258,9 +258,9 @@ void SaveStateManager::restore()
 
 void SaveStateManager::suspendThreads()
 {
-    MYASSERT(pthread_rwlock_destroy(&threadResumeLock) == 0)
-    MYASSERT(pthread_rwlock_init(&threadResumeLock, NULL) == 0)
-    MYASSERT(pthread_rwlock_wrlock(&threadResumeLock) == 0)
+    MYASSERT(pthread_mutex_destroy(&threadResumeLock) == 0)
+    MYASSERT(pthread_mutex_init(&threadResumeLock, NULL) == 0)
+    MYASSERT(pthread_mutex_lock(&threadResumeLock) == 0)
 
     /* Halt all other threads - force them to call stopthisthread
     * If any have blocked checkpointing, wait for them to unblock before
@@ -392,7 +392,7 @@ void SaveStateManager::suspendThreads()
 void SaveStateManager::resumeThreads()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
-    MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
+    MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
 }
 
@@ -442,8 +442,8 @@ void SaveStateManager::stopThisThread(int signum)
             // NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
             // raise(SIGTRAP);
 
-            MYASSERT(pthread_rwlock_rdlock(&threadResumeLock) == 0)
-            MYASSERT(pthread_rwlock_unlock(&threadResumeLock) == 0)
+            MYASSERT(pthread_mutex_lock(&threadResumeLock) == 0)
+            MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
 
             // raise(SIGTRAP);
 

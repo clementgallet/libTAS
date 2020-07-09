@@ -31,8 +31,7 @@
 namespace libtas {
 
 static std::atomic<int> uninitializedThreadCount(0);
-static pthread_rwlock_t wrapperExecutionLock =
-    PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP;
+static pthread_mutex_t wrapperExecutionLock = PTHREAD_MUTEX_INITIALIZER;
 static std::mutex detMutex;
 static std::condition_variable detCond;
 static bool syncGo[10];
@@ -41,7 +40,7 @@ static bool syncGo[10];
 void ThreadSync::acquireLocks()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to exit wrappers");
-    MYASSERT(pthread_rwlock_wrlock(&wrapperExecutionLock) == 0)
+    MYASSERT(pthread_mutex_lock(&wrapperExecutionLock) == 0)
 
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for newly created threads to finish initialization");
     waitForThreadsToFinishInitialization();
@@ -52,7 +51,7 @@ void ThreadSync::acquireLocks()
 void ThreadSync::releaseLocks()
 {
     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Releasing ThreadSync locks");
-    MYASSERT(pthread_rwlock_unlock(&wrapperExecutionLock) == 0)
+    MYASSERT(pthread_mutex_unlock(&wrapperExecutionLock) == 0)
 }
 
 void ThreadSync::waitForThreadsToFinishInitialization()
@@ -80,7 +79,7 @@ void ThreadSync::decrementUninitializedThreadCount()
 void ThreadSync::wrapperExecutionLockLock()
 {
     while (1) {
-        int retVal = pthread_rwlock_tryrdlock(&wrapperExecutionLock);
+        int retVal = pthread_mutex_trylock(&wrapperExecutionLock);
         if (retVal != 0 && retVal == EBUSY) {
             struct timespec sleepTime = { 0, 100 * 1000 * 1000 };
             NATIVECALL(nanosleep(&sleepTime, NULL));
@@ -96,7 +95,7 @@ void ThreadSync::wrapperExecutionLockLock()
 
 void ThreadSync::wrapperExecutionLockUnlock()
 {
-    if (pthread_rwlock_unlock(&wrapperExecutionLock) != 0) {
+    if (pthread_mutex_unlock(&wrapperExecutionLock) != 0) {
         debuglog(LCF_ERROR | LCF_THREAD, "Failed to release lock!");
     }
 }

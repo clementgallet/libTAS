@@ -238,6 +238,7 @@ private slots:
     void slotDisableSound(bool checked);
     void slotRenderSoft(bool checked);
     void slotRenderPerf(bool checked);
+    void slotSavestate();
     void slotDebugState();
     void slotLoggingPrint();
     void slotLoggingExclude();

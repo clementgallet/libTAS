@@ -230,10 +230,11 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         SS_BACKTRACK = 0x04, /* Saving a backtrack savestate each time a thread is created/destroyed */
         SS_COMPRESSED = 0x08, /* Compress savestates */
         SS_PRESENT = 0x10, /* Skip unmapped pages */
+        SS_FORK = 0x20, /* Use a forked process to save the state */
     };
 
     /* Savestate settings */
-    int savestate_settings = SS_PRESENT;
+    int savestate_settings = SS_COMPRESSED;
 
     /* Is the game running or on pause */
     bool running = false;
