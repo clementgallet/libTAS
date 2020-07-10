@@ -146,7 +146,11 @@ static void setPagesFd(int index, int fd)
 int Checkpoint::checkCheckpoint()
 {
     if (shared_config.savestate_settings & SharedConfig::SS_RAM)
-        return 0;
+        return SaveStateManager::ESTATE_OK;
+
+    /* TODO: Find another way to check for space, because mapped memory is
+     * way bigger than final savestate size. */
+    return SaveStateManager::ESTATE_OK;
 
     /* Get an estimation of the savestate space */
     uint64_t savestate_size = 0;
@@ -179,7 +183,7 @@ int Checkpoint::checkCheckpoint()
         }
     }
 
-    return 0;
+    return SaveStateManager::ESTATE_OK;
 }
 
 int Checkpoint::checkRestore()
