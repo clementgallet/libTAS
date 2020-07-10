@@ -284,11 +284,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 	config.setValue("auto_restart", context->config.auto_restart);
 	config.setValue("variable_framerate", context->config.sc.variable_framerate);
 
-	/* Store the md5 that was extracted from the movie, or store the game
-	 * binary movie if not. */
-	if (!context->md5_movie.empty())
-		config.setValue("md5", context->md5_movie.c_str());
-	else if (!context->md5_game.empty())
+	if (!context->md5_game.empty())
 		config.setValue("md5", context->md5_game.c_str());
 
 	config.beginGroup("mainthread_timetrack");
