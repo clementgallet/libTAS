@@ -561,6 +561,7 @@ static void receive_messages(std::function<void()> draw)
         msg += std::to_string(slot);
         msg += " saved";
         RenderHUD::insertMessage(msg.c_str());
+        screen_redraw(draw, hud, preview_ai);
 #endif
     }
 
@@ -583,6 +584,7 @@ static void receive_messages(std::function<void()> draw)
                 msg += std::to_string(slot);
                 msg += " saved";
                 RenderHUD::insertMessage(msg.c_str());
+                screen_redraw(draw, hud, preview_ai);
 #endif
             }
         }

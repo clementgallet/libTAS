@@ -71,7 +71,7 @@ static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveState &saved_area, int spmfd, SaveState &parent_state, SaveState &base_state);
 
-static size_t writeAllAreas(bool base);
+static void writeAllAreas(bool base);
 static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base);
 
 void Checkpoint::setSavestatePath(std::string path)
@@ -175,10 +175,6 @@ int Checkpoint::checkCheckpoint()
     if ((ret = statvfs(savestate_str.c_str(), &devData)) >= 0) {
         uint64_t available_size = static_cast<uint64_t>(devData.f_bavail) * devData.f_bsize;
         if (savestate_size > available_size) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Not enough available space to store the savestate (s %" PRIu64 " / av %" PRIu64 ")", savestate_size, available_size);
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Not enough available space to store the savestate");
-#endif
             return SaveStateManager::ESTATE_NOMEM;
         }
     }
@@ -191,35 +187,19 @@ int Checkpoint::checkRestore()
     /* Check that the savestate files exist */
     if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
         if (!getPagemapFd(ss_index)) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Savestate does not exist");
-#endif
             return SaveStateManager::ESTATE_NOSTATE;
         }
 
         if (!getPagesFd(ss_index)) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Savestate does not exist");
-#endif
             return SaveStateManager::ESTATE_NOSTATE;
         }
     }
     else {
         struct stat sb;
         if (stat(pagemappath, &sb) == -1) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Savestate does not exist");
-#endif
             return SaveStateManager::ESTATE_NOSTATE;
         }
         if (stat(pagespath, &sb) == -1) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Savestate does not exist");
-#endif
             return SaveStateManager::ESTATE_NOSTATE;
         }
     }
@@ -260,19 +240,11 @@ int Checkpoint::checkRestore()
 
         if (t == sh.thread_count) {
             /* We didn't find a match */
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
-#ifdef LIBTAS_ENABLE_HUD
-            RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
-#endif
             return SaveStateManager::ESTATE_NOTSAMETHREADS;
         }
     }
 
     if (n != sh.thread_count) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR | LCF_ALERT, "Loading this state is not supported because the thread list has changed since, sorry");
-#ifdef LIBTAS_ENABLE_HUD
-        RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
-#endif
         return SaveStateManager::ESTATE_NOTSAMETHREADS;
     }
 
@@ -359,24 +331,14 @@ void Checkpoint::handler(int signum)
             if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
                 int fd = getPagemapFd(base_ss_index);
                 if (!fd) {
-                    TimeHolder old_time, new_time, delta_time;
-                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
-                    size_t savestate_size = writeAllAreas(true);
-                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
-                    delta_time = new_time - old_time;
-                    debuglogstdio(LCF_INFO, "Saved base state of size %zu in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+                    writeAllAreas(true);
                 }
             }
             else {
                 struct stat sb;
                 if (stat(basepagemappath, &sb) == -1) {
                     resetParent();
-                    TimeHolder old_time, new_time, delta_time;
-                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
-                    size_t savestate_size = writeAllAreas(true);
-                    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
-                    delta_time = new_time - old_time;
-                    debuglogstdio(LCF_INFO, "Saved base state of size %zu in %f seconds", savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+                    writeAllAreas(true);
                 }
             }
         }
@@ -384,12 +346,7 @@ void Checkpoint::handler(int signum)
         /* We must store the current stack frame in the savestate */
         AltStack::saveStackFrame();
 
-        TimeHolder old_time, new_time, delta_time;
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
-        size_t savestate_size = writeAllAreas(false);
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
-        delta_time = new_time - old_time;
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Saved state %d of size %zu in %f seconds", ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+        writeAllAreas(false);
     }
 }
 
@@ -789,15 +746,18 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 }
 
 
-static size_t writeAllAreas(bool base)
+static void writeAllAreas(bool base)
 {
     if (shared_config.savestate_settings & SharedConfig::SS_FORK) {
         pid_t pid = fork();
         if (pid != 0)
-            return 0;
+            return;
 
         ThreadManager::restoreThreadTids();
     }
+
+    TimeHolder old_time, new_time, delta_time;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
 
     int pmfd, pfd;
 
@@ -994,28 +954,17 @@ static size_t writeAllAreas(bool base)
         }
     }
 
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+    delta_time = new_time - old_time;
+    debuglogstdio(LCF_INFO, "Saved state %d of size %zu in %f seconds", base?0:ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+
     if (shared_config.savestate_settings & SharedConfig::SS_FORK) {
-        /* Cut connections to the X server */
-        for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (gameDisplays[i])
-                NATIVECALL(close(XConnectionNumber(gameDisplays[i])));
-        }
-
-        /* Close the connection to the libTAS program */
-        closeSocket();
-
-        /* Avoid the log message when this process will exit,
-         * caused by closed connections above. */
-        XSetIOErrorHandler([](Display *)->int{exit(0);});
-
         /* Store that we are the child, so that destructors may act differently */
         ThreadManager::setChildFork();
 
         /* Return the savestate index as status code */
-        exit(ss_index);
+        _exit(base?0:ss_index);
     }
-
-    return savestate_size;
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */

@@ -4,6 +4,7 @@
 * Savestates can be compressed
 * Middle button to reset controller axis to 0
 * Hook getpid() used for prng seeding
+* Option to use a forked process to save state
 
 ### Changed
 ### Fixed
