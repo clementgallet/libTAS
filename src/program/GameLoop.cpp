@@ -949,28 +949,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Checking that saving succeeded */
             int message = receiveMessage();
             if (message == MSGB_SAVING_SUCCEEDED) {
-                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                    std::string msg;
-                    if (hk.type == HOTKEY_SAVESTATE_BACKTRACK) {
-                        msg = "Backtrack state saved";
-                    }
-                    else {
-                        msg = "State ";
-                        msg += std::to_string(statei);
-                        msg += " saved";
-                    }
-                    sendMessage(MSGN_OSD_MSG);
-                    sendString(msg);
-                }
-
                 emit savestatePerformed(statei, context->framecount);
-            }
-            else {
-                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                    std::string msg = "State saving failed";
-                    sendMessage(MSGN_OSD_MSG);
-                    sendString(msg);
-                }
             }
 
             return false;

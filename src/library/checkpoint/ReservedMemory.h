@@ -33,12 +33,14 @@ namespace ReservedMemory {
     enum Addresses {
         PAGEMAPS_ADDR = 0,
         PAGES_ADDR = 11*sizeof(int),
-        PSM_ADDR = 22*sizeof(int),
+        SS_SLOTS_ADDR = 22*sizeof(int),
+        PSM_ADDR = 22*sizeof(int)+11*sizeof(bool),
         STACK_ADDR = ONE_MB,
     };
     enum Sizes {
         PAGEMAPS_SIZE = PAGES_ADDR - PAGEMAPS_ADDR,
-        PAGES_SIZE = PSM_ADDR - PAGES_ADDR,
+        PAGES_SIZE = SS_SLOTS_ADDR - PAGES_ADDR,
+        SS_SLOTS_SIZE = PSM_ADDR - SS_SLOTS_ADDR,
         PSM_SIZE = STACK_ADDR - PSM_ADDR,
         STACK_SIZE = RESTORE_TOTAL_SIZE - STACK_ADDR,
     };

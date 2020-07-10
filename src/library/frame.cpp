@@ -550,19 +550,43 @@ static void receive_messages(std::function<void()> draw)
     AllInputs preview_ai;
     preview_ai.emptyInputs();
     std::string savestatepath;
-    int index;
+    int slot;
+
+    /* Catch dead children spawned for state saving */
+    while (1) {
+        int slot = SaveStateManager::waitChild();
+        if (slot < 0) break;
+#ifdef LIBTAS_ENABLE_HUD
+        std::string msg = "State ";
+        msg += std::to_string(slot);
+        msg += " saved";
+        RenderHUD::insertMessage(msg.c_str());
+#endif
+    }
 
     while (1)
     {
         int message = receiveMessageNonBlocking();
-        /* We need to answer to ping messages from the window manager,
-         * otherwise the game will appear as unresponsive. */
         if (message < 0) {
+            /* We need to answer to ping messages from the window manager,
+             * otherwise the game will appear as unresponsive. */
             pushNativeXlibEvents();
             pushNativeXcbEvents();
             NATIVECALL(usleep(100));
+
+            /* Catch dead children spawned for state saving */
+            while (1) {
+                int slot = SaveStateManager::waitChild();
+                if (slot < 0) break;
+#ifdef LIBTAS_ENABLE_HUD
+                std::string msg = "State ";
+                msg += std::to_string(slot);
+                msg += " saved";
+                RenderHUD::insertMessage(msg.c_str());
+#endif
+            }
         }
-        bool succeeded;
+        int status;
         std::string str;
         switch (message)
         {
@@ -618,20 +642,22 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_SAVESTATE_INDEX:
                 /* Get the savestate index */
-                receiveData(&index, sizeof(int));
-                Checkpoint::setSavestateIndex(index);
+                receiveData(&slot, sizeof(int));
+                Checkpoint::setSavestateIndex(slot);
                 break;
 
             case MSGN_SAVESTATE:
-                succeeded = SaveStateManager::checkpoint();
+                status = SaveStateManager::checkpoint(slot);
 
-                if (succeeded) {
+                if (status == 0) {
                     /* Current savestate is now the parent savestate */
                     Checkpoint::setCurrentToParent();
 
                     /* We did at least one savestate, used for backtrack savestate */
                     didASavestate = true;
                 }
+
+                SaveStateManager::printError(status);
 
                 /* Don't forget that when we load a savestate, the game continues
                  * from here and not from SaveStateManager::restore() under.
@@ -664,9 +690,24 @@ static void receive_messages(std::function<void()> draw)
                     /* Screen should have changed after loading */
                     ScreenCapture::setPixels();
                 }
-                else if (succeeded) {
+                else if (status == 0) {
                     /* Tell the program that the saving succeeded */
                     sendMessage(MSGB_SAVING_SUCCEEDED);
+
+                    /* Print the successful message, unless we are saving in a fork */
+#ifdef LIBTAS_ENABLE_HUD
+                    if (!(shared_config.savestate_settings & SharedConfig::SS_FORK)) {
+                        if (shared_config.osd & SharedConfig::OSD_MESSAGES) {
+                            std::string msg;
+                            msg = "State ";
+                            msg += std::to_string(slot);
+                            msg += " saved";
+                            RenderHUD::insertMessage(msg.c_str());
+                            screen_redraw(draw, hud, preview_ai);
+                        }
+                    }
+#endif
+
                 }
                 else {
                     /* A bit hackish, we must send something */
@@ -676,7 +717,9 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_LOADSTATE:
-                SaveStateManager::restore();
+                status = SaveStateManager::restore(slot);
+
+                SaveStateManager::printError(status);
 
                 /* If restoring failed, we return here. We still send the
                  * frame count and time because the program will pull a

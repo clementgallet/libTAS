@@ -143,10 +143,10 @@ static void setPagesFd(int index, int fd)
     pages[index] = fd;
 }
 
-bool Checkpoint::checkCheckpoint()
+int Checkpoint::checkCheckpoint()
 {
     if (shared_config.savestate_settings & SharedConfig::SS_RAM)
-        return true;
+        return 0;
 
     /* Get an estimation of the savestate space */
     uint64_t savestate_size = 0;
@@ -179,14 +179,14 @@ bool Checkpoint::checkCheckpoint()
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Not enough available space to store the savestate");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOMEM;
         }
     }
 
-    return true;
+    return 0;
 }
 
-bool Checkpoint::checkRestore()
+int Checkpoint::checkRestore()
 {
     /* Check that the savestate files exist */
     if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
@@ -195,7 +195,7 @@ bool Checkpoint::checkRestore()
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOSTATE;
         }
 
         if (!getPagesFd(ss_index)) {
@@ -203,7 +203,7 @@ bool Checkpoint::checkRestore()
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOSTATE;
         }
     }
     else {
@@ -213,14 +213,14 @@ bool Checkpoint::checkRestore()
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOSTATE;
         }
         if (stat(pagespath, &sb) == -1) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Savestate does not exist");
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Savestate does not exist");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOSTATE;
         }
     }
 
@@ -232,7 +232,7 @@ bool Checkpoint::checkRestore()
     else {
         NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
         if (pmfd == -1)
-            return false;
+            return SaveStateManager::ESTATE_NOSTATE;
     }
 
     /* Read the savestate header */
@@ -264,7 +264,7 @@ bool Checkpoint::checkRestore()
 #ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
 #endif
-            return false;
+            return SaveStateManager::ESTATE_NOTSAMETHREADS;
         }
     }
 
@@ -273,10 +273,10 @@ bool Checkpoint::checkRestore()
 #ifdef LIBTAS_ENABLE_HUD
         RenderHUD::insertMessage("Loading the savestate not allowed because new threads were created");
 #endif
-        return false;
+        return SaveStateManager::ESTATE_NOTSAMETHREADS;
     }
 
-    return true;
+    return SaveStateManager::ESTATE_OK;
 }
 
 void Checkpoint::handler(int signum)
@@ -1011,7 +1011,8 @@ static size_t writeAllAreas(bool base)
         /* Store that we are the child, so that destructors may act differently */
         ThreadManager::setChildFork();
 
-        exit(0);
+        /* Return the savestate index as status code */
+        exit(ss_index);
     }
 
     return savestate_size;

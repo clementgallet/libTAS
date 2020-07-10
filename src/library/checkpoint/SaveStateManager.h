@@ -33,21 +33,15 @@
 namespace libtas {
 namespace SaveStateManager {
 
-// static thread_local ThreadInfo* current_thread;
-//
-// static pthread_mutex_t threadStateLock;
-// static pthread_mutex_t threadListLock;
-// static pthread_rwlock_t threadResumeLock;
-// static sem_t semNotifyCkptThread;
-// static sem_t semWaitForCkptThreadSignal;
-//
-// static int numThreads;
-//
-// /* Which signals are we using */
-// int sig_suspend_threads;
-// int sig_checkpoint;
-//
-// volatile bool restoreInProgress;
+/* List of error codes */
+enum Error {
+    ESTATE_OK = 0,
+    ESTATE_UNKNOWN = -1, // Unknown error
+    ESTATE_NOMEM = -2, // Not enough memory to perform savestate
+    ESTATE_NOSTATE = -3, // No state in slot
+    ESTATE_NOTSAMETHREADS = -4, // Thread list has changed
+    ESTATE_NOTCOMPLETE = -5, // State still being saved
+};
 
 void init();
 
@@ -56,11 +50,20 @@ void initCheckpointThread();
 
 void initThreadFromChild(ThreadInfo* thread);
 
+/* Wait for a child to terminate and register the savestate slot */
+int waitChild();
+
+/* Returns if a state is completed (useful for fork savestates) */
+bool stateReady(int slot);
+
+/* Change the dirty state of savestate when doing forked savestate */
+void stateStatus(int slot, bool dirty);
+
 /* Save a savestate and returns if succeeded */
-bool checkpoint();
+int checkpoint(int slot);
 
 /* Restore a savestate */
-void restore();
+int restore(int slot);
 
 /* Send a signal to suspend all threads before checkpointing */
 void suspendThreads();
@@ -78,6 +81,9 @@ bool isLoading();
 
 /* Restore the state of loading a savestate, after memory has been rewritten */
 void setLoading();
+
+/* Print savestate error and display it on HUD */
+void printError(int err);
 
 /* Returns the signal number of checkpoint and thread suspend */
 int sigCheckpoint();

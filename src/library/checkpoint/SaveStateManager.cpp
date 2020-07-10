@@ -24,6 +24,7 @@
 #include <algorithm> // std::find
 #include <sys/mman.h>
 #include <sys/syscall.h> // syscall, SYS_gettid
+#include <sys/wait.h> // waitpid
 
 #include "SaveStateManager.h"
 #include "ThreadManager.h"
@@ -46,6 +47,7 @@ static volatile bool restoreInProgress = false;
 static int numThreads;
 static int sig_suspend_threads = SIGXFSZ;
 static int sig_checkpoint = SIGSYS;
+static bool* state_dirty;
 
 int SaveStateManager::sigCheckpoint()
 {
@@ -63,6 +65,9 @@ void SaveStateManager::init()
     sem_init(&semWaitForCkptThreadSignal, 0, 0);
 
     ReservedMemory::init();
+
+    state_dirty = static_cast<bool*>(ReservedMemory::getAddr(ReservedMemory::SS_SLOTS_ADDR));
+    memset(state_dirty, 0, 11*sizeof(bool));
 }
 
 void SaveStateManager::initCheckpointThread()
@@ -117,8 +122,53 @@ void SaveStateManager::initThreadFromChild(ThreadInfo* thread)
     }
 }
 
-bool SaveStateManager::checkpoint()
+int SaveStateManager::waitChild()
 {
+    if (!(shared_config.savestate_settings & SharedConfig::SS_FORK))
+        return -1;
+
+    int status;
+    pid_t pid = waitpid(-1, &status, WNOHANG);
+    if (pid <= 0) {
+        return -1;
+    }
+    status = WEXITSTATUS(status);
+    if ((status < 0) && (status > 10)) {
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Got unknown status code ", status, " from pid ", pid);
+        return -1;
+    }
+    if (!state_dirty[status]) {
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "State saving ", status, " completed but was already ready");
+        return -1;
+    }
+
+    state_dirty[status] = false;
+    return status;
+}
+
+bool SaveStateManager::stateReady(int slot)
+{
+    if (!(shared_config.savestate_settings & SharedConfig::SS_FORK))
+        return true;
+
+    if ((slot < 0) && (slot > 10)) {
+        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Wrong slot number");
+        return false;
+    }
+    return !state_dirty[slot];
+}
+
+void SaveStateManager::stateStatus(int slot, bool dirty)
+{
+    if (shared_config.savestate_settings & SharedConfig::SS_FORK)
+        state_dirty[slot] = dirty;
+}
+
+int SaveStateManager::checkpoint(int slot)
+{
+    if (!stateReady(slot))
+        return ESTATE_NOTCOMPLETE;
+
     ThreadInfo *current_thread = ThreadManager::getCurrentThread();
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
 
@@ -132,9 +182,10 @@ bool SaveStateManager::checkpoint()
     AudioPlayer::close();
 
     /* Perform a series of checks before attempting to checkpoint */
-    if (!Checkpoint::checkCheckpoint()) {
+    int ret = Checkpoint::checkCheckpoint();
+    if (ret < 0) {
         ThreadSync::releaseLocks();
-        return false;
+        return ret;
     }
 
     /* We save the alternate stack if the game did set one */
@@ -187,11 +238,18 @@ bool SaveStateManager::checkpoint()
 
     ThreadSync::releaseLocks();
 
-    return true;
+    /* Mark the savestate as dirty in case of fork savestate */
+    if (!isLoading())
+        stateStatus(slot, true);
+
+    return ESTATE_OK;
 }
 
-void SaveStateManager::restore()
+int SaveStateManager::restore(int slot)
 {
+    if (!stateReady(slot))
+        return ESTATE_NOTCOMPLETE;
+
     ThreadInfo *current_thread = ThreadManager::getCurrentThread();
     MYASSERT(current_thread->state == ThreadInfo::ST_CKPNTHREAD)
     ThreadSync::acquireLocks();
@@ -202,9 +260,10 @@ void SaveStateManager::restore()
     AudioPlayer::close();
 
     /* Perform a series of checks before attempting to restore */
-    if (!Checkpoint::checkRestore()) {
+    int ret = Checkpoint::checkRestore();
+    if (ret < 0) {
         ThreadSync::releaseLocks();
-        return;
+        return ret;
     }
 
     /* We save the alternate stack if the game did set one */
@@ -254,6 +313,8 @@ void SaveStateManager::restore()
      waitForAllRestored(current_thread);
 
      ThreadSync::releaseLocks();
+
+     return ESTATE_UNKNOWN;
 }
 
 void SaveStateManager::suspendThreads()
@@ -485,6 +546,25 @@ void SaveStateManager::waitForAllRestored(ThreadInfo *thread)
     else {
         sem_post(&semNotifyCkptThread);
         sem_wait(&semWaitForCkptThreadSignal);
+    }
+}
+
+void SaveStateManager::printError(int err)
+{
+    const char* const errors[] = {
+        "No error",
+        "Savestate failed",
+        "Not enough available space to store the savestate",
+        "Savestate does not exist",
+        "Loading not allowed because new threads were created",
+        "State still saving",
+        0 };
+
+    if (err < 0) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, errors[-err]);
+#ifdef LIBTAS_ENABLE_HUD
+        RenderHUD::insertMessage(errors[-err]);
+#endif
     }
 }
 

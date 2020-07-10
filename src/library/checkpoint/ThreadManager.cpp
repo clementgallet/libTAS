@@ -182,7 +182,6 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
 
 void ThreadManager::restoreThreadTids()
 {
-    /* Restore tid in all threads */
     for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next) {
         int* thread_data = reinterpret_cast<int*>(thread->pthread_id);
         thread_data[offset_tid] = thread->tid;

@@ -59,6 +59,7 @@ public:
     /* Get the thread tid */
     static pid_t getThreadTid();
 
+    /* Restore tid in all threads into their internal pthread structure */
     static void restoreThreadTids();
 
     /* Set the main thread to this thread */
@@ -95,8 +96,10 @@ public:
         return thread_list;
     }
 
+    /* Are we a child process for state saving? */
     static bool isChildFork();
 
+    /* Set the child process state */
     static void setChildFork();
 
     /* Remove a thread from the list and add it to the free list */

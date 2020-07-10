@@ -35,8 +35,8 @@ namespace Checkpoint
 
     void setCurrentToParent();
 
-    bool checkCheckpoint();
-    bool checkRestore();
+    int checkCheckpoint();
+    int checkRestore();
     void handler(int signum);
 };
 }
