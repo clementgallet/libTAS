@@ -21,6 +21,8 @@
 #include "logging.h"
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
+#include "backtrace.h"
+#include <execinfo.h>
 
 namespace libtas {
 
@@ -29,12 +31,27 @@ DEFINE_ORIG_POINTER(getpid);
 /* Override */ pid_t getpid (void) throw()
 {
     LINK_NAMESPACE_GLOBAL(getpid);
+    pid_t pid = orig::getpid();
+    
     if (GlobalState::isNative()) {
-        return orig::getpid();
+        return pid;
     }
 
     DEBUGLOGCALL(LCF_SYSTEM);
-    return 1234;
+
+    /* A bit hackish: Dead Cells seeds the rng using the process pid.
+     * However, specifying a wrong pid for other calls will most likely crash
+     * games (mainly because OpenGL drivers need this value). So we look from
+     * which library was the call made. */
+    void* return_address =  __builtin_return_address(0);
+    char** symbols = backtrace_symbols(&return_address, 1);
+    if (symbols != nullptr) {
+        if (strstr(symbols[0], "libhl.so"))
+            pid = 1234;
+        free(symbols);
+    }
+
+    return pid;
 }
 
 }
