@@ -26,7 +26,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(glGetIntegerv)
+DECLARE_ORIG_POINTER(glGetIntegerv)
 DEFINE_ORIG_POINTER(glGenTextures)
 DEFINE_ORIG_POINTER(glDeleteTextures)
 DEFINE_ORIG_POINTER(glBindTexture)
