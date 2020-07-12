@@ -23,6 +23,8 @@
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
 #include "../ScreenCapture.h"
+#include "XcbEventQueueList.h"
+#include "XcbEventQueue.h"
 
 namespace libtas {
 
@@ -63,6 +65,25 @@ xcb_create_window_checked (xcb_connection_t *c,
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
 
+    /* Add the mask in our event queue */
+    if (value_mask & XCB_CW_EVENT_MASK) {
+        /* Get the event mask value */
+        const uint32_t *values = static_cast<const uint32_t*>(value_list);
+        uint32_t event_mask = 0;
+        int i = 0;
+        for (int k=1; k <= XCB_CW_CURSOR; k <<= 1) {
+            if (k == XCB_CW_EVENT_MASK) {
+                event_mask = values[i];
+                break;
+            }
+            if (value_mask & k)
+                i++;
+        }
+
+        std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
+        queue->setMask(wid, event_mask);
+    }
+
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
 
@@ -100,6 +121,25 @@ xcb_create_window (xcb_connection_t *c,
     game_info.keyboard |= GameInfo::XCBEVENTS;
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
+
+    /* Add the mask in our event queue */
+    if (value_mask & XCB_CW_EVENT_MASK) {
+        /* Get the event mask value */
+        const uint32_t *values = static_cast<const uint32_t*>(value_list);
+        uint32_t event_mask = 0;
+        int i = 0;
+        for (int k=1; k <= XCB_CW_CURSOR; k <<= 1) {
+            if (k == XCB_CW_EVENT_MASK) {
+                event_mask = values[i];
+                break;
+            }
+            if (value_mask & k)
+                i++;
+        }
+
+        std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
+        queue->setMask(wid, event_mask);
+    }
 
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;

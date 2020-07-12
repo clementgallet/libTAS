@@ -337,8 +337,10 @@ int xcb_flush(xcb_connection_t *c)
         return orig::xcb_flush(c);
     }
 
-    pushNativeXcbEvents(c);
-    return 1; // Success
+    // pushNativeXcbEvents(c);
+    LINK_NAMESPACE_GLOBAL(xcb_flush);
+    return orig::xcb_flush(c);
+    // return 1; // Success
 }
 
 }

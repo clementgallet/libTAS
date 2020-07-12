@@ -21,6 +21,8 @@
 #include "XcbEventQueue.h"
 #include "../logging.h"
 #include "../inputs/inputs.h"
+#include "../xlib/XlibEventQueueList.h"
+#include "../xlib/XlibEventQueue.h"
 
 namespace libtas {
 
@@ -31,28 +33,35 @@ void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
     eventMasks[wid] = event_mask;
 
     /* If the game is interested in the XCB_EVENT_MASK_ENTER_WINDOW event, send one immediately */
-    if (event_mask & XCB_EVENT_MASK_ENTER_WINDOW) {
-        xcb_enter_notify_event_t ev;
-        ev.response_type = XCB_ENTER_NOTIFY;
-        ev.event = wid;
-        ev.event_x = game_ai.pointer_x;
-        ev.event_y = game_ai.pointer_y;
-        ev.root_x = game_ai.pointer_x;
-        ev.root_y = game_ai.pointer_y;
-        ev.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+    // if (event_mask & XCB_EVENT_MASK_ENTER_WINDOW) {
+    //     xcb_enter_notify_event_t ev;
+    //     ev.response_type = XCB_ENTER_NOTIFY;
+    //     ev.event = wid;
+    //     ev.event_x = game_ai.pointer_x;
+    //     ev.event_y = game_ai.pointer_y;
+    //     ev.root_x = game_ai.pointer_x;
+    //     ev.root_y = game_ai.pointer_y;
+    //     ev.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+    //
+    //     debuglog(LCF_EVENTS | LCF_MOUSE, "   Inserting a XCB_EVENT_MASK_ENTER_WINDOW event");
+    //     insert(reinterpret_cast<xcb_generic_event_t*>(&ev));
+    // }
+    //
+    // /* If the game is interested in the XCB_EVENT_MASK_FOCUS_CHANGE event, send one immediately */
+    // if (event_mask & XCB_EVENT_MASK_FOCUS_CHANGE) {
+    //     xcb_focus_in_event_t ev;
+    //     ev.response_type = XCB_FOCUS_IN;
+    //     ev.event = wid;
+    //
+    //     debuglog(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a XCB_EVENT_MASK_FOCUS_CHANGE event");
+    //     insert(reinterpret_cast<xcb_generic_event_t*>(&ev));
+    // }
 
-        debuglog(LCF_EVENTS | LCF_MOUSE, "   Inserting a XCB_EVENT_MASK_ENTER_WINDOW event");
-        insert(reinterpret_cast<xcb_generic_event_t*>(&ev));
-    }
-
-    /* If the game is interested in the XCB_EVENT_MASK_FOCUS_CHANGE event, send one immediately */
-    if (event_mask & XCB_EVENT_MASK_FOCUS_CHANGE) {
-        xcb_focus_in_event_t ev;
-        ev.response_type = XCB_FOCUS_IN;
-        ev.event = wid;
-
-        debuglog(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a XCB_EVENT_MASK_FOCUS_CHANGE event");
-        insert(reinterpret_cast<xcb_generic_event_t*>(&ev));
+    /* TODO: Until we merge Xlib and xcb event queues, a hack to propagate the
+     * event mask from xcb to Xlib. */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (gameDisplays[i])
+            xlibEventQueueList.getQueue(gameDisplays[i])->setMask(wid, event_mask);
     }
 }
 

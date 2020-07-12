@@ -457,6 +457,8 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
         return orig::XCheckIfEvent(display, event_return, predicate, arg);
     }
 
+    pushNativeXlibEvents(display);
+
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     bool isEvent = queue->pop(event_return, predicate, arg);
     return isEvent?True:False;
