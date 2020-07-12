@@ -63,7 +63,7 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
     if (shared_config.screen_width) {
         /* Copy the first mode (current one) in another object */
         XF86VidModeModeInfo *modeinfo = static_cast<XF86VidModeModeInfo*>(malloc(sizeof(XF86VidModeModeInfo)));
-        memcpy(modeinfo, (*(*modesinfo)), sizeof(XF86VidModeModeInfo));
+        memcpy(modeinfo, (*modesinfo)[0], sizeof(XF86VidModeModeInfo));
 
         /* Free the old result */
         XFree((*modesinfo));
@@ -82,7 +82,7 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
 
         /* Set the correct returned values */
         *modecount_return = 1;
-        *modesinfo = &modeinfo;
+        *modesinfo[0] = modeinfo;
     }
 
     return ret;

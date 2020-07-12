@@ -29,6 +29,7 @@ namespace libtas {
 bool SteamGameServer_Init( uint32_t unIP, uint16_t usSteamPort, uint16_t usGamePort, uint16_t usQueryPort, EServerMode eServerMode, const char *pchVersionString )
 {
     DEBUGLOGCALL(LCF_STEAM);
+    return true;
 }
 
 void SteamGameServer_Shutdown()
