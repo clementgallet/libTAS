@@ -5,6 +5,7 @@
 * Middle button to reset controller axis to 0
 * Hook getpid() used for prng seeding
 * Option to use a forked process to save state
+* Accept hotkeys when input editor and controller inputs window have focus (#349)
 
 ### Changed
 ### Fixed

@@ -23,6 +23,7 @@
 
 #include "InputEditorView.h"
 #include "MainWindow.h"
+#include "qtutils.h"
 
 InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {
@@ -312,7 +313,40 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
         event->accept();
     }
 
+    /* We accept hotkeys when this window has focus */
+    xcb_keysym_t mod = convertQtModifiers(event->modifiers());
+
+    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
+        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey() | mod];
+        context->hotkey_pressed_queue.push(hk.type);
+        return;
+    }
+    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
+        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey()];
+        context->hotkey_pressed_queue.push(hk.type);
+        return;
+    }
+
     return QTableView::keyPressEvent(event);
+}
+
+void InputEditorView::keyReleaseEvent(QKeyEvent *event)
+{
+    /* We accept hotkeys when this window has focus */
+    xcb_keysym_t mod = convertQtModifiers(event->modifiers());
+
+    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
+        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey() | mod];
+        context->hotkey_released_queue.push(hk.type);
+        return;
+    }
+    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
+        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey()];
+        context->hotkey_released_queue.push(hk.type);
+        return;
+    }
+
+    return QTableView::keyReleaseEvent(event);
 }
 
 void InputEditorView::horizontalMenu(QPoint pos)
