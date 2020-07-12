@@ -20,6 +20,7 @@
 #include "isteamcontroller.h"
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
+#include "isteamgameserver.h"
 
 namespace libtas {
 
@@ -31,7 +32,6 @@ typedef void ISteamHTMLSurface;
 typedef void ISteamInventory;
 typedef void ISteamVideo;
 typedef void ISteamParentalSettings;
-typedef void ISteamGameServer;
 typedef void ISteamGameServerStats;
 
 

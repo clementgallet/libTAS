@@ -76,6 +76,7 @@ typedef int HTTPRequestHandle;
 typedef int HTTPCookieContainerHandle;
 typedef int EHTTPMethod;
 typedef int EHTTPStatusCode;
+typedef int EServerMode;
 
 typedef void* HServerListRequest;
 typedef int HServerQuery;

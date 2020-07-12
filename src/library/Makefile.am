@@ -110,6 +110,7 @@ libtas_so_SOURCES = \
     steam/isteamcontroller.cpp \
     steam/isteamfriends.cpp \
     steam/isteamgamecoordinator.cpp \
+	steam/isteamgameserver.cpp \
     steam/isteamhttp.cpp \
     steam/isteammatchmaking.cpp \
     steam/isteamremotestorage/isteamremotestorage.cpp \
@@ -124,6 +125,7 @@ libtas_so_SOURCES = \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \
     steam/steamapiinternal.cpp \
+	steam/steamgameserver.cpp \
     wine/winehook.cpp \
     wine/wined3d.cpp \
     wine/user32.cpp \

@@ -110,17 +110,6 @@ OVERRIDE ISteamInventory *SteamInventory();
 OVERRIDE ISteamVideo *SteamVideo();
 OVERRIDE ISteamParentalSettings *SteamParentalSettings();
 
-// inline ISteamClient *SteamGameServerClient();
-// inline ISteamGameServer *SteamGameServer();
-// inline ISteamUtils *SteamGameServerUtils();
-// inline ISteamNetworking *SteamGameServerNetworking();
-// inline ISteamGameServerStats *SteamGameServerStats();
-// inline ISteamHTTP *SteamGameServerHTTP();
-// inline ISteamInventory *SteamGameServerInventory();
-// inline ISteamUGC *SteamGameServerUGC();
-// inline ISteamApps *SteamGameServerApps();
-
-
 }
 
 #endif

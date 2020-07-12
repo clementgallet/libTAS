@@ -20,6 +20,7 @@
 #include "isteamclient.h"
 #include "isteamcontroller.h"
 #include "steamapi.h"
+#include "steamgameserver.h"
 #include "isteamgamecoordinator.h"
 #include "../logging.h"
 
@@ -63,7 +64,7 @@ ISteamUser *ISteamClient::GetISteamUser( HSteamUser hSteamUser, HSteamPipe hStea
 ISteamGameServer *ISteamClient::GetISteamGameServer( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamGameServer();
 }
 
 void ISteamClient::SetLocalIPBinding( uint32_t unIP, uint16_t usPort )

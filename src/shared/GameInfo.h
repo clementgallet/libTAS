@@ -20,8 +20,6 @@
 #ifndef LIBTAS_GAMEINFO_H_INCLUDED
 #define LIBTAS_GAMEINFO_H_INCLUDED
 
-#include <string>
-
 /*
  * Structure that holds information about what the game uses for its engine,
  * rendering, input devices, audio, etc, so that it can be collected and
