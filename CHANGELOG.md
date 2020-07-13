@@ -12,6 +12,7 @@
 ### Fixed
 
 * Filter SDL1 active events (#351)
+* Handle interrupts in socket messages (#342)
 
 ## [1.4.0] - 2020-06-19
 ### Added

@@ -26,6 +26,13 @@
 #include <iostream>
 #include <vector>
 
+#ifdef SOCKET_LOG
+#include "lcf.h"
+#include "../library/logging.h"
+#else
+#include <iostream>
+#endif
+
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
 /* Socket to communicate between the program and the game */
@@ -103,16 +110,44 @@ void closeSocket(void)
 
 void sendData(const void* elem, unsigned int size)
 {
-    send(socket_fd, elem, size, 0);
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Send socket data of size %u", size);
+#endif
+
+    ssize_t ret = 0;
+    do {
+        ret = send(socket_fd, elem, size, 0);
+    } while ((ret == -1) && (errno == EINTR));
+
+    if (ret == -1) {
+#ifdef SOCKET_LOG
+        libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "send() returns -1 with error %s", strerror(errno));
+#else
+        std::cerr << "send() returns -1 with error " << strerror(errno) << std::endl;
+#endif
+    }
+    else if (ret != size) {
+#ifdef SOCKET_LOG
+        libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "send() %u bytes instead of %u", ret, size);
+#else
+        std::cerr << "send() " << ret << " bytes instead of " << size << std::endl;
+#endif
+    }
 }
 
 void sendMessage(int message)
 {
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Send socket message %d", message);
+#endif
     sendData(&message, sizeof(int));
 }
 
 void sendString(const std::string& str)
 {
+#ifdef SOCKET_LOG
+    libtas::debuglog(LCF_SOCKET, "Send socket string ", str);
+#endif
     unsigned int str_size = str.size();
     sendData(&str_size, sizeof(unsigned int));
     sendData(str.c_str(), str_size);
@@ -120,13 +155,40 @@ void sendString(const std::string& str)
 
 int receiveData(void* elem, unsigned int size)
 {
-    return recv(socket_fd, elem, size, MSG_WAITALL);
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Receive socket data of size %u", size);
+#endif
+
+    ssize_t ret = 0;
+    do {
+        ret = recv(socket_fd, elem, size, MSG_WAITALL);
+    } while ((ret == -1) && (errno == EINTR));
+
+    if (ret == -1) {
+#ifdef SOCKET_LOG
+        libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() returns -1 with error %s", strerror(errno));
+#else
+        std::cerr << "recv() returns -1 with error " << strerror(errno) << std::endl;
+#endif
+    }
+    else if (ret != size) {
+#ifdef SOCKET_LOG
+        libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() %u bytes instead of %u", ret, size);
+#else
+        std::cerr << "recv() " << ret << " bytes instead of " << size << std::endl;
+#endif
+    }
+    return ret;
 }
 
 int receiveMessage()
 {
     int msg;
     int ret = receiveData(&msg, sizeof(int));
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Receive socket message %d", ret);
+#endif
+
     if (ret < 0)
         return ret;
     return msg;
@@ -138,6 +200,9 @@ int receiveMessageNonBlocking()
     int ret = recv(socket_fd, &msg, sizeof(int), MSG_WAITALL | MSG_DONTWAIT);
     if (ret < 0)
         return ret;
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Receive non-blocking socket message %d", msg);
+#endif
     return msg;
 }
 
@@ -151,6 +216,9 @@ std::string receiveString()
     receiveData(buf.data(), str_size);
 
     std::string str(buf.data(), str_size);
+#ifdef SOCKET_LOG
+    libtas::debuglog(LCF_SOCKET, "Receive socket string ", str);
+#endif
     return str;
 }
 
@@ -160,4 +228,7 @@ void receiveCString(char* str)
     receiveData(&str_size, sizeof(unsigned int));
     receiveData(str, str_size);
     str[str_size] = '\0';
+#ifdef SOCKET_LOG
+    libtas::debuglogstdio(LCF_SOCKET, "Receive socket C string %s", str);
+#endif
 }
