@@ -15,10 +15,9 @@ There is also initial support for Windows games through wine. Details are given 
 ## Non-linux users
 
 If you don't have a Linux system beforehand, there are several options that you can choose:
+- Run libTAS using WSL 2 (Windows Subsystem for Linux) (preferred option, described below)
 - Install a Linux container with Docker (described below)
 - Install Linux on a virtual machine. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games. Note for Ubuntu users that you need a recent version (17.10 minimum).
-
-libTAS does not work with WSL (Windows Subsystem for Linux), because it is missing some mandatory components of the Linux system.
 
 ## Install
 
@@ -110,6 +109,30 @@ There are still a lot of issues to fix:
 - Window focus/unfocus doesn't work sometimes and you cannot move the game window (#262). Try alt-tabbing until you get it back
 - "Virtual Steam client" does not work, because we don't hook the loading of the `steam_api.dll` file (#264)
 - Window repainting (Expose event) does not work, so if you pause the game and drag another window in front of it, it will overwrite what is displayed by the game
+
+## Run on WSL 2
+
+### Install
+
+You need at least Windows 10 version 2004 to run WSL 2. libTAS does not work with WSL 1, because it is missing some mandatory components of the Linux system. Activate WSL 2 and install Ubuntu from the Windows Store, you can find plenty of documentation for that.
+
+Once installed, you have a new application "Ubuntu" which opens a terminal. Download the latest "libtas_*_amd64.deb" file from the Releases. To locate the file from the Ubuntu terminal, you can access to Windows disk drives in  "/mnt/" ("/mnt/c" for the C: drive, etc.). Go to the directory which contains the downloaded file, and install the package using `sudo dpkg -i libtas_*_amd64.deb`.
+
+By default, there is no display configured. You need to export the display using the following command:
+
+```
+export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0
+```
+
+You can paste this command in the file `~/.bashrc` so that it will run each time you start Ubuntu.
+
+We also need a X server to be able to display Linux windows. WSL 2 is supposed to not need an additional program for that, but I couldn't find how to do it. So you need [vcxsrv](https://sourceforge.net/projects/vcxsrv/). Once it is installed, we need to let it connect to WSL, and it was blocked by default by my Windows Defender firewall. You need to open the firewall configuration window, and authorize the program "vcxsrv" to communicate through the firewall (both private and public networks).
+
+### Run
+
+Launch the "XLaunch" program, which will launch the configuration for the X server. You need to change the "Display number" to 0 on the first screen, uncheck "Native opengl" and check "Disable access control" on the third screen.
+
+From the Ubuntu terminal, enter `libTAS`. You should see the window showing.
 
 ## Run on Windows using Docker
 
