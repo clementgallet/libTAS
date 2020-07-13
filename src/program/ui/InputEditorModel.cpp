@@ -40,7 +40,7 @@ int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return input_set.size() + 2;
+    return movie->input_set.size() + 2;
 }
 
 Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
@@ -54,7 +54,7 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
     if (index.row() < static_cast<int>(context->framecount))
         return QAbstractItemModel::flags(index);
 
-    const SingleInput si = input_set[index.column()-2];
+    const SingleInput si = movie->input_set[index.column()-2];
 
     /* Don't edit locked input */
     if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
@@ -74,7 +74,7 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
                 return QString(tr(""));
             if (section == 1)
                 return QString(tr("Frame"));
-            return QString(input_set[section-2].description.c_str());
+            return QString(movie->input_set[section-2].description.c_str());
         }
     }
     return QVariant();
@@ -134,7 +134,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         else {
             /* Check for locked input */
             if (!movie->locked_inputs.empty()) {
-                const SingleInput si = input_set[index.column()-2];
+                const SingleInput si = movie->input_set[index.column()-2];
                 if (movie->locked_inputs.find(si) != movie->locked_inputs.end()) {
                     color = color.darker(150);
                 }
@@ -169,7 +169,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
 
         const AllInputs ai = movie->input_list[index.row()];
-        const SingleInput si = input_set[index.column()-2];
+        const SingleInput si = movie->input_set[index.column()-2];
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -194,7 +194,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
 
-        const SingleInput si = input_set[index.column()-2];
+        const SingleInput si = movie->input_set[index.column()-2];
 
         /* Don't edit locked input */
         if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
@@ -223,7 +223,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (index.row() < static_cast<int>(context->framecount))
             return false;
 
-        const SingleInput si = input_set[index.column()-2];
+        const SingleInput si = movie->input_set[index.column()-2];
 
         /* Don't edit locked input */
         if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
@@ -256,29 +256,25 @@ void InputEditorModel::buildInputSet()
         ai.extractInputs(new_input_set);
     }
 
-    input_set.clear();
+    /* Remove inputs already on the list */
+    for (SingleInput si : movie->input_set) {
+        new_input_set.erase(si);
+    }
+
+    /* Add the new inputs if any */
     for (SingleInput si : new_input_set) {
 
-        /* Gather input name in the movie if there is one */
-        auto it = movie->input_names.find(si);
-        if (it != movie->input_names.end()) {
-            si.description = it->second;
-        }
-        else {
-            /* Gather input description */
-            for (SingleInput ti : context->config.km.input_list) {
-                if (si == ti) {
-                    si.description = ti.description;
-                    break;
-                }
+        /* Gather input description */
+        for (SingleInput ti : context->config.km.input_list) {
+            if (si == ti) {
+                si.description = ti.description;
+                break;
             }
         }
 
-
         /* Insert input */
-        input_set.push_back(si);
+        movie->input_set.push_back(si);
     }
-
 }
 
 bool InputEditorModel::toggleInput(const QModelIndex &index)
@@ -291,7 +287,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     if (index.row() < static_cast<int>(context->framecount))
         return false;
 
-    SingleInput si = input_set[index.column()-2];
+    SingleInput si = movie->input_set[index.column()-2];
 
     /* Don't toggle locked input */
     if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
@@ -316,21 +312,19 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
 
 std::string InputEditorModel::inputLabel(int column)
 {
-    return input_set[column-2].description;
+    return movie->input_set[column-2].description;
 }
 
 void InputEditorModel::renameLabel(int column, std::string label)
 {
-    input_set[column-2].description = label;
-    movie->input_names[input_set[column-2]] = label;
+    movie->input_set[column-2].description = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
     emit inputSetChanged();
 }
 
-
 std::string InputEditorModel::inputDescription(int column)
 {
-    SingleInput si = input_set[column-2];
+    SingleInput si = movie->input_set[column-2];
 
     /* Gather input description */
     for (SingleInput ti : context->config.km.input_list) {
@@ -347,7 +341,7 @@ bool InputEditorModel::isInputAnalog(int column)
     if (column < 2)
         return false;
 
-    const SingleInput si = input_set[column-2];
+    const SingleInput si = movie->input_set[column-2];
     return si.isAnalog();
 }
 
@@ -494,14 +488,14 @@ int InputEditorModel::pasteInsertInputs(int row)
 void InputEditorModel::addUniqueInput(const SingleInput &si)
 {
     /* Check if input is already present */
-    for (SingleInput ti : input_set) {
+    for (SingleInput ti : movie->input_set) {
         if (si == ti) {
             return;
         }
     }
 
     beginInsertColumns(QModelIndex(), columnCount(), columnCount());
-    input_set.push_back(si);
+    movie->input_set.push_back(si);
     endInsertColumns();
     emit inputSetChanged();
 }
@@ -515,7 +509,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
     for (SingleInput si : new_input_set) {
 
         bool new_input = true;
-        for (SingleInput ti : input_set) {
+        for (SingleInput ti : movie->input_set) {
             if (si == ti) {
                 new_input = false;
                 break;
@@ -525,22 +519,17 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
         /* Insert input if new */
         if (new_input) {
 
-            /* Gather input name in the movie if there is one */
-            auto it = movie->input_names.find(si);
-            if (it != movie->input_names.end()) {
-                si.description = it->second;
-            }
-            else {
-                /* Gather input description */
-                for (SingleInput ti : context->config.km.input_list) {
-                    if (si == ti) {
-                        si.description = ti.description;
-                        break;
-                    }
+            /* Gather input description */
+            for (SingleInput ti : context->config.km.input_list) {
+                if (si == ti) {
+                    si.description = ti.description;
+                    break;
                 }
             }
 
-            addUniqueInput(si);
+            beginInsertColumns(QModelIndex(), columnCount(), columnCount());
+            movie->input_set.push_back(si);
+            endInsertColumns();
         }
     }
     emit inputSetChanged();
@@ -548,7 +537,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 
 void InputEditorModel::clearUniqueInput(int column)
 {
-    SingleInput si = input_set[column-2];
+    SingleInput si = movie->input_set[column-2];
 
     /* Don't clear locked input */
     if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
@@ -561,12 +550,39 @@ void InputEditorModel::clearUniqueInput(int column)
     movie->wasModified();
 }
 
+void InputEditorModel::removeUniqueInput(int column)
+{
+    SingleInput si = movie->input_set[column-2];
+
+    /* Check if the input is set in past frames */
+    for (int f = 0; f < static_cast<int>(context->framecount); f++) {
+        if (movie->input_list[f].getInput(si))
+            return;
+    }
+
+    /* Clear remaining frames */
+    for (int f = static_cast<int>(context->framecount); f < movie->input_list.size(); f++) {
+        movie->input_list[f].setInput(si, 0);
+    }
+
+    movie->wasModified();
+
+    /* Remove clear locked state */
+    if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
+        movie->locked_inputs.erase(si);
+
+    /* Remove the column */
+    beginRemoveColumns(QModelIndex(), column, column);
+    movie->input_set.erase(movie->input_set.begin() + (column-2));
+    endRemoveColumns();
+}
+
 bool InputEditorModel::isLockedUniqueInput(int column)
 {
     if (column < 2)
         return false;
 
-    SingleInput si = input_set[column-2];
+    SingleInput si = movie->input_set[column-2];
 
     if (movie->locked_inputs.find(si) != movie->locked_inputs.end())
         return true;
@@ -580,7 +596,7 @@ void InputEditorModel::lockUniqueInput(int column, bool locked)
     if (column < 2)
         return;
 
-    SingleInput si = input_set[column-2];
+    SingleInput si = movie->input_set[column-2];
 
     if (locked) {
         movie->locked_inputs.insert(si);
@@ -656,7 +672,7 @@ void InputEditorModel::update()
 void InputEditorModel::resetInputs()
 {
     beginResetModel();
-    input_set.clear();
+    // input_set.clear();
     savestate_frames.fill(-1);
     endResetModel();
     emit inputSetChanged();
@@ -673,4 +689,11 @@ void InputEditorModel::registerSavestate(int slot, unsigned long long frame)
     last_savestate = savestate_frames[slot];
     emit dataChanged(createIndex(old_savestate,0), createIndex(old_savestate,0));
     emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
+}
+
+void InputEditorModel::moveInputs(int oldIndex, int newIndex)
+{
+    SingleInput si = movie->input_set[oldIndex];
+    movie->input_set.erase(movie->input_set.begin() + oldIndex);
+    movie->input_set.insert(movie->input_set.begin() + newIndex, si);
 }

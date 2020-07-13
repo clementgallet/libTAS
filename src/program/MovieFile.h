@@ -52,8 +52,8 @@ public:
     /* List of locked single inputs. They won't be modified even in recording mode */
     std::set<SingleInput> locked_inputs;
 
-    /* List of non-default input names */
-    std::map<SingleInput, std::string> input_names;
+    /* Ordered list of single inputs to be shown on the input editor */
+    std::vector<SingleInput> input_set;
 
     /* Flag storing if the movie has been modified since last save.
      * Used for prompting a message when the game exits if the user wants

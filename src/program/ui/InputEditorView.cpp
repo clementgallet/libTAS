@@ -63,12 +63,14 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(horizontalHeader(), &QWidget::customContextMenuRequested, this, &InputEditorView::horizontalMenu);
+    connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
 
     /* Horizontal menu */
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
     horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
     horMenu->addAction(tr("Clear input column"), this, &InputEditorView::clearInputColumn);
+    horMenu->addAction(tr("Remove input column"), this, &InputEditorView::removeInputColumn);
     lockAction = horMenu->addAction(tr("Lock input column"), this, &InputEditorView::lockInputColumn);
     lockAction->setCheckable(true);
 
@@ -411,6 +413,14 @@ void InputEditorView::clearInputColumn()
     inputEditorModel->clearUniqueInput(contextSection);
 }
 
+void InputEditorView::removeInputColumn()
+{
+    if (contextSection < 2)
+        return;
+
+    inputEditorModel->removeUniqueInput(contextSection);    
+}
+
 void InputEditorView::lockInputColumn(bool checked)
 {
     if (contextSection < 2)
@@ -571,4 +581,25 @@ void InputEditorView::pasteInsertInputs()
 void InputEditorView::manualScroll(int)
 {
     autoScroll = false;
+}
+
+void InputEditorView::moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+{
+    /* We want to keep track of the order of inputs, and not keep a mess
+     * between logical and visual indices. So when a user move a section, we
+     * move it back and make the change in our list.
+     */
+
+    /* Skip if moving the first two columns */
+    if ((oldVisualIndex >= 2) && (newVisualIndex >= 2)) {
+        inputEditorModel->moveInputs(oldVisualIndex-2, newVisualIndex-2);
+    }
+
+    /* Disconnect before moving back */
+    disconnect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
+    horizontalHeader()->moveSection(newVisualIndex, oldVisualIndex);
+    connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
+
+    /* We probably need to resize columns */
+    resizeAllColumns();
 }

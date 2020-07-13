@@ -6,6 +6,7 @@
 * Hook getpid() used for prng seeding
 * Option to use a forked process to save state
 * Accept hotkeys when input editor and controller inputs window have focus (#349)
+* Store input column order from input editor in movies (#328)
 
 ### Changed
 ### Fixed

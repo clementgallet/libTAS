@@ -42,6 +42,7 @@ public slots:
     void renameLabel();
     void addInputColumn();
     void clearInputColumn();
+    void removeInputColumn();
     void lockInputColumn(bool checked);
 
     void mainMenu(QPoint pos);
@@ -57,6 +58,8 @@ public slots:
     void pasteInsertInputs();
 
     void manualScroll(int value);
+
+    void moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

@@ -75,6 +75,9 @@ public:
     /* Clear a single input from the entire movie */
     void clearUniqueInput(int column);
 
+    /* Remove a single input from the entire movie */
+    void removeUniqueInput(int column);
+
     /* Get lock status of a single input */
     bool isLockedUniqueInput(int column);
 
@@ -96,6 +99,9 @@ public:
 
     /* Paste insert selected inputs. Returns the number of pasted inputs */
     int pasteInsertInputs(int row);
+
+    /* User moved a column */
+    void moveInputs(int oldIndex, int newIndex);
 
 public slots:
     /* Toggle a single input and return the new value */
@@ -125,9 +131,6 @@ public slots:
 private:
     Context *context;
     MovieFile *movie;
-
-    /* Set of inputs present in the movie */
-    std::vector<SingleInput> input_set;
 
     /* Array of framecount for savestates */
     std::array<unsigned long long, 10> savestate_frames;

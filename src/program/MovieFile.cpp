@@ -165,13 +165,13 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	config.endGroup();
 
 	int size = config.beginReadArray("input_names");
-    if (size > 0)
-        input_names.clear();
+    input_set.clear();
     for (int i = 0; i < size; ++i) {
         config.setArrayIndex(i);
         SingleInput si = config.value("input").value<SingleInput>();
         std::string name = config.value("name").toString().toStdString();
-        input_names[si] = name;
+        si.description = name;
+        input_set.push_back(si);
     }
     config.endArray();
 
@@ -299,13 +299,12 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 	config.remove("input_names");
     config.beginWriteArray("input_names");
     int i = 0;
-    for (auto& in : input_names) {
+    for (const SingleInput& si : input_set) {
         config.setArrayIndex(i++);
-        config.setValue("input", QVariant::fromValue(in.first));
-        config.setValue("name", in.second.c_str());
+        config.setValue("input", QVariant::fromValue(si));
+        config.setValue("name", si.description.c_str());
     }
     config.endArray();
-
 
     config.sync();
 
