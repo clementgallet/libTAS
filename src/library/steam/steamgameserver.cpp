@@ -17,12 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "steamapi.h"
+#include "steamgameserver.h"
 #include "../logging.h"
-#include <signal.h>
-// #define _GNU_SOURCE
-#include <link.h>
-#include <dlfcn.h>
 
 namespace libtas {
 
