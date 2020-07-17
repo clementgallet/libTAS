@@ -25,7 +25,7 @@
 #include "../logging.h"
 #include <fcntl.h>
 #include <unistd.h>
-#include "../../external/lz4.h"
+#include <lz4.h>
 
 namespace libtas {
 

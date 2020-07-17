@@ -82,6 +82,9 @@ AC_CHECK_LIB(pthread, pthread_create, [], AC_MSG_ERROR(The pthread library is re
 AC_CHECK_HEADERS([alsa/asoundlib.h], [], AC_MSG_ERROR(The alsa headers are required!))
 AC_CHECK_LIB(asound, snd_pcm_open, [LIBRARY_LIBS="$LIBRARY_LIBS -lasound"], AC_MSG_ERROR(The asound library is required!))
 
+AC_CHECK_HEADERS([lz4.h], [], AC_MSG_ERROR(The lz4 headers are required!))
+AC_CHECK_LIB(lz4, LZ4_compress_default, [LIBRARY_LIBS="$LIBRARY_LIBS -llz4"], AC_MSG_ERROR(The lz4 library is required!))
+
 AC_SUBST(have_libswresample, no)
 PKG_CHECK_MODULES(LIBSWRESAMPLE, [libswresample], AC_SUBST(have_libswresample, yes), AC_MSG_WARN(Cannot find libswresample using pkg-config))
 

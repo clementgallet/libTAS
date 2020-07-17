@@ -2,11 +2,11 @@ Source: libtas
 Section: unknown
 Priority: optional
 Maintainer: Clement Gallet <clement.gallet@ens-lyon.org>
-Build-Depends: debhelper (>= 9), libx11-dev, qtbase5-dev (>= 5.6.0), libsdl2-dev, libxcb1-dev, libxcb-keysyms1-dev, libxcb-xkb-dev, libxcb-cursor-dev, libasound2-dev, libavutil-dev, libswresample-dev, libfreetype6-dev, libfontconfig1-dev
+Build-Depends: debhelper (>= 9), libx11-dev, qtbase5-dev (>= 5.6.0), libsdl2-dev, libxcb1-dev, libxcb-keysyms1-dev, libxcb-xkb-dev, libxcb-cursor-dev, libasound2-dev, libavutil-dev, libswresample-dev, libfreetype6-dev, libfontconfig1-dev, liblz4-dev
 Standards-Version: 3.9.8
 Homepage: https://github.com/clementgallet/libTAS
 
 Package: libtas
 Architecture: any
-Depends: libasound2 (>= 1.0.16), libavutil55 (>= 7:3.2.0) | libavutil56, libc6 (>= 2.15), libfontconfig1, libfreetype6 (>= 2.2.1), libgcc1 (>= 1:3.0), libqt5core5a (>= 5.7.0), libqt5gui5 (>= 5.6.0), libqt5widgets5 (>= 5.6.0), libstdc++6 (>= 6), libswresample2 (>= 7:3.2.0) | libswresample3, libx11-6, libxcb-keysyms1 (>= 0.4.0), libxcb-xkb1, libxcb-cursor0, libxcb1, ffmpeg
+Depends: libasound2 (>= 1.0.16), libavutil55 (>= 7:3.2.0) | libavutil56, libc6 (>= 2.15), libfontconfig1, libfreetype6 (>= 2.2.1), libgcc1 (>= 1:3.0), libqt5core5a (>= 5.7.0), libqt5gui5 (>= 5.6.0), libqt5widgets5 (>= 5.6.0), libstdc++6 (>= 6), libswresample2 (>= 7:3.2.0) | libswresample3, libx11-6, libxcb-keysyms1 (>= 0.4.0), libxcb-xkb1, libxcb-cursor0, libxcb1, ffmpeg, liblz4-1
 Description: A program to provide tool-assisted speedrun tools to Linux games

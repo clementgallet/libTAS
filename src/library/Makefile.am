@@ -146,8 +146,7 @@ libtas_so_SOURCES = \
     xlib/xwindows.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
-    ../shared/sockethelpers.cpp \
-    ../external/lz4.cpp
+    ../shared/sockethelpers.cpp
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -Wall -fno-stack-protector
 libtas_so_CXXFLAGS += -DSOCKET_LOG
