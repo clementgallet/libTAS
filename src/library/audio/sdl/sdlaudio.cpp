@@ -24,6 +24,7 @@
 #include "../AudioSource.h"
 #include "../AudioBuffer.h"
 #include <cstring> // strncpy
+#include <mutex>
 
 namespace libtas {
 
@@ -45,6 +46,7 @@ static std::shared_ptr<AudioSource> sourceSDL;
 
 static const char* dummySDLDevice = "libTAS device";
 static std::string curDriver;
+static std::mutex mutex;
 
 /* Override */ int SDL_GetNumAudioDrivers(void)
 {
@@ -108,7 +110,10 @@ void fillBufferCallback(AudioBuffer& ab)
 {
     /* Emptying the audio buffer */
     ab.makeSilent();
+
+    NOLOGCALL(SDL_LockAudio());
     audioCallback(callbackArg, ab.samples.data(), ab.size);
+    NOLOGCALL(SDL_UnlockAudio());
 }
 
 /* Override */ int SDL_OpenAudio(SDL_AudioSpec * desired, SDL_AudioSpec * obtained)
@@ -378,21 +383,25 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 /* Override */ void SDL_LockAudio(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    mutex.lock();
 }
 
 /* Override */ void SDL_LockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    mutex.lock();
 }
 
 /* Override */ void SDL_UnlockAudio(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    mutex.unlock();
 }
 
 /* Override */ void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    mutex.unlock();
 }
 
 /* Override */ void SDL_CloseAudio(void)
