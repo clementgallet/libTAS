@@ -158,5 +158,5 @@ bin_PROGRAMS += libtas32.so
 libtas32_so_SOURCES = $(libtas_so_SOURCES)
 libtas32_so_CXXFLAGS = -m32 $(libtas_so_CXXFLAGS)
 libtas32_so_LDFLAGS = $(libtas_so_LDFLAGS)
-libtas32_so_LDADD = $(libtas_so_LDADD)
+libtas32_so_LDADD = $(LIBRARY32_LIBS)
 endif
