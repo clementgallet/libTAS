@@ -443,6 +443,9 @@ void MainWindow::createActions()
     addActionCheckable(timeMainGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
     addActionCheckable(timeMainGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeMainGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+    addActionCheckable(timeMainGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
+    addActionCheckable(timeMainGroup, tr("GetTickCount64()"), SharedConfig::TIMETYPE_GETTICKCOUNT64);
+    addActionCheckable(timeMainGroup, tr("QueryPerformanceCounter()"), SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
 
     timeSecGroup = new QActionGroup(this);
     timeSecGroup->setExclusive(false);
@@ -453,6 +456,9 @@ void MainWindow::createActions()
     addActionCheckable(timeSecGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
     addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+    addActionCheckable(timeSecGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
+    addActionCheckable(timeSecGroup, tr("GetTickCount64()"), SharedConfig::TIMETYPE_GETTICKCOUNT64);
+    addActionCheckable(timeSecGroup, tr("QueryPerformanceCounter()"), SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
 
     waitGroup = new QActionGroup(this);
     addActionCheckable(waitGroup, tr("Native waits"), SharedConfig::WAIT_NATIVE, "Don't modify wait calls");
