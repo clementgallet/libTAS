@@ -104,25 +104,36 @@ void ThreadManager::setMainThread()
 
     if (!main_pthread_id) {
         main_pthread_id = pthread_id;
-        SaveStateManager::initCheckpointThread();
         return;
     }
 
     if (main_pthread_id != pthread_id) {
-        SaveStateManager::initCheckpointThread();
-
-        /* Remove state of old checkpoint thread */
-        ThreadInfo* old_thread = getThread(main_pthread_id);
-        if (old_thread && (old_thread->state == ThreadInfo::ST_CKPNTHREAD)) {
-            old_thread->state = ThreadInfo::ST_RUNNING;
-        }
-
         if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
             /* Switching main thread */
             debuglog(LCF_THREAD | LCF_WARNING, "Switching main thread from ", main_pthread_id, " to ", pthread_id);
             main_pthread_id = pthread_id;
         }
     }
+}
+
+void ThreadManager::setCheckpointThread()
+{
+    if (current_thread->state == ThreadInfo::ST_CKPNTHREAD)
+        return;
+
+    /* Remove state of old checkpoint thread */
+    lockList();
+
+    for (ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
+        if (th->state == ThreadInfo::ST_CKPNTHREAD) {
+            th->state = ThreadInfo::ST_RUNNING;
+        }
+    }
+
+    current_thread->state = ThreadInfo::ST_CKPNTHREAD;
+    SaveStateManager::initCheckpointThread();
+
+    unlockList();
 }
 
 bool ThreadManager::isMainThread()

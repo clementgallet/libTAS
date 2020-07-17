@@ -72,8 +72,6 @@ void SaveStateManager::init()
 
 void SaveStateManager::initCheckpointThread()
 {
-    ThreadManager::getCurrentThread()->state = ThreadInfo::ST_CKPNTHREAD;
-
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask, sig_checkpoint);

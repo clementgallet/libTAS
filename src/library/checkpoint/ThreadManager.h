@@ -68,6 +68,9 @@ public:
     /* Check if this thread is main thread */
     static bool isMainThread();
 
+    /* Set the checkpoint thread to this thread */
+    static void setCheckpointThread();
+
     /* Create a new ThreadInfo struct from the parent thread*/
     static ThreadInfo* getNewThread();
 
