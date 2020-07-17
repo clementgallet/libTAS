@@ -80,6 +80,11 @@ void *dlopen(const char *file, int mode) throw() {
         return nullptr;
     }
 
+    if (file != nullptr && std::string(file).find("ScreenSelector.so") != std::string::npos) {
+        debuglog(LCF_HOOK, __func__, " blocked access to library ", file);
+        return nullptr;
+    }
+
     debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
 
     void *result = orig::dlopen(file, mode);
