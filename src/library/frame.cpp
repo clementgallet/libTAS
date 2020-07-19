@@ -184,6 +184,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     static float fps, lfps = 0;
 
     ThreadManager::setCheckpointThread();
+    ThreadManager::setMainThread();
 
     /* Reset the busy loop detector */
     BusyLoopDetection::reset();
