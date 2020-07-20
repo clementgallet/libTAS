@@ -155,14 +155,14 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
         unsigned int c = pointerLayout->rowCount() - 1;
         for (unsigned int r=0; r<c; r++) {
             if (r < watch->pointer_offsets.size()) {
-                pointerLayout->itemAt(c-r, QFormLayout::LabelRole)->widget()->setVisible(true);
-                pointerLayout->itemAt(c-r, QFormLayout::FieldRole)->widget()->setVisible(true);
-                QSpinBox* offsetBox = qobject_cast<QSpinBox*>(pointerLayout->itemAt(c-r, QFormLayout::FieldRole)->widget());
+                pointerLayout->itemAt(c-r-1, QFormLayout::LabelRole)->widget()->setVisible(true);
+                pointerLayout->itemAt(c-r-1, QFormLayout::FieldRole)->widget()->setVisible(true);
+                QSpinBox* offsetBox = qobject_cast<QSpinBox*>(pointerLayout->itemAt(c-r-1, QFormLayout::FieldRole)->widget());
                 offsetBox->setValue(watch->pointer_offsets[r]);
             }
             else {
-                pointerLayout->itemAt(c-r, QFormLayout::LabelRole)->widget()->setVisible(false);
-                pointerLayout->itemAt(c-r, QFormLayout::FieldRole)->widget()->setVisible(false);
+                pointerLayout->itemAt(c-r-1, QFormLayout::LabelRole)->widget()->setVisible(false);
+                pointerLayout->itemAt(c-r-1, QFormLayout::FieldRole)->widget()->setVisible(false);
             }
         }
     }
@@ -200,7 +200,7 @@ void RamWatchEditWindow::slotPointer(bool checked)
 
 void RamWatchEditWindow::slotAddOffset()
 {
-    for (int r=pointerLayout->rowCount()-1; r>=0; r--) {
+    for (int r=pointerLayout->rowCount()-2; r>=0; r--) {
         if (!pointerLayout->itemAt(r, QFormLayout::LabelRole)->widget()->isVisible()) {
             pointerLayout->itemAt(r, QFormLayout::LabelRole)->widget()->setVisible(true);
             pointerLayout->itemAt(r, QFormLayout::FieldRole)->widget()->setVisible(true);
