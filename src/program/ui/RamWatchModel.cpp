@@ -17,7 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QMessageBox>
 #include "RamWatchModel.h"
+#include "../ramsearch/IRamWatchDetailed.h"
+#include "../ramsearch/RamWatchDetailed.h"
 
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
 
@@ -81,6 +84,99 @@ void RamWatchModel::removeWatch(int row)
     beginRemoveRows(QModelIndex(), row, row);
     ramwatches.erase(ramwatches.begin() + row);
     endRemoveRows();
+}
+
+void RamWatchModel::saveSettings(QSettings& watchSettings)
+{
+    watchSettings.beginWriteArray("watches");
+    int i = 0;
+    for (const std::unique_ptr<IRamWatchDetailed>& w : ramwatches) {
+        watchSettings.setArrayIndex(i++);
+        watchSettings.setValue("address", static_cast<unsigned long long>(w->address));
+        watchSettings.setValue("label", w->label.c_str());
+        watchSettings.setValue("type", w->type());
+        watchSettings.setValue("hex", w->hex);
+        watchSettings.setValue("isPointer", w->isPointer);
+        if (w->isPointer) {
+            watchSettings.setValue("base_address", static_cast<unsigned long long>(w->base_address));
+            watchSettings.beginWriteArray("offsets");
+            int j = 0;
+            for (int o : w->pointer_offsets) {
+                watchSettings.setArrayIndex(j++);
+                watchSettings.setValue("offset", o);
+            }
+            watchSettings.endArray();
+        }
+    }
+    watchSettings.endArray();
+}
+
+void RamWatchModel::loadSettings(QSettings& watchSettings)
+{
+    beginResetModel();
+
+    int size = watchSettings.beginReadArray("watches");
+    ramwatches.clear();
+    for (int i = 0; i < size; ++i) {
+        watchSettings.setArrayIndex(i);
+
+        std::unique_ptr<IRamWatchDetailed> ramwatch;
+        int type = watchSettings.value("type").toInt();
+        uintptr_t addr = watchSettings.value("address").toULongLong();
+
+        /* Build the ram watch using the right type as template */
+        switch (type) {
+            case RamWatch::RamUnsignedChar:
+                ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
+                break;
+            case RamWatch::RamChar:
+                ramwatch.reset(new RamWatchDetailed<char>(addr));
+                break;
+            case RamWatch::RamUnsignedShort:
+                ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
+                break;
+            case RamWatch::RamShort:
+                ramwatch.reset(new RamWatchDetailed<short>(addr));
+                break;
+            case RamWatch::RamUnsignedInt:
+                ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
+                break;
+            case RamWatch::RamInt:
+                ramwatch.reset(new RamWatchDetailed<int>(addr));
+                break;
+            case RamWatch::RamUnsignedLong:
+                ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
+                break;
+            case RamWatch::RamLong:
+                ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
+                break;
+            case RamWatch::RamFloat:
+                ramwatch.reset(new RamWatchDetailed<float>(addr));
+                break;
+            case RamWatch::RamDouble:
+                ramwatch.reset(new RamWatchDetailed<double>(addr));
+                break;
+            default:
+                QMessageBox::critical(nullptr, "Error", "Could not determine type of ram watch");
+                return;
+        }
+        ramwatch->label = watchSettings.value("label").toString().toStdString();
+        ramwatch->hex = watchSettings.value("hex").toBool();
+        ramwatch->isPointer = watchSettings.value("isPointer").toBool();
+        if (ramwatch->isPointer) {
+            ramwatch->base_address = watchSettings.value("base_address").toULongLong();
+            int size_off = watchSettings.beginReadArray("offsets");
+            for (int j = 0; j < size_off; ++j) {
+                watchSettings.setArrayIndex(j);
+                ramwatch->pointer_offsets.push_back(watchSettings.value("offset").toInt());
+            }
+            watchSettings.endArray();
+        }
+        ramwatches.push_back(std::move(ramwatch));
+    }
+    watchSettings.endArray();
+
+    endResetModel();
 }
 
 

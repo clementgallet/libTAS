@@ -8,6 +8,7 @@
 * Accept hotkeys when input editor and controller inputs window have focus (#349)
 * Store input column order from input editor in movies (#328)
 * Implement SDL_Lock/UnlockAudio (#358)
+* Implement ram watch saving/loading
 
 ### Changed
 ### Fixed

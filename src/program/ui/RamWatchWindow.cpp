@@ -22,6 +22,8 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <QHeaderView>
+#include <QSettings>
+#include <QFileDialog>
 
 #include "RamWatchWindow.h"
 
@@ -61,11 +63,23 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flag
     buttonBox->addButton(removeWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(scanWatch, QDialogButtonBox::ActionRole);
 
+    /* Other buttons */
+    QPushButton *saveWatch = new QPushButton(tr("Save Watches"));
+    connect(saveWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotSave);
+
+    QPushButton *loadWatch = new QPushButton(tr("Load Watches"));
+    connect(loadWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotLoad);
+
+    QDialogButtonBox *buttonBox2 = new QDialogButtonBox();
+    buttonBox2->addButton(saveWatch, QDialogButtonBox::ActionRole);
+    buttonBox2->addButton(loadWatch, QDialogButtonBox::ActionRole);
+
     /* Create the main layout */
     QVBoxLayout *mainLayout = new QVBoxLayout;
 
     mainLayout->addWidget(ramWatchView);
     mainLayout->addWidget(buttonBox);
+    mainLayout->addWidget(buttonBox2);
 
     setLayout(mainLayout);
 
@@ -155,4 +169,39 @@ void RamWatchWindow::slotScanPointer()
     /* Fill and show the watch edit window */
     pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchModel->ramwatches.at(row)->address, 0, 16));
     pointerScanWindow->exec();
+}
+
+void RamWatchWindow::slotSave()
+{
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    if (filename.isNull()) {
+        return;
+    }
+
+    std::string watchFile = filename.toStdString();
+
+    /* Check or add .wch extension */
+    if ((watchFile.length() < 4) || (watchFile.compare(watchFile.length()-4, 4, ".wch") != 0)) {
+        watchFile += ".wch";
+    }
+
+	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	watchSettings.setFallbacksEnabled(false);
+
+    ramWatchModel->saveSettings(watchSettings);
+}
+
+void RamWatchWindow::slotLoad()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    if (filename.isNull()) {
+        return;
+    }
+
+    std::string watchFile = filename.toStdString();
+
+	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	watchSettings.setFallbacksEnabled(false);
+
+    ramWatchModel->loadSettings(watchSettings);
 }

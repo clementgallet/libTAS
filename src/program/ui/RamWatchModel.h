@@ -21,6 +21,7 @@
 #define LIBTAS_RAMWATCHMODEL_H_INCLUDED
 
 #include <QAbstractTableModel>
+#include <QSettings>
 #include <vector>
 #include <memory>
 
@@ -45,6 +46,9 @@ public:
 
     void addWatch(std::unique_ptr<IRamWatchDetailed> ramwatch);
     void removeWatch(int row);
+
+    void saveSettings(QSettings& watchSettings);
+    void loadSettings(QSettings& watchSettings);
 
     void update();
 };

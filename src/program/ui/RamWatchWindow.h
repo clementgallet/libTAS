@@ -52,6 +52,8 @@ private slots:
     void slotEdit();
     void slotRemove();
     void slotScanPointer();
+    void slotSave();
+    void slotLoad();
 
 };
 

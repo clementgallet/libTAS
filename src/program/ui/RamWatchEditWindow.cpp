@@ -256,34 +256,34 @@ void RamWatchEditWindow::slotSave()
 
     /* Build the ram watch using the right type as template */
     switch (typeBox->currentIndex()) {
-        case 0:
+        case RamWatch::RamUnsignedChar:
             ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
             break;
-        case 1:
+        case RamWatch::RamChar:
             ramwatch.reset(new RamWatchDetailed<char>(addr));
             break;
-        case 2:
+        case RamWatch::RamUnsignedShort:
             ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
             break;
-        case 3:
+        case RamWatch::RamShort:
             ramwatch.reset(new RamWatchDetailed<short>(addr));
             break;
-        case 4:
+        case RamWatch::RamUnsignedInt:
             ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
             break;
-        case 5:
+        case RamWatch::RamInt:
             ramwatch.reset(new RamWatchDetailed<int>(addr));
             break;
-        case 6:
+        case RamWatch::RamUnsignedLong:
             ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
             break;
-        case 7:
+        case RamWatch::RamLong:
             ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
             break;
-        case 8:
+        case RamWatch::RamFloat:
             ramwatch.reset(new RamWatchDetailed<float>(addr));
             break;
-        case 9:
+        case RamWatch::RamDouble:
             ramwatch.reset(new RamWatchDetailed<double>(addr));
             break;
     }
