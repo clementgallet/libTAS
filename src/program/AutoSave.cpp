@@ -44,12 +44,7 @@ void AutoSave::update(Context* context, MovieFile& movie)
 		time(&last_time_saved);
 
 		/* Build the autosave filename */
-		size_t sep = context->config.moviefile.find_last_of("/");
-		std::string moviename;
-		if (sep != std::string::npos)
-			moviename += context->config.moviefile.substr(sep + 1);
-		else
-			moviename += context->config.moviefile;
+		std::string moviename = fileFromPath(context->config.moviefile);
 
 		/* Remove the extension if any */
 		if (moviename.compare(moviename.size() - 4, 4, ".ltm") == 0) {

@@ -33,22 +33,23 @@ class MemSection {
             MemDataRW = 0x0004,
             MemBSS = 0x0008,
             MemHeap = 0x0010,
-            MemFileMapping = 0x0020,
-            MemAnonymousMappingRO = 0x0040,
-            MemAnonymousMappingRW = 0x0080,
-            MemStack = 0x0100,
-            MemSpecial = 0x0200
+            MemFileMappingRO = 0x0020,
+            MemFileMappingRW = 0x0040,
+            MemAnonymousMappingRO = 0x0080,
+            MemAnonymousMappingRW = 0x0100,
+            MemStack = 0x0200,
+            MemSpecial = 0x0400
         };
 
         /* All information gather from a single line of /proc/pid/maps */
         uintptr_t addr;
         uintptr_t endaddr;
-        intptr_t size;
+        size_t size;
         bool readflag;
         bool writeflag;
         bool execflag;
         bool sharedflag;
-        int offset;
+        off_t offset;
         std::string device;
         int inode;
         std::string filename;

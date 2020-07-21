@@ -26,9 +26,6 @@
 // #include <pair>
 #include <memory>
 #include <sys/types.h>
-#include <sstream>
-#include <fstream>
-#include <iostream>
 
 #include "../Context.h"
 #include "../ramsearch/MemSection.h"
@@ -51,6 +48,9 @@ public:
     /* Max size of pointer chain */
     int max_level = 5;
 
+    /* Get the file and file offset from an address */
+    std::string getFileAndOffset(uintptr_t& addr) const;
+
     /* Store all pointers from the game memory into a map */
     void locatePointers();
 
@@ -62,6 +62,9 @@ public:
 
 private:
     Context *context;
+
+    /* File mapping sections */
+    std::vector<MemSection> file_mapping_sections;
 
     /* Recursive call for the pointer chain search */
     void recursiveFind(uintptr_t addr, int level, int offsets[], int max_offset);

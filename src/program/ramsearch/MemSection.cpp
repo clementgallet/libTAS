@@ -89,7 +89,12 @@ void MemSection::readMap(std::string& line)
 
     if (heap_discovered) {
         if (!isempty) {
-            type = MemFileMapping;
+            if (writeflag) {
+                type = MemFileMappingRW;
+                return;
+            }
+
+            type = MemFileMappingRO;
             return;
         }
 

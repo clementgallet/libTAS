@@ -26,7 +26,6 @@
 #include <QFormLayout>
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QSortFilterProxyModel>
 
 #include "PointerScanWindow.h"
 #include "MainWindow.h"
@@ -51,7 +50,7 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent, Qt::WindowFlag
     pointerScanView->sortByColumn(0, Qt::AscendingOrder);
 
     pointerScanModel = new PointerScanModel(context);
-    QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel();
+    proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(pointerScanModel);
     pointerScanView->setModel(proxyModel);
 
@@ -151,11 +150,15 @@ void PointerScanWindow::slotAdd()
     if (mw) {
         bool ok;
         uintptr_t addr = addressInput->text().toULong(&ok, 16);
-        const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(index.row());
+        const QModelIndex sourceIndex = proxyModel->mapToSource(index);
+        const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
         std::unique_ptr<IRamWatchDetailed> watch(new RamWatchDetailed<int>(addr));
 
         watch->isPointer = true;
         watch->base_address = chain.first;
+        uintptr_t base_file_offset = chain.first;
+        watch->base_file = pointerScanModel->getFileAndOffset(base_file_offset);
+        watch->base_file_offset = base_file_offset;
         watch->pointer_offsets = chain.second;
         std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
         mw->ramWatchWindow->editWindow->fill(watch);

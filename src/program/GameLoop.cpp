@@ -393,11 +393,7 @@ void GameLoop::init()
         context->encoding_segment = 0;
 
     /* Extract the game executable name from the game executable path */
-    size_t sep = context->gamepath.find_last_of("/");
-    if (sep != std::string::npos)
-        context->gamename = context->gamepath.substr(sep + 1);
-    else
-        context->gamename = context->gamepath;
+    context->gamename = fileFromPath(context->gamepath);
 
     /* Clear the event queue and parameters */
     xcb_generic_event_t *event;

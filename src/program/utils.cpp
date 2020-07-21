@@ -24,6 +24,15 @@
 #include <iostream>
 #include <unistd.h> // unlink
 
+std::string fileFromPath(const std::string& path)
+{
+    size_t sep = path.find_last_of("/");
+    if (sep != std::string::npos)
+        return path.substr(sep + 1);
+    else
+        return path;
+}
+
 int create_dir(const std::string& path)
 {
     int ret = mkdir(path.c_str(), S_IRWXU);

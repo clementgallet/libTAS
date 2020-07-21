@@ -30,6 +30,9 @@ public:
     IRamWatchDetailed(uintptr_t addr) : address(addr) {};
     virtual ~IRamWatchDetailed() = default;
 
+    /* Update the actual address to look at (in case of pointer chain) */
+    void update_addr();
+
     /* Return the current value of the ram watch as a string */
     virtual std::string value_str() = 0;
 
@@ -48,6 +51,8 @@ public:
     bool isPointer;
     std::vector<int> pointer_offsets;
     uintptr_t base_address;
+    off_t base_file_offset;
+    std::string base_file;
 
     static pid_t game_pid;
     static bool isValid;

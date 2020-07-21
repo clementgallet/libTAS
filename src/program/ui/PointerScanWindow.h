@@ -28,6 +28,7 @@
 #include <QComboBox>
 #include <QProgressBar>
 #include <QLabel>
+#include <QSortFilterProxyModel>
 #include <memory>
 
 #include "PointerScanModel.h"
@@ -43,6 +44,7 @@ public:
 private:
     Context *context;
     QTableView *pointerScanView;
+    QSortFilterProxyModel* proxyModel;
 
     PointerScanModel *pointerScanModel;
     QProgressBar *searchProgress;

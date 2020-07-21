@@ -9,6 +9,7 @@
 * Store input column order from input editor in movies (#328)
 * Implement SDL_Lock/UnlockAudio (#358)
 * Implement ram watch saving/loading
+* Pointer scanning can start from any file-mapped memory
 
 ### Changed
 ### Fixed

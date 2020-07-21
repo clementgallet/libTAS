@@ -23,6 +23,9 @@
 #include <string>
 #include "Context.h"
 
+/* Get the file from path */
+std::string fileFromPath(const std::string& path);
+
 /* Create a directory if it does not exist already */
 int create_dir(const std::string& path);
 

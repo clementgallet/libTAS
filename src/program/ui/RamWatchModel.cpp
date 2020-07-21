@@ -98,7 +98,8 @@ void RamWatchModel::saveSettings(QSettings& watchSettings)
         watchSettings.setValue("hex", w->hex);
         watchSettings.setValue("isPointer", w->isPointer);
         if (w->isPointer) {
-            watchSettings.setValue("base_address", static_cast<unsigned long long>(w->base_address));
+            watchSettings.setValue("base_file", w->base_file.c_str());
+            watchSettings.setValue("base_file_offset", static_cast<unsigned long long>(w->base_file_offset));
             watchSettings.beginWriteArray("offsets");
             int j = 0;
             for (int o : w->pointer_offsets) {
@@ -164,7 +165,8 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
         ramwatch->hex = watchSettings.value("hex").toBool();
         ramwatch->isPointer = watchSettings.value("isPointer").toBool();
         if (ramwatch->isPointer) {
-            ramwatch->base_address = watchSettings.value("base_address").toULongLong();
+            ramwatch->base_file = watchSettings.value("base_file").toString().toStdString();
+            ramwatch->base_file_offset = watchSettings.value("base_file_offset").toULongLong();
             int size_off = watchSettings.beginReadArray("offsets");
             for (int j = 0; j < size_off; ++j) {
                 watchSettings.setArrayIndex(j);

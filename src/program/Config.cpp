@@ -21,16 +21,11 @@
 #include "Config.h"
 #include <fcntl.h>
 #include <unistd.h> // access
+#include "utils.h"
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
-    size_t sep = gamepath.find_last_of("/");
-    std::string gamename;
-    if (sep != std::string::npos)
-        gamename = gamepath.substr(sep + 1);
-    else
-        gamename = gamepath;
-
+    std::string gamename = fileFromPath(gamepath);
     return QString("%1/%2.ini").arg(configdir.c_str()).arg(gamename.c_str());
 }
 

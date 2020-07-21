@@ -18,6 +18,10 @@
  */
 
 #include "PointerScanModel.h"
+#include "../utils.h"
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
 PointerScanModel::PointerScanModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -39,6 +43,8 @@ void PointerScanModel::locatePointers()
     MemSection::reset();
 
     std::vector<MemSection> memory_sections;
+    file_mapping_sections.clear();
+
     int total_size = 0;
     while (std::getline(mapsfile, line)) {
 
@@ -46,10 +52,14 @@ void PointerScanModel::locatePointers()
         section.readMap(line);
 
         /* Only store sections that could contain pointers */
-        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW)) {
+        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW)) {
         // if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap)) {
             memory_sections.push_back(section);
             total_size += section.size;
+        }
+        /* Keep the file mapping to access to the file and offsets */
+        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemFileMappingRW)) {
+            file_mapping_sections.push_back(section);
         }
     }
 
@@ -114,6 +124,17 @@ void PointerScanModel::locatePointers()
     }
 }
 
+std::string PointerScanModel::getFileAndOffset(uintptr_t& addr) const
+{
+    for (const MemSection &section : file_mapping_sections) {
+        if ((addr >= section.addr) && (addr < section.endaddr)) {
+            addr -= section.addr;
+            addr += section.offset;
+            return fileFromPath(section.filename);
+        }
+    }
+    return std::string("");
+}
 
 void PointerScanModel::findPointerChain(uintptr_t addr, int ml, int max_offset)
 {
@@ -193,7 +214,9 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         const std::pair<uintptr_t, std::vector<int>> &chain = pointer_chains.at(index.row());
         if (index.column() == 0) {
-            return QString("%1").arg(chain.first, 0, 16);
+            uintptr_t base_addr = chain.first;
+            std::string file = getFileAndOffset(base_addr);
+            return QString("%1+%2").arg(file.c_str()).arg(base_addr, 0, 16);
         }
         if (index.column() > static_cast<int>(chain.second.size())) {
             return QString("");

@@ -219,7 +219,7 @@ void RamSearchWindow::slotNew()
     if (memHeapBox->isChecked())
         memregions |= MemSection::MemHeap;
     if (memFileMappingBox->isChecked())
-        memregions |= MemSection::MemFileMapping;
+        memregions |= MemSection::MemFileMappingRW;
     if (memAnonymousMappingROBox->isChecked())
         memregions |= MemSection::MemAnonymousMappingRO;
     if (memAnonymousMappingRWBox->isChecked())
