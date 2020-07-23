@@ -10,6 +10,7 @@
 * Implement SDL_Lock/UnlockAudio (#358)
 * Implement ram watch saving/loading
 * Pointer scanning can start from any file-mapped memory
+* Prevent SDL from creating custom cursors
 
 ### Changed
 ### Fixed

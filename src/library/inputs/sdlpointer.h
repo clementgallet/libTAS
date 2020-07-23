@@ -162,7 +162,6 @@ OVERRIDE int SDL_CaptureMouse(SDL_bool enabled);
  */
 OVERRIDE SDL_bool SDL_GetRelativeMouseMode(void);
 
-#if 0
 /**
  *  \brief Create a cursor, using the specified bitmap data and
  *         mask (in MSB format).
@@ -181,7 +180,7 @@ OVERRIDE SDL_bool SDL_GetRelativeMouseMode(void);
  *
  *  \sa SDL_FreeCursor()
  */
-extern DECLSPEC SDL_Cursor *SDLCALL SDL_CreateCursor(const Uint8 * data,
+OVERRIDE SDL_Cursor *SDL_CreateCursor(const Uint8 * data,
                                                      const Uint8 * mask,
                                                      int w, int h, int hot_x,
                                                      int hot_y);
@@ -191,7 +190,7 @@ extern DECLSPEC SDL_Cursor *SDLCALL SDL_CreateCursor(const Uint8 * data,
  *
  *  \sa SDL_FreeCursor()
  */
-extern DECLSPEC SDL_Cursor *SDLCALL SDL_CreateColorCursor(SDL_Surface *surface,
+OVERRIDE SDL_Cursor *SDL_CreateColorCursor(SDL_Surface *surface,
                                                           int hot_x,
                                                           int hot_y);
 
@@ -200,31 +199,30 @@ extern DECLSPEC SDL_Cursor *SDLCALL SDL_CreateColorCursor(SDL_Surface *surface,
  *
  *  \sa SDL_FreeCursor()
  */
-extern DECLSPEC SDL_Cursor *SDLCALL SDL_CreateSystemCursor(SDL_SystemCursor id);
+OVERRIDE SDL_Cursor *SDL_CreateSystemCursor(SDL_SystemCursor id);
 
 /**
  *  \brief Set the active cursor.
  */
-extern DECLSPEC void SDLCALL SDL_SetCursor(SDL_Cursor * cursor);
+OVERRIDE void SDL_SetCursor(SDL_Cursor * cursor);
 
 /**
  *  \brief Return the active cursor.
  */
-extern DECLSPEC SDL_Cursor *SDLCALL SDL_GetCursor(void);
+OVERRIDE SDL_Cursor *SDL_GetCursor(void);
 
 /**
  *  \brief Return the default cursor.
  */
-extern DECLSPEC SDL_Cursor *SDLCALL SDL_GetDefaultCursor(void);
+OVERRIDE SDL_Cursor *SDL_GetDefaultCursor(void);
 
 /**
  *  \brief Frees a cursor created with SDL_CreateCursor().
  *
  *  \sa SDL_CreateCursor()
  */
-extern DECLSPEC void SDLCALL SDL_FreeCursor(SDL_Cursor * cursor);
+OVERRIDE void SDL_FreeCursor(SDL_Cursor * cursor);
 
-#endif
 /**
  *  \brief Toggle whether or not the cursor is shown.
  *

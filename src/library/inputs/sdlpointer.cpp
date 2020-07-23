@@ -166,6 +166,50 @@ SDL_bool SDL_GetRelativeMouseMode(void)
     return relativeMode;
 }
 
+SDL_Cursor *SDL_CreateCursor(const Uint8 * data, const Uint8 * mask, int w, int h, int hot_x, int hot_y)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+SDL_Cursor *SDL_CreateColorCursor(SDL_Surface *surface, int hot_x, int hot_y)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+SDL_Cursor *SDL_CreateSystemCursor(SDL_SystemCursor id)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+void SDL_SetCursor(SDL_Cursor * cursor)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+}
+
+SDL_Cursor *SDL_GetCursor(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+SDL_Cursor *SDL_GetDefaultCursor(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+void SDL_FreeCursor(SDL_Cursor * cursor)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+}
 
 int SDL_ShowCursor(int toggle)
 {
