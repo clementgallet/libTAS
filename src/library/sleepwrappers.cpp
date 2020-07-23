@@ -26,6 +26,7 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
+#include <execinfo.h>
 
 namespace libtas {
 
@@ -79,6 +80,19 @@ DEFINE_ORIG_POINTER(sched_yield);
      * the timer and do not actually wait.
      */
     if (usec && mainT) {
+
+        /* A bit hackish: Disable sleeps from nvidia driver */
+        void* return_address =  __builtin_return_address(0);
+        char** symbols = backtrace_symbols(&return_address, 1);
+        if (symbols != nullptr) {
+            if (strstr(symbols[0], "libGLX_nvidia.so")) {
+                orig::nanosleep(&ts, NULL);
+                free(symbols);
+                return 0;
+            }
+            free(symbols);
+        }
+        printBacktrace();
         detTimer.addDelay(ts);
         NATIVECALL(sched_yield());
         return 0;
