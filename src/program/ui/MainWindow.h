@@ -32,6 +32,7 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <forward_list>
+#include <string>
 
 #include "config.h"
 #include "EncodeWindow.h"
@@ -46,6 +47,7 @@
 #include "OsdWindow.h"
 #include "AnnotationsWindow.h"
 #include "AutoSaveWindow.h"
+#include "TimeTraceWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
@@ -75,6 +77,7 @@ public:
     OsdWindow* osdWindow;
     AnnotationsWindow* annotationsWindow;
     AutoSaveWindow* autoSaveWindow;
+    TimeTraceWindow* timeTraceWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;

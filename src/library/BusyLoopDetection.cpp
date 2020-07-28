@@ -28,7 +28,20 @@
 // #include <math.h>
 #include <execinfo.h>
 #include <map>
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+#include <dlfcn.h>
+#include <sstream>
+#include <string.h>
+#include "GlobalState.h"
+#include "checkpoint/ProcSelfMaps.h"
+#include "checkpoint/ProcMapsArea.h"
+#include "checkpoint/ReservedMemory.h"
+#include "../shared/SharedConfig.h"
 
+extern char**environ;
+
+#define MAX_STACK_SIZE 256
 
 namespace libtas {
 
@@ -36,6 +49,8 @@ static std::map<uintptr_t, int>& getTimecallCount() {
     static std::map<uintptr_t, int> timecall_count;
     return timecall_count;
 }
+
+static uint64_t hash;
 
 void BusyLoopDetection::reset()
 {
@@ -48,44 +63,175 @@ void BusyLoopDetection::reset()
     getTimecallCount().clear();
 }
 
-void BusyLoopDetection::increment(void* ret_address)
+void BusyLoopDetection::resetHash()
 {
-    if (!shared_config.busyloop_detection)
+    hash = 0;
+}
+
+void BusyLoopDetection::toHash(const char* string)
+{
+    const char* c = string;
+    for (; *c != '\0'; c++)
+        hash = hash * 33 + *c;
+}
+
+void BusyLoopDetection::toHash(intptr_t addr)
+{
+    hash = hash * 33 + addr;
+}
+
+void BusyLoopDetection::increment(int type)
+{
+    if (!shared_config.busyloop_detection && !shared_config.time_trace)
         return;
     if (!ThreadManager::isMainThread())
         return;
     if (GlobalState::isNative())
         return;
+    if (detTimer.isInsideFrameBoundary())
+        return;
 
-//    printBacktrace();
+    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "Time function called");
 
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "Time function called from %p", ret_address);
+    GlobalState::setNative(true);
 
-    uintptr_t intret = reinterpret_cast<uintptr_t>(ret_address);
+    resetHash();
 
-    auto& timecall_count = getTimecallCount();
-    auto it = timecall_count.find(intret);
-    if (it != timecall_count.end()) {
-        it->second = it->second + 1;
-        if (it->second == 1000) {
-            debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
-            detTimer.fakeAdvanceTimerFrame();
-        }
-        if (it->second > 1100) {
-            if (!detTimer.insideFrameBoundary) {
-                debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
-#ifdef LIBTAS_ENABLE_HUD
-                static RenderHUD dummy;
-                frameBoundary(false, [] () {}, dummy);
-#else
-                frameBoundary(false, [] () {});
-#endif
+    toHash(static_cast<intptr_t>(type));
+
+    void* addresses[MAX_STACK_SIZE];
+    const int n = backtrace(addresses, MAX_STACK_SIZE);
+
+    /* Get the ld_library_path content */
+    /* The env name was modified in libTAS init function */
+    static char* ld_path = nullptr;
+
+    if (ld_path == nullptr) {
+        const char* ld = "DD_LIBRARY_PATH=";
+        for (int i=0; environ[i]; i++) {
+            if (strstr(environ[i], ld) == environ[i]) {
+                ld_path = environ[i] + strlen(ld);
+                /* Check if non empty */
+                if (ld_path[0] == '\0')
+                    ld_path = nullptr;
+                break;
             }
         }
     }
-    else {
-        timecall_count[intret] = 1;
+
+    /* We don't need the whole `backtrace_symbols()` feature, only some information,
+     * so this is a simplified implementation of this function. */
+    std::ostringstream oss;
+
+    /* Start the stack at frame 3 to skip this, DeterministicTimer::getTicks() and gettime() */
+    for (int cnt = 3; cnt < n; ++cnt) {
+        Dl_info info;
+        int status = dladdr(addresses[cnt], &info);
+        if (status && info.dli_fname != NULL && info.dli_fname[0] != '\0') {
+            /* Check if the program or library is provided by the game,
+             * using the content of LD_LIBRARY_PATH
+             */
+            bool isGameLibrary = false;
+            /* Putting executable base addresses directly, because I'm lazy... */
+            if (info.dli_fbase == (void*)0x400000 || info.dli_fbase == (void*)0x8048000)
+                isGameLibrary = true;
+            else if (ld_path) {
+                isGameLibrary = strstr(info.dli_fname, ld_path);
+            }
+
+            if (isGameLibrary) {
+                /* Hash the file name */
+                const char* filename = strrchr(info.dli_fname, '/');
+                toHash(filename? ++filename : info.dli_fname);
+
+                /* Hash the address offset */
+                if (info.dli_fbase && (addresses[cnt] >= info.dli_fbase))
+                    toHash(reinterpret_cast<intptr_t>(addresses[cnt]) - reinterpret_cast<intptr_t>(info.dli_fbase));
+            }
+            else {
+                /* We should be safe to push the function called inside the library.
+                 * everything else may change (even library name) */
+                if (info.dli_sname != NULL) {
+                    toHash(info.dli_sname);
+                }
+            }
+
+            /* Building stack trace string */
+            if (shared_config.time_trace) {
+                oss << info.dli_fname;
+
+                if (info.dli_sname == NULL)
+                    info.dli_saddr = info.dli_fbase;
+
+                if (info.dli_sname != NULL || info.dli_saddr != 0) {
+                    oss << "(" << (info.dli_sname ?: "");
+                    if (info.dli_saddr != 0) {
+                        if (addresses[cnt] >= (void *)info.dli_saddr) {
+                            oss << '+' << std::hex << (reinterpret_cast<intptr_t>(addresses[cnt]) - reinterpret_cast<intptr_t>(info.dli_saddr));
+                        }
+                        else {
+                            oss << '-' << std::hex << (reinterpret_cast<intptr_t>(info.dli_saddr) - reinterpret_cast<intptr_t>(addresses[cnt]));
+                        }
+                    }
+                    oss << ")";
+                }
+                oss << " ";
+            }
+        }
+        else {
+            /* Executed code comes from some anonymous mapping, which is often
+             * the sign of JIT execution. For now, we trust that the code always
+             * has the same offset from the beginning of the mapped section. */
+
+            /* Find the corresponding memory area */
+            ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+            Area area;
+            while (procSelfMaps.getNextArea(&area)) {
+                if ((addresses[cnt] >= area.addr) && (addresses[cnt] < area.endAddr)) {
+                    toHash(reinterpret_cast<intptr_t>(addresses[cnt]) - reinterpret_cast<intptr_t>(area.addr));
+                    break;
+                }
+            }
+        }
+        if (shared_config.time_trace) {
+            oss << "[" << addresses[cnt] << "]\n";
+        }
     }
+
+    if (shared_config.time_trace) {
+        sendMessage(MSGB_GETTIME_BACKTRACE);
+        sendData(&type, sizeof(int));
+        sendData(&hash, sizeof(uint64_t));
+        sendString(oss.str());
+    }
+    GlobalState::setNative(false);
+
+//
+//     uintptr_t intret = reinterpret_cast<uintptr_t>(ret_address);
+//
+//     auto& timecall_count = getTimecallCount();
+//     auto it = timecall_count.find(intret);
+//     if (it != timecall_count.end()) {
+//         it->second = it->second + 1;
+//         if (it->second == 1000) {
+//             debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
+//             detTimer.fakeAdvanceTimerFrame();
+//         }
+//         if (it->second > 1100) {
+//             if (!detTimer.insideFrameBoundary) {
+//                 debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
+// #ifdef LIBTAS_ENABLE_HUD
+//                 static RenderHUD dummy;
+//                 frameBoundary(false, [] () {}, dummy);
+// #else
+//                 frameBoundary(false, [] () {});
+// #endif
+//             }
+//         }
+//     }
+//     else {
+//         timecall_count[intret] = 1;
+//     }
 }
 
 }

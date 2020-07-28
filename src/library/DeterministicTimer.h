@@ -80,9 +80,11 @@ public:
     void fakeAdvanceTimerFrame();
 
     /* Are we inside a frame boudary */
-    bool insideFrameBoundary = false;
+    bool isInsideFrameBoundary();
 
 private:
+
+    bool insideFrameBoundary = false;
 
     /* By how much time do we increment the timer, excluding fractional part.
      * It only depends on the framerate setting.

@@ -27,6 +27,7 @@
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
 #include "global.h" // shared_config
+#include "BusyLoopDetection.h"
 
 #include <sched.h> // sched_yield()
 
@@ -66,6 +67,10 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 
     bool mainT = ThreadManager::isMainThread();
+
+    /* Check for busy loops */
+    if (mainT)
+        BusyLoopDetection::increment(type);
 
     /* Update the count of time query calls, and advance time if reached the
      * limit. We use different counts for main and secondary threads because
@@ -317,6 +322,11 @@ void DeterministicTimer::initialize(void)
     fakeExtraTicks = {0, 0};
 
     inited = true;
+}
+
+bool DeterministicTimer::isInsideFrameBoundary()
+{
+    return insideFrameBoundary;
 }
 
 DeterministicTimer detTimer;

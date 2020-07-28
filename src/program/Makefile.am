@@ -24,7 +24,9 @@ libTAS_QTSOURCES = \
     ui/RamSearchWindow.h \
     ui/RamWatchEditWindow.h \
     ui/RamWatchModel.h \
-    ui/RamWatchWindow.h
+    ui/RamWatchWindow.h \
+    ui/TimeTraceModel.h \
+    ui/TimeTraceWindow.h
 
 libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 
@@ -60,7 +62,9 @@ libTAS_SOURCES = \
     ui/RamWatchEditWindow.cpp \
     ui/RamWatchModel.cpp \
     ui/RamWatchWindow.cpp \
-	ui/qtutils.cpp \
+    ui/TimeTraceModel.cpp \
+    ui/TimeTraceWindow.cpp \
+    ui/qtutils.cpp \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
     ramsearch/MemSection.cpp \

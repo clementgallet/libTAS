@@ -44,6 +44,8 @@
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
+    qRegisterMetaType<std::string>("std::string");
+
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
 #ifdef LIBTAS_INTERIM
     title.append(" - interim ").append(LIBTAS_INTERIM);
@@ -74,6 +76,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     osdWindow = new OsdWindow(c, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     autoSaveWindow = new AutoSaveWindow(c, this);
+    timeTraceWindow = new TimeTraceWindow(c, this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
@@ -84,6 +87,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
+    connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
 
     /* Menu */
     createActions();
@@ -769,6 +773,8 @@ void MainWindow::createMenus()
     QMenu *debugExcludeMenu = debugMenu->addMenu(tr("Exclude Categories"));
     debugExcludeMenu->addActions(loggingExcludeGroup->actions());
     debugExcludeMenu->installEventFilter(this);
+
+    debugMenu->addAction(tr("Time Trace..."), timeTraceWindow, &TimeTraceWindow::show);
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));

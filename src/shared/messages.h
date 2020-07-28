@@ -239,6 +239,12 @@ enum {
      */
     MSGB_GIT_COMMIT,
 
+    /*
+     * Send the hash and backtrace of a gettime function.
+     * Argument: uint64_t then size_t (string length) then char[len]
+     */
+    MSGB_GETTIME_BACKTRACE,
+
 };
 
 #endif

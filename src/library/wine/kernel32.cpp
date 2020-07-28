@@ -22,7 +22,6 @@
 #include "../hookpatch.h"
 #include "../logging.h"
 #include "../DeterministicTimer.h"
-#include "../BusyLoopDetection.h"
 
 namespace libtas {
 
@@ -80,7 +79,6 @@ int __stdcall WaitForMultipleObjectsEx( int count, const void **handles,
 unsigned int __stdcall GetTickCount()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT);
     unsigned int msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", msec);
@@ -90,7 +88,6 @@ unsigned int __stdcall GetTickCount()
 uint64_t __stdcall GetTickCount64()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT64);
     uint64_t msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", msec);
@@ -107,7 +104,6 @@ int __stdcall QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 int __stdcall QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    BusyLoopDetection::increment(__builtin_return_address(0));
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
     lpPerformanceCount->QuadPart = ts.tv_nsec + ts.tv_sec * 1000000000LL;
     debuglog(LCF_TIMEGET | LCF_FREQUENT, "  returning ", lpPerformanceCount->QuadPart);

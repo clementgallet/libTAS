@@ -292,6 +292,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* User can modify the framerate during the game execution */
     bool variable_framerate = false;
 
+    /* Send stack traces of all time calls to libTAS program */
+    bool time_trace = false;
 };
 
 #endif

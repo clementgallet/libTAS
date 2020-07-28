@@ -121,6 +121,8 @@ signals:
 
     /* register a savestate */
     void savestatePerformed(int slot, unsigned long long frame);
+
+    void getTimeTrace(int type, unsigned long long hash, std::string stacktrace);
 };
 
 #endif

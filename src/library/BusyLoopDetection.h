@@ -20,14 +20,22 @@
 #ifndef LIBTAS_BUSYLOOPDETECTION_H_INCL
 #define LIBTAS_BUSYLOOPDETECTION_H_INCL
 
+#include <cstdint>
+
 namespace libtas {
 namespace BusyLoopDetection {
 
 /* Reset the state, at the end of each frame */
 void reset();
 
+void resetHash();
+
+void toHash(const char* string);
+
+void toHash(intptr_t addr);
+
 /* Update the state after a time call was made */
-void increment(void* ret_address);
+void increment(int type);
 
 }
 }

@@ -651,6 +651,17 @@ bool GameLoop::startFrameMessages()
         case MSGB_DO_BACKTRACK_SAVESTATE:
             context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
             break;
+        case MSGB_GETTIME_BACKTRACE:
+        {
+            int type;
+            receiveData(&type, sizeof(int));
+            uint64_t hash;
+            receiveData(&hash, sizeof(uint64_t));
+            std::string trace = receiveString();
+            emit getTimeTrace(type, static_cast<unsigned long long>(hash), trace);
+        }
+        break;
+
         case MSGB_QUIT:
             if (context->config.dumping) {
                 /* Finished running a dump from the command line */
