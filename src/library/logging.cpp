@@ -27,6 +27,8 @@
 #include "frame.h" // For framecount
 #include <mutex>
 #include <list>
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 
@@ -35,7 +37,7 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     if ((shared_config.includeFlags & LCF_MAINTHREAD) &&
         !ThreadManager::isMainThread())
         return;
-    
+
     if ((!(lcf & shared_config.includeFlags)  ||
           (lcf & shared_config.excludeFlags)) &&
          !(lcf & LCF_ALERT))
@@ -120,23 +122,12 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 
 }
 
-static std::list<std::string> alert_messages;
-static std::mutex mutex;
-
-void setAlertMsg(const std::string alert)
+void sendAlertMsg(const std::string alert)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-    alert_messages.push_back(alert);
-}
-
-bool getAlertMsg(std::string& alert)
-{
-    std::lock_guard<std::mutex> lock(mutex);
-    if (alert_messages.empty())
-        return false;
-    alert = alert_messages.front();
-    alert_messages.pop_front();
-    return true;
+    lockSocket();
+    sendMessage(MSGB_ALERT_MSG);
+    sendString(alert);
+    unlockSocket();
 }
 
 }

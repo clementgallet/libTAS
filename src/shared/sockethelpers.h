@@ -35,6 +35,12 @@ bool initSocketGame(void);
 /* Close the socket connection */
 void closeSocket(void);
 
+/* Lock access to socket */
+void lockSocket(void);
+
+/* Unlock access to socket */
+void unlockSocket(void);
+
 /* Send data over the socket. Data is stored at the beginning of
  * pointer elem, and has the specified size in bytes.
  */

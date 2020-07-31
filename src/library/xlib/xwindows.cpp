@@ -142,8 +142,10 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
 static void sendXWindow(Window w)
 {
     uint32_t i = (uint32_t)w;
+    lockSocket();
     sendMessage(MSGB_WINDOW_ID);
     sendData(&i, sizeof(i));
+    unlockSocket();
     debuglog(LCF_WINDOW, "Sent X11 window id ", w);
 }
 

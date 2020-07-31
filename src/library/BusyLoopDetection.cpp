@@ -199,10 +199,12 @@ void BusyLoopDetection::increment(int type)
     }
 
     if (shared_config.time_trace) {
+        lockSocket();
         sendMessage(MSGB_GETTIME_BACKTRACE);
         sendData(&type, sizeof(int));
         sendData(&hash, sizeof(uint64_t));
         sendString(oss.str());
+        unlockSocket();
     }
     GlobalState::setNative(false);
 

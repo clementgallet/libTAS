@@ -244,12 +244,8 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      * boundary.
      */
 
-    /* Send error messages */
-    std::string alert;
-    while (getAlertMsg(alert)) {
-        sendMessage(MSGB_ALERT_MSG);
-        sendString(alert);
-    }
+    /* Other threads may send socket messages, so we lock the socket */
+    lockSocket();
 
     /* Send framecount and internal time */
     sendMessage(MSGB_FRAMECOUNT_TIME);
@@ -389,6 +385,9 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     #else
         receive_messages(draw);
     #endif
+
+    /* No more socket messages here, unlocking the socket. */
+    unlockSocket();
 
     /* Some methods of drawing on screen don't always update the full screen.
      * Our current screen may be dirty with OSD, so in that case, we must

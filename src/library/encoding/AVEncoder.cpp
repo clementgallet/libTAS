@@ -67,8 +67,10 @@ AVEncoder::AVEncoder() {
     }
 
     segment_number++;
+    lockSocket();
     sendMessage(MSGB_ENCODING_SEGMENT);
     sendData(&segment_number, sizeof(int));
+    unlockSocket();
 }
 
 void AVEncoder::initMuxer() {

@@ -169,7 +169,7 @@ void checkMesa()
         std::string alertMsg = "Software rendering was enabled, but the OpenGL renderer currently used (";
         alertMsg += renderer;
         alertMsg += ") does not match. Check if you have a Mesa-compatible GPU driver installed. At the moment, it is likely that savestates will crash";
-        setAlertMsg(alertMsg);
+        sendAlertMsg(alertMsg);
     }
 }
 

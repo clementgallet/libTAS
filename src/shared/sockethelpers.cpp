@@ -25,6 +25,7 @@
 #include <sys/un.h>
 #include <iostream>
 #include <vector>
+#include <mutex>
 
 #ifdef SOCKET_LOG
 #include "lcf.h"
@@ -37,6 +38,8 @@
 
 /* Socket to communicate between the program and the game */
 static int socket_fd = 0;
+
+static std::mutex mutex;
 
 void removeSocket(void){
     unlink(SOCKET_FILENAME);
@@ -106,6 +109,16 @@ bool initSocketGame(void)
 void closeSocket(void)
 {
     close(socket_fd);
+}
+
+void lockSocket(void)
+{
+    mutex.lock();
+}
+
+void unlockSocket(void)
+{
+    mutex.unlock();
 }
 
 void sendData(const void* elem, unsigned int size)
