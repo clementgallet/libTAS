@@ -50,6 +50,9 @@ namespace libtas {
     /* Indicate if the game is exiting. It helps avoiding some invalid or blocking calls */
     extern volatile bool is_exiting;
 
+    /* Indicate if this is a forked process. We should not use socket on forked processes */
+    extern volatile bool is_fork;
+
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
 

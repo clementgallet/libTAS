@@ -27,6 +27,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(getpid);
+DEFINE_ORIG_POINTER(fork);
 
 /* Override */ pid_t getpid (void) throw()
 {
@@ -51,6 +52,23 @@ DEFINE_ORIG_POINTER(getpid);
         free(symbols);
     }
 
+    return pid;
+}
+
+/* Override */  pid_t fork(void) __THROWNL
+{
+    LINK_NAMESPACE_GLOBAL(fork);
+    pid_t pid = orig::fork();
+
+    if (GlobalState::isNative()) {
+        return pid;
+    }
+
+    DEBUGLOGCALL(LCF_SYSTEM);
+
+    if (pid == 0) {
+        is_fork = true;
+    }
     return pid;
 }
 

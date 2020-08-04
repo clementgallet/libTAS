@@ -753,7 +753,8 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 static void writeAllAreas(bool base)
 {
     if (shared_config.savestate_settings & SharedConfig::SS_FORK) {
-        pid_t pid = fork();
+        pid_t pid;
+        NATIVECALL(pid = fork());
         if (pid != 0)
             return;
 

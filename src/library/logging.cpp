@@ -79,11 +79,15 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     snprintf(s + size, maxsize-size-1, "[libTAS f:%" PRIu64 "] ", framecount);
     size = strlen(s);
 
-    pid_t tid = ThreadManager::getThreadTid();
-    if (ThreadManager::isMainThread())
-        snprintf(s + size, maxsize-size-1, "Thread %d (main) ", tid);
+    pid_t tid;
+    if (is_fork)
+        /* For forked processes, the thread manager have wrong pid values (those of parent process) */
+        NATIVECALL(tid = getpid());
     else
-        snprintf(s + size, maxsize-size-1, "Thread %d        ", tid);
+        tid = ThreadManager::getThreadTid();
+
+    snprintf(s + size, maxsize-size-1, "Thread %d %s ", tid, is_fork?"(fork)":(ThreadManager::isMainThread()?"(main)":""));
+
     size = strlen(s);
 
     if (isTerm) {

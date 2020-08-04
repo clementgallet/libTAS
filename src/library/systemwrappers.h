@@ -27,7 +27,12 @@
 namespace libtas {
 
 /* Get the process ID of the calling process.  */
-OVERRIDE pid_t getpid (void) throw();
+OVERRIDE pid_t getpid (void) __THROWNL;
+
+/* Clone the calling process, creating an exact copy.
+   Return -1 for errors, 0 to the new process,
+   and the process ID of the new process to the old process.  */
+OVERRIDE pid_t fork(void) __THROWNL;
 
 }
 

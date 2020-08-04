@@ -180,10 +180,12 @@ void __attribute__((constructor)) init(void)
 void __attribute__((destructor)) term(void)
 {
     if (is_inited) {
-        ThreadManager::deallocateThreads();
-        sendMessage(MSGB_QUIT);
-        closeSocket();
+        if (!is_fork) {
+            sendMessage(MSGB_QUIT);
+            closeSocket();
+        }
         debuglog(LCF_SOCKET, "Exiting.");
+        ThreadManager::deallocateThreads();
     }
 }
 
