@@ -68,6 +68,11 @@ DEFINE_ORIG_POINTER(fork);
 
     if (pid == 0) {
         is_fork = true;
+
+        /* Invalidate the previous connections to the X server */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            gameDisplays[i] = nullptr;
+        }
     }
     return pid;
 }
