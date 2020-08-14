@@ -568,6 +568,10 @@ Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
     /* Data from our cookies are already present */
     if (cookie->type == GenericEvent)
         return True;
+
+    /* Make sure the data pointer is null, so that our `XFreeEventData()`
+     * function can correctly detect non-null cookies. */
+    cookie->data = nullptr;
     return False;
 }
 
@@ -586,7 +590,7 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
     }
 
 #ifdef LIBTAS_HAS_XINPUT
-    if (cookie) {
+    if (cookie && cookie->data) {
         XIEvent* xiev = static_cast<XIEvent*>(cookie->data);
         XIRawEvent *rev;
         XIDeviceEvent* dev;
