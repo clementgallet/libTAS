@@ -36,7 +36,6 @@
 #include "GlobalState.h"
 #include "checkpoint/ProcSelfMaps.h"
 #include "checkpoint/ProcMapsArea.h"
-#include "checkpoint/ReservedMemory.h"
 #include "../shared/SharedConfig.h"
 
 extern char**environ;
@@ -184,7 +183,7 @@ void BusyLoopDetection::increment(int type)
              * has the same offset from the beginning of the mapped section. */
 
             /* Find the corresponding memory area */
-            ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+            ProcSelfMaps procSelfMaps;
             Area area;
             while (procSelfMaps.getNextArea(&area)) {
                 if ((addresses[cnt] >= area.addr) && (addresses[cnt] < area.endAddr)) {

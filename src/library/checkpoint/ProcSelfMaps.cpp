@@ -26,10 +26,11 @@
 #include <sys/mman.h>
 #include "../Utils.h"
 #include <cstring>
+#include "ReservedMemory.h"
 
 namespace libtas {
 
-ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
+ProcSelfMaps::ProcSelfMaps()
     : dataIdx(0),
     numAreas(0),
     numBytes(0)
@@ -38,11 +39,11 @@ ProcSelfMaps::ProcSelfMaps(void* restoreAddr, size_t restoreLength)
     NATIVECALL(fd = open("/proc/self/maps", O_RDONLY));
     MYASSERT(fd != -1);
 
-    data = static_cast<char*>(restoreAddr);
+    data = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR));
 
-    numBytes = Utils::readAll(fd, data, restoreLength);
+    numBytes = Utils::readAll(fd, data, ReservedMemory::PSM_SIZE);
     MYASSERT(numBytes > 0)
-    MYASSERT(numBytes < restoreLength)
+    MYASSERT(numBytes < ReservedMemory::PSM_SIZE)
 
     NATIVECALL(close(fd));
 

@@ -155,7 +155,7 @@ int Checkpoint::checkCheckpoint()
     /* Get an estimation of the savestate space */
     uint64_t savestate_size = 0;
 
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+    ProcSelfMaps procSelfMaps;
 
     /* Read the first current area */
     Area area;
@@ -429,7 +429,7 @@ static void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+    ProcSelfMaps procSelfMaps;
 
     /* Read the first current area */
     bool not_eof = procSelfMaps.getNextArea(&current_area);
@@ -890,7 +890,7 @@ static void writeAllAreas(bool base)
      * We don't allocate memory here, we are using our special allocated
      * memory section that won't be saved in the savestate.
      */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+    ProcSelfMaps procSelfMaps;
 
     /* Remove write and add read flags from all memory areas we will be dumping */
     Area area;

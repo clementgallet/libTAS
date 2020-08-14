@@ -21,7 +21,6 @@
 #include "logging.h"
 #include "checkpoint/ProcSelfMaps.h"
 #include "checkpoint/ProcMapsArea.h"
-#include "checkpoint/ReservedMemory.h"
 #include <sys/resource.h>
 #include <alloca.h>
 
@@ -46,7 +45,7 @@ void Stack::grow()
     }
 
     /* Find the current stack area */
-    ProcSelfMaps procSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+    ProcSelfMaps procSelfMaps;
     Area stackArea;
     uintptr_t stackPointer = reinterpret_cast<uintptr_t>(&stackArea);
     while (procSelfMaps.getNextArea(&stackArea)) {
@@ -77,7 +76,7 @@ void Stack::grow()
     /* Look at the new stack area */
     /* Apparently, if we don't use another local variable here, the compiler
      * optimizes the alloca code above! */
-    ProcSelfMaps newProcSelfMaps(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR), ReservedMemory::PSM_SIZE);
+    ProcSelfMaps newProcSelfMaps;
     while (newProcSelfMaps.getNextArea(&stackArea)) {
         if ((stackPointer >= reinterpret_cast<uintptr_t>(stackArea.addr)) && (stackPointer < reinterpret_cast<uintptr_t>(stackArea.endAddr))) {
             break;
