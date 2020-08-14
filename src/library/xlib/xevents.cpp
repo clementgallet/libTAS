@@ -122,7 +122,7 @@ void pushNativeXlibEvents(Display *display)
         if (event.type == ClientMessage) {
             /* Catch the close event */
             if (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(WM_DELETE_WINDOW)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                 is_exiting = true;
             }
 
@@ -130,7 +130,7 @@ void pushNativeXlibEvents(Display *display)
             if ((event.xclient.message_type == x11_atom(WM_PROTOCOLS)) &&
                 (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(_NET_WM_PING))) {
 
-                debuglog(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 XEvent reply = event;
                 reply.xclient.window = DefaultRootWindow(display);
                 NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
@@ -171,7 +171,7 @@ int XNextEvent(Display *display, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 
@@ -227,7 +227,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }
@@ -257,7 +257,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }
@@ -306,7 +306,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }
@@ -384,7 +384,7 @@ int XEventsQueued(Display* display, int mode)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     int ret = queue->size();
-    debuglog(LCF_EVENTS, "    returns ", ret);
+    debuglogstdio(LCF_EVENTS, "    returns %d", ret);
     if ((ret == 0) && (mode != QueuedAlready))
         pushNativeXlibEvents(display);
 
@@ -407,7 +407,7 @@ int XPending(Display *display)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     int ret = queue->size();
-    debuglog(LCF_EVENTS, "    returns ", ret);
+    debuglogstdio(LCF_EVENTS, "    returns %d", ret);
     if (ret == 0)
         pushNativeXlibEvents(display);
     return ret;
@@ -438,7 +438,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
 }
@@ -480,9 +480,9 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
-                    debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                    debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 
                 /* Resize the window to the screen or fake resolution */
@@ -503,7 +503,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
             /* Detect and disable window always on top */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_ABOVE)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
                 return 0;
             }
         }

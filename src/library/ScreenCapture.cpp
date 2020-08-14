@@ -135,7 +135,7 @@ int ScreenCapture::init()
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
-        debuglog(LCF_WINDOW | LCF_ERROR, "Screen dimensions must be a multiple of 2");
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Screen dimensions must be a multiple of 2");
         return -1;
     }
 
@@ -167,7 +167,7 @@ int ScreenCapture::init()
 
     initScreenSurface();
 
-    debuglog(LCF_WINDOW, "Inited Screen Capture with dimensions (", width, ",", height, ")");
+    debuglogstdio(LCF_WINDOW, "Inited Screen Capture with dimensions (%d,%d)", width, height);
 
     inited = true;
     return 0;
@@ -185,14 +185,14 @@ void ScreenCapture::initScreenSurface()
         /* Create the screen texture */
         sdl_renderer = orig::SDL_GetRenderer(gameSDLWindow);
         if (!sdl_renderer) {
-            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: ", orig::SDL_GetError());
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: %d", orig::SDL_GetError());
         }
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         if (!screenSDLTex) {
             screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
                 SDL_TEXTUREACCESS_STREAMING, width, height);
             if (!screenSDLTex) {
-                debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: ", orig::SDL_GetError());
+                debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: %d", orig::SDL_GetError());
             }
         }
     }
@@ -222,45 +222,45 @@ void ScreenCapture::initScreenSurface()
         GLint draw_buffer, read_buffer;
         orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error %d", error);
 
         orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error %d", error);
 
         if (screenFBO == 0) {
             orig::glGenFramebuffers(1, &screenFBO);
             if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenFramebuffers failed with error ", error);
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenFramebuffers failed with error %d", error);
         }
         orig::glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         if (screenRBO == 0) {
             orig::glGenRenderbuffers(1, &screenRBO);
             if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenRenderbuffers failed with error ", error);
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenRenderbuffers failed with error %d", error);
         }
         orig::glBindRenderbuffer(GL_RENDERBUFFER, screenRBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindRenderbuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindRenderbuffer failed with error %d", error);
 
         orig::glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glRenderbufferStorage failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glRenderbufferStorage failed with error %d", error);
 
         orig::glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, screenRBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glFramebufferRenderbuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glFramebufferRenderbuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         glpixels.resize(size);
     }
@@ -349,7 +349,7 @@ void ScreenCapture::resize(int w, int h)
 
     initScreenSurface();
 
-    debuglog(LCF_WINDOW, "Resize Screen Capture with new dimensions (", width, ",", height, ")");
+    debuglogstdio(LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d)", width, height);
 }
 
 bool ScreenCapture::isInited()
@@ -371,37 +371,37 @@ const char* ScreenCapture::getPixelFormat()
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         switch (sdlpixfmt) {
             case SDL_PIXELFORMAT_RGBA8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGBA");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBA");
                 return "BGRA";
             case SDL_PIXELFORMAT_BGRA8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  BGRA");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRA");
                 return "RGBA";
             case SDL_PIXELFORMAT_ARGB8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  ARGB");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  ARGB");
                 return "ABGR";
             case SDL_PIXELFORMAT_ABGR8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  ABGR");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  ABGR");
                 return "ARGB";
             case SDL_PIXELFORMAT_RGB888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGB888");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB888");
                 return "BGR\0";
             case SDL_PIXELFORMAT_RGBX8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGBX8888");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBX8888");
                 return "\0BGR";
             case SDL_PIXELFORMAT_BGR888:
-                debuglog(LCF_DUMP | LCF_SDL, "  BGR888");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR888");
                 return "RGB\0";
             case SDL_PIXELFORMAT_BGRX8888:
-                debuglog(LCF_DUMP | LCF_SDL, "  BGRX8888");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRX8888");
                 return "\0RGB";
             case SDL_PIXELFORMAT_RGB24:
-                debuglog(LCF_DUMP | LCF_SDL, "  RGB24");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB24");
                 return "24BG";
             case SDL_PIXELFORMAT_BGR24:
-                debuglog(LCF_DUMP | LCF_SDL, "  BGR24");
+                debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR24");
                 return "RAW ";
             default:
-                debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format ", sdlpixfmt);
+                debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format %d", sdlpixfmt);
         }
     }
 
@@ -452,7 +452,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
         int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
         if (ret < 0) {
-            debuglog(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: ", orig::SDL_GetError());
+            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: %d", orig::SDL_GetError());
         }
         void* tex_pixels;
         int tex_pitch;
@@ -462,7 +462,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
     }
 
     else if (game_info.video & GameInfo::SDL2_SURFACE) {
-        debuglog(LCF_DUMP, "Access SDL_Surface pixels for video dump");
+        debuglogstdio(LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
         LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
         LINK_NAMESPACE_SDL2(SDL_LockSurface);
@@ -476,7 +476,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         int cw = surf2->w;
         int ch = surf2->h;
         if ((cw != width) || (ch != height)) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
             return -1;
         }
 
@@ -520,39 +520,39 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         orig::glGetError();
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screenFBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
 
         /* Restore the original draw/read framebuffers */
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         if (pixels) {
 
             /* We need to recover the pixels for encoding */
             orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
             if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
             orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
             if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error ", error);
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
 
             orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
             if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error ", error);
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
 
             /*
              * Flip image horizontally
@@ -572,7 +572,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
     else if (game_info.video & GameInfo::SDL1) {
         /* Not tested !! */
-        debuglog(LCF_DUMP, "Access SDL_Surface pixels for video dump");
+        debuglogstdio(LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
         link_function((void**)&orig::SDL1_LockSurface, "SDL_LockSurface", "libSDL-1.2.so.0");
@@ -587,7 +587,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         int cw = surf1->w;
         int ch = surf1->h;
         if ((cw != width) || (ch != height)) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Window coords have changed (",width,",",height,") -> (",cw,",",ch,")");
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
             return -1;
         }
 
@@ -604,7 +604,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
             /* We must lock the surface before accessing the raw pixels */
             int ret = orig::SDL1_LockSurface(screenSDL1Surf);
             if (ret != 0) {
-                debuglog(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
+                debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
                 return -1;
             }
 
@@ -632,7 +632,7 @@ int ScreenCapture::setPixels() {
 
         ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
         if (ret < 0) {
-            debuglog(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: ", orig::SDL_GetError());
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: %d", orig::SDL_GetError());
         }
     }
 
@@ -642,7 +642,7 @@ int ScreenCapture::setPixels() {
         LINK_NAMESPACE_SDL2(SDL_GetClipRect);
         LINK_NAMESPACE_SDL2(SDL_SetClipRect);
 
-        debuglog(LCF_DUMP, "Set SDL1_Surface pixels");
+        debuglogstdio(LCF_DUMP, "Set SDL1_Surface pixels");
 
         /* Get surface from window */
         SDL_Surface* surf2 = orig::SDL_GetWindowSurface(gameSDLWindow);
@@ -677,24 +677,24 @@ int ScreenCapture::setPixels() {
         orig::glGetError();
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
         orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
 
         /* Restore the original draw/read framebuffers */
         orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglog(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error ", error);
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
 
         if (isFramebufferSrgb)
             orig::glEnable(GL_FRAMEBUFFER_SRGB);
@@ -709,7 +709,7 @@ int ScreenCapture::setPixels() {
         link_function((void**)&orig::SDL1_UpperBlit, "SDL_UpperBlit", "libSDL-1.2.so.0");
 
         /* Not tested !! */
-        debuglog(LCF_DUMP, "Set SDL1_Surface pixels");
+        debuglogstdio(LCF_DUMP, "Set SDL1_Surface pixels");
 
         /* Get surface from window */
         SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();

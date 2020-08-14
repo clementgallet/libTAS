@@ -100,7 +100,7 @@ void pushNativeXcbEvents(xcb_connection_t *c)
             xcb_client_message_event_t* client_event = reinterpret_cast<xcb_client_message_event_t*>(event);
 
             if (static_cast<Atom>(client_event->data.data32[0]) == x11_atom(WM_DELETE_WINDOW)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                 is_exiting = true;
             }
 
@@ -108,7 +108,7 @@ void pushNativeXcbEvents(xcb_connection_t *c)
             if ((client_event->type == x11_atom(WM_PROTOCOLS)) &&
                 (static_cast<Atom>(client_event->data.data32[0]) == x11_atom(_NET_WM_PING))) {
 
-                debuglog(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 xcb_client_message_event_t reply = *client_event;
                 xcb_screen_iterator_t iter = xcb_setup_roots_iterator (xcb_get_setup (c));
                 xcb_screen_t* screen = iter.data;
@@ -156,7 +156,7 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
         pushNativeXcbEvents(c);
     }
     if (!event) {
-        debuglog(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return event;
 }
@@ -210,9 +210,9 @@ xcb_send_event_checked (xcb_connection_t *c,
 
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (!gameXWindows.empty() && (client_event->window != gameXWindows.front())) {
-                    debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                    debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 
                 /* Resize the window to the screen or fake resolution */
@@ -242,7 +242,7 @@ xcb_send_event_checked (xcb_connection_t *c,
 
             /* Detect and disable window always on top */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_ABOVE)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
                 return cookie;
             }
         }
@@ -277,9 +277,9 @@ xcb_send_event (xcb_connection_t *c,
 
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (!gameXWindows.empty() && (client_event->window != gameXWindows.front())) {
-                    debuglog(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                    debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 
                 /* Resize the window to the screen or fake resolution */
@@ -309,7 +309,7 @@ xcb_send_event (xcb_connection_t *c,
 
             /* Detect and disable window always on top */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_ABOVE)) {
-                debuglog(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
+                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
                 return cookie;
             }
         }

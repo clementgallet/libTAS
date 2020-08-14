@@ -45,7 +45,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.xcrossing.y_root = game_ai.pointer_y;
         ev.xcrossing.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
 
-        debuglog(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event");
         insert(&ev);
     }
 
@@ -55,7 +55,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.type = FocusIn;
         ev.xfocus.window = w;
 
-        debuglog(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
         insert(&ev);
     }
 
@@ -79,7 +79,7 @@ int XlibEventQueue::insert(XEvent* event)
 
     /* Check the size of the queue */
     if (eventQueue.size() > 1024) {
-        debuglog(LCF_EVENTS, "We reached the limit of the event queue size!");
+        debuglogstdio(LCF_EVENTS, "We reached the limit of the event queue size!");
         return -1;
     }
 

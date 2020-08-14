@@ -55,12 +55,12 @@ xcb_create_window_checked (xcb_connection_t *c,
                            uint32_t          value_mask,
                            const void       *value_list)
 {
-    debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
+    debuglogstdio(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
-    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
-    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
     game_info.keyboard |= GameInfo::XCBEVENTS;
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
@@ -90,7 +90,7 @@ xcb_create_window_checked (xcb_connection_t *c,
     if (s->root == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
-            debuglog(LCF_WINDOW, "   set game window to ", wid);
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
         gameXWindows.push_back(wid);
     }
 
@@ -112,12 +112,12 @@ xcb_create_window (xcb_connection_t *c,
                    uint32_t          value_mask,
                    const void       *value_list)
 {
-    debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
+    debuglogstdio(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window);
     xcb_void_cookie_t ret = orig::xcb_create_window(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
-    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
-    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
     game_info.keyboard |= GameInfo::XCBEVENTS;
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
@@ -147,7 +147,7 @@ xcb_create_window (xcb_connection_t *c,
     if (s->root == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
-            debuglog(LCF_WINDOW, "   set game window to ", wid);
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
         gameXWindows.push_back(wid);
     }
 
@@ -170,12 +170,12 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
                                uint32_t                              value_mask,
                                const xcb_create_window_value_list_t *value_list)
 {
-    debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
+    debuglogstdio(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
-    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
-    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
     game_info.keyboard |= GameInfo::XCBEVENTS;
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
@@ -186,7 +186,7 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
     if (s->root == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
-            debuglog(LCF_WINDOW, "   set game window to ", wid);
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
         gameXWindows.push_back(wid);
     }
 
@@ -208,12 +208,12 @@ xcb_create_window_aux (xcb_connection_t                     *c,
                        uint32_t                              value_mask,
                        const xcb_create_window_value_list_t *value_list)
 {
-    debuglog(LCF_WINDOW, __func__, " call with id ", wid, " and dimensions ", width, "x", height);
+    debuglogstdio(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
-    debuglog(LCF_KEYBOARD, "   selecting xcb keyboard events");
-    debuglog(LCF_MOUSE, "   selecting xcb mouse events");
+    debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
+    debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
     game_info.keyboard |= GameInfo::XCBEVENTS;
     game_info.mouse |= GameInfo::XCBEVENTS;
     game_info.tosend = true;
@@ -224,7 +224,7 @@ xcb_create_window_aux (xcb_connection_t                     *c,
     if (s->root == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
-            debuglog(LCF_WINDOW, "   set game window to ", wid);
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
         gameXWindows.push_back(wid);
     }
 
@@ -238,12 +238,12 @@ static void sendXWindow(Window w)
     sendMessage(MSGB_WINDOW_ID);
     sendData(&i, sizeof(i));
     unlockSocket();
-    debuglog(LCF_WINDOW, "Sent X11 window id ", w);
+    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", w);
 }
 
 xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window_checked);
 
     /* If current game window, switch to another one on the list */
@@ -257,7 +257,7 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
         }
         else {
             /* Switch to the next game window */
-            debuglog(LCF_WINDOW, "   set game window to ", gameXWindows.front());
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
             sendXWindow(gameXWindows.front());
             ScreenCapture::init();
         }
@@ -277,7 +277,7 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
 
 xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window);
 
     /* If current game window, switch to another one on the list */
@@ -291,7 +291,7 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
         }
         else {
             /* Switch to the next game window */
-            debuglog(LCF_WINDOW, "   set game window to ", gameXWindows.front());
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
             sendXWindow(gameXWindows.front());
             ScreenCapture::init();
         }
@@ -311,7 +311,7 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
 
 xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_map_window_checked);
     xcb_void_cookie_t ret = orig::xcb_map_window_checked(c, window);
 
@@ -331,7 +331,7 @@ xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t wind
 
 xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_map_window);
     xcb_void_cookie_t ret = orig::xcb_map_window(c, window);
 
@@ -351,7 +351,7 @@ xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
 
 xcb_void_cookie_t xcb_unmap_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_unmap_window_checked);
     xcb_void_cookie_t ret = orig::xcb_unmap_window_checked(c, window);
     return ret;
@@ -359,7 +359,7 @@ xcb_void_cookie_t xcb_unmap_window_checked (xcb_connection_t *c, xcb_window_t wi
 
 xcb_void_cookie_t xcb_unmap_window (xcb_connection_t *c, xcb_window_t window)
 {
-    debuglog(LCF_WINDOW, __func__, " called with window ", window);
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_unmap_window);
     xcb_void_cookie_t ret = orig::xcb_unmap_window(c, window);
     return ret;

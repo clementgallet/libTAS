@@ -63,7 +63,7 @@ void RenderHUD::initFonts()
         FcPatternAddString(pat, FC_LANG, reinterpret_cast<const FcChar8*>("en-US"));
         FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
         FcFontSet* fs = FcFontList(config, pat, os);
-        debuglog(LCF_WINDOW, "Total matching fonts: ", fs->nfont);
+        debuglogstdio(LCF_WINDOW, "Total matching fonts: %d", fs->nfont);
         char* fontFile = nullptr;
         for (int i=0; fs && i < fs->nfont; ++i) {
             FcPattern* font = fs->fonts[i];
@@ -93,29 +93,29 @@ void RenderHUD::initFonts()
         }
 
         if (fontFile) {
-            debuglog(LCF_WINDOW, "Picking font: ", fontFile);
+            debuglogstdio(LCF_WINDOW, "Picking font: %s", fontFile);
             /* Initialize SDL TTF */
             if(TTF_Init() == -1) {
-                debuglog(LCF_ERROR, "Couldn't init SDL TTF.");
+                debuglogstdio(LCF_ERROR, "Couldn't init SDL TTF.");
                 return;
             }
 
             fg_font = TTF_OpenFont(fontFile, 20);
             if (fg_font == NULL) {
-                debuglog(LCF_ERROR, "Couldn't load font");
+                debuglogstdio(LCF_ERROR, "Couldn't load font");
                 return;
             }
 
             bg_font = TTF_OpenFont(fontFile, 20);
             if (bg_font == NULL) {
-                debuglog(LCF_ERROR, "Couldn't load font");
+                debuglogstdio(LCF_ERROR, "Couldn't load font");
                 return;
             }
 
             TTF_SetFontOutline(bg_font, outline_size);
         }
         else {
-            debuglog(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+            debuglogstdio(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
         }
 
         if (fs) FcFontSetDestroy(fs);

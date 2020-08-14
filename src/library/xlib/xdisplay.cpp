@@ -45,7 +45,7 @@ Display *XOpenDisplay(const char *display_name)
         }
     }
     if (i == GAMEDISPLAYNUM) {
-        debuglog(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
     }
 
     /* Initialize atoms */

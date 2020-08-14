@@ -42,7 +42,7 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
         }
     }
     if (i == GAMECONNECTIONNUM) {
-        debuglog(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered xcb connections");
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered xcb connections");
     }
 
     /* Initialize atoms */
