@@ -43,7 +43,7 @@
 #include "../renderhud/RenderHUD.h"
 #include "ReservedMemory.h"
 #include "SaveState.h"
-#include <lz4.h>
+#include "../../external/lz4.h"
 #include "../../shared/sockethelpers.h"
 
 #define ONE_MB 1024 * 1024

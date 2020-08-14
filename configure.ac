@@ -87,9 +87,6 @@ AC_SEARCH_LIBS([pthread_join], [pthread], [], [AC_MSG_ERROR(The pthread library 
 AC_CHECK_HEADERS([alsa/asoundlib.h], [], [AC_MSG_ERROR(The alsa headers are required!)])
 AC_SEARCH_LIBS([snd_pcm_open], [asound], [], [AC_MSG_ERROR(The asound library is required!)])
 
-AC_CHECK_HEADERS([lz4.h], [], [AC_MSG_ERROR(The lz4 headers are required!)])
-AC_SEARCH_LIBS([LZ4_compress_default], [lz4], [], [AC_MSG_ERROR(The lz4 library is required!)])
-
 AC_SUBST(have_libswresample, no)
 PKG_CHECK_MODULES(LIBSWRESAMPLE, [libswresample], AC_SUBST(have_libswresample, yes), AC_MSG_WARN(Cannot find libswresample using pkg-config))
 
@@ -132,7 +129,6 @@ case $host in
        AC_SEARCH_LIBS([XGetXCBConnection], [X11-xcb], [], [AC_MSG_ERROR(The x11-xcb library is required!)])
        AC_SEARCH_LIBS([pthread_exit], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])
        AC_SEARCH_LIBS([snd_pcm_close], [asound], [], [AC_MSG_ERROR(The asound library is required!)])
-       AC_SEARCH_LIBS([LZ4_decompress_safe], [lz4], [], [AC_MSG_ERROR(The lz4 library is required!)])
 
        AS_IF([test "x$enable_hud" != "xno"], [
        	  AC_SEARCH_LIBS([FcConfigAppFontAddFile], [fontconfig], [], [enable_hud=no])
