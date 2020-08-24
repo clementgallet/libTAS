@@ -11,6 +11,7 @@
 * Implement ram watch saving/loading
 * Pointer scanning can start from any file-mapped memory
 * Prevent SDL from creating custom cursors
+* Non-blocking ALSA mode (#361)
 
 ### Changed
 ### Fixed
@@ -18,6 +19,7 @@
 * Filter SDL1 active events (#351)
 * Handle interrupts in socket messages (#342)
 * Fix calls to XFreeEventData() when not GenericEvent (#361)
+* Support partial ALSA audio buffer writing (#361)
 
 ## [1.4.0] - 2020-06-19
 ### Added

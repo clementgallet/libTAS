@@ -122,6 +122,8 @@ static int get_latency(snd_pcm_t *pcm);
 
 static int last_source;
 
+static bool block_mode = true;
+
 int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int mode)
 {
     if (GlobalState::isNative()) {
@@ -137,6 +139,13 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
     if (stream != SND_PCM_STREAM_PLAYBACK) {
         debuglog(LCF_SOUND | LCF_WARNING, "    Unsupported stream direction ", stream);
         return -1;
+    }
+
+    if (mode == SND_PCM_NONBLOCK) {
+        block_mode = false;
+    }
+    else {
+        block_mode = true;
     }
 
     if (!(game_info.audio & GameInfo::ALSA)) {
@@ -281,6 +290,13 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
     }
 
     debuglog(LCF_SOUND, __func__, " call with ", nonblock==0?"block":((nonblock==1)?"nonblock":"abort"), " mode");
+    if (nonblock == 0) {
+        block_mode = true;
+    }
+    else if (nonblock == 1) {
+        block_mode = false;
+    }
+
     return 0;
 }
 
@@ -599,13 +615,26 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
         return -EBADFD;
     }
 
-    /* Blocking if latency is too high */
-    struct timespec mssleep = {0, 1000*1000};
-    do {
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-    } while (!is_exiting && ((get_latency(pcm)+size) > buffer_size));
+    /* Blocking or return if latency is too high */
+    if (block_mode) {
+        struct timespec mssleep = {0, 1000*1000};
+        while (!is_exiting && (get_latency(pcm) >= buffer_size)) {
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+        }
 
-    if (is_exiting) return 0;
+        if (is_exiting) return 0;
+    }
+    else if (get_latency(pcm) >= buffer_size) {
+        return -EAGAIN;
+    }
+
+    /* Only write a portion of the buffer if no room for the whole buffer */
+    if ((get_latency(pcm)+size) > buffer_size) {
+        size = buffer_size - get_latency(pcm);
+    }
+
+    if (size == 0)
+        return 0;
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
