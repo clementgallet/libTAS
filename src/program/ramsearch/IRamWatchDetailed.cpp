@@ -30,8 +30,9 @@ pid_t IRamWatchDetailed::game_pid;
 
 void IRamWatchDetailed::update_addr()
 {
-    struct iovec local, remote;
+    isValid = true;
     if (isPointer) {
+        struct iovec local, remote;
 
         /* Update the base address from the file and file offset */
         if (!base_address) {
