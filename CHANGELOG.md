@@ -20,6 +20,7 @@
 * Handle interrupts in socket messages (#342)
 * Fix calls to XFreeEventData() when not GenericEvent (#361)
 * Support partial ALSA audio buffer writing (#361)
+* Stop screen capture on GL context destroy (#370)
 
 ## [1.4.0] - 2020-06-19
 ### Added

@@ -147,6 +147,10 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
         RenderHUD_GL::fini();
     #endif
 
+    /* Games can destroy the GL context without closing the window. It still
+     * invalidates GL objects, so we must close the screen capture. */
+    ScreenCapture::fini();
+
     orig::SDL_GL_DeleteContext(context);
 }
 
