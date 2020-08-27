@@ -67,10 +67,9 @@ AVEncoder::AVEncoder() {
     }
 
     segment_number++;
-    lockSocket();
+    /* Socket is already locked in frame.cpp */
     sendMessage(MSGB_ENCODING_SEGMENT);
     sendData(&segment_number, sizeof(int));
-    unlockSocket();
 }
 
 void AVEncoder::initMuxer() {
