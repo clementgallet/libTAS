@@ -65,6 +65,8 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale);
 
     ScreenCapture::fini();
 
+    game_info.video &= ~GameInfo::SDL2_RENDERER;
+
     orig::SDL_DestroyRenderer(renderer);
 }
 
