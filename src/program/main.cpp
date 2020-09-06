@@ -67,6 +67,7 @@ int main(int argc, char **argv)
     char* abspath;
     std::ofstream o;
     std::string moviefile;
+    std::string dumpfile;
 
     static struct option long_options[] =
     {
@@ -103,8 +104,7 @@ int main(int argc, char **argv)
 
                 abspath = realpath(optarg, buf);
                 if (abspath) {
-                    context.config.dumpfile = abspath;
-                    context.config.dumping = true;
+                    dumpfile = abspath;
                 }
                 break;
             case '?':
@@ -212,6 +212,12 @@ int main(int argc, char **argv)
     /* Overwrite the movie path if specified in commandline */
     if (! moviefile.empty()) {
         context.config.moviefile = moviefile;
+    }
+
+    /* Overwrite the dump path if specified in commandline */
+    if (! dumpfile.empty()) {
+        context.config.dumpfile = dumpfile;
+        context.config.dumping = true;
     }
 
     /* If the config file set custom directories for the remaining working dir,
