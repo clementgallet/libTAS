@@ -349,8 +349,8 @@ void GameLoop::start()
             ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
             ((context->config.sc.movie_framecount + context->pause_frame) == (context->framecount + 1)))) {
 
-            if (context->config.dumping) {
-                /* If we're dumping from the command line, we are done */
+            if (!context->interactive) {
+                /* Quit at the end of the movie if non-interactive */
                 shouldQuit = true;
             } else {
                 /* Disable pause */
@@ -663,8 +663,8 @@ bool GameLoop::startFrameMessages()
         break;
 
         case MSGB_QUIT:
-            if (context->config.dumping) {
-                /* Finished running a dump from the command line */
+            if (!context->interactive) {
+                /* Exit the program when game has exit */
                 exit(0);
             }
             return true;

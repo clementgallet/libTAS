@@ -121,6 +121,9 @@ struct Context {
 
     /* fps values */
     float fps, lfps = -1;
+
+    /* Interactive mode */
+    bool interactive = true;
 };
 
 #endif

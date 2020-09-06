@@ -31,20 +31,24 @@ namespace ErrorChecking {
     /* Check if the game path is an existing file, and that this file is
      * executable by the user.
      */
-    bool checkGameExists(std::string gamepath);
+    bool checkGameExists(std::string gamepath, bool interactive);
 
     /* Check that the moviefile exists */
-    bool checkMovieExists(std::string moviepath);
+    bool checkMovieExists(std::string moviepath, bool interactive);
 
     /* Check that the directory of the movie file exists, and that the
      * movie file can be written in its directory.
      */
-    bool checkMovieWriteable(std::string moviepath);
+    bool checkMovieWriteable(std::string moviepath, bool interactive);
 
     /* Check if the libtas.so library and the game executable where compiled
      * for the same arch.
      */
     bool checkArchType(Context* context);
+
+    /* Show an error box or error message on terminal */
+    void critical(QString str, bool interactive);
+
 };
 
 #endif

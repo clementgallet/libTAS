@@ -33,6 +33,48 @@ std::string fileFromPath(const std::string& path)
         return path;
 }
 
+std::string realpath_nonexist(const std::string& path)
+{
+    std::string absstr;
+
+    char* abspath = realpath(path.c_str(), nullptr);
+    if (abspath) {
+        absstr = abspath;
+        free(abspath);
+        return absstr;
+    }
+
+    if (errno == ENOENT) {
+        /* If file does not exist, get the absolute path of the directory and
+         * append the file. */
+
+        std::string dir;
+        std::string file;
+
+        size_t sep = path.find_last_of("/");
+        if (sep != std::string::npos) {
+            dir = path.substr(0, sep);
+            file = path.substr(sep+1);
+        }
+        else {
+            dir = ".";
+            file = path;
+        }
+
+        abspath = realpath(dir.c_str(), nullptr);
+        if (abspath) {
+            absstr = abspath;
+            absstr += "/";
+            absstr += file;
+            free(abspath);
+            return absstr;
+        }
+    }
+
+    return absstr;
+}
+
+
 int create_dir(const std::string& path)
 {
     int ret = mkdir(path.c_str(), S_IRWXU);

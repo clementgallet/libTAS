@@ -46,10 +46,11 @@ static void print_usage(void)
 {
     std::cout << "Usage: libTAS [options] game_executable_relative_path [game_cmdline_arguments]" << std::endl;
     std::cout << "Options are:" << std::endl;
-    std::cout << "  -d, --dump FILE     Start a audio/video encode into the specified FILE" << std::endl;
-    std::cout << "  -r, --read MOVIE    Play game inputs from MOVIE file" << std::endl;
-    std::cout << "  -w, --write MOVIE   Record game inputs into the specified MOVIE file" << std::endl;
-    std::cout << "  -h, --help          Show this message" << std::endl;
+    std::cout << "  -d, --dump FILE         Start a audio/video encode into the specified FILE" << std::endl;
+    std::cout << "  -r, --read MOVIE        Play game inputs from MOVIE file" << std::endl;
+    std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
+    std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
+    std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -64,48 +65,44 @@ int main(int argc, char **argv)
     /* Parsing arguments */
     int c;
     char buf[PATH_MAX];
-    char* abspath;
+    std::string abspath;
     std::ofstream o;
     std::string moviefile;
     std::string dumpfile;
+    int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
     {
         {"read", required_argument, nullptr, 'r'},
         {"write", required_argument, nullptr, 'w'},
         {"dump", required_argument, nullptr, 'd'},
+        {"non-interactive", no_argument, nullptr, 'n'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}
     };
     int option_index = 0;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:h", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:nh", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
                 /* Record/Playback movie file */
-
-                /* We must be sure that the file exists, otherwise the following call
-                 * to realpath will fail. */
-                o.open(optarg, std::ofstream::app);
-                o.close();
-
-                abspath = realpath(optarg, buf);
-                if (abspath) {
+                abspath = realpath_nonexist(optarg);
+                if (!abspath.empty()) {
                     moviefile = abspath;
-                    context.config.sc.recording = (c == 'r')?SharedConfig::RECORDING_READ:SharedConfig::RECORDING_WRITE;
+                    recordingmode = (c == 'r')?SharedConfig::RECORDING_READ:SharedConfig::RECORDING_WRITE;
                 }
                 break;
             case 'd':
                 /* Dump video to file */
-                o.open(optarg);
-                o.close();
-
-                abspath = realpath(optarg, buf);
-                if (abspath) {
+                abspath = realpath_nonexist(optarg);
+                if (!abspath.empty()) {
                     dumpfile = abspath;
                 }
+                break;
+            case 'n':
+                context.interactive = false;
                 break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
@@ -119,8 +116,8 @@ int main(int argc, char **argv)
     }
 
     /* Game path */
-    abspath = realpath(argv[optind], buf);
-    if (abspath) {
+    abspath = realpath_nonexist(argv[optind]);
+    if (!abspath.empty()) {
         context.gamepath = abspath;
     }
 
@@ -212,6 +209,7 @@ int main(int argc, char **argv)
     /* Overwrite the movie path if specified in commandline */
     if (! moviefile.empty()) {
         context.config.moviefile = moviefile;
+        context.config.sc.recording = recordingmode;
     }
 
     /* Overwrite the dump path if specified in commandline */

@@ -317,9 +317,13 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(timer, &QTimer::timeout, this, &MainWindow::updateUIFrequent);
     timer->start(20);
 
-    /* We are dumping from the command line */
+    /* We may have already started dumping from command-line */
     if (context->config.dumping) {
         slotToggleEncode();
+    }
+
+    /* We must start the game in non-interactive mode */
+    if (!context->interactive) {
         slotPause(false);
         slotFastForward(true);
         slotLaunch();
@@ -1093,9 +1097,19 @@ void MainWindow::updateMovieParams()
             movieLength->setText("Movie length: -");
         }
 
-        moviePlayback->setChecked(true);
-        context->config.sc.recording = SharedConfig::RECORDING_READ;
-        context->config.sc_modified = true;
+        /* If move exists, default to read mode except in non-interactive mode */
+        if (context->interactive) {
+            moviePlayback->setChecked(true);
+            context->config.sc.recording = SharedConfig::RECORDING_READ;
+            context->config.sc_modified = true;
+        }
+        else {
+            if (context->config.sc.recording == SharedConfig::RECORDING_READ)
+                moviePlayback->setChecked(true);
+            else
+                movieRecording->setChecked(true);
+        }
+
         annotationsWindow->update();
     }
     else {
@@ -1463,8 +1477,9 @@ void MainWindow::slotMovieRecording()
 
 void MainWindow::slotToggleEncode()
 {
-    /* Prompt a confirmation message for overwriting an encode file */
-    if (!context->config.sc.av_dumping) {
+    /* Prompt a confirmation message for overwriting an encode file, except
+     * when in non-interactive mode */
+    if (!context->config.sc.av_dumping && context->interactive) {
         struct stat sb;
         if (stat(context->config.dumpfile.c_str(), &sb) == 0 && sb.st_size != 0) {
             /* Pause the game during the choice */
@@ -1556,12 +1571,23 @@ BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {
     std::promise<bool>* saveAnswer = static_cast<std::promise<bool>*>(promise);
-    QMessageBox::StandardButton btn = QMessageBox::question(this, "", alert_msg, QMessageBox::Yes | QMessageBox::No);
-    saveAnswer->set_value(btn == QMessageBox::Yes);
+
+    if (context->interactive) {
+        QMessageBox::StandardButton btn = QMessageBox::question(this, "", alert_msg, QMessageBox::Yes | QMessageBox::No);
+        saveAnswer->set_value(btn == QMessageBox::Yes);
+    }
+    else {
+        /* Always answer 'yes' in non-interactive mode */
+        saveAnswer->set_value(true);
+    }
 }
 
 void MainWindow::alertDialog(QString alert_msg)
 {
+    /* Don't show any dialog box in non-interactive mode */
+    if (!context->interactive)
+        return;
+
     /* Pause the game */
     context->config.sc.running = false;
     context->config.sc_modified = true;
