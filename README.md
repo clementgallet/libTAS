@@ -29,7 +29,6 @@ You can download the latest stable version of the software in the [Releases](htt
 * `ffmpeg`
 * `libswresample2` or `libswresample3`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
-* `liblz4-1`
 
 Installing with the debian package will install all the required packages as well.
 
@@ -43,8 +42,8 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg liblz4-dev`
-* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib ffmpeg lz4 sdl2`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
+* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib ffmpeg sdl2`
 
 To enable HUD on the game screen, you will also need:
 
@@ -117,7 +116,13 @@ There are still a lot of issues to fix:
 
 You need at least Windows 10 version 2004 to run WSL 2. libTAS does not work with WSL 1, because it is missing some mandatory components of the Linux system. Activate WSL 2 and install Ubuntu from the Windows Store, you can find plenty of documentation for that.
 
-Once installed, you have a new application "Ubuntu" which opens a terminal. Download the latest "libtas_*_amd64.deb" file from the Releases. To locate the file from the Ubuntu terminal, you can access to Windows disk drives in  "/mnt/" ("/mnt/c" for the C: drive, etc.). Go to the directory which contains the downloaded file, and install the package using `sudo dpkg -i libtas_*_amd64.deb`.
+Once installed, you have a new application "Ubuntu" which opens a terminal. Download the latest "libtas_*_amd64.deb" file from the Releases. To locate the file from the Ubuntu terminal, you can access to Windows disk drives in  "/mnt/" ("/mnt/c" for the C: drive, etc.). Go to the directory which contains the downloaded file, and install the package using:
+
+```
+sudo apt update
+sudo apt upgrade
+sudo dpkg -i libtas_*_amd64.deb
+```
 
 By default, there is no display configured. You need to export the display using the following command:
 
