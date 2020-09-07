@@ -43,6 +43,12 @@ ALenum alGetError(ALvoid)
     return err;
 }
 
+#define CHECKVAL(x) do { \
+    if (x) break; \
+    alSetError(AL_INVALID_VALUE); \
+    return; \
+} while(0)
+
 ALboolean alIsExtensionPresent(const ALchar *extname)
 {
     debuglog(LCF_SOUND, __func__, " call with extname ", extname);
@@ -249,6 +255,7 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
 
     switch(param) {
         case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
+            CHECKVAL(value >= 0);
             debuglog(LCF_SOUND, "  Set block alignment ", value);
             ab->blockSamples = value;
             ab->update();
@@ -281,10 +288,11 @@ void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 
     switch(param) {
         case AL_UNPACK_BLOCK_ALIGNMENT_SOFT:
+            CHECKVAL(*values >= 0.0f);
             alBufferi(buffer, param, *values);
             break;
         case AL_LOOP_POINTS_SOFT:
-            /* TODO: Generate the errors */
+            CHECKVAL(values[0] >= 0.0f && values[1] > values[0] && values[1] <= ab->sampleSize);
             debuglog(LCF_SOUND, "  Set loop points ", values[0], " -> ", values[1]);
             ab->loop_point_beg = values[0];
             ab->loop_point_end = values[1];
@@ -439,10 +447,12 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
     std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_GAIN:
+            CHECKVAL(value >= 0.0f);
             as->volume = value;
             debuglog(LCF_SOUND, "  Set gain of ", value);
             break;
         case AL_PITCH:
+            CHECKVAL(value >= 0.0f);
             if (as->pitch != value) {
                 as->dirty();
             }
@@ -450,21 +460,13 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             debuglog(LCF_SOUND, "  Set pitch of ", value);
             break;
         case AL_REFERENCE_DISTANCE:
+            CHECKVAL(value >= 0.0f);
             if (value != 1.0) {
                 debuglog(LCF_SOUND, "  Set reference distance to ", value, ". Operation not supported");
             }
             break;
-        case AL_MIN_GAIN:
-        case AL_MAX_GAIN:
-        case AL_MAX_DISTANCE:
-        case AL_ROLLOFF_FACTOR:
-        case AL_CONE_OUTER_GAIN:
-        case AL_CONE_INNER_ANGLE:
-        case AL_CONE_OUTER_ANGLE:
-        case AL_AUXILIARY_SEND_FILTER:
-            debuglog(LCF_SOUND, "Operation not supported: ", param);
-            break;
         case AL_SEC_OFFSET:
+            CHECKVAL(value >= 0.0f);
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
@@ -476,6 +478,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             }
             break;
         case AL_SAMPLE_OFFSET:
+            CHECKVAL(value >= 0.0f);
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
@@ -483,12 +486,45 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             as->setPosition((int)value);
             break;
         case AL_BYTE_OFFSET:
+            CHECKVAL(value >= 0.0f);
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 value /= (ALfloat) ab->alignSize;
                 debuglog(LCF_SOUND, "  Set position of ", value, " bytes");
                 as->setPosition((int)value);
             }
+            break;
+        /* Unsupported operations */
+        case AL_MIN_GAIN:
+            CHECKVAL(value >= 0.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_MAX_GAIN:
+            CHECKVAL(value >= 0.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_MAX_DISTANCE:
+            CHECKVAL(value >= 0.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_ROLLOFF_FACTOR:
+            CHECKVAL(value >= 0.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_CONE_OUTER_GAIN:
+            CHECKVAL(value >= 0.0f && value <= 1.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_CONE_INNER_ANGLE:
+            CHECKVAL(value >= 0.0f && value <= 360.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_CONE_OUTER_ANGLE:
+            CHECKVAL(value >= 0.0f && value <= 360.0f);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_AUXILIARY_SEND_FILTER:
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
             break;
         default:
             debuglog(LCF_SOUND, "  Unknown param ", param);
@@ -544,6 +580,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
     std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_LOOPING:
+            CHECKVAL(value == AL_FALSE || value == AL_TRUE);
             debuglog(LCF_SOUND, "  Set looping of ", value);
             if (value == AL_TRUE)
                 as->looping = true;
@@ -577,16 +614,8 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                 debuglog(LCF_SOUND, "  Bind to buffer ", value);
             }
             break;
-        case AL_SOURCE_RELATIVE:
-        case AL_CONE_INNER_ANGLE:
-        case AL_CONE_OUTER_ANGLE:
-        case AL_DIRECT_FILTER:
-        case AL_DIRECT_FILTER_GAINHF_AUTO:
-        case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
-        case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
-            debuglog(LCF_SOUND, "Operation not supported: ", param);
-            break;
         case AL_SEC_OFFSET:
+            CHECKVAL(value >= 0);
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
@@ -598,6 +627,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             }
             break;
         case AL_SAMPLE_OFFSET:
+            CHECKVAL(value >= 0);
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
@@ -605,12 +635,40 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             as->setPosition(static_cast<int>(value));
             break;
         case AL_BYTE_OFFSET:
+            CHECKVAL(value >= 0);
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 value /= static_cast<ALint>(ab->alignSize);
                 debuglog(LCF_SOUND, "  Set position of ", value, " bytes");
                 as->setPosition(static_cast<int>(value));
             }
+            break;
+        case AL_SOURCE_RELATIVE:
+            CHECKVAL(value == AL_FALSE || value == AL_TRUE);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_CONE_INNER_ANGLE:
+            CHECKVAL(value >= 0 && value <= 360);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_CONE_OUTER_ANGLE:
+            CHECKVAL(value >= 0 && value <= 360);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_DIRECT_FILTER:
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_DIRECT_FILTER_GAINHF_AUTO:
+            CHECKVAL(value == AL_FALSE || value == AL_TRUE);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_AUXILIARY_SEND_FILTER_GAIN_AUTO:
+            CHECKVAL(value == AL_FALSE || value == AL_TRUE);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
+            break;
+        case AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO:
+            CHECKVAL(value == AL_FALSE || value == AL_TRUE);
+            debuglog(LCF_SOUND, "Operation not supported: ", param);
             break;
         default:
             debuglog(LCF_SOUND, "  Unknown param ", param);

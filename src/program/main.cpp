@@ -116,9 +116,11 @@ int main(int argc, char **argv)
     }
 
     /* Game path */
-    abspath = realpath_nonexist(argv[optind]);
-    if (!abspath.empty()) {
-        context.gamepath = abspath;
+    if (argv[optind]) {
+        abspath = realpath_nonexist(argv[optind]);
+        if (!abspath.empty()) {
+            context.gamepath = abspath;
+        }
     }
 
     /* Game arguments */
