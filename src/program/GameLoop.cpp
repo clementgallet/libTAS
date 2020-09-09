@@ -126,8 +126,8 @@ void GameLoop::launchGameThread()
     else
         unsetenv("LIBGL_ALWAYS_SOFTWARE");
 
-    /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked. */
-    setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
+    /* Pass libtas library path to the game */
+    setenv("LIBTAS_LIBRARY_PATH", context->libtaspath.c_str(), 1);
 
     setenv("LIBTAS_START_FRAME", std::to_string(context->framecount).c_str(), 1);
 
@@ -246,6 +246,11 @@ void GameLoop::launchGameThread()
         setenv("LIBTAS_DELAY_INIT", "1", 1);
     }
     else {
+        /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked.
+         * Does not work for wine games, because our custom SDL functions don't
+         * have the correct calling convention. */
+        setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
+
         arg_list.push_back(context->gamepath);
     }
 

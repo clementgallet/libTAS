@@ -120,7 +120,7 @@ void *find_sym(const char *name, bool original) {
         if (res != 0) {
             std::string libpath = info.dli_fname;
             std::string libtasstr;
-            NATIVECALL(libtasstr = getenv("SDL_DYNAMIC_API"));
+            NATIVECALL(libtasstr = getenv("LIBTAS_LIBRARY_PATH"));
             bool fromLibtas = libpath.length() >= libtasstr.length() &&
                 libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
             if (original == fromLibtas) {

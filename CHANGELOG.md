@@ -22,6 +22,7 @@
 * Fix calls to XFreeEventData() when not GenericEvent (#361)
 * Support partial ALSA audio buffer writing (#361)
 * Stop screen capture on GL context destroy (#370)
+* Don't set SDL_DYNAMIC_API for wine games
 
 ## [1.4.0] - 2020-06-19
 ### Added
