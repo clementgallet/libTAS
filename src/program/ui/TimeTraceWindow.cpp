@@ -61,6 +61,12 @@ TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     stackTraceText->setReadOnly(true);
 
     /* Buttons */
+    QPushButton *chooseHashButton = new QPushButton(tr("Pick Hash"));
+    connect(chooseHashButton, &QAbstractButton::clicked, this, &TimeTraceWindow::slotChooseHash);
+
+    QPushButton *clearHashButton = new QPushButton(tr("Clear Hash"));
+    connect(clearHashButton, &QAbstractButton::clicked, this, &TimeTraceWindow::slotClearHash);
+
     startButton = new QPushButton(context->config.sc.time_trace?tr("Stop Trace"):tr("Start Trace"));
     connect(startButton, &QAbstractButton::clicked, this, &TimeTraceWindow::slotStart);
 
@@ -68,6 +74,8 @@ TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent, Qt::WindowFlags fl
     connect(clearButton, &QAbstractButton::clicked, this, &TimeTraceWindow::slotClear);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(chooseHashButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(clearHashButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(startButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(clearButton, QDialogButtonBox::ActionRole);
 
@@ -105,6 +113,28 @@ void TimeTraceWindow::slotClear()
 {
     timeTraceModel->clearData();
     stackTraceText->clear();
+}
+
+void TimeTraceWindow::slotChooseHash()
+{
+    const QModelIndex index = timeTraceView->selectionModel()->currentIndex();
+
+    if (!index.isValid()) {
+        return;
+    }
+
+    const QModelIndex sourceIndex = proxyModel->mapToSource(index);
+
+    auto it = timeTraceModel->time_calls_map.begin();
+    std::advance(it, sourceIndex.row());
+    context->config.sc.busy_loop_hash = it->first;
+    context->config.sc_modified = true;
+}
+
+void TimeTraceWindow::slotClearHash()
+{
+    context->config.sc.busy_loop_hash = 0;
+    context->config.sc_modified = true;
 }
 
 QSize TimeTraceWindow::sizeHint() const

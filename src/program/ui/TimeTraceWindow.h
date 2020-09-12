@@ -59,6 +59,8 @@ private:
 
 private slots:
     void slotStacktrace(const QItemSelection &selected, const QItemSelection &deselected);
+    void slotChooseHash();
+    void slotClearHash();
     void slotStart();
     void slotClear();
 };

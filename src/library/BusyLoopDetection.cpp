@@ -44,12 +44,8 @@ extern char**environ;
 
 namespace libtas {
 
-static std::map<uintptr_t, int>& getTimecallCount() {
-    static std::map<uintptr_t, int> timecall_count;
-    return timecall_count;
-}
-
 static uint64_t hash;
+static uint64_t timecall_count;
 
 void BusyLoopDetection::reset()
 {
@@ -59,7 +55,7 @@ void BusyLoopDetection::reset()
     /* Remove any fake ticks cause by the busy loop detector */
     detTimer.fakeAdvanceTimer({0, 0});
 
-    getTimecallCount().clear();
+    timecall_count = 0;
 }
 
 void BusyLoopDetection::resetHash()
@@ -207,32 +203,23 @@ void BusyLoopDetection::increment(int type)
     }
     GlobalState::setNative(false);
 
-//
-//     uintptr_t intret = reinterpret_cast<uintptr_t>(ret_address);
-//
-//     auto& timecall_count = getTimecallCount();
-//     auto it = timecall_count.find(intret);
-//     if (it != timecall_count.end()) {
-//         it->second = it->second + 1;
-//         if (it->second == 1000) {
-//             debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
-//             detTimer.fakeAdvanceTimerFrame();
-//         }
-//         if (it->second > 1100) {
-//             if (!detTimer.insideFrameBoundary) {
-//                 debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
-// #ifdef LIBTAS_ENABLE_HUD
-//                 static RenderHUD dummy;
-//                 frameBoundary(false, [] () {}, dummy);
-// #else
-//                 frameBoundary(false, [] () {});
-// #endif
-//             }
-//         }
-//     }
-//     else {
-//         timecall_count[intret] = 1;
-//     }
+    if (hash == shared_config.busy_loop_hash) {
+        timecall_count++;
+
+        if (timecall_count == 10) {
+            debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
+            detTimer.fakeAdvanceTimerFrame();
+        }
+        if (timecall_count > 20) {
+            debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
+#ifdef LIBTAS_ENABLE_HUD
+            static RenderHUD dummy;
+            frameBoundary(false, [] () {}, dummy);
+#else
+            frameBoundary(false, [] () {});
+#endif
+        }
+    }
 }
 
 }

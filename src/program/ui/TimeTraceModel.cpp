@@ -23,6 +23,10 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <QColor>
+#include <QPalette>
+#include <QBrush>
+#include <QGuiApplication>
 
 TimeTraceModel::TimeTraceModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -76,10 +80,30 @@ QVariant TimeTraceModel::headerData(int section, Qt::Orientation orientation, in
 
 QVariant TimeTraceModel::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::DisplayRole) {
-        auto it = time_calls_map.begin();
-        std::advance(it, index.row());
+    auto it = time_calls_map.begin();
+    std::advance(it, index.row());
 
+    if (role == Qt::BackgroundRole) {
+        QColor color = QGuiApplication::palette().window().color();
+        int r, g, b;
+        color.getRgb(&r, &g, &b, nullptr);
+        if (color.lightness() > 128) {
+            /* Light theme */
+            if (it->first == context->config.sc.busy_loop_hash)
+                color.setRgb(r - 0x30, g - 0x10, b);
+            else
+                color.setRgb(r, g, b - 0x18);
+        }
+        else {
+            /* Dark theme */
+            if (it->first == context->config.sc.busy_loop_hash)
+                color.setRgb(r, g + 0x10, b + 0x20);
+            else
+                color.setRgb(r + 0x08, g + 0x08, b);
+        }
+        return QBrush(color);
+    }
+    else if (role == Qt::DisplayRole) {
         if (index.column() == 0) {
             switch (it->second.type) {
                 case SharedConfig::TIMETYPE_TIME:

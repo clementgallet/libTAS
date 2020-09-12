@@ -236,6 +236,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Savestate settings */
     int savestate_settings = SS_COMPRESSED;
 
+    /* Stacktrace hash to advance time */
+    uint64_t busy_loop_hash = 0;
+
     /* Is the game running or on pause */
     bool running = false;
 
