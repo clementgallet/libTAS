@@ -42,6 +42,8 @@ static const char * const atom_names[NB_XATOMS] =
     "_NET_WM_STATE_ABOVE",
     "_NET_WM_PING",
     "_MOTIF_WM_HINTS",
+    "_NET_WM_NAME",
+    "UTF8_STRING",
 };
 
 Atom X11Atoms[NB_XATOMS];

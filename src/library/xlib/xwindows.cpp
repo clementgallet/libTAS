@@ -441,6 +441,20 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
         }
     }
 
+    /* Detect a title change */
+    if (property == x11_atom(_NET_WM_NAME)) {
+        debuglogstdio(LCF_WINDOW, "   change title to %s", data);
+        if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+            WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(data));
+            WindowTitle::setUpdateFunc([display] (const char* t) {
+                if (!gameXWindows.empty()) {
+                    orig::XChangeProperty(display, gameXWindows.front(), x11_atom(_NET_WM_NAME), x11_atom(UTF8_STRING), 8, PropModeReplace, reinterpret_cast<const unsigned char*>(t), strlen(t));
+                }
+            });
+            return 1; // value from implementation apparently
+        }
+    }
+
     /* Always display window borders/title/menu/etc */
     if (!gameXWindows.empty() && (gameXWindows.front() == w) && (property == x11_atom(_MOTIF_WM_HINTS))) {
         MwmHints mwm_hints = *reinterpret_cast<const MwmHints*>(data);

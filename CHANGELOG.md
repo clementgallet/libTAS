@@ -13,6 +13,7 @@
 * Prevent SDL from creating custom cursors
 * Non-blocking ALSA mode (#361)
 * Add a non-interactive mode
+* Support window title change from XChangeProperty()
 
 ### Changed
 ### Fixed

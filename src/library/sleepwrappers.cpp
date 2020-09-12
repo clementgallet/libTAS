@@ -92,7 +92,6 @@ DEFINE_ORIG_POINTER(sched_yield);
             }
             free(symbols);
         }
-        printBacktrace();
         detTimer.addDelay(ts);
         NATIVECALL(sched_yield());
         return 0;
