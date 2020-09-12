@@ -32,6 +32,7 @@ libtas_so_SOURCES = \
     timewrappers.cpp \
     tlswrappers.cpp \
     Utils.cpp \
+    vdpauwrappers.cpp \
     waitwrappers.cpp \
     WindowTitle.cpp \
     audio/AudioBuffer.cpp \
@@ -91,6 +92,7 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_SDL1.cpp \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_SDL2_surface.cpp \
+    renderhud/RenderHUD_VDPAU.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \

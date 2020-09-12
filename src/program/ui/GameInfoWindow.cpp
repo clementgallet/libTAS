@@ -63,6 +63,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.video & GameInfo::SDL2) {
         videoStr = "SDL 2";
     }
+    else if (game_info.video & GameInfo::VDPAU) {
+        videoStr = "VDPAU";
+    }
     else {
         videoStr = "unknown";
     }

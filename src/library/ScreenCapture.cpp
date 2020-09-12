@@ -23,11 +23,13 @@
 #include "logging.h"
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
+#include "encoding/AVEncoder.h"
 
 #include <cstring> // memcpy
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include "vdpauwrappers.h"
 
 namespace libtas {
 
@@ -78,6 +80,12 @@ DEFINE_ORIG_POINTER(glIsEnabled);
 DEFINE_ORIG_POINTER(glGetIntegerv);
 DEFINE_ORIG_POINTER(glGetError);
 
+DECLARE_ORIG_POINTER(VdpOutputSurfaceGetParameters);
+DECLARE_ORIG_POINTER(VdpOutputSurfaceCreate);
+DECLARE_ORIG_POINTER(VdpOutputSurfaceDestroy);
+DECLARE_ORIG_POINTER(VdpOutputSurfaceRenderOutputSurface);
+DECLARE_ORIG_POINTER(VdpOutputSurfaceGetBitsNative);
+
 DEFINE_ORIG_POINTER(XGetGeometry);
 
 static bool inited = false;
@@ -108,6 +116,9 @@ static SDL_Texture* screenSDLTex = nullptr;
 
 /* SDL2 renderer if any */
 static SDL_Renderer* sdl_renderer;
+
+/* VDPAU screen surface */
+static VdpOutputSurface screenVDPAUSurf;
 
 int ScreenCapture::init()
 {
@@ -140,7 +151,21 @@ int ScreenCapture::init()
     }
 
     /* Get window color depth */
-    if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
+    if (game_info.video & GameInfo::VDPAU) {
+        VdpRGBAFormat rgba_format;
+        unsigned int uw, uh;
+        orig::VdpOutputSurfaceGetParameters(vdpSurface, &rgba_format, &uw, &uh);
+        if (rgba_format == VDP_RGBA_FORMAT_A8) {
+            pixelSize = 1;
+        }
+        else {
+            pixelSize = 4;
+        }
+        /* Also overwrite the dimensions */
+        width = uw;
+        height = uh;
+    }
+    else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         pixelSize = sdlpixfmt & 0xFF;
@@ -176,7 +201,14 @@ int ScreenCapture::init()
 void ScreenCapture::initScreenSurface()
 {
     /* Set up a backup surface/framebuffer */
-    if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::VDPAU) {
+        VdpStatus status = orig::VdpOutputSurfaceCreate(vdpDevice, VDP_RGBA_FORMAT_B8G8R8A8, width, height, &screenVDPAUSurf);
+        if (status != VDP_STATUS_OK) {
+            debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceCreate failed with status %d", status);
+            return;
+        }
+    }
+    else if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_GetRenderer);
         LINK_NAMESPACE_SDL2(SDL_CreateTexture);
         LINK_NAMESPACE_SDL2(SDL_GetError);
@@ -325,6 +357,12 @@ void ScreenCapture::destroyScreenSurface()
         orig::SDL_DestroyTexture(screenSDLTex);
         screenSDLTex = nullptr;
     }
+
+    /* Delete the SDL2 screen surface */
+    if (screenVDPAUSurf) {
+        orig::VdpOutputSurfaceDestroy(screenVDPAUSurf);
+        screenSDL2Surf = 0;
+    }
 }
 
 void ScreenCapture::resize(int w, int h)
@@ -335,6 +373,10 @@ void ScreenCapture::resize(int w, int h)
 
     /* Don't resize if window is not registered */
     if (gameXWindows.empty()) {
+        return;
+    }
+
+    if (width == w && height == h) {
         return;
     }
 
@@ -349,7 +391,12 @@ void ScreenCapture::resize(int w, int h)
 
     initScreenSurface();
 
-    debuglogstdio(LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d)", width, height);
+    /* We need to close the dumping if needed, and open a new one */
+    if (shared_config.av_dumping) {
+        avencoder.reset(new AVEncoder());
+    }
+
+    debuglogstdio(LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d) and size %d", width, height, size);
 }
 
 bool ScreenCapture::isInited()
@@ -366,7 +413,21 @@ const char* ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
-    if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
+    if (game_info.video & GameInfo::VDPAU) {
+        VdpRGBAFormat rgba_format;
+        unsigned int uw, uh;
+        orig::VdpOutputSurfaceGetParameters(vdpSurface, &rgba_format, &uw, &uh);
+        switch (rgba_format) {
+            case VDP_RGBA_FORMAT_B8G8R8A8:
+                return "BGRA";
+            case VDP_RGBA_FORMAT_R8G8B8A8:
+                return "RGBA";
+            default:
+                debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format %d", rgba_format);
+        }
+    }
+
+    else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         switch (sdlpixfmt) {
@@ -445,7 +506,20 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
     GlobalNative gn;
 
-    if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::VDPAU) {
+        /* Copy to our screen surface */
+        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(screenVDPAUSurf, nullptr, vdpSurface, nullptr, nullptr, nullptr, 0);
+        if (status != VDP_STATUS_OK) {
+            debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
+        }
+
+        /* Copy pixels */
+        void* const pix = reinterpret_cast<void* const>(winpixels.data());
+        unsigned int pp = pitch;
+        status = orig::VdpOutputSurfaceGetBitsNative(screenVDPAUSurf, nullptr, &pix, &pp);
+    }
+
+    else if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
         LINK_NAMESPACE_SDL2(SDL_LockTexture);
         LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
@@ -625,7 +699,14 @@ int ScreenCapture::setPixels() {
 
     GlobalNative gn;
 
-    if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::VDPAU) {
+        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(vdpSurface, nullptr, screenVDPAUSurf, nullptr, nullptr, nullptr, 0);
+        if (status != VDP_STATUS_OK) {
+            debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
+        }
+    }
+
+    else if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderCopy);
 
         int ret;

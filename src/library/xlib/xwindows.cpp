@@ -302,17 +302,7 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
         return ret;
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d, new size: %d x %d", __func__, w, width, height);
-    int old_width, old_height;
-    ScreenCapture::getDimensions(old_width, old_height);
-    if ((old_width != width) || (old_height != height)) {
-        ScreenCapture::resize(width, height);
-
-        /* We need to close the dumping if needed, and open a new one */
-        if (shared_config.av_dumping) {
-            debuglogstdio(LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-            avencoder.reset(new AVEncoder());
-        }
-    }
+    ScreenCapture::resize(width, height);
     return ret;
 }
 
@@ -326,19 +316,8 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d, new position: %d - %d, new size: %d x %d", __func__, w, x, y, width, height);
 
-    /* Check if size has changed */
     if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
-        int old_width, old_height;
-        ScreenCapture::getDimensions(old_width, old_height);
-        if ((old_width != width) || (old_height != height)) {
-            ScreenCapture::resize(width, height);
-
-            /* We need to close the dumping if needed, and open a new one */
-            if (shared_config.av_dumping) {
-                debuglogstdio(LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-                avencoder.reset(new AVEncoder());
-            }
-        }
+        ScreenCapture::resize(width, height);
     }
     return ret;
 }
@@ -362,16 +341,8 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
 
     /* Check if size has changed */
     if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
-        int old_width, old_height;
-        ScreenCapture::getDimensions(old_width, old_height);
-        if ((value_mask & CWWidth) && (value_mask & CWHeight) && ((values->width != old_width) || (values->height != old_height))) {
+        if ((value_mask & CWWidth) && (value_mask & CWHeight)) {
             ScreenCapture::resize(values->width, values->height);
-
-            /* We need to close the dumping if needed, and open a new one */
-            if (shared_config.av_dumping) {
-                debuglogstdio(LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-                avencoder.reset(new AVEncoder());
-            }
         }
     }
     return ret;

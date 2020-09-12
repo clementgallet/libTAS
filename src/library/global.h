@@ -68,6 +68,12 @@ namespace libtas {
     /* SDL2 game window (we suppose there is only one) */
     extern SDL_Window* gameSDLWindow;
 
+    /* VDPAU device */
+    extern unsigned int vdpDevice;
+
+    /* VDPAU output surface */
+    extern unsigned int vdpSurface;
+
     /* Should we perform a backtrack savestate? */
     extern bool saveBacktrack;
 }

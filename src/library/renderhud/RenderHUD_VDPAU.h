@@ -17,21 +17,29 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
+#include "config.h"
+#ifdef LIBTAS_ENABLE_HUD
+
+#ifndef LIBTAS_RENDERHUD_VDPAU_H_INCL
+#define LIBTAS_RENDERHUD_VDPAU_H_INCL
+
+#include "RenderHUD.h"
+#include "../vdpauwrappers.h"
 
 namespace libtas {
+class RenderHUD_VDPAU : public RenderHUD
+{
+    public:
+        // ~RenderHUD_SDL2_renderer();
+        static void setDevice(VdpDevice d);
+        void setSurface(VdpOutputSurface o);
+        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 
-SharedConfig shared_config;
-GameInfo game_info;
-volatile bool is_exiting = false;
-volatile bool is_fork = false;
-bool skipping_draw = false;
-Display* gameDisplays[GAMEDISPLAYNUM] = {};
-xcb_connection_t* gameConnections[GAMEDISPLAYNUM] = {};
-std::list<Window> gameXWindows;
-SDL_Window* gameSDLWindow = nullptr;
-unsigned int vdpDevice = 0;
-unsigned int vdpSurface = 0;
-bool saveBacktrack = false;
-
+    private:
+        static VdpDevice device;
+        VdpOutputSurface output_surface;
+};
 }
+
+#endif
+#endif

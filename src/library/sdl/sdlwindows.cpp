@@ -386,17 +386,7 @@ static int swapInterval = 0;
 
     NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
 
-    int old_width, old_height;
-    ScreenCapture::getDimensions(old_width, old_height);
-    if ((old_width != w) || (old_height != h)) {
-        ScreenCapture::resize(w, h);
-
-        /* We need to close the dumping if needed, and open a new one */
-        if (shared_config.av_dumping) {
-            debuglog(LCF_SDL | LCF_WINDOW | LCF_DUMP, "    Dumping is restarted");
-            avencoder.reset(new AVEncoder());
-        }
-    }
+    ScreenCapture::resize(w, h);
 }
 
 /* SDL 1.2 */
