@@ -65,7 +65,19 @@ DEFINE_ORIG_POINTER(epoll_wait);
         }
     }
 
-    return orig::poll(fds, nfds, timeout);
+    int ret = orig::poll(fds, nfds, timeout);
+
+    /* If timeout on main thread, add the timeout amount to the timer */
+    if (ret == 0 && timeout > 0 && ThreadManager::isMainThread()) {
+        struct timespec ts;
+        ts.tv_sec = timeout / 1000;
+        ts.tv_nsec = timeout * 1000000;
+        detTimer.addDelay(ts);
+
+        NATIVECALL(sched_yield());
+    }
+
+    return ret;
 }
 
 /* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)

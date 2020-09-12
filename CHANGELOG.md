@@ -17,6 +17,9 @@
 * Add VDPAU rendering
 
 ### Changed
+
+* Add timeout to timer when main thread polls and timeout
+
 ### Fixed
 
 * Filter SDL1 active events (#351)
