@@ -19,6 +19,7 @@
 
 #include "RenderHUD_VDPAU.h"
 #ifdef LIBTAS_ENABLE_HUD
+#ifdef LIBTAS_HAS_VDPAU
 
 #include "../logging.h"
 #include "../hook.h"
@@ -98,4 +99,5 @@ void RenderHUD_VDPAU::renderText(const char* text, Color fg_color, Color bg_colo
 
 }
 
+#endif
 #endif

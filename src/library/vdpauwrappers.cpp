@@ -18,6 +18,8 @@
  */
 
 #include "vdpauwrappers.h"
+#ifdef LIBTAS_HAS_VDPAU
+
 #include "logging.h"
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
@@ -192,3 +194,5 @@ VdpStatus MyVdpGetProcAddress(VdpDevice device, VdpFuncId function_id, void **fu
 }
 
 }
+
+#endif

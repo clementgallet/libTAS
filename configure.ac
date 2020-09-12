@@ -79,6 +79,7 @@ AC_CHECK_HEADER([X11/extensions/xf86vmode.h], [AC_DEFINE([LIBTAS_HAS_XF86VMODE],
 AC_CHECK_HEADER([X11/extensions/Xrandr.h], [AC_DEFINE([LIBTAS_HAS_XRANDR], [1], [Extension Xrandr is present])])
 AC_CHECK_HEADER([X11/extensions/XInput2.h], [AC_DEFINE([LIBTAS_HAS_XINPUT], [1], [Extension XInput2 is present])])
 AC_CHECK_HEADER([X11/extensions/Xinerama.h], [AC_DEFINE([LIBTAS_HAS_XINERAMA], [1], [Extension Xinerama is present])])
+AC_CHECK_HEADER([vdpau/vdpau.h], [AC_DEFINE([LIBTAS_HAS_VDPAU], [1], [VDPAU is present])])
 AC_CHECK_HEADER([xcb/randr.h], [AC_DEFINE([LIBTAS_HAS_XCB_RANDR], [1], [Extension xcb randr is present])])
 
 AC_CHECK_HEADERS([pthread.h], [], [AC_MSG_ERROR(The pthread header is required!)])

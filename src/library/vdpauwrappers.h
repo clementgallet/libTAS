@@ -20,6 +20,9 @@
 #ifndef LIBTAS_VDPAU_H_INCL
 #define LIBTAS_VDPAU_H_INCL
 
+#include "config.h"
+#ifdef LIBTAS_HAS_VDPAU
+
 // #include <unistd.h>
 #include "hook.h"
 #include "global.h"
@@ -43,4 +46,5 @@ VdpStatus VdpOutputSurfaceGetBitsNative(VdpOutputSurface surface, VdpRect const 
 
 }
 
+#endif
 #endif
