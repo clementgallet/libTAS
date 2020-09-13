@@ -27,6 +27,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
 * `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xkb1`, `libxcb-cursor0`
 * `ffmpeg`
+* `file`
 * `libswresample2` or `libswresample3`, `libasound2`
 * `libfontconfig1`, `libfreetype6`
 
