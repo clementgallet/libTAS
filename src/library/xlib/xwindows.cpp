@@ -88,6 +88,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     if (valuemask & CWEventMask) {
         std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
         queue->setMask(w, attributes->event_mask);
+        debuglogstdio(LCF_WINDOW, "   event mask is %d", attributes->event_mask);
     }
 
     /* Don't save windows that has override-redirect (Wine invisible windows) */
@@ -96,14 +97,13 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     }
 
     /* Only save the Window identifier for top-level windows */
-    Window root_return = 0;
     Window parent_return = 0;
     Window *children_return = nullptr;
     unsigned int nchildren_return = 0;
-    XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+    XQueryTree(display, w, &rootWindow, &parent_return, &children_return, &nchildren_return);
     if (children_return) XFree(children_return);
 
-    if (root_return == parent) {
+    if (rootWindow == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", w);
@@ -122,14 +122,13 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     debuglogstdio(LCF_WINDOW, "   window id is %d", w);
 
     /* Only save the Window identifier for top-level windows */
-    Window root_return = 0;
     Window parent_return = 0;
     Window *children_return = nullptr;
     unsigned int nchildren_return = 0;
-    XQueryTree(display, w, &root_return, &parent_return, &children_return, &nchildren_return);
+    XQueryTree(display, w, &rootWindow, &parent_return, &children_return, &nchildren_return);
     if (children_return) XFree(children_return);
 
-    if (root_return == parent) {
+    if (rootWindow == parent) {
         /* Saving top-level window */
         if (gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", w);

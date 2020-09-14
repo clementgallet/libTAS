@@ -118,6 +118,10 @@ void generateKeyUpEvents(void)
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
                 event.xkey.window = gameXWindows.front();
                 event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
+                event.xkey.same_screen = 1;
+                event.xkey.send_event = 0;
+                event.xkey.subwindow = 0;
+                event.xkey.root = rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
@@ -135,6 +139,9 @@ void generateKeyUpEvents(void)
                 event.state = 0; // TODO: Do we have to set the key modifiers?
                 event.event = gameXWindows.front();
                 event.time = timestamp; // TODO: Wrong! timestamp is from X server start
+                event.same_screen = 1;
+                event.child = 0;
+                event.root = rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (gameConnections[c]) {
@@ -271,6 +278,9 @@ void generateKeyDownEvents(void)
                 event.xkey.window = gameXWindows.front();
                 event.xkey.time = timestamp;
                 event.xkey.same_screen = 1;
+                event.xkey.send_event = 0;
+                event.xkey.subwindow = 0;
+                event.xkey.root = rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (gameDisplays[d]) {
@@ -288,6 +298,9 @@ void generateKeyDownEvents(void)
                 event.state = 0; // TODO: Do we have to set the key modifiers?
                 event.event = gameXWindows.front();
                 event.time = timestamp; // TODO: Wrong! timestamp is from X server start
+                event.same_screen = 1;
+                event.child = 0;
+                event.root = rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (gameConnections[c]) {
@@ -809,6 +822,10 @@ void generateMouseMotionEvents(void)
             event.xmotion.window = pointer_grab_window;
         else
             event.xmotion.window = gameXWindows.front();
+        event.xmotion.send_event = 0;
+        event.xmotion.subwindow = 0;
+        event.xmotion.root = rootWindow;
+        event.xmotion.same_screen = 0;
         event.xmotion.time = timestamp;
 
         xlibEventQueueList.insert(&event);
@@ -825,6 +842,9 @@ void generateMouseMotionEvents(void)
         event.root_y = game_ai.pointer_y;
         event.event = gameXWindows.front();
         event.time = timestamp;
+        event.same_screen = 1;
+        event.child = 0;
+        event.root = rootWindow;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
@@ -934,6 +954,10 @@ void generateMouseButtonEvents(void)
                     event.xbutton.window = pointer_grab_window;
                 else
                     event.xbutton.window = gameXWindows.front();
+                event.xbutton.same_screen = 1;
+                event.xbutton.send_event = 0;
+                event.xbutton.subwindow = 0;
+                event.xbutton.root = rootWindow;
 
                 xlibEventQueueList.insert(&event);
             }
@@ -955,6 +979,9 @@ void generateMouseButtonEvents(void)
                 event.root_y = game_ai.pointer_y;
                 event.detail = SingleInput::toXlibPointerButton(buttons[bi]);
                 event.event = gameXWindows.front();
+                event.same_screen = 1;
+                event.child = 0;
+                event.root = rootWindow;
 
                 xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
             }

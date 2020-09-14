@@ -42,12 +42,10 @@ DEFINE_ORIG_POINTER(XQueryPointer);
                                    root_x_return, root_y_return,
                                    win_x_return, win_y_return, mask_return);
     }
-    XWindowAttributes gameAttr;
-    NATIVECALL(MYASSERT(XGetWindowAttributes(display, gameXWindows.front(), &gameAttr) != 0));
-    *root_return = gameAttr.root;
+    *root_return = rootWindow;
     *root_x_return = game_ai.pointer_x;
     *root_y_return = game_ai.pointer_y;
-    *child_return = gameXWindows.front();
+    *child_return = 0;
     *win_x_return = game_ai.pointer_x;
     *win_y_return = game_ai.pointer_y;
     *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer_mask);

@@ -15,6 +15,7 @@
 * Add a non-interactive mode
 * Support window title change from XChangeProperty()
 * Add VDPAU rendering
+* Add missing fields in Xlib input events (#365)
 
 ### Changed
 

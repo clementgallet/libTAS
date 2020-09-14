@@ -65,6 +65,9 @@ namespace libtas {
     /* Game window (we suppose there is only one) */
     extern std::list<Window> gameXWindows;
 
+    /* Root window */
+    extern Window rootWindow;
+
     /* SDL2 game window (we suppose there is only one) */
     extern SDL_Window* gameSDLWindow;
 
