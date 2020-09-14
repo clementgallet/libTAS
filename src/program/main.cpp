@@ -124,9 +124,13 @@ int main(int argc, char **argv)
     }
 
     /* Game arguments */
-    for (int i = optind+1; i < argc; i++) {
-        context.config.gameargs += argv[i];
-        context.config.gameargs += " ";
+    std::string gameargsoverride;
+    if (optind + 1 < argc) {
+        gameargsoverride = argv[optind + 1];
+    }
+    for (int i = optind+2; i < argc; i++) {
+        gameargsoverride += " ";
+        gameargsoverride += argv[i];
     }
 
     /* Open connection with the server */
@@ -207,6 +211,9 @@ int main(int argc, char **argv)
 
     /* Now that we have the config dir, we load the game-specific config */
     context.config.load(context.gamepath);
+    if (! gameargsoverride.empty()) {
+        context.config.gameargs = gameargsoverride;
+    }
 
     /* Overwrite the movie path if specified in commandline */
     if (! moviefile.empty()) {
