@@ -28,16 +28,19 @@
 #include "renderhud/RenderHUD_VDPAU.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
-// #include <execinfo.h>
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 
+VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawable, VdpPresentationQueueTarget *target);
 VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarget presentation_queue_target, VdpPresentationQueue *presentation_queue);
 VdpStatus VdpPresentationQueueDestroy(VdpPresentationQueue presentation_queue);
 VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, VdpOutputSurface surface, uint32_t clip_width, uint32_t clip_height, VdpTime earliest_presentation_time);
 VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue presentation_queue, VdpOutputSurface surface, VdpTime *first_presentation_time);
 
 DEFINE_ORIG_POINTER(vdp_device_create_x11);
+DEFINE_ORIG_POINTER(VdpPresentationQueueTargetCreateX11);
 DEFINE_ORIG_POINTER(VdpPresentationQueueCreate);
 DEFINE_ORIG_POINTER(VdpPresentationQueueDestroy);
 DEFINE_ORIG_POINTER(VdpPresentationQueueDisplay);
@@ -56,6 +59,34 @@ DEFINE_ORIG_POINTER(VdpOutputSurfaceGetBitsNative);
 
 namespace orig {
     VdpGetProcAddress* GetProcAddress = nullptr;
+}
+
+VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawable, VdpPresentationQueueTarget *target)
+{
+    if (GlobalState::isNative())
+        return orig::VdpPresentationQueueTargetCreateX11(device, drawable, target);
+
+    DEBUGLOGCALL(LCF_WINDOW);
+
+    /* Set the game window to that window */
+
+    /* Remove window from the list if it is already present */
+    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        if (drawable == *iter) {
+            gameXWindows.erase(iter);
+            break;
+        }
+    }
+
+    gameXWindows.push_front(drawable);
+    uint32_t i = static_cast<uint32_t>(drawable);
+    lockSocket();
+    sendMessage(MSGB_WINDOW_ID);
+    sendData(&i, sizeof(i));
+    unlockSocket();
+    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", i);
+
+    return orig::VdpPresentationQueueTargetCreateX11(device, drawable, target);
 }
 
 VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarget presentation_queue_target, VdpPresentationQueue *presentation_queue)
@@ -145,6 +176,10 @@ VdpStatus MyVdpGetProcAddress(VdpDevice device, VdpFuncId function_id, void **fu
     DEBUGLOGCALL(LCF_WINDOW);
     VdpStatus status = orig::GetProcAddress(device, function_id, function_pointer);
     switch(function_id) {
+        case VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11:
+            orig::VdpPresentationQueueTargetCreateX11 = reinterpret_cast<decltype(&VdpPresentationQueueTargetCreateX11)>(*function_pointer);
+            *function_pointer = reinterpret_cast<void*>(VdpPresentationQueueTargetCreateX11);
+            return status;
         case VDP_FUNC_ID_PRESENTATION_QUEUE_CREATE:
             orig::VdpPresentationQueueCreate = reinterpret_cast<decltype(&VdpPresentationQueueCreate)>(*function_pointer);
             *function_pointer = reinterpret_cast<void*>(VdpPresentationQueueCreate);

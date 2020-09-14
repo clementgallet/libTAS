@@ -27,6 +27,7 @@
 #include "hook.h"
 #include "global.h"
 #include <vdpau/vdpau.h>
+#include <vdpau/vdpau_x11.h>
 
 namespace libtas {
 
