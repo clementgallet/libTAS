@@ -28,6 +28,7 @@
 * Support partial ALSA audio buffer writing (#361)
 * Stop screen capture on GL context destroy (#370)
 * Don't set SDL_DYNAMIC_API for wine games
+* Open natively a special file by jemalloc to avoid deadlock
 
 ## [1.4.0] - 2020-06-19
 ### Added

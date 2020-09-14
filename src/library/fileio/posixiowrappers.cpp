@@ -71,6 +71,12 @@ int open (const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::open(file, oflag, mode);
 
+    /* Special case for file opened by je_malloc.
+     * We should not allocate any memory here otherwise deadlock. */
+    if (strcmp(file, "/proc/sys/vm/overcommit_memory") == 0) {
+        return orig::open(file, oflag, mode);
+    }
+
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int fd = 0;
