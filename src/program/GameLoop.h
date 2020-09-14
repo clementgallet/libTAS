@@ -63,6 +63,9 @@ private:
     xcb_keycode_t last_pressed_key;
     xcb_generic_event_t *next_event;
 
+    /* parent window of game window */
+    xcb_window_t parent_game_window = 0;
+
     void init();
 
     void initProcessMessages();

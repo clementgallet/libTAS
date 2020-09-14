@@ -607,6 +607,20 @@ bool GameLoop::startFrameMessages()
                 if (error) {
                     std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
                 }
+
+                /* Also get parent window of game window for focus */
+                xcb_query_tree_cookie_t qt_cookie = xcb_query_tree(context->conn, context->game_window);
+                xcb_query_tree_reply_t *reply = xcb_query_tree_reply(context->conn, qt_cookie, &error);
+
+                if (error) {
+                    std::cerr << "Could not get xcb_query_tree, X error" << error->error_code << std::endl;
+                    break;
+                }
+                else {
+                    parent_game_window = reply->parent;
+                }
+                if (reply)
+                    free(reply);
             }
             break;
         }
@@ -1597,7 +1611,7 @@ bool GameLoop::haveFocus()
     window = focus_reply->focus;
     free(focus_reply);
 
-    return (window == context->game_window);
+    return (window == context->game_window) || (window == parent_game_window);
 }
 
 void GameLoop::loopExit()
