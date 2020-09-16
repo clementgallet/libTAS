@@ -36,6 +36,7 @@ struct GameInfo {
         SDL2_RENDERER = 0x08,
         OPENGL = 0x10,
         VDPAU = 0x20,
+        XSHM = 0x40,
         OPENAL = 0x100,
         PULSEAUDIO = 0x200,
         XEVENTS = 0x400,

@@ -145,6 +145,7 @@ libtas_so_SOURCES = \
     xlib/xf86vidmode.cpp \
     xlib/xinerama.cpp \
     xlib/xrandr.cpp \
+    xlib/xshm.cpp \
     xlib/xwindows.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \

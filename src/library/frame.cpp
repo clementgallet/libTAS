@@ -176,9 +176,9 @@ static bool skipDraw(float fps)
 }
 
 #ifdef LIBTAS_ENABLE_HUD
-void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud)
+void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 #else
-void frameBoundary(bool drawFB, std::function<void()> draw)
+void frameBoundary(std::function<void()> draw)
 #endif
 {
     static float fps, lfps = 0;
@@ -195,7 +195,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_END)
         sdlEventQueue.waitForEmpty();
 
-    if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) && (framecount > 11) && (drawFB)) {
+    if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) && (framecount > 11) && (draw)) {
         ThreadSync::detWait();
     }
 
@@ -236,7 +236,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     ++framecount;
 
     /* Compute new FPS values */
-    if (drawFB) {
+    if (draw) {
         computeFPS(fps, lfps);
     }
 
@@ -298,7 +298,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
     }
 
     /*** Rendering ***/
-    if (!drawFB)
+    if (!draw)
         nondraw_framecount++;
 
     /* Update window title */
@@ -309,7 +309,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      * the HUD, so that we can redraw with another HUD.
      */
     if (!skipping_draw) {
-        if (drawFB && shared_config.save_screenpixels) {
+        if (draw && shared_config.save_screenpixels) {
             ScreenCapture::storePixels();
         }
     }
@@ -343,7 +343,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
         }
 
         /* Write the current frame */
-        avencoder->encodeOneFrame(drawFB, timeIncrement);
+        avencoder->encodeOneFrame(!!draw, timeIncrement);
     }
     else {
         /* If there is still an encoder object, it means we just stopped
@@ -374,7 +374,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
 #endif
 
     /* Actual draw command */
-    if (!skipping_draw) {
+    if (!skipping_draw && draw) {
         GlobalNoLog gnl;
         NATIVECALL(draw());
     }
@@ -396,7 +396,7 @@ void frameBoundary(bool drawFB, std::function<void()> draw)
      * It is also the case for double buffer draw methods when the game does
      * not clean the back buffer.
      */
-    if (!skipping_draw && drawFB && shared_config.save_screenpixels) {
+    if (!skipping_draw && draw && shared_config.save_screenpixels) {
         ScreenCapture::setPixels();
     }
 
@@ -515,7 +515,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs 
 static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 #endif
 {
-    if (!skipping_draw && shared_config.save_screenpixels) {
+    if (!skipping_draw && draw && shared_config.save_screenpixels) {
         ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD
@@ -690,7 +690,8 @@ static void receive_messages(std::function<void()> draw)
                     sendData(&ticks_val, sizeof(uint64_t));
 
                     /* Screen should have changed after loading */
-                    ScreenCapture::setPixels();
+                    if (draw)
+                        ScreenCapture::setPixels();
                 }
                 else if (status == 0) {
                     /* Tell the program that the saving succeeded */

@@ -149,12 +149,12 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
 #ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_VDPAU renderHUD;
     renderHUD.setSurface(surface);
-    frameBoundary(true, [&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);}, renderHUD);
+    frameBoundary([&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);}, renderHUD);
 #else
-    frameBoundary(true, [&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);});
+    frameBoundary([&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);});
 #endif
 
-    return orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);
+    return VDP_STATUS_OK;
 }
 
 VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue presentation_queue, VdpOutputSurface surface, VdpTime *first_presentation_time)

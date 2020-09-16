@@ -187,6 +187,12 @@ int ScreenCapture::init()
         }
         pixelSize = surf->format->BytesPerPixel;
     }
+    else if (game_info.video & GameInfo::XSHM) {
+        pixelSize = gameXImage->bits_per_pixel / 8;
+        /* Also overwrite the dimensions */
+        width = gameXImage->width;
+        height = gameXImage->height;
+    }
     else {
         pixelSize = depth / 8; /* depth is in bits/pixels */
     }
@@ -496,6 +502,27 @@ const char* ScreenCapture::getPixelFormat()
         return "RGBA";
     }
 
+    else if (game_info.video & GameInfo::XSHM) {
+        /* Apparently, it will only be RGB or BGR depending on the endianness
+         * of the machine. */
+
+        if (gameXImage->bits_per_pixel == 24) {
+            if (gameXImage->byte_order == LSBFirst)
+                return "24BG";
+            else
+                return "RAW ";
+        }
+        else if (gameXImage->bits_per_pixel == 32) {
+            if (gameXImage->byte_order == LSBFirst)
+                return "BGR\0";
+            else
+                return "RGB\0";
+        }
+        else {
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format");
+        }
+    }
+
     return "RGBA";
 }
 
@@ -704,6 +731,14 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         }
     }
 
+    else if (game_info.video & GameInfo::XSHM) {
+        if ((gameXImage->width != width) || (gameXImage->height != height)) {
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, gameXImage->width, gameXImage->height);
+            return -1;
+        }
+        memcpy(winpixels.data(), gameXImage->data, size);
+    }
+
     return size;
 }
 
@@ -818,6 +853,10 @@ int ScreenCapture::setPixels() {
         orig::SDL1_UpperBlit(screenSDL1Surf, nullptr, surf1, nullptr);
         orig::SDL1_SetClipRect(surf1, &clip_rect);
 
+    }
+
+    else if (game_info.video & GameInfo::XSHM) {
+        memcpy(gameXImage->data, winpixels.data(), size);
     }
 
     return 0;

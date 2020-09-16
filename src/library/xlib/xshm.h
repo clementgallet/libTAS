@@ -17,23 +17,32 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
+#ifndef LIBTAS_XSHM_H_INCL
+#define LIBTAS_XSHM_H_INCL
+
+#include "config.h"
+#ifdef LIBTAS_HAS_XRANDR
+
+#include "../global.h"
+#include <X11/extensions/XShm.h>
 
 namespace libtas {
 
-SharedConfig shared_config;
-GameInfo game_info;
-volatile bool is_exiting = false;
-volatile bool is_fork = false;
-bool skipping_draw = false;
-Display* gameDisplays[GAMEDISPLAYNUM] = {};
-xcb_connection_t* gameConnections[GAMEDISPLAYNUM] = {};
-std::list<Window> gameXWindows;
-Window rootWindow;
-SDL_Window* gameSDLWindow = nullptr;
-unsigned int vdpDevice = 0;
-unsigned int vdpSurface = 0;
-XImage* gameXImage = nullptr;
-bool saveBacktrack = false;
+OVERRIDE Bool XShmPutImage(
+    Display*        /* dpy */,
+    Drawable        /* d */,
+    GC          /* gc */,
+    XImage*     /* image */,
+    int         /* src_x */,
+    int         /* src_y */,
+    int         /* dst_x */,
+    int         /* dst_y */,
+    unsigned int    /* src_width */,
+    unsigned int    /* src_height */,
+    Bool        /* send_event */
+);
 
 }
+
+#endif
+#endif

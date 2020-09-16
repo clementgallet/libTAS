@@ -33,14 +33,14 @@ extern uint64_t framecount;
  * - Receiving data from libTAS and sending data to it
  * - Dumping audio/video
  *
- * It is mainly called during a screen refresh (drawFB == true),
+ * It is mainly called during a screen refresh (when draw() is defined),
  * but can be called also by the timer when we need to advance time to avoid a
  * game softlock (game expect time to pass).
  */
 #ifdef LIBTAS_ENABLE_HUD
-void frameBoundary(bool drawFB, std::function<void()> draw, RenderHUD& hud);
+void frameBoundary(std::function<void()> draw, RenderHUD& hud);
 #else
-void frameBoundary(bool drawFB, std::function<void()> draw);
+void frameBoundary(std::function<void()> draw);
 #endif
 
 }

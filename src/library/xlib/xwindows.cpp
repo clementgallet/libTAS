@@ -162,7 +162,7 @@ int XDestroyWindow(Display *display, Window w)
             /* Tells the program we don't have a window anymore to gather inputs */
             sendXWindow(0);
         }
-        else {
+        else if (!is_exiting) {
             /* Switch to the next game window */
             debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
             sendXWindow(gameXWindows.front());

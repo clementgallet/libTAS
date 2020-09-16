@@ -77,6 +77,9 @@ namespace libtas {
     /* VDPAU output surface */
     extern unsigned int vdpSurface;
 
+    /* XImage to render */
+    extern XImage* gameXImage;
+
     /* Should we perform a backtrack savestate? */
     extern bool saveBacktrack;
 }
