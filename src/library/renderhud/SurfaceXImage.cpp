@@ -17,28 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "SurfaceARGB.h"
+#include "SurfaceXImage.h"
 #ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 
 namespace libtas {
 
-SurfaceARGB::SurfaceARGB(int width, int height)
+SurfaceXImage::SurfaceXImage(XImage* i)
 {
-    w = width;
-    h = height;
-    pitch = 4 * w;
-    pixels.resize(w*h);
+    image = i;
 }
 
-void SurfaceARGB::fill(uint32_t color)
+void SurfaceXImage::blit(const SurfaceARGB* src, int x, int y)
 {
-    pixels.assign(w*h, color);
-}
+    int dst_w = image->width;
+    int dst_h = image->width;
 
-void SurfaceARGB::blit(const SurfaceARGB* src, int x, int y)
-{
     /* Code taken from SDL 2 software blitting BlitRGBtoRGBPixelAlpha() */
     int width = src->w;
     int height = src->h;
@@ -48,26 +43,22 @@ void SurfaceARGB::blit(const SurfaceARGB* src, int x, int y)
         x = 0;
     if (y < 0)
         y = 0;
-    if ((x + width) > w)
-        width = w - x;
-    if ((y + height) > h)
-        height = h - y;
+    if ((x + width) > dst_w)
+        width = dst_w - x;
+    if ((y + height) > dst_h)
+        height = dst_h - y;
     if (width <= 0)
         return;
     if (height <= 0)
         return;
 
     const uint32_t *srcp = src->pixels.data();
-    uint32_t *dstp = pixels.data() + y*w + x;
-    int dstskip = w - width;
 
-    while (height--) {
+    for (int ih = 0; ih < height; ih++) {
         /* The code originally uses a Duff's device.
          * Let's try to trust the compiler optmisations.
          */
-        int curwidth = width;
-        while (curwidth--) {
-            uint32_t dalpha;
+        for (int iw = 0; iw < width; iw++) {
             uint32_t d;
             uint32_t s1;
             uint32_t d1;
@@ -79,28 +70,24 @@ void SurfaceARGB::blit(const SurfaceARGB* src, int x, int y)
                Benchmark this! */
             if (alpha) {
                 if (alpha == 0xFF) {
-                    *dstp = *srcp;
+                    image->f.put_pixel(image, x + iw, y + ih, *srcp);
                 } else {
                     /*
                      * take out the middle component (green), and process
                      * the other two in parallel. One multiply less.
                      */
-                    d = *dstp;
-                    dalpha = d >> 24;
+                    d = image->f.get_pixel(image, x + iw, y + ih);
                     s1 = s & 0xff00ff;
                     d1 = d & 0xff00ff;
                     d1 = (d1 + ((s1 - d1) * alpha >> 8)) & 0xff00ff;
                     s &= 0xff00;
                     d &= 0xff00;
                     d = (d + ((s - d) * alpha >> 8)) & 0xff00;
-                    dalpha = alpha + (dalpha * (alpha ^ 0xFF) >> 8);
-                    *dstp = d1 | d | (dalpha << 24);
+                    image->f.put_pixel(image, x + iw, y + ih, d1 | d);
                 }
             }
             ++srcp;
-            ++dstp;
         }
-        dstp += dstskip;
     }
 }
 

@@ -93,9 +93,11 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_SDL2_surface.cpp \
     renderhud/RenderHUD_VDPAU.cpp \
+	renderhud/RenderHUD_XShm.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \
+	renderhud/SurfaceXImage.cpp \
 	sdl/SDLEventQueue.cpp \
     sdl/sdldisplay.cpp \
     sdl/sdldynapi.cpp \

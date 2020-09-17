@@ -155,6 +155,7 @@ int XDestroyWindow(Display *display, Window w)
 
     /* If current game window, switch to another one on the list */
     if (!gameXWindows.empty() && w == gameXWindows.front()) {
+        bool inited = ScreenCapture::isInited();
         ScreenCapture::fini();
 
         gameXWindows.pop_front();
@@ -166,7 +167,8 @@ int XDestroyWindow(Display *display, Window w)
             /* Switch to the next game window */
             debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
             sendXWindow(gameXWindows.front());
-            ScreenCapture::init();
+            if (inited)
+                ScreenCapture::init();
         }
     }
     else {

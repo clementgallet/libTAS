@@ -20,46 +20,27 @@
 #include "config.h"
 #ifdef LIBTAS_ENABLE_HUD
 
-#ifndef LIBTAS_SURFACEARGB_H_INCL
-#define LIBTAS_SURFACEARGB_H_INCL
+#ifndef LIBTAS_SURFACEXIMAGE_H_INCL
+#define LIBTAS_SURFACEXIMAGE_H_INCL
 
+#include "SurfaceARGB.h"
 #include <cstdint>
 #include <vector>
+#include <X11/Xlib.h>
 
 namespace libtas {
-/* Create a simple ARGB surface class that can be used by sdl_ttf,
- * instead of the SDL_Surface struct.
- * This allows to use sdl_ttf without needing any function
- * from the SDL library.
- */
-class SurfaceARGB
+
+/* Create a wrapper around an XImage for blitting */
+class SurfaceXImage
 {
 	public:
-        /* Width and height */
-        int w, h;
+        /* Pointer to the image */
+        XImage* image;
 
-        /* Pitch */
-        int pitch;
-
-        /* Internal storage of surface pixels */
-        std::vector<uint32_t> pixels;
-
-        /* Pointer to the surface pixels (may not be pointing to internal storage)*/
-        uint32_t* data;
-
-        /* Allocate a surface with width and height*/
-        SurfaceARGB(int width, int height);
-
-        /* Fill all pixels to a certain color */
-        void fill(uint32_t color);
+        SurfaceXImage(XImage* image);
 
         /* Blit surface `src` into this surface at coords x and y */
         void blit(const SurfaceARGB* src, int x, int y);
-};
-
-struct Color
-{
-    uint8_t r, g, b, a;
 };
 
 }
