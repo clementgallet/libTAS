@@ -16,6 +16,7 @@
 * Support window title change from XChangeProperty()
 * Add VDPAU rendering
 * Add missing fields in Xlib input events (#365)
+* Add special case for dlsym(RTLD_NEXT) (#82)
 
 ### Changed
 

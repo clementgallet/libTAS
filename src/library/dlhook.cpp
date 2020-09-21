@@ -153,6 +153,29 @@ void *dlsym(void *handle, const char *name) throw() {
     if (strcmp(name, "dlsym") == 0)
         return reinterpret_cast<void*>(dlsym);
 
+    /* Special case for RTLD_NEXT. The order of loaded libraries are affected
+     * by us preloading libtas.so, so if the game relies on the order of
+     * libraries by calling dlsym with RTLD_NEXT, it may return the wrong
+     * function and an infinite call.
+
+     * We are handling each case here. */
+    if (handle == RTLD_NEXT) {
+        GlobalNative gn;
+
+        /* Chrome */
+        if ((strcmp(name, "localtime") == 0) ||
+            (strcmp(name, "localtime64") == 0) ||
+            (strcmp(name, "localtime_r") == 0) ||
+            (strcmp(name, "localtime64_r") == 0)) {
+            void* libc_handle = dlopen("libc.so.6", RTLD_LAZY);
+            return dlsym(libc_handle, name);
+        }
+        else {
+            debuglogstdio(LCF_HOOK | LCF_WARNING, "   dlsym called with RTLD_NEXT for symbol %s!", name);
+        }
+    }
+
+
     /* FIXME: This design is not good enough.
      * This idea is to link to our defined function when there is one, instead
      * of the function inside the library that the game wants to load.
