@@ -33,6 +33,7 @@
 * Stop screen capture on GL context destroy (#370)
 * Don't set SDL_DYNAMIC_API for wine games
 * Open natively a special file by jemalloc to avoid deadlock
+* Check native events when XCheck*Event() returns nothing
 
 ## [1.4.0] - 2020-06-19
 ### Added

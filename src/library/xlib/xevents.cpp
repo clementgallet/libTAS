@@ -327,6 +327,10 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     bool isEvent = queue->pop(event_return, 0, event_mask);
+    if (!isEvent) {
+        pushNativeXlibEvents(display);
+        isEvent = queue->pop(event_return, 0, event_mask);        
+    }
     return isEvent?True:False;
 }
 
@@ -346,6 +350,10 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     bool isEvent = queue->pop(event_return, 0, event_type);
+    if (!isEvent) {
+        pushNativeXlibEvents(display);
+        isEvent = queue->pop(event_return, 0, event_type);        
+    }
     return isEvent?True:False;
 }
 
@@ -365,6 +373,10 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     bool isEvent = queue->pop(event_return, w, event_type);
+    if (!isEvent) {
+        pushNativeXlibEvents(display);
+        isEvent = queue->pop(event_return, w, event_type);        
+    }
     return isEvent?True:False;
 }
 
