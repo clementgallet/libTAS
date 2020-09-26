@@ -51,6 +51,7 @@ DEFINE_ORIG_POINTER(glXSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
+DEFINE_ORIG_POINTER(glXDestroyContext);
 
 DEFINE_ORIG_POINTER(glGetString);
 
@@ -195,6 +196,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_RETURN_SYMBOL(glXGetSwapIntervalMESA)
     STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
     STORE_RETURN_SYMBOL(glXCreateContextAttribsARB)
+    STORE_RETURN_SYMBOL(glXDestroyContext)
 
     /* Some games like Super Meat Boy defines the glDrawArrays function in the
      * executable, so even if we preload our glDrawArrays function, it will still
@@ -465,6 +467,14 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
         i += 2;
     }
     return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
+}
+
+void glXDestroyContext(Display * dpy,  GLXContext ctx)
+{
+    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
+    LINK_NAMESPACE(glXDestroyContext, "GL");
+    ScreenCapture::fini();
+    return orig::glXDestroyContext(dpy, ctx);
 }
 
 // void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)

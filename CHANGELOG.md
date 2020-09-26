@@ -34,6 +34,7 @@
 * Don't set SDL_DYNAMIC_API for wine games
 * Open natively a special file by jemalloc to avoid deadlock
 * Check native events when XCheck*Event() returns nothing
+* Free ScreenCapture when glx context is destroyed
 
 ## [1.4.0] - 2020-06-19
 ### Added
