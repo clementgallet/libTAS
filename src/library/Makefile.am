@@ -9,6 +9,7 @@ libtas_so_SOURCES = \
     BusyLoopDetection.cpp \
     DeterministicTimer.cpp \
     dlhook.cpp \
+    eglwrappers.cpp \
     frame.cpp \
     glibwrappers.cpp \
     global.cpp \

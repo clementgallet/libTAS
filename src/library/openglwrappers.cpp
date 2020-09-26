@@ -40,10 +40,6 @@
 
 namespace libtas {
 
-#ifdef LIBTAS_ENABLE_HUD
-static RenderHUD_GL renderHUD_GL;
-#endif
-
 DEFINE_ORIG_POINTER(glXGetProcAddress);
 DEFINE_ORIG_POINTER(glXGetProcAddressARB);
 DEFINE_ORIG_POINTER(glXGetProcAddressEXT);

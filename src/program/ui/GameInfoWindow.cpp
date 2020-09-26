@@ -70,6 +70,10 @@ void GameInfoWindow::update(GameInfo game_info)
         videoStr = "unknown";
     }
 
+    if (game_info.video & GameInfo::EGL) {
+        videoStr += " (EGL)";
+    }
+
     if (game_info.video & GameInfo::OPENGL) {
         if (game_info.opengl_major > 0) {
             QString profile;

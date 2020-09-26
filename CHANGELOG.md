@@ -17,7 +17,8 @@
 * Add VDPAU rendering
 * Add missing fields in Xlib input events (#365)
 * Add special case for dlsym(RTLD_NEXT) (#82)
-* Remove input events from event masks (#365)
+* Remove input events from window event masks (#365)
+* Add basic EGL support
 
 ### Changed
 
