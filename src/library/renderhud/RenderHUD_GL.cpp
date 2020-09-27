@@ -27,21 +27,21 @@
 namespace libtas {
 
 DECLARE_ORIG_POINTER(glGetIntegerv)
-DEFINE_ORIG_POINTER(glGenTextures)
-DEFINE_ORIG_POINTER(glDeleteTextures)
-DEFINE_ORIG_POINTER(glBindTexture)
+DECLARE_ORIG_POINTER(glGenTextures)
+DECLARE_ORIG_POINTER(glDeleteTextures)
+DECLARE_ORIG_POINTER(glBindTexture)
 DECLARE_ORIG_POINTER(glTexParameteri)
-DEFINE_ORIG_POINTER(glTexImage2D)
-DEFINE_ORIG_POINTER(glActiveTexture)
+DECLARE_ORIG_POINTER(glTexImage2D)
+DECLARE_ORIG_POINTER(glActiveTexture)
 
 DECLARE_ORIG_POINTER(glGenFramebuffers)
 DECLARE_ORIG_POINTER(glBindFramebuffer)
-DEFINE_ORIG_POINTER(glFramebufferTexture2D)
+DECLARE_ORIG_POINTER(glFramebufferTexture2D)
 DECLARE_ORIG_POINTER(glDeleteFramebuffers)
 DECLARE_ORIG_POINTER(glBlitFramebuffer)
 
-DEFINE_ORIG_POINTER(glUseProgram)
-DEFINE_ORIG_POINTER(glPixelStorei)
+DECLARE_ORIG_POINTER(glUseProgram)
+DECLARE_ORIG_POINTER(glPixelStorei)
 
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;

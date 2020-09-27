@@ -24,6 +24,12 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 
+#define STORE_SYMBOL(str) \
+    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
+        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+        return reinterpret_cast<void*>(orig::str); \
+    }
+
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
@@ -52,21 +58,32 @@ DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA);
 DEFINE_ORIG_POINTER(glXQueryDrawable);
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB);
 DEFINE_ORIG_POINTER(glXDestroyContext);
-
 DEFINE_ORIG_POINTER(glGetString);
-
 DEFINE_ORIG_POINTER(glBlitFramebuffer);
-
 DEFINE_ORIG_POINTER(glTexParameterf);
 DEFINE_ORIG_POINTER(glTexParameteri);
-// DEFINE_ORIG_POINTER(glTexParameterfv);
-// DEFINE_ORIG_POINTER(glTexParameteriv);
-// DEFINE_ORIG_POINTER(glTexParameterIiv);
-// DEFINE_ORIG_POINTER(glTexParameterIuiv);
-
 DEFINE_ORIG_POINTER(glEnable);
-// DEFINE_ORIG_POINTER(glDisable);
-
+DEFINE_ORIG_POINTER(glReadPixels);
+DEFINE_ORIG_POINTER(glGenFramebuffers);
+DEFINE_ORIG_POINTER(glBindFramebuffer);
+DEFINE_ORIG_POINTER(glDeleteFramebuffers);
+DEFINE_ORIG_POINTER(glGenRenderbuffers);
+DEFINE_ORIG_POINTER(glBindRenderbuffer);
+DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
+DEFINE_ORIG_POINTER(glRenderbufferStorage);
+DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
+DEFINE_ORIG_POINTER(glDisable);
+DEFINE_ORIG_POINTER(glIsEnabled);
+DEFINE_ORIG_POINTER(glGetIntegerv);
+DEFINE_ORIG_POINTER(glGetError);
+DEFINE_ORIG_POINTER(glGenTextures);
+DEFINE_ORIG_POINTER(glDeleteTextures);
+DEFINE_ORIG_POINTER(glBindTexture);
+DEFINE_ORIG_POINTER(glTexImage2D);
+DEFINE_ORIG_POINTER(glActiveTexture);
+DEFINE_ORIG_POINTER(glFramebufferTexture2D);
+DEFINE_ORIG_POINTER(glUseProgram);
+DEFINE_ORIG_POINTER(glPixelStorei);
 
 #define GLFUNCSKIPDRAW(NAME, DECL, ARGS) \
 DEFINE_ORIG_POINTER(NAME)\
@@ -179,14 +196,31 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     if (!real_pointer || !symbol)
         return real_pointer;
 
-    // if (strcmp(reinterpret_cast<const char*>(symbol), "glDrawArrays") == 0) {
-    //     debuglog(LCF_OGL, __func__, "   hooking  glDrawArrays");
-    //     debuglog(LCF_OGL, __func__, "   real pointer is ", real_pointer);
-    //     debuglog(LCF_OGL, __func__, "   my pointer is ", reinterpret_cast<void*>(myglDrawArrays));
-    //     orig::glDrawArrays = reinterpret_cast<decltype(orig::glDrawArrays)>(real_pointer);
-    //     return reinterpret_cast<void*>(myglDrawArrays);
-    // }
+    /* Store function pointers that are used in other files */
+    STORE_SYMBOL(glReadPixels)
+    STORE_SYMBOL(glGenFramebuffers)
+    STORE_SYMBOL(glBindFramebuffer)
+    STORE_SYMBOL(glDeleteFramebuffers)
+    STORE_SYMBOL(glGenRenderbuffers)
+    STORE_SYMBOL(glBindRenderbuffer)
+    STORE_SYMBOL(glDeleteRenderbuffers)
+    STORE_SYMBOL(glRenderbufferStorage)
+    STORE_SYMBOL(glFramebufferRenderbuffer)
+    STORE_SYMBOL(glDisable)
+    STORE_SYMBOL(glIsEnabled)
+    STORE_SYMBOL(glGetIntegerv)
+    STORE_SYMBOL(glGetError)
 
+    STORE_SYMBOL(glGenTextures)
+    STORE_SYMBOL(glDeleteTextures)
+    STORE_SYMBOL(glBindTexture)
+    STORE_SYMBOL(glTexImage2D)
+    STORE_SYMBOL(glActiveTexture)
+    STORE_SYMBOL(glFramebufferTexture2D)
+    STORE_SYMBOL(glUseProgram)
+    STORE_SYMBOL(glPixelStorei)
+
+    /* Store function pointers and return our function */
     STORE_RETURN_SYMBOL(glXMakeCurrent)
     STORE_RETURN_SYMBOL(glXSwapBuffers)
     STORE_RETURN_SYMBOL(glXQueryDrawable)

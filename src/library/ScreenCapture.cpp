@@ -64,21 +64,21 @@ DECLARE_ORIG_POINTER(SDL_LockSurface);
 DECLARE_ORIG_POINTER(SDL_UnlockSurface);
 DECLARE_ORIG_POINTER(SDL_UpperBlit)
 
-DEFINE_ORIG_POINTER(glReadPixels);
-DEFINE_ORIG_POINTER(glGenFramebuffers);
-DEFINE_ORIG_POINTER(glBindFramebuffer);
-DEFINE_ORIG_POINTER(glDeleteFramebuffers);
-DEFINE_ORIG_POINTER(glGenRenderbuffers);
-DEFINE_ORIG_POINTER(glBindRenderbuffer);
-DEFINE_ORIG_POINTER(glDeleteRenderbuffers);
-DEFINE_ORIG_POINTER(glRenderbufferStorage);
-DEFINE_ORIG_POINTER(glFramebufferRenderbuffer);
+DECLARE_ORIG_POINTER(glReadPixels);
+DECLARE_ORIG_POINTER(glGenFramebuffers);
+DECLARE_ORIG_POINTER(glBindFramebuffer);
+DECLARE_ORIG_POINTER(glDeleteFramebuffers);
+DECLARE_ORIG_POINTER(glGenRenderbuffers);
+DECLARE_ORIG_POINTER(glBindRenderbuffer);
+DECLARE_ORIG_POINTER(glDeleteRenderbuffers);
+DECLARE_ORIG_POINTER(glRenderbufferStorage);
+DECLARE_ORIG_POINTER(glFramebufferRenderbuffer);
 DECLARE_ORIG_POINTER(glBlitFramebuffer);
 DECLARE_ORIG_POINTER(glEnable);
-DEFINE_ORIG_POINTER(glDisable);
-DEFINE_ORIG_POINTER(glIsEnabled);
-DEFINE_ORIG_POINTER(glGetIntegerv);
-DEFINE_ORIG_POINTER(glGetError);
+DECLARE_ORIG_POINTER(glDisable);
+DECLARE_ORIG_POINTER(glIsEnabled);
+DECLARE_ORIG_POINTER(glGetIntegerv);
+DECLARE_ORIG_POINTER(glGetError);
 
 #ifdef LIBTAS_HAS_VDPAU
 DECLARE_ORIG_POINTER(VdpOutputSurfaceGetParameters);
