@@ -37,7 +37,7 @@ bool link_function(void** function, const char* source, const char* library, con
         NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {
-        debuglog(LCF_HOOK, "Imported symbol ", source, " function : ", *function);
+        debuglogstdio(LCF_HOOK, "Imported symbol %s function : %p", source, *function);
         return true;
     }
 
@@ -58,7 +58,7 @@ bool link_function(void** function, const char* source, const char* library, con
                 NATIVECALL(*function = dlsym(handle, source));
 
                 if (*function != nullptr) {
-                    debuglog(LCF_HOOK, "Imported from lib ", libpath, " symbol ", source, " function : ", *function);
+                    debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", libpath.c_str(), source, *function);
                     return true;
                 }
             }
@@ -71,7 +71,7 @@ bool link_function(void** function, const char* source, const char* library, con
             NATIVECALL(*function = dlsym(handle, source));
 
             if (*function != nullptr) {
-                debuglog(LCF_HOOK, "Imported from lib ", library, " symbol ", source, " function : ", *function);
+                debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", libpath.c_str(), source, *function);
 
                 /* Add the library to our set of libraries */
                 add_lib(library);

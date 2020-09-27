@@ -76,16 +76,16 @@ void *dlopen(const char *file, int mode) throw() {
     }
 
     if (file != nullptr && std::string(file).find("libpulse") != std::string::npos) {
-        debuglog(LCF_HOOK, __func__, " blocked access to library ", file);
+        debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
     if (file != nullptr && std::string(file).find("ScreenSelector.so") != std::string::npos) {
-        debuglog(LCF_HOOK, __func__, " blocked access to library ", file);
+        debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
-    debuglog(LCF_HOOK, __func__, " call with file ", (file!=nullptr)?file:"<NULL>");
+    debuglogstdio(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
 
     void *result = orig::dlopen(file, mode);
 
@@ -112,8 +112,7 @@ void *dlopen(const char *file, int mode) throw() {
 
 void *find_sym(const char *name, bool original) {
     dlerror(); // Clear pending errors
-    void *addr;
-    NATIVECALL(addr = dlsym(RTLD_DEFAULT, name));
+    void *addr = orig::dlsym(RTLD_DEFAULT, name);
     if (dlerror() == nullptr) {
         Dl_info info;
         int res = dladdr(addr, &info);
@@ -141,17 +140,41 @@ void *dlsym(void *handle, const char *name) throw() {
         orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
     }
 
+    /* dlsym() does some work besides the actual function, and that may call
+     * other hooked functions that themselves call dlsym(). If we detect a recursion,
+     * we switch to the pure dlsym() function like above.
+     * This is especially the case for jemalloc which calls a bunch of functions,
+     * and dlsym allocates buffers for dlerror().
+     */
+    static int recurs_count = 0;
+    static bool safe = false;
+
+    safe = (recurs_count > 0);
+    recurs_count++;
+
     if (GlobalState::isNative()) {
-        return orig::dlsym(handle, name);
+        void* ret;
+        if (safe) {
+            ret = _dl_sym(handle, name, reinterpret_cast<void*>(dlsym));            
+        }
+        else {
+            ret = orig::dlsym(handle, name);            
+        }
+        recurs_count--;
+        return ret;
     }
 
-    debuglog(LCF_HOOK, __func__, " call with function ", name);
+    debuglogstdio(LCF_HOOK, "%s call with function %s %s", __func__, name, safe?"(safe)":"");
 
     /* Special cases when dlsym is called with dl* functions (yes, it happens...). */
-    if (strcmp(name, "dlopen") == 0)
+    if (strcmp(name, "dlopen") == 0) {
+        recurs_count--;
         return reinterpret_cast<void*>(dlopen);
-    if (strcmp(name, "dlsym") == 0)
+    }
+    if (strcmp(name, "dlsym") == 0) {
+        recurs_count--;        
         return reinterpret_cast<void*>(dlsym);
+    }
 
     /* Special case for RTLD_NEXT. The order of loaded libraries are affected
      * by us preloading libtas.so, so if the game relies on the order of
@@ -168,7 +191,9 @@ void *dlsym(void *handle, const char *name) throw() {
             (strcmp(name, "localtime_r") == 0) ||
             (strcmp(name, "localtime64_r") == 0)) {
             void* libc_handle = dlopen("libc.so.6", RTLD_LAZY);
-            return dlsym(libc_handle, name);
+            void* ret = orig::dlsym(libc_handle, name);
+            recurs_count--;
+            return ret;
         }
         else {
             debuglogstdio(LCF_HOOK | LCF_WARNING, "   dlsym called with RTLD_NEXT for symbol %s!", name);
@@ -203,6 +228,7 @@ void *dlsym(void *handle, const char *name) throw() {
         hook_ntdll();
     }
 
+    recurs_count--;
     return addr;
 }
 
