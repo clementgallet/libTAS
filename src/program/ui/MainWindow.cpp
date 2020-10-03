@@ -46,10 +46,12 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
     qRegisterMetaType<std::string>("std::string");
 
+#ifdef LIBTAS_INTERIM_COMMIT
+    QString title = QString("libTAS v%1.%2.%3 - interim %4 (%5)").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION).arg(LIBTAS_INTERIM_COMMIT).arg(LIBTAS_INTERIM_DATE);
+#else
     QString title = QString("libTAS v%1.%2.%3").arg(MAJORVERSION).arg(MINORVERSION).arg(PATCHVERSION);
-#ifdef LIBTAS_INTERIM
-    title.append(" - interim ").append(LIBTAS_INTERIM);
 #endif
+
     setWindowTitle(title);
 
     /* Create the object that will launch and communicate with the game,
