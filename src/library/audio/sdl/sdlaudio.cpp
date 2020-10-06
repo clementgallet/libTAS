@@ -38,8 +38,6 @@ static const char* dummySDLDriver = "libtas";
  * audio device, we call instead SDL_MixAudioFormat with the saved audio format.
  */
 static SDL_AudioFormat audioFormat;
-static SDL_AudioCallback audioCallback;
-static void* callbackArg;
 // static Uint16 bufferSamplesSize;
 
 static std::shared_ptr<AudioSource> sourceSDL;
@@ -100,20 +98,6 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
         return curDriver.c_str();
     }
     return nullptr;
-}
-
-/* Function that is called by an AudioSource when the played sound buffer
- * is empty
- */
-void fillBufferCallback(AudioBuffer& ab);
-void fillBufferCallback(AudioBuffer& ab)
-{
-    /* Emptying the audio buffer */
-    ab.makeSilent();
-
-    NOLOGCALL(SDL_LockAudio());
-    audioCallback(callbackArg, ab.samples.data(), ab.size);
-    NOLOGCALL(SDL_UnlockAudio());
 }
 
 /* Override */ int SDL_OpenAudio(SDL_AudioSpec * desired, SDL_AudioSpec * obtained)
@@ -181,9 +165,16 @@ void fillBufferCallback(AudioBuffer& ab)
          */
 
         sourceSDL->source = AudioSource::SOURCE_CALLBACK;
-        sourceSDL->callback = fillBufferCallback;
-        audioCallback = desired->callback;
-        callbackArg = desired->userdata;
+        SDL_AudioCallback audioCallback = desired->callback;
+        void* callbackArg = desired->userdata;
+        sourceSDL->callback = [audioCallback, callbackArg](AudioBuffer& ab){
+            /* Emptying the audio buffer */
+            ab.makeSilent();
+
+            NOLOGCALL(SDL_LockAudio());
+            audioCallback(callbackArg, ab.samples.data(), ab.size);
+            NOLOGCALL(SDL_UnlockAudio());
+        };
     }
     else {
         /* We are using the push mechanism. The game will use
