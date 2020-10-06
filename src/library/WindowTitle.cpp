@@ -73,7 +73,7 @@ void WindowTitle::update(float fps, float lfps)
         out << " dumping";
 
     std::string new_title = orig_title + out.str();
-    set_title(new_title.c_str());
+    NATIVECALL(set_title(new_title.c_str()));
 
     /* Store updated values */
     last_running = shared_config.running;
