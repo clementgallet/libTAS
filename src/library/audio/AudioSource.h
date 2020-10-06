@@ -101,6 +101,7 @@ class AudioSource
             SOURCE_PLAYING,
             SOURCE_STOPPED,
             SOURCE_PAUSED,
+            SOURCE_UNDERRUN,
         };
         SourceState state;
 

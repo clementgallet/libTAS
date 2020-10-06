@@ -21,6 +21,7 @@
 * Add basic EGL support
 * Add commit version and date to window title
 * Add cubeb support
+* Implement ALSA underrun (#371)
 
 ### Changed
 

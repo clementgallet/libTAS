@@ -405,6 +405,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 /* Update the position in the buffer */
                 queue_index = finalIndex;
                 position = finalPos;
+                state = SOURCE_UNDERRUN;
             }
         }
 

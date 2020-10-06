@@ -381,6 +381,8 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
             return SND_PCM_STATE_PAUSED;
         case AudioSource::SOURCE_STOPPED:
             return SND_PCM_STATE_XRUN;
+        case AudioSource::SOURCE_UNDERRUN:
+            return SND_PCM_STATE_XRUN;
     }
 
     return SND_PCM_STATE_OPEN;
@@ -578,6 +580,7 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
     if ((source->state == AudioSource::SOURCE_INITIAL) ||
+        (source->state == AudioSource::SOURCE_UNDERRUN) ||
         (source->state == AudioSource::SOURCE_STOPPED))
         source->state = AudioSource::SOURCE_PREPARED;
 
