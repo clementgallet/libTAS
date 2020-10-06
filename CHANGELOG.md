@@ -20,6 +20,7 @@
 * Remove input events from window event masks (#365)
 * Add basic EGL support
 * Add commit version and date to window title
+* Add cubeb support
 
 ### Changed
 

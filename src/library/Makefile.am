@@ -43,6 +43,7 @@ libtas_so_SOURCES = \
     audio/DecoderMSADPCM.cpp \
     audio/alsa/control.cpp \
     audio/alsa/pcm.cpp \
+    audio/cubeb/cubeb.cpp \
     audio/fluidsynth/fluidsynth.cpp \
     audio/fmod/fmod.cpp \
     audio/openal/al.cpp \

@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
 #include "AudioBuffer.h"
 extern "C" {
 #include <libswresample/swresample.h>
@@ -118,7 +119,7 @@ class AudioSource
         /* In case of callback type, callback function.
          * We send as an argument a pointer to the buffer to refill.
          */
-        void (*callback)(AudioBuffer&);
+        std::function<void(AudioBuffer&)> callback;
 
         /* Helper function to convert ticks into a number of samples
          * in the audio buffer
