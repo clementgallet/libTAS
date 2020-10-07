@@ -1665,6 +1665,9 @@ void GameLoop::loopExit()
     /* Remove savestates because they are invalid on future instances of the game */
     remove_savestates(context);
 
+    /* Reset the frame count */
+    context->framecount = 0;
+
     /* wait on the game process to terminate */
     wait(nullptr);
 

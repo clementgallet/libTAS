@@ -853,9 +853,6 @@ void MainWindow::updateStatus()
             if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
                 movieBox->setEnabled(true);
             }
-            saveMovieAction->setEnabled(false);
-            exportMovieAction->setEnabled(false);
-
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
@@ -1113,6 +1110,10 @@ void MainWindow::updateMovieParams()
         }
 
         annotationsWindow->update();
+        inputEditorWindow->resetInputs();
+
+        saveMovieAction->setEnabled(true);
+        exportMovieAction->setEnabled(true);
     }
     else {
         context->config.sc.movie_framecount = 0;
@@ -1126,6 +1127,9 @@ void MainWindow::updateMovieParams()
             context->config.sc_modified = true;
         }
         annotationsWindow->clear();
+        
+        saveMovieAction->setEnabled(false);
+        exportMovieAction->setEnabled(false);
     }
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
