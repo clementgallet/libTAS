@@ -250,7 +250,6 @@ static void *pthread_start(void *arg)
         return orig::pthread_join(pthread_id, thread_return);
     }
 
-    ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
 
     debuglog(LCF_THREAD, "Joining thread id ", pthread_id, " tid " , ThreadManager::getThreadTid(pthread_id));
@@ -258,12 +257,10 @@ static void *pthread_start(void *arg)
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return ESRCH;
     }
 
     if (thread->detached) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return EINVAL;
     }
 
@@ -279,6 +276,7 @@ static void *pthread_start(void *arg)
         ret = orig::pthread_join(pthread_id, thread_return);
     }
 
+    ThreadSync::wrapperExecutionLockLock();
     ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
     return ret;
