@@ -20,11 +20,8 @@
 #ifndef LIBTAS_XINERAMA_H_INCL
 #define LIBTAS_XINERAMA_H_INCL
 
-#include "config.h"
-#ifdef LIBTAS_HAS_XINERAMA
-
 #include "../global.h"
-#include <X11/extensions/Xinerama.h>
+#include "../../external/X11/Xinerama.h"
 
 namespace libtas {
 
@@ -32,5 +29,4 @@ OVERRIDE XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number);
 
 }
 
-#endif
 #endif

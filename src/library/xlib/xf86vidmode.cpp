@@ -19,8 +19,6 @@
 
 #include "xf86vidmode.h"
 
-#ifdef LIBTAS_HAS_XF86VMODE
-
 #include "../hook.h"
 #include "../logging.h"
 
@@ -89,5 +87,3 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
 }
 
 }
-
-#endif

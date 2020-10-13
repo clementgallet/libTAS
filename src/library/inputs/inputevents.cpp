@@ -46,11 +46,6 @@
 #include <linux/joystick.h>
 #include <linux/input.h>
 
-
-#ifdef LIBTAS_HAS_XINPUT
-#include <X11/extensions/XInput2.h>
-#endif
-
 namespace libtas {
 
 void generateKeyUpEvents(void)
@@ -153,7 +148,6 @@ void generateKeyUpEvents(void)
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_RELEASE with keycode ", event.detail);
             }
 
-#ifdef LIBTAS_HAS_XINPUT
             if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
@@ -189,7 +183,6 @@ void generateKeyUpEvents(void)
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyRelease with keycode ", rev->detail);
             }
-#endif
         }
     }
 }
@@ -312,7 +305,6 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_PRESS with keycode ", event.detail);
             }
 
-#ifdef LIBTAS_HAS_XINPUT
             if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
@@ -348,7 +340,6 @@ void generateKeyDownEvents(void)
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyPress with keycode ", rev->detail);
             }
-#endif
         }
     }
 }
@@ -742,7 +733,6 @@ void generateMouseMotionEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     /* XIRAWEVENTS are special because they output raw pointer events */
-#ifdef LIBTAS_HAS_XINPUT
     if ((game_info.mouse & GameInfo::XIRAWEVENTS) &&
         ((game_unclipped_ai.pointer_x != old_game_unclipped_ai.pointer_x) || (game_unclipped_ai.pointer_y != old_game_unclipped_ai.pointer_y))) {
         XEvent event;
@@ -768,7 +758,6 @@ void generateMouseMotionEvents(void)
 
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_RawMotion");
     }
-#endif
 
     /* Check if we got a change in mouse position */
     if ((game_ai.pointer_x == old_game_ai.pointer_x) && (game_ai.pointer_y == old_game_ai.pointer_y))
@@ -850,7 +839,6 @@ void generateMouseMotionEvents(void)
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
     }
 
-#ifdef LIBTAS_HAS_XINPUT
     if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
@@ -875,8 +863,6 @@ void generateMouseMotionEvents(void)
 
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_Motion");
     }
-
-#endif
 }
 
 void generateMouseButtonEvents(void)
@@ -986,7 +972,6 @@ void generateMouseButtonEvents(void)
                 xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
             }
 
-#ifdef LIBTAS_HAS_XINPUT
             if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
@@ -1045,7 +1030,6 @@ void generateMouseButtonEvents(void)
                 rev->detail = bi+1;
                 xlibEventQueueList.insert(&event);
             }
-#endif
         }
     }
 }

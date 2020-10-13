@@ -18,7 +18,6 @@
  */
 
 #include "xinput.h"
-#ifdef LIBTAS_HAS_XINPUT
 
 #include "../hook.h"
 #include "../logging.h"
@@ -77,5 +76,3 @@ XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
 }
 
 }
-
-#endif

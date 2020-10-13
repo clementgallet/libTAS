@@ -20,11 +20,8 @@
 #ifndef LIBTAS_XRANDR_H_INCL
 #define LIBTAS_XRANDR_H_INCL
 
-#include "config.h"
-#ifdef LIBTAS_HAS_XRANDR
-
 #include "../global.h"
-#include <X11/extensions/Xrandr.h>
+#include "../../external/X11/Xrandr.h"
 
 namespace libtas {
 
@@ -48,5 +45,4 @@ OVERRIDE void XRRSetScreenSize (Display *dpy, Window window, int width, int heig
 
 }
 
-#endif
 #endif

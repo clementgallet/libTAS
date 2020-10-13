@@ -18,7 +18,6 @@
  */
 
 #include "xinerama.h"
-#ifdef LIBTAS_HAS_XINERAMA
 
 #include "../hook.h"
 #include "../logging.h"
@@ -46,5 +45,3 @@ XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
 }
 
 }
-
-#endif

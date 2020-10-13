@@ -20,11 +20,8 @@
 #ifndef LIBTAS_XINPUT_H_INCL
 #define LIBTAS_XINPUT_H_INCL
 
-#include "config.h"
-#ifdef LIBTAS_HAS_XINPUT
-
 #include "../global.h"
-#include <X11/extensions/XInput2.h>
+#include "../../external/X11/XInput2.h"
 
 namespace libtas {
 
@@ -35,5 +32,4 @@ OVERRIDE XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_r
 
 }
 
-#endif
 #endif

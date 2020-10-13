@@ -18,7 +18,6 @@
  */
 
 #include "xrandr.h"
-#ifdef LIBTAS_HAS_XRANDR
 
 #include "../hook.h"
 #include "../logging.h"
@@ -173,11 +172,12 @@ Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
         LINK_NAMESPACE(XRRListOutputProperties, "Xrandr");
         return orig::XRRListOutputProperties(dpy, output, nprop);
     }
+    
+    Atom *ret = orig::XRRListOutputProperties(dpy, output, nprop);
     *nprop = 0;
 
-    /* We need to return something that will be called with XFree(), and it
-     * cannot be NULL, so we use some function that allocates an Xlib object */
-    return reinterpret_cast<Atom*>(XAllocIconSize());
+    /* We need to return something that will be called with XFree() */
+    return ret;
 }
 
 Status XRRSetCrtcConfig (Display *dpy, XRRScreenResources *resources, RRCrtc crtc, Time timestamp, int x, int y, RRMode mode, Rotation rotation, RROutput *outputs, int noutputs)
@@ -207,5 +207,3 @@ void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int m
 
 
 }
-
-#endif

@@ -19,7 +19,6 @@
 
 #include "config.h"
 #ifdef LIBTAS_ENABLE_HUD
-#ifdef LIBTAS_HAS_VDPAU
 
 #ifndef LIBTAS_RENDERHUD_VDPAU_H_INCL
 #define LIBTAS_RENDERHUD_VDPAU_H_INCL
@@ -42,6 +41,5 @@ class RenderHUD_VDPAU : public RenderHUD
 };
 }
 
-#endif
 #endif
 #endif
