@@ -92,17 +92,17 @@ void *dlopen(const char *file, int mode) throw() {
     if (result)
         add_lib(file);
 
-    if (file != nullptr && std::string(file).find("wined3d.dll.so") != std::string::npos) {
+    if (result && file && std::string(file).find("wined3d.dll.so") != std::string::npos) {
         /* Hook wine wined3d functions */
         hook_wined3d();
     }
 
-    if (file != nullptr && std::string(file).find("user32.dll.so") != std::string::npos) {
+    if (result && file && std::string(file).find("user32.dll.so") != std::string::npos) {
         /* Hook wine user32 functions */
         hook_user32();
     }
 
-    if (file != nullptr && std::string(file).find("kernel32.dll.so") != std::string::npos) {
+    if (result && file && std::string(file).find("kernel32.dll.so") != std::string::npos) {
         /* Hook wine kernel32 functions */
         hook_kernel32();
     }
