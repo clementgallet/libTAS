@@ -18,8 +18,6 @@
  */
 
 #include "xshm.h"
-#ifdef LIBTAS_HAS_XRANDR
-
 #include "../hook.h"
 #include "../logging.h"
 #include "../GlobalState.h"
@@ -105,5 +103,3 @@ OVERRIDE Bool XShmPutImage(
 }
 
 }
-
-#endif

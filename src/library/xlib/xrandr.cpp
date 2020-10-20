@@ -204,6 +204,31 @@ void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int m
     /* We prevent games from changing the screen size */
 }
 
+void get_monitor_resolution(int& width, int& height)
+{
+    LINK_NAMESPACE(XRRGetScreenResourcesCurrent, "Xrandr");
+    LINK_NAMESPACE(XRRGetCrtcInfo, "Xrandr");
+    LINK_NAMESPACE(XRRFreeCrtcInfo, "Xrandr");
+    LINK_NAMESPACE(XRRFreeScreenResources, "Xrandr");
 
+    XRRScreenResources *screen_resources = nullptr;
+    XRRCrtcInfo *crtc_info = nullptr;
+    
+    for (int d=0; d<GAMEDISPLAYNUM; d++) {
+        if (gameDisplays[d]) {
+            screen_resources = orig::XRRGetScreenResourcesCurrent(gameDisplays[d], DefaultRootWindow(gameDisplays[d]));
+            crtc_info = orig::XRRGetCrtcInfo(gameDisplays[d], screen_resources, screen_resources->crtcs[0]);
+            break;
+        }
+    }
+    
+    width = crtc_info->width;
+    height = crtc_info->height;
+    
+    if (crtc_info)
+        orig::XRRFreeCrtcInfo(crtc_info);
+    if (screen_resources)
+        orig::XRRFreeScreenResources(screen_resources);
+}
 
 }

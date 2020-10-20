@@ -21,10 +21,9 @@
 #define LIBTAS_XSHM_H_INCL
 
 #include "config.h"
-#ifdef LIBTAS_HAS_XRANDR
 
 #include "../global.h"
-#include <X11/extensions/XShm.h>
+#include "../../external/X11/XShm.h"
 
 namespace libtas {
 
@@ -44,5 +43,4 @@ OVERRIDE Bool XShmPutImage(
 
 }
 
-#endif
 #endif

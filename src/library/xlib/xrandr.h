@@ -42,6 +42,9 @@ OVERRIDE Status XRRSetScreenConfig (Display *dpy, XRRScreenConfiguration *config
 OVERRIDE Status XRRSetScreenConfigAndRate (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, short rate, Time timestamp);
 OVERRIDE void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int mmWidth, int mmHeight);
 
+/* Get the first monitor resolution to simulate fullscreen switch while
+ * keeping windowed mode */
+void get_monitor_resolution(int& width, int& height);
 
 }
 

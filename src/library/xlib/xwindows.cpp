@@ -32,10 +32,7 @@
 #include "xatom.h"
 #include "../../external/mwm.h"
 #include "XlibEventQueueList.h"
-
-#ifdef LIBTAS_HAS_XRANDR
-#include <X11/extensions/Xrandr.h>
-#endif
+#include "xrandr.h"
 
 namespace libtas {
 
@@ -57,9 +54,6 @@ DEFINE_ORIG_POINTER(XQueryExtension);
 DEFINE_ORIG_POINTER(XChangeProperty);
 DEFINE_ORIG_POINTER(XSetWMHints);
 DEFINE_ORIG_POINTER(XTranslateCoordinates);
-#ifdef LIBTAS_HAS_XRANDR
-DECLARE_ORIG_POINTER(XRRSizes);
-#endif
 
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
     debuglogstdio(LCF_WINDOW, "%s called with name %s", __func__, name);
@@ -391,13 +385,10 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
                     XResizeWindow(display, w, shared_config.screen_width, shared_config.screen_height);
                 }
                 else {
-    #ifdef LIBTAS_HAS_XRANDR
                     /* Change the window size to monitor size */
-                    LINK_NAMESPACE(XRRSizes, "Xrandr");
-                    int nsizes;
-                    XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
-                    XResizeWindow(display, w, sizes[0].width, sizes[0].height);
-    #endif
+                    int fs_width, fs_height;
+                    get_monitor_resolution(fs_width, fs_height);
+                    XResizeWindow(display, w, fs_width, fs_height);
                 }
             }
             else if (atoms[i] == x11_atom(_NET_WM_STATE_ABOVE)) {

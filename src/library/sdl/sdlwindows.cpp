@@ -36,10 +36,7 @@
 #include "SDLEventQueue.h"
 #include "../openglwrappers.h" // checkMesa()
 #include "../checkpoint/ThreadManager.h"
-
-#ifdef LIBTAS_HAS_XRANDR
-#include <X11/extensions/Xrandr.h>
-#endif
+#include "../xlib/xrandr.h"
 
 namespace libtas {
 
@@ -64,9 +61,6 @@ DEFINE_ORIG_POINTER(SDL_UpdateRect);
 DECLARE_ORIG_POINTER(SDL_GL_SetAttribute);
 DECLARE_ORIG_POINTER(SDL_UpdateWindowSurface);
 DECLARE_ORIG_POINTER(SDL_UpdateWindowSurfaceRects);
-#ifdef LIBTAS_HAS_XRANDR
-DECLARE_ORIG_POINTER(XRRSizes);
-#endif
 
 
 /* SDL 1.2 */
@@ -307,19 +301,10 @@ static int swapInterval = 0;
         SDL_SetWindowSize(window, shared_config.screen_width, shared_config.screen_height);
     }
     else {
-#ifdef LIBTAS_HAS_XRANDR
         /* Change the window size to monitor size */
-        LINK_NAMESPACE(XRRSizes, "Xrandr");
-        int nsizes;
-        XRRScreenSize *sizes;
-        for (int d=0; d<GAMEDISPLAYNUM; d++) {
-            if (gameDisplays[d]) {
-                sizes = orig::XRRSizes(gameDisplays[d], 0, &nsizes);
-                SDL_SetWindowSize(window, sizes[0].width, sizes[0].height);
-                break;
-            }
-        }
-#endif
+        int fs_width, fs_height;
+        get_monitor_resolution(fs_width, fs_height);
+        SDL_SetWindowSize(window, fs_width, fs_height);
     }
 
     return 0; // success

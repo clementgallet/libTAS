@@ -28,9 +28,7 @@
 #include <X11/extensions/XInput2.h>
 #endif
 
-#ifdef LIBTAS_HAS_XRANDR
-#include <X11/extensions/Xrandr.h>
-#endif
+#include "xrandr.h"
 
 namespace libtas {
 
@@ -51,10 +49,6 @@ DEFINE_ORIG_POINTER(XFlush);
 DEFINE_ORIG_POINTER(XSync);
 DEFINE_ORIG_POINTER(XGetEventData);
 DEFINE_ORIG_POINTER(XFreeEventData);
-#ifdef LIBTAS_HAS_XRANDR
-DEFINE_ORIG_POINTER(XRRSizes);
-#endif
-
 
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (XEvent *event) {
@@ -502,13 +496,10 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
                     XResizeWindow(display, event_send->xclient.window, shared_config.screen_width, shared_config.screen_height);
                 }
                 else {
-    #ifdef LIBTAS_HAS_XRANDR
                     /* Change the window size to monitor size */
-                    LINK_NAMESPACE(XRRSizes, "Xrandr");
-                    int nsizes;
-                    XRRScreenSize *sizes = orig::XRRSizes(display, 0, &nsizes);
-                    XResizeWindow(display, event_send->xclient.window, sizes[0].width, sizes[0].height);
-    #endif
+                    int fs_width, fs_height;
+                    get_monitor_resolution(fs_width, fs_height);
+                    XResizeWindow(display, event_send->xclient.window, fs_width, fs_height);
                 }
                 return 0;
             }

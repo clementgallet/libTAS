@@ -40,6 +40,7 @@
 * Check native events when XCheck*Event() returns nothing
 * Free ScreenCapture when glx context is destroyed
 * Prevent recursive calls to dlsym (#369)
+* Fix getting monitor resolution for fake fullscreen
 
 ## [1.4.0] - 2020-06-19
 ### Added
