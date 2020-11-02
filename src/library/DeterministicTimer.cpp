@@ -164,9 +164,9 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
              * to advance the time.
              * This decrements addedDelay by (basically) how much it advances ticks
              */
+            std::function<void()> dummy_draw;
     #ifdef LIBTAS_ENABLE_HUD
             static RenderHUD dummy;
-            std::function<void()> dummy_draw;
             frameBoundary(dummy_draw, dummy);
     #else
             frameBoundary(dummy_draw);
