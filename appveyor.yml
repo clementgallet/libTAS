@@ -18,6 +18,10 @@ build_script:
 after_build:
 - sh: sudo mv ../libtas*.deb ./
 - sh: for f in libtas*.deb; do mv $f ${f/_amd/_${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
+- sh: for f in libtas-dbgsym*.ddeb; do mv $f ${f/_amd/_${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
 artifacts:
 - path: libtas*.deb
   name: libtas
+
+- path: libtas-dbgsym*.ddeb
+  name: libtas-dbgsym
