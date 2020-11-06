@@ -22,6 +22,8 @@
 #include "../hook.h"
 #include "../logging.h"
 
+#include <X11/Xlibint.h> // Xmalloc
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XRRGetScreenResources);
@@ -173,11 +175,10 @@ Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
         return orig::XRRListOutputProperties(dpy, output, nprop);
     }
     
-    Atom *ret = orig::XRRListOutputProperties(dpy, output, nprop);
     *nprop = 0;
 
     /* We need to return something that will be called with XFree() */
-    return ret;
+    return static_cast<Atom*>(Xmalloc(8));
 }
 
 Status XRRSetCrtcConfig (Display *dpy, XRRScreenResources *resources, RRCrtc crtc, Time timestamp, int x, int y, RRMode mode, Rotation rotation, RROutput *outputs, int noutputs)
