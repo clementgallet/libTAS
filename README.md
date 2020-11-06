@@ -4,6 +4,8 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 Discord server: https://discord.gg/3MBVAzU
 
+Additional documentation on tasvideos.org: http://tasvideos.org/EmulatorResources/LibTAS.html
+
 ## Supported Games
 
 Initial work was done to support games using the SDL library (which is the case of many indie games), but other engines are supported now.
