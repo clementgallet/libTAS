@@ -18,6 +18,8 @@
  */
 
 #include "isteamuserstats.h"
+#include "CCallback.h"
+#include "CCallbackManager.h"
 #include "../logging.h"
 #include <string.h>
 
@@ -26,6 +28,14 @@ namespace libtas {
 bool ISteamUserStats::RequestCurrentStats()
 {
     DEBUGLOGCALL(LCF_STEAM);
+
+    struct UserStatsReceived_t user_stats_received;
+    user_stats_received.m_nGameID = 105600; // TODO
+    user_stats_received.m_eResult = 1; // k_EResultOK
+    user_stats_received.m_steamIDUser = 1; // TODO
+    
+    CCallbackManager::DispatchCallbackOutput(STEAM_CALLBACK_TYPE_USER_STATS_USER_STATS_RECEIVED, &user_stats_received, sizeof(user_stats_received));
+    
     return true;
 }
 
@@ -135,7 +145,19 @@ const char *ISteamUserStats::GetAchievementName( unsigned int iAchievement )
 SteamAPICall_t ISteamUserStats::RequestUserStats( CSteamID steamIDUser )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return 1;
+
+    SteamAPICall_t api_call = CCallbackManager::AwaitApiCallResultOutput();
+
+    struct UserStatsReceived_t user_stats_received;
+    bool io_failure = false;
+
+    user_stats_received.m_nGameID = 105600; // TODO
+    user_stats_received.m_eResult = 1; // k_EResultOK
+    user_stats_received.m_steamIDUser = steamIDUser; // TODO
+    
+    CCallbackManager::DispatchApiCallResultOutput(api_call, STEAM_CALLBACK_TYPE_USER_STATS_USER_STATS_RECEIVED, io_failure, &user_stats_received, sizeof(user_stats_received));
+    
+    return api_call;
 }
 
 bool ISteamUserStats::GetUserStat( CSteamID steamIDUser, const char *pchName, int *pData )

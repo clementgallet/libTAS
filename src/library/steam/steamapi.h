@@ -33,6 +33,8 @@
 #include "isteamugc.h"
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
+#include "CCallback.h"
+#include "CCallbackManager.h"
 
 namespace libtas {
 
@@ -71,12 +73,12 @@ OVERRIDE bool SteamAPI_InitSafe();
 OVERRIDE void SteamAPI_RunCallbacks();
 
 // functions used by the utility CCallback objects to receive callbacks
-OVERRIDE void SteamAPI_RegisterCallback( void *pCallback, int iCallback );
-OVERRIDE void SteamAPI_UnregisterCallback( void *pCallback );
+OVERRIDE void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_type iCallback );
+OVERRIDE void SteamAPI_UnregisterCallback( CCallbackBase *pCallback );
 
 // Internal functions used by the utility CCallResult objects to receive async call results
-OVERRIDE void SteamAPI_RegisterCallResult( void *pCallback, SteamAPICall_t hAPICall );
-OVERRIDE void SteamAPI_UnregisterCallResult( void *pCallback, SteamAPICall_t hAPICall );
+OVERRIDE void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall );
+OVERRIDE void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall );
 
 
 OVERRIDE ISteamClient *SteamClient();

@@ -35,6 +35,7 @@ typedef void SteamUGCDetails_t;
 typedef void FriendGameInfo_t;
 typedef void LeaderboardEntry_t;
 
+typedef int EResult;
 typedef int EVoiceResult;
 typedef int EBeginAuthSessionResult;
 typedef int EUserHasLicenseForAppResult;

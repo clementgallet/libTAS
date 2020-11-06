@@ -9,12 +9,20 @@
 
 #include <stdint.h>
 #include "steamtypes.h"
+#include "CCallback.h"
 
 namespace libtas {
 
 typedef uint64_t SteamLeaderboard_t;
 typedef uint64_t SteamLeaderboardEntries_t;
 typedef uint64_t UGCHandle_t;
+
+struct __attribute__((packed, aligned(1))) UserStatsReceived_t
+{
+    uint64_t m_nGameID __attribute__((aligned(4)));
+    EResult m_eResult __attribute__((aligned(4)));
+    CSteamID m_steamIDUser __attribute__((aligned(4)));
+};
 
 class ISteamUserStats
 {

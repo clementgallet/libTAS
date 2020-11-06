@@ -111,6 +111,8 @@ libtas_so_SOURCES = \
     sdl/sdltimer.cpp \
     sdl/sdlversion.cpp \
     sdl/sdlwindows.cpp \
+    steam/CCallback.cpp \
+    steam/CCallbackManager.cpp \
     steam/isteamapps.cpp \
     steam/isteamclient.cpp \
     steam/isteamcontroller.cpp \
