@@ -112,11 +112,13 @@ static bool SteamGetInterfaceVersion()
 
     /* Load SteamAPI library */
     void* h;
-    h = dlopen("libsteam_api.so", RTLD_NOLOAD);
-    if (!h) h = dlopen("libsteam_api64.so", RTLD_NOLOAD);
+    dlerror();
+    h = dlopen("libsteam_api.so", RTLD_LAZY);
+    if (!h) h = dlopen("libsteam_api64.so", RTLD_LAZY);
 
     if (!h) {
-        debuglog(LCF_STEAM | LCF_WARNING, "Could not load Steam library");
+        char* error = dlerror();
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Could not load Steam library: %s", error?error:"");
         return false;
     }
 
