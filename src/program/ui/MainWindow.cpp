@@ -1110,7 +1110,6 @@ void MainWindow::updateMovieParams()
         }
 
         annotationsWindow->update();
-        inputEditorWindow->resetInputs();
 
         saveMovieAction->setEnabled(true);
         exportMovieAction->setEnabled(true);
@@ -1131,6 +1130,7 @@ void MainWindow::updateMovieParams()
         saveMovieAction->setEnabled(false);
         exportMovieAction->setEnabled(false);
     }
+    inputEditorWindow->resetInputs();
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
     authorField->setText(context->authors.c_str());

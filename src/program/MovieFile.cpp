@@ -110,6 +110,10 @@ int MovieFile::extractMovie()
 
 int MovieFile::loadMovie(const std::string& moviefile)
 {
+    /* Clear structures */
+    input_list.clear();
+    input_set.clear();
+    
 	/* Extract the moviefile in the temp directory */
 	int ret = extractMovie(moviefile);
 	if (ret < 0)
@@ -165,7 +169,6 @@ int MovieFile::loadMovie(const std::string& moviefile)
 	config.endGroup();
 
 	int size = config.beginReadArray("input_names");
-    input_set.clear();
     for (int i = 0; i < size; ++i) {
         config.setArrayIndex(i);
         SingleInput si = config.value("input").value<SingleInput>();
@@ -179,8 +182,6 @@ int MovieFile::loadMovie(const std::string& moviefile)
     std::string input_file = context->config.tempmoviedir + "/inputs";
     std::ifstream input_stream(input_file);
     std::string line;
-
-    input_list.clear();
 
     while (std::getline(input_stream, line)) {
         if (!line.empty() && (line[0] == '|')) {
