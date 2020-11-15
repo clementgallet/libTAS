@@ -42,6 +42,7 @@ DEFINE_ORIG_POINTER(pthread_join);
 DEFINE_ORIG_POINTER(pthread_detach);
 DEFINE_ORIG_POINTER(pthread_tryjoin_np);
 DEFINE_ORIG_POINTER(pthread_timedjoin_np);
+DEFINE_ORIG_POINTER(pthread_cond_init);
 DEFINE_ORIG_POINTER(pthread_cond_wait);
 DEFINE_ORIG_POINTER(pthread_cond_timedwait);
 DEFINE_ORIG_POINTER(pthread_cond_signal);
@@ -55,6 +56,7 @@ DEFINE_ORIG_POINTER(sem_timedwait);
 DEFINE_ORIG_POINTER(sem_trywait);
 DEFINE_ORIG_POINTER(pthread_attr_setstack);
 DEFINE_ORIG_POINTER(pthread_condattr_setclock);
+DEFINE_ORIG_POINTER(pthread_condattr_getclock);
 DEFINE_ORIG_POINTER(pthread_setname_np);
 
 /* We create a specific exception for thread exit calls */
@@ -90,8 +92,6 @@ extern "C" {
   // any libc internal state in thread-local storage.
   extern void __libc_thread_freeres();
 }
-
-static clockid_t cond_clock_id = CLOCK_REALTIME;
 
 static void *pthread_start(void *arg)
 {
@@ -425,6 +425,32 @@ static void *pthread_start(void *arg)
     return ETIMEDOUT;
 }
 
+static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
+    static std::map<pthread_cond_t*, clockid_t> condClocks;
+    return condClocks;
+}
+
+/* Override */ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) throw()
+{
+    LINK_NAMESPACE_VERSION(pthread_cond_init, "pthread", "GLIBC_2.3.2");
+    if (GlobalState::isNative())
+        return orig::pthread_cond_init(cond, cond_attr);
+
+    debuglog(LCF_WAIT, __func__, " call with cond ", static_cast<void*>(cond));
+
+    /* Store the clock if one is set for `pthread_cond_timedwait()` */
+    if (cond_attr) {        
+        clockid_t clock_id;
+        LINK_NAMESPACE(pthread_condattr_getclock, "pthread");
+        orig::pthread_condattr_getclock(cond_attr, &clock_id);
+        
+        std::map<pthread_cond_t*, clockid_t>& condClocks = getCondClock();
+        condClocks[cond] = clock_id;
+    }
+
+    return orig::pthread_cond_init(cond, cond_attr);
+}
+
 /* Override */ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
     LINK_NAMESPACE_VERSION(pthread_cond_wait, "pthread", "GLIBC_2.3.2");
@@ -447,12 +473,20 @@ static void *pthread_start(void *arg)
 
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
 
+    /* Get clock_id of cond */
+    clockid_t clock_id = CLOCK_REALTIME;
+    const std::map<pthread_cond_t*, clockid_t>& condClocks = getCondClock();
+
+    auto it = condClocks.find(cond);
+    if (it != condClocks.end())
+        clock_id = it->second;
+
     /* Convert the abstime variable because pthread_cond_timedwait() is using
      * the real system time. */
     struct timespec new_abstime = *abstime;
     TimeHolder abs_timeout = *abstime;
     TimeHolder real_time;
-    NATIVECALL(clock_gettime(cond_clock_id, &real_time));
+    NATIVECALL(clock_gettime(clock_id, &real_time));
     TimeHolder rel_timeout = abs_timeout - real_time;
     /* We presume that the game won't call pthread_cond_timedwait() with
      * a negative time, or more than 10 seconds.
@@ -464,7 +498,7 @@ static void *pthread_start(void *arg)
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
         debuglog(LCF_WAIT, " Rel time was ", 1000*new_rel_timeout.tv_sec + new_rel_timeout.tv_nsec/1000000, " ms.");
-        debuglog(LCF_WAIT, " New abs time is ", 1000*new_abstime.tv_sec + new_abstime.tv_nsec/1000000, " ms.");
+        debuglog(LCF_WAIT, " New abs time is ", new_abstime.tv_sec, ".", new_abstime.tv_nsec/1000000, " s");
     }
 
     /* If not main thread, do not change the behavior */
@@ -609,12 +643,9 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
 int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) throw()
 {
     LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
-    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT);
+    debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
 
     int ret = orig::pthread_condattr_setclock(attr, clock_id);
-    if (ret == 0)
-        cond_clock_id = clock_id;
-
     return ret;
 }
 

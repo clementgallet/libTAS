@@ -63,6 +63,10 @@ OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
    __THROW.  */
 OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
+/* Initialize condition variable COND using attributes ATTR, or use
+   the default values if later is NULL.  */
+OVERRIDE int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) throw();
+
 /* Wake up one thread waiting for condition variable COND.  */
 OVERRIDE int pthread_cond_signal (pthread_cond_t *cond) throw();
 
