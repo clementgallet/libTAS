@@ -257,11 +257,6 @@ static thread_local int origUsrMaskThread = 0;
 
     DEBUGLOGCALL(LCF_SIGNAL);
 
-    /* Our checkpoint code uses altstacks, so we must prevent the game from
-     * changing the altstack at the same time.
-     */
-    ThreadSync::wrapperExecutionLockLock();
-
     if (ss) {
         debuglog(LCF_SIGNAL, "    Setting altstack with base address ", ss->ss_sp, " and size ", ss->ss_size);
     }
@@ -270,8 +265,6 @@ static thread_local int origUsrMaskThread = 0;
     }
 
     int ret = orig::sigaltstack(ss, oss);
-
-    ThreadSync::wrapperExecutionLockUnlock();
 
     return ret;
 }
