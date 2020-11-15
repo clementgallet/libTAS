@@ -25,6 +25,7 @@
 * Implement Steam callback mechanism
 * Implement Steam Networking
 * Implement more of Steam remote storage
+* Implement dirent API
 
 ### Changed
 

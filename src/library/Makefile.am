@@ -62,6 +62,7 @@ libtas_so_SOURCES = \
     checkpoint/ThreadSync.cpp \
     encoding/AVEncoder.cpp \
     encoding/NutMuxer.cpp \
+    fileio/dirwrappers.cpp \
     fileio/FileHandleList.cpp \
     fileio/generaliowrappers.cpp \
     fileio/posixiowrappers.cpp \

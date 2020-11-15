@@ -199,7 +199,7 @@ bool ISteamRemoteStorage_SetSyncPlatforms( void* iface, const char *pchFile, ERe
 
 UGCFileWriteStreamHandle_t ISteamRemoteStorage_FileWriteStreamOpen( void* iface, const char *pchFile )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    debuglogstdio(LCF_STEAM, "%s called with file %s", __func__, pchFile);
     
     std::string path = steamremotestorage;
     path += "/";
@@ -214,7 +214,7 @@ UGCFileWriteStreamHandle_t ISteamRemoteStorage_FileWriteStreamOpen( void* iface,
 
 bool ISteamRemoteStorage_FileWriteStreamWriteChunk( void* iface, UGCFileWriteStreamHandle_t writeHandle, const void *pvData, int cubData )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    debuglogstdio(LCF_STEAM, "%s called with file handke %ull and size %d", __func__, writeHandle, cubData);
     
     ssize_t ret = write(writeHandle, pvData, cubData);
     
@@ -223,7 +223,7 @@ bool ISteamRemoteStorage_FileWriteStreamWriteChunk( void* iface, UGCFileWriteStr
 
 bool ISteamRemoteStorage_FileWriteStreamClose( void* iface, UGCFileWriteStreamHandle_t writeHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    debuglogstdio(LCF_STEAM, "%s called with file handke %ull", __func__, writeHandle);
 
     int ret = close(writeHandle);
 
@@ -302,12 +302,16 @@ int ISteamRemoteStorage_GetFileCount(void* iface)
         return 0;
 
     int filecount = 0;
-    while (readdir(d) != NULL) {
-        filecount++;
+    struct dirent *dir;
+    while ((dir = readdir(d)) != nullptr) {
+        /* Skip the special files `..` and `.` */
+        if (strcmp(dir->d_name, "..") != 0 && strcmp(dir->d_name, ".") != 0)
+            filecount++;
     }
     
     closedir(d);
 
+    debuglogstdio(LCF_STEAM, "   return file count %d", filecount);
 	return filecount;
 }
 
@@ -323,11 +327,18 @@ const char *ISteamRemoteStorage_GetFileNameAndSize( void* iface, int iFile, int 
     if (!d)
         return 0;
 
-    struct dirent *dir = readdir(d);
-    
-    for (int i=0; i<iFile && dir!=nullptr; i++) {
+    struct dirent *dir;
+    int i = 0;
+
+    do {
         dir = readdir(d);
-    }
+
+        /* Skip the special files `..` and `.` */
+        while (dir != nullptr && strcmp(dir->d_name, "..") != 0 && strcmp(dir->d_name, ".") != 0)
+            dir = readdir(d);
+
+        i++;
+    } while (dir != nullptr && i <= iFile);
 
     closedir(d);
 
@@ -337,6 +348,8 @@ const char *ISteamRemoteStorage_GetFileNameAndSize( void* iface, int iFile, int 
     }
 
     *pnFileSizeInBytes = ISteamRemoteStorage_GetFileSize(iface, dir->d_name);
+    debuglogstdio(LCF_STEAM, "   return file %s and size %d", dir->d_name, *pnFileSizeInBytes);
+
     return dir->d_name;
 }
 

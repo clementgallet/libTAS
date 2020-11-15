@@ -276,6 +276,32 @@ bool isSaveFileRemoved(const char *file)
     return true;
 }
 
+std::string getSaveFileInsideDir(std::string dir, int n)
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    
+    if (dir.back() != '/')
+        dir.push_back('/');
+        
+    int index = 0;
+    
+    for (const auto& savefile : savefiles) {
+        if (savefile->filename.find(dir, 0) == std::string::npos)
+            continue;
+
+        std::string relfile = savefile->filename.substr(dir.size());
+
+        /* Skip based on index */
+        if (index == n)
+            return relfile;
+            
+        index++;
+    }
+
+    return "";
+}
 
 }
 
