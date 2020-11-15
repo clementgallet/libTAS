@@ -121,6 +121,7 @@ libtas_so_SOURCES = \
 	steam/isteamgameserver.cpp \
     steam/isteamhttp.cpp \
     steam/isteammatchmaking.cpp \
+    steam/isteamnetworking.cpp \
     steam/isteamremotestorage/isteamremotestorage.cpp \
     steam/isteamremotestorage/isteamremotestorage001.cpp \
     steam/isteamremotestorage/isteamremotestorage012.cpp \

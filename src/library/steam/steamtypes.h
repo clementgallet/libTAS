@@ -34,6 +34,7 @@ typedef uint32_t PartnerId_t;
 typedef void SteamUGCDetails_t;
 typedef void FriendGameInfo_t;
 typedef void LeaderboardEntry_t;
+typedef void P2PSessionState_t;
 
 typedef int EResult;
 typedef int EVoiceResult;
@@ -78,6 +79,13 @@ typedef int HTTPCookieContainerHandle;
 typedef int EHTTPMethod;
 typedef int EHTTPStatusCode;
 typedef int EServerMode;
+
+typedef int EP2PSessionError;
+typedef int EP2PSend;
+typedef uint32_t SNetSocket_t;
+typedef uint32_t SNetListenSocket_t;
+typedef int ESNetSocketState;
+typedef int ESNetSocketConnectionType;
 
 typedef void* HServerListRequest;
 typedef int HServerQuery;

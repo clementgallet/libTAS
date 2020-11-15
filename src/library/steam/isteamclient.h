@@ -21,10 +21,10 @@
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
 #include "isteamgameserver.h"
+#include "isteamnetworking.h"
 
 namespace libtas {
 
-typedef void ISteamNetworking;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

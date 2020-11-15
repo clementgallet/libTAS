@@ -21,6 +21,7 @@
 #include "isteamcontroller.h"
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
+#include "isteamnetworking.h"
 
 namespace libtas {
 
@@ -29,7 +30,6 @@ OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
 OVERRIDE void * SteamInternal_ContextInit( void *pContextInitData );
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 
-typedef void ISteamNetworking;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

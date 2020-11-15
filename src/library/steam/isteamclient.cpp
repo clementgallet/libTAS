@@ -128,7 +128,7 @@ ISteamApps *ISteamClient::GetISteamApps( HSteamUser hSteamUser, HSteamPipe hStea
 ISteamNetworking *ISteamClient::GetISteamNetworking( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamNetworking();
 }
 
 ISteamRemoteStorage *ISteamClient::GetISteamRemoteStorage( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )

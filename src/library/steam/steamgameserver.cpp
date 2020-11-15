@@ -87,11 +87,12 @@ ISteamUtils *SteamGameServerUtils()
 
 ISteamNetworking *SteamGameServerNetworking()
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
+    DEBUGLOGCALL(LCF_STEAM);
     if (!shared_config.virtual_steam)
         return nullptr;
 
-    return nullptr;
+    static ISteamNetworking steamgameservernetworking;
+    return &steamgameservernetworking;
 }
 
 ISteamGameServerStats *SteamGameServerStats()

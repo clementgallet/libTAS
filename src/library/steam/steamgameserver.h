@@ -28,6 +28,7 @@
 #include "isteamugc.h"
 #include "isteamhttp.h"
 #include "isteamgameserver.h"
+#include "isteamnetworking.h"
 
 namespace libtas {
 
@@ -68,7 +69,6 @@ OVERRIDE uint64_t SteamGameServer_GetSteamID();
 // which calls into a Steamworks API should retrieve the interface from a global accessor.
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 
-typedef void ISteamNetworking;
 typedef void ISteamGameServerStats;
 typedef void ISteamInventory;
 

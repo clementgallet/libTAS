@@ -33,6 +33,7 @@
 #include "isteamugc.h"
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
+#include "isteamnetworking.h"
 #include "CCallback.h"
 #include "CCallbackManager.h"
 
@@ -91,7 +92,6 @@ OVERRIDE ISteamFriends *SteamFriends();
 OVERRIDE ISteamScreenshots *SteamScreenshots();
 OVERRIDE ISteamUGC *SteamUGC();
 
-typedef void ISteamNetworking;
 typedef void ISteamAppList;
 typedef void ISteamMusic;
 typedef void ISteamMusicRemote;

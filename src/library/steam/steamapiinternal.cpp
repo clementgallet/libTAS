@@ -56,6 +56,7 @@ void * SteamInternal_ContextInit( void *pContextInitData )
     context.m_pSteamMatchmaking = SteamMatchmaking();
     context.m_pSteamMatchmakingServers = SteamMatchmakingServers();
     context.m_pSteamHTTP = SteamHTTP();
+    context.m_pSteamNetworking = SteamNetworking();
     return &context;
 }
 

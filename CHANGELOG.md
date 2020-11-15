@@ -23,6 +23,7 @@
 * Add cubeb support
 * Implement ALSA underrun (#371)
 * Implement Steam callback mechanism
+* Implement Steam Networking
 
 ### Changed
 
