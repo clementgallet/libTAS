@@ -28,6 +28,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h> 
 
 namespace libtas {
 
@@ -198,26 +199,45 @@ bool ISteamRemoteStorage_SetSyncPlatforms( void* iface, const char *pchFile, ERe
 
 UGCFileWriteStreamHandle_t ISteamRemoteStorage_FileWriteStreamOpen( void* iface, const char *pchFile )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return 1;
+    DEBUGLOGCALL(LCF_STEAM);
+    
+    std::string path = steamremotestorage;
+    path += "/";
+    path += pchFile;
+
+    /* We don't use the native `open` function, so that we handle the
+     * "prevent writing to disk" feature without extra work. */
+    int fd = open(path.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    
+	return fd;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamWriteChunk( void* iface, UGCFileWriteStreamHandle_t writeHandle, const void *pvData, int cubData )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return true;
+    DEBUGLOGCALL(LCF_STEAM);
+    
+    ssize_t ret = write(writeHandle, pvData, cubData);
+    
+	return ret == cubData;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamClose( void* iface, UGCFileWriteStreamHandle_t writeHandle )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return true;
+
+    int ret = close(writeHandle);
+
+	return ret == 0;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamCancel( void* iface, UGCFileWriteStreamHandle_t writeHandle )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return true;
+
+    /* TODO: Not good, should not write or overwrite file */
+    int ret = close(writeHandle);
+
+	return ret == 0;
 }
 
 bool ISteamRemoteStorage_FileExists( void* iface, const char *pchFile )
@@ -271,14 +291,53 @@ ERemoteStoragePlatform ISteamRemoteStorage_GetSyncPlatforms( void* iface, const 
 
 int ISteamRemoteStorage_GetFileCount(void* iface)
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return 0;
+    DEBUGLOGCALL(LCF_STEAM);
+    
+    std::string path = steamremotestorage;
+    path += "/";
+    
+    DIR *d = opendir(path.c_str());
+    
+    if (!d)
+        return 0;
+
+    int filecount = 0;
+    while (readdir(d) != NULL) {
+        filecount++;
+    }
+    
+    closedir(d);
+
+	return filecount;
 }
 
 const char *ISteamRemoteStorage_GetFileNameAndSize( void* iface, int iFile, int *pnFileSizeInBytes )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-	return "";
+    DEBUGLOGCALL(LCF_STEAM);
+
+    std::string path = steamremotestorage;
+    path += "/";
+    
+    DIR *d = opendir(path.c_str());
+    
+    if (!d)
+        return 0;
+
+    struct dirent *dir = readdir(d);
+    
+    for (int i=0; i<iFile && dir!=nullptr; i++) {
+        dir = readdir(d);
+    }
+
+    closedir(d);
+
+    if (dir == nullptr) {
+        *pnFileSizeInBytes = 0;
+        return "";
+    }
+
+    *pnFileSizeInBytes = ISteamRemoteStorage_GetFileSize(iface, dir->d_name);
+    return dir->d_name;
 }
 
 bool ISteamRemoteStorage_GetQuota( void* iface, uint64_t *pnTotalBytes, uint64_t *puAvailableBytes )
