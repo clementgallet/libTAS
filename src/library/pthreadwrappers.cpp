@@ -613,8 +613,29 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_timedwait(sem, abstime);
 
-    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT | LCF_TODO);
-    return orig::sem_timedwait(sem, abstime);
+    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with sem ", static_cast<void*>(sem), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
+
+    /* Convert the abstime variable because sem_timedwait() is using
+     * the real system time. */
+    struct timespec new_abstime = *abstime;
+    TimeHolder abs_timeout = *abstime;
+    TimeHolder real_time;
+    NATIVECALL(clock_gettime(CLOCK_REALTIME, &real_time));
+    TimeHolder rel_timeout = abs_timeout - real_time;
+    /* We presume that the game won't call sem_timedwait() with
+     * a negative time, or more than 10 seconds.
+     */
+    if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
+        /* Change the reference time to real system time */
+        TimeHolder fake_time = detTimer.getTicks();
+        TimeHolder new_rel_timeout = abs_timeout - fake_time;
+        TimeHolder new_abs_timeout = real_time + new_rel_timeout;
+        new_abstime = new_abs_timeout;
+        debuglog(LCF_WAIT, " Rel time was ", 1000*new_rel_timeout.tv_sec + new_rel_timeout.tv_nsec/1000000, " ms.");
+        debuglog(LCF_WAIT, " New abs time is ", new_abstime.tv_sec, ".", new_abstime.tv_nsec/1000000, " s");
+    }
+
+    return orig::sem_timedwait(sem, &new_abstime);
 }
 
 /* Override */ int sem_trywait (sem_t *sem) throw()
