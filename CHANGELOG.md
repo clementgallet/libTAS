@@ -49,6 +49,7 @@
 * Save clock_id per conditional variable
 * sem_timedwait converts timeout relative to real time
 * Forked processes are set to native
+* Support spaces in commandline argument (#333)
 
 ## [1.4.0] - 2020-06-19
 ### Added

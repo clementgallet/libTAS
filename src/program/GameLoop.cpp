@@ -254,37 +254,40 @@ void GameLoop::launchGameThread()
         arg_list.push_back(context->gamepath);
     }
 
-    /* Parse the game command-line arguments */
-    std::istringstream iss(context->config.gameargs);
-    std::string arg;
-    while (iss >> arg) {
-        arg_list.push_back(arg);
-    }
+    /* Argument string for sh */
+    std::ostringstream sharg;
 
-    /* Build the char* array for execv */
-    std::vector<char*> arg_vect;
-    for (const std::string& elem : arg_list) {
-        /* The const_cast is bad, but execv has no reason to modify it, no ? */
-        arg_vect.push_back(const_cast<char*>(elem.c_str()));
-    }
-    arg_vect.push_back(NULL);
-
-    /* Set LD_PRELOAD just before execv, so we don't preload other processes */
+    /* Prepend LD_PRELOAD */
     if (!context->attach_gdb) {
         /* Set the LD_PRELOAD environment variable to inject our lib to the game */
+        sharg << "LD_PRELOAD=";
         if (!context->old_ld_preload.empty()) {
-            std::string new_ld_preload = context->libtaspath;
-            new_ld_preload += ":";
-            new_ld_preload += context->old_ld_preload;
-            setenv("LD_PRELOAD", new_ld_preload.c_str(), 1);
+            sharg << context->libtaspath << ":" << context->old_ld_preload << " ";
         }
         else {
-            setenv("LD_PRELOAD", context->libtaspath.c_str(), 1);
+            sharg << context->libtaspath << " ";
         }
     }
 
-    /* Run the actual game */
-    execv(arg_vect[0], &arg_vect[0]);
+    /* Escape and concatenate arguments */
+    for (std::string arg : arg_list) {
+        /* Replace all occurrences of `'` with `'\'''` */
+        const std::string escape_string = "'\\''";
+        size_t pos = arg.find("'");
+        while(pos != std::string::npos) {
+            arg.replace(pos, 1, escape_string);
+            pos = arg.find("'", pos + escape_string.size());
+        }
+
+        /* Add to the argument string with enclosed `'` and space */
+        sharg << "'" << arg << "' ";
+    }
+
+    /* Append the game command-line arguments */
+    sharg << context->config.gameargs;
+
+    /* Run the actual game with sh, taking care of splitting arguments */
+    execlp("sh", "sh", "-c", sharg.str().c_str(), nullptr);
 }
 
 void GameLoop::start()
