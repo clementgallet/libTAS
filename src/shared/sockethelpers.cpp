@@ -199,7 +199,7 @@ int receiveMessage()
     int msg;
     int ret = receiveData(&msg, sizeof(int));
 #ifdef SOCKET_LOG
-    libtas::debuglogstdio(LCF_SOCKET, "Receive socket message %d", ret);
+    libtas::debuglogstdio(LCF_SOCKET, "Receive socket message %d", msg);
 #endif
 
     if (ret < 0)

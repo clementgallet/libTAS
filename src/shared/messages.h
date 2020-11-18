@@ -54,6 +54,12 @@ enum {
     MSGN_PREVIEW_INPUTS,
 
     /*
+     * Send config struct size
+     * Argument: int
+     */
+    MSGN_CONFIG_SIZE,
+
+    /*
      * Send config
      * Argument: struct SharedConfig
      */

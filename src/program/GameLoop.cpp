@@ -533,6 +533,11 @@ void GameLoop::initProcessMessages()
 
     /* Send informations to the game */
 
+    /* Send shared config size */
+    sendMessage(MSGN_CONFIG_SIZE);
+    int config_size = sizeof(SharedConfig);
+    sendData(&config_size, sizeof(int));
+
     /* Send shared config */
 
     /* This is a bit hackish, change the initial time to the current time before

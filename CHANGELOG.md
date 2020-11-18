@@ -26,6 +26,7 @@
 * Implement Steam Networking
 * Implement more of Steam remote storage
 * Implement dirent API
+* Check for shared config size between program and library
 
 ### Changed
 

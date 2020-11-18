@@ -106,14 +106,21 @@ void __attribute__((constructor)) init(void)
     sendMessage(MSGB_END_INIT);
 
     /* Receive information from the program */
-    int message;
-    receiveData(&message, sizeof(int));
+    int message = receiveMessage();
     while (message != MSGN_END_INIT) {
         std::string basesavestatepath;
         std::string steamuserdatapath;
         std::string steamremotestorage;
         int index;
+        int config_size;
         switch (message) {
+            case MSGN_CONFIG_SIZE:
+                debuglog(LCF_SOCKET, "Receiving config size");
+                receiveData(&config_size, sizeof(int));
+                if (config_size != sizeof(SharedConfig)) {
+                    debuglog(LCF_SOCKET | LCF_ERROR, "Shared config size mismatch between program and library!");                    
+                }
+                break;
             case MSGN_CONFIG:
                 debuglog(LCF_SOCKET, "Receiving config");
                 receiveData(&shared_config, sizeof(SharedConfig));
@@ -147,7 +154,7 @@ void __attribute__((constructor)) init(void)
                 debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);
                 exit(1);
         }
-        receiveData(&message, sizeof(int));
+        message = receiveMessage();
     }
 
     /* Set the frame count to the initial frame count */
