@@ -73,6 +73,11 @@ DEFINE_ORIG_POINTER(fork);
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             gameDisplays[i] = nullptr;
         }
+        
+        /* We are not interested in the forked process, make it run native.
+         * Fix one Unity game (Stephen Sausage Roll), where forked process
+         * closes a pipe handle and can softlock on mutex. */
+        GlobalState::setNative(true);
     }
     return pid;
 }
