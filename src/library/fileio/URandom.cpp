@@ -83,6 +83,7 @@ int urandom_create_fd()
         /* Add signal handler for SIGIO signal */
         struct sigaction sigio;
         sigfillset(&sigio.sa_mask);
+        sigio.sa_flags = SA_RESTART;
         sigio.sa_handler = urandom_handler;
         MYASSERT(sigaction(SIGIO, &sigio, nullptr) == 0)
     }
