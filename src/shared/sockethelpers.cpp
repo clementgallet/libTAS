@@ -184,6 +184,13 @@ int receiveData(void* elem, unsigned int size)
         std::cerr << "recv() returns -1 with error " << strerror(errno) << std::endl;
 #endif
     }
+    else if (ret == 0) { // socket has been closed
+#ifdef SOCKET_LOG
+        libtas::debuglogstdio(LCF_SOCKET | LCF_WARNING, "recv() returns 0 -> socket closed");
+#else
+        std::cerr << "recv() returns 0 -> socket closed" << std::endl;
+#endif
+    }
     else if (ret != size) {
 #ifdef SOCKET_LOG
         libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() %u bytes instead of %u", ret, size);
@@ -201,7 +208,10 @@ int receiveMessage()
 #ifdef SOCKET_LOG
     libtas::debuglogstdio(LCF_SOCKET, "Receive socket message %d", msg);
 #endif
-
+    /* Handle special case for closed socket */
+    if (ret == 0)
+        return -2;
+        
     if (ret < 0)
         return ret;
     return msg;
@@ -216,6 +226,11 @@ int receiveMessageNonBlocking()
 #ifdef SOCKET_LOG
     libtas::debuglogstdio(LCF_SOCKET, "Receive non-blocking socket message %d", msg);
 #endif
+
+    /* Handle special case for closed socket */
+    if (ret == 0)
+        return -2;
+
     return msg;
 }
 

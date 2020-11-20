@@ -32,6 +32,7 @@
 
 * Add timeout to timer when main thread polls and timeout
 * Update input editor before game is launched (#340)
+* Handle game closing a bit more cleanly
 
 ### Fixed
 

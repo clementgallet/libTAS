@@ -698,6 +698,9 @@ bool GameLoop::startFrameMessages()
         case -1:
             std::cerr << "The connection to the game was lost. Exiting" << std::endl;
             return true;
+        case -2:
+            std::cerr << "The connection to the game was closed. Exiting" << std::endl;
+            return true;
         default:
             std::cerr << "Got unknown message!!!" << std::endl;
             return true;
