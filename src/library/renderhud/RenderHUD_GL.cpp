@@ -184,42 +184,44 @@ void RenderHUD_GL::renderText(const char* text, Color fg_color, Color bg_color, 
 
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
 
-    orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (surf) {
+        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels.data());
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glTexImage2D failed with error %d", error);
+        orig::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels.data());
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glTexImage2D failed with error %d", error);
 
-    orig::glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glFramebufferTexture2D failed with error %d", error);
+        orig::glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glFramebufferTexture2D failed with error %d", error);
 
-    /* Blit the textured framebuffer into the screen and flip y-coord */
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
+        /* Blit the textured framebuffer into the screen and flip y-coord */
+        int width, height;
+        ScreenCapture::getDimensions(width, height);
 
-    /* Change the coords so that the text fills on screen */
-    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
-    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
+        /* Change the coords so that the text fills on screen */
+        x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
+        y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
-    orig::glBlitFramebuffer(0, 0, surf->w, surf->h, x, height-y, x+surf->w, height-(y+surf->h),
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
+        orig::glBlitFramebuffer(0, 0, surf->w, surf->h, x, height-y, x+surf->w, height-(y+surf->h),
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
 
-    /* Restore the original draw/read framebuffers */
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+        /* Restore the original draw/read framebuffers */
+        orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+    }
 
     /* Restore previous binded texture and active texture unit */
     if (oldTex != 0) {

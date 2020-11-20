@@ -53,6 +53,9 @@ void RenderHUD_VDPAU::renderText(const char* text, Color fg_color, Color bg_colo
     // GlobalNative gn;
     std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
 
+    if (!surf)
+        return;
+
     /* Create Vdp bitmap surface */
     VdpBitmapSurface surface;
     VdpStatus status = orig::VdpBitmapSurfaceCreate(device, VDP_RGBA_FORMAT_B8G8R8A8, surf->w, surf->h, false, &surface);

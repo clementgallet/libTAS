@@ -50,6 +50,7 @@
 * sem_timedwait converts timeout relative to real time
 * Forked processes are set to native
 * Support spaces in commandline argument (#333)
+* Handle when no font was found (#376)
 
 ## [1.4.0] - 2020-06-19
 ### Added

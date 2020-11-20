@@ -116,6 +116,7 @@ void RenderHUD::initFonts()
         }
         else {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
+            shared_config.osd = 0;
         }
 
         if (fs) FcFontSetDestroy(fs);
@@ -124,6 +125,9 @@ void RenderHUD::initFonts()
 
 std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
 {
+    if (!fg_font)
+        return nullptr;
+
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
     std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
 
