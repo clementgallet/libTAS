@@ -573,6 +573,11 @@ static void receive_messages(std::function<void()> draw)
              * otherwise the game will appear as unresponsive. */
             pushNativeXlibEvents();
             pushNativeXcbEvents();
+            
+            /* Resume execution if game is exiting */
+            if (is_exiting)
+                return;
+            
             NATIVECALL(usleep(100));
 
             /* Catch dead children spawned for state saving */

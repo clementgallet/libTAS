@@ -309,9 +309,9 @@ void GameLoop::start()
         if (context->game_window ) do {
 
             /* Check if game is still running */
-            int ret = waitpid(context->game_pid, nullptr, WNOHANG);
-            if (ret == context->game_pid) {
-                emit alertToShow(QString("Game did not exit normally..."));
+            int ret = waitpid(context->fork_pid, nullptr, WNOHANG);
+            if (ret == context->fork_pid) {
+                emit alertToShow(QString("Game was closed"));
                 loopExit();
                 return;
             }
@@ -419,8 +419,8 @@ void GameLoop::init()
     removeSocket();
 
     /* We fork here so that the child process calls the game */
-    int pid = fork();
-    if (pid == 0) {
+    context->fork_pid = fork();
+    if (context->fork_pid == 0) {
         launchGameThread();
     }
 

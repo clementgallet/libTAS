@@ -80,6 +80,9 @@ struct Context {
     /* Name of the game executable */
     std::string gamename;
 
+    /* PID of the forked `sh` process which executes the game */
+    pid_t fork_pid;
+
     /* PID of the game */
     pid_t game_pid;
 
