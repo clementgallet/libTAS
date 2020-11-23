@@ -395,17 +395,24 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
 
-            if ((remainingSamples > 0) && (source != SOURCE_STREAMING_CONTINUOUS)) {
+            if (remainingSamples > 0) {
                 /* We reached the end of the buffer queue */
-                rewind();
-                state = SOURCE_STOPPED;
                 debuglog(LCF_SOUND, "  End of the queue reached");
+                if (source == SOURCE_STREAMING_CONTINUOUS) {
+                    /* Update the position in the buffer */
+                    queue_index = finalIndex;
+                    position = finalPos;
+                    state = SOURCE_UNDERRUN;
+                }
+                else {
+                    rewind();
+                    state = SOURCE_STOPPED;
+                }
             }
             else {
                 /* Update the position in the buffer */
                 queue_index = finalIndex;
                 position = finalPos;
-                state = SOURCE_UNDERRUN;
             }
         }
 
