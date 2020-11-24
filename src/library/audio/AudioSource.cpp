@@ -74,8 +74,6 @@ AudioSource::AudioSource(void)
 
     swr = orig::swr_alloc();
 
-    volume = 1.0f;
-    pitch = 1.0f;
     init();
 }
 
@@ -86,6 +84,8 @@ AudioSource::~AudioSource(void)
 
 void AudioSource::init(void)
 {
+    volume = 1.0f;
+    pitch = 1.0f;
     looping = false;
     source = SOURCE_UNDETERMINED;
     state = SOURCE_INITIAL;
