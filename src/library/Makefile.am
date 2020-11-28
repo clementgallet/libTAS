@@ -160,7 +160,7 @@ libtas_so_SOURCES = \
     ../shared/sockethelpers.cpp \
     ../external/lz4.cpp
 
-libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -Wall -fno-stack-protector
+libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
 libtas_so_CXXFLAGS += -DSOCKET_LOG
 libtas_so_LDFLAGS = -shared
 libtas_so_LDADD = $(LIBRARY_LIBS)

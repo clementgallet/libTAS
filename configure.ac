@@ -1,7 +1,7 @@
 dnl **** Initialization ****
 
 AC_INIT([libTAS], [1.4.0], [clement.gallet@ens-lyon.org])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_PROG_CXX
 AC_CONFIG_SRCDIR([src/program/main.cpp])
 AC_CONFIG_HEADERS([config.h])
