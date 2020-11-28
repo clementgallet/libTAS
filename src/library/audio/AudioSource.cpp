@@ -66,20 +66,23 @@ AudioSource::AudioSource(void)
     }
     /* Still test if it succeeded. */
     if (!orig::swr_alloc) {
-        debuglog(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc");
+        debuglog(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc, disable audio mixing");
+        swr = nullptr;
     }
+    else {
+        /* We link to swr_free here, because linking during destructor can softlock */
+        LINK_NAMESPACE(swr_free, "swresample");
 
-    /* We link to swr_free here, because linking during destructor can softlock */
-    LINK_NAMESPACE(swr_free, "swresample");
-
-    swr = orig::swr_alloc();
+        swr = orig::swr_alloc();        
+    }
 
     init();
 }
 
 AudioSource::~AudioSource(void)
 {
-    orig::swr_free(&swr);
+    if (orig::swr_free && swr)
+        orig::swr_free(&swr);
 }
 
 void AudioSource::init(void)
@@ -103,10 +106,12 @@ void AudioSource::rewind(void)
 
 void AudioSource::dirty(void)
 {
-    LINK_NAMESPACE(swr_is_initialized, "swresample");
-    LINK_NAMESPACE(swr_close, "swresample");
-    if (orig::swr_is_initialized(swr))
-        orig::swr_close(swr);
+    if (swr) {
+        LINK_NAMESPACE(swr_is_initialized, "swresample");
+        LINK_NAMESPACE(swr_close, "swresample");
+        if (orig::swr_is_initialized(swr))
+            orig::swr_close(swr);
+    }
 }
 
 int AudioSource::nbQueue()
@@ -197,10 +202,12 @@ bool AudioSource::willEnd(struct timespec ticks)
 
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
-    LINK_NAMESPACE(swr_is_initialized, "swresample");
-    LINK_NAMESPACE(swr_init, "swresample");
-    LINK_NAMESPACE(swr_convert, "swresample");
-    LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
+    if (swr) {
+        LINK_NAMESPACE(swr_is_initialized, "swresample");
+        LINK_NAMESPACE(swr_init, "swresample");
+        LINK_NAMESPACE(swr_convert, "swresample");
+        LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
+    }
 
     if (state != SOURCE_PLAYING)
         return -1;
@@ -210,8 +217,11 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     debuglog(LCF_SOUND, "Start mixing source ", id);
 
-    bool skipMixing = !shared_config.av_dumping && (shared_config.audio_mute ||
-        (shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_MIXING)));
+    bool skipMixing = (!swr) || 
+                        (!shared_config.av_dumping && 
+                            (shared_config.audio_mute ||
+                                (shared_config.fastforward && 
+                                    (shared_config.fastforward_mode & SharedConfig::FF_MIXING))));
 
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
