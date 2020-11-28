@@ -34,26 +34,28 @@
 #include "XlibEventQueueList.h"
 #include "xrandr.h"
 
+#include <vector>
+
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XCreateWindow);
-DEFINE_ORIG_POINTER(XCreateSimpleWindow);
-DEFINE_ORIG_POINTER(XDestroyWindow);
-DEFINE_ORIG_POINTER(XMapWindow);
-DEFINE_ORIG_POINTER(XUnmapWindow);
-DEFINE_ORIG_POINTER(XMapRaised);
-DEFINE_ORIG_POINTER(XStoreName);
-DEFINE_ORIG_POINTER(XSetWMName);
-DEFINE_ORIG_POINTER(XSelectInput);
-DEFINE_ORIG_POINTER(XMoveWindow);
-DEFINE_ORIG_POINTER(XResizeWindow);
-DEFINE_ORIG_POINTER(XConfigureWindow);
-DEFINE_ORIG_POINTER(XGetWindowAttributes);
-DEFINE_ORIG_POINTER(XChangeWindowAttributes);
-DEFINE_ORIG_POINTER(XQueryExtension);
-DEFINE_ORIG_POINTER(XChangeProperty);
-DEFINE_ORIG_POINTER(XSetWMHints);
-DEFINE_ORIG_POINTER(XTranslateCoordinates);
+DEFINE_ORIG_POINTER(XCreateWindow)
+DEFINE_ORIG_POINTER(XCreateSimpleWindow)
+DEFINE_ORIG_POINTER(XDestroyWindow)
+DEFINE_ORIG_POINTER(XMapWindow)
+DEFINE_ORIG_POINTER(XUnmapWindow)
+DEFINE_ORIG_POINTER(XMapRaised)
+DEFINE_ORIG_POINTER(XStoreName)
+DEFINE_ORIG_POINTER(XSetWMName)
+DEFINE_ORIG_POINTER(XSelectInput)
+DEFINE_ORIG_POINTER(XMoveWindow)
+DEFINE_ORIG_POINTER(XResizeWindow)
+DEFINE_ORIG_POINTER(XConfigureWindow)
+DEFINE_ORIG_POINTER(XGetWindowAttributes)
+DEFINE_ORIG_POINTER(XChangeWindowAttributes)
+DEFINE_ORIG_POINTER(XQueryExtension)
+DEFINE_ORIG_POINTER(XChangeProperty)
+DEFINE_ORIG_POINTER(XSetWMHints)
+DEFINE_ORIG_POINTER(XTranslateCoordinates)
 
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
     debuglogstdio(LCF_WINDOW, "%s called with name %s", __func__, name);
@@ -371,8 +373,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     /* Prevent games from intercepting ClientMessage focus events */
     if (property == x11_atom(_NET_WM_STATE)) {
         const Atom* atoms = reinterpret_cast<const Atom*>(data);
-        Atom newatoms[nelements];
-        int j = 0;
+        std::vector<Atom> newatoms;
         for (int i=0; i<nelements; i++) {
             if (atoms[i] == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 debuglogstdio(LCF_WINDOW, "   prevented fullscreen switching but resized the window");
@@ -395,10 +396,10 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
                 debuglogstdio(LCF_WINDOW, "   prevented window always on top");
             }
             else {
-                newatoms[j++] = atoms[i];
+                newatoms.push_back(atoms[i]);
             }
         }
-        return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms), j);
+        return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms.data()), newatoms.size());
     }
 
     /* Detect and disable several window state changes */
@@ -407,16 +408,13 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
         for (int i=0; i<nelements; i++) {
             if (atoms[i] == x11_atom(WM_TAKE_FOCUS)) {
                 debuglogstdio(LCF_WINDOW, "   removing WM_TAKE_FOCUS protocol");
-                Atom newatoms[nelements-1];
+                std::vector<Atom> newatoms;
                 for (int j=0; j<nelements-1; j++) {
-                    if (j<i) {
-                        newatoms[j] = atoms[j];
-                    }
-                    else {
-                        newatoms[j] = atoms[j+1];
+                    if (j!=i) {
+                        newatoms.push_back(atoms[j]);
                     }
                 }
-                return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms), nelements-1);
+                return orig::XChangeProperty(display, w, property, type, format, mode, reinterpret_cast<unsigned char*>(newatoms.data()), newatoms.size());
             }
         }
     }

@@ -24,7 +24,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XineramaQueryScreens);
+DEFINE_ORIG_POINTER(XineramaQueryScreens)
 
 XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
 {

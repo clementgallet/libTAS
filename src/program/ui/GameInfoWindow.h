@@ -28,7 +28,7 @@
 class GameInfoWindow : public QDialog {
     Q_OBJECT
 public:
-    GameInfoWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    GameInfoWindow(QWidget *parent = Q_NULLPTR);
 
 private:
     QLabel *videoLabel;

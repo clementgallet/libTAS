@@ -27,7 +27,7 @@
 
 #include "InputWindow.h"
 
-InputWindow::InputWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Input mapping");
 

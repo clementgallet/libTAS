@@ -26,7 +26,7 @@
 
 #include "AutoSaveWindow.h"
 
-AutoSaveWindow::AutoSaveWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+AutoSaveWindow::AutoSaveWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Autosave configuration");
 

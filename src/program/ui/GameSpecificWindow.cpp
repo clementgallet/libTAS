@@ -29,7 +29,7 @@
 
 #include <iostream>
 
-GameSpecificWindow::GameSpecificWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+GameSpecificWindow::GameSpecificWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Game-specific configuration");
 

@@ -42,7 +42,7 @@ DECLARE_ORIG_POINTER(glBlitFramebuffer)
 
 DECLARE_ORIG_POINTER(glUseProgram)
 DECLARE_ORIG_POINTER(glPixelStorei)
-DECLARE_ORIG_POINTER(glGetError);
+DECLARE_ORIG_POINTER(glGetError)
 
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;

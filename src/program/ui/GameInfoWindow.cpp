@@ -21,7 +21,7 @@
 #include "GameInfoWindow.h"
 #include "MainWindow.h"
 
-GameInfoWindow::GameInfoWindow(QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags)
+GameInfoWindow::GameInfoWindow(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle("Game information");
 

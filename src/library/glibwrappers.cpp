@@ -27,8 +27,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(g_cond_wait);
-DEFINE_ORIG_POINTER(g_cond_wait_until);
+DEFINE_ORIG_POINTER(g_cond_wait)
+DEFINE_ORIG_POINTER(g_cond_wait_until)
 
 /* Override */ void g_cond_wait (GCond *cond, GMutex *mutex)
 {

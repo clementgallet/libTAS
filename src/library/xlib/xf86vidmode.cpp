@@ -24,8 +24,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XF86VidModeGetModeLine);
-DEFINE_ORIG_POINTER(XF86VidModeGetAllModeLines);
+DEFINE_ORIG_POINTER(XF86VidModeGetModeLine)
+DEFINE_ORIG_POINTER(XF86VidModeGetAllModeLines)
 
 Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidModeModeLine* modeline)
 {

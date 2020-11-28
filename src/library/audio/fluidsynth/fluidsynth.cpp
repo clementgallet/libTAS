@@ -23,10 +23,10 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(fluid_settings_getstr_default);
-DEFINE_ORIG_POINTER(fluid_settings_setstr);
-DEFINE_ORIG_POINTER(new_fluid_settings);
-DEFINE_ORIG_POINTER(fluid_audio_driver_register);
+DEFINE_ORIG_POINTER(fluid_settings_getstr_default)
+DEFINE_ORIG_POINTER(fluid_settings_setstr)
+DEFINE_ORIG_POINTER(new_fluid_settings)
+DEFINE_ORIG_POINTER(fluid_audio_driver_register)
 
 static const char* alsa_driver = "alsa";
 

@@ -38,23 +38,23 @@ VdpStatus VdpPresentationQueueDestroy(VdpPresentationQueue presentation_queue);
 VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, VdpOutputSurface surface, uint32_t clip_width, uint32_t clip_height, VdpTime earliest_presentation_time);
 VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue presentation_queue, VdpOutputSurface surface, VdpTime *first_presentation_time);
 
-DEFINE_ORIG_POINTER(vdp_device_create_x11);
-DEFINE_ORIG_POINTER(VdpPresentationQueueTargetCreateX11);
-DEFINE_ORIG_POINTER(VdpPresentationQueueCreate);
-DEFINE_ORIG_POINTER(VdpPresentationQueueDestroy);
-DEFINE_ORIG_POINTER(VdpPresentationQueueDisplay);
-DEFINE_ORIG_POINTER(VdpPresentationQueueBlockUntilSurfaceIdle);
+DEFINE_ORIG_POINTER(vdp_device_create_x11)
+DEFINE_ORIG_POINTER(VdpPresentationQueueTargetCreateX11)
+DEFINE_ORIG_POINTER(VdpPresentationQueueCreate)
+DEFINE_ORIG_POINTER(VdpPresentationQueueDestroy)
+DEFINE_ORIG_POINTER(VdpPresentationQueueDisplay)
+DEFINE_ORIG_POINTER(VdpPresentationQueueBlockUntilSurfaceIdle)
 
-DEFINE_ORIG_POINTER(VdpBitmapSurfaceCreate);
-DEFINE_ORIG_POINTER(VdpBitmapSurfaceDestroy);
-DEFINE_ORIG_POINTER(VdpBitmapSurfacePutBitsNative);
-DEFINE_ORIG_POINTER(VdpOutputSurfaceRenderBitmapSurface);
+DEFINE_ORIG_POINTER(VdpBitmapSurfaceCreate)
+DEFINE_ORIG_POINTER(VdpBitmapSurfaceDestroy)
+DEFINE_ORIG_POINTER(VdpBitmapSurfacePutBitsNative)
+DEFINE_ORIG_POINTER(VdpOutputSurfaceRenderBitmapSurface)
 
-DEFINE_ORIG_POINTER(VdpOutputSurfaceGetParameters);
-DEFINE_ORIG_POINTER(VdpOutputSurfaceCreate);
-DEFINE_ORIG_POINTER(VdpOutputSurfaceDestroy);
-DEFINE_ORIG_POINTER(VdpOutputSurfaceRenderOutputSurface);
-DEFINE_ORIG_POINTER(VdpOutputSurfaceGetBitsNative);
+DEFINE_ORIG_POINTER(VdpOutputSurfaceGetParameters)
+DEFINE_ORIG_POINTER(VdpOutputSurfaceCreate)
+DEFINE_ORIG_POINTER(VdpOutputSurfaceDestroy)
+DEFINE_ORIG_POINTER(VdpOutputSurfaceRenderOutputSurface)
+DEFINE_ORIG_POINTER(VdpOutputSurfaceGetBitsNative)
 
 namespace orig {
     VdpGetProcAddress* GetProcAddress = nullptr;

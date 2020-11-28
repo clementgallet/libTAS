@@ -27,7 +27,7 @@
 
 #include "RamWatchWindow.h"
 
-RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Ram Watch");
 

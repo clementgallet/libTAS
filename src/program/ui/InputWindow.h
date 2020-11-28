@@ -30,7 +30,7 @@
 class InputWindow : public QDialog {
     Q_OBJECT
 public:
-    InputWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    InputWindow(Context *c, QWidget *parent = Q_NULLPTR);
     Context *context;
 
     QSize sizeHint() const override;

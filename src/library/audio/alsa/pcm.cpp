@@ -32,91 +32,91 @@ namespace libtas {
 
 static int buffer_size = 4096; // in samples
 
-DEFINE_ORIG_POINTER(snd_pcm_open);
-DEFINE_ORIG_POINTER(snd_pcm_open_lconf);
-DEFINE_ORIG_POINTER(snd_pcm_open_fallback);
+DEFINE_ORIG_POINTER(snd_pcm_open)
+DEFINE_ORIG_POINTER(snd_pcm_open_lconf)
+DEFINE_ORIG_POINTER(snd_pcm_open_fallback)
 
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_count);
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors);
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_revents);
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_count)
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors)
+DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_revents)
 
-DEFINE_ORIG_POINTER(snd_pcm_info);
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_current);
-DEFINE_ORIG_POINTER(snd_pcm_sw_params);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_sizeof);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_any);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_current);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_access);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask);
+DEFINE_ORIG_POINTER(snd_pcm_info)
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_current)
+DEFINE_ORIG_POINTER(snd_pcm_sw_params)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_sizeof)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_any)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_current)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_access)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask)
 
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_min);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_max);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_min)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_max)
 
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_size);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_time_min);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_time_near);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_size_near);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_periods_near);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_periods);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_size)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_time_min)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_time_near)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_size_near)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_periods_near)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_periods)
 
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_time_max);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_time_near);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_time_max)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_time_near)
 
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_min);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_max);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_channels);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_free);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy);
-DEFINE_ORIG_POINTER(snd_pcm_get_params);
-DEFINE_ORIG_POINTER(snd_pcm_set_params);
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_min)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_max)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_channels)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_free)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy)
+DEFINE_ORIG_POINTER(snd_pcm_get_params)
+DEFINE_ORIG_POINTER(snd_pcm_set_params)
 
-DEFINE_ORIG_POINTER(snd_pcm_prepare);
-DEFINE_ORIG_POINTER(snd_pcm_writei);
-DEFINE_ORIG_POINTER(snd_pcm_readi);
-DEFINE_ORIG_POINTER(snd_pcm_nonblock);
-DEFINE_ORIG_POINTER(snd_pcm_close);
-DEFINE_ORIG_POINTER(snd_pcm_recover);
-DEFINE_ORIG_POINTER(snd_pcm_reset);
+DEFINE_ORIG_POINTER(snd_pcm_prepare)
+DEFINE_ORIG_POINTER(snd_pcm_writei)
+DEFINE_ORIG_POINTER(snd_pcm_readi)
+DEFINE_ORIG_POINTER(snd_pcm_nonblock)
+DEFINE_ORIG_POINTER(snd_pcm_close)
+DEFINE_ORIG_POINTER(snd_pcm_recover)
+DEFINE_ORIG_POINTER(snd_pcm_reset)
 
-DEFINE_ORIG_POINTER(snd_pcm_mmap_begin);
-DEFINE_ORIG_POINTER(snd_pcm_mmap_commit);
+DEFINE_ORIG_POINTER(snd_pcm_mmap_begin)
+DEFINE_ORIG_POINTER(snd_pcm_mmap_commit)
 
-DEFINE_ORIG_POINTER(snd_pcm_start);
-DEFINE_ORIG_POINTER(snd_pcm_drop);
-DEFINE_ORIG_POINTER(snd_pcm_state);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_can_pause);
-DEFINE_ORIG_POINTER(snd_pcm_pause);
-DEFINE_ORIG_POINTER(snd_pcm_resume);
-DEFINE_ORIG_POINTER(snd_pcm_wait);
-DEFINE_ORIG_POINTER(snd_pcm_delay);
-DEFINE_ORIG_POINTER(snd_pcm_avail_update);
-DEFINE_ORIG_POINTER(snd_pcm_rewind);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_format);
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_channels);
+DEFINE_ORIG_POINTER(snd_pcm_start)
+DEFINE_ORIG_POINTER(snd_pcm_drop)
+DEFINE_ORIG_POINTER(snd_pcm_state)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_can_pause)
+DEFINE_ORIG_POINTER(snd_pcm_pause)
+DEFINE_ORIG_POINTER(snd_pcm_resume)
+DEFINE_ORIG_POINTER(snd_pcm_wait)
+DEFINE_ORIG_POINTER(snd_pcm_delay)
+DEFINE_ORIG_POINTER(snd_pcm_avail_update)
+DEFINE_ORIG_POINTER(snd_pcm_rewind)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_format)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_channels)
 
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof);
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold);
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_stop_threshold);
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_avail_min);
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof)
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold)
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_stop_threshold)
+DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_avail_min)
 
-DEFINE_ORIG_POINTER(snd_pcm_get_chmap);
+DEFINE_ORIG_POINTER(snd_pcm_get_chmap)
 
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_malloc);
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_free);
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_test);
+DEFINE_ORIG_POINTER(snd_pcm_format_mask_malloc)
+DEFINE_ORIG_POINTER(snd_pcm_format_mask_free)
+DEFINE_ORIG_POINTER(snd_pcm_format_mask_test)
 
-DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes);
+DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes)
 
 static int get_latency(snd_pcm_t *pcm);
 

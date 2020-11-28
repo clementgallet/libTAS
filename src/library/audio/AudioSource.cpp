@@ -31,13 +31,13 @@ namespace libtas {
 /* Link dynamically to avutil/swresample functions, because there are different
  * library versions depending on your distro.
  */
-DEFINE_ORIG_POINTER(swr_alloc);
-DEFINE_ORIG_POINTER(swr_free);
-DEFINE_ORIG_POINTER(swr_is_initialized);
-DEFINE_ORIG_POINTER(swr_close);
-DEFINE_ORIG_POINTER(swr_init);
-DEFINE_ORIG_POINTER(swr_alloc_set_opts);
-DEFINE_ORIG_POINTER(swr_convert);
+DEFINE_ORIG_POINTER(swr_alloc)
+DEFINE_ORIG_POINTER(swr_free)
+DEFINE_ORIG_POINTER(swr_is_initialized)
+DEFINE_ORIG_POINTER(swr_close)
+DEFINE_ORIG_POINTER(swr_init)
+DEFINE_ORIG_POINTER(swr_alloc_set_opts)
+DEFINE_ORIG_POINTER(swr_convert)
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)

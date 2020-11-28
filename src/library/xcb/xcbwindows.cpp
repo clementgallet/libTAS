@@ -28,17 +28,17 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(xcb_create_window_checked);
-DEFINE_ORIG_POINTER(xcb_create_window);
-DEFINE_ORIG_POINTER(xcb_create_window_aux_checked);
-DEFINE_ORIG_POINTER(xcb_create_window_aux);
-DEFINE_ORIG_POINTER(xcb_destroy_window_checked);
-DEFINE_ORIG_POINTER(xcb_destroy_window);
+DEFINE_ORIG_POINTER(xcb_create_window_checked)
+DEFINE_ORIG_POINTER(xcb_create_window)
+DEFINE_ORIG_POINTER(xcb_create_window_aux_checked)
+DEFINE_ORIG_POINTER(xcb_create_window_aux)
+DEFINE_ORIG_POINTER(xcb_destroy_window_checked)
+DEFINE_ORIG_POINTER(xcb_destroy_window)
 
-DEFINE_ORIG_POINTER(xcb_map_window_checked);
-DEFINE_ORIG_POINTER(xcb_map_window);
-DEFINE_ORIG_POINTER(xcb_unmap_window_checked);
-DEFINE_ORIG_POINTER(xcb_unmap_window);
+DEFINE_ORIG_POINTER(xcb_map_window_checked)
+DEFINE_ORIG_POINTER(xcb_map_window)
+DEFINE_ORIG_POINTER(xcb_unmap_window_checked)
+DEFINE_ORIG_POINTER(xcb_unmap_window)
 
 OVERRIDE xcb_void_cookie_t
 xcb_create_window_checked (xcb_connection_t *c,

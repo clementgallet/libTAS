@@ -38,7 +38,7 @@ namespace Checkpoint
     int checkCheckpoint();
     int checkRestore();
     void handler(int signum);
-};
+}
 }
 
 #endif

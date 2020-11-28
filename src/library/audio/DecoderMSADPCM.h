@@ -49,7 +49,7 @@ namespace DecoderMSADPCM
      * @return The calculated PCM sample
      */
     int16_t calculateSample(uint8_t nibble, uint8_t predictor, int16_t& sample1, int16_t& sample2, int16_t& delta);
-};
+}
 }
 
 #endif

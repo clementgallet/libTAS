@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_GetWindowID);
+DECLARE_ORIG_POINTER(SDL_GetWindowID)
 
 SDL_Window *SDL_GetMouseFocus(void)
 {

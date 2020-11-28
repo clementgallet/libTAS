@@ -25,10 +25,10 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XOpenDisplay);
-DEFINE_ORIG_POINTER(XCloseDisplay);
-DEFINE_ORIG_POINTER(XDisplayHeight);
-DEFINE_ORIG_POINTER(XDisplayWidth);
+DEFINE_ORIG_POINTER(XOpenDisplay)
+DEFINE_ORIG_POINTER(XCloseDisplay)
+DEFINE_ORIG_POINTER(XDisplayHeight)
+DEFINE_ORIG_POINTER(XDisplayWidth)
 
 Display *XOpenDisplay(const char *display_name)
 {

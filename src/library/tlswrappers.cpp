@@ -23,10 +23,10 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(pthread_key_create);
-DEFINE_ORIG_POINTER(pthread_key_delete);
-DEFINE_ORIG_POINTER(pthread_getspecific);
-DEFINE_ORIG_POINTER(pthread_setspecific);
+DEFINE_ORIG_POINTER(pthread_key_create)
+DEFINE_ORIG_POINTER(pthread_key_delete)
+DEFINE_ORIG_POINTER(pthread_getspecific)
+DEFINE_ORIG_POINTER(pthread_setspecific)
 
 /* We declare our map static inside a function, so that we ensure it is
  * constructed when we call the function. */

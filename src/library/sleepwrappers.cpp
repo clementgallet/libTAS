@@ -30,9 +30,9 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(nanosleep);
-DEFINE_ORIG_POINTER(clock_nanosleep);
-DEFINE_ORIG_POINTER(sched_yield);
+DEFINE_ORIG_POINTER(nanosleep)
+DEFINE_ORIG_POINTER(clock_nanosleep)
+DEFINE_ORIG_POINTER(sched_yield)
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {

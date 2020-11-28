@@ -31,8 +31,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_DYNAPI_entry);
-#define SDL_LINK(FUNC) DEFINE_ORIG_POINTER(FUNC);
+DEFINE_ORIG_POINTER(SDL_DYNAPI_entry)
+#define SDL_LINK(FUNC) DEFINE_ORIG_POINTER(FUNC)
 #define SDL_HOOK(FUNC)
 #include "sdlhooks.h"
 

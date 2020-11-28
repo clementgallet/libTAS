@@ -27,7 +27,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(clock_gettime);
+DEFINE_ORIG_POINTER(clock_gettime)
 
 /* Override */ time_t time(time_t* t) throw()
 {

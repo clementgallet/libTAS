@@ -23,7 +23,7 @@
 #include "AnnotationsWindow.h"
 #include "MainWindow.h"
 
-AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Annotations");
 

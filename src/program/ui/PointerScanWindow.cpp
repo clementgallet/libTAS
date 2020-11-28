@@ -33,7 +33,7 @@
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
-PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Pointer Scan");
 

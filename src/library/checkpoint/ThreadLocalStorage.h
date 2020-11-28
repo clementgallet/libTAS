@@ -43,7 +43,7 @@ namespace ThreadLocalStorage
 {
     void saveTLSState(ThreadTLSInfo *tlsInfo);
     void restoreTLSState(ThreadTLSInfo *tlsInfo);
-};
+}
 }
 
 #endif

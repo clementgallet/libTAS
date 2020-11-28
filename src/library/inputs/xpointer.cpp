@@ -27,7 +27,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XQueryPointer);
+DEFINE_ORIG_POINTER(XQueryPointer)
 
 /* Override */ Bool XQueryPointer( Display* display, Window w,
         Window* root_return, Window* child_return,

@@ -29,7 +29,7 @@
 
 #include <iostream>
 
-EncodeWindow::EncodeWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Encoding configuration");
 

@@ -30,15 +30,15 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(xcb_wait_for_event);
-DEFINE_ORIG_POINTER(xcb_poll_for_event);
-DEFINE_ORIG_POINTER(xcb_send_event_checked);
-DEFINE_ORIG_POINTER(xcb_send_event);
-DEFINE_ORIG_POINTER(xcb_flush);
+DEFINE_ORIG_POINTER(xcb_wait_for_event)
+DEFINE_ORIG_POINTER(xcb_poll_for_event)
+DEFINE_ORIG_POINTER(xcb_send_event_checked)
+DEFINE_ORIG_POINTER(xcb_send_event)
+DEFINE_ORIG_POINTER(xcb_flush)
 #ifdef LIBTAS_HAS_XCB_RANDR
-DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_unchecked);
-DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_reply);
-DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_sizes);
+DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_unchecked)
+DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_reply)
+DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_sizes)
 #endif
 
 /* Function to indicate if an event is filtered */

@@ -32,7 +32,7 @@ class GameSpecificWindow : public QDialog {
     Q_OBJECT
 
 public:
-    GameSpecificWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    GameSpecificWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     /* Update UI elements when the config has changed */
     void update_config();

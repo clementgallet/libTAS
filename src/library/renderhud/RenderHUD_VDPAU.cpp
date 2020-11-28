@@ -27,10 +27,10 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(VdpBitmapSurfaceCreate);
-DECLARE_ORIG_POINTER(VdpBitmapSurfaceDestroy);
-DECLARE_ORIG_POINTER(VdpBitmapSurfacePutBitsNative);
-DECLARE_ORIG_POINTER(VdpOutputSurfaceRenderBitmapSurface);
+DECLARE_ORIG_POINTER(VdpBitmapSurfaceCreate)
+DECLARE_ORIG_POINTER(VdpBitmapSurfaceDestroy)
+DECLARE_ORIG_POINTER(VdpBitmapSurfacePutBitsNative)
+DECLARE_ORIG_POINTER(VdpOutputSurfaceRenderBitmapSurface)
 
 // RenderHUD_VDPAU::~RenderHUD_SDL2_renderer()
 // {

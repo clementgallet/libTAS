@@ -23,8 +23,8 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_CreateThread);
-DECLARE_ORIG_POINTER(SDL_WaitThread);
+DECLARE_ORIG_POINTER(SDL_CreateThread)
+DECLARE_ORIG_POINTER(SDL_WaitThread)
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {

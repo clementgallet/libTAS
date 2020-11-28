@@ -28,10 +28,10 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(poll);
-DEFINE_ORIG_POINTER(select);
-DEFINE_ORIG_POINTER(pselect);
-DEFINE_ORIG_POINTER(epoll_wait);
+DEFINE_ORIG_POINTER(poll)
+DEFINE_ORIG_POINTER(select)
+DEFINE_ORIG_POINTER(pselect)
+DEFINE_ORIG_POINTER(epoll_wait)
 
 /* Override */ int poll (struct pollfd *fds, nfds_t nfds, int timeout)
 {

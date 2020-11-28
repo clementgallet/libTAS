@@ -25,7 +25,7 @@
 
 #include "ExecutableWindow.h"
 
-ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Executable Options");
 

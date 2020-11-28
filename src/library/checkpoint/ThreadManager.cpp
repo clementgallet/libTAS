@@ -77,7 +77,7 @@ void ThreadManager::init()
     }
 }
 
-DEFINE_ORIG_POINTER(pthread_self);
+DEFINE_ORIG_POINTER(pthread_self)
 
 pthread_t ThreadManager::getThreadId()
 {

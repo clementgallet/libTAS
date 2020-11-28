@@ -29,21 +29,21 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(signal);
-DEFINE_ORIG_POINTER(sigblock);
-DEFINE_ORIG_POINTER(sigsetmask);
-DEFINE_ORIG_POINTER(siggetmask);
-DEFINE_ORIG_POINTER(sigprocmask);
-DEFINE_ORIG_POINTER(sigsuspend);
-DEFINE_ORIG_POINTER(sigaction);
-DEFINE_ORIG_POINTER(sigpending);
-DEFINE_ORIG_POINTER(sigwait);
-DEFINE_ORIG_POINTER(sigwaitinfo);
-DEFINE_ORIG_POINTER(sigtimedwait);
-DEFINE_ORIG_POINTER(sigaltstack);
-DEFINE_ORIG_POINTER(pthread_sigmask);
-DEFINE_ORIG_POINTER(pthread_kill);
-DEFINE_ORIG_POINTER(pthread_sigqueue);
+DEFINE_ORIG_POINTER(signal)
+DEFINE_ORIG_POINTER(sigblock)
+DEFINE_ORIG_POINTER(sigsetmask)
+DEFINE_ORIG_POINTER(siggetmask)
+DEFINE_ORIG_POINTER(sigprocmask)
+DEFINE_ORIG_POINTER(sigsuspend)
+DEFINE_ORIG_POINTER(sigaction)
+DEFINE_ORIG_POINTER(sigpending)
+DEFINE_ORIG_POINTER(sigwait)
+DEFINE_ORIG_POINTER(sigwaitinfo)
+DEFINE_ORIG_POINTER(sigtimedwait)
+DEFINE_ORIG_POINTER(sigaltstack)
+DEFINE_ORIG_POINTER(pthread_sigmask)
+DEFINE_ORIG_POINTER(pthread_kill)
+DEFINE_ORIG_POINTER(pthread_sigqueue)
 
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;

@@ -36,28 +36,28 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(pthread_create);
-DEFINE_ORIG_POINTER(pthread_exit);
-DEFINE_ORIG_POINTER(pthread_join);
-DEFINE_ORIG_POINTER(pthread_detach);
-DEFINE_ORIG_POINTER(pthread_tryjoin_np);
-DEFINE_ORIG_POINTER(pthread_timedjoin_np);
-DEFINE_ORIG_POINTER(pthread_cond_init);
-DEFINE_ORIG_POINTER(pthread_cond_wait);
-DEFINE_ORIG_POINTER(pthread_cond_timedwait);
-DEFINE_ORIG_POINTER(pthread_cond_signal);
-DEFINE_ORIG_POINTER(pthread_cond_broadcast);
-DEFINE_ORIG_POINTER(pthread_setcancelstate);
-DEFINE_ORIG_POINTER(pthread_setcanceltype);
-DEFINE_ORIG_POINTER(pthread_cancel);
-DEFINE_ORIG_POINTER(pthread_testcancel);
-DEFINE_ORIG_POINTER(sem_wait);
-DEFINE_ORIG_POINTER(sem_timedwait);
-DEFINE_ORIG_POINTER(sem_trywait);
-DEFINE_ORIG_POINTER(pthread_attr_setstack);
-DEFINE_ORIG_POINTER(pthread_condattr_setclock);
-DEFINE_ORIG_POINTER(pthread_condattr_getclock);
-DEFINE_ORIG_POINTER(pthread_setname_np);
+DEFINE_ORIG_POINTER(pthread_create)
+DEFINE_ORIG_POINTER(pthread_exit)
+DEFINE_ORIG_POINTER(pthread_join)
+DEFINE_ORIG_POINTER(pthread_detach)
+DEFINE_ORIG_POINTER(pthread_tryjoin_np)
+DEFINE_ORIG_POINTER(pthread_timedjoin_np)
+DEFINE_ORIG_POINTER(pthread_cond_init)
+DEFINE_ORIG_POINTER(pthread_cond_wait)
+DEFINE_ORIG_POINTER(pthread_cond_timedwait)
+DEFINE_ORIG_POINTER(pthread_cond_signal)
+DEFINE_ORIG_POINTER(pthread_cond_broadcast)
+DEFINE_ORIG_POINTER(pthread_setcancelstate)
+DEFINE_ORIG_POINTER(pthread_setcanceltype)
+DEFINE_ORIG_POINTER(pthread_cancel)
+DEFINE_ORIG_POINTER(pthread_testcancel)
+DEFINE_ORIG_POINTER(sem_wait)
+DEFINE_ORIG_POINTER(sem_timedwait)
+DEFINE_ORIG_POINTER(sem_trywait)
+DEFINE_ORIG_POINTER(pthread_attr_setstack)
+DEFINE_ORIG_POINTER(pthread_condattr_setclock)
+DEFINE_ORIG_POINTER(pthread_condattr_getclock)
+DEFINE_ORIG_POINTER(pthread_setname_np)
 
 /* We create a specific exception for thread exit calls */
 class ThreadExitException {

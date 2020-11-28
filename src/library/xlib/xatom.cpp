@@ -23,7 +23,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XInternAtom);
+DEFINE_ORIG_POINTER(XInternAtom)
 
 Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
 {

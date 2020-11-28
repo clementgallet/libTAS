@@ -22,7 +22,7 @@
 #include "InputEditorWindow.h"
 #include "MainWindow.h"
 
-InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(nullptr, flags)
+InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QDialog(nullptr)
 {
     setWindowTitle("Input Editor");
 

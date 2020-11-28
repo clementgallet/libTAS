@@ -27,7 +27,7 @@
 #include "RamWatchEditWindow.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
-RamWatchEditWindow::RamWatchEditWindow(QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags)
+RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle("Edit Watch");
 

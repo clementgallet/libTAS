@@ -24,8 +24,8 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(xcb_connect);
-DEFINE_ORIG_POINTER(xcb_disconnect);
+DEFINE_ORIG_POINTER(xcb_connect)
+DEFINE_ORIG_POINTER(xcb_disconnect)
 
 xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 {

@@ -37,7 +37,7 @@ class RamSearchWindow : public QDialog {
     Q_OBJECT
 
 public:
-    RamSearchWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    RamSearchWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     void update();
 

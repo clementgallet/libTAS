@@ -116,6 +116,6 @@ void myglEnable(GLenum cap);
 // OVERRIDE void glDisable(GLenum cap);
 // void myglDisable(GLenum cap);
 
-};
+}
 
 #endif

@@ -34,7 +34,7 @@ class TimeTraceWindow : public QDialog {
     Q_OBJECT
 
 public:
-    TimeTraceWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    TimeTraceWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     QLineEdit *addressInput;
 

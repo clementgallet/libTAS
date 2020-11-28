@@ -24,8 +24,8 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_AddTimer);
-DECLARE_ORIG_POINTER(SDL_RemoveTimer);
+DECLARE_ORIG_POINTER(SDL_AddTimer)
+DECLARE_ORIG_POINTER(SDL_RemoveTimer)
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {

@@ -38,6 +38,6 @@ OVERRIDE EGLBoolean eglSwapInterval (EGLDisplay dpy, EGLint interval);
 
 OVERRIDE EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list);
 
-};
+}
 
 #endif

@@ -29,6 +29,6 @@
 namespace AutoSave {
     void update(Context* context, MovieFile& movie);
     void removeOldSaves(Context* context, const char* moviename);
-};
+}
 
 #endif

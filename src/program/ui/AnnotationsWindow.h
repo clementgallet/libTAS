@@ -30,7 +30,7 @@ class AnnotationsWindow : public QDialog {
     Q_OBJECT
 
 public:
-    AnnotationsWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    AnnotationsWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     QSize sizeHint() const override;
 

@@ -30,7 +30,7 @@
 class ExecutableWindow : public QDialog {
     Q_OBJECT
 public:
-    ExecutableWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    ExecutableWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     /* Update UI elements when the config has changed */
     void update_config();

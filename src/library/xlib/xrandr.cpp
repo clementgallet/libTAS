@@ -26,18 +26,18 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XRRGetScreenResources);
-DEFINE_ORIG_POINTER(XRRGetScreenResourcesCurrent);
-DEFINE_ORIG_POINTER(XRRFreeScreenResources);
-DEFINE_ORIG_POINTER(XRRGetOutputInfo);
-DEFINE_ORIG_POINTER(XRRFreeOutputInfo);
-DEFINE_ORIG_POINTER(XRRGetCrtcInfo);
-DEFINE_ORIG_POINTER(XRRFreeCrtcInfo);
-DEFINE_ORIG_POINTER(XRRListOutputProperties);
-DEFINE_ORIG_POINTER(XRRSetCrtcConfig);
-DEFINE_ORIG_POINTER(XRRSetScreenConfig);
-DEFINE_ORIG_POINTER(XRRSetScreenConfigAndRate);
-DEFINE_ORIG_POINTER(XRRSetScreenSize);
+DEFINE_ORIG_POINTER(XRRGetScreenResources)
+DEFINE_ORIG_POINTER(XRRGetScreenResourcesCurrent)
+DEFINE_ORIG_POINTER(XRRFreeScreenResources)
+DEFINE_ORIG_POINTER(XRRGetOutputInfo)
+DEFINE_ORIG_POINTER(XRRFreeOutputInfo)
+DEFINE_ORIG_POINTER(XRRGetCrtcInfo)
+DEFINE_ORIG_POINTER(XRRFreeCrtcInfo)
+DEFINE_ORIG_POINTER(XRRListOutputProperties)
+DEFINE_ORIG_POINTER(XRRSetCrtcConfig)
+DEFINE_ORIG_POINTER(XRRSetScreenConfig)
+DEFINE_ORIG_POINTER(XRRSetScreenConfigAndRate)
+DEFINE_ORIG_POINTER(XRRSetScreenSize)
 
 static const char *output_name = "libTAS fake XRR output";
 static const char *mode_name = "libTAS fake XRR mode";

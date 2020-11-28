@@ -49,6 +49,6 @@ namespace ErrorChecking {
     /* Show an error box or error message on terminal */
     void critical(QString str, bool interactive);
 
-};
+}
 
 #endif

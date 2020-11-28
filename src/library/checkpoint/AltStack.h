@@ -31,7 +31,7 @@ namespace AltStack
 
     void saveStackFrame();
     void restoreStackFrame();
-};
+}
 }
 
 #endif

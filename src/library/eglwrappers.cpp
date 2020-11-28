@@ -40,11 +40,11 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(eglGetProcAddress);
-DEFINE_ORIG_POINTER(eglMakeCurrent);
-DEFINE_ORIG_POINTER(eglSwapBuffers);
-DEFINE_ORIG_POINTER(eglSwapInterval);
-DEFINE_ORIG_POINTER(eglCreateContext);
+DEFINE_ORIG_POINTER(eglGetProcAddress)
+DEFINE_ORIG_POINTER(eglMakeCurrent)
+DEFINE_ORIG_POINTER(eglSwapBuffers)
+DEFINE_ORIG_POINTER(eglSwapInterval)
+DEFINE_ORIG_POINTER(eglCreateContext)
 
 /* If the game uses the eglGetProcAddress functions to access to a function
  * that we hook, we must return our function and store the original pointers

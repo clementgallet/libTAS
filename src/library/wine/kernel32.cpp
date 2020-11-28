@@ -29,7 +29,7 @@ typedef union _LARGE_INTEGER {
     struct {
         unsigned int LowPart;
         int HighPart;
-    };
+    } dummy;
     struct {
         unsigned int LowPart;
         int HighPart;

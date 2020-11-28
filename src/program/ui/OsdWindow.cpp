@@ -25,7 +25,7 @@
 
 #include "OsdWindow.h"
 
-OsdWindow::OsdWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+OsdWindow::OsdWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("On-screen Display Options");
 

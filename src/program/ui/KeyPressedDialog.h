@@ -26,7 +26,7 @@
 class KeyPressedDialog : public QDialog {
     Q_OBJECT
 public:
-    KeyPressedDialog(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    KeyPressedDialog(QWidget *parent = Q_NULLPTR);
 
     bool withModifiers;
 

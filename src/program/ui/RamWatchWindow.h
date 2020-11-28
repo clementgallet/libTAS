@@ -32,7 +32,7 @@ class RamWatchWindow : public QDialog {
     Q_OBJECT
 
 public:
-    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR);
     void update();
 
     RamWatchEditWindow *editWindow;

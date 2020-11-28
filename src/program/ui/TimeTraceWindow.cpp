@@ -32,7 +32,7 @@
 // #include "../ramsearch/IRamWatchDetailed.h"
 // #include "../ramsearch/RamWatchDetailed.h"
 
-TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags), context(c)
+TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Time Trace");
 

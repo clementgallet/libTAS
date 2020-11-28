@@ -29,7 +29,7 @@ class InputEditorWindow : public QDialog {
     Q_OBJECT
 
 public:
-    InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR);
     void resetInputs();
     QSize sizeHint() const override;
     InputEditorView *inputEditorView;

@@ -26,8 +26,8 @@ namespace libtas {
 
 int xinput_opcode;
 
-DEFINE_ORIG_POINTER(XISelectEvents);
-DEFINE_ORIG_POINTER(XIQueryDevice);
+DEFINE_ORIG_POINTER(XISelectEvents)
+DEFINE_ORIG_POINTER(XIQueryDevice)
 
 int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 {

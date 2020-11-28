@@ -60,8 +60,8 @@ void add_lib(const char* library)
     }
 }
 
-DEFINE_ORIG_POINTER(dlopen);
-DEFINE_ORIG_POINTER(dlsym);
+DEFINE_ORIG_POINTER(dlopen)
+DEFINE_ORIG_POINTER(dlsym)
 
 void *dlopen(const char *file, int mode) throw() {
     if (!orig::dlopen) {

@@ -24,7 +24,7 @@
 #include "KeyPressedDialog.h"
 #include "../KeyMapping.h"
 
-KeyPressedDialog::KeyPressedDialog(QWidget *parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
+KeyPressedDialog::KeyPressedDialog(QWidget *parent) : QDialog(parent) {
 
     setWindowTitle("");
     setFocusPolicy(Qt::ClickFocus);

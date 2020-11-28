@@ -23,11 +23,11 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(FMOD_System_Create);
-DEFINE_ORIG_POINTER(FMOD_EventSystem_Create);
-DEFINE_ORIG_POINTER(FMOD_EventSystem_GetSystemObject);
-DEFINE_ORIG_POINTER(FMOD_System_SetOutput);
-DEFINE_ORIG_POINTER(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE);
+DEFINE_ORIG_POINTER(FMOD_System_Create)
+DEFINE_ORIG_POINTER(FMOD_EventSystem_Create)
+DEFINE_ORIG_POINTER(FMOD_EventSystem_GetSystemObject)
+DEFINE_ORIG_POINTER(FMOD_System_SetOutput)
+DEFINE_ORIG_POINTER(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE)
 
 int FMOD_System_Create(void **system)
 {

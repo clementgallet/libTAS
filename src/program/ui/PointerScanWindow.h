@@ -38,7 +38,7 @@ class PointerScanWindow : public QDialog {
     Q_OBJECT
 
 public:
-    PointerScanWindow(Context *c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = 0);
+    PointerScanWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     QLineEdit *addressInput;
 private:

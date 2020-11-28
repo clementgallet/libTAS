@@ -32,7 +32,7 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XShmPutImage);
+DEFINE_ORIG_POINTER(XShmPutImage)
 
 OVERRIDE Bool XShmPutImage(
     Display*        dpy,
