@@ -171,6 +171,25 @@ This should open a terminal in your container. You can then enter `libTAS` to la
 
 TODO: Figure out how to use Mesa OpenGL.
 
+## Run on Linux using Docker
+
+### Install
+
+- install docker through your usual package manager
+- you may want to use docker as a non-root user. To do that, create the docker group: `sudo groupadd docker` and add the user to the group: `sudo usermod -aG docker $USER` 
+- download the [Dockerfile](https://github.com/clementgallet/libTAS/blob/master/Dockerfile) somewhere (don't rename the file!).
+- run the command `docker build -t libtas /path/to/Dockerfile/directory`. The path points to the directory containing the Dockerfile, not to the Dockerfile itself. The Docker container build should start.
+
+### Run
+
+- to launch the container, run:
+
+```
+docker run --net=host -ti --rm -v /tmp/.X11-unix:/tmp/.X11-unix -v "$XAUTHORITY:/root/.Xauthority:rw" -e DISPLAY libtas
+```
+
+This should open a terminal in your container. You can then enter `libTAS` to launch the program. If everything goes right, you should see the libtas window appear. If you want to access to your local files, you can add `-v $HOME:/home` in the command options to map your $HOME directory to `/home`. Because of how Docker works, everything that is modified outside of this directory will not be preserved on later instances of the container.
+
 ## Logo
 
 Made by brunovalads.

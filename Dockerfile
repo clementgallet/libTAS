@@ -1,40 +1,53 @@
-FROM archlinux/base
+FROM debian:latest
+
+# update
+  RUN dpkg --add-architecture i386
+  RUN apt-get update 
+
 # libtas
   # dependencies
     # main
-      RUN pacman -Sy --noconfirm git
-      RUN pacman -Sy --noconfirm base-devel
-      RUN pacman -Sy --noconfirm automake
-      RUN pacman -Sy --noconfirm pkgconf
-      RUN pacman -Sy --noconfirm qt5-base
-      RUN pacman -Sy --noconfirm xcb-util-cursor
-      RUN pacman -Sy --noconfirm alsa-lib
-      RUN pacman -Sy --noconfirm ffmpeg
-      RUN pacman -Sy --noconfirm libffi
-      RUN pacman -Sy --noconfirm mesa
+      RUN apt-get -y install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg
 
     # HUD
-      RUN pacman -Sy --noconfirm fontconfig
-      RUN pacman -Sy --noconfirm freetype2
+      RUN apt-get -y install libfreetype6-dev libfontconfig1-dev
 
     # fonts
-      RUN pacman -Sy --noconfirm gnu-free-fonts
-      RUN pacman -Sy --noconfirm ttf-ubuntu-font-family
-
-    # wine
-      RUN printf '%s\n' $'[multilib]\n\
-Include = /etc/pacman.d/mirrorlist' >> /etc/pacman.conf
-      RUN pacman -Sy --noconfirm wine
+      RUN apt-get -y install libfreetype6-dev libfontconfig1-dev
+      RUN apt-get -y install fonts-liberation
 
     # i386
-      # lib32-alsa-lib
-        RUN pacman -Sy --noconfirm lib32-alsa-lib
+      RUN apt-get -y install g++-multilib
+      RUN apt-get -y install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libswresample3:i386 libfreetype6:i386 libfontconfig1:i386
+      # add missing symbolic links
+        RUN ln -s /usr/lib/i386-linux-gnu/libX11.so.6 /usr/lib/i386-linux-gnu/libX11.so
+        RUN ln -s /usr/lib/i386-linux-gnu/libX11-xcb.so.1 /usr/lib/i386-linux-gnu/libX11-xcb.so
+        RUN ln -s /usr/lib/i386-linux-gnu/libasound.so.2 /usr/lib/i386-linux-gnu/libasound.so
+        RUN ln -s /usr/lib/i386-linux-gnu/libfontconfig.so.1 /usr/lib/i386-linux-gnu/libfontconfig.so
+        RUN ln -s /usr/lib/i386-linux-gnu/libfreetype.so.6 /usr/lib/i386-linux-gnu/libfreetype.so
+      
 
   # install
+    RUN apt-get -y install git
     RUN mkdir /root/src
     RUN cd /root/src && git clone https://github.com/clementgallet/libTAS.git
     RUN cd /root/src/libTAS && ./build.sh --with-i386 --disable-dependency-tracking
     RUN cd /root/src/libTAS && make install
 
-  # run
-    CMD bash
+# additional programs
+  # wine
+    RUN apt-get -y install wine
+
+  # pcem
+    # dependencies
+      RUN apt-get -y install libwxbase3.0-dev libwxgtk3.0-gtk3-dev wx-common libsdl2-dev libopenal-dev
+  
+    # install
+      RUN cd /root/src && git clone https://github.com/TASVideos/pcem.git
+      RUN cd /root/src/pcem && git checkout v16_9b737f6
+      RUN cd /root/src/pcem && ./configure --enable-release-build
+      RUN cd /root/src/pcem && autoreconf
+      RUN cd /root/src/pcem && make
+
+# run
+  CMD bash
