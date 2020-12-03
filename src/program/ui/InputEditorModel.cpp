@@ -388,6 +388,12 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+void InputEditorModel::clearClipboard()
+{
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->clear();
+}
+
 void InputEditorModel::copyInputs(int row, int count)
 {
     std::ostringstream inputString;
@@ -397,9 +403,11 @@ void InputEditorModel::copyInputs(int row, int count)
         movie->writeFrame(inputString, movie->input_list[r]);
     }
 
-    // QString qInputs(inputString)
+    /* Append text from the existing clipboard text */
     QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(inputString.str().c_str());
+    QString clipText = clipboard->text();
+    clipText.append(inputString.str().c_str());
+    clipboard->setText(clipText);
 }
 
 int InputEditorModel::pasteInputs(int row)

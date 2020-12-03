@@ -93,6 +93,15 @@ private:
     QAction *lockAction;
 
     bool autoScroll = true;
+    
+    /* Apply a function to each range of selected rows,
+     * and return min selected row */
+    int applyToSelectedRanges(std::function<void(int, int)>);
+
+    /* Apply a function to each range of selected rows (in decreasing order),
+     * and return min selected row */
+    int applyToSelectedRangesReversed(std::function<void(int, int)>);
+
 };
 
 #endif

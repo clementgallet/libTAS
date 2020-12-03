@@ -465,22 +465,84 @@ void InputEditorView::insertInputs()
     }
 }
 
+int InputEditorView::applyToSelectedRanges(std::function<void(int, int)> func)
+{
+    /* Extract ranges of selected rows */
+    QModelIndexList indexlist = selectionModel()->selectedRows();
+    std::sort(indexlist.begin(), indexlist.end());
+    
+    int cur_row = -1;
+    int min_row = -1;
+    for (const QModelIndex index : indexlist) {
+        if (min_row == -1) {
+            min_row = index.row();
+            cur_row = index.row();
+        }
+        else {
+            if (index.row() == (cur_row + 1)) {
+                cur_row = index.row();
+            }
+            else {
+                func(min_row, cur_row);
+                min_row = index.row();
+                cur_row = index.row();
+            }
+        }
+    }
+    
+    if (min_row != -1) {
+        func(min_row, cur_row);
+    }
+
+    if (indexlist.isEmpty())
+        return -1;
+        
+    return indexlist.first().row();
+}
+
+int InputEditorView::applyToSelectedRangesReversed(std::function<void(int, int)> func)
+{
+    /* Extract ranges of selected rows */
+    QModelIndexList indexlist = selectionModel()->selectedRows();
+    std::sort(indexlist.begin(), indexlist.end());
+    
+    int cur_row = -1;
+    int max_row = -1;
+    for (auto it = indexlist.crbegin(); it != indexlist.crend(); it++) {
+        if (max_row == -1) {
+            max_row = it->row();
+            cur_row = it->row();
+        }
+        else {
+            if (it->row() == (cur_row - 1)) {
+                cur_row = it->row();
+            }
+            else {
+                func(cur_row, max_row);
+                max_row = it->row();
+                cur_row = it->row();
+            }
+        }
+    }
+
+    if (max_row != -1) {
+        func(cur_row, max_row);
+    }
+
+    if (indexlist.isEmpty())
+        return -1;
+        
+    return indexlist.first().row();
+}
+
 void InputEditorView::deleteInput()
 {
     if (!selectionModel()->hasSelection())
         return;
 
-    /* Selection mode garanties that we select a contiguous range, so getting
-     * the min and max row.
-     */
-    int min_row = 2000000000;
-    int max_row = -1;
-    for (const QModelIndex index : selectionModel()->selectedRows()) {
-        min_row = (index.row()<min_row)?index.row():min_row;
-        max_row = (index.row()>max_row)?index.row():max_row;
-    }
-    inputEditorModel->removeRows(min_row, max_row-min_row+1);
-
+    /* Removing rows must be done in reversed order so that row indices are valid */
+    int min_row = applyToSelectedRangesReversed([this](int min, int max){inputEditorModel->removeRows(min, max-min+1);});
+    
     /* Select the next frame */
     QModelIndex newSel = inputEditorModel->index(min_row, 0);
     selectionModel()->clear();
@@ -513,16 +575,8 @@ void InputEditorView::copyInputs()
     if (!selectionModel()->hasSelection())
         return;
 
-    /* Selection mode garanties that we select a contiguous range, so getting
-     * the min and max row.
-     */
-    int min_row = 2000000000;
-    int max_row = -1;
-    for (const QModelIndex index : selectionModel()->selectedRows()) {
-        min_row = (index.row()<min_row)?index.row():min_row;
-        max_row = (index.row()>max_row)?index.row():max_row;
-    }
-    inputEditorModel->copyInputs(min_row, max_row-min_row+1);
+    inputEditorModel->clearClipboard();
+    applyToSelectedRanges([this](int min, int max){inputEditorModel->copyInputs(min, max-min+1);});
 }
 
 void InputEditorView::cutInputs()
@@ -530,18 +584,10 @@ void InputEditorView::cutInputs()
     if (!selectionModel()->hasSelection())
         return;
 
-    /* Selection mode garanties that we select a contiguous range, so getting
-     * the min and max row.
-     */
-    int min_row = 2000000000;
-    int max_row = -1;
-    for (const QModelIndex index : selectionModel()->selectedRows()) {
-        min_row = (index.row()<min_row)?index.row():min_row;
-        max_row = (index.row()>max_row)?index.row():max_row;
-    }
-    inputEditorModel->copyInputs(min_row, max_row-min_row+1);
-    inputEditorModel->removeRows(min_row, max_row-min_row+1);
-
+    inputEditorModel->clearClipboard();
+    applyToSelectedRanges([this](int min, int max){inputEditorModel->copyInputs(min, max-min+1);});
+    /* Removing rows must be done in reversed order so that row indices are valid */
+    applyToSelectedRangesReversed([this](int min, int max){inputEditorModel->removeRows(min, max-min+1);});
 }
 
 void InputEditorView::pasteInputs()

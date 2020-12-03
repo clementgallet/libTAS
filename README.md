@@ -119,7 +119,7 @@ There are still a lot of issues to fix:
 
 You need at least Windows 10 version 2004 to run WSL 2. libTAS does not work with WSL 1, because it is missing some mandatory components of the Linux system. Activate WSL 2 and install Ubuntu from the Windows Store, you can find plenty of documentation for that.
 
-Once installed, you have a new application "Ubuntu" which opens a terminal. Download the latest "libtas_*_amd64.deb" file from the Releases. To locate the file from the Ubuntu terminal, you can access to Windows disk drives in  "/mnt/" ("/mnt/c" for the C: drive, etc.). Go to the directory which contains the downloaded file, and install the package using:
+Once installed, you have a new application "Ubuntu" which opens a terminal. Download the latest `libtas_*_amd64.deb` file from the Releases. To locate the file from the Ubuntu terminal, you can access to Windows disk drives in  "/mnt/" ("/mnt/c" for the C: drive, etc.). Go to the directory which contains the downloaded file, and install the package using:
 
 ```
 sudo apt update

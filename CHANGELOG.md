@@ -55,6 +55,7 @@
 * Handle when no font was found (#376)
 * Fix init audio source volume and pitch when created
 * When unavailable swresample, disable mixing instead of crashing
+* Input editor: Support copy/delete any selection of rows
 
 ## [1.4.0] - 2020-06-19
 ### Added
