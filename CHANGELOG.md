@@ -28,6 +28,7 @@
 * Implement dirent API
 * Check for shared config size between program and library
 * Closing the game window takes effect even when paused (#65)
+* Can remove multiple ram watches
 
 ### Changed
 

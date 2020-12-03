@@ -34,7 +34,7 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
     /* Table */
     ramWatchView = new QTableView(this);
     ramWatchView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ramWatchView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ramWatchView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ramWatchView->setShowGrid(false);
     ramWatchView->setAlternatingRowColors(true);
     ramWatchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -145,15 +145,16 @@ void RamWatchWindow::slotEdit()
 
 void RamWatchWindow::slotRemove()
 {
-    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
+    QModelIndexList indexlist = ramWatchView->selectionModel()->selectedRows();
     ramWatchView->selectionModel()->clear();
 
     /* If no watch was selected, return */
-    if (!index.isValid())
+    if (indexlist.isEmpty())
         return;
 
-    int row = index.row();
-    ramWatchModel->removeWatch(row);
+    for (const QModelIndex index : indexlist) {
+        ramWatchModel->removeWatch(index.row());
+    }
 }
 
 void RamWatchWindow::slotScanPointer()
