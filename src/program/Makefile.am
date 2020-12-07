@@ -37,6 +37,8 @@ libTAS_SOURCES = \
     KeyMapping.cpp \
     main.cpp \
     MovieFile.cpp \
+    SaveState.cpp \
+    SaveStateList.cpp \
     utils.cpp \
     ui/AnnotationsWindow.cpp \
     ui/AutoSaveWindow.cpp \

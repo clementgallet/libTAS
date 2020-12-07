@@ -25,6 +25,8 @@
 #include "GameLoop.h"
 #include "utils.h"
 #include "AutoSave.h"
+#include "SaveState.h"
+#include "SaveStateList.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -936,55 +938,11 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Slot number */
             int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
 
-            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-                /* Building the movie path */
-                std::string moviepath = context->config.savestatedir + '/';
-                moviepath += context->gamename;
-                moviepath += ".movie" + std::to_string(statei) + ".ltm";
-
-                /* Save the movie file */
-                movie.saveMovie(moviepath, context->framecount);
-            }
-
-            /* Send the savestate index */
-            sendMessage(MSGN_SAVESTATE_INDEX);
-            sendData(&statei, sizeof(int));
-
-            /* Send the savestate path */
-            std::string savestatepath = context->config.savestatedir + '/';
-            savestatepath += context->gamename;
-            savestatepath += ".state" + std::to_string(statei);
-            if (! (context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
-                sendMessage(MSGN_SAVESTATE_PATH);
-                sendString(savestatepath);
-            }
-            else {
-                /* Create empty savestate files if stored in RAM */
-                std::string pagemappath = savestatepath + ".pm";
-                std::string pagespath = savestatepath + ".p";
-                std::ofstream opm(pagemappath);
-                opm.close();
-                std::ofstream op(pagespath);
-                op.close();
-            }
-
-            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string msg;
-                if (hk.type == HOTKEY_SAVESTATE_BACKTRACK) {
-                    msg = "Saving backtrack state";
-                }
-                else {
-                    msg = "Saving state ";
-                    msg += std::to_string(statei);
-                }
-                sendMessage(MSGN_OSD_MSG);
-                sendString(msg);
-            }
-
-            sendMessage(MSGN_SAVESTATE);
+            /* Perform savestate */
+            SaveState* ss = SaveStateList::get(statei);
+            int message = ss->save(context, movie);
 
             /* Checking that saving succeeded */
-            int message = receiveMessage();
             if (message == MSGB_SAVING_SUCCEEDED) {
                 emit savestatePerformed(statei, context->framecount);
             }
@@ -1038,209 +996,84 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             /* Slot number */
             int statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
 
-            /* Send the savestate index */
-            sendMessage(MSGN_SAVESTATE_INDEX);
-            sendData(&statei, sizeof(int));
+            /* Perform state loading */
+            SaveState* ss = SaveStateList::get(statei);
+            int error = ss->load(context, movie, load_branch);
 
-            /* Building the movie path */
-            std::string moviepath = context->config.savestatedir + '/';
-            moviepath += context->gamename;
-            moviepath += ".movie" + std::to_string(statei) + ".ltm";
-
-            /* Building the savestate path */
-            std::string savestatepath = context->config.savestatedir + '/';
-            savestatepath += context->gamename;
-            savestatepath += ".state" + std::to_string(statei);
-
-            /* Check that the savestate exists */
-            std::string pagemappath = savestatepath + ".pm";
-            std::string pagespath = savestatepath + ".p";
-            if ((access(pagemappath.c_str(), F_OK) != 0) || (access(pagespath.c_str(), F_OK) != 0)) {
-                /* If there is no savestate but a movie file, offer to load
-                 * the movie and fast-forward to the savestate movie frame.
+            /* Handle errors */
+            if (error == SaveState::ENOSTATEMOVIEPREFIX) {
+                /* Ask the user if they want to load the movie, and get the answer.
+                 * Prompting a alert window must be done by the UI thread, so we are
+                 * using std::future/std::promise mechanism.
                  */
+                std::promise<bool> answer;
+                std::future<bool> future = answer.get_future();
+                emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
 
-                if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-                    (access(moviepath.c_str(), F_OK) == 0)) {
-
-                    /* Load the savestate movie */
-                    MovieFile savedmovie(context);
-                    int ret = savedmovie.loadInputs(moviepath);
-
-                    /* Checking if our movie is a prefix of the savestate movie */
-                    if ((ret == 0) && savedmovie.isPrefix(movie, context->framecount)) {
-
-                        /* Ask the user if they want to load the movie, and get the answer.
-                         * Prompting a alert window must be done by the UI thread, so we are
-                         * using std::future/std::promise mechanism.
-                         */
-                        std::promise<bool> answer;
-                        std::future<bool> future = answer.get_future();
-                        emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
-
-                        if (! future.get()) {
-                            /* User answered no */
-                            return false;
-                        }
-
-                        /* Loading the movie */
-                        emit inputsToBeChanged();
-                        movie.loadInputs(moviepath);
-                        emit inputsChanged();
-
-                        /* Return if we already are on the correct frame */
-                        if (context->framecount == movie.savestateFramecount())
-                            return false;
-
-                        /* Fast-forward to savestate frame */
-                        context->config.sc.recording = SharedConfig::RECORDING_READ;
-                        context->config.sc.movie_framecount = movie.nbFrames();
-                        movie.length(&context->movie_time_sec, &context->movie_time_nsec);
-                        context->pause_frame = movie.savestateFramecount();
-                        context->config.sc.running = true;
-                        context->config.sc_modified = true;
-
-                        emit sharedConfigChanged();
-
-                        return false;
-                    }
+                if (! future.get()) {
+                    /* User answered no */
+                    return false;
                 }
 
-                if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                    std::string message = "No savestate in slot ";
-                    message += std::to_string(statei);
-                    sendMessage(MSGN_OSD_MSG);
-                    sendString(message);
-                }
-                else {
-                    emit alertToShow(QString("There is no savestate to load in this slot"));
-                }
+                /* Loading the movie */
+                emit inputsToBeChanged();
+                movie.loadInputs(ss->getMoviePath());
+                emit inputsChanged();
+
+                /* Return if we already are on the correct frame */
+                if (context->framecount == movie.savestateFramecount())
+                    return false;
+
+                /* Fast-forward to savestate frame */
+                context->config.sc.recording = SharedConfig::RECORDING_READ;
+                context->config.sc.movie_framecount = movie.nbFrames();
+                movie.length(&context->movie_time_sec, &context->movie_time_nsec);
+                context->pause_frame = movie.savestateFramecount();
+                context->config.sc.running = true;
+                context->config.sc_modified = true;
+
+                emit sharedConfigChanged();
+
                 return false;
             }
 
-            /* Send savestate path */
-            if (! (context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
-                sendMessage(MSGN_SAVESTATE_PATH);
-                sendString(savestatepath);
+            if (error == SaveState::ENOSTATE) {
+                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES))
+                    emit alertToShow(QString("There is no savestate to load in this slot"));
+                return false;
             }
 
-
-            /* When loading in read mode and not branch, we don't allow loading a non-prefix movie */
-            if ((context->config.sc.recording == SharedConfig::RECORDING_READ) && (!load_branch)) {
-
-                /* Checking if the savestate movie is a prefix of our movie */
-                MovieFile savedmovie(context);
-                int ret = savedmovie.loadInputs(moviepath);
-                if (ret < 0) {
-                    emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
-                    return false;
-                }
-
-                if (!movie.isPrefix(savedmovie)) {
-                    /* Not a prefix, we don't allow loading */
-                    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                        sendMessage(MSGN_OSD_MSG);
-                        sendString(std::string("Savestate inputs mismatch"));
-                    }
-                    else {
-                        emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
-                    }
-                    return false;
-                }
+            if (error == SaveState::ENOMOVIE) {
+                emit alertToShow(QString("Could not load the moviefile associated with the savestate"));
+                return false;                
             }
 
-            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-                std::string msg;
-                if ((hk.type == HOTKEY_LOADSTATE_BACKTRACK) || (hk.type == HOTKEY_LOADBRANCH_BACKTRACK)) {
-                    msg = "Loading backtrack ";
-                    msg += load_branch?"branch ":"state ";
+            if (error == SaveState::EINPUTMISMATCH) {
+                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
+                    emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
                 }
-                else {
-                    msg = "Loading ";
-                    msg += load_branch?"branch ":"state ";
-                    msg += std::to_string(statei);
-                }
-                sendMessage(MSGN_OSD_MSG);
-                sendString(msg);
+                return false;                
             }
-
-            sendMessage(MSGN_LOADSTATE);
 
             emit inputsToBeChanged();
 
-            int message = receiveMessage();
-            /* Loading is not assured to succeed, the following must
-             * only be done if it's the case.
-             */
+            /* Processing after state loading */
+            int message = ss->postLoad(context, movie, load_branch);
 
-            bool didLoad = message == MSGB_LOADING_SUCCEEDED;
-            if (didLoad) {
-                /* The copy of SharedConfig that the game stores may not
-                 * be the same as this one due to memory loading, so we
-                 * send it.
-                 */
-                sendMessage(MSGN_CONFIG);
-                sendData(&context->config.sc, sizeof(SharedConfig));
-
-                if ((context->config.sc.recording == SharedConfig::RECORDING_WRITE) || load_branch) {
-                    /* When in writing move or loading a branch,
-                     * we load the movie associated with the savestate.
-                     */
-                    movie.loadInputs(moviepath);
-                }
-
-                /* If the movie was modified since last state load, increment
-                 * the rerecord count. */
-                if (movie.modifiedSinceLastStateLoad) {
-                    context->rerecord_count++;
-                    movie.modifiedSinceLastStateLoad = false;
-                }
-
-                message = receiveMessage();
-
-                emit savestatePerformed(statei, 0);
-            }
-
-            /* The frame count has changed, we must get the new one */
-            if (message != MSGB_FRAMECOUNT_TIME) {
-                std::cerr << "Got wrong message after state loading" << std::endl;
-
+            /* Handle errors and return values */
+            if (message == SaveState::ENOLOAD) {
                 if (!context->config.sc.opengl_soft) {
                     emit alertToShow(QString("Crash after loading the savestate. Savestates are unstable unless you check Video>Force software rendering"));
                 }
 
                 return false;
             }
-            receiveData(&context->framecount, sizeof(uint64_t));
-            receiveData(&context->current_time_sec, sizeof(uint64_t));
-            receiveData(&context->current_time_nsec, sizeof(uint64_t));
-            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                context->config.sc.movie_framecount = context->framecount;
-                context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
-                context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
-                if (context->movie_time_nsec < 0) {
-                    context->movie_time_nsec += 1000000000;
-                    context->movie_time_sec--;
-                }
+
+            if (message == MSGB_LOADING_SUCCEEDED) {
+                emit savestatePerformed(statei, 0);
             }
 
             emit inputsChanged();
-
-            if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
-                std::string msg;
-                if ((hk.type == HOTKEY_LOADSTATE_BACKTRACK) || (hk.type == HOTKEY_LOADBRANCH_BACKTRACK)) {
-                    msg = load_branch?"Backtrack branch loaded":"Backtrack state loaded";
-                }
-                else {
-                    msg = load_branch?"Branch ":"State ";
-                    msg += std::to_string(statei);
-                    msg += " loaded";
-                }
-                sendMessage(MSGN_OSD_MSG);
-                sendString(msg);
-            }
-
-            sendMessage(MSGN_EXPOSE);
 
             return false;
         }
