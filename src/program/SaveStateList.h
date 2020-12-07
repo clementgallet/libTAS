@@ -25,9 +25,18 @@
 #include <string>
 
 namespace SaveStateList {
-    
-    SaveState* get(int id);
 
+    /* Return the savestate from its id */
+    SaveState& get(int id);
+    
+    /* Save state from its id and handle parent */
+    int save(int id, Context* context, MovieFile& movie);
+
+    /* Load state from its id */
+    int load(int id, Context* context, MovieFile& movie, bool branch);
+
+    /* Process after loading state from its id and handle parent */
+    int postLoad(int id, Context* context, MovieFile& movie, bool branch);
 }
 
 #endif

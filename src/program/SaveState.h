@@ -26,6 +26,9 @@
 
 class SaveState {
 public:
+    
+    SaveState () : parent(-1) {}
+    
     /* List of error codes */
     enum Error {
         ENOSTATEMOVIEPREFIX = -1, // No state but movie with matching prefix
@@ -40,6 +43,9 @@ public:
 
     /* Is backtrack savestate */
     bool is_backtrack;
+
+    /* Id of parent savestate, or -1 if no parent */
+    int parent;
 
     /* Return the savestate movie path */
     const std::string& getMoviePath();

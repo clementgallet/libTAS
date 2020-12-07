@@ -939,8 +939,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
 
             /* Perform savestate */
-            SaveState* ss = SaveStateList::get(statei);
-            int message = ss->save(context, movie);
+            int message = SaveStateList::save(statei, context, movie);
 
             /* Checking that saving succeeded */
             if (message == MSGB_SAVING_SUCCEEDED) {
@@ -997,8 +996,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             int statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
 
             /* Perform state loading */
-            SaveState* ss = SaveStateList::get(statei);
-            int error = ss->load(context, movie, load_branch);
+            int error = SaveStateList::load(statei, context, movie, load_branch);
 
             /* Handle errors */
             if (error == SaveState::ENOSTATEMOVIEPREFIX) {
@@ -1017,7 +1015,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 /* Loading the movie */
                 emit inputsToBeChanged();
-                movie.loadInputs(ss->getMoviePath());
+                movie.loadInputs(SaveStateList::get(statei).getMoviePath());
                 emit inputsChanged();
 
                 /* Return if we already are on the correct frame */
@@ -1058,7 +1056,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             emit inputsToBeChanged();
 
             /* Processing after state loading */
-            int message = ss->postLoad(context, movie, load_branch);
+            int message = SaveStateList::postLoad(statei, context, movie, load_branch);
 
             /* Handle errors and return values */
             if (message == SaveState::ENOLOAD) {
