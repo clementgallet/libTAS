@@ -29,6 +29,7 @@
 * Check for shared config size between program and library
 * Closing the game window takes effect even when paused (#65)
 * Can remove multiple ram watches
+* Implement greenzone using existing savestates (#134)
 
 ### Changed
 

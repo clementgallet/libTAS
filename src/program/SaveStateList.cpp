@@ -31,6 +31,9 @@ static SaveState states[NB_STATES];
 /* Id of last loaded or saved savestate */
 static int last_state_id = -1;
 
+/* Old id of root savestate */
+static int old_root_state_id = -1;
+
 SaveState& SaveStateList::get(int id)
 {
     if (id < 0 || id > NB_STATES) {
@@ -50,6 +53,8 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
     int message = ss.save(context, movie);
     
     if (message == MSGB_SAVING_SUCCEEDED) {
+        /* Update root savestate */
+        old_root_state_id = rootStateFramecount();        
         
         /* Update parent of every child to its grandparent */
         for (int cid = 0; cid < NB_STATES; cid++) {
@@ -59,7 +64,7 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
                 states[cid].parent = ss.parent;
         }
         
-        /* Update parent of savestate */        
+        /* Update parent of savestate */
         if (id != last_state_id)
             ss.parent = last_state_id;
             
@@ -81,8 +86,48 @@ int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool bra
     int message = ss.postLoad(context, movie, branch);
     
     if (message == MSGB_LOADING_SUCCEEDED) {
+        /* Update root savestate */
+        old_root_state_id = rootStateFramecount();        
+
         last_state_id = id;
     }
     
     return message;
+}
+
+int64_t SaveStateList::rootStateFramecount()
+{
+    if (last_state_id == -1)
+        return -1;
+        
+    int parent_id = last_state_id;
+    uint64_t framecount;
+    
+    while (parent_id != -1) {
+        framecount = states[parent_id].framecount;
+        parent_id = states[parent_id].parent;
+    }
+    
+    return framecount;
+}
+
+int64_t SaveStateList::oldRootStateFramecount()
+{
+    return old_root_state_id;
+}
+
+int SaveStateList::nearestState(uint64_t framecount)
+{
+    if (last_state_id == -1)
+        return -1;
+        
+    int parent_id = last_state_id;
+    
+    while (parent_id != -1) {
+        if (states[parent_id].framecount <= framecount)
+            return parent_id;
+        parent_id = states[parent_id].parent;
+    }
+    
+    return -1;
 }

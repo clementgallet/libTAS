@@ -103,6 +103,9 @@ public:
     /* User moved a column */
     void moveInputs(int oldIndex, int newIndex);
 
+    /* Rewind to frame, return if succeeded */
+    bool rewind(uint64_t framecount);
+
 public slots:
     /* Toggle a single input and return the new value */
     bool toggleInput(const QModelIndex &index);

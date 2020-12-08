@@ -22,11 +22,13 @@
 #include <QGuiApplication>
 #include <QPalette>
 #include <QFont>
+#include <QThread>
 #include <sstream>
-
+#include <iostream>
 #include <set>
 
 #include "InputEditorModel.h"
+#include "../SaveStateList.h"
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m)
 {
@@ -51,8 +53,16 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
     if (index.column() < 2)
         return QAbstractItemModel::flags(index);
 
-    if (index.row() < static_cast<int>(context->framecount))
-        return QAbstractItemModel::flags(index);
+    /* Don't toggle past inputs before root savestate */
+    uint64_t root_frame = SaveStateList::rootStateFramecount();
+    if (root_frame == -1) {
+        if (index.row() < static_cast<int>(context->framecount))
+            return QAbstractItemModel::flags(index);
+    }
+    else {
+        if (index.row() < root_frame)
+            return QAbstractItemModel::flags(index);
+    }
 
     const SingleInput si = movie->input_set[index.column()-2];
 
@@ -95,14 +105,6 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::BackgroundRole) {
-        /* Return white-ish for future inputs */
-        // if (index.row() > static_cast<int>(context->framecount))
-        //     return QBrush(QColor(0xff, 0xfe, 0xee));
-
-        /* Return white-ish for savestate column */
-        // if (index.column() == 0)
-        //     return QBrush(QColor(0xff, 0xfe, 0xee));
-
         /* Main color */
         QColor color = QGuiApplication::palette().window().color();
         int r, g, b;
@@ -139,6 +141,13 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
                     color = color.darker(150);
                 }
             }
+        }
+        
+        /* Greenzone */
+        if (index.row() < static_cast<int>(context->framecount)) {
+            int root_frame = SaveStateList::rootStateFramecount();
+            if (root_frame != -1 && index.row() >= root_frame)
+                color = color.darker(105);            
         }
 
         /* Frame containing a savestate */
@@ -220,8 +229,12 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (index.column() < 2)
             return false;
 
-        if (index.row() < static_cast<int>(context->framecount))
-            return false;
+        /* Rewind to past frame is needed */
+        if (index.row() < static_cast<int>(context->framecount)) {
+            bool ret = rewind(index.row());
+            if (!ret)
+                return false;
+        }
 
         const SingleInput si = movie->input_set[index.column()-2];
 
@@ -283,9 +296,16 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     if (index.column() < 2)
         return false;
 
-    /* Don't toggle past inputs */
-    if (index.row() < static_cast<int>(context->framecount))
-        return false;
+    /* Don't toggle past inputs before root savestate */
+    uint64_t root_frame = SaveStateList::rootStateFramecount();
+    if (root_frame == -1) {
+        if (index.row() < static_cast<int>(context->framecount))
+            return false;
+    }
+    else {
+        if (index.row() < root_frame)
+            return false;        
+    }
 
     SingleInput si = movie->input_set[index.column()-2];
 
@@ -296,6 +316,13 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     /* Add a row if necessary */
     if (index.row() == movie->input_list.size()) {
         insertRows(movie->input_list.size(), 1, QModelIndex());
+    }
+    
+    /* Rewind to past frame is needed */
+    if (index.row() < static_cast<int>(context->framecount)) {
+        bool ret = rewind(index.row());
+        if (!ret)
+            return false;
     }
 
     AllInputs &ai = movie->input_list[index.row()];
@@ -697,6 +724,18 @@ void InputEditorModel::registerSavestate(int slot, unsigned long long frame)
     last_savestate = savestate_frames[slot];
     emit dataChanged(createIndex(old_savestate,0), createIndex(old_savestate,0));
     emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
+    
+    /* Update greenzone between old and new root savestate */
+    int64_t oldRoot = SaveStateList::oldRootStateFramecount();
+    int64_t newRoot = SaveStateList::rootStateFramecount();
+
+    if (oldRoot == -1 || newRoot == -1)
+        return;
+        
+    if (oldRoot < newRoot)
+        emit dataChanged(createIndex(oldRoot,0), createIndex(newRoot,columnCount()));
+    else
+        emit dataChanged(createIndex(newRoot,0), createIndex(oldRoot,columnCount()));
 }
 
 void InputEditorModel::moveInputs(int oldIndex, int newIndex)
@@ -704,4 +743,37 @@ void InputEditorModel::moveInputs(int oldIndex, int newIndex)
     SingleInput si = movie->input_set[oldIndex];
     movie->input_set.erase(movie->input_set.begin() + oldIndex);
     movie->input_set.insert(movie->input_set.begin() + newIndex, si);
+}
+
+bool InputEditorModel::rewind(uint64_t framecount)
+{
+    if (framecount >= context->framecount)
+        return false;
+        
+    int state = SaveStateList::nearestState(framecount);
+    if (state == -1)
+        return false;
+        
+    /* Switch to playback if needed */
+    int recording = context->config.sc.recording;
+    if (recording == SharedConfig::RECORDING_WRITE) {
+        context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
+    }
+
+    /* Load state */
+    context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
+
+    /* Fast-forward to frame */
+    context->pause_frame = framecount;
+    
+    context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
+    if (!context->config.sc.running)
+        context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);    
+
+    /* Switch back */
+    if (recording == SharedConfig::RECORDING_WRITE) {
+        context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
+    }
+    
+    return true;
 }

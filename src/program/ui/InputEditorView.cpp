@@ -243,13 +243,19 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
         return QTableView::mousePressEvent(event);
     }
 
-    if (index.column() < 2) {
+    if (index.column() == 1) {
         return QTableView::mousePressEvent(event);
     }
 
     selectionModel()->clear();
     mouseSection = index.column();
     mouseRow = index.row();
+
+    /* Rewind when clicking for column */
+    if (mouseSection == 0) {
+        inputEditorModel->rewind(mouseRow);
+        return;
+    }
 
     /* For editable items, copy the value. Else, copy the opposite value */
     if (inputEditorModel->flags(index) & Qt::ItemIsEditable) {

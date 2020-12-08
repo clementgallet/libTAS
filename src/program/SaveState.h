@@ -47,6 +47,9 @@ public:
     /* Id of parent savestate, or -1 if no parent */
     int parent;
 
+    /* Frame count of the savestate */
+    uint64_t framecount;
+
     /* Return the savestate movie path */
     const std::string& getMoviePath();
 

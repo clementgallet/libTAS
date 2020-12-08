@@ -128,6 +128,11 @@ int SaveState::save(Context* context, MovieFile& movie)
 
     /* Checking that saving succeeded */
     int message = receiveMessage();
+    
+    /* Set framecount */
+    if (message == MSGB_SAVING_SUCCEEDED)
+        framecount = context->framecount;
+    
     return message;
 }
 
