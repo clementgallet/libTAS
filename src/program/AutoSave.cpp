@@ -33,7 +33,7 @@ void AutoSave::update(Context* context, MovieFile& movie)
 		return;
 
 	/* Check if the movie was modified */
-	if (!movie.modifiedSinceLastAutoSave)
+	if (!movie.inputs->modifiedSinceLastAutoSave)
 		return;
 
 	/* Update the frame counter and check if we must auto-save */
@@ -66,7 +66,7 @@ void AutoSave::update(Context* context, MovieFile& movie)
 		/* Save the movie */
 		movie.saveMovie(moviename);
 
-		movie.modifiedSinceLastAutoSave = false;
+		movie.inputs->modifiedSinceLastAutoSave = false;
 	}
 }
 

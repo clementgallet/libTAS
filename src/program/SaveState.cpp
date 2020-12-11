@@ -166,7 +166,7 @@ int SaveState::load(Context* context, MovieFile& movie, bool branch)
                 int ret = savedmovie.loadInputs(movie_path);
 
                 /* Checking if our movie is a prefix of the savestate movie */
-                if ((ret == 0) && savedmovie.isPrefix(movie, context->framecount)) {
+                if ((ret == 0) && savedmovie.inputs->isPrefix(movie.inputs, context->framecount)) {
                     return ENOSTATEMOVIEPREFIX;
                 }
             }
@@ -241,9 +241,9 @@ int SaveState::postLoad(Context* context, MovieFile& movie, bool branch)
 
         /* If the movie was modified since last state load, increment
          * the rerecord count. */
-        if (movie.modifiedSinceLastStateLoad) {
+        if (movie.inputs->modifiedSinceLastStateLoad) {
             context->rerecord_count++;
-            movie.modifiedSinceLastStateLoad = false;
+            movie.inputs->modifiedSinceLastStateLoad = false;
         }
 
         message = receiveMessage();

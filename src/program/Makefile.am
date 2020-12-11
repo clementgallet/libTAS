@@ -36,10 +36,14 @@ libTAS_SOURCES = \
     GameLoop.cpp \
     KeyMapping.cpp \
     main.cpp \
-    MovieFile.cpp \
     SaveState.cpp \
     SaveStateList.cpp \
     utils.cpp \
+    movie/MovieFile.cpp \
+    movie/MovieFileAnnotations.cpp \
+    movie/MovieFileEditor.cpp \
+    movie/MovieFileHeader.cpp \
+    movie/MovieFileInputs.cpp \
     ui/AnnotationsWindow.cpp \
     ui/AutoSaveWindow.cpp \
     ui/ControllerAxisWidget.cpp \

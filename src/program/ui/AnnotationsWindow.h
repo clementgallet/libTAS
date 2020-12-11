@@ -24,7 +24,7 @@
 #include <QPlainTextEdit>
 
 #include "../Context.h"
-#include "../MovieFile.h"
+#include "../movie/MovieFile.h"
 
 class AnnotationsWindow : public QDialog {
     Q_OBJECT

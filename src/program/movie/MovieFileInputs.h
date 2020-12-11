@@ -17,43 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_MOVIEFILE_H_INCLUDED
-#define LIBTAS_MOVIEFILE_H_INCLUDED
+#ifndef LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
+#define LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 
-//#include <stdio.h>
-//#include <unistd.h>
-#include "../shared/AllInputs.h"
-#include "Context.h"
+#include "../../shared/AllInputs.h"
+#include "../Context.h"
 #include <fstream>
 #include <string>
 #include <vector>
-#include <set>
-#include <map>
 #include <regex>
 
-class MovieFile {
+class MovieFileInputs {
 public:
-    /* List of error codes */
-    enum Error {
-        ENOMOVIE = -1, // No movie file at the specified path
-        EBADARCHIVE = -2, // Could not extract movie file
-        ENOINPUTS = -3, // Movie file does not contain the input file
-        ENOCONFIG = -4, // Movie file does not contain the config file
-    };
-
-    /* Error string associated with an error code */
-    static const char* errorString(int error_code);
 
     /* The list of inputs. We need this to be public because a movie may
      * check if another movie is a prefix
      */
     std::vector<AllInputs> input_list;
-
-    /* List of locked single inputs. They won't be modified even in recording mode */
-    std::set<SingleInput> locked_inputs;
-
-    /* Ordered list of single inputs to be shown on the input editor */
-    std::vector<SingleInput> input_set;
 
     /* Flag storing if the movie has been modified since last save.
      * Used for prompting a message when the game exits if the user wants
@@ -68,43 +48,27 @@ public:
      * Used to determine when a state loading increments the rerecord count. */
     bool modifiedSinceLastStateLoad;
 
-    /* Annotations to be saved inside the movie file */
-    std::string annotations;
-
-    MovieFile() {};
+    /* Initial framerate values */
+    unsigned int framerate_num, framerate_den;
 
     /* Prepare a movie file from the context */
-    MovieFile(Context* c);
-
-    /* Extract a moviefile into the temp directory
-     * Returns 0 if no error, or a negative value if an error occured */
-    int extractMovie();
-    int extractMovie(const std::string& moviefile);
+    MovieFileInputs(Context* c);
 
     /* Import the inputs into a list, and all the parameters.
      * Returns 0 if no error, or a negative value if an error occured */
-    int loadMovie();
-    int loadMovie(const std::string& moviefile);
-
-    /* Import the inputs only. Used when loading movies attached to savestates.
-     * Returns 0 if no error, or a negative value if an error occured */
-    int loadInputs(const std::string& moviefile);
+    void load();
 
     /* Write the inputs into a file and compress to the whole moviefile */
-    int saveMovie();
-    int saveMovie(const std::string& moviefile);
+    void save();
 
-    /* Write only the n first frames of input into the movie file. Used for savestate movies */
-    int saveMovie(const std::string& moviefile, uint64_t frame_nb);
+    /* Write a single frame of inputs into the input stream */
+    int writeFrame(std::ostream& input_stream, const AllInputs& inputs);
+
+    /* Read a single frame of inputs from the line of inputs */
+    int readFrame(const std::string& line, AllInputs& inputs);
 
     /* Get the number of frames of the current movie */
     uint64_t nbFrames() const;
-
-    /* Get the frame count of the associated savestate if any */
-    uint64_t savestateFramecount() const;
-
-    /* Get the movie length from metadata */
-    void length(int64_t* sec, int64_t* nsec) const;
 
     /* Update movie length from movie framecount */
     void updateLength() const;
@@ -128,35 +92,20 @@ public:
     void deleteInputs(uint64_t pos);
 
     /* Truncate inputs to a frame number */
-    void truncateInputs(uint64_t size);
-
-    /* Copy locked inputs from the current inputs to the inputs in argument */
-    void setLockedInputs(AllInputs& inputs);
-
-    /* Helper function called when the movie has been modified */
-    void wasModified();
+    // void truncateInputs(uint64_t size);
 
     /* Close the moviefile */
     void close();
 
     /* Check if another movie starts with the same inputs as this movie, up to
      * a specified frame count. */
-    bool isPrefix(const MovieFile& movie, unsigned int frame);
+    bool isPrefix(const MovieFileInputs* movie, unsigned int frame);
 
-    /* Same, but using the movie savestate framecount parameter. */
-    bool isPrefix(const MovieFile& movie);
-
-    /* Write a single frame of inputs into the input stream */
-    int writeFrame(std::ostream& input_stream, const AllInputs& inputs);
-
-    /* Read a single frame of inputs from the line of inputs */
-    int readFrame(const std::string& line, AllInputs& inputs);
+    /* Helper function called when the movie has been modified */
+    void wasModified();
 
 private:
     Context* context;
-
-    /* Initial framerate values */
-    unsigned int framerate_num, framerate_den;
 
     /* Regex for the keyboard input string */
     std::regex rek;

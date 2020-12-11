@@ -59,7 +59,7 @@ QSize AnnotationsWindow::sizeHint() const
 
 void AnnotationsWindow::update()
 {
-    const QString qann = QString(movie->annotations.c_str());
+    const QString qann = QString(movie->annotations->text.c_str());
     annotationText->setPlainText(qann);
 }
 
@@ -71,7 +71,7 @@ void AnnotationsWindow::clear()
 void AnnotationsWindow::slotSave()
 {
     const QString qann = annotationText->toPlainText();
-    movie->annotations = qann.toStdString();
+    movie->annotations->text = qann.toStdString();
     movie->saveMovie();
 
     /* Close window */

@@ -25,7 +25,7 @@
 #include <array>
 
 #include "../Context.h"
-#include "../MovieFile.h"
+#include "../movie/MovieFile.h"
 
 class InputEditorModel : public QAbstractTableModel {
     Q_OBJECT

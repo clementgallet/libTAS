@@ -53,9 +53,7 @@
 # define personality(pers) ((long)syscall(SYS_personality, pers))
 #endif
 
-GameLoop::GameLoop(Context* c) : context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {
-    movie = MovieFile(context);
-}
+GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
 
 void GameLoop::launchGameThread()
 {
@@ -474,10 +472,10 @@ void GameLoop::init()
          * between the game startup and the first screen draw, which is for now
          * impossible to set. Exception is if we restarted.
          */
-        if (context->framecount == movie.nbFrames()) {
+        if (context->framecount == movie.inputs->nbFrames()) {
             AllInputs ai;
             ai.emptyInputs();
-            movie.setInputs(ai, false);
+            movie.inputs->setInputs(ai, false);
         }
     }
 
@@ -1019,14 +1017,14 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
                 emit inputsChanged();
 
                 /* Return if we already are on the correct frame */
-                if (context->framecount == movie.savestateFramecount())
+                if (context->framecount == movie.header->savestateFramecount())
                     return false;
 
                 /* Fast-forward to savestate frame */
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
-                context->config.sc.movie_framecount = movie.nbFrames();
-                movie.length(&context->movie_time_sec, &context->movie_time_nsec);
-                context->pause_frame = movie.savestateFramecount();
+                context->config.sc.movie_framecount = movie.inputs->nbFrames();
+                movie.header->length(&context->movie_time_sec, &context->movie_time_nsec);
+                context->pause_frame = movie.header->savestateFramecount();
                 context->config.sc.running = true;
                 context->config.sc_modified = true;
 
@@ -1081,7 +1079,7 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
             switch (context->config.sc.recording) {
             case SharedConfig::RECORDING_WRITE:
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
-                context->config.sc.movie_framecount = movie.nbFrames();
+                context->config.sc.movie_framecount = movie.inputs->nbFrames();
                 {
                     std::string msg = "Switched to playback mode";
                     sendMessage(MSGN_OSD_MSG);
@@ -1294,7 +1292,7 @@ void GameLoop::processInputs(AllInputs &ai)
                  * If not, we truncate inputs if necessary.
                  */
                 bool keep_inputs = false;
-                bool past_inputs = context->framecount < movie.nbFrames();
+                bool past_inputs = context->framecount < movie.inputs->nbFrames();
                 emit isInputEditorVisible(keep_inputs);
 
                 /* Send signal before saving the input */
@@ -1317,7 +1315,7 @@ void GameLoop::processInputs(AllInputs &ai)
                     movie.setLockedInputs(ai);
 
                 /* Save inputs to moviefile */
-                movie.setInputs(ai, keep_inputs);
+                movie.inputs->setInputs(ai, keep_inputs);
 
                 /* Send signal after saving the input */
                 if (past_inputs) {
@@ -1338,7 +1336,7 @@ void GameLoop::processInputs(AllInputs &ai)
 
         case SharedConfig::RECORDING_READ:
             /* Read inputs from file */
-            int ret = movie.getInputs(ai);
+            int ret = movie.inputs->getInputs(ai);
 
             if (ret == 1) {
                 /* We are reading the last frame of the movie */
@@ -1485,7 +1483,7 @@ void GameLoop::loopExit()
         return;
     }
 
-    if (movie.modifiedSinceLastSave) {
+    if (movie.inputs->modifiedSinceLastSave) {
 
         /* Ask the user if he wants to save the movie, and get the answer.
          * Prompting a alert window must be done by the UI thread, so we are

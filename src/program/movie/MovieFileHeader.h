@@ -17,18 +17,36 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_AUTOSAVE_H_INCLUDED
-#define LIBTAS_AUTOSAVE_H_INCLUDED
+#ifndef LIBTAS_MOVIEFILEHEADER_H_INCLUDED
+#define LIBTAS_MOVIEFILEHEADER_H_INCLUDED
 
-#include "movie/MovieFile.h"
 #include "Context.h"
-
 #include <string>
-#include <ctime>
 
-namespace AutoSave {
-    void update(Context* context, MovieFile& movie);
-    void removeOldSaves(Context* context, const char* moviename);
-}
+class MovieFileHeader {
+public:
+
+    /* Prepare a movie file from the context */
+    MovieFileHeader(Context* c);
+
+    /* Import the movie header */
+    void load();
+
+    /* Write only the n first frames of input into the movie file. Used for savestate movies */
+    void save(uint64_t tot_frames, uint64_t frame_nb);
+
+    /* Get the frame count of the associated savestate if any */
+    uint64_t savestateFramecount() const;
+
+    /* Get the movie length from metadata */
+    void length(int64_t* sec, int64_t* nsec) const;
+
+    /* Initial framerate values */
+    unsigned int framerate_num, framerate_den;
+
+private:
+    Context* context;
+
+};
 
 #endif

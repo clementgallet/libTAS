@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "Context.h"
-#include "MovieFile.h"
+#include "movie/MovieFile.h"
 #include <xcb/xcb_keysyms.h>
 
 class GameLoop : public QObject {

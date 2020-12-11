@@ -31,7 +31,7 @@
 #include <QTimer>
 
 #include "MainWindow.h"
-#include "../MovieFile.h"
+#include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
 

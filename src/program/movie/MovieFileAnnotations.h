@@ -17,18 +17,30 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_AUTOSAVE_H_INCLUDED
-#define LIBTAS_AUTOSAVE_H_INCLUDED
+#ifndef LIBTAS_MOVIEFILEANNOTATIONS_H_INCLUDED
+#define LIBTAS_MOVIEFILEANNOTATIONS_H_INCLUDED
 
-#include "movie/MovieFile.h"
-#include "Context.h"
-
+#include "../Context.h"
 #include <string>
-#include <ctime>
 
-namespace AutoSave {
-    void update(Context* context, MovieFile& movie);
-    void removeOldSaves(Context* context, const char* moviename);
-}
+class MovieFileAnnotations {
+public:
+    /* Annotations to be saved inside the movie file */
+    std::string text;
+
+    /* Prepare a movie file from the context */
+    MovieFileAnnotations(Context* c);
+
+    /* Import the inputs into a list, and all the parameters.
+     * Returns 0 if no error, or a negative value if an error occured */
+    void load();
+
+    /* Write the inputs into a file and compress to the whole moviefile */
+    void save();
+
+private:
+    Context* context;
+
+};
 
 #endif

@@ -21,7 +21,7 @@
 #define LIBTAS_SAVESTATE_H_INCLUDED
 
 #include "Context.h"
-#include "MovieFile.h"
+#include "movie/MovieFile.h"
 #include <string>
 
 class SaveState {
