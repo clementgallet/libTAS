@@ -597,6 +597,8 @@ void GameLoop::initProcessMessages()
 
 bool GameLoop::startFrameMessages()
 {
+    bool draw_frame = true;
+    
     /* Wait for frame boundary */
     int message = receiveMessage();
 
@@ -688,6 +690,9 @@ bool GameLoop::startFrameMessages()
             emit getTimeTrace(type, static_cast<unsigned long long>(hash), trace);
         }
         break;
+        case MSGB_NONDRAW_FRAME:
+            draw_frame = false;
+            break;
 
         case MSGB_QUIT:
             if (!context->interactive) {
@@ -707,6 +712,8 @@ bool GameLoop::startFrameMessages()
         }
         message = receiveMessage();
     }
+
+    movie.editor->setDraw(draw_frame);
 
     /* Send ram watches */
     if (context->config.sc.osd & SharedConfig::OSD_RAMWATCHES) {

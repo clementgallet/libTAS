@@ -33,6 +33,9 @@ public:
     /* List of locked single inputs. They won't be modified even in recording mode */
     std::set<SingleInput> locked_inputs;
 
+    /* List of nondraw frames */
+    std::set<uint64_t> nondraw_frames;
+
     /* Prepare a movie file from the context */
     MovieFileEditor(Context* c);
 
@@ -45,6 +48,12 @@ public:
 
     /* Copy locked inputs from the current inputs to the inputs in argument */
     void setLockedInputs(AllInputs& inputs, const AllInputs& movie_inputs);
+
+    /* Set draw of current frame */
+    void setDraw(bool draw);
+
+    /* Returns if draw frame */
+    bool isDraw(uint64_t frame);
 
     /* Close the moviefile */
     void close();

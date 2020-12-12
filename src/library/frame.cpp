@@ -280,6 +280,11 @@ void frameBoundary(std::function<void()> draw)
         saveBacktrack = false;
     }
 
+    /* Send message if non-draw frame */
+    if (!draw) {
+        sendMessage(MSGB_NONDRAW_FRAME);
+    }
+
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 

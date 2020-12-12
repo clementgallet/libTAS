@@ -29,6 +29,7 @@ void MovieFileEditor::load()
 {
     /* Clear structures */
     input_set.clear();
+    nondraw_frames.clear();
     
     /* Load the editor file */
     QString editorfile = context->config.tempmoviedir.c_str();
@@ -44,6 +45,14 @@ void MovieFileEditor::load()
         std::string name = editor.value("name").toString().toStdString();
         si.description = name;
         input_set.push_back(si);
+    }
+    editor.endArray();
+
+    size = editor.beginReadArray("nondraw_frames");
+    for (int i = 0; i < size; ++i) {
+        editor.setArrayIndex(i);
+        uint64_t f = static_cast<uint64_t>(editor.value("frame").toULongLong());
+        nondraw_frames.insert(f);
     }
     editor.endArray();
     
@@ -87,6 +96,15 @@ void MovieFileEditor::save()
     }
     config.endArray();
 
+    config.remove("nondraw_frames");
+    config.beginWriteArray("nondraw_frames");
+    i = 0;
+    for (uint64_t f : nondraw_frames) {
+        config.setArrayIndex(i++);
+        config.setValue("frame", static_cast<unsigned long long>(f));
+    }
+    config.endArray();
+
     config.sync();
 }
 
@@ -99,6 +117,21 @@ void MovieFileEditor::setLockedInputs(AllInputs& inputs, const AllInputs& movie_
 		int value = movie_inputs.getInput(si);
 		inputs.setInput(si, value);
 	}
+}
+
+void MovieFileEditor::setDraw(bool draw)
+{
+    if (!draw) {
+        nondraw_frames.insert(context->framecount);
+    }
+    else {
+        nondraw_frames.erase(context->framecount);
+    }
+}
+
+bool MovieFileEditor::isDraw(uint64_t frame)
+{
+    return !nondraw_frames.count(frame);
 }
 
 void MovieFileEditor::close()

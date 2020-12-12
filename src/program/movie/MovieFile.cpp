@@ -141,6 +141,7 @@ int MovieFile::loadInputs(const std::string& moviefile)
 		return ret;
 
     inputs->load();
+    editor->load();
 
 	return 0;
 }

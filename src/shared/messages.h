@@ -251,6 +251,12 @@ enum {
      */
     MSGB_GETTIME_BACKTRACE,
 
+    /*
+     * Indicate that the current frame is a non-draw frame.
+     * Argument: None
+     */
+    MSGB_NONDRAW_FRAME,
+
 };
 
 #endif
