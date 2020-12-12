@@ -24,8 +24,12 @@
 #include "../DeterministicTimer.h"
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
+#include "../hook.h"
 
 namespace libtas {
+
+DEFINE_ORIG_POINTER(xcb_warp_pointer_checked)
+DEFINE_ORIG_POINTER(xcb_warp_pointer)
 
 /* Override */ xcb_query_pointer_cookie_t xcb_query_pointer (xcb_connection_t *c, xcb_window_t window)
 {
@@ -69,6 +73,11 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
                           int16_t           dst_x,
                           int16_t           dst_y)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(xcb_warp_pointer_checked);
+        return orig::xcb_warp_pointer_checked(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
+    }
+
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
@@ -110,8 +119,25 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         game_ai.pointer_y = dst_y;
     }
 
-    xcb_void_cookie_t cookie{0};
-    return cookie;
+    if (shared_config.mouse_prevent_warp) {
+        xcb_void_cookie_t cookie{0};
+        return cookie;        
+    }
+    
+    /* When warping cursor, real and game cursor position are now synced */
+    if (dst_window == XCB_NONE) {
+        /* Relative warp */
+        old_ai.pointer_x += dst_x;
+        old_ai.pointer_y += dst_y;
+    }
+    else {
+        /* Absolute warp */
+        old_ai.pointer_x = dst_x;
+        old_ai.pointer_y = dst_y;
+    }
+
+    LINK_NAMESPACE_GLOBAL(xcb_warp_pointer_checked);
+    return orig::xcb_warp_pointer_checked(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
 }
 
 /* Override */ xcb_void_cookie_t
@@ -125,6 +151,11 @@ xcb_warp_pointer (xcb_connection_t *c,
                   int16_t           dst_x,
                   int16_t           dst_y)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(xcb_warp_pointer);
+        return orig::xcb_warp_pointer(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
+    }
+    
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
@@ -166,8 +197,25 @@ xcb_warp_pointer (xcb_connection_t *c,
         game_ai.pointer_y = dst_y;
     }
 
-    xcb_void_cookie_t cookie{0};
-    return cookie;
+    if (shared_config.mouse_prevent_warp) {
+        xcb_void_cookie_t cookie{0};
+        return cookie;        
+    }
+    
+    /* When warping cursor, real and game cursor position are now synced */
+    if (dst_window == XCB_NONE) {
+        /* Relative warp */
+        old_ai.pointer_x += dst_x;
+        old_ai.pointer_y += dst_y;
+    }
+    else {
+        /* Absolute warp */
+        old_ai.pointer_x = dst_x;
+        old_ai.pointer_y = dst_y;
+    }
+
+    LINK_NAMESPACE_GLOBAL(xcb_warp_pointer);
+    return orig::xcb_warp_pointer(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
 }
 
 /* Override */ xcb_grab_pointer_cookie_t

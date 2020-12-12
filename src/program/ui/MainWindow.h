@@ -132,6 +132,7 @@ public:
     QAction *mouseAction;
     QAction *mouseModeAction;
     QAction *mouseWarpAction;
+    QAction *mouseGameWarpAction;
     QActionGroup *joystickGroup;
 
 
@@ -265,6 +266,7 @@ private slots:
     void slotVariableFramerate(bool checked);
     void slotMouseMode(bool checked);
     void slotMouseWarp(bool checked);
+    void slotMouseGameWarp(bool checked);
 };
 
 #endif

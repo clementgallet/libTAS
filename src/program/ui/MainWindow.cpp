@@ -822,6 +822,8 @@ void MainWindow::createMenus()
     mouseModeAction->setCheckable(true);
     mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, &MainWindow::slotMouseWarp);
     mouseWarpAction->setCheckable(true);
+    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games to warp the mouse cursor"), this, &MainWindow::slotMouseGameWarp);
+    mouseGameWarpAction->setCheckable(true);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
     joystickMenu->addActions(joystickGroup->actions());
@@ -1185,6 +1187,7 @@ void MainWindow::updateUIFromConfig()
 
     mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
     mouseWarpAction->setChecked(context->config.mouse_warp);
+    mouseGameWarpAction->setChecked(context->config.sc.mouse_prevent_warp);
 
     int screenResValue = (context->config.sc.screen_width << 16) | context->config.sc.screen_height;
     setRadioFromList(screenResGroup, screenResValue);
@@ -1573,6 +1576,7 @@ BOOLSLOT(slotAutoRestart, context->config.auto_restart)
 BOOLSLOT(slotVariableFramerate, context->config.sc.variable_framerate)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
 BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
+BOOLSLOT(slotMouseGameWarp, context->config.sc.mouse_prevent_warp)
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {

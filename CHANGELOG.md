@@ -30,6 +30,7 @@
 * Closing the game window takes effect even when paused (#65)
 * Can remove multiple ram watches
 * Implement greenzone using existing savestates (#134)
+* Add an option to allow games to warp the mouse pointer (#378)
 
 ### Changed
 

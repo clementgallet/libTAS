@@ -28,6 +28,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XQueryPointer)
+DEFINE_ORIG_POINTER(XWarpPointer)
 
 /* Override */ Bool XQueryPointer( Display* display, Window w,
         Window* root_return, Window* child_return,
@@ -130,10 +131,15 @@ DEFINE_ORIG_POINTER(XQueryPointer)
     return 0; // Not sure what to return
 }
 
-/* Override */ int XWarpPointer( Display*, Window src_w, Window dest_w,
+/* Override */ int XWarpPointer( Display* d, Window src_w, Window dest_w,
     int src_x, int src_y, unsigned int src_width, unsigned int src_height,
     int dest_x, int dest_y)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(XWarpPointer);
+        return orig::XWarpPointer(d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y);
+    }
+    
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dest_w, " and dest_x ", dest_x, " and dest_y ", dest_y);
 
     /* We have to generate an MotionNotify event. */
@@ -174,9 +180,24 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         game_ai.pointer_y = dest_y;
     }
 
-    return 0; // Not sure what to return
+    if (shared_config.mouse_prevent_warp) {
+        return 0; // Not sure what to return
+    }
+    
+    /* When warping cursor, real and game cursor position are now synced */
+    if (dest_w == None) {
+        /* Relative warp */
+        old_ai.pointer_x += dest_x;
+        old_ai.pointer_y += dest_y;
+    }
+    else {
+        /* Absolute warp */
+        old_ai.pointer_x = dest_x;
+        old_ai.pointer_y = dest_y;
+    }
+
+    LINK_NAMESPACE_GLOBAL(XWarpPointer);
+    return orig::XWarpPointer(d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y);
 }
-
-
 
 }

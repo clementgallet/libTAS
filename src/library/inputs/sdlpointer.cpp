@@ -29,6 +29,8 @@
 namespace libtas {
 
 DECLARE_ORIG_POINTER(SDL_GetWindowID)
+DECLARE_ORIG_POINTER(SDL_WarpMouseInWindow)
+DEFINE_ORIG_POINTER(SDL_WarpMouse)
 
 SDL_Window *SDL_GetMouseFocus(void)
 {
@@ -111,6 +113,17 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     /* Update the pointer coordinates */
     game_ai.pointer_x = x;
     game_ai.pointer_y = y;
+    
+    if (shared_config.mouse_prevent_warp) {
+        return;
+    }
+
+    /* When warping cursor, real and game cursor position are now synced */
+    old_ai.pointer_x = x;
+    old_ai.pointer_y = y;
+
+    LINK_NAMESPACE_SDL2(SDL_WarpMouseInWindow);
+    NATIVECALL(orig::SDL_WarpMouseInWindow(window, x, y));
 }
 
 int SDL_WarpMouseGlobal(int x, int y)
@@ -142,6 +155,13 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     /* Update the pointer coordinates */
     game_ai.pointer_x = x;
     game_ai.pointer_y = y;
+    
+    if (shared_config.mouse_prevent_warp) {
+        return;
+    }
+
+    LINK_NAMESPACE_SDL1(SDL_WarpMouse);
+    NATIVECALL(orig::SDL_WarpMouse(x, y));
 }
 
 SDL_bool relativeMode = SDL_FALSE;

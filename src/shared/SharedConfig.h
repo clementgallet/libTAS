@@ -257,6 +257,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Are we sending absolute or relative mouse movements */
     bool mouse_mode_relative = false;
 
+    /* Are preventing the game from warping the cursor */
+    bool mouse_prevent_warp = false;
+
     /* Display OSD in the video encode */
     bool osd_encode = false;
 
