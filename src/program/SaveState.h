@@ -23,6 +23,7 @@
 #include "Context.h"
 #include "movie/MovieFile.h"
 #include <string>
+#include <memory>
 
 class SaveState {
 public:
@@ -50,17 +51,25 @@ public:
     /* Frame count of the savestate */
     uint64_t framecount;
 
+    /* Movie file */
+    std::unique_ptr<MovieFile> movie;
+
+    void init(Context* context, int i);
+
     /* Return the savestate movie path */
     const std::string& getMoviePath();
 
     /* Save state. Return the received message */
-    int save(Context* context, MovieFile& movie);
+    int save(Context* context, const MovieFile& movie);
 
     /* Load state. Return 0 or error (<0) */
-    int load(Context* context, MovieFile& movie, bool branch);
+    int load(Context* context, const MovieFile& movie, bool branch);
 
     /* Process after state loading. Return message or error */
     int postLoad(Context* context, MovieFile& movie, bool branch);
+
+    /* Save movie on disk when exiting */
+    void backupMovie();
 
 private:
     /* Savestate path */

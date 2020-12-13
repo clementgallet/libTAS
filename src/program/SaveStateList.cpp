@@ -29,10 +29,20 @@
 static SaveState states[NB_STATES];
 
 /* Id of last loaded or saved savestate */
-static int last_state_id = -1;
+static int last_state_id;
 
 /* Old id of root savestate */
-static int old_root_state_id = -1;
+static int old_root_state_id;
+
+void SaveStateList::init(Context* context)
+{
+    for (int i = 0; i < NB_STATES; i++) {
+        states[i].init(context, i);
+    }
+    
+    last_state_id = -1;
+    old_root_state_id = -1;
+}
 
 SaveState& SaveStateList::get(int id)
 {
@@ -41,9 +51,6 @@ SaveState& SaveStateList::get(int id)
         id = 0;
     }
 
-    states[id].id = id;
-    states[id].is_backtrack = (id == 10);
-    
     return states[id];
 }
 
@@ -130,4 +137,11 @@ int SaveStateList::nearestState(uint64_t framecount)
     }
     
     return -1;
+}
+
+void SaveStateList::backupMovies()
+{
+    for (int i = 0; i < NB_STATES; i++) {
+        states[i].backupMovie();
+    }
 }

@@ -25,23 +25,23 @@ MovieFileAnnotations::MovieFileAnnotations(Context* c) : context(c) {}
 
 void MovieFileAnnotations::load()
 {
-	/* Load annotations if available */
-	std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    /* Load annotations if available */
+    std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
     std::ifstream annotations_stream(annotations_file);
-	if (annotations_stream) {
-		text = std::string((std::istreambuf_iterator<char>(annotations_stream)),
-	                 std::istreambuf_iterator<char>());
-	}
-	else {
-		text = "";
-	}
+    if (annotations_stream) {
+        text = std::string((std::istreambuf_iterator<char>(annotations_stream)),
+                     std::istreambuf_iterator<char>());
+    }
+    else {
+        text = "";
+    }
 }
 
 void MovieFileAnnotations::save()
 {
-	/* Save annotations */
-	std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    /* Save annotations */
+    std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
     std::ofstream annotations_stream(annotations_file);
-	annotations_stream << text;
-	annotations_stream.close();
+    annotations_stream << text;
+    annotations_stream.close();
 }

@@ -33,10 +33,10 @@ void MovieFileEditor::load()
     
     /* Load the editor file */
     QString editorfile = context->config.tempmoviedir.c_str();
-	editorfile += "/editor.ini";
+    editorfile += "/editor.ini";
 
-	QSettings editor(editorfile, QSettings::IniFormat);
-	editor.setFallbacksEnabled(false);
+    QSettings editor(editorfile, QSettings::IniFormat);
+    editor.setFallbacksEnabled(false);
     
     int size = editor.beginReadArray("input_names");
     for (int i = 0; i < size; ++i) {
@@ -63,10 +63,10 @@ void MovieFileEditor::load()
     QString configfile = context->config.tempmoviedir.c_str();
     configfile += "/config.ini";
 
-	QSettings config(configfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
+    QSettings config(configfile, QSettings::IniFormat);
+    config.setFallbacksEnabled(false);
 
-	size = config.beginReadArray("input_names");
+    size = config.beginReadArray("input_names");
     for (int i = 0; i < size; ++i) {
         config.setArrayIndex(i);
         SingleInput si = config.value("input").value<SingleInput>();
@@ -81,12 +81,12 @@ void MovieFileEditor::save()
 {
     /* Save some parameters into the editor file */
     QString editorfile = context->config.tempmoviedir.c_str();
-	editorfile += "/editor.ini";
+    editorfile += "/editor.ini";
 
-	QSettings config(editorfile, QSettings::IniFormat);
-	config.setFallbacksEnabled(false);
+    QSettings config(editorfile, QSettings::IniFormat);
+    config.setFallbacksEnabled(false);
 
-	config.remove("input_names");
+    config.remove("input_names");
     config.beginWriteArray("input_names");
     int i = 0;
     for (const SingleInput& si : input_set) {
@@ -110,13 +110,13 @@ void MovieFileEditor::save()
 
 void MovieFileEditor::setLockedInputs(AllInputs& inputs, const AllInputs& movie_inputs)
 {
-	if (locked_inputs.empty())
-		return;
+    if (locked_inputs.empty())
+        return;
 
-	for (SingleInput si : locked_inputs) {
-		int value = movie_inputs.getInput(si);
-		inputs.setInput(si, value);
-	}
+    for (SingleInput si : locked_inputs) {
+        int value = movie_inputs.getInput(si);
+        inputs.setInput(si, value);
+    }
 }
 
 void MovieFileEditor::setDraw(bool draw)
@@ -136,5 +136,5 @@ bool MovieFileEditor::isDraw(uint64_t frame)
 
 void MovieFileEditor::close()
 {
-	locked_inputs.clear();
+    locked_inputs.clear();
 }

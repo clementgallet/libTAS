@@ -99,7 +99,7 @@ public:
 
     /* Check if another movie starts with the same inputs as this movie, up to
      * a specified frame count. */
-    bool isPrefix(const MovieFileInputs* movie, unsigned int frame);
+    bool isPrefix(const MovieFileInputs* movie, unsigned int frame) const;
 
     /* Helper function called when the movie has been modified */
     void wasModified();

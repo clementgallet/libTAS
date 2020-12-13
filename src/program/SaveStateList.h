@@ -25,6 +25,9 @@
 #include <string>
 
 namespace SaveStateList {
+    
+    /* Init savestates and movies */
+    void init(Context* context);
 
     /* Return the savestate from its id */
     SaveState& get(int id);
@@ -46,6 +49,9 @@ namespace SaveStateList {
 
     /* Returns the nearest state id in current branch before framecount */
     int nearestState(uint64_t framecount);
+
+    /* Save movies on disk when exiting */
+    void backupMovies();
 
 }
 

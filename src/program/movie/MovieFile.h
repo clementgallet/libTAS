@@ -61,9 +61,9 @@ public:
     int loadMovie();
     int loadMovie(const std::string& moviefile);
 
-    /* Import the inputs only. Used when loading movies attached to savestates.
+    /* Import only relevent data used for savestate movies.
      * Returns 0 if no error, or a negative value if an error occured */
-    int loadInputs(const std::string& moviefile);
+    int loadSavestateMovie(const std::string& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     int saveMovie();
@@ -72,10 +72,13 @@ public:
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
     int saveMovie(const std::string& moviefile, uint64_t frame_nb);
 
+    /* Copy movie to another one */
+    void copyTo(MovieFile& movie) const;
+
     /* Copy locked inputs from the current inputs to the inputs in argument */
     void setLockedInputs(AllInputs& inputs);
 
-    bool isPrefix(const MovieFile& movie);
+    bool isPrefix(const MovieFile& movie) const;
 
     /* Close the moviefile */
     void close();

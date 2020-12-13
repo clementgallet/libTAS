@@ -26,6 +26,17 @@
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
 
+void SaveState::init(Context* context, int i)
+{
+    id = i;
+    is_backtrack = (i == 10);
+    parent = -1;
+    movie = std::unique_ptr<MovieFile>(new MovieFile(context));
+
+    buildPaths(context);
+    buildMessages(context);
+}
+
 void SaveState::buildPaths(Context* context)
 {
     /* Build the savestate paths */
@@ -92,15 +103,12 @@ const std::string& SaveState::getMoviePath()
     return movie_path;
 }
 
-int SaveState::save(Context* context, MovieFile& movie)
-{
-    buildPaths(context);
-    buildMessages(context);
-    
-    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {    
+int SaveState::save(Context* context, const MovieFile& m)
+{    
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
         /* Save the movie file */
-        movie.saveMovie(movie_path, context->framecount);
-    }    
+        m.copyTo(*movie);
+    }
     
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
@@ -136,11 +144,8 @@ int SaveState::save(Context* context, MovieFile& movie)
     return message;
 }
 
-int SaveState::load(Context* context, MovieFile& movie, bool branch)
+int SaveState::load(Context* context, const MovieFile& m, bool branch)
 {
-    buildPaths(context);
-    buildMessages(context);
-
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
     sendData(&id, sizeof(int));
@@ -161,12 +166,12 @@ int SaveState::load(Context* context, MovieFile& movie, bool branch)
             if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
                 (access(movie_path.c_str(), F_OK) == 0)) {
 
-                /* Load the savestate movie */
+                /* Load the savestate movie from disk */
                 MovieFile savedmovie(context);
-                int ret = savedmovie.loadInputs(movie_path);
+                int ret = savedmovie.loadSavestateMovie(movie_path);
 
                 /* Checking if our movie is a prefix of the savestate movie */
-                if ((ret == 0) && savedmovie.inputs->isPrefix(movie.inputs, context->framecount)) {
+                if ((ret == 0) && savedmovie.inputs->isPrefix(m.inputs, context->framecount)) {
                     return ENOSTATEMOVIEPREFIX;
                 }
             }
@@ -189,13 +194,7 @@ int SaveState::load(Context* context, MovieFile& movie, bool branch)
     if ((context->config.sc.recording == SharedConfig::RECORDING_READ) && (!branch)) {
 
         /* Checking if the savestate movie is a prefix of our movie */
-        MovieFile savedmovie(context);
-        int ret = savedmovie.loadInputs(movie_path);
-        if (ret < 0) {
-            return ENOMOVIE;
-        }
-
-        if (!movie.isPrefix(savedmovie)) {
+        if (!movie || !m.isPrefix(*movie)) {
             /* Not a prefix, we don't allow loading */
             if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
                 sendMessage(MSGN_OSD_MSG);
@@ -216,7 +215,7 @@ int SaveState::load(Context* context, MovieFile& movie, bool branch)
     return 0;
 }
 
-int SaveState::postLoad(Context* context, MovieFile& movie, bool branch)
+int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
 {
     int message = receiveMessage();
     
@@ -236,14 +235,14 @@ int SaveState::postLoad(Context* context, MovieFile& movie, bool branch)
             /* When in writing move or loading a branch,
              * we load the movie associated with the savestate.
              */
-            movie.loadInputs(movie_path);
+            movie->copyTo(m);
         }
 
         /* If the movie was modified since last state load, increment
          * the rerecord count. */
-        if (movie.inputs->modifiedSinceLastStateLoad) {
+        if (m.inputs->modifiedSinceLastStateLoad) {
             context->rerecord_count++;
-            movie.inputs->modifiedSinceLastStateLoad = false;
+            m.inputs->modifiedSinceLastStateLoad = false;
         }
 
         message = receiveMessage();
@@ -279,4 +278,9 @@ int SaveState::postLoad(Context* context, MovieFile& movie, bool branch)
         return MSGB_LOADING_SUCCEEDED;
     
     return 0;
+}
+
+void SaveState::backupMovie()
+{
+    movie->saveMovie(movie_path);
 }

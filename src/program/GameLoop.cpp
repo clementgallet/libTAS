@@ -418,6 +418,9 @@ void GameLoop::init()
     /* Remove the file socket */
     removeSocket();
 
+    /* Init savestate list */
+    SaveStateList::init(context);
+
     /* We fork here so that the child process calls the game */
     context->fork_pid = fork();
     if (context->fork_pid == 0) {
@@ -1020,18 +1023,19 @@ bool GameLoop::processEvent(uint8_t type, struct HotKey &hk)
 
                 /* Loading the movie */
                 emit inputsToBeChanged();
-                movie.loadInputs(SaveStateList::get(statei).getMoviePath());
+                movie.loadSavestateMovie(SaveStateList::get(statei).getMoviePath());
                 emit inputsChanged();
 
                 /* Return if we already are on the correct frame */
-                if (context->framecount == movie.header->savestateFramecount())
+                if (context->framecount == movie.header->savestate_framecount)
                     return false;
 
                 /* Fast-forward to savestate frame */
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
                 context->config.sc.movie_framecount = movie.inputs->nbFrames();
-                movie.header->length(&context->movie_time_sec, &context->movie_time_nsec);
-                context->pause_frame = movie.header->savestateFramecount();
+                context->movie_time_sec = movie.header->length_sec;
+                context->movie_time_nsec = movie.header->length_nsec;
+                context->pause_frame = movie.header->savestate_framecount;
                 context->config.sc.running = true;
                 context->config.sc_modified = true;
 
@@ -1481,6 +1485,9 @@ void GameLoop::loopExit()
         /* Remove savestates because they are invalid on future instances of the game */
         remove_savestates(context);
 
+        /* Backup savestate movies on disk */
+        SaveStateList::backupMovies();
+
         /* wait on the game process to terminate */
         wait(nullptr);
 
@@ -1511,6 +1518,9 @@ void GameLoop::loopExit()
 
     /* Remove savestates because they are invalid on future instances of the game */
     remove_savestates(context);
+
+    /* Backup savestate movies on disk */
+    SaveStateList::backupMovies();
 
     /* Reset the frame count */
     context->framecount = 0;

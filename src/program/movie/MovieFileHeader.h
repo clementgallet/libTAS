@@ -32,17 +32,20 @@ public:
     /* Import the movie header */
     void load();
 
+    /* Only load parameters used for savestates */
+    void loadSavestate();
+
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
     void save(uint64_t tot_frames, uint64_t frame_nb);
 
-    /* Get the frame count of the associated savestate if any */
-    uint64_t savestateFramecount() const;
-
-    /* Get the movie length from metadata */
-    void length(int64_t* sec, int64_t* nsec) const;
-
     /* Initial framerate values */
     unsigned int framerate_num, framerate_den;
+
+    /* Savestate framecount */
+    uint64_t savestate_framecount;
+
+    /* Movie length, only used for savestate movies */
+    int64_t length_sec, length_nsec;
 
 private:
     Context* context;

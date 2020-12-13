@@ -26,11 +26,11 @@
 
 MovieFileInputs::MovieFileInputs(Context* c) : modifiedSinceLastSave(false), modifiedSinceLastAutoSave(false), modifiedSinceLastStateLoad(false), context(c)
 {
-	rek.assign(R"(\|K([0-9a-f]*(?::[0-9a-f]+)*)\|)", std::regex::ECMAScript|std::regex::optimize);
-	rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?[\.1-5]{5})\|)", std::regex::ECMAScript|std::regex::optimize);
-	rec.assign(R"(\|C([1-4](?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
-	ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
-	ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
+    rek.assign(R"(\|K([0-9a-f]*(?::[0-9a-f]+)*)\|)", std::regex::ECMAScript|std::regex::optimize);
+    rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?[\.1-5]{5})\|)", std::regex::ECMAScript|std::regex::optimize);
+    rec.assign(R"(\|C([1-4](?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
+    ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
+    ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
 }
 
 void MovieFileInputs::load()
@@ -53,7 +53,7 @@ void MovieFileInputs::load()
 
     input_stream.close();
 
-	return;
+    return;
 }
 
 void MovieFileInputs::save()
@@ -73,7 +73,7 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
     /* Write keyboard inputs */
     if (context->config.sc.keyboard_support) {
         input_stream.put('|');
-		input_stream.put('K');
+        input_stream.put('K');
         input_stream << std::hex;
         for (int k=0; k<AllInputs::MAXKEYS; k++) {
             if (!inputs.keyboard[k]) break;
@@ -84,10 +84,10 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
     /* Write mouse inputs */
     if (context->config.sc.mouse_support) {
         input_stream.put('|');
-		input_stream.put('M');
+        input_stream.put('M');
         input_stream << std::dec;
         input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
-		input_stream << ((inputs.pointer_mode == SingleInput::POINTER_MODE_RELATIVE)?"R:":"A:");
+        input_stream << ((inputs.pointer_mode == SingleInput::POINTER_MODE_RELATIVE)?"R:":"A:");
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B1))?'1':'.');
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B2))?'2':'.');
         input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B3))?'3':'.');
@@ -97,11 +97,11 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
 
     /* Write controller inputs */
     for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
-		if (inputs.isDefaultController(joy))
-			continue;
+        if (inputs.isDefaultController(joy))
+            continue;
         input_stream.put('|');
-		input_stream.put('C');
-		input_stream.put('1'+joy);
+        input_stream.put('C');
+        input_stream.put('1'+joy);
         input_stream << std::dec;
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             input_stream << inputs.controller_axes[joy][axis] << ':';
@@ -123,35 +123,35 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
-	/* Write flag inputs */
-	if (inputs.flags) {
-		input_stream << '|';
-		input_stream << 'F';
-		if (inputs.flags & (1 << SingleInput::FLAG_RESTART)) input_stream.put('R');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED)) input_stream.put('1');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED)) input_stream.put('2');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED)) input_stream.put('3');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED)) input_stream.put('4');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_REMOVED)) input_stream.put('I');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_REMOVED)) input_stream.put('L');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_REMOVED)) input_stream.put('U');
-		if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED)) input_stream.put('O');
-	}
+    /* Write flag inputs */
+    if (inputs.flags) {
+        input_stream << '|';
+        input_stream << 'F';
+        if (inputs.flags & (1 << SingleInput::FLAG_RESTART)) input_stream.put('R');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED)) input_stream.put('1');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED)) input_stream.put('2');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED)) input_stream.put('3');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED)) input_stream.put('4');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_REMOVED)) input_stream.put('I');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_REMOVED)) input_stream.put('L');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_REMOVED)) input_stream.put('U');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED)) input_stream.put('O');
+    }
 
-	/* Write mouse inputs */
+    /* Write mouse inputs */
     if (context->config.sc.variable_framerate) {
-		/* Zero framerate is default framerate */
-		if (inputs.framerate_num) {
-			/* Only store framerate if different from initial framerate */
-			if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
-		        input_stream.put('|');
-				input_stream.put('T');
-		        input_stream << std::dec;
-		        input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
-	    	}
-		}
-	}
-	input_stream << '|' << std::endl;
+        /* Zero framerate is default framerate */
+        if (inputs.framerate_num) {
+            /* Only store framerate if different from initial framerate */
+            if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
+                input_stream.put('|');
+                input_stream.put('T');
+                input_stream << std::dec;
+                input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
+            }
+        }
+    }
+    input_stream << '|' << std::endl;
 
     return 1;
 }
@@ -162,201 +162,201 @@ int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
 
     std::istringstream input_string(line);
     char d;
-	input_string >> d;
+    input_string >> d;
 
-	/* Read keyboard inputs using regex first. If matched, read the rest of the
-	 * inputs with regex as well. */
+    /* Read keyboard inputs using regex first. If matched, read the rest of the
+     * inputs with regex as well. */
 
-	std::smatch match;
+    std::smatch match;
     if (std::regex_search(line, match, rek) && match.size() > 1) {
-		std::istringstream key_string(match.str(1));
-		readKeyboardFrame(key_string, inputs);
+        std::istringstream key_string(match.str(1));
+        readKeyboardFrame(key_string, inputs);
 
-		/* Read mouse inputs */
-		if (std::regex_search(line, match, rem) && match.size() > 1) {
-			std::istringstream mouse_string(match.str(1));
-			readMouseFrame(mouse_string, inputs);
-	    }
+        /* Read mouse inputs */
+        if (std::regex_search(line, match, rem) && match.size() > 1) {
+            std::istringstream mouse_string(match.str(1));
+            readMouseFrame(mouse_string, inputs);
+        }
 
-		/* Read controller inputs */
-		std::sregex_iterator next(line.begin(), line.end(), rec);
-		std::sregex_iterator end;
-		if (next != end) {
-			while (next != end) {
-				std::smatch match = *next;
-				std::istringstream controller_string(match.str(1));
+        /* Read controller inputs */
+        std::sregex_iterator next(line.begin(), line.end(), rec);
+        std::sregex_iterator end;
+        if (next != end) {
+            while (next != end) {
+                std::smatch match = *next;
+                std::istringstream controller_string(match.str(1));
 
-				/* Extract joystick number */
-				char j;
-				controller_string >> j;
+                /* Extract joystick number */
+                char j;
+                controller_string >> j;
 
-				/* Read joystick inputs */
-				readControllerFrame(controller_string, inputs, j - '1');
-				next++;
-			}
-		}
+                /* Read joystick inputs */
+                readControllerFrame(controller_string, inputs, j - '1');
+                next++;
+            }
+        }
 
-		/* Read flag inputs */
-		if (std::regex_search(line, match, ref) && match.size() > 1) {
-			std::istringstream flag_string(match.str(1));
-			readFlagFrame(flag_string, inputs);
-		}
+        /* Read flag inputs */
+        if (std::regex_search(line, match, ref) && match.size() > 1) {
+            std::istringstream flag_string(match.str(1));
+            readFlagFrame(flag_string, inputs);
+        }
 
-		/* Read framerate inputs */
-		if (std::regex_search(line, match, ret) && match.size() > 1) {
-			std::istringstream framerate_string(match.str(1));
-			readFramerateFrame(framerate_string, inputs);
-		}
-		else {
-			/* Write initial framerate values */
-			// inputs.framerate_num = framerate_num;
-			// inputs.framerate_den = framerate_den;
-		}
+        /* Read framerate inputs */
+        if (std::regex_search(line, match, ret) && match.size() > 1) {
+            std::istringstream framerate_string(match.str(1));
+            readFramerateFrame(framerate_string, inputs);
+        }
+        else {
+            /* Write initial framerate values */
+            // inputs.framerate_num = framerate_num;
+            // inputs.framerate_den = framerate_den;
+        }
 
-		return 1;
+        return 1;
     }
 
-	/* Following code is for old input format (1.3.5 and earlier) */
+    /* Following code is for old input format (1.3.5 and earlier) */
 
-	/* Read keyboard inputs */
-	if (context->config.sc.keyboard_support) {
-		readKeyboardFrame(input_string, inputs);
+    /* Read keyboard inputs */
+    if (context->config.sc.keyboard_support) {
+        readKeyboardFrame(input_string, inputs);
     }
 
-	/* Read mouse inputs */
+    /* Read mouse inputs */
     if (context->config.sc.mouse_support) {
-		readMouseFrame(input_string, inputs);
+        readMouseFrame(input_string, inputs);
     }
 
     /* Read controller inputs */
-	for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
-		readControllerFrame(input_string, inputs, joy);
+    for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
+        readControllerFrame(input_string, inputs, joy);
     }
 
-	/* Read flag inputs */
-	readFlagFrame(input_string, inputs);
+    /* Read flag inputs */
+    readFlagFrame(input_string, inputs);
 
-	/* Read framerate inputs */
-	if (context->config.sc.variable_framerate) {
-		readFramerateFrame(input_string, inputs);
-	}
+    /* Read framerate inputs */
+    if (context->config.sc.variable_framerate) {
+        readFramerateFrame(input_string, inputs);
+    }
 
     return 1;
 }
 
 void MovieFileInputs::readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs)
 {
-	input_string >> std::hex;
-	char d = input_string.peek();
-	if (d == '|') {
-		input_string.get();
-		return;
-	}
-	for (int k=0; (k<AllInputs::MAXKEYS) && input_string; k++) {
-		input_string >> inputs.keyboard[k] >> d;
-		if (d == '|') {
-			break;
-		}
-	}
+    input_string >> std::hex;
+    char d = input_string.peek();
+    if (d == '|') {
+        input_string.get();
+        return;
+    }
+    for (int k=0; (k<AllInputs::MAXKEYS) && input_string; k++) {
+        input_string >> inputs.keyboard[k] >> d;
+        if (d == '|') {
+            break;
+        }
+    }
 }
 
 void MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs& inputs)
 {
-	char d;
-	input_string >> std::dec;
-	input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
-	input_string >> d;
-	if ((d == 'R') || (d == 'A')) {
-		/* Read mouse mode */
-		if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
-		else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
-		input_string >> d;
-		input_string >> d;
-	}
-	else {
-		inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
-	}
-	if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
-	input_string >> d;
-	if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);
-	input_string >> d;
-	if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B3);
-	input_string >> d;
-	if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B4);
-	input_string >> d;
-	if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B5);
-	input_string >> d;
+    char d;
+    input_string >> std::dec;
+    input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
+    input_string >> d;
+    if ((d == 'R') || (d == 'A')) {
+        /* Read mouse mode */
+        if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
+        else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+        input_string >> d;
+        input_string >> d;
+    }
+    else {
+        inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+    }
+    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
+    input_string >> d;
+    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);
+    input_string >> d;
+    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B3);
+    input_string >> d;
+    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B4);
+    input_string >> d;
+    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B5);
+    input_string >> d;
 }
 
 void MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy)
 {
-	char d;
-	input_string >> std::dec;
-	for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-		input_string >> inputs.controller_axes[joy][axis] >> d;
-	}
-	for (int b=0; b<15; b++) {
-		input_string >> d;
-		if (d != '.') inputs.controller_buttons[joy] |= (1 << b);
-	}
-	input_string >> d;
+    char d;
+    input_string >> std::dec;
+    for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
+        input_string >> inputs.controller_axes[joy][axis] >> d;
+    }
+    for (int b=0; b<15; b++) {
+        input_string >> d;
+        if (d != '.') inputs.controller_buttons[joy] |= (1 << b);
+    }
+    input_string >> d;
 }
 
 void MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs& inputs)
 {
-	char d;
-	input_string >> d;
-	while (input_string && (d != '|')) {
-		switch (d) {
-			case 'R': inputs.flags |= (1 << SingleInput::FLAG_RESTART); break;
-			case '1': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED); break;
-			case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED); break;
-			case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED); break;
-			case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED); break;
-			case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_REMOVED); break;
-			case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_REMOVED); break;
-			case 'U': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_REMOVED); break;
-			case 'O': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_REMOVED); break;
-		}
-		input_string >> d;
-	}
+    char d;
+    input_string >> d;
+    while (input_string && (d != '|')) {
+        switch (d) {
+            case 'R': inputs.flags |= (1 << SingleInput::FLAG_RESTART); break;
+            case '1': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED); break;
+            case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED); break;
+            case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED); break;
+            case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED); break;
+            case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_REMOVED); break;
+            case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_REMOVED); break;
+            case 'U': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_REMOVED); break;
+            case 'O': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_REMOVED); break;
+        }
+        input_string >> d;
+    }
 }
 
 void MovieFileInputs::readFramerateFrame(std::istringstream& input_string, AllInputs& inputs)
 {
-	char d;
-	input_string >> std::dec;
-	input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
+    char d;
+    input_string >> std::dec;
+    input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
 }
 
 uint64_t MovieFileInputs::nbFrames() const
 {
-	return input_list.size();
+    return input_list.size();
 }
 
 void MovieFileInputs::updateLength() const
 {
-	if (context->config.sc.movie_framecount != nbFrames()) {
-		context->config.sc.movie_framecount = nbFrames();
+    if (context->config.sc.movie_framecount != nbFrames()) {
+        context->config.sc.movie_framecount = nbFrames();
 
-		/* Unvalidate movie length when variable framerate */
-		if (context->config.sc.variable_framerate) {
-			context->movie_time_sec = -1;
-			context->movie_time_nsec = -1;
-		}
-		else {
-			/* Compute movie length from framecount */
-			context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
-			context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
-		}
+        /* Unvalidate movie length when variable framerate */
+        if (context->config.sc.variable_framerate) {
+            context->movie_time_sec = -1;
+            context->movie_time_nsec = -1;
+        }
+        else {
+            /* Compute movie length from framecount */
+            context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
+            context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
+        }
 
-		context->config.sc_modified = true;
-	}
+        context->config.sc_modified = true;
+    }
 }
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 {
-	return setInputs(inputs, context->framecount, keep_inputs);
+    return setInputs(inputs, context->framecount, keep_inputs);
 }
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
@@ -364,22 +364,22 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
         input_list.push_back(inputs);
-		wasModified();
+        wasModified();
         return 0;
     }
     else if (pos < input_list.size()) {
         /* Writing to a frame that is before the last one. if keep_inputs is
-		 * false, we resize the input list accordingly and append the frame at
-		 * the end.
+         * false, we resize the input list accordingly and append the frame at
+         * the end.
          */
-		if (keep_inputs) {
-			input_list[pos] = inputs;
-		}
-		else {
-	        input_list.resize(pos);
-	        input_list.push_back(inputs);
-		}
-		wasModified();
+        if (keep_inputs) {
+            input_list[pos] = inputs;
+        }
+        else {
+            input_list.resize(pos);
+            input_list.push_back(inputs);
+        }
+        wasModified();
         return 0;
     }
     else {
@@ -390,25 +390,25 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
 
 int MovieFileInputs::getInputs(AllInputs& inputs) const
 {
-	return getInputs(inputs, context->framecount);
+    return getInputs(inputs, context->framecount);
 }
 
 int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
 {
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
-		if (pos == input_list.size())
-			return -2;
-    	return -1;
+        if (pos == input_list.size())
+            return -2;
+        return -1;
     }
 
-	inputs = input_list[pos];
+    inputs = input_list[pos];
 
-	/* Special case for zero framerate */
-	if (!inputs.framerate_num) {
-		inputs.framerate_num = framerate_num;
-		inputs.framerate_den = framerate_den;
-	}
+    /* Special case for zero framerate */
+    if (!inputs.framerate_num) {
+        inputs.framerate_num = framerate_num;
+        inputs.framerate_den = framerate_den;
+    }
 
     if ((pos + 1) == input_list.size()) {
         /* We are reading the last frame of the movie, notify the caller */
@@ -420,45 +420,45 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
 
 void MovieFileInputs::insertInputsBefore(const AllInputs& inputs, uint64_t pos)
 {
-	if (pos > input_list.size())
-		return;
+    if (pos > input_list.size())
+        return;
 
-	input_list.insert(input_list.begin() + pos, inputs);
-	wasModified();
+    input_list.insert(input_list.begin() + pos, inputs);
+    wasModified();
 }
 
 void MovieFileInputs::deleteInputs(uint64_t pos)
 {
-	if (pos >= input_list.size())
-		return;
+    if (pos >= input_list.size())
+        return;
 
-	input_list.erase(input_list.begin() + pos);
-	wasModified();
+    input_list.erase(input_list.begin() + pos);
+    wasModified();
 }
 
 // void MovieFileInputs::truncateInputs(uint64_t size)
 // {
-// 	input_list.resize(size);
-// 	wasModified();
+//     input_list.resize(size);
+//     wasModified();
 // }
 
 void MovieFileInputs::close()
 {
-	input_list.clear();
+    input_list.clear();
 }
 
-bool MovieFileInputs::isPrefix(const MovieFileInputs* movie, unsigned int frame)
+bool MovieFileInputs::isPrefix(const MovieFileInputs* movie, unsigned int frame) const
 {
     /* Not a prefix if the size is greater */
     if (frame > input_list.size())
         return false;
 
-    return std::equal(movie->input_list.begin(), movie->input_list.begin() + frame, movie->input_list.begin());
+    return std::equal(movie->input_list.begin(), movie->input_list.begin() + frame, input_list.begin());
 }
 
 void MovieFileInputs::wasModified()
 {
-	modifiedSinceLastSave = true;
-	modifiedSinceLastAutoSave = true;
-	modifiedSinceLastStateLoad = true;
+    modifiedSinceLastSave = true;
+    modifiedSinceLastAutoSave = true;
+    modifiedSinceLastStateLoad = true;
 }
