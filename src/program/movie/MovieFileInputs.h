@@ -54,6 +54,9 @@ public:
     /* Prepare a movie file from the context */
     MovieFileInputs(Context* c);
 
+    /* Clear */
+    void clear();
+
     /* Import the inputs into a list, and all the parameters.
      * Returns 0 if no error, or a negative value if an error occured */
     void load();

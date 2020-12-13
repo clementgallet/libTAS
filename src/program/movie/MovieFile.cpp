@@ -57,6 +57,14 @@ const char* MovieFile::errorString(int error_code) {
     }
 }
 
+void MovieFile::clear()
+{
+    header->clear();
+    inputs->clear();
+    annotations->clear();
+    editor->clear();
+}
+
 int MovieFile::extractMovie(const std::string& moviefile)
 {
     if (moviefile.empty())

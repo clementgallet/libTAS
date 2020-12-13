@@ -51,6 +51,9 @@ public:
     /* Prepare a movie file from the context */
     MovieFile(Context* c);
 
+    /* Clear */
+    void clear();
+
     /* Extract a moviefile into the temp directory
      * Returns 0 if no error, or a negative value if an error occured */
     int extractMovie();

@@ -84,7 +84,8 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
                 return QString(tr(""));
             if (section == 1)
                 return QString(tr("Frame"));
-            return QString(movie->editor->input_set[section-2].description.c_str());
+            if ((section-2) < movie->editor->input_set.size())
+                return QString(movie->editor->input_set[section-2].description.c_str());
         }
     }
     return QVariant();

@@ -24,7 +24,12 @@
 
 MovieFileHeader::MovieFileHeader(Context* c) : context(c)
 {
-    /* For a new movies, will be overwritten when loading a moviefile */
+    clear();
+}
+
+void MovieFileHeader::clear()
+{
+    /* For new movies, will be overwritten when loading a moviefile */
     framerate_num = context->config.sc.framerate_num;
     framerate_den = context->config.sc.framerate_den;
 }

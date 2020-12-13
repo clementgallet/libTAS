@@ -29,6 +29,9 @@ public:
     /* Prepare a movie file from the context */
     MovieFileHeader(Context* c);
 
+    /* Clear */
+    void clear();
+
     /* Import the movie header */
     void load();
 

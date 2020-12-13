@@ -23,7 +23,16 @@
 
 #include "MovieFileEditor.h"
 
-MovieFileEditor::MovieFileEditor(Context* c) : context(c) {}
+MovieFileEditor::MovieFileEditor(Context* c) : context(c) {
+    clear();
+}
+
+void MovieFileEditor::clear()
+{
+    input_set.clear();
+    locked_inputs.clear();
+    nondraw_frames.clear();    
+}
 
 void MovieFileEditor::load()
 {

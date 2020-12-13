@@ -23,6 +23,11 @@
 
 MovieFileAnnotations::MovieFileAnnotations(Context* c) : context(c) {}
 
+void MovieFileAnnotations::clear()
+{
+    text.clear();
+}
+
 void MovieFileAnnotations::load()
 {
     /* Load annotations if available */

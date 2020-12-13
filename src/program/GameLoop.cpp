@@ -204,7 +204,6 @@ void GameLoop::init()
         /* Opening a movie, which imports the inputs and parameters if in read mode,
          * or prepare a movie if in write mode.
          */
-        movie = MovieFile(context);
         if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
             int ret = movie.loadMovie();
             if (ret < 0) {
@@ -220,6 +219,9 @@ void GameLoop::init()
             if ((!context->md5_movie.empty()) && (context->md5_game.compare(context->md5_movie) != 0))
                 emit alertToShow(QString("Game executable hash does not match with the hash stored in the movie!"));
 
+        }
+        else {
+            movie.clear();
         }
     }
 
