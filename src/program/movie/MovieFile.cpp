@@ -76,9 +76,11 @@ int MovieFile::extractMovie(const std::string& moviefile)
 
     /* Empty the temp directory */
     std::string configfile = context->config.tempmoviedir + "/config.ini";
+    std::string editorfile = context->config.tempmoviedir + "/editor.ini";
     std::string inputfile = context->config.tempmoviedir + "/inputs";
     std::string annotationsfile = context->config.tempmoviedir + "/annotations.txt";
     unlink(configfile.c_str());
+    unlink(editorfile.c_str());
     unlink(inputfile.c_str());
     unlink(annotationsfile.c_str());
 
@@ -172,7 +174,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
     oss << moviefile;
     oss << "\" -C ";
     oss << context->config.tempmoviedir;
-    oss << " inputs config.ini annotations.txt";
+    oss << " inputs config.ini editor.ini annotations.txt";
 
     /* Execute the tar command */
     // std::cout << oss.str() << std::endl;
