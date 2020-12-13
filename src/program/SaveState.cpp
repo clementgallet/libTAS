@@ -30,6 +30,7 @@ void SaveState::init(Context* context, int i)
 {
     id = i;
     is_backtrack = (i == 10);
+    framecount = -1;
     parent = -1;
     movie = std::unique_ptr<MovieFile>(new MovieFile(context));
 
@@ -282,5 +283,6 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
 
 void SaveState::backupMovie()
 {
-    movie->saveMovie(movie_path);
+    if (framecount != -1)
+        movie->saveMovie(movie_path);
 }
