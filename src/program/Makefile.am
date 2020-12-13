@@ -34,6 +34,7 @@ libTAS_SOURCES = \
     AutoSave.cpp \
     Config.cpp \
     GameLoop.cpp \
+    GameThread.cpp \
     KeyMapping.cpp \
     main.cpp \
     SaveState.cpp \

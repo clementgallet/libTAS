@@ -72,13 +72,6 @@ private:
 
     bool startFrameMessages();
 
-    /* Set the different environment variables, then start the game executable with
-     * our library to be injected using the LD_PRELOAD trick.
-     * Because this function eventually calls execl, it does not return.
-     * So, it is called from a child process using fork().
-     */
-    void launchGameThread();
-
     uint8_t nextEvent(struct HotKey &hk);
 
     void notifyControllerEvent(xcb_keysym_t ks, bool pressed);
