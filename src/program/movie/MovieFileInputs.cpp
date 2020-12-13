@@ -51,11 +51,6 @@ void MovieFileInputs::load()
         }
     }
 
-	if (context->config.sc.movie_framecount != input_list.size()) {
-		std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
-		context->config.sc.movie_framecount = input_list.size();
-	}
-
     input_stream.close();
 
 	return;
