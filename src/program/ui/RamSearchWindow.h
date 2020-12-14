@@ -70,11 +70,13 @@ private:
     QRadioButton *operatorGreaterButton;
     QRadioButton *operatorLessEqualButton;
     QRadioButton *operatorGreaterEqualButton;
+    QRadioButton *operatorDifferenceButton;
+    QDoubleSpinBox *differenceValueBox;
 
     QComboBox *typeBox;
     QComboBox *displayBox;
 
-    void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value);
+    void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value);
 
 private slots:
     void slotNew();

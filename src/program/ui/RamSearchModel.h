@@ -52,14 +52,15 @@ public:
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
+    double different_value;
 
     // template <class T>
     // void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value, Fl_Hor_Fill_Slider *search_progress)
-    void newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv);
+    void newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
     int predictWatchCount(int type_filter);
     int watchCount();
-    void searchWatches(CompareType ct, CompareOperator co, double cv);
+    void searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
 
 private:
     Context *context;

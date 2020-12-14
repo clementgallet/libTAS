@@ -42,7 +42,7 @@ QVariant RamSearchModel::headerData(int section, Qt::Orientation orientation, in
             case 1:
                 return QString("Value");
             case 2:
-                return QString("Previous Value");
+                return QString("Previous");
             }
         }
     }
@@ -101,11 +101,12 @@ int RamSearchModel::watchCount()
     return ramwatches.size();
 }
 
-void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv)
+void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv, double dv)
 {
     compare_type = ct;
     compare_operator = co;
     compare_value = cv;
+    different_value = dv;
 
     beginResetModel();
 
@@ -176,7 +177,7 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
 
                 /* If only insert watches that match the compare */
                 if (compare_type == CompareType::Value) {
-                    if (ramwatches.back().check(ramwatches.back().previous_value, compare_type, compare_operator, compare_value)) {
+                    if (ramwatches.back().check(ramwatches.back().previous_value, compare_type, compare_operator, compare_value, different_value)) {
                         ramwatches.pop_back();
                     }
                 }
@@ -187,11 +188,12 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
     endResetModel();
 }
 
-void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv)
+void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv, double dv)
 {
     compare_type = ct;
     compare_operator = co;
     compare_value = cv;
+    different_value = dv;
 
     beginResetModel();
 
@@ -202,7 +204,7 @@ void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv
                 if (!(count++ & 0xfff)) {
                     emit signalProgress(count);
                 }
-                return watch.check_update(compare_type, compare_operator, compare_value);
+                return watch.check_update(compare_type, compare_operator, compare_value, different_value);
             }),
         ramwatches.end());
 

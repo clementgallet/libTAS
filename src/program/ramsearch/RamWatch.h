@@ -59,13 +59,13 @@ public:
     bool query();
 
     /* Compare function */
-    bool check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
+    bool check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
 
     /* Check the current value against a condition, and store the value */
-    bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
+    bool check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
 
     /* Check the current value against a condition without storing it */
-    bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db);
+    bool check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
 
     static int type_to_size();
 

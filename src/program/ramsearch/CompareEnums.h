@@ -32,6 +32,7 @@ enum class CompareOperator {
     Greater,
     LessEqual,
     GreaterEqual,
+    Different,
 };
 
 #endif

@@ -32,6 +32,7 @@
 * Implement greenzone using existing savestates (#134)
 * Add an option to allow games to warp the mouse pointer (#378)
 * Add nondraw frames in input editor
+* Add Different By in Ram Search
 
 ### Changed
 

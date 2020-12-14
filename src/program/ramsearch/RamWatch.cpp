@@ -207,6 +207,7 @@ bool RamWatch::query()
 T typed_value;\
 memcpy(&typed_value, &value, type_size);\
 T compare_value;\
+T different_value;\
 if (compare_type == CompareType::Previous)\
     memcpy(&compare_value, &previous_value, type_size);\
 else\
@@ -224,10 +225,13 @@ switch(compare_operator) {\
         return typed_value > compare_value;\
     case CompareOperator::GreaterEqual:\
         return typed_value < compare_value;\
+    case CompareOperator::Different:\
+        different_value = static_cast<T>(different_value_db);\
+        return (typed_value-compare_value) != different_value;\
 }\
 }
 
-bool RamWatch::check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+bool RamWatch::check(uint64_t value, CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db)
 {
     switch(type) {
         case RamChar:
@@ -257,22 +261,22 @@ bool RamWatch::check(uint64_t value, CompareType compare_type, CompareOperator c
     return false;
 }
 
-bool RamWatch::check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+bool RamWatch::check_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db)
 {
     uint64_t value = get_value();
     if (!isValid)
         return true;
 
-    bool res = check(value, compare_type, compare_operator, compare_value_db);
+    bool res = check(value, compare_type, compare_operator, compare_value_db, different_value_db);
     previous_value = value;
     return res;
 }
 
-bool RamWatch::check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db)
+bool RamWatch::check_no_update(CompareType compare_type, CompareOperator compare_operator, double compare_value_db, double different_value_db)
 {
     uint64_t value = get_value();
     if (!isValid)
         return true;
 
-    return check(value, compare_type, compare_operator, compare_value_db);
+    return check(value, compare_type, compare_operator, compare_value_db, different_value_db);
 }

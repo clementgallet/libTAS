@@ -114,15 +114,21 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     operatorGreaterButton = new QRadioButton("Greater Than");
     operatorLessEqualButton = new QRadioButton("Less Than Or Equal To");
     operatorGreaterEqualButton = new QRadioButton("Greater Than Or Equal To");
+    operatorDifferenceButton = new QRadioButton("Different By");
+    differenceValueBox = new QDoubleSpinBox();
+    differenceValueBox->setRange(std::numeric_limits<double>::lowest(),std::numeric_limits<double>::max());
+    differenceValueBox->setDecimals(5);
 
     QGroupBox *operatorGroupBox = new QGroupBox(tr("Comparison Operator"));
-    QVBoxLayout *operatorLayout = new QVBoxLayout;
-    operatorLayout->addWidget(operatorEqualButton);
-    operatorLayout->addWidget(operatorNotEqualButton);
-    operatorLayout->addWidget(operatorLessButton);
-    operatorLayout->addWidget(operatorGreaterButton);
-    operatorLayout->addWidget(operatorLessEqualButton);
-    operatorLayout->addWidget(operatorGreaterEqualButton);
+    QGridLayout *operatorLayout = new QGridLayout;
+    operatorLayout->addWidget(operatorEqualButton, 0, 0, 1, 2);
+    operatorLayout->addWidget(operatorNotEqualButton, 1, 0, 1, 2);
+    operatorLayout->addWidget(operatorLessButton, 2, 0, 1, 2);
+    operatorLayout->addWidget(operatorGreaterButton, 3, 0, 1, 2);
+    operatorLayout->addWidget(operatorLessEqualButton, 4, 0, 1, 2);
+    operatorLayout->addWidget(operatorGreaterEqualButton, 5, 0, 1, 2);
+    operatorLayout->addWidget(operatorDifferenceButton, 6, 0);
+    operatorLayout->addWidget(differenceValueBox, 6, 1);
     operatorGroupBox->setLayout(operatorLayout);
 
     /* Format */
@@ -180,7 +186,7 @@ void RamSearchWindow::update()
     ramSearchModel->update();
 }
 
-void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value)
+void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value)
 {
     compare_type = CompareType::Previous;
     if (compareValueButton->isChecked()) {
@@ -199,6 +205,10 @@ void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOpe
         compare_operator = CompareOperator::LessEqual;
     if (operatorGreaterEqualButton->isChecked())
         compare_operator = CompareOperator::GreaterEqual;
+    if (operatorDifferenceButton->isChecked()) {
+        compare_operator = CompareOperator::Different;
+        different_value = differenceValueBox->value();
+    }
 }
 
 void RamSearchWindow::slotNew()
@@ -233,7 +243,8 @@ void RamSearchWindow::slotNew()
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
-    getCompareParameters(compare_type, compare_operator, compare_value);
+    double different_value;
+    getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
 
@@ -242,7 +253,7 @@ void RamSearchWindow::slotNew()
     searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
 
     /* Call the RamSearch new function using the right type */
-    ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value);
+    ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
 
     searchProgress->hide();
     watchCount->show();
@@ -256,13 +267,14 @@ void RamSearchWindow::slotSearch()
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
-    getCompareParameters(compare_type, compare_operator, compare_value);
+    double different_value;
+    getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
     searchProgress->setMaximum(ramSearchModel->watchCount());
     watchCount->hide();
     searchProgress->show();
 
-    ramSearchModel->searchWatches(compare_type, compare_operator, compare_value);
+    ramSearchModel->searchWatches(compare_type, compare_operator, compare_value, different_value);
 
     /* Update address count */
     searchProgress->hide();
