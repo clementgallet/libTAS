@@ -68,7 +68,7 @@ int open_evdev(const char* source, int flags)
         game_info.tosend = true;
 
         /* Create an unnamed pipe. */
-        evdevfds[evnum].first = FileHandleList::createPipe();
+        evdevfds[evnum].first = FileHandleList::createPipe(flags);
     }
 
     return evdevfds[evnum].first.first;

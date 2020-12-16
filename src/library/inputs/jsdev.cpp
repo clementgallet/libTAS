@@ -68,7 +68,7 @@ int open_jsdev(const char* source, int flags)
         game_info.tosend = true;
 
         /* Create an unnamed pipe */
-        jsdevfds[jsnum].first = FileHandleList::createPipe();
+        jsdevfds[jsnum].first = FileHandleList::createPipe(flags);
 
         /* Write the synthetic events corresponding to the initial state of the
          * joystick. */
