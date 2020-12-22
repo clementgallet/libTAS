@@ -27,7 +27,7 @@
 namespace libtas {
 
 snd_pcm_t *AudioPlayer::phandle;
-bool AudioPlayer::inited = false;
+int AudioPlayer::inited = 0;
 std::vector<char> AudioPlayer::silence;
 
 bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
@@ -38,6 +38,7 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 
     if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
         debuglog(LCF_SOUND | LCF_ERROR, "  Cannot open default audio device");
+        return false;
     }
 
     snd_pcm_hw_params_t *hw_params;
@@ -98,27 +99,32 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 
 bool AudioPlayer::play(AudioContext& ac)
 {
-    if (!inited) {
+    if (inited == 0) {
         snd_pcm_format_t format;
         if (ac.outBitDepth == 8)
             format = SND_PCM_FORMAT_U8;
         if (ac.outBitDepth == 16)
             format = SND_PCM_FORMAT_S16_LE;
-        if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency)))
+        if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency))) {
+            inited = -1;
             return false;
+        }
 
         /* Build a 50 ms silence buffer */
         int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
 
         if (ac.outBitDepth == 8) {
-            silence.assign(sil_bytes, 0x80);
+            silence.assign(sil_bytes, -128);
         }
         if (ac.outBitDepth == 16) {
             silence.assign(sil_bytes, 0x00);
         }
         
-        inited = true;
+        inited = 1;
     }
+
+    if (inited == -1)
+        return false;
 
     if (shared_config.fastforward)
         return true;
@@ -160,9 +166,9 @@ bool AudioPlayer::play(AudioContext& ac)
 
 void AudioPlayer::close()
 {
-    if (inited) {
+    if (inited == 1) {
         MYASSERT(snd_pcm_close(phandle) == 0)
-        inited = false;
+        inited = 0;
     }
 }
 

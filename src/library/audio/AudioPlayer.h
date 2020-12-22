@@ -27,7 +27,8 @@ namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
-    static bool inited;
+    /* 0 if uninit, 1 if inited with no error, -1 if error during init */
+    static int inited;
 
     /* Connection to the sound system */
     static snd_pcm_t *phandle;
