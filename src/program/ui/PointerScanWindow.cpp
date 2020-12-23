@@ -156,9 +156,7 @@ void PointerScanWindow::slotAdd()
 
         watch->isPointer = true;
         watch->base_address = chain.first;
-        uintptr_t base_file_offset = chain.first;
-        watch->base_file = pointerScanModel->getFileAndOffset(base_file_offset);
-        watch->base_file_offset = base_file_offset;
+        watch->base_file = pointerScanModel->getFileAndOffset(chain.first, watch->base_file_offset);
         watch->pointer_offsets = chain.second;
         std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
         mw->ramWatchWindow->editWindow->fill(watch);

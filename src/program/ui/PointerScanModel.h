@@ -49,7 +49,7 @@ public:
     int max_level = 5;
 
     /* Get the file and file offset from an address */
-    std::string getFileAndOffset(uintptr_t& addr) const;
+    std::string getFileAndOffset(uintptr_t addr, off_t& offset) const;
 
     /* Store all pointers from the game memory into a map */
     void locatePointers();

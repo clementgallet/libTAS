@@ -59,12 +59,18 @@ void IRamWatchDetailed::update_addr()
                     section.readMap(line);
                     std::string file = fileFromPath(section.filename);
 
-                    if ((base_file.compare(file) == 0) &&
-                        (base_file_offset >= section.offset) &&
-                        (base_file_offset < (section.offset + section.size))) {
+                    if (base_file.compare(file) == 0) {
+                        if ((base_file_offset >= 0) &&
+                            (base_file_offset >= section.offset) &&
+                            (base_file_offset < (section.offset + section.size))) {
 
-                        base_address = section.addr - section.offset + base_file_offset;
-                        break;
+                            base_address = section.addr - section.offset + base_file_offset;
+                            break;
+                        }
+                        if (base_file_offset < 0) {
+                            base_address = section.endaddr + base_file_offset;
+                            break;                            
+                        }
                     }
                 }
             }

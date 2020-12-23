@@ -150,7 +150,10 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
 
     if (watch->isPointer) {
 
-        baseAddressInput->setText(QString("%1+%2").arg(watch->base_file.c_str()).arg(watch->base_file_offset, 0, 16));
+        if (watch->base_file_offset >= 0)
+            baseAddressInput->setText(QString("%1+0x%2").arg(watch->base_file.c_str()).arg(watch->base_file_offset, 0, 16));
+        else
+            baseAddressInput->setText(QString("%1-0x%2").arg(watch->base_file.c_str()).arg(-watch->base_file_offset, 0, 16));
 
         unsigned int c = pointerLayout->rowCount() - 1;
         for (unsigned int r=0; r<c; r++) {
@@ -294,8 +297,11 @@ void RamWatchEditWindow::slotSave()
     if (ramwatch->isPointer) {
         std::string base = baseAddressInput->text().toStdString();
 
-        /* Split the string with '+' sign */
-        size_t sep = base.find_last_of("+");
+        /* Split the string with '+' or '-' sign */
+        size_t sep = base.find_last_of("+0x");
+        if (sep != std::string::npos)
+            sep = base.find_last_of("-0x");
+
         if (sep != std::string::npos) {
             ramwatch->base_file = base.substr(0, sep);
             ramwatch->base_file_offset = std::stoll(base.substr(sep + 1), nullptr, 16);

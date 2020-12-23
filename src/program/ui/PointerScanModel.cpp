@@ -52,13 +52,13 @@ void PointerScanModel::locatePointers()
         section.readMap(line);
 
         /* Only store sections that could contain pointers */
-        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW)) {
+        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack)) {
         // if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap)) {
             memory_sections.push_back(section);
             total_size += section.size;
         }
         /* Keep the file mapping to access to the file and offsets */
-        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemFileMappingRW)) {
+        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemFileMappingRW | MemSection::MemStack)) {
             file_mapping_sections.push_back(section);
         }
     }
@@ -84,19 +84,16 @@ void PointerScanModel::locatePointers()
                 continue;
             }
 
+            /* Update progress bar */
+            emit signalProgress((int)(100 * ((float)cur_size / total_size)));
+
             for (unsigned int i = 0; i < readValues/sizeof(uintptr_t); i++, cur_size += sizeof(uintptr_t)) {
-
-                /* Update progress bar */
-                if (!(cur_size & 0xfff)) {
-                    emit signalProgress((int)(100 * ((float)cur_size / total_size)));
-                }
-
                 /* Check if the value could be a pointer */
                 bool isPointer = false;
 
                 for (const MemSection &ms : memory_sections) {
                     /* If pointing to a static section, we can skip it */
-                    if (ms.type & (MemSection::MemDataRW | MemSection::MemBSS)) {
+                    if (ms.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemStack)) {
                         continue;
                     }
 
@@ -112,7 +109,7 @@ void PointerScanModel::locatePointers()
 
                 if (isPointer) {
                     uintptr_t stored_addr = addr + i*sizeof(uintptr_t);
-                    if (section.type & (MemSection::MemDataRW | MemSection::MemBSS)) {
+                    if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemStack)) {
                         static_pointer_map.insert(std::make_pair(chunk[i], stored_addr));
                     }
                     else {
@@ -124,15 +121,22 @@ void PointerScanModel::locatePointers()
     }
 }
 
-std::string PointerScanModel::getFileAndOffset(uintptr_t& addr) const
+std::string PointerScanModel::getFileAndOffset(uintptr_t addr, off_t& offset) const
 {
     for (const MemSection &section : file_mapping_sections) {
         if ((addr >= section.addr) && (addr < section.endaddr)) {
-            addr -= section.addr;
-            addr += section.offset;
+            if (section.type & MemSection::MemStack) {
+                /* For stack, save the negative offset from the end */
+                offset = section.endaddr - addr;
+            }
+            else {
+                offset = addr - section.addr;
+                offset += section.offset;
+            }
             return fileFromPath(section.filename);
         }
     }
+    offset = 0;
     return std::string("");
 }
 
@@ -214,9 +218,12 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         const std::pair<uintptr_t, std::vector<int>> &chain = pointer_chains.at(index.row());
         if (index.column() == 0) {
-            uintptr_t base_addr = chain.first;
-            std::string file = getFileAndOffset(base_addr);
-            return QString("%1+%2").arg(file.c_str()).arg(base_addr, 0, 16);
+            off_t offset;
+            std::string file = getFileAndOffset(chain.first, offset);
+            if (offset >= 0)
+                return QString("%1+0x%2").arg(file.c_str()).arg(offset, 0, 16);
+            else
+                return QString("%1-0x%2").arg(file.c_str()).arg(-offset, 0, 16);
         }
         if (index.column() > static_cast<int>(chain.second.size())) {
             return QString("");
