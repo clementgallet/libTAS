@@ -58,7 +58,7 @@ AVEncoder::AVEncoder() {
     NATIVECALL(ffmpeg_pipe = popen(commandline.str().c_str(), "w"));
 
     if (! ffmpeg_pipe) {
-        debuglog(LCF_DUMP | LCF_ERROR, "Could not create a pipe to ffmpeg");
+        debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not create a pipe to ffmpeg");
         return;
     }
 
@@ -115,7 +115,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     }
 
     /*** Audio ***/
-    debuglog(LCF_DUMP, "Encode an audio frame");
+    debuglogstdio(LCF_DUMP, "Encode an audio frame");
 
     nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
 
@@ -136,7 +136,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     int size = ScreenCapture::getPixels(&pixels, draw);
 
     for (int f=0; f<frames; f++) {
-        debuglog(LCF_DUMP, "Encode a video frame");
+        debuglogstdio(LCF_DUMP, "Encode a video frame");
         nutMuxer->writeVideoFrame(pixels, size);
     }
 }
@@ -150,7 +150,7 @@ AVEncoder::~AVEncoder() {
         int ret;
         NATIVECALL(ret = pclose(ffmpeg_pipe));
         if (ret < 0) {
-            debuglog(LCF_DUMP | LCF_ERROR, "Could not close the pipe to ffmpeg");
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not close the pipe to ffmpeg");
         }
     }
 }

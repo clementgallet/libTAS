@@ -106,8 +106,8 @@ void SaveStateManager::initThreadFromChild(ThreadInfo* thread)
     int ret;
     NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
     if (ret < 0) {
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", errno);
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "stack starts at ", thread->altstack.ss_sp);
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error %d", errno);
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "stack starts at %p", thread->altstack.ss_sp);
     }
 
     struct sigaction sigsuspend;
@@ -132,11 +132,11 @@ int SaveStateManager::waitChild()
     }
     status = WEXITSTATUS(status);
     if ((status < 0) && (status > 10)) {
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Got unknown status code ", status, " from pid ", pid);
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Got unknown status code %d from pid %d", status, pid);
         return -1;
     }
     if (!state_dirty[status]) {
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "State saving ", status, " completed but was already ready");
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "State saving %d completed but was already ready", status);
         return -1;
     }
 
@@ -150,7 +150,7 @@ bool SaveStateManager::stateReady(int slot)
         return true;
 
     if ((slot < 0) && (slot > 10)) {
-        debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Wrong slot number");
+        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Wrong slot number");
         return false;
     }
     return !state_dirty[slot];
@@ -230,9 +230,9 @@ int SaveStateManager::checkpoint(int slot)
     resumeThreads();
 
     /* Wait for all other threads to finish being restored before resuming */
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
     waitForAllRestored(current_thread);
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming main thread");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Resuming main thread");
 
     ThreadSync::releaseLocks();
 
@@ -298,7 +298,7 @@ int SaveStateManager::restore(int slot)
      */
 
      /* If restore was not done, we return here */
-     debuglog(LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
+     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
 
      /* Restoring the game alternate stack (if any) */
      AltStack::restoreStack();
@@ -389,7 +389,7 @@ void SaveStateManager::suspendThreads()
                     }
                     else {
                         MYASSERT(ret == ESRCH)
-                        debuglog(LCF_THREAD | LCF_CHECKPOINT, "Thread", thread->tid, "has died since");
+                        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread %d has died since", thread->tid);
                         ThreadManager::threadIsDead(thread);
                     }
                 }
@@ -403,7 +403,7 @@ void SaveStateManager::suspendThreads()
                 }
                 else {
                     MYASSERT(ret == ESRCH)
-                    debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread ", thread->tid, " died");
+                    debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->tid);
                     ThreadManager::threadIsDead(thread);
                 }
                 break;
@@ -429,7 +429,7 @@ void SaveStateManager::suspendThreads()
                 break;
 
             default:
-                debuglog(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state ", thread->state);
+                debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state %d", thread->state);
             }
         }
         if (needrescan) {
@@ -444,15 +444,15 @@ void SaveStateManager::suspendThreads()
         sem_wait(&semNotifyCkptThread);
     }
 
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, numThreads, " threads were suspended");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "%d threads were suspended", numThreads);
 }
 
 /* Resume all threads. */
 void SaveStateManager::resumeThreads()
 {
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
     MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
-    debuglog(LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
+    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
 }
 
 void SaveStateManager::stopThisThread(int signum)

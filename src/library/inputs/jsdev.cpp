@@ -60,7 +60,7 @@ int open_jsdev(const char* source, int flags)
         return -1;
     }
 
-    debuglog(LCF_JOYSTICK, "   jsdev device ", jsnum, " detected");
+    debuglogstdio(LCF_JOYSTICK, "   jsdev device %d detected", jsnum);
 
     if (jsdevfds[jsnum].second++ == 0) {
         /* Register that we use JSDEV for joystick inputs */
@@ -104,7 +104,7 @@ void write_jsdev(struct js_event ev, int jsnum)
     if (pipeSize < (64*sizeof(ev)))
         write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
     else {
-        debuglog(LCF_JOYSTICK | LCF_WARNING, "did not write jsdev event, too many already.");
+        debuglogstdio(LCF_JOYSTICK | LCF_WARNING, "did not write jsdev event, too many already.");
     }
 }
 
@@ -124,7 +124,7 @@ bool sync_jsdev(int jsnum)
         NATIVECALL(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count));
         if (count > 0) {
             if (++attempts > 10 * 100) {
-                debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "jsdev sync took too long, were asynchronous events incorrectly enabled?");
+                debuglogstdio(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "jsdev sync took too long, were asynchronous events incorrectly enabled?");
                 return false;
             }
             struct timespec sleepTime = { 0, 10 * 1000 };

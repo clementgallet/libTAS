@@ -103,7 +103,7 @@ void *ISteamClient::GetISteamGenericInterface( HSteamUser hSteamUser, HSteamPipe
         static ISteamGameCoordinator steamgamecoordinator;
         return &steamgamecoordinator;
     }
-    debuglog(LCF_STEAM | LCF_ERROR, "Invalid interface ", pchVersion);
+    debuglogstdio(LCF_STEAM | LCF_ERROR, "Invalid interface %s", pchVersion);
     return nullptr;
 }
 

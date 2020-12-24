@@ -164,7 +164,7 @@ void NutMuxer::AVParams::reduce()
 
 void NutMuxer::writeMainHeader()
 {
-	debuglog(LCF_DUMP, "Write nut main header");
+	debuglogstdio(LCF_DUMP, "Write nut main header");
 
 	// note: this file start tag not actually part of main headers
     const char tag[] = "nut/multimedia container\0";
@@ -201,7 +201,7 @@ void NutMuxer::writeMainHeader()
 
 void NutMuxer::writeVideoHeader()
 {
-	debuglog(LCF_DUMP, "Write nut video header");
+	debuglogstdio(LCF_DUMP, "Write nut video header");
 
     NutPacket header_packet(NutPacket::Stream, output);
 
@@ -227,7 +227,7 @@ void NutMuxer::writeVideoHeader()
 
 void NutMuxer::writeAudioHeader()
 {
-	debuglog(LCF_DUMP, "Write nut audio header");
+	debuglogstdio(LCF_DUMP, "Write nut audio header");
 
     NutPacket header_packet(NutPacket::Stream, output);
 
@@ -238,7 +238,7 @@ void NutMuxer::writeAudioHeader()
 	else if ((avparams.samplesize / avparams.channels) == 1)
 		writeBytes("PUD\x08", 4, header_packet.data); // fourcc = little-endian unsigned interleaved 8-bit
 	else {
-		debuglog(LCF_DUMP | LCF_ERROR, "Unrecognized audio format");
+		debuglogstdio(LCF_DUMP | LCF_ERROR, "Unrecognized audio format");
 		writeBytes("\x00\x00\x00\x00", 4, header_packet.data);
 	}
 	writeVarU(1, header_packet.data); // time_base_id = 1
@@ -284,19 +284,19 @@ void NutMuxer::writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, 
     size_t written = fwrite(frameheader.data(), 1, frameheader.size(), underlying);
 
 	if (written != frameheader.size())
-		debuglog(LCF_DUMP | LCF_WARNING, "Incomplete header transfer to ffmpeg");
+		debuglogstdio(LCF_DUMP | LCF_WARNING, "Incomplete header transfer to ffmpeg");
 
 	if (payload) {
 		written = fwrite(payload, 1, payloadlen, underlying);
 		if (written != payloadlen)
-			debuglog(LCF_DUMP | LCF_WARNING, "Incomplete buffer transfer to ffmpeg");
+			debuglogstdio(LCF_DUMP | LCF_WARNING, "Incomplete buffer transfer to ffmpeg");
 	}
 }
 
 void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
 {
-	debuglog(LCF_DUMP, "Write nut video frame");
-	debuglog(LCF_DUMP, "Video pts is ", (double)videopts * avparams.fpsden / avparams.fpsnum);
+	debuglogstdio(LCF_DUMP, "Write nut video frame");
+	debuglogstdio(LCF_DUMP, "Video pts is %f", (double)videopts * avparams.fpsden / avparams.fpsnum);
 
 	writeFrame(video, len, videopts, static_cast<uint64_t>(avparams.fpsden), static_cast<uint64_t>(avparams.fpsnum), 0, output);
 	videopts++;
@@ -305,8 +305,8 @@ void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
 
 void NutMuxer::writeAudioFrame(const uint8_t* samples, int len)
 {
-	debuglog(LCF_DUMP, "Write nut audio frame");
-	debuglog(LCF_DUMP, "Audio pts is ", (double)audiopts / avparams.samplerate);
+	debuglogstdio(LCF_DUMP, "Write nut audio frame");
+	debuglogstdio(LCF_DUMP, "Audio pts is %f", (double)audiopts / avparams.samplerate);
 
 	writeFrame(samples, len, audiopts, 1, static_cast<uint64_t>(avparams.samplerate), 1, output);
 
@@ -339,7 +339,7 @@ NutMuxer::NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pi
 
 void NutMuxer::finish()
 {
-	debuglog(LCF_DUMP, "Write nut EOF frames");
+	debuglogstdio(LCF_DUMP, "Write nut EOF frames");
 	// writeVideoFrame(nullptr, 0);
 	// writeAudioFrame(nullptr, 0);
 }

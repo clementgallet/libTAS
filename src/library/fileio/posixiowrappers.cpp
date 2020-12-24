@@ -299,7 +299,7 @@ int creat (const char *file, mode_t mode)
     if (GlobalState::isNative())
         return orig::creat(file, mode);
 
-    debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
 
     /* From creat() man page, creat() is just open() with flags
      * O_CREAT, O_WRONLY and O_TRUNC
@@ -330,7 +330,7 @@ int creat64 (const char *file, mode_t mode)
     if (GlobalState::isNative())
         return orig::creat64(file, mode);
 
-    debuglog(LCF_FILEIO, __func__, " call with file ", file);
+    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 

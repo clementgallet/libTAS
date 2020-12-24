@@ -60,7 +60,7 @@ int open_evdev(const char* source, int flags)
         return -1;
     }
 
-    debuglog(LCF_JOYSTICK, "   evdev device ", evnum, " detected");
+    debuglogstdio(LCF_JOYSTICK, "   evdev device %d detected", evnum);
 
     if (evdevfds[evnum].second++ == 0) {
         /* Register that we use EVDEV for joystick inputs */
@@ -86,7 +86,7 @@ void write_evdev(struct input_event ev, int evnum)
     if (pipeSize < (64*sizeof(ev)))
         write(evdevfds[evnum].first.second, &ev, sizeof(ev));
     else {
-        debuglog(LCF_JOYSTICK | LCF_WARNING, "did not write evdev event, too many already.");
+        debuglogstdio(LCF_JOYSTICK | LCF_WARNING, "did not write evdev event, too many already.");
     }
 }
 
@@ -105,7 +105,7 @@ bool sync_evdev(int evnum)
         NATIVECALL(ioctl(evdevfds[evnum].first.first, FIONREAD, &count));
         if (count > 0) {
             if (++attempts > 100 * 100) {
-                debuglog(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "evdev sync took too long, were asynchronous events incorrectly enabled?");
+                debuglogstdio(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "evdev sync took too long, were asynchronous events incorrectly enabled?");
                 return false;
             }
             struct timespec sleepTime = { 0, 10 * 1000 };

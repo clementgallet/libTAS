@@ -88,7 +88,7 @@ int urandom_create_fd()
         MYASSERT(sigaction(SIGIO, &sigio, nullptr) == 0)
     }
 
-    debuglog(LCF_FILEIO | LCF_RANDOM, "Return fd ", readfd);
+    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Return fd %d", readfd);
     return readfd;
 }
 

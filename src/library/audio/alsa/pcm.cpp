@@ -137,7 +137,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
         return -1;
 
     if (stream != SND_PCM_STREAM_PLAYBACK) {
-        debuglog(LCF_SOUND | LCF_WARNING, "    Unsupported stream direction ", stream);
+        debuglogstdio(LCF_SOUND | LCF_WARNING, "    Unsupported stream direction %d", stream);
         return -1;
     }
 
@@ -289,7 +289,7 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
         return orig::snd_pcm_nonblock(pcm, nonblock);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with ", nonblock==0?"block":((nonblock==1)?"nonblock":"abort"), " mode");
+    debuglogstdio(LCF_SOUND, "%s call with %s mode", __func__, nonblock==0?"block":((nonblock==1)?"nonblock":"abort"));
     if (nonblock == 0) {
         block_mode = true;
     }
@@ -409,7 +409,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
         LINK_NAMESPACE_GLOBAL(snd_pcm_wait);
         return orig::snd_pcm_wait(pcm, timeout);
     }
-    debuglog(LCF_SOUND, __func__, " called with timeout ", timeout);
+    debuglogstdio(LCF_SOUND, "%s called with timeout %d", __func__, timeout);
 
     /* Check for no more available samples */
     int delta_ms = -1;
@@ -441,7 +441,7 @@ int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 
     DEBUGLOGCALL(LCF_SOUND);
     *delayp = get_latency(pcm);
-    debuglog(LCF_SOUND, "   return ", *delayp);
+    debuglogstdio(LCF_SOUND, "   return %d", *delayp);
     return 0;
 }
 
@@ -456,7 +456,7 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
     if (avail<0)
         avail = 0;
-    debuglog(LCF_SOUND, "   return ", avail);
+    debuglogstdio(LCF_SOUND, "   return %d", avail);
     return avail;
 }
 
@@ -656,7 +656,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 
         /* Getting the parameters of the buffer from one of the queue */
         if (source->buffer_queue.empty()) {
-            debuglog(LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
+            debuglogstdio(LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
             return -1;
         }
 
@@ -685,7 +685,7 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
         return orig::snd_pcm_readi(pcm, buffer, size);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with ", size, " bytes");
+    debuglogstdio(LCF_SOUND, "%s call with %d bytes", __func__, size);
     return static_cast<snd_pcm_sframes_t>(size);
 }
 
@@ -699,7 +699,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
         return orig::snd_pcm_mmap_begin(pcm, areas, offset, frames);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with ", *frames, " frames");
+    debuglogstdio(LCF_SOUND, "%s call with %d frames", __func__, *frames);
 
     /* Getting the available samples, don't return more frames than that */
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
@@ -709,7 +709,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     if (*frames > avail)
         *frames = avail;
 
-    debuglog(LCF_SOUND, "  returning ", *frames, " frames");
+    debuglogstdio(LCF_SOUND, "  returning %d frames", *frames);
 
     /* We should lock the audio mutex until snd_pcm_mmap_commit() is called,
      * but for some reason, FTL doesn't call snd_pcm_mmap_commit() the first
@@ -736,7 +736,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
 
         /* Getting the parameters of the buffer from one of the queue */
         if (source->buffer_queue.empty()) {
-            debuglog(LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
+            debuglogstdio(LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
             return -1;
         }
 
@@ -782,7 +782,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
     /* We should unlock the audio mutex here, but we don't (see above comment) */
     // audiocontext.mutex.unlock();
 
-    debuglog(LCF_SOUND, __func__, " call with frames ", frames);
+    debuglogstdio(LCF_SOUND, "%s call with frames %d", __func__, frames);
     return frames;
 }
 
@@ -850,9 +850,9 @@ int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
         return orig::snd_pcm_hw_params_set_access(pcm, params, access);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with access ", access);
+    debuglogstdio(LCF_SOUND, "%s call with access %d", __func__, access);
     if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
-        debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported access ", access);
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "    Unsupported access %d", access);
     }
     current_access = access;
     return 0;
@@ -865,7 +865,7 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
         return orig::snd_pcm_hw_params_set_format(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with format ", val);
+    debuglogstdio(LCF_SOUND, "%s call with format %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -885,7 +885,7 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
             buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
             break;
         default:
-            debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported audio format");
+            debuglogstdio(LCF_SOUND | LCF_ERROR, "    Unsupported audio format");
             return -1;
     }
 
@@ -953,7 +953,7 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
         return orig::snd_pcm_hw_params_set_channels(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with channels ", val);
+    debuglogstdio(LCF_SOUND, "%s call with channels %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -970,7 +970,7 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
         return orig::snd_pcm_hw_params_set_rate(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with rate ", val, " and dir ", dir);
+    debuglogstdio(LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -987,7 +987,7 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
         return orig::snd_pcm_hw_params_set_rate_near(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with rate ", *val);
+    debuglogstdio(LCF_SOUND, "%s call with rate %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -1004,7 +1004,7 @@ int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
         return orig::snd_pcm_hw_params_set_rate_resample(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
 
     /* Not sure what should we do here */
     return 0;
@@ -1081,7 +1081,7 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
         return orig::snd_pcm_hw_params_set_period_size_near(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with period size ", *val, " and dir ", dir?*dir:-2);
+    debuglogstdio(LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
     return 0;
 }
 
@@ -1092,7 +1092,7 @@ int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *para
         return orig::snd_pcm_hw_params_set_periods_near(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with period ", *val, " and dir ", dir?*dir:-2);
+    debuglogstdio(LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
     return 0;
 }
@@ -1147,7 +1147,7 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
         return orig::snd_pcm_hw_params_set_buffer_size_near(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with buffer size ", *val);
+    debuglogstdio(LCF_SOUND, "%s call with buffer size %d", __func__, *val);
     buffer_size = *val;
     return 0;
 }
@@ -1159,7 +1159,7 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
         return orig::snd_pcm_hw_params_set_buffer_time_near(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with buffer time ", *val);
+    debuglogstdio(LCF_SOUND, "%s call with buffer time %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -1184,7 +1184,7 @@ int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, uns
         return orig::snd_pcm_hw_params_test_rate(pcm, params, val, dir);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1195,7 +1195,7 @@ int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, s
         return orig::snd_pcm_hw_params_test_format(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1206,7 +1206,7 @@ int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
         return orig::snd_pcm_hw_params_test_channels(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1265,12 +1265,12 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
             buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
             break;
         default:
-            debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported audio format");
+            debuglogstdio(LCF_SOUND | LCF_ERROR, "    Unsupported audio format");
             return -1;
     }
 
     if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
-        debuglog(LCF_SOUND | LCF_ERROR, "    Unsupported access ", access);
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "    Unsupported access %d", access);
     }
     current_access = access;
 
@@ -1304,7 +1304,7 @@ int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *p
         return orig::snd_pcm_sw_params_set_start_threshold(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with start threshold ", val);
+    debuglogstdio(LCF_SOUND, "%s call with start threshold %d", __func__, val);
     return 0;
 }
 
@@ -1315,7 +1315,7 @@ int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *pa
         return orig::snd_pcm_sw_params_set_stop_threshold(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with stop threshold ", val);
+    debuglogstdio(LCF_SOUND, "%s call with stop threshold %d", __func__, val);
     return 0;
 }
 
@@ -1326,7 +1326,7 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
         return orig::snd_pcm_sw_params_set_avail_min(pcm, params, val);
     }
 
-    debuglog(LCF_SOUND, __func__, " call with val ", val);
+    debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1393,7 +1393,7 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
         return orig::snd_pcm_frames_to_bytes(pcm, frames);
     }
 
-    debuglog(LCF_SOUND, __func__, " called with frames ", frames);
+    debuglogstdio(LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
     auto buffer = source->buffer_queue[0];

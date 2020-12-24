@@ -100,15 +100,15 @@ int cubeb_stream_init(cubeb * context,
             buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
             break;
         default:
-            debuglog(LCF_SOUND, "   Unsupported audio format");
+            debuglogstdio(LCF_SOUND, "   Unsupported audio format");
             return -1;
     }
 
     buffer->nbChannels = output_stream_params->channels;
-    debuglog(LCF_SOUND, "   Channels %d", buffer->nbChannels);
+    debuglogstdio(LCF_SOUND, "   Channels %d", buffer->nbChannels);
 
     buffer->update();
-    debuglog(LCF_SOUND, "   Format %d bits", buffer->bitDepth);
+    debuglogstdio(LCF_SOUND, "   Format %d bits", buffer->bitDepth);
 
     buffer->size = latency_frames * buffer->alignSize;
     buffer->update(); // Yes, a second time, to fill sampleSize based on size.
@@ -125,7 +125,7 @@ int cubeb_stream_init(cubeb * context,
     source->callback = ([data_callback, stream, user_ptr](AudioBuffer& ab) {
         int samples = data_callback(*stream, user_ptr, nullptr, ab.samples.data(), ab.sampleSize);
         if (samples != ab.size)
-            debuglog(LCF_SOUND | LCF_WARNING, "   Buffer not filled completely (%d / %d)", samples, ab.sampleSize);
+            debuglogstdio(LCF_SOUND | LCF_WARNING, "   Buffer not filled completely (%d / %d)", samples, ab.sampleSize);
     });
     
     /* We simulate an empty buffer by setting the position at the end */

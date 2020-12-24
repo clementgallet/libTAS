@@ -76,11 +76,11 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 /* Override */ int SDL_AudioInit(const char *driver_name)
 {
     if (driver_name == NULL) {
-        debuglog(LCF_SDL | LCF_SOUND, "Init SDL Audio with default driver");
+        debuglogstdio(LCF_SDL | LCF_SOUND, "Init SDL Audio with default driver");
         curDriver = dummySDLDevice;
     }
     else {
-        debuglog(LCF_SDL | LCF_SOUND, "Init SDL Audio with driver ", driver_name);
+        debuglogstdio(LCF_SDL | LCF_SOUND, "Init SDL Audio with driver %s", driver_name);
         curDriver = driver_name;
     }
     return 0;
@@ -115,7 +115,7 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
     /* Sanity check done by SDL */
     if (!desired->freq) desired->freq = 22050;
     buffer->frequency = desired->freq;
-    debuglog(LCF_SDL | LCF_SOUND, "Frequency ",buffer->frequency, " Hz");
+    debuglogstdio(LCF_SDL | LCF_SOUND, "Frequency %d Hz", buffer->frequency);
 
     /* Sanity check done by SDL */
     if (!desired->format) desired->format = AUDIO_S16LSB;
@@ -134,16 +134,16 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
             buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
             break;
         default:
-            debuglog(LCF_SDL | LCF_SOUND, "Unsupported audio format");
+            debuglogstdio(LCF_SDL | LCF_SOUND, "Unsupported audio format");
             return -1;
     }
     /* Sanity check done by SDL */
     if (!desired->channels) desired->channels = 2;
     buffer->nbChannels = desired->channels;
-    debuglog(LCF_SDL | LCF_SOUND, "Channels ",buffer->nbChannels);
+    debuglogstdio(LCF_SDL | LCF_SOUND, "Channels %d", buffer->nbChannels);
 
     buffer->update();
-    debuglog(LCF_SDL | LCF_SOUND, "Format ",buffer->bitDepth," bits");
+    debuglogstdio(LCF_SDL | LCF_SOUND, "Format %d bits", buffer->bitDepth);
 
     buffer->size = desired->samples * buffer->alignSize;
     buffer->update(); // Yes, a second time, to fill sampleSize based on size.
@@ -243,7 +243,7 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
         case AudioSource::SOURCE_PAUSED:
             return SDL_AUDIO_PAUSED;
         default:
-            debuglog(LCF_SDL | LCF_SOUND | LCF_ERROR, "Unknown source state");
+            debuglogstdio(LCF_SDL | LCF_SOUND | LCF_ERROR, "Unknown source state");
             return SDL_AUDIO_STOPPED;
     }
 }
@@ -296,7 +296,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ int SDL_QueueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
-    debuglog(LCF_SDL | LCF_SOUND, __func__, " call with ", len, " bytes of data");
+    debuglogstdio(LCF_SDL | LCF_SOUND, "%s call with %d bytes of data", __func__, len);
 
     if (sourceSDL->source == AudioSource::SOURCE_CALLBACK) {
         /* We cannot queue samples when using the callback mechanism */
@@ -320,7 +320,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
         /* Getting the parameters of the buffer from one of the queue */
         if (sourceSDL->buffer_queue.empty()) {
-            debuglog(LCF_SDL | LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
+            debuglogstdio(LCF_SDL | LCF_SOUND | LCF_ERROR, "Empty queue, cannot guess buffer parameters");
             return -1;
         }
 
@@ -351,7 +351,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     Uint32 qsize = sourceSDL->queueSize() - sourceSDL->getPosition();
-    debuglog(LCF_SDL | LCF_SOUND, "Returning ", qsize);
+    debuglogstdio(LCF_SDL | LCF_SOUND, "Returning %d", qsize);
     return qsize;
 }
 

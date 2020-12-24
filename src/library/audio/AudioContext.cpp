@@ -200,7 +200,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
 {
     /* Check that ticks is positive! */
     if (ticks.tv_sec < 0) {
-        debuglog(LCF_SOUND | LCF_ERROR, "Negative number of ticks for audio mixing!");
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "Negative number of ticks for audio mixing!");
         return;
     }
 
@@ -208,7 +208,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
   	/* Save the actual number of samples and size */
   	outNbSamples = outBytes / outAlignSize;
 
-    debuglog(LCF_SOUND, "Start mixing about ", outNbSamples, " samples");
+    debuglogstdio(LCF_SOUND, "Start mixing about %d samples", outNbSamples);
 
     /* Silent the output buffer */
     if (outBitDepth == 8) // Unsigned 8-bit samples
@@ -229,7 +229,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
             (mix_thread != audio_thread) &&
             source->willEnd(ticks)) {
 
-            debuglog(LCF_SOUND | LCF_WARNING, "Audio mixing will underrun, waiting for the game to send audio samples");
+            debuglogstdio(LCF_SOUND | LCF_WARNING, "Audio mixing will underrun, waiting for the game to send audio samples");
             int i;
             for (i=0; i<1000; i++) {
 
@@ -241,7 +241,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
                     break;
             }
             if (i == 1000) {
-                debuglog(LCF_SOUND | LCF_WARNING, "    Timeout");
+                debuglogstdio(LCF_SOUND | LCF_WARNING, "    Timeout");
             }
         }
         audiocontext.mutex.unlock();

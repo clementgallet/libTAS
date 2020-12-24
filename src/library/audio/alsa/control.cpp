@@ -26,7 +26,7 @@ namespace libtas {
 
 int snd_device_name_hint(int card, const char *iface, void ***hints)
 {
-    debuglog(LCF_SOUND, __func__, " call with card ", card, " and iface ", iface);
+    debuglogstdio(LCF_SOUND, "%s call with card %d and iface %s", __func__, card, iface);
 
     if (shared_config.audio_disabled) {
         static void* nohint[1] = {nullptr};

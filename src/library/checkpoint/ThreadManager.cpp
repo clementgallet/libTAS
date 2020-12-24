@@ -110,7 +110,7 @@ void ThreadManager::setMainThread()
     if (main_pthread_id != pthread_id) {
         if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
             /* Switching main thread */
-            debuglog(LCF_THREAD | LCF_WARNING, "Switching main thread from ", main_pthread_id, " to ", pthread_id);
+            debuglogstdio(LCF_THREAD | LCF_WARNING, "Switching main thread from %d to %d", main_pthread_id, pthread_id);
             main_pthread_id = pthread_id;
         }
     }
@@ -166,7 +166,7 @@ ThreadInfo* ThreadManager::getNewThread()
     /* No free thread, create a new one */
     if (!thread) {
         thread = new ThreadInfo;
-        debuglog(LCF_THREAD, "Allocate a new ThreadInfo struct");
+        debuglogstdio(LCF_THREAD, "Allocate a new ThreadInfo struct");
         saveBacktrack = true;
     }
 
@@ -201,7 +201,7 @@ void ThreadManager::restoreThreadTids()
 
 bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
-    debuglog(LCF_THREAD, "Init thread with routine ", (void*)start_routine);
+    debuglogstdio(LCF_THREAD, "Init thread with routine %p", (void*)start_routine);
     bool isRecycled = thread->state == ThreadInfo::ST_RECYCLED;
 
     thread->start = start_routine;
@@ -284,7 +284,7 @@ void ThreadManager::setChildFork()
 
 void ThreadManager::threadIsDead(ThreadInfo *thread)
 {
-    debuglog(LCF_THREAD, "Remove thread ", thread->tid, " from list");
+    debuglogstdio(LCF_THREAD, "Remove thread %d from list", thread->tid);
 
     if (thread->prev != nullptr) {
         thread->prev->next = thread->next;
@@ -312,7 +312,7 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         lockList();
         thread->detached = true;
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            debuglog(LCF_THREAD, "Zombie thread ", thread->tid, " is detached");
+            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->tid);
             MYASSERT(updateState(thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
             if (! shared_config.recycle_threads) {
                 threadIsDead(thread);
@@ -331,7 +331,7 @@ void ThreadManager::threadExit(void* retval)
     MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
              updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
     if (current_thread->detached) {
-        debuglog(LCF_THREAD, "Detached thread ", current_thread->tid, " exited");
+        debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->tid);
         MYASSERT(updateState(current_thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
         if (! shared_config.recycle_threads) {
             threadIsDead(current_thread);
