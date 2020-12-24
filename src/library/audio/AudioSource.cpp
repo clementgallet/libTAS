@@ -66,7 +66,7 @@ AudioSource::AudioSource(void)
     }
     /* Still test if it succeeded. */
     if (!orig::swr_alloc) {
-        debuglog(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc, disable audio mixing");
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc, disable audio mixing");
         swr = nullptr;
     }
     else {
@@ -215,7 +215,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     if (buffer_queue.empty())
         return -1;
 
-    debuglog(LCF_SOUND, "Start mixing source ", id);
+    debuglogstdio(LCF_SOUND, "Start mixing source %d", id);
 
     bool skipMixing = (!swr) || 
                         (!shared_config.av_dumping && 
@@ -251,7 +251,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     inFormat = AV_SAMPLE_FMT_DBL;
                     break;
                 default:
-                    debuglog(LCF_SOUND | LCF_ERROR, "Unknown sample format");
+                    debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown sample format");
                     break;
             }
             if (outBitDepth == 8)
@@ -280,7 +280,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             /* Open the context */
             if (orig::swr_init(swr) < 0) {
-                debuglog(LCF_SOUND | LCF_ERROR, "Error initializing swr context");
+                debuglogstdio(LCF_SOUND | LCF_ERROR, "Error initializing swr context");
                 return 0;
             }
         }
@@ -316,14 +316,14 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
-        debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " in read in range ", oldPosition, " - ", position);
+        debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", curBuf->id, oldPosition, position);
         if (!skipMixing) {
             convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
         }
     }
     else {
         /* We reached the end of the buffer */
-        debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " is read from ", oldPosition, " to its end ", curBuf->sampleSize);
+        debuglogstdio(LCF_SOUND, "  Buffer %d is read from %d to its end %d", curBuf->id, oldPosition, curBuf->sampleSize);
         if (!skipMixing) {
             if (availableSamples > 0)
                 orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
@@ -348,7 +348,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
                 }
 
-                debuglog(LCF_SOUND, "  Buffer ", curBuf->id, " is read again from 0 to ", availableSamples);
+                debuglogstdio(LCF_SOUND, "  Buffer %d is read again from 0 to %d", curBuf->id, availableSamples);
                 if (remainingSamples == availableSamples)
                     position = availableSamples;
                 remainingSamples -= availableSamples;
@@ -369,7 +369,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, loopbuf->loop_point_beg, (source == SOURCE_STATIC) && looping);
-                    debuglog(LCF_SOUND, "  Buffer ", loopbuf->id, " in read in range ", loopbuf->loop_point_beg, " - ", availableSamples);
+                    debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, availableSamples);
 
                     if (!skipMixing) {
                         orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
@@ -386,7 +386,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
-                    debuglog(LCF_SOUND, "  Buffer ", loopbuf->id, " in read in range 0 - ", availableSamples);
+                    debuglogstdio(LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
 
                     if (!skipMixing) {
                         orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
@@ -407,7 +407,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (remainingSamples > 0) {
                 /* We reached the end of the buffer queue */
-                debuglog(LCF_SOUND, "  End of the queue reached");
+                debuglogstdio(LCF_SOUND, "  End of the queue reached");
                 if (source == SOURCE_STREAMING_CONTINUOUS) {
                     /* Update the position in the buffer */
                     queue_index = finalIndex;
@@ -431,6 +431,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     if (!skipMixing) {
         #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
+        int nbSaturate = 0;
+
         /* Add mixed source to the output buffer */
         if (outBitDepth == 8) {
             for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
@@ -438,16 +440,14 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int otherL = outSamples[s];
                 int sumL = otherL + ((myL * lvas) >> 16) - 256;
                 outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
-                if ((sumL < 0) || (sumL > UINT8_MAX))
-                    debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
+                nbSaturate += (sumL < 0) || (sumL > UINT8_MAX);
 
                 if (outNbChannels == 2) {
                     int myR = mixedSamples[s+1];
                     int otherR = outSamples[s+1];
                     int sumR = otherR + ((myR * rvas) >> 16) - 256;
                     outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
-                    if ((sumR < 0) || (sumR > UINT8_MAX))
-                        debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
+                    nbSaturate += (sumR < 0) || (sumR > UINT8_MAX);
                 }
             }
         }
@@ -460,19 +460,19 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 int otherL = outSamples16[s];
                 int sumL = otherL + ((myL * lvas) >> 16);
                 outSamples16[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
-                if ((sumL < INT16_MIN) || (sumL > INT16_MAX))
-                    debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
+                nbSaturate += (sumL < INT16_MIN) || (sumL > INT16_MAX);
 
                 if (outNbChannels == 2) {
                     int myR = mixedSamples16[s+1];
                     int otherR = outSamples16[s+1];
                     int sumR = otherR + ((myR * rvas) >> 16);
                     outSamples16[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
-                    if ((sumR < INT16_MIN) || (sumR > INT16_MAX))
-                        debuglog(LCF_SOUND | LCF_WARNING, "Saturation during mixing");
+                    nbSaturate += (sumR < INT16_MIN) || (sumR > INT16_MAX);
                 }
             }
         }
+        
+        debuglogstdio(LCF_SOUND | LCF_WARNING, "Saturation during mixing for %d samples", nbSaturate);        
     }
 
     return convOutSamples;
