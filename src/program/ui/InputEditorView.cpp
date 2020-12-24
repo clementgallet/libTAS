@@ -286,6 +286,11 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         return QTableView::mouseMoveEvent(event);
     }
 
+    /* Disable toggle together with rewind, because it can cause multiple
+     * rewinds because of the scrolling */
+    if (index.row() < context->framecount)
+        return QTableView::mouseMoveEvent(event);
+
     int newMouseValue = mouseValue;
 
     /* Check if we need to alternate the input state */

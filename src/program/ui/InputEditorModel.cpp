@@ -780,13 +780,16 @@ bool InputEditorModel::rewind(uint64_t framecount)
     /* Load state */
     context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
 
-    /* Fast-forward to frame */
-    context->pause_frame = framecount;
-    
-    context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
-    if (!context->config.sc.running)
-        context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);    
+    /* Fast-forward to frame if further than state framecount */
+    int64_t state_framecount = SaveStateList::get(state).framecount;
+    if (framecount > state_framecount) {
+        context->pause_frame = framecount;
 
+        context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
+        if (!context->config.sc.running)
+            context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
+    }
+    
     /* Switch back */
     if (recording == SharedConfig::RECORDING_WRITE) {
         context->hotkey_pressed_queue.push(HOTKEY_READWRITE);

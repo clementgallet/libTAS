@@ -99,7 +99,7 @@ void SaveState::buildMessages(Context* context)
     }
 }
 
-const std::string& SaveState::getMoviePath()
+const std::string& SaveState::getMoviePath() const
 {
     return movie_path;
 }

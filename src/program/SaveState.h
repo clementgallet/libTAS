@@ -57,7 +57,7 @@ public:
     void init(Context* context, int i);
 
     /* Return the savestate movie path */
-    const std::string& getMoviePath();
+    const std::string& getMoviePath() const;
 
     /* Save state. Return the received message */
     int save(Context* context, const MovieFile& movie);
