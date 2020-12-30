@@ -26,6 +26,7 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
+#include "GameHacks.h"
 #include <execinfo.h>
 
 namespace libtas {
@@ -117,7 +118,7 @@ DEFINE_ORIG_POINTER(sched_yield)
      */
     if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
 
-        if ((shared_config.game_specific_sync & SharedConfig::GC_SYNC_HOLLOW_KNIGHT) &&
+        if (GameHacks::isUnity() &&
             (requested_time->tv_sec == 0) && (requested_time->tv_nsec == 9999000)) {
             /* Don't add to the timer, because it is sleep for loading threads */
         }

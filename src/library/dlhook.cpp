@@ -27,6 +27,7 @@
 #include <cstring>
 #include <set>
 #include "backtrace.h"
+#include "GameHacks.h"
 
 namespace libtas {
 
@@ -200,6 +201,9 @@ void *dlsym(void *handle, const char *name) throw() {
         }
     }
 
+    /* Detect a Unity game when it loads a specific function */
+    if (strcmp(name, "mono_unity_liveness_allocate_struct") == 0)
+        GameHacks::setUnity();
 
     /* FIXME: This design is not good enough.
      * This idea is to link to our defined function when there is one, instead

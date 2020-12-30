@@ -17,37 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
-#define LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
+#include "GameHacks.h"
+#include "logging.h"
 
-#include <QDialog>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
+namespace libtas {
 
-#include "../Context.h"
+static bool unity = false;
 
-class GameSpecificWindow : public QDialog {
-    Q_OBJECT
+void GameHacks::setUnity()
+{
+    debuglog(LCF_HOOK, "   detected Unity engine");
+    unity = true;
+}
 
-public:
-    GameSpecificWindow(Context *c, QWidget *parent = Q_NULLPTR);
+bool GameHacks::isUnity()
+{
+    return unity;
+}
 
-    /* Update UI elements when the config has changed */
-    void update_config();
-
-private:
-    Context *context;
-
-    QCheckBox *timingCeleste;
-    QCheckBox *syncCeleste;
-    QCheckBox *syncWitness;
-
-private slots:
-    // void slotBrowseEncodePath();
-    // void slotUpdate();
-    void slotOk();
-};
-
-#endif
+}

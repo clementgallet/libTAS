@@ -11,6 +11,7 @@ libtas_so_SOURCES = \
     dlhook.cpp \
     eglwrappers.cpp \
     frame.cpp \
+    GameHacks.cpp \
     glibwrappers.cpp \
     global.cpp \
     GlobalState.cpp \

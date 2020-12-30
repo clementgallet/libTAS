@@ -44,13 +44,11 @@ GameSpecificWindow::GameSpecificWindow(Context* c, QWidget *parent) : QDialog(pa
     /* Sync settings */
     syncCeleste = new QCheckBox("Celeste");
     syncWitness = new QCheckBox("The Witness");
-    syncHollow = new QCheckBox("Hollow Knight");
 
     QGroupBox *syncGroupBox = new QGroupBox(tr("Sync settings"));
     QVBoxLayout *syncLayout = new QVBoxLayout;
     syncLayout->addWidget(syncCeleste);
     syncLayout->addWidget(syncWitness);
-    syncLayout->addWidget(syncHollow);
     syncGroupBox->setLayout(syncLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -81,7 +79,6 @@ void GameSpecificWindow::update_config()
     timingCeleste->setChecked(context->config.sc.game_specific_timing & SharedConfig::GC_TIMING_CELESTE);
     syncCeleste->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_CELESTE);
     syncWitness->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_WITNESS);
-    syncHollow->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_HOLLOW_KNIGHT);
 }
 
 void GameSpecificWindow::slotOk()
@@ -95,8 +92,6 @@ void GameSpecificWindow::slotOk()
         context->config.sc.game_specific_sync |= SharedConfig::GC_SYNC_CELESTE;
     if (syncWitness->isChecked())
         context->config.sc.game_specific_sync |= SharedConfig::GC_SYNC_WITNESS;
-    if (syncHollow->isChecked())
-        context->config.sc.game_specific_sync |= SharedConfig::GC_SYNC_HOLLOW_KNIGHT;
 
     context->config.sc_modified = true;
 
