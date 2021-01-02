@@ -1,5 +1,11 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+
+## [1.4.1] - 2021-01-02
+### Added
 
 * Savestates can be compressed
 * Middle button to reset controller axis to 0

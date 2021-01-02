@@ -1,3 +1,63 @@
+libtas (1.4.1) unstable; urgency=medium
+
+  * Savestates can be compressed
+  * Middle button to reset controller axis to 0
+  * Hook getpid() used for prng seeding
+  * Option to use a forked process to save state
+  * Accept hotkeys when input editor and controller inputs window have focus (#349)
+  * Store input column order from input editor in movies (#328)
+  * Implement SDL_Lock/UnlockAudio (#358)
+  * Implement ram watch saving/loading
+  * Pointer scanning can start from any file-mapped memory
+  * Prevent SDL from creating custom cursors
+  * Non-blocking ALSA mode (#361)
+  * Add a non-interactive mode
+  * Support window title change from XChangeProperty()
+  * Add VDPAU rendering
+  * Add missing fields in Xlib input events (#365)
+  * Add special case for dlsym(RTLD_NEXT) (#82)
+  * Remove input events from window event masks (#365)
+  * Add basic EGL support
+  * Add commit version and date to window title
+  * Add cubeb support
+  * Implement ALSA underrun (#371)
+  * Implement Steam callback mechanism
+  * Implement Steam Networking
+  * Implement more of Steam remote storage
+  * Implement dirent API
+  * Check for shared config size between program and library
+  * Closing the game window takes effect even when paused (#65)
+  * Can remove multiple ram watches
+  * Implement greenzone using existing savestates (#134)
+  * Add an option to allow games to warp the mouse pointer (#378)
+  * Add nondraw frames in input editor
+  * Add Different By in Ram Search
+  * Add timeout to timer when main thread polls and timeout
+  * Update input editor before game is launched (#340)
+  * Handle game closing a bit more cleanly
+  * Don't save movie savestates on disk until game exit
+  * Filter SDL1 active events (#351)
+  * Handle interrupts in socket messages (#342)
+  * Fix calls to XFreeEventData() when not GenericEvent (#361)
+  * Support partial ALSA audio buffer writing (#361)
+  * Stop screen capture on GL context destroy (#370)
+  * Don't set SDL_DYNAMIC_API for wine games
+  * Open natively a special file by jemalloc to avoid deadlock
+  * Check native events when XCheck*Event() returns nothing
+  * Free ScreenCapture when glx context is destroyed
+  * Prevent recursive calls to dlsym (#369)
+  * Fix getting monitor resolution for fake fullscreen
+  * Save clock_id per conditional variable
+  * sem_timedwait converts timeout relative to real time
+  * Forked processes are set to native
+  * Support spaces in commandline argument (#333)
+  * Handle when no font was found (#376)
+  * Fix init audio source volume and pitch when created
+  * When unavailable swresample, disable mixing instead of crashing
+  * Input editor: Support copy/delete any selection of rows
+
+ -- clement <clement.gallet@ens-lyon.org>  Sat, 02 Jan 2021 14:43:18 +0100
+
 libtas (1.4.0) unstable; urgency=medium
 
   * Add async SDL events handling (#166)
