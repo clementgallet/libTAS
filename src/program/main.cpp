@@ -39,6 +39,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <getopt.h>
+#include <stdint.h>
 
 Context context;
 

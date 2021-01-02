@@ -23,6 +23,7 @@
 #include "Context.h"
 #include "SaveState.h"
 #include <string>
+#include <stdint.h>
 
 namespace SaveStateList {
     

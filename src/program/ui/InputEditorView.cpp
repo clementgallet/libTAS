@@ -21,6 +21,8 @@
 #include <QHeaderView>
 #include <QScrollBar>
 
+#include <stdint.h>
+
 #include "InputEditorView.h"
 #include "MainWindow.h"
 #include "qtutils.h"

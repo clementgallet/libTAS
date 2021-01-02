@@ -23,6 +23,7 @@
 #include <QAbstractTableModel>
 #include <vector>
 #include <array>
+#include <stdint.h>
 
 #include "../Context.h"
 #include "../movie/MovieFile.h"

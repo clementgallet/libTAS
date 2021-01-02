@@ -22,6 +22,8 @@
 #include "AudioPlayer.h"
 #include "../global.h" // shared_config
 
+#include <stdint.h>
+
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112
 

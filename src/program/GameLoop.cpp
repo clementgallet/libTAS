@@ -41,6 +41,7 @@
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 #include <X11/X.h>
+#include <stdint.h>
 
 GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
 

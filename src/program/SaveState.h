@@ -24,6 +24,7 @@
 #include "movie/MovieFile.h"
 #include <string>
 #include <memory>
+#include <stdint.h>
 
 class SaveState {
 public:

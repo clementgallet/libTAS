@@ -30,6 +30,7 @@
 #include "BusyLoopDetection.h"
 
 #include <sched.h> // sched_yield()
+#include <stdint.h>
 
 namespace libtas {
 

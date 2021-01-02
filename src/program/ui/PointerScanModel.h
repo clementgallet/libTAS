@@ -26,6 +26,7 @@
 // #include <pair>
 #include <memory>
 #include <sys/types.h>
+#include <stdint.h>
 
 #include "../Context.h"
 #include "../ramsearch/MemSection.h"

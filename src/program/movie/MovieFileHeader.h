@@ -22,6 +22,7 @@
 
 #include "Context.h"
 #include <string>
+#include <stdint.h>
 
 class MovieFileHeader {
 public:

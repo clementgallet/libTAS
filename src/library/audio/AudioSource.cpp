@@ -24,6 +24,7 @@
 #include "../global.h" // shared_config
 #include "hook.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 
 namespace libtas {

@@ -24,6 +24,8 @@
 #include <QSpinBox>
 #include <QMessageBox>
 
+#include <stdint.h>
+
 #include "RamWatchEditWindow.h"
 #include "../ramsearch/RamWatchDetailed.h"
 

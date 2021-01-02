@@ -33,6 +33,7 @@
 #include <dlfcn.h>
 #include <sstream>
 #include <string.h>
+#include <stdint.h>
 #include "GlobalState.h"
 #include "checkpoint/ProcSelfMaps.h"
 #include "checkpoint/ProcMapsArea.h"

@@ -32,6 +32,7 @@
 #include <list>
 #include <utility>
 #include <string>
+#include <stdint.h>
 
 namespace libtas {
 /* This class handles the display of some text over the game screen (HUD).

@@ -24,6 +24,7 @@
 #include "Config.h"
 // #include <X11/Xlib.h>
 #include <xcb/xcb.h>
+#include <stdint.h>
 #include "ConcurrentQueue.h"
 #include "../shared/GameInfo.h"
 

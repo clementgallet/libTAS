@@ -28,6 +28,8 @@
 #include "../../DeterministicTimer.h"
 #include "../../checkpoint/ThreadManager.h"
 
+#include <stdint.h>
+
 namespace libtas {
 
 static int buffer_size = 4096; // in samples

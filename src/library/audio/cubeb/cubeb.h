@@ -23,6 +23,8 @@
 #include "../../global.h"
 #include "../../../external/cubeb.h"
 
+#include <stdint.h>
+
 namespace libtas {
 
 OVERRIDE int cubeb_init(cubeb ** context, char const * context_name, char const * backend_name);

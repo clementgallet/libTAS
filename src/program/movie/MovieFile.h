@@ -28,6 +28,7 @@
 #include "MovieFileInputs.h"
 
 #include <string>
+#include <stdint.h>
 
 class MovieFile {
 public:

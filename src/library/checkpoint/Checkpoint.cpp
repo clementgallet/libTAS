@@ -34,6 +34,7 @@
 #include <sys/mman.h>
 #include <cstring>
 #include <csignal>
+#include <stdint.h>
 #include <X11/Xlibint.h>
 #include <X11/Xlib-xcb.h>
 #include <sys/statvfs.h>

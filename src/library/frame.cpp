@@ -30,6 +30,7 @@
 #include "sdl/sdlwindows.h"
 #include "sdl/sdlevents.h"
 #include <iomanip>
+#include <stdint.h>
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"

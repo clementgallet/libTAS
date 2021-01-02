@@ -23,6 +23,8 @@
 #include "../logging.h"
 #include "../DeterministicTimer.h"
 
+#include <stdint.h>
+
 namespace libtas {
 
 typedef union _LARGE_INTEGER {

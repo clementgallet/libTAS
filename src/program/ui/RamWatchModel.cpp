@@ -22,6 +22,8 @@
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
+#include <stdint.h>
+
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 int RamWatchModel::rowCount(const QModelIndex & /*parent*/) const

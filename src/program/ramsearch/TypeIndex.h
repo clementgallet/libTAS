@@ -21,6 +21,7 @@
 #define LIBTAS_TYPEINDEX_H_INCLUDED
 
 #include "RamWatch.h"
+#include <stdint.h>
 
 /* This looks aaawwwful */
 template <typename T> static inline int type_index() {return 0;}

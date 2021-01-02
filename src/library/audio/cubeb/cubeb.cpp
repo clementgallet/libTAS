@@ -24,6 +24,8 @@
 #include "../AudioSource.h"
 #include "../AudioBuffer.h"
 
+#include <stdint.h>
+
 namespace libtas {
 
 int cubeb_init(cubeb ** context, char const * context_name, char const * backend_name)

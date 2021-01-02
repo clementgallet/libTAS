@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <stdint.h>
 
 class MovieFileInputs {
 public:

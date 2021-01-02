@@ -24,6 +24,7 @@
 #include "Context.h"
 #include <vector>
 #include <set>
+#include <stdint.h>
 
 class MovieFileEditor {
 public:
