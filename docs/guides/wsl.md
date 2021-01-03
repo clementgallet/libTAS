@@ -170,13 +170,13 @@ command first (make sure that your X-Server is running of course).
 
 # Step 5: Installing Steam (optional)
 
-If your game has a linux version and exists on steam, then the easiest way to
-get the files of the game you want to TAS would be to simply install steam and download it.
-There are some ways to directly access steam repositories but I am not familiar with that. So run
+If your game has a Linux version and exists on Steam, then the easiest way to
+get the files of the game you want to TAS would be to simply install Steam and download it.
+There are some ways to directly access Steam repositories but I am not familiar with that. So run
 
     sudo dpkg --add-architecture i386 # allows WSL to access 32 bit repos
     sudo add-apt-repository multiverse
     sudo apt update
     sudo apt install steam
 
-and it should install steam. Download your game, then launch it through libTAS.
+and it should install Steam. Download your game, then launch it through libTAS.
