@@ -40,6 +40,7 @@ AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" == "xyes" || test "x$enable_i38
 AM_CONDITIONAL([BUILD32LIBONLY], [test "x$enable_i386_lib" == "xyes"])
 
 AC_ARG_ENABLE([release-build], AS_HELP_STRING([--enable-release-build], [Build a release]))
+AC_ARG_ENABLE([build-date], AS_HELP_STRING([--disable-build-date], [Do not embed build date in executable]))
 
 dnl **** Check for libraries and headers for libTAS program ****
 
@@ -153,9 +154,11 @@ AS_IF([test "x$enable_release_build" != "xyes"], [
     AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_COMMIT], ["$git_commit_hash"], [Git commit])
     AC_MSG_NOTICE([git commit is $git_commit_hash])
 
-    dnl Add build date as macro
-    today=`date +%Y-%m-%d`
-    AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$today"], [Git commit])
+    AS_IF([test "x$enable_build_date" != "xno"], [
+      dnl Add build date as macro
+      today=`date +%Y-%m-%d`
+      AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$today"], [Git commit])
+    ])
 ])
 
 AC_SUBST([PROGRAM_LIBS])

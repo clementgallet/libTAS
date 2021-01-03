@@ -57,7 +57,11 @@ static void print_usage(void)
 int main(int argc, char **argv)
 {
 #ifdef LIBTAS_INTERIM_COMMIT
-    std::cout << "Interim commit " << LIBTAS_INTERIM_COMMIT << " built on " << LIBTAS_INTERIM_DATE << std::endl;
+    std::cout << "Interim commit " << LIBTAS_INTERIM_COMMIT;
+#ifdef LIBTAS_INTERIM_DATE
+    std::cout << " built on " << LIBTAS_INTERIM_DATE;
+#endif
+    std::cout << std::endl;
 #endif
 
     qRegisterMetaTypeStreamOperators<HotKey>("HotKey");
