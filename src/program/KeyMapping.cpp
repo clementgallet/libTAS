@@ -150,16 +150,6 @@ void KeyMapping::init(xcb_connection_t* c)
         }
     }
 
-    /* Add mouse mapping */
-    input_list.push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
-    input_list.push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
-    input_list.push_back({SingleInput::IT_POINTER_MODE, 1, "Mouse rel"});
-    input_list.push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});
-    input_list.push_back({SingleInput::IT_POINTER_B2, 1, "Mouse button 2"});
-    input_list.push_back({SingleInput::IT_POINTER_B3, 1, "Mouse button 3"});
-    input_list.push_back({SingleInput::IT_POINTER_B4, 1, "Mouse button 4"});
-    input_list.push_back({SingleInput::IT_POINTER_B5, 1, "Mouse button 5"});
-
     /* Add flags mapping */
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_RESTART, "Restart"});
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_ADDED, "Joy1 Added"});
@@ -170,10 +160,6 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_REMOVED, "Joy2 Removed"});
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_REMOVED, "Joy3 Removed"});
     input_list.push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_REMOVED, "Joy4 Removed"});
-
-    /* Add framerate mapping */
-    input_list.push_back({SingleInput::IT_FRAMERATE_NUM, 1, "Framerate num"});
-    input_list.push_back({SingleInput::IT_FRAMERATE_DEN, 1, "Framerate den"});
 
     /* Add controller mapping */
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Joy1 A"});
@@ -192,13 +178,6 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Joy1 Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Joy1 Right"});
 
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTX, 1, "Joy1 LeftStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTY, 1, "Joy1 LeftStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTX, 1, "Joy1 RightStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTY, 1, "Joy1 RightStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERLEFT, 1, "Joy1 LeftTrigger"});
-    input_list.push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERRIGHT, 1, "Joy1 RightTrigger"});
-
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_A, 1, "Joy2 A"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_B, 1, "Joy2 B"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_X, 1, "Joy2 X"});
@@ -214,13 +193,6 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Joy2 Down"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Joy2 Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Joy2 Right"});
-
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTX, 1, "Joy2 LeftStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTY, 1, "Joy2 LeftStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTX, 1, "Joy2 RightStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTY, 1, "Joy2 RightStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERLEFT, 1, "Joy2 LeftTrigger"});
-    input_list.push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERRIGHT, 1, "Joy2 RightTrigger"});
 
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_A, 1, "Joy3 A"});
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_B, 1, "Joy3 B"});
@@ -238,13 +210,6 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Joy3 Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Joy3 Right"});
 
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTX, 1, "Joy3 LeftStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTY, 1, "Joy3 LeftStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTX, 1, "Joy3 RightStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTY, 1, "Joy3 RightStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERLEFT, 1, "Joy3 LeftTrigger"});
-    input_list.push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERRIGHT, 1, "Joy3 RightTrigger"});
-
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_A, 1, "Joy4 A"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_B, 1, "Joy4 B"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_X, 1, "Joy4 X"});
@@ -260,13 +225,6 @@ void KeyMapping::init(xcb_connection_t* c)
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Joy4 Down"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Joy4 Left"});
     input_list.push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Joy4 Right"});
-
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTX, 1, "Joy4 LeftStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTY, 1, "Joy4 LeftStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTX, 1, "Joy4 RightStickX"});
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTY, 1, "Joy4 RightStickY"});
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERLEFT, 1, "Joy4 LeftTrigger"});
-    input_list.push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERRIGHT, 1, "Joy4 RightTrigger"});
 
     /* Set default inputs */
     default_inputs();
