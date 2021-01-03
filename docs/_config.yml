@@ -19,7 +19,7 @@ email: clement.gallet@ens-lyon.org
 description: >- # this means to ignore newlines until "baseurl:"
   libTAS is a software for Linux that provides TAS tools to games, such as
   frame advance, inputs recording, savestates.
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "/libTAS" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: KilayeJV
 github_username:  clementgallet
