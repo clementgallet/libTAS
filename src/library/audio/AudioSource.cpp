@@ -473,7 +473,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
         }
         
-        debuglogstdio(LCF_SOUND | LCF_WARNING, "Saturation during mixing for %d samples", nbSaturate);        
+        if (nbSaturate > 0)
+            debuglogstdio(LCF_SOUND | LCF_WARNING, "Saturation during mixing for %d samples", nbSaturate);        
     }
 
     return convOutSamples;
