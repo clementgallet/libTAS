@@ -300,17 +300,27 @@ void RamWatchEditWindow::slotSave()
         std::string base = baseAddressInput->text().toStdString();
 
         /* Split the string with '+' or '-' sign */
-        size_t sep = base.find_last_of("+0x");
-        if (sep != std::string::npos)
-            sep = base.find_last_of("-0x");
+        size_t sep = base.find("+0x");
+        if (sep == std::string::npos)
+            sep = base.find("-0x");
 
         if (sep != std::string::npos) {
             ramwatch->base_file = base.substr(0, sep);
-            ramwatch->base_file_offset = std::stoll(base.substr(sep + 1), nullptr, 16);
+            try {
+                ramwatch->base_file_offset = std::stoll(base.substr(sep), nullptr, 16);
+            }
+            catch (const std::invalid_argument& ia) {
+                ramwatch->base_file_offset = 0;                
+            }
         }
         else {
             ramwatch->base_file = "";
-            ramwatch->base_file_offset = std::stoll(base, nullptr, 16);
+            try {
+                ramwatch->base_file_offset = std::stoll(base, nullptr, 16);
+            }
+            catch (const std::invalid_argument& ia) {
+                ramwatch->base_file_offset = 0;
+            }            
         }
         /* Reset base address to it is recomputed */
         ramwatch->base_address = 0;
