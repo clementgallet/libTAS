@@ -277,8 +277,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Prevent audio device from being initialized */
     bool audio_disabled = false;
 
-    bool save_screenpixels = true;
-
     /* Recycle threads when they terminate */
     bool recycle_threads = false;
 

@@ -4,6 +4,9 @@
 * Add the execution permission if possible
 
 ### Changed
+
+* Remove "save screen" option (always on)
+
 ### Fixed
 
 

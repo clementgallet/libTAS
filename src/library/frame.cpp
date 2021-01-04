@@ -315,7 +315,7 @@ void frameBoundary(std::function<void()> draw)
      * the HUD, so that we can redraw with another HUD.
      */
     if (!skipping_draw) {
-        if (draw && shared_config.save_screenpixels) {
+        if (draw) {
             ScreenCapture::storePixels();
         }
     }
@@ -402,7 +402,7 @@ void frameBoundary(std::function<void()> draw)
      * It is also the case for double buffer draw methods when the game does
      * not clean the back buffer.
      */
-    if (!skipping_draw && draw && shared_config.save_screenpixels) {
+    if (!skipping_draw && draw) {
         ScreenCapture::setPixels();
     }
 
@@ -521,7 +521,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs 
 static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 #endif
 {
-    if (!skipping_draw && draw && shared_config.save_screenpixels) {
+    if (!skipping_draw && draw) {
         ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD

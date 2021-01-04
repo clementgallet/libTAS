@@ -739,9 +739,6 @@ void MainWindow::createMenus()
     // savestateMenu->setToolTipsVisible(true);
     savestateMenu->addActions(savestateGroup->actions());
 
-    saveScreenAction = runtimeMenu->addAction(tr("Save screen"), this, &MainWindow::slotSaveScreen);
-    saveScreenAction->setCheckable(true);
-    saveScreenAction->setToolTip("Save the screen pixels on memory, used for video encode, OSD, etc. You probably want this to be checked except if the screen is going black");
     preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
     preventSavefileAction->setToolTip("Prevent the game from writing files on disk, but write in memory instead. May cause issues in some games");
@@ -1209,7 +1206,6 @@ void MainWindow::updateUIFromConfig()
 
     renderSoftAction->setChecked(context->config.sc.opengl_soft);
     renderPerfAction->setChecked(context->config.sc.opengl_performance);
-    saveScreenAction->setChecked(context->config.sc.save_screenpixels);
     preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
     recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
     steamAction->setChecked(context->config.sc.virtual_steam);
@@ -1565,7 +1561,6 @@ BOOLSLOT(slotOsdEncode, context->config.sc.osd_encode)
 #endif
 
 BOOLSLOT(slotBusyLoop, context->config.sc.busyloop_detection)
-BOOLSLOT(slotSaveScreen, context->config.sc.save_screenpixels)
 BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
 BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)
 BOOLSLOT(slotSteam, context->config.sc.virtual_steam)
