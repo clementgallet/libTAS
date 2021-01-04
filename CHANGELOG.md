@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Add the execution permission if possible
+
 ### Changed
 ### Fixed
 

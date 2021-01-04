@@ -141,10 +141,15 @@ bool ErrorChecking::checkArchType(Context* context)
         return false;
     }
 
-    /* Checking that the game can be executed by the user */
+    /* Checking that the game can be executed by the user, or try adding the flag.
+     * This is not needed for wine games */
     if (gameArch != BT_PE32 && gameArch != BT_PE32P && access(context->gamepath.c_str(), X_OK) != 0) {
-        critical(QString("Game %1 is not executable by the user").arg(context->gamepath.c_str()), context->interactive);
-        return false;
+        struct stat sb;
+        if ((stat(context->gamepath.c_str(), &sb) == -1) ||
+           (chmod(context->gamepath.c_str(), sb.st_mode | S_IXUSR) == -1)) {
+           critical(QString("Game %1 is not executable by the user, could not add the executable flag").arg(context->gamepath.c_str()), context->interactive);
+           return false;
+        }
     }
 
     /* Check for a possible libtas alternate file */
