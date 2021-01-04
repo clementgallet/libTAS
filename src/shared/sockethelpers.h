@@ -44,7 +44,7 @@ void unlockSocket(void);
 /* Send data over the socket. Data is stored at the beginning of
  * pointer elem, and has the specified size in bytes.
  */
-void sendData(const void* elem, unsigned int size);
+int sendData(const void* elem, unsigned int size);
 
 /* Send a string object through the socket. It first sends the string length,
  * followed by the char array.
@@ -52,7 +52,7 @@ void sendData(const void* elem, unsigned int size);
 void sendString(const std::string& str);
 
 /* Helper function to send a message over the socket */
-void sendMessage(int message);
+int sendMessage(int message);
 
 /* Receive data from the socket. Same arguments as sendData() */
 int receiveData(void* elem, unsigned int size);

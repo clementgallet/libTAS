@@ -249,7 +249,12 @@ void frameBoundary(std::function<void()> draw)
     lockSocket();
 
     /* Send framecount and internal time */
-    sendMessage(MSGB_FRAMECOUNT_TIME);
+    
+    /* Detect an error on the first send, and exit the game if so */
+    int ret = sendMessage(MSGB_FRAMECOUNT_TIME);
+    if (ret == -1)
+        exit(1);
+        
     sendData(&framecount, sizeof(uint64_t));
     struct timespec ticks = detTimer.getTicks();
     uint64_t ticks_val = ticks.tv_sec;

@@ -121,7 +121,7 @@ void unlockSocket(void)
     mutex.unlock();
 }
 
-void sendData(const void* elem, unsigned int size)
+int sendData(const void* elem, unsigned int size)
 {
 #ifdef SOCKET_LOG
     libtas::debuglogstdio(LCF_SOCKET, "Send socket data of size %u", size);
@@ -146,14 +146,16 @@ void sendData(const void* elem, unsigned int size)
         std::cerr << "send() " << ret << " bytes instead of " << size << std::endl;
 #endif
     }
+    
+    return ret;
 }
 
-void sendMessage(int message)
+int sendMessage(int message)
 {
 #ifdef SOCKET_LOG
     libtas::debuglogstdio(LCF_SOCKET, "Send socket message %d", message);
 #endif
-    sendData(&message, sizeof(int));
+    return sendData(&message, sizeof(int));
 }
 
 void sendString(const std::string& str)

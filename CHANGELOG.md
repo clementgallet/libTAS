@@ -9,6 +9,7 @@
 
 ### Fixed
 
+* Exit the game if the socket connection is lost
 
 ## [1.4.1] - 2021-01-02
 ### Added
