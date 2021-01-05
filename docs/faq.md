@@ -15,7 +15,7 @@ Short answer: no, unless it has a Linux release. Long answer: there's experiment
 
 #### Can I TAS Steam games?
 
-If Steam offers a Linux version, possibly yes. Some games from Steam are actually drm-free, so there are no issues with them. Other games will need you to enable `Virtual Steam client` setting to work. Games heavily relying on Steam features (such as multiplayer games) won't work.
+If Steam offers a Linux version, possibly yes. Some games from Steam are actually DRM-free, so there are no issues with them. Other games will need you to enable `Virtual Steam client` setting to work. Games heavily relying on Steam features (such as multiplayer games) won't work.
 
 #### My Steam game complains about some missing library
 
