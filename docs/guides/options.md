@@ -88,7 +88,7 @@ This option is good for users that don't have an SSD, but no check is performed 
 
 #### Backtrack savestate
 
-This option makes the game save a state each time savestates are invalidated by a thread creation or destruction. This state can be loaded with F10 (by default). It allows used to get back to the earliest frame that is available.
+This option makes the game save a state each time savestates are invalidated by thread creation or destruction. This state can be loaded with F10 (by default). It allows used to get back to the earliest frame that is available.
 
 #### Compressed savestates
 
