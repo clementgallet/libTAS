@@ -97,7 +97,7 @@ Compressed savestates save time especially for slow hard-drive disks. This optio
 #### Skip unmapped pages
 
 Save savestate space by not saving unmapped memory pages, but some games crash
-because of this. If unsure, leave unchecked
+because of this. If unsure, leave unchecked.
 
 #### Fork to save states
 
