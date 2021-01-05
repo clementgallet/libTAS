@@ -92,7 +92,7 @@ This option makes the game save a state each time savestates are invalidated by 
 
 #### Compressed savestates
 
-Compressed savestates save time especially for slow hard-drive disks. It is recommended.
+Compressed savestates save time especially for slow hard-drive disks. This option is recommended.
 
 #### Skip unmapped pages
 
