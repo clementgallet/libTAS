@@ -59,7 +59,7 @@ You must be using Mesa 3D to be able to use this option, which usually means tha
 
 ### Toggle performance tweaks
 
-When software rendering is on, you can check this to skip some steps in the rendering pipeline, which can gives a small performance boost.
+When software rendering is on, you can check this to skip some steps in the rendering pipeline, which can give a small performance boost.
 
 ### On-screen Display (OSD)
 
