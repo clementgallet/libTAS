@@ -53,7 +53,7 @@ This option simulates a monitor that only supports the specified resolution, so 
 
 ### Force software rendering
 
-This option forces the OpenGL device driver Mesa 3D to use its software implementation of OpenGL (llvmpipe) to run the game. While this makes the game much slower, it is usually required to be able to use savestates. Indeed, the state of the GPU cannot be easily accessed and stored into savestates by the tool, thus savestates are incomplete and may crash the game. When using Mesa's software implementation, all of the graphic pipeline is done by the CPU and can be stored in the savestate.
+This option forces the OpenGL device driver Mesa 3D to use its software implementation of OpenGL (llvmpipe) to run the game. While this makes the game much slower, it is usually required to be able to use savestates. Indeed, the state of the GPU cannot be easily accessed and stored into savestates by the tool, thus savestates are incomplete and may crash the game. When using Mesa's software implementation, all of the graphics pipeline is done by the CPU and can be stored in the savestate.
 
 You must be using Mesa 3D to be able to use this option, which usually means that you must be using the free driver for you GPU (e.g. nouveau for nvidia GPUs or radeon for ATI/AMD CPUs)
 
