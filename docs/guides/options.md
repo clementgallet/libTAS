@@ -132,7 +132,7 @@ This option makes the game access the real event system. It is useful to debug g
 
 ### Configure Encode
 
-Video encode is configured in this window. The program offers some audio and video codecs as dropdown menu, which fills the corresponding FFmpeg options, but you can manually modify the options to be send to FFmpeg. Also, the container is determined from the file extension (e.g. name your video encode.mkv will use the Matroska container).
+Video encode is configured in this window. The program offers some audio and video codecs as dropdown menus, which fill the corresponding FFmpeg options, but you can manually modify the options to be send to FFmpeg. Also, the container is determined from the file extension (e.g. name your video encode.mkv will use the Matroska container).
 
 ### Ram Search
 
