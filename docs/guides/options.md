@@ -102,7 +102,7 @@ because of this. If unsure, leave unchecked.
 #### Fork to save states
 
 Use the `fork()` feature to create a copy of the game process that will save its
-memory, so you can resume the game immediatly.
+memory, so you can resume the game immediately.
 
 ### Prevent writing to disk
 
