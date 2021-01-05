@@ -106,7 +106,7 @@ memory, so you can resume the game immediately.
 
 ### Prevent writing to disk
 
-This option aims to prevent the game from saving its savefiles on disk. This is useful to keep the same state of the game whenever you load a savestate or you quit and restart the game. To enable that, libTAS detects if the game opens a regular file in write mode, and instead opens a virtual file in memory with a copy of the content of the actual file. The game does not notice it and uses regular file commands (e.g. read, write, seek) on it. Because this virtual file is in memory, it is saved inside savestates and is recovered when loading a savestate. Also, when the game is closed, all the modifications in the virtual file are lost. This option may cause some games to crash, if they are doing uncommon operations with savefiles, or if the tool incorrectly detected savefiles.
+This option aims to prevent the game from saving its savefiles on disk. This is useful to keep the same state of the game whenever you load a savestate or you quit and restart the game. To enable that, libTAS detects if the game opens a regular file in write mode, and instead opens a virtual file in memory with a copy of the content of the actual file. The game does not notice it and uses regular file commands (e.g. read, write, seek) on it. Because this virtual file is in memory, it is saved inside savestates and is recovered when loading a savestate. Also, when the game is closed, all modifications to the virtual file are lost. This option may cause some games to crash, if they are doing uncommon operations with savefiles, or if the tool incorrectly detected savefiles.
 
 ### Recycle threads
 
