@@ -147,7 +147,7 @@ Then, for more filtering, set the appropriate parameters and press Search. If yo
 
 ### Ram Watch
 
-A simple window to look at the ram watches. It is also possible to scan for pointers to a specific address. Because most memory is allocated dynamically, the location of a particular value that you are looking for will probably change for every game execution. To be able to keep track of this value, you can search for a chain of pointers that starts from a static address (which never change) to the actual value location. It will look like pointer -> offset -> pointer -> offset -> pointer -> offset -> location.
+A simple window to look at the ram watches. It is also possible to scan for pointers to a specific address. Because most memory is allocated dynamically, the location of a particular value that you are looking for will probably change for every game execution. To be able to keep track of this value, you can search for a chain of pointers that starts from a static address (which never changes) to the actual value location. It will look like pointer -> offset -> pointer -> offset -> pointer -> offset -> location.
 
 The pointer scan feature will scan for pointer chains to a specific address. Selecting a ram watch and pressing the button will open a new window. You can then set the maximum number of pointers in the chain and the maximum value of offsets. The Search will take some time, but all the layout is stored so you can search again with different parameters or other addresses in a very short time, as long as you don't frame advance. Then, you can store results in the Ram Watch.
 
