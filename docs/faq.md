@@ -25,7 +25,7 @@ libraries from steam-runtime using:
 
     ~/.steam/bin/steam-runtime/run.sh libTAS
 
-#### Why does my game is horribly slow?
+#### Why does my game run horribly slow?
 
 Unfortunately, for savestates to work, games must be run entire on the CPU, without the GPU. It makes games run even more slowly as they contain heavy rendering. If you don't bother about savestates, you can uncheck `Video > Force software rendering`. If you do, several options are to lower the game resolution or disable rendering effects ingame. Also, fast-forward skips rendering.
 
