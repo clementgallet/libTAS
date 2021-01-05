@@ -14,7 +14,7 @@ Some games are build with a constant framerate in mind, and setting another FPS 
 
 ### System Time
 
-The System Time is the time that is accessed by the game. It can be set before starting the game to have different starting times. Because system time is often use as a seed to a random number generator, setting this value can affect the random behaviors in the game. This is why initial system time is stored in movie files. When the game has started, this value shows the current time that the game has access to.
+The System Time is the time that is accessed by the game. It can be set before starting the game to have different starting times. Because system time is often used as a seed to a random number generator, setting this value can affect the random behaviors in the game. This is why initial system time is stored in movie files. When the game has started, this value shows the current time that the game has access to.
 
 ## File
 
