@@ -823,7 +823,7 @@ void MainWindow::createMenus()
     mouseModeAction->setCheckable(true);
     mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, &MainWindow::slotMouseWarp);
     mouseWarpAction->setCheckable(true);
-    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games to warp the mouse cursor"), this, &MainWindow::slotMouseGameWarp);
+    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games from warping the mouse cursor"), this, &MainWindow::slotMouseGameWarp);
     mouseGameWarpAction->setCheckable(true);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));

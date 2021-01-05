@@ -165,9 +165,9 @@ controls, together with the next feature.
 This feature mimics what is used by first-person games so that the pointer does
 not go past the game screen.
 
-### Prevents games to warp pointer
+### Prevent games from warping the mouse cursor
 
-If checked, libTAS will prevent games to warp the pointer (but will still register
+If checked, libTAS will prevent games from warping the mouse cursor (but will still register
 the warp internally).
 
 ### Recalibrate mouse position
