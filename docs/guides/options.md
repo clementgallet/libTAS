@@ -139,9 +139,9 @@ Video encode is configured in this window. The program offers some audio and vid
 There is a rudimentary Ram Search feature implemented. To start a new search, you need to:
 
 - Check the memory regions you want to include. In the most common case, you will want to only include Heap and Anon RW Mapping which are the two regions of dynamically allocated read/write memory.
-- Choose Unknown/Previous Value if you don't want to filter the results, or Specific Value if you want to filter base on a comparison to a specific value. In that case, fill the value and the operator above. Be careful that the allocated memory can be very big in some games, so whenever possible, filter the results for a new search. Also, try to filter the value 0 because a non-negligible part of memory contains zeros. If too many results are retained, the program will crash
-- Choose the type of variable to search for, and how it will be displayed
-- Press New 
+- Choose Unknown/Previous Value if you don't want to filter the results, or Specific Value if you want to filter base on a comparison to a specific value. In that case, fill the value and the operator above. Be careful that the allocated memory can be very big in some games, so whenever possible, filter the results for a new search. Also, try to filter the value 0 because a non-negligible part of memory contains zeros. If too many results are retained, the program will crash.
+- Choose the type of variable to search for, and how it will be displayed.
+- Press New.
 
 Then, for more filtering, set the appropriate parameters and press Search. If you find a result that you want to keep, you can select the row and press Add Watch. You will be able to save the address and apply a label. Then, the saved addresses are available in the Ram Watch menu.
 
