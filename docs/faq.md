@@ -7,7 +7,7 @@ permalink: /faq/
 
 #### I have a Windows system, how can I run libTAS?
 
-If you have Windows 10, the easiest way is to use [WSL 2](/guides/wsl) (Windows Subsystem for Linux) to run libTAS. Otherwise, you can install a Linux distribution (e.g. Ubuntu) on a virtual machine (e.g. using VirtualBox).
+If you have Windows 10, the easiest way is to use [WSL 2](../guides/wsl) (Windows Subsystem for Linux) to run libTAS. Otherwise, you can install a Linux distribution (e.g. Ubuntu) on a virtual machine (e.g. using VirtualBox).
 
 #### Can I TAS Windows games with libTAS?
 
@@ -23,8 +23,19 @@ Steam games are often dependent on old libraries from the steam-runtime, which a
 on recent systems. To fix that, it is possible to launch libTAS with the additional
 libraries from steam-runtime using:
 
-    ~/.steam/bin/steam-runtime/run.sh
+    ~/.steam/bin/steam-runtime/run.sh libTAS
 
-#### Why does my game run horribly slow?
+#### Why does my game is horribly slow?
 
 Unfortunately, for savestates to work, games must be run entire on the CPU, without the GPU. It makes games run even more slowly as they contain heavy rendering. If you don't bother about savestates, you can uncheck `Video > Force software rendering`. If you do, several options are to lower the game resolution or disable rendering effects ingame. Also, fast-forward skips rendering.
+
+#### When starting a game, it says "Could not determine arch of file <path>"
+
+Check that you specified the binary file for the game. Linux games often provide a script
+to launch the game (e.g. `AxiomVerge`), but the actual binary is another file 
+(e.g. `AxiomVerge.bin.x86_64`).
+
+#### I'm getting an error about `System.TypeInitializationException`
+
+This is a known [Mono bug](https://github.com/mono/mono/issues/6752), it can be
+fixed by launching libTAS like that: `term=XTERM libTAS`.
