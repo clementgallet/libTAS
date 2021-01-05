@@ -74,7 +74,7 @@ before starting the game.
 
 ### Time tracking
 
-Some game expects, at some point, the time to advance, and wait in a loop, querying the time constantly until the time has advanced enough. However, we only advance time during a frame boundary, triggered by a screen display call. To avoid this softlock, we can let the time advance after a threshold number of calls from the same time-querying function. This option affects sync, but the game should run deterministically.
+Some games expect, at some point, the time to advance, and wait in a loop, querying the time constantly until the time has advanced enough. However, we only advance time during a frame boundary, triggered by a screen display call. To avoid this softlock, we can let the time advance after a threshold number of calls from the same time-querying function. This option affects sync, but the game should run deterministically.
 
 ### Savestates
 
