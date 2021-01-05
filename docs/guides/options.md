@@ -126,7 +126,7 @@ This option makes the game access the real system time. It is useful to see if a
 
 #### Native events
 
-This option makes the game access the real event system. It is useful to debug games that don't take inputs from the user. Checking this option may make input recording not working.
+This option makes the game access the real event system. It is useful to debug games that don't take inputs from the user. Checking this option may make input recording not work.
 
 ## Tools
 
