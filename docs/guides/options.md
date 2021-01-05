@@ -112,7 +112,7 @@ This option aims to prevent the game from saving its savefiles on disk. This is 
 
 One current limitation of the savestates implementation is that loading a savestate won't recreated threads that have exited since the savestate was done. It makes loading impossible in common cases like between levels, and the user will be forced to restart the entire movie because they cannot load any savestate. We can work around this limitation by recycling threads. When a game thread exits, it turns into a wait mode instead, and the next time the game creates a new thread, no thread is actually created and the thread function is passed to this waiting thread. Thanks to this, savestates are much more likely to be possible.
 
-However, some games will crash when this option is checked (e.g. recent mono games) because thread-local storage is not completely supported.
+However, some games will crash when this option is checked (e.g. recent Mono games) because thread-local storage is not completely supported.
 
 ### Virtual Steam client
 
