@@ -38,4 +38,4 @@ to launch the game (e.g. `AxiomVerge`), but the actual binary is another file
 #### I'm getting an error about `System.TypeInitializationException`
 
 This is a known [Mono bug](https://github.com/mono/mono/issues/6752), it can be
-fixed by launching libTAS like that: `term=XTERM libTAS`.
+fixed by launching libTAS like this: `term=XTERM libTAS`.
