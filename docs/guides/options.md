@@ -20,7 +20,7 @@ The System Time is the time that is accessed by the game. It can be set before s
 
 ### Executable Options
 
-When the game is required to be ran from a specific working directory, the `Run path` field must be set to that directory. Also, if the game is bundled with its own shared libraries, you probably want to add that library directory path to `Library path` field. Both fields can be guessed if the game is intended to be launched with a script file. You can look at the content
+When the game is required to be ran from a specific working directory, the `Run path` field must be set to that directory. Also, if the game is bundled with its own shared libraries, you probably want to add that library directory path to `Library path` field. Both fields can be guessed if the game is intended to be launched with a script file. You can look at the contents
 of the script.
 
 ## Movie
