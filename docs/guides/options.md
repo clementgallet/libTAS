@@ -116,7 +116,7 @@ However, some games will crash when this option is checked (e.g. recent Mono gam
 
 ### Virtual Steam client
 
-When enabled, it will simulate a dummy Steam client in case games want to connect to Steam. This is mandatory for games that require Steam to be opened, because libTAS does not work with Steam. The implementation of this dummy client is not completed, so it won't work with all games.
+When enabled, it will simulate a dummy Steam client in case games want to connect to Steam. This is mandatory for games that require Steam to be opened, because libTAS does not work with Steam. The implementation of this dummy client is not complete, so it won't work with all games.
 
 ### Debug
 
