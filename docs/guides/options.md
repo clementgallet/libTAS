@@ -8,9 +8,9 @@ permalink: /guides/options/
 
 ### Frames per second
 
-You have to set a fps value prior to running a game, which appears as two fields being the numerator and denominator of a fraction (e.g. `60` and `1` for 60 fps). Many games accept any value and rely on the vsync parameter to either have to game running at fixed fps depending on the screen framerate, or uncapped fps. In this case, you can set the value you want, and libtas will simulate an activated vsync with the corresponding framerate.
+You have to set an FPS value prior to running a game, which appears as two fields being the numerator and denominator of a fraction (e.g. `60` and `1` for 60 FPS). Many games accept any value and rely on the vsync parameter to either have to game running at fixed FPS depending on the screen framerate, or uncapped FPS. In this case, you can set the value you want, and libtas will simulate an activated vsync with the corresponding framerate.
 
-Some games are build with a constant framerate in mind, and setting another fps value will trigger abnormal results (like duplicate frames). In this case, it is possible to guess the intended game framerate by checking Runtime > Debug > Uncontrolled time. This will deactivate the deterministic timer, meaning that the game will access the real system time. Then, you can run the game and look at the obtained fps value. This mode is not meant to be used for TASing, because it makes inputs recording non-deterministic.
+Some games are build with a constant framerate in mind, and setting another FPS value will trigger abnormal results (like duplicate frames). In this case, it is possible to guess the intended game framerate by checking Runtime > Debug > Uncontrolled time. This will deactivate the deterministic timer, meaning that the game will access the real system time. Then, you can run the game and look at the obtained FPS value. This mode is not meant to be used for TASing, because it makes inputs recording non-deterministic.
 
 ### System Time
 
