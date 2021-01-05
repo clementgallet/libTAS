@@ -32,7 +32,7 @@ Unfortunately, for savestates to work, games must be run entirely on the CPU, wi
 #### When starting a game, it says "Could not determine arch of file <path>"
 
 Check that you specified the binary file for the game. Linux games often provide a script
-to launch the game (e.g. `AxiomVerge`), but the actual binary is another file 
+to launch the game (e.g. `AxiomVerge`), but the actual binary is another file
 (e.g. `AxiomVerge.bin.x86_64`).
 
 #### I'm getting an error about `System.TypeInitializationException`
