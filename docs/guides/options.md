@@ -63,7 +63,7 @@ When software rendering is on, you can check this to skip some steps in the rend
 
 ### On-screen Display (OSD)
 
-Displays some information on the game screen such as framecount, inputs, notifications and ram watches. The placement of those texts can be modified, and can be displayed in the encode video.
+Displays some information on the game screen such as framecount, inputs, notifications and ram watches. The placement of these texts can be modified, and can be displayed in the encode video.
 
 ### Variable framerate
 
