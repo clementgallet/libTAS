@@ -67,7 +67,7 @@ Displays some information on the game screen such as framecount, inputs, notific
 
 ### Variable framerate
 
-Allow the user to change the framerate during the game execution. It must be checked
+Allows the user to change the framerate during the game execution. It must be checked
 before starting the game.
 
 ## Runtime
