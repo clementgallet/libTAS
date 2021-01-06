@@ -129,9 +129,16 @@ bool ErrorChecking::checkArchType(Context* context)
         return false;
     }
 
+    /* Checking the type of game binary */
     int gameArch = extractBinaryType(context->gamepath);
-    if (gameArch <= 0) {
+
+    if (gameArch == BT_UNKNOWN) {
         critical(QString("Could not determine arch of file %1").arg(context->gamepath.c_str()), context->interactive);
+        return false;
+    }
+
+    if (gameArch == BT_SH) {
+        critical(QString("libTAS does not support launching a game from a script. Please specify the game binary file instead"), context->interactive);
         return false;
     }
 

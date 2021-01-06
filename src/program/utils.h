@@ -42,6 +42,7 @@ enum BinaryType {
     BT_ELF64,
     BT_PE32,
     BT_PE32P,
+    BT_SH,
 };
 
 /* Run the `file` command from a shell and extract the output of the command. */

@@ -158,5 +158,9 @@ int extractBinaryType(std::string path)
         return BT_PE32P;
     }
 
+    if (outputstr.find("Bourne-Again shell script") != std::string::npos) {
+        return BT_SH;
+    }
+
     return BT_UNKNOWN;
 }
