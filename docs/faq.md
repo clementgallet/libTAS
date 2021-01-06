@@ -15,7 +15,7 @@ Short answer: no, unless it has a Linux release. Long answer: there's experiment
 
 #### Can I TAS Steam games?
 
-If Steam offers a Linux version, possibly yes. Some games from Steam are actually drm-free, so there are no issues with them. Other games will need you to enable `Virtual Steam client` setting to work. Games heavily relying on Steam features (such as multiplayer games) won't work.
+If Steam offers a Linux version, possibly yes. Some games from Steam are actually DRM-free, so there are no issues with them. Other games will need you to enable `Virtual Steam client` setting to work. Games heavily relying on Steam features (such as multiplayer games) won't work.
 
 #### My Steam game complains about some missing library
 
@@ -25,17 +25,17 @@ libraries from steam-runtime using:
 
     ~/.steam/bin/steam-runtime/run.sh libTAS
 
-#### Why does my game is horribly slow?
+#### Why does my game run horribly slow?
 
-Unfortunately, for savestates to work, games must be run entire on the CPU, without the GPU. It makes games run even more slowly as they contain heavy rendering. If you don't bother about savestates, you can uncheck `Video > Force software rendering`. If you do, several options are to lower the game resolution or disable rendering effects ingame. Also, fast-forward skips rendering.
+Unfortunately, for savestates to work, games must be run entirely on the CPU, without the GPU. It makes games run even more slowly as they contain heavy rendering. If you don't bother about savestates, you can uncheck `Video > Force software rendering`. If you do, several options are to lower the game resolution or disable rendering effects ingame. Also, fast-forward skips rendering.
 
 #### When starting a game, it says "Could not determine arch of file <path>"
 
 Check that you specified the binary file for the game. Linux games often provide a script
-to launch the game (e.g. `AxiomVerge`), but the actual binary is another file 
+to launch the game (e.g. `AxiomVerge`), but the actual binary is another file
 (e.g. `AxiomVerge.bin.x86_64`).
 
 #### I'm getting an error about `System.TypeInitializationException`
 
 This is a known [Mono bug](https://github.com/mono/mono/issues/6752), it can be
-fixed by launching libTAS like that: `term=XTERM libTAS`.
+fixed by launching libTAS like this: `term=XTERM libTAS`.
