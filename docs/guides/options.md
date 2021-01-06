@@ -156,7 +156,7 @@ The pointer scan feature will scan for pointer chains to a specific address. Sel
 ### Mouse relative mode
 
 Set the mouse position relative to the center of the screen. For exemple, if you move the cursor
-3 pixels to the right of the center of the screen, it will send to the game as if you moved
+3 pixels to the right of the center of the screen, it will be sent to the game as if you moved
 your cursor 3 pixels to the right from the last frame. This is useful for first-person
 controls, together with the next feature.
 
