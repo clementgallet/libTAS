@@ -65,7 +65,7 @@ public:
     int loadMovie();
     int loadMovie(const std::string& moviefile);
 
-    /* Import only relevent data used for savestate movies.
+    /* Import only relevant data used for savestate movies.
      * Returns 0 if no error, or a negative value if an error occured */
     int loadSavestateMovie(const std::string& moviefile);
 

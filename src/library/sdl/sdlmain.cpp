@@ -36,7 +36,7 @@ DECLARE_ORIG_POINTER(SDL_Quit)
 
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
-     * so we put the rest of relevent code in the SubSystem function.
+     * so we put the rest of relevant code in the SubSystem function.
      *
      * ...well, this is in theory. If on SDL2 we call SDL_Init(), it
      * does not call our SDL_InitSubSystem() function. Maybe it has to do with

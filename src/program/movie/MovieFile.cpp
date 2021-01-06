@@ -199,7 +199,7 @@ int MovieFile::saveMovie()
 
 void MovieFile::copyTo(MovieFile& movie) const
 {
-    /* This will only be used for savestate movies, we only care to copy relevent data */
+    /* This will only be used for savestate movies, we only care to copy relevant data */
     movie.editor->input_set = editor->input_set;
     movie.editor->nondraw_frames = editor->nondraw_frames;
     movie.header->framerate_num = header->framerate_num;
