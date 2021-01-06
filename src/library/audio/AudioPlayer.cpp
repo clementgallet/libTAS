@@ -27,7 +27,7 @@
 namespace libtas {
 
 snd_pcm_t *AudioPlayer::phandle;
-int AudioPlayer::inited = 0;
+AudioPlayer::APStatus AudioPlayer::status = STATUS_UNINIT;
 std::vector<char> AudioPlayer::silence;
 
 bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
@@ -99,14 +99,14 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
 
 bool AudioPlayer::play(AudioContext& ac)
 {
-    if (inited == 0) {
+    if (status == STATUS_UNINIT) {
         snd_pcm_format_t format;
         if (ac.outBitDepth == 8)
             format = SND_PCM_FORMAT_U8;
         if (ac.outBitDepth == 16)
             format = SND_PCM_FORMAT_S16_LE;
         if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency))) {
-            inited = -1;
+            status = STATUS_ERROR;
             return false;
         }
 
@@ -120,10 +120,10 @@ bool AudioPlayer::play(AudioContext& ac)
             silence.assign(sil_bytes, 0x00);
         }
         
-        inited = 1;
+        status = STATUS_OK;
     }
 
-    if (inited == -1)
+    if (status == STATUS_ERROR)
         return false;
 
     if (shared_config.fastforward)
@@ -166,9 +166,9 @@ bool AudioPlayer::play(AudioContext& ac)
 
 void AudioPlayer::close()
 {
-    if (inited == 1) {
+    if (status == STATUS_OK) {
         MYASSERT(snd_pcm_close(phandle) == 0)
-        inited = 0;
+        status = STATUS_UNINIT;
     }
 }
 

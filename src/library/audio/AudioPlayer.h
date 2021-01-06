@@ -27,8 +27,14 @@ namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayer
 {
-    /* 0 if uninit, 1 if inited with no error, -1 if error during init */
-    static int inited;
+    /* Status */
+    enum APStatus {
+        STATUS_ERROR = -1,
+        STATUS_UNINIT = 0,
+        STATUS_OK = 1,
+    };
+
+    static APStatus status;
 
     /* Connection to the sound system */
     static snd_pcm_t *phandle;
