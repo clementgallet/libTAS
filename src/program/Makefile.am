@@ -40,6 +40,8 @@ libTAS_SOURCES = \
     SaveState.cpp \
     SaveStateList.cpp \
     utils.cpp \
+    lua/Input.cpp \
+    lua/Main.cpp \
     movie/MovieFile.cpp \
     movie/MovieFileAnnotations.cpp \
     movie/MovieFileEditor.cpp \
@@ -80,8 +82,8 @@ libTAS_SOURCES = \
     ../shared/sockethelpers.cpp \
     $(libTAS_MOCSOURCES)
 
-libTAS_CXXFLAGS = $(QT5_CFLAGS) -Wall -fno-stack-protector -Wno-float-equal -fPIC
-libTAS_LDADD = $(QT5_LIBS) $(PROGRAM_LIBS)
+libTAS_CXXFLAGS = $(QT5_CFLAGS) $(LIBLUA_CFLAGS) -fno-stack-protector -Wno-float-equal -fPIC
+libTAS_LDADD = $(QT5_LIBS) $(LIBLUA_LIBS) $(PROGRAM_LIBS)
 
 .h_moc.cpp:
 	@MOC@ -o $@ $(CPPFLAGS) $<

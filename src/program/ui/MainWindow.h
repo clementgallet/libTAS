@@ -265,6 +265,8 @@ private slots:
     void slotMouseMode(bool checked);
     void slotMouseWarp(bool checked);
     void slotMouseGameWarp(bool checked);
+    void slotLuaExecute();
+    void slotLuaReset();
 };
 
 #endif

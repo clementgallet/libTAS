@@ -24,6 +24,7 @@
 #include "AutoSave.h"
 #include "SaveState.h"
 #include "SaveStateList.h"
+#include "lua/Input.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -1054,6 +1055,9 @@ void GameLoop::processInputs(AllInputs &ai)
                 ai.framerate_num = context->config.sc.framerate_num;
                 ai.framerate_den = context->config.sc.framerate_den;
             }
+
+            /* Call lua onInput() here so that a script can modify inputs */
+            Lua::Input::onInput(context, &ai);
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 /* If the input editor is visible, we should keep future inputs.

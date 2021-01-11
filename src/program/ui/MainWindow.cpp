@@ -34,6 +34,7 @@
 #include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
+#include "../lua/Main.h"
 
 #include <iostream>
 #include <future>
@@ -807,6 +808,13 @@ void MainWindow::createMenus()
     toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::show);
     toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::show);
 
+    toolsMenu->addSeparator();
+
+    QMenu *luaMenu = toolsMenu->addMenu(tr("Lua"));
+
+    luaMenu->addAction(tr("Execute Lua script..."), this, &MainWindow::slotLuaExecute);
+    luaMenu->addAction(tr("Reset Lua VM"), this, &MainWindow::slotLuaReset);
+
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
     inputMenu->setToolTipsVisible(true);
@@ -1576,6 +1584,20 @@ BOOLSLOT(slotVariableFramerate, context->config.sc.variable_framerate)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
 BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
 BOOLSLOT(slotMouseGameWarp, context->config.sc.mouse_prevent_warp)
+
+void MainWindow::slotLuaExecute()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Lua script"), context->gamepath.c_str());
+    if (filename.isNull())
+        return;
+
+    Lua::Main::run(context, filename.toStdString());
+}
+
+void MainWindow::slotLuaReset()
+{
+    Lua::Main::reset(context);
+}
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)
 {

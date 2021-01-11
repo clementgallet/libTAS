@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include "ConcurrentQueue.h"
 #include "../shared/GameInfo.h"
+#include <lua.h>
 
 struct Context {
     /* Execution status */
@@ -128,6 +129,9 @@ struct Context {
 
     /* Interactive mode */
     bool interactive = true;
+    
+    /* Lua state */
+    lua_State *lua_state = nullptr;
 };
 
 #endif
