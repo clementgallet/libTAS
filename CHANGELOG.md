@@ -3,6 +3,7 @@
 
 * Add the execution permission if possible
 * Show a specific message when user specify a script as game executable
+* Add lua scripting
 
 ### Changed
 

@@ -41,7 +41,7 @@ namespace Input {
     /* Set key (number keysym, number state) */
     int setKey(lua_State *L);
 
-    /* Set key (number keysym) -> number state */
+    /* Get key (number keysym) -> number state */
     int getKey(lua_State *L);
 
     /* Set mouse coords (number x, number y, number mode) */

@@ -53,7 +53,10 @@ int Lua::Movie::currentFrame(lua_State *L)
 
 int Lua::Movie::frameCount(lua_State *L)
 {
-    lua_pushinteger(L, static_cast<lua_Integer>(context->config.sc.movie_framecount));
+    if (context->config.sc.recording == SharedConfig::NO_RECORDING)
+        lua_pushinteger(L, -1);
+    else
+        lua_pushinteger(L, static_cast<lua_Integer>(context->config.sc.movie_framecount));
     return 1;
 }
 
@@ -72,6 +75,9 @@ int Lua::Movie::time(lua_State *L)
 
 int Lua::Movie::rerecords(lua_State *L)
 {
-    lua_pushinteger(L, static_cast<lua_Integer>(context->rerecord_count));
+    if (context->config.sc.recording == SharedConfig::NO_RECORDING)
+        lua_pushinteger(L, -1);
+    else
+        lua_pushinteger(L, static_cast<lua_Integer>(context->rerecord_count));
     return 1;
 }
