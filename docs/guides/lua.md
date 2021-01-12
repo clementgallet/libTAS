@@ -10,7 +10,26 @@ permalink: /guides/lua/
 ### Input functions
 
 All the functions in this section are only valid inside `onInput()` callback, 
-and do nothing when the movie is in playback mode.
+and do nothing when the movie is in playback mode. Here are the indices of the
+different controls:
+
+| Index | Mouse button | Controller button | Controller axis |
+| ----- | ------------ | ----------------- | --------------- |
+| 0     | Left         | A                 | Left stick X    |
+| 1     | Middle       | B                 | Left stick Y    |
+| 2     | Right        | X                 | Right stick X   |
+| 3     | X1           | Y                 | Right stick Y   |
+| 4     | X2           | Select / Back     | Left trigger    |
+| 5     |              | Guide             | Right trigger   |
+| 6     |              | Start             |                 |
+| 7     |              | Left stick        |                 |
+| 8     |              | Right stick       |                 |
+| 9     |              | Left shoulder     |                 |
+| 10    |              | Right shoulder    |                 |
+| 11    |              | Dpad up           |                 |
+| 12    |              | Dpad down         |                 |
+| 13    |              | Dpad left         |                 |
+| 14    |              | Dpad right        |                 |
 
 #### input.clear
 
