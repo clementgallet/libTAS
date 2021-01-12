@@ -25,6 +25,7 @@
 #include "SaveState.h"
 #include "SaveStateList.h"
 #include "lua/Input.h"
+#include "lua/Main.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -50,6 +51,8 @@ void GameLoop::start()
 {
     init();
     initProcessMessages();
+
+    Lua::Main::callLua(context, "onStartup");
 
     while (1)
     {
@@ -128,6 +131,8 @@ void GameLoop::start()
             }
         }
 
+        Lua::Main::callLua(context, "onFrame");
+
         endFrameMessages(ai);
 
         if (shouldQuit) {
@@ -176,6 +181,9 @@ void GameLoop::init()
 
     /* Init savestate list */
     SaveStateList::init(context);
+
+    /* Start the lua VM */
+    Lua::Main::init(context);
 
     /* We fork here so that the child process calls the game */
     context->fork_pid = fork();
@@ -1057,7 +1065,8 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             /* Call lua onInput() here so that a script can modify inputs */
-            Lua::Input::onInput(context, &ai);
+            Lua::Input::registerInputs(&ai);
+            Lua::Main::callLua(context, "onInput");
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 /* If the input editor is visible, we should keep future inputs.
@@ -1233,6 +1242,9 @@ void GameLoop::loopExit()
      * - we are playing or recording a movie
      * - the user didn't use the Stop button to stop the game
      */
+
+    /* Stop the lua VM */
+    Lua::Main::exit(context);
 
     if ((context->status == Context::RESTARTING) ||
         (context->config.auto_restart &&

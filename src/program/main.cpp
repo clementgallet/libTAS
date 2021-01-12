@@ -295,9 +295,6 @@ int main(int argc, char **argv)
         close(fd);
     }
 
-    /* Start the lua VM */
-    Lua::Main::init(&context);
-
     /* Starts the user interface */
     QApplication app(argc, argv);
 
@@ -310,9 +307,6 @@ int main(int argc, char **argv)
     app.exec();
 
     context.config.save(context.gamepath);
-
-    /* Stop the lua VM */
-    Lua::Main::exit(&context);
 
     /* Check if the game is still running and try to close it softly */
     if (context.status != Context::INACTIVE) {

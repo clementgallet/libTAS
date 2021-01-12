@@ -43,28 +43,15 @@ static const luaL_Reg input_functions[] =
     { NULL, NULL }
 };
 
-void Lua::Input::registerFunctions(lua_State *L)
+void Lua::Input::registerFunctions(Context* context)
 {
-    luaL_newlib(L, input_functions);
-    lua_setglobal(L, "input");
+    luaL_newlib(context->lua_state, input_functions);
+    lua_setglobal(context->lua_state, "input");
 }
 
-void Lua::Input::onInput(Context* context, AllInputs* frame_ai)
+void Lua::Input::registerInputs(AllInputs* frame_ai)
 {
     ai = frame_ai;
-    
-    lua_getglobal(context->lua_state, "onInput");
-    if (lua_isfunction(context->lua_state, -1)) {
-        int ret = lua_pcall(context->lua_state, 0, 0, 0);
-        if (ret != 0) {
-            std::cerr << "error running function `onInput': " << lua_tostring(context->lua_state, -1) << std::endl;
-            lua_pop(context->lua_state, 1);  // pop error message from the stack
-        }
-    }
-    else {
-        /* No function, we need to clear the stack */
-        lua_pop(context->lua_state, 1);
-    }
 }
 
 int Lua::Input::clear(lua_State *L)
@@ -75,8 +62,8 @@ int Lua::Input::clear(lua_State *L)
 
 int Lua::Input::setKey(lua_State *L)
 {
-    int keysym = static_cast<int>(lua_tonumber(L, 1));
-    int state = static_cast<int>(lua_tonumber(L, 2));
+    int keysym = static_cast<int>(lua_tointeger(L, 1));
+    int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
     ai->setInput(si, state);
@@ -85,18 +72,18 @@ int Lua::Input::setKey(lua_State *L)
 
 int Lua::Input::getKey(lua_State *L)
 {
-    int keysym = static_cast<int>(lua_tonumber(L, 1));
+    int keysym = static_cast<int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }
 
 int Lua::Input::setMouseCoords(lua_State *L)
 {
-    int x = static_cast<int>(lua_tonumber(L, 1));
-    int y = static_cast<int>(lua_tonumber(L, 2));
-    int mode = static_cast<int>(lua_tonumber(L, 3));
+    int x = static_cast<int>(lua_tointeger(L, 1));
+    int y = static_cast<int>(lua_tointeger(L, 2));
+    int mode = static_cast<int>(lua_tointeger(L, 3));
     
     SingleInput si = {SingleInput::IT_POINTER_X, 0, ""};
     ai->setInput(si, x);
@@ -110,18 +97,18 @@ int Lua::Input::setMouseCoords(lua_State *L)
 int Lua::Input::getMouseCoords(lua_State *L)
 {
     SingleInput si = {SingleInput::IT_POINTER_X, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_POINTER_Y, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_POINTER_MODE, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 3;
 }
 
 int Lua::Input::setMouseButtons(lua_State *L)
 {
-    int button = static_cast<int>(lua_tonumber(L, 1));
-    int state = static_cast<int>(lua_tonumber(L, 2));
+    int button = static_cast<int>(lua_tointeger(L, 1));
+    int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_POINTER_B1 + button, 0, ""};
     ai->setInput(si, state);
@@ -130,18 +117,18 @@ int Lua::Input::setMouseButtons(lua_State *L)
 
 int Lua::Input::getMouseButtons(lua_State *L)
 {
-    int button = static_cast<int>(lua_tonumber(L, 1));
+    int button = static_cast<int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_POINTER_B1 + button, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }
 
 int Lua::Input::setControllerButton(lua_State *L)
 {
-    int controller = static_cast<int>(lua_tonumber(L, 1));
-    int button = static_cast<int>(lua_tonumber(L, 2));
-    int state = static_cast<int>(lua_tonumber(L, 3));
+    int controller = static_cast<int>(lua_tointeger(L, 1));
+    int button = static_cast<int>(lua_tointeger(L, 2));
+    int state = static_cast<int>(lua_tointeger(L, 3));
     
     SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | button, 0, ""};
     ai->setInput(si, state);
@@ -150,19 +137,19 @@ int Lua::Input::setControllerButton(lua_State *L)
 
 int Lua::Input::getControllerButton(lua_State *L)
 {
-    int controller = static_cast<int>(lua_tonumber(L, 1));
-    int button = static_cast<int>(lua_tonumber(L, 2));
+    int controller = static_cast<int>(lua_tointeger(L, 1));
+    int button = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | button, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }
 
 int Lua::Input::setControllerAxis(lua_State *L)
 {
-    int controller = static_cast<int>(lua_tonumber(L, 1));
-    int axis = static_cast<int>(lua_tonumber(L, 2));
-    short value = static_cast<short>(lua_tonumber(L, 3));
+    int controller = static_cast<int>(lua_tointeger(L, 1));
+    int axis = static_cast<int>(lua_tointeger(L, 2));
+    short value = static_cast<short>(lua_tointeger(L, 3));
     
     SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK | axis, 0, ""};
     ai->setInput(si, value);
@@ -171,10 +158,10 @@ int Lua::Input::setControllerAxis(lua_State *L)
 
 int Lua::Input::getControllerAxis(lua_State *L)
 {
-    int controller = static_cast<int>(lua_tonumber(L, 1));
-    int axis = static_cast<int>(lua_tonumber(L, 2));
+    int controller = static_cast<int>(lua_tointeger(L, 1));
+    int axis = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK | axis, 0, ""};
-    lua_pushnumber(L, static_cast<double>(ai->getInput(si)));
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }

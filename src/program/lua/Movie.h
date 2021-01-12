@@ -17,32 +17,35 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUAMAIN_H_INCLUDED
-#define LIBTAS_LUAMAIN_H_INCLUDED
+#ifndef LIBTAS_LUAMOVIE_H_INCLUDED
+#define LIBTAS_LUAMOVIE_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
 #include "../Context.h"
-
-#include <string>
+#include <lua.h>
+// #include <string>
+// #include <stdint.h>
 
 namespace Lua {
 
-namespace Main {
+namespace Movie {
 
-    /* Init */
-    void init(Context* context);
+    /* Register all functions */
+    void registerFunctions(Context* context);
 
-    /* Exit */
-    void exit(Context* context);
+    /* Get the current framecount */
+    int currentFrame(lua_State *L);
 
-    /* Run a lua script */
-    void run(Context* context, std::string filename);
+    /* Get the movie framecount */
+    int frameCount(lua_State *L);
 
-    /* Reset the lua VM */
-    void reset(Context* context);
+    /* Get the movie status (nomovie, playback, recording) */
+    int status(lua_State *L);
 
-    /* Call the lua function */
-    void callLua(Context* context, const char* func);
+    /* Get the current time */
+    int time(lua_State *L);
+
+    /* Get the movie rerecord count */
+    int rerecords(lua_State *L);
 
 }
 }

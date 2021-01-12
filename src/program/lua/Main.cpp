@@ -19,6 +19,7 @@
 
 #include "Main.h"
 #include "Input.h"
+#include "Movie.h"
 #include <iostream>
 #include <lua.h>
 #include <lualib.h>
@@ -26,24 +27,31 @@
 
 void Lua::Main::init(Context* context)
 {
+    if (context->lua_state)
+        lua_close(context->lua_state);
+    
     context->lua_state = luaL_newstate();
     luaL_openlibs(context->lua_state);
     
     /* Register our functions */
-    Lua::Input::registerFunctions(context->lua_state);
+    Lua::Input::registerFunctions(context);
+    Lua::Movie::registerFunctions(context);
 }
 
 void Lua::Main::exit(Context* context)
 {
     if (context->lua_state)
         lua_close(context->lua_state);
+    context->lua_state = nullptr;
 }
 
 void Lua::Main::run(Context* context, std::string filename)
 {
     int status = luaL_dofile(context->lua_state, filename.c_str());
-    if (status != 0)
+    if (status != 0) {
         std::cerr << "Error " << status << " loading lua script " << filename << std::endl;
+        std::cerr << lua_tostring(context->lua_state, -1) << std::endl;
+    }
     else {
         std::cout << "Loaded script " << filename << std::endl;        
     }
@@ -53,4 +61,20 @@ void Lua::Main::reset(Context* context)
 {
     exit(context);
     init(context);
+}
+
+void Lua::Main::callLua(Context* context, const char* func)
+{
+    lua_getglobal(context->lua_state, func);
+    if (lua_isfunction(context->lua_state, -1)) {
+        int ret = lua_pcall(context->lua_state, 0, 0, 0);
+        if (ret != 0) {
+            std::cerr << "error running function "<< func << "(): " << lua_tostring(context->lua_state, -1) << std::endl;
+            lua_pop(context->lua_state, 1);  // pop error message from the stack
+        }
+    }
+    else {
+        /* No function, we need to clear the stack */
+        lua_pop(context->lua_state, 1);
+    }
 }

@@ -30,10 +30,10 @@ namespace Lua {
 namespace Input {
 
     /* Register all functions */
-    void registerFunctions(lua_State *L);
+    void registerFunctions(Context* context);
 
-    /* Call the lua onInput() function */
-    void onInput(Context* context, AllInputs* ai);
+    /* Pass the current AllInputs object to be used by lua functions */
+    void registerInputs(AllInputs* ai);
 
     /* Clear the input state */
     int clear(lua_State *L);
