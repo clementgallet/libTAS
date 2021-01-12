@@ -97,6 +97,35 @@ Set the axis `axis` of controller `controller` to specified value (accepted rang
     
 Returns the value of specified controller axis.
 
+### Memory functions
+
+#### memory.readu8 / memory.readu16 / memory.readu32 / memory.readu64
+
+    Number memory.readu8(Number address)
+    Number memory.readu16(Number address)
+    Number memory.readu32(Number address)
+    Number memory.readu64(Number address)
+
+Returns the unsigned value read from address `address` (any error returns 0).
+
+#### memory.reads8 / memory.reads16 / memory.reads32 / memory.reads64
+
+    Number memory.reads8(Number address)
+    Number memory.reads16(Number address)
+    Number memory.reads32(Number address)
+    Number memory.reads64(Number address)
+
+Returns the signed value read from address `address` (any error returns 0).
+
+#### memory.write8 / memory.write16 / memory.write32 / memory.write64
+
+    None memory.write8(Number address, Number value)
+    None memory.write16(Number address, Number value)
+    None memory.write32(Number address, Number value)
+    None memory.write64(Number address, Number value)
+
+Writes the value `value` to address `address`.
+
 ### Movie functions
 
 #### movie.currentFrame

@@ -20,6 +20,7 @@
 #include "Main.h"
 #include "Input.h"
 #include "Movie.h"
+#include "Memory.h"
 #include <iostream>
 #include <lua.h>
 #include <lualib.h>
@@ -35,6 +36,7 @@ void Lua::Main::init(Context* context)
     
     /* Register our functions */
     Lua::Input::registerFunctions(context);
+    Lua::Memory::registerFunctions(context);
     Lua::Movie::registerFunctions(context);
 }
 
