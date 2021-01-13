@@ -40,6 +40,7 @@ libTAS_SOURCES = \
     SaveState.cpp \
     SaveStateList.cpp \
     utils.cpp \
+    lua/Gui.cpp \
     lua/Input.cpp \
     lua/Main.cpp \
     lua/Memory.cpp \

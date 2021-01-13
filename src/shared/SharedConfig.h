@@ -79,11 +79,12 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         OSD_FRAMECOUNT = 0x01,
         OSD_INPUTS = 0x02,
         OSD_MESSAGES = 0x04,
-        OSD_RAMWATCHES = 0x08
+        OSD_RAMWATCHES = 0x08,
+        OSD_LUA = 0x10
     };
 
     /* Elements to be displayed on the OSD */
-    int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES;
+    int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES | OSD_LUA;
 
     /* OSD text location */
     enum OSDLocation {

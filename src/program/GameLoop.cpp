@@ -482,6 +482,8 @@ bool GameLoop::startFrameMessages()
         message = receiveMessage();
     }
 
+    /* Store in movie and indicate the input editor if the current frame
+     * is a draw frame or not */
     movie.editor->setDraw(draw_frame);
 
     /* Send ram watches */
@@ -494,6 +496,9 @@ bool GameLoop::startFrameMessages()
             emit getRamWatch(ramwatch);
         }
     }
+
+    /* Execute the lua callback onPaint here */
+    Lua::Main::callLua(context, "onPaint");
 
     sendMessage(MSGN_START_FRAMEBOUNDARY);
 

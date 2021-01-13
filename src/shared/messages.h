@@ -257,6 +257,12 @@ enum {
      */
     MSGB_NONDRAW_FRAME,
 
+    /*
+     * Send to the game a text to be displayed from a lua script.
+     * Argument: int x, int y, string text, uint32_t fg, uint32_t bg
+     */
+    MSGN_LUA_TEXT,
+
 };
 
 #endif

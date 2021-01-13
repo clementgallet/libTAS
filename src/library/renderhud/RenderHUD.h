@@ -67,26 +67,11 @@ class RenderHUD
          */
         virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {};
 
-        /* Display the frame count on screen */
-        void renderFrame(uint64_t framecount);
-
-        /* Display nondraw frame count on screen */
-        void renderNonDrawFrame(uint64_t nondraw_framecount);
-
-        /* Display the inputs on screen */
-        void renderInputs(AllInputs& ai);
-
-        /* Display the preview of inputs on screen */
-        void renderPreviewInputs(AllInputs& ai);
-
-        /* Display messages */
-        void renderMessages();
+        /* Display everything based on setting */
+        void render(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
 
         /* Insert a message to be displayed */
         static void insertMessage(const char* message);
-
-        /* Display ram watches */
-        void renderWatches();
 
         /* Insert a ram watch to be displayed */
         static void insertWatch(std::string watch);
@@ -94,8 +79,11 @@ class RenderHUD
         /* Clear the list of watches */
         static void resetWatches();
 
-        /* Reset offsets to 0 */
-        void resetOffsets();
+        /* Insert a lua text to be displayed */
+        static void insertLuaText(int x, int y, std::string text, uint32_t fg, uint32_t bg);
+
+        /* Clear all lua drawings */
+        static void resetLua();
 
     protected:
         /* Create a texture from a text, using colors for the text and the outline */
@@ -107,9 +95,27 @@ class RenderHUD
          */
         void locationToCoords(int location, int& x, int& y);
 
+        /* Reset offsets to 0 */
+        void resetOffsets();
+
+        /* Display the frame count on screen */
+        void renderFrame(uint64_t framecount);
+
+        /* Display nondraw frame count on screen */
+        void renderNonDrawFrame(uint64_t nondraw_framecount);
+
         /* Generic function to display inputs on screen, using fg_color as the
          * text color */
-        void renderInputs(AllInputs& ai, Color fg_color);
+        void renderInputs(const AllInputs& ai, Color fg_color);
+
+        /* Display messages */
+        void renderMessages();
+
+        /* Display ram watches */
+        void renderWatches();
+
+        /* Display lua texts */
+        void renderLuaTexts();
 
         static int outline_size;
         static int font_size;
@@ -125,6 +131,18 @@ class RenderHUD
 
         /* Ram watches to print on screen */
         static std::list<std::string> watches;
+
+        struct LuaText
+        {
+            std::string text;
+            Color fg_color;
+            Color bg_color;
+            int x;
+            int y;
+        };
+
+        /* Lua texts to print on screen */
+        static std::list<LuaText> lua_texts;
 
 };
 }

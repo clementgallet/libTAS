@@ -18,6 +18,7 @@
  */
 
 #include "Main.h"
+#include "Gui.h"
 #include "Input.h"
 #include "Movie.h"
 #include "Memory.h"
@@ -35,6 +36,7 @@ void Lua::Main::init(Context* context)
     luaL_openlibs(context->lua_state);
     
     /* Register our functions */
+    Lua::Gui::registerFunctions(context);
     Lua::Input::registerFunctions(context);
     Lua::Memory::registerFunctions(context);
     Lua::Movie::registerFunctions(context);

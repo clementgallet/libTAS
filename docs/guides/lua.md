@@ -7,6 +7,18 @@ permalink: /guides/lua/
 * TOC
 {:toc}
 
+### Gui functions
+
+Gui functions are only valid in callback `onPaint()`. **Beware**, option
+`Video > OSD > Lua` needs to be checked to show any lua draw function.
+In all gui functions, colors are coded in a single 32-bit unsigned integer as followed: `0xaarrggbb`.
+
+#### gui.text
+
+    none gui.text(Number x, Number y, String text, [Number fgcolor = 0x00ffffff], [Number bgcolor = 0x00000000])
+    
+Draws text string `text` starting from `(x, y)`. The text will be colored using color `fgcolor` and the text background is colored using `bgcolor`. 
+
 ### Input functions
 
 All the functions in this section are only valid inside `onInput()` callback, 
@@ -179,3 +191,9 @@ in recording mode. Not called when movie is in playback mode.
 #### onFrame
 
 Called after frame has completed.
+
+#### onPaint
+
+Called at the end of the frame before the screen rendering is performed. All Gui
+functions must be executed inside this callback. To include Lua draws in encodes,
+`Video > OSD > OSD on video encode` can be checked.

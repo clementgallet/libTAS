@@ -294,17 +294,41 @@ void frameBoundary(std::function<void()> draw)
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
+    /* Reset ramwatches and lua drawings */
 #ifdef LIBTAS_ENABLE_HUD
-    /* Get ramwatches from the program */
     RenderHUD::resetWatches();
+    RenderHUD::resetLua();
 #endif
 
+    /* Receive messages from the program */
     int message = receiveMessage();
-    while (message == MSGN_RAMWATCH) {
-        std::string ramwatch = receiveString();
+    
+    while (message != MSGN_START_FRAMEBOUNDARY) {
+        switch (message) {
+        case MSGN_RAMWATCH:
+        {
+            /* Get ramwatch from the program */
+            std::string ramwatch = receiveString();
 #ifdef LIBTAS_ENABLE_HUD
-        RenderHUD::insertWatch(ramwatch);
+            RenderHUD::insertWatch(ramwatch);
 #endif
+            break;
+        }
+        case MSGN_LUA_TEXT:
+        {
+            int x, y;
+            receiveData(&x, sizeof(int));
+            receiveData(&y, sizeof(int));
+            std::string text = receiveString();
+            uint32_t fg, bg;
+            receiveData(&fg, sizeof(uint32_t));
+            receiveData(&bg, sizeof(uint32_t));
+#ifdef LIBTAS_ENABLE_HUD
+            RenderHUD::insertLuaText(x, y, text, fg, bg);
+#endif
+            break;
+        }
+        }
         message = receiveMessage();
     }
 
@@ -327,19 +351,9 @@ void frameBoundary(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && shared_config.osd_encode) {
-        hud.resetOffsets();
-        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-            hud.renderFrame(framecount);
-            // hud.renderNonDrawFrame(nondraw_framecount);
-        }
-        if (shared_config.osd & SharedConfig::OSD_INPUTS)
-            hud.renderInputs(ai);
-
-        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
-            hud.renderMessages();
-
-        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
-            hud.renderWatches();
+        AllInputs preview_ai;
+        preview_ai.emptyInputs();
+        hud.render(framecount, nondraw_framecount, ai, preview_ai);
     }
 #endif
 
@@ -368,19 +382,9 @@ void frameBoundary(std::function<void()> draw)
 
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && !shared_config.osd_encode) {
-        hud.resetOffsets();
-        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-            hud.renderFrame(framecount);
-            // hud.renderNonDrawFrame(nondraw_framecount);
-        }
-        if (shared_config.osd & SharedConfig::OSD_INPUTS)
-            hud.renderInputs(ai);
-
-        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
-            hud.renderMessages();
-
-        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
-            hud.renderWatches();
+        AllInputs preview_ai;
+        preview_ai.emptyInputs();
+        hud.render(framecount, nondraw_framecount, ai, preview_ai);
     }
 #endif
 
@@ -530,21 +534,7 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
         ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD
-        hud.resetOffsets();
-        if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-            hud.renderFrame(framecount);
-            // hud.renderNonDrawFrame(nondraw_framecount);
-        }
-        if (shared_config.osd & SharedConfig::OSD_INPUTS) {
-            hud.renderInputs(ai);
-            hud.renderPreviewInputs(preview_ai);
-        }
-
-        if (shared_config.osd & SharedConfig::OSD_MESSAGES)
-            hud.renderMessages();
-
-        if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
-            hud.renderWatches();
+        hud.render(framecount, nondraw_framecount, ai, preview_ai);
 #endif
 
         GlobalNoLog gnl;

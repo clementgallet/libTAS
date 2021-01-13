@@ -34,6 +34,7 @@ TTF_Font* RenderHUD::fg_font = nullptr;
 TTF_Font* RenderHUD::bg_font = nullptr;
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 std::list<std::string> RenderHUD::watches;
+std::list<RenderHUD::LuaText> RenderHUD::lua_texts;
 int RenderHUD::outline_size = 1;
 int RenderHUD::font_size = 20;
 
@@ -202,18 +203,7 @@ void RenderHUD::renderNonDrawFrame(uint64_t nondraw_framecount)
     renderText(nondraw_framestr.c_str(), red_color, bg_color, x, y);
 }
 
-
-void RenderHUD::renderInputs(AllInputs& ai)
-{
-    renderInputs(ai, {255, 255, 255, 0});
-}
-
-void RenderHUD::renderPreviewInputs(AllInputs& ai)
-{
-    renderInputs(ai, {160, 160, 160, 0});
-}
-
-void RenderHUD::renderInputs(AllInputs& ai, Color fg_color)
+void RenderHUD::renderInputs(const AllInputs& ai, Color fg_color)
 {
     std::ostringstream oss;
 
@@ -340,6 +330,57 @@ void RenderHUD::renderWatches()
     }
 }
 
+void RenderHUD::renderLuaTexts()
+{
+    for (auto iter = lua_texts.begin(); iter != lua_texts.end(); iter++) {
+        renderText(iter->text.c_str(), iter->fg_color, iter->bg_color, iter->x, iter->y);
+    }    
+}
+
+void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
+{
+    LuaText lt;
+    lt.x = x;
+    lt.y = y;
+    lt.text = text;
+    lt.fg_color = {static_cast<uint8_t>((fg_color >> 16) & 0xff),
+                   static_cast<uint8_t>((fg_color >> 8) & 0xff),
+                   static_cast<uint8_t>(fg_color & 0xff),
+                   static_cast<uint8_t>((fg_color >> 24) & 0xff)};
+    lt.bg_color = {static_cast<uint8_t>((bg_color >> 16) & 0xff),
+                   static_cast<uint8_t>((bg_color >> 8) & 0xff),
+                   static_cast<uint8_t>(bg_color & 0xff),
+                   static_cast<uint8_t>((bg_color >> 24) & 0xff)};
+    lua_texts.push_back(lt);
+}
+
+void RenderHUD::resetLua()
+{
+    lua_texts.clear();
+}
+
+void RenderHUD::render(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
+{
+    resetOffsets();
+    if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
+        renderFrame(framecount);
+        // hud.renderNonDrawFrame(nondraw_framecount);
+    }
+    if (shared_config.osd & SharedConfig::OSD_INPUTS) {
+        renderInputs(ai, {255, 255, 255, 0});
+        renderInputs(preview_ai, {160, 160, 160, 0});
+    }
+
+    if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+        renderMessages();
+
+    if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
+        renderWatches();
+
+    if (shared_config.osd & SharedConfig::OSD_LUA)
+        renderLuaTexts();
+
+}
 
 }
 

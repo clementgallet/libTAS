@@ -413,6 +413,7 @@ void MainWindow::createActions()
     addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
     addActionCheckable(osdGroup, tr("Messages"), SharedConfig::OSD_MESSAGES);
     addActionCheckable(osdGroup, tr("Ram Watches"), SharedConfig::OSD_RAMWATCHES);
+    addActionCheckable(osdGroup, tr("Lua"), SharedConfig::OSD_LUA);
 #endif
 
     frequencyGroup = new QActionGroup(this);
