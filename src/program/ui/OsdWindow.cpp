@@ -155,6 +155,13 @@ void OsdWindow::update_config()
     if (index >= 0)
         messagesVertChoice->setCurrentIndex(index);
 
+    index = watchesHorChoice->findData(context->config.sc.osd_ramwatches_location & hflags);
+    if (index >= 0)
+        watchesHorChoice->setCurrentIndex(index);
+
+    index = watchesVertChoice->findData(context->config.sc.osd_ramwatches_location & vflags);
+    if (index >= 0)
+        watchesVertChoice->setCurrentIndex(index);
 }
 
 void OsdWindow::slotOk()
@@ -162,6 +169,7 @@ void OsdWindow::slotOk()
     context->config.sc.osd_frame_location = frameHorChoice->currentData().toInt() | frameVertChoice->currentData().toInt();
     context->config.sc.osd_inputs_location = inputsHorChoice->currentData().toInt() | inputsVertChoice->currentData().toInt();
     context->config.sc.osd_messages_location = messagesHorChoice->currentData().toInt() | messagesVertChoice->currentData().toInt();
+    context->config.sc.osd_ramwatches_location = watchesHorChoice->currentData().toInt() | watchesVertChoice->currentData().toInt();
     context->config.sc_modified = true;
 
     /* Close window */
