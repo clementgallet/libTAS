@@ -28,13 +28,8 @@
 
 namespace libtas {
 
-void RenderHUD_XShm::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
+void RenderHUD_XShm::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y)
 {
-    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
-
-    if (!surf)
-        return;
-
     if (gameXImage->bits_per_pixel == 32) {
         /* Create a SurfaceARGB pointing to the XImage */
         std::unique_ptr<SurfaceXImage> image_surf = std::unique_ptr<SurfaceXImage>(new SurfaceXImage(gameXImage));

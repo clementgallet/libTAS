@@ -124,18 +124,23 @@ void RenderHUD::initFonts()
     }
 }
 
-std::unique_ptr<SurfaceARGB> RenderHUD::createTextSurface(const char* text, Color fg_color, Color bg_color)
+void RenderHUD::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
     if (!fg_font)
-        return nullptr;
+        return;
 
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
     std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
 
-    /* Blit text onto its outline. */
-    bg_surf->blit(fg_surf.get(), outline_size, outline_size);
+    if (bg_surf) {
+        /* Blit text onto its outline. */
+        bg_surf->blit(fg_surf.get(), outline_size, outline_size);
 
-    return bg_surf;
+        renderSurface(std::move(bg_surf), x, y);        
+    }
+    else {
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not generate a text surface!");
+    }
 }
 
 void RenderHUD::locationToCoords(int location, int& x, int& y)
@@ -170,7 +175,7 @@ void RenderHUD::resetOffsets()
     memset(offsets, 0, 9 * sizeof(int));
 }
 
-void RenderHUD::renderFrame(uint64_t framecount)
+void RenderHUD::drawFrame(uint64_t framecount)
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -192,7 +197,7 @@ void RenderHUD::renderFrame(uint64_t framecount)
     renderText(framestr.c_str(), fg_color, bg_color, x, y);
 }
 
-void RenderHUD::renderNonDrawFrame(uint64_t nondraw_framecount)
+void RenderHUD::drawNonDrawFrame(uint64_t nondraw_framecount)
 {
     Color red_color = {255, 0, 0, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -203,7 +208,7 @@ void RenderHUD::renderNonDrawFrame(uint64_t nondraw_framecount)
     renderText(nondraw_framestr.c_str(), red_color, bg_color, x, y);
 }
 
-void RenderHUD::renderInputs(const AllInputs& ai, Color fg_color)
+void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
 {
     std::ostringstream oss;
 
@@ -280,7 +285,7 @@ void RenderHUD::insertMessage(const char* message)
     messages.push_back(std::make_pair(std::string(message), current_time));
 }
 
-void RenderHUD::renderMessages()
+void RenderHUD::drawMessages()
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -318,7 +323,7 @@ void RenderHUD::resetWatches()
     watches.clear();
 }
 
-void RenderHUD::renderWatches()
+void RenderHUD::drawWatches()
 {
     Color fg_color = {255, 255, 255, 0};
     Color bg_color = {0, 0, 0, 0};
@@ -330,7 +335,7 @@ void RenderHUD::renderWatches()
     }
 }
 
-void RenderHUD::renderLuaTexts()
+void RenderHUD::drawLuaTexts()
 {
     for (auto iter = lua_texts.begin(); iter != lua_texts.end(); iter++) {
         renderText(iter->text.c_str(), iter->fg_color, iter->bg_color, iter->x, iter->y);
@@ -359,26 +364,26 @@ void RenderHUD::resetLua()
     lua_texts.clear();
 }
 
-void RenderHUD::render(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
+void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
 {
     resetOffsets();
     if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-        renderFrame(framecount);
-        // hud.renderNonDrawFrame(nondraw_framecount);
+        drawFrame(framecount);
+        // hud.drawNonDrawFrame(nondraw_framecount);
     }
     if (shared_config.osd & SharedConfig::OSD_INPUTS) {
-        renderInputs(ai, {255, 255, 255, 0});
-        renderInputs(preview_ai, {160, 160, 160, 0});
+        drawInputs(ai, {255, 255, 255, 0});
+        drawInputs(preview_ai, {160, 160, 160, 0});
     }
 
     if (shared_config.osd & SharedConfig::OSD_MESSAGES)
-        renderMessages();
+        drawMessages();
 
     if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
-        renderWatches();
+        drawWatches();
 
     if (shared_config.osd & SharedConfig::OSD_LUA)
-        renderLuaTexts();
+        drawLuaTexts();
 
 }
 

@@ -57,18 +57,16 @@ class RenderHUD
         /* Initialize the font located at the given path */
         static void initFonts();
 
-        /* Main function to render some text on the screen.
+        /* Main function to render something on the screen.
          * This function does nothing in this class and must be overridden.
-         * @param text      Text to display
-         * @param fg_color  Color of the text
-         * @param bg_color  Color of the outline of the text
+         * @param surface   Surface to render
          * @param x         x position of the text (top-left corner)
          * @param y         y position of the text (top-left corner)
          */
-        virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {};
+        virtual void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y) {};
 
         /* Display everything based on setting */
-        void render(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
+        void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
 
         /* Insert a message to be displayed */
         static void insertMessage(const char* message);
@@ -85,10 +83,6 @@ class RenderHUD
         /* Clear all lua drawings */
         static void resetLua();
 
-    protected:
-        /* Create a texture from a text, using colors for the text and the outline */
-        std::unique_ptr<SurfaceARGB> createTextSurface(const char* text, Color fg_color, Color bg_color);
-
     private:
         /* Convert a location into screen coordinates, with an offset if text
          * was already displayed at that position.
@@ -98,24 +92,35 @@ class RenderHUD
         /* Reset offsets to 0 */
         void resetOffsets();
 
+        /* Render text of specified color and outline
+         * @param text      Text to display
+         * @param fg_color  Color of the text
+         * @param bg_color  Color of the outline of the text
+         * @param x         x position of the text (top-left corner)
+         * @param y         y position of the text (top-left corner)
+         */
+        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+
+        /*** Draw specific information on screen ***/
+
         /* Display the frame count on screen */
-        void renderFrame(uint64_t framecount);
+        void drawFrame(uint64_t framecount);
 
         /* Display nondraw frame count on screen */
-        void renderNonDrawFrame(uint64_t nondraw_framecount);
+        void drawNonDrawFrame(uint64_t nondraw_framecount);
 
         /* Generic function to display inputs on screen, using fg_color as the
          * text color */
-        void renderInputs(const AllInputs& ai, Color fg_color);
+        void drawInputs(const AllInputs& ai, Color fg_color);
 
         /* Display messages */
-        void renderMessages();
+        void drawMessages();
 
         /* Display ram watches */
-        void renderWatches();
+        void drawWatches();
 
         /* Display lua texts */
-        void renderLuaTexts();
+        void drawLuaTexts();
 
         static int outline_size;
         static int font_size;

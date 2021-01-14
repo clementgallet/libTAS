@@ -353,7 +353,7 @@ void frameBoundary(std::function<void()> draw)
     if (!skipping_draw && shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
-        hud.render(framecount, nondraw_framecount, ai, preview_ai);
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
 #endif
 
@@ -384,7 +384,7 @@ void frameBoundary(std::function<void()> draw)
     if (!skipping_draw && !shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
-        hud.render(framecount, nondraw_framecount, ai, preview_ai);
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
 #endif
 
@@ -534,7 +534,7 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
         ScreenCapture::setPixels();
 
 #ifdef LIBTAS_ENABLE_HUD
-        hud.render(framecount, nondraw_framecount, ai, preview_ai);
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
 #endif
 
         GlobalNoLog gnl;

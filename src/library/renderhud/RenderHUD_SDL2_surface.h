@@ -30,7 +30,7 @@ class RenderHUD_SDL2_surface : public RenderHUD
 {
     public:
         ~RenderHUD_SDL2_surface();
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+        void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
 };
 }
 

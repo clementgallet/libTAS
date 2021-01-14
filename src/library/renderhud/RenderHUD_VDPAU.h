@@ -33,7 +33,7 @@ class RenderHUD_VDPAU : public RenderHUD
         // ~RenderHUD_SDL2_renderer();
         static void setDevice(VdpDevice d);
         void setSurface(VdpOutputSurface o);
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+        void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
 
     private:
         static VdpDevice device;

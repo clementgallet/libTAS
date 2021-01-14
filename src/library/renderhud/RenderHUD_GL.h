@@ -41,7 +41,7 @@ class RenderHUD_GL : public RenderHUD
         /* Deallocate texture and fbo */
         static void fini();
 
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+        void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
     private:
         static GLuint texture;
         static GLuint fbo;

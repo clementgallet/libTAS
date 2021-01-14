@@ -42,7 +42,7 @@ RenderHUD_SDL1::~RenderHUD_SDL1()
 {
 }
 
-void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
+void RenderHUD_SDL1::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y)
 {
     LINK_NAMESPACE_SDL1(SDL_CreateRGBSurfaceFrom);
     LINK_NAMESPACE_SDL1(SDL_FreeSurface);
@@ -53,13 +53,7 @@ void RenderHUD_SDL1::renderText(const char* text, Color fg_color, Color bg_color
 
     GlobalNative gn;
 
-    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
-    
-    if (!surf)
-        return;
-        
     SDL1::SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-
     SDL1::SDL_Surface* screen = orig::SDL_GetVideoSurface();
 
     /* Change the coords so that the text fills on screen */

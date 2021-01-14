@@ -37,18 +37,13 @@ RenderHUD_SDL2_surface::~RenderHUD_SDL2_surface()
 {
 }
 
-void RenderHUD_SDL2_surface::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
+void RenderHUD_SDL2_surface::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y)
 {
     LINK_NAMESPACE_SDL2(SDL_CreateRGBSurfaceFrom);
     LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
     LINK_NAMESPACE_SDL2(SDL_UpperBlit);
 
     GlobalNative gn;
-
-    std::unique_ptr<SurfaceARGB> surf = createTextSurface(text, fg_color, bg_color);
-    
-    if (!surf)
-        return;
 
     SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
     SDL_Surface* screensurf = orig::SDL_GetWindowSurface(gameSDLWindow);
