@@ -31,6 +31,9 @@ namespace Gui {
     /* Register all functions */
     void registerFunctions(Context* context);
 
+    /* Get the window resolution */
+    int resolution(lua_State *L);
+
     /* Draw text */
     int text(lua_State *L);
 

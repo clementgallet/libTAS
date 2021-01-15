@@ -31,6 +31,7 @@ static Context* context;
 /* List of functions to register */
 static const luaL_Reg gui_functions[] =
 {
+    { "resolution", Lua::Gui::resolution},
     { "text", Lua::Gui::text},
     { "pixel", Lua::Gui::pixel},
     { "rectangle", Lua::Gui::rectangle},
@@ -42,6 +43,25 @@ void Lua::Gui::registerFunctions(Context* c)
     context = c;
     luaL_newlib(context->lua_state, gui_functions);
     lua_setglobal(context->lua_state, "gui");
+}
+
+/* Get the window resolution */
+int Lua::Gui::resolution(lua_State *L)
+{
+    sendMessage(MSGN_LUA_RESOLUTION);
+    
+    /* Get the resolution */
+    int message = receiveMessage();
+    if (message != MSGB_LUA_RESOLUTION) {
+        std::cerr << "Wrong result after asking for lua game resolution" << std::endl;
+        exit(1);
+    }
+    int w, h;
+    receiveData(&w, sizeof(int));
+    receiveData(&h, sizeof(int));    
+    lua_pushinteger(L, static_cast<lua_Integer>(w));
+    lua_pushinteger(L, static_cast<lua_Integer>(h));
+    return 2;
 }
 
 int Lua::Gui::text(lua_State *L)

@@ -275,6 +275,18 @@ enum {
      */
     MSGN_LUA_RECT,
 
+    /*
+     * Ask the game to send the screen resolution.
+     * Argument: None
+     */
+    MSGN_LUA_RESOLUTION,
+
+    /*
+     * Send screen resolution to the program
+     * Argument: int w, int h
+     */
+    MSGB_LUA_RESOLUTION,
+
 };
 
 #endif

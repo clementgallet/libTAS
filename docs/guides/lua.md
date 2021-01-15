@@ -13,6 +13,12 @@ Gui functions are only valid in callback `onPaint()`. **Beware**, option
 `Video > OSD > Lua` needs to be checked to show any lua draw function.
 In all gui functions, colors are coded in a single 32-bit unsigned integer as followed: `0xaarrggbb`.
 
+#### gui.resolution
+
+    (number width, number height) gui.resolution()
+
+Returns the width and height of game window. 
+
 #### gui.text
 
     none gui.text(Number x, Number y, String text, [Number fgcolor = 0x00ffffff], [Number bgcolor = 0x00000000])

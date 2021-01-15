@@ -314,6 +314,15 @@ void frameBoundary(std::function<void()> draw)
 #endif
             break;
         }
+        case MSGN_LUA_RESOLUTION:
+        {
+            int w, h;
+            ScreenCapture::getDimensions(w, h);
+            sendMessage(MSGB_LUA_RESOLUTION);
+            sendData(&w, sizeof(int));
+            sendData(&h, sizeof(int));
+            break;
+        }
         case MSGN_LUA_TEXT:
         {
             int x, y;
