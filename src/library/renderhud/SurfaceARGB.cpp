@@ -32,9 +32,27 @@ SurfaceARGB::SurfaceARGB(int width, int height)
     pixels.resize(w*h);
 }
 
-void SurfaceARGB::fill(uint32_t color)
+void SurfaceARGB::fill(Color color)
 {
-    pixels.assign(w*h, color);
+    pixels.assign(w*h, colorToValue(color));
+}
+
+void SurfaceARGB::fillBorder(Color color, int t)
+{
+    uint32_t value = colorToValue(color);
+    
+    for (int y=0; y<h; y++) {
+        for (int x=(t<w)?(t-1):(w-1); x>=0; x--)
+            pixels[y*w+x] = value;
+        for (int x=(w-t)>=0?(w-t):0; x<w; x++)
+            pixels[y*w+x] = value;
+    }
+    for (int x=0; x<w; x++) {
+        for (int y=(t<h)?(t-1):(h-1); y>=0; y--)
+            pixels[y*w+x] = value;
+        for (int y=(h-t)>=0?(h-t):0; y<h; y++)
+            pixels[y*w+x] = value;
+    }
 }
 
 void SurfaceARGB::blit(const SurfaceARGB* src, int x, int y)
@@ -103,6 +121,16 @@ void SurfaceARGB::blit(const SurfaceARGB* src, int x, int y)
         dstp += dstskip;
     }
 }
+
+uint32_t SurfaceARGB::colorToValue(Color color)
+{
+    uint32_t value = static_cast<uint32_t>(color.a);
+    value = (value << 8) | static_cast<uint32_t>(color.r);
+    value = (value << 8) | static_cast<uint32_t>(color.g);
+    value = (value << 8) | static_cast<uint32_t>(color.b);
+    return value;
+}
+
 
 }
 

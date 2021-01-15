@@ -32,6 +32,8 @@ static Context* context;
 static const luaL_Reg gui_functions[] =
 {
     { "text", Lua::Gui::text},
+    { "pixel", Lua::Gui::pixel},
+    { "rectangle", Lua::Gui::rectangle},
     { NULL, NULL }
 };
 
@@ -56,6 +58,42 @@ int Lua::Gui::text(lua_State *L)
     sendString(text);
     sendData(&fg_color, sizeof(uint32_t));
     sendData(&bg_color, sizeof(uint32_t));
+    
+    return 0;
+}
+
+int Lua::Gui::pixel(lua_State *L)
+{
+    int x = static_cast<int>(lua_tointeger(L, 1));
+    int y = static_cast<int>(lua_tointeger(L, 2));
+    uint32_t color = luaL_optnumber (L, 3, 0x00ffffff);
+    
+    sendMessage(MSGN_LUA_PIXEL);
+    sendData(&x, sizeof(int));
+    sendData(&y, sizeof(int));
+    sendData(&color, sizeof(uint32_t));
+    
+    return 0;
+}
+
+int Lua::Gui::rectangle(lua_State *L)
+{
+    int x = static_cast<int>(lua_tointeger(L, 1));
+    int y = static_cast<int>(lua_tointeger(L, 2));
+    int w = static_cast<int>(lua_tointeger(L, 3));
+    int h = static_cast<int>(lua_tointeger(L, 4));
+    int thickness = luaL_optnumber (L, 5, 1);
+    uint32_t outline_color = luaL_optnumber (L, 6, 0x00ffffff);
+    uint32_t fill_color = luaL_optnumber (L, 7, 0xffffffff);
+    
+    sendMessage(MSGN_LUA_RECT);
+    sendData(&x, sizeof(int));
+    sendData(&y, sizeof(int));
+    sendData(&w, sizeof(int));
+    sendData(&h, sizeof(int));
+    sendData(&thickness, sizeof(int));
+    sendData(&outline_color, sizeof(uint32_t));
+    sendData(&fill_color, sizeof(uint32_t));
     
     return 0;
 }

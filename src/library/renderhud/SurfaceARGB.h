@@ -27,6 +27,12 @@
 #include <vector>
 
 namespace libtas {
+    
+struct Color
+{
+    uint8_t r, g, b, a;
+};
+
 /* Create a simple ARGB surface class that can be used by sdl_ttf,
  * instead of the SDL_Surface struct.
  * This allows to use sdl_ttf without needing any function
@@ -51,15 +57,17 @@ class SurfaceARGB
         SurfaceARGB(int width, int height);
 
         /* Fill all pixels to a certain color */
-        void fill(uint32_t color);
+        void fill(Color color);
+
+        /* Fill the border of the surface to a certain color and thickness */
+        void fillBorder(Color color, int t);
 
         /* Blit surface `src` into this surface at coords x and y */
         void blit(const SurfaceARGB* src, int x, int y);
-};
-
-struct Color
-{
-    uint8_t r, g, b, a;
+        
+    private:
+        /* Compute the value in ARGB32 from a color struct */
+        uint32_t colorToValue(Color color);
 };
 
 }

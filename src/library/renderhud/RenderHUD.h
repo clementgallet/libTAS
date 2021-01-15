@@ -80,6 +80,12 @@ class RenderHUD
         /* Insert a lua text to be displayed */
         static void insertLuaText(int x, int y, std::string text, uint32_t fg, uint32_t bg);
 
+        /* Insert a lua pixel to be displayed */
+        static void insertLuaPixel(int x, int y, uint32_t color);
+
+        /* Insert a lua rect to be displayed */
+        static void insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill);
+
         /* Clear all lua drawings */
         static void resetLua();
 
@@ -101,6 +107,21 @@ class RenderHUD
          */
         void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
 
+        /* Render a single pixel
+         * @param x      x position of the pixel
+         * @param y      y position of the pixel
+         * @param color  Color of the pixel
+         */
+        void renderPixel(int x, int y, Color bg_color);
+
+        /* Render a rectangle
+         * @param x      x position of the pixel
+         * @param y      y position of the pixel
+         * @param color  Color of the pixel
+         */
+        void renderRect(int x, int y, int w, int h, int t, Color outline_color, Color fill_color);
+
+
         /*** Draw specific information on screen ***/
 
         /* Display the frame count on screen */
@@ -119,8 +140,8 @@ class RenderHUD
         /* Display ram watches */
         void drawWatches();
 
-        /* Display lua texts */
-        void drawLuaTexts();
+        /* Display lua drawings */
+        void drawLua();
 
         static int outline_size;
         static int font_size;
@@ -148,6 +169,30 @@ class RenderHUD
 
         /* Lua texts to print on screen */
         static std::list<LuaText> lua_texts;
+
+        struct LuaPixel
+        {
+            int x;
+            int y;
+            Color color;
+        };
+
+        /* Lua pixels to print on screen */
+        static std::list<LuaPixel> lua_pixels;
+
+        struct LuaRect
+        {
+            int x;
+            int y;
+            int w;
+            int h;
+            int thickness;
+            Color outline;
+            Color fill;
+        };
+
+        /* Lua rects to print on screen */
+        static std::list<LuaRect> lua_rects;
 
 };
 }

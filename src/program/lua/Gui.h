@@ -31,8 +31,14 @@ namespace Gui {
     /* Register all functions */
     void registerFunctions(Context* context);
 
-    /* Read an unsigned 8-bit integer */
+    /* Draw text */
     int text(lua_State *L);
+
+    /* Draw pixel */
+    int pixel(lua_State *L);
+
+    /* Draw rectangle */
+    int rectangle(lua_State *L);
 
 }
 }

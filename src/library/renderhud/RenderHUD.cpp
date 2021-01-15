@@ -35,6 +35,8 @@ TTF_Font* RenderHUD::bg_font = nullptr;
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 std::list<std::string> RenderHUD::watches;
 std::list<RenderHUD::LuaText> RenderHUD::lua_texts;
+std::list<RenderHUD::LuaPixel> RenderHUD::lua_pixels;
+std::list<RenderHUD::LuaRect> RenderHUD::lua_rects;
 int RenderHUD::outline_size = 1;
 int RenderHUD::font_size = 20;
 
@@ -136,11 +138,26 @@ void RenderHUD::renderText(const char* text, Color fg_color, Color bg_color, int
         /* Blit text onto its outline. */
         bg_surf->blit(fg_surf.get(), outline_size, outline_size);
 
-        renderSurface(std::move(bg_surf), x, y);        
+        renderSurface(std::move(bg_surf), x, y);
     }
     else {
         debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not generate a text surface!");
     }
+}
+
+void RenderHUD::renderPixel(int x, int y, Color color)
+{
+    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(1, 1));
+    surf->fill(color);
+    renderSurface(std::move(surf), x, y);        
+}
+
+void RenderHUD::renderRect(int x, int y, int w, int h, int t, Color outline_color, Color fill_color)
+{
+    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(w, h));
+    surf->fill(fill_color);
+    surf->fillBorder(outline_color, t);
+    renderSurface(std::move(surf), x, y);        
 }
 
 void RenderHUD::locationToCoords(int location, int& x, int& y)
@@ -335,11 +352,17 @@ void RenderHUD::drawWatches()
     }
 }
 
-void RenderHUD::drawLuaTexts()
+void RenderHUD::drawLua()
 {
     for (auto iter = lua_texts.begin(); iter != lua_texts.end(); iter++) {
         renderText(iter->text.c_str(), iter->fg_color, iter->bg_color, iter->x, iter->y);
-    }    
+    }
+    for (auto iter = lua_pixels.begin(); iter != lua_pixels.end(); iter++) {
+        renderPixel(iter->x, iter->y, iter->color);
+    }
+    for (auto iter = lua_rects.begin(); iter != lua_rects.end(); iter++) {
+        renderRect(iter->x, iter->y, iter->w, iter->h, iter->thickness, iter->outline, iter->fill);
+    }
 }
 
 void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
@@ -357,6 +380,37 @@ void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color,
                    static_cast<uint8_t>(bg_color & 0xff),
                    static_cast<uint8_t>((bg_color >> 24) & 0xff)};
     lua_texts.push_back(lt);
+}
+
+void RenderHUD::insertLuaPixel(int x, int y, uint32_t color)
+{
+    LuaPixel lp;
+    lp.x = x;
+    lp.y = y;
+    lp.color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                static_cast<uint8_t>((color >> 8) & 0xff),
+                static_cast<uint8_t>(color & 0xff),
+                static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_pixels.push_back(lp);
+}
+
+void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill)
+{
+    LuaRect lr;
+    lr.x = x;
+    lr.y = y;
+    lr.w = w;
+    lr.h = h;
+    lr.thickness = thickness;
+    lr.outline = {static_cast<uint8_t>((outline >> 16) & 0xff),
+                  static_cast<uint8_t>((outline >> 8) & 0xff),
+                  static_cast<uint8_t>(outline & 0xff),
+                  static_cast<uint8_t>((outline >> 24) & 0xff)};
+    lr.fill = {static_cast<uint8_t>((fill >> 16) & 0xff),
+               static_cast<uint8_t>((fill >> 8) & 0xff),
+               static_cast<uint8_t>(fill & 0xff),
+               static_cast<uint8_t>((fill >> 24) & 0xff)};
+    lua_rects.push_back(lr);
 }
 
 void RenderHUD::resetLua()
@@ -383,7 +437,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         drawWatches();
 
     if (shared_config.osd & SharedConfig::OSD_LUA)
-        drawLuaTexts();
+        drawLua();
 
 }
 

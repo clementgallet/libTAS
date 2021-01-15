@@ -263,6 +263,18 @@ enum {
      */
     MSGN_LUA_TEXT,
 
+    /*
+     * Send to the game a pixel to be displayed from a lua script.
+     * Argument: int x, int y, uint32_t color
+     */
+    MSGN_LUA_PIXEL,
+
+    /*
+     * Send to the game a rectangle to be displayed from a lua script.
+     * Argument: int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill
+     */
+    MSGN_LUA_RECT,
+
 };
 
 #endif

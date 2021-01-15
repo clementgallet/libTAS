@@ -1258,7 +1258,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended(TTF_Font *font,
     first = true;
     xstart = 0;
     pixel = (fg.r<<16)|(fg.g<<8)|fg.b;
-    textbuf->fill(pixel); /* Initialize with fg and 0 alpha */
+    textbuf->fill({fg.r, fg.g, fg.b, 0}); /* Initialize with fg and 0 alpha */
     while ( textlen > 0 ) {
         uint16_t c = UTF8_getch(&text, &textlen);
         if ( c == UNICODE_BOM_NATIVE || c == UNICODE_BOM_SWAPPED ) {
@@ -1511,7 +1511,7 @@ std::unique_ptr<SurfaceARGB> TTF_RenderUTF8_Blended_Wrapped(TTF_Font *font,
 
     /* Load and render each character */
     pixel = (fg.r<<16)|(fg.g<<8)|fg.b;
-    textbuf->fill(pixel); /* Initialize with fg and 0 alpha */
+    textbuf->fill({fg.r, fg.g, fg.b, 0}); /* Initialize with fg and 0 alpha */
 
     for ( line = 0; line < numLines; line++ ) {
         if ( strLines ) {

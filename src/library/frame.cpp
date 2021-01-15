@@ -328,6 +328,34 @@ void frameBoundary(std::function<void()> draw)
 #endif
             break;
         }
+        case MSGN_LUA_PIXEL:
+        {
+            int x, y;
+            receiveData(&x, sizeof(int));
+            receiveData(&y, sizeof(int));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+#ifdef LIBTAS_ENABLE_HUD
+            RenderHUD::insertLuaPixel(x, y, color);
+#endif
+            break;
+        }
+        case MSGN_LUA_RECT:
+        {
+            int x, y, w, h, thickness;
+            receiveData(&x, sizeof(int));
+            receiveData(&y, sizeof(int));
+            receiveData(&w, sizeof(int));
+            receiveData(&h, sizeof(int));
+            receiveData(&thickness, sizeof(int));
+            uint32_t outline, fill;
+            receiveData(&outline, sizeof(uint32_t));
+            receiveData(&fill, sizeof(uint32_t));
+#ifdef LIBTAS_ENABLE_HUD
+            RenderHUD::insertLuaRect(x, y, w, h, thickness, outline, fill);
+#endif
+            break;
+        }
         }
         message = receiveMessage();
     }

@@ -19,6 +19,18 @@ In all gui functions, colors are coded in a single 32-bit unsigned integer as fo
     
 Draws text string `text` starting from `(x, y)`. The text will be colored using color `fgcolor` and the text background is colored using `bgcolor`. 
 
+#### gui.pixel
+
+    none gui.pixel(Number x, Number y, [Number color = 0x00ffffff]) 
+
+Draws pixel at (x,y) using color `color`.
+
+#### gui.rectangle
+
+    none gui.rectangle(Number x, Number y, Number w, Number h, [Number thickness = 1], [Number outline_color = 0x00ffffff], [Number fill_color = 0xffffffff])
+
+Draws rectangle of size `(w,h)` with top-left corner at `(x,y)`. Outline is of thickness `thickness` and is colored with color `outline_color`. The interior is filled with color `fill_color`.
+
 ### Input functions
 
 All the functions in this section are only valid inside `onInput()` callback, 
