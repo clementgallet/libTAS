@@ -182,9 +182,6 @@ void GameLoop::init()
     /* Init savestate list */
     SaveStateList::init(context);
 
-    /* Start the lua VM */
-    Lua::Main::init(context);
-
     /* We fork here so that the child process calls the game */
     context->fork_pid = fork();
     if (context->fork_pid == 0) {
@@ -1247,9 +1244,6 @@ void GameLoop::loopExit()
      * - we are playing or recording a movie
      * - the user didn't use the Stop button to stop the game
      */
-
-    /* Stop the lua VM */
-    Lua::Main::exit(context);
 
     if ((context->status == Context::RESTARTING) ||
         (context->config.auto_restart &&
