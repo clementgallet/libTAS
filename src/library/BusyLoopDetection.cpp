@@ -160,7 +160,7 @@ void BusyLoopDetection::increment(int type)
                     info.dli_saddr = info.dli_fbase;
 
                 if (info.dli_sname != NULL || info.dli_saddr != 0) {
-                    oss << "(" << (info.dli_sname ?: "");
+                    oss << "(" << (info.dli_sname ? info.dli_sname : "");
                     if (info.dli_saddr != 0) {
                         if (addresses[cnt] >= (void *)info.dli_saddr) {
                             oss << '+' << std::hex << (reinterpret_cast<intptr_t>(addresses[cnt]) - reinterpret_cast<intptr_t>(info.dli_saddr));
