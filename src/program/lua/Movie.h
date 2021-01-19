@@ -21,9 +21,9 @@
 #define LIBTAS_LUAMOVIE_H_INCLUDED
 
 #include "../Context.h"
+extern "C" {
 #include <lua.h>
-// #include <string>
-// #include <stdint.h>
+}
 
 namespace Lua {
 

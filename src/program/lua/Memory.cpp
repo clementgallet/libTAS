@@ -20,8 +20,10 @@
 #include "Memory.h"
 
 #include <iostream>
+extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+}
 
 static Context* context;
 

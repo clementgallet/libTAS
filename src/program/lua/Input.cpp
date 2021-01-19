@@ -21,8 +21,10 @@
 #include "../../shared/SingleInput.h"
 
 #include <iostream>
+extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+}
 
 static AllInputs* ai;
 

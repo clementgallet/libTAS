@@ -21,8 +21,10 @@
 #define LIBTAS_LUAGUI_H_INCLUDED
 
 #include "../Context.h"
-#include <lua.h>
 #include <stdint.h>
+extern "C" {
+#include <lua.h>
+}
 
 namespace Lua {
 

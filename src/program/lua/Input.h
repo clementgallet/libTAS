@@ -23,7 +23,9 @@
 #include "../../shared/AllInputs.h"
 #include "../Context.h"
 
+extern "C" {
 #include <lua.h>
+}
 
 namespace Lua {
 

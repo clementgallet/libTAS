@@ -23,8 +23,10 @@
 
 #include <iostream>
 #include <string>
+extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+}
 
 static Context* context;
 
