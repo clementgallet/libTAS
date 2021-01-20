@@ -100,7 +100,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
             /* Encode startup frames that we skipped */
 
             /* Just getting the size of an image */
-            int size = ScreenCapture::getPixels(nullptr, false);
+            int size = ScreenCapture::getSize();
             startup_audio_bytes.resize(size, 0); // reusing the audio samples vector
             for (int i=0; i<startup_video_frames; i++) {
                 nutMuxer->writeVideoFrame(startup_audio_bytes.data(), size);
@@ -133,7 +133,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     }
 
     /* Access to the screen pixels, or last screen pixels if not a draw frame */
-    int size = ScreenCapture::getPixels(&pixels, draw);
+    int size = ScreenCapture::getPixelsFromSurface(&pixels, draw);
 
     for (int f=0; f<frames; f++) {
         debuglogstdio(LCF_DUMP, "Encode a video frame");

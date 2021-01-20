@@ -382,7 +382,7 @@ void frameBoundary(std::function<void()> draw)
      */
     if (!skipping_draw) {
         if (draw) {
-            ScreenCapture::storePixels();
+            ScreenCapture::copyScreenToSurface();
         }
     }
 
@@ -449,7 +449,7 @@ void frameBoundary(std::function<void()> draw)
      * not clean the back buffer.
      */
     if (!skipping_draw && draw) {
-        ScreenCapture::setPixels();
+        ScreenCapture::copySurfaceToScreen();
     }
 
     /*** Process inputs and events ***/
@@ -568,7 +568,7 @@ static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
 #endif
 {
     if (!skipping_draw && draw) {
-        ScreenCapture::setPixels();
+        ScreenCapture::copySurfaceToScreen();
 
 #ifdef LIBTAS_ENABLE_HUD
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
@@ -734,7 +734,7 @@ static void receive_messages(std::function<void()> draw)
 
                     /* Screen should have changed after loading */
                     if (draw)
-                        ScreenCapture::setPixels();
+                        ScreenCapture::copySurfaceToScreen();
                 }
                 else if (status == 0) {
                     /* Tell the program that the saving succeeded */

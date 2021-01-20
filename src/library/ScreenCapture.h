@@ -50,19 +50,22 @@ bool isInited();
 /* Get the current dimensions of the screen */
 void getDimensions(int& w, int& h);
 
+/* Get the size of the pixel array */
+int getSize();
+
 /* Get the pixel format as an string used by nut muxer. */
 const char* getPixelFormat();
 
-/* Capture the pixels from the screen. */
-int storePixels();
+/* Copy the current screen to the screen buffer/surface/texture.
+ * This surface is optimized for rendering, so it may be stored on GPU. */
+int copyScreenToSurface();
 
-/* Capture the pixels from the screen and copy a pointer to this array into pixels.
- * Returns the size of the array.
- */
-int getPixels(uint8_t **pixels, bool draw);
+/* Transfer pixels from the screen buffer/surface/texture into an array, pointed by `pixels`
+ * Returns the size of the array. */
+int getPixelsFromSurface(uint8_t **pixels, bool draw);
 
-/* Set the screen pixels from our buffers. */
-int setPixels();
+/* Copy back the stored screen buffer/surface/texture into the screen. */
+int copySurfaceToScreen();
 
 }
 }

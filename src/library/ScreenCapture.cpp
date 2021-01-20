@@ -89,9 +89,11 @@ DEFINE_ORIG_POINTER(XGetGeometry)
 
 static bool inited = false;
 
-/* Temporary pixel arrays */
-static std::vector<uint8_t> glpixels;
+/* Stored pixel array for use with the video encoder */
 static std::vector<uint8_t> winpixels;
+
+/* Single line of pixels to swap GL array that has different reference point */
+static std::vector<uint8_t> gllinepixels;
 
 /* Video dimensions */
 static int width, height, pitch;
@@ -222,14 +224,14 @@ void ScreenCapture::initScreenSurface()
         /* Create the screen texture */
         sdl_renderer = orig::SDL_GetRenderer(gameSDLWindow);
         if (!sdl_renderer) {
-            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: %d", orig::SDL_GetError());
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: %s", orig::SDL_GetError());
         }
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
         if (!screenSDLTex) {
             screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
                 SDL_TEXTUREACCESS_STREAMING, width, height);
             if (!screenSDLTex) {
-                debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: %d", orig::SDL_GetError());
+                debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: %s", orig::SDL_GetError());
             }
         }
     }
@@ -299,7 +301,7 @@ void ScreenCapture::initScreenSurface()
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
-        glpixels.resize(size);
+        gllinepixels.resize(pitch);
     }
 
     else if (game_info.video & GameInfo::SDL1) {
@@ -321,7 +323,7 @@ void ScreenCapture::initScreenSurface()
 void ScreenCapture::fini()
 {
     winpixels.clear();
-    glpixels.clear();
+    gllinepixels.clear();
 
     destroyScreenSurface();
 
@@ -412,6 +414,11 @@ bool ScreenCapture::isInited()
 void ScreenCapture::getDimensions(int& w, int& h) {
     w = width;
     h = height;
+}
+
+int ScreenCapture::getSize()
+{
+    return size;
 }
 
 const char* ScreenCapture::getPixelFormat()
@@ -513,22 +520,10 @@ const char* ScreenCapture::getPixelFormat()
     return "RGBA";
 }
 
-int ScreenCapture::storePixels()
-{
-    return getPixels(nullptr, true);
-}
-
-int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
+int ScreenCapture::copyScreenToSurface()
 {
     if (!inited)
         return 0;
-
-    if (pixels) {
-        *pixels = winpixels.data();
-    }
-
-    if (!draw)
-        return size;
 
     GlobalNative gn;
 
@@ -538,11 +533,6 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
         }
-
-        /* Copy pixels */
-        void* const pix = reinterpret_cast<void* const>(winpixels.data());
-        unsigned int pp = pitch;
-        status = orig::VdpOutputSurfaceGetBitsNative(screenVDPAUSurf, nullptr, &pix, &pp);
     }
 
     else if (game_info.video & GameInfo::SDL2_RENDERER) {
@@ -550,14 +540,16 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         LINK_NAMESPACE_SDL2(SDL_LockTexture);
         LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
 
-        int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, winpixels.data(), pitch);
-        if (ret < 0) {
-            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: %d", orig::SDL_GetError());
-        }
+        /* I couldn't find a way to directly copy the screen to a texture.
+         * Because apparently there is no way to access to the screen texture.
+         * So copying the screen pixels into the texture. */
         void* tex_pixels;
         int tex_pitch;
         orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
-        memcpy(tex_pixels, winpixels.data(), size);
+        int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, tex_pixels, pitch);
+        if (ret < 0) {
+            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: %s", orig::SDL_GetError());
+        }
         orig::SDL_UnlockTexture(screenSDLTex);
     }
 
@@ -581,19 +573,6 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         }
 
         orig::SDL_UpperBlit(surf2, nullptr, screenSDL2Surf, nullptr);
-
-        if (pixels) {
-            /* We must lock the surface before accessing the raw pixels */
-            if (SDL_MUSTLOCK(screenSDL2Surf))
-                orig::SDL_LockSurface(screenSDL2Surf);
-
-            /* I know memcpy is not recommended for vectors... */
-            memcpy(winpixels.data(), screenSDL2Surf->pixels, size);
-
-            /* Unlock surface */
-            if (SDL_MUSTLOCK(screenSDL2Surf))
-                orig::SDL_UnlockSurface(screenSDL2Surf);
-        }
     }
 
     else if (game_info.video & GameInfo::OPENGL) {
@@ -607,7 +586,7 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
 
         GLenum error;
 
-        /* Copy the default framebuffer to our FBO */
+        /* Disable sRGB if needed */
         GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
         if (isFramebufferSrgb)
             orig::glDisable(GL_FRAMEBUFFER_SRGB);
@@ -638,33 +617,6 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-        if (pixels) {
-
-            /* We need to recover the pixels for encoding */
-            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-            orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, glpixels.data());
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
-
-            orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
-
-            /*
-             * Flip image horizontally
-             * This is because OpenGL has a different reference point
-             * Code taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
-             */
-
-            for (int line = 0; line < height; line++) {
-                int pos = line * pitch;
-                memcpy(&winpixels[pos], &glpixels[(size-pos)-pitch], pitch);
-            }
-        }
 
         if (isFramebufferSrgb)
             orig::glEnable(GL_FRAMEBUFFER_SRGB);
@@ -699,21 +651,6 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
         else {
             orig::SDL1_UpperBlit(surf1, nullptr, screenSDL1Surf, nullptr);
         }
-
-        if (pixels) {
-            /* We must lock the surface before accessing the raw pixels */
-            int ret = orig::SDL1_LockSurface(screenSDL1Surf);
-            if (ret != 0) {
-                debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
-                return -1;
-            }
-
-            /* I know memcpy is not recommended for vectors... */
-            memcpy(winpixels.data(), screenSDL1Surf->pixels, size);
-
-            /* Unlock surface */
-            orig::SDL1_UnlockSurface(screenSDL1Surf);
-        }
     }
 
     else if (game_info.video & GameInfo::XSHM) {
@@ -721,13 +658,138 @@ int ScreenCapture::getPixels(uint8_t **pixels, bool draw)
             debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, gameXImage->width, gameXImage->height);
             return -1;
         }
+        
+        /* There is no designated surface for XShm, just copy to our array */
         memcpy(winpixels.data(), gameXImage->data, size);
     }
 
     return size;
 }
 
-int ScreenCapture::setPixels() {
+int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
+{
+    if (!inited)
+        return 0;
+
+    if (pixels) {
+        *pixels = winpixels.data();
+    }
+
+    if (!draw)
+        return size;
+
+    GlobalNative gn;
+
+    if (game_info.video & GameInfo::VDPAU) {
+        /* Copy pixels */
+        void* const pix = reinterpret_cast<void* const>(winpixels.data());
+        unsigned int pp = pitch;
+        VdpStatus status = orig::VdpOutputSurfaceGetBitsNative(screenVDPAUSurf, nullptr, &pix, &pp);
+        if (status != VDP_STATUS_OK) {
+            debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceGetBitsNative failed with status %d", status);
+        }
+    }
+
+    else if (game_info.video & GameInfo::SDL2_RENDERER) {
+        LINK_NAMESPACE_SDL2(SDL_LockTexture);
+        LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
+
+        /* Access the texture and copy pixels */
+        void* tex_pixels;
+        int tex_pitch;
+        orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+        memcpy(winpixels.data(), tex_pixels, size);
+        orig::SDL_UnlockTexture(screenSDLTex);
+    }
+
+    else if (game_info.video & GameInfo::SDL2_SURFACE) {
+        /* We must lock the surface before accessing the raw pixels */
+        if (SDL_MUSTLOCK(screenSDL2Surf))
+            orig::SDL_LockSurface(screenSDL2Surf);
+
+        /* I know memcpy is not recommended for vectors... */
+        memcpy(winpixels.data(), screenSDL2Surf->pixels, size);
+
+        /* Unlock surface */
+        if (SDL_MUSTLOCK(screenSDL2Surf))
+            orig::SDL_UnlockSurface(screenSDL2Surf);
+    }
+
+    else if (game_info.video & GameInfo::OPENGL) {
+        LINK_NAMESPACE(glReadPixels, "GL");
+        LINK_NAMESPACE(glBindFramebuffer, "GL");
+        LINK_NAMESPACE(glBlitFramebuffer, "GL");
+        LINK_NAMESPACE(glEnable, "GL");
+        LINK_NAMESPACE(glDisable, "GL");
+        LINK_NAMESPACE(glIsEnabled, "GL");
+        LINK_NAMESPACE(glGetIntegerv, "GL");
+
+        GLenum error;
+
+        /* Disable sRGB if needed */
+        GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
+        if (isFramebufferSrgb)
+            orig::glDisable(GL_FRAMEBUFFER_SRGB);
+
+        /* Copy the original read framebuffer */
+        GLint read_buffer;
+        orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+
+        orig::glGetError();
+
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+
+        orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, winpixels.data());
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
+
+        orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+
+        /*
+         * Flip image horizontally in place
+         * This is because OpenGL has a different reference point
+         * Code taken from http://stackoverflow.com/questions/5862097/sdl-opengl-screenshot-is-black
+         */
+        for (int line = 0; line < (height/2); line++) {
+            int pos1 = line * pitch;
+            int pos2 = (height-line-1) * pitch;
+            memcpy(gllinepixels.data(), &winpixels[pos1], pitch);
+            memcpy(&winpixels[pos1], &winpixels[pos2], pitch);
+            memcpy(&winpixels[pos2], gllinepixels.data(), pitch);
+        }
+
+        if (isFramebufferSrgb)
+            orig::glEnable(GL_FRAMEBUFFER_SRGB);
+    }
+
+    else if (game_info.video & GameInfo::SDL1) {
+        /* We must lock the surface before accessing the raw pixels */
+        int ret = orig::SDL1_LockSurface(screenSDL1Surf);
+        if (ret != 0) {
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
+            return -1;
+        }
+
+        /* I know memcpy is not recommended for vectors... */
+        memcpy(winpixels.data(), screenSDL1Surf->pixels, size);
+
+        /* Unlock surface */
+        orig::SDL1_UnlockSurface(screenSDL1Surf);
+    }
+
+    else if (game_info.video & GameInfo::XSHM) {
+        /* Nothing to do here, the surface is already stored in the pixel array */
+    }
+
+    return size;
+}
+
+int ScreenCapture::copySurfaceToScreen()
+{
     if (!inited)
         return 0;
 
@@ -747,7 +809,7 @@ int ScreenCapture::setPixels() {
 
         ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
         if (ret < 0) {
-            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed: %d", orig::SDL_GetError());
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy to screen failed: %s", orig::SDL_GetError());
         }
     }
 
@@ -817,8 +879,6 @@ int ScreenCapture::setPixels() {
 
     else if (game_info.video & GameInfo::SDL1) {
         LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-        // link_function((void**)&orig::SDL1_LockSurface, "SDL_LockSurface", "libSDL-1.2.so.0")
-        // link_function((void**)&orig::SDL1_UnlockSurface, "SDL_UnlockSurface", "libSDL-1.2.so.0")
         link_function((void**)&orig::SDL1_GetClipRect, "SDL_GetClipRect", "libSDL-1.2.so.0");
         link_function((void**)&orig::SDL1_SetClipRect, "SDL_SetClipRect", "libSDL-1.2.so.0");
         link_function((void**)&orig::SDL1_UpperBlit, "SDL_UpperBlit", "libSDL-1.2.so.0");
@@ -835,7 +895,6 @@ int ScreenCapture::setPixels() {
         orig::SDL1_SetClipRect(surf1, nullptr);
         orig::SDL1_UpperBlit(screenSDL1Surf, nullptr, surf1, nullptr);
         orig::SDL1_SetClipRect(surf1, &clip_rect);
-
     }
 
     else if (game_info.video & GameInfo::XSHM) {
