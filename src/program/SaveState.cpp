@@ -30,7 +30,7 @@ void SaveState::init(Context* context, int i)
 {
     id = i;
     is_backtrack = (i == 10);
-    framecount = -1;
+    framecount = 0; // Special value for `no state`
     parent = -1;
     movie = std::unique_ptr<MovieFile>(new MovieFile(context));
 
@@ -283,6 +283,6 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
 
 void SaveState::backupMovie()
 {
-    if (framecount != -1)
+    if (framecount) // 0 means no state has been made
         movie->saveMovie(movie_path);
 }

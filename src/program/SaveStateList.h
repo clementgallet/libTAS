@@ -43,10 +43,10 @@ namespace SaveStateList {
     int postLoad(int id, Context* context, MovieFile& movie, bool branch);
 
     /* Returns the framecount of the root state, or -1 if already root */
-    int64_t rootStateFramecount();
+    uint64_t rootStateFramecount();
 
     /* Returns the previous framecount of the root state */
-    int64_t oldRootStateFramecount();
+    uint64_t oldRootStateFramecount();
 
     /* Returns the nearest state id in current branch before framecount */
     int nearestState(uint64_t framecount);

@@ -55,7 +55,7 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
 
     /* Don't toggle past inputs before root savestate */
     uint64_t root_frame = SaveStateList::rootStateFramecount();
-    if (root_frame == -1) {
+    if (!root_frame) {
         if (index.row() < static_cast<int>(context->framecount))
             return QAbstractItemModel::flags(index);
     }
@@ -162,8 +162,8 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         
         /* Greenzone */
         if (index.row() < static_cast<int>(context->framecount)) {
-            int root_frame = SaveStateList::rootStateFramecount();
-            if (root_frame != -1 && index.row() >= root_frame)
+            uint64_t root_frame = SaveStateList::rootStateFramecount();
+            if (!root_frame && index.row() >= root_frame)
                 color = color.darker(105);            
         }
 
@@ -315,7 +315,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
 
     /* Don't toggle past inputs before root savestate */
     uint64_t root_frame = SaveStateList::rootStateFramecount();
-    if (root_frame == -1) {
+    if (!root_frame) {
         if (index.row() < static_cast<int>(context->framecount))
             return false;
     }
@@ -743,10 +743,10 @@ void InputEditorModel::registerSavestate(int slot, unsigned long long frame)
     emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
     
     /* Update greenzone between old and new root savestate */
-    int64_t oldRoot = SaveStateList::oldRootStateFramecount();
-    int64_t newRoot = SaveStateList::rootStateFramecount();
+    uint64_t oldRoot = SaveStateList::oldRootStateFramecount();
+    uint64_t newRoot = SaveStateList::rootStateFramecount();
 
-    if (oldRoot == -1 || newRoot == -1)
+    if (!oldRoot || !newRoot)
         return;
         
     if (oldRoot < newRoot)

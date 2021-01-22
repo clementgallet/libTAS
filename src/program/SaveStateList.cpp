@@ -32,7 +32,7 @@ static SaveState states[NB_STATES];
 static int last_state_id;
 
 /* Old id of root savestate */
-static int old_root_state_id;
+static uint64_t old_root_framecount;
 
 void SaveStateList::init(Context* context)
 {
@@ -41,7 +41,7 @@ void SaveStateList::init(Context* context)
     }
     
     last_state_id = -1;
-    old_root_state_id = -1;
+    old_root_framecount = 0;
 }
 
 SaveState& SaveStateList::get(int id)
@@ -61,7 +61,7 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
     
     if (message == MSGB_SAVING_SUCCEEDED) {
         /* Update root savestate */
-        old_root_state_id = rootStateFramecount();        
+        old_root_framecount = rootStateFramecount();        
         
         /* Update parent of every child to its grandparent */
         for (int cid = 0; cid < NB_STATES; cid++) {
@@ -94,18 +94,17 @@ int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool bra
     
     if (message == MSGB_LOADING_SUCCEEDED) {
         /* Update root savestate */
-        old_root_state_id = rootStateFramecount();        
-
+        old_root_framecount = rootStateFramecount();
         last_state_id = id;
     }
     
     return message;
 }
 
-int64_t SaveStateList::rootStateFramecount()
+uint64_t SaveStateList::rootStateFramecount()
 {
     if (last_state_id == -1)
-        return -1;
+        return 0;
         
     int parent_id = last_state_id;
     uint64_t framecount;
@@ -118,9 +117,9 @@ int64_t SaveStateList::rootStateFramecount()
     return framecount;
 }
 
-int64_t SaveStateList::oldRootStateFramecount()
+uint64_t SaveStateList::oldRootStateFramecount()
 {
-    return old_root_state_id;
+    return old_root_framecount;
 }
 
 int SaveStateList::nearestState(uint64_t framecount)
