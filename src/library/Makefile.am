@@ -35,6 +35,7 @@ libtas_so_SOURCES = \
     tlswrappers.cpp \
     Utils.cpp \
     vdpauwrappers.cpp \
+    vulkanwrappers.cpp \
     waitwrappers.cpp \
     WindowTitle.cpp \
     audio/AudioBuffer.cpp \

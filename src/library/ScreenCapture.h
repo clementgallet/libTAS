@@ -21,8 +21,6 @@
 #define LIBTAS_SCREENCAPTURE_H_INCL
 
 #include <stdint.h>
-#include <SDL2/SDL.h>
-#include <vector>
 
 namespace libtas {
 
@@ -66,6 +64,11 @@ int getPixelsFromSurface(uint8_t **pixels, bool draw);
 
 /* Copy back the stored screen buffer/surface/texture into the screen. */
 int copySurfaceToScreen();
+
+/* Restore the state of the screen (backbuffer usually), because some methods
+ * of rendering reuse the backbuffer from the previous frame.
+ * It is equivalent to `copySurfaceToScreen()` in most cases. */
+void restoreScreenState();
 
 }
 }
