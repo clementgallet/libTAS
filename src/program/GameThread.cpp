@@ -124,45 +124,6 @@ void GameThread::launch(Context *context)
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;
 
-    if (context->attach_gdb) {
-        arg_list.push_back("/usr/bin/gdb");
-        arg_list.push_back("-q");
-        arg_list.push_back("-ex");
-
-        /* LD_PRELOAD must be set inside a gdb command to be effective */
-        std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
-        ldpreloadstr += context->libtaspath;
-        if (!context->old_ld_preload.empty()) {
-            ldpreloadstr += ":";
-            ldpreloadstr += context->old_ld_preload;
-        }
-        ldpreloadstr += "'";
-        arg_list.push_back(ldpreloadstr);
-
-        /* We are using SIGSYS and SIGXFSZ for savestates, so don't
-         * print and pause when one signal is sent */
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGSYS nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGXFSZ nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGUSR1 nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGUSR2 nostop noprint");
-        /* The following signals are used a lot in some games */
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGPWR nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIGXCPU nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIG35 nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("handle SIG36 nostop noprint");
-        arg_list.push_back("-ex");
-        arg_list.push_back("run");
-        arg_list.push_back("--args");
-    }
-
     /* Detect Windows executables and launch wine */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
 
@@ -173,10 +134,6 @@ void GameThread::launch(Context *context)
             if (gameArch == BT_PE32P)
                 winepath += "64";
             arg_list.push_back(winepath);
-
-            /* Push the game executable as the first command-line argument */
-            context->gamepath.insert(0, "Z:");
-            arg_list.push_back(context->gamepath);
 
             /* Set the env variables needed by Proton */
             std::string winedllpath = context->config.proton_path;
@@ -219,16 +176,56 @@ void GameThread::launch(Context *context)
                 }
                 pclose(output);
             }
-            /* Push the game executable as the first command-line argument */
-            /* Wine can fail if not specifying a Windows path */
-            context->gamepath.insert(0, "Z:");
-            arg_list.push_back(context->gamepath);
         }
 
         /* We need to delay libtas hooking for wine process. */
         setenv("LIBTAS_DELAY_INIT", "1", 1);
+
+        /* Push the game executable as the first command-line argument */
+        /* Wine can fail if not specifying a Windows path */
+        context->gamepath.insert(0, "Z:");
+        arg_list.push_back(context->gamepath);
     }
     else {
+        if (context->attach_gdb) {
+            arg_list.push_back("/usr/bin/gdb");
+            arg_list.push_back("-q");
+            arg_list.push_back("-ex");
+
+            /* LD_PRELOAD must be set inside a gdb command to be effective */
+            std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
+            ldpreloadstr += context->libtaspath;
+            if (!context->old_ld_preload.empty()) {
+                ldpreloadstr += ":";
+                ldpreloadstr += context->old_ld_preload;
+            }
+            ldpreloadstr += "'";
+            arg_list.push_back(ldpreloadstr);
+
+            /* We are using SIGSYS and SIGXFSZ for savestates, so don't
+             * print and pause when one signal is sent */
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGSYS nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGXFSZ nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGUSR1 nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGUSR2 nostop noprint");
+            /* The following signals are used a lot in some games */
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGPWR nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIGXCPU nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIG35 nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("handle SIG36 nostop noprint");
+            arg_list.push_back("-ex");
+            arg_list.push_back("run");
+            arg_list.push_back("--args");
+        }
+
         /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked.
          * Does not work for wine games, because our custom SDL functions don't
          * have the correct calling convention. */
@@ -241,7 +238,7 @@ void GameThread::launch(Context *context)
     std::ostringstream sharg;
 
     /* Prepend LD_PRELOAD */
-    if (!context->attach_gdb) {
+    if (!(context->attach_gdb && ((gameArch == BT_ELF32) || (gameArch == BT_ELF64)))) {
         /* Set the LD_PRELOAD environment variable to inject our lib to the game */
         sharg << "LD_PRELOAD=";
         if (!context->old_ld_preload.empty()) {

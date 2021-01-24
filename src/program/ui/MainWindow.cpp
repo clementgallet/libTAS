@@ -35,6 +35,7 @@
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
 #include "../lua/Main.h"
+#include "../utils.h"
 
 #include <iostream>
 #include <future>
@@ -105,10 +106,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     gamePath = new QComboBox();
     gamePath->setMinimumWidth(400);
     gamePath->setEditable(true);
-    // connect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
     connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
     gamePath->setInsertPolicy(QComboBox::NoInsert);
-    // connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
     disabledWidgetsOnStart.append(gamePath);
     updateRecentGamepaths();
 
@@ -185,7 +184,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(fastForwardCheck, &QAbstractButton::clicked, this, &MainWindow::slotFastForward);
 
     /* Buttons */
-    QPushButton *launchButton = new QPushButton(tr("Start"));
+    launchButton = new QPushButton(tr("Start"));
     connect(launchButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
     disabledWidgetsOnStart.append(launchButton);
 
@@ -979,7 +978,6 @@ void MainWindow::updateSharedConfigChanged()
 void MainWindow::updateRecentGamepaths()
 {
     /* We don't want to fire a signal by changing the combobox content */
-    // disconnect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
     disconnect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
 
     gamePath->clear();
@@ -987,7 +985,6 @@ void MainWindow::updateRecentGamepaths()
         gamePath->addItem(QString(path.c_str()));
     }
 
-    // connect(gamePath->lineEdit(), &QLineEdit::textEdited, this, &MainWindow::slotGamePathChanged);
     connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
 }
 
@@ -1352,6 +1349,22 @@ void MainWindow::slotGamePathChanged()
 
     context->gamepath = gamePath->currentText().toStdString();
 
+    /* Check if gamepath exists, otherwise disable Start buttons and return */
+    if (access(context->gamepath.c_str(), F_OK) != 0) {
+        launchButton->setEnabled(false);
+        launchGdbButton->setEnabled(false);
+        return;
+    }
+    
+    launchButton->setEnabled(true);
+    
+    /* Disable `Start and attach gdb` if Windows game */
+    int gameArch = extractBinaryType(context->gamepath);
+    if (gameArch == BT_PE32 || gameArch == BT_PE32P)
+        launchGdbButton->setEnabled(false);
+    else
+        launchGdbButton->setEnabled(true);
+    
     /* Try to load the game-specific pref file */
     context->config.load(context->gamepath);
 

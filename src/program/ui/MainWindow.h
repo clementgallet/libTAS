@@ -163,6 +163,7 @@ public:
     QSpinBox *initialTimeSec;
     QSpinBox *initialTimeNsec;
 
+    QPushButton *launchButton;
     QPushButton *launchGdbButton;
     QPushButton *stopButton;
 

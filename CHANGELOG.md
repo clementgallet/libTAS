@@ -13,6 +13,7 @@
 
 * Exit the game if the socket connection is lost
 * Fix ram watch offset parsing
+* Disable Start and attach gdb for wine games
 
 ## [1.4.1] - 2021-01-02
 ### Added
