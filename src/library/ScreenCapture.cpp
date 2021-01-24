@@ -450,12 +450,12 @@ void ScreenCapture::destroyScreenSurface()
     if (vkScreenImageMemory) {
         LINK_NAMESPACE(vkFreeMemory, "vulkan");
         orig::vkFreeMemory(vk::device, vkScreenImageMemory, nullptr);
-        vkScreenImageMemory = nullptr;
+        vkScreenImageMemory = VK_NULL_HANDLE;
     }
     if (vkScreenImage) {
         LINK_NAMESPACE(vkDestroyImage, "vulkan");
         orig::vkDestroyImage(vk::device, vkScreenImage, nullptr);
-        vkScreenImage = nullptr;
+        vkScreenImage = VK_NULL_HANDLE;
     }
 }
 
