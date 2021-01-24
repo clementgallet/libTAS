@@ -197,6 +197,25 @@ bool ErrorChecking::checkArchType(Context* context)
         }
     }
 
+    /* Check for gdb presence in case of Start and attach gdb */
+    if (context->attach_gdb) {
+        std::string cmd = "which gdb";
+        FILE *output = popen(cmd.c_str(), "r");
+        if (output != NULL) {
+            std::array<char,256> buf;
+            fgets(buf.data(), buf.size(), output);
+            int ret = pclose(output);
+            if (ret != 0) {
+                critical(QString("Trying to start a game with attached gdb, but gdb cannot be found"), context->interactive);
+                return false;
+            }
+        }
+        else {
+            critical(QString("Coundn't popen to locate gdb"), context->interactive);
+            return false;
+        }
+    }
+
     /* Arithmetic on enums is ugly but much shorter */
     if (gameArch != libtasArch && ((gameArch-2) != libtasArch)) {
         critical(QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg((libtasArch%2)?32:64).arg(context->gamepath.c_str()).arg((gameArch%2)?32:64), context->interactive);
