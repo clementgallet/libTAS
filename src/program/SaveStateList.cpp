@@ -46,7 +46,7 @@ void SaveStateList::init(Context* context)
 
 SaveState& SaveStateList::get(int id)
 {
-    if (id < 0 || id > NB_STATES) {
+    if (id < 0 || id >= NB_STATES) {
         std::cerr << "Unknown savestate " << id << std::endl;
         id = 0;
     }
