@@ -416,6 +416,8 @@ void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_
 void RenderHUD::resetLua()
 {
     lua_texts.clear();
+    lua_pixels.clear();
+    lua_rects.clear();
 }
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)

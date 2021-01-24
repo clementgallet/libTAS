@@ -542,7 +542,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingPrintGroup, tr("Sleep"), LCF_SLEEP);
     addActionCheckable(loggingPrintGroup, tr("Socket"), LCF_SOCKET);
     addActionCheckable(loggingPrintGroup, tr("Locale"), LCF_LOCALE);
-    addActionCheckable(loggingPrintGroup, tr("OpenGL"), LCF_OGL);
+    addActionCheckable(loggingPrintGroup, tr("OpenGL/Vulkan"), LCF_OGL);
     addActionCheckable(loggingPrintGroup, tr("AV Dumping"), LCF_DUMP);
     addActionCheckable(loggingPrintGroup, tr("SDL"), LCF_SDL);
     addActionCheckable(loggingPrintGroup, tr("Wine"), LCF_WINE);
@@ -578,7 +578,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingExcludeGroup, tr("Sleep"), LCF_SLEEP);
     addActionCheckable(loggingExcludeGroup, tr("Socket"), LCF_SOCKET);
     addActionCheckable(loggingExcludeGroup, tr("Locale"), LCF_LOCALE);
-    addActionCheckable(loggingExcludeGroup, tr("OpenGL"), LCF_OGL);
+    addActionCheckable(loggingExcludeGroup, tr("OpenGL/Vulkan"), LCF_OGL);
     addActionCheckable(loggingExcludeGroup, tr("AV Dumping"), LCF_DUMP);
     addActionCheckable(loggingExcludeGroup, tr("SDL"), LCF_SDL);
     addActionCheckable(loggingExcludeGroup, tr("Wine"), LCF_WINE);
