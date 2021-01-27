@@ -16,6 +16,7 @@
 * Exit the game if the socket connection is lost
 * Fix ram watch offset parsing
 * Disable Start and attach gdb for wine games
+* Fix SDL_Lock/UnlockAudio that can be called multiple times (#385)
 
 ## [1.4.1] - 2021-01-02
 ### Added

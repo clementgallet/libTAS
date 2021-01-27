@@ -18,6 +18,7 @@
  */
 
 #include "sdlaudio.h"
+#include "../../checkpoint/ThreadManager.h" // getThreadId()
 #include "../../logging.h"
 #include "../../hook.h"
 #include "../AudioContext.h"
@@ -44,7 +45,7 @@ static std::shared_ptr<AudioSource> sourceSDL;
 
 static const char* dummySDLDevice = "libTAS device";
 static std::string curDriver;
-static std::mutex mutex;
+static std::recursive_mutex mutex;
 
 /* Override */ int SDL_GetNumAudioDrivers(void)
 {
@@ -171,10 +172,14 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
             /* Emptying the audio buffer */
             ab.makeSilent();
 
-            NOLOGCALL(SDL_LockAudio());
+            mutex.lock();
             audioCallback(callbackArg, ab.samples.data(), ab.size);
-            NOLOGCALL(SDL_UnlockAudio());
+            mutex.unlock();
         };
+        
+        /* Specify the thread that opens the audio, to optimize Lock/UnlockAudio
+         * and match its implementation */
+        audiocontext.audio_thread = ThreadManager::getThreadId();
     }
     else {
         /* We are using the push mechanism. The game will use
@@ -374,24 +379,32 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 /* Override */ void SDL_LockAudio(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+        return;
     mutex.lock();
 }
 
 /* Override */ void SDL_LockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+        return;
     mutex.lock();
 }
 
 /* Override */ void SDL_UnlockAudio(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+        return;
     mutex.unlock();
 }
 
 /* Override */ void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+        return;
     mutex.unlock();
 }
 
