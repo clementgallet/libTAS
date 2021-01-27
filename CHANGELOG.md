@@ -10,6 +10,7 @@
 ### Changed
 
 * Remove "save screen" option (always on)
+* Change again the threshold for triggering a non-draw frame
 
 ### Fixed
 

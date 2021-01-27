@@ -159,7 +159,19 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     bool mainT = ThreadManager::isMainThread();
 
     if (mainT && !insideFrameBoundary) {
-        TimeHolder maxDeferredDelay = baseTimeIncrement * 2;
+        /* The threshold value to trigger a non-draw frame is critical for a 
+         * number of games. Using a value too high will cause some games to
+         * constantly trigger the time-tracking, or will get extra non-draw frames.
+         
+         * We want to document this with specific examples, so the next time we
+         * modify this value, we will have test cases:
+         * - In Hyper Light Drifter, setting a value too high (`thre = 2*base`) triggers
+         *   a non-draw frame every 51 frames
+         * - In Terraria, execution is sometimes normal, sometimes very slow with
+         *   (`thre = 2*base`)
+         */ 
+        TimeHolder maxDeferredDelay = baseTimeIncrement;
+        
         while(addedDelay > maxDeferredDelay) {
             /* We have built up too much delay. We must enter a frame boundary,
              * to advance the time.
