@@ -5,6 +5,7 @@
 * Show a specific message when user specify a script as game executable
 * Add lua scripting
 * Check for gdb presence
+* Use vdpau-va-gl for vdpau software rendering (#390)
 
 ### Changed
 

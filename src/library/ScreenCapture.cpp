@@ -145,8 +145,8 @@ static SDL_Renderer* sdl_renderer;
 static VdpOutputSurface screenVDPAUSurf;
 
 /* Vulkan screen image */
-static VkImage vkScreenImage;
-static VkDeviceMemory vkScreenImageMemory;
+static VkImage vkScreenImage = VK_NULL_HANDLE;
+static VkDeviceMemory vkScreenImageMemory = VK_NULL_HANDLE;
 
 int ScreenCapture::init()
 {

@@ -362,7 +362,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
         game_info.tosend = true;
 
         /* If we are using SDL, we let the higher function initialize stuff */
-        if (!(game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER))) {
+        if (!(game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER | GameInfo::VDPAU))) {
             /* Now that the context is created, we can init the screen capture */
             ScreenCapture::init();
         }

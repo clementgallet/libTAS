@@ -80,6 +80,7 @@ void RenderHUD_VDPAU::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, in
 
     /* Render the text on the output surface */
     VdpOutputSurfaceRenderBlendState blend_state;
+    blend_state.struct_version = VDP_OUTPUT_SURFACE_RENDER_BLEND_STATE_VERSION;
     blend_state.blend_factor_source_color = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_ONE;
     blend_state.blend_factor_destination_color = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     blend_state.blend_factor_source_alpha = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_ONE;

@@ -103,11 +103,17 @@ void GameThread::launch(Context *context)
         libtasArch = extractBinaryType(context->libtaspath);
     }
 
-    /* Set additional environment variables regarding Mesa configuration */
-    if (context->config.sc.opengl_soft)
+    /* Set additional environment variables regarding Mesa and VDPAU configurations */
+    if (context->config.sc.opengl_soft) {
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
-    else
-        unsetenv("LIBGL_ALWAYS_SOFTWARE");
+        setenv("VDPAU_DRIVER", "va_gl", 1);
+        setenv("VDPAU_QUIRKS", "AvoidVA", 1);
+    }
+    else {
+        unsetenv("LIBGL_ALWAYS_SOFTWARE");        
+        unsetenv("VDPAU_DRIVER");        
+        unsetenv("VDPAU_QUIRKS");        
+    }
 
     /* Pass libtas library path to the game */
     setenv("LIBTAS_LIBRARY_PATH", context->libtaspath.c_str(), 1);

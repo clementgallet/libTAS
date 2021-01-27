@@ -55,6 +55,10 @@ OVERRIDE Bool XShmPutImage(
 
     debuglogstdio(LCF_WINDOW, "%s called with drawable %d", __func__, d);
 
+    /* Only handle the screen draw if no other rendering API is used */
+    if ((game_info.video & GameInfo::VDPAU) || (game_info.video & GameInfo::OPENGL))
+        return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);
+
     game_info.video |= GameInfo::XSHM;
     game_info.tosend = true;
 

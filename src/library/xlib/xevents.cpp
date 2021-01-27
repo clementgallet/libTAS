@@ -547,8 +547,6 @@ int XSync(Display *display, Bool discard)
         return orig::XSync(display, discard);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
-
     int ret = orig::XSync(display, discard);
     pushNativeXlibEvents(display);
     return ret;
