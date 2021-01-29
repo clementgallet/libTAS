@@ -21,7 +21,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   frame advance, inputs recording, savestates.
 baseurl: "/libTAS" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: KilayeJV
+twitter_username: libtas_dev
 github_username:  clementgallet
 
 # Build settings

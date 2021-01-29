@@ -39,3 +39,8 @@ to launch the game (e.g. `AxiomVerge`), but the actual binary is another file
 
 This is a known [Mono bug](https://github.com/mono/mono/issues/6752), it can be
 fixed by launching libTAS like this: `term=XTERM libTAS`.
+
+#### I'm getting an error "ERROR: We didn't find any regular TTF font !"
+
+You need to install a TTF font so that the on-screen display works. If you are using a
+Debian-based distribution (e.g. Ubuntu), you can execute `sudo apt install fonts-liberation`.

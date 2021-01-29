@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Help
+title: Documentation
 permalink: /help/
 ---
 
@@ -10,3 +10,4 @@ get help from the [Discord server](https://discord.gg/3MBVAzU).
 * [List of libTAS options](../guides/options)
 * [Running libTAS using WSL 2](../guides/wsl)
 * [Lua usage and functions](../guides/lua)
+* [Moviefile format](../guides/format)
