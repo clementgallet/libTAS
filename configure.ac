@@ -23,21 +23,21 @@ save_CXX="$CXX"
 
 case $host in
   x86_64*|amd64*)
-    if [test "x$with_i386" == "xyes"] || [test "x$enable_i386_lib" == "xyes"]
+    if [test "x$with_i386" = "xyes"] || [test "x$enable_i386_lib" = "xyes"]
     then
        AC_LANG_PUSH([C++])
        CXX="$CXX -m32"
        AC_MSG_CHECKING(for i386 cross-compiling)
        AC_LINK_IFELSE([AC_LANG_PROGRAM()],[AC_MSG_RESULT(yes); cxx_m32=yes],[AC_MSG_RESULT(no)])
-       test "x$cxx_m32" == "xyes" || AC_MSG_ERROR([Cannot build a 32-bit program, you need to install 32-bit development libraries.])
+       test "x$cxx_m32" = "xyes" || AC_MSG_ERROR([Cannot build a 32-bit program, you need to install 32-bit development libraries.])
        CXX="$save_CXX"
        AC_LANG_POP([C++])
     fi
     ;;
 esac
 
-AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" == "xyes" || test "x$enable_i386_lib" == "xyes"])
-AM_CONDITIONAL([BUILD32LIBONLY], [test "x$enable_i386_lib" == "xyes"])
+AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" = "xyes" || test "x$enable_i386_lib" = "xyes"])
+AM_CONDITIONAL([BUILD32LIBONLY], [test "x$enable_i386_lib" = "xyes"])
 
 AC_ARG_ENABLE([release-build], AS_HELP_STRING([--enable-release-build], [Build a release]))
 AC_ARG_ENABLE([build-date], AS_HELP_STRING([--disable-build-date], [Do not embed build date in executable]))
@@ -121,7 +121,7 @@ save_CXX="$CXX"
 
 case $host in
   x86_64*|amd64*)
-    if [test "x$with_i386" == "xyes"] || [test "x$enable_i386_lib" == "xyes"]
+    if [test "x$with_i386" = "xyes"] || [test "x$enable_i386_lib" = "xyes"]
     then
 
        AC_LANG_PUSH([C++])
