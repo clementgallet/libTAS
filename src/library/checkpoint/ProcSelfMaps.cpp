@@ -106,7 +106,6 @@ bool ProcSelfMaps::getNextArea(Area *area)
     }
 
     uintptr_t addr = readHex();
-    MYASSERT(addr != 0)
     area->addr = reinterpret_cast<void*>(addr);
 
     MYASSERT(data[dataIdx++] == '-')
