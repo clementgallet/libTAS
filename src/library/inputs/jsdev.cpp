@@ -101,7 +101,7 @@ void write_jsdev(struct js_event ev, int jsnum)
     int pipeSize;
     NATIVECALL(MYASSERT(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &pipeSize) == 0));
 
-    if (pipeSize < (64*sizeof(ev)))
+    if (pipeSize < static_cast<int>(64*sizeof(ev)))
         write(jsdevfds[jsnum].first.second, &ev, sizeof(ev));
     else {
         debuglogstdio(LCF_JOYSTICK | LCF_WARNING, "did not write jsdev event, too many already.");
@@ -117,7 +117,7 @@ bool sync_jsdev(int jsnum)
     int attempts = 0, count = 0;
     NATIVECALL(ioctl(jsdevfds[jsnum].first.first, FIONREAD, &count));
 
-    if (count >= (64*sizeof(struct js_event)))
+    if (count >= static_cast<int>(64*sizeof(struct js_event)))
         return false;
 
     do {

@@ -64,7 +64,7 @@ int Lua::Input::clear(lua_State *L)
 
 int Lua::Input::setKey(lua_State *L)
 {
-    int keysym = static_cast<int>(lua_tointeger(L, 1));
+    unsigned int keysym = static_cast<unsigned int>(lua_tointeger(L, 1));
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
@@ -74,7 +74,7 @@ int Lua::Input::setKey(lua_State *L)
 
 int Lua::Input::getKey(lua_State *L)
 {
-    int keysym = static_cast<int>(lua_tointeger(L, 1));
+    unsigned int keysym = static_cast<unsigned int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));

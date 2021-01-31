@@ -820,6 +820,9 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
                     *value = AL_STOPPED;
                     debuglogstdio(LCF_SOUND, "  Get source state STOPPED");
                     break;
+                default:
+                    alSetError(AL_INVALID_VALUE);
+                    break;
             }
             break;
         case AL_SOURCE_TYPE:

@@ -83,7 +83,7 @@ void write_evdev(struct input_event ev, int evnum)
     int pipeSize;
     NATIVECALL(MYASSERT(ioctl(evdevfds[evnum].first.first, FIONREAD, &pipeSize) == 0));
 
-    if (pipeSize < (64*sizeof(ev)))
+    if (pipeSize < static_cast<int>(64*sizeof(ev)))
         write(evdevfds[evnum].first.second, &ev, sizeof(ev));
     else {
         debuglogstdio(LCF_JOYSTICK | LCF_WARNING, "did not write evdev event, too many already.");
@@ -98,7 +98,7 @@ bool sync_evdev(int evnum)
     int attempts = 0, count = 0;
     NATIVECALL(ioctl(evdevfds[evnum].first.first, FIONREAD, &count));
 
-    if (count >= (64*sizeof(struct input_event)))
+    if (count >= static_cast<int>(64*sizeof(struct input_event)))
         return false;
 
     do {

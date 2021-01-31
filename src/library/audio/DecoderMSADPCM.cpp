@@ -105,7 +105,7 @@ void DecoderMSADPCM::toPCM(BinaryIStream &source, int nbChannels, int sampleAlig
 
         }
     } else if (nbChannels == 2) {
-        uint8_t lpredictor, rpredictor;
+        uint8_t lpredictor, rpredictor = 0;
 
         /* Read to the end of the buffer */
         while (source >> lpredictor) {

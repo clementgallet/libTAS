@@ -139,7 +139,7 @@ int sendData(const void* elem, unsigned int size)
         std::cerr << "send() returns -1 with error " << strerror(errno) << std::endl;
 #endif
     }
-    else if (ret != size) {
+    else if (ret != static_cast<ssize_t>(size)) {
 #ifdef SOCKET_LOG
         libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "send() %u bytes instead of %u", ret, size);
 #else
@@ -193,7 +193,7 @@ int receiveData(void* elem, unsigned int size)
         std::cerr << "recv() returns 0 -> socket closed" << std::endl;
 #endif
     }
-    else if (ret != size) {
+    else if (ret != static_cast<ssize_t>(size)) {
 #ifdef SOCKET_LOG
         libtas::debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() %u bytes instead of %u", ret, size);
 #else

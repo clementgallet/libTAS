@@ -60,7 +60,7 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
             return QAbstractItemModel::flags(index);
     }
     else {
-        if (index.row() < root_frame)
+        if (static_cast<uint64_t>(index.row()) < root_frame)
             return QAbstractItemModel::flags(index);
     }
 
@@ -84,7 +84,7 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
                 return QString(tr(""));
             if (section == 1)
                 return QString(tr("Frame"));
-            if ((section-2) < movie->editor->input_set.size())
+            if (static_cast<unsigned int>(section-2) < movie->editor->input_set.size())
                 return QString(movie->editor->input_set[section-2].description.c_str());
         }
     }
@@ -93,13 +93,15 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
 
 QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 {
+    unsigned int row = index.row();
+    
     if (role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
     }
 
     if (role == Qt::FontRole) {
         QFont font;
-        if ((index.column() == 0) && (index.row() == last_savestate)) {
+        if ((index.column() == 0) && (row == last_savestate)) {
             font.setBold(true);
         }
         return font;
@@ -113,16 +115,16 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         
         if (color.lightness() > 128) {
             /* Light theme */
-            if (index.row() == static_cast<int>(context->framecount))
+            if (row == context->framecount)
                 color.setRgb(r - 0x30, g - 0x10, b);
-            else if (index.row() < static_cast<int>(context->framecount)) {
-                if (movie->editor->isDraw(index.row()))
+            else if (row < context->framecount) {
+                if (movie->editor->isDraw(row))
                     color.setRgb(r - 0x30, g, b - 0x30);
                 else
                     color.setRgb(r, g - 0x30, b - 0x30);
             }
             else {
-                if (movie->editor->isDraw(index.row()))
+                if (movie->editor->isDraw(row))
                     color.setRgb(r, g, b - 0x18);
                 else
                     color.setRgb(r, g - 0x18, b - 0x18);
@@ -130,16 +132,16 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
         else {
             /* Dark theme */
-            if (index.row() == static_cast<int>(context->framecount))
+            if (row == context->framecount)
                 color.setRgb(r, g + 0x10, b + 0x20);
-            else if (index.row() < static_cast<int>(context->framecount)) {
-                if (movie->editor->isDraw(index.row()))
+            else if (row < context->framecount) {
+                if (movie->editor->isDraw(row))
                     color.setRgb(r, g + 0x18, b);
                 else
                     color.setRgb(r + 0x18, g, b);
             }
             else {
-                if (movie->editor->isDraw(index.row()))
+                if (movie->editor->isDraw(row))
                     color.setRgb(r + 0x08, g + 0x08, b);
                 else
                     color.setRgb(r + 0x08, g, b);
@@ -161,15 +163,15 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
         
         /* Greenzone */
-        if (index.row() < static_cast<int>(context->framecount)) {
+        if (row < context->framecount) {
             uint64_t root_frame = SaveStateList::rootStateFramecount();
-            if (!root_frame && index.row() >= root_frame)
+            if (!root_frame && row >= root_frame)
                 color = color.darker(105);            
         }
 
         /* Frame containing a savestate */
         for (unsigned int i=0; i<savestate_frames.size(); i++) {
-            if (savestate_frames[i] == index.row()) {
+            if (savestate_frames[i] == row) {
                 color = color.darker(105);
                 break;
             }
@@ -179,22 +181,22 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
-        if (index.row() >= movie->inputs->nbFrames()) {
+        if (row >= movie->inputs->nbFrames()) {
             return QVariant();
         }
         if (index.column() == 0) {
             for (unsigned int i=0; i<savestate_frames.size(); i++) {
-                if (savestate_frames[i] == index.row()) {
+                if (savestate_frames[i] == row) {
                     return i;
                 }
             }
             return QString("");
         }
         if (index.column() == 1) {
-            return index.row();
+            return row;
         }
 
-        const AllInputs ai = movie->inputs->input_list[index.row()];
+        const AllInputs ai = movie->inputs->input_list[row];
         const SingleInput si = movie->editor->input_set[index.column()-2];
 
         /* Get the value of the single input in movie inputs */
@@ -213,7 +215,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::EditRole) {
-        if (index.row() >= movie->inputs->nbFrames()) {
+        if (row >= movie->inputs->nbFrames()) {
             return QVariant();
         }
         if (index.column() < 2) {
@@ -226,7 +228,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
             return QVariant();
 
-        const AllInputs ai = movie->inputs->input_list[index.row()];
+        const AllInputs ai = movie->inputs->input_list[row];
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -242,13 +244,14 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid() && role == Qt::EditRole) {
+        unsigned int row = index.row();
 
         if (index.column() < 2)
             return false;
 
         /* Rewind to past frame is needed */
-        if (index.row() < static_cast<int>(context->framecount)) {
-            bool ret = rewind(index.row());
+        if (row < context->framecount) {
+            bool ret = rewind(row);
             if (!ret)
                 return false;
         }
@@ -260,11 +263,11 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
             return false;
 
         /* Add a row if necessary */
-        if (index.row() == movie->inputs->nbFrames()) {
+        if (row == movie->inputs->nbFrames()) {
             insertRows(movie->inputs->nbFrames(), 1, QModelIndex());
         }
 
-        AllInputs &ai = movie->inputs->input_list[index.row()];
+        AllInputs &ai = movie->inputs->input_list[row];
 
         int ivalue = value.toInt();
 
@@ -313,14 +316,16 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     if (index.column() < 2)
         return false;
 
+    unsigned int row = index.row();
+
     /* Don't toggle past inputs before root savestate */
     uint64_t root_frame = SaveStateList::rootStateFramecount();
     if (!root_frame) {
-        if (index.row() < static_cast<int>(context->framecount))
+        if (row < context->framecount)
             return false;
     }
     else {
-        if (index.row() < root_frame)
+        if (row < root_frame)
             return false;        
     }
 
@@ -331,18 +336,18 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
         return false;
 
     /* Add a row if necessary */
-    if (index.row() == movie->inputs->nbFrames()) {
+    if (row == movie->inputs->nbFrames()) {
         insertRows(movie->inputs->nbFrames(), 1, QModelIndex());
     }
     
     /* Rewind to past frame is needed */
-    if (index.row() < static_cast<int>(context->framecount)) {
-        bool ret = rewind(index.row());
+    if (row < context->framecount) {
+        bool ret = rewind(row);
         if (!ret)
             return false;
     }
 
-    AllInputs &ai = movie->inputs->input_list[index.row()];
+    AllInputs &ai = movie->inputs->input_list[row];
 
     int value = ai.toggleInput(si);
     movie->inputs->wasModified();
@@ -595,7 +600,7 @@ void InputEditorModel::clearUniqueInput(int column)
     if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
         return;
 
-    for (int f = static_cast<int>(context->framecount); f < movie->inputs->nbFrames(); f++) {
+    for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
         movie->inputs->input_list[f].setInput(si, 0);
     }
 
@@ -607,13 +612,13 @@ void InputEditorModel::removeUniqueInput(int column)
     SingleInput si = movie->editor->input_set[column-2];
 
     /* Check if the input is set in past frames */
-    for (int f = 0; f < static_cast<int>(context->framecount); f++) {
+    for (unsigned int f = 0; f < context->framecount; f++) {
         if (movie->inputs->input_list[f].getInput(si))
             return;
     }
 
     /* Clear remaining frames */
-    for (int f = static_cast<int>(context->framecount); f < movie->inputs->nbFrames(); f++) {
+    for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
         movie->inputs->input_list[f].setInput(si, 0);
     }
 
@@ -781,7 +786,7 @@ bool InputEditorModel::rewind(uint64_t framecount)
     context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
 
     /* Fast-forward to frame if further than state framecount */
-    int64_t state_framecount = SaveStateList::get(state).framecount;
+    uint64_t state_framecount = SaveStateList::get(state).framecount;
     if (framecount > state_framecount) {
         context->pause_frame = framecount;
 

@@ -41,6 +41,11 @@ void NutMuxer::writeVarU(uint64_t v, std::vector<uint8_t> &stream)
 	   stream.push_back(b[i - 1]);
 }
 
+void NutMuxer::writeVarU(unsigned int v, std::vector<uint8_t> &stream)
+{
+	writeVarU(static_cast<uint64_t>(v), stream);
+}
+
 void NutMuxer::writeVarU(int v, std::vector<uint8_t> &stream)
 {
 	writeVarU(static_cast<uint64_t>(v), stream);
@@ -256,7 +261,7 @@ void NutMuxer::writeAudioHeader()
 	header_packet.flush();
 }
 
-void NutMuxer::writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, uint64_t ptsnum, uint64_t ptsden, int ptsindex, FILE *underlying)
+void NutMuxer::writeFrame(const uint8_t* payload, unsigned int payloadlen, uint64_t pts, uint64_t ptsnum, uint64_t ptsden, int ptsindex, FILE *underlying)
 {
 	// create syncpoint
 	NutPacket sync(NutPacket::Syncpoint, underlying);
@@ -293,7 +298,7 @@ void NutMuxer::writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, 
 	}
 }
 
-void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
+void NutMuxer::writeVideoFrame(const uint8_t* video, unsigned int len)
 {
 	debuglogstdio(LCF_DUMP, "Write nut video frame");
 	debuglogstdio(LCF_DUMP, "Video pts is %f", (double)videopts * avparams.fpsden / avparams.fpsnum);
@@ -303,7 +308,7 @@ void NutMuxer::writeVideoFrame(const uint8_t* video, int len)
 
 }
 
-void NutMuxer::writeAudioFrame(const uint8_t* samples, int len)
+void NutMuxer::writeAudioFrame(const uint8_t* samples, unsigned int len)
 {
 	debuglogstdio(LCF_DUMP, "Write nut audio frame");
 	debuglogstdio(LCF_DUMP, "Audio pts is %f", (double)audiopts / avparams.samplerate);

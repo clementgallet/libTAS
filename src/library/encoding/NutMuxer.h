@@ -33,6 +33,7 @@ class NutMuxer {
 public:
 
 	static void writeVarU(uint64_t v, std::vector<uint8_t> &stream);
+    static void writeVarU(unsigned int v, std::vector<uint8_t> &stream);
 	static void writeVarU(int v, std::vector<uint8_t> &stream);
 	static void writeVarU(int64_t v, std::vector<uint8_t> &stream);
 	static void writeVarS(int64_t v, std::vector<uint8_t> &stream);
@@ -118,11 +119,11 @@ public:
 	/// </summary>
 	void writeAudioHeader();
 
-    void writeFrame(const uint8_t* payload, int payloadlen, uint64_t pts, uint64_t ptsnum, uint64_t ptsden, int ptsindex, FILE *underlying);
+    void writeFrame(const uint8_t* payload, unsigned int payloadlen, uint64_t pts, uint64_t ptsnum, uint64_t ptsden, int ptsindex, FILE *underlying);
 
-    void writeVideoFrame(const uint8_t* video, int len);
+    void writeVideoFrame(const uint8_t* video, unsigned int len);
 
-    void writeAudioFrame(const uint8_t* samples, int len);
+    void writeAudioFrame(const uint8_t* samples, unsigned int len);
 
 	NutMuxer(int width, int height, int fpsnum, int fpsden, const char* pixfmt, int samplerate, int samplesize, int channels, FILE *underlying);
 

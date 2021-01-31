@@ -472,7 +472,7 @@ snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
-    int pos = source->getPosition();
+    snd_pcm_uframes_t pos = source->getPosition();
     if (frames <= pos) {
         source->setPosition(pos - frames);
         return 0;
@@ -634,7 +634,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
     }
 
     /* Only write a portion of the buffer if no room for the whole buffer */
-    if ((get_latency(pcm)+size) > buffer_size) {
+    if ((get_latency(pcm)+static_cast<int>(size)) > buffer_size) {
         size = buffer_size - get_latency(pcm);
     }
 
@@ -708,7 +708,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     if (avail < 0)
         avail = 0;
 
-    if (*frames > avail)
+    if (static_cast<snd_pcm_sframes_t>(*frames) > avail)
         *frames = avail;
 
     debuglogstdio(LCF_SOUND, "  returning %d frames", *frames);

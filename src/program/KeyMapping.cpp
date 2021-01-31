@@ -269,7 +269,7 @@ void KeyMapping::default_inputs()
 
         for (auto iter : input_list)
             if (iter.type == SingleInput::IT_KEYBOARD)
-                if (iter.value == static_cast<int>(ks))
+                if (iter.value == ks)
                     input_mapping[iter.value] = iter;
     }
 }

@@ -62,7 +62,7 @@ void IRamWatchDetailed::update_addr()
                     if (base_file.compare(file) == 0) {
                         if ((base_file_offset >= 0) &&
                             (base_file_offset >= section.offset) &&
-                            (base_file_offset < (section.offset + section.size))) {
+                            (base_file_offset < static_cast<off_t>(section.offset + section.size))) {
 
                             base_address = section.addr - section.offset + base_file_offset;
                             break;

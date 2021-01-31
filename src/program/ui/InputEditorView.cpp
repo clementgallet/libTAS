@@ -178,7 +178,7 @@ void InputEditorView::update()
     /* Enable autoscroll if current frame is not visible */
     int toprow = rowAt(rect().top());
     int bottomrow = rowAt(rect().bottom());
-    if ((context->framecount >= bottomrow) || (context->framecount < toprow)) {
+    if ((context->framecount >= static_cast<unsigned int>(bottomrow)) || (context->framecount < static_cast<unsigned int>(toprow))) {
         autoScroll = true;
     }
 
@@ -222,7 +222,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 
     /* Disable some items on the context menu */
     if (event->button() == Qt::RightButton) {
-        if (index.row() < context->framecount) {
+        if (static_cast<unsigned int>(index.row()) < context->framecount) {
             insertAct->setEnabled(false);
             insertsAct->setEnabled(false);
             deleteAct->setEnabled(false);
@@ -290,7 +290,7 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
 
     /* Disable toggle together with rewind, because it can cause multiple
      * rewinds because of the scrolling */
-    if (index.row() < context->framecount)
+    if (static_cast<unsigned int>(index.row()) < context->framecount)
         return QTableView::mouseMoveEvent(event);
 
     int newMouseValue = mouseValue;

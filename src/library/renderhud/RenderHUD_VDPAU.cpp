@@ -76,7 +76,7 @@ void RenderHUD_VDPAU::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, in
     x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
     y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
-    VdpRect rect = {x, y, x + surf->w, y + surf->h};
+    VdpRect rect = {static_cast<uint32_t>(x), static_cast<uint32_t>(y), static_cast<uint32_t>(x + surf->w), static_cast<uint32_t>(y + surf->h)};
 
     /* Render the text on the output surface */
     VdpOutputSurfaceRenderBlendState blend_state;
