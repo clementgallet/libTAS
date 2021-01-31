@@ -440,10 +440,6 @@ void KeyMapping::buildAllInputs(AllInputs& ai, xcb_window_t window, xcb_key_symb
                 }
 
                 if (si.type == SingleInput::IT_KEYBOARD) {
-                    /* Check if we support keyboard */
-                    if (!sc.keyboard_support)
-                        continue;
-
                     /* Checking the current number of keys */
                     if (keysym_i >= AllInputs::MAXKEYS) {
                         fprintf(stderr, "Reached maximum number of inputs (%d).", AllInputs::MAXKEYS);

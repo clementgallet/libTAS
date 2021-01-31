@@ -127,7 +127,6 @@ public:
     QActionGroup *slowdownGroup;
     QActionGroup *fastforwardGroup;
 
-    QAction *keyboardAction;
     QAction *mouseAction;
     QAction *mouseModeAction;
     QAction *mouseWarpAction;

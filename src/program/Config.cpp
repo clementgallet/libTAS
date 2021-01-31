@@ -111,7 +111,6 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("excludeFlags", sc.excludeFlags);
     settings.setValue("framerate_num", sc.framerate_num);
     settings.setValue("framerate_den", sc.framerate_den);
-    settings.setValue("keyboard_support", sc.keyboard_support);
     settings.setValue("mouse_support", sc.mouse_support);
     settings.setValue("mouse_mode_relative", sc.mouse_mode_relative);
     settings.setValue("nb_controllers", sc.nb_controllers);
@@ -238,7 +237,6 @@ void Config::load(const std::string& gamepath) {
     sc.excludeFlags = settings.value("excludeFlags", sc.excludeFlags).toInt();
     sc.framerate_num = settings.value("framerate_num", sc.framerate_num).toUInt();
     sc.framerate_den = settings.value("framerate_den", sc.framerate_den).toUInt();
-    sc.keyboard_support = settings.value("keyboard_support", sc.keyboard_support).toBool();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
     sc.mouse_mode_relative = settings.value("mouse_mode_relative", sc.mouse_mode_relative).toBool();
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();

@@ -248,9 +248,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Are we dumping audio and video? */
     bool av_dumping = false;
 
-    /* Are we recording and sending keyboard inputs to the game? */
-    bool keyboard_support = true;
-
     /* Are we recording and sending mouse inputs to the game? */
     bool mouse_support = true;
 

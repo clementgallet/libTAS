@@ -81,14 +81,12 @@ void MovieFileInputs::save()
 int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 {
     /* Write keyboard inputs */
-    if (context->config.sc.keyboard_support) {
-        input_stream.put('|');
-        input_stream.put('K');
-        input_stream << std::hex;
-        for (int k=0; k<AllInputs::MAXKEYS; k++) {
-            if (!inputs.keyboard[k]) break;
-            input_stream << (k>0?":":"") << inputs.keyboard[k];
-        }
+    input_stream.put('|');
+    input_stream.put('K');
+    input_stream << std::hex;
+    for (int k=0; k<AllInputs::MAXKEYS; k++) {
+        if (!inputs.keyboard[k]) break;
+        input_stream << (k>0?":":"") << inputs.keyboard[k];
     }
 
     /* Write mouse inputs */
@@ -229,9 +227,7 @@ int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
     /* Following code is for old input format (1.3.5 and earlier) */
 
     /* Read keyboard inputs */
-    if (context->config.sc.keyboard_support) {
-        readKeyboardFrame(input_string, inputs);
-    }
+    readKeyboardFrame(input_string, inputs);
 
     /* Read mouse inputs */
     if (context->config.sc.mouse_support) {

@@ -44,7 +44,6 @@ void MovieFileHeader::load()
     config.setFallbacksEnabled(false);
 
     context->config.sc.movie_framecount = config.value("frame_count").toULongLong();
-    context->config.sc.keyboard_support = config.value("keyboard_support").toBool();
     context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
     context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
@@ -122,7 +121,6 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
 
     config.setValue("game_name", context->gamename.c_str());
     config.setValue("frame_count", static_cast<unsigned long long>(tot_frames));
-    config.setValue("keyboard_support", context->config.sc.keyboard_support);
     config.setValue("mouse_support", context->config.sc.mouse_support);
     config.setValue("nb_controllers", context->config.sc.nb_controllers);
     config.setValue("initial_time_sec", static_cast<unsigned long long>(context->config.sc.initial_time_sec));

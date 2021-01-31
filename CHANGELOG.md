@@ -18,6 +18,7 @@
 * Fix ram watch offset parsing
 * Disable Start and attach gdb for wine games
 * Fix SDL_Lock/UnlockAudio that can be called multiple times (#385)
+* Remove keyboard_support setting (#386)
 
 ## [1.4.1] - 2021-01-02
 ### Added

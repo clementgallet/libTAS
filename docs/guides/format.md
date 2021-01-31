@@ -14,7 +14,6 @@ The first one is `config.ini`, containing all meta-data of the movie file. It co
     game_name=SuperMeatBoy ; name of the game executable
     md5=a6fa991f40ef518b302a4a492af7259c ; md5 hash of the game executable
     frame_count=81 ; frame count of the movie file
-    keyboard_support=true ; are keyboard inputs sent to the game
     mouse_support=true ; are mouse inputs sent to the game
     nb_controllers=0 ; up to 4 controllers are supported
     initial_time_sec=1 ; number of seconds of the initial system time
@@ -45,7 +44,7 @@ The first one is `config.ini`, containing all meta-data of the movie file. It co
 ### Inputs
 
 The second file is the `inputs` text file. In this file, each line that starts with the character `|` is an input frame.
-The content of one line depends on the three settings `keyboard_support`, `mouse_support` and `nb_controllers` above.
+The content of one line depends on the two settings `mouse_support` and `nb_controllers` above.
 
 The line is a concatenation of sections for each device. Each section starts with `|` followed by a identifier.
 

@@ -821,9 +821,6 @@ void MainWindow::createMenus()
 
     inputMenu->addAction(tr("Configure mapping..."), inputWindow, &InputWindow::exec);
 
-    keyboardAction = inputMenu->addAction(tr("Keyboard support"));
-    keyboardAction->setCheckable(true);
-    disabledActionsOnStart.append(keyboardAction);
     mouseAction = inputMenu->addAction(tr("Mouse support"));
     mouseAction->setCheckable(true);
     disabledActionsOnStart.append(mouseAction);
@@ -1143,7 +1140,6 @@ void MainWindow::updateMovieParams()
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
     authorField->setText(context->authors.c_str());
-    keyboardAction->setChecked(context->config.sc.keyboard_support);
     mouseAction->setChecked(context->config.sc.mouse_support);
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
     fpsNumField->setValue(context->config.sc.framerate_num);
@@ -1276,7 +1272,6 @@ void MainWindow::slotLaunch()
 
     setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
 
-    context->config.sc.keyboard_support = keyboardAction->isChecked();
     context->config.sc.mouse_support = mouseAction->isChecked();
     setListFromRadio(joystickGroup, context->config.sc.nb_controllers);
 

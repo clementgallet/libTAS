@@ -243,11 +243,9 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
     }
 
     /* Keyboard */
-    if (shared_config.keyboard_support) {
-        for (int i=0; i<AllInputs::MAXKEYS; i++) {
-            if (ai.keyboard[i]) {
-                oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
-            }
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        if (ai.keyboard[i]) {
+            oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
         }
     }
 
