@@ -70,6 +70,14 @@ int open_jsdev(const char* source, int flags)
         /* Create an unnamed pipe */
         jsdevfds[jsnum].first = FileHandleList::createPipe(flags);
 
+        /* If pipe creation failed (e.g. when opening the dev file in write mode),
+         * invalidate the pipe and return -1. */
+        if (jsdevfds[jsnum].first.first == -1) {
+            debuglogstdio(LCF_JOYSTICK, "   could not create jsdev pipe with flags %d", flags);
+            jsdevfds[jsnum].second = 0;
+            return -1;
+        }
+
         /* Write the synthetic events corresponding to the initial state of the
          * joystick. */
         struct js_event ev;

@@ -53,7 +53,7 @@ int ioctl(int fd, unsigned long request, ...) throw()
     if (GlobalState::isNative())
         return orig::ioctl(fd, request, argp);
 
-    debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+    // debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
 
     if (fd < 0) {
         errno = EBADF;

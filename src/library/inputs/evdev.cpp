@@ -69,6 +69,14 @@ int open_evdev(const char* source, int flags)
 
         /* Create an unnamed pipe. */
         evdevfds[evnum].first = FileHandleList::createPipe(flags);
+        
+        /* If pipe creation failed (e.g. when opening the dev file in write mode),
+         * invalidate the pipe and return -1. */
+        if (evdevfds[evnum].first.first == -1) {
+            debuglogstdio(LCF_JOYSTICK, "   could not create evdev pipe with flags %d", flags);
+            evdevfds[evnum].second = 0;
+            return -1;
+        }
     }
 
     return evdevfds[evnum].first.first;
