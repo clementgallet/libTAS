@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QHBoxLayout>
+#include <QtWidgets/QHBoxLayout>
 
 #include "InputEditorWindow.h"
 #include "MainWindow.h"

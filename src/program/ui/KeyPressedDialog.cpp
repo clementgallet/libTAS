@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QKeyEvent>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtGui/QKeyEvent>
 
 #include "KeyPressedDialog.h"
 #include "../KeyMapping.h"

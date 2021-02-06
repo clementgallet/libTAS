@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QInputDialog>
-#include <QHeaderView>
-#include <QScrollBar>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QHeaderView>
+#include <QtWidgets/QScrollBar>
 
 #include <stdint.h>
 

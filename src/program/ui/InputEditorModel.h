@@ -20,7 +20,7 @@
 #ifndef LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 #define LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 
-#include <QAbstractTableModel>
+#include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <array>
 #include <stdint.h>

@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QKeyEvent>
+#include <QtGui/QKeyEvent>
 #include "../KeyMapping.h"
 #include "qtutils.h"
 

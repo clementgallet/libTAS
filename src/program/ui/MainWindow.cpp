@@ -17,18 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QFileDialog>
-#include <QMenu>
-#include <QMenuBar>
-#include <QMessageBox>
-#include <QDialogButtonBox>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QStatusBar>
-#include <QInputDialog>
-#include <QApplication>
-#include <QTimer>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QApplication>
+#include <QtCore/QTimer>
 
 #include "MainWindow.h"
 #include "../movie/MovieFile.h"

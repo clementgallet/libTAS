@@ -23,10 +23,10 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <QColor>
-#include <QPalette>
-#include <QBrush>
-#include <QGuiApplication>
+#include <QtGui/QColor>
+#include <QtGui/QPalette>
+#include <QtGui/QBrush>
+#include <QtGui/QGuiApplication>
 
 TimeTraceModel::TimeTraceModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 

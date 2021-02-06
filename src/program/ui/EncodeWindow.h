@@ -20,11 +20,11 @@
 #ifndef LIBTAS_ENCODEWINDOW_H_INCLUDED
 #define LIBTAS_ENCODEWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QSpinBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QSpinBox>
 
 #include "../Context.h"
 

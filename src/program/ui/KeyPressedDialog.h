@@ -20,7 +20,7 @@
 #ifndef LIBTAS_KEYPRESSEDDIALOG_H_INCLUDED
 #define LIBTAS_KEYPRESSEDDIALOG_H_INCLUDED
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 /* Very small QDialog class to catch a pressed key (or key + modifiers) */
 class KeyPressedDialog : public QDialog {

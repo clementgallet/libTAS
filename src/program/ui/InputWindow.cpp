@@ -17,13 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QStringList>
-#include <QTableWidgetItem>
-#include <QDialogButtonBox>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QHeaderView>
-// #include <X11/Xlib.h> // XKeysymToString
+#include <QtCore/QStringList>
+#include <QtWidgets/QTableWidgetItem>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QHeaderView>
 
 #include "InputWindow.h"
 

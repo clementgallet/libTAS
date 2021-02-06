@@ -17,18 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QSettings>
 #include <sstream>
-// #include <iomanip>
 #include <iostream>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
-// #include <X11/X.h> // ButtonXMask
 #include <errno.h>
 #include <unistd.h>
 
 #include "MovieFile.h"
-// #include "utils.h"
-// #include "../shared/version.h"
 
 MovieFile::MovieFile(Context* c) : context(c)
 {

@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include <QApplication>
+#include <QtWidgets/QApplication>
 
 #include "ui/MainWindow.h"
 #include "Context.h"

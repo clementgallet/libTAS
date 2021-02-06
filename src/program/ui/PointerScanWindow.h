@@ -20,15 +20,15 @@
 #ifndef LIBTAS_POINTERSCANWINDOW_H_INCLUDED
 #define LIBTAS_POINTERSCANWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QTableView>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QDoubleSpinBox>
-#include <QComboBox>
-#include <QProgressBar>
-#include <QLabel>
-#include <QSortFilterProxyModel>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QRadioButton>
+#include <QtWidgets/QDoubleSpinBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QProgressBar>
+#include <QtWidgets/QLabel>
+#include <QtCore/QSortFilterProxyModel>
 #include <memory>
 
 #include "PointerScanModel.h"

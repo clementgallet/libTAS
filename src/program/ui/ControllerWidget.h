@@ -20,10 +20,10 @@
 #ifndef LIBTAS_CONTROLLERWIDGET_H_INCLUDED
 #define LIBTAS_CONTROLLERWIDGET_H_INCLUDED
 
-#include <QWidget>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QSlider>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QSlider>
 
 #include "ControllerAxisWidget.h"
 

@@ -20,8 +20,8 @@
 #ifndef LIBTAS_RAMWATCHWINDOW_H_INCLUDED
 #define LIBTAS_RAMWATCHWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QTableView>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QTableView>
 
 #include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"

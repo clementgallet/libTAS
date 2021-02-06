@@ -18,7 +18,7 @@
  */
 
 #include "RamSearchModel.h"
-#include <QMessageBox>
+#include <QtWidgets/QMessageBox>
 
 RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 

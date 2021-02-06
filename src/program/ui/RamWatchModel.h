@@ -20,8 +20,8 @@
 #ifndef LIBTAS_RAMWATCHMODEL_H_INCLUDED
 #define LIBTAS_RAMWATCHMODEL_H_INCLUDED
 
-#include <QAbstractTableModel>
-#include <QSettings>
+#include <QtCore/QAbstractTableModel>
+#include <QtCore/QSettings>
 #include <vector>
 #include <memory>
 

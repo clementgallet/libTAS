@@ -20,7 +20,7 @@
 #ifndef LIBTAS_POINTERSCANMODEL_H_INCLUDED
 #define LIBTAS_POINTERSCANMODEL_H_INCLUDED
 
-#include <QAbstractTableModel>
+#include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <map>
 // #include <pair>

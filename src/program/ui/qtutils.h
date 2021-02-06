@@ -20,7 +20,7 @@
 #ifndef LIBTAS_QTUTILS_H_INCLUDED
 #define LIBTAS_QTUTILS_H_INCLUDED
 
-#include <QKeyEvent>
+#include <QtGui/QKeyEvent>
 #include <xcb/xcb_keysyms.h>
 #include "../Context.h"
 

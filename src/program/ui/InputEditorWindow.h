@@ -20,7 +20,7 @@
 #ifndef LIBTAS_INPUTEDITORWINDOW_H_INCLUDED
 #define LIBTAS_INPUTEDITORWINDOW_H_INCLUDED
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 #include "InputEditorView.h"
 #include "../Context.h"

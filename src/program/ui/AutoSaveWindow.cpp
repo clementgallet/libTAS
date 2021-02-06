@@ -17,12 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QDialogButtonBox>
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include <QLabel>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFormLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QDoubleSpinBox>
 
 #include "AutoSaveWindow.h"
 

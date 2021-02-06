@@ -20,8 +20,8 @@
 #ifndef LIBTAS_ANNOTATIONSWINDOW_H_INCLUDED
 #define LIBTAS_ANNOTATIONSWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QPlainTextEdit>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QPlainTextEdit>
 
 #include "../Context.h"
 #include "../movie/MovieFile.h"

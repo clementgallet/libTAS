@@ -20,7 +20,7 @@
 #ifndef LIBTAS_CONFIG_H_INCLUDED
 #define LIBTAS_CONFIG_H_INCLUDED
 
-#include <QString>
+#include <QtCore/QString>
 #include <string>
 #include <memory>
 #include <list>

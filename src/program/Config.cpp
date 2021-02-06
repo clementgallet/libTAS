@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QSettings>
+#include <QtCore/QSettings>
 #include "Config.h"
 #include <fcntl.h>
 #include <unistd.h> // access

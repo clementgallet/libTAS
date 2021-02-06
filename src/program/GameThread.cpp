@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QApplication>
+// #include <QtWidgets/QApplication>
 
 // #include "ui/MainWindow.h"
 

@@ -17,12 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QBrush>
-#include <QClipboard>
-#include <QGuiApplication>
-#include <QPalette>
-#include <QFont>
-#include <QThread>
+#include <QtGui/QBrush>
+#include <QtGui/QClipboard>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QPalette>
+#include <QtGui/QFont>
 #include <sstream>
 #include <iostream>
 #include <set>

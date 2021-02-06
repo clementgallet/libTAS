@@ -20,13 +20,12 @@
 #ifndef LIBTAS_KEYMAPPING_H_INCLUDED
 #define LIBTAS_KEYMAPPING_H_INCLUDED
 
-#include <QDataStream>
+#include <QtCore/QDataStream>
 #include "../shared/SingleInput.h"
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
-// #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <map>
 #include <vector>

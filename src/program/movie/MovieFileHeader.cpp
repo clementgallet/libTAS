@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QSettings>
+#include <QtCore/QSettings>
 
 #include "MovieFileHeader.h"
 #include "../../shared/version.h"

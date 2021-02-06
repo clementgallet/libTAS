@@ -20,14 +20,14 @@
 #ifndef LIBTAS_RAMSEARCHWINDOW_H_INCLUDED
 #define LIBTAS_RAMSEARCHWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QTableView>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QDoubleSpinBox>
-#include <QComboBox>
-#include <QProgressBar>
-#include <QLabel>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QRadioButton>
+#include <QtWidgets/QDoubleSpinBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QProgressBar>
+#include <QtWidgets/QLabel>
 #include <memory>
 
 #include "RamSearchModel.h"

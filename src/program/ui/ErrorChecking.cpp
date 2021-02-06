@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QMessageBox>
+#include <QtWidgets/QMessageBox>
 
 #include "ErrorChecking.h"
 #include "../utils.h"

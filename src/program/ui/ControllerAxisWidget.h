@@ -20,9 +20,9 @@
 #ifndef LIBTAS_CONTROLLERAXISWIDGET_H_INCLUDED
 #define LIBTAS_CONTROLLERAXISWIDGET_H_INCLUDED
 
-#include <QWidget>
-#include <QPaintEvent>
-#include <QMouseEvent>
+#include <QtWidgets/QWidget>
+#include <QtGui/QPaintEvent>
+#include <QtGui/QMouseEvent>
 
 class ControllerAxisWidget : public QWidget {
     Q_OBJECT

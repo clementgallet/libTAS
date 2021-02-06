@@ -20,10 +20,10 @@
 #ifndef LIBTAS_EXECUTABLEWINDOW_H_INCLUDED
 #define LIBTAS_EXECUTABLEWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QGroupBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QGroupBox>
 
 #include "../Context.h"
 

@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QSettings>
-#include <QString>
+#include <QtCore/QSettings>
+#include <QtCore/QString>
 #include <string>
 
 #include "MovieFileEditor.h"

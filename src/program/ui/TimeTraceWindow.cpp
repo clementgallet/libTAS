@@ -17,14 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QTableView>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QVBoxLayout>
-#include <QGroupBox>
-#include <QFormLayout>
-#include <QHeaderView>
-#include <QMessageBox>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QFormLayout>
+#include <QtWidgets/QHeaderView>
+#include <QtWidgets/QMessageBox>
 
 #include "TimeTraceWindow.h"
 // #include "MainWindow.h"

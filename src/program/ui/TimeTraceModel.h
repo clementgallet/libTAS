@@ -20,7 +20,7 @@
 #ifndef LIBTAS_TIMETRACEMODEL_H_INCLUDED
 #define LIBTAS_TIMETRACEMODEL_H_INCLUDED
 
-#include <QAbstractTableModel>
+#include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <map>
 // #include <pair>

@@ -20,10 +20,10 @@
 #ifndef LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 #define LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QSlider>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QSlider>
 
 #include "ControllerWidget.h"
 #include "../Context.h"

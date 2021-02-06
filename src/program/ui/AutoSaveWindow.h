@@ -20,10 +20,10 @@
 #ifndef LIBTAS_AUTOSAVEWINDOW_H_INCLUDED
 #define LIBTAS_AUTOSAVEWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QGroupBox>
-#include <QDoubleSpinBox>
-#include <QSpinBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QDoubleSpinBox>
+#include <QtWidgets/QSpinBox>
 
 #include "../Context.h"
 

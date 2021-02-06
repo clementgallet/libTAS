@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QPainter>
+#include <QtGui/QPainter>
 #include <cstdint>
 #include <iostream>
 

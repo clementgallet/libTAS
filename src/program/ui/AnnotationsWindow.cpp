@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QDialogButtonBox>
-#include <QVBoxLayout>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QVBoxLayout>
 
 #include "AnnotationsWindow.h"
 #include "MainWindow.h"

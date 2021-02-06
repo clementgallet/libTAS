@@ -20,7 +20,7 @@
 #ifndef LIBTAS_GAMELOOP_H_INCLUDED
 #define LIBTAS_GAMELOOP_H_INCLUDED
 
-#include <QObject>
+#include <QtCore/QObject>
 #include <memory>
 
 #include "Context.h"

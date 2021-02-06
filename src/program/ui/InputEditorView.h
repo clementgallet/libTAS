@@ -20,8 +20,8 @@
 #ifndef LIBTAS_INPUTEDITORVIEW_H_INCLUDED
 #define LIBTAS_INPUTEDITORVIEW_H_INCLUDED
 
-#include <QTableView>
-#include <QMenu>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QMenu>
 
 #include "InputEditorModel.h"
 #include "../Context.h"

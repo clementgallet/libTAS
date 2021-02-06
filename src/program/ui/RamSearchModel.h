@@ -20,7 +20,7 @@
 #ifndef LIBTAS_RAMSEARCHMODEL_H_INCLUDED
 #define LIBTAS_RAMSEARCHMODEL_H_INCLUDED
 
-#include <QAbstractTableModel>
+#include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <memory>
 #include <sys/types.h>

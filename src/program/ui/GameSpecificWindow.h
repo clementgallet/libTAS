@@ -20,11 +20,11 @@
 #ifndef LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
 #define LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QCheckBox>
 
 #include "../Context.h"
 

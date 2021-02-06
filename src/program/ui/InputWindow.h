@@ -20,9 +20,9 @@
 #ifndef LIBTAS_INPUTWINDOW_H_INCLUDED
 #define LIBTAS_INPUTWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QPushButton>
-#include <QTableWidget>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QTableWidget>
 
 #include "../Context.h"
 #include "KeyPressedDialog.h"

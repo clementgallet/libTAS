@@ -20,8 +20,8 @@
 #ifndef LIBTAS_OSDWINDOW_H_INCLUDED
 #define LIBTAS_OSDWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QComboBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QComboBox>
 
 #include "../Context.h"
 

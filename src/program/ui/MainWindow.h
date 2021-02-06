@@ -20,17 +20,17 @@
 #ifndef LIBTAS_MAINWINDOW_H_INCLUDED
 #define LIBTAS_MAINWINDOW_H_INCLUDED
 
-#include <QMainWindow>
-#include <QActionGroup>
-#include <QAction>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QRadioButton>
-#include <QSpinBox>
-#include <QLabel>
-#include <QCheckBox>
-#include <QGroupBox>
-#include <QComboBox>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QActionGroup>
+#include <QtWidgets/QAction>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QRadioButton>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QComboBox>
 #include <forward_list>
 #include <string>
 

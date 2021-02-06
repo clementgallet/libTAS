@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QFormLayout>
+#include <QtWidgets/QFormLayout>
 #include "GameInfoWindow.h"
 #include "MainWindow.h"
 

@@ -20,11 +20,11 @@
 #ifndef LIBTAS_TIMETRACEWINDOW_H_INCLUDED
 #define LIBTAS_TIMETRACEWINDOW_H_INCLUDED
 
-#include <QDialog>
-#include <QTableView>
-#include <QPlainTextEdit>
-#include <QSortFilterProxyModel>
-#include <QItemSelection>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtCore/QSortFilterProxyModel>
+#include <QtCore/QItemSelection>
 #include <memory>
 
 #include "TimeTraceModel.h"
