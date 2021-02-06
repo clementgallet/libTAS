@@ -599,7 +599,8 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 
             if (value == 0) {
                 /* Unbind buffer from source */
-                as->init();
+                as->source = AudioSource::SOURCE_UNDETERMINED;
+                as->buffer_queue.clear();
                 debuglogstdio(LCF_SOUND, "  Unbind buffer");
             }
             else {
@@ -608,7 +609,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
                     alSetError(AL_INVALID_VALUE);
                     return;
                 }
-                as->init();
+                as->buffer_queue.clear();
                 as->buffer_queue.push_back(ab);
                 as->source = AudioSource::SOURCE_STATIC;
                 debuglogstdio(LCF_SOUND, "  Bind to buffer %d", value);
