@@ -24,6 +24,8 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 
+#include <string.h>
+
 #define STORE_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \

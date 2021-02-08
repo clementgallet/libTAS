@@ -31,6 +31,7 @@ in this Software without prior written authorization from The Open Group.
 
 // #include <X11/Xfuncproto.h>
 // #include <X11/extensions/shm.h>
+#include <X11/Xlib.h>
 
 #ifndef _XSHM_SERVER_
 typedef unsigned long ShmSeg;

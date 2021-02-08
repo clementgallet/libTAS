@@ -23,6 +23,8 @@
 #include "../hook.h"
 #include "XcbEventQueueList.h"
 #include "../xlib/xatom.h"
+#include "xcbconnection.h" // x11::gameConnections
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 #ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>
@@ -75,8 +77,8 @@ void pushNativeXcbEvents(void)
     }
 
     for (int i=0; i<GAMECONNECTIONNUM; i++)
-        if (gameConnections[i])
-            pushNativeXcbEvents(gameConnections[i]);
+        if (x11::gameConnections[i])
+            pushNativeXcbEvents(x11::gameConnections[i]);
 }
 
 void pushNativeXcbEvents(xcb_connection_t *c)
@@ -211,7 +213,7 @@ xcb_send_event_checked (xcb_connection_t *c,
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!gameXWindows.empty() && (client_event->window != gameXWindows.front())) {
+                if (!x11::gameXWindows.empty() && (client_event->window != x11::gameXWindows.front())) {
                     debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 
@@ -278,7 +280,7 @@ xcb_send_event (xcb_connection_t *c,
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!gameXWindows.empty() && (client_event->window != gameXWindows.front())) {
+                if (!x11::gameXWindows.empty() && (client_event->window != x11::gameXWindows.front())) {
                     debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 

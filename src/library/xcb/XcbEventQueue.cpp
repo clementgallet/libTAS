@@ -23,6 +23,7 @@
 #include "../inputs/inputs.h"
 #include "../xlib/XlibEventQueueList.h"
 #include "../xlib/XlibEventQueue.h"
+#include "../xlib/xdisplay.h" // x11::gameDisplays
 
 namespace libtas {
 
@@ -60,8 +61,8 @@ void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
     /* TODO: Until we merge Xlib and xcb event queues, a hack to propagate the
      * event mask from xcb to Xlib. */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i])
-            xlibEventQueueList.getQueue(gameDisplays[i])->setMask(wid, event_mask);
+        if (x11::gameDisplays[i])
+            xlibEventQueueList.getQueue(x11::gameDisplays[i])->setMask(wid, event_mask);
     }
 }
 

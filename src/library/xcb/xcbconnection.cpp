@@ -27,6 +27,8 @@ namespace libtas {
 DEFINE_ORIG_POINTER(xcb_connect)
 DEFINE_ORIG_POINTER(xcb_disconnect)
 
+xcb_connection_t* x11::gameConnections[GAMECONNECTIONNUM] = {};
+
 xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 {
     DEBUGLOGCALL(LCF_WINDOW);
@@ -36,8 +38,8 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 
     int i;
     for (i=0; i<GAMECONNECTIONNUM; i++) {
-        if (!gameConnections[i]) {
-            gameConnections[i] = c;
+        if (!x11::gameConnections[i]) {
+            x11::gameConnections[i] = c;
             break;
         }
     }
@@ -60,8 +62,8 @@ void xcb_disconnect(xcb_connection_t *c)
     LINK_NAMESPACE_GLOBAL(xcb_disconnect);
 
     for (int i=0; i<GAMECONNECTIONNUM; i++) {
-        if (gameConnections[i] == c) {
-            gameConnections[i] = nullptr;
+        if (x11::gameConnections[i] == c) {
+            x11::gameConnections[i] = nullptr;
             break;
         }
     }

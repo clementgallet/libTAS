@@ -46,6 +46,7 @@
 #include "SaveState.h"
 #include "../../external/lz4.h"
 #include "../../shared/sockethelpers.h"
+#include "../xlib/xdisplay.h" // x11::gameDisplays
 
 #define ONE_MB 1024 * 1024
 
@@ -261,7 +262,7 @@ void Checkpoint::handler(int signum)
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
      */
-    Display *display = gameDisplays[0];
+    Display *display = x11::gameDisplays[0];
     if ((&display < ReservedMemory::getAddr(0)) ||
         (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
@@ -270,8 +271,8 @@ void Checkpoint::handler(int signum)
 
     /* Sync all X server connections */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i])
-            NATIVECALL(XSync(gameDisplays[i], false));
+        if (x11::gameDisplays[i])
+            NATIVECALL(XSync(x11::gameDisplays[i], false));
     }
 
     if (SaveStateManager::isLoading()) {
@@ -285,17 +286,17 @@ void Checkpoint::handler(int signum)
         xcb_connection_t xcb_conn[GAMEDISPLAYNUM];
 
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (gameDisplays[i]) {
+            if (x11::gameDisplays[i]) {
 #ifdef X_DPY_GET_LAST_REQUEST_READ
-                last_request_read[i] = X_DPY_GET_LAST_REQUEST_READ(gameDisplays[i]);
-                request[i] = X_DPY_GET_REQUEST(gameDisplays[i]);
+                last_request_read[i] = X_DPY_GET_LAST_REQUEST_READ(x11::gameDisplays[i]);
+                request[i] = X_DPY_GET_REQUEST(x11::gameDisplays[i]);
 #else
-                last_request_read[i] = static_cast<uint64_t>(gameDisplays[i]->last_request_read);
-                request[i] = static_cast<uint64_t>(gameDisplays[i]->request);
+                last_request_read[i] = static_cast<uint64_t>(x11::gameDisplays[i]->last_request_read);
+                request[i] = static_cast<uint64_t>(x11::gameDisplays[i]->request);
 #endif
 
                 /* Copy the entire xcb connection struct */
-                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(gameDisplays[i]);
+                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(x11::gameDisplays[i]);
                 memcpy(&xcb_conn[i], cur_xcb_conn, sizeof(xcb_connection_t));
             }
         }
@@ -312,17 +313,17 @@ void Checkpoint::handler(int signum)
 
         /* Restoring the display values */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (gameDisplays[i]) {
+            if (x11::gameDisplays[i]) {
 #ifdef X_DPY_SET_LAST_REQUEST_READ
-                X_DPY_SET_LAST_REQUEST_READ(gameDisplays[i], last_request_read[i]);
-                X_DPY_SET_REQUEST(gameDisplays[i], request[i]);
+                X_DPY_SET_LAST_REQUEST_READ(x11::gameDisplays[i], last_request_read[i]);
+                X_DPY_SET_REQUEST(x11::gameDisplays[i], request[i]);
 #else
                 gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
                 gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
 #endif
 
                 /* Restore the entire xcb connection struct */
-                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(gameDisplays[i]);
+                xcb_connection_t *cur_xcb_conn = XGetXCBConnection(x11::gameDisplays[i]);
                 memcpy(cur_xcb_conn, &xcb_conn[i], sizeof(xcb_connection_t));
             }
         }

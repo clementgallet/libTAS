@@ -40,9 +40,11 @@
 #include "WindowTitle.h"
 #include "sdl/SDLEventQueue.h"
 #include "xlib/xevents.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xcb/xcbevents.h"
 #include "xlib/xatom.h"
 #include "xlib/XlibEventQueueList.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
 #include "BusyLoopDetection.h"
 #include "audio/AudioContext.h"
 
@@ -539,22 +541,22 @@ static void pushQuitEvent(void)
     }
 
     else {
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             return;
 
         GlobalNoLog gnl;
         XEvent xev;
         xev.xclient.type = ClientMessage;
-        xev.xclient.window = gameXWindows.front();
+        xev.xclient.window = x11::gameXWindows.front();
         xev.xclient.format = 32;
         xev.xclient.data.l[1] = CurrentTime;
 
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (gameDisplays[i]) {
+            if (x11::gameDisplays[i]) {
                 xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
                 xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
-                NATIVECALL(XSendEvent(gameDisplays[i], gameXWindows.front(), False, NoEventMask, &xev));
-                NATIVECALL(XSync(gameDisplays[i], false));
+                NATIVECALL(XSendEvent(x11::gameDisplays[i], x11::gameXWindows.front(), False, NoEventMask, &xev));
+                NATIVECALL(XSync(x11::gameDisplays[i], false));
             }
         }
     }

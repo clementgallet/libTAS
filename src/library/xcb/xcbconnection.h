@@ -25,6 +25,12 @@
 
 namespace libtas {
 
+#define GAMECONNECTIONNUM 10
+namespace x11 {
+    /* xcb connections to the X server */
+    extern xcb_connection_t* gameConnections[GAMECONNECTIONNUM];
+}
+
 OVERRIDE xcb_connection_t *xcb_connect(const char *displayname, int *screenp);
 OVERRIDE void xcb_disconnect(xcb_connection_t *c);
 

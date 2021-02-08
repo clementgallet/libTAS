@@ -21,6 +21,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include <sys/mman.h>
+#include <string.h>
 
 namespace libtas {
 

@@ -27,6 +27,11 @@
 
 namespace libtas {
 
+namespace x11 {
+    /* XImage to render */
+    extern XImage* gameXImage;    
+}
+
 OVERRIDE Bool XShmPutImage(
     Display*        /* dpy */,
     Drawable        /* d */,

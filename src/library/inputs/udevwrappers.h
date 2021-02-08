@@ -21,6 +21,7 @@
 #define LIBTAS_UDEV_H_INCLUDED
 
 #include "../global.h"
+#include <sys/types.h>
 
 struct udev;
 struct udev_list_entry;

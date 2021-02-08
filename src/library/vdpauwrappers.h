@@ -28,6 +28,14 @@
 
 namespace libtas {
 
+namespace vdp {
+    /* VDPAU device */
+    extern VdpDevice vdpDevice;
+
+    /* VDPAU output surface */
+    extern VdpOutputSurface vdpSurface;
+}
+
 OVERRIDE int vdp_device_create_x11(Display *display, int screen, VdpDevice *device, VdpGetProcAddress **get_proc_address);
 
 /* Functions used by RenderHUD_VDPAU */

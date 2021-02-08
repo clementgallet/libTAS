@@ -25,6 +25,7 @@
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
 #include "../hook.h"
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
@@ -55,7 +56,7 @@ DEFINE_ORIG_POINTER(xcb_warp_pointer)
     // reply->root = ; TODO
     reply->root_x = game_ai.pointer_x;
     reply->root_y = game_ai.pointer_y;
-    reply->child = gameXWindows.front();
+    reply->child = x11::gameXWindows.front();
     reply->win_x = game_ai.pointer_x;
     reply->win_y = game_ai.pointer_y;
     reply->mask = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -81,7 +82,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
-    if (!gameXWindows.empty()) {
+    if (!x11::gameXWindows.empty()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -98,7 +99,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         }
         event.root_x = event.event_x;
         event.root_y = event.event_y;
-        event.event = gameXWindows.front();
+        event.event = x11::gameXWindows.front();
 
         struct timespec time = detTimer.getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -159,7 +160,7 @@ xcb_warp_pointer (xcb_connection_t *c,
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
-    if (!gameXWindows.empty()) {
+    if (!x11::gameXWindows.empty()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -176,7 +177,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         }
         event.root_x = event.event_x;
         event.root_y = event.event_y;
-        event.event = gameXWindows.front();
+        event.event = x11::gameXWindows.front();
 
         struct timespec time = detTimer.getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;

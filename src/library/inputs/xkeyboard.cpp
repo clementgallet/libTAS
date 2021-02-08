@@ -23,6 +23,7 @@
 #include "xkeyboardlayout.h"
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
@@ -77,8 +78,8 @@ namespace libtas {
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
     /* Returing the game Xlib window */
-    if (focus_return && !gameXWindows.empty()) {
-        *focus_return = gameXWindows.front();
+    if (focus_return && !x11::gameXWindows.empty()) {
+        *focus_return = x11::gameXWindows.front();
     }
     return 0;
 }

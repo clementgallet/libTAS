@@ -30,6 +30,8 @@ DEFINE_ORIG_POINTER(XCloseDisplay)
 DEFINE_ORIG_POINTER(XDisplayHeight)
 DEFINE_ORIG_POINTER(XDisplayWidth)
 
+Display* x11::gameDisplays[GAMEDISPLAYNUM] = {};
+
 Display *XOpenDisplay(const char *display_name)
 {
     DEBUGLOGCALL(LCF_WINDOW);
@@ -39,8 +41,8 @@ Display *XOpenDisplay(const char *display_name)
 
     int i;
     for (i=0; i<GAMEDISPLAYNUM; i++) {
-        if (!gameDisplays[i]) {
-            gameDisplays[i] = display;
+        if (!x11::gameDisplays[i]) {
+            x11::gameDisplays[i] = display;
             break;
         }
     }
@@ -63,8 +65,8 @@ int XCloseDisplay(Display *display)
     LINK_NAMESPACE_GLOBAL(XCloseDisplay);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i] == display) {
-            gameDisplays[i] = nullptr;
+        if (x11::gameDisplays[i] == display) {
+            x11::gameDisplays[i] = nullptr;
             break;
         }
     }

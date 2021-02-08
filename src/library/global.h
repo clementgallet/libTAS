@@ -22,11 +22,6 @@
 
 #include "../shared/SharedConfig.h"
 #include "../shared/GameInfo.h"
-#include <X11/Xlib.h>
-#include <xcb/xcb.h>
-#include <SDL2/SDL.h>
-#include <string>
-#include <list>
 
 /* Include this file in every source code that override functions of the game */
 
@@ -35,9 +30,6 @@
 #else
     #define OVERRIDE extern "C"
 #endif
-
-#define GAMEDISPLAYNUM 10
-#define GAMECONNECTIONNUM 10
 
 namespace libtas {
 
@@ -55,30 +47,6 @@ namespace libtas {
 
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
-
-    /* Xlib connections to the X server */
-    extern Display* gameDisplays[GAMEDISPLAYNUM];
-
-    /* xcb connections to the X server */
-    extern xcb_connection_t* gameConnections[GAMEDISPLAYNUM];
-
-    /* Game window (we suppose there is only one) */
-    extern std::list<Window> gameXWindows;
-
-    /* Root window */
-    extern Window rootWindow;
-
-    /* SDL2 game window (we suppose there is only one) */
-    extern SDL_Window* gameSDLWindow;
-
-    /* VDPAU device */
-    extern unsigned int vdpDevice;
-
-    /* VDPAU output surface */
-    extern unsigned int vdpSurface;
-
-    /* XImage to render */
-    extern XImage* gameXImage;
 
     /* Should we perform a backtrack savestate? */
     extern bool saveBacktrack;

@@ -29,6 +29,7 @@
 #include <sstream>
 #include "GlobalState.h"
 #include <cstdio>
+#include <string.h>
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c

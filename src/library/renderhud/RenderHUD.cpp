@@ -27,6 +27,7 @@
 #include <fontconfig/fontconfig.h>
 // #include <X11/keysym.h>
 #include "../ScreenCapture.h"
+#include <X11/Xlib.h> // XKeysymToString
 
 namespace libtas {
 

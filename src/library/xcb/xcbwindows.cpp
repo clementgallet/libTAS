@@ -25,6 +25,7 @@
 #include "../ScreenCapture.h"
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
@@ -89,9 +90,9 @@ xcb_create_window_checked (xcb_connection_t *c,
 
     if (s->root == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
-        gameXWindows.push_back(wid);
+        x11::gameXWindows.push_back(wid);
     }
 
     return ret;
@@ -146,9 +147,9 @@ xcb_create_window (xcb_connection_t *c,
 
     if (s->root == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
-        gameXWindows.push_back(wid);
+        x11::gameXWindows.push_back(wid);
     }
 
     return ret;
@@ -185,9 +186,9 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
 
     if (s->root == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
-        gameXWindows.push_back(wid);
+        x11::gameXWindows.push_back(wid);
     }
 
     return ret;
@@ -223,9 +224,9 @@ xcb_create_window_aux (xcb_connection_t                     *c,
 
     if (s->root == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", wid);
-        gameXWindows.push_back(wid);
+        x11::gameXWindows.push_back(wid);
     }
 
     return ret;
@@ -247,26 +248,26 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window_checked);
 
     /* If current game window, switch to another one on the list */
-    if (!gameXWindows.empty() && window == gameXWindows.front()) {
+    if (!x11::gameXWindows.empty() && window == x11::gameXWindows.front()) {
         ScreenCapture::fini();
 
-        gameXWindows.pop_front();
-        if (gameXWindows.empty()) {
+        x11::gameXWindows.pop_front();
+        if (x11::gameXWindows.empty()) {
             /* Tells the program we don't have a window anymore to gather inputs */
             sendXWindow(0);
         }
         else {
             /* Switch to the next game window */
-            debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
-            sendXWindow(gameXWindows.front());
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
+            sendXWindow(x11::gameXWindows.front());
             ScreenCapture::init();
         }
     }
     else {
         /* If another game window, remove it from the list */
-        for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
             if (window == *iter) {
-                gameXWindows.erase(iter);
+                x11::gameXWindows.erase(iter);
                 break;
             }
         }
@@ -281,26 +282,26 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window);
 
     /* If current game window, switch to another one on the list */
-    if (!gameXWindows.empty() && window == gameXWindows.front()) {
+    if (!x11::gameXWindows.empty() && window == x11::gameXWindows.front()) {
         ScreenCapture::fini();
 
-        gameXWindows.pop_front();
-        if (gameXWindows.empty()) {
+        x11::gameXWindows.pop_front();
+        if (x11::gameXWindows.empty()) {
             /* Tells the program we don't have a window anymore to gather inputs */
             sendXWindow(0);
         }
         else {
             /* Switch to the next game window */
-            debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
-            sendXWindow(gameXWindows.front());
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
+            sendXWindow(x11::gameXWindows.front());
             ScreenCapture::init();
         }
     }
     else {
         /* If another game window, remove it from the list */
-        for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
             if (window == *iter) {
-                gameXWindows.erase(iter);
+                x11::gameXWindows.erase(iter);
                 break;
             }
         }
@@ -316,11 +317,11 @@ xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t wind
     xcb_void_cookie_t ret = orig::xcb_map_window_checked(c, window);
 
     /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of gameXWindows to see if we must send it */
-    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+     * We are checking the content of x11::gameXWindows to see if we must send it */
+    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
         if (window == *iter) {
-            gameXWindows.erase(iter);
-            gameXWindows.push_front(window);
+            x11::gameXWindows.erase(iter);
+            x11::gameXWindows.push_front(window);
             sendXWindow(window);
             break;
         }
@@ -336,11 +337,11 @@ xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
     xcb_void_cookie_t ret = orig::xcb_map_window(c, window);
 
     /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of gameXWindows to see if we must send it */
-    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+     * We are checking the content of x11::gameXWindows to see if we must send it */
+    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
         if (window == *iter) {
-            gameXWindows.erase(iter);
-            gameXWindows.push_front(window);
+            x11::gameXWindows.erase(iter);
+            x11::gameXWindows.push_front(window);
             sendXWindow(window);
             break;
         }

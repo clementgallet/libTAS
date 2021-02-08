@@ -99,7 +99,7 @@ int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
      */
-    SDL_SetWindowSize(gameSDLWindow, w, h);
+    SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
     logical_w = w;
     logical_h = h;
 

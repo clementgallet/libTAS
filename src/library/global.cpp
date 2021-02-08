@@ -26,14 +26,6 @@ GameInfo game_info;
 volatile bool is_exiting = false;
 volatile bool is_fork = false;
 bool skipping_draw = false;
-Display* gameDisplays[GAMEDISPLAYNUM] = {};
-xcb_connection_t* gameConnections[GAMEDISPLAYNUM] = {};
-std::list<Window> gameXWindows;
-Window rootWindow;
-SDL_Window* gameSDLWindow = nullptr;
-unsigned int vdpDevice = 0;
-unsigned int vdpSurface = 0;
-XImage* gameXImage = nullptr;
 bool saveBacktrack = false;
 
 }

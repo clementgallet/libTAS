@@ -39,7 +39,10 @@
 #include "xinput.h"
 #include "../xlib/XlibEventQueueList.h"
 #include "../xcb/XcbEventQueueList.h"
+#include "../xcb/xcbconnection.h" // x11::gameConnections
 #include "../xlib/xevents.h"
+#include "../xlib/xdisplay.h" // x11::gameDisplays
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 #include <stdlib.h>
 #include <SDL2/SDL.h>
@@ -107,48 +110,48 @@ void generateKeyUpEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
-            if ((game_info.keyboard & GameInfo::XEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyRelease;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = gameXWindows.front();
+                event.xkey.window = x11::gameXWindows.front();
                 event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
                 event.xkey.same_screen = 1;
                 event.xkey.send_event = 0;
                 event.xkey.subwindow = 0;
-                event.xkey.root = rootWindow;
+                event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        event.xkey.root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueueList.insert(gameDisplays[d], &event);
+                    if (x11::gameDisplays[d]) {
+                        event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
+                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
                     }
                 }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode ", event.xkey.keycode);
             }
 
-            if ((game_info.keyboard & GameInfo::XCBEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
                 xcb_key_release_event_t event;
                 event.response_type = XCB_KEY_RELEASE;
                 event.state = 0; // TODO: Do we have to set the key modifiers?
-                event.event = gameXWindows.front();
+                event.event = x11::gameXWindows.front();
                 event.time = timestamp; // TODO: Wrong! timestamp is from X server start
                 event.same_screen = 1;
                 event.child = 0;
-                event.root = rootWindow;
+                event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
-                    if (gameConnections[c]) {
-                        // event.root = XRootWindow(gameConnections[c], 0);
-                        xcbEventQueueList.insert(gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
+                    if (x11::gameConnections[c]) {
+                        // event.root = XRootWindow(x11::gameConnections[c], 0);
+                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
                     }
                 }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_RELEASE with keycode ", event.detail);
             }
 
-            if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -156,13 +159,13 @@ void generateKeyUpEvents(void)
                 event.xcookie.evtype = XI_KeyRelease;
                 event.xcookie.data = dev;
                 dev->evtype = XI_KeyRelease;
-                dev->event = gameXWindows.front();
+                dev->event = x11::gameXWindows.front();
                 dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueueList.insert(gameDisplays[d], &event);
+                    if (x11::gameDisplays[d]) {
+                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
                     }
                 }
 
@@ -264,48 +267,48 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
-            if ((game_info.keyboard & GameInfo::XEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyPress;
                 event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = gameXWindows.front();
+                event.xkey.window = x11::gameXWindows.front();
                 event.xkey.time = timestamp;
                 event.xkey.same_screen = 1;
                 event.xkey.send_event = 0;
                 event.xkey.subwindow = 0;
-                event.xkey.root = rootWindow;
+                event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        event.xkey.root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueueList.insert(gameDisplays[d], &event);
+                    if (x11::gameDisplays[d]) {
+                        event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
+                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
                     }
                 }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode ", event.xkey.keycode);
             }
 
-            if ((game_info.keyboard & GameInfo::XCBEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
                 xcb_key_press_event_t event;
                 event.response_type = XCB_KEY_PRESS;
                 event.state = 0; // TODO: Do we have to set the key modifiers?
-                event.event = gameXWindows.front();
+                event.event = x11::gameXWindows.front();
                 event.time = timestamp; // TODO: Wrong! timestamp is from X server start
                 event.same_screen = 1;
                 event.child = 0;
-                event.root = rootWindow;
+                event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
-                    if (gameConnections[c]) {
-                        // event.root = XRootWindow(gameConnections[c], 0);
-                        xcbEventQueueList.insert(gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
+                    if (x11::gameConnections[c]) {
+                        // event.root = XRootWindow(x11::gameConnections[c], 0);
+                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
                     }
                 }
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_PRESS with keycode ", event.detail);
             }
 
-            if ((game_info.keyboard & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -313,13 +316,13 @@ void generateKeyDownEvents(void)
                 event.xcookie.evtype = XI_KeyPress;
                 event.xcookie.data = dev;
                 dev->evtype = XI_KeyPress;
-                dev->event = gameXWindows.front();
+                dev->event = x11::gameXWindows.front();
                 dev->time = timestamp;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueueList.insert(gameDisplays[d], &event);
+                    if (x11::gameDisplays[d]) {
+                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
                     }
                 }
 
@@ -799,7 +802,7 @@ void generateMouseMotionEvents(void)
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEMOTION with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
     }
 
-    if ((game_info.mouse & GameInfo::XEVENTS) && !gameXWindows.empty()) {
+    if ((game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -810,18 +813,19 @@ void generateMouseMotionEvents(void)
         if (pointer_grab_window != None)
             event.xmotion.window = pointer_grab_window;
         else
-            event.xmotion.window = gameXWindows.front();
+            event.xmotion.window = x11::gameXWindows.front();
         event.xmotion.send_event = 0;
         event.xmotion.subwindow = 0;
-        event.xmotion.root = rootWindow;
-        event.xmotion.same_screen = 0;
+        event.xmotion.root = x11::rootWindow;
+        event.xmotion.same_screen = 1;
         event.xmotion.time = timestamp;
+        event.xmotion.is_hint = 0;
 
         xlibEventQueueList.insert(&event);
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
     }
 
-    if ((game_info.mouse & GameInfo::XCBEVENTS) && !gameXWindows.empty()) {
+    if ((game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -829,17 +833,17 @@ void generateMouseMotionEvents(void)
         event.event_y = game_ai.pointer_y;
         event.root_x = game_ai.pointer_x;
         event.root_y = game_ai.pointer_y;
-        event.event = gameXWindows.front();
+        event.event = x11::gameXWindows.front();
         event.time = timestamp;
         event.same_screen = 1;
         event.child = 0;
-        event.root = rootWindow;
+        event.root = x11::rootWindow;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
     }
 
-    if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
+    if ((game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
@@ -847,7 +851,7 @@ void generateMouseMotionEvents(void)
         event.xcookie.evtype = XI_Motion;
         event.xcookie.data = dev;
         dev->evtype = XI_Motion;
-        dev->event = gameXWindows.front();
+        dev->event = x11::gameXWindows.front();
         dev->time = timestamp;
         dev->event_x = game_ai.pointer_x;
         dev->event_y = game_ai.pointer_y;
@@ -855,9 +859,9 @@ void generateMouseMotionEvents(void)
         dev->root_y = dev->event_y;
         dev->detail = 0;
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
-            if (gameDisplays[d]) {
-                dev->root = XRootWindow(gameDisplays[d], 0);
-                xlibEventQueueList.insert(gameDisplays[d], &event);
+            if (x11::gameDisplays[d]) {
+                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                xlibEventQueueList.insert(x11::gameDisplays[d], &event);
             }
         }
 
@@ -920,7 +924,7 @@ void generateMouseButtonEvents(void)
                 sdlEventQueue.insert(&event1);
             }
 
-            if ((game_info.mouse & GameInfo::XEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 if (game_ai.pointer_mask & (1 << buttons[bi])) {
                     event.xbutton.type = ButtonPress;
@@ -939,16 +943,16 @@ void generateMouseButtonEvents(void)
                 if (pointer_grab_window != None)
                     event.xbutton.window = pointer_grab_window;
                 else
-                    event.xbutton.window = gameXWindows.front();
+                    event.xbutton.window = x11::gameXWindows.front();
                 event.xbutton.same_screen = 1;
                 event.xbutton.send_event = 0;
                 event.xbutton.subwindow = 0;
-                event.xbutton.root = rootWindow;
+                event.xbutton.root = x11::rootWindow;
 
                 xlibEventQueueList.insert(&event);
             }
 
-            if ((game_info.mouse & GameInfo::XCBEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
                 xcb_button_press_event_t event; // same as xcb_button_release_event_t
                 if (game_ai.pointer_mask & (1 << buttons[bi])) {
                     event.response_type = XCB_BUTTON_PRESS;
@@ -964,15 +968,15 @@ void generateMouseButtonEvents(void)
                 event.root_x = game_ai.pointer_x;
                 event.root_y = game_ai.pointer_y;
                 event.detail = SingleInput::toXlibPointerButton(buttons[bi]);
-                event.event = gameXWindows.front();
+                event.event = x11::gameXWindows.front();
                 event.same_screen = 1;
                 event.child = 0;
-                event.root = rootWindow;
+                event.root = x11::rootWindow;
 
                 xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
             }
 
-            if ((game_info.mouse & GameInfo::XIEVENTS) && !gameXWindows.empty()) {
+            if ((game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
                 event.xcookie.type = GenericEvent;
@@ -988,7 +992,7 @@ void generateMouseButtonEvents(void)
                     dev->evtype = XI_ButtonRelease;
                 }
                 event.xcookie.data = dev;
-                dev->event = gameXWindows.front();
+                dev->event = x11::gameXWindows.front();
                 dev->time = timestamp;
                 dev->event_x = game_ai.pointer_x;
                 dev->event_y = game_ai.pointer_y;
@@ -1003,9 +1007,9 @@ void generateMouseButtonEvents(void)
                     }
                 }
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (gameDisplays[d]) {
-                        dev->root = XRootWindow(gameDisplays[d], 0);
-                        xlibEventQueueList.insert(gameDisplays[d], &event);
+                    if (x11::gameDisplays[d]) {
+                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
                     }
                 }
             }

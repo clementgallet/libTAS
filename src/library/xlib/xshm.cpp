@@ -29,10 +29,13 @@
 // #include "../backtrace.h"
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
+#include "xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XShmPutImage)
+
+XImage* x11::gameXImage = nullptr;
 
 OVERRIDE Bool XShmPutImage(
     Display*        dpy,
@@ -62,19 +65,19 @@ OVERRIDE Bool XShmPutImage(
     game_info.video |= GameInfo::XSHM;
     game_info.tosend = true;
 
-    gameXImage = image;
+    x11::gameXImage = image;
 
     /* Set the game window to that window */
-    if (gameXWindows.empty() || gameXWindows.front() != d) {
+    if (x11::gameXWindows.empty() || x11::gameXWindows.front() != d) {
         /* Remove window from the list if it is already present */
-        for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
             if (d == *iter) {
-                gameXWindows.erase(iter);
+                x11::gameXWindows.erase(iter);
                 break;
             }
         }
 
-        gameXWindows.push_front(d);
+        x11::gameXWindows.push_front(d);
         uint32_t i = static_cast<uint32_t>(d);
         lockSocket();
         sendMessage(MSGB_WINDOW_ID);

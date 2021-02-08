@@ -21,6 +21,7 @@
 #define LIBTAS_XKEYBOARDLAYOUT_H_INCL
 
 #include <X11/X.h>
+#include <X11/Xlib.h>
 
 #include "../global.h"
 

@@ -24,6 +24,10 @@
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
 #include "encoding/AVEncoder.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/xshm.h" // x11::gameXImage
+#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 
 #include <SDL2/SDL.h>
 #include <vector>
@@ -155,7 +159,7 @@ int ScreenCapture::init()
     }
 
     /* Don't initialize if window is not registered */
-    if (gameXWindows.empty())
+    if (x11::gameXWindows.empty())
         return 0;
 
     /* Get the window dimensions */
@@ -164,8 +168,8 @@ int ScreenCapture::init()
     int x, y;
     Window root;
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (gameDisplays[i]) {
-            orig::XGetGeometry(gameDisplays[i], gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
+        if (x11::gameDisplays[i]) {
+            orig::XGetGeometry(x11::gameDisplays[i], x11::gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
             break;
         }
     }
@@ -182,7 +186,7 @@ int ScreenCapture::init()
     if (game_info.video & GameInfo::VDPAU) {
         VdpRGBAFormat rgba_format;
         unsigned int uw, uh;
-        orig::VdpOutputSurfaceGetParameters(vdpSurface, &rgba_format, &uw, &uh);
+        orig::VdpOutputSurfaceGetParameters(vdp::vdpSurface, &rgba_format, &uw, &uh);
         if (rgba_format == VDP_RGBA_FORMAT_A8) {
             pixelSize = 1;
         }
@@ -195,7 +199,7 @@ int ScreenCapture::init()
     }
     else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         pixelSize = sdlpixfmt & 0xFF;
     }
     else if (game_info.video & GameInfo::OPENGL) {
@@ -210,10 +214,10 @@ int ScreenCapture::init()
         pixelSize = surf->format->BytesPerPixel;
     }
     else if (game_info.video & GameInfo::XSHM) {
-        pixelSize = gameXImage->bits_per_pixel / 8;
+        pixelSize = x11::gameXImage->bits_per_pixel / 8;
         /* Also overwrite the dimensions */
-        width = gameXImage->width;
-        height = gameXImage->height;
+        width = x11::gameXImage->width;
+        height = x11::gameXImage->height;
     }
     else if (game_info.video & GameInfo::VULKAN) {
         pixelSize = 4;
@@ -240,7 +244,7 @@ void ScreenCapture::initScreenSurface()
 {
     /* Set up a backup surface/framebuffer */
     if (game_info.video & GameInfo::VDPAU) {
-        VdpStatus status = orig::VdpOutputSurfaceCreate(vdpDevice, VDP_RGBA_FORMAT_B8G8R8A8, width, height, &screenVDPAUSurf);
+        VdpStatus status = orig::VdpOutputSurfaceCreate(vdp::vdpDevice, VDP_RGBA_FORMAT_B8G8R8A8, width, height, &screenVDPAUSurf);
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceCreate failed with status %d", status);
             return;
@@ -253,11 +257,11 @@ void ScreenCapture::initScreenSurface()
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
 
         /* Create the screen texture */
-        sdl_renderer = orig::SDL_GetRenderer(gameSDLWindow);
+        sdl_renderer = orig::SDL_GetRenderer(sdl::gameSDLWindow);
         if (!sdl_renderer) {
             debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: %s", orig::SDL_GetError());
         }
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         if (!screenSDLTex) {
             screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
                 SDL_TEXTUREACCESS_STREAMING, width, height);
@@ -271,8 +275,8 @@ void ScreenCapture::initScreenSurface()
         LINK_NAMESPACE_SDL2(SDL_ConvertSurfaceFormat);
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
 
-        SDL_Surface *surf = orig::SDL_GetWindowSurface(gameSDLWindow);
-        screenSDL2Surf = orig::SDL_ConvertSurfaceFormat(surf, orig::SDL_GetWindowPixelFormat(gameSDLWindow), 0);
+        SDL_Surface *surf = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
+        screenSDL2Surf = orig::SDL_ConvertSurfaceFormat(surf, orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow), 0);
     }
     else if (game_info.video & GameInfo::OPENGL) {
         /* Generate FBO and RBO */
@@ -466,7 +470,7 @@ void ScreenCapture::resize(int w, int h)
     }
 
     /* Don't resize if window is not registered */
-    if (gameXWindows.empty()) {
+    if (x11::gameXWindows.empty()) {
         return;
     }
 
@@ -515,7 +519,7 @@ const char* ScreenCapture::getPixelFormat()
     if (game_info.video & GameInfo::VDPAU) {
         VdpRGBAFormat rgba_format;
         unsigned int uw, uh;
-        orig::VdpOutputSurfaceGetParameters(vdpSurface, &rgba_format, &uw, &uh);
+        orig::VdpOutputSurfaceGetParameters(vdp::vdpSurface, &rgba_format, &uw, &uh);
         switch (rgba_format) {
             case VDP_RGBA_FORMAT_B8G8R8A8:
                 return "BGRA";
@@ -528,7 +532,7 @@ const char* ScreenCapture::getPixelFormat()
 
     else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(gameSDLWindow);
+        Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         switch (sdlpixfmt) {
             case SDL_PIXELFORMAT_RGBA8888:
                 debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBA");
@@ -587,14 +591,14 @@ const char* ScreenCapture::getPixelFormat()
         /* Apparently, it will only be RGB or BGR depending on the endianness
          * of the machine. */
 
-        if (gameXImage->bits_per_pixel == 24) {
-            if (gameXImage->byte_order == LSBFirst)
+        if (x11::gameXImage->bits_per_pixel == 24) {
+            if (x11::gameXImage->byte_order == LSBFirst)
                 return "24BG";
             else
                 return "RAW ";
         }
-        else if (gameXImage->bits_per_pixel == 32) {
-            if (gameXImage->byte_order == LSBFirst)
+        else if (x11::gameXImage->bits_per_pixel == 32) {
+            if (x11::gameXImage->byte_order == LSBFirst)
                 return "BGR\0";
             else
                 return "RGB\0";
@@ -628,7 +632,7 @@ int ScreenCapture::copyScreenToSurface()
 
     if (game_info.video & GameInfo::VDPAU) {
         /* Copy to our screen surface */
-        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(screenVDPAUSurf, nullptr, vdpSurface, nullptr, nullptr, nullptr, 0);
+        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(screenVDPAUSurf, nullptr, vdp::vdpSurface, nullptr, nullptr, nullptr, 0);
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
         }
@@ -661,7 +665,7 @@ int ScreenCapture::copyScreenToSurface()
         LINK_NAMESPACE_SDL2(SDL_UpperBlit);
 
         /* Get surface from window */
-        SDL_Surface* surf2 = orig::SDL_GetWindowSurface(gameSDLWindow);
+        SDL_Surface* surf2 = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
 
         /* Checking for a size modification */
         int cw = surf2->w;
@@ -753,13 +757,13 @@ int ScreenCapture::copyScreenToSurface()
     }
 
     else if (game_info.video & GameInfo::XSHM) {
-        if ((gameXImage->width != width) || (gameXImage->height != height)) {
-            debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, gameXImage->width, gameXImage->height);
+        if ((x11::gameXImage->width != width) || (x11::gameXImage->height != height)) {
+            debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, x11::gameXImage->width, x11::gameXImage->height);
             return -1;
         }
         
         /* There is no designated surface for XShm, just copy to our array */
-        memcpy(winpixels.data(), gameXImage->data, size);
+        memcpy(winpixels.data(), x11::gameXImage->data, size);
     }
 
     else if (game_info.video & GameInfo::VULKAN) {
@@ -1062,7 +1066,7 @@ int ScreenCapture::copySurfaceToScreen()
     GlobalNative gn;
 
     if (game_info.video & GameInfo::VDPAU) {
-        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(vdpSurface, nullptr, screenVDPAUSurf, nullptr, nullptr, nullptr, 0);
+        VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(vdp::vdpSurface, nullptr, screenVDPAUSurf, nullptr, nullptr, nullptr, 0);
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
         }
@@ -1088,7 +1092,7 @@ int ScreenCapture::copySurfaceToScreen()
         debuglogstdio(LCF_DUMP, "Set SDL1_Surface pixels");
 
         /* Get surface from window */
-        SDL_Surface* surf2 = orig::SDL_GetWindowSurface(gameSDLWindow);
+        SDL_Surface* surf2 = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
 
         /* Save and restore the clip rectangle */
         SDL_Rect clip_rect;
@@ -1164,7 +1168,7 @@ int ScreenCapture::copySurfaceToScreen()
     }
 
     else if (game_info.video & GameInfo::XSHM) {
-        memcpy(gameXImage->data, winpixels.data(), size);
+        memcpy(x11::gameXImage->data, winpixels.data(), size);
     }
 
     else if (game_info.video & GameInfo::VULKAN) {

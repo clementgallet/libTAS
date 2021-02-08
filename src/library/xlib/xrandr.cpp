@@ -21,6 +21,7 @@
 
 #include "../hook.h"
 #include "../logging.h"
+#include "xdisplay.h" // x11::gameDisplays
 
 #include <X11/Xlibint.h> // Xmalloc
 
@@ -216,9 +217,9 @@ void get_monitor_resolution(int& width, int& height)
     XRRCrtcInfo *crtc_info = nullptr;
     
     for (int d=0; d<GAMEDISPLAYNUM; d++) {
-        if (gameDisplays[d]) {
-            screen_resources = orig::XRRGetScreenResourcesCurrent(gameDisplays[d], DefaultRootWindow(gameDisplays[d]));
-            crtc_info = orig::XRRGetCrtcInfo(gameDisplays[d], screen_resources, screen_resources->crtcs[0]);
+        if (x11::gameDisplays[d]) {
+            screen_resources = orig::XRRGetScreenResourcesCurrent(x11::gameDisplays[d], DefaultRootWindow(x11::gameDisplays[d]));
+            crtc_info = orig::XRRGetCrtcInfo(x11::gameDisplays[d], screen_resources, screen_resources->crtcs[0]);
             break;
         }
     }

@@ -24,8 +24,18 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h> // XSetWMName
+#include <list>
 
 namespace libtas {
+
+namespace x11 {
+    /* Game window (we suppose there is only one) */
+    extern std::list<Window> gameXWindows;
+
+    /* Root window */
+    extern Window rootWindow;
+}
+
 
 OVERRIDE Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return);
 

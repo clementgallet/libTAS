@@ -23,6 +23,8 @@
 #include "../hook.h"
 #include "XlibEventQueueList.h"
 #include "xatom.h"
+#include "xdisplay.h" // x11::gameDisplays
+#include "xwindows.h" // x11::gameXWindows
 
 #ifdef LIBTAS_HAS_XINPUT
 #include <X11/extensions/XInput2.h>
@@ -92,8 +94,8 @@ void pushNativeXlibEvents(void)
     }
 
     for (int i=0; i<GAMEDISPLAYNUM; i++)
-        if (gameDisplays[i])
-            pushNativeXlibEvents(gameDisplays[i]);
+        if (x11::gameDisplays[i])
+            pushNativeXlibEvents(x11::gameDisplays[i]);
 }
 
 void pushNativeXlibEvents(Display *display)
@@ -487,7 +489,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!gameXWindows.empty() && (event_send->xclient.window != gameXWindows.front())) {
+                if (!x11::gameXWindows.empty() && (event_send->xclient.window != x11::gameXWindows.front())) {
                     debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 

@@ -22,6 +22,7 @@
 
 #include "../global.h"
 #include "../../external/X11/Xrandr.h"
+#include <X11/X.h>
 
 namespace libtas {
 

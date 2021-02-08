@@ -23,6 +23,9 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "ScreenCapture.h"
 #include "frame.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+
+#include <string.h>
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
@@ -83,7 +86,7 @@ EGLBoolean eglMakeCurrent( EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
-    if (draw && (!gameXWindows.empty())) {
+    if (draw && (!x11::gameXWindows.empty())) {
 
         game_info.video |= GameInfo::EGL | GameInfo::OPENGL;
         game_info.tosend = true;

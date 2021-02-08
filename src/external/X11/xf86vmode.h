@@ -33,6 +33,8 @@ from Kaleb S. KEITHLEY
 #ifndef _XF86VIDMODE_H_
 #define _XF86VIDMODE_H_
 
+#include <X11/Xlib.h>
+
 typedef struct {
     unsigned short	hdisplay;
     unsigned short	hsyncstart;

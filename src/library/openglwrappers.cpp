@@ -23,6 +23,9 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "ScreenCapture.h"
 #include "frame.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+
+#include <string.h>
 
 #define STORE_SYMBOL(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
@@ -356,7 +359,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
-    if (drawable && (!gameXWindows.empty())) {
+    if (drawable && (!x11::gameXWindows.empty())) {
 
         game_info.video |= GameInfo::OPENGL;
         game_info.tosend = true;

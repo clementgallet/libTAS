@@ -26,6 +26,11 @@
 
 namespace libtas {
 
+namespace sdl {
+    /* SDL2 game window (we suppose there is only one) */
+    extern SDL_Window* gameSDLWindow;    
+}
+
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.

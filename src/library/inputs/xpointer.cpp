@@ -24,6 +24,7 @@
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h"
 #include "../xlib/XlibEventQueueList.h"
+#include "../xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
@@ -37,13 +38,13 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         unsigned int* mask_return)
 {
     DEBUGLOGCALL(LCF_MOUSE);
-    if (gameXWindows.empty()) {
+    if (x11::gameXWindows.empty()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
                                    root_x_return, root_y_return,
                                    win_x_return, win_y_return, mask_return);
     }
-    *root_return = rootWindow;
+    *root_return = x11::rootWindow;
     *root_x_return = game_ai.pointer_x;
     *root_y_return = game_ai.pointer_y;
     *child_return = 0;
@@ -143,7 +144,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
     debuglog(LCF_MOUSE, __func__, " called with dest_w ", dest_w, " and dest_x ", dest_x, " and dest_y ", dest_y);
 
     /* We have to generate an MotionNotify event. */
-    if (!gameXWindows.empty()) {
+    if (!x11::gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
@@ -159,7 +160,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         }
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
-        event.xmotion.window = gameXWindows.front();
+        event.xmotion.window = x11::gameXWindows.front();
 
         struct timespec time = detTimer.getTicks();
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;

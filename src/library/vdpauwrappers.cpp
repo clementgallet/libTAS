@@ -29,8 +29,12 @@
 #include "backtrace.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
+
+VdpDevice vdp::vdpDevice = 0;
+VdpOutputSurface vdp::vdpSurface = 0;
 
 VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawable, VdpPresentationQueueTarget *target);
 VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarget presentation_queue_target, VdpPresentationQueue *presentation_queue);
@@ -70,14 +74,14 @@ VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawabl
     /* Set the game window to that window */
 
     /* Remove window from the list if it is already present */
-    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
         if (drawable == *iter) {
-            gameXWindows.erase(iter);
+            x11::gameXWindows.erase(iter);
             break;
         }
     }
 
-    gameXWindows.push_front(drawable);
+    x11::gameXWindows.push_front(drawable);
     uint32_t i = static_cast<uint32_t>(drawable);
     lockSocket();
     sendMessage(MSGB_WINDOW_ID);
@@ -97,7 +101,7 @@ VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarge
 
     ScreenCapture::fini();
 
-    vdpDevice = device;
+    vdp::vdpDevice = device;
 
     game_info.video |= GameInfo::VDPAU;
     game_info.tosend = true;
@@ -128,7 +132,7 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
 
     debuglogstdio(LCF_WINDOW, "%s called with clip_width %d, clip_height %d and earliest_presentation_time %llu", __func__, clip_width, clip_height, earliest_presentation_time);
 
-    vdpSurface = surface;
+    vdp::vdpSurface = surface;
 
     /* We must wait until the first screen draw to use the parameters of the
      * surface to initialize the screen capture.

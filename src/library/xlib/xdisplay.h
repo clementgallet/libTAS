@@ -25,6 +25,12 @@
 
 namespace libtas {
 
+#define GAMEDISPLAYNUM 10
+namespace x11 {
+    /* Xlib connections to the X server */
+    extern Display* gameDisplays[GAMEDISPLAYNUM];
+}
+
 OVERRIDE Display *XOpenDisplay(const char *display_name);
 OVERRIDE int XCloseDisplay(Display *display);
 

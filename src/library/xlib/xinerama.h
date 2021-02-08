@@ -22,6 +22,7 @@
 
 #include "../global.h"
 #include "../../external/X11/Xinerama.h"
+#include <X11/Xlib.h>
 
 namespace libtas {
 

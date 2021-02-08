@@ -25,14 +25,15 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "../ScreenCapture.h"
+#include "../xlib/xshm.h" // x11::gameXImage
 
 namespace libtas {
 
 void RenderHUD_XShm::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y)
 {
-    if (gameXImage->bits_per_pixel == 32) {
+    if (x11::gameXImage->bits_per_pixel == 32) {
         /* Create a SurfaceARGB pointing to the XImage */
-        std::unique_ptr<SurfaceXImage> image_surf = std::unique_ptr<SurfaceXImage>(new SurfaceXImage(gameXImage));
+        std::unique_ptr<SurfaceXImage> image_surf = std::unique_ptr<SurfaceXImage>(new SurfaceXImage(x11::gameXImage));
 
         /* Change the coords so that the text fills on screen */
         int width, height;
@@ -43,7 +44,7 @@ void RenderHUD_XShm::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int
         image_surf->blit(surf.get(), x, y);
     }
     else {
-        debuglogstdio(LCF_WINDOW | LCF_WARNING, "HUD for surface of depth %d is not supported", gameXImage->bits_per_pixel);
+        debuglogstdio(LCF_WINDOW | LCF_WARNING, "HUD for surface of depth %d is not supported", x11::gameXImage->bits_per_pixel);
     }
 }
 

@@ -57,6 +57,9 @@ DEFINE_ORIG_POINTER(XChangeProperty)
 DEFINE_ORIG_POINTER(XSetWMHints)
 DEFINE_ORIG_POINTER(XTranslateCoordinates)
 
+std::list<Window> x11::gameXWindows;
+Window x11::rootWindow;
+
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
     debuglogstdio(LCF_WINDOW, "%s called with name %s", __func__, name);
     LINK_NAMESPACE_GLOBAL(XQueryExtension);
@@ -107,14 +110,14 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     Window parent_return = 0;
     Window *children_return = nullptr;
     unsigned int nchildren_return = 0;
-    XQueryTree(display, w, &rootWindow, &parent_return, &children_return, &nchildren_return);
+    XQueryTree(display, w, &x11::rootWindow, &parent_return, &children_return, &nchildren_return);
     if (children_return) XFree(children_return);
 
-    if (rootWindow == parent) {
+    if (x11::rootWindow == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", w);
-        gameXWindows.push_back(w);
+        x11::gameXWindows.push_back(w);
     }
 
     return w;
@@ -132,14 +135,14 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     Window parent_return = 0;
     Window *children_return = nullptr;
     unsigned int nchildren_return = 0;
-    XQueryTree(display, w, &rootWindow, &parent_return, &children_return, &nchildren_return);
+    XQueryTree(display, w, &x11::rootWindow, &parent_return, &children_return, &nchildren_return);
     if (children_return) XFree(children_return);
 
-    if (rootWindow == parent) {
+    if (x11::rootWindow == parent) {
         /* Saving top-level window */
-        if (gameXWindows.empty())
+        if (x11::gameXWindows.empty())
             debuglogstdio(LCF_WINDOW, "   set game window to %d", w);
-        gameXWindows.push_back(w);
+        x11::gameXWindows.push_back(w);
     }
 
     return w;
@@ -161,28 +164,28 @@ int XDestroyWindow(Display *display, Window w)
     LINK_NAMESPACE_GLOBAL(XDestroyWindow);
 
     /* If current game window, switch to another one on the list */
-    if (!gameXWindows.empty() && w == gameXWindows.front()) {
+    if (!x11::gameXWindows.empty() && w == x11::gameXWindows.front()) {
         bool inited = ScreenCapture::isInited();
         ScreenCapture::fini();
 
-        gameXWindows.pop_front();
-        if (gameXWindows.empty()) {
+        x11::gameXWindows.pop_front();
+        if (x11::gameXWindows.empty()) {
             /* Tells the program we don't have a window anymore to gather inputs */
             sendXWindow(0);
         }
         else if (!is_exiting) {
             /* Switch to the next game window */
-            debuglogstdio(LCF_WINDOW, "   set game window to %d", gameXWindows.front());
-            sendXWindow(gameXWindows.front());
+            debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
+            sendXWindow(x11::gameXWindows.front());
             if (inited)
                 ScreenCapture::init();
         }
     }
     else {
         /* If another game window, remove it from the list */
-        for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
             if (w == *iter) {
-                gameXWindows.erase(iter);
+                x11::gameXWindows.erase(iter);
                 break;
             }
         }
@@ -199,11 +202,11 @@ int XMapWindow(Display *display, Window w)
     int ret = orig::XMapWindow(display, w);
 
     /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of gameXWindows to see if we must send it */
-    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+     * We are checking the content of x11::gameXWindows to see if we must send it */
+    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
         if (w == *iter) {
-            gameXWindows.erase(iter);
-            gameXWindows.push_front(w);
+            x11::gameXWindows.erase(iter);
+            x11::gameXWindows.push_front(w);
             sendXWindow(w);
             break;
         }
@@ -232,10 +235,10 @@ int XMapRaised(Display *display, Window w)
     /* We must wait until the window is mapped to send it to the program.
      * We are checking the content of gameXWindow to see if we must send it
      */
-    for (auto iter = gameXWindows.begin(); iter != gameXWindows.end(); iter++) {
+    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
         if (w == *iter) {
-            gameXWindows.erase(iter);
-            gameXWindows.push_front(w);
+            x11::gameXWindows.erase(iter);
+            x11::gameXWindows.push_front(w);
             sendXWindow(w);
             break;
         }
@@ -249,9 +252,9 @@ int XStoreName(Display *display, Window w, const char *window_name)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XStoreName);
 
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         WindowTitle::setOriginalTitle(window_name);
-        WindowTitle::setUpdateFunc([display] (const char* t) {if (!gameXWindows.empty()) orig::XStoreName(display, gameXWindows.front(), t);});
+        WindowTitle::setUpdateFunc([display] (const char* t) {if (!x11::gameXWindows.empty()) orig::XStoreName(display, x11::gameXWindows.front(), t);});
     }
 
     return 1;
@@ -262,13 +265,13 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
     debuglogstdio(LCF_WINDOW, "%s call with name %s and format %d", __func__, text_prop->value, text_prop->format);
     LINK_NAMESPACE_GLOBAL(XSetWMName);
 
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
         WindowTitle::setUpdateFunc([display] (const char* t) {
-            if (!gameXWindows.empty()) {
+            if (!x11::gameXWindows.empty()) {
                 XTextProperty prop;
                 XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
-                orig::XSetWMName(display, gameXWindows.front(), &prop);
+                orig::XSetWMName(display, x11::gameXWindows.front(), &prop);
             }
         });
         return;
@@ -299,7 +302,7 @@ int XMoveWindow(Display* display, Window w, int x, int y)
 {
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
     /* Preventing the game to change the game window position */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         return 0;
     }
 
@@ -330,7 +333,7 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d, new position: %d - %d, new size: %d x %d", __func__, w, x, y, width, height);
 
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         ScreenCapture::resize(width, height);
     }
     return ret;
@@ -348,13 +351,13 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
     }
 
     /* Disable window movement */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w))
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w))
         value_mask &= ~(CWX | CWY);
 
     int ret = orig::XConfigureWindow(display, w, value_mask, values);
 
     /* Check if size has changed */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         if ((value_mask & CWWidth) && (value_mask & CWHeight)) {
             ScreenCapture::resize(values->width, values->height);
         }
@@ -377,7 +380,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
         for (int i=0; i<nelements; i++) {
             if (atoms[i] == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 debuglogstdio(LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!gameXWindows.empty() && (w != gameXWindows.front())) {
+                if (!x11::gameXWindows.empty() && (w != x11::gameXWindows.front())) {
                     debuglogstdio(LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
                 }
 
@@ -422,11 +425,11 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     /* Detect a title change */
     if (property == x11_atom(_NET_WM_NAME)) {
         debuglogstdio(LCF_WINDOW, "   change title to %s", data);
-        if (!gameXWindows.empty() && (gameXWindows.front() == w)) {
+        if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
             WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(data));
             WindowTitle::setUpdateFunc([display] (const char* t) {
-                if (!gameXWindows.empty()) {
-                    orig::XChangeProperty(display, gameXWindows.front(), x11_atom(_NET_WM_NAME), x11_atom(UTF8_STRING), 8, PropModeReplace, reinterpret_cast<const unsigned char*>(t), strlen(t));
+                if (!x11::gameXWindows.empty()) {
+                    orig::XChangeProperty(display, x11::gameXWindows.front(), x11_atom(_NET_WM_NAME), x11_atom(UTF8_STRING), 8, PropModeReplace, reinterpret_cast<const unsigned char*>(t), strlen(t));
                 }
             });
             return 1; // value from implementation apparently
@@ -434,7 +437,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     }
 
     /* Always display window borders/title/menu/etc */
-    if (!gameXWindows.empty() && (gameXWindows.front() == w) && (property == x11_atom(_MOTIF_WM_HINTS))) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w) && (property == x11_atom(_MOTIF_WM_HINTS))) {
         MwmHints mwm_hints = *reinterpret_cast<const MwmHints*>(data);
         if (mwm_hints.decorations == 0) {
             debuglogstdio(LCF_WINDOW, "   adding motif decorations");
@@ -454,7 +457,7 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
 
-    if (!gameXWindows.empty() && (gameXWindows.front() == w) && (wm_hints->input == False)) {
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w) && (wm_hints->input == False)) {
         debuglogstdio(LCF_WINDOW, "   switch input hint to True");
         wm_hints->input = True;
     }

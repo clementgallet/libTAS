@@ -25,6 +25,7 @@
 #include "../DeterministicTimer.h" // detTimer
 #include <X11/X.h>
 #include "../sdl/SDLEventQueue.h"
+#include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
 
 namespace libtas {
 
@@ -35,7 +36,7 @@ DEFINE_ORIG_POINTER(SDL_WarpMouse)
 SDL_Window *SDL_GetMouseFocus(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
-    return gameSDLWindow;
+    return sdl::gameSDLWindow;
 }
 
 Uint32 SDL_GetMouseState(int *x, int *y)
@@ -99,7 +100,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     struct timespec time = detTimer.getTicks();
     event2.motion.timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
     LINK_NAMESPACE_SDL2(SDL_GetWindowID);
-    event2.motion.windowID = orig::SDL_GetWindowID(gameSDLWindow);
+    event2.motion.windowID = orig::SDL_GetWindowID(sdl::gameSDLWindow);
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */

@@ -23,6 +23,8 @@
 #include "../shared/SharedConfig.h"
 #include "backtrace.h"
 #include <execinfo.h>
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include <string.h>
 
 namespace libtas {
 
@@ -71,7 +73,7 @@ DEFINE_ORIG_POINTER(fork)
 
         /* Invalidate the previous connections to the X server */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            gameDisplays[i] = nullptr;
+            x11::gameDisplays[i] = nullptr;
         }
         
         /* We are not interested in the forked process, make it run native.
