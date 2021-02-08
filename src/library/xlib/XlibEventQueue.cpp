@@ -44,8 +44,13 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.xcrossing.x_root = game_ai.pointer_x;
         ev.xcrossing.y_root = game_ai.pointer_y;
         ev.xcrossing.state = SingleInput::toXlibPointerMask(ai.pointer_mask);
+        ev.xcrossing.send_event = 0;
+        ev.xcrossing.same_screen = 1;
+        ev.xcrossing.root = rootWindow;
+        ev.xcrossing.mode = NotifyNormal;
+        ev.xcrossing.detail = NotifyNonlinear;
 
-        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event for window %d", w);
         insert(&ev);
     }
 
