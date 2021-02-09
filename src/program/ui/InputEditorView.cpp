@@ -154,13 +154,20 @@ void InputEditorView::resizeAllColumns()
     horizontalHeader()->resizeSection(0, 20);
     horizontalHeader()->resizeSection(1, 80);
 
-    /* Resize analog columns to a fixed value */
-    for (int c = 2; c < inputEditorModel->columnCount(); c++)
-        if (inputEditorModel->isInputAnalog(c)) {
-            int size = horizontalHeader()->sectionSize(c);
+    /* Resize analog columns to a fixed value
+     * Increase the other columns by a small amount, because even if it's
+     * supposed to take the same place as the header, sometimes it considers
+     * that it doesn't have enough space. */
+    for (int c = 2; c < inputEditorModel->columnCount(); c++) {
+        int size = horizontalHeader()->sectionSize(c);
+        if (inputEditorModel->isInputAnalog(c)) {            
             if (size < 70)
                 horizontalHeader()->resizeSection(c, 70);
         }
+        else {
+            horizontalHeader()->resizeSection(c, size + 2);
+        }
+    }
 
 }
 
