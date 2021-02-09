@@ -534,30 +534,28 @@ static void pushQuitEvent(void)
         sdlEventQueue.insert(&ev);
     }
 
-    else if (game_info.video & GameInfo::SDL2) {
+    if (game_info.video & GameInfo::SDL2) {
         SDL_Event ev;
         ev.type = SDL_QUIT;
         sdlEventQueue.insert(&ev);
     }
 
-    else {
-        if (x11::gameXWindows.empty())
-            return;
+    if (x11::gameXWindows.empty())
+        return;
 
-        GlobalNoLog gnl;
-        XEvent xev;
-        xev.xclient.type = ClientMessage;
-        xev.xclient.window = x11::gameXWindows.front();
-        xev.xclient.format = 32;
-        xev.xclient.data.l[1] = CurrentTime;
+    GlobalNoLog gnl;
+    XEvent xev;
+    xev.xclient.type = ClientMessage;
+    xev.xclient.window = x11::gameXWindows.front();
+    xev.xclient.format = 32;
+    xev.xclient.data.l[1] = CurrentTime;
 
-        for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (x11::gameDisplays[i]) {
-                xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
-                xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
-                NATIVECALL(XSendEvent(x11::gameDisplays[i], x11::gameXWindows.front(), False, NoEventMask, &xev));
-                NATIVECALL(XSync(x11::gameDisplays[i], false));
-            }
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i]) {
+            xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
+            xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
+            NATIVECALL(XSendEvent(x11::gameDisplays[i], x11::gameXWindows.front(), False, NoEventMask, &xev));
+            NATIVECALL(XSync(x11::gameDisplays[i], false));
         }
     }
 }

@@ -26,6 +26,7 @@
 * Fix pitch for OpenAL
 * Fix some labels in the input editor being truncated
 * Hook localtime() to prevent timezone differences
+* Send low-level window closing event even if game uses SDL (#395)
 
 ## [1.4.1] - 2021-01-02
 ### Added
