@@ -25,6 +25,7 @@
 * Correctly handle opening of /dev/input/event|jsdev with writing flag
 * Fix pitch for OpenAL
 * Fix some labels in the input editor being truncated
+* Hook localtime() to prevent timezone differences
 
 ## [1.4.1] - 2021-01-02
 ### Added

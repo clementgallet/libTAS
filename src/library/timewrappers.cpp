@@ -77,6 +77,20 @@ DEFINE_ORIG_POINTER(clock_gettime)
     return 0;
 }
 
+/* Override */ struct tm *localtime (const time_t *timer) throw()
+{
+    DEBUGLOGCALL(LCF_TIMEGET);
+    /* Users may have different timezones, so returning the time based on UTC */
+    return gmtime(timer);
+}
+
+/* Override */ struct tm *localtime_r (const time_t *timer, struct tm *tp) throw()
+{
+    DEBUGLOGCALL(LCF_TIMEGET);
+    /* Users may have different timezones, so returning the time based on UTC */
+    return gmtime_r(timer, tp);
+}
+
 /* Override */ Uint32 SDL_GetTicks(void)
 {
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
