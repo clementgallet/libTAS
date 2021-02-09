@@ -112,21 +112,33 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         int r, g, b;
         color.getRgb(&r, &g, &b, nullptr);
         
+        /* Greenzone */
+        uint64_t root_frame = SaveStateList::rootStateFramecount();
+        bool greenzone = (row < context->framecount) && root_frame && (row >= root_frame);
+
         if (color.lightness() > 128) {
             /* Light theme */
             if (row == context->framecount)
                 color.setRgb(r - 0x30, g - 0x10, b);
             else if (row < context->framecount) {
-                if (movie->editor->isDraw(row))
-                    color.setRgb(r - 0x30, g, b - 0x30);
-                else
-                    color.setRgb(r, g - 0x30, b - 0x30);
+                if (movie->editor->isDraw(row)) {                    
+                    if (greenzone)
+                        color.setRgb(r - 0x30, g, b - 0x30);
+                    else
+                        color.setRgb(r - 0x20, g, b - 0x20);
+                }
+                else {
+                    if (greenzone)
+                        color.setRgb(r, g - 0x20, b - 0x20);
+                    else
+                        color.setRgb(r, g - 0x18, b - 0x18);
+                }
             }
             else {
                 if (movie->editor->isDraw(row))
-                    color.setRgb(r, g, b - 0x18);
+                    color.setRgb(r, g, b - 0x10);
                 else
-                    color.setRgb(r, g - 0x18, b - 0x18);
+                    color.setRgb(r, g - 0x10, b - 0x10);
             }
         }
         else {
@@ -134,10 +146,18 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             if (row == context->framecount)
                 color.setRgb(r, g + 0x10, b + 0x20);
             else if (row < context->framecount) {
-                if (movie->editor->isDraw(row))
-                    color.setRgb(r, g + 0x18, b);
-                else
-                    color.setRgb(r + 0x18, g, b);
+                if (movie->editor->isDraw(row)) {
+                    if (greenzone)
+                        color.setRgb(r, g + 0x30, b);
+                    else
+                        color.setRgb(r, g + 0x18, b);
+                }
+                else {
+                    if (greenzone)
+                        color.setRgb(r + 0x30, g, b);
+                    else
+                        color.setRgb(r + 0x18, g, b);
+                }
             }
             else {
                 if (movie->editor->isDraw(row))
@@ -161,13 +181,6 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             }
         }
         
-        /* Greenzone */
-        if (row < context->framecount) {
-            uint64_t root_frame = SaveStateList::rootStateFramecount();
-            if (!root_frame && row >= root_frame)
-                color = color.darker(105);            
-        }
-
         /* Frame containing a savestate */
         for (unsigned int i=0; i<savestate_frames.size(); i++) {
             if (savestate_frames[i] == row) {
