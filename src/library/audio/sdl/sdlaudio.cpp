@@ -306,7 +306,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
 /* Override */ void SDL_PauseAudio(int pause_on)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    SDL_PauseAudioDevice(pause_on, 1);
+    SDL_PauseAudioDevice(1, pause_on);
 }
 
 /* Override */ void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on)
