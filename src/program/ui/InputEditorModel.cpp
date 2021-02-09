@@ -781,12 +781,17 @@ void InputEditorModel::moveInputs(int oldIndex, int newIndex)
 
 bool InputEditorModel::rewind(uint64_t framecount)
 {
-    if (framecount >= context->framecount)
-        return false;
-        
-    int state = SaveStateList::nearestState(framecount);
-    if (state == -1)
-        return false;
+    /* If already on the frame, nothing to do */
+    if (framecount == context->framecount)
+        return true;
+
+    int state = 0;
+    if (framecount < context->framecount) {
+        state = SaveStateList::nearestState(framecount);
+        if (state == -1)
+            /* No available savestate before the given framecount */
+            return false;
+    }
         
     /* Switch to playback if needed */
     int recording = context->config.sc.recording;
@@ -795,10 +800,12 @@ bool InputEditorModel::rewind(uint64_t framecount)
     }
 
     /* Load state */
-    context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
+    if (framecount < context->framecount)
+        context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
 
-    /* Fast-forward to frame if further than state framecount */
-    uint64_t state_framecount = SaveStateList::get(state).framecount;
+    /* Fast-forward to frame if further than state/current framecount */
+    uint64_t state_framecount = (framecount < context->framecount)?(SaveStateList::get(state).framecount):context->framecount;
+    
     if (framecount > state_framecount) {
         context->pause_frame = framecount;
 

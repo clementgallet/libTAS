@@ -7,6 +7,7 @@
 * Check for gdb presence
 * Use vdpau-va-gl for vdpau software rendering (#390)
 * Implement multiple SDL audio devices
+* Clicking the first column seeks to frame in input editor
 
 ### Changed
 
