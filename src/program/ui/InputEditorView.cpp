@@ -177,10 +177,22 @@ void InputEditorView::update()
     if (last_framecount == context->framecount)
         return;
 
+    last_framecount = context->framecount;
+
     inputEditorModel->update();
 
     if (!isVisible())
         return;
+
+    /* Check if scroll is frozen because of a rewind. Disable scroll freeze when
+     * reaching the paused frame. */
+    if (inputEditorModel->isScrollFreeze()) {
+        if (context->pause_frame == 0) {
+            inputEditorModel->setScrollFreeze(false);
+            autoScroll = false;
+        }
+        return;
+    }
 
     /* Enable autoscroll if current frame is not visible */
     int toprow = rowAt(rect().top());
@@ -205,7 +217,6 @@ void InputEditorView::update()
         scrollTo(inputEditorModel->index(firstVisibleFrame, leftcol), QAbstractItemView::PositionAtTop);
         connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
     }
-    last_framecount = context->framecount;
 }
 
 void InputEditorView::resetInputs()

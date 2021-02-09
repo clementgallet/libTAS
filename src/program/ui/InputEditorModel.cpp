@@ -799,18 +799,30 @@ bool InputEditorModel::rewind(uint64_t framecount)
         context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
     }
 
+    /* Save current framecount because it will be replaced by state loading */
+    uint64_t current_framecount = context->framecount;
+
     /* Load state */
-    if (framecount < context->framecount)
+    if (framecount < current_framecount) {
         context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (state-1));
+    }
 
     /* Fast-forward to frame if further than state/current framecount */
-    uint64_t state_framecount = (framecount < context->framecount)?(SaveStateList::get(state).framecount):context->framecount;
+    uint64_t state_framecount = (framecount < current_framecount)?(SaveStateList::get(state).framecount):current_framecount;
     
     if (framecount > state_framecount) {
         context->pause_frame = framecount;
 
+        /* Freeze scroll until pause_frame is reached */
+        freeze_scroll = true;
+
         context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
         if (!context->config.sc.running)
+            context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
+    }
+    else {
+        /* Just pause */
+        if (context->config.sc.running)
             context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }
     
@@ -820,4 +832,14 @@ bool InputEditorModel::rewind(uint64_t framecount)
     }
     
     return true;
+}
+
+bool InputEditorModel::isScrollFreeze()
+{
+    return freeze_scroll;
+}
+
+void InputEditorModel::setScrollFreeze(bool state)
+{
+    freeze_scroll = state;
 }

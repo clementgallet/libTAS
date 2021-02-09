@@ -82,7 +82,6 @@ public:
     /* Get lock status of a single input */
     bool isLockedUniqueInput(int column);
 
-
     /* Lock or unlock a single input */
     void lockUniqueInput(int column, bool locked);
 
@@ -106,6 +105,12 @@ public:
 
     /* Rewind to frame, return if succeeded */
     bool rewind(uint64_t framecount);
+
+    /* Returns if scroll is frozen */
+    bool isScrollFreeze();
+
+    /* Set scroll freeze state */
+    void setScrollFreeze(bool state);
 
 public slots:
     /* Toggle a single input and return the new value */
@@ -141,6 +146,9 @@ private:
 
     /* Last saved/loaded state */
     unsigned long long last_savestate = 0;
+
+    /* Freeze the vertical scroll, used for rewind */
+    bool freeze_scroll = false;
 
 signals:
     void inputSetChanged();
