@@ -620,10 +620,11 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
         return -EBADFD;
     }
 
-    /* Blocking or return if latency is too high */
+    /* Blocking or return if latency is too high. Blocking should be done until
+     * all frames can be written. */
     if (block_mode) {
         struct timespec mssleep = {0, 1000*1000};
-        while (!is_exiting && (get_latency(pcm) >= buffer_size)) {
+        while (!is_exiting && ((get_latency(pcm) + static_cast<int>(size)) > buffer_size)) {
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
         }
 
