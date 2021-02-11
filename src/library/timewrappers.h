@@ -47,14 +47,6 @@ OVERRIDE time_t time(time_t* t) throw();
    Use the functions and variables declared in <time.h> instead.  */
 OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) throw();
 
-/* Return the `struct tm' representation
-   of *TIMER in the local timezone.  */
-OVERRIDE struct tm *localtime (const time_t *timer) throw();
-
-/* Return the `struct tm' representation of *TIMER in local time,
-   using *TP to store the result.  */
-OVERRIDE struct tm *localtime_r (const time_t *timer, struct tm *tp) throw();
-
 /**
  * \brief Get the number of milliseconds since the SDL library initialization.
  *

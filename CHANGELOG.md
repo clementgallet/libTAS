@@ -25,7 +25,7 @@
 * Correctly handle opening of /dev/input/event|jsdev with writing flag
 * Fix pitch for OpenAL
 * Fix some labels in the input editor being truncated
-* Hook localtime() to prevent timezone differences
+* Set timezone to UTC+0
 * Send low-level window closing event even if game uses SDL (#395)
 * snd_pcm_writei() should block until all frames can be played
 

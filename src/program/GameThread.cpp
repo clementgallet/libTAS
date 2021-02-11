@@ -120,6 +120,8 @@ void GameThread::launch(Context *context)
 
     setenv("LIBTAS_START_FRAME", std::to_string(context->framecount).c_str(), 1);
 
+    /* Override timezone for determinism */
+    setenv("TZ", "UTC0", 1);
 
     /* Disable Address Space Layout Randomization for the game, so that ram
      * watch addresses do not change on game restart.
