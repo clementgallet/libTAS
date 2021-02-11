@@ -1011,20 +1011,20 @@ void GameLoop::sleepSendPreview()
     if (context->config.sc.recording == SharedConfig::RECORDING_READ)
         return;
 
-    /* Only preview if input focus */
-    if (!haveFocus())
-        return;
-
     /* Only preview if we actually print inputs */
     if (!(context->config.sc.osd & SharedConfig::OSD_INPUTS))
         return;
 
-    /* Format the keyboard and mouse state and save it in the AllInputs struct */
     static AllInputs preview_ai, last_preview_ai;
-    context->config.km.buildAllInputs(preview_ai, context->game_window, keysyms.get(), context->config.sc, false);
-    preview_ai.pointer_x += pointer_offset_x;
-    preview_ai.pointer_y += pointer_offset_y;
-    emit inputsToBeSent(preview_ai);
+    if (haveFocus()) {
+        /* Format the keyboard and mouse state and save it in the AllInputs struct */
+        context->config.km.buildAllInputs(preview_ai, context->game_window, keysyms.get(), context->config.sc, false);
+        preview_ai.pointer_x += pointer_offset_x;
+        preview_ai.pointer_y += pointer_offset_y;        
+    }
+
+    /* Fill controller inputs from the controller input window. */
+    emit fillControllerInputs(preview_ai);
 
     /* Send inputs if changed */
     if (!(preview_ai == last_preview_ai)) {
@@ -1056,9 +1056,10 @@ void GameLoop::processInputs(AllInputs &ai)
                 context->config.km.buildAllInputs(ai, context->game_window, keysyms.get(), context->config.sc, context->config.mouse_warp);
                 ai.pointer_x += pointer_offset_x;
                 ai.pointer_y += pointer_offset_y;
-
-                emit inputsToBeSent(ai);
             }
+            
+            /* Fill controller inputs from the controller input window. */
+            emit fillControllerInputs(ai);
 
             /* Add framerate if necessary */
             if (context->config.sc.variable_framerate) {

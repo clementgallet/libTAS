@@ -58,7 +58,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* When the game loop will send the inputs to the game, we must set
          * the controller inputs in the AllInputs object.
          */
-        connect(mw->gameLoop, &GameLoop::inputsToBeSent, this, &ControllerTabWindow::slotSetInputs, Qt::DirectConnection);
+        connect(mw->gameLoop, &GameLoop::fillControllerInputs, this, &ControllerTabWindow::slotSetInputs, Qt::DirectConnection);
 
         /* When the game loop is playing back a movie and wants to display the
          * controller inputs in this window.
