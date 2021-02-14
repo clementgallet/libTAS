@@ -284,6 +284,9 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
     }
     else {
         mouseValue = inputEditorModel->toggleInput(index);
+
+        /* Set the min row to toggle inputs */
+        minToggleRow = (mouseRow<context->framecount)?mouseRow:context->framecount;
     }
 
     event->accept();
@@ -306,10 +309,17 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         return QTableView::mouseMoveEvent(event);
     }
 
+    event->accept();
+
     /* Disable toggle together with rewind, because it can cause multiple
      * rewinds because of the scrolling */
     if (static_cast<unsigned int>(index.row()) < context->framecount)
-        return QTableView::mouseMoveEvent(event);
+        return;
+
+    /* Prevent toggle past the first toggle frame when rewinding */
+    if (index.row() < minToggleRow) {
+        return;
+    }
 
     int newMouseValue = mouseValue;
 
@@ -323,7 +333,6 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
     QModelIndex toggle_index = inputEditorModel->index(index.row(), mouseSection);
 
     inputEditorModel->setData(toggle_index, QVariant(newMouseValue), Qt::EditRole);
-    event->accept();
 }
 
 void InputEditorView::keyPressEvent(QKeyEvent *event)
