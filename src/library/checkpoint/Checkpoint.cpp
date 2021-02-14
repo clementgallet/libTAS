@@ -412,11 +412,14 @@ static void readAllAreas()
 {
     SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
-    int spmfd = -1, crfd = -1;
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+    int spmfd = -1;
+    if (shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
         NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
         MYASSERT(spmfd != -1);
+    }
 
+    int crfd = -1;
+    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
         MYASSERT(crfd != -1);
     }
@@ -477,8 +480,11 @@ static void readAllAreas()
         Utils::writeAll(crfd, "4\n", 2);
     }
 
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+    if (crfd != -1) {
         NATIVECALL(close(crfd));
+    }
+
+    if (spmfd != -1) {
         NATIVECALL(close(spmfd));
     }
 }
@@ -654,8 +660,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
     }
 
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-        /* Seek at the beginning of the area pagemap */
+    if (spmfd != -1) {
         MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
     }
 
@@ -675,38 +680,47 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
     curAddr += 4096, page_i++, pagemap_i++) {
-        /* We read pagemap file in chunks to avoid too many read syscalls */
-        if ((shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && (pagemap_i >= 512)) {
-            size_t remaining_pages = ((nb_pages-page_i)>512)?512:(nb_pages-page_i);
+
+        /* We read pagemap flags in chunks to avoid too many read syscalls. */
+        if ((spmfd != -1) && (pagemap_i >= 512)) {
+            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
         }
 
         char flag = saved_state.getNextPageFlag();
 
+        /* Gather the flag for the page map */
+        uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
+        bool soft_dirty = page & (0x1ull << 55);
+        bool page_present = page & (0x1ull << 63);
+
         /* It seems that static memory is both zero and unmapped, so we still
-         * need to memset the region. */
+         * need to memset the region if it was mapped.
+         *
+         * TODO: This setting breaks savestates in Freedom Planet, when saving
+         * on one stage, advancing to the next stage, loading the state and 
+         * advancing to next stage again. */
         if (flag == Area::NO_PAGE) {
-            memset(static_cast<void*>(curAddr), 0, 4096);
+            if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr))))
+                memset(static_cast<void*>(curAddr), 0, 4096);
         }
         else if (flag == Area::ZERO_PAGE) {
             if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
                 /* In case incremental savestates is enabled, we can guess that
                  * the page is already zero if the parent page is zero and the
-                 * page was not modified since. In that case, we can skip the memset.
-                 */
-
-                /* Gather the flag for the page map */
-                uint64_t page = pagemaps[pagemap_i];
-                bool soft_dirty = page & (0x1ull << 55);
-
+                 * page was not modified since. In that case, we can skip the memset. */
                 if (soft_dirty ||
                     parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
                     memset(static_cast<void*>(curAddr), 0, 4096);
                 }
             }
             else {
-                memset(static_cast<void*>(curAddr), 0, 4096);
+                /* Only memset if the page is not zero, to prevent an actual
+                 * allocation if the page was allocated but never used. */
+                if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                    memset(static_cast<void*>(curAddr), 0, 4096);
+                }
             }
         }
         else if (flag == Area::BASE_PAGE) {
@@ -725,10 +739,6 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                 base_state.queuePageLoad(curAddr);
             }
             else {
-                /* Gather the flag for the page map */
-                uint64_t page = pagemaps[pagemap_i];
-                bool soft_dirty = page & (0x1ull << 55);
-
                 if (soft_dirty) {
                     /* Memory page has been modified after parent state.
                      * We must read from the base savestate.
@@ -861,7 +871,7 @@ static void writeAllAreas(bool base)
 
     int spmfd = -1;
     NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+    if (shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
         /* We need /proc/self/pagemap for incremental savestates */
         MYASSERT(spmfd != -1);
     }
@@ -934,7 +944,7 @@ static void writeAllAreas(bool base)
         }
     }
 
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+    if (crfd != 1) {
         NATIVECALL(close(crfd));
     }
 
