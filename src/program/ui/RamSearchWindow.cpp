@@ -70,9 +70,11 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     memDataRWBox = new QCheckBox("RW Data");
     memBSSBox = new QCheckBox("BSS");
     memHeapBox = new QCheckBox("Heap");
+    memHeapBox->setChecked(true);
     memFileMappingBox = new QCheckBox("File Mapping");
     memAnonymousMappingROBox = new QCheckBox("Anon RO Mapping");
     memAnonymousMappingRWBox = new QCheckBox("Anon RW Mapping");
+    memAnonymousMappingRWBox->setChecked(true);
     memStackBox = new QCheckBox("Stack");
     memSpecialBox = new QCheckBox("Special");
 
@@ -138,6 +140,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     typeList << "unsigned int" << "int" << "unsigned int64" << "int64";
     typeList << "float" << "double";
     typeBox->addItems(typeList);
+    typeBox->setCurrentText("int");
 
     displayBox = new QComboBox();
     displayBox->addItem("decimal");
