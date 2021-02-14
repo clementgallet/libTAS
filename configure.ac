@@ -159,13 +159,14 @@ dnl **** Export date and commit ****
 AS_IF([test "x$enable_release_build" != "xyes"], [
     dnl Get the latest abbreviated commit hash of the working branch
     git_commit_hash=`git log -1 --format=%h`
-    AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_COMMIT], ["$git_commit_hash"], [Git commit])
-    AC_MSG_NOTICE([git commit is $git_commit_hash])
+    AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_COMMIT], ["$git_commit_hash"], [Git commit hash])
+    AC_MSG_NOTICE([git commit hash is $git_commit_hash])
 
     AS_IF([test "x$enable_build_date" != "xno"], [
-      dnl Add build date as macro
-      today=`date +%Y-%m-%d`
-      AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$today"], [Git commit])
+      dnl Add commit date as macro
+      git_commit_date=`git log -1 --format=%as`
+      AC_DEFINE_UNQUOTED([LIBTAS_INTERIM_DATE], ["$git_commit_date"], [Git commit date])
+      AC_MSG_NOTICE([git commit date is $git_commit_date])
     ])
 ])
 
