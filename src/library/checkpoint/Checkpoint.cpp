@@ -877,6 +877,10 @@ static void writeAllAreas(bool base)
     int n=0;
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if (thread->state == ThreadInfo::ST_SUSPENDED) {
+            if (n >= STATEMAXTHREADS) {
+                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "   hit the limit of the number of threads");
+                break;
+            }
             sh.pthread_ids[n] = thread->pthread_id;
             sh.tids[n++] = thread->tid;
         }

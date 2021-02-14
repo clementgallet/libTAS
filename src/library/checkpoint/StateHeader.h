@@ -24,7 +24,7 @@
 
 #include <pthread.h>
 
-#define STATEMAXTHREADS 100
+#define STATEMAXTHREADS 1000
 
 namespace libtas {
 struct StateHeader {
