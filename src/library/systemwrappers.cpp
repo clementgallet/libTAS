@@ -23,7 +23,9 @@
 #include "../shared/SharedConfig.h"
 #include "backtrace.h"
 #include <execinfo.h>
+#ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
+#endif
 #include <string.h>
 
 namespace libtas {
@@ -71,10 +73,12 @@ DEFINE_ORIG_POINTER(fork)
     if (pid == 0) {
         is_fork = true;
 
+#ifdef __unix__
         /* Invalidate the previous connections to the X server */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             x11::gameDisplays[i] = nullptr;
         }
+#endif
         
         /* We are not interested in the forked process, make it run native.
          * Fix one Unity game (Stephen Sausage Roll), where forked process

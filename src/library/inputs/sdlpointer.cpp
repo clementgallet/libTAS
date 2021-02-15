@@ -23,7 +23,6 @@
 #include "../hook.h"
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h" // detTimer
-#include <X11/X.h>
 #include "../sdl/SDLEventQueue.h"
 #include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
 

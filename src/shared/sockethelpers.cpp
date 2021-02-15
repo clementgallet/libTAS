@@ -47,7 +47,11 @@ void removeSocket(void){
 
 bool initSocketProgram(void)
 {
+#ifdef __unix__
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
+#elif defined(__APPLE__) && defined(__MACH__)
+    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
+#endif
     socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
     struct timespec tim = {0, 500L*1000L*1000L};
@@ -82,7 +86,11 @@ bool initSocketGame(void)
     if (result == 0)
         return false;
 
+#ifdef __unix__
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
+#elif defined(__APPLE__) && defined(__MACH__)
+    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
+#endif
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {

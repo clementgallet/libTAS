@@ -18,7 +18,7 @@
  */
 
 #include "AllInputs.h"
-#include <X11/keysym.h>
+// #include <X11/keysym.h>
 #include <iostream>
 
 void AllInputs::emptyInputs() {

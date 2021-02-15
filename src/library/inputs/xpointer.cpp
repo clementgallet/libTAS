@@ -28,6 +28,8 @@
 
 namespace libtas {
 
+Window pointer_grab_window = None;
+
 DEFINE_ORIG_POINTER(XQueryPointer)
 DEFINE_ORIG_POINTER(XWarpPointer)
 

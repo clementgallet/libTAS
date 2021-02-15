@@ -33,21 +33,27 @@
 #include "sdltextinput.h" // SDL_EnableUNICODE
 #include "../sdl/SDLEventQueue.h"
 #include "../../external/SDL1.h"
-#include "jsdev.h"
-#include "evdev.h"
 #include "../global.h" // game_info
+#include <stdlib.h>
+#include <SDL2/SDL.h>
+
+#ifdef __unix__
 #include "xinput.h"
+#include "xpointer.h"
 #include "../xlib/XlibEventQueueList.h"
 #include "../xcb/XcbEventQueueList.h"
 #include "../xcb/xcbconnection.h" // x11::gameConnections
 #include "../xlib/xevents.h"
 #include "../xlib/xdisplay.h" // x11::gameDisplays
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#endif
 
-#include <stdlib.h>
-#include <SDL2/SDL.h>
+#ifdef __linux__
 #include <linux/joystick.h>
 #include <linux/input.h>
+#include "jsdev.h"
+#include "evdev.h"
+#endif
 
 namespace libtas {
 
@@ -110,6 +116,7 @@ void generateKeyUpEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key ", event1.key.keysym.sym);
             }
 
+#ifdef __unix__
             if ((game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyRelease;
@@ -186,6 +193,7 @@ void generateKeyUpEvents(void)
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyRelease with keycode ", rev->detail);
             }
+#endif
         }
     }
 }
@@ -267,6 +275,7 @@ void generateKeyDownEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key ", event1.key.keysym.sym);
             }
 
+#ifdef __unix__
             if ((game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 event.xkey.type = KeyPress;
@@ -343,6 +352,7 @@ void generateKeyDownEvents(void)
 
                 debuglog(LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyPress with keycode ", rev->detail);
             }
+#endif
         }
     }
 }
@@ -508,6 +518,7 @@ void generateControllerEvents(void)
                     debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis ", axis);
                 }
 
+#ifdef __linux__
                 if (game_info.joystick & GameInfo::JSDEV) {
                     struct js_event ev;
                     ev.time = timestamp;
@@ -528,6 +539,7 @@ void generateControllerEvents(void)
                     write_evdev(ev, ji);
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis ", axis);
                 }
+#endif
             }
         }
 
@@ -612,6 +624,7 @@ void generateControllerEvents(void)
                     }
                 }
 
+#ifdef __linux__
                 if (game_info.joystick & GameInfo::JSDEV) {
                     if (bi < 11) { // JSDEV joystick only has 11 buttons
                         struct js_event ev;
@@ -642,6 +655,7 @@ void generateControllerEvents(void)
                         hatHasChanged = true;
                     }
                 }
+#endif
             }
         }
 
@@ -671,6 +685,7 @@ void generateControllerEvents(void)
                 debuglog(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYHATMOTION with hat ", (int)event1.jhat.value);
             }
 
+#ifdef __linux__
             if (game_info.joystick & GameInfo::JSDEV) {
                 /* Hat status is represented as 7th and 8th axes */
 
@@ -726,6 +741,7 @@ void generateControllerEvents(void)
                     debuglog(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis ", ABS_HAT0Y);
                 }
             }
+#endif
         }
     }
 }
@@ -735,6 +751,7 @@ void generateMouseMotionEvents(void)
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
+#ifdef __unix__
     /* XIRAWEVENTS are special because they output raw pointer events */
     if ((game_info.mouse & GameInfo::XIRAWEVENTS) &&
         ((game_unclipped_ai.pointer_x != old_game_unclipped_ai.pointer_x) || (game_unclipped_ai.pointer_y != old_game_unclipped_ai.pointer_y))) {
@@ -761,6 +778,7 @@ void generateMouseMotionEvents(void)
 
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_RawMotion");
     }
+#endif
 
     /* Check if we got a change in mouse position */
     if ((game_ai.pointer_x == old_game_ai.pointer_x) && (game_ai.pointer_y == old_game_ai.pointer_y))
@@ -802,6 +820,7 @@ void generateMouseMotionEvents(void)
         debuglog(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEMOTION with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
     }
 
+#ifdef __unix__
     if ((game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
@@ -867,6 +886,7 @@ void generateMouseMotionEvents(void)
 
         debuglog(LCF_EVENTS | LCF_MOUSE, "Generate XIEvent XI_Motion");
     }
+#endif
 }
 
 void generateMouseButtonEvents(void)
@@ -924,6 +944,7 @@ void generateMouseButtonEvents(void)
                 sdlEventQueue.insert(&event1);
             }
 
+#ifdef __unix__
             if ((game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
                 XEvent event;
                 if (game_ai.pointer_mask & (1 << buttons[bi])) {
@@ -1034,6 +1055,7 @@ void generateMouseButtonEvents(void)
                 rev->detail = bi+1;
                 xlibEventQueueList.insert(&event);
             }
+#endif
         }
     }
 }
@@ -1049,6 +1071,7 @@ void syncControllerEvents()
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
+#ifdef __linux__
     for (int i = 0; i < shared_config.nb_controllers; i++) {
         if (shared_config.async_events & SharedConfig::ASYNC_JSDEV) {
             /* Send a synchronize report event */
@@ -1077,6 +1100,7 @@ void syncControllerEvents()
             sync_evdev(i);
         }
     }
+#endif
 }
 
 }

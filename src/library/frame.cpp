@@ -39,14 +39,17 @@
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
 #include "sdl/SDLEventQueue.h"
+#include "BusyLoopDetection.h"
+#include "audio/AudioContext.h"
+
+#ifdef __unix__
 #include "xlib/xevents.h"
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xcb/xcbevents.h"
 #include "xlib/xatom.h"
 #include "xlib/XlibEventQueueList.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
-#include "BusyLoopDetection.h"
-#include "audio/AudioContext.h"
+#endif
 
 namespace libtas {
 
@@ -224,10 +227,12 @@ void frameBoundary(std::function<void()> draw)
             pushNativeSDLEvents();
         }
 
+#ifdef __unix__
         if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
             pushNativeXlibEvents();
             pushNativeXcbEvents();
         }
+#endif
 
         detTimer.exitFrameBoundary();
         return;
@@ -465,21 +470,25 @@ void frameBoundary(std::function<void()> draw)
         pushNativeSDLEvents();
     }
 
+#ifdef __unix__
     if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
         pushNativeXlibEvents();
         pushNativeXcbEvents();
     }
+#endif
 
     /* Update game inputs based on current and previous inputs. This must be
      * done after getting the new inputs (obviously) and before pushing events,
      * because they used the new game inputs. */
     updateGameInputs();
 
+#ifdef __unix__
     /* Reset the empty state of each xevent queue, for async event handling */
     if (shared_config.async_events & (SharedConfig::ASYNC_XEVENTS_BEG | SharedConfig::ASYNC_XEVENTS_END)) {
         xlibEventQueueList.lock();
         xlibEventQueueList.resetEmpty();
     }
+#endif
 
     /* Reset the empty state of the SDL queue, for async event handling */
     if (shared_config.async_events & (SharedConfig::ASYNC_SDLEVENTS_BEG | SharedConfig::ASYNC_SDLEVENTS_END)) {
@@ -497,9 +506,11 @@ void frameBoundary(std::function<void()> draw)
         generateMouseButtonEvents();
     }
 
+#ifdef __unix__
     if (shared_config.async_events & (SharedConfig::ASYNC_XEVENTS_BEG | SharedConfig::ASYNC_XEVENTS_END)) {
         xlibEventQueueList.unlock();
     }
+#endif
 
     if (shared_config.async_events & (SharedConfig::ASYNC_SDLEVENTS_BEG | SharedConfig::ASYNC_SDLEVENTS_END)) {
         sdlEventQueue.mutex.unlock();
@@ -509,8 +520,10 @@ void frameBoundary(std::function<void()> draw)
     syncControllerEvents();
 
     /* Wait for events to be processed by the game */
+#ifdef __unix__
     if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS_BEG)
         xlibEventQueueList.waitForEmpty();
+#endif
 
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_BEG)
         sdlEventQueue.waitForEmpty();
@@ -540,6 +553,7 @@ static void pushQuitEvent(void)
         sdlEventQueue.insert(&ev);
     }
 
+#ifdef __unix__
     if (x11::gameXWindows.empty())
         return;
 
@@ -558,6 +572,7 @@ static void pushQuitEvent(void)
             NATIVECALL(XSync(x11::gameDisplays[i], false));
         }
     }
+#endif
 }
 
 
@@ -607,10 +622,12 @@ static void receive_messages(std::function<void()> draw)
     {
         int message = receiveMessageNonBlocking();
         if (message < 0) {
+#ifdef __unix__
             /* We need to answer to ping messages from the window manager,
              * otherwise the game will appear as unresponsive. */
             pushNativeXlibEvents();
             pushNativeXcbEvents();
+#endif
             
             /* Resume execution if game is exiting */
             if (is_exiting)

@@ -20,6 +20,7 @@
 #include "sdlwindows.h"
 #include "../hook.h"
 #include "sdlversion.h"
+#include "sdldisplay.h" // SDL_GetCurrentDisplayMode
 #include "../logging.h"
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
@@ -36,7 +37,6 @@
 #include "SDLEventQueue.h"
 #include "../openglwrappers.h" // checkMesa()
 #include "../checkpoint/ThreadManager.h"
-#include "../xlib/xrandr.h"
 
 namespace libtas {
 
@@ -303,9 +303,9 @@ static int swapInterval = 0;
     }
     else {
         /* Change the window size to monitor size */
-        int fs_width, fs_height;
-        get_monitor_resolution(fs_width, fs_height);
-        SDL_SetWindowSize(window, fs_width, fs_height);
+        SDL_DisplayMode dm;
+        NATIVECALL(SDL_GetCurrentDisplayMode(0, &dm));
+        SDL_SetWindowSize(window, dm.w, dm.h);
     }
 
     return 0; // success

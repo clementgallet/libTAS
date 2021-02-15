@@ -23,7 +23,6 @@
 /* TODO: I don't know where to put these, so in a separate file for now */
 
 #include "../../shared/AllInputs.h"
-#include <X11/X.h>
 
 namespace libtas {
 
@@ -45,9 +44,6 @@ extern AllInputs old_game_ai;
 /* Same as game_ai but without clipping pointer position */
 extern AllInputs game_unclipped_ai;
 extern AllInputs old_game_unclipped_ai;
-
-/* Pointer grab window */
-extern Window pointer_grab_window;
 
 /* Is the pointer clipped inside a window? */
 extern bool pointer_clipping;

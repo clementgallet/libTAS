@@ -26,6 +26,9 @@
 
 namespace libtas {
 
+/* Pointer grab window */
+extern Window pointer_grab_window;
+
 OVERRIDE Bool XQueryPointer(
     Display*    /* display */,
     Window      /* w */,

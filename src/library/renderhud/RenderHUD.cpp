@@ -27,7 +27,9 @@
 #include <fontconfig/fontconfig.h>
 // #include <X11/keysym.h>
 #include "../ScreenCapture.h"
+#ifdef __unix__
 #include <X11/Xlib.h> // XKeysymToString
+#endif
 
 namespace libtas {
 
@@ -244,11 +246,15 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
     }
 
     /* Keyboard */
+#ifdef __unix__
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (ai.keyboard[i]) {
             oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
         }
     }
+#else
+    /* TODO! */
+#endif
 
     /* Mouse */
     if (shared_config.mouse_support) {

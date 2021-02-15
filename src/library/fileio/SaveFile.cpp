@@ -28,9 +28,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <vector>
-#include <sys/syscall.h>
 #include <unistd.h>
 #include <limits.h> //PATH_MAX
+
+#ifdef __linux__
+#include <sys/syscall.h>
+#endif
 
 namespace libtas {
 
@@ -277,11 +280,16 @@ int SaveFile::open(int flags)
             return -1;
         }
         else {
+#ifdef __linux__
             /* File was removed and opened in write mode */
             fd = syscall(SYS_memfd_create, filename.c_str(), 0);
+#else
+            NATIVECALL(fd = open(filename.c_str(), flags));
+#endif
         }
     }
     else {
+#ifdef __linux__
         /* Create an anonymous file and store its file descriptor using memfd_create syscall. */
         fd = syscall(SYS_memfd_create, filename.c_str(), 0);
 
@@ -308,6 +316,9 @@ int SaveFile::open(int flags)
                 }
             }
         }
+#else
+        NATIVECALL(fd = open(filename.c_str(), flags));
+#endif
     }
 
     /* If in append mode, seek to the end of the stream. If not, seek to the
