@@ -52,7 +52,7 @@ void clear_pthread_keys()
     }
 }
 
-int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) throw()
+int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __THROW
 {
     LINK_NAMESPACE(pthread_key_create, "pthread");
     if (GlobalState::isNative()) {
@@ -70,7 +70,7 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) thr
     return ret;
 }
 
-int pthread_key_delete (pthread_key_t key) throw()
+int pthread_key_delete (pthread_key_t key) __THROW
 {
     LINK_NAMESPACE(pthread_key_delete, "pthread");
     if (GlobalState::isNative()) {

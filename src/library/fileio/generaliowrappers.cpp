@@ -30,7 +30,7 @@ DEFINE_ORIG_POINTER(rename)
 DEFINE_ORIG_POINTER(remove)
 DEFINE_ORIG_POINTER(unlink)
 
-int rename (const char *oldf, const char *newf) throw()
+int rename (const char *oldf, const char *newf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(rename);
 
@@ -49,7 +49,7 @@ int rename (const char *oldf, const char *newf) throw()
 }
 
 /* Remove file FILENAME.  */
-int remove (const char *filename) throw()
+int remove (const char *filename) __THROW
 {
     LINK_NAMESPACE_GLOBAL(remove);
 
@@ -68,7 +68,7 @@ int remove (const char *filename) throw()
 }
 
 /* Remove the link NAME.  */
-int unlink (const char *name) throw()
+int unlink (const char *name) __THROW
 {
     LINK_NAMESPACE_GLOBAL(unlink);
 

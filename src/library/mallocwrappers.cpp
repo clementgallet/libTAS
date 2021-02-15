@@ -25,7 +25,7 @@
 
 namespace libtas {
 
-void *malloc (size_t size) throw()
+void *malloc (size_t size) __THROW
 {
     return calloc(1, size);
 }

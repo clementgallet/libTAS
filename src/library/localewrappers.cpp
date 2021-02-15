@@ -54,7 +54,7 @@ static const char* config_locale()
     }
 }
 
-/* Override */ char *setlocale (int category, const char *locale) throw()
+/* Override */ char *setlocale (int category, const char *locale) __THROW
 {
     debuglog(LCF_LOCALE, __func__, " called with category ", category, " and locale ", locale?locale:"<NULL>");
     char* mylocale = const_cast<char*>(config_locale());
@@ -66,7 +66,7 @@ static const char* config_locale()
     return mylocale;
 }
 
-char *getenv (const char *name) throw()
+char *getenv (const char *name) __THROW
 {
     LINK_NAMESPACE_GLOBAL(getenv);
     if (GlobalState::isNative()) {

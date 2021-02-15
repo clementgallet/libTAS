@@ -29,7 +29,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(clock_gettime)
 
-/* Override */ time_t time(time_t* t) throw()
+/* Override */ time_t time(time_t* t) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_TIME);
@@ -39,7 +39,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
     return ts.tv_sec;
 }
 
-/* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) throw()
+/* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
@@ -49,7 +49,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
     return 0;
 }
 
-/* Override */ clock_t clock (void) throw()
+/* Override */ clock_t clock (void) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
     struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
@@ -58,7 +58,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
     return clk;
 }
 
-/* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp) throw()
+/* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp) __THROW
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE_GLOBAL(clock_gettime);

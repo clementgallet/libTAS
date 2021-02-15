@@ -379,7 +379,7 @@ int close (int fd)
     return 0;
 }
 
-int access(const char *name, int type) throw()
+int access(const char *name, int type) __THROW
 {
     LINK_NAMESPACE_GLOBAL(access);
 
@@ -415,7 +415,7 @@ int access(const char *name, int type) throw()
     return orig::access(name, type);
 }
 
-int __xstat(int ver, const char *path, struct stat *buf) throw()
+int __xstat(int ver, const char *path, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__xstat);
 
@@ -453,7 +453,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__xstat(ver, path, buf);
 }
 
-int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
+int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__xstat64);
 
@@ -491,7 +491,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
     return orig::__xstat64(ver, path, buf);
 }
 
-int __lxstat(int ver, const char *path, struct stat *buf) throw()
+int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__lxstat);
 
@@ -529,7 +529,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__lxstat(ver, path, buf);
 }
 
-int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
+int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__lxstat64);
 
@@ -567,7 +567,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
     return orig::__lxstat64(ver, path, buf);
 }
 
-int __fxstat(int ver, int fd, struct stat *buf) throw()
+int __fxstat(int ver, int fd, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__fxstat);
 
@@ -578,7 +578,7 @@ int __fxstat(int ver, int fd, struct stat *buf) throw()
     return orig::__fxstat(ver, fd, buf);
 }
 
-int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
+int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__fxstat64);
 
@@ -589,7 +589,7 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
     return orig::__fxstat64(ver, fd, buf);
 }
 
-int dup (int fd) throw()
+int dup (int fd) __THROW
 {
     debuglogstdio(LCF_FILEIO, "%s call on %d", __func__, fd);
     LINK_NAMESPACE_GLOBAL(dup);
@@ -599,7 +599,7 @@ int dup (int fd) throw()
     return newfd;
 }
 
-int dup2 (int fd, int fd2) throw()
+int dup2 (int fd, int fd2) __THROW
 {
     debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
     LINK_NAMESPACE_GLOBAL(dup2);

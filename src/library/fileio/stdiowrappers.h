@@ -33,7 +33,7 @@ OVERRIDE FILE *fopen64 (const char *filename, const char *modes);
 OVERRIDE int fclose (FILE *stream);
 
 /* Return the system file descriptor for STREAM.  */
-// OVERRIDE int fileno (FILE *stream) throw();
+// OVERRIDE int fileno (FILE *stream) __THROW;
 
 }
 

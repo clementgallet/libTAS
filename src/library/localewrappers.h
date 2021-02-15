@@ -26,10 +26,10 @@
 namespace libtas {
 
 /* Set and/or return the current locale.  */
-OVERRIDE char *setlocale (int category, const char *locale) throw();
+OVERRIDE char *setlocale (int category, const char *locale) __THROW;
 
 /* Return the value of envariable NAME, or NULL if it doesn't exist.  */
-OVERRIDE char *getenv (const char *name) throw();
+OVERRIDE char *getenv (const char *name) __THROW;
 
 }
 

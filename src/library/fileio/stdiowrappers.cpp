@@ -189,7 +189,7 @@ int fclose (FILE *stream)
     return 0;
 }
 
-// int fileno (FILE *stream) throw()
+// int fileno (FILE *stream) __THROW
 // {
 //     LINK_NAMESPACE_GLOBAL(fileno);
 //

@@ -33,7 +33,7 @@ namespace libtas {
 DEFINE_ORIG_POINTER(getpid)
 DEFINE_ORIG_POINTER(fork)
 
-/* Override */ pid_t getpid (void) throw()
+/* Override */ pid_t getpid (void) __THROW
 {
     LINK_NAMESPACE_GLOBAL(getpid);
     pid_t pid = orig::getpid();

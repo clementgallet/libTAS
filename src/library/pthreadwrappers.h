@@ -29,7 +29,7 @@ namespace libtas {
 /* Create a new thread, starting with execution of START-ROUTINE
    getting passed ARG.  Creation attributed come from ATTR.  The new
    handle is stored in *NEWTHREAD.  */
-OVERRIDE int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw();
+OVERRIDE int pthread_create (pthread_t * thread, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW;
 
 /* Terminate calling thread.
 
@@ -49,11 +49,11 @@ OVERRIDE int pthread_join (pthread_t thread, void **thread_return);
    The resources of TH will therefore be freed immediately when it
    terminates, instead of waiting for another thread to perform PTHREAD_JOIN
    on it.  */
-OVERRIDE int pthread_detach (pthread_t thread) throw();
+OVERRIDE int pthread_detach (pthread_t thread) __THROW;
 
 /* Check whether thread TH has terminated.  If yes return the status of
    the thread in *THREAD_RETURN, if THREAD_RETURN is not NULL.  */
-OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) throw();
+OVERRIDE int pthread_tryjoin_np(pthread_t thread, void **retval) __THROW;
 
 /* Make calling thread wait for termination of the thread TH, but only
    until TIMEOUT.  The exit status of the thread is stored in
@@ -65,13 +65,13 @@ OVERRIDE int pthread_timedjoin_np(pthread_t thread, void **retval, const struct 
 
 /* Initialize condition variable COND using attributes ATTR, or use
    the default values if later is NULL.  */
-OVERRIDE int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) throw();
+OVERRIDE int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) __THROW;
 
 /* Wake up one thread waiting for condition variable COND.  */
-OVERRIDE int pthread_cond_signal (pthread_cond_t *cond) throw();
+OVERRIDE int pthread_cond_signal (pthread_cond_t *cond) __THROW;
 
 /* Wake up all threads waiting for condition variables COND.  */
-OVERRIDE int pthread_cond_broadcast (pthread_cond_t *__cond) throw();
+OVERRIDE int pthread_cond_broadcast (pthread_cond_t *__cond) __THROW;
 
 /* Wait for condition variable COND to be signaled or broadcast.
    MUTEX is assumed to be locked before.
@@ -118,14 +118,14 @@ OVERRIDE void pthread_testcancel (void);
 OVERRIDE int sem_timedwait (sem_t *sem, const struct timespec *abstime);
 
 /* Test whether SEM is posted.  */
-OVERRIDE int sem_trywait (sem_t *__sem) throw();
+OVERRIDE int sem_trywait (sem_t *__sem) __THROW;
 
-OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) throw();
+OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW;
 
-OVERRIDE int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) throw();
+OVERRIDE int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW;
 
 /* Set thread name visible in the kernel and its interfaces.  */
-OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) throw();
+OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) __THROW;
 
 }
 

@@ -52,21 +52,21 @@ OVERRIDE int creat64 (const char *file, mode_t mode);
 OVERRIDE int close (int fd);
 
 /* Test for access to NAME using the real UID and real GID. */
-OVERRIDE int access (const char *name, int type) throw();
+OVERRIDE int access (const char *name, int type) __THROW;
 
 /* Wrappers for stat functions */
-OVERRIDE int __xstat(int ver, const char *path, struct stat *buf) throw();
-OVERRIDE int __xstat64(int ver, const char *path, struct stat64 *buf) throw();
-OVERRIDE int __lxstat(int ver, const char *path, struct stat *buf) throw();
-OVERRIDE int __lxstat64(int ver, const char *path, struct stat64 *buf) throw();
-OVERRIDE int __fxstat(int ver, int fd, struct stat *buf) throw();
-OVERRIDE int __fxstat64(int ver, int fd, struct stat64 *buf) throw();
+OVERRIDE int __xstat(int ver, const char *path, struct stat *buf) __THROW;
+OVERRIDE int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW;
+OVERRIDE int __lxstat(int ver, const char *path, struct stat *buf) __THROW;
+OVERRIDE int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW;
+OVERRIDE int __fxstat(int ver, int fd, struct stat *buf) __THROW;
+OVERRIDE int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW;
 
-// OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) throw();
+// OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) __THROW;
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
-OVERRIDE int dup (int fd) throw();
-OVERRIDE int dup2 (int fd, int fd2) throw();
+OVERRIDE int dup (int fd) __THROW;
+OVERRIDE int dup2 (int fd, int fd2) __THROW;
 
 }
 

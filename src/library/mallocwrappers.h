@@ -26,7 +26,7 @@
 namespace libtas {
 
 /* Allocate SIZE bytes of memory.  */
-OVERRIDE void *malloc (size_t size) throw();
+OVERRIDE void *malloc (size_t size) __THROW;
 
 }
 

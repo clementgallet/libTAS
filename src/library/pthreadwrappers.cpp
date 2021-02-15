@@ -172,7 +172,7 @@ static void *pthread_start(void *arg)
 }
 
 
-/* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
+/* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW
 {
     LINK_NAMESPACE(pthread_create, "pthread");
 
@@ -282,7 +282,7 @@ static void *pthread_start(void *arg)
     return ret;
 }
 
-/* Override */ int pthread_detach (pthread_t pthread_id) throw()
+/* Override */ int pthread_detach (pthread_t pthread_id) __THROW
 {
     LINK_NAMESPACE(pthread_detach, "pthread");
     if (GlobalState::isNative()) {
@@ -315,7 +315,7 @@ static void *pthread_start(void *arg)
     return ret;
 }
 
-/* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) throw()
+/* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) __THROW
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
@@ -430,7 +430,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return condClocks;
 }
 
-/* Override */ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) throw()
+/* Override */ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_init, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
@@ -549,7 +549,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::pthread_cond_wait(cond, mutex);
 }
 
-/* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
+/* Override */ int pthread_cond_signal(pthread_cond_t *cond) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
@@ -559,7 +559,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::pthread_cond_signal(cond);
 }
 
-/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) throw()
+/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
@@ -638,7 +638,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::sem_timedwait(sem, &new_abstime);
 }
 
-/* Override */ int sem_trywait (sem_t *sem) throw()
+/* Override */ int sem_trywait (sem_t *sem) __THROW
 {
     LINK_NAMESPACE(sem_trywait, "pthread");
     if (GlobalState::isNative())
@@ -648,7 +648,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::sem_trywait(sem);
 }
 
-int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) throw()
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW
 {
     LINK_NAMESPACE(pthread_attr_setstack, "pthread");
     if (GlobalState::isNative())
@@ -661,7 +661,7 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
     return 0;
 }
 
-int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) throw()
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW
 {
     LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
     debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
@@ -670,7 +670,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) thro
     return ret;
 }
 
-int pthread_setname_np (pthread_t target_thread, const char *name) throw()
+int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
 {
     LINK_NAMESPACE(pthread_setname_np, "pthread");
     if (GlobalState::isNative())

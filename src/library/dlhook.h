@@ -75,8 +75,8 @@ void add_lib(const char* library);
  */
 void *find_sym(const char* name, bool original = false);
 
-OVERRIDE void *dlopen(const char *file, int mode) throw();
-OVERRIDE void *dlsym(void *handle, const char *name) throw();
+OVERRIDE void *dlopen(const char *file, int mode) __THROW;
+OVERRIDE void *dlsym(void *handle, const char *name) __THROW;
 
 OVERRIDE void *_dl_sym(void *, const char *, void *);
 

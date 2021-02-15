@@ -32,20 +32,20 @@ namespace libtas {
 
 /* Time used by the program so far (user time + system time).
    The result / CLOCKS_PER_SECOND is program time in seconds.  */
-OVERRIDE clock_t clock (void) throw();
+OVERRIDE clock_t clock (void) __THROW;
 
 /* Get current value of clock CLOCK_ID and store it in TP.  */
-OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp) throw();
+OVERRIDE int clock_gettime (clockid_t clock_id, struct timespec *tp) __THROW;
 
 /* Return the current time and put it in *TIMER if TIMER is not NULL.  */
-OVERRIDE time_t time(time_t* t) throw();
+OVERRIDE time_t time(time_t* t) __THROW;
 
 /* Get the current time of day and timezone information,
    putting it into *TV and *TZ.  If TZ is NULL, *TZ is not filled.
    Returns 0 on success, -1 on errors.
    NOTE: This form of timezone information is obsolete.
    Use the functions and variables declared in <time.h> instead.  */
-OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) throw();
+OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW;
 
 /**
  * \brief Get the number of milliseconds since the SDL library initialization.

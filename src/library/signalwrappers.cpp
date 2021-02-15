@@ -48,7 +48,7 @@ DEFINE_ORIG_POINTER(pthread_sigqueue)
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;
 
-/* Override */ sighandler_t signal (int sig, sighandler_t handler) throw()
+/* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(signal);
@@ -72,7 +72,7 @@ static thread_local int origUsrMaskThread = 0;
     return ret;
 }
 
-/* Override */ int sigblock (int mask) throw()
+/* Override */ int sigblock (int mask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
@@ -91,7 +91,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int sigsetmask (int mask) throw()
+/* Override */ int sigsetmask (int mask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
@@ -111,7 +111,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int siggetmask (void) throw()
+/* Override */ int siggetmask (void) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(siggetmask);
@@ -125,7 +125,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) throw()
+/* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigprocmask);
@@ -183,7 +183,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int sigaction (int sig, const struct sigaction *act,
-    struct sigaction *oact) throw()
+    struct sigaction *oact) __THROW
 {
     LINK_NAMESPACE_GLOBAL(sigaction);
 
@@ -218,7 +218,7 @@ static thread_local int origUsrMaskThread = 0;
     return ret;
 }
 
-/* Override */ int sigpending (sigset_t *set) throw()
+/* Override */ int sigpending (sigset_t *set) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE_GLOBAL(sigpending);
@@ -247,7 +247,7 @@ static thread_local int origUsrMaskThread = 0;
     return orig::sigtimedwait(set, info, timeout);
 }
 
-/* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) throw()
+/* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) __THROW
 {
     LINK_NAMESPACE_GLOBAL(sigaltstack);
 
@@ -270,7 +270,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
-    sigset_t *oldmask) throw()
+    sigset_t *oldmask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigmask);
@@ -341,7 +341,7 @@ static thread_local int origUsrMaskThread = 0;
     return ret;
 }
 
-/* Override */ int pthread_kill (pthread_t threadid, int signo) throw()
+/* Override */ int pthread_kill (pthread_t threadid, int signo) __THROW
 {
     LINK_NAMESPACE_GLOBAL(pthread_kill);
 
@@ -363,7 +363,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int pthread_sigqueue (pthread_t threadid, int signo,
-                 const union sigval value) throw()
+                 const union sigval value) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigqueue);

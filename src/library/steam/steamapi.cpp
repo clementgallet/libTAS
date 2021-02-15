@@ -20,8 +20,9 @@
 #include "steamapi.h"
 #include "../logging.h"
 #include <signal.h>
-// #define _GNU_SOURCE
-//#include <link.h>
+#ifdef __unix__
+#include <link.h>
+#endif
 #include <dlfcn.h>
 
 #include "CCallbackManager.h"
@@ -123,7 +124,8 @@ static bool SteamGetInterfaceVersion()
         return false;
     }
 
-    /* Find SteamAPI library path */
+/* Find SteamAPI library path */
+#ifdef __unix__
     struct link_map *l;
     int ret = dlinfo(h, RTLD_DI_LINKMAP, &l);
 
@@ -133,6 +135,18 @@ static bool SteamGetInterfaceVersion()
     }
 
     char* steam_path = l->l_name;
+
+#elif defined(__APPLE__) && defined(__MACH__)
+    void* f = dlsym(h, "SteamAPI_Init");
+    if (!f) {
+        debuglog(LCF_STEAM | LCF_WARNING, "Could not find a symbol inside Steam library");
+        return false;        
+    }
+    
+    Dl_info dli;
+    dladdr(f, &dli);
+    char* steam_path = dli->dli_fname;
+#endif
 
     /* Find Steam interface version from the library.
      * Taken from https://git.bitmycode.com/Booti386/DummySteamAPI */

@@ -64,7 +64,7 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
-void *dlopen(const char *file, int mode) throw() {
+void *dlopen(const char *file, int mode) __THROW {
     if (!orig::dlopen) {
         /* To access the real dlopen function, we use the fact that dlsym
          * calls internally _dl_sym.
@@ -131,7 +131,7 @@ void *find_sym(const char *name, bool original) {
     return addr;
 }
 
-void *dlsym(void *handle, const char *name) throw() {
+void *dlsym(void *handle, const char *name) __THROW {
     if (!orig::dlsym) {
         /* Again, we use the internal `_dl_sym` function to access to the
          * location of the real `dlsym` function. This may seems weird, and is
