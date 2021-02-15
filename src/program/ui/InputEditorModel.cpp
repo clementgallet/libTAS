@@ -310,10 +310,12 @@ void InputEditorModel::buildInputSet()
     for (SingleInput si : new_input_set) {
 
         /* Gather input description */
-        for (SingleInput ti : context->config.km.input_list) {
-            if (si == ti) {
-                si.description = ti.description;
-                break;
+        for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
+            for (SingleInput ti : context->config.km.input_list[i]) {
+                if (si == ti) {
+                    si.description = ti.description;
+                    break;
+                }
             }
         }
 
@@ -388,9 +390,11 @@ std::string InputEditorModel::inputDescription(int column)
     SingleInput si = movie->editor->input_set[column-2];
 
     /* Gather input description */
-    for (SingleInput ti : context->config.km.input_list) {
-        if (si == ti) {
-            return ti.description;
+    for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
+        for (SingleInput ti : context->config.km.input_list[i]) {
+            if (si == ti) {
+                return ti.description;
+            }
         }
     }
 
@@ -589,10 +593,12 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
         if (new_input) {
 
             /* Gather input description */
-            for (SingleInput ti : context->config.km.input_list) {
-                if (si == ti) {
-                    si.description = ti.description;
-                    break;
+            for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
+                for (SingleInput ti : context->config.km.input_list[i]) {
+                    if (si == ti) {
+                        si.description = ti.description;
+                        break;
+                    }
                 }
             }
 

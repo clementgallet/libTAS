@@ -428,11 +428,13 @@ void InputEditorView::addInputColumn()
     ks = ks & 0xffff;
 
     /* Get the input with description if available */
-    for (auto iter : context->config.km.input_list) {
-        if (iter.type == SingleInput::IT_KEYBOARD) {
-            if (iter.value == ks) {
-                inputEditorModel->addUniqueInput(iter);
-                return;
+    for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
+        for (auto iter : context->config.km.input_list[i]) {
+            if (iter.type == SingleInput::IT_KEYBOARD) {
+                if (iter.value == ks) {
+                    inputEditorModel->addUniqueInput(iter);
+                    return;
+                }
             }
         }
     }

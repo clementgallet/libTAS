@@ -141,8 +141,17 @@ class KeyMapping {
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<xcb_keysym_t,SingleInput> input_mapping;
 
+        enum {
+            INPUTLIST_KEYBOARD_LATIN,
+            INPUTLIST_KEYBOARD_MISC,
+            INPUTLIST_FLAG,
+            INPUTLIST_CONTROLLER,
+            INPUTLIST_HIDDEN,
+            INPUTLIST_SIZE,
+        };
+
         /* List of inputs that can be mapped to a single key */
-        std::vector<SingleInput> input_list;
+        std::vector<SingleInput> input_list[INPUTLIST_SIZE];
 
         /* Map keyboard KeySym to a hotkey */
         std::map<xcb_keysym_t,HotKey> hotkey_mapping;
@@ -163,14 +172,14 @@ class KeyMapping {
         void default_hotkey(int hotkey_index);
 
         /* Set input to default value */
-        void default_input(int input_index);
+        void default_input(int tab, int input_index);
 
         /* Assign a new key to the hotkey */
         void reassign_hotkey(int hotkey_index, xcb_keysym_t ks);
         void reassign_hotkey(HotKey hk, xcb_keysym_t ks);
 
         /* Assign a new key to the input */
-        void reassign_input(int input_index, xcb_keysym_t ks);
+        void reassign_input(int tab, int input_index, xcb_keysym_t ks);
         void reassign_input(SingleInput si, xcb_keysym_t ks);
 
         /*

@@ -26,6 +26,7 @@
 
 #include "../Context.h"
 #include "KeyPressedDialog.h"
+#include "../KeyMapping.h"
 
 class InputWindow : public QDialog {
     Q_OBJECT
@@ -39,7 +40,7 @@ public:
 
 private:
     QTableWidget *hotkeyTable;
-    QTableWidget *inputTable;
+    QTableWidget *inputTable[KeyMapping::INPUTLIST_SIZE];
 
     QPushButton *assignButton;
     QPushButton *defaultButton;
@@ -47,7 +48,7 @@ private:
 
     KeyPressedDialog* keyDialog;
 
-    void updateInputRow(int row);
+    void updateInputRow(int tab, int row);
     void updateHotkeyRow(int row);
 
 private slots:
