@@ -21,7 +21,7 @@
 #include "../logging.h"
 #include <signal.h>
 // #define _GNU_SOURCE
-#include <link.h>
+//#include <link.h>
 #include <dlfcn.h>
 
 #include "CCallbackManager.h"

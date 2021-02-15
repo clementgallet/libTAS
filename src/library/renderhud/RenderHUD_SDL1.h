@@ -17,13 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
-#ifdef LIBTAS_ENABLE_HUD
-
 #ifndef LIBTAS_RENDERHUD_SDL1_H_INCL
 #define LIBTAS_RENDERHUD_SDL1_H_INCL
 
 #include "RenderHUD.h"
+
+#ifdef LIBTAS_ENABLE_HUD
 
 namespace libtas {
 class RenderHUD_SDL1 : public RenderHUD

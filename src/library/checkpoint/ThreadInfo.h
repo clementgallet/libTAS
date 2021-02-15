@@ -22,6 +22,7 @@
 #ifndef LIBTAS_THREAD_INFO_H
 #define LIBTAS_THREAD_INFO_H
 #include <atomic>
+#define _XOPEN_SOURCE
 #include <ucontext.h>
 #include <pthread.h> // pthread_t
 #include <csignal> // stack_t

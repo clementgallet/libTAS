@@ -24,7 +24,9 @@
 #include <unistd.h>
 #include <sys/signal.h>
 #include <SDL2/SDL.h>
+#ifdef __linux__
 #include <sys/epoll.h>
+#endif
 #include <poll.h>
 #include "global.h"
 
@@ -57,8 +59,9 @@ OVERRIDE int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *except
    This function is a cancellation point and therefore not marked with
    __THROW.  */
 OVERRIDE int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	const struct timespec *timeout, const __sigset_t *sigmask);
+	const struct timespec *timeout, const sigset_t *sigmask);
 
+#ifdef __linux__
 /* Wait for events on an epoll instance "epfd". Returns the number of
    triggered events returned in "events" buffer. Or -1 in case of
    error with the "errno" variable set to the specific error code. The
@@ -70,7 +73,7 @@ OVERRIDE int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *excep
    This function is a cancellation point and therefore not marked with
    __THROW.  */
 OVERRIDE int epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout);
-
+#endif
 }
 
 #endif

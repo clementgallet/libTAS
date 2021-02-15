@@ -31,8 +31,10 @@ namespace libtas {
 DEFINE_ORIG_POINTER(poll)
 DEFINE_ORIG_POINTER(select)
 DEFINE_ORIG_POINTER(pselect)
+#ifdef __linux__
 DEFINE_ORIG_POINTER(epoll_wait)
-
+#endif
+    
 /* Override */ int poll (struct pollfd *fds, nfds_t nfds, int timeout)
 {
     LINK_NAMESPACE_GLOBAL(poll);
@@ -150,6 +152,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
 }
 
+#ifdef __linux__
 /* Override */ int epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
     LINK_NAMESPACE_GLOBAL(epoll_wait);
@@ -173,5 +176,6 @@ DEFINE_ORIG_POINTER(epoll_wait)
 
     return ret;
 }
+#endif
 
 }

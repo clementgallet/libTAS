@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
-#ifdef LIBTAS_ENABLE_HUD
-
 #ifndef LIBTAS_RENDERHUD_GL_H_INCL
 #define LIBTAS_RENDERHUD_GL_H_INCL
 
 #include "RenderHUD.h"
+
+#ifdef LIBTAS_ENABLE_HUD
+
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glext.h>
