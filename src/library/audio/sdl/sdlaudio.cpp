@@ -273,7 +273,8 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     if (iscapture != 0)
         return 0;
 
-    return open_audio_device(desired, obtained, 2);
+    SDL_AudioDeviceID id = open_audio_device(desired, obtained, 2);
+    return (id > 0)? id : 0;
 }
 
 /* Override */ SDL_AudioStatus SDL_GetAudioStatus(void)
