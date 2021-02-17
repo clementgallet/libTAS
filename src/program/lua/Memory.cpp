@@ -38,10 +38,14 @@ static const luaL_Reg memory_functions[] =
     { "reads16", Lua::Memory::reads16},
     { "reads32", Lua::Memory::reads32},
     { "reads64", Lua::Memory::reads64},
+    { "readf", Lua::Memory::readf},
+    { "readd", Lua::Memory::readd},
     { "write8", Lua::Memory::write8},
     { "write16", Lua::Memory::write16},
     { "write32", Lua::Memory::write32},
     { "write64", Lua::Memory::write64},
+    { "writef", Lua::Memory::writef},
+    { "writed", Lua::Memory::writed},
     { NULL, NULL }
 };
 
@@ -64,7 +68,7 @@ bool Lua::Memory::read(uintptr_t addr, void* return_value, int size)
 }
 
 /* Define a macro to declare all read functions */
-#define READFUNC(NAME, TYPE) \
+#define READFUNCINT(NAME, TYPE) \
 int Lua::Memory::read##NAME(lua_State *L) \
 { \
     uintptr_t addr = static_cast<uintptr_t>(lua_tointeger(L, 1)); \
@@ -77,14 +81,30 @@ int Lua::Memory::read##NAME(lua_State *L) \
     return 1; \
 }
 
-READFUNC(u8, uint8_t)
-READFUNC(u16, uint16_t)
-READFUNC(u32, uint32_t)
-READFUNC(u64, uint64_t)
-READFUNC(s8, int8_t)
-READFUNC(s16, int16_t)
-READFUNC(s32, int32_t)
-READFUNC(s64, int64_t)
+READFUNCINT(u8, uint8_t)
+READFUNCINT(u16, uint16_t)
+READFUNCINT(u32, uint32_t)
+READFUNCINT(u64, uint64_t)
+READFUNCINT(s8, int8_t)
+READFUNCINT(s16, int16_t)
+READFUNCINT(s32, int32_t)
+READFUNCINT(s64, int64_t)
+
+#define READFUNCNUMBER(NAME, TYPE) \
+int Lua::Memory::read##NAME(lua_State *L) \
+{ \
+    uintptr_t addr = static_cast<uintptr_t>(lua_tointeger(L, 1)); \
+    TYPE value; \
+    bool ret = read(addr, &value, sizeof(TYPE)); \
+    if (ret) \
+        lua_pushnumber(L, static_cast<lua_Number>(value)); \
+    else \
+        lua_pushnumber(L, static_cast<lua_Number>(0)); \
+    return 1; \
+}
+
+READFUNCNUMBER(f, float)
+READFUNCNUMBER(d, double)
 
 void Lua::Memory::write(uintptr_t addr, void* value, int size)
 {
@@ -99,11 +119,11 @@ void Lua::Memory::write(uintptr_t addr, void* value, int size)
 }
 
 /* Define a macro to declare all write functions */
-#define WRITEFUNC(NAME, TYPEU, TYPES) \
+#define WRITEFUNCINT(NAME, TYPEU, TYPES) \
 int Lua::Memory::write##NAME(lua_State *L) \
 { \
     uintptr_t addr = static_cast<uintptr_t>(lua_tointeger(L, 1)); \
-    int64_t value = static_cast<int64_t>(lua_tointeger(L, 2)); \
+    lua_Integer value = lua_tointeger(L, 2); \
     if (value >= 0) { \
         TYPEU typed_value = static_cast<TYPEU>(value); \
         write(addr, &typed_value, sizeof(TYPEU)); \
@@ -115,7 +135,20 @@ int Lua::Memory::write##NAME(lua_State *L) \
     return 0; \
 }
 
-WRITEFUNC(8, uint8_t, int8_t)
-WRITEFUNC(16, uint16_t, int16_t)
-WRITEFUNC(32, uint32_t, int32_t)
-WRITEFUNC(64, uint64_t, int64_t)
+WRITEFUNCINT(8, uint8_t, int8_t)
+WRITEFUNCINT(16, uint16_t, int16_t)
+WRITEFUNCINT(32, uint32_t, int32_t)
+WRITEFUNCINT(64, uint64_t, int64_t)
+
+#define WRITEFUNCNUMBER(NAME, TYPE) \
+int Lua::Memory::write##NAME(lua_State *L) \
+{ \
+    uintptr_t addr = static_cast<uintptr_t>(lua_tointeger(L, 1)); \
+    lua_Number value = lua_tonumber(L, 2); \
+    TYPE typed_value = static_cast<TYPE>(value); \
+    write(addr, &typed_value, sizeof(TYPE)); \
+    return 0; \
+}
+
+WRITEFUNCNUMBER(f, float)
+WRITEFUNCNUMBER(d, double)

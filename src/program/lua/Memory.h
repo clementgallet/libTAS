@@ -60,6 +60,12 @@ namespace Memory {
     /* Read a signed 64-bit integer */
     int reads64(lua_State *L);
 
+    /* Read a float */
+    int readf(lua_State *L);
+
+    /* Read a double */
+    int readd(lua_State *L);
+
     /* Helper function for reading an integer */
     void write(uintptr_t addr, void* value, int size);
 
@@ -74,6 +80,12 @@ namespace Memory {
 
     /* Write a 64-bit integer */
     int write64(lua_State *L);
+    
+    /* Write a float */
+    int writef(lua_State *L);
+    
+    /* Write a double */
+    int writed(lua_State *L);
 }
 }
 

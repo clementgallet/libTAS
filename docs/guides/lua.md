@@ -147,12 +147,26 @@ Returns the unsigned value read from address `address` (any error returns 0).
 
 Returns the signed value read from address `address` (any error returns 0).
 
+#### memory.readf / memory.readd
+
+    Number memory.readf(Number address)
+    Number memory.readd(Number address)
+
+Returns the float/double value read from address `address` (any error returns 0).
+
 #### memory.write8 / memory.write16 / memory.write32 / memory.write64
 
     None memory.write8(Number address, Number value)
     None memory.write16(Number address, Number value)
     None memory.write32(Number address, Number value)
     None memory.write64(Number address, Number value)
+
+Writes the value `value` to address `address`.
+
+#### memory.writef / memory.writed
+
+    None memory.writef(Number address, Number value)
+    None memory.writed(Number address, Number value)
 
 Writes the value `value` to address `address`.
 
