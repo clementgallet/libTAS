@@ -259,6 +259,7 @@ public:
     /* Convert button flags to a SDL1/2 hat number */
     static int toSDLHat(int buttons);
 
+#ifdef __linux__
     /* Convert an axis number to an jsdev axis number */
     static int toJsdevAxis(int axis);
 
@@ -276,6 +277,7 @@ public:
 
     /* Convert button flags to an jsdev/evdev vertical hat number */
     static int toDevHatY(int buttons);
+#endif
 
 };
 

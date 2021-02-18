@@ -43,9 +43,13 @@ OVERRIDE void srandom (unsigned int seed) __THROW;
 OVERRIDE char *initstate (unsigned int seed, char *statebuf,
             size_t statelen) __THROW;
 
+#ifdef __unix__
 /* Switch the random number generator to state buffer STATEBUF,
-   which should have been previously initialized by `initstate'.  */
+ which should have been previously initialized by `initstate'.  */
 OVERRIDE char *setstate (char *statebuf) __THROW;
+#elif defined(__APPLE__) && defined(__MACH__)
+OVERRIDE char *setstate (const char *statebuf);
+#endif
 
 // struct random_data
 //   {

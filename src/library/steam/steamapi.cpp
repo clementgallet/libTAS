@@ -144,8 +144,14 @@ static bool SteamGetInterfaceVersion()
     }
     
     Dl_info dli;
-    dladdr(f, &dli);
-    char* steam_path = dli->dli_fname;
+    int ret = dladdr(f, &dli);
+
+    if (ret == 0) {
+        debuglog(LCF_STEAM | LCF_WARNING, "Could not find address of Steam symbol");
+        return false;
+    }
+    
+    const char* steam_path = dli.dli_fname;
 #endif
 
     /* Find Steam interface version from the library.

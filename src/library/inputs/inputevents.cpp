@@ -17,11 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __unix__
 #include "config.h"
+#endif
+
 #include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
-#include "xkeyboardlayout.h"
 #include "../logging.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SingleInput.h"
@@ -40,6 +42,7 @@
 #ifdef __unix__
 #include "xinput.h"
 #include "xpointer.h"
+#include "xkeyboardlayout.h"
 #include "../xlib/XlibEventQueueList.h"
 #include "../xcb/XcbEventQueueList.h"
 #include "../xcb/xcbconnection.h" // x11::gameConnections
@@ -1068,10 +1071,10 @@ void syncControllerEvents()
     if (!(game_info.joystick & (GameInfo::JSDEV | GameInfo::EVDEV)))
         return;
 
+#ifdef __linux__
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-#ifdef __linux__
     for (int i = 0; i < shared_config.nb_controllers; i++) {
         if (shared_config.async_events & SharedConfig::ASYNC_JSDEV) {
             /* Send a synchronize report event */

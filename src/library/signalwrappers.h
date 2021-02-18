@@ -22,14 +22,20 @@
 
 #include "global.h"
 #include <signal.h> // for all signal structs
+#include <time.h> // for all signal structs
 
 namespace libtas {
 
-/* Set the handler for the signal SIG to HANDLER, returning the old
-   handler, or SIG_ERR on error.
-   By default `signal' has the BSD semantic.  */
-OVERRIDE sighandler_t signal (int sig, sighandler_t handler) __THROW;
+    
+#if defined(__APPLE__) && defined(__MACH__)
+typedef void (*sighandler_t) (int);
+#endif
 
+/* Set the handler for the signal SIG to HANDLER, returning the old
+ handler, or SIG_ERR on error.
+ By default `signal' has the BSD semantic.  */
+OVERRIDE sighandler_t signal (int sig, sighandler_t handler) __THROW;
+    
 /* None of the following functions should be used anymore.  They are here
    only for compatibility.  A single word (`int') is not guaranteed to be
    enough to hold a complete signal mask and therefore these functions

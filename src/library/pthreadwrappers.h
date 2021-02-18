@@ -124,8 +124,14 @@ OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t
 
 OVERRIDE int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW;
 
+OVERRIDE int pthread_condattr_getclock(const pthread_condattr_t *attr, clockid_t *clock_id) __THROW;
+
 /* Set thread name visible in the kernel and its interfaces.  */
+#ifdef __unix__
 OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) __THROW;
+#elif defined(__APPLE__) && defined(__MACH__)
+OVERRIDE int pthread_setname_np (const char *name);
+#endif
 
 }
 

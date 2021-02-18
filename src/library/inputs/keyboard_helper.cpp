@@ -20,7 +20,8 @@
 #include "keyboard_helper.h"
 #include "sdlkeyboardlayout.h"
 #include <string.h>
-#include <X11/Xlib.h>
+//#include <X11/Xlib.h>
+#include "../../external/keysymdef.h"
 
 namespace libtas {
 

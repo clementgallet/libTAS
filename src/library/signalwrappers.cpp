@@ -71,7 +71,7 @@ static thread_local int origUsrMaskThread = 0;
 
     return ret;
 }
-
+    
 /* Override */ int sigblock (int mask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);

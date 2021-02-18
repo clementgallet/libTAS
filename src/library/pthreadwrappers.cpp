@@ -123,6 +123,7 @@ static void *pthread_start(void *arg)
 
             debuglog(LCF_THREAD, "End of thread code");
 
+#ifdef __linux__
             /* Because we recycle this thread, we must unset all TLS values
              * and call destructors ourselves.  First, we unset the values
              * from the older, pthread_key_create()-based implementation
@@ -153,6 +154,8 @@ static void *pthread_start(void *arg)
              * to be recycled.  But one value is important:
              * we need to fix ThreadManager::current_thread .
              */
+#endif
+
             ThreadManager::setCurrentThread(thread);
 
             ThreadManager::threadExit(ret);
@@ -670,13 +673,23 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __TH
     return ret;
 }
 
+#ifdef __unix__
 int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
 {
     LINK_NAMESPACE(pthread_setname_np, "pthread");
     if (GlobalState::isNative())
         return orig::pthread_setname_np(target_thread, name);
-
+    
     debuglog(LCF_THREAD, __func__, " called with target_thread ", target_thread, " and name ", name);
+#elif defined(__APPLE__) && defined(__MACH__)
+int pthread_setname_np (const char *name)
+{
+    LINK_NAMESPACE(pthread_setname_np, "pthread");
+    if (GlobalState::isNative())
+        return orig::pthread_setname_np(name);
+
+    debuglog(LCF_THREAD, __func__, " called with name ", name);
+#endif
 
     /* Check if the thread is one of the llvm ones, and make it native and disable log */
     if (strncmp(name, "llvmpipe-", 9) == 0) {
@@ -695,7 +708,11 @@ int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
         }
     }
 
+#ifdef __unix__
     return orig::pthread_setname_np(target_thread, name);
+#elif defined(__APPLE__) && defined(__MACH__)
+    return orig::pthread_setname_np(name);
+#endif
 }
 
 }

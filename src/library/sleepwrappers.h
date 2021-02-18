@@ -22,9 +22,8 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <sys/signal.h>
+//#include <sys/signal.h>
 #include <SDL2/SDL.h>
-#include <sys/epoll.h>
 #include "global.h"
 
 namespace libtas {

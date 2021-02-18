@@ -219,8 +219,12 @@ void DeterministicTimer::exitFrameBoundary()
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * shared_config.speed_divisor;
 
         /* Call the real nanosleep function */
+#ifdef __unix__
         NATIVECALL(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &desiredTime, NULL));
-
+#else
+        NATIVECALL(nanosleep(&desiredTime, NULL));
+#endif
+        
         /* We assume that our sleep was perfect, so we save the desired time as our
          * current time, except if our current time was longer than the desired time.
          */

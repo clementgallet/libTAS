@@ -199,10 +199,16 @@ struct dirent *readdir (DIR *dirp)
     return orig::readdir(dirp);
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+struct dirent *readdir64 (DIR *dirp)
+{
+    static struct dirent dir;
+#else
 struct dirent64 *readdir64 (DIR *dirp)
 {
     static struct dirent64 dir;
-    
+#endif
+
     LINK_NAMESPACE_GLOBAL(readdir64);
 
     if (GlobalState::isNative())
@@ -303,7 +309,11 @@ int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
     return orig::readdir_r(dirp, entry, result);
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+int readdir64_r (DIR *dirp, struct dirent *entry, struct dirent **result)
+#else
 int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
+#endif
 {
     LINK_NAMESPACE_GLOBAL(readdir64_r);
 

@@ -22,8 +22,10 @@
 #include "FileHandle.h"
 #include "../logging.h"
 #include "../Utils.h"
+#ifdef __linux__
 #include "../inputs/evdev.h"
 #include "../inputs/jsdev.h"
+#endif
 
 #include <cstdlib>
 #include <forward_list>
@@ -94,7 +96,11 @@ void openFile(const char* file, FILE* f)
 
 std::pair<int, int> createPipe(int flags) {
     int fds[2];
+#ifdef __linux__
     if (pipe2(fds, flags) != 0)
+#else
+    if (pipe(fds) != 0)
+#endif
         return std::make_pair(-1, -1);
 
     fcntl(fds[1], F_SETFL, O_NONBLOCK);
@@ -120,9 +126,11 @@ bool closeFile(int fd)
                 return false;
             }
             else {
+#ifdef __unix__
                 if (!unref_evdev(iter->fds[0]) || !unref_jsdev(iter->fds[0])) {
                     return false;
                 }
+#endif
                 if (iter->isPipe()) {
                     NATIVECALL(close(iter->fds[1]));
                 }

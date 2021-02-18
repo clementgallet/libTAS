@@ -284,7 +284,7 @@ int SaveFile::open(int flags)
             /* File was removed and opened in write mode */
             fd = syscall(SYS_memfd_create, filename.c_str(), 0);
 #else
-            NATIVECALL(fd = open(filename.c_str(), flags));
+            NATIVECALL(fd = ::open(filename.c_str(), flags));
 #endif
         }
     }
@@ -317,7 +317,7 @@ int SaveFile::open(int flags)
             }
         }
 #else
-        NATIVECALL(fd = open(filename.c_str(), flags));
+        NATIVECALL(fd = ::open(filename.c_str(), flags));
 #endif
     }
 

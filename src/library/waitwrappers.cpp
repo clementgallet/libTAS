@@ -24,7 +24,9 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
+#ifdef __linux__
 #include "audio/alsa/pcm.h"
+#endif
 
 namespace libtas {
 
@@ -45,6 +47,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
 
     debuglog(LCF_WAIT, __func__, " call with ", nfds, " fds and timeout ", timeout);
 
+#ifdef __linux__
     /* Check for the fd used by ALSA */
     for (nfds_t i = 0; i < nfds; i++) {
         if (fds[i].fd == 0xa15a) {
@@ -66,7 +69,8 @@ DEFINE_ORIG_POINTER(epoll_wait)
             return ret;
         }
     }
-
+#endif
+    
     int ret = orig::poll(fds, nfds, timeout);
 
     /* If timeout on main thread, add the timeout amount to the timer */
@@ -119,7 +123,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
 }
 
 /* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	const struct timespec *timeout, const __sigset_t *sigmask)
+	const struct timespec *timeout, const sigset_t *sigmask)
 {
     LINK_NAMESPACE_GLOBAL(pselect);
 

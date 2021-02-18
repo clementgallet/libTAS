@@ -77,7 +77,11 @@ DEFINE_ORIG_POINTER(lcong48_r)
     return orig::initstate(seed, statebuf, statelen);
 }
 
+#ifdef __unix__
 /* Override */ char *setstate (char *statebuf) __THROW
+#elif defined(__APPLE__) && defined(__MACH__)
+/* Override */ char *setstate (const char *statebuf)
+#endif
 {
     DEBUGLOGCALL(LCF_RANDOM);
     LINK_NAMESPACE_GLOBAL(setstate);

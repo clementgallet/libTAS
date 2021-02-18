@@ -20,10 +20,12 @@
 #include "dlhook.h"
 #include "logging.h"
 #include "hook.h"
+#ifdef __unix__
 #include "wine/winehook.h"
 #include "wine/wined3d.h"
 #include "wine/user32.h"
 #include "wine/kernel32.h"
+#endif
 #include <cstring>
 #include <set>
 #include "backtrace.h"
@@ -93,6 +95,7 @@ void *dlopen(const char *file, int mode) __THROW {
     if (result)
         add_lib(file);
 
+#ifdef __linux__
     if (result && file && std::string(file).find("wined3d.dll.so") != std::string::npos) {
         /* Hook wine wined3d functions */
         hook_wined3d();
@@ -107,6 +110,7 @@ void *dlopen(const char *file, int mode) __THROW {
         /* Hook wine kernel32 functions */
         hook_kernel32();
     }
+#endif
 
     return result;
 }
@@ -227,10 +231,12 @@ void *dlsym(void *handle, const char *name) __THROW {
         addr = orig::dlsym(handle, name);
     }
 
+#ifdef __linux__
     if (0 == strcmp(name, "__wine_process_init")) {
         /* Hook wine LdrGetProcedureAddress function */
         hook_ntdll();
     }
+#endif
 
     recurs_count--;
     return addr;

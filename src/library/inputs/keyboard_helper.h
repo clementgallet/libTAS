@@ -22,8 +22,7 @@
 
 #include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
-#include <X11/XKBlib.h>
-#include <X11/keysym.h>
+//#include <X11/XKBlib.h>
 #include "../../shared/AllInputs.h"
 
 namespace libtas {

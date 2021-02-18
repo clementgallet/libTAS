@@ -40,7 +40,7 @@ namespace index {
 enum {
 #define SDL_DYNAPI_PROC(rc,fn,params,args,ret) fn,
 #define SDL_DYNAPI_PROC_NO_VARARGS 0
-#include "../external/SDL_dynapi_procs.h"
+#include "../../external/SDL_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC_NO_VARARGS
 #undef SDL_DYNAPI_PROC
 };

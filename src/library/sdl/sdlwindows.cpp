@@ -35,7 +35,9 @@
 #include "../WindowTitle.h"
 #include "../encoding/AVEncoder.h"
 #include "SDLEventQueue.h"
+#ifdef __unix__
 #include "../openglwrappers.h" // checkMesa()
+#endif
 #include "../checkpoint/ThreadManager.h"
 
 namespace libtas {
@@ -126,9 +128,11 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init();
 
+#ifdef __unix__
     /* Alerting the user if software rendering is not active */
     checkMesa();
-
+#endif
+    
     return context;
 }
 

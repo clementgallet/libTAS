@@ -526,6 +526,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
             /* Special case for stacks, always try to resize the Area */
             if (strstr(saved_area->name, "[stack")) {
+#ifdef __linux__
                 debuglogstdio(LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
                 void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
 
@@ -538,7 +539,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
                     return 0;
                 }
-
+#else
+                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "stack size changed but mremap is not available");
+#endif
                 copy_size = saved_area->size;
             }
 
@@ -546,7 +549,11 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             if (strcmp(saved_area->name, "[heap]") == 0) {
                 debuglogstdio(LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
 
+#ifdef __linux__
                 int ret = brk(saved_area->endAddr);
+#else
+                intptr_t ret = reinterpret_cast<intptr_t>(brk(saved_area->endAddr));
+#endif
 
                 if (ret < 0) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "brk failed");

@@ -57,11 +57,21 @@ OVERRIDE int closedir (DIR *__dirp);
    marked with __THROW.  */
 OVERRIDE struct dirent *readdir (DIR *__dirp);
 
+/* MacOS does not define dirent64 */
+#if defined(__APPLE__) && defined(__MACH__)
+OVERRIDE struct dirent *readdir64 (DIR *__dirp);
+#else
 OVERRIDE struct dirent64 *readdir64 (DIR *__dirp);
+#endif
 
+    
 OVERRIDE int readdir_r (DIR * dirp, struct dirent *entry, struct dirent **result);
 
+#if defined(__APPLE__) && defined(__MACH__)
+OVERRIDE int readdir64_r (DIR * dirp, struct dirent *entry, struct dirent **result);
+#else
 OVERRIDE int readdir64_r (DIR * dirp, struct dirent64 *entry, struct dirent64 **result);
+#endif
 
 }
 

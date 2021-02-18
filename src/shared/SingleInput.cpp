@@ -18,7 +18,9 @@
  */
 
 #include "SingleInput.h"
+#ifdef __linux__
 #include <linux/input.h>
+#endif
 #include <SDL2/SDL.h>
 #include "../external/SDL1.h"
 // #include <X11/keysym.h>
@@ -244,7 +246,7 @@ int SingleInput::toSDLHat(int buttons)
     return hatState;
 }
 
-
+#ifdef __linux__
 int SingleInput::toJsdevAxis(int axis)
 {
     /* Mapping between xbox360 controller and joydev is taken from
@@ -370,3 +372,4 @@ int SingleInput::toDevHatY(int buttons)
         haty = 1;
     return haty;
 }
+#endif

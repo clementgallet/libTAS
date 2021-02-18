@@ -196,8 +196,10 @@ void frameBoundary(std::function<void()> draw)
     BusyLoopDetection::reset();
 
     /* Wait for events to be processed by the game */
+#ifdef __unix__
     if (shared_config.async_events & SharedConfig::ASYNC_XEVENTS_END)
         xlibEventQueueList.waitForEmpty();
+#endif
     if (shared_config.async_events & SharedConfig::ASYNC_SDLEVENTS_END)
         sdlEventQueue.waitForEmpty();
 

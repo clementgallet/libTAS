@@ -37,9 +37,16 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <cstring> // memcpy
-#define GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPESf
+#ifdef __unix__
 #include <GL/gl.h>
 #include <GL/glext.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
+
+
 #include "vulkanwrappers.h"
 
 namespace libtas {
@@ -174,11 +181,12 @@ int ScreenCapture::init()
         return 0;
 #endif
 
+    unsigned int depth;
 #ifdef __unix__
     /* Get the window dimensions */
     LINK_NAMESPACE_GLOBAL(XGetGeometry);
-    unsigned int w = 0, h = 0, border_width, depth;
     int x, y;
+    unsigned int w = 0, h = 0, border_width;
     Window root;
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i]) {
