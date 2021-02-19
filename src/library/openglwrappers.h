@@ -23,36 +23,11 @@
 #include "global.h"
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
-#include <GL/glx.h>
+// #include <GL/glx.h>
 #include <GL/glext.h>
-#include <GL/glxext.h>
+// #include <GL/glxext.h>
 
 namespace libtas {
-
-void checkMesa();
-
-OVERRIDE void(*glXGetProcAddress (const GLubyte *procName))();
-OVERRIDE __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName);
-OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
-
-/* Map the GLX context to the Display connection */
-OVERRIDE Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx );
-
-/* Swap buffers */
-OVERRIDE void glXSwapBuffers( Display *dpy, GLXDrawable drawable );
-
-/* Set the VSync value */
-OVERRIDE void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval);
-OVERRIDE int glXSwapIntervalSGI (int interval);
-OVERRIDE int glXSwapIntervalMESA (unsigned int interval);
-
-OVERRIDE int glXGetSwapIntervalMESA(void);
-
-/* Returns an attribute assoicated with a GLX drawable */
-OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
-
-OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
-OVERRIDE void glXDestroyContext(Display * dpy,  GLXContext ctx);
 
 OVERRIDE const GLubyte* glGetString( GLenum name);
 

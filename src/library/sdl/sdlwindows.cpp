@@ -36,7 +36,7 @@
 #include "../encoding/AVEncoder.h"
 #include "SDLEventQueue.h"
 #ifdef __unix__
-#include "../openglwrappers.h" // checkMesa()
+#include "../glxwrappers.h" // checkMesa()
 #endif
 #include "../checkpoint/ThreadManager.h"
 

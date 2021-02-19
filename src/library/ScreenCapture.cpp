@@ -37,7 +37,7 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <cstring> // memcpy
-#define GL_GLEXT_PROTOTYPESf
+#define GL_GLEXT_PROTOTYPES
 #ifdef __unix__
 #include <GL/gl.h>
 #include <GL/glext.h>

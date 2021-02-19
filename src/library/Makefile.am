@@ -14,6 +14,7 @@ libtas_so_SOURCES = \
     GameHacks.cpp \
     glibwrappers.cpp \
     global.cpp \
+    glxwrappers.cpp \
     GlobalState.cpp \
     hook.cpp \
     hookpatch.cpp \
