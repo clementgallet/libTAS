@@ -1170,6 +1170,10 @@ void GameLoop::processInputs(AllInputs &ai)
                 }
             }
 
+            /* Call lua onInput() here so that a script can modify inputs */
+            Lua::Input::registerInputs(&ai);
+            Lua::Main::callLua(context, "onInput");
+
             /* Update controller inputs if controller window is shown */
             emit showControllerInputs(ai);
 

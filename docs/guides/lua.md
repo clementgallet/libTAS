@@ -39,9 +39,8 @@ Draws rectangle of size `(w,h)` with top-left corner at `(x,y)`. Outline is of t
 
 ### Input functions
 
-All the functions in this section are only valid inside `onInput()` callback, 
-and do nothing when the movie is in playback mode. Here are the indices of the
-different controls:
+All the functions in this section are only valid inside `onInput()` callback.
+Here are the indices of the different controls:
 
 | Index | Mouse button | Controller button | Controller axis |
 | ----- | ------------ | ----------------- | --------------- |
