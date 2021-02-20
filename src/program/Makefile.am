@@ -1,6 +1,7 @@
 bin_PROGRAMS = libTAS
 
 libTAS_QTSOURCES = \
+    GameEvents.h \
     GameLoop.h \
     ui/AnnotationsWindow.h \
     ui/AutoSaveWindow.h \
@@ -33,6 +34,7 @@ libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 libTAS_SOURCES = \
     AutoSave.cpp \
     Config.cpp \
+    GameEvents.cpp \
     GameLoop.cpp \
     GameThread.cpp \
     KeyMapping.cpp \

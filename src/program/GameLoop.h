@@ -27,6 +27,9 @@
 #include "movie/MovieFile.h"
 #include <xcb/xcb_keysyms.h>
 
+/* Forward declaration */
+class GameEvents;
+
 class GameLoop : public QObject {
     Q_OBJECT
 public:
@@ -34,18 +37,11 @@ public:
     void start();
     MovieFile movie;
 
+    /* Handle hotkeys */
+    GameEvents* gameEvents;
+
 private:
     Context* context;
-
-    /*
-     * Frame advance auto-repeat variables.
-     * If ar_ticks is >= 0 (auto-repeat activated), it increases by one every
-     * iteration of the do loop.
-     * If ar_ticks > ar_delay and ar_ticks % ar_freq == 0: trigger frame advance
-     */
-    int ar_ticks;
-    int ar_delay;
-    int ar_freq;
 
     /* Keyboard layout */
     std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
@@ -56,38 +52,17 @@ private:
     /* Inputs from the previous frame */
     AllInputs prev_ai;
 
-    /* Calibration offsets */
-    int pointer_offset_x;
-    int pointer_offset_y;
-
-    xcb_keycode_t last_pressed_key;
-    xcb_generic_event_t *next_event;
-
-    /* parent window of game window */
-    xcb_window_t parent_game_window = 0;
-
     void init();
 
     void initProcessMessages();
 
     bool startFrameMessages();
 
-    uint8_t nextEvent(struct HotKey &hk);
-
-    void notifyControllerEvent(xcb_keysym_t ks, bool pressed);
-
-    bool processEvent(uint8_t type, struct HotKey &hk);
-
     void sleepSendPreview();
 
     void processInputs(AllInputs &ai);
 
     void endFrameMessages(AllInputs &ai);
-
-    /* Determine if we are allowed to send inputs to the game, based on which
-     * window has focus and our settings.
-     */
-    bool haveFocus();
 
     void loopExit();
 
@@ -99,7 +74,6 @@ signals:
     void askToShow(QString str, void* promise);
     void updateFramerate();
 
-    void controllerButtonToggled(int controller_id, int button, bool pressed);
     void showControllerInputs(const AllInputs &allinputs);
     void fillControllerInputs(AllInputs &allinputs);
     void gameInfoChanged(GameInfo game_info);
@@ -114,9 +88,6 @@ signals:
     void inputsEdited();
 
     void getRamWatch(std::string &watch);
-
-    /* register a savestate */
-    void savestatePerformed(int slot, unsigned long long frame);
 
     void getTimeTrace(int type, unsigned long long hash, std::string stacktrace);
 };

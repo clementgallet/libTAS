@@ -25,6 +25,7 @@
 
 #include "ControllerTabWindow.h"
 #include "../GameLoop.h"
+#include "../GameEvents.h"
 #include "MainWindow.h"
 #include "../../shared/SingleInput.h"
 #include "qtutils.h"
@@ -53,7 +54,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* If the user press an input that is mapped to a controller button,
          * we must change the corresponding checkbox in this window.
          */
-        connect(mw->gameLoop, &GameLoop::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle);
+        connect(mw->gameLoop->gameEvents, &GameEvents::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle);
 
         /* When the game loop will send the inputs to the game, we must set
          * the controller inputs in the AllInputs object.
