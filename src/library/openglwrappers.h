@@ -91,6 +91,65 @@ void myglEnable(GLenum cap);
 // OVERRIDE void glDisable(GLenum cap);
 // void myglDisable(GLenum cap);
 
+/* Declare myfunc functions */ 
+#define DECLARE_MY_FUNC(FUNC) \
+decltype(FUNC) my##FUNC;
+
+DECLARE_MY_FUNC(glClear)
+DECLARE_MY_FUNC(glBegin)
+DECLARE_MY_FUNC(glEnd)
+DECLARE_MY_FUNC(glVertex2d)
+DECLARE_MY_FUNC(glVertex2f)
+DECLARE_MY_FUNC(glVertex2i)
+DECLARE_MY_FUNC(glVertex2s)
+DECLARE_MY_FUNC(glVertex3d)
+DECLARE_MY_FUNC(glVertex3f)
+DECLARE_MY_FUNC(glVertex3i)
+DECLARE_MY_FUNC(glVertex3s)
+DECLARE_MY_FUNC(glVertex4d)
+DECLARE_MY_FUNC(glVertex4f)
+DECLARE_MY_FUNC(glVertex4i)
+DECLARE_MY_FUNC(glVertex4s)
+DECLARE_MY_FUNC(glVertex2dv)
+DECLARE_MY_FUNC(glVertex2fv)
+DECLARE_MY_FUNC(glVertex2iv)
+DECLARE_MY_FUNC(glVertex2sv)
+DECLARE_MY_FUNC(glVertex3dv)
+DECLARE_MY_FUNC(glVertex3fv)
+DECLARE_MY_FUNC(glVertex3iv)
+DECLARE_MY_FUNC(glVertex3sv)
+DECLARE_MY_FUNC(glVertex4dv)
+DECLARE_MY_FUNC(glVertex4fv)
+DECLARE_MY_FUNC(glVertex4iv)
+DECLARE_MY_FUNC(glVertex4sv)
+
+DECLARE_MY_FUNC(glDrawArrays)
+DECLARE_MY_FUNC(glDrawElements)
+DECLARE_MY_FUNC(glMultiDrawArrays)
+DECLARE_MY_FUNC(glMultiDrawElements)
+DECLARE_MY_FUNC(glDrawRangeElements)
+DECLARE_MY_FUNC(glDrawElementsBaseVertex)
+DECLARE_MY_FUNC(glDrawRangeElementsBaseVertex)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertex)
+DECLARE_MY_FUNC(glMultiDrawElementsBaseVertex)
+DECLARE_MY_FUNC(glDrawArraysInstancedBaseInstance)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseInstance)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertexBaseInstance)
+
+DECLARE_MY_FUNC(glDrawTransformFeedback)
+DECLARE_MY_FUNC(glDrawTransformFeedbackStream)
+DECLARE_MY_FUNC(glDrawTransformFeedbackInstanced)
+DECLARE_MY_FUNC(glDrawTransformFeedbackStreamInstanced)
+
+DECLARE_MY_FUNC(glDrawArraysInstancedARB)
+DECLARE_MY_FUNC(glDrawElementsInstancedARB)
+DECLARE_MY_FUNC(glDrawArraysInstancedEXT)
+DECLARE_MY_FUNC(glDrawElementsInstancedEXT)
+DECLARE_MY_FUNC(glDrawRangeElementsEXT)
+DECLARE_MY_FUNC(glMultiDrawArraysEXT)
+DECLARE_MY_FUNC(glMultiDrawElementsEXT)
+DECLARE_MY_FUNC(glDrawArraysEXT)
+
 }
 
 #endif
