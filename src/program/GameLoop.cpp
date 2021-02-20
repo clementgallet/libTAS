@@ -21,6 +21,7 @@
 #include "GameLoop.h"
 #include "GameThread.h"
 #include "GameEvents.h"
+#include "GameEventsXcb.h"
 #include "utils.h"
 #include "AutoSave.h"
 // #include "SaveState.h"
@@ -48,7 +49,7 @@
 
 GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free)
 {
-    gameEvents = new GameEvents(c, &movie);
+    gameEvents = new GameEventsXcb(c, &movie);
 }
 
 void GameLoop::start()

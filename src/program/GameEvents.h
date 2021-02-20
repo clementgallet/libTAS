@@ -21,12 +21,11 @@
 #define LIBTAS_GAMEEVENTS_H_INCLUDED
 
 #include <QtCore/QObject>
-#include <memory>
+// #include <memory>
 #include <stdint.h>
 
 #include "Context.h"
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
+#include "KeyMapping.h"
 
 /* Forward declaration */
 class MovieFile;
@@ -39,27 +38,18 @@ public:
     void init();
 
     /* Register and select events from the window handle */
-    void registerGameWindow(uint32_t gameWindow);
+    virtual void registerGameWindow(uint32_t gameWindow) = 0;
 
     bool handleEvent();
 
     /* Determine if we are allowed to send inputs to the game, based on which
      * window has focus and our settings.
      */
-    bool haveFocus();
+    virtual bool haveFocus() = 0;
 
-private:
+protected:
     Context* context;
     MovieFile* movie;
-
-    /* Keyboard layout */
-    std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
-
-    xcb_keycode_t last_pressed_key;
-    xcb_generic_event_t *next_event;
-
-    /* parent window of game window */
-    xcb_window_t parent_game_window = 0;
 
     /* Frame advance auto-repeat variables.
      * If ar_ticks is >= 0 (auto-repeat activated), it increases by one every
@@ -77,11 +67,9 @@ private:
         EVENT_TYPE_EXPOSE,
     };
 
-    void clearEventQueue();
+    virtual void clearEventQueue() = 0;
 
-    EventType nextEvent(struct HotKey &hk);
-
-    void notifyControllerEvent(xcb_keysym_t ks, bool pressed);
+    virtual EventType nextEvent(struct HotKey &hk) = 0;
 
     bool processEvent(EventType type, struct HotKey &hk);
 
