@@ -269,12 +269,6 @@ void Checkpoint::handler(int signum)
         return;
     }
 
-    /* Sync all X server connections */
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            NATIVECALL(XSync(x11::gameDisplays[i], false));
-    }
-
     if (SaveStateManager::isLoading()) {
         /* Before reading from the savestate, we must keep some values from
          * the connection to the X server, because they are used for checking

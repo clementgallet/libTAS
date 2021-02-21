@@ -25,6 +25,7 @@
 #include <sys/mman.h>
 #include <sys/syscall.h> // syscall, SYS_gettid
 #include <sys/wait.h> // waitpid
+#include <X11/Xlib.h> // XLockDisplay
 
 #include "SaveStateManager.h"
 #include "ThreadManager.h"
@@ -37,6 +38,7 @@
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
 #include "../fileio/URandom.h"
+#include "../xlib/xdisplay.h" // x11::gameDisplays
 
 namespace libtas {
 
@@ -189,6 +191,39 @@ int SaveStateManager::checkpoint(int slot)
     /* We save the alternate stack if the game did set one */
     AltStack::saveStack();
 
+    /* Lock the display so we can empty events */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XLockDisplay(x11::gameDisplays[i]);
+    }
+
+    /* Sync all X server connections. Must be done before suspending threads,
+     * because while we have locked the displays, threads could still be suspended
+     * inside xcb functions that temporarily unlock the Xlib lock, and we will
+     * softlock because of xcb lock.
+     *
+     * Real example from flashplayer:
+     * - thread 2 holds the xcb lock and is suspended:
+     *     libtas::SaveStateManager::stopThisThread(int) (signum=<optimized out>)
+     *     <signal handler called> () at /lib/x86_64-linux-gnu/libpthread.so.0
+     *     ...
+     *     xcb_wait_for_reply64 () at /usr/lib/x86_64-linux-gnu/libxcb.so.1
+     *     _XReply () at /usr/lib/x86_64-linux-gnu/libX11.so.6
+     *     XGetGeometry () at /usr/lib/x86_64-linux-gnu/libX11.so.6
+     *
+     * - thread 1 waits on the xcb lock while emptying the event queue before savestating:
+     *     __lll_lock_wait (futex=futex@entry=0x22ef1d8, private=0) at lowlevellock.c:52
+     *     __GI___pthread_mutex_lock (mutex=0x22ef1d8) at ../nptl/pthread_mutex_lock.c:80
+     *     xcb_writev () at /usr/lib/x86_64-linux-gnu/libxcb.so.1
+     *     _XSend () at /usr/lib/x86_64-linux-gnu/libX11.so.6
+     *     _XReply () at /usr/lib/x86_64-linux-gnu/libX11.so.6
+     *     XSync () at /usr/lib/x86_64-linux-gnu/libX11.so.6
+     */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            NATIVECALL(XSync(x11::gameDisplays[i], false));
+    }
+
     /* Sending a suspend signal to all threads */
     suspendThreads();
 
@@ -228,6 +263,12 @@ int SaveStateManager::checkpoint(int slot)
     urandom_enable_handler();
 
     resumeThreads();
+
+    /* Unlock the display */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XUnlockDisplay(x11::gameDisplays[i]);
+    }
 
     /* Wait for all other threads to finish being restored before resuming */
     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
@@ -269,6 +310,18 @@ int SaveStateManager::restore(int slot)
 
     restoreInProgress = false;
 
+    /* Lock the display so we can empty events */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XLockDisplay(x11::gameDisplays[i]);
+    }
+
+    /* Sync all X server connections. */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            NATIVECALL(XSync(x11::gameDisplays[i], false));
+    }
+
     suspendThreads();
 
     restoreInProgress = true;
@@ -307,6 +360,12 @@ int SaveStateManager::restore(int slot)
      urandom_enable_handler();
 
      resumeThreads();
+
+     /* Unlock the display */
+     for (int i=0; i<GAMEDISPLAYNUM; i++) {
+         if (x11::gameDisplays[i])
+             XUnlockDisplay(x11::gameDisplays[i]);
+     }
 
      waitForAllRestored(current_thread);
 

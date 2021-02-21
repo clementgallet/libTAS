@@ -108,7 +108,7 @@ void pushNativeXlibEvents(Display *display)
     LINK_NAMESPACE_GLOBAL(XPending);
     LINK_NAMESPACE_GLOBAL(XNextEvent);
 
-    NOLOGCALL(orig::XSync(display, False));
+    XLockDisplay(display);
     int n;
     NOLOGCALL(n = orig::XPending(display));
     while (n > 0) {
@@ -140,6 +140,7 @@ void pushNativeXlibEvents(Display *display)
 
         NOLOGCALL(n = orig::XPending(display));
     }
+    XUnlockDisplay(display);
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
