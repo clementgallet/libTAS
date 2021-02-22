@@ -842,9 +842,6 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(joystickMenu);
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
-
-    action = inputMenu->addAction(tr("Recalibrate mouse position"), this, &MainWindow::slotCalibrateMouse);
-    action->setToolTip("If there is an offset between the system cursor and the game cursor, select this while paused, then click on the game cursor to register an offset. This does not affect movie sync");
 }
 
 void MainWindow::updateStatus()
@@ -1442,13 +1439,6 @@ void MainWindow::slotPause(bool checked)
     else {
         /* Else, let the game thread set the value */
         context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
-    }
-}
-
-void MainWindow::slotCalibrateMouse()
-{
-    if (context->status == Context::ACTIVE) {
-        context->hotkey_pressed_queue.push(HOTKEY_CALIBRATE_MOUSE);
     }
 }
 

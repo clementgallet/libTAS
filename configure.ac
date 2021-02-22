@@ -56,11 +56,10 @@ AS_IF([test "x$enable_i386_lib" != "xyes"], [
 
     AC_CHECK_PROG([FFMPEG], [ffmpeg])
 
-    AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_cursor.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
+    AC_CHECK_HEADERS([xcb/xcb.h xcb/randr.h xcb/xcb_keysyms.h xcb/xkb.h], [], AC_MSG_ERROR(Some xcb headers are missing!))
     AC_SEARCH_LIBS([XKeysymToString], [X11], [], [AC_MSG_ERROR(The x11 library is required!)])
     AC_SEARCH_LIBS([xcb_connect], [xcb], [], [AC_MSG_ERROR(The xcb library is required!)])
     AC_SEARCH_LIBS([xcb_xkb_use_extension], [xcb-xkb], [], [AC_MSG_ERROR(The xcb-xkb library is required!)])
-    AC_SEARCH_LIBS([xcb_cursor_context_new], [xcb-cursor], [], [AC_MSG_ERROR(The xcb-cursor library is required!)])
     AC_SEARCH_LIBS([xcb_key_symbols_alloc], [xcb-keysyms], [], [AC_MSG_ERROR(The xcb-keysyms library is required!)])
 
     AC_SEARCH_LIBS([pthread_create], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])

@@ -34,7 +34,6 @@
 #define explicit _explicit
 #include <xcb/xkb.h>
 #undef explicit
-#include <xcb/xcb_cursor.h>
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -175,19 +174,6 @@ int main(int argc, char **argv)
     	std::cerr << "failed to set XKB per-client flags, not using detectable repeat" << std::endl;
     }
     free(pcf_reply);
-
-    /* Initialize mouse cursor.
-     * Taken from <https://xcb.freedesktop.org/tutorial/mousecursors/>
-     */
-    xcb_cursor_context_t *ctx;
-    xcb_screen_t *screen;
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(context.conn));
-    screen = iter.data;
-    if (xcb_cursor_context_new(context.conn, screen, &ctx) < 0) {
-        std::cerr << "failed to initialize xcb cursor context" << std::endl;
-    }
-
-    context.crosshair_cursor = xcb_cursor_load_cursor(ctx, "crosshair");
 
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.
@@ -343,9 +329,6 @@ int main(int argc, char **argv)
             kill(context.game_pid, SIGKILL);
         }
     }
-
-    xcb_free_cursor (context.conn, context.crosshair_cursor);
-    xcb_cursor_context_free(ctx);
 
     xcb_disconnect(context.conn);
     return 0;
