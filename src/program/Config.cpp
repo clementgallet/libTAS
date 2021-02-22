@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h> // access
 #include "utils.h"
+#include "KeyMapping.h"
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
@@ -82,7 +83,7 @@ void Config::save(const std::string& gamepath) {
     settings.remove("hotkeys");
     settings.beginWriteArray("hotkeys");
     i = 0;
-    for (auto& hmap : km.hotkey_mapping) {
+    for (auto& hmap : km->hotkey_mapping) {
         settings.setArrayIndex(i++);
         settings.setValue("keysym", hmap.first);
         settings.setValue("hotkey", QVariant::fromValue(hmap.second));
@@ -93,7 +94,7 @@ void Config::save(const std::string& gamepath) {
     settings.beginWriteArray("inputs");
 
     i = 0;
-    for (auto& imap : km.input_mapping) {
+    for (auto& imap : km->input_mapping) {
         settings.setArrayIndex(i++);
         settings.setValue("keysym", imap.first);
         settings.setValue("input", QVariant::fromValue(imap.second));
@@ -205,23 +206,23 @@ void Config::load(const std::string& gamepath) {
     settings.beginGroup("keymapping");
 
     size = settings.beginReadArray("hotkeys");
-    km.default_hotkeys();
+    km->default_hotkeys();
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
         xcb_keysym_t keysym = settings.value("keysym").toInt();
         HotKey hotkey = settings.value("hotkey").value<HotKey>();
-        km.reassign_hotkey(hotkey, keysym);
+        km->reassign_hotkey(hotkey, keysym);
     }
     settings.endArray();
 
     size = settings.beginReadArray("inputs");
     if (size > 0)
-        km.input_mapping.clear();
+        km->input_mapping.clear();
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
         xcb_keysym_t keysym = settings.value("keysym").toInt();
         SingleInput si = settings.value("input").value<SingleInput>();
-        km.reassign_input(si, keysym);
+        km->reassign_input(si, keysym);
     }
     settings.endArray();
 

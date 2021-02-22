@@ -33,9 +33,6 @@
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
-
 #include <string>
 #include <iostream>
 #include <cerrno>
@@ -47,7 +44,7 @@
 // #include <X11/X.h>
 #include <stdint.h>
 
-GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free)
+GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c)
 {
     gameEvents = new GameEventsXcb(c, &movie);
 }
@@ -477,7 +474,7 @@ void GameLoop::sleepSendPreview()
     static AllInputs preview_ai, last_preview_ai;
     if (gameEvents->haveFocus()) {
         /* Format the keyboard and mouse state and save it in the AllInputs struct */
-        context->config.km.buildAllInputs(preview_ai, context->game_window, keysyms.get(), context->config.sc, false);
+        context->config.km->buildAllInputs(preview_ai, context->game_window, context->config.sc, false);
     }
 
     /* Fill controller inputs from the controller input window. */
@@ -510,7 +507,7 @@ void GameLoop::processInputs(AllInputs &ai)
             /* Get inputs if we have input focus */
             if (gameEvents->haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                context->config.km.buildAllInputs(ai, context->game_window, keysyms.get(), context->config.sc, context->config.mouse_warp);
+                context->config.km->buildAllInputs(ai, context->game_window, context->config.sc, context->config.mouse_warp);
             }
             
             /* Fill controller inputs from the controller input window. */

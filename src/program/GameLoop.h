@@ -21,11 +21,9 @@
 #define LIBTAS_GAMELOOP_H_INCLUDED
 
 #include <QtCore/QObject>
-#include <memory>
 
 #include "Context.h"
 #include "movie/MovieFile.h"
-#include <xcb/xcb_keysyms.h>
 
 /* Forward declaration */
 class GameEvents;
@@ -42,9 +40,6 @@ public:
 
 private:
     Context* context;
-
-    /* Keyboard layout */
-    std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
 
     /* Last saved/loaded savestate */
     int current_savestate;

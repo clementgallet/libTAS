@@ -143,7 +143,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 #endif
     this->addAction(pasteInsertAct);
 
-    keyDialog = new KeyPressedDialog(this);
+    keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = true;
 }
 
@@ -358,13 +358,13 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
     /* We accept hotkeys when this window has focus */
     xcb_keysym_t mod = convertQtModifiers(event->modifiers());
 
-    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey()];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
@@ -377,13 +377,13 @@ void InputEditorView::keyReleaseEvent(QKeyEvent *event)
     /* We accept hotkeys when this window has focus */
     xcb_keysym_t mod = convertQtModifiers(event->modifiers());
 
-    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km.hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[event->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey()];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
@@ -429,7 +429,7 @@ void InputEditorView::addInputColumn()
 
     /* Get the input with description if available */
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-        for (auto iter : context->config.km.input_list[i]) {
+        for (auto iter : context->config.km->input_list[i]) {
             if (iter.type == SingleInput::IT_KEYBOARD) {
                 if (iter.value == ks) {
                     inputEditorModel->addUniqueInput(iter);

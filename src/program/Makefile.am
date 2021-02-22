@@ -39,6 +39,7 @@ libTAS_SOURCES = \
     GameLoop.cpp \
     GameThread.cpp \
     KeyMapping.cpp \
+    KeyMappingXcb.cpp \
     main.cpp \
     SaveState.cpp \
     SaveStateList.cpp \

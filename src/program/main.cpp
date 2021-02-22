@@ -24,6 +24,8 @@
 #include "Context.h"
 #include "utils.h" // create_dir
 #include "lua/Main.h"
+#include "KeyMapping.h"
+#include "KeyMappingXcb.h"
 
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
@@ -190,7 +192,11 @@ int main(int argc, char **argv)
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.
      */
-    context.config.km.init(context.conn);
+#ifdef __unix__
+    context.config.km = new KeyMappingXcb(context.conn);
+#elif defined(__APPLE__) && defined(__MACH__)
+    // context.config.km->init(context.conn);
+#endif
 
     /* libTAS.so path */
     /* TODO: Not portable! */

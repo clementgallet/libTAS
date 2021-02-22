@@ -155,6 +155,8 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                 if (response_type == XCB_KEY_PRESS) {
                     last_pressed_key = kc;
                 }
+                
+                int key_state = key_event->state;
 
                 free(event);
 
@@ -162,37 +164,26 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                 xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms.get(), kc, 0);
 
                 /* If pressed a controller button, update the controller input window */
-                if (context->config.km.input_mapping.find(ks) != context->config.km.input_mapping.end()) {
-                    SingleInput si = context->config.km.input_mapping[ks];
+                if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
+                    SingleInput si = context->config.km->input_mapping[ks];
                     if (si.inputTypeIsController())
                         emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), response_type == XCB_KEY_PRESS);
                 }
 
                 /* If the key is a modifier, skip it */
-                if (is_modifier(ks))
+                if (context->config.km->is_modifier(ks))
                     continue;
 
                 /* Build the modifier value */
-                xcb_generic_error_t* error;
-                xcb_query_keymap_cookie_t keymap_cookie = xcb_query_keymap(context->conn);
-                xcb_query_keymap_reply_t* keymap_reply = xcb_query_keymap_reply(context->conn, keymap_cookie, &error);
-
-                xcb_keysym_t modifiers = 0;
-                if (error) {
-                    std::cerr << "Could not get xcb_query_keymap, X error" << error->error_code << std::endl;
-                }
-                else {
-                    modifiers = build_modifiers(keymap_reply->keys, keysyms.get());
-                }
-                free(keymap_reply);
+                xcb_keysym_t modifiers = context->config.km->get_modifiers(key_state);
 
                 /* Check if this KeySym with or without modifiers is mapped to a hotkey */
-                if (context->config.km.hotkey_mapping.find(ks | modifiers) != context->config.km.hotkey_mapping.end()) {
-                    hk = context->config.km.hotkey_mapping[ks | modifiers];
+                if (context->config.km->hotkey_mapping.find(ks | modifiers) != context->config.km->hotkey_mapping.end()) {
+                    hk = context->config.km->hotkey_mapping[ks | modifiers];
                     return (response_type==XCB_KEY_PRESS)?EVENT_TYPE_PRESS:EVENT_TYPE_RELEASE;
                 }
-                else if (context->config.km.hotkey_mapping.find(ks) != context->config.km.hotkey_mapping.end()) {
-                    hk = context->config.km.hotkey_mapping[ks];
+                else if (context->config.km->hotkey_mapping.find(ks) != context->config.km->hotkey_mapping.end()) {
+                    hk = context->config.km->hotkey_mapping[ks];
                     return (response_type==XCB_KEY_PRESS)?EVENT_TYPE_PRESS:EVENT_TYPE_RELEASE;
                 }
                 else

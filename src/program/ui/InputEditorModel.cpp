@@ -311,7 +311,7 @@ void InputEditorModel::buildInputSet()
 
         /* Gather input description */
         for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-            for (SingleInput ti : context->config.km.input_list[i]) {
+            for (SingleInput ti : context->config.km->input_list[i]) {
                 if (si == ti) {
                     si.description = ti.description;
                     break;
@@ -391,7 +391,7 @@ std::string InputEditorModel::inputDescription(int column)
 
     /* Gather input description */
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-        for (SingleInput ti : context->config.km.input_list[i]) {
+        for (SingleInput ti : context->config.km->input_list[i]) {
             if (si == ti) {
                 return ti.description;
             }
@@ -594,7 +594,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 
             /* Gather input description */
             for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-                for (SingleInput ti : context->config.km.input_list[i]) {
+                for (SingleInput ti : context->config.km->input_list[i]) {
                     if (si == ti) {
                         si.description = ti.description;
                         break;

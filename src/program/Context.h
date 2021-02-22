@@ -26,6 +26,7 @@
 #include <xcb/xcb.h>
 #include <stdint.h>
 #include "ConcurrentQueue.h"
+#include "KeyMapping.h"
 #include "../shared/GameInfo.h"
 extern "C" {
 #include <lua.h>
