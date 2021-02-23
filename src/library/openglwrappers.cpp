@@ -110,23 +110,42 @@ GLFUNCSKIPDRAW(glDrawElementsBaseVertex, (GLenum mode, GLsizei count, GLenum typ
 GLFUNCSKIPDRAW(glDrawRangeElementsBaseVertex, (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex), (mode, start, end, count, type, indices, basevertex))
 GLFUNCSKIPDRAW(glDrawElementsInstancedBaseVertex, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex), (mode, count, type, indices, instancecount, basevertex))
 GLFUNCSKIPDRAW(glMultiDrawElementsBaseVertex, (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount, const GLint *basevertex), (mode, count, type, indices, drawcount, basevertex))
+
+#ifdef GL_VERSION_4_0
+GLFUNCSKIPDRAW(glDrawTransformFeedback, (GLenum mode, GLuint id), (mode, id))
+GLFUNCSKIPDRAW(glDrawTransformFeedbackStream, (GLenum mode, GLuint id, GLuint stream), (mode, id, stream))
+#endif
+
+#ifdef GL_VERSION_4_2
 GLFUNCSKIPDRAW(glDrawArraysInstancedBaseInstance, (GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance), (mode, first, count, instancecount, baseinstance))
 GLFUNCSKIPDRAW(glDrawElementsInstancedBaseInstance, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLuint baseinstance), (mode, count, type, indices, instancecount, baseinstance))
 GLFUNCSKIPDRAW(glDrawElementsInstancedBaseVertexBaseInstance, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance), (mode, count, type, indices, instancecount, basevertex, baseinstance))
-
-GLFUNCSKIPDRAW(glDrawTransformFeedback, (GLenum mode, GLuint id), (mode, id))
-GLFUNCSKIPDRAW(glDrawTransformFeedbackStream, (GLenum mode, GLuint id, GLuint stream), (mode, id, stream))
 GLFUNCSKIPDRAW(glDrawTransformFeedbackInstanced, (GLenum mode, GLuint id, GLsizei instancecount), (mode, id, instancecount))
 GLFUNCSKIPDRAW(glDrawTransformFeedbackStreamInstanced, (GLenum mode, GLuint id, GLuint stream, GLsizei instancecount), (mode, id, stream, instancecount))
+#endif
 
+#ifdef GL_ARB_draw_instanced
 GLFUNCSKIPDRAW(glDrawArraysInstancedARB, (GLenum mode, GLint first, GLsizei count, GLsizei primcount), (mode, first, count, primcount))
 GLFUNCSKIPDRAW(glDrawElementsInstancedARB, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount), (mode, count, type, indices, primcount))
+#endif
+    
+#ifdef GL_EXT_draw_instanced
 GLFUNCSKIPDRAW(glDrawArraysInstancedEXT, (GLenum mode, GLint start, GLsizei count, GLsizei primcount), (mode, start, count, primcount))
 GLFUNCSKIPDRAW(glDrawElementsInstancedEXT, (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount), (mode, count, type, indices, primcount))
+#endif
+
+#ifdef GL_EXT_draw_range_elements
 GLFUNCSKIPDRAW(glDrawRangeElementsEXT, (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices), (mode, start, end, count, type, indices))
+#endif
+
+#ifdef GL_EXT_multi_draw_arrays
 GLFUNCSKIPDRAW(glMultiDrawArraysEXT, (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount), (mode, first, count, primcount))
 GLFUNCSKIPDRAW(glMultiDrawElementsEXT, (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei primcount), (mode, count, type, indices, primcount))
+#endif
+
+#ifdef GL_EXT_vertex_array
 GLFUNCSKIPDRAW(glDrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode, first, count))
+#endif
 
 // void glBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 // {

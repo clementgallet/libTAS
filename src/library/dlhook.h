@@ -24,6 +24,10 @@
 #include <string>
 #include "global.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <mach-o/dyld.h>
+#endif
+
 namespace libtas {
 
 /* There are two ways a program can link to a shared library:
@@ -78,7 +82,10 @@ void *find_sym(const char* name, bool original = false);
 OVERRIDE void *dlopen(const char *file, int mode) __THROW;
 OVERRIDE void *dlsym(void *handle, const char *name) __THROW;
 
+#ifdef __unix__
+/* Declare internal implementation-dependent dlsym function */
 OVERRIDE void *_dl_sym(void *, const char *, void *);
+#endif
 
 }
 

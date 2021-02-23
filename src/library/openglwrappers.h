@@ -22,10 +22,13 @@
 
 #include "global.h"
 #define GL_GLEXT_PROTOTYPES
+#ifdef __unix__
 #include <GL/gl.h>
-// #include <GL/glx.h>
 #include <GL/glext.h>
-// #include <GL/glxext.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
 
 namespace libtas {
 
@@ -132,23 +135,40 @@ DECLARE_MY_FUNC(glDrawElementsBaseVertex)
 DECLARE_MY_FUNC(glDrawRangeElementsBaseVertex)
 DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertex)
 DECLARE_MY_FUNC(glMultiDrawElementsBaseVertex)
+
+#ifdef GL_VERSION_4_0
+DECLARE_MY_FUNC(glDrawTransformFeedback)
+DECLARE_MY_FUNC(glDrawTransformFeedbackStream)
+#endif
+
+#ifdef GL_VERSION_4_2
 DECLARE_MY_FUNC(glDrawArraysInstancedBaseInstance)
 DECLARE_MY_FUNC(glDrawElementsInstancedBaseInstance)
 DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertexBaseInstance)
-
-DECLARE_MY_FUNC(glDrawTransformFeedback)
-DECLARE_MY_FUNC(glDrawTransformFeedbackStream)
 DECLARE_MY_FUNC(glDrawTransformFeedbackInstanced)
 DECLARE_MY_FUNC(glDrawTransformFeedbackStreamInstanced)
+#endif
 
+#ifdef GL_ARB_draw_instanced
 DECLARE_MY_FUNC(glDrawArraysInstancedARB)
 DECLARE_MY_FUNC(glDrawElementsInstancedARB)
+#endif
+
+#ifdef GL_EXT_draw_instanced
 DECLARE_MY_FUNC(glDrawArraysInstancedEXT)
 DECLARE_MY_FUNC(glDrawElementsInstancedEXT)
+#endif
+
+#ifdef GL_EXT_draw_range_elements
 DECLARE_MY_FUNC(glDrawRangeElementsEXT)
+#endif
+#ifdef GL_EXT_multi_draw_arrays
 DECLARE_MY_FUNC(glMultiDrawArraysEXT)
 DECLARE_MY_FUNC(glMultiDrawElementsEXT)
+#endif
+#ifdef GL_EXT_vertex_array
 DECLARE_MY_FUNC(glDrawArraysEXT)
+#endif
 
 }
 
