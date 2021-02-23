@@ -54,7 +54,6 @@ public:
     off_t base_file_offset;
     std::string base_file;
 
-    static pid_t game_pid;
     static bool isValid;
 
 };

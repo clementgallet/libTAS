@@ -19,6 +19,7 @@
 
 #include "PointerScanModel.h"
 #include "../utils.h"
+#include "../ramsearch/MemAccess.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -67,19 +68,11 @@ void PointerScanModel::locatePointers()
     int cur_size = 0;
     for (const MemSection &section : memory_sections) {
 
-        struct iovec local, remote;
         for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
 
-            /* Read values in chunks of 4096 bytes so we lower the number
-             * of `process_vm_readv` calls.
-             */
+            /* Read values in chunks of 4096 bytes so we lower the number of calls. */
             uintptr_t chunk[4096/sizeof(uintptr_t)];
-            local.iov_base = static_cast<void*>(chunk);
-            local.iov_len = 4096;
-            remote.iov_base = reinterpret_cast<void*>(addr);
-            remote.iov_len = 4096;
-
-            int readValues = process_vm_readv(context->game_pid, &local, 1, &remote, 1, 0);
+            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(addr), 4096);
             if (readValues < 0) {
                 continue;
             }

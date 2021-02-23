@@ -34,6 +34,7 @@
 #include "SaveStateList.h"
 #include "lua/Input.h"
 #include "lua/Main.h"
+#include "ramsearch/MemAccess.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -264,6 +265,7 @@ void GameLoop::initProcessMessages()
             case MSGB_PID:
                 receiveData(&context->game_pid, sizeof(pid_t));
                 gameEvents->registerGamePid(context->game_pid);
+                MemAccess::init(context->game_pid);
                 break;
 
             case MSGB_GIT_COMMIT:
@@ -742,6 +744,9 @@ void GameLoop::loopExit()
 
     /* Backup savestate movies on disk */
     SaveStateList::backupMovies();
+
+    /* Unvalidate game pid */
+    MemAccess::init(0);
 
     /* Reset the frame count */
     context->framecount = 0;

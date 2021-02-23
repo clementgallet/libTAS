@@ -19,16 +19,15 @@
 
 #include "RamWatch.h"
 #include "CompareEnums.h"
+#include "MemAccess.h"
 #include <cstdint>
 #include <sys/types.h>
-#include <sys/uio.h>
 #include <cerrno>
 #include <cstring>
 #include <cstdio>
 #include <inttypes.h>
 
 bool RamWatch::isValid;
-pid_t RamWatch::game_pid;
 int RamWatch::type;
 int RamWatch::type_size;
 
@@ -161,15 +160,8 @@ const char* RamWatch::tostring(bool hex, uint64_t value) const
 
 uint64_t RamWatch::get_value() const
 {
-    struct iovec local, remote;
     uint64_t value = 0;
-    local.iov_base = static_cast<void*>(&value);
-    local.iov_len = type_size;
-    remote.iov_base = reinterpret_cast<void*>(address);
-    remote.iov_len = type_size;
-
-    isValid = (process_vm_readv(game_pid, &local, 1, &remote, 1, 0) == type_size);
-
+    isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), type_size) == type_size);
     return value;
 }
 

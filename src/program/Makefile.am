@@ -83,6 +83,7 @@ libTAS_SOURCES = \
     ui/qtutils.cpp \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
+    ramsearch/MemAccess.cpp \
     ramsearch/MemSection.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \

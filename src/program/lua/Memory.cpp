@@ -18,6 +18,7 @@
  */
 
 #include "Memory.h"
+#include "../ramsearch/MemAccess.h"
 
 #include <iostream>
 extern "C" {
@@ -54,13 +55,7 @@ void Lua::Memory::registerFunctions(Context* c)
 
 bool Lua::Memory::read(uintptr_t addr, void* return_value, int size)
 {
-    struct iovec local, remote;
-    local.iov_base = return_value;
-    local.iov_len = size;
-    remote.iov_base = reinterpret_cast<void*>(addr);
-    remote.iov_len = size;
-
-    return process_vm_readv(context->game_pid, &local, 1, &remote, 1, 0) == size;
+    return MemAccess::read(return_value, reinterpret_cast<void*>(addr), size) == size;
 }
 
 /* Define a macro to declare all read functions */
@@ -88,14 +83,7 @@ READFUNC(s64, int64_t)
 
 void Lua::Memory::write(uintptr_t addr, void* value, int size)
 {
-    /* Write value into the game process address */
-    struct iovec local, remote;
-    local.iov_base = value;
-    local.iov_len = size;
-    remote.iov_base = reinterpret_cast<void*>(addr);
-    remote.iov_len = size;
-
-    process_vm_writev(context->game_pid, &local, 1, &remote, 1, 0);
+    MemAccess::write(value, reinterpret_cast<void*>(addr), size);
 }
 
 /* Define a macro to declare all write functions */

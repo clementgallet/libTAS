@@ -30,7 +30,6 @@ public:
     uint64_t previous_value;
 
     static bool isValid;
-    static pid_t game_pid;
     static int type;
     static int type_size;
 

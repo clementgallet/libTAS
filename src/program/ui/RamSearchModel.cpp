@@ -18,6 +18,7 @@
  */
 
 #include "RamSearchModel.h"
+#include "../ramsearch/MemAccess.h"
 #include <QtWidgets/QMessageBox>
 
 RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
@@ -113,7 +114,6 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
     ramwatches.clear();
     ramwatches.reserve(0);
 
-    RamWatch::game_pid = context->game_pid;
     RamWatch::type = type;
     RamWatch::type_size = RamWatch::type_to_size();
 
@@ -139,20 +139,11 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
         if (!(mem_filter & section.type))
             continue;
 
-        struct iovec local, remote;
-
-        /* Read values in chunks of 4096 bytes so we lower the number
-         * of `process_vm_readv` calls. */
+        /* Read values in chunks of 4096 bytes so we lower the number of calls. */
         uint8_t chunk[4096];
-        local.iov_base = static_cast<void*>(chunk);
-        local.iov_len = 4096;
-        remote.iov_len = 4096;
 
         for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
-
-            remote.iov_base = reinterpret_cast<void*>(addr);
-
-            int readValues = process_vm_readv(context->game_pid, &local, 1, &remote, 1, 0);
+            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(addr), 4096);
             if (readValues < 0) {
                 continue;
             }
