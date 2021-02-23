@@ -187,7 +187,7 @@ int main(int argc, char **argv)
      */
     context.config.km = new KeyMappingXcb(context.conn);
 #elif defined(__APPLE__) && defined(__MACH__)
-    context.config.km = new KeyMappingQuartz(context.conn);
+    context.config.km = new KeyMappingQuartz(nullptr);
 #endif
 
     /* libTAS.so path */
@@ -336,6 +336,8 @@ int main(int argc, char **argv)
         }
     }
 
+#ifdef __unix__
     xcb_disconnect(context.conn);
+#endif
     return 0;
 }

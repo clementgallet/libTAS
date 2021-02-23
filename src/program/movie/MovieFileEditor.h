@@ -20,8 +20,8 @@
 #ifndef LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 #define LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 
-#include "../shared/AllInputs.h"
-#include "Context.h"
+#include "../../shared/AllInputs.h"
+#include "../Context.h"
 #include <vector>
 #include <set>
 #include <stdint.h>

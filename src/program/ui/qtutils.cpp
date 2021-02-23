@@ -19,11 +19,11 @@
 
 #include <QtGui/QKeyEvent>
 #include "../KeyMapping.h"
-#include "qtutils.h"
+//#include "qtutils.h"
 
-xcb_keysym_t convertQtModifiers(Qt::KeyboardModifiers flags)
+keysym_t convertQtModifiers(Qt::KeyboardModifiers flags)
 {
-    xcb_keysym_t modifiers = 0;
+    keysym_t modifiers = 0;
     if (flags & Qt::ShiftModifier) {
         modifiers |= XK_Shift_Flag;
     }

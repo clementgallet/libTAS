@@ -85,6 +85,9 @@ OVERRIDE void *dlsym(void *handle, const char *name) __THROW;
 #ifdef __unix__
 /* Declare internal implementation-dependent dlsym function */
 OVERRIDE void *_dl_sym(void *, const char *, void *);
+#elif defined(__APPLE__) && defined(__MACH__)
+/* Declare internal function to locate the address of a dyld function */
+OVERRIDE int _dyld_func_lookup(const char* name, void** address);
 #endif
 
 }
