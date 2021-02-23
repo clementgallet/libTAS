@@ -32,8 +32,10 @@
 
 GameEventsXcb::GameEventsXcb(Context* c, MovieFile* m) : GameEvents(c, m), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
 
-void GameEventsXcb::clearEventQueue()
+void GameEventsXcb::init()
 {
+    GameEvents::init();
+    
     /* Clear the event queue and parameters */
     xcb_generic_event_t *event;
     do {

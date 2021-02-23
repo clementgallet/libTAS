@@ -259,7 +259,6 @@ private slots:
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotAsyncEvents(bool checked);
-    void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
     void slotVariableFramerate(bool checked);
     void slotMouseMode(bool checked);

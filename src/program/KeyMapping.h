@@ -115,6 +115,12 @@ class KeyMapping {
         /* Initialize hotkeys and mapping list */
         KeyMapping(void* conn);
 
+        /* Register a keydown event */
+        virtual void registerKeyDown(keysym_t ks) {}
+
+        /* Register a keyup event */
+        virtual void registerKeyUp(keysym_t ks) {}
+
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<keysym_t,SingleInput> input_mapping;
 

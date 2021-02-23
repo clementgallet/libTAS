@@ -36,8 +36,6 @@ GameEvents::GameEvents(Context* c, MovieFile* m) : context(c), movie(m) {}
 
 void GameEvents::init()
 {
-    clearEventQueue();
-    
     ar_ticks = -1;
     ar_delay = 50;
     ar_freq = 2;

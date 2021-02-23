@@ -25,15 +25,15 @@
 #include "utils.h" // create_dir
 #include "lua/Main.h"
 #include "KeyMapping.h"
+#ifdef __unix__
 #include "KeyMappingXcb.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "KeyMappingQuartz.h"
+#endif
 
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 #include <signal.h> // kill
-#include <xcb/xcb.h>
-#define explicit _explicit
-#include <xcb/xkb.h>
-#undef explicit
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -42,6 +42,13 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdint.h>
+
+#ifdef __unix__
+#include <xcb/xcb.h>
+#define explicit _explicit
+#include <xcb/xkb.h>
+#undef explicit
+#endif
 
 Context context;
 
@@ -140,8 +147,8 @@ int main(int argc, char **argv)
         gameargsoverride += argv[i];
     }
 
+#ifdef __unix__
     /* Open connection with the server */
-    // XInitThreads();
     context.conn = xcb_connect(NULL,NULL);
     if (xcb_connection_has_error(context.conn))
     {
@@ -178,10 +185,9 @@ int main(int argc, char **argv)
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.
      */
-#ifdef __unix__
     context.config.km = new KeyMappingXcb(context.conn);
 #elif defined(__APPLE__) && defined(__MACH__)
-    // context.config.km->init(context.conn);
+    context.config.km = new KeyMappingQuartz(context.conn);
 #endif
 
     /* libTAS.so path */

@@ -21,7 +21,13 @@
 #include "GameLoop.h"
 #include "GameThread.h"
 #include "GameEvents.h"
+
+#ifdef __unix__
 #include "GameEventsXcb.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "GameEventsQuartz.h"
+#endif
+
 #include "utils.h"
 #include "AutoSave.h"
 // #include "SaveState.h"
@@ -46,7 +52,11 @@
 
 GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c)
 {
+#ifdef __unix__
     gameEvents = new GameEventsXcb(c, &movie);
+#elif defined(__APPLE__) && defined(__MACH__)
+    gameEvents = new GameEventsQuartz(c, &movie);
+#endif
 }
 
 void GameLoop::start()
@@ -130,6 +140,9 @@ void GameLoop::start()
 
 void GameLoop::init()
 {
+    /* Unvalidate the game pid */
+    context->game_pid = 0;
+    
     /* Unvalidate the game window id */
     context->game_window = 0;
 
@@ -250,6 +263,7 @@ void GameLoop::initProcessMessages()
             /* Get the game process pid */
             case MSGB_PID:
                 receiveData(&context->game_pid, sizeof(pid_t));
+                gameEvents->registerGamePid(context->game_pid);
                 break;
 
             case MSGB_GIT_COMMIT:

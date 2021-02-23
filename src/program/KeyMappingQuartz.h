@@ -17,20 +17,24 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_KEYMAPPING_XCB_H_INCLUDED
-#define LIBTAS_KEYMAPPING_XCB_H_INCLUDED
+#ifndef LIBTAS_KEYMAPPING_QUARTZ_H_INCLUDED
+#define LIBTAS_KEYMAPPING_QUARTZ_H_INCLUDED
 
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
 #include "KeyMapping.h"
 #include <string>
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
 
-class KeyMappingXcb : public KeyMapping {
+class KeyMappingQuartz : public KeyMapping {
     public:
         /* Initialize hotkeys and mapping list */
-        KeyMappingXcb(void* conn);
+        KeyMappingQuartz(void* conn);
+
+        /* Register a keydown event */
+        void registerKeyDown(keysym_t ks);
+
+        /* Register a keyup event */
+        void registerKeyUp(keysym_t ks);
 
         /* Returns if a keysym is a modifier */
         bool is_modifier(keysym_t ks);
@@ -61,15 +65,12 @@ class KeyMappingXcb : public KeyMapping {
         void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp);
 
     private:
-        /* Connection to the X11 server */
-        xcb_connection_t *conn;
+        /* Up-to-date keyboard state */
+        uint8_t keyboard_state[16];
 
-        /* Connection to the keyboard layout */
-        xcb_key_symbols_t *keysyms;
-
-        /* Returns the list of modifiers from the keyboard state */
-        keysym_t build_modifiers(unsigned char keyboard_state[]);
+        /* Returns the list of currently pressed modifiers */
+        keysym_t build_modifiers();
 
 };
 
-#endif // LIBTAS_KEYMAPPING_XCB_H_INCLUDED
+#endif // LIBTAS_KEYMAPPING_QUARTZ_H_INCLUDED

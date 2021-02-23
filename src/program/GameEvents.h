@@ -35,7 +35,10 @@ class GameEvents : public QObject {
 public:
     GameEvents(Context *c, MovieFile* m);
 
-    void init();
+    virtual void init();
+
+    /* Register the game pid */
+    virtual void registerGamePid(pid_t pid) = 0;
 
     /* Register and select events from the window handle */
     virtual void registerGameWindow(uint32_t gameWindow) = 0;
@@ -66,8 +69,6 @@ protected:
         EVENT_TYPE_FOCUS_OUT,
         EVENT_TYPE_EXPOSE,
     };
-
-    virtual void clearEventQueue() = 0;
 
     virtual EventType nextEvent(struct HotKey &hk) = 0;
 
