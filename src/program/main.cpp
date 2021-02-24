@@ -196,7 +196,11 @@ int main(int argc, char **argv)
     std::string binpath = std::string( buf, (count > 0) ? count : 0 );
     char* binpathptr = const_cast<char*>(binpath.c_str());
     context.libtaspath = dirname(binpathptr);
+#ifdef __unix__
     context.libtaspath += "/libtas.so";
+#elif defined(__APPLE__) && defined(__MACH__)
+    context.libtaspath += "/libtas.dylib";
+#endif
 
     /* Create the working directories */
     char *path = getenv("XDG_CONFIG_HOME");
@@ -274,9 +278,14 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    /* Store current content of LD_PRELOAD */
+    /* Store current content of LD_PRELOAD/DYLD_INSERT_LIBRARIES */
 
+#ifdef __unix__
     char* old_preload = getenv("LD_PRELOAD");
+#elif defined(__APPLE__) && defined(__MACH__)
+    char* old_preload = getenv("DYLD_INSERT_LIBRARIES");
+#endif
+
     if (old_preload) context.old_ld_preload = old_preload;
 
     /* Check if incremental savestates is supported by checking the soft-dirty bit */

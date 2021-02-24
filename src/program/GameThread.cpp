@@ -34,6 +34,7 @@
 
 void GameThread::launch(Context *context)
 {
+#ifdef __unix__
     /* Update the LD_LIBRARY_PATH environment variable if the user set one */
     if (!context->config.libdir.empty()) {
         char* oldlibpath = getenv("LD_LIBRARY_PATH");
@@ -44,6 +45,7 @@ void GameThread::launch(Context *context)
         }
         setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
     }
+#endif
 
     /* Change the working directory to the user-defined one or game directory */
     std::string newdir = context->config.rundir;
@@ -117,6 +119,11 @@ void GameThread::launch(Context *context)
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
 
+    /* We need to set DYLD_FORCE_FLAT_NAMESPACE so that we can hook into the game */
+#if defined(__APPLE__) && defined(__MACH__)
+    setenv("DYLD_FORCE_FLAT_NAMESPACE", "1", 1);
+#endif
+
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;
 
@@ -188,8 +195,13 @@ void GameThread::launch(Context *context)
             arg_list.push_back("-q");
             arg_list.push_back("-ex");
 
-            /* LD_PRELOAD must be set inside a gdb command to be effective */
+            /* LD_PRELOAD/DYLD_INSERT_LIBRARIES must be set inside a gdb
+             * command to be effective */
+#ifdef __unix__
             std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
+#elif defined(__APPLE__) && defined(__MACH__)
+            std::string ldpreloadstr = "set exec-wrapper env 'DYLD_INSERT_LIBRARIES=";
+#endif
             ldpreloadstr += context->libtaspath;
             if (!context->old_ld_preload.empty()) {
                 ldpreloadstr += ":";
@@ -227,16 +239,27 @@ void GameThread::launch(Context *context)
          * have the correct calling convention. */
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
 
-        arg_list.push_back(context->gamepath);
+        /* If MacOS app, insert the real executable */
+        if (gameArch == BT_MACOS64) {
+            arg_list.push_back(extractMacOSExecutable(context->gamepath));
+        }
+        else {
+            arg_list.push_back(context->gamepath);
+        }
     }
 
     /* Argument string for sh */
     std::ostringstream sharg;
 
-    /* Prepend LD_PRELOAD */
-    if (!(context->attach_gdb && ((gameArch == BT_ELF32) || (gameArch == BT_ELF64)))) {
-        /* Set the LD_PRELOAD environment variable to inject our lib to the game */
+    /* Prepend LD_PRELOAD/DYLD_INSERT_LIBRARIES */
+    if (!(context->attach_gdb && ((gameArch == BT_ELF32) || (gameArch == BT_ELF64) || (gameArch == BT_MACOS64)))) {
+        /* Set the LD_PRELOAD/DYLD_INSERT_LIBRARIES environment variable to
+         * inject our lib to the game */
+#ifdef __unix__
         sharg << "LD_PRELOAD=";
+#elif defined(__APPLE__) && defined(__MACH__)
+        sharg << "DYLD_INSERT_LIBRARIES=";
+#endif
         if (!context->old_ld_preload.empty()) {
             sharg << context->libtaspath << ":" << context->old_ld_preload << " ";
         }

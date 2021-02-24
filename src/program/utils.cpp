@@ -127,6 +127,12 @@ void remove_savestates(Context* context)
 
 int extractBinaryType(std::string path)
 {
+    /* Check for MacOS app file, and extract the actual executable if so. */
+    std::string executable_path = extractMacOSExecutable(path);
+    if (!executable_path.empty()) {
+        path = executable_path;
+    }
+    
     std::string cmd = "file -b \"";
     cmd += path;
     cmd += "\"";
@@ -162,5 +168,34 @@ int extractBinaryType(std::string path)
         return BT_SH;
     }
 
+    if (outputstr.find("Mach-O 64-bit executable") != std::string::npos) {
+        return BT_MACOS64;
+    }
+
     return BT_UNKNOWN;
+}
+
+std::string extractMacOSExecutable(std::string path)
+{
+    struct stat sb;
+
+    if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+        /* Extract file name and check for '.app' extension */
+        std::string name = fileFromPath(path);
+        if (name.substr(name.find_last_of(".") + 1) != "app")
+            return "";
+            
+        /* Build path to executable */
+        std::string executable_path = path;
+        executable_path += "/Contents/MacOS/";
+        executable_path += name.substr(0, name.find_last_of("."));
+        
+        /* Check that the file exists */
+        if (access(executable_path.c_str(), F_OK) != 0)
+            return "";
+
+        return executable_path;
+    }
+
+    return "";
 }

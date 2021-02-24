@@ -43,9 +43,13 @@ enum BinaryType {
     BT_PE32,
     BT_PE32P,
     BT_SH,
+    BT_MACOS64,
 };
 
 /* Run the `file` command from a shell and extract the output of the command. */
 int extractBinaryType(std::string path);
+
+/* Get the executable from MacOS .app directory. */
+std::string extractMacOSExecutable(std::string path);
 
 #endif

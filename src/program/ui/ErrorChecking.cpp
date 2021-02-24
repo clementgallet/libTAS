@@ -149,7 +149,8 @@ bool ErrorChecking::checkArchType(Context* context)
     }
 
     /* Checking that the game can be executed by the user, or try adding the flag.
-     * This is not needed for wine games */
+     * This is not needed for wine games.
+     * MacOS apps are directories, and thus executables */
     if (gameArch != BT_PE32 && gameArch != BT_PE32P && access(context->gamepath.c_str(), X_OK) != 0) {
         struct stat sb;
         if ((stat(context->gamepath.c_str(), &sb) == -1) ||
@@ -216,12 +217,13 @@ bool ErrorChecking::checkArchType(Context* context)
         }
     }
 
-    /* Arithmetic on enums is ugly but much shorter */
-    if (gameArch != libtasArch && ((gameArch-2) != libtasArch)) {
+    /* Check for arch mismatch */
+    if ((((gameArch == BT_ELF32) || (gameArch == BT_PE32)) && (libtasArch == BT_ELF64)) ||
+        (((gameArch == BT_ELF64) || (gameArch == BT_PE32P)) && (libtasArch == BT_ELF32))) {
         critical(QString("libtas.so library was compiled for a %1-bit arch but %2 has a %3-bit arch").arg((libtasArch%2)?32:64).arg(context->gamepath.c_str()).arg((gameArch%2)?32:64), context->interactive);
         return false;
     }
-
+    
     return true;
 }
 
