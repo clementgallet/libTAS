@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+    <key>SecTaskAccess</key>
+    <array>
+        <string>allowed</string>
+    </array>
 </dict>
 </plist>

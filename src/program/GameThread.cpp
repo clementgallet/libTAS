@@ -191,7 +191,15 @@ void GameThread::launch(Context *context)
     }
     else {
         if (context->attach_gdb) {
-            arg_list.push_back("/usr/bin/gdb");
+            std::string cmd = "which gdb";
+            FILE *output = popen(cmd.c_str(), "r");
+            std::array<char,256> buf;
+            fgets(buf.data(), buf.size(), output);
+            std::string gdbpath = std::string(buf.data());
+            gdbpath.pop_back(); // remove trailing newline
+            pclose(output);
+
+            arg_list.push_back(gdbpath);
             arg_list.push_back("-q");
             arg_list.push_back("-ex");
 
@@ -285,6 +293,7 @@ void GameThread::launch(Context *context)
     /* Append the game command-line arguments */
     sharg << context->config.gameargs;
 
+    std::cerr << sharg.str() << std::endl;
     /* Run the actual game with sh, taking care of splitting arguments */
     execlp("sh", "sh", "-c", sharg.str().c_str(), nullptr);
 }

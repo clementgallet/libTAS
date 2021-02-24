@@ -139,7 +139,6 @@ int extractBinaryType(std::string path)
 
     std::string outputstr("");
 
-    std::cerr << cmd << std::endl;
     FILE *output = popen(cmd.c_str(), "r");
     if (output != NULL) {
         std::array<char,1000> buf;
