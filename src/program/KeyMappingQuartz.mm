@@ -19,12 +19,14 @@
 
 #include "KeyMappingQuartz.h"
 #include "../shared/SingleInput.h"
+#include "../external/keysymdef.h"
 #include "../external/QuartzKeycodes.h"
 #include "ramsearch/MemAccess.h"
 
 #include <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #include <AppKit/NSEvent.h>
+#include <AppKit/NSText.h>
 
 #include <cstring>
 #include <iostream>
@@ -52,7 +54,7 @@ void KeyMappingQuartz::registerKeyDown(uint16_t kc)
     keyboard_state[kc >> 3] |= (1 << (kc & 0x7));
 }
 
-void KeyMappingQuartz::registerKeyUp(uint16_t ks)
+void KeyMappingQuartz::registerKeyUp(uint16_t kc)
 {
     keyboard_state[kc >> 3] &= ~(1 << (kc & 0x7));
 }
@@ -323,7 +325,7 @@ static const key_translate char_to_xcb_keycode[59] = {
     { NSNewlineCharacter, XK_Linefeed },
     { NSCarriageReturnCharacter, XK_Return },
     { NSBackTabCharacter, XK_VoidSymbol },
-    { kEscapeCharCode, XK_Escape },
+    { 27, XK_Escape },
     { NSDeleteCharacter, XK_Delete },
     { NSUpArrowFunctionKey, XK_Up },
     { NSDownArrowFunctionKey, XK_Up },
@@ -410,7 +412,11 @@ void KeyMappingQuartz::initKeyboardLayout()
                         si.type = SingleInput::IT_KEYBOARD;
                         si.value = keyboard_layout[kc];
                         /* TODO: Add a proper description of the key */
-                        si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                        const char* str = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                        if (str)
+                            si.description = str;
+                        else
+                            si.description = "";
                         input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
 
                         break;
@@ -427,7 +433,12 @@ void KeyMappingQuartz::initKeyboardLayout()
                     si.type = SingleInput::IT_KEYBOARD;
                     si.value = keyboard_layout[kc];
                     /* TODO: Add a proper description of the key */
-                    si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                    const char* str = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                    if (str)
+                        si.description = str;
+                    else
+                        si.description = "";
+
                     input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
                 }
             }

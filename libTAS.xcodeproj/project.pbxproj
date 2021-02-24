@@ -66,9 +66,6 @@
 		EBC20FEE25E583D9008A406C /* GameEvents.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC20FE725E583D3008A406C /* GameEvents.cpp */; };
 		EBC20FEF25E583D9008A406C /* GameEventsQuartz.mm in Sources */ = {isa = PBXBuildFile; fileRef = EBC20FE325E583D2008A406C /* GameEventsQuartz.mm */; };
 		EBC20FF025E583D9008A406C /* KeyMappingQuartz.mm in Sources */ = {isa = PBXBuildFile; fileRef = EBC20FE425E583D2008A406C /* KeyMappingQuartz.mm */; };
-		EBC20FF125E584D1008A406C /* QtCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBBDFCF725CEF089005F26EE /* QtCore.framework */; };
-		EBC20FF225E584D1008A406C /* QtGui.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBBDFCF825CEF089005F26EE /* QtGui.framework */; };
-		EBC20FF325E584D1008A406C /* QtWidgets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBBDFCF625CEF089005F26EE /* QtWidgets.framework */; };
 		EBC20FF525E5871B008A406C /* AnnotationsWindow.h in Sources */ = {isa = PBXBuildFile; fileRef = EBED820825CC8F3C00951619 /* AnnotationsWindow.h */; };
 		EBC20FF625E5871B008A406C /* AutoSaveWindow.h in Sources */ = {isa = PBXBuildFile; fileRef = EBED820A25CC8F3C00951619 /* AutoSaveWindow.h */; };
 		EBC20FF725E5871B008A406C /* ControllerAxisWidget.h in Sources */ = {isa = PBXBuildFile; fileRef = EBED820C25CC8F3C00951619 /* ControllerAxisWidget.h */; };
@@ -101,6 +98,11 @@
 		EBC2101425E58C09008A406C /* liblua.5.3.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */; };
 		EBC93BBD25DE929600C84DF4 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC93BBC25DE929600C84DF4 /* OpenGL.framework */; };
 		EBC9684E25DC7B4D00605863 /* keysymdef.h in Headers */ = {isa = PBXBuildFile; fileRef = EBC9684D25DC7B4D00605863 /* keysymdef.h */; };
+		EBDA73A325E6C3ED007DD9B8 /* MemAccess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */; };
+		EBDA73A525E6C638007DD9B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A425E6C637007DD9B8 /* AppKit.framework */; };
+		EBDA73A725E6C8EE007DD9B8 /* QtCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */; };
+		EBDA73AA25E6C908007DD9B8 /* QtGui.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A825E6C908007DD9B8 /* QtGui.framework */; };
+		EBDA73AB25E6C908007DD9B8 /* QtWidgets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */; };
 		EBED828725CC902A00951619 /* backtrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80A825CC8F3C00951619 /* backtrace.cpp */; };
 		EBED828825CC902A00951619 /* BusyLoopDetection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80AA25CC8F3C00951619 /* BusyLoopDetection.cpp */; };
 		EBED828925CC902A00951619 /* DeterministicTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80C325CC8F3C00951619 /* DeterministicTimer.cpp */; };
@@ -223,7 +225,7 @@
 		EBC20FF425E585CB008A406C /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
 			compilerSpec = com.apple.compilers.proxy.script;
-			filePatterns = .h;
+			filePatterns = "*.h";
 			fileType = pattern.proxy;
 			isEditable = 1;
 			outputFiles = (
@@ -253,6 +255,12 @@
 		EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblua.5.3.6.dylib; path = "../../../../usr/local/Cellar/lua@5.3/5.3.6/lib/liblua.5.3.6.dylib"; sourceTree = "<group>"; };
 		EBC93BBC25DE929600C84DF4 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		EBC9684D25DC7B4D00605863 /* keysymdef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keysymdef.h; sourceTree = "<group>"; };
+		EBDA73A125E6C3E6007DD9B8 /* MemAccess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemAccess.h; sourceTree = "<group>"; };
+		EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MemAccess.cpp; sourceTree = "<group>"; };
+		EBDA73A425E6C637007DD9B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtCore.framework; path = ../../Qt/5.15.2/clang_64/lib/QtCore.framework; sourceTree = "<group>"; };
+		EBDA73A825E6C908007DD9B8 /* QtGui.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtGui.framework; path = ../../Qt/5.15.2/clang_64/lib/QtGui.framework; sourceTree = "<group>"; };
+		EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtWidgets.framework; path = ../../Qt/5.15.2/clang_64/lib/QtWidgets.framework; sourceTree = "<group>"; };
 		EBED807025CC8F3C00951619 /* cubeb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cubeb.h; sourceTree = "<group>"; };
 		EBED807125CC8F3C00951619 /* lz4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lz4.cpp; sourceTree = "<group>"; };
 		EBED807225CC8F3C00951619 /* lz4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lz4.h; sourceTree = "<group>"; };
@@ -638,12 +646,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBDA73AA25E6C908007DD9B8 /* QtGui.framework in Frameworks */,
+				EBDA73AB25E6C908007DD9B8 /* QtWidgets.framework in Frameworks */,
+				EBDA73A725E6C8EE007DD9B8 /* QtCore.framework in Frameworks */,
+				EBDA73A525E6C638007DD9B8 /* AppKit.framework in Frameworks */,
 				EB79949925E5DEDA0011078F /* CoreFoundation.framework in Frameworks */,
 				EB79949725E5DE810011078F /* CoreGraphics.framework in Frameworks */,
 				EBC2101425E58C09008A406C /* liblua.5.3.6.dylib in Frameworks */,
-				EBC20FF125E584D1008A406C /* QtCore.framework in Frameworks */,
-				EBC20FF225E584D1008A406C /* QtGui.framework in Frameworks */,
-				EBC20FF325E584D1008A406C /* QtWidgets.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -662,6 +671,10 @@
 		EBBDFCF525CEF089005F26EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EBDA73A825E6C908007DD9B8 /* QtGui.framework */,
+				EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */,
+				EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */,
+				EBDA73A425E6C637007DD9B8 /* AppKit.framework */,
 				EB79949825E5DED90011078F /* CoreFoundation.framework */,
 				EB79949625E5DE810011078F /* CoreGraphics.framework */,
 				EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */,
@@ -1182,6 +1195,8 @@
 				EBED81FA25CC8F3C00951619 /* IRamWatchDetailed.cpp */,
 				EBED81FB25CC8F3C00951619 /* IRamWatchDetailed.h */,
 				EBED81FC25CC8F3C00951619 /* MemSection.cpp */,
+				EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */,
+				EBDA73A125E6C3E6007DD9B8 /* MemAccess.h */,
 				EBED81FD25CC8F3C00951619 /* MemSection.h */,
 				EBED81FE25CC8F3C00951619 /* RamWatch.cpp */,
 				EBED81FF25CC8F3C00951619 /* RamWatch.h */,
@@ -1453,6 +1468,7 @@
 				EBC20FF025E583D9008A406C /* KeyMappingQuartz.mm in Sources */,
 				EBC20FD925E583A2008A406C /* RamSearchWindow.cpp in Sources */,
 				EBC20FDF25E583B4008A406C /* AllInputs.cpp in Sources */,
+				EBDA73A325E6C3ED007DD9B8 /* MemAccess.cpp in Sources */,
 				EBC20FCB25E583A2008A406C /* ExecutableWindow.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1587,6 +1603,7 @@
 		EBC20FAC25E582EF008A406C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_ENTITLEMENTS = libTAS/libTAS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1616,6 +1633,7 @@
 		EBC20FAD25E582EF008A406C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_ENTITLEMENTS = libTAS/libTAS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

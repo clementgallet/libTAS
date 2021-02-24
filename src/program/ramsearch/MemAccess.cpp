@@ -20,9 +20,11 @@
 #include "MemAccess.h"
 
 #include <stdint.h>
+#include <iostream>
 #ifdef __unix__
 #include <sys/uio.h>
 #elif defined(__APPLE__) && defined(__MACH__)
+#include <mach/vm_map.h>
 #include <mach/mach_traps.h>
 #include <mach/mach_init.h>
 #include <mach/mach_error.h>
@@ -36,8 +38,8 @@ void MemAccess::init(pid_t pid)
 {
 #if defined(__APPLE__) && defined(__MACH__)
     kern_return_t error = task_for_pid(mach_task_self(), pid, &task);
-    if (kret != KERN_SUCCESS) {
-        std::cerr << "task_for_pid() failed with message " << mach_error_string(kret) << std::endl;
+    if (error != KERN_SUCCESS) {
+        std::cerr << "task_for_pid() failed with message " << mach_error_string(error) << std::endl;
         return;
     }
 #endif
@@ -50,7 +52,7 @@ pid_t MemAccess::getPid()
     return game_pid;
 }
 
-int MemAccess::read(void* local_addr, void* remote_addr, size_t size)
+size_t MemAccess::read(void* local_addr, void* remote_addr, size_t size)
 {
     if (!game_pid)
         return 0;
@@ -65,7 +67,7 @@ int MemAccess::read(void* local_addr, void* remote_addr, size_t size)
     return process_vm_readv(game_pid, &local, 1, &remote, 1, 0);
 #elif defined(__APPLE__) && defined(__MACH__)
     size_t ret_size = size;
-    kern_return_t error = vm_read_overwrite(task, reinterpret_cast<vm_address_t>(remote_addr), size, local_addr, &ret_size);
+    kern_return_t error = vm_read_overwrite(task, reinterpret_cast<vm_address_t>(remote_addr), size, reinterpret_cast<vm_address_t>(local_addr), &ret_size);
 
     if (error != KERN_SUCCESS)
         return 0;
@@ -73,7 +75,7 @@ int MemAccess::read(void* local_addr, void* remote_addr, size_t size)
 #endif
 }
 
-int MemAccess::write(void* local_addr, void* remote_addr, size_t size)
+size_t MemAccess::write(void* local_addr, void* remote_addr, size_t size)
 {
     if (!game_pid)
         return 0;
@@ -87,8 +89,7 @@ int MemAccess::write(void* local_addr, void* remote_addr, size_t size)
 
     return process_vm_writev(game_pid, &local, 1, &remote, 1, 0);    
 #elif defined(__APPLE__) && defined(__MACH__)
-    size_t ret_size = size;
-    kern_return_t error = vm_write(task, reinterpret_cast<vm_address_t>(remote_addr), local_addr, size);
+    kern_return_t error = vm_write(task, reinterpret_cast<vm_address_t>(remote_addr), reinterpret_cast<vm_offset_t>(local_addr), size);
 
     if (error != KERN_SUCCESS)
         return 0;

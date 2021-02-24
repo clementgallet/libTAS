@@ -75,6 +75,13 @@
             ReferencedContainer = "container:libTAS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "QT_QPA_PLATFORM_PLUGIN_PATH"
+            value = "/Users/clement/Qt/5.15.2/clang_64/plugins"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

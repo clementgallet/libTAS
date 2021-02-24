@@ -30,9 +30,9 @@ namespace MemAccess {
     
     pid_t getPid();
     
-    int read(void* local_addr, void* remote_addr, size_t size);
+    size_t read(void* local_addr, void* remote_addr, size_t size);
 
-    int write(void* local_addr, void* remote_addr, size_t size);    
+    size_t write(void* local_addr, void* remote_addr, size_t size);    
 }
 
 #endif
