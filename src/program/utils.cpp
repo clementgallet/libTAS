@@ -139,6 +139,7 @@ int extractBinaryType(std::string path)
 
     std::string outputstr("");
 
+    std::cerr << cmd << std::endl;
     FILE *output = popen(cmd.c_str(), "r");
     if (output != NULL) {
         std::array<char,1000> buf;
@@ -168,7 +169,7 @@ int extractBinaryType(std::string path)
         return BT_SH;
     }
 
-    if (outputstr.find("Mach-O 64-bit executable") != std::string::npos) {
+    if (outputstr.find("Mach-O 64-bit") != std::string::npos) {
         return BT_MACOS64;
     }
 
@@ -184,12 +185,32 @@ std::string extractMacOSExecutable(std::string path)
         std::string name = fileFromPath(path);
         if (name.substr(name.find_last_of(".") + 1) != "app")
             return "";
-            
+        
+        /* Get executable name from Info.plist CFBundleExecutable field */
+        std::string plist_cmd = "defaults read \"";
+        plist_cmd += path;
+        plist_cmd += "/Contents/Info.plist\" CFBundleExecutable";
+        
+        std::string outputstr("");
+        
+        FILE *output = popen(plist_cmd.c_str(), "r");
+        if (output != NULL) {
+            std::array<char,1000> buf;
+            if (fgets(buf.data(), buf.size(), output) != 0) {
+                outputstr = std::string(buf.data());
+            }
+            pclose(output);
+        }
+
+        /* Trim the value */
+        size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
+        outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
+        
         /* Build path to executable */
         std::string executable_path = path;
         executable_path += "/Contents/MacOS/";
-        executable_path += name.substr(0, name.find_last_of("."));
-        
+        executable_path += outputstr;
+
         /* Check that the file exists */
         if (access(executable_path.c_str(), F_OK) != 0)
             return "";

@@ -43,6 +43,10 @@
 #include <getopt.h>
 #include <stdint.h>
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <mach-o/dyld.h> // _NSGetExecutablePath
+#endif
+
 #ifdef __unix__
 #include <xcb/xcb.h>
 #define explicit _explicit
@@ -192,13 +196,20 @@ int main(int argc, char **argv)
 
     /* libTAS.so path */
     /* TODO: Not portable! */
+#ifdef __unix__
     ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
     std::string binpath = std::string( buf, (count > 0) ? count : 0 );
     char* binpathptr = const_cast<char*>(binpath.c_str());
     context.libtaspath = dirname(binpathptr);
-#ifdef __unix__
     context.libtaspath += "/libtas.so";
 #elif defined(__APPLE__) && defined(__MACH__)
+    uint32_t size = 4096;
+    if (_NSGetExecutablePath(buf, &size) == 0)
+        context.libtaspath = dirname(buf);
+    else {
+        std::cerr << "Could not get path of libTAS executable" << std::endl;
+        exit(0);
+    }
     context.libtaspath += "/libtas.dylib";
 #endif
 
