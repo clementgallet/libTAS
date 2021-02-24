@@ -34,67 +34,9 @@
 
 KeyMappingQuartz::KeyMappingQuartz(void* c) : KeyMapping(c)
 {
-    /* Fill hotkey list */
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_ANSI_P}, HOTKEY_PLAYPAUSE, "Play/Pause"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_ANSI_V}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F1 | XK_Shift_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F2 | XK_Shift_Flag}, HOTKEY_SAVESTATE2, "Save State 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F3 | XK_Shift_Flag}, HOTKEY_SAVESTATE3, "Save State 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F4 | XK_Shift_Flag}, HOTKEY_SAVESTATE4, "Save State 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F5 | XK_Shift_Flag}, HOTKEY_SAVESTATE5, "Save State 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F6 | XK_Shift_Flag}, HOTKEY_SAVESTATE6, "Save State 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F7 | XK_Shift_Flag}, HOTKEY_SAVESTATE7, "Save State 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F8 | XK_Shift_Flag}, HOTKEY_SAVESTATE8, "Save State 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F9 | XK_Shift_Flag}, HOTKEY_SAVESTATE9, "Save State 9"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SAVESTATE_BACKTRACK, "Save Backtrack State"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F1}, HOTKEY_LOADSTATE1, "Load State 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F2}, HOTKEY_LOADSTATE2, "Load State 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F3}, HOTKEY_LOADSTATE3, "Load State 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F4}, HOTKEY_LOADSTATE4, "Load State 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F5}, HOTKEY_LOADSTATE5, "Load State 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F6}, HOTKEY_LOADSTATE6, "Load State 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F7}, HOTKEY_LOADSTATE7, "Load State 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F8}, HOTKEY_LOADSTATE8, "Load State 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F9}, HOTKEY_LOADSTATE9, "Load State 9"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F10}, HOTKEY_LOADSTATE_BACKTRACK, "Load Backtrack State"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F1 | XK_Control_Flag}, HOTKEY_LOADBRANCH1, "Load Branch 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F2 | XK_Control_Flag}, HOTKEY_LOADBRANCH2, "Load Branch 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F3 | XK_Control_Flag}, HOTKEY_LOADBRANCH3, "Load Branch 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F4 | XK_Control_Flag}, HOTKEY_LOADBRANCH4, "Load Branch 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F5 | XK_Control_Flag}, HOTKEY_LOADBRANCH5, "Load Branch 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F6 | XK_Control_Flag}, HOTKEY_LOADBRANCH6, "Load Branch 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F7 | XK_Control_Flag}, HOTKEY_LOADBRANCH7, "Load Branch 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F8 | XK_Control_Flag}, HOTKEY_LOADBRANCH8, "Load Branch 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F9 | XK_Control_Flag}, HOTKEY_LOADBRANCH9, "Load Branch 9"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, kVK_F10 | XK_Control_Flag}, HOTKEY_LOADBRANCH_BACKTRACK, "Load Backtrack Branch"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
-
-    /* Get the keyboard layout to get the string representation of each keycode */
-    /* Taken from https://stackoverflow.com/a/64344453 */
-    
-    for (int kc = 0; kc < 128; kc++) {
-        /* Create dummy NSEvent from a CGEvent for a keypress */
-        CGEventRef coreEvent = CGEventCreateKeyboardEvent(nullptr, kc, true);
-        NSEvent* keyEvent = [NSEvent eventWithCGEvent:coreEvent];
-        CFRelease(coreEvent);
-
-        if (keyEvent.type == NSEventTypeKeyDown) {
-            /* Get the character from the event */
-            NSString* character = [keyEvent characters];
-            
-            /* If non-null string, insert the key in the list */
-            if ([character length] > 0) {
-                SingleInput si;
-                si.type = SingleInput::IT_KEYBOARD;
-                si.value = kc;
-                si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
-                input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
-            }
-        }
-    }    
-
+    /* Get the keyboard layout and fill input list */
+    initKeyboardLayout();
+   
     /* Reset keyboard state */
     memset(keyboard_state, 0, 16);
 
@@ -105,14 +47,14 @@ KeyMappingQuartz::KeyMappingQuartz(void* c) : KeyMapping(c)
     default_inputs();
 }
 
-void KeyMappingQuartz::registerKeyDown(keysym_t ks)
+void KeyMappingQuartz::registerKeyDown(uint16_t kc)
 {
-    keyboard_state[ks >> 3] |= (1 << (ks & 0x7));
+    keyboard_state[kc >> 3] |= (1 << (kc & 0x7));
 }
 
-void KeyMappingQuartz::registerKeyUp(keysym_t ks)
+void KeyMappingQuartz::registerKeyUp(uint16_t ks)
 {
-    keyboard_state[ks >> 3] &= ~(1 << (ks & 0x7));
+    keyboard_state[kc >> 3] &= ~(1 << (kc & 0x7));
 }
 
 struct ModifierKey {
@@ -198,7 +140,7 @@ void KeyMappingQuartz::default_inputs()
     /* Map all keycode to their respective keysym. The other keysyms are unmapped. */
     for (int kc = 0; kc < 128; kc++) {
         for (auto iter : input_list[INPUTLIST_KEYBOARD_LATIN])
-            if (iter.value == kc) {
+            if (iter.value == keyboard_layout[kc]) {
                 input_mapping[iter.value] = iter;
                 break;
             }
@@ -220,7 +162,12 @@ void KeyMappingQuartz::default_input(int tab, int input_index)
 
     /* Check if there's a keycode mapped to this keysym */
     if (si.type == SingleInput::IT_KEYBOARD) {
-        input_mapping[si.value] = si;
+        for (int kc = 0; kc < 128; kc++) {
+            if (si.value == keyboard_layout[kc]) {
+                input_mapping[si.value] = si;
+                break;
+            }
+        }
     }
 }
 
@@ -243,16 +190,16 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
             if ((keyboard_state[i] >> j) & 0x1) {
 
                 /* We got a pressed keycode */
-                keysym_t kc = (i << 3) | j;
+                keysym_t ks = keyboard_layout[(i << 3) | j];
 
                 /* Check if we are dealing with a hotkey with or without modifiers */
-                if (hotkey_mapping.find(kc) != hotkey_mapping.end()) {
+                if (hotkey_mapping.find(ks) != hotkey_mapping.end()) {
                     /* Dealing with a hotkey, skipping */
                     continue;
                 }
 
                 if (modifiers) {
-                    keysym_t ksm = kc | modifiers;
+                    keysym_t ksm = ks | modifiers;
                     if (hotkey_mapping.find(ksm) != hotkey_mapping.end()) {
                         /* Dealing with a hotkey, skipping */
                         continue;
@@ -261,8 +208,8 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
 
                 /* Checking the mapped input for that key */
                 SingleInput si = {SingleInput::IT_NONE,0};
-                if (input_mapping.find(kc) != input_mapping.end())
-                    si = input_mapping[kc];
+                if (input_mapping.find(ks) != input_mapping.end())
+                    si = input_mapping[ks];
 
                 if (si.type == SingleInput::IT_NONE) {
                     /* Key is mapped to nothing */
@@ -361,5 +308,129 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
         if (cocoaButtons & (1 << 4))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+    }
+}
+
+struct key_translate {
+    uint16_t unicode_char;
+    keysym_t keysym;
+};
+
+static const key_translate char_to_xcb_keycode[59] = {
+    { NSEnterCharacter, XK_Return },
+    { NSBackspaceCharacter, XK_BackSpace },
+    { NSTabCharacter, XK_Tab },
+    { NSNewlineCharacter, XK_Linefeed },
+    { NSCarriageReturnCharacter, XK_Return },
+    { NSBackTabCharacter, XK_VoidSymbol },
+    { kEscapeCharCode, XK_Escape },
+    { NSDeleteCharacter, XK_Delete },
+    { NSUpArrowFunctionKey, XK_Up },
+    { NSDownArrowFunctionKey, XK_Up },
+    { NSLeftArrowFunctionKey, XK_Left },
+    { NSRightArrowFunctionKey, XK_Right },
+    { NSF1FunctionKey, XK_F1 },
+    { NSF2FunctionKey, XK_F2 },
+    { NSF3FunctionKey, XK_F3 },
+    { NSF4FunctionKey, XK_F4 },
+    { NSF5FunctionKey, XK_F5 },
+    { NSF6FunctionKey, XK_F6 },
+    { NSF7FunctionKey, XK_F7 },
+    { NSF8FunctionKey, XK_F8 },
+    { NSF9FunctionKey, XK_F9 },
+    { NSF10FunctionKey, XK_F10 },
+    { NSF11FunctionKey, XK_F11 },
+    { NSF12FunctionKey, XK_F12 },
+    { NSF13FunctionKey, XK_F13 },
+    { NSF14FunctionKey, XK_F14 },
+    { NSF15FunctionKey, XK_F15 },
+    { NSF16FunctionKey, XK_F16 },
+    { NSF17FunctionKey, XK_F17 },
+    { NSF18FunctionKey, XK_F18 },
+    { NSF19FunctionKey, XK_F19 },
+    { NSF20FunctionKey, XK_F20 },
+    { NSF21FunctionKey, XK_F21 },
+    { NSF22FunctionKey, XK_F22 },
+    { NSF23FunctionKey, XK_F23 },
+    { NSF24FunctionKey, XK_F24 },
+    { NSF25FunctionKey, XK_F25 },
+    { NSF26FunctionKey, XK_F26 },
+    { NSF27FunctionKey, XK_F27 },
+    { NSF28FunctionKey, XK_F28 },
+    { NSF29FunctionKey, XK_F29 },
+    { NSF30FunctionKey, XK_F30 },
+    { NSF31FunctionKey, XK_F31 },
+    { NSF32FunctionKey, XK_F32 },
+    { NSF33FunctionKey, XK_F33 },
+    { NSF34FunctionKey, XK_F34 },
+    { NSF35FunctionKey, XK_F35 },
+    { NSInsertFunctionKey, XK_Insert },
+    { NSDeleteFunctionKey, XK_Delete },
+    { NSHomeFunctionKey, XK_Home },
+    { NSEndFunctionKey, XK_End },
+    { NSPageUpFunctionKey, XK_Page_Up },
+    { NSPageDownFunctionKey, XK_Page_Down },
+    { NSPrintScreenFunctionKey, XK_Print },
+    { NSScrollLockFunctionKey, XK_Scroll_Lock },
+    { NSPauseFunctionKey, XK_Pause },
+    { NSSysReqFunctionKey, XK_Sys_Req },
+    { NSMenuFunctionKey, XK_Menu },
+    { NSHelpFunctionKey, XK_Help },
+};
+
+void KeyMappingQuartz::initKeyboardLayout()
+{
+    /* Get the keyboard layout to get the string representation of each keycode */
+    /* Taken from https://stackoverflow.com/a/64344453 */
+    
+    for (int kc = 0; kc < 128; kc++) {
+        keyboard_layout[kc] = 0;
+
+        /* Create dummy NSEvent from a CGEvent for a keypress */
+        CGEventRef coreEvent = CGEventCreateKeyboardEvent(nullptr, kc, true);
+        NSEvent* keyEvent = [NSEvent eventWithCGEvent:coreEvent];
+        CFRelease(coreEvent);
+
+        if (keyEvent.type == NSEventTypeKeyDown) {
+            /* Get the character from the event */
+            NSString* character = [keyEvent characters];
+            
+            /* If non-null string, use the first character (UTF-16) as a
+             * representation of the key. */
+            if ([character length] > 0) {
+                uint16_t ch = [character characterAtIndex:0];
+                
+                /* First check special (non-ASCII) characters */
+                for (int t = 0; t < 59; t++) {
+                    if (char_to_xcb_keycode[t].unicode_char == ch) {
+                        keyboard_layout[kc] = char_to_xcb_keycode[t].keysym;
+
+                        /* Insert key in the misc list */
+                        SingleInput si;
+                        si.type = SingleInput::IT_KEYBOARD;
+                        si.value = keyboard_layout[kc];
+                        /* TODO: Add a proper description of the key */
+                        si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                        input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
+
+                        break;
+                    }                    
+                }
+
+                /* If not found, then represent it as an ASCII character, which
+                 * matches the first 256 values of xcb keysyms */
+                if (keyboard_layout[kc] == 0) {
+                    keyboard_layout[kc] = (ch & 0xff);
+                    
+                    /* Insert key in the ascii list */
+                    SingleInput si;
+                    si.type = SingleInput::IT_KEYBOARD;
+                    si.value = keyboard_layout[kc];
+                    /* TODO: Add a proper description of the key */
+                    si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
+                    input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
+                }
+            }
+        }
     }
 }

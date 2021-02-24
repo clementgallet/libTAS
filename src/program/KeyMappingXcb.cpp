@@ -34,43 +34,6 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
 {
     conn = static_cast<xcb_connection_t*>(c);
 
-    /* Fill hotkey list */
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1 | XK_Shift_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2 | XK_Shift_Flag}, HOTKEY_SAVESTATE2, "Save State 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3 | XK_Shift_Flag}, HOTKEY_SAVESTATE3, "Save State 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F4 | XK_Shift_Flag}, HOTKEY_SAVESTATE4, "Save State 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F5 | XK_Shift_Flag}, HOTKEY_SAVESTATE5, "Save State 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F6 | XK_Shift_Flag}, HOTKEY_SAVESTATE6, "Save State 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7 | XK_Shift_Flag}, HOTKEY_SAVESTATE7, "Save State 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8 | XK_Shift_Flag}, HOTKEY_SAVESTATE8, "Save State 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Shift_Flag}, HOTKEY_SAVESTATE9, "Save State 9"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SAVESTATE_BACKTRACK, "Save Backtrack State"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1}, HOTKEY_LOADSTATE1, "Load State 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2}, HOTKEY_LOADSTATE2, "Load State 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3}, HOTKEY_LOADSTATE3, "Load State 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F4}, HOTKEY_LOADSTATE4, "Load State 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F5}, HOTKEY_LOADSTATE5, "Load State 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F6}, HOTKEY_LOADSTATE6, "Load State 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7}, HOTKEY_LOADSTATE7, "Load State 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8}, HOTKEY_LOADSTATE8, "Load State 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9}, HOTKEY_LOADSTATE9, "Load State 9"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F10}, HOTKEY_LOADSTATE_BACKTRACK, "Load Backtrack State"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1 | XK_Control_Flag}, HOTKEY_LOADBRANCH1, "Load Branch 1"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2 | XK_Control_Flag}, HOTKEY_LOADBRANCH2, "Load Branch 2"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F3 | XK_Control_Flag}, HOTKEY_LOADBRANCH3, "Load Branch 3"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F4 | XK_Control_Flag}, HOTKEY_LOADBRANCH4, "Load Branch 4"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F5 | XK_Control_Flag}, HOTKEY_LOADBRANCH5, "Load Branch 5"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F6 | XK_Control_Flag}, HOTKEY_LOADBRANCH6, "Load Branch 6"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F7 | XK_Control_Flag}, HOTKEY_LOADBRANCH7, "Load Branch 7"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8 | XK_Control_Flag}, HOTKEY_LOADBRANCH8, "Load Branch 8"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Control_Flag}, HOTKEY_LOADBRANCH9, "Load Branch 9"});
-    hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F10 | XK_Control_Flag}, HOTKEY_LOADBRANCH_BACKTRACK, "Load Backtrack Branch"});
-    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
-
     /* Build the list of keysym values to be mapped based on valid keycodes.
      * This list is dependent on the keyboard layout.
      */

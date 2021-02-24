@@ -31,10 +31,10 @@ class KeyMappingQuartz : public KeyMapping {
         KeyMappingQuartz(void* conn);
 
         /* Register a keydown event */
-        void registerKeyDown(keysym_t ks);
+        void registerKeyDown(uint16_t kc);
 
         /* Register a keyup event */
-        void registerKeyUp(keysym_t ks);
+        void registerKeyUp(uint16_t kc);
 
         /* Returns if a keysym is a modifier */
         bool is_modifier(keysym_t ks);
@@ -71,6 +71,13 @@ class KeyMappingQuartz : public KeyMapping {
         /* Returns the list of currently pressed modifiers */
         keysym_t build_modifiers();
 
+        /* Array to convert Quartz CGKeyCode to xcb keysym_t
+         * (using the user's keyboard layout).
+         * This is needed to get movie files portable across different OS */
+        keysym_t keyboard_layout[128];
+
+        /* Init the above array */
+        void initKeyboardLayout();
 };
 
 #endif // LIBTAS_KEYMAPPING_QUARTZ_H_INCLUDED

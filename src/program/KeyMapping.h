@@ -116,10 +116,10 @@ class KeyMapping {
         KeyMapping(void* conn);
 
         /* Register a keydown event */
-        virtual void registerKeyDown(keysym_t ks) {}
+        virtual void registerKeyDown(uint16_t kc) {}
 
         /* Register a keyup event */
-        virtual void registerKeyUp(keysym_t ks) {}
+        virtual void registerKeyUp(uint16_t kc) {}
 
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<keysym_t,SingleInput> input_mapping;
