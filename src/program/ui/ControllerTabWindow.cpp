@@ -179,7 +179,7 @@ void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
 
 void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 {
-    xcb_keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t mod = convertQtModifiers(e->modifiers());
 
     if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
         HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];
@@ -202,7 +202,7 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 
 void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
 {
-    xcb_keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t mod = convertQtModifiers(e->modifiers());
 
     if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
         HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];

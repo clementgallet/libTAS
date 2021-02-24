@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EB79949725E5DE810011078F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949625E5DE810011078F /* CoreGraphics.framework */; };
+		EB79949925E5DEDA0011078F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949825E5DED90011078F /* CoreFoundation.framework */; };
 		EBC20F9625E568A1008A406C /* openglwrappers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED812525CC8F3C00951619 /* openglwrappers.cpp */; };
 		EBC20F9825E57DDE008A406C /* dylib1.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC20F9725E57DDE008A406C /* dylib1.o */; };
 		EBC20FAE25E58354008A406C /* AutoSave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED81D325CC8F3C00951619 /* AutoSave.cpp */; };
@@ -233,6 +235,9 @@
 
 /* Begin PBXFileReference section */
 		EB18D18625DAE57000A40A10 /* libtas.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libtas.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB79949525E5C9CD0011078F /* QuartzKeycodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuartzKeycodes.h; sourceTree = "<group>"; };
+		EB79949625E5DE810011078F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		EB79949825E5DED90011078F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		EBBDFCF625CEF089005F26EE /* QtWidgets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtWidgets.framework; path = ../../../../Library/Frameworks/QtWidgets.framework; sourceTree = "<group>"; };
 		EBBDFCF725CEF089005F26EE /* QtCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtCore.framework; path = ../../../../Library/Frameworks/QtCore.framework; sourceTree = "<group>"; };
 		EBBDFCF825CEF089005F26EE /* QtGui.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtGui.framework; path = ../../../../Library/Frameworks/QtGui.framework; sourceTree = "<group>"; };
@@ -517,7 +522,7 @@
 		EBED81D625CC8F3C00951619 /* Config.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Config.cpp; sourceTree = "<group>"; };
 		EBED81D725CC8F3C00951619 /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		EBED81D825CC8F3C00951619 /* Context.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Context.h; sourceTree = "<group>"; };
-		EBED81D925CC8F3C00951619 /* GameLoop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GameLoop.cpp; sourceTree = "<group>"; };
+		EBED81D925CC8F3C00951619 /* GameLoop.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = GameLoop.cpp; sourceTree = "<group>"; };
 		EBED81DA25CC8F3C00951619 /* GameLoop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameLoop.h; sourceTree = "<group>"; };
 		EBED81DB25CC8F3C00951619 /* GameThread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GameThread.cpp; sourceTree = "<group>"; };
 		EBED81DC25CC8F3C00951619 /* GameThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameThread.h; sourceTree = "<group>"; };
@@ -633,6 +638,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB79949925E5DEDA0011078F /* CoreFoundation.framework in Frameworks */,
+				EB79949725E5DE810011078F /* CoreGraphics.framework in Frameworks */,
 				EBC2101425E58C09008A406C /* liblua.5.3.6.dylib in Frameworks */,
 				EBC20FF125E584D1008A406C /* QtCore.framework in Frameworks */,
 				EBC20FF225E584D1008A406C /* QtGui.framework in Frameworks */,
@@ -655,6 +662,8 @@
 		EBBDFCF525CEF089005F26EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EB79949825E5DED90011078F /* CoreFoundation.framework */,
+				EB79949625E5DE810011078F /* CoreGraphics.framework */,
 				EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */,
 				EBC20F9725E57DDE008A406C /* dylib1.o */,
 				EBC93BBC25DE929600C84DF4 /* OpenGL.framework */,
@@ -694,6 +703,7 @@
 				EBED807225CC8F3C00951619 /* lz4.h */,
 				EBED807325CC8F3C00951619 /* mwm.h */,
 				EBC9684D25DC7B4D00605863 /* keysymdef.h */,
+				EB79949525E5C9CD0011078F /* QuartzKeycodes.h */,
 				EBED807425CC8F3C00951619 /* SDL1.h */,
 				EBED807525CC8F3C00951619 /* SDL_dynapi_procs.h */,
 				EBED807625CC8F3C00951619 /* vdpau.h */,

@@ -17,7 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __unix__
 #include "config.h"
+#endif
 #include "GameLoop.h"
 #include "GameThread.h"
 #include "GameEvents.h"
@@ -42,6 +44,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <cerrno>
 #include <unistd.h> // fork()
 #include <future>

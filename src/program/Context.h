@@ -57,6 +57,8 @@ struct Context {
     /* Main UI window */
     xcb_window_t ui_window = 0;
 #elif defined(__APPLE__) && defined(__MACH__)
+    /* Dummy */
+    unsigned int game_window = 0;
 #endif
 
     /* Recording status */

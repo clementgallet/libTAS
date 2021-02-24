@@ -356,7 +356,7 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
     }
 
     /* We accept hotkeys when this window has focus */
-    xcb_keysym_t mod = convertQtModifiers(event->modifiers());
+    keysym_t mod = convertQtModifiers(event->modifiers());
 
     if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
         HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
@@ -375,7 +375,7 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
 void InputEditorView::keyReleaseEvent(QKeyEvent *event)
 {
     /* We accept hotkeys when this window has focus */
-    xcb_keysym_t mod = convertQtModifiers(event->modifiers());
+    keysym_t mod = convertQtModifiers(event->modifiers());
 
     if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
         HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
@@ -422,7 +422,7 @@ void InputEditorView::renameLabel()
 void InputEditorView::addInputColumn()
 {
     /* Get an input from the user */
-    xcb_keysym_t ks = keyDialog->exec();
+    keysym_t ks = keyDialog->exec();
 
     /* Remove the custom modifiers that we added in that function */
     ks = ks & 0xffff;

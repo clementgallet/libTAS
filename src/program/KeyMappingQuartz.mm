@@ -19,9 +19,11 @@
 
 #include "KeyMappingQuartz.h"
 #include "../shared/SingleInput.h"
+#include "../external/QuartzKeycodes.h"
+#include "ramsearch/MemAccess.h"
 
 #include <CoreGraphics/CoreGraphics.h>
-#include <HIToolbox/Events.h>
+#import <Foundation/Foundation.h>
 #include <AppKit/NSEvent.h>
 
 #include <cstring>
@@ -80,14 +82,14 @@ KeyMappingQuartz::KeyMappingQuartz(void* c) : KeyMapping(c)
 
         if (keyEvent.type == NSEventTypeKeyDown) {
             /* Get the character from the event */
-            NSString character = [keyEvent characters];
+            NSString* character = [keyEvent characters];
             
             /* If non-null string, insert the key in the list */
-            if ([character cString] > 0) {
+            if ([character length] > 0) {
                 SingleInput si;
                 si.type = SingleInput::IT_KEYBOARD;
                 si.value = kc;
-                si.description = [character length];
+                si.description = [character cStringUsingEncoding:NSASCIIStringEncoding];
                 input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
             }
         }
@@ -144,11 +146,11 @@ keysym_t KeyMappingQuartz::get_modifiers(int flags)
     keysym_t modifiers = 0;
     if (flags & kCGEventFlagMaskShift)
         modifiers |= XK_Shift_Flag;
-    if (state & kCGEventFlagMaskControl)
+    if (flags & kCGEventFlagMaskControl)
         modifiers |= XK_Control_Flag;
-    if (state & kCGEventFlagMaskAlternate)
+    if (flags & kCGEventFlagMaskAlternate)
         modifiers |= XK_Alt_Flag;
-    if (state & kCGEventFlagMaskCommand)
+    if (flags & kCGEventFlagMaskCommand)
         modifiers |= XK_Meta_Flag;
     
     return modifiers;
@@ -163,11 +165,11 @@ keysym_t KeyMappingQuartz::build_modifiers()
 
     if (flags & NSEventModifierFlagShift)
         modifiers |= XK_Shift_Flag;
-    if (state & NSEventModifierFlagControl)
+    if (flags & NSEventModifierFlagControl)
         modifiers |= XK_Control_Flag;
-    if (state & NSEventModifierFlagOption)
+    if (flags & NSEventModifierFlagOption)
         modifiers |= XK_Alt_Flag;
-    if (state & NSEventModifierFlagCommand)
+    if (flags & NSEventModifierFlagCommand)
         modifiers |= XK_Meta_Flag;
     
     return modifiers;
@@ -312,10 +314,10 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
         CGRect bounds;
 
         CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
-        for (NSMutableDictionary* entry in (NSArray*)windowList)
+        for (NSMutableDictionary* entry in (__bridge NSArray*)windowList)
         {
             NSInteger ownerPID = [[entry objectForKey:(id)kCGWindowOwnerPID] integerValue];
-            if (ownerPID == context->game_pid) {
+            if (ownerPID == MemAccess::getPid()) {
                 CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)[entry objectForKey:(id)kCGWindowBounds], &bounds);
                 break;
             }
@@ -327,37 +329,37 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
         const NSPoint cocoaLocation = [NSEvent mouseLocation];
 
         ai.pointer_mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
-        ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.minX);
-        ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.minY);
+        ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.origin.x);
+        ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.origin.y);
         
         if (sc.mouse_mode_relative) {
-            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.midX);
-            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.midY);
+            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
+            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
 
             /* Warp pointer if needed */
             if (mouse_warp) {
-                const CGPoint point = CGPointMake(bounds.midX, bounds.midY);
+                const CGPoint point = CGPointMake(bounds.size.width/2, bounds.size.height/2);
                 CGWarpMouseCursorPosition(point);
                 CGAssociateMouseAndMouseCursorPosition(YES);
             }
         }
         else {
-            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.midX);
-            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.midY);
+            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
+            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
         }
 
         /* We only care about the five mouse buttons */
         ai.pointer_mask = 0;
             
-        if (pointer_reply->mask & (1 << 0))
+        if (cocoaButtons & (1 << 0))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
-        if (pointer_reply->mask & (1 << 1))
+        if (cocoaButtons & (1 << 1))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
-        if (pointer_reply->mask & (1 << 2))
+        if (cocoaButtons & (1 << 2))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
-        if (pointer_reply->mask & (1 << 3))
+        if (cocoaButtons & (1 << 3))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
-        if (pointer_reply->mask & (1 << 4))
+        if (cocoaButtons & (1 << 4))
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
     }
 }

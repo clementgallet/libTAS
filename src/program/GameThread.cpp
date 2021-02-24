@@ -21,7 +21,7 @@
 
 // #include "ui/MainWindow.h"
 
-#include "config.h"
+//#include "config.h"
 #include "GameThread.h"
 #include "utils.h"
 #include "../shared/SharedConfig.h"
@@ -31,12 +31,6 @@
 #include <iostream>
 #include <unistd.h> // chdir()
 #include <fcntl.h> // O_RDWR, O_CREAT
-
-#include <sys/personality.h>
-#ifndef HAVE_PERSONALITY
-# include <syscall.h>
-# define personality(pers) ((long)syscall(SYS_personality, pers))
-#endif
 
 void GameThread::launch(Context *context)
 {
@@ -122,12 +116,6 @@ void GameThread::launch(Context *context)
 
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
-
-    /* Disable Address Space Layout Randomization for the game, so that ram
-     * watch addresses do not change on game restart.
-     * Source: https://stackoverflow.com/questions/5194666/disable-randomization-of-memory-addresses/30385370#30385370
-     */
-    personality(ADDR_NO_RANDOMIZE);
 
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;

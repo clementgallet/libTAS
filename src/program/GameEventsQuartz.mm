@@ -29,7 +29,7 @@
 #include <unistd.h> // usleep()
 #include <stdint.h>
 
-GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m), keysyms(xcb_key_symbols_alloc(c->conn), xcb_key_symbols_free) {}
+GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m) {}
 
 void GameEventsQuartz::init()
 {
@@ -39,9 +39,11 @@ void GameEventsQuartz::init()
     gameApp = nullptr;
 }
 
-CGEventRef GameEventsQuartz::eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
+static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
     if ((type == kCGEventKeyDown) || (type == kCGEventKeyUp)) {
 
+        Context* context = static_cast<Context*>(refcon);
+        
         /* Skip autorepeat */
         int autorepeat = CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat);
         if (autorepeat)
@@ -50,15 +52,16 @@ CGEventRef GameEventsQuartz::eventTapFunction(CGEventTapProxy proxy, CGEventType
         CGKeyCode keycode = static_cast<CGKeyCode>(CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
         
         /* If pressed a controller button, update the controller input window */
+        /*
         if (context->config.km->input_mapping.find(keycode) != context->config.km->input_mapping.end()) {
             SingleInput si = context->config.km->input_mapping[keycode];
             if (si.inputTypeIsController())
                 emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), type == kCGEventKeyDown);
-        }
+        }*/
         
         /* Build modifiers */
         CGEventFlags flags = CGEventGetFlags(event);
-        keysym_t modifiers = context->config.km->get_modifiers(key_state);
+        keysym_t modifiers = context->config.km->get_modifiers(flags);
 
         /* Check if this keycode with or without modifiers is mapped to a hotkey */
         int hk_type = -1;
@@ -71,9 +74,9 @@ CGEventRef GameEventsQuartz::eventTapFunction(CGEventTapProxy proxy, CGEventType
 
         if (hk_type != -1) {
             if (type == kCGEventKeyDown)
-                context->hotkey_pressed_queue.push(hk.type);
+                context->hotkey_pressed_queue.push(hk_type);
             else
-                context->hotkey_released_queue.push(hk.type);
+                context->hotkey_released_queue.push(hk_type);
         }
     }
 	return event;
@@ -83,7 +86,7 @@ void GameEventsQuartz::registerGamePid(pid_t pid)
 {
     CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
     
-    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, nullptr);
+    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
     
     CFRunLoopSourceRef runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
     CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
@@ -116,7 +119,7 @@ bool GameEventsQuartz::haveFocus()
     
     /* Get game NSRunningApplication object */
     if (!gameApp) {
-        NSRunningApplication* gameApp = [NSRunningApplication init:processIdentifier(context->game_pid)];
+        NSRunningApplication* gameApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid_t(context->game_pid)];
         
         if (!gameApp) {
             std::cerr << "Could not get NSRunningApplication object from pid: " << context->game_pid << std::endl;

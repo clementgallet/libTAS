@@ -133,7 +133,7 @@ void InputWindow::updateHotkeyRow(int row)
     for (auto itermap : context->config.km->hotkey_mapping) {
         if (itermap.second == context->config.km->hotkey_list[row]) {
             /* Build the key string with modifiers */
-            xcb_keysym_t ks = itermap.first;
+            keysym_t ks = itermap.first;
             QString str = context->config.km->input_description_mod(ks).c_str();
             hotkeyTable->item(row, 1)->setText(str);
             return;
@@ -243,7 +243,7 @@ void InputWindow::slotAssign()
     int row = selTable->row(selTable->selectedItems().first());
 
     keyDialog->withModifiers = (selTable == hotkeyTable);
-    xcb_keysym_t ks = keyDialog->exec();
+    keysym_t ks = keyDialog->exec();
 
     if (ks != 0) {
         if (selTable == hotkeyTable) {

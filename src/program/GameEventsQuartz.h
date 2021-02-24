@@ -27,7 +27,7 @@
 #include "GameEvents.h"
 #include "KeyMapping.h"
 
-#include <AppKit/NSRunningApplication.h>
+#import <AppKit/AppKit.h>
 #include <CoreGraphics/CoreGraphics.h>
 
 /* Forward declaration */
@@ -52,8 +52,6 @@ private:
     /* Game running app */
     NSRunningApplication* gameApp;
     
-    CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon);
-
     EventType nextEvent(struct HotKey &hk);
 };
 
