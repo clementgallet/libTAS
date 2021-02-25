@@ -28,6 +28,7 @@
 #include <set>
 #include "backtrace.h"
 #include "GameHacks.h"
+#include <sys/stat.h>
 
 namespace libtas {
 
@@ -64,7 +65,9 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
-void *dlopen(const char *file, int mode) throw() {
+__attribute__((noipa)) void *dlopen(const char *file, int mode) throw() {
+    const void *const callerAddr = __builtin_extract_return_addr(__builtin_return_address(0));
+
     if (!orig::dlopen) {
         /* To access the real dlopen function, we use the fact that dlsym
          * calls internally _dl_sym.
@@ -76,34 +79,100 @@ void *dlopen(const char *file, int mode) throw() {
         return orig::dlopen(file, mode);
     }
 
-    if (file != nullptr && std::string(file).find("libpulse") != std::string::npos) {
+    if (file != nullptr && std::strstr(file, "libpulse") != nullptr) {
         debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
-    if (file != nullptr && std::string(file).find("ScreenSelector.so") != std::string::npos) {
+    if (file != nullptr && std::strstr(file, "ScreenSelector.so") != nullptr) {
         debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
     debuglogstdio(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
+    void *result = nullptr;
 
-    void *result = orig::dlopen(file, mode);
+    if (file != nullptr && file[0] != '\0' && std::strchr(file, '/') == nullptr) {
+        /* Path should be searched using search paths, so let's
+         * manually check the paths in the correct order...
+         */
+        Dl_info info;
+        if (dladdr(callerAddr, &info)) {
+            /* Get the dynamic library name of our caller */
+            const char *dlname = info.dli_fname;
+            {
+                struct stat dlstat, exestat;
+                if (stat(dlname, &dlstat) == 0 &&
+                    stat("/proc/self/exe", &exestat) == 0 &&
+                    dlstat.st_dev == exestat.st_dev &&
+                    dlstat.st_ino == exestat.st_ino) {
+                    /* Unless being called from the main executable */
+                    dlname = nullptr;
+                }
+            }
 
-    if (result)
-        add_lib(file);
+            /* Open object of caller */
+            void *caller = orig::dlopen(dlname, RTLD_LAZY | RTLD_NOLOAD);
+            if (caller != nullptr) {
+                Dl_serinfo size;
+                if (dlinfo(caller, RTLD_DI_SERINFOSIZE, &size) == 0) {
+                    auto *paths = reinterpret_cast<Dl_serinfo *>(new char[size.dls_size]);
+                    *paths = size;
 
-    if (result && file && std::string(file).find("wined3d.dll.so") != std::string::npos) {
+                    /* Get ordered list of search paths for this object */
+                    if (dlinfo(caller, RTLD_DI_SERINFO, paths) == 0) {
+                        for (unsigned i = 0; i != paths->dls_cnt; ++i) {
+                            const char *name = paths->dls_serpath[i].dls_name;
+                            /* Probably can't happen, just being safe... */
+                            if (name == nullptr || name[0] == '\0')
+                                continue;
+                            std::string path(name);
+                            /* Note that this guaranteed / prevents
+                             * recursive search path lookup
+                             */
+                            if (path.back() != '/')
+                                path += '/';
+                            path += file;
+
+                            result = orig::dlopen(path.c_str(), mode);
+                            if (result != nullptr) {
+                                debuglogstdio(LCF_HOOK, "   Found at %s", name);
+                                add_lib(path.c_str());
+                                break;
+                            }
+                        }
+                    }
+
+                    delete [] reinterpret_cast<char *>(paths);
+                }
+
+                dlclose(caller);
+            }
+        }
+    }
+
+    if (result == nullptr) {
+        /* Path is empty (referring to the main program), relative to
+         * the cwd, absolute, or failed search path lookup above, so
+         * try looking it up normally.
+         */
+        result = orig::dlopen(file, mode);
+
+        if (result != nullptr)
+            add_lib(file);
+    }
+
+    if (result && file && std::strstr(file, "wined3d.dll.so") != nullptr) {
         /* Hook wine wined3d functions */
         hook_wined3d();
     }
 
-    if (result && file && std::string(file).find("user32.dll.so") != std::string::npos) {
+    if (result && file && std::strstr(file, "user32.dll.so") != nullptr) {
         /* Hook wine user32 functions */
         hook_user32();
     }
 
-    if (result && file && std::string(file).find("kernel32.dll.so") != std::string::npos) {
+    if (result && file && std::strstr(file, "kernel32.dll.so") != nullptr) {
         /* Hook wine kernel32 functions */
         hook_kernel32();
     }
