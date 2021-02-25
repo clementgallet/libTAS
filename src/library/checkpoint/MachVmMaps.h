@@ -19,55 +19,31 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_SAVESTATE_H
-#define LIBTAS_SAVESTATE_H
+#ifndef LIBTAS_MACHVMMAPS_H
+#define LIBTAS_MACHVMMAPS_H
 
 #include "MemArea.h"
-#include "StateHeader.h"
+#include <mach/vm_map.h>
 
 namespace libtas {
-class SaveState
+class MachVmMaps
 {
     public:
-        SaveState(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd);
-        ~SaveState();
+        /* Connect a tesk to self */
+        MachVmMaps();
 
-	// Also resets back to first area
-	void readHeader(StateHeader& sh);
+        /* Parse the next memory section into the area */
+        bool getNextArea(Area *area);
 
-	Area& getArea();
-	void nextArea();
-
-	// Reset back to first area
-	void restart();
-
-    char getPageFlag(char* addr);
-	char getNextPageFlag();
-	void queuePageLoad(char* addr);
-	void finishLoad();
-
-    explicit operator bool() const {
-        return (pmfd != -1);
-    }
+        /* Reset all internal variables */
+        void reset();
 
     private:
-	char nextFlag();
-
-	char flags[4096];
-    char current_flag;
-	int flag_i;
-	int flags_remaining;
-
-    int pmfd, pfd;
-
-    Area area;
-    char* current_addr;
-    off_t next_pfd_offset;
-
-    int compressed_length;
-    char* queued_addr;
-	off_t queued_offset;
-	int queued_size;
+        mach_port_t task;
+        pid_t pid;
+        mach_vm_address_t address;
+        mach_vm_size_t size;
+        vm_region_basic_info_data_t info;
 };
 }
 

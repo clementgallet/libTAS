@@ -36,7 +36,7 @@
 #include <stdint.h>
 #include "GlobalState.h"
 #include "checkpoint/ProcSelfMaps.h"
-#include "checkpoint/ProcMapsArea.h"
+#include "checkpoint/MemArea.h"
 #include "../shared/SharedConfig.h"
 
 extern char**environ;

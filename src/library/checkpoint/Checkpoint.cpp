@@ -24,8 +24,14 @@
 #include "SaveStateManager.h"
 #include "AltStack.h"
 #include "../logging.h"
-#include "ProcMapsArea.h"
+#include "MemArea.h"
+
+#ifdef __unix__
 #include "ProcSelfMaps.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "MachVmMaps.h"
+#endif
+
 #include "StateHeader.h"
 #include "../Utils.h"
 #include <fcntl.h>
@@ -163,17 +169,21 @@ int Checkpoint::checkCheckpoint()
     /* Get an estimation of the savestate space */
     uint64_t savestate_size = 0;
 
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Read the first current area */
     Area area;
-    bool not_eof = procSelfMaps.getNextArea(&area);
+    bool not_eof = memMapLayout.getNextArea(&area);
 
     while (not_eof) {
         if (!skipArea(&area)) {
             savestate_size += area.size;
         }
-        not_eof = procSelfMaps.getNextArea(&area);
+        not_eof = memMapLayout.getNextArea(&area);
     }
 
     /* Get the savestate directory */
@@ -447,10 +457,14 @@ static void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Read the first current area */
-    bool not_eof = procSelfMaps.getNextArea(&current_area);
+    bool not_eof = memMapLayout.getNextArea(&current_area);
 
     /* Reallocate areas to match the savestate areas. Nothing is written yet */
     while ((saved_area.addr != nullptr) || not_eof) {
@@ -460,11 +474,11 @@ static void readAllAreas()
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
             saved_state.nextArea();
-            not_eof = procSelfMaps.getNextArea(&current_area);
+            not_eof = memMapLayout.getNextArea(&current_area);
         }
         if (cmp > 0) {
             /* Saved area is greater, advance current area */
-            not_eof = procSelfMaps.getNextArea(&current_area);
+            not_eof = memMapLayout.getNextArea(&current_area);
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
@@ -925,15 +939,19 @@ static void writeAllAreas(bool base)
     /* Load the parent savestate if any. */
     SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
 
-    /* Parse the content of /proc/self/maps into memory.
+    /* Parse the memory mapping layout.
      * We don't allocate memory here, we are using our special allocated
      * memory section that won't be saved in the savestate.
      */
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Remove write and add read flags from all memory areas we will be dumping */
     Area area;
-    while (procSelfMaps.getNextArea(&area)) {
+    while (memMapLayout.getNextArea(&area)) {
         if (!skipArea(&area)) {
             //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
             MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
@@ -942,8 +960,8 @@ static void writeAllAreas(bool base)
     }
 
     /* Dump all memory areas */
-    procSelfMaps.reset();
-    while (procSelfMaps.getNextArea(&area)) {
+    memMapLayout.reset();
+    while (memMapLayout.getNextArea(&area)) {
         savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state, base);
     }
 
@@ -959,8 +977,8 @@ static void writeAllAreas(bool base)
     }
 
     /* Recover area protection and advise */
-    procSelfMaps.reset();
-    while (procSelfMaps.getNextArea(&area)) {
+    memMapLayout.reset();
+    while (memMapLayout.getNextArea(&area)) {
         if (!skipArea(&area)) {
             MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_NORMAL) == 0);
