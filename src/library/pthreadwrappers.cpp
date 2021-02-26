@@ -26,6 +26,7 @@
 #include "tlswrappers.h"
 #include "backtrace.h"
 #include "hook.h"
+#include "timewrappers.h" // gettimeofday()
 
 #include <errno.h>
 #include <unistd.h>
@@ -487,6 +488,12 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
 
+    /* Convert the abstime variable because pthread_cond_timedwait() is using
+     * the real system time. */
+    struct timespec new_abstime = *abstime;
+    TimeHolder abs_timeout = *abstime;
+    TimeHolder real_time;
+#ifdef __unix__
     /* Get clock_id of cond */
     clockid_t clock_id = CLOCK_REALTIME;
     const std::map<pthread_cond_t*, clockid_t>& condClocks = getCondClock();
@@ -495,16 +502,18 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (it != condClocks.end())
         clock_id = it->second;
 
-    /* Convert the abstime variable because pthread_cond_timedwait() is using
-     * the real system time. */
-    struct timespec new_abstime = *abstime;
-    TimeHolder abs_timeout = *abstime;
-    TimeHolder real_time;
     NATIVECALL(clock_gettime(clock_id, &real_time));
+#elif defined(__APPLE__) && defined(__MACH__)
+    /* On MacOS, the reference time is based on gettimeofday(). */
+    timeval tv;
+    NATIVECALL(gettimeofday(&tv, nullptr));
+    real_time.tv_sec = tv.tv_sec;
+    real_time.tv_nsec = tv.tv_usec * 1000;
+#endif
+
     TimeHolder rel_timeout = abs_timeout - real_time;
     /* We presume that the game won't call pthread_cond_timedwait() with
-     * a negative time, or more than 10 seconds.
-     */
+     * a negative time, or more than 10 seconds. */
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
         TimeHolder fake_time = detTimer.getTicks();
@@ -516,8 +525,11 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     }
 
     /* If not main thread, do not change the behavior */
-    if (!ThreadManager::isMainThread())
-        return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
+    if (!ThreadManager::isMainThread()) {
+        int ret = orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
+        debuglogstdio(LCF_WAIT, "   ret is %d ", ret);
+        return ret;
+    }
 
     if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
@@ -545,7 +557,14 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait again for 0.1 sec, arbitrary */
+#ifdef __unix__
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
+#elif defined(__APPLE__) && defined(__MACH__)
+        timeval tv;
+        NATIVECALL(gettimeofday(&tv, nullptr));
+        real_time.tv_sec = tv.tv_sec;
+        real_time.tv_nsec = tv.tv_usec * 1000;
+#endif
         TimeHolder delta_time;
         delta_time.tv_sec = 0;
         delta_time.tv_nsec = 100*1000*1000;
