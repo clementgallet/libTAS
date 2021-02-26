@@ -333,17 +333,17 @@ unsigned char GetScanFromKey1(SDL1::SDLKey key){
 
 /* Override */ SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " called with scancode ", (int)scancode);
+    debuglogstdio(LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d", __func__, (int)scancode);
     SDL_Keycode keycode = SDL_default_keymap[scancode];
-    debuglog(LCF_SDL | LCF_KEYBOARD, "   returning ", keycode);
+    debuglogstdio(LCF_SDL | LCF_KEYBOARD, "   returning %d", keycode);
     return keycode;
 }
 
 /* Override */ SDL_Scancode SDL_GetScancodeFromKey(SDL_Keycode key)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " called with key ", key);
+    debuglogstdio(LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
     SDL_Scancode scancode = GetScanFromKey(key);
-    debuglog(LCF_SDL | LCF_KEYBOARD, "   returning ", scancode);
+    debuglogstdio(LCF_SDL | LCF_KEYBOARD, "   returning %d", scancode);
     return scancode;
 }
 

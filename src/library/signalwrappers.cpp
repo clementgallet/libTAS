@@ -58,8 +58,7 @@ static thread_local int origUsrMaskThread = 0;
      */
     ThreadSync::wrapperExecutionLockLock();
 
-    debuglog(LCF_SIGNAL, "    Setting handler ", reinterpret_cast<void*>(handler),
-        " for signal ", strsignal(sig));
+    debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
 
     if ((sig == SaveStateManager::sigSuspend()) || (sig == SaveStateManager::sigCheckpoint())) {
         return SIG_IGN;
@@ -199,16 +198,14 @@ static thread_local int origUsrMaskThread = 0;
     ThreadSync::wrapperExecutionLockLock();
 
     if (act != nullptr) {
-        debuglog(LCF_SIGNAL, "    Setting handler ", (act->sa_flags & SA_SIGINFO)?
+        debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %d (%s)", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
-                reinterpret_cast<void*>(act->sa_handler),
-            " for signal ", sig, " (", strsignal(sig), ")");
+                reinterpret_cast<void*>(act->sa_handler), sig, strsignal(sig));
     }
     else if (oact != nullptr) {
-        debuglog(LCF_SIGNAL, "    Getting handler ", (oact->sa_flags & SA_SIGINFO)?
+        debuglogstdio(LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
             reinterpret_cast<void*>(oact->sa_sigaction):
-            reinterpret_cast<void*>(oact->sa_handler),
-            " for signal ", sig, " (", strsignal(sig), ")");
+            reinterpret_cast<void*>(oact->sa_handler), sig, strsignal(sig));
     }
 
     int ret = orig::sigaction(sig, act, oact);
@@ -258,10 +255,10 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
 
     if (ss) {
-        debuglog(LCF_SIGNAL, "    Setting altstack with base address ", ss->ss_sp, " and size ", ss->ss_size);
+        debuglogstdio(LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
     }
     else if (oss) {
-        debuglog(LCF_SIGNAL, "    Getting altstack with base address ", oss->ss_sp, " and size ", oss->ss_size);
+        debuglogstdio(LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
     }
 
     int ret = orig::sigaltstack(ss, oss);
@@ -372,7 +369,7 @@ static thread_local int origUsrMaskThread = 0;
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
 
-    debuglog(LCF_SIGNAL | LCF_THREAD, __func__, " called with thread ", threadid, " and signo ", signo);
+    debuglogstdio(LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.

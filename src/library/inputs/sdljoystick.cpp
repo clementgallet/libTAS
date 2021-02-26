@@ -30,7 +30,7 @@ namespace libtas {
 
 /* Override */ int SDL_NumJoysticks(void)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
     /* For now, we declare one joystick */
     return shared_config.nb_controllers;
 }
@@ -82,7 +82,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ SDL_Joystick *SDL_JoystickOpen(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return NULL;
     if (device_index >= shared_config.nb_controllers)
@@ -99,7 +99,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ SDL_Joystick *SDL_JoystickFromInstanceID(SDL_JoystickID joyid)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy id ", joyid);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy id %d", __func__, joyid);
 
     if ((joyid < 0) || (joyid >= MAX_SDLJOYS))
         return NULL;
@@ -114,7 +114,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ Uint16 SDL_JoystickGetDeviceVendor(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
     if (device_index >= shared_config.nb_controllers)
@@ -125,7 +125,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ Uint16 SDL_JoystickGetDeviceProduct(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
     if (device_index >= shared_config.nb_controllers)
@@ -136,7 +136,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ Uint16 SDL_JoystickGetDeviceProductVersion(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
     if (device_index >= shared_config.nb_controllers)
@@ -147,7 +147,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
 /* Override */ SDL_JoystickType SDL_JoystickGetDeviceType(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return SDL_JOYSTICK_TYPE_UNKNOWN;
     if (device_index >= shared_config.nb_controllers)
@@ -162,7 +162,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with device ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if (device_index >= shared_config.nb_controllers)
 	    return nullGUID;
 
@@ -171,7 +171,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ Uint16 SDL_JoystickGetVendor(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
     if (!isIdValid(joystick))
         return 0;
@@ -181,7 +181,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ Uint16 SDL_JoystickGetProduct(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
     if (!isIdValid(joystick))
         return 0;
@@ -191,7 +191,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ Uint16 SDL_JoystickGetProductVersion(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
     if (!isIdValid(joystick))
         return 0;
@@ -201,7 +201,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ SDL_JoystickType SDL_JoystickGetType(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
     if (!isIdValid(joystick))
         return SDL_JOYSTICK_TYPE_UNKNOWN;
@@ -220,7 +220,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ SDL_bool SDL_JoystickGetAttached(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return SDL_FALSE;
 
@@ -229,7 +229,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ int SDL_JoystickOpened(int device_index)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", device_index);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if (!isIdValidOpen(reinterpret_cast<SDL_Joystick*>(&device_index)))
         return 0;
 
@@ -238,7 +238,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 /* Override */ SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValid(joystick))
         return -1;
 
@@ -248,7 +248,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 
 int SDL_JoystickIndex(SDL_Joystick *joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return -1;
 
@@ -294,7 +294,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ int SDL_JoystickEventState(int state)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with state ", state);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with state %d", __func__, state);
     const int joyevents1[] = {
         SDL1::SDL_JOYAXISMOTION,
         SDL1::SDL_JOYBUTTONDOWN,
@@ -350,7 +350,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ Sint16 SDL_JoystickGetAxis(SDL_Joystick * joystick, int axis)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with axis ", axis);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with axis %d", __func__, axis);
 
     if (!isIdValidOpen(joystick))
         return 0;
@@ -365,7 +365,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with hat ", hat);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with hat %d", __func__, hat);
 
     if (!isIdValidOpen(joystick))
         return 0;
@@ -390,13 +390,13 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ int SDL_JoystickGetBall(SDL_Joystick * joystick, int ball, int *dx, int *dy)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with ball ", ball);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with ball %d", __func__, ball);
     return 0;
 }
 
 /* Override */ Uint8 SDL_JoystickGetButton(SDL_Joystick * joystick, int button)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with button ", button);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with button %d", __func__, button);
 
     if (!isIdValidOpen(joystick))
         return 0;
@@ -411,13 +411,13 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
 /* Override */ int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return -1;
 }
 
 /* Override */ void SDL_JoystickClose(SDL_Joystick * joystick)
 {
-    debuglog(LCF_SDL | LCF_JOYSTICK, __func__, " call with joy ", joystick?*reinterpret_cast<int*>(joystick):-1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
         return;
 

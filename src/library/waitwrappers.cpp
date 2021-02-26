@@ -45,7 +45,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::poll(fds, nfds, timeout);
     }
 
-    debuglog(LCF_WAIT, __func__, " call with ", nfds, " fds and timeout ", timeout);
+    debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d", __func__, nfds, timeout);
 
 #ifdef __linux__
     /* Check for the fd used by ALSA */
@@ -104,7 +104,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000 + timeout->tv_usec, " usec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_usec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -141,7 +141,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000000 + timeout->tv_nsec, " nsec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -165,7 +165,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::epoll_wait(epfd, events, maxevents, timeout);
     }
 
-    debuglog(LCF_SLEEP, __func__, " call with timeout ", timeout, " msec");
+    debuglogstdio(LCF_SLEEP, "%s call with timeout %d", __func__, timeout);
 
     int ret = orig::epoll_wait(epfd, events, maxevents, timeout);
 

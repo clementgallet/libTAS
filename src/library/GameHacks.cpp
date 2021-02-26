@@ -26,7 +26,7 @@ static bool unity = false;
 
 void GameHacks::setUnity()
 {
-    debuglog(LCF_HOOK, "   detected Unity engine");
+    debuglogstdio(LCF_HOOK, "   detected Unity engine");
     unity = true;
 }
 

@@ -169,7 +169,7 @@ int sendMessage(int message)
 void sendString(const std::string& str)
 {
 #ifdef SOCKET_LOG
-    libtas::debuglog(LCF_SOCKET, "Send socket string ", str);
+    libtas::debuglogstdio(LCF_SOCKET, "Send socket string %s", str.c_str());
 #endif
     unsigned int str_size = str.size();
     sendData(&str_size, sizeof(unsigned int));
@@ -255,7 +255,7 @@ std::string receiveString()
 
     std::string str(buf.data(), str_size);
 #ifdef SOCKET_LOG
-    libtas::debuglog(LCF_SOCKET, "Receive socket string ", str);
+    libtas::debuglogstdio(LCF_SOCKET, "Receive socket string %s", str.c_str());
 #endif
     return str;
 }

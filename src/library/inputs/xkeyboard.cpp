@@ -86,7 +86,7 @@ namespace libtas {
 
 /* Override */ int XSetInputFocus(Display* display, Window focus, int revert_to, Time time)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with window ", focus);
+    debuglogstdio(LCF_KEYBOARD, "%s called with window %d", __func__, focus);
     return 0;
 }
 

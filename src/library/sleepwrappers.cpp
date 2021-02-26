@@ -49,7 +49,7 @@ DEFINE_ORIG_POINTER(sched_yield)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleep, " ms.");
+    debuglogstdio(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d ms", __func__, sleep);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -75,7 +75,7 @@ DEFINE_ORIG_POINTER(sched_yield)
         return orig::nanosleep(&ts, NULL);
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", usec, " us.");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d us", __func__, usec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -111,7 +111,7 @@ DEFINE_ORIG_POINTER(sched_yield)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", requested_time->tv_sec * 1000000000 + requested_time->tv_nsec, " nsec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%010d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -154,7 +154,7 @@ DEFINE_ORIG_POINTER(sched_yield)
         sleeptime -= curtime;
     }
 
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", sleeptime.tv_sec * 1000000000 + sleeptime.tv_nsec, " nsec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%010d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
     /* If the function was called from the main thread
      * and we are not in the native state,

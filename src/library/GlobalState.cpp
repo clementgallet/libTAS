@@ -26,9 +26,11 @@ thread_local int GlobalState::native = 0;
 thread_local int GlobalState::owncode = 0;
 thread_local int GlobalState::nolog = 0;
 
+#if defined(__APPLE__) && defined(__MACH__)
 static int native_init = 0;
 static int owncode_init = 0;
 static int nolog_init = 0;
+#endif
 
 void GlobalState::setNative(bool state)
 {

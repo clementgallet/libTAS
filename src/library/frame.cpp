@@ -409,7 +409,7 @@ void frameBoundary(std::function<void()> draw)
 
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
-            debuglog(LCF_DUMP, "Start AV dumping on file ", AVEncoder::dumpfile);
+            debuglogstdio(LCF_DUMP, "Start AV dumping on file %s", AVEncoder::dumpfile);
             avencoder.reset(new AVEncoder());
         }
 
@@ -421,7 +421,7 @@ void frameBoundary(std::function<void()> draw)
          * encoding, so we must delete the encoder object.
          */
         if (avencoder) {
-            debuglog(LCF_DUMP, "Stop AV dumping");
+            debuglogstdio(LCF_DUMP, "Stop AV dumping");
             avencoder.reset(nullptr);
         }
     }
@@ -666,9 +666,9 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_DUMP_FILE:
-                debuglog(LCF_SOCKET, "Receiving dump filename");
+                debuglogstdio(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
-                debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
+                debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
 
@@ -807,7 +807,7 @@ static void receive_messages(std::function<void()> draw)
 
             case MSGN_STOP_ENCODE:
                 if (avencoder) {
-                    debuglog(LCF_DUMP, "Stop AV dumping");
+                    debuglogstdio(LCF_DUMP, "Stop AV dumping");
                     avencoder.reset(nullptr);
                     shared_config.av_dumping = false;
 
@@ -827,7 +827,7 @@ static void receive_messages(std::function<void()> draw)
                 return;
 
             default:
-                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown message received");
+                debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown message received");
                 return;
         }
     }

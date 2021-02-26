@@ -88,7 +88,6 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
         /* We actually track this time call */
         std::lock_guard<std::mutex> lock(ticks_mutex);
-        debuglog(LCF_TIMESET | LCF_FREQUENT, "subticks ", type, " increased");
         int* gettimes_count = mainT ? &main_gettimes[type] : &sec_gettimes[type];
         (*gettimes_count)++;
 
@@ -99,7 +98,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
              */
             int tickDelta = 1;
 
-            debuglog(LCF_TIMESET | LCF_FREQUENT, "WARNING! force-advancing time of type ", type);
+            debuglogstdio(LCF_TIMESET | LCF_FREQUENT, "WARNING! force-advancing time of type %d", type);
 
             ticksExtra += tickDelta;
 
@@ -123,7 +122,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    debuglog(LCF_TIMESET | LCF_SLEEP, __func__, " call with delay ", delayTicks.tv_sec * 1000000000 + delayTicks.tv_nsec, " nsec");
+    debuglogstdio(LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
 
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.addDelay(delayTicks);
@@ -289,7 +288,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     if (timeIncrement > addedDelay) {
         TimeHolder deltaTicks = timeIncrement - addedDelay;
         ticks += deltaTicks;
-        debuglog(LCF_TIMESET, __func__, " added ", deltaTicks.tv_sec * 1000000000 + deltaTicks.tv_nsec, " nsec");
+        debuglogstdio(LCF_TIMESET, "%s added %u.%010u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
         addedDelay = {0, 0};
     }
     else {

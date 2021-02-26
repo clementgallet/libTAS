@@ -38,7 +38,7 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
     x__++;\
     x__++;\
     if (x__==2) {\
-        debuglog(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");\
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");\
     }\
     x__++;\
     x__++;\

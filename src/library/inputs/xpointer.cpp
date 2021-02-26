@@ -75,20 +75,20 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         clipping_h = clip_attr.height;
 
         if (game_ai.pointer_x < clipping_x) {
-            debuglog(LCF_MOUSE, "   warping pointer x from ", game_ai.pointer_x, " to ", clipping_x);
+            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer_x, clipping_x);
             game_ai.pointer_x = clipping_x;
         }
         else if (game_ai.pointer_x >= (clipping_x + clipping_w)) {
-            debuglog(LCF_MOUSE, "   warping pointer x from ", game_ai.pointer_x, " to ", clipping_x + clipping_w - 1);
+            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer_x, clipping_x + clipping_w - 1);
             game_ai.pointer_x = clipping_x + clipping_w - 1;
         }
 
         if (game_ai.pointer_y < clipping_y) {
-            debuglog(LCF_MOUSE, "   warping pointer y from ", game_ai.pointer_y, " to ", clipping_y);
+            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer_y, clipping_y);
             game_ai.pointer_y = clipping_y;
         }
         else if (game_ai.pointer_y >= (clipping_y + clipping_h)) {
-            debuglog(LCF_MOUSE, "   warping pointer y from ", game_ai.pointer_y, " to ", clipping_y + clipping_h - 1);
+            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer_y, clipping_y + clipping_h - 1);
             game_ai.pointer_y = clipping_y + clipping_h - 1;
         }
     }
@@ -143,7 +143,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         return orig::XWarpPointer(d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y);
     }
     
-    debuglog(LCF_MOUSE, __func__, " called with dest_w ", dest_w, " and dest_x ", dest_x, " and dest_y ", dest_y);
+    debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
 
     /* We have to generate an MotionNotify event. */
     if (!x11::gameXWindows.empty()) {
@@ -168,7 +168,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xlibEventQueueList.insert(&event);
-        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", game_ai.pointer_x, game_ai.pointer_y);
     }
 
     /* Update the pointer coordinates */

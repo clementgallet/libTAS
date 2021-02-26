@@ -29,14 +29,14 @@ DECLARE_ORIG_POINTER(SDL_RemoveTimer)
 
 /* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
 {
-    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after ", interval, " ms");
+    debuglogstdio(LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after %d ms", interval);
     LINK_NAMESPACE_SDLX(SDL_AddTimer);
     return orig::SDL_AddTimer(interval, callback, param);
 }
 
 /* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
-    debuglog(LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
+    debuglogstdio(LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
     return orig::SDL_RemoveTimer(id);
 }

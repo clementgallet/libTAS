@@ -68,36 +68,36 @@ static Uint32 init_flags = 0;
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
 
     if (flags & SDL_INIT_TIMER)
-        debuglog(LCF_SDL, "    SDL_TIMER enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_TIMER enabled.");
 
     if (flags & SDL_INIT_AUDIO) {
-        debuglog(LCF_SDL, "    SDL_AUDIO fake enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_AUDIO fake enabled.");
         SDL_AudioInit(nullptr);
         game_info.audio = sdl_flag;
     }
 
     if (flags & SDL_INIT_VIDEO) {
-        debuglog(LCF_SDL, "    SDL_VIDEO enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_VIDEO enabled.");
         game_info.video |= sdl_flag;
         game_info.keyboard = sdl_flag;
         game_info.mouse = sdl_flag;
     }
 
     if (flags & SDL_INIT_JOYSTICK) {
-        debuglog(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
         game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_HAPTIC)
-        debuglog(LCF_SDL, "    SDL_HAPTIC fake enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_HAPTIC fake enabled.");
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
-        debuglog(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
         game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_EVENTS)
-        debuglog(LCF_SDL, "    SDL_EVENTS enabled.");
+        debuglogstdio(LCF_SDL, "    SDL_EVENTS enabled.");
 
     game_info.tosend = true;
 
@@ -122,7 +122,7 @@ static Uint32 init_flags = 0;
 
 Uint32 SDL_WasInit(Uint32 flags)
 {
-    debuglog(LCF_SDL, __func__, " with flags ", flags);
+    debuglogstdio(LCF_SDL, "%s with flags %d", __func__, flags);
 
     if (flags == 0)
         flags = SDL_INIT_EVERYTHING;

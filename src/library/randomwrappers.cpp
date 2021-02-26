@@ -58,13 +58,13 @@ DEFINE_ORIG_POINTER(lcong48_r)
     static int count = 0;
     LINK_NAMESPACE_GLOBAL(random);
     long int ret = orig::random();
-    debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
+    debuglogstdio(LCF_RANDOM, "%s call %d, returning %ld", __func__, count++, ret);
     return ret;
 }
 
 /* Override */ void srandom (unsigned int seed) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
     LINK_NAMESPACE_GLOBAL(srandom);
     return orig::srandom(seed);
 }
@@ -72,7 +72,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ char *initstate (unsigned int seed, char *statebuf,
             size_t statelen) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
     LINK_NAMESPACE_GLOBAL(initstate);
     return orig::initstate(seed, statebuf, statelen);
 }
@@ -98,7 +98,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 
 /* Override */ int srandom_r (unsigned int seed, struct random_data *buf) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
     LINK_NAMESPACE_GLOBAL(srandom_r);
     return orig::srandom_r(seed, buf);
 }
@@ -106,7 +106,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ int initstate_r (unsigned int seed, char *statebuf, size_t statelen,
             struct random_data *buf) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
     LINK_NAMESPACE_GLOBAL(initstate_r);
     return orig::initstate_r(seed, statebuf, statelen, buf);
 }
@@ -123,13 +123,13 @@ DEFINE_ORIG_POINTER(lcong48_r)
     static int count = 0;
     LINK_NAMESPACE_GLOBAL(rand);
     int ret = orig::rand();
-    debuglog(LCF_RANDOM, __func__, " call ", count++, ", returning ", ret);
+    debuglogstdio(LCF_RANDOM, "%s call %d, returning %ld", __func__, count++, ret);
     return ret;
 }
 
 /* Override */ void srand (unsigned int seed) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
     LINK_NAMESPACE_GLOBAL(srand);
     return orig::srand(seed);
 }
@@ -185,14 +185,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
 
 /* Override */ void srand48 (long int seedval) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seedval);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %ld", __func__, seedval);
     LINK_NAMESPACE_GLOBAL(srand48);
     return orig::srand48(seedval);
 }
 
 /* Override */ unsigned short int *seed48 (unsigned short int seed16v[3]) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed16v[0], " ", seed16v[1], " ", seed16v[2]);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %d %d %d", __func__, seed16v[0], seed16v[1], seed16v[2]);
     LINK_NAMESPACE_GLOBAL(seed48);
     return orig::seed48(seed16v);
 }
@@ -251,7 +251,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 
 /* Override */ int srand48_r (long int seedval, struct drand48_data *buffer) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seedval);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %ld", __func__, seedval);
     LINK_NAMESPACE_GLOBAL(srand48_r);
     return orig::srand48_r(seedval, buffer);
 }
@@ -259,7 +259,7 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ int seed48_r (unsigned short int seed16v[3],
              struct drand48_data *buffer) __THROW
 {
-    debuglog(LCF_RANDOM, __func__, " call with seed ", seed16v[0], " ", seed16v[1], " ", seed16v[2]);
+    debuglogstdio(LCF_RANDOM, "%s call with seed %d %d %d", __func__, seed16v[0], seed16v[1], seed16v[2]);
     LINK_NAMESPACE_GLOBAL(seed48_r);
     return orig::seed48_r(seed16v, buffer);
 }

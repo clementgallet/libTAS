@@ -43,10 +43,10 @@ void clear_pthread_keys()
     std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
     for( const auto& pair : pthread_keys ) {
         if (orig::pthread_getspecific(pair.first)) {
-            debuglog(LCF_THREAD, "  removing value from key ", pair.first);
+            debuglogstdio(LCF_THREAD, "  removing value from key %d", pair.first);
             orig::pthread_setspecific(pair.first, nullptr);
             if (orig::pthread_getspecific(pair.first)) {
-                debuglog(LCF_THREAD, "  calling destructor for key ", pair.first);
+                debuglogstdio(LCF_THREAD, "  calling destructor for key %d", pair.first);
             }
         }
     }
@@ -62,7 +62,7 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __T
     DEBUGLOGCALL(LCF_THREAD);
     int ret = orig::pthread_key_create(key, destr_function);
 
-    debuglog(LCF_THREAD, "   returning ", *key);
+    debuglogstdio(LCF_THREAD, "   returning %d", *key);
 
     std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
     pthread_keys.insert(std::pair<pthread_key_t, void(*)(void*)>(*key,destr_function));
@@ -77,7 +77,7 @@ int pthread_key_delete (pthread_key_t key) __THROW
         return orig::pthread_key_delete(key);
     }
 
-    debuglog(LCF_THREAD, __func__, " called on key ", key);
+    debuglogstdio(LCF_THREAD, "%s called on key %d", __func__, key);
     int ret = orig::pthread_key_delete(key);
 
     std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();

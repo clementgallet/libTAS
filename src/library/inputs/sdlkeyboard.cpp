@@ -32,7 +32,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
 /* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
         *numkeys = SDL_NUM_SCANCODES;
@@ -44,7 +44,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
 /* Override */ Uint8* SDL_GetKeyState( int* numkeys)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
         *numkeys = SDL1::SDLK_LAST;
@@ -55,7 +55,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 
 /* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
     return sdl::gameSDLWindow;
 }
 

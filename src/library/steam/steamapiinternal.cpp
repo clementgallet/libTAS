@@ -62,7 +62,7 @@ void * SteamInternal_ContextInit( void *pContextInitData )
 
 void * SteamInternal_CreateInterface( const char *ver )
 {
-    debuglog(LCF_STEAM, __func__, " called with ", ver);
+    debuglogstdio(LCF_STEAM, "%s called with %s", __func__, ver);
     if (!shared_config.virtual_steam)
         return nullptr;
 

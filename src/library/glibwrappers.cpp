@@ -39,7 +39,7 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
 
 /* Override */ gboolean g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
 {
-    debuglog(LCF_THREAD | LCF_WAIT, __func__, " called with end_time ", end_time);
+    debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with end_time %lld", __func__, end_time);
     LINK_NAMESPACE(g_cond_wait_until, "glib-2.0");
 
     /* If not main thread, do not change the behavior */

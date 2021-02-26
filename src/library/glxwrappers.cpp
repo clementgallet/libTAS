@@ -166,8 +166,8 @@ void checkMesa()
         return;
     }
 
-    debuglog(LCF_OGL | LCF_INFO, "OpenGL vendor: ", vendor);
-    debuglog(LCF_OGL | LCF_INFO, "OpenGL renderer: ", renderer);
+    debuglogstdio(LCF_OGL | LCF_INFO, "OpenGL vendor: %s", vendor);
+    debuglogstdio(LCF_OGL | LCF_INFO, "OpenGL renderer: %s", renderer);
 
     /* Check that we are using llvm driver */
     if (shared_config.opengl_soft && (strstr(renderer, "llvmpipe") == nullptr)) {
@@ -310,7 +310,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 
 void(*glXGetProcAddress (const GLubyte *procName))()
 {
-    debuglog(LCF_OGL, __func__, " call with symbol ", procName);
+    debuglogstdio(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddress, "GL");
 
     if (!orig::glXGetProcAddress) return nullptr;
@@ -320,7 +320,7 @@ void(*glXGetProcAddress (const GLubyte *procName))()
 
 __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 {
-    debuglog(LCF_OGL, __func__, " call with symbol ", procName);
+    debuglogstdio(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddressARB, "GL");
 
     if (!orig::glXGetProcAddressARB) return nullptr;
@@ -330,7 +330,7 @@ __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 
 void* glXGetProcAddressEXT (const GLubyte *procName)
 {
-    debuglog(LCF_OGL, __func__, " call with symbol ", procName);
+    debuglogstdio(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddressEXT, "GL");
 
     if (!orig::glXGetProcAddressEXT) return nullptr;
@@ -392,7 +392,7 @@ static int swapInterval = 0;
 
 void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 {
-    debuglog(LCF_OGL, __func__, " call with interval ", interval);
+    debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_NAMESPACE(glXSwapIntervalEXT, "GL");
 
     swapInterval = interval;
@@ -409,7 +409,7 @@ void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 
 int glXSwapIntervalSGI (int interval)
 {
-    debuglog(LCF_OGL, __func__, " call with interval ", interval);
+    debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_NAMESPACE(glXSwapIntervalSGI, "GL");
 
     swapInterval = interval;
@@ -425,7 +425,7 @@ int glXSwapIntervalSGI (int interval)
 
 int glXSwapIntervalMESA (unsigned int interval)
 {
-    debuglog(LCF_OGL, __func__, " call with interval ", interval);
+    debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_NAMESPACE(glXSwapIntervalMESA, "GL");
 
     swapInterval = interval;
