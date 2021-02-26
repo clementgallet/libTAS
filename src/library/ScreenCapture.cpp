@@ -81,6 +81,7 @@ DECLARE_ORIG_POINTER(SDL_GetClipRect)
 DECLARE_ORIG_POINTER(SDL_LockSurface)
 DECLARE_ORIG_POINTER(SDL_UnlockSurface)
 DECLARE_ORIG_POINTER(SDL_UpperBlit)
+DECLARE_ORIG_POINTER(SDL_GetWindowSize)
 
 DECLARE_ORIG_POINTER(glReadPixels)
 DECLARE_ORIG_POINTER(glGenFramebuffers)
@@ -179,9 +180,13 @@ int ScreenCapture::init()
     /* Don't initialize if window is not registered */
     if (x11::gameXWindows.empty())
         return 0;
+#else
+    /* Use SDL window for now */
+    if ((game_info.video & GameInfo::SDL2) && (!sdl::gameSDLWindow))
+        return 0;
 #endif
 
-    unsigned int depth;
+    unsigned int depth = 8;
 #ifdef __unix__
     /* Get the window dimensions */
     LINK_NAMESPACE_GLOBAL(XGetGeometry);
@@ -196,6 +201,12 @@ int ScreenCapture::init()
     }
     width = w;
     height = h;
+#else
+    /* Use SDL2 window for now */
+    if (game_info.video & GameInfo::SDL2) {
+        LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+        orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
+    }
 #endif
 
     /* Dimensions must be a multiple of 2 */
