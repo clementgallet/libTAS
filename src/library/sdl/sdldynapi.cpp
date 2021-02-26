@@ -52,7 +52,20 @@ enum {
     /* First try to use functions from the main executable in case it is
      * statically linked with a modified version of SDL.  If this fails, the
      * LINK_NAMESPACE below will use the dynamic library instead. */
-    orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(find_sym("SDL_DYNAPI_entry", true));
+    void* h;
+#ifdef __unix__
+    NATIVECALL(h = dlopen(nullptr, RTLD_DEEPBIND));
+#elif defined(__APPLE__) && defined(__MACH__)
+    NATIVECALL(h = dlopen(nullptr, RTLD_FIRST));
+#endif
+    NATIVECALL(orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(dlsym(h, "SDL_DYNAPI_entry")));
+
+    /* Check if the function pointer we found is this function. In that case,
+     * invalide the pointer, so we use the second method. */
+
+    if (orig::SDL_DYNAPI_entry == SDL_DYNAPI_entry) {
+        orig::SDL_DYNAPI_entry = nullptr;
+    }
 
     /* We cannot call any SDL functions until dynapi is setup, including the
      * get_sdlversion in LINK_NAMESPACE_SDLX.  However, dynapi was not
@@ -60,6 +73,11 @@ enum {
      */
     LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
 
+    if (!orig::SDL_DYNAPI_entry) {
+        debuglog(LCF_SDL | LCF_ERROR, "Could not find the original SDL_DYNAPI_entry function!");
+        return 1;
+    }
+    
     /* Get the original pointers. */
     Sint32 res = orig::SDL_DYNAPI_entry(apiver, table, tablesize);
     if (res != 0) {

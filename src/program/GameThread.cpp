@@ -293,7 +293,6 @@ void GameThread::launch(Context *context)
     /* Append the game command-line arguments */
     sharg << context->config.gameargs;
 
-    std::cerr << sharg.str() << std::endl;
     /* Run the actual game with sh, taking care of splitting arguments */
     execlp("sh", "sh", "-c", sharg.str().c_str(), nullptr);
 }
