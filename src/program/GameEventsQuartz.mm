@@ -84,6 +84,12 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
 
 void GameEventsQuartz::registerGamePid(pid_t pid)
 {
+    /* Check for accessibility */
+    NSDictionary* options = @{(__bridge NSString*)(kAXTrustedCheckOptionPrompt) : @YES};
+    if (!AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options)) {
+        std::cerr << "You must turn on accessibility for this app" << std::endl;
+    }
+    
     CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
     
     CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
