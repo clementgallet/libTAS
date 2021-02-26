@@ -222,7 +222,9 @@ void DeterministicTimer::exitFrameBoundary()
 #ifdef __unix__
         NATIVECALL(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &desiredTime, NULL));
 #else
-        NATIVECALL(nanosleep(&desiredTime, NULL));
+        /* nanosleep() uses relative time */
+        TimeHolder sleepTime = desiredTime - currentTime;
+        NATIVECALL(nanosleep(&sleepTime, NULL));
 #endif
         
         /* We assume that our sleep was perfect, so we save the desired time as our
