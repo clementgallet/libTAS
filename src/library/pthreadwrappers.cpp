@@ -97,7 +97,12 @@ static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
 
+    /* Crash on MacOS:
+     * libc++abi.dylib: terminating with uncaught exception of type std::__1::system_error: mutex lock failed: Invalid argument
+     */
+#ifdef __linux__
     std::unique_lock<std::mutex> lock(thread->mutex);
+#endif
 
     ThreadManager::initThreadFromChild(thread);
 
@@ -167,7 +172,11 @@ static void *pthread_start(void *arg)
             // }
         }
         else {
-             thread->cv.wait(lock);
+#ifdef __linux__
+            thread->cv.wait(lock);
+#else
+            NATIVECALL(usleep(1));
+#endif
         }
     } while (!thread->quit && shared_config.recycle_threads); /* Check if game is quitting */
 
@@ -206,8 +215,10 @@ static void *pthread_start(void *arg)
     if (isRecycled) {
         debuglog(LCF_THREAD, "Recycling thread ", thread->tid);
         *tid_p = thread->pthread_id;
+#ifdef __linux__
         /* Notify the thread that it has a function to execute */
         thread->cv.notify_all();
+#endif
     }
     else {
         /* Call our wrapper function */
