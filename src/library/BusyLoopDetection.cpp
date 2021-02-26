@@ -35,7 +35,11 @@
 #include <string.h>
 #include <stdint.h>
 #include "GlobalState.h"
+#ifdef __unix__
 #include "checkpoint/ProcSelfMaps.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "checkpoint/MachVmMaps.h"
+#endif
 #include "checkpoint/MemArea.h"
 #include "../shared/SharedConfig.h"
 
@@ -180,9 +184,13 @@ void BusyLoopDetection::increment(int type)
              * has the same offset from the beginning of the mapped section. */
 
             /* Find the corresponding memory area */
-            ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+            ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+            MachVmMaps memMapLayout;
+#endif
             Area area;
-            while (procSelfMaps.getNextArea(&area)) {
+            while (memMapLayout.getNextArea(&area)) {
                 if ((addresses[cnt] >= area.addr) && (addresses[cnt] < area.endAddr)) {
                     toHash(reinterpret_cast<intptr_t>(addresses[cnt]) - reinterpret_cast<intptr_t>(area.addr));
                     break;

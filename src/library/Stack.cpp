@@ -66,7 +66,6 @@ void Stack::grow()
     /* Check if we need to grow it */
     if (stackSize <= stackArea.size)
         return;
-#endif
 
     /* Grow the stack */
     size_t allocSize = stackSize - stackArea.size - 4095;
@@ -75,7 +74,6 @@ void Stack::grow()
     memset(tmpbuf, 0, allocSize);
     debuglogstdio(LCF_NONE, "Some value %d", static_cast<char*>(tmpbuf)[0]);
 
-#ifdef __unix__
     /* Look at the new stack area */
     /* Apparently, if we don't use another local variable here, the compiler
      * optimizes the alloca code above! */

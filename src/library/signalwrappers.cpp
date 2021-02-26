@@ -318,10 +318,21 @@ static thread_local int origUsrMaskThread = 0;
 
     if (ret != -1) {
         if (oldmask) {
+#if defined(__APPLE__) && defined(__MACH__)
+            if (!is_inited) {
+                if (origUsrMaskProcess & SaveStateManager::sigSuspend())
+                    sigaddset(oldmask, SaveStateManager::sigSuspend());
+                if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
+                    sigaddset(oldmask, SaveStateManager::sigCheckpoint());
+            } else {
+#endif
             if (origUsrMaskThread & SaveStateManager::sigSuspend())
                 sigaddset(oldmask, SaveStateManager::sigSuspend());
             if (origUsrMaskThread & SaveStateManager::sigCheckpoint())
                 sigaddset(oldmask, SaveStateManager::sigCheckpoint());
+#if defined(__APPLE__) && defined(__MACH__)
+            }
+#endif
         }
 
         if (newmask) {
@@ -329,12 +340,25 @@ static thread_local int origUsrMaskThread = 0;
             if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
             if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
 
+#if defined(__APPLE__) && defined(__MACH__)
+            if (!is_inited) {
+                if (how == SIG_BLOCK)
+                    origUsrMaskProcess |= mask;
+                if (how == SIG_UNBLOCK)
+                    origUsrMaskProcess &= ~mask;
+                if (how == SIG_SETMASK)
+                    origUsrMaskProcess = mask;
+            } else {
+#endif
             if (how == SIG_BLOCK)
                 origUsrMaskThread |= mask;
             if (how == SIG_UNBLOCK)
                 origUsrMaskThread &= ~mask;
             if (how == SIG_SETMASK)
                 origUsrMaskThread = mask;
+#if defined(__APPLE__) && defined(__MACH__)
+            }
+#endif
         }
     }
 

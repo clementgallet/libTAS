@@ -46,8 +46,6 @@ extern char**environ;
 
 namespace libtas {
 
-static bool is_inited = false;
-
 void __attribute__((constructor)) init(void)
 {
     /* If LIBTAS_DELAY_INIT env variable is > 0, skip initialization and

@@ -98,6 +98,8 @@
 		EBC2101425E58C09008A406C /* liblua.5.3.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */; };
 		EBC93BBD25DE929600C84DF4 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC93BBC25DE929600C84DF4 /* OpenGL.framework */; };
 		EBC9684E25DC7B4D00605863 /* keysymdef.h in Headers */ = {isa = PBXBuildFile; fileRef = EBC9684D25DC7B4D00605863 /* keysymdef.h */; };
+		EBD1996625E857960021009B /* MachVmMaps.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD1996225E857960021009B /* MachVmMaps.cpp */; };
+		EBD1996825E857960021009B /* MemArea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD1996425E857960021009B /* MemArea.cpp */; };
 		EBDA73A325E6C3ED007DD9B8 /* MemAccess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */; };
 		EBDA73A525E6C638007DD9B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A425E6C637007DD9B8 /* AppKit.framework */; };
 		EBDA73A725E6C8EE007DD9B8 /* QtCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */; };
@@ -146,8 +148,6 @@
 		EBED82B525CC904800951619 /* sdlaudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80A625CC8F3C00951619 /* sdlaudio.cpp */; };
 		EBED82B625CC905400951619 /* AltStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80AD25CC8F3C00951619 /* AltStack.cpp */; };
 		EBED82B725CC905400951619 /* Checkpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80AF25CC8F3C00951619 /* Checkpoint.cpp */; };
-		EBED82B825CC905400951619 /* ProcMapsArea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80B125CC8F3C00951619 /* ProcMapsArea.cpp */; };
-		EBED82B925CC905400951619 /* ProcSelfMaps.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80B325CC8F3C00951619 /* ProcSelfMaps.cpp */; };
 		EBED82BA25CC905400951619 /* ReservedMemory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80B525CC8F3C00951619 /* ReservedMemory.cpp */; };
 		EBED82BB25CC905400951619 /* SaveState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80B725CC8F3C00951619 /* SaveState.cpp */; };
 		EBED82BC25CC905400951619 /* SaveStateManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80B925CC8F3C00951619 /* SaveStateManager.cpp */; };
@@ -255,6 +255,10 @@
 		EBC2101325E58C08008A406C /* liblua.5.3.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblua.5.3.6.dylib; path = "../../../../usr/local/Cellar/lua@5.3/5.3.6/lib/liblua.5.3.6.dylib"; sourceTree = "<group>"; };
 		EBC93BBC25DE929600C84DF4 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		EBC9684D25DC7B4D00605863 /* keysymdef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keysymdef.h; sourceTree = "<group>"; };
+		EBD1996125E857960021009B /* MachVmMaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MachVmMaps.h; sourceTree = "<group>"; };
+		EBD1996225E857960021009B /* MachVmMaps.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MachVmMaps.cpp; sourceTree = "<group>"; };
+		EBD1996325E857960021009B /* MemArea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemArea.h; sourceTree = "<group>"; };
+		EBD1996425E857960021009B /* MemArea.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemArea.cpp; sourceTree = "<group>"; };
 		EBDA73A125E6C3E6007DD9B8 /* MemAccess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemAccess.h; sourceTree = "<group>"; };
 		EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MemAccess.cpp; sourceTree = "<group>"; };
 		EBDA73A425E6C637007DD9B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -310,8 +314,6 @@
 		EBED80AE25CC8F3C00951619 /* AltStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AltStack.h; sourceTree = "<group>"; };
 		EBED80AF25CC8F3C00951619 /* Checkpoint.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Checkpoint.cpp; sourceTree = "<group>"; };
 		EBED80B025CC8F3C00951619 /* Checkpoint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Checkpoint.h; sourceTree = "<group>"; };
-		EBED80B125CC8F3C00951619 /* ProcMapsArea.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ProcMapsArea.cpp; sourceTree = "<group>"; };
-		EBED80B225CC8F3C00951619 /* ProcMapsArea.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProcMapsArea.h; sourceTree = "<group>"; };
 		EBED80B325CC8F3C00951619 /* ProcSelfMaps.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ProcSelfMaps.cpp; sourceTree = "<group>"; };
 		EBED80B425CC8F3C00951619 /* ProcSelfMaps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProcSelfMaps.h; sourceTree = "<group>"; };
 		EBED80B525CC8F3C00951619 /* ReservedMemory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ReservedMemory.cpp; sourceTree = "<group>"; };
@@ -902,8 +904,6 @@
 				EBED80AE25CC8F3C00951619 /* AltStack.h */,
 				EBED80AF25CC8F3C00951619 /* Checkpoint.cpp */,
 				EBED80B025CC8F3C00951619 /* Checkpoint.h */,
-				EBED80B125CC8F3C00951619 /* ProcMapsArea.cpp */,
-				EBED80B225CC8F3C00951619 /* ProcMapsArea.h */,
 				EBED80B325CC8F3C00951619 /* ProcSelfMaps.cpp */,
 				EBED80B425CC8F3C00951619 /* ProcSelfMaps.h */,
 				EBED80B525CC8F3C00951619 /* ReservedMemory.cpp */,
@@ -917,6 +917,10 @@
 				EBED80BD25CC8F3C00951619 /* ThreadLocalStorage.cpp */,
 				EBED80BE25CC8F3C00951619 /* ThreadLocalStorage.h */,
 				EBED80BF25CC8F3C00951619 /* ThreadManager.cpp */,
+				EBD1996225E857960021009B /* MachVmMaps.cpp */,
+				EBD1996125E857960021009B /* MachVmMaps.h */,
+				EBD1996425E857960021009B /* MemArea.cpp */,
+				EBD1996325E857960021009B /* MemArea.h */,
 				EBED80C025CC8F3C00951619 /* ThreadManager.h */,
 				EBED80C125CC8F3C00951619 /* ThreadSync.cpp */,
 				EBED80C225CC8F3C00951619 /* ThreadSync.h */,
@@ -1539,6 +1543,7 @@
 				EBED830025CC90B500951619 /* isteamremotestorage001.cpp in Sources */,
 				EBED830625CC90B500951619 /* isteamuser.cpp in Sources */,
 				EBED82FC25CC90B500951619 /* isteamhttp.cpp in Sources */,
+				EBD1996825E857960021009B /* MemArea.cpp in Sources */,
 				EBED829D25CC902A00951619 /* sleepwrappers.cpp in Sources */,
 				EBED82A525CC902A00951619 /* vulkanwrappers.cpp in Sources */,
 				EBED82B425CC904700951619 /* efx.cpp in Sources */,
@@ -1558,6 +1563,7 @@
 				EBED82F825CC90B500951619 /* isteamcontroller.cpp in Sources */,
 				EBED82B325CC904700951619 /* alc.cpp in Sources */,
 				EBED82F225CC909C00951619 /* sdlversion.cpp in Sources */,
+				EBD1996625E857960021009B /* MachVmMaps.cpp in Sources */,
 				EBED82E125CC908A00951619 /* RenderHUD_SDL1.cpp in Sources */,
 				EBED82AE25CC904700951619 /* cubeb.cpp in Sources */,
 				EBED830425CC90B500951619 /* isteamscreenshots.cpp in Sources */,
@@ -1565,14 +1571,12 @@
 				EBED82A025CC902A00951619 /* TimeHolder.cpp in Sources */,
 				EBC20F9625E568A1008A406C /* openglwrappers.cpp in Sources */,
 				EBED828C25CC902A00951619 /* frame.cpp in Sources */,
-				EBED82B925CC905400951619 /* ProcSelfMaps.cpp in Sources */,
 				EBED829C25CC902A00951619 /* signalwrappers.cpp in Sources */,
 				EBED82B225CC904700951619 /* al.cpp in Sources */,
 				EBED829F25CC902A00951619 /* systemwrappers.cpp in Sources */,
 				EBED82F525CC90B500951619 /* CCallbackManager.cpp in Sources */,
 				EBED82E925CC909C00951619 /* sdldisplay.cpp in Sources */,
 				EBED82EC25CC909C00951619 /* sdlevents.cpp in Sources */,
-				EBED82B825CC905400951619 /* ProcMapsArea.cpp in Sources */,
 				EBED82EA25CC909C00951619 /* sdldynapi.cpp in Sources */,
 				EBED82BE25CC905400951619 /* ThreadManager.cpp in Sources */,
 				EBED82D325CC907C00951619 /* sdlkeyboard.cpp in Sources */,

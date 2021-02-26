@@ -39,6 +39,9 @@ namespace libtas {
     /* Some informations about the game that are send to the program */
     extern GameInfo game_info;
 
+    /* Indicate if the library constructor has started */
+    extern volatile bool is_inited;
+
     /* Indicate if the game is exiting. It helps avoiding some invalid or blocking calls */
     extern volatile bool is_exiting;
 

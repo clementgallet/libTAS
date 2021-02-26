@@ -30,6 +30,9 @@
 // #include <cstring>
 #include <mach/vm_region.h>
 #include <mach/vm_map.h>
+#include <mach/mach_traps.h>
+#include <mach/mach_vm.h>
+#include <mach/mach.h>
 #include <libproc.h>
 
 namespace libtas {

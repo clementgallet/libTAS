@@ -37,7 +37,7 @@ void Area::print(const char* prefix) const
 #ifdef __unix__
     (prot&PROT_READ)?'r':'-', (prot&PROT_WRITE)?'w':'-', (prot&PROT_EXEC)?'x':'-', (flags&MAP_SHARED)?'s':'p',
 #elif defined(__APPLE__) && defined(__MACH__)
-    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXEC)?'x':'-', (flags==VM_INHERIT_SHARE)?'s':'p',
+    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXECUTE)?'x':'-', (flags==1)?'s':'p',
 #endif
     addr, endAddr, name, size);
 }

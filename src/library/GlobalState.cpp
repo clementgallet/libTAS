@@ -18,6 +18,7 @@
  */
 
 #include "GlobalState.h"
+#include "global.h"
 
 namespace libtas {
 
@@ -25,8 +26,23 @@ thread_local int GlobalState::native = 0;
 thread_local int GlobalState::owncode = 0;
 thread_local int GlobalState::nolog = 0;
 
+static int native_init = 0;
+static int owncode_init = 0;
+static int nolog_init = 0;
+
 void GlobalState::setNative(bool state)
 {
+    /* On MacOS, thread-local storage cannot be access while the library is being loaded. */
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited) {
+        if (state)
+            native_init++;
+        else
+            native_init--;
+        return;
+    }
+#endif
+
     if (state)
         native++;
     else
@@ -35,11 +51,26 @@ void GlobalState::setNative(bool state)
 
 bool GlobalState::isNative()
 {
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited)
+        return (native_init > 0);
+#endif
+
     return (native > 0);
 }
 
 void GlobalState::setOwnCode(bool state)
 {
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited) {
+        if (state)
+            owncode_init++;
+        else
+            owncode_init--;
+        return;
+    }
+#endif
+
     if (state)
         owncode++;
     else
@@ -48,11 +79,26 @@ void GlobalState::setOwnCode(bool state)
 
 bool GlobalState::isOwnCode()
 {
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited)
+        return (owncode_init > 0);
+#endif
+
     return (owncode > 0);
 }
 
 void GlobalState::setNoLog(bool state)
 {
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited) {
+        if (state)
+            nolog_init++;
+        else
+            nolog_init--;
+        return;
+    }
+#endif
+
     if (state)
         nolog++;
     else
@@ -61,6 +107,11 @@ void GlobalState::setNoLog(bool state)
 
 bool GlobalState::isNoLog()
 {
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited)
+        return (nolog_init > 0);
+#endif
+
     return (nolog > 0);
 }
 
