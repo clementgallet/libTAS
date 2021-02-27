@@ -248,7 +248,7 @@ void GameThread::launch(Context *context)
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
 
         /* If MacOS app, insert the real executable */
-        if (gameArch == BT_MACOS64) {
+        if ((gameArch == BT_MACOSUNI) || (gameArch == BT_MACOS32) || (gameArch == BT_MACOS64)) {
             arg_list.push_back(extractMacOSExecutable(context->gamepath));
         }
         else {
@@ -260,7 +260,7 @@ void GameThread::launch(Context *context)
     std::ostringstream sharg;
 
     /* Prepend LD_PRELOAD/DYLD_INSERT_LIBRARIES */
-    if (!(context->attach_gdb && ((gameArch == BT_ELF32) || (gameArch == BT_ELF64) || (gameArch == BT_MACOS64)))) {
+    if (!(context->attach_gdb && (!((gameArch == BT_PE32) || (gameArch == BT_PE32P))))) {
         /* Set the LD_PRELOAD/DYLD_INSERT_LIBRARIES environment variable to
          * inject our lib to the game */
 #ifdef __unix__

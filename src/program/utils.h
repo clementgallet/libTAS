@@ -43,7 +43,9 @@ enum BinaryType {
     BT_PE32,
     BT_PE32P,
     BT_SH,
+    BT_MACOS32,
     BT_MACOS64,
+    BT_MACOSUNI,
 };
 
 /* Run the `file` command from a shell and extract the output of the command. */

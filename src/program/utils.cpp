@@ -168,6 +168,14 @@ int extractBinaryType(std::string path)
         return BT_SH;
     }
 
+    if (outputstr.find("Mach-O universal binary") != std::string::npos) {
+        return BT_MACOSUNI;
+    }
+
+    if (outputstr.find("Mach-O executable i386") != std::string::npos) {
+        return BT_MACOS32;
+    }
+
     if (outputstr.find("Mach-O 64-bit") != std::string::npos) {
         return BT_MACOS64;
     }
@@ -191,7 +199,6 @@ std::string extractMacOSExecutable(std::string path)
         plist_cmd += "/Contents/Info.plist\" CFBundleExecutable";
         
         std::string outputstr("");
-        
         FILE *output = popen(plist_cmd.c_str(), "r");
         if (output != NULL) {
             std::array<char,1000> buf;
@@ -204,7 +211,7 @@ std::string extractMacOSExecutable(std::string path)
         /* Trim the value */
         size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
         outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
-        
+
         /* Build path to executable */
         std::string executable_path = path;
         executable_path += "/Contents/MacOS/";
