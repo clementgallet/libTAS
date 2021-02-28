@@ -66,13 +66,11 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
         /* Build modifiers */
         CGEventFlags flags = CGEventGetFlags(event);
         keysym_t modifiers = context->config.km->get_modifiers(flags);
-        
 
         /* Check if this keycode with or without modifiers is mapped to a hotkey */
         int hk_type = -1;
         keysym_t keysym = context->config.km->nativeToKeysym(keycode);
         keysym_t keyWithMod = keysym | modifiers;
-        std::cerr << "keysym " << keysym << std::endl;
         if (context->config.km->hotkey_mapping.find(keyWithMod) != context->config.km->hotkey_mapping.end()) {
             hk_type = context->config.km->hotkey_mapping[keyWithMod].type;
         }
@@ -146,10 +144,10 @@ bool GameEventsQuartz::haveFocus(Context *context)
     /* If not received game pid, returns false */
     if (!context->game_pid)
         return false;
-    
+
     /* Get game NSRunningApplication object */
     if (!gameApp) {
-        NSRunningApplication* gameApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid_t(context->game_pid)];
+        gameApp = [NSRunningApplication runningApplicationWithProcessIdentifier:context->game_pid];
         
         if (!gameApp) {
             std::cerr << "Could not get NSRunningApplication object from pid: " << context->game_pid << std::endl;
