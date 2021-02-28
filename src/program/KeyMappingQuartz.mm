@@ -380,6 +380,13 @@ static const key_translate char_to_xcb_keycode[59] = {
     { NSHelpFunctionKey, XK_Help },
 };
 
+keysym_t KeyMappingQuartz::nativeToKeysym(int keycode)
+{
+    if (keycode < 0 || keycode >= 128)
+        std::cerr << "Unknown native keycode " << keycode << std::endl;
+    return keyboard_layout[keycode];
+}
+
 void KeyMappingQuartz::initKeyboardLayout()
 {
     /* Get the keyboard layout to get the string representation of each keycode */

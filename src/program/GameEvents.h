@@ -37,9 +37,6 @@ public:
 
     virtual void init();
 
-    /* Register the game pid */
-    virtual void registerGamePid(pid_t pid) = 0;
-
     /* Register and select events from the window handle */
     virtual void registerGameWindow(uint32_t gameWindow) = 0;
 

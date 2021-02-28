@@ -121,6 +121,9 @@ class KeyMapping {
         /* Register a keyup event */
         virtual void registerKeyUp(uint16_t kc) {}
 
+        /* Convert a native keycode into xcb keysym */
+        virtual keysym_t nativeToKeysym(int keycode) {return keycode;}
+
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<keysym_t,SingleInput> input_mapping;
 

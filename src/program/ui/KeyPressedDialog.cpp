@@ -20,6 +20,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QKeyEvent>
+#include <iostream>
 
 #include "KeyPressedDialog.h"
 #include "qtutils.h"
@@ -40,7 +41,7 @@ KeyPressedDialog::KeyPressedDialog(Context* c, QWidget *parent) : QDialog(parent
 void KeyPressedDialog::keyPressEvent(QKeyEvent * e)
 {
     int modifiers = 0;
-
+    std::cerr << "Qt native key " << e->nativeVirtualKey() << std::endl;
     if (withModifiers) {
 
         /* We ignore a key press on a modifier key if we accept a mapping that
@@ -55,5 +56,5 @@ void KeyPressedDialog::keyPressEvent(QKeyEvent * e)
         modifiers = convertQtModifiers(e->modifiers());
     }
 
-    done(modifiers | e->nativeVirtualKey());
+    done(modifiers | context->config.km->nativeToKeysym(e->nativeVirtualKey()));
 }

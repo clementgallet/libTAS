@@ -29,49 +29,57 @@
 #include <unistd.h> // usleep()
 #include <stdint.h>
 
+NSRunningApplication* GameEventsQuartz::gameApp = nullptr;
+
 GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m) {}
 
-void GameEventsQuartz::init()
-{
-    GameEvents::init();
-    
-    /* Clear the game running app */
-    gameApp = nullptr;
-}
-
 static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
+    
     if ((type == kCGEventKeyDown) || (type == kCGEventKeyUp)) {
-
         Context* context = static_cast<Context*>(refcon);
         
         /* Skip autorepeat */
-        int autorepeat = CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat);
+        int64_t autorepeat = CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat);
         if (autorepeat)
             return event;
-
+        
         CGKeyCode keycode = static_cast<CGKeyCode>(CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
+        
+        /* Register the key event for when building the inputs */
+        if (type == kCGEventKeyDown)
+            context->config.km->registerKeyDown(keycode);
+        else
+            context->config.km->registerKeyUp(keycode);
+        
+        /* Only run hotkeys if the game app has focus */
+        if (!GameEventsQuartz::haveFocus(context))
+            return event;
         
         /* If pressed a controller button, update the controller input window */
         /*
-        if (context->config.km->input_mapping.find(keycode) != context->config.km->input_mapping.end()) {
-            SingleInput si = context->config.km->input_mapping[keycode];
-            if (si.inputTypeIsController())
-                emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), type == kCGEventKeyDown);
-        }*/
+         if (context->config.km->input_mapping.find(keycode) != context->config.km->input_mapping.end()) {
+         SingleInput si = context->config.km->input_mapping[keycode];
+         if (si.inputTypeIsController())
+         emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), type == kCGEventKeyDown);
+         }*/
         
         /* Build modifiers */
         CGEventFlags flags = CGEventGetFlags(event);
         keysym_t modifiers = context->config.km->get_modifiers(flags);
+        
 
         /* Check if this keycode with or without modifiers is mapped to a hotkey */
         int hk_type = -1;
-        if (context->config.km->hotkey_mapping.find(keycode | modifiers) != context->config.km->hotkey_mapping.end()) {
-            hk_type = context->config.km->hotkey_mapping[keycode | modifiers].type;
+        keysym_t keysym = context->config.km->nativeToKeysym(keycode);
+        keysym_t keyWithMod = keysym | modifiers;
+        std::cerr << "keysym " << keysym << std::endl;
+        if (context->config.km->hotkey_mapping.find(keyWithMod) != context->config.km->hotkey_mapping.end()) {
+            hk_type = context->config.km->hotkey_mapping[keyWithMod].type;
         }
-        else if (context->config.km->hotkey_mapping.find(keycode) != context->config.km->hotkey_mapping.end()) {
-            hk_type = context->config.km->hotkey_mapping[keycode].type;
+        else if (context->config.km->hotkey_mapping.find(keysym) != context->config.km->hotkey_mapping.end()) {
+            hk_type = context->config.km->hotkey_mapping[keysym].type;
         }
-
+        
         if (hk_type != -1) {
             if (type == kCGEventKeyDown)
                 context->hotkey_pressed_queue.push(hk_type);
@@ -79,30 +87,36 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
                 context->hotkey_released_queue.push(hk_type);
         }
     }
-	return event;
+    return event;
 }
 
-void GameEventsQuartz::registerGamePid(pid_t pid)
+void GameEventsQuartz::init()
 {
+    GameEvents::init();
+    
+    /* Clear the game running app */
+    gameApp = nullptr;
+
     /* Check for accessibility */
     NSDictionary* options = @{(__bridge NSString*)(kAXTrustedCheckOptionPrompt) : @YES};
     if (!AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options)) {
         std::cerr << "You must turn on accessibility for this app" << std::endl;
     }
     
+    /* Register the event tap */
     CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
     
-    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
-
+    //    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
+    CFMachPortRef eventTap = CGEventTapCreate(kCGHIDEventTap, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
+    
     if (!eventTap) {
         std::cerr << "Could not create event tap" << std::endl;
         return;
     }
     
     CFRunLoopSourceRef runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
+    CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, kCFRunLoopCommonModes);
     CGEventTapEnable(eventTap, true);
-    CFRunLoopRun();
 }
 
 void GameEventsQuartz::registerGameWindow(uint32_t gameWindow) {}
@@ -124,6 +138,11 @@ GameEventsQuartz::EventType GameEventsQuartz::nextEvent(struct HotKey &hk)
 
 bool GameEventsQuartz::haveFocus()
 {
+    return GameEventsQuartz::haveFocus(context);
+}
+
+bool GameEventsQuartz::haveFocus(Context *context)
+{
     /* If not received game pid, returns false */
     if (!context->game_pid)
         return false;
@@ -135,7 +154,6 @@ bool GameEventsQuartz::haveFocus()
         if (!gameApp) {
             std::cerr << "Could not get NSRunningApplication object from pid: " << context->game_pid << std::endl;
         }
-
     }
     
     return [gameApp isActive];

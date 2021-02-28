@@ -78,6 +78,10 @@ void GameLoop::start()
             return;
         }
 
+        if (!context->game_window ) {
+            context->game_window = 1;
+        }
+
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
@@ -267,7 +271,7 @@ void GameLoop::initProcessMessages()
             /* Get the game process pid */
             case MSGB_PID:
                 receiveData(&context->game_pid, sizeof(pid_t));
-                gameEvents->registerGamePid(context->game_pid);
+                std::cerr << "Got game pid: " << context->game_pid << std::endl;
                 MemAccess::init(context->game_pid);
                 break;
 
@@ -693,6 +697,9 @@ void GameLoop::endFrameMessages(AllInputs &ai)
 
 void GameLoop::loopExit()
 {
+    /* Unvalidate the game pid */
+    context->game_pid = 0;
+
     /* We need to restart the game if we got a restart input, or if:
      * - auto-restart is set
      * - we are playing or recording a movie
