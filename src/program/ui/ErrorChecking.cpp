@@ -131,6 +131,7 @@ bool ErrorChecking::checkArchType(Context* context)
 
     /* Checking the type of game binary */
     int gameArch = extractBinaryType(context->gamepath);
+    gameArch &= BT_TYPEMASK; // Remove the flag for MacOS .app
 
     if (gameArch == BT_UNKNOWN) {
         critical(QString("Could not determine arch of file %1").arg(context->gamepath.c_str()), context->interactive);

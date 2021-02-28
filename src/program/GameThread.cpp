@@ -88,6 +88,9 @@ void GameThread::launch(Context *context)
 
     /* Change settings based on game arch */
     int gameArch = extractBinaryType(context->gamepath);
+    bool macappflag = gameArch & BT_MACOSAPP;
+    gameArch &= BT_TYPEMASK;
+    
     int libtasArch = extractBinaryType(context->libtaspath);
 
     /* Switch to libtas32.so if required */
@@ -118,11 +121,6 @@ void GameThread::launch(Context *context)
 
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
-
-    /* We need to set DYLD_FORCE_FLAT_NAMESPACE so that we can hook into the game */
-#if defined(__APPLE__) && defined(__MACH__)
-    setenv("DYLD_FORCE_FLAT_NAMESPACE", "1", 1);
-#endif
 
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;
@@ -218,6 +216,11 @@ void GameThread::launch(Context *context)
             ldpreloadstr += "'";
             arg_list.push_back(ldpreloadstr);
 
+#if defined(__APPLE__) && defined(__MACH__)
+            arg_list.push_back("-ex");
+            arg_list.push_back("set exec-wrapper env 'DYLD_FORCE_FLAT_NAMESPACE=1'");
+#endif
+
             /* We are using SIGSYS and SIGXFSZ for savestates, so don't
              * print and pause when one signal is sent */
             arg_list.push_back("-ex");
@@ -248,7 +251,7 @@ void GameThread::launch(Context *context)
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
 
         /* If MacOS app, insert the real executable */
-        if ((gameArch == BT_MACOSUNI) || (gameArch == BT_MACOS32) || (gameArch == BT_MACOS64)) {
+        if (macappflag) {
             arg_list.push_back(extractMacOSExecutable(context->gamepath));
         }
         else {
@@ -274,6 +277,11 @@ void GameThread::launch(Context *context)
         else {
             sharg << context->libtaspath << " ";
         }
+        
+        /* We need to set DYLD_FORCE_FLAT_NAMESPACE so that we can hook into the game */
+#if defined(__APPLE__) && defined(__MACH__)
+        sharg << "DYLD_FORCE_FLAT_NAMESPACE=1 ";
+#endif
     }
 
     /* Escape and concatenate arguments */
