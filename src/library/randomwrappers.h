@@ -31,21 +31,25 @@ namespace libtas {
    The `rand' and `srand' functions are required by the ANSI standard.
    We provide both interfaces to the same random number generator.  */
 /* Return a random long integer between 0 and RAND_MAX inclusive.  */
-OVERRIDE long int random (void) throw();
+OVERRIDE long int random (void) __THROW;
 
 /* Seed the random number generator with the given number.  */
-OVERRIDE void srandom (unsigned int seed) throw();
+OVERRIDE void srandom (unsigned int seed) __THROW;
 
 /* Initialize the random number generator to use state buffer STATEBUF,
    of length STATELEN, and seed it with SEED.  Optimal lengths are 8, 16,
    32, 64, 128 and 256, the bigger the better; values less than 8 will
    cause an error and values greater than 256 will be rounded down.  */
 OVERRIDE char *initstate (unsigned int seed, char *statebuf,
-            size_t statelen) throw();
+            size_t statelen) __THROW;
 
+#ifdef __unix__
 /* Switch the random number generator to state buffer STATEBUF,
-   which should have been previously initialized by `initstate'.  */
-OVERRIDE char *setstate (char *statebuf) throw();
+ which should have been previously initialized by `initstate'.  */
+OVERRIDE char *setstate (char *statebuf) __THROW;
+#elif defined(__APPLE__) && defined(__MACH__)
+OVERRIDE char *setstate (const char *statebuf);
+#endif
 
 // struct random_data
 //   {
@@ -59,41 +63,41 @@ OVERRIDE char *setstate (char *statebuf) throw();
 //   };
 
 OVERRIDE int random_r (struct random_data *buf,
-             int32_t *result) throw();
+             int32_t *result) __THROW;
 
-OVERRIDE int srandom_r (unsigned int seed, struct random_data *buf) throw();
+OVERRIDE int srandom_r (unsigned int seed, struct random_data *buf) __THROW;
 
 OVERRIDE int initstate_r (unsigned int seed, char *statebuf, size_t statelen,
-            struct random_data *buf) throw();
+            struct random_data *buf) __THROW;
 
-OVERRIDE int setstate_r (char *statebuf, struct random_data *buf) throw();
+OVERRIDE int setstate_r (char *statebuf, struct random_data *buf) __THROW;
 
 /* Return a random integer between 0 and RAND_MAX inclusive.  */
-OVERRIDE int rand (void) throw();
+OVERRIDE int rand (void) __THROW;
 /* Seed the random number generator with the given number.  */
-OVERRIDE void srand (unsigned int seed) throw();
+OVERRIDE void srand (unsigned int seed) __THROW;
 
 /* Reentrant interface according to POSIX.1.  */
-OVERRIDE int rand_r (unsigned int *seed) throw();
+OVERRIDE int rand_r (unsigned int *seed) __THROW;
 
 /* System V style 48-bit random number generator functions.  */
 
 /* Return non-negative, double-precision floating-point value in [0.0,1.0).  */
-OVERRIDE double drand48 (void) throw();
-OVERRIDE double erand48 (unsigned short int xsubi[3]) throw();
+OVERRIDE double drand48 (void) __THROW;
+OVERRIDE double erand48 (unsigned short int xsubi[3]) __THROW;
 
 /* Return non-negative, long integer in [0,2^31).  */
-OVERRIDE long int lrand48 (void) throw();
-OVERRIDE long int nrand48 (unsigned short int xsubi[3]) throw();
+OVERRIDE long int lrand48 (void) __THROW;
+OVERRIDE long int nrand48 (unsigned short int xsubi[3]) __THROW;
 
 /* Return signed, long integers in [-2^31,2^31).  */
-OVERRIDE long int mrand48 (void) throw();
-OVERRIDE long int jrand48 (unsigned short int xsubi[3]) throw();
+OVERRIDE long int mrand48 (void) __THROW;
+OVERRIDE long int jrand48 (unsigned short int xsubi[3]) __THROW;
 
 /* Seed random number generator.  */
-OVERRIDE void srand48 (long int seedval) throw();
-OVERRIDE unsigned short int *seed48 (unsigned short int seed16v[3]) throw();
-OVERRIDE void lcong48 (unsigned short int param[7]) throw();
+OVERRIDE void srand48 (long int seedval) __THROW;
+OVERRIDE unsigned short int *seed48 (unsigned short int seed16v[3]) __THROW;
+OVERRIDE void lcong48 (unsigned short int param[7]) __THROW;
 
 /* Data structure for communication with thread safe versions.  This
    type is to be regarded as opaque.  It's only exported because users
@@ -108,28 +112,28 @@ OVERRIDE void lcong48 (unsigned short int param[7]) throw();
 //   };
 
 /* Return non-negative, double-precision floating-point value in [0.0,1.0).  */
-OVERRIDE int drand48_r (struct drand48_data *buffer, double *result) throw();
+OVERRIDE int drand48_r (struct drand48_data *buffer, double *result) __THROW;
 OVERRIDE int erand48_r (unsigned short int xsubi[3],
-              struct drand48_data *buffer, double *result) throw() ;
+              struct drand48_data *buffer, double *result) __THROW ;
 
 /* Return non-negative, long integer in [0,2^31).  */
-OVERRIDE int lrand48_r (struct drand48_data *buffer, long int *result) throw();
+OVERRIDE int lrand48_r (struct drand48_data *buffer, long int *result) __THROW;
 OVERRIDE int nrand48_r (unsigned short int xsubi[3],
-              struct drand48_data *buffer, long int *result) throw();
+              struct drand48_data *buffer, long int *result) __THROW;
 
 /* Return signed, long integers in [-2^31,2^31).  */
-OVERRIDE int mrand48_r (struct drand48_data *buffer, long int *result) throw();
+OVERRIDE int mrand48_r (struct drand48_data *buffer, long int *result) __THROW;
 OVERRIDE int jrand48_r (unsigned short int xsubi[3],
-              struct drand48_data *buffer, long int *result) throw();
+              struct drand48_data *buffer, long int *result) __THROW;
 
 /* Seed random number generator.  */
-OVERRIDE int srand48_r (long int seedval, struct drand48_data *buffer) throw();
+OVERRIDE int srand48_r (long int seedval, struct drand48_data *buffer) __THROW;
 
 OVERRIDE int seed48_r (unsigned short int seed16v[3],
-             struct drand48_data *buffer) throw();
+             struct drand48_data *buffer) __THROW;
 
 OVERRIDE int lcong48_r (unsigned short int param[7],
-              struct drand48_data *buffer) throw();
+              struct drand48_data *buffer) __THROW;
 
 }
 

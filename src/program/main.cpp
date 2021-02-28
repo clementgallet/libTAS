@@ -17,22 +17,23 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
+//#include "config.h"
 #include <QtWidgets/QApplication>
 
 #include "ui/MainWindow.h"
 #include "Context.h"
 #include "utils.h" // create_dir
 #include "lua/Main.h"
+#include "KeyMapping.h"
+#ifdef __unix__
+#include "KeyMappingXcb.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "KeyMappingQuartz.h"
+#endif
 
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname
 #include <signal.h> // kill
-#include <xcb/xcb.h>
-#define explicit _explicit
-#include <xcb/xkb.h>
-#undef explicit
-#include <xcb/xcb_cursor.h>
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -41,6 +42,17 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdint.h>
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <mach-o/dyld.h> // _NSGetExecutablePath
+#endif
+
+#ifdef __unix__
+#include <xcb/xcb.h>
+#define explicit _explicit
+#include <xcb/xkb.h>
+#undef explicit
+#endif
 
 Context context;
 
@@ -139,8 +151,8 @@ int main(int argc, char **argv)
         gameargsoverride += argv[i];
     }
 
+#ifdef __unix__
     /* Open connection with the server */
-    // XInitThreads();
     context.conn = xcb_connect(NULL,NULL);
     if (xcb_connection_has_error(context.conn))
     {
@@ -174,31 +186,32 @@ int main(int argc, char **argv)
     }
     free(pcf_reply);
 
-    /* Initialize mouse cursor.
-     * Taken from <https://xcb.freedesktop.org/tutorial/mousecursors/>
-     */
-    xcb_cursor_context_t *ctx;
-    xcb_screen_t *screen;
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(context.conn));
-    screen = iter.data;
-    if (xcb_cursor_context_new(context.conn, screen, &ctx) < 0) {
-        std::cerr << "failed to initialize xcb cursor context" << std::endl;
-    }
-
-    context.crosshair_cursor = xcb_cursor_load_cursor(ctx, "crosshair");
-
     /* Init keymapping. This uses the X connection to get the list of KeyCodes,
      * so it must be called after opening it.
      */
-    context.config.km.init(context.conn);
+    context.config.km = new KeyMappingXcb(context.conn);
+#elif defined(__APPLE__) && defined(__MACH__)
+    context.config.km = new KeyMappingQuartz(nullptr);
+#endif
 
     /* libTAS.so path */
     /* TODO: Not portable! */
+#ifdef __unix__
     ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
     std::string binpath = std::string( buf, (count > 0) ? count : 0 );
     char* binpathptr = const_cast<char*>(binpath.c_str());
     context.libtaspath = dirname(binpathptr);
     context.libtaspath += "/libtas.so";
+#elif defined(__APPLE__) && defined(__MACH__)
+    uint32_t size = 4096;
+    if (_NSGetExecutablePath(buf, &size) == 0)
+        context.libtaspath = dirname(buf);
+    else {
+        std::cerr << "Could not get path of libTAS executable" << std::endl;
+        exit(0);
+    }
+    context.libtaspath += "/libtas.dylib";
+#endif
 
     /* Create the working directories */
     char *path = getenv("XDG_CONFIG_HOME");
@@ -276,9 +289,14 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    /* Store current content of LD_PRELOAD */
+    /* Store current content of LD_PRELOAD/DYLD_INSERT_LIBRARIES */
 
+#ifdef __unix__
     char* old_preload = getenv("LD_PRELOAD");
+#elif defined(__APPLE__) && defined(__MACH__)
+    char* old_preload = getenv("DYLD_INSERT_LIBRARIES");
+#endif
+
     if (old_preload) context.old_ld_preload = old_preload;
 
     /* Check if incremental savestates is supported by checking the soft-dirty bit */
@@ -338,9 +356,8 @@ int main(int argc, char **argv)
         }
     }
 
-    xcb_free_cursor (context.conn, context.crosshair_cursor);
-    xcb_cursor_context_free(ctx);
-
+#ifdef __unix__
     xcb_disconnect(context.conn);
+#endif
     return 0;
 }

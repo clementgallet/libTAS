@@ -84,7 +84,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     }
 
     ticks += delta;
-    debuglog(LCF_TIMESET|LCF_FREQUENT, __func__, " added ", delta.tv_sec * 1000000000 + delta.tv_nsec, " nsec ");
+    debuglogstdio(LCF_TIMESET|LCF_FREQUENT, "%s added %d.%010d", __func__, delta.tv_sec, delta.tv_nsec);
 
     lasttime = realtime;
 

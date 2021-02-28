@@ -22,9 +22,9 @@
 
 #include "IRamWatchDetailed.h"
 #include "TypeIndex.h"
+#include "MemAccess.h"
 #include <sstream>
 #include <iostream>
-#include <sys/uio.h>
 
 template <class T>
 class RamWatchDetailed : public IRamWatchDetailed {
@@ -39,14 +39,7 @@ public:
             return 0;
 
         T value = 0;
-        struct iovec local, remote;
-        local.iov_base = static_cast<void*>(&value);
-        local.iov_len = sizeof(T);
-        remote.iov_base = reinterpret_cast<void*>(address);
-        remote.iov_len = sizeof(T);
-
-        isValid = (process_vm_readv(game_pid, &local, 1, &remote, 1, 0) == sizeof(T));
-
+        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), sizeof(T)) == sizeof(T));
         return value;
     }
 
@@ -96,13 +89,7 @@ public:
         }
 
         /* Write value into the game process address */
-        struct iovec local, remote;
-        local.iov_base = static_cast<void*>(&value);
-        local.iov_len = sizeof(T);
-        remote.iov_base = reinterpret_cast<void*>(address);
-        remote.iov_len = sizeof(T);
-
-        return process_vm_writev(game_pid, &local, 1, &remote, 1, 0);
+        return MemAccess::write(&value, reinterpret_cast<void*>(address), sizeof(T));
     }
 
     int type()

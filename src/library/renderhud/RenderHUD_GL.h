@@ -17,16 +17,21 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
-#ifdef LIBTAS_ENABLE_HUD
-
 #ifndef LIBTAS_RENDERHUD_GL_H_INCL
 #define LIBTAS_RENDERHUD_GL_H_INCL
 
 #include "RenderHUD.h"
+
+#ifdef LIBTAS_ENABLE_HUD
+
 #define GL_GLEXT_PROTOTYPES
+#ifdef __unix__
 #include <GL/gl.h>
 #include <GL/glext.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
 
 namespace libtas {
 class RenderHUD_GL : public RenderHUD

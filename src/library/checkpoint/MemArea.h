@@ -19,8 +19,8 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_PROCMAPSAREA_H
-#define LIBTAS_PROCMAPSAREA_H
+#ifndef LIBTAS_MEMAREA_H
+#define LIBTAS_MEMAREA_H
 
 #include <cstdint>
 #include <sys/types.h>
@@ -60,6 +60,7 @@ struct Area {
     size_t size;
     off_t offset;
     int prot;
+    int max_prot;
     int flags;
     unsigned int long devmajor;
     unsigned int long devminor;

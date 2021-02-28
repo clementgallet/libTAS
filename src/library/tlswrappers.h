@@ -35,10 +35,10 @@ void clear_pthread_keys();
    associated to that key when the key is destroyed.
    DESTR_FUNCTION is not called if the value associated is NULL when
    the key is destroyed.  */
-OVERRIDE int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) throw();
+OVERRIDE int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __THROW;
 
 /* Destroy KEY.  */
-OVERRIDE int pthread_key_delete (pthread_key_t key) throw();
+OVERRIDE int pthread_key_delete (pthread_key_t key) __THROW;
 
 }
 

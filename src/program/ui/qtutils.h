@@ -21,9 +21,8 @@
 #define LIBTAS_QTUTILS_H_INCLUDED
 
 #include <QtGui/QKeyEvent>
-#include <xcb/xcb_keysyms.h>
-#include "../Context.h"
+//#include "../Context.h"
 
-xcb_keysym_t convertQtModifiers(Qt::KeyboardModifiers flags);
+unsigned int convertQtModifiers(Qt::KeyboardModifiers flags);
 
 #endif

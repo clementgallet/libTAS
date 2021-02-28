@@ -89,7 +89,6 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
 
 void RamWatchWindow::update()
 {
-    IRamWatchDetailed::game_pid = context->game_pid;
     ramWatchModel->update();
 }
 
@@ -98,7 +97,6 @@ void RamWatchWindow::slotAdd()
     editWindow->exec();
 
     if (editWindow->ramwatch) {
-        editWindow->ramwatch->game_pid = context->game_pid;
         ramWatchModel->addWatch(std::move(editWindow->ramwatch));
     }
 }
@@ -137,7 +135,6 @@ void RamWatchWindow::slotEdit()
 
     /* Modify the watch */
     if (editWindow->ramwatch) {
-        editWindow->ramwatch->game_pid = context->game_pid;
         ramWatchModel->ramwatches[row] = std::move(editWindow->ramwatch);
         ramWatchModel->update();
     }

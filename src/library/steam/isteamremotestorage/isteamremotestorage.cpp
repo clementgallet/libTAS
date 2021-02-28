@@ -56,7 +56,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version)
 	};
 	int i;
 
-    debuglog(LCF_STEAM, __func__, " called with version ", version);
+    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
 
 	i = 0;
 	while (ifaces[i].name)
@@ -71,14 +71,14 @@ struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version)
 		i++;
 	}
 
-    debuglog(LCF_STEAM | LCF_WARNING, "Unable to find ISteamRemoteStorage version ", version);
+    debuglogstdio(LCF_STEAM | LCF_WARNING, "Unable to find ISteamRemoteStorage version %s", version);
 
 	return nullptr;
 }
 
 void SteamRemoteStorage_set_version(const char *version)
 {
-    debuglog(LCF_STEAM, __func__, " called with version ", version);
+    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
 
 	if (!steamremotestorage_version)
 		steamremotestorage_version = version;
@@ -93,7 +93,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
 	if (!steamremotestorage_version)
 	{
 		steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_014;
-        debuglog(LCF_STEAM | LCF_WARNING, "ISteamRemoteStorage: No version specified, defaulting to ", steamremotestorage_version);
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "ISteamRemoteStorage: No version specified, defaulting to %s", steamremotestorage_version);
 	}
 
 	if (!cached_iface)

@@ -23,10 +23,12 @@
 #include "../hook.h"
 #include "SaveFileList.h"
 #include "FileHandleList.h"
-#include "URandom.h"
 #include "../GlobalState.h"
+#ifdef __linux__
+#include "URandom.h"
 #include "../inputs/jsdev.h"
 #include "../inputs/evdev.h"
+#endif
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -59,7 +61,11 @@ int open (const char *file, int oflag, ...)
     LINK_NAMESPACE_GLOBAL(open);
 
     mode_t mode = 0;
+#ifdef __linux__
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
+#else
+    if (oflag & O_CREAT)
+#endif
     {
         va_list arg_list;
 
@@ -69,6 +75,9 @@ int open (const char *file, int oflag, ...)
     }
 
     if (GlobalState::isNative())
+        return orig::open(file, oflag, mode);
+
+    if (!file)
         return orig::open(file, oflag, mode);
 
     /* Special case for file opened by je_malloc.
@@ -81,11 +90,12 @@ int open (const char *file, int oflag, ...)
 
     int fd = 0;
 
+#ifdef __linux__
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
         return urandom_create_fd();
-    }
-
-    else if (strcmp(file, "/proc/uptime") == 0) {
+    } else
+#endif
+    if (strcmp(file, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -112,6 +122,7 @@ int open (const char *file, int oflag, ...)
         }
     }
 
+#ifdef __linux__
     /* Check if joystick device */
     else if (is_jsdev(file) >= 0) {
         fd = open_jsdev(file, oflag);
@@ -124,6 +135,7 @@ int open (const char *file, int oflag, ...)
         /* We already stored the file descriptor */
         return fd;
     }
+#endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
@@ -145,7 +157,11 @@ int open64 (const char *file, int oflag, ...)
     LINK_NAMESPACE_GLOBAL(open64);
 
     mode_t mode = 0;
+#ifdef __linux__
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
+#else
+    if (oflag & O_CREAT)
+#endif
     {
         va_list arg_list;
 
@@ -157,15 +173,19 @@ int open64 (const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::open64(file, oflag, mode);
 
+    if (!file)
+        return orig::open64(file, oflag, mode);
+    
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
 
     int fd = 0;
 
+#ifdef __linux__
     if ((strcmp(file, "/dev/urandom") == 0) || (strcmp(file, "/dev/random") == 0)) {
         return urandom_create_fd();
-    }
-
-    else if (strcmp(file, "/proc/uptime") == 0) {
+    } else
+#endif
+    if (strcmp(file, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(file) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -192,6 +212,7 @@ int open64 (const char *file, int oflag, ...)
         }
     }
 
+#ifdef __linux__
     /* Check if joystick device */
     else if (is_jsdev(file) >= 0) {
         fd = open_jsdev(file, oflag);
@@ -204,6 +225,7 @@ int open64 (const char *file, int oflag, ...)
         /* We already stored the file descriptor */
         return fd;
     }
+#endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
         debuglogstdio(LCF_FILEIO, "  savefile detected");
@@ -225,7 +247,11 @@ int openat (int dirfd, const char *file, int oflag, ...)
     LINK_NAMESPACE_GLOBAL(openat);
 
     mode_t mode = 0;
+#ifdef __linux__
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
+#else
+    if (oflag & O_CREAT)
+#endif
     {
         va_list arg_list;
 
@@ -235,6 +261,9 @@ int openat (int dirfd, const char *file, int oflag, ...)
     }
 
     if (GlobalState::isNative())
+        return orig::openat(dirfd, file, oflag, mode);
+
+    if (!file)
         return orig::openat(dirfd, file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
@@ -261,7 +290,11 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
     LINK_NAMESPACE_GLOBAL(openat64);
 
     mode_t mode = 0;
+#ifdef __linux__
     if ((oflag & O_CREAT) || (oflag & O_TMPFILE))
+#else
+    if (oflag & O_CREAT)
+#endif
     {
         va_list arg_list;
 
@@ -271,6 +304,9 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
     }
 
     if (GlobalState::isNative())
+        return orig::openat64(dirfd, file, oflag, mode);
+
+    if (!file)
         return orig::openat64(dirfd, file, oflag, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
@@ -297,6 +333,9 @@ int creat (const char *file, mode_t mode)
     LINK_NAMESPACE_GLOBAL(creat);
 
     if (GlobalState::isNative())
+        return orig::creat(file, mode);
+
+    if (!file)
         return orig::creat(file, mode);
 
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
@@ -330,6 +369,9 @@ int creat64 (const char *file, mode_t mode)
     if (GlobalState::isNative())
         return orig::creat64(file, mode);
 
+    if (!file)
+        return orig::creat64(file, mode);
+
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
@@ -359,10 +401,12 @@ int close (int fd)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
+#ifdef __linux__
     /* Check for urandom */
     if (urandom_get_fd() == fd) {
         return 0;
     }
+#endif
 
     /* Check if we must actually close the file */
     bool doClose = FileHandleList::closeFile(fd);
@@ -379,15 +423,19 @@ int close (int fd)
     return 0;
 }
 
-int access(const char *name, int type) throw()
+int access(const char *name, int type) __THROW
 {
     LINK_NAMESPACE_GLOBAL(access);
 
     if (GlobalState::isNative())
         return orig::access(name, type);
 
+    if (!name)
+        return orig::access(name, type);
+
     debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
 
+#ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(name);
     if (joy == -1) joy = is_evdev(name);
@@ -400,6 +448,7 @@ int access(const char *name, int type) throw()
             return -1;
         }
     }
+#endif
 
     /* Check for savefile. */
     if (SaveFileList::getSaveFileFd(name) != 0) {
@@ -415,7 +464,7 @@ int access(const char *name, int type) throw()
     return orig::access(name, type);
 }
 
-int __xstat(int ver, const char *path, struct stat *buf) throw()
+int __xstat(int ver, const char *path, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__xstat);
 
@@ -424,6 +473,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+#ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(path);
     if (joy == -1) joy = is_evdev(path);
@@ -436,6 +486,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
             return -1;
         }
     }
+#endif
 
     /* Check if savefile. */
     int fd = SaveFileList::getSaveFileFd(path);
@@ -453,7 +504,7 @@ int __xstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__xstat(ver, path, buf);
 }
 
-int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
+int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__xstat64);
 
@@ -462,6 +513,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+#ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(path);
     if (joy == -1) joy = is_evdev(path);
@@ -474,6 +526,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
             return -1;
         }
     }
+#endif
 
     /* Check if savefile. */
     int fd = SaveFileList::getSaveFileFd(path);
@@ -491,7 +544,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) throw()
     return orig::__xstat64(ver, path, buf);
 }
 
-int __lxstat(int ver, const char *path, struct stat *buf) throw()
+int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__lxstat);
 
@@ -500,6 +553,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+#ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(path);
     if (joy == -1) joy = is_evdev(path);
@@ -512,6 +566,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
             return -1;
         }
     }
+#endif
 
     /* Check if savefile. */
     int fd = SaveFileList::getSaveFileFd(path);
@@ -529,7 +584,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) throw()
     return orig::__lxstat(ver, path, buf);
 }
 
-int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
+int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__lxstat64);
 
@@ -538,6 +593,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
+#ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(path);
     if (joy == -1) joy = is_evdev(path);
@@ -550,6 +606,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
             return -1;
         }
     }
+#endif
 
     /* Check if savefile. */
     int fd = SaveFileList::getSaveFileFd(path);
@@ -567,7 +624,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) throw()
     return orig::__lxstat64(ver, path, buf);
 }
 
-int __fxstat(int ver, int fd, struct stat *buf) throw()
+int __fxstat(int ver, int fd, struct stat *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__fxstat);
 
@@ -578,7 +635,7 @@ int __fxstat(int ver, int fd, struct stat *buf) throw()
     return orig::__fxstat(ver, fd, buf);
 }
 
-int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
+int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 {
     LINK_NAMESPACE_GLOBAL(__fxstat64);
 
@@ -589,7 +646,7 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) throw()
     return orig::__fxstat64(ver, fd, buf);
 }
 
-int dup (int fd) throw()
+int dup (int fd) __THROW
 {
     debuglogstdio(LCF_FILEIO, "%s call on %d", __func__, fd);
     LINK_NAMESPACE_GLOBAL(dup);
@@ -599,7 +656,7 @@ int dup (int fd) throw()
     return newfd;
 }
 
-int dup2 (int fd, int fd2) throw()
+int dup2 (int fd, int fd2) __THROW
 {
     debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
     LINK_NAMESPACE_GLOBAL(dup2);

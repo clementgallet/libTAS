@@ -228,8 +228,10 @@ public:
     /* Extract a controller input number from an input type */
     int inputTypeToInputNumber() const;
 
+#ifdef __unix__
     /* Convert a pointer button to a Xlib pointer button */
     static unsigned int toXlibPointerButton(int button);
+#endif
 
     /* Convert a pointer button to a SDL1 pointer button */
     static unsigned int toSDL1PointerButton(int button);
@@ -237,8 +239,10 @@ public:
     /* Convert a pointer button to a SDL2 pointer button */
     static unsigned int toSDL2PointerButton(int button);
 
+#ifdef __unix__
     /* Convert a pointer mask to a Xlib pointer mask */
     static unsigned int toXlibPointerMask(int mask);
+#endif
 
     /* Convert a pointer mask to a SDL1 pointer mask */
     static unsigned int toSDL1PointerMask(int mask);
@@ -255,6 +259,7 @@ public:
     /* Convert button flags to a SDL1/2 hat number */
     static int toSDLHat(int buttons);
 
+#ifdef __linux__
     /* Convert an axis number to an jsdev axis number */
     static int toJsdevAxis(int axis);
 
@@ -272,6 +277,7 @@ public:
 
     /* Convert button flags to an jsdev/evdev vertical hat number */
     static int toDevHatY(int buttons);
+#endif
 
 };
 

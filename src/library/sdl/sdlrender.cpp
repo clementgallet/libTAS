@@ -41,13 +41,13 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale)
     LINK_NAMESPACE_SDL2(SDL_CreateRenderer);
 
     if (flags & SDL_RENDERER_SOFTWARE)
-        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
+        debuglogstdio(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
     if (flags & SDL_RENDERER_ACCELERATED)
-        debuglog(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_ACCELERATED");
+        debuglogstdio(LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_ACCELERATED");
     if (flags & SDL_RENDERER_PRESENTVSYNC)
-        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
+        debuglogstdio(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_PRESENTVSYNC");
     if (flags & SDL_RENDERER_TARGETTEXTURE)
-        debuglog(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
+        debuglogstdio(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
 
     game_info.video |=  GameInfo::SDL2_RENDERER;
 
@@ -94,7 +94,7 @@ static int logical_h = 0;
 
 int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " called with new size: ", w, " x ", h);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
 
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
@@ -118,9 +118,9 @@ void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
 int SDL_RenderSetViewport(SDL_Renderer * renderer, const SDL_Rect * rect)
 {
     if (rect)
-        debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with new size: ", rect->w, " x ", rect->h);
+        debuglogstdio(LCF_SDL | LCF_WINDOW | LCF_TODO, " called with new size: %d x %d", __func__, rect->w, rect->h);
     else
-        debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with native size");
+        debuglogstdio(LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with native size", __func__);
 
     LINK_NAMESPACE_SDL2(SDL_RenderSetViewport);
     return orig::SDL_RenderSetViewport(renderer, rect);
@@ -135,7 +135,7 @@ void SDL_RenderGetViewport(SDL_Renderer * renderer, SDL_Rect * rect)
 
 int SDL_RenderSetScale(SDL_Renderer * renderer, float scaleX, float scaleY)
 {
-    debuglog(LCF_SDL | LCF_WINDOW | LCF_TODO, __func__, " called with new scaleX: ", scaleX, " and scaleY: ", scaleY);
+    debuglogstdio(LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with new scaleX: %d and scaleY: %d", __func__, scaleX, scaleY);
     LINK_NAMESPACE_SDL2(SDL_RenderSetScale);
     return orig::SDL_RenderSetScale(renderer, scaleX, scaleY);
 }

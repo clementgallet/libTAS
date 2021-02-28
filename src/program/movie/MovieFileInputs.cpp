@@ -19,6 +19,7 @@
 
 #include <QtCore/QSettings>
 #include <iostream>
+#include <sstream>
 
 #include "MovieFileInputs.h"
 #include "../utils.h"

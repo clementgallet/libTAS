@@ -25,6 +25,7 @@
 
 #include "ControllerTabWindow.h"
 #include "../GameLoop.h"
+#include "../GameEvents.h"
 #include "MainWindow.h"
 #include "../../shared/SingleInput.h"
 #include "qtutils.h"
@@ -53,7 +54,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* If the user press an input that is mapped to a controller button,
          * we must change the corresponding checkbox in this window.
          */
-        connect(mw->gameLoop, &GameLoop::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle);
+        connect(mw->gameLoop->gameEvents, &GameEvents::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle);
 
         /* When the game loop will send the inputs to the game, we must set
          * the controller inputs in the AllInputs object.
@@ -178,20 +179,20 @@ void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
 
 void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 {
-    xcb_keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t mod = convertQtModifiers(e->modifiers());
 
-    if (context->config.km.hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[e->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km.hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[e->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey()];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
-        SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
+    if (context->config.km->input_mapping.find(e->nativeVirtualKey()) != context->config.km->input_mapping.end()) {
+        SingleInput si = context->config.km->input_mapping[e->nativeVirtualKey()];
         if (si.inputTypeIsController())
             return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), true);
     }
@@ -201,20 +202,20 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 
 void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
 {
-    xcb_keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t mod = convertQtModifiers(e->modifiers());
 
-    if (context->config.km.hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[e->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km.hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km.hotkey_mapping.end()) {
-        HotKey hk = context->config.km.hotkey_mapping[e->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey()];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km.input_mapping.find(e->nativeVirtualKey()) != context->config.km.input_mapping.end()) {
-        SingleInput si = context->config.km.input_mapping[e->nativeVirtualKey()];
+    if (context->config.km->input_mapping.find(e->nativeVirtualKey()) != context->config.km->input_mapping.end()) {
+        SingleInput si = context->config.km->input_mapping[e->nativeVirtualKey()];
         if (si.inputTypeIsController())
             return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), false);
     }

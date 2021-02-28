@@ -1,6 +1,7 @@
 bin_PROGRAMS = libTAS
 
 libTAS_QTSOURCES = \
+    GameEvents.h \
     GameLoop.h \
     ui/AnnotationsWindow.h \
     ui/AutoSaveWindow.h \
@@ -33,9 +34,12 @@ libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 libTAS_SOURCES = \
     AutoSave.cpp \
     Config.cpp \
+    GameEvents.cpp \
+    GameEventsXcb.cpp \
     GameLoop.cpp \
     GameThread.cpp \
     KeyMapping.cpp \
+    KeyMappingXcb.cpp \
     main.cpp \
     SaveState.cpp \
     SaveStateList.cpp \
@@ -79,6 +83,7 @@ libTAS_SOURCES = \
     ui/qtutils.cpp \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
+    ramsearch/MemAccess.cpp \
     ramsearch/MemSection.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \

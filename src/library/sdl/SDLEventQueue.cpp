@@ -88,7 +88,7 @@ int SDLEventQueue::insert(SDL_Event* event)
 
     /* 4. Check the size of the queue */
     if (eventQueue.size() > 1024) {
-        debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
+        debuglogstdio(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
         return -1;
     }
 
@@ -119,7 +119,7 @@ int SDLEventQueue::insert(SDL1::SDL_Event* event)
 
     /* 3. Check the size of the queue */
     if (eventQueue.size() > 1024) {
-        debuglog(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
+        debuglogstdio(LCF_SDL | LCF_EVENTS, "We reached the limit of the event queue size!");
         return -1;
     }
 
@@ -315,7 +315,7 @@ bool SDLEventQueue::waitForEmpty()
 
     while (!emptied) {
         if (++attempts > 10 * 100) {
-            debuglog(LCF_EVENTS | LCF_SDL | LCF_ERROR | LCF_ALERT, "SDL events sync took too long, were asynchronous events incorrectly enabled?");
+            debuglogstdio(LCF_EVENTS | LCF_SDL | LCF_ERROR | LCF_ALERT, "SDL events sync took too long, were asynchronous events incorrectly enabled?");
             return false;
         }
         struct timespec sleepTime = { 0, 10 * 1000 };

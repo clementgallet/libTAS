@@ -140,23 +140,23 @@ static const char Xlib_default_char[256] = {
 
 /* Override */ KeySym XKeycodeToKeysym(Display* display, KeyCode keycode, int index)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with keycode ", (int)keycode);
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
     KeySym sym = Xlib_default_keymap[keycode];
-    debuglog(LCF_KEYBOARD, "   returning ", sym);
+    debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
 
 /* Override */ KeySym XkbKeycodeToKeysym(Display *dpy, KeyCode kc, int group, int level)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with keycode ", (int)kc);
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
     KeySym sym = Xlib_default_keymap[kc];
-    debuglog(LCF_KEYBOARD, "   returning ", sym);
+    debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
 
 /* Override */ KeyCode XKeysymToKeycode( Display* display, KeySym keysym)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with keysym ", keysym);
+    debuglogstdio(LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
     KeyCode kc = 0;
     /* Translate from uppercase letter to lowercase */
     if ((keysym >= XK_A) && (keysym <= XK_Z)) {
@@ -170,13 +170,13 @@ static const char Xlib_default_char[256] = {
         }
     }
 
-    debuglog(LCF_KEYBOARD, "   returning ", (int)kc);
+    debuglogstdio(LCF_KEYBOARD, "   returning %d", (int)kc);
     return kc;
 }
 
 /* Override */ int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with keycode ", event_struct->keycode);
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
     KeyCode keycode = event_struct->keycode;
     *keysym_return = Xlib_default_keymap[keycode];
     if (buffer_return && (bytes_buffer > 0)) {
@@ -192,7 +192,7 @@ static const char Xlib_default_char[256] = {
 
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
 {
-    debuglog(LCF_KEYBOARD, __func__, " called with keycode_count ", keycode_count);
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
     *keysyms_per_keycode_return = 1;
     KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
     for (int c=0; c<keycode_count; c++) {

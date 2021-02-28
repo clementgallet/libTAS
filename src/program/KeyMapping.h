@@ -24,9 +24,6 @@
 #include "../shared/SingleInput.h"
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
-#include <X11/keysym.h>
 #include <map>
 #include <vector>
 #include <array>
@@ -101,45 +98,31 @@ QDataStream &operator<<(QDataStream &out, const HotKey &obj);
 /* Load the content of the struct from the stream */
 QDataStream &operator>>(QDataStream &in, HotKey &obj);
 
-struct ModifierKey {
-    xcb_keysym_t ks;
-    xcb_keysym_t flag;
-    std::string description;
-};
+/* Generic keysym type */
+typedef uint32_t keysym_t;
 
+/* Flag for modifiers. We must expose this because GUI needs to build modifiers */
 enum ModifierFlag {
-    XK_Shift_L_Flag = 0x010000,
-    XK_Shift_R_Flag = 0x020000,
-    XK_Control_L_Flag = 0x040000,
-    XK_Control_R_Flag = 0x080000,
-    XK_Meta_L_Flag = 0x100000,
-    XK_Meta_R_Flag = 0x200000,
-    XK_Alt_L_Flag = 0x400000,
-    XK_Alt_R_Flag = 0x800000
+    XK_Shift_Flag = 0x010000,
+    XK_Control_Flag = 0x040000,
+    XK_Meta_Flag = 0x100000,
+    XK_Alt_Flag = 0x400000,
 };
 
-static std::array<ModifierKey, 8> modifier_list {{
-    {XK_Shift_L, XK_Shift_L_Flag, "Shift_L"},
-    {XK_Shift_R, XK_Shift_R_Flag, "Shift_R"},
-    {XK_Control_L, XK_Control_L_Flag, "Control_L"},
-    {XK_Control_R, XK_Control_R_Flag, "Control_R"},
-    {XK_Meta_L, XK_Meta_L_Flag, "Meta_L"},
-    {XK_Meta_R, XK_Meta_R_Flag, "Meta_R"},
-    {XK_Alt_L, XK_Alt_L_Flag, "Alt_L"},
-    {XK_Alt_R, XK_Alt_R_Flag, "Alt_R"},
-}};
-
-bool is_modifier(xcb_keysym_t ks);
-
-xcb_keysym_t build_modifiers(unsigned char keyboard_state[], xcb_key_symbols_t *keysyms);
 
 class KeyMapping {
     public:
         /* Initialize hotkeys and mapping list */
-        void init(xcb_connection_t* conn);
+        KeyMapping(void* conn);
+
+        /* Register a keydown event */
+        virtual void registerKeyDown(uint16_t kc) {}
+
+        /* Register a keyup event */
+        virtual void registerKeyUp(uint16_t kc) {}
 
         /* Map keyboard KeySym to a single input of a keyboard or controller */
-        std::map<xcb_keysym_t,SingleInput> input_mapping;
+        std::map<keysym_t,SingleInput> input_mapping;
 
         enum {
             INPUTLIST_KEYBOARD_LATIN,
@@ -154,33 +137,42 @@ class KeyMapping {
         std::vector<SingleInput> input_list[INPUTLIST_SIZE];
 
         /* Map keyboard KeySym to a hotkey */
-        std::map<xcb_keysym_t,HotKey> hotkey_mapping;
+        std::map<keysym_t,HotKey> hotkey_mapping;
 
         /* List of hotkeys */
         std::vector<HotKey> hotkey_list;
 
         /* Get the input description */
-        std::string input_description(xcb_keysym_t ks);
+        std::string input_description(keysym_t ks);
+
+        /* Returns if a keysym is a modifier */
+        virtual bool is_modifier(keysym_t ks) = 0;
+
+        /* Returns the list of modifiers compated into a single int from the event state */
+        virtual keysym_t get_modifiers(int state) = 0;
+
+        /* Get the input description with modifiers */
+        virtual std::string input_description_mod(keysym_t ks) = 0;
 
         /* Set hotkeys to default values */
         void default_hotkeys();
 
         /* Set hotkeys to default values */
-        void default_inputs();
+        virtual void default_inputs() = 0;
 
         /* Set a hotkey to default value */
         void default_hotkey(int hotkey_index);
 
         /* Set input to default value */
-        void default_input(int tab, int input_index);
+        virtual void default_input(int tab, int input_index) = 0;
 
         /* Assign a new key to the hotkey */
-        void reassign_hotkey(int hotkey_index, xcb_keysym_t ks);
-        void reassign_hotkey(HotKey hk, xcb_keysym_t ks);
+        void reassign_hotkey(int hotkey_index, keysym_t ks);
+        void reassign_hotkey(HotKey hk, keysym_t ks);
 
         /* Assign a new key to the input */
-        void reassign_input(int tab, int input_index, xcb_keysym_t ks);
-        void reassign_input(SingleInput si, xcb_keysym_t ks);
+        void reassign_input(int tab, int input_index, keysym_t ks);
+        void reassign_input(SingleInput si, keysym_t ks);
 
         /*
          * We are building the whole AllInputs structure,
@@ -193,15 +185,7 @@ class KeyMapping {
          * - Get the mouse state
          * - Warp mouse pointer if needed
          */
-        void buildAllInputs(AllInputs& ai, xcb_window_t window, xcb_key_symbols_t *keysyms, SharedConfig& sc, bool mouse_warp);
-
-    private:
-        /* Connection to the X11 server */
-        xcb_connection_t *conn;
-
-        /* Connection to the keyboard layout */
-        xcb_key_symbols_t *keysyms;
-
+        virtual void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp) = 0;
 };
 
 #endif // LIBTAS_KEYMAPPING_H_INCLUDED

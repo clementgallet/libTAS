@@ -23,7 +23,6 @@
 #include "../hook.h"
 #include "../../shared/AllInputs.h"
 #include "../DeterministicTimer.h" // detTimer
-#include <X11/X.h>
 #include "../sdl/SDLEventQueue.h"
 #include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
 
@@ -92,7 +91,7 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     SDL_Event event2;
@@ -129,7 +128,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 
 int SDL_WarpMouseGlobal(int x, int y)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* Should we support this? */
     SDL_WarpMouseInWindow(nullptr, x, y);
@@ -138,7 +137,7 @@ int SDL_WarpMouseGlobal(int x, int y)
 
 void SDL_WarpMouse(Uint16 x, Uint16 y)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call to pos (",x,",",y,")");
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     SDL1::SDL_Event event1;
@@ -169,14 +168,14 @@ SDL_bool relativeMode = SDL_FALSE;
 
 int SDL_SetRelativeMouseMode(SDL_bool enabled)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call with ", enabled);
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
     relativeMode = enabled;
     return 0;
 }
 
 int SDL_CaptureMouse(SDL_bool enabled)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call with ", enabled);
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
     /* We should disable capture anyway */
     return 0;
 }
@@ -234,7 +233,7 @@ void SDL_FreeCursor(SDL_Cursor * cursor)
 
 int SDL_ShowCursor(int toggle)
 {
-    debuglog(LCF_SDL | LCF_MOUSE, __func__, " call with ", toggle);
+    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
 
     /* We keep the state of the cursor, but we keep it shown. */
     static int showCursor = 1;

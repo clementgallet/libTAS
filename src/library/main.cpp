@@ -46,8 +46,6 @@ extern char**environ;
 
 namespace libtas {
 
-static bool is_inited = false;
-
 void __attribute__((constructor)) init(void)
 {
     /* If LIBTAS_DELAY_INIT env variable is > 0, skip initialization and
@@ -57,7 +55,7 @@ void __attribute__((constructor)) init(void)
     if (delay_str && (delay_str[0] > '0')) {
         delay_str[0] -= 1;
         setenv("LIBTAS_DELAY_INIT", delay_str, 1);
-        debuglog(LCF_INFO, "Skipping libtas init");
+        debuglogstdio(LCF_INFO, "Skipping libtas init");
 
         /* Setting native state so that we interact as little as possible
          * with the process */
@@ -92,7 +90,7 @@ void __attribute__((constructor)) init(void)
     debuglogstdio(LCF_SOCKET, "Send pid to program: %d", mypid);
     /* If I replace with the line below, then wine+SuperMeatBoy crashes on
      * on startup... */
-    // debuglog(LCF_SOCKET, "Send pid to program: ", mypid);
+    // debuglogstdio(LCF_SOCKET, "Send pid to program: ", mypid);
     sendData(&mypid, sizeof(pid_t));
 
     /* Send interim commit hash if one */
@@ -115,20 +113,20 @@ void __attribute__((constructor)) init(void)
         int config_size;
         switch (message) {
             case MSGN_CONFIG_SIZE:
-                debuglog(LCF_SOCKET, "Receiving config size");
+                debuglogstdio(LCF_SOCKET, "Receiving config size");
                 receiveData(&config_size, sizeof(int));
                 if (config_size != sizeof(SharedConfig)) {
-                    debuglog(LCF_SOCKET | LCF_ERROR, "Shared config size mismatch between program and library!");                    
+                    debuglogstdio(LCF_SOCKET | LCF_ERROR, "Shared config size mismatch between program and library!");                    
                 }
                 break;
             case MSGN_CONFIG:
-                debuglog(LCF_SOCKET, "Receiving config");
+                debuglogstdio(LCF_SOCKET, "Receiving config");
                 receiveData(&shared_config, sizeof(SharedConfig));
                 break;
             case MSGN_DUMP_FILE:
-                debuglog(LCF_SOCKET, "Receiving dump filename");
+                debuglogstdio(LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
-                debuglog(LCF_SOCKET, "File ", AVEncoder::dumpfile);
+                debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
             case MSGN_BASE_SAVESTATE_PATH:
@@ -151,7 +149,7 @@ void __attribute__((constructor)) init(void)
                 SteamSetRemoteStorageFolder(steamremotestorage);
                 break;
             default:
-                debuglog(LCF_ERROR | LCF_SOCKET, "Unknown socket message ", message);
+                debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d", message);
                 exit(1);
         }
         message = receiveMessage();
@@ -191,7 +189,7 @@ void __attribute__((destructor)) term(void)
             sendMessage(MSGB_QUIT);
             closeSocket();
         }
-        debuglog(LCF_SOCKET, "Exiting.");
+        debuglogstdio(LCF_SOCKET, "Exiting.");
         ThreadManager::deallocateThreads();
     }
 }

@@ -34,7 +34,7 @@
 #include <forward_list>
 #include <string>
 
-#include "config.h"
+//#include "config.h"
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
@@ -259,7 +259,6 @@ private slots:
     void slotRecycleThreads(bool checked);
     void slotSteam(bool checked);
     void slotAsyncEvents(bool checked);
-    void slotCalibrateMouse();
     void slotAutoRestart(bool checked);
     void slotVariableFramerate(bool checked);
     void slotMouseMode(bool checked);

@@ -24,7 +24,10 @@
 #include "SaveFileList.h"
 #include "FileHandleList.h"
 #include "../GlobalState.h"
+
+#ifdef __linux__
 #include "URandom.h"
+#endif
 
 namespace libtas {
 
@@ -51,11 +54,13 @@ FILE *fopen (const char *filename, const char *modes)
 
     FILE* f = nullptr;
 
+#ifdef __linux__
     if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
         return urandom_create_file();
-    }
+    } else
+#endif
 
-    else if (strcmp(filename, "/proc/uptime") == 0) {
+    if (strcmp(filename, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -113,11 +118,13 @@ FILE *fopen64 (const char *filename, const char *modes)
 
     FILE* f = nullptr;
 
+#ifdef __linux__
     if ((strcmp(filename, "/dev/urandom") == 0) || (strcmp(filename, "/dev/random") == 0)) {
         return urandom_create_file();
-    }
+    } else
+#endif
 
-    else if (strcmp(filename, "/proc/uptime") == 0) {
+    if (strcmp(filename, "/proc/uptime") == 0) {
         if (SaveFileList::getSaveFileFd(filename) == 0) {
             /* Create a file with memory storage (reusing the savefile code),
              * and fill it with values from the initial time, so that, for
@@ -170,10 +177,12 @@ int fclose (FILE *stream)
 
     DEBUGLOGCALL(LCF_FILEIO);
 
+#ifdef __linux__
     /* Check for urandom */
     if (urandom_get_file() == stream) {
         return 0;
     }
+#endif
 
     /* Check if we must actually close the file */
     bool doClose = FileHandleList::closeFile(fileno(stream));
@@ -189,7 +198,7 @@ int fclose (FILE *stream)
     return 0;
 }
 
-// int fileno (FILE *stream) throw()
+// int fileno (FILE *stream) __THROW
 // {
 //     LINK_NAMESPACE_GLOBAL(fileno);
 //

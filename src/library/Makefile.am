@@ -14,6 +14,7 @@ libtas_so_SOURCES = \
     GameHacks.cpp \
     glibwrappers.cpp \
     global.cpp \
+    glxwrappers.cpp \
     GlobalState.cpp \
     hook.cpp \
     hookpatch.cpp \
@@ -54,7 +55,7 @@ libtas_so_SOURCES = \
     audio/sdl/sdlaudio.cpp \
     checkpoint/AltStack.cpp \
     checkpoint/Checkpoint.cpp \
-    checkpoint/ProcMapsArea.cpp \
+    checkpoint/MemArea.cpp \
     checkpoint/ProcSelfMaps.cpp \
     checkpoint/ReservedMemory.cpp \
     checkpoint/SaveState.cpp \

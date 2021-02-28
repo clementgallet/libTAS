@@ -22,37 +22,15 @@
 
 #include "global.h"
 #define GL_GLEXT_PROTOTYPES
+#ifdef __unix__
 #include <GL/gl.h>
-#include <GL/glx.h>
 #include <GL/glext.h>
-#include <GL/glxext.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
 
 namespace libtas {
-
-void checkMesa();
-
-OVERRIDE void(*glXGetProcAddress (const GLubyte *procName))();
-OVERRIDE __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName);
-OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
-
-/* Map the GLX context to the Display connection */
-OVERRIDE Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx );
-
-/* Swap buffers */
-OVERRIDE void glXSwapBuffers( Display *dpy, GLXDrawable drawable );
-
-/* Set the VSync value */
-OVERRIDE void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval);
-OVERRIDE int glXSwapIntervalSGI (int interval);
-OVERRIDE int glXSwapIntervalMESA (unsigned int interval);
-
-OVERRIDE int glXGetSwapIntervalMESA(void);
-
-/* Returns an attribute assoicated with a GLX drawable */
-OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
-
-OVERRIDE GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
-OVERRIDE void glXDestroyContext(Display * dpy,  GLXContext ctx);
 
 OVERRIDE const GLubyte* glGetString( GLenum name);
 
@@ -115,6 +93,82 @@ OVERRIDE void glEnable(GLenum cap);
 void myglEnable(GLenum cap);
 // OVERRIDE void glDisable(GLenum cap);
 // void myglDisable(GLenum cap);
+
+/* Declare myfunc functions */ 
+#define DECLARE_MY_FUNC(FUNC) \
+decltype(FUNC) my##FUNC;
+
+DECLARE_MY_FUNC(glClear)
+DECLARE_MY_FUNC(glBegin)
+DECLARE_MY_FUNC(glEnd)
+DECLARE_MY_FUNC(glVertex2d)
+DECLARE_MY_FUNC(glVertex2f)
+DECLARE_MY_FUNC(glVertex2i)
+DECLARE_MY_FUNC(glVertex2s)
+DECLARE_MY_FUNC(glVertex3d)
+DECLARE_MY_FUNC(glVertex3f)
+DECLARE_MY_FUNC(glVertex3i)
+DECLARE_MY_FUNC(glVertex3s)
+DECLARE_MY_FUNC(glVertex4d)
+DECLARE_MY_FUNC(glVertex4f)
+DECLARE_MY_FUNC(glVertex4i)
+DECLARE_MY_FUNC(glVertex4s)
+DECLARE_MY_FUNC(glVertex2dv)
+DECLARE_MY_FUNC(glVertex2fv)
+DECLARE_MY_FUNC(glVertex2iv)
+DECLARE_MY_FUNC(glVertex2sv)
+DECLARE_MY_FUNC(glVertex3dv)
+DECLARE_MY_FUNC(glVertex3fv)
+DECLARE_MY_FUNC(glVertex3iv)
+DECLARE_MY_FUNC(glVertex3sv)
+DECLARE_MY_FUNC(glVertex4dv)
+DECLARE_MY_FUNC(glVertex4fv)
+DECLARE_MY_FUNC(glVertex4iv)
+DECLARE_MY_FUNC(glVertex4sv)
+
+DECLARE_MY_FUNC(glDrawArrays)
+DECLARE_MY_FUNC(glDrawElements)
+DECLARE_MY_FUNC(glMultiDrawArrays)
+DECLARE_MY_FUNC(glMultiDrawElements)
+DECLARE_MY_FUNC(glDrawRangeElements)
+DECLARE_MY_FUNC(glDrawElementsBaseVertex)
+DECLARE_MY_FUNC(glDrawRangeElementsBaseVertex)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertex)
+DECLARE_MY_FUNC(glMultiDrawElementsBaseVertex)
+
+#ifdef GL_VERSION_4_0
+DECLARE_MY_FUNC(glDrawTransformFeedback)
+DECLARE_MY_FUNC(glDrawTransformFeedbackStream)
+#endif
+
+#ifdef GL_VERSION_4_2
+DECLARE_MY_FUNC(glDrawArraysInstancedBaseInstance)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseInstance)
+DECLARE_MY_FUNC(glDrawElementsInstancedBaseVertexBaseInstance)
+DECLARE_MY_FUNC(glDrawTransformFeedbackInstanced)
+DECLARE_MY_FUNC(glDrawTransformFeedbackStreamInstanced)
+#endif
+
+#ifdef GL_ARB_draw_instanced
+DECLARE_MY_FUNC(glDrawArraysInstancedARB)
+DECLARE_MY_FUNC(glDrawElementsInstancedARB)
+#endif
+
+#ifdef GL_EXT_draw_instanced
+DECLARE_MY_FUNC(glDrawArraysInstancedEXT)
+DECLARE_MY_FUNC(glDrawElementsInstancedEXT)
+#endif
+
+#ifdef GL_EXT_draw_range_elements
+DECLARE_MY_FUNC(glDrawRangeElementsEXT)
+#endif
+#ifdef GL_EXT_multi_draw_arrays
+DECLARE_MY_FUNC(glMultiDrawArraysEXT)
+DECLARE_MY_FUNC(glMultiDrawElementsEXT)
+#endif
+#ifdef GL_EXT_vertex_array
+DECLARE_MY_FUNC(glDrawArraysEXT)
+#endif
 
 }
 

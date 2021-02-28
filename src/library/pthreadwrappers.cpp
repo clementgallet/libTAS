@@ -26,6 +26,7 @@
 #include "tlswrappers.h"
 #include "backtrace.h"
 #include "hook.h"
+#include "timewrappers.h" // gettimeofday()
 
 #include <errno.h>
 #include <unistd.h>
@@ -97,7 +98,12 @@ static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
 
+    /* Crash on MacOS:
+     * libc++abi.dylib: terminating with uncaught exception of type std::__1::system_error: mutex lock failed: Invalid argument
+     */
+#ifdef __linux__
     std::unique_lock<std::mutex> lock(thread->mutex);
+#endif
 
     ThreadManager::initThreadFromChild(thread);
 
@@ -107,7 +113,7 @@ static void *pthread_start(void *arg)
             ThreadManager::update(thread);
             ThreadSync::decrementUninitializedThreadCount();
 
-            debuglog(LCF_THREAD, "Beginning of thread code ", thread->routine_id);
+            debuglogstdio(LCF_THREAD, "Beginning of thread code %p", thread->routine_id);
 
             /* We need to handle the case where the thread calls pthread_exit to
              * terminate. Because we recycle thread routines, we must continue
@@ -121,8 +127,9 @@ static void *pthread_start(void *arg)
             }
             catch (const ThreadExitException& e) {}
 
-            debuglog(LCF_THREAD, "End of thread code");
+            debuglogstdio(LCF_THREAD, "End of thread code");
 
+#ifdef __linux__
             /* Because we recycle this thread, we must unset all TLS values
              * and call destructors ourselves.  First, we unset the values
              * from the older, pthread_key_create()-based implementation
@@ -153,6 +160,8 @@ static void *pthread_start(void *arg)
              * to be recycled.  But one value is important:
              * we need to fix ThreadManager::current_thread .
              */
+#endif
+
             ThreadManager::setCurrentThread(thread);
 
             ThreadManager::threadExit(ret);
@@ -164,7 +173,11 @@ static void *pthread_start(void *arg)
             // }
         }
         else {
-             thread->cv.wait(lock);
+#ifdef __linux__
+            thread->cv.wait(lock);
+#else
+            NATIVECALL(usleep(1));
+#endif
         }
     } while (!thread->quit && shared_config.recycle_threads); /* Check if game is quitting */
 
@@ -172,14 +185,14 @@ static void *pthread_start(void *arg)
 }
 
 
-/* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) throw()
+/* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW
 {
     LINK_NAMESPACE(pthread_create, "pthread");
 
     if (GlobalState::isNative())
         return orig::pthread_create(tid_p, attr, start_routine, arg);
 
-    debuglog(LCF_THREAD, "Thread is created with routine ", (void*)start_routine);
+    debuglogstdio(LCF_THREAD, "Thread is created with routine %p", (void*)start_routine);
 
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::incrementUninitializedThreadCount();
@@ -194,17 +207,19 @@ static void *pthread_start(void *arg)
     int detachstate = PTHREAD_CREATE_JOINABLE; // default
     if (attr) {
         pthread_attr_getdetachstate(attr, &detachstate);
-        debuglog(LCF_THREAD, "Detached state is ", detachstate);
-        debuglog(LCF_THREAD, "Default state is ", PTHREAD_CREATE_JOINABLE);
+        if (detachstate != PTHREAD_CREATE_JOINABLE)
+            debuglogstdio(LCF_THREAD, "Detached state is ", detachstate);
     }
     thread->detached = (detachstate == PTHREAD_CREATE_DETACHED);
 
     int ret = 0;
     if (isRecycled) {
-        debuglog(LCF_THREAD, "Recycling thread ", thread->tid);
+        debuglogstdio(LCF_THREAD, "Recycling thread %d", thread->tid);
         *tid_p = thread->pthread_id;
+#ifdef __linux__
         /* Notify the thread that it has a function to execute */
         thread->cv.notify_all();
+#endif
     }
     else {
         /* Call our wrapper function */
@@ -228,7 +243,7 @@ static void *pthread_start(void *arg)
     if (GlobalState::isNative())
         return orig::pthread_exit(retval);
 
-    debuglog(LCF_THREAD, "Thread has exited.");
+    debuglogstdio(LCF_THREAD, "Thread has exited.");
 
     if (shared_config.recycle_threads) {
         /* We need to jump to code after the end of the original thread routine */
@@ -252,7 +267,7 @@ static void *pthread_start(void *arg)
 
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    debuglog(LCF_THREAD, "Joining thread id ", pthread_id, " tid " , ThreadManager::getThreadTid(pthread_id));
+    debuglogstdio(LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
@@ -282,7 +297,7 @@ static void *pthread_start(void *arg)
     return ret;
 }
 
-/* Override */ int pthread_detach (pthread_t pthread_id) throw()
+/* Override */ int pthread_detach (pthread_t pthread_id) __THROW
 {
     LINK_NAMESPACE(pthread_detach, "pthread");
     if (GlobalState::isNative()) {
@@ -292,7 +307,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    debuglog(LCF_THREAD, "Detaching thread id ", pthread_id, " tid ", ThreadManager::getThreadTid(pthread_id));
+    debuglogstdio(LCF_THREAD, "Detaching thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
@@ -315,7 +330,7 @@ static void *pthread_start(void *arg)
     return ret;
 }
 
-/* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) throw()
+/* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) __THROW
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
@@ -325,7 +340,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    debuglog(LCF_THREAD, "Try to join thread ", ThreadManager::getThreadTid(pthread_id));
+    debuglogstdio(LCF_THREAD, "Try to join thread %d", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
@@ -358,9 +373,9 @@ static void *pthread_start(void *arg)
     }
 
     if (ret == 0)
-        debuglog(LCF_THREAD, "Joining thread successfully.");
+        debuglogstdio(LCF_THREAD, "Joining thread successfully.");
     else
-        debuglog(LCF_THREAD, "Thread has not yet terminated.");
+        debuglogstdio(LCF_THREAD, "Thread has not yet terminated.");
     ThreadSync::wrapperExecutionLockUnlock();
     return EBUSY;
 }
@@ -375,7 +390,7 @@ static void *pthread_start(void *arg)
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    debuglog(LCF_THREAD | LCF_TODO, "Try to join thread in ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000," ms.");
+    debuglogstdio(LCF_THREAD | LCF_TODO, "Try to join thread in %d.%010d sec", abstime->tv_sec, abstime->tv_nsec);
 
     if (abstime->tv_sec < 0 || abstime->tv_nsec >= 1000000000) {
         ThreadSync::wrapperExecutionLockUnlock();
@@ -417,9 +432,9 @@ static void *pthread_start(void *arg)
     }
 
     if (ret == 0)
-        debuglog(LCF_THREAD, "Joining thread successfully.");
+        debuglogstdio(LCF_THREAD, "Joining thread successfully.");
     else
-        debuglog(LCF_THREAD, "Call timed out before thread terminated.");
+        debuglogstdio(LCF_THREAD, "Call timed out before thread terminated.");
 
     ThreadSync::wrapperExecutionLockUnlock();
     return ETIMEDOUT;
@@ -430,13 +445,13 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return condClocks;
 }
 
-/* Override */ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) throw()
+/* Override */ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *cond_attr) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_init, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
         return orig::pthread_cond_init(cond, cond_attr);
 
-    debuglog(LCF_WAIT, __func__, " call with cond ", static_cast<void*>(cond));
+    debuglogstdio(LCF_WAIT, "%s call with cond %p", __func__, static_cast<void*>(cond));
 
     /* Store the clock if one is set for `pthread_cond_timedwait()` */
     if (cond_attr) {        
@@ -461,7 +476,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         ThreadSync::detSignal(false);
     }
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex));
+    debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p", __func__, static_cast<void*>(cond), static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
 
@@ -471,8 +486,14 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_timedwait(cond, mutex, abstime);
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond), " and mutex ", static_cast<void*>(mutex), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
+    debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p and timeout %d.%010d sec", __func__, static_cast<void*>(cond), static_cast<void*>(mutex), abstime->tv_sec, abstime->tv_nsec);
 
+    /* Convert the abstime variable because pthread_cond_timedwait() is using
+     * the real system time. */
+    struct timespec new_abstime = *abstime;
+    TimeHolder abs_timeout = *abstime;
+    TimeHolder real_time;
+#ifdef __unix__
     /* Get clock_id of cond */
     clockid_t clock_id = CLOCK_REALTIME;
     const std::map<pthread_cond_t*, clockid_t>& condClocks = getCondClock();
@@ -481,29 +502,34 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (it != condClocks.end())
         clock_id = it->second;
 
-    /* Convert the abstime variable because pthread_cond_timedwait() is using
-     * the real system time. */
-    struct timespec new_abstime = *abstime;
-    TimeHolder abs_timeout = *abstime;
-    TimeHolder real_time;
     NATIVECALL(clock_gettime(clock_id, &real_time));
+#elif defined(__APPLE__) && defined(__MACH__)
+    /* On MacOS, the reference time is based on gettimeofday(). */
+    timeval tv;
+    NATIVECALL(gettimeofday(&tv, nullptr));
+    real_time.tv_sec = tv.tv_sec;
+    real_time.tv_nsec = tv.tv_usec * 1000;
+#endif
+
     TimeHolder rel_timeout = abs_timeout - real_time;
     /* We presume that the game won't call pthread_cond_timedwait() with
-     * a negative time, or more than 10 seconds.
-     */
+     * a negative time, or more than 10 seconds. */
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
         TimeHolder fake_time = detTimer.getTicks();
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
-        debuglog(LCF_WAIT, " Rel time was ", 1000*new_rel_timeout.tv_sec + new_rel_timeout.tv_nsec/1000000, " ms.");
-        debuglog(LCF_WAIT, " New abs time is ", new_abstime.tv_sec, ".", new_abstime.tv_nsec/1000000, " s");
+        debuglogstdio(LCF_WAIT, " Rel time was %d.%010d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
+        debuglogstdio(LCF_WAIT, " New abs time is %d.%010d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
     /* If not main thread, do not change the behavior */
-    if (!ThreadManager::isMainThread())
-        return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
+    if (!ThreadManager::isMainThread()) {
+        int ret = orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
+        debuglogstdio(LCF_WAIT, "   ret is %d ", ret);
+        return ret;
+    }
 
     if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
@@ -531,7 +557,14 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait again for 0.1 sec, arbitrary */
+#ifdef __unix__
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
+#elif defined(__APPLE__) && defined(__MACH__)
+        timeval tv;
+        NATIVECALL(gettimeofday(&tv, nullptr));
+        real_time.tv_sec = tv.tv_sec;
+        real_time.tv_nsec = tv.tv_usec * 1000;
+#endif
         TimeHolder delta_time;
         delta_time.tv_sec = 0;
         delta_time.tv_nsec = 100*1000*1000;
@@ -549,23 +582,23 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::pthread_cond_wait(cond, mutex);
 }
 
-/* Override */ int pthread_cond_signal(pthread_cond_t *cond) throw()
+/* Override */ int pthread_cond_signal(pthread_cond_t *cond) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_signal, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
         return orig::pthread_cond_signal(cond);
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
     return orig::pthread_cond_signal(cond);
 }
 
-/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) throw()
+/* Override */ int pthread_cond_broadcast(pthread_cond_t *cond) __THROW
 {
     LINK_NAMESPACE_VERSION(pthread_cond_broadcast, "pthread", "GLIBC_2.3.2");
     if (GlobalState::isNative())
         return orig::pthread_cond_broadcast(cond);
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with cond ", static_cast<void*>(cond));
+    debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
     return orig::pthread_cond_broadcast(cond);
 }
 
@@ -586,7 +619,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 /* Override */ int pthread_cancel (pthread_t pthread_id)
 {
     LINK_NAMESPACE(pthread_cancel, "pthread");
-    debuglog(LCF_THREAD | LCF_TODO, "Cancel thread ", ThreadManager::getThreadTid(pthread_id));
+    debuglogstdio(LCF_THREAD | LCF_TODO, "Cancel thread %d", ThreadManager::getThreadTid(pthread_id));
     return orig::pthread_cancel(pthread_id);
 }
 
@@ -613,7 +646,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_timedwait(sem, abstime);
 
-    debuglog(LCF_WAIT | LCF_TODO, __func__, " call with sem ", static_cast<void*>(sem), " and timeout ", 1000*abstime->tv_sec + abstime->tv_nsec/1000000, " ms.");
+    debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%010d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
 
     /* Convert the abstime variable because sem_timedwait() is using
      * the real system time. */
@@ -631,14 +664,14 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
-        debuglog(LCF_WAIT, " Rel time was ", 1000*new_rel_timeout.tv_sec + new_rel_timeout.tv_nsec/1000000, " ms.");
-        debuglog(LCF_WAIT, " New abs time is ", new_abstime.tv_sec, ".", new_abstime.tv_nsec/1000000, " s");
+        debuglogstdio(LCF_WAIT, " Rel time was %d.%010d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
+        debuglogstdio(LCF_WAIT, " New abs time is %d.%010d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
     return orig::sem_timedwait(sem, &new_abstime);
 }
 
-/* Override */ int sem_trywait (sem_t *sem) throw()
+/* Override */ int sem_trywait (sem_t *sem) __THROW
 {
     LINK_NAMESPACE(sem_trywait, "pthread");
     if (GlobalState::isNative())
@@ -648,20 +681,20 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::sem_trywait(sem);
 }
 
-int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) throw()
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW
 {
     LINK_NAMESPACE(pthread_attr_setstack, "pthread");
     if (GlobalState::isNative())
         return orig::pthread_attr_setstack(attr, stackaddr, stacksize);
 
-    debuglog(LCF_THREAD, __func__, " called with addr ", stackaddr, " and size ", stacksize);
+    debuglogstdio(LCF_THREAD, "%s called with addr %p and size %d", __func__, stackaddr, stacksize);
     // int ret = orig::pthread_attr_setstack(attr, stackaddr, stacksize);
-    // debuglog(LCF_THREAD, "  returns ", ret);
+    // debuglogstdio(LCF_THREAD, "  returns %d", ret);
     // return ret;
     return 0;
 }
 
-int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) throw()
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW
 {
     LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
     debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
@@ -670,13 +703,23 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) thro
     return ret;
 }
 
-int pthread_setname_np (pthread_t target_thread, const char *name) throw()
+#ifdef __unix__
+int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
 {
     LINK_NAMESPACE(pthread_setname_np, "pthread");
     if (GlobalState::isNative())
         return orig::pthread_setname_np(target_thread, name);
+    
+    debuglogstdio(LCF_THREAD, "%s called with target_thread %p and name %s", __func__, target_thread, name);
+#elif defined(__APPLE__) && defined(__MACH__)
+int pthread_setname_np (const char *name)
+{
+    LINK_NAMESPACE(pthread_setname_np, "pthread");
+    if (GlobalState::isNative())
+        return orig::pthread_setname_np(name);
 
-    debuglog(LCF_THREAD, __func__, " called with target_thread ", target_thread, " and name ", name);
+    debuglogstdio(LCF_THREAD, "%s called with name %s", __func__, name);
+#endif
 
     /* Check if the thread is one of the llvm ones, and make it native and disable log */
     if (strncmp(name, "llvmpipe-", 9) == 0) {
@@ -695,7 +738,11 @@ int pthread_setname_np (pthread_t target_thread, const char *name) throw()
         }
     }
 
+#ifdef __unix__
     return orig::pthread_setname_np(target_thread, name);
+#elif defined(__APPLE__) && defined(__MACH__)
+    return orig::pthread_setname_np(name);
+#endif
 }
 
 }

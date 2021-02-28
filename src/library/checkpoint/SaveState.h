@@ -22,7 +22,7 @@
 #ifndef LIBTAS_SAVESTATE_H
 #define LIBTAS_SAVESTATE_H
 
-#include "ProcMapsArea.h"
+#include "MemArea.h"
 #include "StateHeader.h"
 
 namespace libtas {

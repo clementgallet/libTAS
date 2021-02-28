@@ -22,9 +22,9 @@
 #include <QtGui/QKeyEvent>
 
 #include "KeyPressedDialog.h"
-#include "../KeyMapping.h"
+#include "qtutils.h"
 
-KeyPressedDialog::KeyPressedDialog(QWidget *parent) : QDialog(parent) {
+KeyPressedDialog::KeyPressedDialog(Context* c, QWidget *parent) : QDialog(parent), context(c) {
 
     setWindowTitle("");
     setFocusPolicy(Qt::ClickFocus);
@@ -47,23 +47,12 @@ void KeyPressedDialog::keyPressEvent(QKeyEvent * e)
          * includes modifier keys
          */
 
-        if (is_modifier(e->nativeVirtualKey())) {
+        if (context->config.km->is_modifier(e->nativeVirtualKey())) {
             return QDialog::keyPressEvent(e);
         }
 
         /* Build modifiers */
-        if (e->modifiers() & Qt::ShiftModifier) {
-            modifiers |= XK_Shift_L_Flag;
-        }
-        if (e->modifiers() & Qt::ControlModifier) {
-            modifiers |= XK_Control_L_Flag;
-        }
-        if (e->modifiers() & Qt::AltModifier) {
-            modifiers |= XK_Alt_L_Flag;
-        }
-        if (e->modifiers() & Qt::MetaModifier) {
-            modifiers |= XK_Meta_L_Flag;
-        }
+        modifiers = convertQtModifiers(e->modifiers());
     }
 
     done(modifiers | e->nativeVirtualKey());

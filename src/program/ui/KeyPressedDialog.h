@@ -21,17 +21,21 @@
 #define LIBTAS_KEYPRESSEDDIALOG_H_INCLUDED
 
 #include <QtWidgets/QDialog>
+#include "../Context.h"
 
 /* Very small QDialog class to catch a pressed key (or key + modifiers) */
 class KeyPressedDialog : public QDialog {
     Q_OBJECT
 public:
-    KeyPressedDialog(QWidget *parent = Q_NULLPTR);
+    KeyPressedDialog(Context *c, QWidget *parent = Q_NULLPTR);
 
     bool withModifiers;
 
 protected:
     void keyPressEvent(QKeyEvent * e);
+
+private:
+    Context *context;
 
 };
 

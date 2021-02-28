@@ -26,8 +26,9 @@
 #include <list>
 
 #include "../shared/SharedConfig.h"
-#include "KeyMapping.h"
 
+/* Forward declaration */
+class KeyMapping;
 
 /* Structure holding program configuration that is saved in a file.
  * We use QtSettings class for that, which basically stores preferences
@@ -44,7 +45,7 @@ public:
     bool sc_modified = false;
 
     /* key mapping */
-    KeyMapping km;
+    KeyMapping* km;
 
     /* Arguments passed to the game */
     std::string gameargs;

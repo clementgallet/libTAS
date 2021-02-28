@@ -24,8 +24,14 @@
 #include "SaveStateManager.h"
 #include "AltStack.h"
 #include "../logging.h"
-#include "ProcMapsArea.h"
+#include "MemArea.h"
+
+#ifdef __unix__
 #include "ProcSelfMaps.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "MachVmMaps.h"
+#endif
+
 #include "StateHeader.h"
 #include "../Utils.h"
 #include <fcntl.h>
@@ -35,18 +41,24 @@
 #include <cstring>
 #include <csignal>
 #include <stdint.h>
-#include <X11/Xlibint.h>
-#include <X11/Xlib-xcb.h>
 #include <sys/statvfs.h>
-#include <sys/syscall.h>
 #include "errno.h"
-#include "../../external/xcbint.h"
 #include "../renderhud/RenderHUD.h"
 #include "ReservedMemory.h"
 #include "SaveState.h"
 #include "../../external/lz4.h"
 #include "../../shared/sockethelpers.h"
+
+#ifdef __unix__
+#include <X11/Xlibint.h>
+#include <X11/Xlib-xcb.h>
+#include "../../external/xcbint.h"
 #include "../xlib/xdisplay.h" // x11::gameDisplays
+#endif
+
+#ifdef __linux__
+#include <sys/syscall.h>
+#endif
 
 #define ONE_MB 1024 * 1024
 
@@ -157,17 +169,21 @@ int Checkpoint::checkCheckpoint()
     /* Get an estimation of the savestate space */
     uint64_t savestate_size = 0;
 
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Read the first current area */
     Area area;
-    bool not_eof = procSelfMaps.getNextArea(&area);
+    bool not_eof = memMapLayout.getNextArea(&area);
 
     while (not_eof) {
         if (!skipArea(&area)) {
             savestate_size += area.size;
         }
-        not_eof = procSelfMaps.getNextArea(&area);
+        not_eof = memMapLayout.getNextArea(&area);
     }
 
     /* Get the savestate directory */
@@ -259,6 +275,8 @@ int Checkpoint::checkRestore()
 
 void Checkpoint::handler(int signum)
 {
+
+#ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
      */
@@ -270,6 +288,7 @@ void Checkpoint::handler(int signum)
     }
 
     if (SaveStateManager::isLoading()) {
+#ifdef __unix__
         /* Before reading from the savestate, we must keep some values from
          * the connection to the X server, because they are used for checking
          * consistency of requests. We can store them in this (alternate) stack
@@ -294,6 +313,7 @@ void Checkpoint::handler(int signum)
                 memcpy(&xcb_conn[i], cur_xcb_conn, sizeof(xcb_connection_t));
             }
         }
+#endif
 
         TimeHolder old_time, new_time, delta_time;
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
@@ -305,6 +325,7 @@ void Checkpoint::handler(int signum)
         /* Loading state was overwritten, putting the right value again */
         SaveStateManager::setLoading();
 
+#ifdef __unix__
         /* Restoring the display values */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
@@ -321,6 +342,7 @@ void Checkpoint::handler(int signum)
                 memcpy(cur_xcb_conn, &xcb_conn[i], sizeof(xcb_connection_t));
             }
         }
+#endif
 
         /* We must restore the current stack frame from the savestate */
         AltStack::restoreStackFrame();
@@ -428,10 +450,14 @@ static void readAllAreas()
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Read the first current area */
-    bool not_eof = procSelfMaps.getNextArea(&current_area);
+    bool not_eof = memMapLayout.getNextArea(&current_area);
 
     /* Reallocate areas to match the savestate areas. Nothing is written yet */
     while ((saved_area.addr != nullptr) || not_eof) {
@@ -441,11 +467,11 @@ static void readAllAreas()
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
             saved_state.nextArea();
-            not_eof = procSelfMaps.getNextArea(&current_area);
+            not_eof = memMapLayout.getNextArea(&current_area);
         }
         if (cmp > 0) {
             /* Saved area is greater, advance current area */
-            not_eof = procSelfMaps.getNextArea(&current_area);
+            not_eof = memMapLayout.getNextArea(&current_area);
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
@@ -507,6 +533,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
             /* Special case for stacks, always try to resize the Area */
             if (strstr(saved_area->name, "[stack")) {
+#ifdef __linux__
                 debuglogstdio(LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
                 void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
 
@@ -519,7 +546,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
                     return 0;
                 }
-
+#else
+                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "stack size changed but mremap is not available");
+#endif
                 copy_size = saved_area->size;
             }
 
@@ -527,7 +556,11 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             if (strcmp(saved_area->name, "[heap]") == 0) {
                 debuglogstdio(LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
 
+#ifdef __linux__
                 int ret = brk(saved_area->endAddr);
+#else
+                intptr_t ret = reinterpret_cast<intptr_t>(brk(saved_area->endAddr));
+#endif
 
                 if (ret < 0) {
                     debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "brk failed");
@@ -784,6 +817,7 @@ static void writeAllAreas(bool base)
     char temppagemappath[1024];
     char temppagespath[1024];
 
+#ifdef __linux__
     if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
         if (!(shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
@@ -827,7 +861,9 @@ static void writeAllAreas(bool base)
             pfd = syscall(SYS_memfd_create, "pagesstate", 0);
         }
     }
-    else {
+    else
+#endif
+    {
         if (!(shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
             debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
@@ -896,15 +932,19 @@ static void writeAllAreas(bool base)
     /* Load the parent savestate if any. */
     SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
 
-    /* Parse the content of /proc/self/maps into memory.
+    /* Parse the memory mapping layout.
      * We don't allocate memory here, we are using our special allocated
      * memory section that won't be saved in the savestate.
      */
-    ProcSelfMaps procSelfMaps;
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
 
     /* Remove write and add read flags from all memory areas we will be dumping */
     Area area;
-    while (procSelfMaps.getNextArea(&area)) {
+    while (memMapLayout.getNextArea(&area)) {
         if (!skipArea(&area)) {
             //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
             MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
@@ -913,8 +953,8 @@ static void writeAllAreas(bool base)
     }
 
     /* Dump all memory areas */
-    procSelfMaps.reset();
-    while (procSelfMaps.getNextArea(&area)) {
+    memMapLayout.reset();
+    while (memMapLayout.getNextArea(&area)) {
         savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state, base);
     }
 
@@ -930,8 +970,8 @@ static void writeAllAreas(bool base)
     }
 
     /* Recover area protection and advise */
-    procSelfMaps.reset();
-    while (procSelfMaps.getNextArea(&area)) {
+    memMapLayout.reset();
+    while (memMapLayout.getNextArea(&area)) {
         if (!skipArea(&area)) {
             MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_NORMAL) == 0);

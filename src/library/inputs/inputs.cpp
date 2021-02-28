@@ -29,8 +29,6 @@ AllInputs old_game_ai;
 AllInputs game_unclipped_ai;
 AllInputs old_game_unclipped_ai;
 
-Window pointer_grab_window = None;
-
 bool pointer_clipping = false;
 int clipping_x, clipping_y, clipping_w, clipping_h;
 

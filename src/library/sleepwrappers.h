@@ -22,9 +22,8 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <sys/signal.h>
+//#include <sys/signal.h>
 #include <SDL2/SDL.h>
-#include <sys/epoll.h>
 #include "global.h"
 
 namespace libtas {
@@ -52,7 +51,7 @@ OVERRIDE int clock_nanosleep (clockid_t clock_id, int flags,
  */
 OVERRIDE void SDL_Delay(Uint32 sleep);
 
-OVERRIDE int sched_yield(void) throw();
+OVERRIDE int sched_yield(void) __THROW;
 
 }
 

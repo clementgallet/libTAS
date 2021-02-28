@@ -20,10 +20,12 @@
 #include "dlhook.h"
 #include "logging.h"
 #include "hook.h"
+#ifdef __unix__
 #include "wine/winehook.h"
 #include "wine/wined3d.h"
 #include "wine/user32.h"
 #include "wine/kernel32.h"
+#endif
 #include <cstring>
 #include <set>
 #include "backtrace.h"
@@ -65,14 +67,18 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
-__attribute__((noipa)) void *dlopen(const char *file, int mode) throw() {
+__attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     const void *const callerAddr = __builtin_extract_return_addr(__builtin_return_address(0));
 
     if (!orig::dlopen) {
+#ifdef __unix__
         /* To access the real dlopen function, we use the fact that dlsym
-         * calls internally _dl_sym.
-         */
+         * calls internally _dl_sym. */
         orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
+#elif defined(__APPLE__) && defined(__MACH__)
+        /* Using the convenient function to locate a dyld function pointer */
+        _dyld_func_lookup("__dyld_dlopen", reinterpret_cast<void**>(&orig::dlopen));
+#endif
     }
 
     if (GlobalState::isNative()) {
@@ -176,6 +182,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) throw() {
         /* Hook wine kernel32 functions */
         hook_kernel32();
     }
+#endif
 
     return result;
 }
@@ -200,14 +207,19 @@ void *find_sym(const char *name, bool original) {
     return addr;
 }
 
-void *dlsym(void *handle, const char *name) throw() {
+void *dlsym(void *handle, const char *name) __THROW {
     if (!orig::dlsym) {
+#ifdef __unix__
         /* Again, we use the internal `_dl_sym` function to access to the
          * location of the real `dlsym` function. This may seems weird, and is
          * also implementation-dependant, but it is simple. `_dl_sym` does not
-         * have error-checking so we only use it here.
-         */
+         * have error-checking so we only use it here. */
         orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
+#elif defined(__APPLE__) && defined(__MACH__)
+        /* Using the convenient function to locate a dyld function pointer */
+        _dyld_func_lookup("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
+#endif
+
     }
 
     /* dlsym() does some work besides the actual function, and that may call
@@ -218,14 +230,19 @@ void *dlsym(void *handle, const char *name) throw() {
      */
     static int recurs_count = 0;
     static bool safe = false;
-
+    
     safe = (recurs_count > 0);
     recurs_count++;
-
+    
     if (GlobalState::isNative()) {
         void* ret;
         if (safe) {
-            ret = _dl_sym(handle, name, reinterpret_cast<void*>(dlsym));            
+#ifdef __unix__
+            ret = _dl_sym(handle, name, reinterpret_cast<void*>(dlsym));
+#elif defined(__APPLE__) && defined(__MACH__)
+            /* TODO */
+            ret = orig::dlsym(handle, name);
+#endif
         }
         else {
             ret = orig::dlsym(handle, name);            
@@ -296,10 +313,12 @@ void *dlsym(void *handle, const char *name) throw() {
         addr = orig::dlsym(handle, name);
     }
 
+#ifdef __linux__
     if (0 == strcmp(name, "__wine_process_init")) {
         /* Hook wine LdrGetProcedureAddress function */
         hook_ntdll();
     }
+#endif
 
     recurs_count--;
     return addr;

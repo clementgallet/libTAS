@@ -48,7 +48,7 @@ DEFINE_ORIG_POINTER(pthread_sigqueue)
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;
 
-/* Override */ sighandler_t signal (int sig, sighandler_t handler) throw()
+/* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(signal);
@@ -58,8 +58,7 @@ static thread_local int origUsrMaskThread = 0;
      */
     ThreadSync::wrapperExecutionLockLock();
 
-    debuglog(LCF_SIGNAL, "    Setting handler ", reinterpret_cast<void*>(handler),
-        " for signal ", strsignal(sig));
+    debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
 
     if ((sig == SaveStateManager::sigSuspend()) || (sig == SaveStateManager::sigCheckpoint())) {
         return SIG_IGN;
@@ -71,8 +70,8 @@ static thread_local int origUsrMaskThread = 0;
 
     return ret;
 }
-
-/* Override */ int sigblock (int mask) throw()
+    
+/* Override */ int sigblock (int mask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
@@ -91,7 +90,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int sigsetmask (int mask) throw()
+/* Override */ int sigsetmask (int mask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
@@ -111,7 +110,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int siggetmask (void) throw()
+/* Override */ int siggetmask (void) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(siggetmask);
@@ -125,7 +124,7 @@ static thread_local int origUsrMaskThread = 0;
     return oldmask;
 }
 
-/* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) throw()
+/* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigprocmask);
@@ -183,7 +182,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int sigaction (int sig, const struct sigaction *act,
-    struct sigaction *oact) throw()
+    struct sigaction *oact) __THROW
 {
     LINK_NAMESPACE_GLOBAL(sigaction);
 
@@ -199,16 +198,14 @@ static thread_local int origUsrMaskThread = 0;
     ThreadSync::wrapperExecutionLockLock();
 
     if (act != nullptr) {
-        debuglog(LCF_SIGNAL, "    Setting handler ", (act->sa_flags & SA_SIGINFO)?
+        debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %d (%s)", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
-                reinterpret_cast<void*>(act->sa_handler),
-            " for signal ", sig, " (", strsignal(sig), ")");
+                reinterpret_cast<void*>(act->sa_handler), sig, strsignal(sig));
     }
     else if (oact != nullptr) {
-        debuglog(LCF_SIGNAL, "    Getting handler ", (oact->sa_flags & SA_SIGINFO)?
+        debuglogstdio(LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
             reinterpret_cast<void*>(oact->sa_sigaction):
-            reinterpret_cast<void*>(oact->sa_handler),
-            " for signal ", sig, " (", strsignal(sig), ")");
+            reinterpret_cast<void*>(oact->sa_handler), sig, strsignal(sig));
     }
 
     int ret = orig::sigaction(sig, act, oact);
@@ -218,7 +215,7 @@ static thread_local int origUsrMaskThread = 0;
     return ret;
 }
 
-/* Override */ int sigpending (sigset_t *set) throw()
+/* Override */ int sigpending (sigset_t *set) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE_GLOBAL(sigpending);
@@ -247,7 +244,7 @@ static thread_local int origUsrMaskThread = 0;
     return orig::sigtimedwait(set, info, timeout);
 }
 
-/* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) throw()
+/* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) __THROW
 {
     LINK_NAMESPACE_GLOBAL(sigaltstack);
 
@@ -258,10 +255,10 @@ static thread_local int origUsrMaskThread = 0;
     DEBUGLOGCALL(LCF_SIGNAL);
 
     if (ss) {
-        debuglog(LCF_SIGNAL, "    Setting altstack with base address ", ss->ss_sp, " and size ", ss->ss_size);
+        debuglogstdio(LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
     }
     else if (oss) {
-        debuglog(LCF_SIGNAL, "    Getting altstack with base address ", oss->ss_sp, " and size ", oss->ss_size);
+        debuglogstdio(LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
     }
 
     int ret = orig::sigaltstack(ss, oss);
@@ -270,7 +267,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
-    sigset_t *oldmask) throw()
+    sigset_t *oldmask) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigmask);
@@ -318,10 +315,21 @@ static thread_local int origUsrMaskThread = 0;
 
     if (ret != -1) {
         if (oldmask) {
+#if defined(__APPLE__) && defined(__MACH__)
+            if (!is_inited) {
+                if (origUsrMaskProcess & SaveStateManager::sigSuspend())
+                    sigaddset(oldmask, SaveStateManager::sigSuspend());
+                if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
+                    sigaddset(oldmask, SaveStateManager::sigCheckpoint());
+            } else {
+#endif
             if (origUsrMaskThread & SaveStateManager::sigSuspend())
                 sigaddset(oldmask, SaveStateManager::sigSuspend());
             if (origUsrMaskThread & SaveStateManager::sigCheckpoint())
                 sigaddset(oldmask, SaveStateManager::sigCheckpoint());
+#if defined(__APPLE__) && defined(__MACH__)
+            }
+#endif
         }
 
         if (newmask) {
@@ -329,26 +337,39 @@ static thread_local int origUsrMaskThread = 0;
             if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
             if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
 
+#if defined(__APPLE__) && defined(__MACH__)
+            if (!is_inited) {
+                if (how == SIG_BLOCK)
+                    origUsrMaskProcess |= mask;
+                if (how == SIG_UNBLOCK)
+                    origUsrMaskProcess &= ~mask;
+                if (how == SIG_SETMASK)
+                    origUsrMaskProcess = mask;
+            } else {
+#endif
             if (how == SIG_BLOCK)
                 origUsrMaskThread |= mask;
             if (how == SIG_UNBLOCK)
                 origUsrMaskThread &= ~mask;
             if (how == SIG_SETMASK)
                 origUsrMaskThread = mask;
+#if defined(__APPLE__) && defined(__MACH__)
+            }
+#endif
         }
     }
 
     return ret;
 }
 
-/* Override */ int pthread_kill (pthread_t threadid, int signo) throw()
+/* Override */ int pthread_kill (pthread_t threadid, int signo) __THROW
 {
     LINK_NAMESPACE_GLOBAL(pthread_kill);
 
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
 
-    debuglog(LCF_SIGNAL | LCF_THREAD, __func__, " called with thread ", threadid, " and signo ", signo);
+    debuglogstdio(LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -363,7 +384,7 @@ static thread_local int origUsrMaskThread = 0;
 }
 
 /* Override */ int pthread_sigqueue (pthread_t threadid, int signo,
-                 const union sigval value) throw()
+                 const union sigval value) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigqueue);

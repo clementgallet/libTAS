@@ -23,6 +23,7 @@ namespace libtas {
 
 SharedConfig shared_config;
 GameInfo game_info;
+volatile bool is_inited = false;
 volatile bool is_exiting = false;
 volatile bool is_fork = false;
 bool skipping_draw = false;

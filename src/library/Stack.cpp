@@ -20,7 +20,7 @@
 #include "Stack.h"
 #include "logging.h"
 #include "checkpoint/ProcSelfMaps.h"
-#include "checkpoint/ProcMapsArea.h"
+#include "checkpoint/MemArea.h"
 #include <sys/resource.h>
 #include <alloca.h>
 
@@ -44,6 +44,7 @@ void Stack::grow()
       stackSize = rlim.rlim_cur;
     }
 
+#ifdef __unix__
     /* Find the current stack area */
     ProcSelfMaps procSelfMaps;
     Area stackArea;
@@ -88,6 +89,7 @@ void Stack::grow()
         // debuglogstdio(LCF_INFO, "New stack size is %d", stackArea.size);
         return;
     }
+#endif
 
 }
 

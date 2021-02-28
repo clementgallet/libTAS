@@ -36,6 +36,7 @@
 #include "../../shared/version.h"
 #include "../lua/Main.h"
 #include "../utils.h"
+#include "../GameEvents.h"
 
 #include <iostream>
 #include <future>
@@ -67,8 +68,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
+    connect(gameLoop->gameEvents, &GameEvents::alertToShow, this, &MainWindow::alertDialog);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
+    connect(gameLoop->gameEvents, &GameEvents::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
     connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer);
+    connect(gameLoop->gameEvents, &GameEvents::askToShow, this, &MainWindow::alertOffer);
     connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate);
 
     /* Create other windows */
@@ -87,14 +91,16 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     timeTraceWindow = new TimeTraceWindow(c, this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
+    connect(gameLoop->gameEvents, &GameEvents::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop, &GameLoop::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
+    connect(gameLoop->gameEvents, &GameEvents::inputsChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endModifyInputs);
     connect(gameLoop, &GameLoop::inputsToBeAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginAddInputs);
     connect(gameLoop, &GameLoop::inputsAdded, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endAddInputs);
     connect(gameLoop, &GameLoop::inputsToBeEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginEditInputs);
     connect(gameLoop, &GameLoop::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
-    connect(gameLoop, &GameLoop::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
+    connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
     connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
 
     /* Menu */
@@ -836,9 +842,6 @@ void MainWindow::createMenus()
     disabledWidgetsOnStart.append(joystickMenu);
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
-
-    action = inputMenu->addAction(tr("Recalibrate mouse position"), this, &MainWindow::slotCalibrateMouse);
-    action->setToolTip("If there is an offset between the system cursor and the game cursor, select this while paused, then click on the game cursor to register an offset. This does not affect movie sync");
 }
 
 void MainWindow::updateStatus()
@@ -1436,13 +1439,6 @@ void MainWindow::slotPause(bool checked)
     else {
         /* Else, let the game thread set the value */
         context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
-    }
-}
-
-void MainWindow::slotCalibrateMouse()
-{
-    if (context->status == Context::ACTIVE) {
-        context->hotkey_pressed_queue.push(HOTKEY_CALIBRATE_MOUSE);
     }
 }
 

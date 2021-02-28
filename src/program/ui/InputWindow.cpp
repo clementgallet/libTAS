@@ -31,10 +31,10 @@ InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context
 {
     setWindowTitle("Input mapping");
 
-    keyDialog = new KeyPressedDialog(this);
+    keyDialog = new KeyPressedDialog(c, this);
 
     /* Tables */
-    hotkeyTable = new QTableWidget(context->config.km.hotkey_list.size(), 2, this);
+    hotkeyTable = new QTableWidget(context->config.km->hotkey_list.size(), 2, this);
     QStringList hotkeyHeader;
     hotkeyHeader << "Hotkey" << "Mapping";
     hotkeyTable->setHorizontalHeaderLabels(hotkeyHeader);
@@ -50,7 +50,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context
     connect(hotkeyTable, &QTableWidget::cellDoubleClicked, this, &InputWindow::slotAssign);
 
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-        inputTable[i] = new QTableWidget(context->config.km.input_list[i].size(), 2, Q_NULLPTR);
+        inputTable[i] = new QTableWidget(context->config.km->input_list[i].size(), 2, Q_NULLPTR);
         QStringList inputHeader;
         inputHeader << "Hotkey" << "Mapping";
         inputTable[i]->setHorizontalHeaderLabels(inputHeader);
@@ -75,7 +75,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context
 
     /* Fill hotkey list */
     int r = 0;
-    for (auto iter : context->config.km.hotkey_list) {
+    for (auto iter : context->config.km->hotkey_list) {
         hotkeyTable->setItem(r, 0, new QTableWidgetItem(iter.description.c_str()));
         hotkeyTable->setItem(r++, 1, new QTableWidgetItem());
     }
@@ -83,7 +83,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context
     /* Fill input list */
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
         r = 0;
-        for (auto iter : context->config.km.input_list[i]) {
+        for (auto iter : context->config.km->input_list[i]) {
             inputTable[i]->setItem(r, 0, new QTableWidgetItem(iter.description.c_str()));
             inputTable[i]->setItem(r++, 1, new QTableWidgetItem());
         }
@@ -130,20 +130,11 @@ QSize InputWindow::sizeHint() const
 void InputWindow::updateHotkeyRow(int row)
 {
     /* Check if a key is mapped to this hotkey */
-    for (auto itermap : context->config.km.hotkey_mapping) {
-        if (itermap.second == context->config.km.hotkey_list[row]) {
+    for (auto itermap : context->config.km->hotkey_mapping) {
+        if (itermap.second == context->config.km->hotkey_list[row]) {
             /* Build the key string with modifiers */
-            QString str;
-            xcb_keysym_t ks = itermap.first;
-            for (ModifierKey modifier : modifier_list) {
-                if (ks & modifier.flag) {
-                    str += modifier.description.c_str();
-                    str += "+";
-                    ks ^= modifier.flag;
-                }
-            }
-
-            str += context->config.km.input_description(ks).c_str();
+            keysym_t ks = itermap.first;
+            QString str = context->config.km->input_description_mod(ks).c_str();
             hotkeyTable->item(row, 1)->setText(str);
             return;
         }
@@ -154,10 +145,10 @@ void InputWindow::updateHotkeyRow(int row)
 
 void InputWindow::updateInputRow(int tab, int row)
 {
-    SingleInput si = context->config.km.input_list[tab][row];
+    SingleInput si = context->config.km->input_list[tab][row];
 
     /* Check if a key is mapped to this input */
-    for (auto itermap : context->config.km.input_mapping) {
+    for (auto itermap : context->config.km->input_mapping) {
         if (itermap.second == si) {
             QString str;
             /* Special case for visibility:
@@ -165,7 +156,7 @@ void InputWindow::updateInputRow(int tab, int row)
             if ((si.type == SingleInput::IT_KEYBOARD) && (si.value == itermap.first))
                 str += "<self>";
             else
-                str += context->config.km.input_description(itermap.first).c_str();
+                str += context->config.km->input_description(itermap.first).c_str();
 
             inputTable[tab]->item(row, 1)->setText(str);
             return;
@@ -178,13 +169,13 @@ void InputWindow::updateInputRow(int tab, int row)
 void InputWindow::update()
 {
     /* Update hotkey list */
-    for (unsigned int row = 0; row < context->config.km.hotkey_list.size(); row++) {
+    for (unsigned int row = 0; row < context->config.km->hotkey_list.size(); row++) {
         updateHotkeyRow(row);
     }
 
     /* Update input list */
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-        for (unsigned int row = 0; row < context->config.km.input_list[i].size(); row++) {
+        for (unsigned int row = 0; row < context->config.km->input_list[i].size(); row++) {
             updateInputRow(i, row);
         }
     }
@@ -252,14 +243,14 @@ void InputWindow::slotAssign()
     int row = selTable->row(selTable->selectedItems().first());
 
     keyDialog->withModifiers = (selTable == hotkeyTable);
-    xcb_keysym_t ks = keyDialog->exec();
+    keysym_t ks = keyDialog->exec();
 
     if (ks != 0) {
         if (selTable == hotkeyTable) {
-            context->config.km.reassign_hotkey(row, ks);
+            context->config.km->reassign_hotkey(row, ks);
         }
         else {
-            context->config.km.reassign_input(tab, row, ks);
+            context->config.km->reassign_input(tab, row, ks);
         }
     }
 
@@ -270,13 +261,13 @@ void InputWindow::slotDefault()
 {
     QList<QModelIndex> hotkeySelList = hotkeyTable->selectionModel()->selectedRows();
     for (auto item : hotkeySelList) {
-        context->config.km.default_hotkey(item.row());
+        context->config.km->default_hotkey(item.row());
     }
 
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
         QList<QModelIndex> inputSelList = inputTable[i]->selectionModel()->selectedRows();
         for (auto item : inputSelList) {
-            context->config.km.default_input(i, item.row());
+            context->config.km->default_input(i, item.row());
         }
     }
 
@@ -287,14 +278,14 @@ void InputWindow::slotDisable()
 {
     QList<QModelIndex> hotkeySelList = hotkeyTable->selectionModel()->selectedRows();
     for (auto item : hotkeySelList) {
-        context->config.km.reassign_hotkey(item.row(), 0);
+        context->config.km->reassign_hotkey(item.row(), 0);
         updateHotkeyRow(item.row());
     }
 
     for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
         QList<QModelIndex> inputSelList = inputTable[i]->selectionModel()->selectedRows();
         for (auto item : inputSelList) {
-            context->config.km.reassign_input(i, item.row(), 0);
+            context->config.km->reassign_input(i, item.row(), 0);
             updateInputRow(i, item.row());
         }
     }

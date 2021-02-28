@@ -22,6 +22,7 @@
 #include <algorithm> // std::find
 #include <sys/mman.h>
 #include <sys/syscall.h> // syscall, SYS_gettid
+#include <pthread.h>
 
 #include "ThreadManager.h"
 #include "SaveStateManager.h"
@@ -29,7 +30,7 @@
 #include "ThreadSync.h"
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
-#include "../audio/AudioPlayer.h"
+//#include "../audio/AudioPlayer.h"
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
@@ -93,6 +94,12 @@ pthread_t ThreadManager::getThreadId()
 
 pid_t ThreadManager::getThreadTid()
 {
+    /* MacOS cannot access TLS at startup */
+#if defined(__APPLE__) && defined(__MACH__)
+    if (!is_inited)
+        return 0;
+#endif
+
     if (current_thread)
         return current_thread->tid;
     return 0;
@@ -227,7 +234,15 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
 void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 {
     thread->pthread_id = getThreadId();
+    
+#ifdef __unix__
     thread->tid = syscall(SYS_gettid);
+#elif defined(__APPLE__) && defined(__MACH__)
+    uint64_t tid;
+    pthread_threadid_np(nullptr, &tid);
+    thread->tid = tid;
+#endif
+
 
     current_thread = thread;
     addToList(thread);

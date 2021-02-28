@@ -25,15 +25,20 @@
 #include <sys/syscall.h> // SYS_get_thread_area, SYS_set_thread_area
 #include <cstring> // memset
 
+#if defined(__APPLE__) && defined(__MACH__)
+#else
 #ifdef __x86_64__
 #include <asm/prctl.h> // ARCH_GET_FS, ARCH_GET_GS, etc.
 #include <sys/prctl.h>
+#endif
 #endif
 
 namespace libtas {
 
 void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
 {
+#if defined(__APPLE__) && defined(__MACH__)
+#else
 #ifdef __i386__
     asm volatile ("movw %%fs,%0" : "=m" (tlsInfo->fs));
     asm volatile ("movw %%gs,%0" : "=m" (tlsInfo->gs));
@@ -46,7 +51,7 @@ void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
     MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_FS, &tlsInfo->fs) == 0)
     MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_GS, &tlsInfo->gs) == 0)
 #endif
-
+#endif
 }
 
 void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
@@ -55,6 +60,8 @@ void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
    * TLS (thread-local storage).  This is where we set it up.
    */
 
+#if defined(__APPLE__) && defined(__MACH__)
+#else
 #ifdef __i386__
    MYASSERT(syscall(SYS_set_thread_area, &(tlsInfo->gdtentrytls[0])) == 0)
 
@@ -69,6 +76,7 @@ void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
 #elif __x86_64__
     MYASSERT(syscall(SYS_arch_prctl, ARCH_SET_FS, tlsInfo->fs) == 0)
     MYASSERT(syscall(SYS_arch_prctl, ARCH_SET_GS, tlsInfo->gs) == 0)
+#endif
 #endif
 }
 

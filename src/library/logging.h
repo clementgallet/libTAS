@@ -57,60 +57,6 @@ namespace libtas {
 /* Print the debug message using stdio functions */
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...);
 
-/* Helper functions to concatenate different arguments arbitrary types into
- * a string stream. Because it uses variadic templates, its definition must
- * be visible by files that #include it, so the compiler knows for which
- * types it has to build a function.
- *
- * I'm not sure if it is the right choice, as it rapidly populates with
- * hundred of symbols and takes hundreds of kB in memory.
- * However, I think removing the -g debugger flag does save lot of memory.
- */
-void catlog(std::ostringstream &oss);
-inline void catlog(std::ostringstream&) {}
-
-template<typename First, typename ...Rest>
-void catlog (std::ostringstream &oss, First && first, Rest && ...rest);
-template<typename First, typename ...Rest>
-inline void catlog (std::ostringstream &oss, First && first, Rest && ...rest)
-{
-    oss << std::forward<First>(first);
-    catlog(oss, std::forward<Rest>(rest)...);
-}
-
-/* Print a variable list of arguments and other information based on the
- * value of lcf compared to the values in tasflags.includeFlags
- * and tasflags.excludeFlags.
- *
- * This function is the one called by other source files.
- * It uses variadic templates so the above comment does apply here also.
- *
- * The content is kept as minimal as possible and everything that does not
- * depend on variadic templates is transfered to debuglogstdio(),
- * to keep increased size as low as possible.
- */
-template<typename ...Args>
-void debuglog(LogCategoryFlag lcf, Args ...args);
-template<typename ...Args>
-inline void debuglog(LogCategoryFlag lcf, Args ...args)
-{
-    /* We also check this in debuglogstdio(), but doing it here avoid building
-     * all strings, because as a fraction of these will be printed.
-     */
-    if ((shared_config.includeFlags & LCF_MAINTHREAD) &&
-        !ThreadManager::isMainThread())
-        return;
-
-    if ((!(lcf & shared_config.includeFlags) ||
-          (lcf & shared_config.excludeFlags)) &&
-         !(lcf & LCF_ALERT))
-        return;
-
-    std::ostringstream oss;
-    catlog(oss, std::forward<Args>(args)...);
-    debuglogstdio(lcf, oss.str().c_str());
-}
-
 /* If we only want to print the function name... */
 #define DEBUGLOGCALL(lcf) debuglogstdio(lcf, "%s call.", __func__)
 

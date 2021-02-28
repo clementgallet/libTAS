@@ -24,6 +24,10 @@
 #include <string>
 #include "global.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <mach-o/dyld.h>
+#endif
+
 namespace libtas {
 
 /* There are two ways a program can link to a shared library:
@@ -75,10 +79,16 @@ void add_lib(const char* library);
  */
 void *find_sym(const char* name, bool original = false);
 
-OVERRIDE void *dlopen(const char *file, int mode) throw();
-OVERRIDE void *dlsym(void *handle, const char *name) throw();
+OVERRIDE void *dlopen(const char *file, int mode) __THROW;
+OVERRIDE void *dlsym(void *handle, const char *name) __THROW;
 
+#ifdef __unix__
+/* Declare internal implementation-dependent dlsym function */
 OVERRIDE void *_dl_sym(void *, const char *, void *);
+#elif defined(__APPLE__) && defined(__MACH__)
+/* Declare internal function to locate the address of a dyld function */
+OVERRIDE int _dyld_func_lookup(const char* name, void** address);
+#endif
 
 }
 

@@ -21,20 +21,20 @@
 #include "../KeyMapping.h"
 #include "qtutils.h"
 
-xcb_keysym_t convertQtModifiers(Qt::KeyboardModifiers flags)
+unsigned int convertQtModifiers(Qt::KeyboardModifiers flags)
 {
-    xcb_keysym_t modifiers = 0;
+    unsigned int modifiers = 0;
     if (flags & Qt::ShiftModifier) {
-        modifiers |= XK_Shift_L_Flag;
+        modifiers |= XK_Shift_Flag;
     }
     if (flags & Qt::ControlModifier) {
-        modifiers |= XK_Control_L_Flag;
+        modifiers |= XK_Control_Flag;
     }
     if (flags & Qt::AltModifier) {
-        modifiers |= XK_Meta_L_Flag;
+        modifiers |= XK_Meta_Flag;
     }
     if (flags & Qt::MetaModifier) {
-        modifiers |= XK_Alt_L_Flag;
+        modifiers |= XK_Alt_Flag;
     }
 
     return modifiers;

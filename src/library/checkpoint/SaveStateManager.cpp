@@ -33,11 +33,13 @@
 #include "Checkpoint.h"
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
+#ifdef __linux__
 #include "../audio/AudioPlayer.h"
+#include "../fileio/URandom.h"
+#endif
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
-#include "../fileio/URandom.h"
 #include "../xlib/xdisplay.h" // x11::gameDisplays
 
 namespace libtas {
@@ -179,7 +181,9 @@ int SaveStateManager::checkpoint(int slot)
     /* We must close the connection to the sound device. This must be done
      * BEFORE suspending threads.
      */
+#ifdef __linux__
     AudioPlayer::close();
+#endif
 
     /* Perform a series of checks before attempting to checkpoint */
     int ret = Checkpoint::checkCheckpoint();
@@ -227,10 +231,12 @@ int SaveStateManager::checkpoint(int slot)
     /* Sending a suspend signal to all threads */
     suspendThreads();
 
+#ifdef __linux__
     /* Disable the signal that refills the fake urandom pipe. Must be done
      * before the file tracking
      */
     urandom_disable_handler();
+#endif
 
     /* We flag all opened files as tracked and store their offset. This must be
      * done AFTER suspending threads.
@@ -259,8 +265,10 @@ int SaveStateManager::checkpoint(int slot)
      */
     FileHandleList::recoverAllFiles();
 
+#ifdef __linux__
     /* Restore the signal that refills the fake urandom pipe */
     urandom_enable_handler();
+#endif
 
     resumeThreads();
 
@@ -296,7 +304,9 @@ int SaveStateManager::restore(int slot)
     /* We must close the connection to the sound device. This must be done
      * BEFORE suspending threads.
      */
+#ifdef __linux__
     AudioPlayer::close();
+#endif
 
     /* Perform a series of checks before attempting to restore */
     int ret = Checkpoint::checkRestore();
@@ -326,8 +336,10 @@ int SaveStateManager::restore(int slot)
 
     restoreInProgress = true;
 
+#ifdef __linux__
     /* Disable the signal that refills the fake urandom pipe. */
     urandom_disable_handler();
+#endif
 
     /* We close all untracked files, because by definition they are closed when
      * the savestate will be loaded. */
@@ -356,8 +368,10 @@ int SaveStateManager::restore(int slot)
      /* Restoring the game alternate stack (if any) */
      AltStack::restoreStack();
 
+#ifdef __linux__
      /* Restore the signal that refills the fake urandom pipe */
      urandom_enable_handler();
+#endif
 
      resumeThreads();
 

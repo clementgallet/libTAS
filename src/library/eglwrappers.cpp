@@ -68,7 +68,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
 
 void(*eglGetProcAddress (const char *procName))()
 {
-    debuglog(LCF_OGL, __func__, " call with symbol ", procName);
+    debuglogstdio(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(eglGetProcAddress, "EGL");
 
     if (!orig::eglGetProcAddress) return nullptr;
@@ -126,7 +126,7 @@ static int swapInterval = 0;
 
 EGLBoolean eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
-    debuglog(LCF_OGL, __func__, " call with interval ", interval);
+    debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_NAMESPACE(eglSwapInterval, "EGL");
 
     swapInterval = interval;

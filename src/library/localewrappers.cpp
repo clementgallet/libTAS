@@ -54,9 +54,9 @@ static const char* config_locale()
     }
 }
 
-/* Override */ char *setlocale (int category, const char *locale) throw()
+/* Override */ char *setlocale (int category, const char *locale) __THROW
 {
-    debuglog(LCF_LOCALE, __func__, " called with category ", category, " and locale ", locale?locale:"<NULL>");
+    debuglogstdio(LCF_LOCALE, "%s called with category %d and locale %s", __func__, category, locale?locale:"<NULL>");
     char* mylocale = const_cast<char*>(config_locale());
     if (mylocale[0] == '\0') {
         /* Return native locale */
@@ -66,14 +66,14 @@ static const char* config_locale()
     return mylocale;
 }
 
-char *getenv (const char *name) throw()
+char *getenv (const char *name) __THROW
 {
     LINK_NAMESPACE_GLOBAL(getenv);
     if (GlobalState::isNative()) {
         return orig::getenv(name);
     }
 
-    debuglog(LCF_LOCALE, __func__, " called with name ", name);
+    debuglogstdio(LCF_LOCALE, "%s called with name %s", __func__, name);
     if (0 == strncmp(name, "LANG", 4)) {
         char* mylocale = const_cast<char*>(config_locale());
         if (mylocale[0] != '\0') {
@@ -81,7 +81,7 @@ char *getenv (const char *name) throw()
         }
     }
     char* ret = orig::getenv(name);
-    debuglog(LCF_LOCALE, "  returning ", ret);
+    debuglogstdio(LCF_LOCALE, "  returning %s", ret);
 
     return ret;
 }

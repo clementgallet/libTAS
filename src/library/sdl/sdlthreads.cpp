@@ -28,7 +28,7 @@ DECLARE_ORIG_POINTER(SDL_WaitThread)
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
-    debuglog(LCF_THREAD, "SDL Thread ", name, " was created.");
+    debuglogstdio(LCF_THREAD, "SDL Thread %s was created.", name);
     LINK_NAMESPACE_SDLX(SDL_CreateThread);
     return orig::SDL_CreateThread(fn, name, data);
 }

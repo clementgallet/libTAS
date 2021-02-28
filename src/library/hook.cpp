@@ -31,9 +31,11 @@ bool link_function(void** function, const char* source, const char* library, con
         return true;
 
     /* First try to link it from the global namespace */
+#ifdef __linux__
     if (version)
         *function = dlvsym(RTLD_NEXT, source, version);
     else
+#endif
         NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {

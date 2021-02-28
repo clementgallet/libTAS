@@ -20,6 +20,7 @@
 #include "sdlwindows.h"
 #include "../hook.h"
 #include "sdlversion.h"
+#include "sdldisplay.h" // SDL_GetCurrentDisplayMode
 #include "../logging.h"
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
@@ -34,9 +35,10 @@
 #include "../WindowTitle.h"
 #include "../encoding/AVEncoder.h"
 #include "SDLEventQueue.h"
-#include "../openglwrappers.h" // checkMesa()
+#ifdef __unix__
+#include "../glxwrappers.h" // checkMesa()
+#endif
 #include "../checkpoint/ThreadManager.h"
-#include "../xlib/xrandr.h"
 
 namespace libtas {
 
@@ -72,7 +74,7 @@ SDL_Window* sdl::gameSDLWindow = nullptr;
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapBuffers();
 
-    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -90,7 +92,7 @@ SDL_Window* sdl::gameSDLWindow = nullptr;
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapWindow(window);
 
-    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -115,7 +117,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     if (!(shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)) {
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
-        debuglog(LCF_WINDOW, "Disable vsync !!");
+        debuglogstdio(LCF_WINDOW, "Disable vsync !!");
     }
 
     /* If the context creation failed, we stop here */
@@ -126,9 +128,11 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* Now that the context is created, we can init the screen capture */
     ScreenCapture::init();
 
+#ifdef __unix__
     /* Alerting the user if software rendering is not active */
     checkMesa();
-
+#endif
+    
     return context;
 }
 
@@ -153,7 +157,7 @@ static int swapInterval = 0;
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
-    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call - setting to ", interval);
+    debuglogstdio(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
     LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
 
     /* We save the interval if the game wants it later */
@@ -161,9 +165,9 @@ static int swapInterval = 0;
 
     /* When using non deterministic timer, we let the game set vsync */
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        debuglog(LCF_WINDOW, "Set swap interval !!");
+        debuglogstdio(LCF_WINDOW, "Set swap interval !!");
         int ret = orig::SDL_GL_SetSwapInterval(interval);
-        debuglog(LCF_WINDOW, "   return ", ret);
+        debuglogstdio(LCF_WINDOW, "   return %d", ret);
         return ret;
         // return orig::SDL_GL_SetSwapInterval(interval);
     }
@@ -178,7 +182,7 @@ static int swapInterval = 0;
 }
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call - title: ", title?title:"", ", pos: (", x, ",", y, "), size: (", w, ",", h, "), flags: 0x", std::hex, flags, std::dec);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
     LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
     ThreadManager::setMainThread();
@@ -269,13 +273,13 @@ static int swapInterval = 0;
     LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
     Uint32 flags = orig::SDL_GetWindowFlags(window);
     flags |= SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
-    debuglog(LCF_SDL | LCF_WINDOW, "  flags: ", flags);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "  flags: %d", flags);
     return flags;
 }
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
     LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
 
     WindowTitle::setOriginalTitle(title);
@@ -284,7 +288,7 @@ static int swapInterval = 0;
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with title ", title?title:"[null]");
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
     LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
@@ -292,7 +296,7 @@ static int swapInterval = 0;
 
 /* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flags ", flags);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
 
     if (flags == 0) // Windowed
         return 0;
@@ -303,9 +307,9 @@ static int swapInterval = 0;
     }
     else {
         /* Change the window size to monitor size */
-        int fs_width, fs_height;
-        get_monitor_resolution(fs_width, fs_height);
-        SDL_SetWindowSize(window, fs_width, fs_height);
+        SDL_DisplayMode dm;
+        NATIVECALL(SDL_GetCurrentDisplayMode(0, &dm));
+        SDL_SetWindowSize(window, dm.w, dm.h);
     }
 
     return 0; // success
@@ -313,7 +317,7 @@ static int swapInterval = 0;
 
 /* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with border ", bordered);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
     /* Don't do anything */
 }
 
@@ -322,7 +326,7 @@ static int swapInterval = 0;
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    debuglog(LCF_SDL | LCF_WINDOW, "  size ", width, " x ", height);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
     LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
 
     ThreadManager::setMainThread();
@@ -367,7 +371,7 @@ static int swapInterval = 0;
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    debuglog(LCF_SDL | LCF_WINDOW, "    New size: ", w, " x ", h);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "    New size: %d x %d", w, h);
     LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
 
     NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
@@ -380,7 +384,7 @@ static int swapInterval = 0;
 {
     LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
 
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with size (", width, ",", height, "), bpp ", bpp, " and flags ", std::hex, flags, std::dec);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with size (%d,%d), bpp %d and flags %x", __func__, width, height, bpp, flags);
 
     ThreadManager::setMainThread();
 
@@ -419,7 +423,7 @@ static int swapInterval = 0;
 
 /* Override */ int SDL_SetColorKey(SDL_Surface *surface, int flag, Uint32 key)
 {
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with flag ", flag, " and key ", key);
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with flag %d and key %d", __func__, flag, key);
     LINK_NAMESPACE_SDLX(SDL_SetColorKey);
     return orig::SDL_SetColorKey(surface, flag, key);
 }
@@ -431,7 +435,7 @@ static int swapInterval = 0;
     if (GlobalState::isNative())
         return orig::SDL_Flip(screen);
 
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call.");
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -452,7 +456,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     }
 
     LINK_NAMESPACE_SDL1(SDL_UpdateRect);
-    debuglog(LCF_SDL | LCF_WINDOW, __func__, " call with ", numrects, " rects");
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
 
     /* Start the frame boundary and pass the function to draw */
 #ifdef LIBTAS_ENABLE_HUD
@@ -483,7 +487,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
 /* Override */ SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode)
 {
-    debuglog(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, __func__, " call with mode ", mode);
+    debuglogstdio(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, "%s call with mode %d", __func__, mode);
     static SDL1::SDL_GrabMode fakeGrab = SDL1::SDL_GRAB_OFF;
     if (mode != SDL1::SDL_GRAB_QUERY)
         fakeGrab = mode;
@@ -493,7 +497,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
 /* Override */ int SDL_GL_SetAttribute(SDL_GLattr attr, int value)
 {
-    debuglog(LCF_SDL | LCF_OGL | LCF_WINDOW, __func__, " call with attr ", attr, " and value ", value);
+    debuglogstdio(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call with attr %d and value %d", __func__, attr, value);
     LINK_NAMESPACE_SDL2(SDL_GL_SetAttribute);
 
     switch (attr) {

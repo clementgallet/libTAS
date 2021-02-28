@@ -122,8 +122,11 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
      * - Thread 1 executes a function that is wrapped, and prints a debug message
      * - Thread 1 wants to acquire the lock
      */
+#ifdef __linux__
     fputs_unlocked(s, stderr);
-
+#else
+    fputs(s, stderr);
+#endif
 }
 
 void sendAlertMsg(const std::string alert)

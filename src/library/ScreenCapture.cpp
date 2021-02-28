@@ -24,18 +24,29 @@
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
 #include "encoding/AVEncoder.h"
+
+#ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "xlib/xshm.h" // x11::gameXImage
+#include "vdpauwrappers.h"
+#endif
+
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 
 #include <SDL2/SDL.h>
 #include <vector>
 #include <cstring> // memcpy
 #define GL_GLEXT_PROTOTYPES
+#ifdef __unix__
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include "vdpauwrappers.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
+
+
 #include "vulkanwrappers.h"
 
 namespace libtas {
@@ -70,6 +81,7 @@ DECLARE_ORIG_POINTER(SDL_GetClipRect)
 DECLARE_ORIG_POINTER(SDL_LockSurface)
 DECLARE_ORIG_POINTER(SDL_UnlockSurface)
 DECLARE_ORIG_POINTER(SDL_UpperBlit)
+DECLARE_ORIG_POINTER(SDL_GetWindowSize)
 
 DECLARE_ORIG_POINTER(glReadPixels)
 DECLARE_ORIG_POINTER(glGenFramebuffers)
@@ -86,11 +98,13 @@ DECLARE_ORIG_POINTER(glDisable)
 DECLARE_ORIG_POINTER(glIsEnabled)
 DECLARE_ORIG_POINTER(glGetIntegerv)
 DECLARE_ORIG_POINTER(glGetError)
+#ifdef __unix__
 DECLARE_ORIG_POINTER(VdpOutputSurfaceGetParameters)
 DECLARE_ORIG_POINTER(VdpOutputSurfaceCreate)
 DECLARE_ORIG_POINTER(VdpOutputSurfaceDestroy)
 DECLARE_ORIG_POINTER(VdpOutputSurfaceRenderOutputSurface)
 DECLARE_ORIG_POINTER(VdpOutputSurfaceGetBitsNative)
+#endif
 
 DECLARE_ORIG_POINTER(vkCreateImage)
 DECLARE_ORIG_POINTER(vkGetImageMemoryRequirements)
@@ -112,7 +126,9 @@ DECLARE_ORIG_POINTER(vkGetImageSubresourceLayout)
 DECLARE_ORIG_POINTER(vkMapMemory)
 DECLARE_ORIG_POINTER(vkAcquireNextImageKHR)
 
+#ifdef __unix__
 DEFINE_ORIG_POINTER(XGetGeometry)
+#endif
 
 static bool inited = false;
 
@@ -145,8 +161,10 @@ static SDL_Texture* screenSDLTex = nullptr;
 /* SDL2 renderer if any */
 static SDL_Renderer* sdl_renderer;
 
+#ifdef __unix__
 /* VDPAU screen surface */
 static VdpOutputSurface screenVDPAUSurf;
+#endif
 
 /* Vulkan screen image */
 static VkImage vkScreenImage = VK_NULL_HANDLE;
@@ -158,14 +176,22 @@ int ScreenCapture::init()
         return 0;
     }
 
+#ifdef __unix__
     /* Don't initialize if window is not registered */
     if (x11::gameXWindows.empty())
         return 0;
+#else
+    /* Use SDL window for now */
+    if ((game_info.video & GameInfo::SDL2) && (!sdl::gameSDLWindow))
+        return 0;
+#endif
 
+    unsigned int depth = 8;
+#ifdef __unix__
     /* Get the window dimensions */
     LINK_NAMESPACE_GLOBAL(XGetGeometry);
-    unsigned int w = 0, h = 0, border_width, depth;
     int x, y;
+    unsigned int w = 0, h = 0, border_width;
     Window root;
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i]) {
@@ -175,6 +201,13 @@ int ScreenCapture::init()
     }
     width = w;
     height = h;
+#else
+    /* Use SDL2 window for now */
+    if (game_info.video & GameInfo::SDL2) {
+        LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+        orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
+    }
+#endif
 
     /* Dimensions must be a multiple of 2 */
     if ((width % 1) || (height % 1)) {
@@ -182,6 +215,7 @@ int ScreenCapture::init()
         return -1;
     }
 
+#ifdef __unix__
     /* Get window color depth */
     if (game_info.video & GameInfo::VDPAU) {
         VdpRGBAFormat rgba_format;
@@ -196,8 +230,9 @@ int ScreenCapture::init()
         /* Also overwrite the dimensions */
         width = uw;
         height = uh;
-    }
-    else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
+    } else
+#endif
+    if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         pixelSize = sdlpixfmt & 0xFF;
@@ -213,12 +248,14 @@ int ScreenCapture::init()
         }
         pixelSize = surf->format->BytesPerPixel;
     }
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         pixelSize = x11::gameXImage->bits_per_pixel / 8;
         /* Also overwrite the dimensions */
         width = x11::gameXImage->width;
         height = x11::gameXImage->height;
     }
+#endif
     else if (game_info.video & GameInfo::VULKAN) {
         pixelSize = 4;
     }
@@ -242,6 +279,7 @@ int ScreenCapture::init()
 
 void ScreenCapture::initScreenSurface()
 {
+#ifdef __unix__
     /* Set up a backup surface/framebuffer */
     if (game_info.video & GameInfo::VDPAU) {
         VdpStatus status = orig::VdpOutputSurfaceCreate(vdp::vdpDevice, VDP_RGBA_FORMAT_B8G8R8A8, width, height, &screenVDPAUSurf);
@@ -249,8 +287,9 @@ void ScreenCapture::initScreenSurface()
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceCreate failed with status %d", status);
             return;
         }
-    }
-    else if (game_info.video & GameInfo::SDL2_RENDERER) {
+    } else
+#endif
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_GetRenderer);
         LINK_NAMESPACE_SDL2(SDL_CreateTexture);
         LINK_NAMESPACE_SDL2(SDL_GetError);
@@ -444,11 +483,13 @@ void ScreenCapture::destroyScreenSurface()
         screenSDLTex = nullptr;
     }
 
+#ifdef __unix__
     /* Delete the SDL2 screen surface */
     if (screenVDPAUSurf) {
         orig::VdpOutputSurfaceDestroy(screenVDPAUSurf);
         screenSDL2Surf = 0;
     }
+#endif
     
     /* Delete the Vulkan image */
     if (vkScreenImageMemory != VK_NULL_HANDLE) {
@@ -469,10 +510,12 @@ void ScreenCapture::resize(int w, int h)
         return;
     }
 
+#ifdef __unix__
     /* Don't resize if window is not registered */
     if (x11::gameXWindows.empty()) {
         return;
     }
+#endif
 
     if (width == w && height == h) {
         return;
@@ -516,6 +559,7 @@ const char* ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
+#ifdef __unix__
     if (game_info.video & GameInfo::VDPAU) {
         VdpRGBAFormat rgba_format;
         unsigned int uw, uh;
@@ -528,9 +572,10 @@ const char* ScreenCapture::getPixelFormat()
             default:
                 debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format %d", rgba_format);
         }
-    }
+    } else
+#endif
 
-    else if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
+    if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         switch (sdlpixfmt) {
@@ -587,6 +632,7 @@ const char* ScreenCapture::getPixelFormat()
         return "RGBA";
     }
 
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         /* Apparently, it will only be RGB or BGR depending on the endianness
          * of the machine. */
@@ -607,6 +653,7 @@ const char* ScreenCapture::getPixelFormat()
             debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format");
         }
     }
+#endif
 
     else if (game_info.video & GameInfo::VULKAN) {
         switch(vk::colorFormat) {
@@ -630,15 +677,17 @@ int ScreenCapture::copyScreenToSurface()
 
     GlobalNative gn;
 
+#ifdef __unix__
     if (game_info.video & GameInfo::VDPAU) {
         /* Copy to our screen surface */
         VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(screenVDPAUSurf, nullptr, vdp::vdpSurface, nullptr, nullptr, nullptr, 0);
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
         }
-    }
+    } else
+#endif
 
-    else if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
         LINK_NAMESPACE_SDL2(SDL_LockTexture);
         LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
@@ -756,6 +805,7 @@ int ScreenCapture::copyScreenToSurface()
         }
     }
 
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         if ((x11::gameXImage->width != width) || (x11::gameXImage->height != height)) {
             debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, x11::gameXImage->width, x11::gameXImage->height);
@@ -765,6 +815,7 @@ int ScreenCapture::copyScreenToSurface()
         /* There is no designated surface for XShm, just copy to our array */
         memcpy(winpixels.data(), x11::gameXImage->data, size);
     }
+#endif
 
     else if (game_info.video & GameInfo::VULKAN) {
         LINK_NAMESPACE(vkAllocateCommandBuffers, "vulkan");
@@ -927,6 +978,7 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
 
     GlobalNative gn;
 
+#ifdef __unix__
     if (game_info.video & GameInfo::VDPAU) {
         /* Copy pixels */
         void* const pix = reinterpret_cast<void* const>(winpixels.data());
@@ -935,9 +987,10 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceGetBitsNative failed with status %d", status);
         }
-    }
+    } else
+#endif
 
-    else if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_LockTexture);
         LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
 
@@ -1028,9 +1081,11 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
         orig::SDL1_UnlockSurface(screenSDL1Surf);
     }
 
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         /* Nothing to do here, the surface is already stored in the pixel array */
     }
+#endif
 
     else if (game_info.video & GameInfo::VULKAN) {
         LINK_NAMESPACE(vkGetImageSubresourceLayout, "vulkan");
@@ -1065,14 +1120,16 @@ int ScreenCapture::copySurfaceToScreen()
 
     GlobalNative gn;
 
+#ifdef __unix__
     if (game_info.video & GameInfo::VDPAU) {
         VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(vdp::vdpSurface, nullptr, screenVDPAUSurf, nullptr, nullptr, nullptr, 0);
         if (status != VDP_STATUS_OK) {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
         }
-    }
+    } else
+#endif
 
-    else if (game_info.video & GameInfo::SDL2_RENDERER) {
+    if (game_info.video & GameInfo::SDL2_RENDERER) {
         LINK_NAMESPACE_SDL2(SDL_RenderCopy);
 
         int ret;
@@ -1167,9 +1224,11 @@ int ScreenCapture::copySurfaceToScreen()
         orig::SDL1_SetClipRect(surf1, &clip_rect);
     }
 
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         memcpy(x11::gameXImage->data, winpixels.data(), size);
     }
+#endif
 
     else if (game_info.video & GameInfo::VULKAN) {
         LINK_NAMESPACE(vkAcquireNextImageKHR, "vulkan");
@@ -1330,10 +1389,13 @@ void ScreenCapture::restoreScreenState()
     if (!inited)
         return;
 
+#ifdef __unix__
     if (game_info.video & GameInfo::VDPAU) {
         /* Probably not needed */
         // copySurfaceToScreen();        
     }
+#endif
+
     else if (game_info.video & GameInfo::SDL2_RENDERER) {
         /* Possibly needed */
         copySurfaceToScreen();
@@ -1353,10 +1415,12 @@ void ScreenCapture::restoreScreenState()
         copySurfaceToScreen();
     }
 
+#ifdef __unix__
     else if (game_info.video & GameInfo::XSHM) {
         /* Definitively needed in some cases */
         copySurfaceToScreen();
     }
+#endif
 
     else if (game_info.video & GameInfo::VULKAN) {
         /* Must not do anything here, because of how Vulkan works */

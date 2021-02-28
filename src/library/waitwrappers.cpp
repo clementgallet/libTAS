@@ -24,15 +24,19 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
+#ifdef __linux__
 #include "audio/alsa/pcm.h"
+#endif
 
 namespace libtas {
 
 DEFINE_ORIG_POINTER(poll)
 DEFINE_ORIG_POINTER(select)
 DEFINE_ORIG_POINTER(pselect)
+#ifdef __linux__
 DEFINE_ORIG_POINTER(epoll_wait)
-
+#endif
+    
 /* Override */ int poll (struct pollfd *fds, nfds_t nfds, int timeout)
 {
     LINK_NAMESPACE_GLOBAL(poll);
@@ -41,8 +45,9 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::poll(fds, nfds, timeout);
     }
 
-    debuglog(LCF_WAIT, __func__, " call with ", nfds, " fds and timeout ", timeout);
+    debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d", __func__, nfds, timeout);
 
+#ifdef __linux__
     /* Check for the fd used by ALSA */
     for (nfds_t i = 0; i < nfds; i++) {
         if (fds[i].fd == 0xa15a) {
@@ -64,7 +69,8 @@ DEFINE_ORIG_POINTER(epoll_wait)
             return ret;
         }
     }
-
+#endif
+    
     int ret = orig::poll(fds, nfds, timeout);
 
     /* If timeout on main thread, add the timeout amount to the timer */
@@ -98,7 +104,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000 + timeout->tv_usec, " usec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_usec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -117,7 +123,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
 }
 
 /* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	const struct timespec *timeout, const __sigset_t *sigmask)
+	const struct timespec *timeout, const sigset_t *sigmask)
 {
     LINK_NAMESPACE_GLOBAL(pselect);
 
@@ -135,7 +141,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglog(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), __func__, " call - sleep for ", timeout->tv_sec * 1000000000 + timeout->tv_nsec, " nsec");
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -150,6 +156,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
 }
 
+#ifdef __linux__
 /* Override */ int epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
     LINK_NAMESPACE_GLOBAL(epoll_wait);
@@ -158,7 +165,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::epoll_wait(epfd, events, maxevents, timeout);
     }
 
-    debuglog(LCF_SLEEP, __func__, " call with timeout ", timeout, " msec");
+    debuglogstdio(LCF_SLEEP, "%s call with timeout %d", __func__, timeout);
 
     int ret = orig::epoll_wait(epfd, events, maxevents, timeout);
 
@@ -173,5 +180,6 @@ DEFINE_ORIG_POINTER(epoll_wait)
 
     return ret;
 }
+#endif
 
 }

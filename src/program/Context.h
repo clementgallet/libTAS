@@ -20,12 +20,17 @@
 #ifndef LIBTAS_CONTEXT_H_INCLUDED
 #define LIBTAS_CONTEXT_H_INCLUDED
 
-#include <string>
 #include "Config.h"
-// #include <X11/Xlib.h>
+
+#ifdef __unix__
 #include <xcb/xcb.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+#endif
+
+#include <string>
 #include <stdint.h>
 #include "ConcurrentQueue.h"
+#include "KeyMapping.h"
 #include "../shared/GameInfo.h"
 extern "C" {
 #include <lua.h>
@@ -42,6 +47,7 @@ struct Context {
     };
     volatile RunStatus status = INACTIVE;
 
+#ifdef __unix__
     /* Connection to the X server */
     xcb_connection_t *conn;
 
@@ -50,9 +56,10 @@ struct Context {
 
     /* Main UI window */
     xcb_window_t ui_window = 0;
-
-    /* Crosshair cursor */
-    xcb_cursor_t crosshair_cursor;
+#elif defined(__APPLE__) && defined(__MACH__)
+    /* Dummy */
+    unsigned int game_window = 0;
+#endif
 
     /* Recording status */
     enum FocusState {

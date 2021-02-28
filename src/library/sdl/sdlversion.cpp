@@ -62,12 +62,12 @@ int get_sdlversion(void)
     }
 
     if (orig::SDL_GetVersion && orig::SDL_Linked_Version) {
-        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "Both SDL versions were detected! Taking SDL1 in priority");
+        debuglogstdio(LCF_SDL | LCF_HOOK | LCF_ERROR, "Both SDL versions were detected! Taking SDL1 in priority");
     }
 
     if (ver.major > 0) {
         SDLver = ver.major;
-        debuglog(LCF_SDL | LCF_HOOK, "Detected SDL ", static_cast<int>(ver.major), ".", static_cast<int>(ver.minor), ".", static_cast<int>(ver.patch));
+        debuglogstdio(LCF_SDL | LCF_HOOK, "Detected SDL %d.%d.%d", static_cast<int>(ver.major), static_cast<int>(ver.minor), static_cast<int>(ver.patch));
         return SDLver;
     }
 
@@ -86,10 +86,10 @@ int get_sdlversion(void)
     else if (sdl1 && sdl2) {
         dlclose(sdl1);
         dlclose(sdl2);
-        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "Multiple SDL versions were detected!");
+        debuglogstdio(LCF_SDL | LCF_HOOK | LCF_ERROR, "Multiple SDL versions were detected!");
     }
     else {
-        debuglog(LCF_SDL | LCF_HOOK | LCF_ERROR, "No SDL versions were detected!");
+        debuglogstdio(LCF_SDL | LCF_HOOK | LCF_ERROR, "No SDL versions were detected!");
     }
 
     return SDLver;

@@ -22,31 +22,37 @@
 
 #include "global.h"
 #include <signal.h> // for all signal structs
+#include <time.h> // for all signal structs
 
 namespace libtas {
 
-/* Set the handler for the signal SIG to HANDLER, returning the old
-   handler, or SIG_ERR on error.
-   By default `signal' has the BSD semantic.  */
-OVERRIDE sighandler_t signal (int sig, sighandler_t handler) throw();
+    
+#if defined(__APPLE__) && defined(__MACH__)
+typedef void (*sighandler_t) (int);
+#endif
 
+/* Set the handler for the signal SIG to HANDLER, returning the old
+ handler, or SIG_ERR on error.
+ By default `signal' has the BSD semantic.  */
+OVERRIDE sighandler_t signal (int sig, sighandler_t handler) __THROW;
+    
 /* None of the following functions should be used anymore.  They are here
    only for compatibility.  A single word (`int') is not guaranteed to be
    enough to hold a complete signal mask and therefore these functions
    simply do not work in many situations.  Use `sigprocmask' instead.  */
 
 /* Block signals in MASK, returning the old mask.  */
-OVERRIDE int sigblock (int mask) throw();
+OVERRIDE int sigblock (int mask) __THROW;
 
 /* Set the mask of blocked signals to MASK, returning the old mask.  */
-OVERRIDE int sigsetmask (int mask) throw();
+OVERRIDE int sigsetmask (int mask) __THROW;
 
 /* Return currently selected signal mask.  */
-OVERRIDE int siggetmask (void) throw();
+OVERRIDE int siggetmask (void) __THROW;
 
 /* Get and/or change the set of blocked signals.  */
 OVERRIDE int sigprocmask (int how, const sigset_t *set,
-            sigset_t *oset) throw();
+            sigset_t *oset) __THROW;
 
 /* Change the set of blocked signals to SET,
    wait until a signal arrives, and restore the set of blocked signals.
@@ -57,10 +63,10 @@ OVERRIDE int sigsuspend (const sigset_t *set);
 
 /* Get and/or set the action for signal SIG.  */
 OVERRIDE int sigaction (int sig, const struct sigaction *act,
-              struct sigaction *oact) throw();
+              struct sigaction *oact) __THROW;
 
 /* Put in SET all signals that are blocked and waiting to be delivered.  */
-OVERRIDE int sigpending (sigset_t *set) throw();
+OVERRIDE int sigpending (sigset_t *set) __THROW;
 
 /* Select any of pending signals from SET or wait for any to arrive.
 
@@ -85,19 +91,19 @@ OVERRIDE int sigtimedwait (const sigset_t *set,
 
 /* Alternate signal handler stack interface.
     This interface should always be preferred over `sigstack'.  */
-OVERRIDE int sigaltstack (const stack_t *ss, stack_t *oss) throw();
+OVERRIDE int sigaltstack (const stack_t *ss, stack_t *oss) __THROW;
 
 /* Modify the signal mask for the calling thread.  The arguments have
    the same meaning as for sigprocmask(2). */
 OVERRIDE int pthread_sigmask (int how, const sigset_t *newmask,
-                sigset_t *oldmask) throw();
+                sigset_t *oldmask) __THROW;
 
 /* Send signal SIGNO to the given thread. */
-OVERRIDE int pthread_kill (pthread_t threadid, int signo) throw();
+OVERRIDE int pthread_kill (pthread_t threadid, int signo) __THROW;
 
 /* Queue signal and data to a thread.  */
 OVERRIDE int pthread_sigqueue (pthread_t threadid, int signo,
-                 const union sigval value) throw();
+                 const union sigval value) __THROW;
 
 }
 

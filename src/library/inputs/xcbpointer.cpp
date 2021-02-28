@@ -79,7 +79,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         return orig::xcb_warp_pointer_checked(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
     }
 
-    debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
+    debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
     if (!x11::gameXWindows.empty()) {
@@ -105,7 +105,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
-        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer_x, game_ai.pointer_y);
     }
 
     /* Update the pointer coordinates */
@@ -157,7 +157,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         return orig::xcb_warp_pointer(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
     }
     
-    debuglog(LCF_MOUSE, __func__, " called with dest_w ", dst_window, " and dest_x ", dst_x, " and dest_y ", dst_y);
+    debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
     if (!x11::gameXWindows.empty()) {
@@ -183,7 +183,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
-        debuglog(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (", game_ai.pointer_x, ",", game_ai.pointer_y,")");
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer_x, game_ai.pointer_y);
     }
 
     /* Update the pointer coordinates */

@@ -19,10 +19,13 @@
 
 #include "../logging.h"
 #include "AudioContext.h"
+#ifdef __linux__
 #include "AudioPlayer.h"
+#endif
 #include "../global.h" // shared_config
 
 #include <stdint.h>
+#include <unistd.h>
 
 #define MAXBUFFERS 2048 // Max I've seen so far: 960
 #define MAXSOURCES 256 // Max I've seen so far: 112
@@ -252,10 +255,12 @@ void AudioContext::mixAllSources(struct timespec ticks)
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
+#ifdef __linux__
     if (!audiocontext.isLoopback && !shared_config.audio_mute) {
         /* Play the music */
         AudioPlayer::play(*this);
     }
+#endif
 }
 
 }

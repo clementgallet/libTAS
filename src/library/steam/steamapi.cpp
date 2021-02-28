@@ -20,8 +20,9 @@
 #include "steamapi.h"
 #include "../logging.h"
 #include <signal.h>
-// #define _GNU_SOURCE
+#ifdef __unix__
 #include <link.h>
+#endif
 #include <dlfcn.h>
 
 #include "CCallbackManager.h"
@@ -123,23 +124,42 @@ static bool SteamGetInterfaceVersion()
         return false;
     }
 
-    /* Find SteamAPI library path */
+/* Find SteamAPI library path */
+#ifdef __unix__
     struct link_map *l;
     int ret = dlinfo(h, RTLD_DI_LINKMAP, &l);
 
     if (ret == -1) {
-        debuglog(LCF_STEAM | LCF_WARNING, "Could not find Steam library path");
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Could not find Steam library path");
         return false;
     }
 
     char* steam_path = l->l_name;
+
+#elif defined(__APPLE__) && defined(__MACH__)
+    void* f = dlsym(h, "SteamAPI_Init");
+    if (!f) {
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Could not find a symbol inside Steam library");
+        return false;        
+    }
+    
+    Dl_info dli;
+    int ret = dladdr(f, &dli);
+
+    if (ret == 0) {
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Could not find address of Steam symbol");
+        return false;
+    }
+    
+    const char* steam_path = dli.dli_fname;
+#endif
 
     /* Find Steam interface version from the library.
      * Taken from https://git.bitmycode.com/Booti386/DummySteamAPI */
 
     FILE *fp = fopen(steam_path, "rb");
     if (!fp) {
-        debuglog(LCF_STEAM | LCF_WARNING, "Could not open Steam library path");
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Could not open Steam library path");
         return false;
     }
 
@@ -150,21 +170,21 @@ static bool SteamGetInterfaceVersion()
 
     if (size <= 0)
     {
-        debuglog(LCF_STEAM | LCF_WARNING, "Steam library is empty");
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Steam library is empty");
         fclose(fp);
         return false;
     }
 
     char* data = static_cast<char*>(malloc(size));
     if (!data) {
-        debuglog(LCF_STEAM | LCF_WARNING, "No memory");
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "No memory");
         fclose(fp);
         return false;
     }
 
     ret = fread(data, size, 1, fp);
     if (ret != 1) {
-        debuglog(LCF_STEAM | LCF_WARNING, "Failed to read from ", steam_path);
+        debuglogstdio(LCF_STEAM | LCF_WARNING, "Failed to read from %s", steam_path);
         free(data);
         fclose(fp);
         return false;
@@ -204,7 +224,7 @@ static bool SteamGetInterfaceVersion()
 
 bool SteamAPI_Init()
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
         SteamGetInterfaceVersion();
     return shared_config.virtual_steam;
@@ -212,7 +232,7 @@ bool SteamAPI_Init()
 
 bool SteamAPI_InitSafe()
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
         SteamGetInterfaceVersion();
     return shared_config.virtual_steam;
@@ -220,25 +240,25 @@ bool SteamAPI_InitSafe()
 
 void SteamAPI_Shutdown()
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     return;
 }
 
 bool SteamAPI_IsSteamRunning()
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     return shared_config.virtual_steam;
 }
 
 bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     return false;
 }
 
 void SteamAPI_RunCallbacks()
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     CCallbackManager::Run();
 }
 
@@ -250,19 +270,19 @@ void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_ty
 
 void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     CCallbackManager::UnregisterCallback(pCallback);
 }
 
 void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     CCallbackManager::RegisterApiCallResult(pCallback, hAPICall);
 }
 
 void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
 {
-    debuglog(LCF_STEAM, __func__, " call.");
+    DEBUGLOGCALL(LCF_STEAM);
     CCallbackManager::UnregisterApiCallResult(pCallback, hAPICall);
 }
 

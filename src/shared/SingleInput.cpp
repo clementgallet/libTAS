@@ -18,11 +18,15 @@
  */
 
 #include "SingleInput.h"
+#ifdef __linux__
 #include <linux/input.h>
+#endif
 #include <SDL2/SDL.h>
 #include "../external/SDL1.h"
 // #include <X11/keysym.h>
+#ifdef __unix__
 #include <xcb/xcb.h>
+#endif
 
 bool SingleInput::isAnalog() const
 {
@@ -56,6 +60,7 @@ int SingleInput::inputTypeToInputNumber() const
     return type & IT_CONTROLLER_TYPE_MASK;
 }
 
+#ifdef __unix__
 unsigned int SingleInput::toXlibPointerButton(int button)
 {
     switch (button) {
@@ -73,6 +78,7 @@ unsigned int SingleInput::toXlibPointerButton(int button)
             return 0;
     }
 }
+#endif
 
 unsigned int SingleInput::toSDL1PointerButton(int button)
 {
@@ -110,7 +116,7 @@ unsigned int SingleInput::toSDL2PointerButton(int button)
     }
 }
 
-
+#ifdef __unix__
 unsigned int SingleInput::toXlibPointerMask(int mask)
 {
     unsigned int xlib_mask = 0;
@@ -127,6 +133,7 @@ unsigned int SingleInput::toXlibPointerMask(int mask)
 
     return xlib_mask;
 }
+#endif
 
 unsigned int SingleInput::toSDL1PointerMask(int mask)
 {
@@ -239,7 +246,7 @@ int SingleInput::toSDLHat(int buttons)
     return hatState;
 }
 
-
+#ifdef __linux__
 int SingleInput::toJsdevAxis(int axis)
 {
     /* Mapping between xbox360 controller and joydev is taken from
@@ -365,3 +372,4 @@ int SingleInput::toDevHatY(int buttons)
         haty = 1;
     return haty;
 }
+#endif
