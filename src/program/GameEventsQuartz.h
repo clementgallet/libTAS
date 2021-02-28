@@ -39,8 +39,6 @@ public:
 
     void init();
 
-    void registerGamePid(pid_t pid);
-
     /* Register and select events from the window handle */
     void registerGameWindow(uint32_t gameWindow);
 
@@ -48,9 +46,12 @@ public:
      * window has focus and our settings. */
     bool haveFocus();
 
+    /* We need this function to be static, so it can be called from the static callback. */
+    static bool haveFocus(Context *c);
+
 private:
     /* Game running app */
-    NSRunningApplication* gameApp;
+    static NSRunningApplication* gameApp;
     
     EventType nextEvent(struct HotKey &hk);
 };

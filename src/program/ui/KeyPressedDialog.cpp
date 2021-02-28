@@ -40,13 +40,10 @@ KeyPressedDialog::KeyPressedDialog(Context* c, QWidget *parent) : QDialog(parent
 void KeyPressedDialog::keyPressEvent(QKeyEvent * e)
 {
     int modifiers = 0;
-
     if (withModifiers) {
 
         /* We ignore a key press on a modifier key if we accept a mapping that
-         * includes modifier keys
-         */
-
+         * includes modifier keys */
         if (context->config.km->is_modifier(e->nativeVirtualKey())) {
             return QDialog::keyPressEvent(e);
         }
@@ -55,5 +52,5 @@ void KeyPressedDialog::keyPressEvent(QKeyEvent * e)
         modifiers = convertQtModifiers(e->modifiers());
     }
 
-    done(modifiers | e->nativeVirtualKey());
+    done(modifiers | context->config.km->nativeToKeysym(e->nativeVirtualKey()));
 }

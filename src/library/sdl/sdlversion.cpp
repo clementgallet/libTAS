@@ -73,8 +73,14 @@ int get_sdlversion(void)
 
     /* If not, determine which library was already dynamically loaded. */
     void *sdl1, *sdl2;
+#ifdef __unix__
     NATIVECALL(sdl1 = dlopen("libSDL-1.2.so.0", RTLD_NOLOAD));
     NATIVECALL(sdl2 = dlopen("libSDL2-2.0.so.0", RTLD_NOLOAD));
+#elif defined(__APPLE__) && defined(__MACH__)
+    NATIVECALL(sdl1 = dlopen("libSDL-1.2.0.dylib", RTLD_NOLOAD));
+    NATIVECALL(sdl2 = dlopen("libSDL2-2.0.0.dylib", RTLD_NOLOAD));
+#endif
+
     if (sdl1 && !sdl2) {
         dlclose(sdl1);
         SDLver = 1;

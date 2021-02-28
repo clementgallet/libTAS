@@ -77,16 +77,18 @@ int open (const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::open(file, oflag, mode);
 
-    if (!file)
-        return orig::open(file, oflag, mode);
-
     /* Special case for file opened by je_malloc.
      * We should not allocate any memory here otherwise deadlock. */
-    if (strcmp(file, "/proc/sys/vm/overcommit_memory") == 0) {
+    if (file && strcmp(file, "/proc/sys/vm/overcommit_memory") == 0) {
         return orig::open(file, oflag, mode);
     }
 
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
+        return orig::open(file, oflag, mode);
+    }
 
     int fd = 0;
 
@@ -173,10 +175,12 @@ int open64 (const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::open64(file, oflag, mode);
 
-    if (!file)
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::open64(file, oflag, mode);
-    
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    }
 
     int fd = 0;
 
@@ -263,10 +267,12 @@ int openat (int dirfd, const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::openat(dirfd, file, oflag, mode);
 
-    if (!file)
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::openat(dirfd, file, oflag, mode);
-
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    }
 
     int fd = 0;
 
@@ -306,10 +312,12 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
     if (GlobalState::isNative())
         return orig::openat64(dirfd, file, oflag, mode);
 
-    if (!file)
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::openat64(dirfd, file, oflag, mode);
-
-    debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+    }
 
     int fd = 0;
 
@@ -335,10 +343,12 @@ int creat (const char *file, mode_t mode)
     if (GlobalState::isNative())
         return orig::creat(file, mode);
 
-    if (!file)
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with file <NULL>", __func__);
         return orig::creat(file, mode);
-
-    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+    }
 
     /* From creat() man page, creat() is just open() with flags
      * O_CREAT, O_WRONLY and O_TRUNC
@@ -369,10 +379,12 @@ int creat64 (const char *file, mode_t mode)
     if (GlobalState::isNative())
         return orig::creat64(file, mode);
 
-    if (!file)
+    if (file)
+        debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with file <NULL>", __func__);
         return orig::creat64(file, mode);
-
-    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+    }
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
 
@@ -430,10 +442,12 @@ int access(const char *name, int type) __THROW
     if (GlobalState::isNative())
         return orig::access(name, type);
 
-    if (!name)
+    if (name)
+        debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
+    else {
+        debuglogstdio(LCF_FILEIO, "%s call with name <NULL>", __func__);
         return orig::access(name, type);
-
-    debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
+    }
 
 #ifdef __linux__
     /* Check if joystick device */

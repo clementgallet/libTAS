@@ -128,9 +128,11 @@ void remove_savestates(Context* context)
 int extractBinaryType(std::string path)
 {
     /* Check for MacOS app file, and extract the actual executable if so. */
+    int macappflag = 0;
     std::string executable_path = extractMacOSExecutable(path);
     if (!executable_path.empty()) {
         path = executable_path;
+        macappflag = BT_MACOSAPP;
     }
     
     std::string cmd = "file -b \"";
@@ -149,30 +151,38 @@ int extractBinaryType(std::string path)
     }
 
     if (outputstr.find("ELF 32-bit") != std::string::npos) {
-        return BT_ELF32;
+        return BT_ELF32 | macappflag;
     }
 
     if (outputstr.find("ELF 64-bit") != std::string::npos) {
-        return BT_ELF64;
+        return BT_ELF64 | macappflag;
     }
 
     if (outputstr.find("PE32 executable") != std::string::npos) {
-        return BT_PE32;
+        return BT_PE32 | macappflag;
     }
 
     if (outputstr.find("PE32+ executable") != std::string::npos) {
-        return BT_PE32P;
+        return BT_PE32P | macappflag;
     }
 
     if (outputstr.find("Bourne-Again shell script") != std::string::npos) {
-        return BT_SH;
+        return BT_SH | macappflag;
+    }
+
+    if (outputstr.find("Mach-O universal binary") != std::string::npos) {
+        return BT_MACOSUNI | macappflag;
+    }
+
+    if (outputstr.find("Mach-O executable i386") != std::string::npos) {
+        return BT_MACOS32 | macappflag;
     }
 
     if (outputstr.find("Mach-O 64-bit") != std::string::npos) {
-        return BT_MACOS64;
+        return BT_MACOS64 | macappflag;
     }
 
-    return BT_UNKNOWN;
+    return BT_UNKNOWN | macappflag;
 }
 
 std::string extractMacOSExecutable(std::string path)
@@ -191,7 +201,6 @@ std::string extractMacOSExecutable(std::string path)
         plist_cmd += "/Contents/Info.plist\" CFBundleExecutable";
         
         std::string outputstr("");
-        
         FILE *output = popen(plist_cmd.c_str(), "r");
         if (output != NULL) {
             std::array<char,1000> buf;
@@ -204,7 +213,7 @@ std::string extractMacOSExecutable(std::string path)
         /* Trim the value */
         size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
         outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
-        
+
         /* Build path to executable */
         std::string executable_path = path;
         executable_path += "/Contents/MacOS/";

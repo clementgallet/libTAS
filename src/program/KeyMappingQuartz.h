@@ -36,6 +36,9 @@ class KeyMappingQuartz : public KeyMapping {
         /* Register a keyup event */
         void registerKeyUp(uint16_t kc);
 
+        /* Convert a native keycode into xcb keysym */
+        keysym_t nativeToKeysym(int keycode);
+
         /* Returns if a keysym is a modifier */
         bool is_modifier(keysym_t ks);
 

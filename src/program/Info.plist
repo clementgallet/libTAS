@@ -32,5 +32,7 @@
     <array>
         <string>allowed</string>
     </array>
+    <key>NSAppleEventsUsageDescription</key>
+    <string></string>
 </dict>
 </plist>
