@@ -23,6 +23,18 @@
 #include "../global.h"
 #include <dirent.h>
 
+#ifndef __DARWIN_SUF_UNIX03
+#define __DARWIN_SUF_UNIX03 ""
+#endif
+
+#ifndef __DARWIN_SUF_64_BIT_INO_T
+#define __DARWIN_SUF_64_BIT_INO_T ""
+#endif
+
+#define __DARWIN_ALIAS_STR(x) x ## __DARWIN_SUF_UNIX03
+#define __DARWIN_ALIAS_I_STR(x) x ## __DARWIN_SUF_64_BIT_INO_T ## __DARWIN_SUF_UNIX03
+#define __DARWIN_INODE64_STR(x) x ## __DARWIN_SUF_64_BIT_INO_T
+
 namespace libtas {
 
 /* Open a directory stream on NAME.
@@ -30,20 +42,20 @@ namespace libtas {
 
    This function is a possible cancellation point and therefore not
    marked with __THROW.  */
-OVERRIDE DIR *opendir (const char *__name);
+OVERRIDE DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *__name);
 
 /* Same as opendir, but open the stream on the file descriptor FD.
 
    This function is a possible cancellation point and therefore not
    marked with __THROW.  */
-OVERRIDE DIR *fdopendir (int __fd);
+OVERRIDE DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int __fd);
 
 /* Close the directory stream DIRP.
    Return 0 if successful, -1 if not.
 
    This function is a possible cancellation point and therefore not
    marked with __THROW.  */
-OVERRIDE int closedir (DIR *__dirp);
+OVERRIDE int __DARWIN_ALIAS_STR(closedir) (DIR *__dirp);
 
 /* Read a directory entry from DIRP.  Return a pointer to a `struct
    dirent' describing the entry, or NULL for EOF or error.  The
@@ -55,21 +67,15 @@ OVERRIDE int closedir (DIR *__dirp);
 
    This function is a possible cancellation point and therefore not
    marked with __THROW.  */
-OVERRIDE struct dirent *readdir (DIR *__dirp);
+OVERRIDE struct dirent *__DARWIN_INODE64_STR(readdir) (DIR *__dirp);
 
-/* MacOS does not define dirent64 */
-#if defined(__APPLE__) && defined(__MACH__)
-OVERRIDE struct dirent *readdir64 (DIR *__dirp);
-#else
+#ifdef __unix__
 OVERRIDE struct dirent64 *readdir64 (DIR *__dirp);
 #endif
 
-    
-OVERRIDE int readdir_r (DIR * dirp, struct dirent *entry, struct dirent **result);
+OVERRIDE int __DARWIN_INODE64_STR(readdir_r) (DIR * dirp, struct dirent *entry, struct dirent **result);
 
-#if defined(__APPLE__) && defined(__MACH__)
-OVERRIDE int readdir64_r (DIR * dirp, struct dirent *entry, struct dirent **result);
-#else
+#ifdef __unix__
 OVERRIDE int readdir64_r (DIR * dirp, struct dirent64 *entry, struct dirent64 **result);
 #endif
 

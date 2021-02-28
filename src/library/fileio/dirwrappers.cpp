@@ -30,24 +30,26 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(opendir)
-DEFINE_ORIG_POINTER(fdopendir)
-DEFINE_ORIG_POINTER(closedir)
-DEFINE_ORIG_POINTER(readdir)
+DEFINE_ORIG_POINTER(__DARWIN_ALIAS_I_STR(opendir))
+DEFINE_ORIG_POINTER(__DARWIN_ALIAS_I_STR(fdopendir))
+DEFINE_ORIG_POINTER(__DARWIN_ALIAS_STR(closedir))
+DEFINE_ORIG_POINTER(__DARWIN_INODE64_STR(readdir))
+DEFINE_ORIG_POINTER(__DARWIN_INODE64_STR(readdir_r))
+#ifdef __unix__
 DEFINE_ORIG_POINTER(readdir64)
-DEFINE_ORIG_POINTER(readdir_r)
 DEFINE_ORIG_POINTER(readdir64_r)
+#endif
 
 #define DIROFF_SIZE 10
 static DIR *dird[DIROFF_SIZE];
 static int diri[DIROFF_SIZE];
 static std::string dirpath[DIROFF_SIZE];
 
-DIR *opendir (const char *name)
+DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
 {
-    LINK_NAMESPACE_GLOBAL(opendir);
+    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_I_STR(opendir));
 
-    DIR *d = orig::opendir(name);
+    DIR *d = orig::__DARWIN_ALIAS_I_STR(opendir)(name);
 
     if (GlobalState::isNative())
         return d;
@@ -74,11 +76,11 @@ DIR *opendir (const char *name)
     return d;
 }
 
-DIR *fdopendir (int fd)
+DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
 {
-    LINK_NAMESPACE_GLOBAL(fdopendir);
+    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_I_STR(fdopendir));
 
-    DIR *d = orig::fdopendir(fd);
+    DIR *d = orig::__DARWIN_ALIAS_I_STR(fdopendir)(fd);
 
     if (GlobalState::isNative())
         return d;
@@ -117,11 +119,11 @@ DIR *fdopendir (int fd)
     return d;    
 }
 
-int closedir (DIR *dirp)
+int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
 {
-    LINK_NAMESPACE_GLOBAL(closedir);
+    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_STR(closedir));
 
-    int ret = orig::closedir(dirp);
+    int ret = orig::__DARWIN_ALIAS_STR(closedir)(dirp);
 
     if (GlobalState::isNative())
         return ret;
@@ -147,19 +149,19 @@ int closedir (DIR *dirp)
     return ret;
 }
 
-struct dirent *readdir (DIR *dirp)
+struct dirent *__DARWIN_INODE64_STR(readdir) (DIR *dirp)
 {
     static struct dirent dir;
     
-    LINK_NAMESPACE_GLOBAL(readdir);
+    LINK_NAMESPACE_GLOBAL(__DARWIN_INODE64_STR(readdir));
 
     if (GlobalState::isNative())
-        return orig::readdir(dirp);
+        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (!shared_config.prevent_savefiles)
-        return orig::readdir(dirp);
+        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 
     /* First, list all savefiles from directory */
     for (int i = 0; i < DIROFF_SIZE; i++) {
@@ -196,18 +198,13 @@ struct dirent *readdir (DIR *dirp)
     }
     
     /* Then, list all actual files */
-    return orig::readdir(dirp);
+    return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 }
 
-#if defined(__APPLE__) && defined(__MACH__)
-struct dirent *readdir64 (DIR *dirp)
-{
-    static struct dirent dir;
-#else
+#ifdef __unix__
 struct dirent64 *readdir64 (DIR *dirp)
 {
     static struct dirent64 dir;
-#endif
 
     LINK_NAMESPACE_GLOBAL(readdir64);
 
@@ -256,18 +253,19 @@ struct dirent64 *readdir64 (DIR *dirp)
     /* Then, list all actual files */
     return orig::readdir64(dirp);
 }
+#endif
 
-int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
+int __DARWIN_INODE64_STR(readdir_r) (DIR *dirp, struct dirent *entry, struct dirent **result)
 {
-    LINK_NAMESPACE_GLOBAL(readdir_r);
+    LINK_NAMESPACE_GLOBAL(__DARWIN_INODE64_STR(readdir_r));
 
     if (GlobalState::isNative())
-        return orig::readdir_r(dirp, entry, result);
+        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (!shared_config.prevent_savefiles)
-        return orig::readdir_r(dirp, entry, result);
+        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 
     /* First, list all savefiles from directory */
     for (int i = 0; i < DIROFF_SIZE; i++) {
@@ -306,14 +304,11 @@ int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
     }
     
     /* Then, list all actual files */
-    return orig::readdir_r(dirp, entry, result);
+    return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 }
 
-#if defined(__APPLE__) && defined(__MACH__)
-int readdir64_r (DIR *dirp, struct dirent *entry, struct dirent **result)
-#else
+#ifdef __unix__
 int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
-#endif
 {
     LINK_NAMESPACE_GLOBAL(readdir64_r);
 
@@ -363,6 +358,6 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
     /* Then, list all actual files */
     return orig::readdir64_r(dirp, entry, result);
 }
-
+#endif
 
 }
