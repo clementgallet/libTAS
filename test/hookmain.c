@@ -17,10 +17,14 @@ int main()
         printf("Hooking failed!\n");
     }
 
-    printf("Hooking a dynamic function\n");
-    void* handle = dlopen("./libhooklib2.so", RTLD_LAZY);
-    int (*func)() = (int (*)()) dlsym(handle, "libtasTestFunc2");
+    printf("Loading a dynamic library\n");
+    void* handle = dlopen("libhooklib2.so", RTLD_LAZY);
+    if (!handle) {
+        printf("Cound not load library libhooklib2.so from runpath!\n");
+    }
 
+    printf("Hooking a dynamic function\n");
+    int (*func)() = (int (*)()) dlsym(handle, "libtasTestFunc2");
     if (!func) {
         printf("Cound not link to function libtasTestFunc2!\n");
     }
