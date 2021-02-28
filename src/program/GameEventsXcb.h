@@ -38,8 +38,6 @@ public:
 
     void init();
 
-    void registerGamePid(pid_t pid) {}
-
     /* Register and select events from the window handle */
     void registerGameWindow(uint32_t gameWindow);
 

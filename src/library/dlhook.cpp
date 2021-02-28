@@ -168,6 +168,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
             add_lib(file);
     }
 
+#ifdef __linux__
     if (result && file && std::strstr(file, "wined3d.dll.so") != nullptr) {
         /* Hook wine wined3d functions */
         hook_wined3d();

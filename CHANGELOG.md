@@ -9,6 +9,7 @@
 * Implement multiple SDL audio devices
 * Clicking the first column seeks to frame in input editor
 * Lua memory read and write float/double
+* Basic MacOS support
 
 ### Changed
 

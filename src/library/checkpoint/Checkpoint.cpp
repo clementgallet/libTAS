@@ -286,6 +286,7 @@ void Checkpoint::handler(int signum)
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
         return;
     }
+#endif
 
     if (SaveStateManager::isLoading()) {
 #ifdef __unix__

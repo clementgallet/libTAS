@@ -271,7 +271,6 @@ void GameLoop::initProcessMessages()
             /* Get the game process pid */
             case MSGB_PID:
                 receiveData(&context->game_pid, sizeof(pid_t));
-                std::cerr << "Got game pid: " << context->game_pid << std::endl;
                 MemAccess::init(context->game_pid);
                 break;
 

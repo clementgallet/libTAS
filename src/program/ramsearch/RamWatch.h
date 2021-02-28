@@ -31,7 +31,7 @@ public:
 
     static bool isValid;
     static int type;
-    static int type_size;
+    static size_t type_size;
 
     enum RamType {
         RamUnsignedChar,

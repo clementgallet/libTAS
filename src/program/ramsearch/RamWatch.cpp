@@ -29,7 +29,7 @@
 
 bool RamWatch::isValid;
 int RamWatch::type;
-int RamWatch::type_size;
+size_t RamWatch::type_size;
 
 const char* RamWatch::type_to_fmt(bool hex)
 {
