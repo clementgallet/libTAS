@@ -41,6 +41,7 @@
 #include "sdl/SDLEventQueue.h"
 #include "BusyLoopDetection.h"
 #include "audio/AudioContext.h"
+#include "hook.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -52,6 +53,8 @@
 #endif
 
 namespace libtas {
+
+DECLARE_ORIG_POINTER(SDL_PumpEvents)
 
 /* Frame counter */
 uint64_t framecount = 0;
@@ -629,13 +632,20 @@ static void receive_messages(std::function<void()> draw)
              * otherwise the game will appear as unresponsive. */
             pushNativeXlibEvents();
             pushNativeXcbEvents();
+#elif defined(__APPLE__) && defined(__MACH__)
+            /* We need to poll events, otherwise the game appears as non-responsive.
+             * TODO: Put this at appropriate place */
+            if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {
+                LINK_NAMESPACE_SDLX(SDL_PumpEvents);
+                orig::SDL_PumpEvents();
+            }
 #endif
             
             /* Resume execution if game is exiting */
             if (is_exiting)
                 return;
             
-            NATIVECALL(usleep(100));
+            NATIVECALL(usleep(1000));
 
             /* Catch dead children spawned for state saving */
             while (1) {
