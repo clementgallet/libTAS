@@ -288,8 +288,8 @@ void *dlsym(void *handle, const char *name) __THROW {
         }
     }
 
-    /* Detect a Unity game when it loads a specific function */
-    if (strcmp(name, "mono_unity_liveness_allocate_struct") == 0)
+    /* Detect a Unity game when it loads specific Unity functions */
+    if (std::strstr(name, "mono_unity_") != nullptr)
         GameHacks::setUnity();
 
     /* FIXME: This design is not good enough.
