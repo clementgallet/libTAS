@@ -44,3 +44,7 @@ fixed by launching libTAS like this: `term=XTERM libTAS`.
 
 You need to install a TTF font so that the on-screen display works. If you are using a
 Debian-based distribution (e.g. Ubuntu), you can execute `sudo apt install fonts-liberation`.
+
+#### I'm getting an error when launching libTAS: "libQt5Core.so.5: cannont open shared object file: No such file or directory"
+
+If you are running libTAS in WSL, it probably means that you have the version 1 installed. You can check by running the following command in a Windows terminal: `wsl --list --verbose`. If it prints `1`, then you must upgrade to version 2.

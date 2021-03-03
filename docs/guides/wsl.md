@@ -50,8 +50,9 @@ potentially not work.
 
 I think [Microsoft's guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps) did a decent job explaining the installation process so I just refer to that here. If however you do happen to run into trouble, feel free to join the [libTAS discord server](https://discord.gg/3MBVAzU) and ask for help. Optionally, you can also find tutorials on YouTube.
 
-Once WSL 2 (do make sure it's version 2, and set to default) has been installed,
-grab Ubuntu from the store (this is all mentioned in Microsoft's guide but I just
+You can check that you have the version 2 installed by running the following command in a Windows terminal: `wsl --list --verbose`. If it prints `1` at `VERSION`, then you need to upgrade to version 2.
+
+Once WSL 2 has been installed, grab Ubuntu from the store (this is all mentioned in Microsoft's guide but I just
 want to point it out here again). You should have a new Windows-App called Ubuntu 20.04 LTS.
 
 Start it and a terminal will open. For the first time only you'll be asked to
@@ -87,7 +88,7 @@ the different pathing style).
 Adjust the command to your path where you've put the .deb file and change your
 current directory to it, then run
 
-    sudo dpkg -i libtas_*_amd64.deb
+    sudo apt install ./libtas_*_amd64.deb
 
 The `*` makes it so that it uses our .deb file regardless of its version, e.g.
 it may be named `libtas_1.4.0_d086878_amd64.deb` and it will still work. Very convenient.
