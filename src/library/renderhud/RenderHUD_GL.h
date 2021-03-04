@@ -20,7 +20,11 @@
 #ifndef LIBTAS_RENDERHUD_GL_H_INCL
 #define LIBTAS_RENDERHUD_GL_H_INCL
 
-#include "RenderHUD.h"
+#ifdef __unix__
+#include "RenderHUD_Base_Linux.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "RenderHUD_Base_MacOS.h"
+#endif
 
 #ifdef LIBTAS_ENABLE_HUD
 
@@ -34,10 +38,13 @@
 #endif
 
 namespace libtas {
-class RenderHUD_GL : public RenderHUD
+#ifdef __unix__
+class RenderHUD_GL : public RenderHUD_Base_Linux
+#elif defined(__APPLE__) && defined(__MACH__)
+class RenderHUD_GL : public RenderHUD_Base_MacOS
+#endif
 {
     public:
-        RenderHUD_GL();
         ~RenderHUD_GL();
 
         /* Initialize texture and fbo */

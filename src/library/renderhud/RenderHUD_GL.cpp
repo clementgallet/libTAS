@@ -47,8 +47,6 @@ DECLARE_ORIG_POINTER(glGetError)
 GLuint RenderHUD_GL::texture = 0;
 GLuint RenderHUD_GL::fbo = 0;
 
-RenderHUD_GL::RenderHUD_GL() : RenderHUD() {}
-
 RenderHUD_GL::~RenderHUD_GL() {
     fini();
 }

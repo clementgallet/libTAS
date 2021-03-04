@@ -37,16 +37,14 @@
 #include <stdint.h>
 
 namespace libtas {
-/* This class handles the display of some text over the game screen (HUD).
+/* This class handles the display of some text and shapes over the game screen (HUD).
  *
  * Because games have different methods of rendering, this class
  * should be derived for each rendering method. The subclass must
- * define the renderText() and size() functions
+ * define the renderSurface() function
  *
- * As a helper, this class provide a method to create a surface from
- * a text, based on the sdl_ttf library. This library was modified so
- * that it does not depend on SDL anymore. It returns now a standard
- * 32-bit surface using the ARGB mask, encapsulated in a SurfaceARGB object.
+ * Also, OS have different ways of creating a text surface from a string,
+ * so this class must be derived for each OS to define the renderText() method.
  *
  * This class is also responsible on formatting and positioning the
  * different elements of the HUD.
@@ -54,18 +52,13 @@ namespace libtas {
 class RenderHUD
 {
     public:
-        virtual ~RenderHUD();
-
-        /* Initialize the font located at the given path */
-        static void initFonts();
-
         /* Main function to render something on the screen.
          * This function does nothing in this class and must be overridden.
          * @param surface   Surface to render
          * @param x         x position of the text (top-left corner)
          * @param y         y position of the text (top-left corner)
          */
-        virtual void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y) {};
+        virtual void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y) {}
 
         /* Display everything based on setting */
         void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
@@ -107,7 +100,7 @@ class RenderHUD
          * @param x         x position of the text (top-left corner)
          * @param y         y position of the text (top-left corner)
          */
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
+        virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {}
 
         /* Render a single pixel
          * @param x      x position of the pixel
@@ -144,12 +137,6 @@ class RenderHUD
 
         /* Display lua drawings */
         void drawLua();
-
-        static int outline_size;
-        static int font_size;
-
-        static TTF_Font* fg_font;
-        static TTF_Font* bg_font;
 
         /* Location offsets when displaying multiple texts on the same location */
         int offsets[9];

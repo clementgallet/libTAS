@@ -34,7 +34,10 @@
 #include <forward_list>
 #include <string>
 
-//#include "config.h"
+#ifdef __unix__
+#include "config.h"
+#endif
+
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"

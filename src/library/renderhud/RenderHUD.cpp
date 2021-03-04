@@ -24,7 +24,6 @@
 #include "../hook.h"
 #include <sstream>
 #include "../global.h" // shared_config
-#include <fontconfig/fontconfig.h>
 // #include <X11/keysym.h>
 #include "../ScreenCapture.h"
 #ifdef __unix__
@@ -33,120 +32,11 @@
 
 namespace libtas {
 
-TTF_Font* RenderHUD::fg_font = nullptr;
-TTF_Font* RenderHUD::bg_font = nullptr;
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 std::list<std::string> RenderHUD::watches;
 std::list<RenderHUD::LuaText> RenderHUD::lua_texts;
 std::list<RenderHUD::LuaPixel> RenderHUD::lua_pixels;
 std::list<RenderHUD::LuaRect> RenderHUD::lua_rects;
-int RenderHUD::outline_size = 1;
-int RenderHUD::font_size = 20;
-
-RenderHUD::~RenderHUD()
-{
-    if (fg_font) {
-        TTF_CloseFont(fg_font);
-        fg_font = nullptr;
-    }
-    if (bg_font) {
-        TTF_CloseFont(bg_font);
-        bg_font = nullptr;
-    }
-    if (TTF_WasInit())
-        TTF_Quit();
-}
-
-void RenderHUD::initFonts()
-{
-    if (!fg_font || !bg_font) {
-        /* Find an installed regular font in the system using fontconfig */
-        /* Code taken from http://stackoverflow.com/questions/10542832 */
-        GlobalNative gn;
-        FcConfig* config = FcInitLoadConfigAndFonts();
-        FcPattern* pat = FcPatternCreate();
-        FcPatternAddString(pat, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
-        FcPatternAddString(pat, FC_LANG, reinterpret_cast<const FcChar8*>("en-US"));
-        FcObjectSet* os = FcObjectSetBuild (FC_FAMILY, FC_FILE, (char *) 0);
-        FcFontSet* fs = FcFontList(config, pat, os);
-        debuglogstdio(LCF_WINDOW, "Total matching fonts: %d", fs->nfont);
-        char* fontFile = nullptr;
-        for (int i=0; fs && i < fs->nfont; ++i) {
-            FcPattern* font = fs->fonts[i];
-            FcChar8 *file, *family;
-            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
-                FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch) {
-
-                /* In priority, choose one of the following font */
-                if (FcStrStr(file, reinterpret_cast<const FcChar8*>("FreeSans.ttf")) ||
-                    FcStrStr(file, reinterpret_cast<const FcChar8*>("Gentium-R.ttf")) ||
-                    FcStrStr(file, reinterpret_cast<const FcChar8*>("LiberationSans-Regular.ttf")) ||
-                    FcStrStr(file, reinterpret_cast<const FcChar8*>("Ubuntu-R.ttf"))) {
-
-                    fontFile = reinterpret_cast<char*>(file);
-                    break;
-                }
-
-                if (FcStrStr(file, reinterpret_cast<const FcChar8*>(".ttf"))) {
-                    // debuglog(LCF_WINDOW, "   Font: ", file, " (family ", family, ")");
-
-                    /* Otherwise, pick this font */
-                    if (!fontFile) {
-                        fontFile = reinterpret_cast<char*>(file);
-                    }
-                }
-            }
-        }
-
-        if (fontFile) {
-            debuglogstdio(LCF_WINDOW, "Picking font: %s", fontFile);
-            /* Initialize SDL TTF */
-            if(TTF_Init() == -1) {
-                debuglogstdio(LCF_ERROR, "Couldn't init SDL TTF.");
-                return;
-            }
-
-            fg_font = TTF_OpenFont(fontFile, 20);
-            if (fg_font == NULL) {
-                debuglogstdio(LCF_ERROR, "Couldn't load font");
-                return;
-            }
-
-            bg_font = TTF_OpenFont(fontFile, 20);
-            if (bg_font == NULL) {
-                debuglogstdio(LCF_ERROR, "Couldn't load font");
-                return;
-            }
-
-            TTF_SetFontOutline(bg_font, outline_size);
-        }
-        else {
-            debuglogstdio(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
-            shared_config.osd = 0;
-        }
-
-        if (fs) FcFontSetDestroy(fs);
-    }
-}
-
-void RenderHUD::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
-{
-    if (!fg_font)
-        return;
-
-    std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
-    std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);
-
-    if (bg_surf) {
-        /* Blit text onto its outline. */
-        bg_surf->blit(fg_surf.get(), outline_size, outline_size);
-
-        renderSurface(std::move(bg_surf), x, y);
-    }
-    else {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not generate a text surface!");
-    }
-}
 
 void RenderHUD::renderPixel(int x, int y, Color color)
 {
@@ -160,7 +50,7 @@ void RenderHUD::renderRect(int x, int y, int w, int h, int t, Color outline_colo
     std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(w, h));
     surf->fill(fill_color);
     surf->fillBorder(outline_color, t);
-    renderSurface(std::move(surf), x, y);        
+    renderSurface(std::move(surf), x, y);
 }
 
 void RenderHUD::locationToCoords(int location, int& x, int& y)

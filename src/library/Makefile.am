@@ -99,12 +99,13 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_SDL2_surface.cpp \
     renderhud/RenderHUD_VDPAU.cpp \
-	renderhud/RenderHUD_XShm.cpp \
+    renderhud/RenderHUD_XShm.cpp \
     renderhud/RenderHUD.cpp \
+    renderhud/RenderHUD_Base_Linux.cpp \
     renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \
-	renderhud/SurfaceXImage.cpp \
-	sdl/SDLEventQueue.cpp \
+    renderhud/SurfaceXImage.cpp \
+    sdl/SDLEventQueue.cpp \
     sdl/sdldisplay.cpp \
     sdl/sdldynapi.cpp \
     sdl/sdlevents.cpp \
@@ -122,7 +123,7 @@ libtas_so_SOURCES = \
     steam/isteamcontroller.cpp \
     steam/isteamfriends.cpp \
     steam/isteamgamecoordinator.cpp \
-	steam/isteamgameserver.cpp \
+    steam/isteamgameserver.cpp \
     steam/isteamhttp.cpp \
     steam/isteammatchmaking.cpp \
     steam/isteamnetworking.cpp \
@@ -138,17 +139,17 @@ libtas_so_SOURCES = \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \
     steam/steamapiinternal.cpp \
-	steam/steamgameserver.cpp \
+    steam/steamgameserver.cpp \
     wine/winehook.cpp \
     wine/wined3d.cpp \
     wine/user32.cpp \
     wine/kernel32.cpp \
-	xcb/XcbEventQueue.cpp \
+    xcb/XcbEventQueue.cpp \
     xcb/XcbEventQueueList.cpp \
     xcb/xcbconnection.cpp \
     xcb/xcbevents.cpp \
     xcb/xcbwindows.cpp \
-	xlib/XlibEventQueue.cpp \
+    xlib/XlibEventQueue.cpp \
     xlib/XlibEventQueueList.cpp \
     xlib/xatom.cpp \
     xlib/xdisplay.cpp \

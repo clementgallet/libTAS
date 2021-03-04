@@ -20,14 +20,22 @@
 #ifndef LIBTAS_RENDERHUD_SDL2_RENDERER_H_INCL
 #define LIBTAS_RENDERHUD_SDL2_RENDERER_H_INCL
 
-#include "RenderHUD.h"
+#ifdef __unix__
+#include "RenderHUD_Base_Linux.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "RenderHUD_Base_MacOS.h"
+#endif
 
 #ifdef LIBTAS_ENABLE_HUD
 
 #include <SDL2/SDL.h> // SDL_Renderer
 
 namespace libtas {
-class RenderHUD_SDL2_renderer : public RenderHUD
+#ifdef __unix__
+class RenderHUD_SDL2_renderer : public RenderHUD_Base_Linux
+#elif defined(__APPLE__) && defined(__MACH__)
+class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
+#endif
 {
     public:
         ~RenderHUD_SDL2_renderer();
