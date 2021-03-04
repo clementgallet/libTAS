@@ -98,6 +98,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     debuglogstdio(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
     void *result = nullptr;
 
+#ifdef __unix__
     if (file != nullptr && file[0] != '\0' && std::strchr(file, '/') == nullptr) {
         /* Path should be searched using search paths, so let's
          * manually check the paths in the correct order...
@@ -156,6 +157,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
             }
         }
     }
+#endif
 
     if (result == nullptr) {
         /* Path is empty (referring to the main program), relative to

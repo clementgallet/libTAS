@@ -123,8 +123,11 @@ void RenderHUD_Base_Linux::initFonts()
 
 void RenderHUD_Base_Linux::renderText(const char* text, Color fg_color, Color bg_color, int x, int y)
 {
-    if (!fg_font)
-        return;
+    if (!fg_font || !bg_font) {
+        initFonts();
+        if (!fg_font || !bg_font)
+            return;
+    }
 
     std::unique_ptr<SurfaceARGB> fg_surf = TTF_RenderText_Blended(fg_font, text, fg_color);
     std::unique_ptr<SurfaceARGB> bg_surf = TTF_RenderText_Blended(bg_font, text, bg_color);

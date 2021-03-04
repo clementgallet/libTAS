@@ -26,7 +26,7 @@
 #define LIBTAS_RENDERHUD_H_INCL
 
 //#include "../../external/SDL.h"
-#include "sdl_ttf.h"
+//#include "sdl_ttf.h"
 #include "SurfaceARGB.h"
 #include "../../shared/AllInputs.h"
 #include "../TimeHolder.h"

@@ -37,7 +37,7 @@ namespace libtas {
 class RenderHUD_Base_MacOS : public RenderHUD
 {
     public:
-        virtual ~RenderHUD_Base_MacOS();
+        ~RenderHUD_Base_MacOS();
 
         /* Initialize the font located at the given path */
         static void initFonts();

@@ -25,7 +25,9 @@
 #include <sys/mman.h>
 #include <sys/syscall.h> // syscall, SYS_gettid
 #include <sys/wait.h> // waitpid
+#ifdef __unix__
 #include <X11/Xlib.h> // XLockDisplay
+#endif
 
 #include "SaveStateManager.h"
 #include "ThreadManager.h"
@@ -40,7 +42,10 @@
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
+#include "../renderhud/RenderHUD.h"
+#ifdef __unix__
 #include "../xlib/xdisplay.h" // x11::gameDisplays
+#endif
 
 namespace libtas {
 
@@ -195,11 +200,13 @@ int SaveStateManager::checkpoint(int slot)
     /* We save the alternate stack if the game did set one */
     AltStack::saveStack();
 
+#ifdef __unix__
     /* Lock the display so we can empty events */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
             XLockDisplay(x11::gameDisplays[i]);
     }
+#endif
 
     /* Sync all X server connections. Must be done before suspending threads,
      * because while we have locked the displays, threads could still be suspended
@@ -223,10 +230,12 @@ int SaveStateManager::checkpoint(int slot)
      *     _XReply () at /usr/lib/x86_64-linux-gnu/libX11.so.6
      *     XSync () at /usr/lib/x86_64-linux-gnu/libX11.so.6
      */
+#ifdef __unix__
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
             NATIVECALL(XSync(x11::gameDisplays[i], false));
     }
+#endif
 
     /* Sending a suspend signal to all threads */
     suspendThreads();
@@ -272,11 +281,13 @@ int SaveStateManager::checkpoint(int slot)
 
     resumeThreads();
 
+#ifdef __unix__
     /* Unlock the display */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
             XUnlockDisplay(x11::gameDisplays[i]);
     }
+#endif
 
     /* Wait for all other threads to finish being restored before resuming */
     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
@@ -320,6 +331,7 @@ int SaveStateManager::restore(int slot)
 
     restoreInProgress = false;
 
+#ifdef __unix__
     /* Lock the display so we can empty events */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
@@ -331,6 +343,7 @@ int SaveStateManager::restore(int slot)
         if (x11::gameDisplays[i])
             NATIVECALL(XSync(x11::gameDisplays[i], false));
     }
+#endif
 
     suspendThreads();
 
@@ -375,11 +388,13 @@ int SaveStateManager::restore(int slot)
 
      resumeThreads();
 
+#ifdef __unix__
      /* Unlock the display */
      for (int i=0; i<GAMEDISPLAYNUM; i++) {
          if (x11::gameDisplays[i])
              XUnlockDisplay(x11::gameDisplays[i]);
      }
+#endif
 
      waitForAllRestored(current_thread);
 

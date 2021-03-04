@@ -399,7 +399,7 @@ void frameBoundary(std::function<void()> draw)
     }
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (!skipping_draw && shared_config.osd_encode) {
+    if (!skipping_draw && draw && shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
@@ -430,7 +430,7 @@ void frameBoundary(std::function<void()> draw)
     }
 
 #ifdef LIBTAS_ENABLE_HUD
-    if (!skipping_draw && !shared_config.osd_encode) {
+    if (!skipping_draw && draw && !shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
@@ -444,11 +444,11 @@ void frameBoundary(std::function<void()> draw)
     }
 
     /* Receive messages from the program */
-    #ifdef LIBTAS_ENABLE_HUD
+#ifdef LIBTAS_ENABLE_HUD
         receive_messages(draw, hud);
-    #else
+#else
         receive_messages(draw);
-    #endif
+#endif
 
     /* No more socket messages here, unlocking the socket. */
     unlockSocket();

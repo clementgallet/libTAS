@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EB36F78D25F0F60800833793 /* RenderHUD_Base_MacOS.h in Headers */ = {isa = PBXBuildFile; fileRef = EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */; };
+		EB36F78E25F0F60800833793 /* RenderHUD_Base_MacOS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB36F78C25F0F60800833793 /* RenderHUD_Base_MacOS.cpp */; };
+		EB36F78F25F0FE0900833793 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949825E5DED90011078F /* CoreFoundation.framework */; };
+		EB36F79025F0FE0900833793 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949625E5DE810011078F /* CoreGraphics.framework */; };
+		EB36F79225F0FE0900833793 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB36F79125F0FE0900833793 /* CoreText.framework */; };
 		EB79949725E5DE810011078F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949625E5DE810011078F /* CoreGraphics.framework */; };
 		EB79949925E5DEDA0011078F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949825E5DED90011078F /* CoreFoundation.framework */; };
 		EBC20F9625E568A1008A406C /* openglwrappers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED812525CC8F3C00951619 /* openglwrappers.cpp */; };
@@ -178,7 +183,6 @@
 		EBED82E125CC908A00951619 /* RenderHUD_SDL1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED813025CC8F3C00951619 /* RenderHUD_SDL1.cpp */; };
 		EBED82E225CC908A00951619 /* RenderHUD_SDL2_renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED813225CC8F3C00951619 /* RenderHUD_SDL2_renderer.cpp */; };
 		EBED82E325CC908A00951619 /* RenderHUD_SDL2_surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED813425CC8F3C00951619 /* RenderHUD_SDL2_surface.cpp */; };
-		EBED82E625CC908A00951619 /* sdl_ttf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED813A25CC8F3C00951619 /* sdl_ttf.cpp */; };
 		EBED82E725CC908A00951619 /* SurfaceARGB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED813C25CC8F3C00951619 /* SurfaceARGB.cpp */; };
 		EBED82E925CC909C00951619 /* sdldisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED814325CC8F3C00951619 /* sdldisplay.cpp */; };
 		EBED82EA25CC909C00951619 /* sdldynapi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED814525CC8F3C00951619 /* sdldynapi.cpp */; };
@@ -237,7 +241,12 @@
 
 /* Begin PBXFileReference section */
 		EB18D18625DAE57000A40A10 /* libtas.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libtas.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderHUD_Base_MacOS.h; sourceTree = "<group>"; };
+		EB36F78C25F0F60800833793 /* RenderHUD_Base_MacOS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderHUD_Base_MacOS.cpp; sourceTree = "<group>"; };
+		EB36F79125F0FE0900833793 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		EB4C32EE25EBC16E00364303 /* libTAS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = libTAS.entitlements; sourceTree = "<group>"; };
+		EB6B040725F14FE500C8B0F2 /* RenderHUD_Base_Linux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RenderHUD_Base_Linux.h; sourceTree = "<group>"; };
+		EB6B040825F14FE500C8B0F2 /* RenderHUD_Base_Linux.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RenderHUD_Base_Linux.cpp; sourceTree = "<group>"; };
 		EB79949525E5C9CD0011078F /* QuartzKeycodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuartzKeycodes.h; sourceTree = "<group>"; };
 		EB79949625E5DE810011078F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		EB79949825E5DED90011078F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -663,6 +672,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB36F79225F0FE0900833793 /* CoreText.framework in Frameworks */,
+				EB36F78F25F0FE0900833793 /* CoreFoundation.framework in Frameworks */,
+				EB36F79025F0FE0900833793 /* CoreGraphics.framework in Frameworks */,
 				EBC20F9825E57DDE008A406C /* dylib1.o in Frameworks */,
 				EBC93BBD25DE929600C84DF4 /* OpenGL.framework in Frameworks */,
 			);
@@ -674,6 +686,7 @@
 		EBBDFCF525CEF089005F26EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EB36F79125F0FE0900833793 /* CoreText.framework */,
 				EBDA73A825E6C908007DD9B8 /* QtGui.framework */,
 				EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */,
 				EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */,
@@ -998,8 +1011,12 @@
 				EBED812E25CC8F3C00951619 /* RenderHUD_GL.cpp */,
 				EBED812F25CC8F3C00951619 /* RenderHUD_GL.h */,
 				EBED813025CC8F3C00951619 /* RenderHUD_SDL1.cpp */,
+				EB36F78C25F0F60800833793 /* RenderHUD_Base_MacOS.cpp */,
+				EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */,
 				EBED813125CC8F3C00951619 /* RenderHUD_SDL1.h */,
 				EBED813225CC8F3C00951619 /* RenderHUD_SDL2_renderer.cpp */,
+				EB6B040825F14FE500C8B0F2 /* RenderHUD_Base_Linux.cpp */,
+				EB6B040725F14FE500C8B0F2 /* RenderHUD_Base_Linux.h */,
 				EBED813325CC8F3C00951619 /* RenderHUD_SDL2_renderer.h */,
 				EBED813425CC8F3C00951619 /* RenderHUD_SDL2_surface.cpp */,
 				EBED813525CC8F3C00951619 /* RenderHUD_SDL2_surface.h */,
@@ -1299,6 +1316,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBC9684E25DC7B4D00605863 /* keysymdef.h in Headers */,
+				EB36F78D25F0F60800833793 /* RenderHUD_Base_MacOS.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1540,7 +1558,6 @@
 				EBED82FB25CC90B500951619 /* isteamgameserver.cpp in Sources */,
 				EBED830B25CC90B500951619 /* steamgameserver.cpp in Sources */,
 				EBED82BF25CC905400951619 /* ThreadSync.cpp in Sources */,
-				EBED82E625CC908A00951619 /* sdl_ttf.cpp in Sources */,
 				EBED82A225CC902A00951619 /* tlswrappers.cpp in Sources */,
 				EBED82B525CC904800951619 /* sdlaudio.cpp in Sources */,
 				EBED828F25CC902A00951619 /* global.cpp in Sources */,
@@ -1592,6 +1609,7 @@
 				EBED830825CC90B500951619 /* isteamutils.cpp in Sources */,
 				EBED82CB25CC907C00951619 /* inputevents.cpp in Sources */,
 				EBED82E025CC908A00951619 /* RenderHUD_GL.cpp in Sources */,
+				EB36F78E25F0F60800833793 /* RenderHUD_Base_MacOS.cpp in Sources */,
 				EBED82AF25CC904700951619 /* DecoderMSADPCM.cpp in Sources */,
 				EBED82F625CC90B500951619 /* isteamapps.cpp in Sources */,
 				EBED82B025CC904700951619 /* fluidsynth.cpp in Sources */,
@@ -1624,6 +1642,7 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "LIBTAS_ENABLE_HUD=1";
 				HEADER_SEARCH_PATHS = (
 					"/usr/local/opt/lua@5.3/include/lua",
 					/usr/local/include,
@@ -1657,6 +1676,7 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "LIBTAS_ENABLE_HUD=1";
 				HEADER_SEARCH_PATHS = (
 					"/usr/local/opt/lua@5.3/include/lua",
 					/usr/local/include,
@@ -1804,6 +1824,7 @@
 					"__THROW=",
 					"__THROWNL=",
 					"SOCKET_LOG=1",
+					"LIBTAS_ENABLE_HUD=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include;
@@ -1835,6 +1856,7 @@
 					"__THROW=",
 					"__THROWNL=",
 					"SOCKET_LOG=1",
+					"LIBTAS_ENABLE_HUD=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include;

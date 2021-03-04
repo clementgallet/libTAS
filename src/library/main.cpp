@@ -34,11 +34,6 @@
 #include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
-#ifdef __unix__
-#include "renderhud/RenderHUD_Base_Linux.h"
-#elif defined(__APPLE__) && defined(__MACH__)
-#include "renderhud/RenderHUD_Base_MacOS.h"
-#endif
 #include <unistd.h> // getpid()
 #include "frame.h" // framecount
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
@@ -177,15 +172,6 @@ void __attribute__((constructor)) init(void)
 
     /* Initialize sound parameters */
     audiocontext.init();
-
-#ifdef LIBTAS_ENABLE_HUD
-    /* Load HUD fonts */
-#ifdef __unix__
-    RenderHUD_Base_Linux::initFonts();
-#elif defined(__APPLE__) && defined(__MACH__)
-    RenderHUD_Base_MacOS::initFonts();
-#endif
-#endif
 
     is_inited = true;
 }
