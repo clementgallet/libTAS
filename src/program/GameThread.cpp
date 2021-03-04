@@ -189,25 +189,28 @@ void GameThread::launch(Context *context)
     }
     else {
         if (context->attach_gdb) {
+#ifdef __unix__
             std::string cmd = "which gdb";
+#elif defined(__APPLE__) && defined(__MACH__)
+            std::string cmd = "which lldb";
+#endif
             FILE *output = popen(cmd.c_str(), "r");
             std::array<char,256> buf;
             fgets(buf.data(), buf.size(), output);
-            std::string gdbpath = std::string(buf.data());
-            gdbpath.pop_back(); // remove trailing newline
+            std::string dbgpath = std::string(buf.data());
+            dbgpath.pop_back(); // remove trailing newline
             pclose(output);
 
-            arg_list.push_back(gdbpath);
+            arg_list.push_back(dbgpath);
+
+            /* Push debugger arguments */
+#ifdef __unix__
             arg_list.push_back("-q");
             arg_list.push_back("-ex");
 
-            /* LD_PRELOAD/DYLD_INSERT_LIBRARIES must be set inside a gdb
+            /* LD_PRELOAD must be set inside a gdb
              * command to be effective */
-#ifdef __unix__
             std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
-#elif defined(__APPLE__) && defined(__MACH__)
-            std::string ldpreloadstr = "set exec-wrapper env 'DYLD_INSERT_LIBRARIES=";
-#endif
             ldpreloadstr += context->libtaspath;
             if (!context->old_ld_preload.empty()) {
                 ldpreloadstr += ":";
@@ -216,33 +219,42 @@ void GameThread::launch(Context *context)
             ldpreloadstr += "'";
             arg_list.push_back(ldpreloadstr);
 
-#if defined(__APPLE__) && defined(__MACH__)
-            arg_list.push_back("-ex");
-            arg_list.push_back("set exec-wrapper env 'DYLD_FORCE_FLAT_NAMESPACE=1'");
-#endif
-
             /* We are using SIGSYS and SIGXFSZ for savestates, so don't
-             * print and pause when one signal is sent */
+             * print and pause when one signal is sent *
+             * Signals SIGPWR SIGXCPU SIG35 and SIG36 are used a lot in some games */
             arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGSYS nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGXFSZ nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGUSR1 nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGUSR2 nostop noprint");
-            /* The following signals are used a lot in some games */
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGPWR nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIGXCPU nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIG35 nostop noprint");
-            arg_list.push_back("-ex");
-            arg_list.push_back("handle SIG36 nostop noprint");
+            arg_list.push_back("handle SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGPWR SIGXCPU SIG35 SIG36 nostop noprint");
             arg_list.push_back("-ex");
             arg_list.push_back("run");
             arg_list.push_back("--args");
+
+#elif defined(__APPLE__) && defined(__MACH__)
+
+            arg_list.push_back("-o");
+
+            /* DYLD_INSERT_LIBRARIES must be set inside a lldb
+             * command to be effective */
+            std::string ldpreloadstr = "set se target.env-vars 'DYLD_INSERT_LIBRARIES=";
+            ldpreloadstr += context->libtaspath;
+            if (!context->old_ld_preload.empty()) {
+                ldpreloadstr += ":";
+                ldpreloadstr += context->old_ld_preload;
+            }
+            ldpreloadstr += "'";
+            arg_list.push_back(ldpreloadstr);
+            
+            arg_list.push_back("-o");
+            arg_list.push_back("set se target.env-vars 'DYLD_FORCE_FLAT_NAMESPACE=1'");
+            
+            /* We are using SIGSYS and SIGXFSZ for savestates, so don't
+             * print and pause when one signal is sent */
+            arg_list.push_back("-o");
+            arg_list.push_back("run");
+            /* Signal handling cannot be performed in llvm before the process has started */
+//            arg_list.push_back("-o");
+//            arg_list.push_back("process handle -n false -p false -s false SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGXCPU");
+            arg_list.push_back("--");
+#endif
         }
 
         /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked.
