@@ -192,7 +192,7 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
             if ((keyboard_state[i] >> j) & 0x1) {
 
                 /* We got a pressed keycode */
-                keysym_t ks = keyboard_layout[(i << 3) | j];
+                keysym_t ks = nativeToKeysym((i << 3) | j);
 
                 /* Check if we are dealing with a hotkey with or without modifiers */
                 if (hotkey_mapping.find(ks) != hotkey_mapping.end()) {
@@ -328,7 +328,7 @@ static const key_translate char_to_xcb_keycode[59] = {
     { 27, XK_Escape },
     { NSDeleteCharacter, XK_Delete },
     { NSUpArrowFunctionKey, XK_Up },
-    { NSDownArrowFunctionKey, XK_Up },
+    { NSDownArrowFunctionKey, XK_Down },
     { NSLeftArrowFunctionKey, XK_Left },
     { NSRightArrowFunctionKey, XK_Right },
     { NSF1FunctionKey, XK_F1 },
@@ -451,4 +451,10 @@ void KeyMappingQuartz::initKeyboardLayout()
             }
         }
     }
+    
+    /* Add modifiers using the left keys for translation */
+    keyboard_layout[kVK_Shift] = XK_Shift_L;
+    keyboard_layout[kVK_Control] = XK_Control_L;
+    keyboard_layout[kVK_Command] = XK_Meta_L;
+    keyboard_layout[kVK_Option] = XK_Alt_L;
 }

@@ -20,6 +20,7 @@
 #include "GameEventsQuartz.h"
 #include "GameEvents.h"
 #include "movie/MovieFile.h"
+#include "../external/QuartzKeycodes.h"
 
 #include <CoreGraphics/CoreGraphics.h>
 
@@ -34,10 +35,10 @@ NSRunningApplication* GameEventsQuartz::gameApp = nullptr;
 GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m) {}
 
 static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
-    
+
+    Context* context = static_cast<Context*>(refcon);
+
     if ((type == kCGEventKeyDown) || (type == kCGEventKeyUp)) {
-        Context* context = static_cast<Context*>(refcon);
-        
         /* Skip autorepeat */
         int64_t autorepeat = CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat);
         if (autorepeat)
@@ -85,6 +86,26 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
                 context->hotkey_released_queue.push(hk_type);
         }
     }
+    if (type == kCGEventFlagsChanged) {
+        CGEventFlags flags = CGEventGetFlags(event);
+        if (flags & kCGEventFlagMaskShift)
+            context->config.km->registerKeyDown(kVK_Shift);
+        else
+            context->config.km->registerKeyUp(kVK_Shift);
+        if (flags & kCGEventFlagMaskControl)
+            context->config.km->registerKeyDown(kVK_Control);
+        else
+            context->config.km->registerKeyUp(kVK_Control);
+        if (flags & kCGEventFlagMaskAlternate)
+            context->config.km->registerKeyDown(kVK_Command);
+        else
+            context->config.km->registerKeyUp(kVK_Command);
+        if (flags & kCGEventFlagMaskCommand)
+            context->config.km->registerKeyDown(kVK_Option);
+        else
+            context->config.km->registerKeyUp(kVK_Option);
+    }
+    
     return event;
 }
 
@@ -102,7 +123,7 @@ void GameEventsQuartz::init()
     }
     
     /* Register the event tap */
-    CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
+    CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp) | CGEventMaskBit(kCGEventFlagsChanged);
     
     //    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
     CFMachPortRef eventTap = CGEventTapCreate(kCGHIDEventTap, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
