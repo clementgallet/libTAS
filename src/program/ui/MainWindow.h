@@ -31,6 +31,8 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QComboBox>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <forward_list>
 #include <string>
 
@@ -189,9 +191,12 @@ private:
     /* Update the list of recent gamepaths */
     void updateRecentGamepaths();
 
-    /* Update UI elements that are often modified, triggered by a timer */
-    void updateUIFrequent();
+    /* Timer to limit the number of update calls */
+    QElapsedTimer* updateTimer;
 
+    /* Timer to trigger the update call */
+    QTimer* callTimer;
+    
     /* Helper function to create a checkable action inside an action group */
     QAction *addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data, const QString& toolTip);
     QAction *addActionCheckable(QActionGroup*& group, const QString& text, const QVariant &data);
@@ -209,6 +214,9 @@ private slots:
      * are not supposed to be modified when the game is running.
      */
     void updateStatus();
+
+    /* Update UI elements that are often modified, triggered by a timer */
+    void updateUIFrequent();
 
     /* Update UI elements when the shared config has changed (pause, fastforward,
      * encode, etc.

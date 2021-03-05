@@ -332,7 +332,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
     return false;
 }
 
-bool GameEvents::handleEvent()
+int GameEvents::handleEvent()
 {
     /* Implement frame-advance auto-repeat */
     bool ar_advance = false;
@@ -346,8 +346,13 @@ bool GameEvents::handleEvent()
     struct HotKey hk;
     EventType eventType = nextEvent(hk);
 
+    int flags = ar_advance?RETURN_FLAG_ADVANCE:0;
+
     if (eventType) {
-        return ar_advance | processEvent(eventType, hk);
+        flags |= RETURN_FLAG_EVENT;
+        flags |= RETURN_FLAG_UPDATE; // For now, mark all events for update
+        if (processEvent(eventType, hk))
+            flags |= RETURN_FLAG_ADVANCE;
     }
-    return ar_advance;
+    return flags;
 }

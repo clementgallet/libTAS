@@ -65,6 +65,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
      * and connect all the signals.
      */
     gameLoop = new GameLoop(context);
+    connect(gameLoop, &GameLoop::uiChanged, this, &MainWindow::updateUIFrequent);
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
@@ -324,10 +325,14 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     updateUIFromConfig();
 
-    /* Periodic update timer */
-    QTimer *timer = new QTimer();
-    connect(timer, &QTimer::timeout, this, &MainWindow::updateUIFrequent);
-    timer->start(20);
+    /* Start the update timer */
+    updateTimer = new QElapsedTimer();
+    updateTimer->start();
+
+    /* Configure the call timer */
+    callTimer = new QTimer(this);
+    callTimer->setSingleShot(true);
+    connect(callTimer, &QTimer::timeout, this, &MainWindow::updateUIFrequent);
 
     /* We may have already started dumping from command-line */
     if (context->config.dumping) {
@@ -990,8 +995,16 @@ void MainWindow::updateRecentGamepaths()
 
 void MainWindow::updateUIFrequent()
 {
-    if (context->status != Context::ACTIVE)
+    /* Only update every 50 ms */
+    if (!updateTimer->hasExpired(50)) {
+        /* Call this function on timeout, if not already done */
+        if (!callTimer->isActive()) {
+            callTimer->start(50 - updateTimer->elapsed());
+        }
         return;
+    }
+
+    updateTimer->start();
 
     /* Update frame count */
     frameCount->setValue(context->framecount);
@@ -1020,7 +1033,7 @@ void MainWindow::updateUIFrequent()
         }
     }
 
-    /* Update frame count */
+    /* Update rerecord count */
     rerecordCount->setValue(context->rerecord_count);
 
     /* Update fps values */

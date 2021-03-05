@@ -78,9 +78,7 @@ void GameLoop::start()
             return;
         }
 
-        if (!context->game_window ) {
-            context->game_window = 1;
-        }
+        emit uiChanged();
 
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
@@ -95,10 +93,14 @@ void GameLoop::start()
                 return;
             }
 
-            bool hasFrameAdvanced = gameEvents->handleEvent();
+            int eventFlag = gameEvents->handleEvent();
+
+            if (eventFlag & GameEvents::RETURN_FLAG_UPDATE)
+                emit uiChanged();
 
             endInnerLoop = context->config.sc.running ||
-                hasFrameAdvanced || (context->status == Context::QUITTING);
+                (eventFlag & GameEvents::RETURN_FLAG_ADVANCE) ||
+                (context->status == Context::QUITTING);
 
             if (!endInnerLoop) {
                 sleepSendPreview();

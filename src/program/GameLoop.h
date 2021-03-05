@@ -62,6 +62,7 @@ private:
     void loopExit();
 
 signals:
+    void uiChanged();
     void statusChanged();
     void configChanged();
     void alertToShow(QString str);

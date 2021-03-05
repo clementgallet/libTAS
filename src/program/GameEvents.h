@@ -40,7 +40,15 @@ public:
     /* Register and select events from the window handle */
     virtual void registerGameWindow(uint32_t gameWindow) = 0;
 
-    bool handleEvent();
+    /* Flags to return after a single call to `handleEvent())` */
+    enum ReturnFlag {
+        RETURN_FLAG_EVENT = 0x1, // an event was processed
+        RETURN_FLAG_ADVANCE = 0x2, // advance to next frame
+        RETURN_FLAG_UPDATE = 0x4, // update UI
+    };
+
+    /* Handle an event from the queue and return flags */
+    int handleEvent();
 
     /* Determine if we are allowed to send inputs to the game, based on which
      * window has focus and our settings.
