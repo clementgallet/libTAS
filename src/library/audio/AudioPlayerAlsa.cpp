@@ -17,22 +17,38 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AudioPlayer.h"
+#include "AudioPlayerAlsa.h"
 
 #include "../logging.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
-//#include "../hook.h"
 
 namespace libtas {
 
-snd_pcm_t *AudioPlayer::phandle;
-AudioPlayer::APStatus AudioPlayer::status = STATUS_UNINIT;
-std::vector<char> AudioPlayer::silence;
+snd_pcm_t *AudioPlayerAlsa::phandle;
+AudioPlayerAlsa::APStatus AudioPlayerAlsa::status = STATUS_UNINIT;
+std::vector<uint8_t> AudioPlayerAlsa::silence;
 
-bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int frequency)
+bool AudioPlayerAlsa::init(AudioContext& ac)
 {
     debuglogstdio(LCF_SOUND, "Init audio player");
+
+    /* Format parameters */
+    snd_pcm_format_t format;
+    if (ac.outBitDepth == 8)
+        format = SND_PCM_FORMAT_U8;
+    if (ac.outBitDepth == 16)
+        format = SND_PCM_FORMAT_S16_LE;
+
+    /* Build a 50 ms silence buffer */
+    int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
+
+    if (ac.outBitDepth == 8) {
+        silence.assign(sil_bytes, -128);
+    }
+    if (ac.outBitDepth == 16) {
+        silence.assign(sil_bytes, 0x00);
+    }
 
     GlobalNative gn;
 
@@ -64,17 +80,17 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
     }
 
     int dir = 0;
-    if (snd_pcm_hw_params_set_rate(phandle, hw_params, frequency, dir) < 0) {
+    if (snd_pcm_hw_params_set_rate(phandle, hw_params, ac.outFrequency, dir) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate failed");
         return false;
     }
 
-    if (snd_pcm_hw_params_set_channels(phandle, hw_params, nbChannels) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_channels failed (%d)", nbChannels);
+    if (snd_pcm_hw_params_set_channels(phandle, hw_params, ac.outNbChannels) < 0) {
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_channels failed (%d)", ac.outNbChannels);
         return false;
     }
 
-    snd_pcm_uframes_t buffer_size = (shared_config.framerate_num>0)?(2*frequency*shared_config.framerate_den/shared_config.framerate_num):(2*frequency/30);
+    snd_pcm_uframes_t buffer_size = (shared_config.framerate_num>0)?(2*ac.outFrequency*shared_config.framerate_den/shared_config.framerate_num):(2*ac.outFrequency/30);
     debuglogstdio(LCF_SOUND, "  Buffer size is %d", buffer_size);
     if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
@@ -97,29 +113,13 @@ bool AudioPlayer::init(snd_pcm_format_t format, int nbChannels, unsigned int fre
     return true;
 }
 
-bool AudioPlayer::play(AudioContext& ac)
+bool AudioPlayerAlsa::play(AudioContext& ac)
 {
     if (status == STATUS_UNINIT) {
-        snd_pcm_format_t format;
-        if (ac.outBitDepth == 8)
-            format = SND_PCM_FORMAT_U8;
-        if (ac.outBitDepth == 16)
-            format = SND_PCM_FORMAT_S16_LE;
-        if (!init(format, ac.outNbChannels, static_cast<unsigned int>(ac.outFrequency))) {
+        if (!init(ac)) {
             status = STATUS_ERROR;
             return false;
         }
-
-        /* Build a 50 ms silence buffer */
-        int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
-
-        if (ac.outBitDepth == 8) {
-            silence.assign(sil_bytes, -128);
-        }
-        if (ac.outBitDepth == 16) {
-            silence.assign(sil_bytes, 0x00);
-        }
-        
         status = STATUS_OK;
     }
 
@@ -164,7 +164,7 @@ bool AudioPlayer::play(AudioContext& ac)
     return true;
 }
 
-void AudioPlayer::close()
+void AudioPlayerAlsa::close()
 {
     if (status == STATUS_OK) {
         MYASSERT(snd_pcm_close(phandle) == 0)

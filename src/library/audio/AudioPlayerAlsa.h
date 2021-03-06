@@ -17,16 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_AUDIOPLAYER_H_INCL
-#define LIBTAS_AUDIOPLAYER_H_INCL
+#ifndef LIBTAS_AUDIOPLAYERALSA_H_INCL
+#define LIBTAS_AUDIOPLAYERALSA_H_INCL
 
 #include "AudioContext.h"
 #include <alsa/asoundlib.h>
+#include <stdint.h>
 
 namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
-class AudioPlayer
+class AudioPlayerAlsa
 {
+private:
     /* Status */
     enum APStatus {
         STATUS_ERROR = -1,
@@ -39,22 +41,19 @@ class AudioPlayer
     /* Connection to the sound system */
     static snd_pcm_t *phandle;
 
-    static std::vector<char> silence;
+    static std::vector<uint8_t> silence;
     
-    public:
-        // AudioPlayer();
-        // ~AudioPlayer();
+public:
+    /* Init the connection to the server.
+     * Return if the connection was successful
+     */
+	static bool init(AudioContext& ac);
 
-        /* Init the connection to the server.
-         * Return if the connection was successful
-         */
-		static bool init(snd_pcm_format_t format, int nbChannels, unsigned int frequency);
+    /* Play the audio buffer stored in the audio context */
+	static bool play(AudioContext& ac);
 
-        /* Play the audio buffer stored in the audio context */
-		static bool play(AudioContext& ac);
-
-        /* Close the connection to the server */
-        static void close();
+    /* Close the connection to the server */
+    static void close();
 };
 }
 

@@ -20,7 +20,9 @@
 #include "../logging.h"
 #include "AudioContext.h"
 #ifdef __linux__
-#include "AudioPlayer.h"
+#include "AudioPlayerAlsa.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "AudioPlayerCoreAudio.h"
 #endif
 #include "../global.h" // shared_config
 
@@ -255,12 +257,14 @@ void AudioContext::mixAllSources(struct timespec ticks)
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
 
-#ifdef __linux__
     if (!audiocontext.isLoopback && !shared_config.audio_mute) {
         /* Play the music */
-        AudioPlayer::play(*this);
-    }
+#ifdef __linux__
+        AudioPlayerAlsa::play(*this);
+#elif defined(__APPLE__) && defined(__MACH__)
+        AudioPlayerCoreAudio::play(*this);
 #endif
+    }
 }
 
 }

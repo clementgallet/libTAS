@@ -36,8 +36,10 @@
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
 #ifdef __linux__
-#include "../audio/AudioPlayer.h"
 #include "../fileio/URandom.h"
+#include "../audio/AudioPlayerAlsa.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "../audio/AudioPlayerCoreAudio.h"
 #endif
 #include "AltStack.h"
 #include "ReservedMemory.h"
@@ -187,7 +189,9 @@ int SaveStateManager::checkpoint(int slot)
      * BEFORE suspending threads.
      */
 #ifdef __linux__
-    AudioPlayer::close();
+    AudioPlayerAlsa::close();
+#elif defined(__APPLE__) && defined(__MACH__)
+    AudioPlayerCoreAudio::close();
 #endif
 
     /* Perform a series of checks before attempting to checkpoint */
@@ -316,7 +320,9 @@ int SaveStateManager::restore(int slot)
      * BEFORE suspending threads.
      */
 #ifdef __linux__
-    AudioPlayer::close();
+    AudioPlayerAlsa::close();
+#elif defined(__APPLE__) && defined(__MACH__)
+    AudioPlayerCoreAudio::close();
 #endif
 
     /* Perform a series of checks before attempting to restore */
