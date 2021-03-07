@@ -21,6 +21,7 @@
 #include "../shared/SingleInput.h"
 #include "../external/keysymdef.h"
 #include "../external/QuartzKeycodes.h"
+#include "../external/keysymdesc.h"
 #include "ramsearch/MemAccess.h"
 
 #include <CoreGraphics/CoreGraphics.h>
@@ -418,12 +419,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                         SingleInput si;
                         si.type = SingleInput::IT_KEYBOARD;
                         si.value = keyboard_layout[kc];
-                        /* TODO: Add a proper description of the key */
-                        const char* str = [character cStringUsingEncoding:NSASCIIStringEncoding];
-                        if (str)
-                            si.description = str;
-                        else
-                            si.description = "";
+                        si.description = KEYSYM_TO_DESC_MISC(si.value);
                         input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
 
                         break;
@@ -439,13 +435,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                     SingleInput si;
                     si.type = SingleInput::IT_KEYBOARD;
                     si.value = keyboard_layout[kc];
-                    /* TODO: Add a proper description of the key */
-                    const char* str = [character cStringUsingEncoding:NSASCIIStringEncoding];
-                    if (str)
-                        si.description = str;
-                    else
-                        si.description = "";
-
+                    si.description = KEYSYM_TO_DESC_LATIN(si.value);
                     input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
                 }
             }

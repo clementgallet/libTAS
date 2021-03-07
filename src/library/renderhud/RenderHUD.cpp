@@ -24,11 +24,8 @@
 #include "../hook.h"
 #include <sstream>
 #include "../global.h" // shared_config
-// #include <X11/keysym.h>
 #include "../ScreenCapture.h"
-#ifdef __unix__
-#include <X11/Xlib.h> // XKeysymToString
-#endif
+#include "../../external/keysymdesc.h"
 
 namespace libtas {
 
@@ -139,7 +136,11 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
 #ifdef __unix__
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (ai.keyboard[i]) {
-            oss << "[K " << XKeysymToString(ai.keyboard[i]) << "] ";
+            const char* str = KEYSYM_TO_DESC(ai.keyboard[i]);
+            if (str)
+                oss << "[K " << str << "] ";
+            else
+                oss << "[K ???] ";
         }
     }
 #else

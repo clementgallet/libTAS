@@ -19,9 +19,9 @@
 
 #include "KeyMappingXcb.h"
 #include "../shared/SingleInput.h"
+#include "../external/keysymdesc.h"
+#include "../external/keysymdef.h"
 
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
 #include <cstring>
@@ -51,7 +51,7 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
         si.value = 0x0000 | ks;
-        char* str = XKeysymToString(si.value); // afaik there is no xcb counterpart to this...
+        const char* str = KEYSYM_TO_DESC_LATIN(ks);
         if (str) {
             si.description = str;
             input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
@@ -63,7 +63,7 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
         si.value = 0xff00 | ks;
-        char* str = XKeysymToString(si.value);
+        const char* str = KEYSYM_TO_DESC_MISC(ks);
         if (str) {
             si.description = str;
             input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
