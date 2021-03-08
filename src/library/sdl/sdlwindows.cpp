@@ -241,6 +241,18 @@ static int swapInterval = 0;
     event.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
     sdlEventQueue.insert(&event);
 
+#if defined(__APPLE__) && defined(__MACH__)
+    /* As a temp measure on MacOS, send SDL window handle so that the
+     * GameLoop can process events. Will be replaced by the low-level window
+     * handle when implemented. */
+    uint32_t w = static_cast<uint32_t>(sdl::gameSDLWindow);
+    lockSocket();
+    sendMessage(MSGB_WINDOW_ID);
+    sendData(&w, sizeof(w));
+    unlockSocket();
+    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", w);
+#endif
+
     return sdl::gameSDLWindow;
 }
 
