@@ -24,24 +24,18 @@
 #include <memory>
 #include <functional>
 #include "AudioBuffer.h"
-extern "C" {
-#include <libswresample/swresample.h>
-}
+#include "AudioConverter.h"
 
 namespace libtas {
 /* Class storing an audio source, whose role is to control the playback
  * of an audio buffer or a queue of audio buffers.
  * It is also in charge of eventually resample the buffer(s) and mix them
  * with an extern sample buffer.
- *
- * Its role is close to the openAL source object, with some additions from
- * SDL audio system (callback method mainly).
  */
 class AudioSource
 {
     public:
         AudioSource();
-        ~AudioSource();
 
         /* Identifier of the buffer */
         int id;
@@ -111,8 +105,8 @@ class AudioSource
         /* Indicate the current position in the buffer queue */
         int queue_index;
 
-        /* Context for resampling audio */
-        struct SwrContext *swr;
+        /* Object for resampling audio */
+        std::unique_ptr<AudioConverter> audioConverter;
 
         /* Temporary array of mixed samples */
         std::vector<uint8_t> mixedSamples;

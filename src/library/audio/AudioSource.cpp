@@ -18,27 +18,18 @@
  */
 
 #include "AudioSource.h"
-#include <iterator>     // std::back_inserter
-#include <algorithm>    // std::copy
 #include "../logging.h"
 #include "../global.h" // shared_config
-#include "hook.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
+#include "AudioConverter.h"
+#ifdef __unix__
+#include "AudioConverterSwr.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#endif
 
 namespace libtas {
-
-/* Link dynamically to avutil/swresample functions, because there are different
- * library versions depending on your distro.
- */
-DEFINE_ORIG_POINTER(swr_alloc)
-DEFINE_ORIG_POINTER(swr_free)
-DEFINE_ORIG_POINTER(swr_is_initialized)
-DEFINE_ORIG_POINTER(swr_close)
-DEFINE_ORIG_POINTER(swr_init)
-DEFINE_ORIG_POINTER(swr_alloc_set_opts)
-DEFINE_ORIG_POINTER(swr_convert)
 
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
@@ -55,35 +46,12 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 
 AudioSource::AudioSource(void)
 {
-    /* Some systems don't create the unversionned symlinks when the libraries
-     * are installed, so we add a link with the major version. */
-
-    /* Disabling logging because we expect some of these to fail */
-    {
-        GlobalNoLog gnl;
-        LINK_NAMESPACE(swr_alloc, "swresample");
-        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
-        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
-    }
-    /* Still test if it succeeded. */
-    if (!orig::swr_alloc) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc, disable audio mixing");
-        swr = nullptr;
-    }
-    else {
-        /* We link to swr_free here, because linking during destructor can softlock */
-        LINK_NAMESPACE(swr_free, "swresample");
-
-        swr = orig::swr_alloc();        
-    }
+#ifdef __unix__
+    audioConverter = std::unique_ptr<AudioConverter>(new AudioConverterSwr());
+#elif defined(__APPLE__) && defined(__MACH__)
+#endif
 
     init();
-}
-
-AudioSource::~AudioSource(void)
-{
-    if (orig::swr_free && swr)
-        orig::swr_free(&swr);
 }
 
 void AudioSource::init(void)
@@ -107,12 +75,7 @@ void AudioSource::rewind(void)
 
 void AudioSource::dirty(void)
 {
-    if (swr) {
-        LINK_NAMESPACE(swr_is_initialized, "swresample");
-        LINK_NAMESPACE(swr_close, "swresample");
-        if (orig::swr_is_initialized(swr))
-            orig::swr_close(swr);
-    }
+    audioConverter->dirty();
 }
 
 int AudioSource::nbQueue()
@@ -203,13 +166,6 @@ bool AudioSource::willEnd(struct timespec ticks)
 
 int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
 {
-    if (swr) {
-        LINK_NAMESPACE(swr_is_initialized, "swresample");
-        LINK_NAMESPACE(swr_init, "swresample");
-        LINK_NAMESPACE(swr_convert, "swresample");
-        LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
-    }
-
     if (state != SOURCE_PLAYING)
         return -1;
 
@@ -218,7 +174,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
     debuglogstdio(LCF_SOUND, "Start mixing source %d", id);
 
-    bool skipMixing = (!swr) || 
+    bool skipMixing = (!audioConverter->isAvailable()) || 
                         (!shared_config.av_dumping && 
                             (shared_config.audio_mute ||
                                 (shared_config.fastforward && 
@@ -227,63 +183,24 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
     if (!skipMixing) {
-        /* Check if SWR context is initialized.
-         * If not, set parameters and init it
-         */
-        if (! orig::swr_is_initialized(swr)) {
+        /* Check if audio converter is initialized.
+         * If not, set parameters and init it */
+        if (! audioConverter->isInited()) {
             /* Get the sample format */
-            AVSampleFormat inFormat = AV_SAMPLE_FMT_U8;
-            AVSampleFormat outFormat = AV_SAMPLE_FMT_U8;
-            switch (curBuf->format) {
-                case AudioBuffer::SAMPLE_FMT_U8:
-                    inFormat = AV_SAMPLE_FMT_U8;
+            AudioBuffer::SampleFormat outFormat = AudioBuffer::SAMPLE_FMT_U8;
+            switch (outBitDepth) {
+                case 8:
+                    outFormat = AudioBuffer::SAMPLE_FMT_U8;
                     break;
-                case AudioBuffer::SAMPLE_FMT_S16:
-                case AudioBuffer::SAMPLE_FMT_MSADPCM:
-                    inFormat = AV_SAMPLE_FMT_S16;
-                    break;
-                case AudioBuffer::SAMPLE_FMT_S32:
-                    inFormat = AV_SAMPLE_FMT_S32;
-                    break;
-                case AudioBuffer::SAMPLE_FMT_FLT:
-                    inFormat = AV_SAMPLE_FMT_FLT;
-                    break;
-                case AudioBuffer::SAMPLE_FMT_DBL:
-                    inFormat = AV_SAMPLE_FMT_DBL;
+                case 16:
+                    outFormat = AudioBuffer::SAMPLE_FMT_S16;
                     break;
                 default:
-                    debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown sample format");
+                    debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown audio format");
                     break;
             }
-            if (outBitDepth == 8)
-                outFormat = AV_SAMPLE_FMT_U8;
-            if (outBitDepth == 16)
-                outFormat = AV_SAMPLE_FMT_S16;
 
-            /* Get the channel layout */
-            int64_t in_ch_layout = 0;
-            int64_t out_ch_layout = 0;
-
-            if (curBuf->nbChannels == 1) {
-                in_ch_layout = AV_CH_LAYOUT_MONO;
-            }
-            if (curBuf->nbChannels == 2) {
-                in_ch_layout = AV_CH_LAYOUT_STEREO;
-            }
-            if (outNbChannels == 1) {
-                out_ch_layout = AV_CH_LAYOUT_MONO;
-            }
-            if (outNbChannels == 2) {
-                out_ch_layout = AV_CH_LAYOUT_STEREO;
-            }
-
-            MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outFormat, outFrequency, in_ch_layout, inFormat, static_cast<int>(curBuf->frequency*pitch), 0, nullptr));
-
-            /* Open the context */
-            if (orig::swr_init(swr) < 0) {
-                debuglogstdio(LCF_SOUND | LCF_ERROR, "Error initializing swr context");
-                return 0;
-            }
+            audioConverter->init(curBuf->format, curBuf->nbChannels, static_cast<int>(curBuf->frequency*pitch), outFormat, outNbChannels, outFrequency);
         }
     }
 
@@ -304,12 +221,6 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     int oldPosition = position;
     int newPosition = position + inNbSamples;
 
-    /* Allocate the mixed audio array */
-    int outNbSamples = outBytes / (outNbChannels * outBitDepth / 8);
-    mixedSamples.resize(outBytes);
-    uint8_t* begMixed = mixedSamples.data();
-
-    int convOutSamples = 0;
     uint8_t* begSamples;
     int availableSamples = curBuf->getSamples(begSamples, inNbSamples, oldPosition, (source == SOURCE_STATIC) && looping);
 
@@ -319,7 +230,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         position = newPosition;
         debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", curBuf->id, oldPosition, position);
         if (!skipMixing) {
-            convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, const_cast<const uint8_t**>(&begSamples), inNbSamples);
+            audioConverter->queueSamples(begSamples, inNbSamples);
         }
     }
     else {
@@ -327,7 +238,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         debuglogstdio(LCF_SOUND, "  Buffer %d is read from %d to its end %d", curBuf->id, oldPosition, curBuf->sampleSize);
         if (!skipMixing) {
             if (availableSamples > 0)
-                orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                audioConverter->queueSamples(begSamples, availableSamples);
         }
 
         int remainingSamples = inNbSamples - availableSamples;
@@ -346,18 +257,13 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 detTimer.fakeAdvanceTimer({0, 0});
                 availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0, false);
                 if (!skipMixing) {
-                    orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                    audioConverter->queueSamples(begSamples, availableSamples);
                 }
 
                 debuglogstdio(LCF_SOUND, "  Buffer %d is read again from 0 to %d", curBuf->id, availableSamples);
                 if (remainingSamples == availableSamples)
                     position = availableSamples;
                 remainingSamples -= availableSamples;
-            }
-
-            if (!skipMixing) {
-                /* Get the mixed samples */
-                convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
         }
         else {
@@ -373,7 +279,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, availableSamples);
 
                     if (!skipMixing) {
-                        orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                        audioConverter->queueSamples(begSamples, availableSamples);
                     }
 
                     if (remainingSamples == availableSamples) {
@@ -390,7 +296,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     debuglogstdio(LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
 
                     if (!skipMixing) {
-                        orig::swr_convert(swr, nullptr, 0, const_cast<const uint8_t**>(&begSamples), availableSamples);
+                        audioConverter->queueSamples(begSamples, availableSamples);
                     }
 
                     if (remainingSamples == availableSamples) {
@@ -399,11 +305,6 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     }
                     remainingSamples -= availableSamples;
                 }
-            }
-
-            if (!skipMixing) {
-                /* Get the mixed samples */
-                convOutSamples = orig::swr_convert(swr, &begMixed, outNbSamples, nullptr, 0);
             }
 
             if (remainingSamples > 0) {
@@ -426,10 +327,18 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 position = finalPos;
             }
         }
-
     }
+    
+    int convOutSamples = 0;
 
     if (!skipMixing) {
+        /* Allocate the mixed audio array */
+        int outNbSamples = outBytes / (outNbChannels * outBitDepth / 8);
+        mixedSamples.resize(outBytes);
+
+        /* Get the converter samples */
+        convOutSamples = audioConverter->getSamples(mixedSamples.data(), outNbSamples);
+
         #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
         int nbSaturate = 0;

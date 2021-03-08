@@ -41,6 +41,7 @@ libtas_so_SOURCES = \
     WindowTitle.cpp \
     audio/AudioBuffer.cpp \
     audio/AudioContext.cpp \
+    audio/AudioConverterSwr.cpp \
     audio/AudioPlayerAlsa.cpp \
     audio/AudioSource.cpp \
     audio/DecoderMSADPCM.cpp \
