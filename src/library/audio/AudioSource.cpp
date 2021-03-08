@@ -27,6 +27,7 @@
 #ifdef __unix__
 #include "AudioConverterSwr.h"
 #elif defined(__APPLE__) && defined(__MACH__)
+#include "AudioConverterCoreAudio.h"
 #endif
 
 namespace libtas {
@@ -49,6 +50,7 @@ AudioSource::AudioSource(void)
 #ifdef __unix__
     audioConverter = std::unique_ptr<AudioConverter>(new AudioConverterSwr());
 #elif defined(__APPLE__) && defined(__MACH__)
+    audioConverter = std::unique_ptr<AudioConverter>(new AudioConverterCoreAudio());
 #endif
 
     init();

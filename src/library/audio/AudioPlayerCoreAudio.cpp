@@ -81,11 +81,10 @@ bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
     switch (ac.outBitDepth) {
         case 8:
             strdesc.mBitsPerChannel = 8;
-            strdesc.mFormatFlags = 0;
             break;
-        case 8:
+        case 16:
             strdesc.mBitsPerChannel = 16;
-            strdesc.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger;
+            strdesc.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
             break;
         default:
             debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported audio format %d", ac.outBitDepth);
