@@ -245,12 +245,12 @@ static int swapInterval = 0;
     /* As a temp measure on MacOS, send SDL window handle so that the
      * GameLoop can process events. Will be replaced by the low-level window
      * handle when implemented. */
-    uint32_t w = static_cast<uint32_t>(sdl::gameSDLWindow);
+    uint32_t win = reinterpret_cast<uintptr_t>(sdl::gameSDLWindow);
     lockSocket();
     sendMessage(MSGB_WINDOW_ID);
-    sendData(&w, sizeof(w));
+    sendData(&win, sizeof(win));
     unlockSocket();
-    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", w);
+    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", win);
 #endif
 
     return sdl::gameSDLWindow;

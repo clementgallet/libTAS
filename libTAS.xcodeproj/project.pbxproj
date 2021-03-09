@@ -223,6 +223,12 @@
 		EBED832025CC90DE00951619 /* SingleInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED824625CC8F3C00951619 /* SingleInput.cpp */; };
 		EBED832125CC90DE00951619 /* sockethelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED824825CC8F3C00951619 /* sockethelpers.cpp */; };
 		EBED832225CC90F700951619 /* lz4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED807125CC8F3C00951619 /* lz4.cpp */; };
+		EBEF729B25F6D4AD00FEF4D6 /* AudioConverterCoreAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBEF729625F6D4AC00FEF4D6 /* AudioConverterCoreAudio.cpp */; };
+		EBEF729C25F6D4AD00FEF4D6 /* AudioPlayerCoreAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBEF729725F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.cpp */; };
+		EBEF729D25F6D4AD00FEF4D6 /* AudioPlayerCoreAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = EBEF729825F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.h */; };
+		EBEF729E25F6D4AD00FEF4D6 /* AudioConverterCoreAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = EBEF729925F6D4AD00FEF4D6 /* AudioConverterCoreAudio.h */; };
+		EBEF729F25F6D4AD00FEF4D6 /* AudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = EBEF729A25F6D4AD00FEF4D6 /* AudioConverter.h */; };
+		EBEF72A125F6E11700FEF4D6 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBEF72A025F6E11700FEF4D6 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -241,6 +247,7 @@
 
 /* Begin PBXFileReference section */
 		EB18D18625DAE57000A40A10 /* libtas.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libtas.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB1F440125F7E71300E18895 /* keysymdesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keysymdesc.h; sourceTree = "<group>"; };
 		EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderHUD_Base_MacOS.h; sourceTree = "<group>"; };
 		EB36F78C25F0F60800833793 /* RenderHUD_Base_MacOS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderHUD_Base_MacOS.cpp; sourceTree = "<group>"; };
 		EB36F79125F0FE0900833793 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
@@ -651,6 +658,12 @@
 		EBED824825CC8F3C00951619 /* sockethelpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sockethelpers.cpp; sourceTree = "<group>"; };
 		EBED824925CC8F3C00951619 /* sockethelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sockethelpers.h; sourceTree = "<group>"; };
 		EBED824A25CC8F3C00951619 /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		EBEF729625F6D4AC00FEF4D6 /* AudioConverterCoreAudio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverterCoreAudio.cpp; sourceTree = "<group>"; };
+		EBEF729725F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioPlayerCoreAudio.cpp; sourceTree = "<group>"; };
+		EBEF729825F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayerCoreAudio.h; sourceTree = "<group>"; };
+		EBEF729925F6D4AD00FEF4D6 /* AudioConverterCoreAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverterCoreAudio.h; sourceTree = "<group>"; };
+		EBEF729A25F6D4AD00FEF4D6 /* AudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverter.h; sourceTree = "<group>"; };
+		EBEF72A025F6E11700FEF4D6 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -672,6 +685,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBEF72A125F6E11700FEF4D6 /* AudioToolbox.framework in Frameworks */,
 				EB36F79225F0FE0900833793 /* CoreText.framework in Frameworks */,
 				EB36F78F25F0FE0900833793 /* CoreFoundation.framework in Frameworks */,
 				EB36F79025F0FE0900833793 /* CoreGraphics.framework in Frameworks */,
@@ -686,6 +700,7 @@
 		EBBDFCF525CEF089005F26EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EBEF72A025F6E11700FEF4D6 /* AudioToolbox.framework */,
 				EB36F79125F0FE0900833793 /* CoreText.framework */,
 				EBDA73A825E6C908007DD9B8 /* QtGui.framework */,
 				EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */,
@@ -735,6 +750,7 @@
 				EBC9684D25DC7B4D00605863 /* keysymdef.h */,
 				EB79949525E5C9CD0011078F /* QuartzKeycodes.h */,
 				EBED807425CC8F3C00951619 /* SDL1.h */,
+				EB1F440125F7E71300E18895 /* keysymdesc.h */,
 				EBED807525CC8F3C00951619 /* SDL_dynapi_procs.h */,
 				EBED807625CC8F3C00951619 /* vdpau.h */,
 				EBED807725CC8F3C00951619 /* vdpau_x11.h */,
@@ -849,6 +865,11 @@
 				EBED808B25CC8F3C00951619 /* AudioBuffer.h */,
 				EBED808C25CC8F3C00951619 /* AudioContext.cpp */,
 				EBED808D25CC8F3C00951619 /* AudioContext.h */,
+				EBEF729A25F6D4AD00FEF4D6 /* AudioConverter.h */,
+				EBEF729625F6D4AC00FEF4D6 /* AudioConverterCoreAudio.cpp */,
+				EBEF729925F6D4AD00FEF4D6 /* AudioConverterCoreAudio.h */,
+				EBEF729725F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.cpp */,
+				EBEF729825F6D4AC00FEF4D6 /* AudioPlayerCoreAudio.h */,
 				EBED809025CC8F3C00951619 /* AudioSource.cpp */,
 				EBED809125CC8F3C00951619 /* AudioSource.h */,
 				EBED809225CC8F3C00951619 /* BinaryIStream.h */,
@@ -1315,7 +1336,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBEF729E25F6D4AD00FEF4D6 /* AudioConverterCoreAudio.h in Headers */,
+				EBEF729F25F6D4AD00FEF4D6 /* AudioConverter.h in Headers */,
 				EBC9684E25DC7B4D00605863 /* keysymdef.h in Headers */,
+				EBEF729D25F6D4AD00FEF4D6 /* AudioPlayerCoreAudio.h in Headers */,
 				EB36F78D25F0F60800833793 /* RenderHUD_Base_MacOS.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1535,6 +1559,7 @@
 				EBED82FA25CC90B500951619 /* isteamgamecoordinator.cpp in Sources */,
 				EBED82EE25CC909C00951619 /* sdlmutex.cpp in Sources */,
 				EBED82AA25CC904700951619 /* AudioBuffer.cpp in Sources */,
+				EBEF729B25F6D4AD00FEF4D6 /* AudioConverterCoreAudio.cpp in Sources */,
 				EBED82D125CC907C00951619 /* sdlhaptic.cpp in Sources */,
 				EBED82D525CC907C00951619 /* sdlpointer.cpp in Sources */,
 				EBED830525CC90B500951619 /* isteamugc.cpp in Sources */,
@@ -1553,6 +1578,7 @@
 				EBED82C525CC906700951619 /* posixiowrappers.cpp in Sources */,
 				EBED82A625CC902A00951619 /* waitwrappers.cpp in Sources */,
 				EBED832225CC90F700951619 /* lz4.cpp in Sources */,
+				EBEF729C25F6D4AD00FEF4D6 /* AudioPlayerCoreAudio.cpp in Sources */,
 				EBED829525CC902A00951619 /* main.cpp in Sources */,
 				EBED82AD25CC904700951619 /* AudioSource.cpp in Sources */,
 				EBED82FB25CC90B500951619 /* isteamgameserver.cpp in Sources */,

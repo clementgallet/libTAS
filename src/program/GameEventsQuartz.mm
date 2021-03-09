@@ -138,7 +138,10 @@ void GameEventsQuartz::init()
     CGEventTapEnable(eventTap, true);
 }
 
-void GameEventsQuartz::registerGameWindow(uint32_t gameWindow) {}
+void GameEventsQuartz::registerGameWindow(uint32_t gameWindow)
+{
+    context->game_window = gameWindow;
+}
 
 GameEventsQuartz::EventType GameEventsQuartz::nextEvent(struct HotKey &hk)
 {

@@ -22,6 +22,7 @@
 #include "hook.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <algorithm>
 
 namespace libtas {
 
@@ -43,6 +44,8 @@ bool AudioConverterCoreAudio::isInited()
 
 void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inChannels, int inFreq, AudioBuffer::SampleFormat outFormat, int outChannels, int outFreq)
 {
+    debuglogstdio(LCF_SOUND, "Init audio converter");
+
     in.mFormatID = kAudioFormatLinearPCM;
     in.mFormatFlags = kLinearPCMFormatFlagIsPacked;
     in.mChannelsPerFrame = inChannels;
@@ -114,6 +117,9 @@ void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inCha
         debuglogstdio(LCF_SOUND | LCF_ERROR, "Error initializing AudioConverter: %d", err);
         return;
     }
+
+    tempBuffer.resize(0);
+    tempBufferOffset = 0;
 }
 
 void AudioConverterCoreAudio::dirty(void)
@@ -122,13 +128,13 @@ void AudioConverterCoreAudio::dirty(void)
     converter = nullptr;
 }
 
-static OSStatus converterCallback(AudioConverterRef inAudioConverter, int *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
+static OSStatus converterCallback(AudioConverterRef inAudioConverter, uint32_t *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
 {
     AudioConverterCoreAudio *converter = static_cast<AudioConverterCoreAudio*>(inUserData);
-    AudioBufferList *bufferList = converter->inBufferList;
-    ioData->mBuffers[0].mNumberChannels = bufferList->mBuffers[0].mNumberChannels;
-    ioData->mBuffers[0].mData = bufferList->mBuffers[0].mData;
-    ioData->mBuffers[0].mDataByteSize = bufferList->mBuffers[0].mDataByteSize;
+    AudioBufferList bufferList = converter->inBufferList;
+    ioData->mBuffers[0].mNumberChannels = bufferList.mBuffers[0].mNumberChannels;
+    ioData->mBuffers[0].mData = bufferList.mBuffers[0].mData;
+    ioData->mBuffers[0].mDataByteSize = bufferList.mBuffers[0].mDataByteSize;
 
     *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / converter->in.mBytesPerPacket;
     return noErr;
@@ -139,20 +145,36 @@ void AudioConverterCoreAudio::queueSamples(const uint8_t* inSamples, int inNbSam
     if (!isAvailable() || !isInited())
         return;
 
-    /* Create an AudioBuffer object */
-    AudioBuffer ab;
-    ab.mData = inSamples;
+    /* Create the input AudioBuffer object */
+    ::AudioBuffer ab;
+    ab.mData = const_cast<uint8_t*>(inSamples);
     ab.mDataByteSize = in.mBytesPerFrame*inNbSamples;
     ab.mNumberChannels = in.mChannelsPerFrame;
     
-    inBufferList.mNumberBuffers = 1
+    inBufferList.mNumberBuffers = 1;
     inBufferList.mBuffers[0] = ab;
 
-    AudioBufferList outBufferList;
+    /* Create the output AudioBuffer object */
+    ::AudioBuffer outAb;
+    outAb.mDataByteSize = out.mBytesPerFrame*inNbSamples*out.mSampleRate/in.mSampleRate;
+    outAb.mNumberChannels = out.mChannelsPerFrame;
+    tempBuffer.resize(tempBuffer.size() + outAb.mDataByteSize);
+    outAb.mData = &tempBuffer[tempBufferOffset];
 
-    int ioOutputDataPacketSize = 0;
-    OSStatus err = AudioConverterFillComplexBuffer(converter, converterCallback, 
-    this, &ioOutputDataPacketSize, &outBufferList, NULL);
+    AudioBufferList outBufferList;
+    outBufferList.mNumberBuffers = 1;
+    outBufferList.mBuffers[0] = outAb;
+
+    uint32_t ioOutputDataPacketSize = inNbSamples*out.mSampleRate/in.mSampleRate;
+    OSStatus err = AudioConverterFillComplexBuffer(converter, &converterCallback,
+    static_cast<void*>(this), &ioOutputDataPacketSize, &outBufferList, nullptr);
+    
+    if (err < 0) {
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "Error in AudioConverterFillComplexBuffer: %d", err);
+        return;
+    }
+    
+    tempBufferOffset += ioOutputDataPacketSize*out.mBytesPerFrame;
 }
 
 int AudioConverterCoreAudio::getSamples(uint8_t* outSamples, int outNbSamples)
@@ -160,27 +182,14 @@ int AudioConverterCoreAudio::getSamples(uint8_t* outSamples, int outNbSamples)
     if (!isAvailable() || !isInited())
         return 0;
     
-    /* Create an AudioBuffer object */
-    AudioBuffer ab;
-    ab.mData = nullptr;
-    ab.mDataByteSize = 0;
-    ab.mNumberChannels = in.mChannelsPerFrame;
-    
-    inBufferList.mNumberBuffers = 1
-    inBufferList.mBuffers[0] = ab;
+    size_t maxOutBytes = std::min(static_cast<size_t>(outNbSamples*out.mBytesPerFrame),tempBuffer.size());
+    memcpy(outSamples, tempBuffer.data(), maxOutBytes);
 
-    AudioBuffer outAb;
-    outAb.mData = outSamples;
-    outAb.mDataByteSize = out.mBytesPerFrame*outNbSamples;
-    outAb.mNumberChannels = out.mChannelsPerFrame;
+    /* Reset temporary buffer */
+    tempBuffer.resize(0);
+    tempBufferOffset = 0;
 
-    AudioBufferList outBufferList;
-    outBufferList.mNumberBuffers = 1
-    outBufferList.mBuffers[0] = outAb;
+    return maxOutBytes/out.mBytesPerFrame;
+}
 
-    int ioOutputDataPacketSize = outSamples;
-    OSStatus err = AudioConverterFillComplexBuffer(converter, converterCallback, 
-    this, &ioOutputDataPacketSize, &outBufferList, NULL);
-
-    return ioOutputDataPacketSize;
 }

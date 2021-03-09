@@ -22,30 +22,31 @@
 #include "../logging.h"
 #include "../global.h" // shared_config
 #include "../GlobalState.h"
+#include <algorithm>
 
 namespace libtas {
 
 AudioQueueRef AudioPlayerCoreAudio::audioQueue;
 std::vector<AudioQueueBufferRef> AudioPlayerCoreAudio::audioQueueBuffers;
 AudioPlayerCoreAudio::APStatus AudioPlayerCoreAudio::status = STATUS_UNINIT;
-cyclic_buffer AudioPlayerCoreAudio::cyclicBuffer;
+AudioPlayerCoreAudio::cyclic_buffer AudioPlayerCoreAudio::cyclicBuffer;
 
 static void audioCallback(void *inUserData, AudioQueueRef queue, AudioQueueBufferRef buffer)
 {
-    cyclic_buffer* cyclicBuffer = static_cast<cyclic_buffer*>(inUserData);
+    AudioPlayerCoreAudio::cyclic_buffer* cyclicBuffer = static_cast<AudioPlayerCoreAudio::cyclic_buffer*>(inUserData);
     
     UInt32 remaining = buffer->mAudioDataBytesCapacity;
     uint8_t* ptr = static_cast<uint8_t*>(buffer->mAudioData);
     
     /* Read from cyclic buffer */
-    size_t bytesToRead = std::min(inBuffer->mAudioDataBytesCapacity, buffer.size);
-    
+    int bytesToRead = std::min(buffer->mAudioDataBytesCapacity, static_cast<uint32_t>(cyclicBuffer->size));
+
     /* Read at buffer end */
     size_t sizeEnd = std::min(bytesToRead, cyclicBuffer->cap - cyclicBuffer->beg);
     memcpy(ptr, cyclicBuffer->data.data() + cyclicBuffer->beg, sizeEnd);
 
     /* Read at buffer beginning if needed */
-    size_t sizeBeg = bytesToRead - sizeEnd;
+    int sizeBeg = bytesToRead - sizeEnd;
     if (sizeBeg > 0) {
         memcpy(ptr + sizeEnd, cyclicBuffer->data.data(), sizeBeg);
         cyclicBuffer->beg = sizeBeg;
@@ -56,14 +57,14 @@ static void audioCallback(void *inUserData, AudioQueueRef queue, AudioQueueBuffe
     
     /* Fill the rest with silence */
     if (bytesToRead < buffer->mAudioDataBytesCapacity) {
-        if ()
+        memset(ptr + bytesToRead, cyclicBuffer->silence, buffer->mAudioDataBytesCapacity-bytesToRead);
     }
     
     AudioQueueEnqueueBuffer(queue, buffer, 0, NULL);
     buffer->mAudioDataByteSize = buffer->mAudioDataBytesCapacity;
 }
 
-bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
+bool AudioPlayerCoreAudio::init(AudioContext& ac)
 {
     debuglogstdio(LCF_SOUND, "Init audio player");
 
@@ -95,16 +96,17 @@ bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
     strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 
     /* Setup cyclic buffer */
-    int buffer_size = (2*frequency*shared_config.framerate_den/shared_config.framerate_num)
+    int buffer_size = (2*ac.outFrequency*shared_config.framerate_den/shared_config.framerate_num);
 
     cyclicBuffer.data.resize(2*buffer_size*strdesc.mBytesPerFrame);
     cyclicBuffer.beg = 0;
     cyclicBuffer.end = 0;
     cyclicBuffer.size = 0;
     cyclicBuffer.cap = 2*buffer_size*strdesc.mBytesPerFrame;
+    cyclicBuffer.silence = (strdesc.mBitsPerChannel==8)?0x80:0;
 
     /* Init new queue */
-    if (res = AudioQueueNewOutput(&strdesc, audioCallback, &cyclicBuffer, CFRunLoopGetCurrent(), kCFRunLoopCommonModes, 0, &audioQueue) < 0)
+    if ((res = AudioQueueNewOutput(&strdesc, audioCallback, &cyclicBuffer, nullptr, nullptr, 0, &audioQueue)) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  Cannot create audio queue: err %d", res);
         return false;
     }
@@ -123,7 +125,7 @@ bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
             return false;
     }
     
-    if (res = AudioQueueSetProperty(audioQueue, kAudioQueueProperty_ChannelLayout, &layout, sizeof(layout)) < 0) {
+    if ((res = AudioQueueSetProperty(audioQueue, kAudioQueueProperty_ChannelLayout, &layout, sizeof(layout))) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueSetProperty(kAudioQueueProperty_ChannelLayout) failed: err %d", res);
         return false;
     }
@@ -132,8 +134,8 @@ bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
     audioQueueBuffers.resize(numAudioBuffers);
 
     /* Create audio buffers */
-    for (i = 0; i < numAudioBuffers; i++) {
-        if (res = AudioQueueAllocateBuffer(audioQueue, buffer_size, &audioQueueBuffers[i]) < 0) {
+    for (int i = 0; i < numAudioBuffers; i++) {
+        if ((res = AudioQueueAllocateBuffer(audioQueue, buffer_size, &audioQueueBuffers[i])) < 0) {
             debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueAllocateBuffer failed: err %d", res);
             return false;
         }
@@ -144,13 +146,13 @@ bool AudioPlayerCoreAudio::init(const AudioStreamBasicDescription& strdesc)
             memset(audioQueueBuffers[i]->mAudioData, 0, audioQueueBuffers[i]->mAudioDataBytesCapacity);
 
         audioQueueBuffers[i]->mAudioDataByteSize = audioQueueBuffers[i]->mAudioDataBytesCapacity;
-        if (res = AudioQueueEnqueueBuffer(audioQueue, audioQueueBuffers[i], 0, NULL) < 0) {
+        if ((res = AudioQueueEnqueueBuffer(audioQueue, audioQueueBuffers[i], 0, NULL)) < 0) {
             debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueEnqueueBuffer failed: err %d", res);
             return false;
         }
     }
     
-    if (res = AudioQueueStart(audioQueue, NULL)) {
+    if ((res = AudioQueueStart(audioQueue, NULL))) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueEnqueueBuffer failed: err %d", res);
         return false;
     }
@@ -177,8 +179,10 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
     debuglogstdio(LCF_SOUND, "Play an audio frame");
     
     /* Write into circular buffer */
-    int bytestoWrite = std::min(ac.outNbSamples, cyclicBuffer.cap - cyclicBuffer.size);
-    
+    int bytestoWrite = std::min(ac.outBytes, cyclicBuffer.cap - cyclicBuffer.size);
+    if ((cyclicBuffer.cap - cyclicBuffer.size) < ac.outBytes)
+        debuglogstdio(LCF_SOUND | LCF_WARNING, "Not enough space in circular buffer to write");
+
     /* Write until buffer end */
     size_t sizeEnd = std::min(bytestoWrite, cyclicBuffer.cap - cyclicBuffer.end);
     memcpy(cyclicBuffer.data.data() + cyclicBuffer.end, ac.outSamples.data(), sizeEnd);
@@ -191,10 +195,7 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
     }
     else
         cyclicBuffer.end += bytestoWrite;
-    cyclicBuffer.size += bytestoWrite
-
-    if ((cyclicBuffer.cap - cyclicBuffer.size) < ac.outNbSamples)
-        debuglogstdio(LCF_SOUND | LCF_WARNING, "Not enough space in circular buffer to write");
+    cyclicBuffer.size += bytestoWrite;
 
     return true;
 }
@@ -202,7 +203,7 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
 void AudioPlayerCoreAudio::close()
 {
     if (status == STATUS_OK) {
-        if (queue)
+        if (audioQueue)
             AudioQueueDispose(audioQueue, 1);
         status = STATUS_UNINIT;
     }

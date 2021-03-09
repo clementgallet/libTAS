@@ -23,6 +23,7 @@
 #include "AudioBuffer.h"
 #include "AudioConverter.h"
 #include <AudioToolbox/AudioToolbox.h>
+#include <vector>
 
 namespace libtas {
 /* Resampler implementation using Core Audio library */
@@ -43,15 +44,21 @@ public:
 
     int getSamples(uint8_t* outSamples, int outNbSamples);
 
-private:
-    /* Context for resampling audio */
-    AudioConverterRef converter;
-    
     /* Description of input buffers */
     AudioStreamBasicDescription in, out;
     
     /* Input buffer */
     AudioBufferList inBufferList;
+
+private:
+    /* Context for resampling audio */
+    AudioConverterRef converter;
+    
+    /* Internal temp buffer */
+    std::vector<uint8_t> tempBuffer;
+    
+    /* Buffer offset */
+    int tempBufferOffset;
 };
 }
 

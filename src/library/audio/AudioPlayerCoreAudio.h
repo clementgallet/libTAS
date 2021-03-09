@@ -22,12 +22,33 @@
 
 #include "AudioContext.h"
 #include <AudioToolbox/AudioToolbox.h>
+#include <vector>
 #include <stdint.h>
 
 namespace libtas {
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayerCoreAudio
 {
+public:
+    struct cyclic_buffer {
+        std::vector<uint8_t> data;
+        int beg;
+        int end;
+        int size;
+        int cap;
+        uint8_t silence;
+    };
+    
+    /* Init the connection to the server.
+     * Return if the connection was successful
+     */
+    static bool init(AudioContext& ac);
+    
+    /* Play the audio buffer stored in the audio context */
+    static bool play(AudioContext& ac);
+    
+    /* Close the connection to the server */
+    static void close();
 private:
     /* Status */
     enum APStatus {
@@ -38,27 +59,11 @@ private:
 
     static APStatus status;
 
-    struct cyclic_buffer {
-        std::vector<uint8_t> data;
-        int beg;
-        int end;
-        int size;
-        int cap;
-    };
+    static cyclic_buffer cyclicBuffer;
+    
+    static AudioQueueRef audioQueue;
+    static std::vector<AudioQueueBufferRef> audioQueueBuffers;
 
-    static cyclic_buffer buffer;
-
-public:
-    /* Init the connection to the server.
-     * Return if the connection was successful
-     */
-	static bool init(AudioContext& ac);
-
-    /* Play the audio buffer stored in the audio context */
-	static bool play(AudioContext& ac);
-
-    /* Close the connection to the server */
-    static void close();
 };
 }
 
