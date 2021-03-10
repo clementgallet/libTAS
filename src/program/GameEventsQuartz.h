@@ -53,6 +53,9 @@ private:
     /* Game running app */
     static NSRunningApplication* gameApp;
     
+    /* Event tap */
+    CFMachPortRef eventTap;
+    
     EventType nextEvent(struct HotKey &hk);
 };
 

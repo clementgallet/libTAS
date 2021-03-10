@@ -32,7 +32,9 @@
 
 NSRunningApplication* GameEventsQuartz::gameApp = nullptr;
 
-GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m) {}
+GameEventsQuartz::GameEventsQuartz(Context* c, MovieFile* m) : GameEvents(c, m) {
+    eventTap = nullptr;
+}
 
 static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
 
@@ -45,7 +47,8 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
             return event;
         
         CGKeyCode keycode = static_cast<CGKeyCode>(CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
-        
+        std::cerr << "Got key event with key " << keycode << std::endl;
+
         /* Register the key event for when building the inputs */
         if (type == kCGEventKeyDown)
             context->config.km->registerKeyDown(keycode);
@@ -116,6 +119,10 @@ void GameEventsQuartz::init()
     /* Clear the game running app */
     gameApp = nullptr;
 
+    /* Don't create event tap if already present */
+    if (eventTap)
+        return;
+    
     /* Check for accessibility */
     NSDictionary* options = @{(__bridge NSString*)(kAXTrustedCheckOptionPrompt) : @YES};
     if (!AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options)) {
@@ -126,7 +133,7 @@ void GameEventsQuartz::init()
     CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp) | CGEventMaskBit(kCGEventFlagsChanged);
     
     //    CFMachPortRef eventTap = CGEventTapCreateForPid(pid, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
-    CFMachPortRef eventTap = CGEventTapCreate(kCGHIDEventTap, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
+    eventTap = CGEventTapCreate(kCGHIDEventTap, kCGTailAppendEventTap, kCGEventTapOptionListenOnly, eventMask, eventTapFunction, context);
     
     if (!eventTap) {
         std::cerr << "Could not create event tap" << std::endl;
