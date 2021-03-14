@@ -22,9 +22,8 @@
 #include "MemArea.h"
 #include "../logging.h"
 
-#ifdef __unix__
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
-#elif defined(__APPLE__) && defined(__MACH__)
+#if defined(__APPLE__) && defined(__MACH__)
 #include <mach/vm_prot.h> // VM_PROT_READ, VM_PROT_WRITE, etc.
 #endif
 
@@ -32,14 +31,26 @@ namespace libtas {
 
 void Area::print(const char* prefix) const
 {
-    debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p-%p (%s) with size %zu",
+    debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p-%p (%s) with size %zu and flags %x",
     prefix,
 #ifdef __unix__
-    (prot&PROT_READ)?'r':'-', (prot&PROT_WRITE)?'w':'-', (prot&PROT_EXEC)?'x':'-', (flags&MAP_SHARED)?'s':'p',
+    (prot&PROT_READ)?'r':'-', (prot&PROT_WRITE)?'w':'-', (prot&PROT_EXEC)?'x':'-', (flags&AREA_SHARED)?'s':'p',
 #elif defined(__APPLE__) && defined(__MACH__)
-    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXECUTE)?'x':'-', (flags==1)?'s':'p',
+    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXECUTE)?'x':'-', (flags&AREA_SHARED)?'s':'p',
 #endif
-    addr, endAddr, name, size);
+    addr, endAddr, name, size, flags);
+}
+
+int Area::toMmapFlag() const
+{
+    int mf = MAP_FIXED;
+    if (flags & AREA_ANON)
+        mf |= MAP_ANON;
+    if (flags & AREA_PRIV)
+        mf |= MAP_PRIVATE;
+    if (flags & AREA_SHARED)
+        mf |= MAP_SHARED;
+    return mf;
 }
 
 }

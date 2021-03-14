@@ -103,7 +103,7 @@ char SaveState::nextFlag()
     return current_flag;
 }
 
-void SaveState::nextArea()
+Area SaveState::nextArea()
 {
     if (flags_remaining > 0)
         lseek(pmfd, flags_remaining, SEEK_CUR);
@@ -116,9 +116,10 @@ void SaveState::nextArea()
     } else {
         flags_remaining = area.size / 4096;
     }
+    return area;
 }
 
-Area& SaveState::getArea()
+Area SaveState::getArea()
 {
     return area;
 }

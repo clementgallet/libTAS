@@ -43,7 +43,6 @@ void ReservedMemory::init()
         restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
         MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
         memset(reinterpret_cast<void*>(restoreAddr), 0, restoreLength);
-        // debuglogstdio(LCF_ERROR, "Setup reserved space from %p to %p", reinterpret_cast<void*>(restoreAddr+ONE_MB), reinterpret_cast<void*>(restoreAddr+restoreLength));
     }
 }
 

@@ -71,12 +71,17 @@ void AltStack::restoreStack()
 
 void AltStack::saveStackFrame()
 {
+    /* Does not work in MacOS yet */
+#ifdef __unix__
     memcpy(stack_frame, ReservedMemory::getAddr(ReservedMemory::STACK_ADDR + ReservedMemory::STACK_SIZE - STACKFRAME_OFFSET), STACKFRAME_SIZE);
+#endif
 }
 
 void AltStack::restoreStackFrame()
 {
+#ifdef __unix__
     memcpy(ReservedMemory::getAddr(ReservedMemory::STACK_ADDR + ReservedMemory::STACK_SIZE - STACKFRAME_OFFSET), stack_frame, STACKFRAME_SIZE);
+#endif
 }
 
 }

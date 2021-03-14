@@ -39,11 +39,43 @@ class MachVmMaps
         void reset();
 
     private:
-        mach_port_t task;
         pid_t pid;
         mach_vm_address_t address;
         mach_vm_size_t size;
-        vm_region_basic_info_data_t info;
+        natural_t depth;
+        vm_region_submap_short_info_data_64_t info;
+    
+        struct dyld_all_image_infos *infos;
+
+        const static int LIBRARYPATHSIZE = 1024;
+
+        struct cache_library_data {
+            uintptr_t addr;
+            uint64_t size;
+            vm_prot_t initprot;
+            vm_prot_t maxprot;
+            uint32_t flags;
+            char path[LIBRARYPATHSIZE];
+            
+            cache_library_data &operator=(const cache_library_data& cld)
+            {
+                this->addr = cld.addr;
+                this->size = cld.size;
+                this->initprot = cld.initprot;
+                this->maxprot = cld.maxprot;
+                this->flags = cld.flags;
+                strcpy(this->path, cld.path);
+                return *this;
+            }
+            
+            bool operator<(const cache_library_data& cld ) const
+            {
+                return (this->addr < cld.addr);
+            }
+        };
+    
+        cache_library_data* cache_libs;
+        int cache_index;
 };
 }
 

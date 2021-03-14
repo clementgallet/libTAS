@@ -268,7 +268,7 @@ int SaveStateManager::checkpoint(int slot)
      * and safely writing to the original stack.
      */
 
-    raise(sig_checkpoint);
+    NATIVECALL(raise(sig_checkpoint));
 
     /* Restoring the game alternate stack (if any) */
     AltStack::restoreStack();
@@ -371,7 +371,7 @@ int SaveStateManager::restore(int slot)
     AltStack::prepareStack();
 
     /* Here is where we load all the memory and stuff */
-    raise(sig_checkpoint);
+    NATIVECALL(raise(sig_checkpoint));
 
     /* It seems that when restoring the original stack at the end of the
      * signal handler function, the program pulls from the stack the address

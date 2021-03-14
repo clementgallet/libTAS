@@ -61,6 +61,15 @@ struct Area {
     off_t offset;
     int prot;
     int max_prot;
+
+    enum AreaFlag {
+        AREA_ANON = 0x01, /* Anonymous mapping */
+        AREA_FILE = 0x02, /* File mapping */
+        AREA_PRIV = 0x04, /* Private mapping */
+        AREA_SHARED = 0x08, /* Shared mapping */
+        AREA_STACK = 0x10, /* Stack */
+        AREA_HEAP = 0x20, /* Heap */
+    };
     int flags;
     unsigned int long devmajor;
     unsigned int long devminor;
@@ -70,6 +79,8 @@ struct Area {
     char name[FILENAMESIZE];
 
     void print(const char* prefix) const;
+
+    int toMmapFlag() const;
 };
 }
 

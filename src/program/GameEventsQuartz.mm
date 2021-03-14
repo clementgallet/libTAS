@@ -47,7 +47,6 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
             return event;
         
         CGKeyCode keycode = static_cast<CGKeyCode>(CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
-        std::cerr << "Got key event with key " << keycode << std::endl;
 
         /* Register the key event for when building the inputs */
         if (type == kCGEventKeyDown)

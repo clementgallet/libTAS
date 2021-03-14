@@ -275,6 +275,7 @@ int Checkpoint::checkRestore()
 
 void Checkpoint::handler(int signum)
 {
+    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint::handler");
 
 #ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address
@@ -323,8 +324,10 @@ void Checkpoint::handler(int signum)
         delta_time = new_time - old_time;
         debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "isload is %d", SaveStateManager::isLoading());
         /* Loading state was overwritten, putting the right value again */
         SaveStateManager::setLoading();
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "after isload is %d", SaveStateManager::isLoading());
 
 #ifdef __unix__
         /* Restoring the display values */
@@ -347,8 +350,12 @@ void Checkpoint::handler(int signum)
 
         /* We must restore the current stack frame from the savestate */
         AltStack::restoreStackFrame();
+        
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "end isload is %d", SaveStateManager::isLoading());
     }
     else {
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "re isload is %d why?", SaveStateManager::isLoading());
+
         /* Check that base savestate exists, otherwise save it */
         if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
             if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
@@ -366,8 +373,12 @@ void Checkpoint::handler(int signum)
             }
         }
 
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "rere isload is %d why?", SaveStateManager::isLoading());
+
         /* We must store the current stack frame in the savestate */
         AltStack::saveStackFrame();
+
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "rerere isload is %d why?", SaveStateManager::isLoading());
 
         writeAllAreas(false);
     }
@@ -418,7 +429,7 @@ static bool skipArea(const Area *area)
     /* Save anonymous area even if write protection off, because some
      * games or libs could change protections
      */
-    if (area->flags & MAP_ANONYMOUS) {
+    if (area->flags & Area::AREA_ANON) {
         return false;
     }
 
@@ -446,7 +457,7 @@ static void readAllAreas()
     saved_state.readHeader(sh);
 
     Area current_area;
-    Area& saved_area = saved_state.getArea();
+    Area saved_area = saved_state.getArea();
 
     debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
 
@@ -467,7 +478,7 @@ static void readAllAreas()
         int cmp = reallocateArea(&saved_area, &current_area);
         if (cmp == 0) {
             /* Areas matched, we advance both areas */
-            saved_state.nextArea();
+            saved_area = saved_state.nextArea();
             not_eof = memMapLayout.getNextArea(&current_area);
         }
         if (cmp > 0) {
@@ -476,7 +487,7 @@ static void readAllAreas()
         }
         if (cmp < 0) {
             /* Saved area is smaller, advance saved area */
-            saved_state.nextArea();
+            saved_area = saved_state.nextArea();
         }
     }
 
@@ -533,7 +544,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         if (saved_area->size != current_area->size) {
 
             /* Special case for stacks, always try to resize the Area */
-            if (strstr(saved_area->name, "[stack")) {
+            if (saved_area->flags & Area::AREA_STACK) {
 #ifdef __linux__
                 debuglogstdio(LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
                 void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
@@ -554,7 +565,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             }
 
             /* Special case for heap, use brk instead */
-            if (strcmp(saved_area->name, "[heap]") == 0) {
+            if (saved_area->flags & Area::AREA_HEAP) {
                 debuglogstdio(LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
 
 #ifdef __linux__
@@ -622,7 +633,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
 
         int imagefd = -1;
-        if (!(saved_area->flags & MAP_ANONYMOUS)) {
+        if (saved_area->flags & Area::AREA_FILE) {
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
@@ -637,16 +648,16 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                     NATIVECALL(close(imagefd));
                     imagefd = -1;
                     saved_area->offset = 0;
-                    saved_area->flags |= MAP_ANONYMOUS;
+                    saved_area->flags = Area::AREA_ANON;
                 }
             }
             else {
                 /* We could not open the file, map the section as anonymous */
-                saved_area->flags |= MAP_ANONYMOUS;
+                saved_area->flags = Area::AREA_ANON;
             }
         }
 
-        if (saved_area->flags & MAP_ANONYMOUS) {
+        if (saved_area->flags & Area::AREA_ANON) {
             debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", saved_area->size, saved_area->addr);
         } else {
             debuglogstdio(LCF_CHECKPOINT, "Restoring non-anonymous area, %d bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
@@ -654,7 +665,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         /* Create the memory area */
         void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot,
-            saved_area->flags, imagefd, saved_area->offset);
+                               saved_area->toMmapFlag(), imagefd, saved_area->offset);
 
         if (mmappedat == MAP_FAILED) {
             debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
@@ -948,6 +959,8 @@ static void writeAllAreas(bool base)
     while (memMapLayout.getNextArea(&area)) {
         if (!skipArea(&area)) {
             //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
+//            debuglogstdio(LCF_CHECKPOINT, "   mprotect on addr %p", area.addr);
+
             MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_SEQUENTIAL) == 0);
         }
@@ -1095,7 +1108,7 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
         }
 
         /* Check if page is zero (only check on anonymous memory)*/
-        else if ((area.flags & MAP_ANONYMOUS) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        else if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             ss_pagemaps[ss_pagemap_i++] = Area::ZERO_PAGE;
         }
 

@@ -172,29 +172,38 @@ bool ProcSelfMaps::getNextArea(Area *area)
         area->prot |= PROT_EXEC;
     }
 
-    area->flags = MAP_FIXED;
     if (sflag == 's') {
-        area->flags |= MAP_SHARED;
+        area->flags = Area::AREA_SHARED;
     }
     if (sflag == 'p') {
-        area->flags |= MAP_PRIVATE;
+        area->flags = Area::AREA_PRIV;
     }
     if (area->name[0] == '\0') {
-        area->flags |= MAP_ANONYMOUS;
+        area->flags |= Area::AREA_ANON;
+    }
+    if (area->name[0] == '/') {
+        area->flags |= Area::AREA_FILE;
     }
 
     area->skip = false;
+
+    /* Identify specific segments */
+    if (strstr(saved_area->name, "[stack"))
+        area->flags |= Area::AREA_STACK;
+
+    if (strcmp(area->name, "[heap]") == 0)
+        area->flags |= Area::AREA_HEAP;
 
     /* Sometimes the [heap] is split into several contiguous segments, such as
      * after a dumping was made (but why...?). This can screw up our code for
      * loading and remapping the [heap] using brk, so we always read the [heap]
      * as one single segment.
      */
-    if (strcmp(area->name, "[heap]") == 0) {
+    if (area->flags & Area::AREA_HEAP) {
         Area next_area;
         size_t curDataIdx = dataIdx;
         bool valid = getNextArea(&next_area); // recursive call
-        if (valid && (strcmp(next_area.name, "[heap]") == 0)) {
+        if (valid && (next_area->flags & Area::AREA_HEAP)) {
             MYASSERT(area->endAddr == next_area.addr)
             MYASSERT(area->flags == next_area.flags)
             area->prot |= next_area.prot;

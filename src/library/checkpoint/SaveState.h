@@ -35,8 +35,8 @@ class SaveState
 	// Also resets back to first area
 	void readHeader(StateHeader& sh);
 
-	Area& getArea();
-	void nextArea();
+	Area getArea();
+	Area nextArea();
 
 	// Reset back to first area
 	void restart();
