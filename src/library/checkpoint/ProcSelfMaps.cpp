@@ -172,6 +172,9 @@ bool ProcSelfMaps::getNextArea(Area *area)
         area->prot |= PROT_EXEC;
     }
 
+    /* Max protection does not exist on Linux, so setting all flags */
+    area->maxprot = PROT_READ | PROT_WRITE | PROT_EXEC;
+
     if (sflag == 's') {
         area->flags = Area::AREA_SHARED;
     }

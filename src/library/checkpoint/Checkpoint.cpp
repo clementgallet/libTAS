@@ -324,10 +324,8 @@ void Checkpoint::handler(int signum)
         delta_time = new_time - old_time;
         debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "isload is %d", SaveStateManager::isLoading());
         /* Loading state was overwritten, putting the right value again */
         SaveStateManager::setLoading();
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "after isload is %d", SaveStateManager::isLoading());
 
 #ifdef __unix__
         /* Restoring the display values */
@@ -350,12 +348,8 @@ void Checkpoint::handler(int signum)
 
         /* We must restore the current stack frame from the savestate */
         AltStack::restoreStackFrame();
-        
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "end isload is %d", SaveStateManager::isLoading());
     }
     else {
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "re isload is %d why?", SaveStateManager::isLoading());
-
         /* Check that base savestate exists, otherwise save it */
         if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
             if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
@@ -372,13 +366,8 @@ void Checkpoint::handler(int signum)
                 }
             }
         }
-
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "rere isload is %d why?", SaveStateManager::isLoading());
-
         /* We must store the current stack frame in the savestate */
         AltStack::saveStackFrame();
-
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "rerere isload is %d why?", SaveStateManager::isLoading());
 
         writeAllAreas(false);
     }
@@ -394,7 +383,7 @@ static bool skipArea(const Area *area)
     if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffe000) {
         return true;
     }
-    #ifdef __x86_64__
+#ifdef __x86_64__
 
     /* And in 64-bit mode later Red Hat RHEL Linux 2.6.9 releases
     * use 0xffffffffff600000 for VDSO.
@@ -402,7 +391,7 @@ static bool skipArea(const Area *area)
     if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffffffff600000) {
         return true;
     }
-    #endif // ifdef __x86_64__
+#endif // ifdef __x86_64__
 
     if (area->size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */
@@ -421,6 +410,11 @@ static bool skipArea(const Area *area)
         return true;
     }
 
+    /* Don't save area that cannot be promoted to read/write */
+    if ((area->max_prot & (PROT_WRITE|PROT_READ)) != (PROT_WRITE|PROT_READ)) {
+        return false;
+    }
+    
     /* Save area if write permission */
     if (area->prot & PROT_WRITE) {
         return false;
@@ -493,7 +487,8 @@ static void readAllAreas()
 
     /* Now that the memory layout matches the savestate, we load savestate into memory */
     saved_state.restart();
-
+    saved_area = saved_state.nextArea();
+    
     /* Load base and parent savestates */
     SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
     SaveState base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
@@ -504,15 +499,12 @@ static void readAllAreas()
     bool same_state = (ss_index == parent_ss_index);
     while (saved_area.addr != nullptr) {
         readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
-        saved_state.nextArea();
-    }
-
-    if (shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-        /* Clear soft-dirty bits */
-        Utils::writeAll(crfd, "4\n", 2);
+        saved_area = saved_state.nextArea();
     }
 
     if (crfd != -1) {
+        /* Clear soft-dirty bits */
+        Utils::writeAll(crfd, "4\n", 2);
         NATIVECALL(close(crfd));
     }
 
