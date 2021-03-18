@@ -59,6 +59,13 @@ DEFINE_ORIG_POINTER(pthread_attr_setstack)
 DEFINE_ORIG_POINTER(pthread_condattr_setclock)
 DEFINE_ORIG_POINTER(pthread_condattr_getclock)
 DEFINE_ORIG_POINTER(pthread_setname_np)
+#if defined(__APPLE__) && defined(__MACH__)
+DEFINE_ORIG_POINTER(pthread_workqueue_create_np)
+
+/* Internal function */
+int __pthread_workqueue_setkill(int enable);
+DEFINE_ORIG_POINTER(__pthread_workqueue_setkill)
+#endif
 
 /* We create a specific exception for thread exit calls */
 class ThreadExitException {
@@ -744,5 +751,64 @@ int pthread_setname_np (const char *name)
     return orig::pthread_setname_np(name);
 #endif
 }
+
+#if defined(__APPLE__) && defined(__MACH__)
+static void pthread_workqueue_start(void *arg)
+{
+    ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
+
+    ThreadManager::initThreadFromChild(thread);
+
+    /* Flag thread as killable */
+    LINK_NAMESPACE(__pthread_workqueue_setkill, "pthread");
+    orig::__pthread_workqueue_setkill(1);
+    
+    ThreadSync::decrementUninitializedThreadCount();
+
+    debuglogstdio(LCF_THREAD, "End of our pthread_workqueue_start code");
+}
+
+int pthread_workqueue_create_np(pthread_workqueue_t *workqp, const pthread_workqueue_attr_t * attr)
+{
+    LINK_NAMESPACE(pthread_workqueue_create_np, "pthread");
+
+    if (GlobalState::isNative())
+        return orig::pthread_workqueue_create_np(workqp, attr);
+
+    debuglogstdio(LCF_THREAD, "Workqueue thread is created");
+
+    ThreadSync::wrapperExecutionLockLock();
+    ThreadSync::incrementUninitializedThreadCount();
+
+    /* Creating a new or recycled thread, and filling some parameters.
+     * The rest (like thread->tid) will be filled by the child thread.
+     */
+    ThreadInfo* thread = ThreadManager::getNewThread();
+    bool isRecycled = ThreadManager::initThreadFromParent(thread, nullptr, nullptr, __builtin_return_address(0));
+
+    /* Workqueue thread must not come from recycled thread */
+    MYASSERT(!isRecycled)
+
+    thread->detached = false;
+
+    /* Call our wrapper function */
+    int ret = orig::pthread_workqueue_create_np(workqp, attr);
+
+    if (ret != 0) {
+        /* Thread creation failed */
+        ThreadSync::decrementUninitializedThreadCount();
+        ThreadManager::threadIsDead(thread);
+    }
+
+    /* We must send an item to this thread to fill the last parameters of our
+     * thread struct. Also, we must flag this thread as killable, so that
+     * it can be suspended for savestating. */
+    pthread_workqueue_additem_np(*workqp, pthread_workqueue_start, &thread, nullptr, nullptr);
+
+    ThreadSync::wrapperExecutionLockUnlock();
+    return ret;
+}
+
+#endif
 
 }

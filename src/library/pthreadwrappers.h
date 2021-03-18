@@ -23,6 +23,10 @@
 #include "global.h"
 #include <pthread.h> // pthread_t
 #include <semaphore.h>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <pthread_workqueue.h> // pthread_workqueue_t
+#endif
+
 
 namespace libtas {
 
@@ -131,6 +135,11 @@ OVERRIDE int pthread_condattr_getclock(const pthread_condattr_t *attr, clockid_t
 OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) __THROW;
 #elif defined(__APPLE__) && defined(__MACH__)
 OVERRIDE int pthread_setname_np (const char *name);
+#endif
+
+/* Create a workqueue thread */
+#if defined(__APPLE__) && defined(__MACH__)
+OVERRIDE int pthread_workqueue_create_np(pthread_workqueue_t *workqp, const pthread_workqueue_attr_t * attr);
 #endif
 
 }
