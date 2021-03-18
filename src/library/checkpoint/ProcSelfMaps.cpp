@@ -173,7 +173,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
     }
 
     /* Max protection does not exist on Linux, so setting all flags */
-    area->maxprot = PROT_READ | PROT_WRITE | PROT_EXEC;
+    area->max_prot = PROT_READ | PROT_WRITE | PROT_EXEC;
 
     if (sflag == 's') {
         area->flags = Area::AREA_SHARED;
@@ -191,7 +191,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
     area->skip = false;
 
     /* Identify specific segments */
-    if (strstr(saved_area->name, "[stack"))
+    if (strstr(area->name, "[stack"))
         area->flags |= Area::AREA_STACK;
 
     if (strcmp(area->name, "[heap]") == 0)
@@ -206,7 +206,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
         Area next_area;
         size_t curDataIdx = dataIdx;
         bool valid = getNextArea(&next_area); // recursive call
-        if (valid && (next_area->flags & Area::AREA_HEAP)) {
+        if (valid && (next_area.flags & Area::AREA_HEAP)) {
             MYASSERT(area->endAddr == next_area.addr)
             MYASSERT(area->flags == next_area.flags)
             area->prot |= next_area.prot;
