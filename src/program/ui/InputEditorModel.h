@@ -103,8 +103,9 @@ public:
     /* User moved a column */
     void moveInputs(int oldIndex, int newIndex);
 
-    /* Rewind to frame, return if succeeded */
-    bool rewind(uint64_t framecount);
+    /* Rewind to frame, specify if it was called from input toggle or seeking
+     * return if succeeded */
+    bool rewind(uint64_t framecount, bool toggle);
 
     /* Returns if scroll is frozen */
     bool isScrollFreeze();

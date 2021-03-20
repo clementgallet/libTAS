@@ -21,21 +21,33 @@
 #define LIBTAS_INPUTEDITORWINDOW_H_INCLUDED
 
 #include <QtWidgets/QDialog>
+#include <QtWidgets/QMainWindow>
 
 #include "InputEditorView.h"
 #include "../Context.h"
 
-class InputEditorWindow : public QDialog {
+class InputEditorWindow : public QMainWindow {
     Q_OBJECT
 
 public:
     InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR);
     void resetInputs();
     QSize sizeHint() const override;
+
+    /* Update UI elements when config has changed */
+    void update_config();
+    
     InputEditorView *inputEditorView;
 
 public slots:
     void isWindowVisible(bool &visible);
+    void scrollingSlot(bool checked);
+    void rewindSlot(bool checked);
+    
+private:
+    Context *context;
+    QAction* scrollingAct;
+    QAction* rewindAct;
 };
 
 #endif

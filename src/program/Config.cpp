@@ -77,6 +77,8 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("mouse_warp", mouse_warp);
     settings.setValue("use_proton", use_proton);
     settings.setValue("proton_path", proton_path.c_str());
+    settings.setValue("editor_autoscroll", editor_autoscroll);
+    settings.setValue("editor_rewind_seek", editor_rewind_seek);
 
     settings.beginGroup("keymapping");
 
@@ -201,6 +203,8 @@ void Config::load(const std::string& gamepath) {
     mouse_warp = settings.value("mouse_warp", mouse_warp).toBool();
     use_proton = settings.value("use_proton", use_proton).toBool();
     proton_path = settings.value("proton_path", "").toString().toStdString();
+    editor_autoscroll = settings.value("editor_autoscroll", editor_autoscroll).toBool();
+    editor_rewind_seek = settings.value("editor_rewind_seek", editor_rewind_seek).toBool();
 
     /* Load key mapping */
 

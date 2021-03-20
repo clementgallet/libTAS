@@ -20,6 +20,7 @@
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QScrollBar>
+#include <QtWidgets/QMenuBar>
 
 #include <stdint.h>
 
@@ -83,11 +84,16 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     /* Track vertical scrolling */
     connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
 
-    /* Main menu */
+    keyDialog = new KeyPressedDialog(c, this);
+    keyDialog->withModifiers = true;
+}
+
+void InputEditorView::fillMenu(QMenu* frameMenu)
+{
+    menu = frameMenu;
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested, this, &InputEditorView::mainMenu);
 
-    menu = new QMenu(this);
     insertAct = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
 
     /* Shortcuts for context menus are special, they won't work by default
@@ -141,10 +147,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     pasteInsertAct->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(pasteInsertAct);
-
-    keyDialog = new KeyPressedDialog(c, this);
-    keyDialog->withModifiers = true;
+    this->addAction(pasteInsertAct);    
 }
 
 void InputEditorView::resizeAllColumns()
@@ -193,6 +196,10 @@ void InputEditorView::update()
         }
         return;
     }
+
+    /* Don't autoscroll if disabled in the user options */
+    if (!context->config.editor_autoscroll)
+        return;
 
     /* Enable autoscroll if current frame is not visible */
     int toprow = rowAt(rect().top());
@@ -273,7 +280,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 
     /* Rewind when clicking for column */
     if (mouseSection == 0) {
-        inputEditorModel->rewind(mouseRow);
+        inputEditorModel->rewind(mouseRow, false);
         return;
     }
 

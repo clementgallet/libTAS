@@ -115,6 +115,12 @@ public:
     /* Use proton to launch Windows executables */
     bool use_proton = false;
 
+    /* Autoscroll in the input editor */
+    bool editor_autoscroll = true;
+
+    /* true if rewind seeks to previous frame, false if seeks to modified frame */
+    bool editor_rewind_seek = false;
+
     /* Proton absolute path */
     std::string proton_path;
 

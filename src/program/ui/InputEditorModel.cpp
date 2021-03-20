@@ -263,7 +263,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
 
         /* Rewind to past frame is needed */
         if (row < context->framecount) {
-            bool ret = rewind(row);
+            bool ret = rewind(row, true);
             if (!ret)
                 return false;
         }
@@ -356,7 +356,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     
     /* Rewind to past frame is needed */
     if (row < context->framecount) {
-        bool ret = rewind(row);
+        bool ret = rewind(row, true);
         if (!ret)
             return false;
     }
@@ -785,7 +785,7 @@ void InputEditorModel::moveInputs(int oldIndex, int newIndex)
     movie->editor->input_set.insert(movie->editor->input_set.begin() + newIndex, si);
 }
 
-bool InputEditorModel::rewind(uint64_t framecount)
+bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
 {
     /* If already on the frame, nothing to do */
     if (framecount == context->framecount)
@@ -817,7 +817,11 @@ bool InputEditorModel::rewind(uint64_t framecount)
     uint64_t state_framecount = (framecount < current_framecount)?(SaveStateList::get(state).framecount):current_framecount;
     
     if (framecount > state_framecount) {
-        context->pause_frame = framecount;
+        /* Seek to either the modified frame or the current frame */
+        if (toggle && context->config.editor_rewind_seek)
+            context->pause_frame = current_framecount;
+        else
+            context->pause_frame = framecount;
 
         /* Freeze scroll until pause_frame is reached */
         freeze_scroll = true;

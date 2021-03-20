@@ -18,21 +18,46 @@
  */
 
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMenu>
 
 #include "InputEditorWindow.h"
 #include "MainWindow.h"
 
-InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QDialog(nullptr)
+InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
     setWindowTitle("Input Editor");
 
     /* Table */
     inputEditorView = new InputEditorView(c, this, parent);
 
+    /* Main menu */
+    QMenu* menu = menuBar()->addMenu(tr("Frames"));
+    inputEditorView->fillMenu(menu);
+
+    QMenu* optionMenu = menuBar()->addMenu(tr("Options"));
+    
+    scrollingAct = optionMenu->addAction(tr("Disable autoscrolling"), this, &InputEditorWindow::scrollingSlot);
+    scrollingAct->setCheckable(true);
+
+    rewindAct = optionMenu->addAction(tr("Rewind seeks to current frame"), this, &InputEditorWindow::rewindSlot);
+    rewindAct->setCheckable(true);
+
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(inputEditorView);
-    setLayout(mainLayout);
+
+    QWidget *centralWidget = new QWidget;
+    centralWidget->setLayout(mainLayout);
+    setCentralWidget(centralWidget);
+    
+    update_config();
+}
+
+void InputEditorWindow::update_config()
+{
+    scrollingAct->setChecked(!context->config.editor_autoscroll);
+    rewindAct->setChecked(context->config.editor_rewind_seek);
 }
 
 QSize InputEditorWindow::sizeHint() const
@@ -46,8 +71,17 @@ void InputEditorWindow::resetInputs()
     inputEditorView->resetInputs();
 }
 
-
 void InputEditorWindow::isWindowVisible(bool &visible)
 {
     visible = isVisible();
+}
+
+void InputEditorWindow::scrollingSlot(bool checked)
+{
+    context->config.editor_autoscroll = !checked;
+}
+
+void InputEditorWindow::rewindSlot(bool checked)
+{
+    context->config.editor_rewind_seek = checked;
 }

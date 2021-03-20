@@ -33,6 +33,9 @@ class InputEditorView : public QTableView {
 public:
     InputEditorView(Context *c, QWidget *parent, QWidget *gp);
 
+    /* Fill menu action */
+    void fillMenu(QMenu* menu);
+
     void update();
     void resetInputs();
     InputEditorModel *inputEditorModel;
