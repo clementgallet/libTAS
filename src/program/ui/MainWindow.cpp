@@ -996,10 +996,11 @@ void MainWindow::updateRecentGamepaths()
 void MainWindow::updateUIFrequent()
 {
     /* Only update every 50 ms */
-    if (!updateTimer->hasExpired(50)) {
+    int64_t elapsed = updateTimer->elapsed();
+    if (elapsed < 50) {
         /* Call this function on timeout, if not already done */
         if (!callTimer->isActive()) {
-            callTimer->start(50 - updateTimer->elapsed());
+            callTimer->start(50 - elapsed);
         }
         return;
     }
