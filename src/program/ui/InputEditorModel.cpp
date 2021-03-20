@@ -832,11 +832,6 @@ bool InputEditorModel::rewind(uint64_t framecount)
             context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }
     
-    /* Switch back */
-    if (recording == SharedConfig::RECORDING_WRITE) {
-        context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
-    }
-    
     return true;
 }
 
