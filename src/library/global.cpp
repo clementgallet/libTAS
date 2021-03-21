@@ -27,6 +27,6 @@ volatile bool is_inited = false;
 volatile bool is_exiting = false;
 volatile bool is_fork = false;
 bool skipping_draw = false;
-bool saveBacktrack = false;
+bool threadListChanged = false;
 
 }

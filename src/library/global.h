@@ -51,8 +51,8 @@ namespace libtas {
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
 
-    /* Should we perform a backtrack savestate? */
-    extern bool saveBacktrack;
+    /* Past savestates are invalid when thread list has changed */
+    extern bool threadListChanged;
 }
 
 #endif

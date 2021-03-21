@@ -174,7 +174,7 @@ ThreadInfo* ThreadManager::getNewThread()
     if (!thread) {
         thread = new ThreadInfo;
         debuglogstdio(LCF_THREAD, "Allocate a new ThreadInfo struct");
-        saveBacktrack = true;
+        threadListChanged = true;
     }
 
     unlockList();
@@ -316,7 +316,7 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
     }
     delete(thread);
 
-    saveBacktrack = true;
+    threadListChanged = true;
 }
 
 void ThreadManager::threadDetach(pthread_t pthread_id)

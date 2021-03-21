@@ -32,10 +32,17 @@ void SaveState::init(Context* context, int i)
     is_backtrack = (i == 10);
     framecount = 0; // Special value for `no state`
     parent = -1;
+    invalid = false;
     movie = std::unique_ptr<MovieFile>(new MovieFile(context));
 
     buildPaths(context);
     buildMessages(context);
+}
+
+void SaveState::invalidate()
+{
+    parent = -1;
+    invalid = true;    
 }
 
 void SaveState::buildPaths(Context* context)
@@ -139,14 +146,24 @@ int SaveState::save(Context* context, const MovieFile& m)
     int message = receiveMessage();
     
     /* Set framecount */
-    if (message == MSGB_SAVING_SUCCEEDED)
+    if (message == MSGB_SAVING_SUCCEEDED) {
         framecount = context->framecount;
+        invalid = false;
+    }
     
     return message;
 }
 
 int SaveState::load(Context* context, const MovieFile& m, bool branch)
 {
+    if (invalid) {
+        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+            sendMessage(MSGN_OSD_MSG);
+            sendString(std::string("State invalid because new threads were created"));
+        }
+        return EINVALID;
+    }
+    
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
     sendData(&id, sizeof(int));

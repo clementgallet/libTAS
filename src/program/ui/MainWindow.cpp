@@ -102,6 +102,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
+    connect(gameLoop, &GameLoop::invalidateSavestates, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::invalidateSavestates);
     connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
 
     /* Menu */
@@ -889,8 +890,6 @@ void MainWindow::updateStatus()
 
             stopButton->setText("Stop");
             stopButton->setEnabled(false);
-
-            inputEditorWindow->resetInputs();
 
             updateMovieParams();
             break;

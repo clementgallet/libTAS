@@ -156,6 +156,9 @@ void GameLoop::init()
     /* Unvalidate the game window id */
     context->game_window = 0;
 
+    /* Reset savestate flag */
+    context->didASavestate = false;
+
     /* Reset the frame count if not restarting */
     if (context->status != Context::RESTARTING)
         context->framecount = 0;
@@ -418,8 +421,19 @@ bool GameLoop::startFrameMessages()
         case MSGB_ENCODING_SEGMENT:
             receiveData(&context->encoding_segment, sizeof(int));
             break;
-        case MSGB_DO_BACKTRACK_SAVESTATE:
-            context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
+        case MSGB_INVALIDATE_SAVESTATES:
+            /* Only save a backtrack savestate if we did at least one savestate.
+             * This prevent incremental savestating from being inefficient if a
+             * backtrack savestate is performed at the very beginning of the game.
+             */
+            if ((context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK) && context->didASavestate)
+                context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
+
+            /* Invalidate all savestates */
+            SaveStateList::invalidate();
+            
+            /* Notify the input editor so it can show it to users */
+            emit invalidateSavestates();
             break;
         case MSGB_GETTIME_BACKTRACE:
         {

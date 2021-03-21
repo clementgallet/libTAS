@@ -286,16 +286,11 @@ void frameBoundary(std::function<void()> draw)
     sendData(&fps, sizeof(float));
     sendData(&lfps, sizeof(float));
 
-    /* Ask the program to perform a backtrack savestate */
-    if (saveBacktrack) {
-        /* Only save a backtrack savestate if we did at least one savestate.
-         * This prevent incremental savestating from being inefficient if a
-         * backtrack savestate is performed at the very beginning of the game.
-         */
-        if ((shared_config.savestate_settings & SharedConfig::SS_BACKTRACK) && didASavestate) {
-            sendMessage(MSGB_DO_BACKTRACK_SAVESTATE);
-        }
-        saveBacktrack = false;
+    /* Notify the program that threads have changed, so that it can show it
+     * and trigger a backtrack savestate */
+    if (threadListChanged) {
+        sendMessage(MSGB_INVALIDATE_SAVESTATES);
+        threadListChanged = false;
     }
 
     /* Send message if non-draw frame */

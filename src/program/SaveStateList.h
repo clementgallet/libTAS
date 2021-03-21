@@ -42,6 +42,12 @@ namespace SaveStateList {
     /* Process after loading state from its id and handle parent */
     int postLoad(int id, Context* context, MovieFile& movie, bool branch);
 
+    /* Invalidate all savestates. Used when threads have changed */
+    void invalidate();
+
+    /* Returns one state id that was performed on that specific frame, or -1 */
+    int stateAtFrame(uint64_t frame);
+
     /* Returns the framecount of the root state, or -1 if already root */
     uint64_t rootStateFramecount();
 

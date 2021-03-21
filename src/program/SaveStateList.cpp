@@ -101,6 +101,26 @@ int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool bra
     return message;
 }
 
+void SaveStateList::invalidate()
+{
+    for (int i = 0; i < NB_STATES; i++) {
+        states[i].invalidate();
+    }
+    
+    last_state_id = -1;
+    old_root_framecount = 0;
+}
+
+int SaveStateList::stateAtFrame(uint64_t frame)
+{
+    for (int i = 0; i < NB_STATES; i++) {
+        if ((states[i].framecount == frame) && !states[i].invalid)
+            return states[i].id;
+    }
+
+    return -1;
+}
+
 uint64_t SaveStateList::rootStateFramecount()
 {
     if (last_state_id == -1)

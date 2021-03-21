@@ -141,6 +141,9 @@ struct Context {
     
     /* Lua state */
     lua_State *lua_state = nullptr;
+    
+    /* Indicate if at least one savestate was performed, for backtrack savestate */
+    bool didASavestate = false;
 };
 
 #endif

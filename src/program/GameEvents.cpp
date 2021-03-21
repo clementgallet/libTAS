@@ -117,6 +117,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
 
             /* Checking that saving succeeded */
             if (message == MSGB_SAVING_SUCCEEDED) {
+                context->didASavestate = true;
                 emit savestatePerformed(statei, context->framecount);
             }
 
@@ -173,6 +174,12 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             int error = SaveStateList::load(statei, context, *movie, load_branch);
 
             /* Handle errors */
+            if (error == SaveState::EINVALID) {
+                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES))
+                    emit alertToShow(QString("State invalid because new threads were created"));
+                return false;
+            }
+
             if (error == SaveState::ENOSTATEMOVIEPREFIX) {
                 /* Ask the user if they want to load the movie, and get the answer.
                  * Prompting a alert window must be done by the UI thread, so we are

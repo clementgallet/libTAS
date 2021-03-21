@@ -222,10 +222,10 @@ enum {
     MSGN_ENCODING_SEGMENT,
 
     /*
-     * Notify that a backtrack savestate must be performed.
+     * Notify that previous savestates have been invalidated because of thread change.
      * Argument: none
      */
-    MSGB_DO_BACKTRACK_SAVESTATE,
+    MSGB_INVALIDATE_SAVESTATES,
 
     /*
      * Send to the game the location of the Steam user data folder.

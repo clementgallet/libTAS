@@ -29,10 +29,7 @@
 #include "InputEditorModel.h"
 #include "../SaveStateList.h"
 
-InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m)
-{
-    savestate_frames.fill(-1);
-}
+InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
@@ -182,12 +179,13 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
         
         /* Frame containing a savestate */
-        for (unsigned int i=0; i<savestate_frames.size(); i++) {
-            if (savestate_frames[i] == row) {
-                color = color.darker(105);
-                break;
-            }
-        }
+        int savestate_frame = SaveStateList::stateAtFrame(row);
+        if (savestate_frame != -1)
+            color = color.darker(105);
+
+        /* Invalid portion */
+        if (row < invalid_frame)
+            color = color.darker(120);
 
         return QBrush(color);
     }
@@ -197,10 +195,12 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
         if (index.column() == 0) {
-            for (unsigned int i=0; i<savestate_frames.size(); i++) {
-                if (savestate_frames[i] == row) {
-                    return i;
-                }
+            int savestate_frame = SaveStateList::stateAtFrame(row);
+            if (savestate_frame != -1) {
+                if (savestate_frame == 10)
+                    return QString("B");
+                else
+                    return savestate_frame;
             }
             return QString("");
         }
@@ -747,23 +747,38 @@ void InputEditorModel::update()
 void InputEditorModel::resetInputs()
 {
     beginResetModel();
-    // input_set.clear();
-    savestate_frames.fill(-1);
+    invalid_frame = 0;
+    last_savestate = 0;
     endResetModel();
     emit inputSetChanged();
 }
 
+void InputEditorModel::invalidateSavestates()
+{
+    /* Update invalid frame */
+    uint64_t previous_invalid_frame = invalid_frame;
+    invalid_frame = context->framecount;
+    
+    /* Update portion of the table */
+    emit dataChanged(createIndex(previous_invalid_frame,0), createIndex(context->framecount,columnCount()));
+}
+
 /* Register a savestate. If saved, frame contains the framecount of the
- * savestate slot. It loaded, frame contains 0.
+ * savestate slot. If loaded, frame contains 0.
  */
 void InputEditorModel::registerSavestate(int slot, unsigned long long frame)
 {
-    if (frame > 0)
-        savestate_frames[slot] = frame;
-    unsigned long long old_savestate = last_savestate;
-    last_savestate = savestate_frames[slot];
-    emit dataChanged(createIndex(old_savestate,0), createIndex(old_savestate,0));
+    /* Refresh the first column for previous and current state framecount */
     emit dataChanged(createIndex(last_savestate,0), createIndex(last_savestate,0));
+    emit dataChanged(createIndex(frame,0), createIndex(frame,0));
+
+    /* Update last savestate frame */
+    if (frame == 0) {
+        const SaveState& s = SaveStateList::get(slot);
+        last_savestate = s.id;
+    }
+    else
+        last_savestate = frame;
     
     /* Update greenzone between old and new root savestate */
     uint64_t oldRoot = SaveStateList::oldRootStateFramecount();

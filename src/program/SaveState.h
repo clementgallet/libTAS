@@ -38,6 +38,7 @@ public:
         ENOMOVIE = -3, // Could not moad movie
         EINPUTMISMATCH = -4, // Mistmatch inputs
         ENOLOAD = -5, // State loading failed
+        EINVALID = -6, // State invalid
     };
 
     /* Savestate number */
@@ -52,10 +53,18 @@ public:
     /* Frame count of the savestate */
     uint64_t framecount;
 
+    /* Is invalid because threads have changed */
+    bool invalid;
+
     /* Movie file */
     std::unique_ptr<MovieFile> movie;
 
     void init(Context* context, int i);
+
+    /* Invalidate a savestate. Basically reset the state, but we hold a special
+     * flag so that we can inform users that threads have changed and the state
+     * has become invalid. */
+    void invalidate();
 
     /* Return the savestate movie path */
     const std::string& getMoviePath() const;
