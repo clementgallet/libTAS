@@ -62,6 +62,9 @@ public slots:
 
     void manualScroll(int value);
 
+    /* Disable or enable menu items when selection has changed */
+    void updateMenu();
+
     void moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex);
 
 protected:

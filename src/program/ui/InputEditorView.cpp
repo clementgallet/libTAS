@@ -84,6 +84,10 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     /* Track vertical scrolling */
     connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
 
+    /* Track selection changed to enable/disable menu items. */
+    insertAct = nullptr;
+    connect(selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorView::updateMenu);
+
     keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = true;
 }
@@ -231,42 +235,54 @@ void InputEditorView::resetInputs()
     inputEditorModel->resetInputs();
 }
 
+void InputEditorView::updateMenu()
+{
+    /* Sanity check if this slot is called too early */
+    if (!insertAct)
+        return;
+    
+    /* Get the lowest selected row */
+    int min_row = 1 << 30;
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    for (const QModelIndex index : indexes) {
+        if (index.row() < min_row)
+            min_row = index.row();
+    }
+
+    if (static_cast<uint32_t>(min_row) < context->framecount) {
+        insertAct->setEnabled(false);
+        insertsAct->setEnabled(false);
+        deleteAct->setEnabled(false);
+        truncateAct->setEnabled(false);
+        clearAct->setEnabled(false);
+        cutAct->setEnabled(false);
+        pasteAct->setEnabled(false);
+        pasteInsertAct->setEnabled(false);
+    }
+    else {
+        insertAct->setEnabled(true);
+        insertsAct->setEnabled(true);
+        deleteAct->setEnabled(true);
+        truncateAct->setEnabled(true);
+        clearAct->setEnabled(true);
+        cutAct->setEnabled(true);
+        pasteAct->setEnabled(true);
+        pasteInsertAct->setEnabled(true);
+    }
+}
+
 void InputEditorView::mousePressEvent(QMouseEvent *event)
 {
     mouseSection = -1;
 
-    if ((event->button() != Qt::LeftButton) && (event->button() != Qt::RightButton)) {
+    if (event->button() != Qt::LeftButton) {
         return QTableView::mousePressEvent(event);
     }
 
     /* Get the table cell under the mouse position */
     const QModelIndex index = indexAt(event->pos());
     if (!index.isValid()) {
-        return QTableView::mousePressEvent(event);
-    }
-
-    /* Disable some items on the context menu */
-    if (event->button() == Qt::RightButton) {
-        if (static_cast<unsigned int>(index.row()) < context->framecount) {
-            insertAct->setEnabled(false);
-            insertsAct->setEnabled(false);
-            deleteAct->setEnabled(false);
-            truncateAct->setEnabled(false);
-            clearAct->setEnabled(false);
-            cutAct->setEnabled(false);
-            pasteAct->setEnabled(false);
-            pasteInsertAct->setEnabled(false);
-        }
-        else {
-            insertAct->setEnabled(true);
-            insertsAct->setEnabled(true);
-            deleteAct->setEnabled(true);
-            truncateAct->setEnabled(true);
-            clearAct->setEnabled(true);
-            cutAct->setEnabled(true);
-            pasteAct->setEnabled(true);
-            pasteInsertAct->setEnabled(true);
-        }
         return QTableView::mousePressEvent(event);
     }
 

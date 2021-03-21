@@ -10,6 +10,8 @@
 * Clicking the first column seeks to frame in input editor
 * Lua memory read and write float/double
 * Basic MacOS support
+* Input editor: option to disable autoscroll (#182)
+* Input editor: option to seeks to current frame after rewind (#134)
 
 ### Changed
 
@@ -19,6 +21,7 @@
 * Raise the limit of thread number in states
 * State loading doesn't write zeros on zero pages, preventing allocations
 * Switch input mapping to tabs
+* Optimize UI refresh with timer
 
 ### Fixed
 

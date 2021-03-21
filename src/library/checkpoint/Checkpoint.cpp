@@ -275,8 +275,6 @@ int Checkpoint::checkRestore()
 
 void Checkpoint::handler(int signum)
 {
-    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint::handler");
-
 #ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
