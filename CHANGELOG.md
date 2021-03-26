@@ -38,6 +38,7 @@
 * Send low-level window closing event even if game uses SDL (#395)
 * snd_pcm_writei() should block until all frames can be played
 * Fix controller inputs when controller window has focus
+* Add modifier to SDL key event (#405)
 
 ## [1.4.1] - 2021-01-02
 ### Added

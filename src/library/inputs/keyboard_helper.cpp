@@ -20,6 +20,7 @@
 #include "keyboard_helper.h"
 #include "sdlkeyboardlayout.h"
 #include <string.h>
+#include <array>
 //#include <X11/Xlib.h>
 #include "../../external/keysymdef.h"
 
@@ -328,15 +329,47 @@ void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& 
 void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym) {
     keysym->sym = X11_TranslateKeysym(xkeysym);
     keysym->scancode = GetScanFromKey(keysym->sym);
-    keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unused = 0;
 }
 
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym) {
     keysym->sym = X11_Translate1Keysym(xkeysym);
     keysym->scancode = GetScanFromKey1(keysym->sym);
-    keysym->mod = KMOD_NONE; /* TODO: Add the modifier */
     keysym->unicode = 0;
+}
+
+struct ModTranslate {
+    unsigned int xmod;
+    SDL_Keymod sdlmod;
+};
+
+static std::array<ModTranslate, 10> mod_translate {{
+    {XK_Shift_L, KMOD_LSHIFT},
+    {XK_Shift_R, KMOD_RSHIFT},
+    {XK_Control_L, KMOD_LCTRL},
+    {XK_Control_R, KMOD_RCTRL},
+    {XK_Meta_L, KMOD_LGUI},
+    {XK_Meta_R, KMOD_RGUI},
+    {XK_Alt_L, KMOD_LALT},
+    {XK_Alt_R, KMOD_RALT},
+    {XK_Caps_Lock, KMOD_CAPS},
+    {XK_Shift_Lock, KMOD_NUM},
+}};
+
+SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
+    unsigned int mod = KMOD_NONE; // use int because "bitwise or" promotes to int
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        if (Xkeyboard[i]) {
+            for (int j=0; i<10; j++) {
+                if (Xkeyboard[i] == mod_translate[j].xmod) {
+                    mod |= mod_translate[j].sdlmod;
+                    break;
+                }
+            }
+        }
+    }
+
+    return static_cast<SDL_Keymod>(mod);
 }
 
 }

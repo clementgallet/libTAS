@@ -59,4 +59,15 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     return sdl::gameSDLWindow;
 }
 
+/* Override */ SDL_Keymod SDL_GetModState(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    return xkeyboardToSDLMod(game_ai.keyboard);
+}
+
+/* Override */ void SDL_SetModState(SDL_Keymod modstate)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD | LCF_TODO);
+}
+
 }

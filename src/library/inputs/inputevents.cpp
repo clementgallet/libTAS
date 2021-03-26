@@ -89,6 +89,7 @@ void generateKeyUpEvents(void)
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, old_game_ai.keyboard[i]);
+                keysym.mod = xkeyboardToSDLMod(game_ai.keyboard);
                 event2.key.keysym = keysym;
 
                 sdlEventQueue.insert(&event2);
@@ -232,6 +233,7 @@ void generateKeyDownEvents(void)
 
                 SDL_Keysym keysym;
                 xkeysymToSDL(&keysym, game_ai.keyboard[i]);
+                keysym.mod = xkeyboardToSDLMod(game_ai.keyboard);
                 event2.key.keysym = keysym;
 
                 sdlEventQueue.insert(&event2);
