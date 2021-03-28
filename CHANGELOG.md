@@ -39,6 +39,8 @@
 * snd_pcm_writei() should block until all frames can be played
 * Fix controller inputs when controller window has focus
 * Add modifier to SDL key event (#405)
+* Handle savestates from previous execution that were performed after game 
+  exiting (because forked savestate) (#407)
 
 ## [1.4.1] - 2021-01-02
 ### Added

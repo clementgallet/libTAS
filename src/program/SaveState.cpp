@@ -156,20 +156,11 @@ int SaveState::save(Context* context, const MovieFile& m)
 
 int SaveState::load(Context* context, const MovieFile& m, bool branch)
 {
-    if (invalid) {
-        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
-            sendMessage(MSGN_OSD_MSG);
-            sendString(std::string("State invalid because new threads were created"));
-        }
-        return EINVALID;
-    }
-    
-    /* Send the savestate index */
-    sendMessage(MSGN_SAVESTATE_INDEX);
-    sendData(&id, sizeof(int));
-
-    /* Check that the savestate exists */
-    if ((access(pagemap_path.c_str(), F_OK) != 0) || (access(pages_path.c_str(), F_OK) != 0)) {
+    /* Check that the savestate exists (check for both savestate files and 
+     * framecount, because there can be leftover savestate files from
+     * forked savestate of previous execution). */
+    if ((access(pagemap_path.c_str(), F_OK) != 0) || (access(pages_path.c_str(), F_OK) != 0) ||
+        (framecount == 0)) {
         /* If there is no savestate but a movie file, offer to load
          * the movie and fast-forward to the savestate movie frame.
          */
@@ -201,6 +192,18 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch)
         }
         return ENOSTATE;
     }
+
+    if (invalid) {
+        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+            sendMessage(MSGN_OSD_MSG);
+            sendString(std::string("State invalid because new threads were created"));
+        }
+        return EINVALID;
+    }
+    
+    /* Send the savestate index */
+    sendMessage(MSGN_SAVESTATE_INDEX);
+    sendData(&id, sizeof(int));
 
     /* Send savestate path */
     if (! (context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
