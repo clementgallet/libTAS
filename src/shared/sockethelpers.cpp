@@ -137,7 +137,7 @@ int sendData(const void* elem, unsigned int size)
 
     ssize_t ret = 0;
     do {
-        ret = send(socket_fd, elem, size, 0);
+        ret = send(socket_fd, elem, size, MSG_NOSIGNAL);
     } while ((ret == -1) && (errno == EINTR));
 
     if (ret == -1) {
