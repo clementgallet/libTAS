@@ -225,7 +225,9 @@ void frameBoundary(std::function<void()> draw)
     /* If the game is exiting, dont process the frame boundary, just draw and exit */
     if (is_exiting) {
         detTimer.flushDelay();
-        NATIVECALL(draw());
+
+        if (draw)
+            NATIVECALL(draw());
 
         /* Still push native events so that the game can exit properly */
         if ((game_info.video & GameInfo::SDL1) || (game_info.video & GameInfo::SDL2)) {

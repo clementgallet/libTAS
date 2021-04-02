@@ -135,7 +135,7 @@ int extractBinaryType(std::string path)
         macappflag = BT_MACOSAPP;
     }
     
-    std::string cmd = "file -b \"";
+    std::string cmd = "file --brief --dereference \"";
     cmd += path;
     cmd += "\"";
 
