@@ -243,6 +243,7 @@ private slots:
     void slotMoviePathChanged();
     void slotSaveMovie();
     void slotExportMovie();
+    void slotEnforceMovieSettings(bool checked);
     void slotPause(bool checked);
     void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);

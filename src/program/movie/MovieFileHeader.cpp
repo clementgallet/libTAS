@@ -44,22 +44,36 @@ void MovieFileHeader::load()
     config.setFallbacksEnabled(false);
 
     context->config.sc.movie_framecount = config.value("frame_count").toULongLong();
-    context->config.sc.mouse_support = config.value("mouse_support").toBool();
+    if (!skipLoadSettings) {
+        context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
-    context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
-    context->config.sc.initial_time_sec = config.value("initial_time_sec").toULongLong();
-    context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toULongLong();
+        context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
+        context->config.sc.initial_time_sec = config.value("initial_time_sec").toULongLong();
+        context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toULongLong();
+        
+        framerate_num = config.value("framerate_num").toUInt();
+        framerate_den = config.value("framerate_den").toUInt();
+        /* Compatibility with older movie format */
+        if (!framerate_num) {
+            framerate_num = config.value("framerate").toUInt();
+            framerate_den = 1;
+        }
 
-    framerate_num = config.value("framerate_num").toUInt();
-    framerate_den = config.value("framerate_den").toUInt();
-    /* Compatibility with older movie format */
-    if (!framerate_num) {
-        framerate_num = config.value("framerate").toUInt();
-        framerate_den = 1;
+        context->config.sc.framerate_num = framerate_num;
+        context->config.sc.framerate_den = framerate_den;
+        
+        context->config.auto_restart = config.value("auto_restart").toBool();
+        context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
+        
+        config.beginGroup("mainthread_timetrack");
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
+        config.endGroup();
     }
-
-    context->config.sc.framerate_num = framerate_num;
-    context->config.sc.framerate_den = framerate_den;
 
     context->movie_time_sec = config.value("length_sec").toULongLong();
     context->movie_time_nsec = config.value("length_nsec").toULongLong();
@@ -73,17 +87,6 @@ void MovieFileHeader::load()
     context->authors = config.value("authors").toString().toStdString();
     context->md5_movie = config.value("md5").toString().toStdString();
     savestate_framecount = config.value("savestate_frame_count").toULongLong();
-    context->config.auto_restart = config.value("auto_restart").toBool();
-    context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
-
-    config.beginGroup("mainthread_timetrack");
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toInt();
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toInt();
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toInt();
-    context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
-    config.endGroup();
 }
 
 void MovieFileHeader::loadSavestate()

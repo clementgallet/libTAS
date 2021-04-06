@@ -653,6 +653,9 @@ void MainWindow::createMenus()
     saveMovieAction->setEnabled(false);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
+    action = movieMenu->addAction(tr("Don't enforce movie settings"), this, &MainWindow::slotEnforceMovieSettings);
+    action->setCheckable(true);
+    action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
 
     movieMenu->addSeparator();
 
@@ -1435,6 +1438,11 @@ void MainWindow::slotExportMovie()
             }
         }
     }
+}
+
+void MainWindow::slotEnforceMovieSettings(bool checked)
+{
+    gameLoop->movie.header->skipLoadSettings = checked;
 }
 
 void MainWindow::slotPauseMovie()

@@ -51,6 +51,9 @@ public:
     /* Movie length, only used for savestate movies */
     int64_t length_sec, length_nsec;
 
+    /* Skip loading some settings so that users can change settings */
+    bool skipLoadSettings = false;
+
 private:
     Context* context;
 
