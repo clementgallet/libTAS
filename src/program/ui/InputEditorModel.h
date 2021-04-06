@@ -96,6 +96,9 @@ public:
     /* Paste selected inputs. Returns the number of pasted inputs */
     int pasteInputs(int row);
 
+    /* Paste inputs inside the selected range */
+    void pasteInputsInRange(int row, int count);
+
     /* Paste insert selected inputs. Returns the number of pasted inputs */
     int pasteInsertInputs(int row);
 

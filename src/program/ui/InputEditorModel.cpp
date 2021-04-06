@@ -521,6 +521,41 @@ int InputEditorModel::pasteInputs(int row)
     return paste_ais.size();
 }
 
+void InputEditorModel::pasteInputsInRange(int row, int count)
+{
+    /* Don't modify past inputs */
+    if (row < static_cast<int>(context->framecount))
+        return;
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    std::istringstream inputString(clipboard->text().toStdString());
+
+    std::vector<AllInputs> paste_ais;
+    std::string line;
+    while (std::getline(inputString, line)) {
+        if (!line.empty() && (line[0] == '|')) {
+            AllInputs ai;
+            movie->inputs->readFrame(line, ai);
+            paste_ais.push_back(ai);
+        }
+    }
+
+    size_t r = 0;
+    for (int f = row; f < (row+count); f++) {
+        movie->inputs->setInputs(paste_ais[r], f, true);
+        addUniqueInputs(paste_ais[r]);
+        r = (r+1)%paste_ais.size();
+    }
+
+    /* Update the movie framecount */
+    movie->inputs->updateLength();
+
+    /* Update the paste inputs view */
+    emit dataChanged(createIndex(row,0), createIndex(row+count-1,columnCount()));
+
+    emit inputSetChanged();
+}
+
 int InputEditorModel::pasteInsertInputs(int row)
 {
     /* Don't modify past inputs */

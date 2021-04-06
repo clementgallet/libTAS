@@ -663,13 +663,25 @@ void InputEditorView::pasteInputs()
     if (indexes.count() == 0)
         return;
 
-    int nbFrames = inputEditorModel->pasteInputs(indexes[0].row());
+    /* If we selected only one row, paste the all inputs at that row */
+    if (indexes.count() == 1) {
+        int nbFrames = inputEditorModel->pasteInputs(indexes[0].row());
 
-    /* Select the pasted inputs */
-    QModelIndex top = inputEditorModel->index(indexes[0].row(), 0);
-    QModelIndex bottom = inputEditorModel->index(indexes[0].row()+nbFrames-1, 0);
-    selectionModel()->clear();
-    selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        /* Select the pasted inputs */
+        QModelIndex top = inputEditorModel->index(indexes[0].row(), 0);
+        QModelIndex bottom = inputEditorModel->index(indexes[0].row()+nbFrames-1, 0);
+        selectionModel()->clear();
+        selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);        
+        setCurrentIndex(top);
+    }
+    
+    /* Else, paste inputs inside the selected range, with repeated inputs if
+     * there are more selected rows that frames in the clipboard.
+     * This allows for exemple to copy a single frame and paste it to multiple
+     * rows. */
+    else {
+        applyToSelectedRanges([this](int min, int max){inputEditorModel->pasteInputsInRange(min, max-min+1);});
+    }
 }
 
 void InputEditorView::pasteInsertInputs()
@@ -687,6 +699,7 @@ void InputEditorView::pasteInsertInputs()
     QModelIndex bottom = inputEditorModel->index(indexes[0].row()+nbFrames-1, 0);
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    setCurrentIndex(top);
 }
 
 void InputEditorView::manualScroll(int)
