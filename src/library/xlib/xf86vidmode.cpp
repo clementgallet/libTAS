@@ -51,7 +51,7 @@ Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidMode
         return True;
     }
 
-    LINK_NAMESPACE(XF86VidModeGetModeLine, "Xxf86vm");
+    LINK_NAMESPACE_FULLNAME(XF86VidModeGetModeLine, "libXxf86vm.so.1");
     return orig::XF86VidModeGetModeLine(dpy, screen, dotclock, modeline);        
 }
 
@@ -93,7 +93,7 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
         return True;
     }
 
-    LINK_NAMESPACE(XF86VidModeGetAllModeLines, "Xxf86vm");
+    LINK_NAMESPACE_FULLNAME(XF86VidModeGetAllModeLines, "libXxf86vm.so.1");
     return orig::XF86VidModeGetAllModeLines(dpy, screen, modecount_return, modesinfo);
 }
 

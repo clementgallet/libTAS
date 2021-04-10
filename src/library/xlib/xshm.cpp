@@ -51,7 +51,7 @@ OVERRIDE Bool XShmPutImage(
     Bool        send_event
 )
 {
-    LINK_NAMESPACE(XShmPutImage, "XShm");
+    LINK_NAMESPACE_FULLNAME(XShmPutImage, "libXext.so.6");
 
     if (GlobalState::isNative())
         return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);

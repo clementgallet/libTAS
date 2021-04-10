@@ -64,14 +64,14 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
         }
     }
 
-    LINK_NAMESPACE(XISelectEvents, "Xi");
+    LINK_NAMESPACE_FULLNAME(XISelectEvents, "libXi.so.6");
     return orig::XISelectEvents(dpy, win, masks, num_masks);
 }
 
 XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE(XIQueryDevice, "Xi");
+    LINK_NAMESPACE_FULLNAME(XIQueryDevice, "libXi.so.6");
     return orig::XIQueryDevice(dpy, deviceid, ndevices_return);
 }
 

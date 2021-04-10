@@ -40,7 +40,7 @@ XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
         info->height = shared_config.screen_height;
         return info;
     }
-    LINK_NAMESPACE(XineramaQueryScreens, "Xinerama");
+    LINK_NAMESPACE_FULLNAME(XineramaQueryScreens, "libXinerama.so.1");
     return orig::XineramaQueryScreens(dpy, number);
 }
 

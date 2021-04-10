@@ -52,6 +52,7 @@ namespace orig { \
 
 #ifdef __unix__
 #define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so")
+#define LINK_NAMESPACE_FULLNAME(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)
 #define LINK_NAMESPACE_GLOBAL(FUNC) link_function((void**)&orig::FUNC, #FUNC, nullptr)
 #define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so", V)
 #define LINK_NAMESPACE_SDL1(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL-1.2.so.0")

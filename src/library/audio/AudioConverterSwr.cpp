@@ -45,8 +45,8 @@ AudioConverterSwr::AudioConverterSwr(void)
     {
         GlobalNoLog gnl;
         LINK_NAMESPACE(swr_alloc, "swresample");
-        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.3");
-        link_function((void**)&orig::swr_alloc, "swr_alloc", "libswresample.so.2");
+        LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.3");
+        LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.2");
     }
     /* Still test if it succeeded. */
     if (!orig::swr_alloc) {

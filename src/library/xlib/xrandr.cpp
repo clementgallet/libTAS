@@ -77,7 +77,7 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
         return &sr;
     }
 
-    LINK_NAMESPACE(XRRGetScreenResources, "Xrandr");
+    LINK_NAMESPACE_FULLNAME(XRRGetScreenResources, "libXrandr.so.2");
     XRRScreenResources* sr = orig::XRRGetScreenResources(dpy, window);
 
     /* Replace the monitor refresh rate */
@@ -98,7 +98,7 @@ void XRRFreeScreenResources (XRRScreenResources *resources)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     if (!shared_config.screen_width) {
-        LINK_NAMESPACE(XRRFreeScreenResources, "Xrandr");
+        LINK_NAMESPACE_FULLNAME(XRRFreeScreenResources, "libXrandr.so.2");
         return orig::XRRFreeScreenResources(resources);
     }
 }
@@ -119,7 +119,7 @@ XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RR
         output_info.modes = &output_mode;
         return &output_info;
     }
-    LINK_NAMESPACE(XRRGetOutputInfo, "Xrandr");
+    LINK_NAMESPACE_FULLNAME(XRRGetOutputInfo, "libXrandr.so.2");
     return orig::XRRGetOutputInfo(dpy, resources, output);
 }
 
@@ -127,7 +127,7 @@ void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     if (!shared_config.screen_width) {
-        LINK_NAMESPACE(XRRFreeOutputInfo, "Xrandr");
+        LINK_NAMESPACE_FULLNAME(XRRFreeOutputInfo, "libXrandr.so.2");
         return orig::XRRFreeOutputInfo(outputInfo);
     }
 }
@@ -155,7 +155,7 @@ XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc
 
         return &crtcInfo;
     }
-    LINK_NAMESPACE(XRRGetCrtcInfo, "Xrandr");
+    LINK_NAMESPACE_FULLNAME(XRRGetCrtcInfo, "libXrandr.so.2");
     return orig::XRRGetCrtcInfo(dpy, resources, crtc);
 }
 
@@ -163,7 +163,7 @@ void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     if (!shared_config.screen_width) {
-        LINK_NAMESPACE(XRRFreeCrtcInfo, "Xrandr");
+        LINK_NAMESPACE_FULLNAME(XRRFreeCrtcInfo, "libXrandr.so.2");
         return orig::XRRFreeCrtcInfo(crtcInfo);
     }
 }
@@ -172,7 +172,7 @@ Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
 {
     DEBUGLOGCALL(LCF_WINDOW);
     if (!shared_config.screen_width) {
-        LINK_NAMESPACE(XRRListOutputProperties, "Xrandr");
+        LINK_NAMESPACE_FULLNAME(XRRListOutputProperties, "libXrandr.so.2");
         return orig::XRRListOutputProperties(dpy, output, nprop);
     }
     
@@ -208,10 +208,10 @@ void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int m
 
 void get_monitor_resolution(int& width, int& height)
 {
-    LINK_NAMESPACE(XRRGetScreenResourcesCurrent, "Xrandr");
-    LINK_NAMESPACE(XRRGetCrtcInfo, "Xrandr");
-    LINK_NAMESPACE(XRRFreeCrtcInfo, "Xrandr");
-    LINK_NAMESPACE(XRRFreeScreenResources, "Xrandr");
+    LINK_NAMESPACE_FULLNAME(XRRGetScreenResourcesCurrent, "libXrandr.so.2");
+    LINK_NAMESPACE_FULLNAME(XRRGetCrtcInfo, "libXrandr.so.2");
+    LINK_NAMESPACE_FULLNAME(XRRFreeCrtcInfo, "libXrandr.so.2");
+    LINK_NAMESPACE_FULLNAME(XRRFreeScreenResources, "libXrandr.so.2");
 
     XRRScreenResources *screen_resources = nullptr;
     XRRCrtcInfo *crtc_info = nullptr;
