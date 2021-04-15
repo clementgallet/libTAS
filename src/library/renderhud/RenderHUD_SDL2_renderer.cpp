@@ -26,12 +26,16 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_CreateRGBSurfaceFrom)
+DECLARE_ORIG_POINTER(SDL_CreateTexture)
+DECLARE_ORIG_POINTER(SDL_DestroyTexture)
+DECLARE_ORIG_POINTER(SDL_LockTexture)
+DECLARE_ORIG_POINTER(SDL_UnlockTexture)
 DECLARE_ORIG_POINTER(SDL_RenderCopy)
-DECLARE_ORIG_POINTER(SDL_CreateTextureFromSurface)
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
+    if (texture != nullptr)
+        orig::SDL_DestroyTexture(texture);
 }
 
 void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
@@ -41,23 +45,52 @@ void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
 
 void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y)
 {
-    LINK_NAMESPACE_SDL2(SDL_CreateRGBSurfaceFrom);
-    LINK_NAMESPACE_SDL2(SDL_CreateTextureFromSurface);
+    LINK_NAMESPACE_SDL2(SDL_CreateTexture);
+    LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
+    LINK_NAMESPACE_SDL2(SDL_LockTexture);
+    LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
     LINK_NAMESPACE_SDL2(SDL_RenderCopy);
 
     GlobalNative gn;
 
-    SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    SDL_Texture* tex = orig::SDL_CreateTextureFromSurface(renderer, sdlsurf);
+    /* Create a new texture if smaller than the text to be rendered */
+    if ((texture == nullptr) || (surf->w > tex_w) || (surf->h > tex_h)) {
+        if (texture != nullptr)
+            orig::SDL_DestroyTexture(texture);
 
+        texture = orig::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, surf->w, surf->h);
+        tex_w = surf->w;
+        tex_h = surf->h;        
+    }
+
+    /* Copy pixels into the texture */
+    SDL_Rect tex_rect = {0, 0, surf->w, surf->h};
+    uint8_t* tex_pixels;
+    int pitch;
+
+    orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    for (int row = 0; row < surf->h; row++) {
+        memcpy(tex_pixels, &surf->pixels[row*surf->w], 4*surf->w);
+        tex_pixels += pitch;
+    }
+    orig::SDL_UnlockTexture(texture);
+    
     /* Change the coords so that the text fills on screen */
     int width, height;
     ScreenCapture::getDimensions(width, height);
     x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
     y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
-    SDL_Rect rect = {x, y, sdlsurf->w, sdlsurf->h};
-    orig::SDL_RenderCopy(renderer, tex, NULL, &rect);
+    SDL_Rect rect = {x, y, surf->w, surf->h};
+    orig::SDL_RenderCopy(renderer, texture, &tex_rect, &rect);
+    
+    /* Erase the content of the texture */
+    orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    for (int row = 0; row < surf->h; row++) {
+        memset(tex_pixels, 0, 4*surf->w);
+        tex_pixels += pitch;
+    }
+    orig::SDL_UnlockTexture(texture);
 }
 
 }

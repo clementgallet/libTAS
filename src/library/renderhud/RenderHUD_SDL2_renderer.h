@@ -44,6 +44,9 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 
     private:
         SDL_Renderer* renderer;
+        SDL_Texture* texture = nullptr;
+        int tex_w, tex_h;
+
 };
 }
 
