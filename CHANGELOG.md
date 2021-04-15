@@ -15,6 +15,7 @@
 * Input editor: show state invalidation as gray area when threads changed
 * Add setting to not load movie metadata
 * Input editor: pasting while selecting a range repeats the paste frames in range
+* Allow games to use the native Steam API
 
 ### Changed
 

@@ -19,15 +19,27 @@
 
 #include "steamapiinternal.h"
 #include "../logging.h"
+#include "../hook.h"
 #include "steamapi.h"
 // #include <signal.h>
 #include <dlfcn.h>
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(SteamAPI_GetHSteamUser)
+DEFINE_ORIG_POINTER(SteamAPI_GetHSteamPipe)
+DEFINE_ORIG_POINTER(SteamInternal_ContextInit)
+DEFINE_ORIG_POINTER(SteamInternal_CreateInterface)
+DEFINE_ORIG_POINTER(_ZN16CSteamAPIContext4InitEv)
+
 HSteamUser SteamAPI_GetHSteamUser()
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamAPI_GetHSteamUser, "steam_api");
+        return orig::SteamAPI_GetHSteamUser();
+    }
+
     if (auto *user = SteamUser())
         return user->GetHSteamUser();
     return 0;
@@ -36,12 +48,22 @@ HSteamUser SteamAPI_GetHSteamUser()
 HSteamPipe SteamAPI_GetHSteamPipe()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return shared_config.virtual_steam;
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamAPI_GetHSteamUser, "steam_api");
+        return orig::SteamAPI_GetHSteamUser();
+    }
+    
+    return true;
 }
 
 void * SteamInternal_ContextInit( void *pContextInitData )
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamInternal_ContextInit, "steam_api");
+        return orig::SteamInternal_ContextInit(pContextInitData);
+    }
+
     static CSteamAPIContext context;
     GlobalNoLog gnl;
     context.m_pSteamClient = SteamClient();
@@ -63,8 +85,10 @@ void * SteamInternal_ContextInit( void *pContextInitData )
 void * SteamInternal_CreateInterface( const char *ver )
 {
     debuglogstdio(LCF_STEAM, "%s called with %s", __func__, ver);
-    if (!shared_config.virtual_steam)
-        return nullptr;
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamInternal_CreateInterface, "steam_api");
+        return orig::SteamInternal_CreateInterface(ver);
+    }
 
     /* The expected return from this function is a pointer to a C++ class with
      * specific virtual functions.  The format of our argument is the name
@@ -86,6 +110,11 @@ void * SteamInternal_CreateInterface( const char *ver )
 bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
 {
     DEBUGLOGCALL(LCF_STEAM);
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(_ZN16CSteamAPIContext4InitEv, "steam_api");
+        return orig::_ZN16CSteamAPIContext4InitEv(context);
+    }
+
     GlobalNoLog gnl;
     context->m_pSteamClient = SteamClient();
     context->m_pSteamUser = SteamUser();

@@ -24,6 +24,7 @@
 #include "isteamremotestorage013.h"
 #include "isteamremotestorage014.h"
 #include "../../logging.h"
+#include "../../hook.h"
 #include "../../Utils.h"
 
 #include <unistd.h>
@@ -31,6 +32,8 @@
 #include <dirent.h> 
 
 namespace libtas {
+
+DEFINE_ORIG_POINTER(SteamRemoteStorage)
 
 char steamremotestorage[2048] = "/NOTVALID";
 static const char *steamremotestorage_version = NULL;
@@ -86,9 +89,14 @@ void SteamRemoteStorage_set_version(const char *version)
 
 struct ISteamRemoteStorage *SteamRemoteStorage(void)
 {
-	static struct ISteamRemoteStorage *cached_iface = nullptr;
-
     DEBUGLOGCALL(LCF_STEAM);
+
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamRemoteStorage, "steam_api");
+        return orig::SteamRemoteStorage();
+    }
+
+	static struct ISteamRemoteStorage *cached_iface = nullptr;
 
 	if (!steamremotestorage_version)
 	{
