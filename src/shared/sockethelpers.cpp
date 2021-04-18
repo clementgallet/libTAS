@@ -36,6 +36,12 @@
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+
+
 /* Socket to communicate between the program and the game */
 static int socket_fd = 0;
 
@@ -110,6 +116,16 @@ bool initSocketGame(void)
         exit(-1);
     }
 
+    /* Don't generate SIGPIPE */
+#if defined(__APPLE__) && defined(__MACH__)
+    int option_value = 1;
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &option_value, sizeof(option_value)))
+    {
+        std::cerr << "Couldn't set SO_NOSIGPIPE option." << std::endl;
+        exit(-1);
+    }
+#endif
+    
     close(tmp_fd);
     return true;
 }
