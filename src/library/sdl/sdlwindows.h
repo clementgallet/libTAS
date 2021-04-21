@@ -72,6 +72,11 @@ OVERRIDE SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, in
 OVERRIDE Uint32 SDL_GetWindowID(SDL_Window* window);
 
 /**
+ *  \brief Get a window from a stored ID, or NULL if it doesn't exist.
+ */
+OVERRIDE SDL_Window* SDL_GetWindowFromID(Uint32 id);
+
+/**
  *  \brief Get the window flags.
  */
 OVERRIDE Uint32 SDL_GetWindowFlags(SDL_Window* window);

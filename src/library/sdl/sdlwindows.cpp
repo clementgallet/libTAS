@@ -45,6 +45,7 @@ namespace libtas {
 DECLARE_ORIG_POINTER(SDL_GL_SwapWindow)
 DECLARE_ORIG_POINTER(SDL_CreateWindow)
 DECLARE_ORIG_POINTER(SDL_GetWindowID)
+DECLARE_ORIG_POINTER(SDL_GetWindowFromID)
 DECLARE_ORIG_POINTER(SDL_GetWindowFlags)
 DECLARE_ORIG_POINTER(SDL_SetWindowTitle)
 DEFINE_ORIG_POINTER(SDL_WM_SetCaption)
@@ -256,7 +257,8 @@ static int swapInterval = 0;
     return sdl::gameSDLWindow;
 }
 
-/* Override */ void SDL_DestroyWindow(SDL_Window* window){
+/* Override */ void SDL_DestroyWindow(SDL_Window* window)
+{
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_DestroyWindow);
 
@@ -272,12 +274,22 @@ static int swapInterval = 0;
     ScreenCapture::fini();
 }
 
-/* Override */ Uint32 SDL_GetWindowID(SDL_Window* window){
+/* Override */ Uint32 SDL_GetWindowID(SDL_Window* window)
+{
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     if (sdl::gameSDLWindow == window)
         return 1;
     LINK_NAMESPACE_SDL2(SDL_GetWindowID);
     return orig::SDL_GetWindowID(window);
+}
+
+/* Override */ SDL_Window* SDL_GetWindowFromID(Uint32 id)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    if (id == 1)
+        return sdl::gameSDLWindow;
+    LINK_NAMESPACE_SDL2(SDL_GetWindowFromID);
+    return orig::SDL_GetWindowFromID(id);
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
