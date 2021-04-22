@@ -24,7 +24,7 @@
 #include <pthread.h> // pthread_t
 #include <semaphore.h>
 #if defined(__APPLE__) && defined(__MACH__)
-#include <pthread_workqueue.h> // pthread_workqueue_t
+//#include <pthread_workqueue.h> // pthread_workqueue_t
 #endif
 
 
@@ -137,9 +137,12 @@ OVERRIDE int pthread_setname_np (pthread_t target_thread, const char *name) __TH
 OVERRIDE int pthread_setname_np (const char *name);
 #endif
 
-/* Create a workqueue thread */
 #if defined(__APPLE__) && defined(__MACH__)
-OVERRIDE int pthread_workqueue_create_np(pthread_workqueue_t *workqp, const pthread_workqueue_attr_t * attr);
+typedef unsigned long pthread_priority_t;
+typedef void (*pthread_workqueue_function2_t)(pthread_priority_t priority);
+typedef void (*pthread_workqueue_function_kevent_t)(void **events, int *nevents);
+typedef void (*pthread_workqueue_function_workloop_t)(uint64_t *workloop_id, void **events, int *nevents);
+OVERRIDE int _pthread_workqueue_init_with_workloop(pthread_workqueue_function2_t queue_func, pthread_workqueue_function_kevent_t kevent_func, pthread_workqueue_function_workloop_t workloop_func, int offset, int flags);
 #endif
 
 }
