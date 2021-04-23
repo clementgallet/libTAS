@@ -67,8 +67,14 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
+#if defined(__APPLE__) && defined(__MACH__)
+/* dlopen_from is like dlopen, except it takes an extra argument specifying the "true" caller address.
+ * it is marked as weak so that libTAS will still work if it's not present. */
+extern "C" void *dlopen_from(const char *file, int mode, void *callerAddr) __attribute__((weak));
+#endif
+
 __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
-    const void *const callerAddr = __builtin_extract_return_addr(__builtin_return_address(0));
+    void *const callerAddr = __builtin_extract_return_addr(__builtin_return_address(0));
 
     if (!orig::dlopen) {
 #ifdef __unix__
@@ -98,76 +104,87 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     debuglogstdio(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
     void *result = nullptr;
 
+#if defined(__APPLE__) && defined(__MACH__)
+    if (dlopen_from) {
+        result = dlopen_from(file, mode, reinterpret_cast<void*>(callerAddr));
+
+        if (result != nullptr) {
+            add_lib(file);
+        }
+    } else
+#endif
+    {
 #ifdef __unix__
-    if (file != nullptr && file[0] != '\0' && std::strchr(file, '/') == nullptr) {
-        /* Path should be searched using search paths, so let's
-         * manually check the paths in the correct order...
-         */
-        Dl_info info;
-        if (dladdr(callerAddr, &info)) {
-            /* Get the dynamic library name of our caller */
-            const char *dlname = info.dli_fname;
-            {
-                struct stat dlstat, exestat;
-                if (stat(dlname, &dlstat) == 0 &&
-                    stat("/proc/self/exe", &exestat) == 0 &&
-                    dlstat.st_dev == exestat.st_dev &&
-                    dlstat.st_ino == exestat.st_ino) {
-                    /* Unless being called from the main executable */
-                    dlname = nullptr;
+        if (file != nullptr && file[0] != '\0' && std::strchr(file, '/') == nullptr) {
+            /* Path should be searched using search paths, so let's
+             * manually check the paths in the correct order...
+             */
+            Dl_info info;
+            if (dladdr(callerAddr, &info)) {
+                /* Get the dynamic library name of our caller */
+                const char *dlname = info.dli_fname;
+                {
+                    struct stat dlstat, exestat;
+                    if (stat(dlname, &dlstat) == 0 &&
+                        stat("/proc/self/exe", &exestat) == 0 &&
+                        dlstat.st_dev == exestat.st_dev &&
+                        dlstat.st_ino == exestat.st_ino) {
+                        /* Unless being called from the main executable */
+                        dlname = nullptr;
+                    }
                 }
-            }
 
-            /* Open object of caller */
-            void *caller = orig::dlopen(dlname, RTLD_LAZY | RTLD_NOLOAD);
-            if (caller != nullptr) {
-                Dl_serinfo size;
-                if (dlinfo(caller, RTLD_DI_SERINFOSIZE, &size) == 0) {
-                    auto *paths = reinterpret_cast<Dl_serinfo *>(new char[size.dls_size]);
-                    *paths = size;
+                /* Open object of caller */
+                void *caller = orig::dlopen(dlname, RTLD_LAZY | RTLD_NOLOAD);
+                if (caller != nullptr) {
+                    Dl_serinfo size;
+                    if (dlinfo(caller, RTLD_DI_SERINFOSIZE, &size) == 0) {
+                        auto *paths = reinterpret_cast<Dl_serinfo *>(new char[size.dls_size]);
+                        *paths = size;
 
-                    /* Get ordered list of search paths for this object */
-                    if (dlinfo(caller, RTLD_DI_SERINFO, paths) == 0) {
-                        for (unsigned i = 0; i != paths->dls_cnt; ++i) {
-                            const char *name = paths->dls_serpath[i].dls_name;
-                            /* Probably can't happen, just being safe... */
-                            if (name == nullptr || name[0] == '\0')
-                                continue;
-                            std::string path(name);
-                            /* Note that this guaranteed / prevents
-                             * recursive search path lookup
-                             */
-                            if (path.back() != '/')
-                                path += '/';
-                            path += file;
+                        /* Get ordered list of search paths for this object */
+                        if (dlinfo(caller, RTLD_DI_SERINFO, paths) == 0) {
+                            for (unsigned i = 0; i != paths->dls_cnt; ++i) {
+                                const char *name = paths->dls_serpath[i].dls_name;
+                                /* Probably can't happen, just being safe... */
+                                if (name == nullptr || name[0] == '\0')
+                                    continue;
+                                std::string path(name);
+                                /* Note that this guaranteed / prevents
+                                 * recursive search path lookup
+                                 */
+                                if (path.back() != '/')
+                                    path += '/';
+                                path += file;
 
-                            result = orig::dlopen(path.c_str(), mode);
-                            if (result != nullptr) {
-                                debuglogstdio(LCF_HOOK, "   Found at %s", name);
-                                add_lib(path.c_str());
-                                break;
+                                result = orig::dlopen(path.c_str(), mode);
+                                if (result != nullptr) {
+                                    debuglogstdio(LCF_HOOK, "   Found at %s", name);
+                                    add_lib(path.c_str());
+                                    break;
+                                }
                             }
                         }
+
+                        delete [] reinterpret_cast<char *>(paths);
                     }
 
-                    delete [] reinterpret_cast<char *>(paths);
+                    dlclose(caller);
                 }
-
-                dlclose(caller);
             }
         }
-    }
 #endif
 
-    if (result == nullptr) {
-        /* Path is empty (referring to the main program), relative to
-         * the cwd, absolute, or failed search path lookup above, so
-         * try looking it up normally.
-         */
-        result = orig::dlopen(file, mode);
+        if (result == nullptr) {
+            /* Path is empty (referring to the main program), relative to
+             * the cwd, absolute, or failed search path lookup above, so
+             * try looking it up normally.
+             */
+            result = orig::dlopen(file, mode);
 
-        if (result != nullptr)
-            add_lib(file);
+            if (result != nullptr)
+                add_lib(file);
+        }
     }
 
 #ifdef __linux__
