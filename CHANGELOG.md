@@ -46,6 +46,7 @@
 * Handle savestates from previous execution that were performed after game 
   exiting (because forked savestate) (#407)
 * Fix and improve SDL2_renderer HUD (#410)
+* Fix "OSD on encodes" being broken
 
 ## [1.4.1] - 2021-01-02
 ### Added

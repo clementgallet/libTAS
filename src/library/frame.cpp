@@ -386,15 +386,9 @@ void frameBoundary(std::function<void()> draw)
     if (!skipping_draw)
         WindowTitle::update(fps, lfps);
 
-    /* Saving the screen pixels before drawing. This is done before rendering
-     * the HUD, so that we can redraw with another HUD.
-     */
-    if (!skipping_draw) {
-        if (draw) {
-            ScreenCapture::copyScreenToSurface();
-        }
-    }
-
+    /* If we want HUD to appear in encodes, we need to draw it before saving
+     * the window surface/texture/etc. This has the small drawback that we
+     * won't be able to remove HUD messages during that frame. */
 #ifdef LIBTAS_ENABLE_HUD
     if (!skipping_draw && draw && shared_config.osd_encode) {
         AllInputs preview_ai;
@@ -402,6 +396,12 @@ void frameBoundary(std::function<void()> draw)
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
 #endif
+
+    if (!skipping_draw) {
+        if (draw) {
+            ScreenCapture::copyScreenToSurface();
+        }
+    }
 
     /* Audio mixing is done above, so encode must be called after */
     /* Dumping audio and video */
