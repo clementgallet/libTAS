@@ -533,6 +533,12 @@ void GameLoop::processInputs(AllInputs &ai)
 {
     ai.emptyInputs();
 
+    /* Set framerate numbers here to prevent potential errors */
+    if (context->config.sc.variable_framerate) {
+        ai.framerate_num = context->config.sc.framerate_num;
+        ai.framerate_den = context->config.sc.framerate_den;
+    }
+
     /* Don't record inputs if we are quitting */
     if (context->status == Context::QUITTING)
         return;
