@@ -37,6 +37,7 @@ int RenderHUD_Base_Linux::font_size = 20;
 
 RenderHUD_Base_Linux::~RenderHUD_Base_Linux()
 {
+    GlobalNative gn;
     if (fg_font) {
         TTF_CloseFont(fg_font);
         fg_font = nullptr;
