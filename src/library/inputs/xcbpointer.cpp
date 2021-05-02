@@ -126,15 +126,17 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
     }
     
     /* When warping cursor, real and game cursor position are now synced */
-    if (dst_window == XCB_NONE) {
-        /* Relative warp */
-        old_ai.pointer_x += dst_x;
-        old_ai.pointer_y += dst_y;
-    }
-    else {
-        /* Absolute warp */
-        old_ai.pointer_x = dst_x;
-        old_ai.pointer_y = dst_y;
+    if (shared_config.mouse_support) {
+        if (dst_window == XCB_NONE) {
+            /* Relative warp */
+            old_ai.pointer_x += dst_x;
+            old_ai.pointer_y += dst_y;
+        }
+        else {
+            /* Absolute warp */
+            old_ai.pointer_x = dst_x;
+            old_ai.pointer_y = dst_y;
+        }
     }
 
     LINK_NAMESPACE_GLOBAL(xcb_warp_pointer_checked);
@@ -204,15 +206,17 @@ xcb_warp_pointer (xcb_connection_t *c,
     }
     
     /* When warping cursor, real and game cursor position are now synced */
-    if (dst_window == XCB_NONE) {
-        /* Relative warp */
-        old_ai.pointer_x += dst_x;
-        old_ai.pointer_y += dst_y;
-    }
-    else {
-        /* Absolute warp */
-        old_ai.pointer_x = dst_x;
-        old_ai.pointer_y = dst_y;
+    if (shared_config.mouse_support) {
+        if (dst_window == XCB_NONE) {
+            /* Relative warp */
+            old_ai.pointer_x += dst_x;
+            old_ai.pointer_y += dst_y;
+        }
+        else {
+            /* Absolute warp */
+            old_ai.pointer_x = dst_x;
+            old_ai.pointer_y = dst_y;
+        }
     }
 
     LINK_NAMESPACE_GLOBAL(xcb_warp_pointer);

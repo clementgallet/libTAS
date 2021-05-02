@@ -187,16 +187,20 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         return 0; // Not sure what to return
     }
     
-    /* When warping cursor, real and game cursor position are now synced */
-    if (dest_w == None) {
-        /* Relative warp */
-        old_ai.pointer_x += dest_x;
-        old_ai.pointer_y += dest_y;
-    }
-    else {
-        /* Absolute warp */
-        old_ai.pointer_x = dest_x;
-        old_ai.pointer_y = dest_y;
+    /* When warping cursor, real and game cursor position are now synced.
+     * When mouse is disabled, we consider that the user doesn't move the mouse,
+     * so it is kept at the same position. */
+    if (shared_config.mouse_support) {
+        if (dest_w == None) {
+            /* Relative warp */
+            old_ai.pointer_x += dest_x;
+            old_ai.pointer_y += dest_y;
+        }
+        else {
+            /* Absolute warp */
+            old_ai.pointer_x = dest_x;
+            old_ai.pointer_y = dest_y;
+        }
     }
 
     LINK_NAMESPACE_GLOBAL(XWarpPointer);
