@@ -17,6 +17,7 @@
 * Input editor: pasting while selecting a range repeats the paste frames in range
 * Allow games to use the native Steam API
 * Implement SDL_GetWindowFromID() (#409)
+* Implement more X*LookupString() functions
 
 ### Changed
 

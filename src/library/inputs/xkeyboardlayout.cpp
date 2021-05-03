@@ -20,6 +20,7 @@
 #include "xkeyboardlayout.h"
 
 #include "../logging.h"
+#include "../backtrace.h"
 
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
@@ -177,6 +178,7 @@ static const char Xlib_default_char[256] = {
 /* Override */ int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out)
 {
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
+    // printBacktrace();
     KeyCode keycode = event_struct->keycode;
     *keysym_return = Xlib_default_keymap[keycode];
     if (buffer_return && (bytes_buffer > 0)) {
@@ -184,6 +186,90 @@ static const char Xlib_default_char[256] = {
         if (c == '\0') {
             return 0;
         }
+        buffer_return[0] = c;
+        return 1;
+    }
+    return 0;
+}
+
+/* Override */ int XmbLookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
+{
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    KeyCode keycode = event->keycode;
+    *keysym_return = Xlib_default_keymap[keycode];
+
+    /* Return if no associated keysym */
+    if (*keysym_return == NoSymbol) {
+        *status_return = XLookupNone;
+        return 0;
+    }
+
+    char c = Xlib_default_char[keycode];
+
+    /* Return if no associated string */
+    if (c == '\0') {
+        *status_return = XLookupKeySym;
+        return 0;
+    }
+
+    *status_return = XLookupBoth;
+    if (buffer_return && (bytes_buffer > 0)) {
+        buffer_return[0] = c;
+        return 1;
+    }
+    return 0;
+}
+
+/* Override */ int XwcLookupString(XIC ic, XKeyPressedEvent *event, wchar_t *buffer_return, int wchars_buffer, KeySym *keysym_return, Status *status_return)
+{
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    KeyCode keycode = event->keycode;
+    *keysym_return = Xlib_default_keymap[keycode];
+
+    /* Return if no associated keysym */
+    if (*keysym_return == NoSymbol) {
+        *status_return = XLookupNone;
+        return 0;
+    }
+
+    char c = Xlib_default_char[keycode];
+
+    /* Return if no associated string */
+    if (c == '\0') {
+        *status_return = XLookupKeySym;
+        return 0;
+    }
+
+    *status_return = XLookupBoth;
+    if (buffer_return && (wchars_buffer > 0)) {
+        buffer_return[0] = c;
+        return 1;
+    }
+    return 0;
+}
+
+/* Override */ int Xutf8LookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
+{
+    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    KeyCode keycode = event->keycode;
+    *keysym_return = Xlib_default_keymap[keycode];
+
+    /* Return if no associated keysym */
+    if (*keysym_return == NoSymbol) {
+        *status_return = XLookupNone;
+        return 0;
+    }
+
+    char c = Xlib_default_char[keycode];
+
+    /* Return if no associated string */
+    if (c == '\0') {
+        *status_return = XLookupKeySym;
+        return 0;
+    }
+
+    *status_return = XLookupBoth;
+    if (buffer_return && (bytes_buffer > 0)) {
         buffer_return[0] = c;
         return 1;
     }
