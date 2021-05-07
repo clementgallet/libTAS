@@ -18,6 +18,7 @@
 * Allow games to use the native Steam API
 * Implement SDL_GetWindowFromID() (#409)
 * Implement more X*LookupString() functions
+* Check for socket file removal errors
 
 ### Changed
 

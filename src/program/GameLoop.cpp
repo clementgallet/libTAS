@@ -184,7 +184,9 @@ void GameLoop::init()
     remove_savestates(context);
 
     /* Remove the file socket */
-    removeSocket();
+    int err = removeSocket();
+    if (err != 0)
+        emit alertToShow(QString("Could not remove socket file /tmp/libTAS.socket: %2").arg(strerror(err)));
 
     /* Init savestate list */
     SaveStateList::init(context);

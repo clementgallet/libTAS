@@ -23,8 +23,8 @@
 #include <cstddef>
 #include <string>
 
-/* Remove the socker file */
-void removeSocket();
+/* Remove the socket file and return error */
+int removeSocket();
 
 /* Initiate a socket connection with the game */
 bool initSocketProgram(void);

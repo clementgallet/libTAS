@@ -26,6 +26,7 @@
 #include <iostream>
 #include <vector>
 #include <mutex>
+#include <errno.h>
 
 #ifdef SOCKET_LOG
 #include "lcf.h"
@@ -47,8 +48,11 @@ static int socket_fd = 0;
 
 static std::mutex mutex;
 
-void removeSocket(void){
-    unlink(SOCKET_FILENAME);
+int removeSocket(void) {
+    int ret = unlink(SOCKET_FILENAME);
+    if ((ret == -1) && (errno != ENOENT))
+        return errno;
+    return 0;
 }
 
 bool initSocketProgram(void)
