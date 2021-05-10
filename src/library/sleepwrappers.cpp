@@ -93,7 +93,8 @@ DEFINE_ORIG_POINTER(sched_yield)
             }
             free(symbols);
         }
-        detTimer.addDelay(ts);
+        if (usec != 2000)
+            detTimer.addDelay(ts);
         NATIVECALL(sched_yield());
         return 0;
     }

@@ -30,6 +30,7 @@
 #include <pthread.h> // pthread_t
 #include <csignal> // stack_t
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <setjmp.h>
 
@@ -80,6 +81,8 @@ struct ThreadInfo {
 
     bool syncEnabled = false; // main thread needs to wait for this thread
     bool syncGo = false; // main thread can advance for now
+    std::atomic<int> syncCount;
+    int syncOldCount = 0;
 
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list

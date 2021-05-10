@@ -25,6 +25,7 @@
 #include "xatom.h"
 #include "xdisplay.h" // x11::gameDisplays
 #include "xwindows.h" // x11::gameXWindows
+#include "../frame.h"
 
 #ifdef LIBTAS_HAS_XINPUT
 #include <X11/extensions/XInput2.h>
@@ -77,7 +78,9 @@ static Bool isEventFiltered (XEvent *event) {
                 xce->x = 0;
                 xce->y = 0;
             }
-            return False;
+            if (framecount == 0)
+                return False;
+            return True;
         case ClientMessage:
             if (static_cast<Atom>(reinterpret_cast<XClientMessageEvent*>(event)->data.l[0]) == x11_atom(WM_TAKE_FOCUS))
                 return True;

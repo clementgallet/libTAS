@@ -21,6 +21,7 @@
 
 #include "ThreadSync.h"
 #include "../logging.h"
+#include "../sleepwrappers.h"
 #include <time.h> // nanosleep
 #include "../GlobalState.h"
 #include <atomic>
@@ -109,12 +110,36 @@ void ThreadSync::detInit()
 
 void ThreadSync::detWait()
 {
-    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
-        if (!thread->syncEnabled) continue;
-        std::unique_lock<std::mutex> lock(detMutex);
-        detCond.wait(lock, [thread]{ return (thread->syncGo); });
-        thread->syncGo = false;
+    bool shouldWait = true;
+    
+    while (shouldWait) {
+        shouldWait = false;
+        for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
+            /* Should wait if sync count has increased since last time */
+            if (thread->syncCount > thread->syncOldCount) {
+                debuglogstdio(LCF_ERROR, "Thread %d has increased sync count %d -> %d", thread->tid, thread->syncOldCount, thread->syncCount.load());
+                thread->syncOldCount = thread->syncCount;
+                shouldWait = true;
+            }
+            
+            if (!thread->syncEnabled) continue;
+            if (!thread->syncGo) {
+                shouldWait = true;
+                std::unique_lock<std::mutex> lock(detMutex);
+                detCond.wait(lock, [thread]{ return (thread->syncGo); });
+                thread->syncGo = false;
+            }
+        }
+        if (shouldWait)
+            NATIVECALL(usleep(100));
     }
+
+    /* Reset sync count */
+    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
+        thread->syncCount = 0;
+        thread->syncOldCount = 0;
+    }
+
 }
 
 void ThreadSync::detWaitGlobal(int i)
@@ -135,6 +160,7 @@ void ThreadSync::detSignal(bool stop)
     {
         std::lock_guard<std::mutex> lock(detMutex);
         current_thread->syncGo = true;
+        current_thread->syncCount++;
     }
     detCond.notify_all();
 
