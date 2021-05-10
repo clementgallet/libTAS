@@ -60,8 +60,7 @@ DEFINE_ORIG_POINTER(pthread_condattr_setclock)
 DEFINE_ORIG_POINTER(pthread_condattr_getclock)
 DEFINE_ORIG_POINTER(pthread_setname_np)
 #if defined(__APPLE__) && defined(__MACH__)
-DEFINE_ORIG_POINTER(pthread_workqueue_create_np)
-
+DEFINE_ORIG_POINTER(_pthread_workqueue_init_with_workloop)
 /* Internal function */
 int __pthread_workqueue_setkill(int enable);
 DEFINE_ORIG_POINTER(__pthread_workqueue_setkill)
@@ -753,60 +752,75 @@ int pthread_setname_np (const char *name)
 }
 
 #if defined(__APPLE__) && defined(__MACH__)
-static void pthread_workqueue_start(void *arg)
+static void register_self_thread()
 {
-    ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
-
+    /* Exit if thread already registered */
+    if (ThreadManager::getThreadTid() != 0)
+        return;
+    
+    ThreadSync::incrementUninitializedThreadCount();
+    
+    /* Creating a new thread and filling parameters. */
+    ThreadInfo* thread = ThreadManager::getNewThread();
+    bool isRecycled = ThreadManager::initThreadFromParent(thread, nullptr, nullptr, __builtin_return_address(0));
+    
+    /* Workqueue thread must not come from recycled thread */
+    MYASSERT(!isRecycled)
+    
+    thread->detached = false;
     ThreadManager::initThreadFromChild(thread);
-
+    
     /* Flag thread as killable */
-    LINK_NAMESPACE(__pthread_workqueue_setkill, "pthread");
+    LINK_NAMESPACE(__pthread_workqueue_setkill, "system_pthread");
     orig::__pthread_workqueue_setkill(1);
     
     ThreadSync::decrementUninitializedThreadCount();
-
-    debuglogstdio(LCF_THREAD, "End of our pthread_workqueue_start code");
+}
+    
+namespace orig {
+    static pthread_workqueue_function2_t queue_func;
+    static pthread_workqueue_function_kevent_t kevent_func;
+    static pthread_workqueue_function_workloop_t workloop_func;
 }
 
-int pthread_workqueue_create_np(pthread_workqueue_t *workqp, const pthread_workqueue_attr_t * attr)
+static void pthread_workqueue_queue_func(pthread_priority_t priority)
 {
-    LINK_NAMESPACE(pthread_workqueue_create_np, "pthread");
+    /* Register own thread if not already */
+    register_self_thread();
+    
+    /* Returns original function */
+    return orig::queue_func(priority);
+}
 
-    if (GlobalState::isNative())
-        return orig::pthread_workqueue_create_np(workqp, attr);
+static void pthread_workqueue_kevent_func(void **events, int *nevents)
+{
+    /* Register own thread if not already */
+    register_self_thread();
+    
+    /* Returns original function */
+    return orig::kevent_func(events, nevents);
+}
 
-    debuglogstdio(LCF_THREAD, "Workqueue thread is created");
+static void pthread_workqueue_workloop_func(uint64_t *workloop_id, void **events, int *nevents)
+{
+    /* Register own thread if not already */
+    register_self_thread();
+    
+    /* Returns original function */
+    return orig::workloop_func(workloop_id, events, nevents);
+}
 
-    ThreadSync::wrapperExecutionLockLock();
-    ThreadSync::incrementUninitializedThreadCount();
+int _pthread_workqueue_init_with_workloop(pthread_workqueue_function2_t queue_func, pthread_workqueue_function_kevent_t kevent_func, pthread_workqueue_function_workloop_t workloop_func, int offset, int flags)
+{
+    DEBUGLOGCALL(LCF_THREAD);
 
-    /* Creating a new or recycled thread, and filling some parameters.
-     * The rest (like thread->tid) will be filled by the child thread.
-     */
-    ThreadInfo* thread = ThreadManager::getNewThread();
-    bool isRecycled = ThreadManager::initThreadFromParent(thread, nullptr, nullptr, __builtin_return_address(0));
+    /* Save orig workqueue functions */
+    orig::queue_func = queue_func;
+    orig::kevent_func = kevent_func;
+    orig::workloop_func = workloop_func;
 
-    /* Workqueue thread must not come from recycled thread */
-    MYASSERT(!isRecycled)
-
-    thread->detached = false;
-
-    /* Call our wrapper function */
-    int ret = orig::pthread_workqueue_create_np(workqp, attr);
-
-    if (ret != 0) {
-        /* Thread creation failed */
-        ThreadSync::decrementUninitializedThreadCount();
-        ThreadManager::threadIsDead(thread);
-    }
-
-    /* We must send an item to this thread to fill the last parameters of our
-     * thread struct. Also, we must flag this thread as killable, so that
-     * it can be suspended for savestating. */
-    pthread_workqueue_additem_np(*workqp, pthread_workqueue_start, &thread, nullptr, nullptr);
-
-    ThreadSync::wrapperExecutionLockUnlock();
-    return ret;
+    LINK_NAMESPACE(_pthread_workqueue_init_with_workloop, "system_pthread");
+    return orig::_pthread_workqueue_init_with_workloop(pthread_workqueue_queue_func,  pthread_workqueue_kevent_func,  pthread_workqueue_workloop_func, offset, flags);
 }
 
 #endif

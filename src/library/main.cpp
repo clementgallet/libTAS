@@ -72,6 +72,12 @@ void __attribute__((constructor)) init(void)
         if ( strstr(environ[i], "LD_LIBRARY_PATH=") ) {
              environ[i][0] = 'D';
         }
+        if ( strstr(environ[i], "DYLD_INSERT_LIBRARIES=") ) {
+            environ[i][0] = 'Y';
+        }
+        if ( strstr(environ[i], "DYLD_FORCE_FLAT_NAMESPACE=") ) {
+            environ[i][0] = 'Y';
+        }
     }
 
     ThreadManager::init();
