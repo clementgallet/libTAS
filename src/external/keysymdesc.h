@@ -18,10 +18,10 @@
  */
 
 #define KEYSYM_TO_DESC_LATIN(ks)\
-    (keysym_offsets_latin[ks&0xff] == -1)?"":&keysym_desc_latin[keysym_offsets_latin[ks&0xff]] \
+    (keysym_offsets_latin[ks&0xff] == -1)?nullptr:&keysym_desc_latin[keysym_offsets_latin[ks&0xff]] \
 
 #define KEYSYM_TO_DESC_MISC(ks)\
-    (keysym_offsets_misc[ks&0xff] == -1)?"":&keysym_desc_misc[keysym_offsets_misc[ks&0xff]] \
+    (keysym_offsets_misc[ks&0xff] == -1)?nullptr:&keysym_desc_misc[keysym_offsets_misc[ks&0xff]] \
 
 #define KEYSYM_TO_DESC(ks)\
     ((ks & 0xff00)==0)?(KEYSYM_TO_DESC_LATIN(ks)):(KEYSYM_TO_DESC_MISC(ks))

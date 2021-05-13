@@ -415,13 +415,16 @@ void KeyMappingQuartz::initKeyboardLayout()
                     if (char_to_xcb_keycode[t].unicode_char == ch) {
                         keyboard_layout[kc] = char_to_xcb_keycode[t].keysym;
 
-                        /* Insert key in the misc list */
-                        SingleInput si;
-                        si.type = SingleInput::IT_KEYBOARD;
-                        si.value = keyboard_layout[kc];
-                        si.description = KEYSYM_TO_DESC_MISC(si.value);
-                        input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
-
+                        /* Check if we have a description string of the key */
+                        const char* str = KEYSYM_TO_DESC_MISC(si.value);
+                        if (str) {
+                            /* Insert key in the misc list */
+                            SingleInput si;
+                            si.type = SingleInput::IT_KEYBOARD;
+                            si.value = keyboard_layout[kc];
+                            si.description = str;
+                            input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
+                        }
                         break;
                     }                    
                 }
@@ -431,12 +434,16 @@ void KeyMappingQuartz::initKeyboardLayout()
                 if (keyboard_layout[kc] == 0) {
                     keyboard_layout[kc] = (ch & 0xff);
                     
-                    /* Insert key in the ascii list */
-                    SingleInput si;
-                    si.type = SingleInput::IT_KEYBOARD;
-                    si.value = keyboard_layout[kc];
-                    si.description = KEYSYM_TO_DESC_LATIN(si.value);
-                    input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
+                    /* Check if we have a description string of the key */
+                    const char* str = KEYSYM_TO_DESC_LATIN(si.value);
+                    if (str) {
+                        /* Insert key in the ascii list */
+                        SingleInput si;
+                        si.type = SingleInput::IT_KEYBOARD;
+                        si.value = keyboard_layout[kc];
+                        si.description = str;
+                        input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
+                    }
                 }
             }
         }
