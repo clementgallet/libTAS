@@ -19,6 +19,7 @@
 
 #include "IRamWatchDetailed.h"
 #include "MemSection.h"
+#include "MemLayout.h"
 #include "MemAccess.h"
 #include "../utils.h"
 #include <sstream>
@@ -39,21 +40,10 @@ void IRamWatchDetailed::update_addr()
                 base_address = base_file_offset;
             }
             else {
-                /* Compose the filename for the /proc memory map, and open it. */
-                std::ostringstream oss;
-                oss << "/proc/" << MemAccess::getPid() << "/maps";
-                std::ifstream mapsfile(oss.str());
-                if (!mapsfile) {
-                    std::cerr << "Could not open " << oss.str() << std::endl;
-                    return;
-                }
-
-                std::string line;
-                MemSection::reset();
-
-                while (std::getline(mapsfile, line)) {
-                    MemSection section;
-                    section.readMap(line);
+                std::unique_ptr<MemLayout> memlayout (new MemLayout(MemAccess::getPid()));
+                
+                MemSection section;
+                while (memlayout->nextSection(0xffffffff, section)) {
                     std::string file = fileFromPath(section.filename);
 
                     if (base_file.compare(file) == 0) {

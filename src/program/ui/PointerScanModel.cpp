@@ -20,9 +20,11 @@
 #include "PointerScanModel.h"
 #include "../utils.h"
 #include "../ramsearch/MemAccess.h"
+#include "../ramsearch/MemLayout.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 PointerScanModel::PointerScanModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -31,33 +33,19 @@ void PointerScanModel::locatePointers()
     pointer_map.clear();
     static_pointer_map.clear();
 
-    /* Compose the filename for the /proc memory map, and open it. */
-    std::ostringstream oss;
-    oss << "/proc/" << context->game_pid << "/maps";
-    std::ifstream mapsfile(oss.str());
-    if (!mapsfile) {
-        std::cerr << "Could not open " << oss.str() << std::endl;
-        return;
-    }
-
-    std::string line;
-    MemSection::reset();
-
+    std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
+    
     std::vector<MemSection> memory_sections;
     file_mapping_sections.clear();
 
-    int total_size = 0;
-    while (std::getline(mapsfile, line)) {
-
-        MemSection section;
-        section.readMap(line);
-
+    int type_flag = (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack);
+    uint64_t total_size = memlayout->totalSize(type_flag);
+    
+    MemSection section;
+    while (memlayout->nextSection(type_flag, section)) {
         /* Only store sections that could contain pointers */
-        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack)) {
-        // if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap)) {
-            memory_sections.push_back(section);
-            total_size += section.size;
-        }
+        memory_sections.push_back(section);
+        
         /* Keep the file mapping to access to the file and offsets */
         if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemFileMappingRW | MemSection::MemStack)) {
             file_mapping_sections.push_back(section);

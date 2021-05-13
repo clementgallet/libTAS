@@ -84,6 +84,7 @@ libTAS_SOURCES = \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
     ramsearch/MemAccess.cpp \
+    ramsearch/MemLayout.cpp \
     ramsearch/MemSection.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
