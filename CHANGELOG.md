@@ -29,6 +29,7 @@
 * State loading doesn't write zeros on zero pages, preventing allocations
 * Switch input mapping to tabs
 * Optimize UI refresh with timer
+* Switch OpenGL OSD using shaders. Adds transparency.
 
 ### Fixed
 

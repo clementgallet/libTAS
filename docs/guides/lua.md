@@ -21,9 +21,9 @@ Returns the width and height of game window.
 
 #### gui.text
 
-    none gui.text(Number x, Number y, String text, [Number fgcolor = 0x00ffffff], [Number bgcolor = 0x00000000])
+    none gui.text(Number x, Number y, String text, [Number color = 0x00ffffff], [Number outline_color = 0x00000000])
     
-Draws text string `text` starting from `(x, y)`. The text will be colored using color `fgcolor` and the text background is colored using `bgcolor`. 
+Draws text string `text` starting from `(x, y)`. The text will be colored using color `color` and the outline colored using `outline_color`. 
 
 #### gui.pixel
 
