@@ -19,6 +19,7 @@
 * Implement SDL_GetWindowFromID() (#409)
 * Implement more X*LookupString() functions
 * Check for socket file removal errors
+* Input editor: Prevent users from setting blank input labels
 
 ### Changed
 

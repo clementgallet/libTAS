@@ -380,6 +380,10 @@ std::string InputEditorModel::inputLabel(int column)
 
 void InputEditorModel::renameLabel(int column, std::string label)
 {
+    /* Don't change label if it has only whitespaces */
+    if (label.find_first_not_of(" \t\n\v\f\r") == std::string::npos)
+        return;
+    
     movie->editor->input_set[column-2].description = label;
     emit dataChanged(createIndex(0, column), createIndex(rowCount(), column));
     emit inputSetChanged();
