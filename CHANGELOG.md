@@ -52,6 +52,7 @@
 * Fix and improve SDL2_renderer HUD (#410)
 * Fix "OSD on encodes" being broken
 * Fix the method to detect the game's `SDL_DYNAPI_entry` symbol
+* Input editor: Allow modifiers when adding a new column
 
 ## [1.4.1] - 2021-01-02
 ### Added

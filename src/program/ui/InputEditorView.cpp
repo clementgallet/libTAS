@@ -89,7 +89,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     connect(selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorView::updateMenu);
 
     keyDialog = new KeyPressedDialog(c, this);
-    keyDialog->withModifiers = true;
+    keyDialog->withModifiers = false;
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
