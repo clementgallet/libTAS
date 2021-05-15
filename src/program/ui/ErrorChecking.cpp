@@ -166,12 +166,14 @@ bool ErrorChecking::checkArchType(Context* context)
         std::string lib32path = context->libtaspath;
         std::string libname("libtas.so");
         size_t pos = context->libtaspath.find(libname);
-        lib32path.replace(pos, libname.length(), "libtas32.so");
+        if (pos != std::string::npos) {
+            lib32path.replace(pos, libname.length(), "libtas32.so");
 
-        /* Checking that libtas32.so exists */
-        if (access(lib32path.c_str(), F_OK) == 0) {
-            /* Just in case, check the arch */
-            libtasArch = extractBinaryType(lib32path);
+            /* Checking that libtas32.so exists */
+            if (access(lib32path.c_str(), F_OK) == 0) {
+                /* Just in case, check the arch */
+                libtasArch = extractBinaryType(lib32path);
+            }
         }
     }
 
