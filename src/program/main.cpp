@@ -65,6 +65,7 @@ static void print_usage(void)
     std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
+    std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
@@ -97,6 +98,7 @@ int main(int argc, char **argv)
         {"dump", required_argument, nullptr, 'd'},
         {"non-interactive", no_argument, nullptr, 'n'},
         {"libtas-so-path", required_argument, nullptr, 'p'},
+        {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}
     };
@@ -128,6 +130,12 @@ int main(int argc, char **argv)
                 abspath = realpath_nonexist(optarg);
                 if (!abspath.empty()) {
                     context.libtaspath = abspath;
+                }
+                break;
+            case 'P':
+                abspath = realpath_nonexist(optarg);
+                if (!abspath.empty()) {
+                    context.libtas32path = abspath;
                 }
                 break;
             case '?':
@@ -202,7 +210,7 @@ int main(int argc, char **argv)
     context.config.km = new KeyMappingQuartz(nullptr);
 #endif
 
-    /* libTAS.so path */
+    /* libtas.so path */
     /* TODO: Not portable! */
     if (context.libtaspath.empty()) {
         char *libtaspath_from_env = getenv("LIBTAS_SO_PATH");
@@ -230,6 +238,26 @@ int main(int argc, char **argv)
         }
         context.libtaspath += "/libtas.dylib";
 #endif
+    }
+
+    /* libtas32.so path */
+    if (context.libtas32path.empty()) {
+        char *libtas32path_from_env = getenv("LIBTAS32_SO_PATH");
+        if (libtas32path_from_env) {
+            abspath = realpath_nonexist(libtas32path_from_env);
+            if (!abspath.empty()) {
+                context.libtas32path = abspath;
+            }
+        }
+    }
+    if (context.libtas32path.empty()) {
+        std::string lib32path = context.libtaspath;
+        std::string libname("libtas.so");
+        size_t pos = context.libtaspath.find(libname);
+        if (pos != std::string::npos) {
+            lib32path.replace(pos, libname.length(), "libtas32.so");
+            context.libtas32path = lib32path;
+        }
     }
 
     /* Create the working directories */

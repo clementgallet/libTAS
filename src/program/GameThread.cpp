@@ -95,9 +95,7 @@ void GameThread::launch(Context *context)
 
     /* Switch to libtas32.so if required */
     if (((gameArch == BT_ELF32) || (gameArch == BT_PE32)) && (libtasArch == BT_ELF64)) {
-        std::string libname("libtas.so");
-        size_t pos = context->libtaspath.find(libname);
-        context->libtaspath.replace(pos, libname.length(), "libtas32.so");
+        context->libtaspath = context->libtas32path;
         /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
         libtasArch = extractBinaryType(context->libtaspath);
     }

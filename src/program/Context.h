@@ -82,8 +82,11 @@ struct Context {
     /* config */
     Config config;
 
-    /* Absolute path of libTAS.so */
+    /* Absolute path of libtas.so */
     std::string libtaspath;
+
+    /* Absolute path of libtas32.so */
+    std::string libtas32path;
 
     /* Absolute path of the game executable */
     std::string gamepath;
