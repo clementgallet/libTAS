@@ -21,6 +21,7 @@
 #include "../utils.h"
 #include "../ramsearch/MemAccess.h"
 #include "../ramsearch/MemLayout.h"
+#include "../ramsearch/BaseAddresses.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -102,25 +103,6 @@ void PointerScanModel::locatePointers()
     }
 }
 
-std::string PointerScanModel::getFileAndOffset(uintptr_t addr, off_t& offset) const
-{
-    for (const MemSection &section : file_mapping_sections) {
-        if ((addr >= section.addr) && (addr < section.endaddr)) {
-            if (section.type & MemSection::MemStack) {
-                /* For stack, save the negative offset from the end */
-                offset = section.endaddr - addr;
-            }
-            else {
-                offset = addr - section.addr;
-                offset += section.offset;
-            }
-            return fileFromPath(section.filename);
-        }
-    }
-    offset = 0;
-    return std::string("");
-}
-
 void PointerScanModel::findPointerChain(uintptr_t addr, int ml, int max_offset)
 {
     static uint64_t last_scan_frame = 1 << 30;
@@ -199,8 +181,9 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         const std::pair<uintptr_t, std::vector<int>> &chain = pointer_chains.at(index.row());
         if (index.column() == 0) {
+            /* Get file and offset */
             off_t offset;
-            std::string file = getFileAndOffset(chain.first, offset);
+            std::string file = BaseAddresses::getFileAndOffset(chain.first, offset);
             if (offset >= 0)
                 return QString("%1+0x%2").arg(file.c_str()).arg(offset, 0, 16);
             else

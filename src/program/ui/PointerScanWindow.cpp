@@ -32,6 +32,7 @@
 #include "../ramsearch/CompareEnums.h"
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
+#include "../ramsearch/BaseAddresses.h"
 
 PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -156,7 +157,7 @@ void PointerScanWindow::slotAdd()
 
         watch->isPointer = true;
         watch->base_address = chain.first;
-        watch->base_file = pointerScanModel->getFileAndOffset(chain.first, watch->base_file_offset);
+        watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
         watch->pointer_offsets = chain.second;
         std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
         mw->ramWatchWindow->editWindow->fill(watch);

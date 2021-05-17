@@ -21,6 +21,7 @@
 #include "MemSection.h"
 #include "MemLayout.h"
 #include "MemAccess.h"
+#include "BaseAddresses.h"
 #include "../utils.h"
 #include <sstream>
 #include <fstream>
@@ -40,26 +41,7 @@ void IRamWatchDetailed::update_addr()
                 base_address = base_file_offset;
             }
             else {
-                std::unique_ptr<MemLayout> memlayout (new MemLayout(MemAccess::getPid()));
-                
-                MemSection section;
-                while (memlayout->nextSection(0xffffffff, section)) {
-                    std::string file = fileFromPath(section.filename);
-
-                    if (base_file.compare(file) == 0) {
-                        if ((base_file_offset >= 0) &&
-                            (base_file_offset >= section.offset) &&
-                            (base_file_offset < static_cast<off_t>(section.offset + section.size))) {
-
-                            base_address = section.addr - section.offset + base_file_offset;
-                            break;
-                        }
-                        if (base_file_offset < 0) {
-                            base_address = section.endaddr + base_file_offset;
-                            break;                            
-                        }
-                    }
-                }
+                base_address = BaseAddresses::getBaseAddress(base_file) + base_file_offset;
             }
         }
 

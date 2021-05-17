@@ -53,6 +53,7 @@
 * Fix "OSD on encodes" being broken
 * Fix the method to detect the game's `SDL_DYNAPI_entry` symbol
 * Input editor: Allow modifiers when adding a new column
+* Ram Watch: Fix the definition of base address of file
 
 ## [1.4.1] - 2021-01-02
 ### Added

@@ -24,12 +24,11 @@
 MemLayout::MemLayout(pid_t p)
 {
     pid = p;
-    MemSection::reset();
 }
 
 MemLayout::~MemLayout()
 {
-    if (mapsfile)
+    if (mapsfile.is_open())
         mapsfile.close();
 }
 
@@ -62,7 +61,7 @@ uint64_t MemLayout::totalSize(int type_flag)
         }
     }
     
-    if (mapsfile)
+    if (mapsfile.is_open())
         mapsfile.close();
         
     return total_size;
@@ -70,7 +69,7 @@ uint64_t MemLayout::totalSize(int type_flag)
 
 bool MemLayout::nextSection(int type_flag, MemSection &section)
 {
-    if (!mapsfile) {
+    if (!mapsfile.is_open()) {
         readLayout();
         MemSection::reset();
     }
@@ -83,7 +82,6 @@ bool MemLayout::nextSection(int type_flag, MemSection &section)
     std::string line;
     while (std::getline(mapsfile, line)) {
         section.readMap(line);
-
         if (section.type & type_flag) {
             return true;
         }
