@@ -453,6 +453,11 @@ void InputEditorView::addInputColumn()
     ks = ks & 0xffff;
 
     if (ks != 0) {
+        /* Get the remapped input if available */
+        if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
+            ks = context->config.km->input_mapping[ks].value;
+        }
+
         /* Get the input with description if available */
         for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
             for (auto iter : context->config.km->input_list[i]) {
