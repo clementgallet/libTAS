@@ -193,7 +193,7 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
             return QString("");
         }
         /* Offsets are stored in reverse order */
-        return *(chain.second.rbegin() + (index.column() - 1));
+        return QString("%1").arg(*(chain.second.rbegin() + (index.column() - 1)), 0, 16);
     }
     return QVariant();
 }

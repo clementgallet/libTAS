@@ -44,12 +44,17 @@ void IRamWatchDetailed::update_addr()
                 base_address = BaseAddresses::getBaseAddress(base_file) + base_file_offset;
             }
         }
+        
+        pointer_addresses.assign(pointer_offsets.size(), 0);
 
         address = base_address;
+        int i=0;
         for (auto offset : pointer_offsets) {
             uintptr_t next_address;
             isValid = (MemAccess::read(&next_address, reinterpret_cast<void*>(address), sizeof(uintptr_t)) == sizeof(uintptr_t));
-            if (!isValid)
+            if (isValid)
+                pointer_addresses[i++] = next_address;
+            else
                 return;
 
             address = next_address + offset;

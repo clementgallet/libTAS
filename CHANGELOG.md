@@ -20,6 +20,7 @@
 * Implement more X*LookupString() functions
 * Check for socket file removal errors
 * Input editor: Prevent users from setting blank input labels
+* Ram Watch: Add intermediate addresses for pointer chain
 
 ### Changed
 
