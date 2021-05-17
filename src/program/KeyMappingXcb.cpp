@@ -179,6 +179,17 @@ void KeyMappingXcb::base_keysyms()
             keysym_mapping[ks] = keyboard_keysyms[kc];
         }
     }
+
+    free(keyboard_mapping);
+}
+
+keysym_t KeyMappingXcb::nativeToKeysym(int keycode) {
+    /* Convert native virtual key to the keysym obtained without modifiers */
+    if (keysym_mapping.find(keycode) != keysym_mapping.end()) {
+        return keysym_mapping[keycode];
+    }
+
+    return keycode;
 }
 
 void KeyMappingXcb::default_inputs()
