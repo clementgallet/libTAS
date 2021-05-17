@@ -41,6 +41,9 @@ class KeyMappingXcb : public KeyMapping {
         /* Get the input description with modifiers */
         std::string input_description_mod(keysym_t ks);
 
+        /* Builds the keysym to keysym without modifier map */
+        void base_keysyms();
+
         /* Set hotkeys to default values */
         void default_inputs();
 

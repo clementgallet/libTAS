@@ -124,6 +124,9 @@ class KeyMapping {
         /* Convert a native keycode into xcb keysym */
         virtual keysym_t nativeToKeysym(int keycode) {return keycode;}
 
+        /* Map keyboard KeySym with modifiers to keyboard KeySym without modifiers */
+        std::map<keysym_t,keysym_t> keysym_mapping;
+
         /* Map keyboard KeySym to a single input of a keyboard or controller */
         std::map<keysym_t,SingleInput> input_mapping;
 
