@@ -180,19 +180,20 @@ void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
 void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 {
     keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t ks = context->config.km->nativeToKeysym(e->nativeVirtualKey());
 
-    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(ks | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks | mod];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(ks) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km->input_mapping.find(e->nativeVirtualKey()) != context->config.km->input_mapping.end()) {
-        SingleInput si = context->config.km->input_mapping[e->nativeVirtualKey()];
+    if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
+        SingleInput si = context->config.km->input_mapping[ks];
         if (si.inputTypeIsController())
             return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), true);
     }
@@ -203,19 +204,20 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
 void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
 {
     keysym_t mod = convertQtModifiers(e->modifiers());
+    keysym_t ks = context->config.km->nativeToKeysym(e->nativeVirtualKey());
 
-    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(ks | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks | mod];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km->hotkey_mapping.find(e->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[e->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(ks) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km->input_mapping.find(e->nativeVirtualKey()) != context->config.km->input_mapping.end()) {
-        SingleInput si = context->config.km->input_mapping[e->nativeVirtualKey()];
+    if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
+        SingleInput si = context->config.km->input_mapping[ks];
         if (si.inputTypeIsController())
             return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), false);
     }
