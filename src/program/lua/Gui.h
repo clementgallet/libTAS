@@ -45,6 +45,11 @@ namespace Gui {
     /* Draw rectangle */
     int rectangle(lua_State *L);
 
+    /* Draw line */
+    int line(lua_State *L);
+
+    /* Draw ellipse */
+    int ellipse(lua_State *L);
 }
 }
 

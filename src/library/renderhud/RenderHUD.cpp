@@ -34,6 +34,8 @@ std::list<std::string> RenderHUD::watches;
 std::list<RenderHUD::LuaText> RenderHUD::lua_texts;
 std::list<RenderHUD::LuaPixel> RenderHUD::lua_pixels;
 std::list<RenderHUD::LuaRect> RenderHUD::lua_rects;
+std::list<RenderHUD::LuaLine> RenderHUD::lua_lines;
+std::list<RenderHUD::LuaEllipse> RenderHUD::lua_ellipses;
 
 void RenderHUD::renderPixel(int x, int y, Color color)
 {
@@ -48,6 +50,20 @@ void RenderHUD::renderRect(int x, int y, int w, int h, int t, Color outline_colo
     surf->fill(fill_color);
     surf->fillBorder(outline_color, t);
     renderSurface(std::move(surf), x, y);
+}
+
+void RenderHUD::renderLine(int x0, int y0, int x1, int y1, Color color)
+{
+    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(std::abs(x1-x0)+1, std::abs(y1-y0)+1));
+    surf->drawLine(color, ((x1-x0)*(y1-y0)) > 0);
+    renderSurface(std::move(surf), std::min(x0, x1), std::min(y0, y1));
+}
+
+void RenderHUD::renderEllipse(int center_x, int center_y, int radius_x, int radius_y, Color color)
+{
+    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(2*radius_x+1, 2*radius_y+1));
+    surf->drawEllipse(color);
+    renderSurface(std::move(surf), center_x-radius_x, center_y-radius_y);
 }
 
 void RenderHUD::locationToCoords(int location, int& x, int& y)
@@ -259,6 +275,12 @@ void RenderHUD::drawLua()
     for (auto iter = lua_rects.begin(); iter != lua_rects.end(); iter++) {
         renderRect(iter->x, iter->y, iter->w, iter->h, iter->thickness, iter->outline, iter->fill);
     }
+    for (auto iter = lua_lines.begin(); iter != lua_lines.end(); iter++) {
+        renderLine(iter->x0, iter->y0, iter->x1, iter->y1, iter->color);
+    }
+    for (auto iter = lua_ellipses.begin(); iter != lua_ellipses.end(); iter++) {
+        renderEllipse(iter->center_x, iter->center_y, iter->radius_x, iter->radius_y, iter->color);
+    }
 }
 
 void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
@@ -309,11 +331,41 @@ void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_
     lua_rects.push_back(lr);
 }
 
+void RenderHUD::insertLuaLine(int x0, int y0, int x1, int y1, uint32_t color)
+{
+    LuaLine ll;
+    ll.x0 = x0;
+    ll.y0 = y0;
+    ll.x1 = x1;
+    ll.y1 = y1;
+    ll.color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                static_cast<uint8_t>((color >> 8) & 0xff),
+                static_cast<uint8_t>(color & 0xff),
+                static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_lines.push_back(ll);
+}
+
+void RenderHUD::insertLuaEllipse(int center_x, int center_y, int radius_x, int radius_y, uint32_t color)
+{
+    LuaEllipse le;
+    le.center_x = center_x;
+    le.center_y = center_y;
+    le.radius_x = radius_x;
+    le.radius_y = radius_y;
+    le.color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                static_cast<uint8_t>((color >> 8) & 0xff),
+                static_cast<uint8_t>(color & 0xff),
+                static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_ellipses.push_back(le);
+}
+
 void RenderHUD::resetLua()
 {
     lua_texts.clear();
     lua_pixels.clear();
     lua_rects.clear();
+    lua_lines.clear();
+    lua_ellipses.clear();
 }
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)

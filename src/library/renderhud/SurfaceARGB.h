@@ -64,12 +64,24 @@ class SurfaceARGB
         /* Fill the border of the surface to a certain color and thickness */
         void fillBorder(Color color, int t);
 
+        /* Draw an anti-aliased line accross the whole surface, with specified
+         * color and slope orientation */
+        void drawLine(Color color, bool positive_slope);
+
+        /* Draw an anti-aliased ellpise accross the whole surface, with specified
+         * color */
+        void drawEllipse(Color color);
+
         /* Blit surface `src` into this surface at coords x and y */
         void blit(const SurfaceARGB* src, int x, int y);
         
     private:
         /* Compute the value in ARGB32 from a color struct */
         uint32_t colorToValue(Color color);
+
+        /* Draw four pixels for ellipse */
+        void setPixel4(int x, int y, int dx, int dy, uint32_t c);
+
 };
 
 }

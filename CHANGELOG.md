@@ -21,6 +21,7 @@
 * Check for socket file removal errors
 * Input editor: Prevent users from setting blank input labels
 * Ram Watch: Add intermediate addresses for pointer chain
+* Lua: add line and ellipse drawing
 
 ### Changed
 

@@ -81,6 +81,12 @@ class RenderHUD
         /* Insert a lua rect to be displayed */
         static void insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill);
 
+        /* Insert a lua line to be displayed */
+        static void insertLuaLine(int x0, int y0, int x1, int y1, uint32_t color);
+
+        /* Insert a lua line to be displayed */
+        static void insertLuaEllipse(int center_x, int center_y, int radius_x, int radius_y, uint32_t color);
+
         /* Clear all lua drawings */
         static void resetLua();
 
@@ -116,6 +122,23 @@ class RenderHUD
          */
         void renderRect(int x, int y, int w, int h, int t, Color outline_color, Color fill_color);
 
+        /* Render a line
+         * @param x0     x position of the line beginning
+         * @param y0     y position of the line beginning
+         * @param x1     x position of the line end
+         * @param y1     y position of the line end
+         * @param color  Color of the line
+         */
+        void renderLine(int x0, int y0, int x1, int y1, Color color);
+
+        /* Render an ellipse
+         * @param center_x     x position of the center of the ellipse
+         * @param center_y     y position of the center of the ellipse
+         * @param radius_x     radius along x axis
+         * @param radius_y     radius along y axis
+         * @param color        Color of the ellipse
+         */
+        void renderEllipse(int center_x, int center_y, int radius_x, int radius_y, Color color);
 
         /*** Draw specific information on screen ***/
 
@@ -182,6 +205,30 @@ class RenderHUD
 
         /* Lua rects to print on screen */
         static std::list<LuaRect> lua_rects;
+
+        struct LuaLine
+        {
+            int x0;
+            int y0;
+            int x1;
+            int y1;
+            Color color;
+        };
+
+        /* Lua rects to print on screen */
+        static std::list<LuaLine> lua_lines;
+
+        struct LuaEllipse
+        {
+            int center_x;
+            int center_y;
+            int radius_x;
+            int radius_y;
+            Color color;
+        };
+
+        /* Lua rects to print on screen */
+        static std::list<LuaEllipse> lua_ellipses;
 
 };
 }
