@@ -647,8 +647,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         return orig::sem_wait(sem);
 
     ThreadInfo* thread = ThreadManager::getCurrentThread();
-//    bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236);
-    bool isWaitThread = (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801);
+    bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236) ||
+                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801);
 
     if (isWaitThread) {
         ThreadSync::detSignal(true);
