@@ -56,7 +56,13 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
         void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
     private:
         static GLuint texture;
-        static GLuint fbo;
+        static GLuint vao;
+        static GLuint vbo;
+        static GLuint ebo;
+        static GLuint programID;
+        
+        static float vertices[20];
+        static GLuint indices[6];
 };
 }
 

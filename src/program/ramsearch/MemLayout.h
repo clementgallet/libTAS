@@ -17,40 +17,29 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUAGUI_H_INCLUDED
-#define LIBTAS_LUAGUI_H_INCLUDED
+#ifndef LIBTAS_MEMLAYOUT_H_INCLUDED
+#define LIBTAS_MEMLAYOUT_H_INCLUDED
 
-#include "../Context.h"
-#include <stdint.h>
-extern "C" {
-#include <lua.h>
-}
+#include <string>
+#include <fstream>
+#include "MemSection.h"
 
-namespace Lua {
+/* Handle the layout of game memory */
+class MemLayout {
+    public:
 
-namespace Gui {
+        MemLayout(pid_t pid);
+        ~MemLayout();
+        
+        uint64_t totalSize(int type_flag);
+        
+        bool nextSection(int type_flag, MemSection &section);
 
-    /* Register all functions */
-    void registerFunctions(Context* context);
+    private:
+        void readLayout();
 
-    /* Get the window resolution */
-    int resolution(lua_State *L);
-
-    /* Draw text */
-    int text(lua_State *L);
-
-    /* Draw pixel */
-    int pixel(lua_State *L);
-
-    /* Draw rectangle */
-    int rectangle(lua_State *L);
-
-    /* Draw line */
-    int line(lua_State *L);
-
-    /* Draw ellipse */
-    int ellipse(lua_State *L);
-}
-}
+        pid_t pid;
+        std::ifstream mapsfile;
+};
 
 #endif

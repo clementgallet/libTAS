@@ -37,6 +37,8 @@ static const luaL_Reg gui_functions[] =
     { "text", Lua::Gui::text},
     { "pixel", Lua::Gui::pixel},
     { "rectangle", Lua::Gui::rectangle},
+    { "line", Lua::Gui::line},
+    { "ellipse", Lua::Gui::ellipse},
     { NULL, NULL }
 };
 
@@ -116,6 +118,42 @@ int Lua::Gui::rectangle(lua_State *L)
     sendData(&thickness, sizeof(int));
     sendData(&outline_color, sizeof(uint32_t));
     sendData(&fill_color, sizeof(uint32_t));
+    
+    return 0;
+}
+
+int Lua::Gui::line(lua_State *L)
+{
+    int x0 = static_cast<int>(lua_tointeger(L, 1));
+    int y0 = static_cast<int>(lua_tointeger(L, 2));
+    int x1 = static_cast<int>(lua_tointeger(L, 3));
+    int y1 = static_cast<int>(lua_tointeger(L, 4));
+    uint32_t color = luaL_optnumber (L, 5, 0x00ffffff);
+    
+    sendMessage(MSGN_LUA_LINE);
+    sendData(&x0, sizeof(int));
+    sendData(&y0, sizeof(int));
+    sendData(&x1, sizeof(int));
+    sendData(&y1, sizeof(int));
+    sendData(&color, sizeof(uint32_t));
+    
+    return 0;
+}
+
+int Lua::Gui::ellipse(lua_State *L)
+{
+    int center_x = static_cast<int>(lua_tointeger(L, 1));
+    int center_y = static_cast<int>(lua_tointeger(L, 2));
+    int radius_x = static_cast<int>(lua_tointeger(L, 3));
+    int radius_y = static_cast<int>(lua_tointeger(L, 4));
+    uint32_t color = luaL_optnumber (L, 5, 0x00ffffff);
+    
+    sendMessage(MSGN_LUA_ELLIPSE);
+    sendData(&center_x, sizeof(int));
+    sendData(&center_y, sizeof(int));
+    sendData(&radius_x, sizeof(int));
+    sendData(&radius_y, sizeof(int));
+    sendData(&color, sizeof(uint32_t));
     
     return 0;
 }

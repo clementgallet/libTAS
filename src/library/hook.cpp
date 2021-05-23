@@ -78,7 +78,7 @@ bool link_function(void** function, const char* source, const char* library, con
             NATIVECALL(*function = dlsym(handle, source));
 
             if (*function != nullptr) {
-                debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", libpath.c_str(), source, *function);
+                debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", library, source, *function);
 
                 /* Add the library to our set of libraries */
                 add_lib(library);

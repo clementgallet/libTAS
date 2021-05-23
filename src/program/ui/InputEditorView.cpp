@@ -89,7 +89,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     connect(selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorView::updateMenu);
 
     keyDialog = new KeyPressedDialog(c, this);
-    keyDialog->withModifiers = true;
+    keyDialog->withModifiers = false;
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
@@ -380,14 +380,15 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
 
     /* We accept hotkeys when this window has focus */
     keysym_t mod = convertQtModifiers(event->modifiers());
+    keysym_t ks = context->config.km->nativeToKeysym(event->nativeVirtualKey());
 
-    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(ks | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks | mod];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
-    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(ks) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks];
         context->hotkey_pressed_queue.push(hk.type);
         return;
     }
@@ -399,14 +400,15 @@ void InputEditorView::keyReleaseEvent(QKeyEvent *event)
 {
     /* We accept hotkeys when this window has focus */
     keysym_t mod = convertQtModifiers(event->modifiers());
+    keysym_t ks = context->config.km->nativeToKeysym(event->nativeVirtualKey());
 
-    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey() | mod) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey() | mod];
+    if (context->config.km->hotkey_mapping.find(ks | mod) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks | mod];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
-    if (context->config.km->hotkey_mapping.find(event->nativeVirtualKey()) != context->config.km->hotkey_mapping.end()) {
-        HotKey hk = context->config.km->hotkey_mapping[event->nativeVirtualKey()];
+    if (context->config.km->hotkey_mapping.find(ks) != context->config.km->hotkey_mapping.end()) {
+        HotKey hk = context->config.km->hotkey_mapping[ks];
         context->hotkey_released_queue.push(hk.type);
         return;
     }
@@ -450,24 +452,31 @@ void InputEditorView::addInputColumn()
     /* Remove the custom modifiers that we added in that function */
     ks = ks & 0xffff;
 
-    /* Get the input with description if available */
-    for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
-        for (auto iter : context->config.km->input_list[i]) {
-            if (iter.type == SingleInput::IT_KEYBOARD) {
-                if (iter.value == ks) {
-                    inputEditorModel->addUniqueInput(iter);
-                    return;
+    if (ks != 0) {
+        /* Get the remapped input if available */
+        if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
+            ks = context->config.km->input_mapping[ks].value;
+        }
+
+        /* Get the input with description if available */
+        for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
+            for (auto iter : context->config.km->input_list[i]) {
+                if (iter.type == SingleInput::IT_KEYBOARD) {
+                    if (iter.value == ks) {
+                        inputEditorModel->addUniqueInput(iter);
+                        return;
+                    }
                 }
             }
         }
-    }
 
-    /* Didn't find the input in the list, insert it with the value as description */
-    SingleInput si;
-    si.type = SingleInput::IT_KEYBOARD;
-    si.value = ks;
-    si.description = std::to_string(ks);
-    inputEditorModel->addUniqueInput(si);
+        /* Didn't find the input in the list, insert it with the value as description */
+        SingleInput si;
+        si.type = SingleInput::IT_KEYBOARD;
+        si.value = ks;
+        si.description = std::to_string(ks);
+        inputEditorModel->addUniqueInput(si);
+    }
 }
 
 void InputEditorView::clearInputColumn()

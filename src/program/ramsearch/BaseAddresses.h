@@ -17,40 +17,27 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUAGUI_H_INCLUDED
-#define LIBTAS_LUAGUI_H_INCLUDED
+#ifndef LIBTAS_BASEADDRESSES_H_INCLUDED
+#define LIBTAS_BASEADDRESSES_H_INCLUDED
 
-#include "../Context.h"
-#include <stdint.h>
-extern "C" {
-#include <lua.h>
-}
+#include <stddef.h>
+#include <sys/types.h>
+#include <string>
 
-namespace Lua {
+/* Holds the base address for executable and each loaded library */
+namespace BaseAddresses {
 
-namespace Gui {
+    /* Query all loaded libraries and executable, and store base and end addresses */
+    void load();
 
-    /* Register all functions */
-    void registerFunctions(Context* context);
+    /* Query base and end addresses for a specific file that was not stored */
+    uintptr_t findNewFile(std::string file);
 
-    /* Get the window resolution */
-    int resolution(lua_State *L);
+    /* Return the base address of a specific file */
+    uintptr_t getBaseAddress(std::string file);
 
-    /* Draw text */
-    int text(lua_State *L);
-
-    /* Draw pixel */
-    int pixel(lua_State *L);
-
-    /* Draw rectangle */
-    int rectangle(lua_State *L);
-
-    /* Draw line */
-    int line(lua_State *L);
-
-    /* Draw ellipse */
-    int ellipse(lua_State *L);
-}
+    /* Get the file and offset from an address */
+    std::string getFileAndOffset(uintptr_t addr, off_t &offset);
 }
 
 #endif

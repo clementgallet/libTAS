@@ -19,7 +19,9 @@
 
 #include "RamSearchModel.h"
 #include "../ramsearch/MemAccess.h"
+#include "../ramsearch/MemLayout.h"
 #include <QtWidgets/QMessageBox>
+#include <memory>
 
 RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -70,31 +72,8 @@ QVariant RamSearchModel::data(const QModelIndex &index, int role) const
 
 int RamSearchModel::predictWatchCount(int mem_filter)
 {
-    /* Compose the filename for the /proc memory map, and open it. */
-    std::ostringstream oss;
-    oss << "/proc/" << context->game_pid << "/maps";
-    std::ifstream mapsfile(oss.str());
-    if (!mapsfile) {
-        std::cerr << "Could not open " << oss.str() << std::endl;
-        return 0;
-    }
-
-    std::string line;
-    MemSection::reset();
-
-    int total_size = 0;
-    while (std::getline(mapsfile, line)) {
-        MemSection section;
-        section.readMap(line);
-
-        /* Filter based on type */
-        if (!(mem_filter & section.type))
-            continue;
-
-        total_size += section.size;
-    }
-
-    return total_size;
+    std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
+    return memlayout->totalSize(mem_filter);
 }
 
 int RamSearchModel::watchCount()
@@ -117,28 +96,11 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
     RamWatch::type = type;
     RamWatch::type_size = RamWatch::type_to_size();
 
-    /* Compose the filename for the /proc memory map, and open it. */
-    std::ostringstream oss;
-    oss << "/proc/" << context->game_pid << "/maps";
-    std::ifstream mapsfile(oss.str());
-    if (!mapsfile) {
-        std::cerr << "Could not open " << oss.str() << std::endl;
-        return;
-    }
+    std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
 
-    std::string line;
-    MemSection::reset();
-
+    MemSection section;
     int cur_size = 0;
-    while (std::getline(mapsfile, line)) {
-
-        MemSection section;
-        section.readMap(line);
-
-        /* Filter based on type */
-        if (!(mem_filter & section.type))
-            continue;
-
+    while (memlayout->nextSection(mem_filter, section)) {
         /* Read values in chunks of 4096 bytes so we lower the number of calls. */
         uint8_t chunk[4096];
 

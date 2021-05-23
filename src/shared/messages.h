@@ -276,6 +276,18 @@ enum {
     MSGN_LUA_RECT,
 
     /*
+     * Send to the game a line to be displayed from a lua script.
+     * Argument: int x0, int y0, int x1, int y1, uint32_t color
+     */
+    MSGN_LUA_LINE,
+
+    /*
+     * Send to the game a line to be displayed from a lua script.
+     * Argument: int center_x, int center_y, int radius_x, int radius_y, uint32_t color
+     */
+    MSGN_LUA_ELLIPSE,
+
+    /*
      * Ask the game to send the screen resolution.
      * Argument: None
      */

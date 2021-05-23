@@ -319,7 +319,9 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     state = SOURCE_UNDERRUN;
                 }
                 else {
-                    rewind();
+                    queue_index = 0;
+                    position = 0;
+                    samples_frac = 0;
                     state = SOURCE_STOPPED;
                 }
             }
@@ -387,6 +389,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         if (nbSaturate > 0)
             debuglogstdio(LCF_SOUND | LCF_WARNING, "Saturation during mixing for %d samples", nbSaturate);        
     }
+
+    /* Reset the audio converter if the source has stopped */
+    if (state == SOURCE_STOPPED)
+        dirty();
 
     return convOutSamples;
 }

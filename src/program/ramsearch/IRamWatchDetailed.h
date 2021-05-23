@@ -50,6 +50,8 @@ public:
 
     bool isPointer;
     std::vector<int> pointer_offsets;
+    /* Intermediate addresses, only for indication */
+    std::vector<uintptr_t> pointer_addresses;
     uintptr_t base_address;
     off_t base_file_offset;
     std::string base_file;

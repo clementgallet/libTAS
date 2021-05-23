@@ -19,7 +19,9 @@
 
 #include "IRamWatchDetailed.h"
 #include "MemSection.h"
+#include "MemLayout.h"
 #include "MemAccess.h"
+#include "BaseAddresses.h"
 #include "../utils.h"
 #include <sstream>
 #include <fstream>
@@ -39,45 +41,20 @@ void IRamWatchDetailed::update_addr()
                 base_address = base_file_offset;
             }
             else {
-                /* Compose the filename for the /proc memory map, and open it. */
-                std::ostringstream oss;
-                oss << "/proc/" << MemAccess::getPid() << "/maps";
-                std::ifstream mapsfile(oss.str());
-                if (!mapsfile) {
-                    std::cerr << "Could not open " << oss.str() << std::endl;
-                    return;
-                }
-
-                std::string line;
-                MemSection::reset();
-
-                while (std::getline(mapsfile, line)) {
-                    MemSection section;
-                    section.readMap(line);
-                    std::string file = fileFromPath(section.filename);
-
-                    if (base_file.compare(file) == 0) {
-                        if ((base_file_offset >= 0) &&
-                            (base_file_offset >= section.offset) &&
-                            (base_file_offset < static_cast<off_t>(section.offset + section.size))) {
-
-                            base_address = section.addr - section.offset + base_file_offset;
-                            break;
-                        }
-                        if (base_file_offset < 0) {
-                            base_address = section.endaddr + base_file_offset;
-                            break;                            
-                        }
-                    }
-                }
+                base_address = BaseAddresses::getBaseAddress(base_file) + base_file_offset;
             }
         }
+        
+        pointer_addresses.assign(pointer_offsets.size(), 0);
 
         address = base_address;
+        int i=0;
         for (auto offset : pointer_offsets) {
             uintptr_t next_address;
             isValid = (MemAccess::read(&next_address, reinterpret_cast<void*>(address), sizeof(uintptr_t)) == sizeof(uintptr_t));
-            if (!isValid)
+            if (isValid)
+                pointer_addresses[i++] = next_address;
+            else
                 return;
 
             address = next_address + offset;

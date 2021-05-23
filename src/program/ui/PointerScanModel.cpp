@@ -20,9 +20,12 @@
 #include "PointerScanModel.h"
 #include "../utils.h"
 #include "../ramsearch/MemAccess.h"
+#include "../ramsearch/MemLayout.h"
+#include "../ramsearch/BaseAddresses.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 PointerScanModel::PointerScanModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
@@ -31,33 +34,19 @@ void PointerScanModel::locatePointers()
     pointer_map.clear();
     static_pointer_map.clear();
 
-    /* Compose the filename for the /proc memory map, and open it. */
-    std::ostringstream oss;
-    oss << "/proc/" << context->game_pid << "/maps";
-    std::ifstream mapsfile(oss.str());
-    if (!mapsfile) {
-        std::cerr << "Could not open " << oss.str() << std::endl;
-        return;
-    }
-
-    std::string line;
-    MemSection::reset();
-
+    std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
+    
     std::vector<MemSection> memory_sections;
     file_mapping_sections.clear();
 
-    int total_size = 0;
-    while (std::getline(mapsfile, line)) {
-
-        MemSection section;
-        section.readMap(line);
-
+    int type_flag = (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack);
+    uint64_t total_size = memlayout->totalSize(type_flag);
+    
+    MemSection section;
+    while (memlayout->nextSection(type_flag, section)) {
         /* Only store sections that could contain pointers */
-        if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack)) {
-        // if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap)) {
-            memory_sections.push_back(section);
-            total_size += section.size;
-        }
+        memory_sections.push_back(section);
+        
         /* Keep the file mapping to access to the file and offsets */
         if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemFileMappingRW | MemSection::MemStack)) {
             file_mapping_sections.push_back(section);
@@ -112,25 +101,6 @@ void PointerScanModel::locatePointers()
             }
         }
     }
-}
-
-std::string PointerScanModel::getFileAndOffset(uintptr_t addr, off_t& offset) const
-{
-    for (const MemSection &section : file_mapping_sections) {
-        if ((addr >= section.addr) && (addr < section.endaddr)) {
-            if (section.type & MemSection::MemStack) {
-                /* For stack, save the negative offset from the end */
-                offset = section.endaddr - addr;
-            }
-            else {
-                offset = addr - section.addr;
-                offset += section.offset;
-            }
-            return fileFromPath(section.filename);
-        }
-    }
-    offset = 0;
-    return std::string("");
 }
 
 void PointerScanModel::findPointerChain(uintptr_t addr, int ml, int max_offset)
@@ -211,8 +181,9 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         const std::pair<uintptr_t, std::vector<int>> &chain = pointer_chains.at(index.row());
         if (index.column() == 0) {
+            /* Get file and offset */
             off_t offset;
-            std::string file = getFileAndOffset(chain.first, offset);
+            std::string file = BaseAddresses::getFileAndOffset(chain.first, offset);
             if (offset >= 0)
                 return QString("%1+0x%2").arg(file.c_str()).arg(offset, 0, 16);
             else
@@ -222,7 +193,7 @@ QVariant PointerScanModel::data(const QModelIndex &index, int role) const
             return QString("");
         }
         /* Offsets are stored in reverse order */
-        return *(chain.second.rbegin() + (index.column() - 1));
+        return QString("%1").arg(*(chain.second.rbegin() + (index.column() - 1)), 0, 16);
     }
     return QVariant();
 }

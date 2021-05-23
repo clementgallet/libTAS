@@ -36,6 +36,7 @@ public:
     short x_axis, y_axis;
 
 protected:
+    void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -50,8 +51,11 @@ signals:
     void YAxisChanged(int y);
 
 private:
-    short clampToShort(int val);
+    /* Layout properties, for square aspect ratio */
+    int size;
+    int x_offset, y_offset;
 
+    short clampToShort(int val);
 };
 
 #endif

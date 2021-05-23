@@ -81,9 +81,11 @@ libTAS_SOURCES = \
     ui/TimeTraceModel.cpp \
     ui/TimeTraceWindow.cpp \
     ui/qtutils.cpp \
+    ramsearch/BaseAddresses.cpp \
     ramsearch/IRamWatchDetailed.cpp \
     ramsearch/RamWatch.cpp \
     ramsearch/MemAccess.cpp \
+    ramsearch/MemLayout.cpp \
     ramsearch/MemSection.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \

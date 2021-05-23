@@ -42,9 +42,23 @@ QSize ControllerAxisWidget::minimumSizeHint() const
     return QSize(200, 200);
 }
 
+void ControllerAxisWidget::resizeEvent(QResizeEvent *)
+{
+    /* Force square aspect ratio */
+    if (width() > height()) {
+        size = height();
+        x_offset = (width() - height()) / 2;
+        y_offset = 0;
+    } else {
+        size = width();
+        x_offset = 0;
+        y_offset = (height() - width()) / 2;
+    }
+}
+
 void ControllerAxisWidget::paintEvent(QPaintEvent * /* event */)
 {
-    QRect rect(2, 2, width()-4, height()-4);
+    QRect rect(x_offset+2, y_offset+2, size-4, size-4);
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
@@ -53,8 +67,8 @@ void ControllerAxisWidget::paintEvent(QPaintEvent * /* event */)
 
     painter.drawChord(rect, 0, 360 * 16);
 
-    float value_x = ((float)x_axis - INT16_MIN) * width() / UINT16_MAX;
-    float value_y = ((float)y_axis - INT16_MIN) * height() / UINT16_MAX;
+    float value_x = x_offset + ((float)x_axis - INT16_MIN) * size / UINT16_MAX;
+    float value_y = y_offset + ((float)y_axis - INT16_MIN) * size / UINT16_MAX;
 
     painter.setBrush(QBrush(Qt::blue));
     painter.setPen(QPen(Qt::blue, 2));
@@ -97,8 +111,8 @@ void ControllerAxisWidget::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    int x_axis_unclamped = (event->x() * UINT16_MAX / width()) + INT16_MIN;
-    int y_axis_unclamped = (event->y() * UINT16_MAX / height()) + INT16_MIN;
+    int x_axis_unclamped = ((event->x() - x_offset) * UINT16_MAX / size) + INT16_MIN;
+    int y_axis_unclamped = ((event->y() - y_offset) * UINT16_MAX / size) + INT16_MIN;
 
     x_axis = clampToShort(x_axis_unclamped);
     y_axis = clampToShort(y_axis_unclamped);

@@ -376,6 +376,34 @@ void frameBoundary(std::function<void()> draw)
 #endif
             break;
         }
+        case MSGN_LUA_LINE:
+        {
+            int x0, y0, x1, y1;
+            receiveData(&x0, sizeof(int));
+            receiveData(&y0, sizeof(int));
+            receiveData(&x1, sizeof(int));
+            receiveData(&y1, sizeof(int));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+#ifdef LIBTAS_ENABLE_HUD
+            RenderHUD::insertLuaLine(x0, y0, x1, y1, color);
+#endif
+            break;
+        }
+        case MSGN_LUA_ELLIPSE:
+        {
+            int center_x, center_y, radius_x, radius_y;
+            receiveData(&center_x, sizeof(int));
+            receiveData(&center_y, sizeof(int));
+            receiveData(&radius_x, sizeof(int));
+            receiveData(&radius_y, sizeof(int));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+#ifdef LIBTAS_ENABLE_HUD
+            RenderHUD::insertLuaEllipse(center_x, center_y, radius_x, radius_y, color);
+#endif
+            break;
+        }
         }
         message = receiveMessage();
     }

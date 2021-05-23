@@ -60,10 +60,30 @@ enum {
 #endif
     NATIVECALL(orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(dlsym(h, "SDL_DYNAPI_entry")));
 
+    /* This looks weird to use dlopen/dlsym to find the current function pointer,
+     * but in games that bundle their own libSDL (e.g. Iconoclasts), even using
+     * pointer `libtas::SDL_DYNAPI_entry` does not refer to this function but to 
+     * the game's one. */
+     
+    char* libtaspath;
+    NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
+    void *libtas;
+    NATIVECALL(libtas = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD));
+    if (libtas == nullptr) {
+        debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
+        return 1;
+    }
+
+    void *current_func;
+    NATIVECALL(current_func = dlsym(libtas, "SDL_DYNAPI_entry"));
+    if (current_func == nullptr) {
+        debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find own SDL_DYNAPI_entry function!");
+        return 1;
+    }
+
     /* Check if the function pointer we found is this function. In that case,
      * invalide the pointer, so we use the second method. */
-
-    if (orig::SDL_DYNAPI_entry == SDL_DYNAPI_entry) {
+    if (reinterpret_cast<void*>(orig::SDL_DYNAPI_entry) == current_func) {
         orig::SDL_DYNAPI_entry = nullptr;
     }
 
@@ -86,14 +106,6 @@ enum {
     }
 
     /* Now save original pointers while replacing them with our hooks. */
-    char* libtaspath;
-    NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
-    void *libtas = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD);
-    if (libtas == nullptr) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
-        return 1;
-    }
-
     void **entries = static_cast<void **>(table);
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
 #define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol %s", #FUNC);

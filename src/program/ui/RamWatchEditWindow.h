@@ -25,6 +25,7 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGridLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include <memory> // std::unique_ptr
@@ -54,9 +55,9 @@ private:
 
     QCheckBox *pointerBox;
 
-    // std::vector<std::unique_ptr<QSpinBox>> offsetBoxes;
+    const static int POINTER_CHAIN_SIZE = 8;
     QVBoxLayout *mainLayout;
-    QFormLayout *pointerLayout;
+    QGridLayout *pointerLayout;
     QDialogButtonBox *buttonOffsetBox;
     QLineEdit *baseAddressInput;
 

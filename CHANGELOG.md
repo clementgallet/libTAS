@@ -19,6 +19,9 @@
 * Implement SDL_GetWindowFromID() (#409)
 * Implement more X*LookupString() functions
 * Check for socket file removal errors
+* Input editor: Prevent users from setting blank input labels
+* Ram Watch: Add intermediate addresses for pointer chain
+* Lua: add line and ellipse drawing
 
 ### Changed
 
@@ -29,6 +32,7 @@
 * State loading doesn't write zeros on zero pages, preventing allocations
 * Switch input mapping to tabs
 * Optimize UI refresh with timer
+* Switch OpenGL OSD using shaders. Adds transparency.
 
 ### Fixed
 
@@ -49,6 +53,9 @@
   exiting (because forked savestate) (#407)
 * Fix and improve SDL2_renderer HUD (#410)
 * Fix "OSD on encodes" being broken
+* Fix the method to detect the game's `SDL_DYNAPI_entry` symbol
+* Input editor: Allow modifiers when adding a new column
+* Ram Watch: Fix the definition of base address of file
 
 ## [1.4.1] - 2021-01-02
 ### Added

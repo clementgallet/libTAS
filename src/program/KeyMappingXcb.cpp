@@ -70,6 +70,9 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
         }
     }
 
+    /* Build the map between keysym values with modifiers and keysym values without modifiers */
+    base_keysyms();
+
     /* Set default hotkeys */
     default_hotkeys();
 
@@ -150,6 +153,44 @@ std::string KeyMappingXcb::input_description_mod(keysym_t ks)
 
     str += input_description(ks);
     return str;
+}
+
+void KeyMappingXcb::base_keysyms()
+{
+    keysym_mapping.clear();
+
+    /* Map all keycode + modifier combinations to the keysym obtained without modifiers */
+
+    /* Gather the list of valid X11 KeyCode values */
+    xcb_keycode_t min_keycode = xcb_get_setup(conn)->min_keycode;
+    xcb_keycode_t max_keycode = xcb_get_setup(conn)->max_keycode;
+
+    /* Retrieve the current keyboard mapping */
+    xcb_get_keyboard_mapping_cookie_t keyboard_mapping_cookie = xcb_get_keyboard_mapping(conn, min_keycode, max_keycode - min_keycode + 1);
+    xcb_get_keyboard_mapping_reply_t* keyboard_mapping = xcb_get_keyboard_mapping_reply(conn, keyboard_mapping_cookie, nullptr);
+    xcb_keysym_t* keyboard_keysyms = xcb_get_keyboard_mapping_keysyms(keyboard_mapping);
+
+    for (int kc=0; kc<xcb_get_keyboard_mapping_keysyms_length(keyboard_mapping); kc+=keyboard_mapping->keysyms_per_keycode) {
+        for (int k=0; k<keyboard_mapping->keysyms_per_keycode; k++) {
+            xcb_keysym_t ks = keyboard_keysyms[kc + k];
+
+            if (ks == XCB_NO_SYMBOL) continue;
+
+            keysym_mapping[ks] = keyboard_keysyms[kc];
+        }
+    }
+
+    free(keyboard_mapping);
+}
+
+keysym_t KeyMappingXcb::nativeToKeysym(int keycode)
+{
+    /* Convert native virtual key to the keysym obtained without modifiers */
+    if (keysym_mapping.find(keycode) != keysym_mapping.end()) {
+        return keysym_mapping[keycode];
+    }
+
+    return keycode;
 }
 
 void KeyMappingXcb::default_inputs()
