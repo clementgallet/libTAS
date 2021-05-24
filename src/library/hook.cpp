@@ -39,7 +39,7 @@ bool link_function(void** function, const char* source, const char* library, con
 #ifdef __linux__
     if (version)
         *function = dlvsym(RTLD_NEXT, source, version);
-    else
+    if (*function == nullptr)
 #endif
         NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
