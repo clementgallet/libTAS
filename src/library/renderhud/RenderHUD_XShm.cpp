@@ -24,7 +24,6 @@
 #include "SurfaceXImage.h"
 #include "../logging.h"
 #include "../hook.h"
-#include "../ScreenCapture.h"
 #include "../xlib/xshm.h" // x11::gameXImage
 
 namespace libtas {
@@ -34,12 +33,6 @@ void RenderHUD_XShm::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int
     if (x11::gameXImage->bits_per_pixel == 32) {
         /* Create a SurfaceARGB pointing to the XImage */
         std::unique_ptr<SurfaceXImage> image_surf = std::unique_ptr<SurfaceXImage>(new SurfaceXImage(x11::gameXImage));
-
-        /* Change the coords so that the text fills on screen */
-        int width, height;
-        ScreenCapture::getDimensions(width, height);
-        x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
-        y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
         image_surf->blit(surf.get(), x, y);
     }

@@ -106,6 +106,13 @@ void RenderHUD_Base_MacOS::renderText(const char* text, Color fg_color, Color bg
     CGContextSetTextPosition(ctx, 0, 0);
     CTLineDraw(line, ctx);
 
+    /* Change the coords so that the text fills on screen */
+    int swidth, sheight;
+    ScreenCapture::getDimensions(swidth, sheight);
+
+    x = (x + width + 5) > swidth ? (swidth - width - 5) : x;    
+    y = (y + height + 5) > sheight ? (sheight - height - 5) : y;
+
     /* Call the specific render function */
     renderSurface(std::move(surf), x, y);
 

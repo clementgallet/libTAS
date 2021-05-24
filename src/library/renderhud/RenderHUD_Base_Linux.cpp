@@ -26,7 +26,7 @@
 #include <fontconfig/fontconfig.h>
 #include "SurfaceARGB.h"
 // #include <X11/keysym.h>
-//#include "../ScreenCapture.h"
+#include "../ScreenCapture.h"
 
 namespace libtas {
 
@@ -136,6 +136,13 @@ void RenderHUD_Base_Linux::renderText(const char* text, Color fg_color, Color bg
     if (bg_surf) {
         /* Blit text onto its outline. */
         bg_surf->blit(fg_surf.get(), outline_size, outline_size);
+
+        /* Change the coords so that the text fills on screen */
+        int width, height;
+        ScreenCapture::getDimensions(width, height);
+
+        x = (x + bg_surf->w + 5) > width ? (width - bg_surf->w - 5) : x;    
+        y = (y + bg_surf->h + 5) > height ? (height - bg_surf->h - 5) : y;
 
         renderSurface(std::move(bg_surf), x, y);
     }

@@ -339,10 +339,6 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
-    /* Change the coords so that the text fills on screen */
-    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;    
-    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
-
     /* Flip y coord */
     y = height - y - surf->h;
 
