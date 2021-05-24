@@ -23,7 +23,6 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
-#include "../ScreenCapture.h"
 
 #include <SDL2/SDL.h>
 
@@ -47,12 +46,6 @@ void RenderHUD_SDL2_surface::renderSurface(std::unique_ptr<SurfaceARGB> surf, in
 
     SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
     SDL_Surface* screensurf = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
-
-    /* Change the coords so that the text fills on screen */
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
-    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
-    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
     SDL_Rect rect = {x, y, sdlsurf->w, sdlsurf->h};
     orig::SDL_UpperBlit(sdlsurf, NULL, screensurf, &rect);

@@ -22,7 +22,6 @@
 
 #include "../logging.h"
 #include "../hook.h"
-#include "../ScreenCapture.h"
 #include "../../external/vdpau.h"
 
 namespace libtas {
@@ -66,15 +65,6 @@ void RenderHUD_VDPAU::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, in
         debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpBitmapSurfacePutBitsNative failed with status %d", status);
         return;
     }
-
-    // SDL_Surface* sdlsurf = orig::SDL_CreateRGBSurfaceFrom(surf->pixels.data(), surf->w, surf->h, 32, surf->pitch, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    // SDL_Texture* tex = orig::SDL_CreateTextureFromSurface(renderer, sdlsurf);
-
-    /* Change the coords so that the text fills on screen */
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
-    x = (x + surf->w + 5) > width ? (width - surf->w - 5) : x;
-    y = (y + surf->h + 5) > height ? (height - surf->h - 5) : y;
 
     VdpRect rect = {static_cast<uint32_t>(x), static_cast<uint32_t>(y), static_cast<uint32_t>(x + surf->w), static_cast<uint32_t>(y + surf->h)};
 
