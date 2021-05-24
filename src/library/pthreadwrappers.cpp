@@ -114,7 +114,7 @@ static void *pthread_start(void *arg)
     ThreadManager::initThreadFromChild(thread);
 
     bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236) ||
-                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801);
+                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801) || (thread->routine_id == 777);
     if (isWaitThread)
         debuglogstdio(LCF_THREAD, "Detected mono thread to wait");
 
@@ -649,7 +649,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236) ||
-                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801);
+                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801) || (thread->routine_id == 777);
 
     if (isWaitThread) {
         ThreadSync::detSignal(true);

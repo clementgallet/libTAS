@@ -117,7 +117,7 @@ void ThreadSync::detWait()
         for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
             /* Should wait if sync count has increased since last time */
             if (thread->syncCount > thread->syncOldCount) {
-                debuglogstdio(LCF_ERROR, "Thread %d has increased sync count %d -> %d", thread->tid, thread->syncOldCount, thread->syncCount.load());
+//                debuglogstdio(LCF_ERROR, "Thread %d has increased sync count %d -> %d", thread->tid, thread->syncOldCount, thread->syncCount.load());
                 thread->syncOldCount = thread->syncCount;
                 shouldWait = true;
             }
