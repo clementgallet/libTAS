@@ -113,9 +113,10 @@ static void *pthread_start(void *arg)
 
     ThreadManager::initThreadFromChild(thread);
 
-    bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236);
+    bool isWaitThread = (thread->routine_id == -12625) || (thread->routine_id == -12493) || (thread->routine_id == 1236) ||
+                        (thread->routine_id == -9535) || (thread->routine_id == -9456) || (thread->routine_id == 801);
     if (isWaitThread)
-        debuglogstdio(LCF_THREAD | LCF_ERROR, "Detected mono thread to wait");
+        debuglogstdio(LCF_THREAD, "Detected mono thread to wait");
 
     do {
         /* Check if there is a function to execute */
