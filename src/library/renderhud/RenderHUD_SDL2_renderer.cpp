@@ -30,6 +30,7 @@ DECLARE_ORIG_POINTER(SDL_DestroyTexture)
 DECLARE_ORIG_POINTER(SDL_LockTexture)
 DECLARE_ORIG_POINTER(SDL_UnlockTexture)
 DECLARE_ORIG_POINTER(SDL_RenderCopy)
+DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
@@ -49,6 +50,7 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
     LINK_NAMESPACE_SDL2(SDL_LockTexture);
     LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
     LINK_NAMESPACE_SDL2(SDL_RenderCopy);
+    LINK_NAMESPACE_SDL2(SDL_SetTextureBlendMode);
 
     GlobalNative gn;
 
@@ -58,6 +60,7 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
             orig::SDL_DestroyTexture(texture);
 
         texture = orig::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, surf->w, surf->h);
+        orig::SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
         tex_w = surf->w;
         tex_h = surf->h;        
     }
