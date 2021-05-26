@@ -1606,8 +1606,13 @@ void MainWindow::slotMovieEnd()
     setListFromRadio(movieEndGroup, context->config.on_movie_end);
 }
 
+void MainWindow::slotVariableFramerate(bool checked)
+{
+    context->config.sc.variable_framerate = checked;
+    encodeWindow->update_config();
+}
+
 BOOLSLOT(slotAutoRestart, context->config.auto_restart)
-BOOLSLOT(slotVariableFramerate, context->config.sc.variable_framerate)
 BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
 BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
 BOOLSLOT(slotMouseGameWarp, context->config.sc.mouse_prevent_warp)
