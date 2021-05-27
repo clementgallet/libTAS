@@ -345,8 +345,8 @@ int snd_pcm_hw_params_can_pause(const snd_pcm_hw_params_t *params)
 int snd_pcm_pause(snd_pcm_t *pcm, int enable)
 {
     if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_state);
-        return orig::snd_pcm_state(pcm);
+        LINK_NAMESPACE_GLOBAL(snd_pcm_pause);
+        return orig::snd_pcm_pause(pcm);
     }
 
     DEBUGLOGCALL(LCF_SOUND);
