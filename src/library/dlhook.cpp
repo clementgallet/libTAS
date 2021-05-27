@@ -31,6 +31,7 @@
 #include "backtrace.h"
 #include "GameHacks.h"
 #include <sys/stat.h>
+#include "../dyld_func_lookup_helper/dyld_func_lookup_helper.h"
 
 namespace libtas {
 
@@ -83,7 +84,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
         orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
 #elif defined(__APPLE__) && defined(__MACH__)
         /* Using the convenient function to locate a dyld function pointer */
-        _dyld_func_lookup("__dyld_dlopen", reinterpret_cast<void**>(&orig::dlopen));
+        dyld_func_lookup_helper("__dyld_dlopen", reinterpret_cast<void**>(&orig::dlopen));
 #endif
     }
 
@@ -237,7 +238,7 @@ void *dlsym(void *handle, const char *name) __THROW {
         orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
 #elif defined(__APPLE__) && defined(__MACH__)
         /* Using the convenient function to locate a dyld function pointer */
-        _dyld_func_lookup("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
+        dyld_func_lookup_helper("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
 #endif
 
     }

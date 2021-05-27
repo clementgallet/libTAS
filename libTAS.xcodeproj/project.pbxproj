@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B29F5260263C6CD60087D1A7 /* libtas.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = EB18D18625DAE57000A40A10 /* libtas.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		B29F5261263C6CDA0087D1A7 /* libdyld_func_lookup_helper.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = B2E6D48E263B0DEA00D79778 /* libdyld_func_lookup_helper.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		B2E6D495263B0DF100D79778 /* dyld_func_lookup_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B761A6263B082100C28B70 /* dyld_func_lookup_helper.cpp */; };
+		B2E6D499263B0DF700D79778 /* dylib1.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC20F9725E57DDE008A406C /* dylib1.o */; };
+		B2E6D49D263B0E0000D79778 /* libdyld_func_lookup_helper.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B2E6D48E263B0DEA00D79778 /* libdyld_func_lookup_helper.dylib */; };
 		EB36F78D25F0F60800833793 /* RenderHUD_Base_MacOS.h in Headers */ = {isa = PBXBuildFile; fileRef = EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */; };
 		EB36F78E25F0F60800833793 /* RenderHUD_Base_MacOS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB36F78C25F0F60800833793 /* RenderHUD_Base_MacOS.cpp */; };
 		EB36F78F25F0FE0900833793 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949825E5DED90011078F /* CoreFoundation.framework */; };
@@ -15,7 +20,6 @@
 		EB79949725E5DE810011078F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949625E5DE810011078F /* CoreGraphics.framework */; };
 		EB79949925E5DEDA0011078F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB79949825E5DED90011078F /* CoreFoundation.framework */; };
 		EBC20F9625E568A1008A406C /* openglwrappers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED812525CC8F3C00951619 /* openglwrappers.cpp */; };
-		EBC20F9825E57DDE008A406C /* dylib1.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EBC20F9725E57DDE008A406C /* dylib1.o */; };
 		EBC20FAE25E58354008A406C /* AutoSave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED81D325CC8F3C00951619 /* AutoSave.cpp */; };
 		EBC20FAF25E58354008A406C /* Config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED81D625CC8F3C00951619 /* Config.cpp */; };
 		EBC20FB025E58354008A406C /* GameLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED81D925CC8F3C00951619 /* GameLoop.cpp */; };
@@ -245,7 +249,25 @@
 		};
 /* End PBXBuildRule section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		B29F525F263C6CBF0087D1A7 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				B29F5261263C6CDA0087D1A7 /* libdyld_func_lookup_helper.dylib in Copy Files */,
+				B29F5260263C6CD60087D1A7 /* libtas.dylib in Copy Files */,
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		B2B761A6263B082100C28B70 /* dyld_func_lookup_helper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dyld_func_lookup_helper.cpp; sourceTree = "<group>"; };
+		B2B761A7263B082100C28B70 /* dyld_func_lookup_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dyld_func_lookup_helper.h; sourceTree = "<group>"; };
+		B2E6D48E263B0DEA00D79778 /* libdyld_func_lookup_helper.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libdyld_func_lookup_helper.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB18D18625DAE57000A40A10 /* libtas.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libtas.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB1F440125F7E71300E18895 /* keysymdesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keysymdesc.h; sourceTree = "<group>"; };
 		EB36F78B25F0F60800833793 /* RenderHUD_Base_MacOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderHUD_Base_MacOS.h; sourceTree = "<group>"; };
@@ -667,6 +689,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B2E6D48C263B0DEA00D79778 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2E6D499263B0DF700D79778 /* dylib1.o in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EBC20F9A25E582ED008A406C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -685,11 +715,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2E6D49D263B0E0000D79778 /* libdyld_func_lookup_helper.dylib in Frameworks */,
 				EBEF72A125F6E11700FEF4D6 /* AudioToolbox.framework in Frameworks */,
 				EB36F79225F0FE0900833793 /* CoreText.framework in Frameworks */,
 				EB36F78F25F0FE0900833793 /* CoreFoundation.framework in Frameworks */,
 				EB36F79025F0FE0900833793 /* CoreGraphics.framework in Frameworks */,
-				EBC20F9825E57DDE008A406C /* dylib1.o in Frameworks */,
 				EBC93BBD25DE929600C84DF4 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -697,6 +727,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B2B761A5263B07FF00C28B70 /* dyld_func_lookup_helper */ = {
+			isa = PBXGroup;
+			children = (
+				B2B761A6263B082100C28B70 /* dyld_func_lookup_helper.cpp */,
+				B2B761A7263B082100C28B70 /* dyld_func_lookup_helper.h */,
+			);
+			path = dyld_func_lookup_helper;
+			sourceTree = "<group>";
+		};
 		EBBDFCF525CEF089005F26EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -726,12 +765,14 @@
 				EBBDFCF525CEF089005F26EE /* Frameworks */,
 				EB18D18625DAE57000A40A10 /* libtas.dylib */,
 				EBC20F9D25E582ED008A406C /* libTAS.app */,
+				B2E6D48E263B0DEA00D79778 /* libdyld_func_lookup_helper.dylib */,
 			);
 			sourceTree = "<group>";
 		};
 		EBED806E25CC8F3C00951619 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B2B761A5263B07FF00C28B70 /* dyld_func_lookup_helper */,
 				EBED806F25CC8F3C00951619 /* external */,
 				EBED808325CC8F3C00951619 /* library */,
 				EBED81D225CC8F3C00951619 /* program */,
@@ -1332,6 +1373,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		B2E6D48A263B0DEA00D79778 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EBED824B25CC8F5C00951619 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1347,6 +1395,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		B2E6D48D263B0DEA00D79778 /* dyld_func_lookup_helper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B2E6D491263B0DEA00D79778 /* Build configuration list for PBXNativeTarget "dyld_func_lookup_helper" */;
+			buildPhases = (
+				B2E6D48A263B0DEA00D79778 /* Headers */,
+				B2E6D48B263B0DEA00D79778 /* Sources */,
+				B2E6D48C263B0DEA00D79778 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = dyld_func_lookup_helper;
+			productName = dyld_func_lookup_helper;
+			productReference = B2E6D48E263B0DEA00D79778 /* libdyld_func_lookup_helper.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 		EBC20F9C25E582ED008A406C /* libTAS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EBC20FAB25E582EF008A406C /* Build configuration list for PBXNativeTarget "libTAS" */;
@@ -1354,6 +1419,7 @@
 				EBC20F9925E582ED008A406C /* Sources */,
 				EBC20F9A25E582ED008A406C /* Frameworks */,
 				EBC20F9B25E582ED008A406C /* Resources */,
+				B29F525F263C6CBF0087D1A7 /* Copy Files */,
 			);
 			buildRules = (
 				EBC20FF425E585CB008A406C /* PBXBuildRule */,
@@ -1391,6 +1457,9 @@
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = "Clément";
 				TargetAttributes = {
+					B2E6D48D263B0DEA00D79778 = {
+						CreatedOnToolsVersion = 12.4;
+					};
 					EBC20F9C25E582ED008A406C = {
 						CreatedOnToolsVersion = 10.1;
 						SystemCapabilities = {
@@ -1419,6 +1488,7 @@
 			targets = (
 				EBED824E25CC8F5C00951619 /* tas */,
 				EBC20F9C25E582ED008A406C /* libTAS */,
+				B2E6D48D263B0DEA00D79778 /* dyld_func_lookup_helper */,
 			);
 		};
 /* End PBXProject section */
@@ -1434,6 +1504,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B2E6D48B263B0DEA00D79778 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2E6D495263B0DF100D79778 /* dyld_func_lookup_helper.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EBC20F9925E582ED008A406C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1655,6 +1733,40 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		B2E6D48F263B0DEA00D79778 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_IDENTITY = libtas;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = clementgallet;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		B2E6D490263B0DEA00D79778 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_IDENTITY = libtas;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = clementgallet;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		EBC20FAC25E582EF008A406C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1677,6 +1789,7 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+					"@executable_path",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"/usr/local/opt/lua\\@5.3/lib",
@@ -1711,6 +1824,7 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+					"@executable_path",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"/usr/local/opt/lua\\@5.3/lib",
@@ -1845,6 +1959,7 @@
 				DEVELOPMENT_TEAM = clementgallet;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				EXECUTABLE_PREFIX = lib;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"__THROW=",
@@ -1854,6 +1969,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -1883,6 +1999,7 @@
 				DEVELOPMENT_TEAM = clementgallet;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				EXECUTABLE_PREFIX = lib;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"__THROW=",
@@ -1892,6 +2009,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -1913,6 +2031,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B2E6D491263B0DEA00D79778 /* Build configuration list for PBXNativeTarget "dyld_func_lookup_helper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2E6D48F263B0DEA00D79778 /* Debug */,
+				B2E6D490263B0DEA00D79778 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		EBC20FAB25E582EF008A406C /* Build configuration list for PBXNativeTarget "libTAS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
