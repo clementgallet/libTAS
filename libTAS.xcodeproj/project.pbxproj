@@ -114,6 +114,8 @@
 		EBDA73A725E6C8EE007DD9B8 /* QtCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */; };
 		EBDA73AA25E6C908007DD9B8 /* QtGui.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A825E6C908007DD9B8 /* QtGui.framework */; };
 		EBDA73AB25E6C908007DD9B8 /* QtWidgets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */; };
+		EBE36ACC265FF4E800B7B065 /* BaseAddresses.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE36ACA265FF4E800B7B065 /* BaseAddresses.cpp */; };
+		EBE36ACD265FF4E800B7B065 /* MemLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE36ACB265FF4E800B7B065 /* MemLayout.cpp */; };
 		EBED828725CC902A00951619 /* backtrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80A825CC8F3C00951619 /* backtrace.cpp */; };
 		EBED828825CC902A00951619 /* BusyLoopDetection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80AA25CC8F3C00951619 /* BusyLoopDetection.cpp */; };
 		EBED828925CC902A00951619 /* DeterministicTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED80C325CC8F3C00951619 /* DeterministicTimer.cpp */; };
@@ -304,6 +306,10 @@
 		EBDA73A625E6C8EE007DD9B8 /* QtCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtCore.framework; path = ../../Qt/5.15.2/clang_64/lib/QtCore.framework; sourceTree = "<group>"; };
 		EBDA73A825E6C908007DD9B8 /* QtGui.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtGui.framework; path = ../../Qt/5.15.2/clang_64/lib/QtGui.framework; sourceTree = "<group>"; };
 		EBDA73A925E6C908007DD9B8 /* QtWidgets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtWidgets.framework; path = ../../Qt/5.15.2/clang_64/lib/QtWidgets.framework; sourceTree = "<group>"; };
+		EBE36ACA265FF4E800B7B065 /* BaseAddresses.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BaseAddresses.cpp; sourceTree = "<group>"; };
+		EBE36ACB265FF4E800B7B065 /* MemLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemLayout.cpp; sourceTree = "<group>"; };
+		EBE36ACE265FF4F500B7B065 /* BaseAddresses.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BaseAddresses.h; sourceTree = "<group>"; };
+		EBE36ACF265FF4F500B7B065 /* MemLayout.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemLayout.h; sourceTree = "<group>"; };
 		EBED807025CC8F3C00951619 /* cubeb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cubeb.h; sourceTree = "<group>"; };
 		EBED807125CC8F3C00951619 /* lz4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lz4.cpp; sourceTree = "<group>"; };
 		EBED807225CC8F3C00951619 /* lz4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lz4.h; sourceTree = "<group>"; };
@@ -1281,6 +1287,10 @@
 				EBED81FB25CC8F3C00951619 /* IRamWatchDetailed.h */,
 				EBED81FC25CC8F3C00951619 /* MemSection.cpp */,
 				EBDA73A225E6C3E6007DD9B8 /* MemAccess.cpp */,
+				EBE36ACA265FF4E800B7B065 /* BaseAddresses.cpp */,
+				EBE36ACE265FF4F500B7B065 /* BaseAddresses.h */,
+				EBE36ACF265FF4F500B7B065 /* MemLayout.h */,
+				EBE36ACB265FF4E800B7B065 /* MemLayout.cpp */,
 				EBDA73A125E6C3E6007DD9B8 /* MemAccess.h */,
 				EBED81FD25CC8F3C00951619 /* MemSection.h */,
 				EBED81FE25CC8F3C00951619 /* RamWatch.cpp */,
@@ -1517,6 +1527,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBC2101025E58755008A406C /* GameEvents.h in Sources */,
+				EBE36ACC265FF4E800B7B065 /* BaseAddresses.cpp in Sources */,
 				EBC2101125E58755008A406C /* GameLoop.h in Sources */,
 				EBC20FF525E5871B008A406C /* AnnotationsWindow.h in Sources */,
 				EBC20FF625E5871B008A406C /* AutoSaveWindow.h in Sources */,
@@ -1540,6 +1551,7 @@
 				EBC2100825E5871B008A406C /* qtutils.h in Sources */,
 				EBC2100925E5871B008A406C /* RamSearchModel.h in Sources */,
 				EBC2100A25E5871B008A406C /* RamSearchWindow.h in Sources */,
+				EBE36ACD265FF4E800B7B065 /* MemLayout.cpp in Sources */,
 				EBC2100B25E5871B008A406C /* RamWatchEditWindow.h in Sources */,
 				EBC2100C25E5871B008A406C /* RamWatchModel.h in Sources */,
 				EBC2100D25E5871B008A406C /* RamWatchWindow.h in Sources */,

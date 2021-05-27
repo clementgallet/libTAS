@@ -123,8 +123,6 @@ void RenderHUD_GL::init()
         GLint res;
 
         /* Get previous active texture */
-        GLint oldTex;
-        orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
         GLint oldActiveTex;
         orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
 
@@ -138,6 +136,12 @@ void RenderHUD_GL::init()
         orig::glGenTextures(1, &texture);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenTextures failed with error %d", error);
+
+        if (oldActiveTex != 0) {
+            orig::glActiveTexture(oldActiveTex);
+            if ((error = orig::glGetError()) != GL_NO_ERROR)
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glActiveTexture failed with error %d", error);
+        }
 
         /* Create buffers */
         orig::glGenBuffers(1, &vbo);        
@@ -238,18 +242,6 @@ void RenderHUD_GL::init()
         
     	orig::glDeleteShader(vertexShaderID);
     	orig::glDeleteShader(fragmentShaderID);
-        
-        /* Restore previous active texture */
-        if (oldTex != 0) {
-            orig::glBindTexture(GL_TEXTURE_2D, oldTex);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindTexture failed with error %d", error);
-        }
-        if (oldActiveTex != 0) {
-            orig::glActiveTexture(oldActiveTex);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glActiveTexture failed with error %d", error);
-        }
     }
 }
 
