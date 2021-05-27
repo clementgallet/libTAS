@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "InputEditorView.h"
+#include "InputEditorModel.h"
 #include "MainWindow.h"
 #include "qtutils.h"
 

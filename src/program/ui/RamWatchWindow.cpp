@@ -26,6 +26,9 @@
 #include <QtWidgets/QFileDialog>
 
 #include "RamWatchWindow.h"
+#include "RamWatchModel.h"
+#include "RamWatchEditWindow.h"
+#include "PointerScanWindow.h"
 
 RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

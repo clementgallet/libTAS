@@ -22,6 +22,7 @@
 #include <QtWidgets/QMenu>
 
 #include "InputEditorWindow.h"
+#include "InputEditorView.h"
 #include "MainWindow.h"
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)

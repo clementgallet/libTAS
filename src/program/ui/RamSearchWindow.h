@@ -30,8 +30,10 @@
 #include <QtWidgets/QLabel>
 #include <memory>
 
-#include "RamSearchModel.h"
 #include "../Context.h"
+#include "../ramsearch/CompareEnums.h"
+
+class RamSearchModel;
 
 class RamSearchWindow : public QDialog {
     Q_OBJECT

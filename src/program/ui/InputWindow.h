@@ -25,8 +25,9 @@
 #include <QtWidgets/QTableWidget>
 
 #include "../Context.h"
-#include "KeyPressedDialog.h"
 #include "../KeyMapping.h"
+
+class KeyPressedDialog;
 
 class InputWindow : public QDialog {
     Q_OBJECT

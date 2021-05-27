@@ -25,7 +25,7 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
 
-#include "ControllerAxisWidget.h"
+class ControllerAxisWidget;
 
 class ControllerWidget : public QWidget {
     Q_OBJECT

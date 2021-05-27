@@ -31,7 +31,8 @@
 #include <memory> // std::unique_ptr
 
 #include "../ramsearch/IRamWatchDetailed.h"
-#include "../ramsearch/RamWatch.h"
+
+class RamWatch;
 
 class RamWatchEditWindow : public QDialog {
     Q_OBJECT

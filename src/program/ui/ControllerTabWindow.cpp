@@ -24,6 +24,8 @@
 #include <QtWidgets/QLabel>
 
 #include "ControllerTabWindow.h"
+#include "ControllerAxisWidget.h"
+#include "ControllerWidget.h"
 #include "../GameLoop.h"
 #include "../GameEvents.h"
 #include "MainWindow.h"

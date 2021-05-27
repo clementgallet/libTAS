@@ -24,7 +24,7 @@
 #include <QtWidgets/QLabel>
 
 #include "ControllerWidget.h"
-// #include "../../shared/AllInputs.h"
+#include "ControllerAxisWidget.h"
 
 ControllerWidget::ControllerWidget(QWidget *parent) : QWidget(parent)
 {

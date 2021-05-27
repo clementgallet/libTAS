@@ -28,6 +28,9 @@
 #include <QtWidgets/QMessageBox>
 
 #include "PointerScanWindow.h"
+#include "PointerScanModel.h"
+#include "RamWatchWindow.h"
+#include "RamWatchEditWindow.h"
 #include "MainWindow.h"
 #include "../ramsearch/CompareEnums.h"
 #include "../ramsearch/IRamWatchDetailed.h"

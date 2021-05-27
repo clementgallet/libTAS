@@ -40,23 +40,24 @@
 #include "config.h"
 #endif
 
-#include "EncodeWindow.h"
-#include "ExecutableWindow.h"
-#include "InputWindow.h"
-#include "ControllerTabWindow.h"
-#include "GameInfoWindow.h"
-#include "GameSpecificWindow.h"
-#include "RamSearchWindow.h"
-#include "RamWatchWindow.h"
-#include "InputEditorWindow.h"
-#include "OsdWindow.h"
-#include "AnnotationsWindow.h"
-#include "AutoSaveWindow.h"
-#include "TimeTraceWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
 #include <thread>
+
+class EncodeWindow;
+class InputWindow;
+class ExecutableWindow;
+class ControllerTabWindow;
+class GameInfoWindow;
+class GameSpecificWindow;
+class RamSearchWindow;
+class RamWatchWindow;
+class InputEditorWindow;
+class OsdWindow;
+class AnnotationsWindow;
+class AutoSaveWindow;
+class TimeTraceWindow;
 
 class MainWindow : public QMainWindow
 {

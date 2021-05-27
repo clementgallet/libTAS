@@ -23,10 +23,11 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTableView>
 
-#include "RamWatchModel.h"
-#include "RamWatchEditWindow.h"
-#include "PointerScanWindow.h"
 #include "../Context.h"
+
+class RamWatchEditWindow;
+class PointerScanWindow;
+class RamWatchModel;
 
 class RamWatchWindow : public QDialog {
     Q_OBJECT
