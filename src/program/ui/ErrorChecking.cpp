@@ -125,7 +125,7 @@ bool ErrorChecking::checkArchType(Context* context)
 
     /* Checking that the libtas.so library path is correct */
     if (access(context->libtaspath.c_str(), F_OK) != 0) {
-        critical(QString("libtas.so library at %1 was not found. Make sure that the file libtas.so is in the same directory as libTAS file").arg(context->libtaspath.c_str()), context->interactive);
+        critical(QString("libtas.so library at %1 was not found. Make sure that the libtas.so file is in the same directory as the libTAS executable").arg(context->libtaspath.c_str()), context->interactive);
         return false;
     }
 
@@ -163,15 +163,14 @@ bool ErrorChecking::checkArchType(Context* context)
 
     /* Check for a possible libtas alternate file */
     if (((gameArch == BT_ELF32) || (gameArch == BT_PE32)) && (libtasArch == BT_ELF64)) {
-        std::string lib32path = context->libtaspath;
-        std::string libname("libtas.so");
-        size_t pos = context->libtaspath.find(libname);
-        lib32path.replace(pos, libname.length(), "libtas32.so");
-
-        /* Checking that libtas32.so exists */
-        if (access(lib32path.c_str(), F_OK) == 0) {
-            /* Just in case, check the arch */
-            libtasArch = extractBinaryType(lib32path);
+        if (context->libtas32path.empty()) {
+            critical(QString("Trying to launch a 32-bit game with a 64-bit build of libTAS, but libTAS couldn't guess the path to libtas32.so. Use --libtas32-so-path (see --help)"), context->interactive);
+            return false;
+        } else if (access(context->libtas32path.c_str(), F_OK) != 0) {
+            critical(QString("Trying to launch a 32-bit game with a 64-bit build of libTAS, but no libtas32.so library could be found at %1. Make sure that libTAS was built with dual-arch support and that the libtas32.so file is in the same directory as the libTAS executable").arg(context->libtas32path.c_str()), context->interactive);
+            return false;
+        } else {
+            libtasArch = extractBinaryType(context->libtas32path);
         }
     }
 
