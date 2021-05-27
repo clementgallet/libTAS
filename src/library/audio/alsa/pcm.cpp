@@ -346,7 +346,7 @@ int snd_pcm_pause(snd_pcm_t *pcm, int enable)
 {
     if (GlobalState::isNative()) {
         LINK_NAMESPACE_GLOBAL(snd_pcm_pause);
-        return orig::snd_pcm_pause(pcm);
+        return orig::snd_pcm_pause(pcm, enable);
     }
 
     DEBUGLOGCALL(LCF_SOUND);
