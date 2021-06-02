@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+
 
 
 #define VK_VERSION_1_0 1
