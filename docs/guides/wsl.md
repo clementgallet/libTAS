@@ -40,7 +40,7 @@ Things you will need to download:
 
 * [Ubuntu](https://www.microsoft.com/store/apps/9n6svws3rx71)
 * [vcxsrv](https://sourceforge.net/projects/vcxsrv/)
-* [libTAS](../)
+* [libTAS](https://github.com/clementgallet/libTAS/releases)
 
 And of course, you will need a game that runs on Linux. Otherwise you need to
 use wine, which, aside from adding yet another layer in our approach, will
