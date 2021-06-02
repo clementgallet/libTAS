@@ -252,23 +252,26 @@ static const char Xlib_default_char[256] = {
 {
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
-    *keysym_return = Xlib_default_keymap[keycode];
+    KeySym keysym = Xlib_default_keymap[keycode];
 
     /* Return if no associated keysym */
-    if (*keysym_return == NoSymbol) {
+    if (keysym == NoSymbol) {
         *status_return = XLookupNone;
         return 0;
     }
+    
+    if (keysym_return)
+        *keysym_return = keysym;
 
     char c = Xlib_default_char[keycode];
 
     /* Return if no associated string */
     if (c == '\0') {
-        *status_return = XLookupKeySym;
+        *status_return = keysym_return ? XLookupKeySym : XLookupNone;
         return 0;
     }
 
-    *status_return = XLookupBoth;
+    *status_return = keysym_return ? XLookupBoth : XLookupChars;
     if (buffer_return && (bytes_buffer > 0)) {
         buffer_return[0] = c;
         return 1;
