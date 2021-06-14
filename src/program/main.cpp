@@ -260,6 +260,11 @@ int main(int argc, char **argv)
         }
     }
 
+    /* Randomize socket filename */
+    char templ[] = "/tmp/libTAS-XXXXXX";
+    context.socket_filename = mkdtemp(templ);
+    context.socket_filename += "/socket";
+
     /* Create the working directories */
     char *path = getenv("XDG_CONFIG_HOME");
     if (path) {

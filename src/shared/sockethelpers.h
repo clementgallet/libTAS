@@ -24,10 +24,15 @@
 #include <string>
 
 /* Remove the socket file and return error */
-int removeSocket();
+int removeSocket(const std::string& socket_filename);
+
+/* Returns the socket filename from environment variable (in the game, for
+ * program use context->socket_filename)
+ */
+std::string getSocketFilenameGame(void);
 
 /* Initiate a socket connection with the game */
-bool initSocketProgram(void);
+bool initSocketProgram(const std::string& socket_filename);
 
 /* Initiate a socket connection with libTAS */
 bool initSocketGame(void);

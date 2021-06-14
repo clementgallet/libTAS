@@ -67,6 +67,11 @@ void GameThread::launch(Context *context)
      */
     setenv("PWD", newdir.c_str(), 1);
 
+    /* Set the LIBTAS_SOCKET environment variable to context->socket_filename
+     * so that the game knows what the socket is called
+     */
+    setenv("LIBTAS_SOCKET", context->socket_filename.c_str(), 1);
+
     /* Set where stderr of the game is redirected */
     int fd;
     std::string logfile = context->gamepath + ".log";

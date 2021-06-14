@@ -147,6 +147,9 @@ struct Context {
     
     /* Indicate if at least one savestate was performed, for backtrack savestate */
     bool didASavestate = false;
+
+    /* Socket filename */
+    std::string socket_filename;
 };
 
 #endif

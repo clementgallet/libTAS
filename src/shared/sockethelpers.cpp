@@ -35,8 +35,6 @@
 #include <iostream>
 #endif
 
-#define SOCKET_FILENAME "/tmp/libTAS.socket"
-
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -48,20 +46,21 @@ static int socket_fd = 0;
 
 static std::mutex mutex;
 
-int removeSocket(void) {
-    int ret = unlink(SOCKET_FILENAME);
+int removeSocket(const std::string& socket_filename) {
+    int ret = unlink(socket_filename.c_str());
     if ((ret == -1) && (errno != ENOENT))
         return errno;
     return 0;
 }
 
-bool initSocketProgram(void)
+bool initSocketProgram(const std::string& socket_filename)
 {
 #ifdef __unix__
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
+    struct sockaddr_un addr = { AF_UNIX };
 #elif defined(__APPLE__) && defined(__MACH__)
-    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
+    struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX };
 #endif
+    strncpy(addr.sun_path, socket_filename.c_str(), sizeof(addr.sun_path));
     socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
     struct timespec tim = {0, 500L*1000L*1000L};
@@ -85,22 +84,30 @@ bool initSocketProgram(void)
     return true;
 }
 
+std::string getSocketFilenameGame(void)
+{
+    return getenv("LIBTAS_SOCKET");
+}
+
 bool initSocketGame(void)
 {
+    std::string socket_filename = getSocketFilenameGame();
+
     /* Check if socket file already exists. If so, it is probably because
      * the link is already done in another process of the game.
      * In this case, we just return immediately.
      */
     struct stat st;
-    int result = stat(SOCKET_FILENAME, &st);
+    int result = stat(socket_filename.c_str(), &st);
     if (result == 0)
         return false;
 
 #ifdef __unix__
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
+    struct sockaddr_un addr = { AF_UNIX };
 #elif defined(__APPLE__) && defined(__MACH__)
-    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
+    struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX };
 #endif
+    strncpy(addr.sun_path, socket_filename.c_str(), sizeof(addr.sun_path));
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {
