@@ -466,7 +466,10 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ void SDL_CloseAudioDevice(SDL_AudioDeviceID dev)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
+    debuglogstdio(LCF_SDL | LCF_SOUND, "%s called with dev %d", __func__, dev);
+
+    if (dev == 0 || dev >= MAX_SDL_SOURCES)
+        return;
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     /* Remove the source from the audio context */
