@@ -22,6 +22,7 @@
 * Input editor: Prevent users from setting blank input labels
 * Ram Watch: Add intermediate addresses for pointer chain
 * Lua: add line and ellipse drawing
+* Advance time for .NET speed checks (#303)
 
 ### Changed
 

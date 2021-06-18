@@ -205,6 +205,9 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     }
 #endif
 
+    if (result && file && std::strstr(file, "libcoreclr.so") != nullptr)
+        GameHacks::setCoreclr();
+
     return result;
 }
 

@@ -24,6 +24,8 @@
 #include "DeterministicTimer.h"
 #include "GlobalState.h"
 #include "../shared/SharedConfig.h"
+#include "GameHacks.h"
+#include <execinfo.h>
 
 namespace libtas {
 
@@ -66,6 +68,50 @@ DEFINE_ORIG_POINTER(clock_gettime)
     }
 
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+
+    /* .NET coreclr computes several speed chekcs at startup.
+     * Because we don't advance time, it causes a softlock.
+     * In this specific case, we advance time to account for this.
+     * Getting the caller function is very costly, so we only do it when
+     * `libcoreclr.so` has been linked, and on first frame. */
+    if (framecount < 4 && GameHacks::hasCoreclr()) {
+
+        /* .NET coreclr computes at startup how much time does a `yield` takes
+         * in the Finalizer thread.
+         * <https://github.com/dotnet/runtime/blob/140120290aaaffb40e90e8ece982b4f0170c6700/src/coreclr/vm/yieldprocessornormalized.cpp#L46>
+         */
+        if (GameHacks::getFinalizerThread() == ThreadManager::getThreadTid()) {
+            void* return_address =  __builtin_return_address(0);
+            char** symbols = backtrace_symbols(&return_address, 1);
+            debuglogstdio(LCF_TIMEGET | LCF_ERROR, "  getting call symbol: %s", symbols[0]);
+            if (symbols != nullptr) {
+                if (strstr(symbols[0], "libcoreclr.so")) {
+                    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr yield");
+                    struct timespec ts = {0, 1000000};
+                    detTimer.addDelay(ts);
+                }
+                free(symbols);
+            }
+        }
+
+        /* .NET coreclr computes at startup how much time does process id and TLS take
+         * <https://github.com/dotnet/runtime/blob/140120290aaaffb40e90e8ece982b4f0170c6700/src/coreclr/System.Private.CoreLib/src/System/Threading/ProcessorIdCache.cs#L58>
+         */
+        if (ThreadManager::isMainThread()) {
+            void* return_address =  __builtin_return_address(0);
+            char** symbols = backtrace_symbols(&return_address, 1);
+            debuglogstdio(LCF_TIMEGET | LCF_ERROR, "  getting call symbol: %s", symbols[0]);
+            if (symbols != nullptr) {
+                if (strstr(symbols[0], "libSystem.Native.so")) {
+                    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr TLS");
+                    struct timespec ts = {0, 1000000};
+                    detTimer.addDelay(ts);
+                }
+                free(symbols);
+            }
+        }
+    }
+
     *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
