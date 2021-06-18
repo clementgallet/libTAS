@@ -79,6 +79,11 @@ bool initSocketProgram(void)
         } else {
             return false;
         }
+        tim.tv_nsec *= 1.5;
+        if (tim.tv_nsec >= 1000000000) {            
+            tim.tv_sec++;
+            tim.tv_nsec -= 1000000000;
+        }
     }
     std::cout << "Attempt " << retry + 1 << ": Connected." << std::endl;
 
