@@ -1350,8 +1350,20 @@ void MainWindow::slotLaunch()
 void MainWindow::slotStop()
 {
     if (context->status == Context::QUITTING) {
-        /* Terminate the game process */
-        kill(context->game_pid, SIGKILL);
+        if (context->game_pid != 0) {
+            /* Terminate the game process */
+            kill(context->game_pid, SIGKILL);
+        } else {
+            /* In this case, the game has closed (because game_pid has been set
+             * to 0 by loopExit) yet status is still QUITTING, because status
+             * depends on whether fork_pid is alive, not the game itself.
+             *
+             * So in this case, the game process and the forked process have
+             * different pids (which can happen with gdb, for example) and the
+             * game process has quit, but the forked process has not.
+             */
+            kill(context->fork_pid, SIGKILL);
+        }
         return;
     }
 
