@@ -1,3 +1,58 @@
+libtas (1.4.2) unstable; urgency=medium
+
+  * Add the execution permission if possible
+  * Show a specific message when user specify a script as game executable
+  * Add lua scripting
+  * Check for gdb presence
+  * Use vdpau-va-gl for vdpau software rendering (#390)
+  * Implement multiple SDL audio devices
+  * Clicking the first column seeks to frame in input editor
+  * Lua memory read and write float/double
+  * Basic MacOS support
+  * Input editor: option to disable autoscroll (#182)
+  * Input editor: option to seeks to current frame after rewind (#134)
+  * Input editor: show state invalidation as gray area when threads changed
+  * Add setting to not load movie metadata
+  * Input editor: pasting while selecting a range repeats the paste frames in range
+  * Allow games to use the native Steam API
+  * Implement SDL_GetWindowFromID() (#409)
+  * Implement more X*LookupString() functions
+  * Check for socket file removal errors
+  * Input editor: Prevent users from setting blank input labels
+  * Ram Watch: Add intermediate addresses for pointer chain
+  * Lua: add line and ellipse drawing
+  * Advance time for .NET speed checks (#303)
+  * Remove "save screen" option (always on)
+  * Change again the threshold for triggering a non-draw frame
+  * Don't scroll input editor when rewinding (#381)
+  * Raise the limit of thread number in states
+  * State loading doesn't write zeros on zero pages, preventing allocations
+  * Switch input mapping to tabs
+  * Optimize UI refresh with timer
+  * Switch OpenGL OSD using shaders. Adds transparency.
+  * Exit the game if the socket connection is lost
+  * Fix ram watch offset parsing
+  * Disable Start and attach gdb for wine games
+  * Fix SDL_Lock/UnlockAudio that can be called multiple times (#385)
+  * Remove keyboard_support setting (#386)
+  * Correctly handle opening of /dev/input/event|jsdev with writing flag
+  * Fix pitch for OpenAL
+  * Fix some labels in the input editor being truncated
+  * Set timezone to UTC+0
+  * Send low-level window closing event even if game uses SDL (#395)
+  * snd_pcm_writei() should block until all frames can be played
+  * Fix controller inputs when controller window has focus
+  * Add modifier to SDL key event (#405)
+  * Handle savestates from previous execution that were performed after game 
+    exiting (because forked savestate) (#407)
+  * Fix and improve SDL2_renderer HUD (#410)
+  * Fix "OSD on encodes" being broken
+  * Fix the method to detect the game's `SDL_DYNAPI_entry` symbol
+  * Input editor: Allow modifiers when adding a new column
+  * Ram Watch: Fix the definition of base address of file
+
+ -- clement <clement.gallet@ens-lyon.org>  Tue, 06 Jul 2021 11:47:22 +0200
+
 libtas (1.4.1) unstable; urgency=medium
 
   * Savestates can be compressed

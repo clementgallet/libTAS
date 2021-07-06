@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.2] - 2021-07-06
+### Added
 
 * Add the execution permission if possible
 * Show a specific message when user specify a script as game executable
