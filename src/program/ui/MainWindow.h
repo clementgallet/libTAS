@@ -124,6 +124,7 @@ public:
     QActionGroup *asyncGroup;
 
     QActionGroup *debugStateGroup;
+    QAction *sigintAction;
     QActionGroup *loggingOutputGroup;
     QActionGroup *loggingPrintGroup;
     QActionGroup *loggingExcludeGroup;

@@ -820,6 +820,11 @@ void MainWindow::createMenus()
 
     debugMenu->addSeparator();
 
+    sigintAction = debugMenu->addAction(tr("Raise SIGINT upon game launch (if debugging)"));
+    sigintAction->setCheckable(true);
+
+    debugMenu->addSeparator();
+
     debugMenu->addActions(loggingOutputGroup->actions());
     disabledActionsOnStart.append(loggingOutputGroup->actions());
 
@@ -1352,6 +1357,8 @@ void MainWindow::slotLaunch(bool attach_gdb)
     setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
     setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
+
+    context->config.sc.sigint_upon_launch = context->attach_gdb && sigintAction->isChecked();
 
     context->config.sc.mouse_support = mouseAction->isChecked();
     setListFromRadio(joystickGroup, context->config.sc.nb_controllers);
