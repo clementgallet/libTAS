@@ -31,6 +31,7 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QToolButton>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <forward_list>
@@ -133,6 +134,8 @@ public:
     QActionGroup *slowdownGroup;
     QActionGroup *fastforwardGroup;
 
+    QAction *sigintAction;
+
     QAction *mouseAction;
     QAction *mouseModeAction;
     QAction *mouseWarpAction;
@@ -169,7 +172,9 @@ public:
     QSpinBox *initialTimeNsec;
 
     QPushButton *launchButton;
-    QPushButton *launchGdbButton;
+    QToolButton *launchGdbButton;
+    QAction *launchGdbAction;
+    QAction *launchLldbAction;
     QPushButton *stopButton;
 
     QGroupBox *movieBox;
@@ -236,7 +241,9 @@ private slots:
     /* Update framerate values */
     void updateFramerate();
 
-    void slotLaunch();
+    void slotLaunchGdb();
+    void slotLaunchLldb();
+    void slotLaunch(bool attach_gdb);
     void slotStop();
     void slotBrowseGamePath();
     void slotGamePathChanged();

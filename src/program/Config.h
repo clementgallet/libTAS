@@ -130,6 +130,17 @@ public:
     /* Load a game-specific config from the config file */
     void load(const std::string& gamepath);
 
+    enum Debugger {
+        DEBUGGER_GDB = 0,
+        DEBUGGER_LLDB = 1,
+    };
+
+#ifdef __unix__
+    int debugger = DEBUGGER_GDB;
+#elif defined(__APPLE__) && defined(__MACH__)
+    int debugger = DEBUGGER_LLDB;
+#endif
+
 private:
     QString iniPath(const std::string& gamepath) const;
 };

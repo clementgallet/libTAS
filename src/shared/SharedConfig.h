@@ -295,6 +295,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
 
     /* Send stack traces of all time calls to libTAS program */
     bool time_trace = false;
+
+    /* Call raise(SIGINT) in libtas::init */
+    bool sigint_upon_launch = false;
 };
 
 #endif
