@@ -52,6 +52,7 @@
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
 // #include <X11/X.h>
+#include <sys/socket.h>
 #include <stdint.h>
 
 GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c)
@@ -183,19 +184,28 @@ void GameLoop::init()
     /* Remove savestates again in case we did not exist cleanly the previous time */
     remove_savestates(context);
 
-    /* Remove the file socket */
-    int err = removeSocket();
-    if (err != 0)
-        emit alertToShow(QString("Could not remove socket file /tmp/libTAS.socket: %2").arg(strerror(err)));
-
     /* Init savestate list */
     SaveStateList::init(context);
+
+    /* Create socket pair */
+    int sockets[2];
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
+        perror("Failed to create socket pair");
+        return;
+    }
 
     /* We fork here so that the child process calls the game */
     context->fork_pid = fork();
     if (context->fork_pid == 0) {
-        GameThread::launch(context);
+        close(sockets[0]);
+
+        // noreturn; calls exec
+        return GameThread::launch(context, sockets[1]);
     }
+
+    close(sockets[1]);
+    setSocket(sockets[0]);
 
     /* Compute the MD5 hash of the game binary */
     context->md5_game.clear();
@@ -267,9 +277,6 @@ void GameLoop::init()
 
 void GameLoop::initProcessMessages()
 {
-    /* Connect to the socket between the program and the game */
-    initSocketProgram();
-
     /* Receive informations from the game */
     int message = receiveMessage();
     while (message != MSGB_END_INIT) {
@@ -739,7 +746,6 @@ void GameLoop::loopExit()
         (context->status != Context::QUITTING))) {
 
         /* We keep the movie opened and indicate the main thread to restart the game */
-
         closeSocket();
 
         /* Remove savestates because they are invalid on future instances of the game */
