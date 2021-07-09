@@ -19,7 +19,6 @@
 
 #include "sockethelpers.h"
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/un.h>
@@ -27,6 +26,7 @@
 #include <vector>
 #include <mutex>
 #include <errno.h>
+#include <fcntl.h>
 
 #ifdef SOCKET_LOG
 #include "lcf.h"
@@ -34,8 +34,6 @@
 #else
 #include <iostream>
 #endif
-
-#define SOCKET_FILENAME "/tmp/libTAS.socket"
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -48,80 +46,20 @@ static int socket_fd = 0;
 
 static std::mutex mutex;
 
-int removeSocket(void) {
-    int ret = unlink(SOCKET_FILENAME);
-    if ((ret == -1) && (errno != ENOENT))
-        return errno;
-    return 0;
+void setSocket(int sock) {
+    socket_fd = sock;
 }
 
-bool initSocketProgram(void)
+void initSocketGame(void)
 {
-#ifdef __unix__
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
-#elif defined(__APPLE__) && defined(__MACH__)
-    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
-#endif
-    socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    socket_fd = std::stoi(getenv("LIBTAS_SOCKET_FD"));
 
-    struct timespec tim = {0, 500L*1000L*1000L};
-
-    const int MAX_RETRIES = 10;
-    int retry = 0;
-
-    nanosleep(&tim, NULL);
-    while (connect(socket_fd, reinterpret_cast<const struct sockaddr*>(&addr),
-                sizeof(struct sockaddr_un))) {
-        std::cout << "Attempt " << retry + 1 << ": Couldn't connect to socket." << std::endl;
-        retry++;
-        if (retry < MAX_RETRIES) {
-            nanosleep(&tim, NULL);
+    if (fcntl(socket_fd, F_GETFD) == -1) {
+        if (errno == EBADF) {
+            perror("LIBTAS_SOCKET_FD has been closed");
         } else {
-            return false;
+            perror("Unable to use game socket");
         }
-        tim.tv_nsec *= 1.5;
-        if (tim.tv_nsec >= 1000000000) {            
-            tim.tv_sec++;
-            tim.tv_nsec -= 1000000000;
-        }
-    }
-    std::cout << "Attempt " << retry + 1 << ": Connected." << std::endl;
-
-    return true;
-}
-
-bool initSocketGame(void)
-{
-    /* Check if socket file already exists. If so, it is probably because
-     * the link is already done in another process of the game.
-     * In this case, we just return immediately.
-     */
-    struct stat st;
-    int result = stat(SOCKET_FILENAME, &st);
-    if (result == 0)
-        return false;
-
-#ifdef __unix__
-    const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
-#elif defined(__APPLE__) && defined(__MACH__)
-    const struct sockaddr_un addr = { sizeof(struct sockaddr_un), AF_UNIX, SOCKET_FILENAME };
-#endif
-    const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
-    {
-        std::cerr << "Couldn't bind client socket." << std::endl;
-        exit(-1);
-    }
-
-    if (listen(tmp_fd, 1))
-    {
-        std::cerr << "Couldn't listen on client socket." << std::endl;
-        exit(-1);
-    }
-
-    if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
-    {
-        std::cerr << "Couldn't accept client connection." << std::endl;
         exit(-1);
     }
 
@@ -134,9 +72,6 @@ bool initSocketGame(void)
         exit(-1);
     }
 #endif
-    
-    close(tmp_fd);
-    return true;
 }
 
 void closeSocket(void)

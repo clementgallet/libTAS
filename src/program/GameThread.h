@@ -28,7 +28,7 @@ namespace GameThread {
      * Because this function eventually calls execl, it does not return.
      * So, it is called from a child process using fork().
      */
-    void launch(Context *context);
+    void launch(Context *context, int sock);
 }
 
 #endif

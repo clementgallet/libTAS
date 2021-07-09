@@ -32,7 +32,7 @@
 #include <unistd.h> // chdir()
 #include <fcntl.h> // O_RDWR, O_CREAT
 
-void GameThread::launch(Context *context)
+void GameThread::launch(Context *context, int sock)
 {
 #ifdef __unix__
     /* Update the LD_LIBRARY_PATH environment variable if the user set one */
@@ -119,6 +119,9 @@ void GameThread::launch(Context *context)
 
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
+
+    /* Pass socket file descriptor to the game */
+    setenv("LIBTAS_SOCKET_FD", std::to_string(sock).c_str(), 1);
 
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;

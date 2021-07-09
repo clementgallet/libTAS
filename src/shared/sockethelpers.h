@@ -23,14 +23,11 @@
 #include <cstddef>
 #include <string>
 
-/* Remove the socket file and return error */
-int removeSocket();
-
-/* Initiate a socket connection with the game */
-bool initSocketProgram(void);
+/* Set socket_fd */
+void setSocket(int sock);
 
 /* Initiate a socket connection with libTAS */
-bool initSocketGame(void);
+void initSocketGame(void);
 
 /* Close the socket connection */
 void closeSocket(void);
