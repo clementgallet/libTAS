@@ -160,6 +160,10 @@ void __attribute__((constructor)) init(void)
         message = receiveMessage();
     }
 
+    if (shared_config.sigint_upon_launch) {
+        raise(SIGINT);
+    }
+
     /* Set the frame count to the initial frame count */
     framecount = shared_config.initial_framecount;
 

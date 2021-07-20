@@ -209,12 +209,32 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     /* Buttons */
     launchButton = new QPushButton(tr("Start"));
-    connect(launchButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
+    connect(launchButton, &QAbstractButton::clicked, this, [this] { MainWindow::slotLaunch(false); });
     disabledWidgetsOnStart.append(launchButton);
 
-    launchGdbButton = new QPushButton(tr("Start and attach gdb"));
-    connect(launchGdbButton, &QAbstractButton::clicked, this, &MainWindow::slotLaunch);
-    disabledWidgetsOnStart.append(launchGdbButton);
+    launchGdbButton = new QToolButton();
+    launchGdbButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+
+    launchGdbAction = new QAction(tr("Launch with GDB"), this);
+    launchLldbAction = new QAction(tr("Launch with LLDB"), this);
+
+    connect(launchGdbAction, &QAction::triggered, this, &MainWindow::slotLaunchGdb);
+    connect(launchLldbAction, &QAction::triggered, this, &MainWindow::slotLaunchLldb);
+
+    /* launchGdbButton is a special case, it's explicitly disabled along with
+     * all the other widgets on launch
+     */
+    //disabledWidgetsOnStart.append(launchGdbButton);
+
+#ifdef __unix__
+    launchGdbButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+    QMenu *launchGdbButtonMenu = new QMenu();
+    launchGdbButton->setMenu(launchGdbButtonMenu);
+
+    launchGdbButtonMenu->addAction(launchGdbAction);
+    launchGdbButtonMenu->addAction(launchLldbAction);
+#endif
 
     stopButton = new QPushButton(tr("Stop"));
     connect(stopButton, &QAbstractButton::clicked, this, &MainWindow::slotStop);
@@ -360,7 +380,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     if (!context->interactive) {
         slotPause(false);
         slotFastForward(true);
-        slotLaunch();
+        slotLaunch(false);
     }
 }
 
@@ -800,6 +820,11 @@ void MainWindow::createMenus()
 
     debugMenu->addSeparator();
 
+    sigintAction = debugMenu->addAction(tr("Raise SIGINT upon game launch (if debugging)"));
+    sigintAction->setCheckable(true);
+
+    debugMenu->addSeparator();
+
     debugMenu->addActions(loggingOutputGroup->actions());
     disabledActionsOnStart.append(loggingOutputGroup->actions());
 
@@ -897,6 +922,8 @@ void MainWindow::updateStatus()
             initialTimeSec->setValue(context->config.sc.initial_time_sec);
             initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
+            launchGdbButton->setEnabled(true);
+
             if (context->config.sc.av_dumping) {
                 context->config.sc.av_dumping = false;
                 configEncodeAction->setEnabled(true);
@@ -928,6 +955,8 @@ void MainWindow::updateStatus()
                 fpsNumField->setEnabled(false);
                 fpsDenField->setEnabled(false);
             }
+
+            launchGdbButton->setEnabled(false);
 
             movieBox->setCheckable(false);
             if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
@@ -1254,6 +1283,15 @@ void MainWindow::updateUIFromConfig()
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
 
+    switch (context->config.debugger) {
+    case Config::DEBUGGER_GDB:
+        launchGdbButton->setDefaultAction(launchGdbAction);
+        break;
+    case Config::DEBUGGER_LLDB:
+        launchGdbButton->setDefaultAction(launchLldbAction);
+        break;
+    }
+
     updateStatusBar();
 }
 
@@ -1279,12 +1317,25 @@ void MainWindow::updateStatusBar()
     }
 }
 
-void MainWindow::slotLaunch()
+void MainWindow::slotLaunchGdb() {
+    context->config.debugger = Config::DEBUGGER_GDB;
+    launchGdbButton->setDefaultAction(launchGdbAction);
+
+    slotLaunch(true);
+}
+
+void MainWindow::slotLaunchLldb() {
+    context->config.debugger = Config::DEBUGGER_LLDB;
+    launchGdbButton->setDefaultAction(launchLldbAction);
+
+    slotLaunch(true);
+}
+
+void MainWindow::slotLaunch(bool attach_gdb)
 {
 
     /* Do we attach gdb ? */
-    QPushButton* button = static_cast<QPushButton*>(sender());
-    context->attach_gdb = (button == launchGdbButton);
+    context->attach_gdb = attach_gdb;
 
     if (context->status != Context::INACTIVE)
         return;
@@ -1306,6 +1357,8 @@ void MainWindow::slotLaunch()
     setListFromRadio(channelGroup, context->config.sc.audio_channels);
 
     setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
+
+    context->config.sc.sigint_upon_launch = context->attach_gdb && sigintAction->isChecked();
 
     context->config.sc.mouse_support = mouseAction->isChecked();
     setListFromRadio(joystickGroup, context->config.sc.nb_controllers);

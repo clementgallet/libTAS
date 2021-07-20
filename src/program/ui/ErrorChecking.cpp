@@ -200,19 +200,29 @@ bool ErrorChecking::checkArchType(Context* context)
 
     /* Check for gdb presence in case of Start and attach gdb */
     if (context->attach_gdb) {
-        std::string cmd = "which gdb";
+        std::string cmd;
+
+        switch (context->config.debugger) {
+        case Config::DEBUGGER_GDB:
+            cmd = "which gdb";
+            break;
+        case Config::DEBUGGER_LLDB:
+            cmd = "which lldb";
+            break;
+        }
+
         FILE *output = popen(cmd.c_str(), "r");
         if (output != NULL) {
             std::array<char,256> buf;
             fgets(buf.data(), buf.size(), output);
             int ret = pclose(output);
             if (ret != 0) {
-                critical(QString("Trying to start a game with attached gdb, but gdb cannot be found"), context->interactive);
+                critical(QString("Trying to start a game with attached debugger, but debugger cannot be found"), context->interactive);
                 return false;
             }
         }
         else {
-            critical(QString("Coundn't popen to locate gdb"), context->interactive);
+            critical(QString("Coundn't popen to locate debugger"), context->interactive);
             return false;
         }
     }
