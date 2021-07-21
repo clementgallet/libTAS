@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Implement SteamInternal_FindOrCreateUserInterface()
+
 ### Changed
 ### Fixed
 

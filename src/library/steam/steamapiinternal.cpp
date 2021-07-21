@@ -30,6 +30,7 @@ DEFINE_ORIG_POINTER(SteamAPI_GetHSteamUser)
 DEFINE_ORIG_POINTER(SteamAPI_GetHSteamPipe)
 DEFINE_ORIG_POINTER(SteamInternal_ContextInit)
 DEFINE_ORIG_POINTER(SteamInternal_CreateInterface)
+DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateUserInterface)
 DEFINE_ORIG_POINTER(_ZN16CSteamAPIContext4InitEv)
 
 HSteamUser SteamAPI_GetHSteamUser()
@@ -56,30 +57,25 @@ HSteamPipe SteamAPI_GetHSteamPipe()
     return true;
 }
 
-void * SteamInternal_ContextInit( void *pContextInitData )
+CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *data )
 {
     DEBUGLOGCALL(LCF_STEAM);
     if (!shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_ContextInit, "steam_api");
-        return orig::SteamInternal_ContextInit(pContextInitData);
+        return orig::SteamInternal_ContextInit(data);
     }
 
-    static CSteamAPIContext context;
-    GlobalNoLog gnl;
-    context.m_pSteamClient = SteamClient();
-    context.m_pSteamUser = SteamUser();
-    context.m_pSteamUserStats = SteamUserStats();
-    context.m_pSteamUtils = SteamUtils();
-    context.m_pSteamRemoteStorage = SteamRemoteStorage();
-    context.m_pSteamApps = SteamApps();
-    context.m_pSteamFriends = SteamFriends();
-    context.m_pSteamScreenshots = SteamScreenshots();
-    context.m_pSteamUGC = SteamUGC();
-    context.m_pSteamMatchmaking = SteamMatchmaking();
-    context.m_pSteamMatchmakingServers = SteamMatchmakingServers();
-    context.m_pSteamHTTP = SteamHTTP();
-    context.m_pSteamNetworking = SteamNetworking();
-    return &context;
+    /* Should be incremented on API/GameServer Init/Shutdown. */
+    const uintptr_t ifaces_stale_cnt = 1;
+    if (data->ifaces_stale_cnt != ifaces_stale_cnt)
+    {
+        if (data->callback)
+            data->callback(&data->ctx);
+    
+        data->ifaces_stale_cnt = ifaces_stale_cnt;
+    }
+    
+    return &data->ctx;
 }
 
 void * SteamInternal_CreateInterface( const char *ver )
@@ -97,6 +93,31 @@ void * SteamInternal_CreateInterface( const char *ver )
      * version checking.  As a quick hack, just lookup the symbol and call it.
      */
     std::string symbol = ver;
+    /* Strip numbers at the end */
+    auto end = symbol.find_last_not_of("0123456789");
+    if (end != std::string::npos)
+        symbol.resize(end + 1);
+    void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
+    if (func)
+        return func();
+    return nullptr;
+}
+
+void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char *version)
+{
+    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamInternal_FindOrCreateUserInterface, "steam_api");
+        return orig::SteamInternal_FindOrCreateUserInterface(steam_user, version);
+    }
+
+    /* The expected return from this function is a pointer to a C++ class with
+     * specific virtual functions.  The format of our argument is the name
+     * of the corresponding C function that has already been hooked to return
+     * the correct value, followed by some numbers that are probably used for
+     * version checking.  As a quick hack, just lookup the symbol and call it.
+     */
+    std::string symbol = version;
     /* Strip numbers at the end */
     auto end = symbol.find_last_not_of("0123456789");
     if (end != std::string::npos)
@@ -128,6 +149,16 @@ bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
     context->m_pSteamMatchmaking = SteamMatchmaking();
     context->m_pSteamMatchmakingServers = SteamMatchmakingServers();
     context->m_pSteamHTTP = SteamHTTP();
+    context->m_pSteamNetworking = SteamNetworking();
+    context->m_pController = SteamController();
+    context->m_pSteamAppList = nullptr;
+    context->m_pSteamMusic = nullptr;
+    context->m_pSteamMusicRemote = nullptr;
+    context->m_pSteamHTMLSurface = nullptr;
+    context->m_pSteamInventory = nullptr;
+    context->m_pSteamVideo = nullptr;
+    context->m_pSteamParentalSettings = nullptr;
+
     return true;
 }
 

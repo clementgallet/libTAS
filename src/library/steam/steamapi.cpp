@@ -309,7 +309,7 @@ void SteamAPI_RunCallbacks()
 {
     DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
-        CCallbackManager::Run();
+        return CCallbackManager::Run();
 
     LINK_NAMESPACE(SteamAPI_RunCallbacks, "steam_api");
     return orig::SteamAPI_RunCallbacks();
@@ -319,7 +319,7 @@ void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_ty
 {
     debuglogstdio(LCF_STEAM, "%s called with type %d", __func__, iCallback);
     if (shared_config.virtual_steam)
-        CCallbackManager::RegisterCallback(pCallback, iCallback);
+        return CCallbackManager::RegisterCallback(pCallback, iCallback);
 
     LINK_NAMESPACE(SteamAPI_RegisterCallback, "steam_api");
     return orig::SteamAPI_RegisterCallback(pCallback, iCallback);
@@ -329,7 +329,7 @@ void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
 {
     DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
-        CCallbackManager::UnregisterCallback(pCallback);
+        return CCallbackManager::UnregisterCallback(pCallback);
 
     LINK_NAMESPACE(SteamAPI_UnregisterCallback, "steam_api");
     return orig::SteamAPI_UnregisterCallback(pCallback);
@@ -339,7 +339,7 @@ void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPIC
 {
     DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
-        CCallbackManager::RegisterApiCallResult(pCallback, hAPICall);
+        return CCallbackManager::RegisterApiCallResult(pCallback, hAPICall);
 
     LINK_NAMESPACE(SteamAPI_RegisterCallResult, "steam_api");
     return orig::SteamAPI_RegisterCallResult(pCallback, hAPICall);
@@ -349,7 +349,7 @@ void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAP
 {
     DEBUGLOGCALL(LCF_STEAM);
     if (shared_config.virtual_steam)
-        CCallbackManager::UnregisterApiCallResult(pCallback, hAPICall);
+        return CCallbackManager::UnregisterApiCallResult(pCallback, hAPICall);
         
     LINK_NAMESPACE(SteamAPI_UnregisterCallResult, "steam_api");
     return orig::SteamAPI_UnregisterCallResult(pCallback, hAPICall);
