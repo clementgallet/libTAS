@@ -6,6 +6,8 @@
 ### Changed
 ### Fixed
 
+* Fix variable RNG seed in Papers Please (#422)
+
 ## [1.4.2] - 2021-07-06
 ### Added
 
