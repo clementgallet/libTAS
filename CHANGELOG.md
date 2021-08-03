@@ -7,6 +7,7 @@
 ### Fixed
 
 * Fix variable RNG seed in Papers Please (#422)
+* Fix some keys with modifiers that are mapped to keys from another layout
 
 ## [1.4.2] - 2021-07-06
 ### Added
