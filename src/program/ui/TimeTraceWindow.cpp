@@ -27,10 +27,7 @@
 #include <QtWidgets/QMessageBox>
 
 #include "TimeTraceWindow.h"
-// #include "MainWindow.h"
-// #include "../ramsearch/CompareEnums.h"
-// #include "../ramsearch/IRamWatchDetailed.h"
-// #include "../ramsearch/RamWatchDetailed.h"
+#include "TimeTraceModel.h"
 
 TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

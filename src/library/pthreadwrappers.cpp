@@ -27,6 +27,7 @@
 #include "backtrace.h"
 #include "hook.h"
 #include "timewrappers.h" // gettimeofday()
+#include "GameHacks.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -140,41 +141,41 @@ static void *pthread_start(void *arg)
 
             debuglogstdio(LCF_THREAD, "End of thread code");
 
+            if (shared_config.recycle_threads) {
 #ifdef __linux__
-            /* Because we recycle this thread, we must unset all TLS values
-             * and call destructors ourselves.  First, we unset the values
-             * from the older, pthread_key_create()-based implementation
-             * of TLS.
-             */
-            clear_pthread_keys();
-            /* Next we deal with the newer linker-based TLS
-             * implementation accessed via thread_local in C11/C++11
-             * and later.  For that, first we need to run any C++
-             * destructors for values in thread-local storage, using
-             * an internal libc function.
-             */
-            __call_tls_dtors();
-            /* Next, we clean up any libc state in thread-local storage,
-             * using an internal libc function.
-             */
-            __libc_thread_freeres();
-            /* Finally, we reset all thread-local storage back to its
-             * initial value, using a third internal libc function.
-             * This is architecture-specific; it works on 32-bit and
-             * 64-bit x86, but not on all Linux architectures.  See
-             * above, where this function is declared.
-             */
-            _dl_allocate_tls_init(thread->pthread_id);
-            /* This has just reset any libTAS thread-local storage
-             * for this thread.  Most libTAS TLS is either transient
-             * anyway, or irrelevant while the thread is waiting
-             * to be recycled.  But one value is important:
-             * we need to fix ThreadManager::current_thread .
-             */
+                /* Because we recycle this thread, we must unset all TLS values
+                 * and call destructors ourselves.  First, we unset the values
+                 * from the older, pthread_key_create()-based implementation
+                 * of TLS.
+                 */
+                clear_pthread_keys();
+                /* Next we deal with the newer linker-based TLS
+                 * implementation accessed via thread_local in C11/C++11
+                 * and later.  For that, first we need to run any C++
+                 * destructors for values in thread-local storage, using
+                 * an internal libc function.
+                 */
+                __call_tls_dtors();
+                /* Next, we clean up any libc state in thread-local storage,
+                 * using an internal libc function.
+                 */
+                __libc_thread_freeres();
+                /* Finally, we reset all thread-local storage back to its
+                 * initial value, using a third internal libc function.
+                 * This is architecture-specific; it works on 32-bit and
+                 * 64-bit x86, but not on all Linux architectures.  See
+                 * above, where this function is declared.
+                 */
+                _dl_allocate_tls_init(thread->pthread_id);
+                /* This has just reset any libTAS thread-local storage
+                 * for this thread.  Most libTAS TLS is either transient
+                 * anyway, or irrelevant while the thread is waiting
+                 * to be recycled.  But one value is important:
+                 * we need to fix ThreadManager::current_thread .
+                 */
+                ThreadManager::setCurrentThread(thread);
 #endif
-
-            ThreadManager::setCurrentThread(thread);
-
+            }
             ThreadManager::threadExit(ret);
 
             /* Thread is now in zombie state until it is detached */
@@ -752,6 +753,14 @@ int pthread_setname_np (const char *name)
         GlobalState::setNoLog(true);
     }
 
+    if (strcmp(name, ".NET Finalizer") == 0) {
+#ifdef __unix__
+        GameHacks::setFinalizerThread(ThreadManager::getThreadTid(target_thread));
+#elif defined(__APPLE__) && defined(__MACH__)
+        GameHacks::setFinalizerThread(ThreadManager::getThreadTid());
+#endif
+    }
+    
     if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
         if ((strcmp(name, "OVERWORLD_LOADE") == 0) ||
             (strcmp(name, "LEVEL_LOADER") == 0) ||

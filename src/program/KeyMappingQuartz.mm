@@ -416,7 +416,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                         keyboard_layout[kc] = char_to_xcb_keycode[t].keysym;
 
                         /* Check if we have a description string of the key */
-                        const char* str = KEYSYM_TO_DESC_MISC(si.value);
+                        const char* str = KEYSYM_TO_DESC_MISC(keyboard_layout[kc]);
                         if (str) {
                             /* Insert key in the misc list */
                             SingleInput si;
@@ -435,7 +435,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                     keyboard_layout[kc] = (ch & 0xff);
                     
                     /* Check if we have a description string of the key */
-                    const char* str = KEYSYM_TO_DESC_LATIN(si.value);
+                    const char* str = KEYSYM_TO_DESC_LATIN(keyboard_layout[kc]);
                     if (str) {
                         /* Insert key in the ascii list */
                         SingleInput si;

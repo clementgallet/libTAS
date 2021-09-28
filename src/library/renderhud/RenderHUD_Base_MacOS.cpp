@@ -26,6 +26,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 //#include "../global.h" // shared_config
+#include "../ScreenCapture.h"
 
 namespace libtas {
 

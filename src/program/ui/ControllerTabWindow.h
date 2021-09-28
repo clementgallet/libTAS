@@ -25,9 +25,10 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
 
-#include "ControllerWidget.h"
 #include "../Context.h"
 #include "../../shared/AllInputs.h"
+
+class ControllerWidget;
 
 class ControllerTabWindow : public QDialog {
     Q_OBJECT

@@ -27,6 +27,8 @@
 #include <stdint.h>
 
 #include "RamWatchEditWindow.h"
+#include "../ramsearch/RamWatch.h"
+#include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
 RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)

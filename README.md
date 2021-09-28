@@ -80,7 +80,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 If you have an amd64 system and you want to run both i386 or amd64 games, you can install libTAS 32-bit library together with the amd64 build. To do that, you can build using `./build.sh --with-i386`, which will produce an additional `libtas32.so` (32-bit) library together with amd64 builds of `libTAS` GUI and `libtas.so` library.
 
-You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, `liblz4-1`, the 32-bit version of the headers for `libavutil`, `libswresample`, and also librairies `libfreetype` and `libfontconfig` for the HUD feature. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
+You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, the 32-bit version of the headers for `libavutil`, `libswresample`, and also librairies `libfreetype` and `libfontconfig` for the HUD feature. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
+
+* Deb: `apt-get install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libavutil-dev:i386 libswresample-dev:i386 libswresample3:i386 libfreetype6:i386 libfontconfig1:i386`
 
 ## Run
 

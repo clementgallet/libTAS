@@ -26,8 +26,8 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 #elif defined(__APPLE__) && defined(__MACH__)
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
 #endif
 
 namespace libtas {

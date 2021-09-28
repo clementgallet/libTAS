@@ -22,7 +22,9 @@
 
 namespace libtas {
 
-static bool unity = false;
+bool GameHacks::unity = false;
+bool GameHacks::coreclr = false;
+pid_t GameHacks::finalizer_pid = 0;
 
 void GameHacks::setUnity()
 {
@@ -33,6 +35,28 @@ void GameHacks::setUnity()
 bool GameHacks::isUnity()
 {
     return unity;
+}
+
+void GameHacks::setCoreclr()
+{
+    debuglogstdio(LCF_HOOK | LCF_ERROR, "   detected coreclr");
+    coreclr = true;
+}
+
+bool GameHacks::hasCoreclr()
+{
+    return coreclr;
+}
+
+void GameHacks::setFinalizerThread(pid_t pid)
+{
+    debuglogstdio(LCF_HOOK | LCF_ERROR, "   set finalizer to %d", pid);
+    finalizer_pid = pid;
+}
+
+pid_t GameHacks::getFinalizerThread()
+{
+    return finalizer_pid;
 }
 
 }

@@ -169,14 +169,24 @@ void KeyMappingXcb::base_keysyms()
     xcb_get_keyboard_mapping_cookie_t keyboard_mapping_cookie = xcb_get_keyboard_mapping(conn, min_keycode, max_keycode - min_keycode + 1);
     xcb_get_keyboard_mapping_reply_t* keyboard_mapping = xcb_get_keyboard_mapping_reply(conn, keyboard_mapping_cookie, nullptr);
     xcb_keysym_t* keyboard_keysyms = xcb_get_keyboard_mapping_keysyms(keyboard_mapping);
+    int keysym_length = xcb_get_keyboard_mapping_keysyms_length(keyboard_mapping);
 
-    for (int kc=0; kc<xcb_get_keyboard_mapping_keysyms_length(keyboard_mapping); kc+=keyboard_mapping->keysyms_per_keycode) {
+    for (int kc=0; kc<keysym_length; kc+=keyboard_mapping->keysyms_per_keycode) {
         for (int k=0; k<keyboard_mapping->keysyms_per_keycode; k++) {
             xcb_keysym_t ks = keyboard_keysyms[kc + k];
 
             if (ks == XCB_NO_SYMBOL) continue;
 
-            keysym_mapping[ks] = keyboard_keysyms[kc];
+            /* Some modifiers switch my azerty layout into qwerty, so we
+             * prioritize keysyms that are mapped to themselves. */
+
+            if (ks == keyboard_keysyms[kc])
+                keysym_mapping[ks] = ks;
+            else {
+                if (keysym_mapping.find(ks) == keysym_mapping.end()) {
+                    keysym_mapping[ks] = keyboard_keysyms[kc];
+                }
+            }
         }
     }
 

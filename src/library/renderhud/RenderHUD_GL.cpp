@@ -60,6 +60,8 @@ DECLARE_ORIG_POINTER(glDeleteBuffers)
 DECLARE_ORIG_POINTER(glDeleteVertexArrays)
 DECLARE_ORIG_POINTER(glDeleteProgram)
 DECLARE_ORIG_POINTER(glEnable)
+DECLARE_ORIG_POINTER(glDisable)
+DECLARE_ORIG_POINTER(glIsEnabled)
 DECLARE_ORIG_POINTER(glBlendFunc)
 
 GLuint RenderHUD_GL::texture = 0;
@@ -121,8 +123,6 @@ void RenderHUD_GL::init()
         GLint res;
 
         /* Get previous active texture */
-        GLint oldTex;
-        orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
         GLint oldActiveTex;
         orig::glGetIntegerv(GL_ACTIVE_TEXTURE, &oldActiveTex);
 
@@ -136,6 +136,12 @@ void RenderHUD_GL::init()
         orig::glGenTextures(1, &texture);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenTextures failed with error %d", error);
+
+        if (oldActiveTex != 0) {
+            orig::glActiveTexture(oldActiveTex);
+            if ((error = orig::glGetError()) != GL_NO_ERROR)
+                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glActiveTexture failed with error %d", error);
+        }
 
         /* Create buffers */
         orig::glGenBuffers(1, &vbo);        
@@ -236,18 +242,6 @@ void RenderHUD_GL::init()
         
     	orig::glDeleteShader(vertexShaderID);
     	orig::glDeleteShader(fragmentShaderID);
-        
-        /* Restore previous active texture */
-        if (oldTex != 0) {
-            orig::glBindTexture(GL_TEXTURE_2D, oldTex);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindTexture failed with error %d", error);
-        }
-        if (oldActiveTex != 0) {
-            orig::glActiveTexture(oldActiveTex);
-            if ((error = orig::glGetError()) != GL_NO_ERROR)
-                debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glActiveTexture failed with error %d", error);
-        }
     }
 }
 
@@ -282,6 +276,8 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     RenderHUD_GL::init();
 
     LINK_NAMESPACE(glEnable, "GL");
+    LINK_NAMESPACE(glDisable, "GL");
+    LINK_NAMESPACE(glIsEnabled, "GL");
     LINK_NAMESPACE(glBlendFunc, "GL");
     LINK_NAMESPACE(glBindTexture, "GL");
     LINK_NAMESPACE(glTexImage2D, "GL");
@@ -297,6 +293,7 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     GLenum error;
     orig::glGetError();
 
+    GLboolean isBlend = orig::glIsEnabled(GL_BLEND);
     orig::glEnable(GL_BLEND);
     orig::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
@@ -391,6 +388,9 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     orig::glUseProgram(oldProgram);
     if ((error = orig::glGetError()) != GL_NO_ERROR)
         debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glUseProgram failed with error %d", error);
+        
+    if (!isBlend)
+        orig::glDisable(GL_BLEND);
 }
 
 }

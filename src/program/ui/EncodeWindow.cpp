@@ -137,7 +137,11 @@ void EncodeWindow::update_config()
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
 
     /* Set video framerate */
-    videoFramerate->setValue(context->config.sc.video_framerate);
+    videoFramerate->setEnabled(context->config.sc.variable_framerate);
+    if (context->config.sc.variable_framerate)
+        videoFramerate->setValue(context->config.sc.video_framerate);
+    else
+        videoFramerate->setValue(0);
 
     if (context->config.ffmpegoptions.empty()) {
         slotUpdate();

@@ -31,8 +31,9 @@
 #include <QtCore/QSortFilterProxyModel>
 #include <memory>
 
-#include "PointerScanModel.h"
 #include "../Context.h"
+
+class PointerScanModel;
 
 class PointerScanWindow : public QDialog {
     Q_OBJECT

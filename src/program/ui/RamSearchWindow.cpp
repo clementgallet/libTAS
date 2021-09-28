@@ -28,6 +28,9 @@
 #include <QtWidgets/QMessageBox>
 
 #include "RamSearchWindow.h"
+#include "RamSearchModel.h"
+#include "RamWatchWindow.h"
+#include "RamWatchEditWindow.h"
 #include "MainWindow.h"
 #include "../ramsearch/CompareEnums.h"
 

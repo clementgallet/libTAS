@@ -25,19 +25,6 @@
 
 namespace libtas {
 
-OVERRIDE HSteamUser SteamAPI_GetHSteamUser();
-OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
-OVERRIDE void * SteamInternal_ContextInit( void *pContextInitData );
-OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
-
-typedef void ISteamAppList;
-typedef void ISteamMusic;
-typedef void ISteamMusicRemote;
-typedef void ISteamHTMLSurface;
-typedef void ISteamInventory;
-typedef void ISteamVideo;
-typedef void ISteamParentalSettings;
-
 // CSteamAPIContext encapsulates the Steamworks API global accessors into
 // a single object. This is DEPRECATED and only remains for compatibility.
 class CSteamAPIContext
@@ -65,6 +52,27 @@ public:
 	ISteamVideo			*m_pSteamVideo;
 	ISteamParentalSettings *m_pSteamParentalSettings;
 };
+
+struct CSteamAPIContextInitData
+{
+	void (*callback)(CSteamAPIContext *ctx);
+	uintptr_t ifaces_stale_cnt;
+	CSteamAPIContext ctx;
+};
+
+OVERRIDE HSteamUser SteamAPI_GetHSteamUser();
+OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
+OVERRIDE CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *pContextInitData );
+OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
+OVERRIDE void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char *version);
+
+typedef void ISteamAppList;
+typedef void ISteamMusic;
+typedef void ISteamMusicRemote;
+typedef void ISteamHTMLSurface;
+typedef void ISteamInventory;
+typedef void ISteamVideo;
+typedef void ISteamParentalSettings;
 
 /* Override method CSteamAPIContext::Init() */
 OVERRIDE bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context);

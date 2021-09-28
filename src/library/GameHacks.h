@@ -20,6 +20,8 @@
 #ifndef LIBTAS_GAMEHACKS_H_INCLUDED
 #define LIBTAS_GAMEHACKS_H_INCLUDED
 
+#include <sys/types.h>
+
 namespace libtas {
 
 class GameHacks
@@ -28,6 +30,23 @@ class GameHacks
         static void setUnity();
 
         static bool isUnity();
+        
+        /* Regsiter that the game linked `libcoreclr.so` library */
+        static void setCoreclr();
+    
+        /* Returns if the game linked `libcoreclr.so` library */
+        static bool hasCoreclr();
+
+        /* Regsiter the pid of the .NET finalizer thread */
+        static void setFinalizerThread(pid_t pid);
+
+        /* Get the pid of the .NET finalizer thread, or 0 */
+        static pid_t getFinalizerThread();
+        
+    private:
+        static bool unity;
+        static bool coreclr;
+        static pid_t finalizer_pid;
 };
 
 }

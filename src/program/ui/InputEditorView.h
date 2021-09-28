@@ -23,9 +23,10 @@
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QMenu>
 
-#include "InputEditorModel.h"
 #include "../Context.h"
 #include "KeyPressedDialog.h"
+
+class InputEditorModel;
 
 class InputEditorView : public QTableView {
     Q_OBJECT

@@ -26,6 +26,7 @@
 #include <QtWidgets/QTabWidget>
 
 #include "InputWindow.h"
+#include "KeyPressedDialog.h"
 
 InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

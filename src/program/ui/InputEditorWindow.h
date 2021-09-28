@@ -23,8 +23,9 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QMainWindow>
 
-#include "InputEditorView.h"
 #include "../Context.h"
+
+class InputEditorView;
 
 class InputEditorWindow : public QMainWindow {
     Q_OBJECT

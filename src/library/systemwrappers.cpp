@@ -51,7 +51,7 @@ DEFINE_ORIG_POINTER(fork)
     void* return_address =  __builtin_return_address(0);
     char** symbols = backtrace_symbols(&return_address, 1);
     if (symbols != nullptr) {
-        if (strstr(symbols[0], "libhl.so"))
+        if (strstr(symbols[0], "libhl.so") || strstr(symbols[0], "PapersPlease(+0x"))
             pid = 1234;
         free(symbols);
     }

@@ -1,6 +1,19 @@
 ## [Unreleased]
 ### Added
 
+* Implement SteamInternal_FindOrCreateUserInterface()
+
+### Changed
+### Fixed
+
+* Fix variable RNG seed in Papers Please (#422)
+* Fix some keys with modifiers that are mapped to keys from another layout
+* Fix ALSA underrun support (fix #426)
+* Fix SDL2 hooking when different library name
+
+## [1.4.2] - 2021-07-06
+### Added
+
 * Add the execution permission if possible
 * Show a specific message when user specify a script as game executable
 * Add lua scripting
@@ -22,6 +35,7 @@
 * Input editor: Prevent users from setting blank input labels
 * Ram Watch: Add intermediate addresses for pointer chain
 * Lua: add line and ellipse drawing
+* Advance time for .NET speed checks (#303)
 
 ### Changed
 

@@ -58,6 +58,8 @@ void Config::save(const std::string& gamepath) {
     }
     general_settings.endArray();
 
+    general_settings.setValue("debugger", debugger);
+
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
@@ -173,6 +175,12 @@ void Config::load(const std::string& gamepath) {
         recent_gamepaths.push_back(path);
     }
     general_settings.endArray();
+
+#ifdef __unix__
+    debugger = general_settings.value("debugger", debugger).toInt();
+#elif defined(__APPLE__) && defined(__MACH__)
+    debugger = DEBUGGER_LLDB;
+#endif
 
     if (gamepath.empty())
         return;

@@ -31,6 +31,7 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QToolButton>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <forward_list>
@@ -40,23 +41,24 @@
 #include "config.h"
 #endif
 
-#include "EncodeWindow.h"
-#include "ExecutableWindow.h"
-#include "InputWindow.h"
-#include "ControllerTabWindow.h"
-#include "GameInfoWindow.h"
-#include "GameSpecificWindow.h"
-#include "RamSearchWindow.h"
-#include "RamWatchWindow.h"
-#include "InputEditorWindow.h"
-#include "OsdWindow.h"
-#include "AnnotationsWindow.h"
-#include "AutoSaveWindow.h"
-#include "TimeTraceWindow.h"
 #include "../GameLoop.h"
 #include "../Context.h"
 
 #include <thread>
+
+class EncodeWindow;
+class InputWindow;
+class ExecutableWindow;
+class ControllerTabWindow;
+class GameInfoWindow;
+class GameSpecificWindow;
+class RamSearchWindow;
+class RamWatchWindow;
+class InputEditorWindow;
+class OsdWindow;
+class AnnotationsWindow;
+class AutoSaveWindow;
+class TimeTraceWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -122,6 +124,7 @@ public:
     QActionGroup *asyncGroup;
 
     QActionGroup *debugStateGroup;
+    QAction *sigintAction;
     QActionGroup *loggingOutputGroup;
     QActionGroup *loggingPrintGroup;
     QActionGroup *loggingExcludeGroup;
@@ -168,7 +171,9 @@ public:
     QSpinBox *initialTimeNsec;
 
     QPushButton *launchButton;
-    QPushButton *launchGdbButton;
+    QToolButton *launchGdbButton;
+    QAction *launchGdbAction;
+    QAction *launchLldbAction;
     QPushButton *stopButton;
 
     QGroupBox *movieBox;
@@ -235,7 +240,9 @@ private slots:
     /* Update framerate values */
     void updateFramerate();
 
-    void slotLaunch();
+    void slotLaunchGdb();
+    void slotLaunchLldb();
+    void slotLaunch(bool attach_gdb);
     void slotStop();
     void slotBrowseGamePath();
     void slotGamePathChanged();

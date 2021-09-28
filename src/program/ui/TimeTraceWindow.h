@@ -27,8 +27,9 @@
 #include <QtCore/QItemSelection>
 #include <memory>
 
-#include "TimeTraceModel.h"
 #include "../Context.h"
+
+class TimeTraceModel;
 
 class TimeTraceWindow : public QDialog {
     Q_OBJECT
