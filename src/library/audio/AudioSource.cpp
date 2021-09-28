@@ -284,10 +284,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                         audioConverter->queueSamples(begSamples, availableSamples);
                     }
 
-                    if (remainingSamples == availableSamples) {
-                        finalIndex = i;
-                        finalPos = loopbuf->loop_point_beg + availableSamples;
-                    }
+                    finalIndex = i;
+                    finalPos = loopbuf->loop_point_beg + availableSamples;
                     remainingSamples -= availableSamples;
                 }
             }
@@ -301,10 +299,8 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                         audioConverter->queueSamples(begSamples, availableSamples);
                     }
 
-                    if (remainingSamples == availableSamples) {
-                        finalIndex = i;
-                        finalPos = availableSamples;
-                    }
+                    finalIndex = i;
+                    finalPos = availableSamples;
                     remainingSamples -= availableSamples;
                 }
             }

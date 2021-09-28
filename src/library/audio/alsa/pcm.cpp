@@ -616,6 +616,11 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
         source->state = AudioSource::SOURCE_PLAYING;
     }
 
+    if (source->state == AudioSource::SOURCE_UNDERRUN) {
+        /* Underrun */
+        return -EPIPE;
+    }
+
     if (source->state != AudioSource::SOURCE_PLAYING) {
         return -EBADFD;
     }
