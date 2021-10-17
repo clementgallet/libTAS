@@ -10,6 +10,7 @@
 * Fix some keys with modifiers that are mapped to keys from another layout
 * Fix ALSA underrun support (fix #426)
 * Fix SDL2 hooking when different library name
+* Update SDL_GetKeyboardState returned value (#440)
 
 ## [1.4.2] - 2021-07-06
 ### Added

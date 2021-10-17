@@ -24,6 +24,7 @@
 #include "SDLEventQueue.h"
 #include "../sleepwrappers.h"
 #include "../GlobalState.h"
+#include "../inputs/sdlkeyboard.h"
 
 namespace libtas {
 
@@ -156,6 +157,17 @@ void pushNativeSDLEvents(void)
 /* Override */ void SDL_PumpEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    
+    /* Update the internal keyboard array */
+    int SDLver = get_sdlversion();
+    if (SDLver == 1) {
+        NOLOGCALL(SDL_GetKeyState(nullptr));
+    }
+
+    if (SDLver == 2) {
+        NOLOGCALL(SDL_GetKeyboardState(nullptr));
+    }
+    
     if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PumpEvents);
         return orig::SDL_PumpEvents();
@@ -243,6 +255,9 @@ void pushNativeSDLEvents(void)
             logEvent(event);
         return ret;
     }
+    
+    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    NOLOGCALL(SDL_PumpEvents());
 
     int SDLver = get_sdlversion();
     if (event) {
@@ -328,6 +343,9 @@ void pushNativeSDLEvents(void)
         return orig::SDL_WaitEvent(event);
     }
 
+    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    NOLOGCALL(SDL_PumpEvents());
+
     struct timespec mssleep = {0, 1000000};
     if (event) {
         while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
@@ -354,6 +372,9 @@ void pushNativeSDLEvents(void)
         LINK_NAMESPACE_SDLX(SDL_WaitEventTimeout);
         return orig::SDL_WaitEventTimeout(event, timeout);
     }
+
+    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    NOLOGCALL(SDL_PumpEvents());
 
     int t;
     struct timespec mssleep = {0, 1000000};
