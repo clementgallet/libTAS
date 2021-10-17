@@ -91,14 +91,22 @@ enum {
      * get_sdlversion in LINK_NAMESPACE_SDLX.  However, dynapi was not
      * introduced until 2.0.2, so we can assume SDL2 for now.
      * 
-     * We don't use the full library name, because it is supposed to be already
+     * We don't use the full library name first, because it is supposed to be already
      * accessible. Some games or frameworks don't use the exact library name.
      */
     LINK_NAMESPACE_FULLNAME(SDL_DYNAPI_entry, "libSDL2");
 
     if (!orig::SDL_DYNAPI_entry) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find the original SDL_DYNAPI_entry function!");
-        return 1;
+        
+        /* We couldn't find the SDL library that is supposed to be used by the
+         * game, so we load the system SDL library instead */
+        debuglogstdio(LCF_SDL | LCF_WARNING, "Could not find the original SDL_DYNAPI_entry function, using the system one");
+        LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
+
+        if (!orig::SDL_DYNAPI_entry) {
+            debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find any SDL_DYNAPI_entry function!");
+            return 1;
+        }
     }
     
     /* Get the original pointers. */
