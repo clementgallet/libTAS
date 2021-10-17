@@ -287,7 +287,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
-    if (!sourcesSDL[dev-1])
+    if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return SDL_AUDIO_STOPPED;
 
     switch(sourcesSDL[dev-1]->state) {
@@ -313,7 +313,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
 /* Override */ void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    if (!sourcesSDL[dev-1])
+    if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return;
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -348,7 +348,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
     debuglogstdio(LCF_SDL | LCF_SOUND, "%s call with %d bytes of data", __func__, len);
 
-    if (!sourcesSDL[dev-1])
+    if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return -1;
 
     if (sourcesSDL[dev-1]->source == AudioSource::SOURCE_CALLBACK) {
@@ -397,7 +397,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
-    if (!sourcesSDL[dev-1])
+    if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return -1;
 
     if (sourcesSDL[dev-1]->source == AudioSource::SOURCE_CALLBACK) {
@@ -415,7 +415,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
 
-    if (!sourcesSDL[dev-1])
+    if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return;
 
     if (sourcesSDL[dev-1]->source == AudioSource::SOURCE_CALLBACK) {
@@ -468,7 +468,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
     debuglogstdio(LCF_SDL | LCF_SOUND, "%s called with dev %d", __func__, dev);
 
-    if (dev == 0 || dev >= MAX_SDL_SOURCES)
+    if (dev < 1 || dev > MAX_SDL_SOURCES)
         return;
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
