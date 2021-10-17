@@ -64,7 +64,7 @@ SaveFile::~SaveFile() {
             ssize_t s;
             do {
                 s = Utils::readAll(fd, tmp_buf, 4096);
-                Utils::writeAll(file_fd, tmp_buf, 4096);
+                Utils::writeAll(file_fd, tmp_buf, s);
             } while(s > 0);
             close(file_fd);
         }

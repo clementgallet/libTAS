@@ -11,6 +11,7 @@
 * Fix ALSA underrun support (fix #426)
 * Fix SDL2 hooking when different library name
 * Update SDL_GetKeyboardState returned value (#440)
+* Fix writing back savefiles on restart (#433)
 
 ## [1.4.2] - 2021-07-06
 ### Added
