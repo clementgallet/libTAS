@@ -67,6 +67,8 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_periods_near)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_periods)
 
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size_min)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size_max)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_time_max)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_time_near)
@@ -89,6 +91,7 @@ DEFINE_ORIG_POINTER(snd_pcm_nonblock)
 DEFINE_ORIG_POINTER(snd_pcm_close)
 DEFINE_ORIG_POINTER(snd_pcm_recover)
 DEFINE_ORIG_POINTER(snd_pcm_reset)
+DEFINE_ORIG_POINTER(snd_pcm_status)
 
 DEFINE_ORIG_POINTER(snd_pcm_mmap_begin)
 DEFINE_ORIG_POINTER(snd_pcm_mmap_commit)
@@ -101,6 +104,7 @@ DEFINE_ORIG_POINTER(snd_pcm_pause)
 DEFINE_ORIG_POINTER(snd_pcm_resume)
 DEFINE_ORIG_POINTER(snd_pcm_wait)
 DEFINE_ORIG_POINTER(snd_pcm_delay)
+DEFINE_ORIG_POINTER(snd_pcm_avail)
 DEFINE_ORIG_POINTER(snd_pcm_avail_update)
 DEFINE_ORIG_POINTER(snd_pcm_rewind)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate)
@@ -118,6 +122,7 @@ DEFINE_ORIG_POINTER(snd_pcm_format_mask_malloc)
 DEFINE_ORIG_POINTER(snd_pcm_format_mask_free)
 DEFINE_ORIG_POINTER(snd_pcm_format_mask_test)
 
+DEFINE_ORIG_POINTER(snd_pcm_bytes_to_frames)
 DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes)
 
 static int get_latency(snd_pcm_t *pcm);
@@ -447,6 +452,21 @@ int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
     return 0;
 }
 
+snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_avail);
+        return orig::snd_pcm_avail(pcm);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
+    if (avail<0)
+        avail = 0;
+    debuglogstdio(LCF_SOUND, "   return %d", avail);
+    return avail;
+}
+
 snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 {
     if (GlobalState::isNative()) {
@@ -501,6 +521,20 @@ int snd_pcm_reset(snd_pcm_t *pcm)
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
     source->setPosition(source->queueSize());
+    DEBUGLOGCALL(LCF_SOUND);
+    return 0;
+}
+
+int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_status);
+        return orig::snd_pcm_status(pcm, status);
+    }
+
+    // int sourceId = reinterpret_cast<intptr_t>(pcm);
+    // auto source = audiocontext.getSource(sourceId);
+    // source->setPosition(source->queueSize());
     DEBUGLOGCALL(LCF_SOUND);
     return 0;
 }
@@ -1129,6 +1163,30 @@ int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm
     return 0;
 }
 
+int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size_min);
+        return orig::snd_pcm_hw_params_get_buffer_size_min(params, val);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = 1024;
+    return 0;
+}
+
+int snd_pcm_hw_params_get_buffer_size_max(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size_max);
+        return orig::snd_pcm_hw_params_get_buffer_size_max(params, val);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+    *val = 4096;
+    return 0;
+}
+
 int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
@@ -1392,6 +1450,20 @@ int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t
         return 1;
 
     return 0;
+}
+
+snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_bytes_to_frames);
+        return orig::snd_pcm_bytes_to_frames(pcm, bytes);
+    }
+
+    debuglogstdio(LCF_SOUND, "%s called with bytes %d", __func__, bytes);
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = audiocontext.getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+    return bytes / buffer->alignSize;
 }
 
 ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)

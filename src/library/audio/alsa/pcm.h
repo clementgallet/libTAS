@@ -54,7 +54,7 @@ OVERRIDE int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *para
 OVERRIDE int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
 OVERRIDE int snd_pcm_prepare(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_reset(snd_pcm_t *pcm);
-    // int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
+OVERRIDE int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
 OVERRIDE int snd_pcm_start(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_drop(snd_pcm_t *pcm);
     // int snd_pcm_drain(snd_pcm_t *pcm);
@@ -65,7 +65,7 @@ OVERRIDE snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp);
 OVERRIDE int snd_pcm_resume(snd_pcm_t *pcm);
     // int snd_pcm_htimestamp(snd_pcm_t *pcm, snd_pcm_uframes_t *avail, snd_htimestamp_t *tstamp);
-    // snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm);
+OVERRIDE snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm);
 OVERRIDE snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm);
     // int snd_pcm_avail_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *availp, snd_pcm_sframes_t *delayp);
     // snd_pcm_sframes_t snd_pcm_rewindable(snd_pcm_t *pcm);
@@ -81,6 +81,8 @@ OVERRIDE int snd_pcm_wait(snd_pcm_t *pcm, int timeout);
     // int snd_pcm_link(snd_pcm_t *pcm1, snd_pcm_t *pcm2);
     // int snd_pcm_unlink(snd_pcm_t *pcm);
 OVERRIDE int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent);
+
+OVERRIDE snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes);
 OVERRIDE ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames);
 
 
@@ -117,6 +119,8 @@ OVERRIDE int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_param
 OVERRIDE int snd_pcm_hw_params_get_periods(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 
 OVERRIDE int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
+OVERRIDE int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
+OVERRIDE int snd_pcm_hw_params_get_buffer_size_max(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
 OVERRIDE int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
 OVERRIDE int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val);
 OVERRIDE int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir);
