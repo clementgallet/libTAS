@@ -23,10 +23,6 @@
 #include "../inputs/inputs.h"
 #include "xwindows.h"
 
-#ifdef LIBTAS_HAS_XINPUT
-#include <X11/extensions/XInput2.h>
-#endif
-
 namespace libtas {
 
 XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false) {}

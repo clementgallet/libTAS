@@ -13,6 +13,7 @@
 * Update SDL_GetKeyboardState returned value (#440)
 * Fix writing back savefiles on restart (#433)
 * Check for invalid SDL audio device (fix #432)
+* Remove unused LIBTAS_HAS_XINPUT which broke XInput opcode (fix #430)
 
 ## [1.4.2] - 2021-07-06
 ### Added
