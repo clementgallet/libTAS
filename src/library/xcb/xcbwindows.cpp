@@ -62,9 +62,18 @@ xcb_create_window_checked (xcb_connection_t *c,
 
     debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
     debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
-    game_info.keyboard |= GameInfo::XCBEVENTS;
-    game_info.mouse |= GameInfo::XCBEVENTS;
-    game_info.tosend = true;
+    
+    /* This is a bit of a hack: only handle xcb events if an non-dummy window
+     * is created. This is needed for ruffle which uses Xlib events, but one
+     * part of the code creates two 1x1 xcb windows (for clipboard?) and
+     * handling both APIs results in mismatch sequence numbers.
+     * This change might break other games.
+     */
+    if (width != 1 || height != 1) {
+        game_info.keyboard |= GameInfo::XCBEVENTS;
+        game_info.mouse |= GameInfo::XCBEVENTS;
+        game_info.tosend = true;        
+    }
 
     /* Add the mask in our event queue */
     if (value_mask & XCB_CW_EVENT_MASK) {
@@ -119,9 +128,11 @@ xcb_create_window (xcb_connection_t *c,
 
     debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
     debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
-    game_info.keyboard |= GameInfo::XCBEVENTS;
-    game_info.mouse |= GameInfo::XCBEVENTS;
-    game_info.tosend = true;
+    if (width != 1 || height != 1) {
+        game_info.keyboard |= GameInfo::XCBEVENTS;
+        game_info.mouse |= GameInfo::XCBEVENTS;
+        game_info.tosend = true;
+    }
 
     /* Add the mask in our event queue */
     if (value_mask & XCB_CW_EVENT_MASK) {
