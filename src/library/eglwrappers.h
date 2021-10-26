@@ -36,6 +36,8 @@ OVERRIDE EGLBoolean eglSwapBuffers( EGLDisplay dpy, EGLSurface surface );
 /* Set the VSync value */
 OVERRIDE EGLBoolean eglSwapInterval (EGLDisplay dpy, EGLint interval);
 
+OVERRIDE EGLBoolean eglBindAPI(EGLenum api);
+
 OVERRIDE EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list);
 
 }

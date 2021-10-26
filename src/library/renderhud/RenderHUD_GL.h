@@ -48,10 +48,13 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
         ~RenderHUD_GL();
 
         /* Initialize texture and fbo */
-        static void init();
+        static void init(bool stateGLES);
 
         /* Deallocate texture and fbo */
         static void fini();
+
+        /* Switch renderer to OpenGL ES */
+        void setGLES(bool stateGLES) {isGLES = stateGLES;}
 
         void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
     private:
@@ -63,6 +66,8 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
         
         static float vertices[20];
         static GLuint indices[6];
+        
+        bool isGLES = false;
 };
 }
 

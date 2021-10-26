@@ -2,6 +2,7 @@
 ### Added
 
 * Implement SteamInternal_FindOrCreateUserInterface()
+* Add shaders for OpenGL ES (#441)
 
 ### Changed
 ### Fixed

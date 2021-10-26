@@ -47,6 +47,7 @@ DEFINE_ORIG_POINTER(eglGetProcAddress)
 DEFINE_ORIG_POINTER(eglMakeCurrent)
 DEFINE_ORIG_POINTER(eglSwapBuffers)
 DEFINE_ORIG_POINTER(eglSwapInterval)
+DEFINE_ORIG_POINTER(eglBindAPI)
 DEFINE_ORIG_POINTER(eglCreateContext)
 
 /* If the game uses the eglGetProcAddress functions to access to a function
@@ -61,6 +62,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(eglMakeCurrent)
     STORE_RETURN_SYMBOL(eglSwapBuffers)
     STORE_RETURN_SYMBOL(eglSwapInterval)
+    STORE_RETURN_SYMBOL(eglBindAPI)
     STORE_RETURN_SYMBOL(eglCreateContext)
 
     return real_pointer;
@@ -101,6 +103,18 @@ EGLBoolean eglMakeCurrent( EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
     return ret;
 }
 
+static EGLenum bindAPI = EGL_OPENGL_ES_API;
+
+EGLBoolean eglBindAPI(EGLenum api)
+{
+    debuglogstdio(LCF_OGL, "%s call with API %d", __func__, api);
+    LINK_NAMESPACE(eglBindAPI, "EGL");
+
+    bindAPI = api;
+
+    return orig::eglBindAPI(api);
+}
+
 EGLBoolean eglSwapBuffers( EGLDisplay dpy, EGLSurface surface )
 {
     LINK_NAMESPACE(eglSwapBuffers, "EGL");
@@ -114,6 +128,7 @@ EGLBoolean eglSwapBuffers( EGLDisplay dpy, EGLSurface surface )
 #ifdef LIBTAS_ENABLE_HUD
     // static RenderHUD_GL renderHUD;
     static RenderHUD_GL renderHUD;
+    renderHUD.setGLES(bindAPI == EGL_OPENGL_ES_API);
     frameBoundary([&] () {orig::eglSwapBuffers(dpy, surface);}, renderHUD);
 #else
     frameBoundary([&] () {orig::eglSwapBuffers(dpy, surface);});
