@@ -74,18 +74,18 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
     return 0;
 }
 
-/* For some reason, those two functions must not be declared by their original name.
+/* For some reason, those functions must not be declared by their original name.
  * This does not matter much, because linking is done with a specific ProcAddr function anyway.
  * So, I'm prefixing them with `my` */
 namespace orig { \
     decltype(&myvkCreateDevice) vkCreateDevice; \
     decltype(&myvkDestroyDevice) vkDestroyDevice; \
+    decltype(&myvkGetDeviceProcAddr) vkGetDeviceProcAddr; \
 }
 
 DEFINE_ORIG_POINTER(vkCreateSwapchainKHR)
 DEFINE_ORIG_POINTER(vkQueuePresentKHR)
 DEFINE_ORIG_POINTER(vkGetInstanceProcAddr)
-DEFINE_ORIG_POINTER(vkGetDeviceProcAddr)
 DEFINE_ORIG_POINTER(vkAcquireNextImageKHR)
 DEFINE_ORIG_POINTER(vkGetPhysicalDeviceMemoryProperties)
 DEFINE_ORIG_POINTER(vkCreateImage)
@@ -123,6 +123,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(vkQueuePresentKHR)
     STORE_RETURN_SYMBOL_CUSTOM(vkCreateDevice)
     STORE_RETURN_SYMBOL_CUSTOM(vkDestroyDevice)
+    STORE_RETURN_SYMBOL_CUSTOM(vkGetDeviceProcAddr)
     STORE_SYMBOL(vkGetPhysicalDeviceMemoryProperties)
     STORE_SYMBOL(vkCreateImage)
     STORE_SYMBOL(vkGetImageMemoryRequirements)
@@ -158,7 +159,7 @@ PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
     return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(pName, reinterpret_cast<void*>(orig::vkGetInstanceProcAddr(instance, pName))));
 }
 
-PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
+PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
     debuglogstdio(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
     LINK_NAMESPACE(vkGetDeviceProcAddr, "vulkan");
