@@ -106,6 +106,9 @@ public:
     /* List of recent existing gamepaths */
     std::list<std::string> recent_gamepaths;
 
+    /* List of recent command-line options */
+    std::list<std::string> recent_args;
+
     /* Do we restart the game when it exits? */
     bool auto_restart = false;
 

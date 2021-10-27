@@ -3,6 +3,7 @@
 
 * Implement SteamInternal_FindOrCreateUserInterface()
 * Add shaders for OpenGL ES (#441)
+* Add history for game command-line arguments
 
 ### Changed
 ### Fixed

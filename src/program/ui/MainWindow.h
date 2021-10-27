@@ -144,7 +144,7 @@ public:
 
     QComboBox *gamePath;
     QPushButton *browseGamePath;
-    QLineEdit *cmdOptions;
+    QComboBox *cmdOptions;
 
     QLineEdit *moviePath;
     QPushButton *browseMoviePath;

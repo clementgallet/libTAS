@@ -44,6 +44,15 @@ void Config::save(const std::string& gamepath) {
     }
     recent_gamepaths.push_front(gamepath);
 
+    /* Save the option in recent options */
+    for (auto iter = recent_args.begin(); iter != recent_args.end(); iter++) {
+        if (iter->compare(gameargs) == 0) {
+            recent_args.erase(iter);
+            break;
+        }
+    }
+    recent_args.push_front(gameargs);
+
     /* Open the general preferences */
     QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
     general_settings.setFallbacksEnabled(false);
@@ -63,6 +72,17 @@ void Config::save(const std::string& gamepath) {
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
+
+    /* Save recent options */
+    settings.remove("recent_args");
+    settings.beginWriteArray("recent_args");
+    i = 0;
+    for (auto& args : recent_args) {
+        settings.setArrayIndex(i++);
+        settings.setValue("args", args.c_str());
+        if (i > 10) break;
+    }
+    settings.endArray();
 
     settings.setValue("gameargs", gameargs.c_str());
     settings.setValue("moviefile", moviefile.c_str());
@@ -188,6 +208,15 @@ void Config::load(const std::string& gamepath) {
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
     settings.setFallbacksEnabled(false);
+
+    size = settings.beginReadArray("recent_args");
+    recent_args.clear();
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+        std::string args = settings.value("args").toString().toStdString();
+        recent_args.push_back(args);
+    }
+    settings.endArray();
 
     gameargs = settings.value("gameargs", "").toString().toStdString();
 

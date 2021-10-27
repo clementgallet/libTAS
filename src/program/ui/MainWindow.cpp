@@ -140,7 +140,10 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     disabledWidgetsOnStart.append(browseGamePath);
 
     /* Command-line options */
-    cmdOptions = new QLineEdit();
+    cmdOptions = new QComboBox();
+    cmdOptions->setMinimumWidth(400);
+    cmdOptions->setEditable(true);
+    cmdOptions->setInsertPolicy(QComboBox::NoInsert);
     disabledWidgetsOnStart.append(cmdOptions);
 
     /* Movie File */
@@ -1227,7 +1230,12 @@ void MainWindow::updateUIFromConfig()
     gamePath->setEditText(context->gamepath.c_str());
     connect(gamePath, &QComboBox::editTextChanged, this, &MainWindow::slotGamePathChanged);
 
-    cmdOptions->setText(context->config.gameargs.c_str());
+    cmdOptions->clear();
+    for (const auto& args : context->config.recent_args) {
+        cmdOptions->addItem(QString(args.c_str()));
+    }
+    cmdOptions->setEditText(context->config.gameargs.c_str());
+    
     moviePath->setText(context->config.moviefile.c_str());
 
     movieBox->setChecked(!(context->config.sc.recording == SharedConfig::NO_RECORDING));
@@ -1388,7 +1396,17 @@ void MainWindow::slotLaunch(bool attach_gdb)
     setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
     setMaskFromCheckboxes(savestateGroup, context->config.sc.savestate_settings);
 
-    context->config.gameargs = cmdOptions->text().toStdString();
+    context->config.gameargs = cmdOptions->currentText().toStdString();
+
+    /* Save the config */
+    context->config.save(context->gamepath);
+
+    /* Update the game args list */
+    cmdOptions->clear();
+    for (const auto& args : context->config.recent_args) {
+        cmdOptions->addItem(QString(args.c_str()));
+    }
+    cmdOptions->setEditText(context->config.gameargs.c_str());
 
     /* Check that there might be a thread from a previous game execution */
     if (game_thread.joinable())
