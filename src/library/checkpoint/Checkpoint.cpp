@@ -643,7 +643,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             }
             else {
                 /* We could not open the file, map the section as anonymous */
-                saved_area->flags = Area::AREA_ANON;
+                saved_area->flags &= ~Area::AREA_FILE;
+                saved_area->flags |= Area::AREA_ANON;
+                saved_area->offset = 0;
             }
         }
 
