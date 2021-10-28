@@ -72,7 +72,7 @@ int AllInputs::getInput(const SingleInput &si) const
     if (si.type == SingleInput::IT_POINTER_MODE) {
         return pointer_mode;
     }
-    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
+    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5) {
         return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
     }
 
@@ -149,7 +149,7 @@ void AllInputs::setInput(const SingleInput &si, int value)
     if (si.type == SingleInput::IT_POINTER_MODE) {
         pointer_mode = value;
     }
-    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B3) {
+    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5) {
         if (value)
             pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
         else

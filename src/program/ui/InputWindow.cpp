@@ -72,6 +72,7 @@ InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context
     tabInputs->addTab(inputTable[KeyMapping::INPUTLIST_KEYBOARD_LATIN], tr("Common keys"));
     tabInputs->addTab(inputTable[KeyMapping::INPUTLIST_KEYBOARD_MISC], tr("Misc keys"));
     tabInputs->addTab(inputTable[KeyMapping::INPUTLIST_FLAG], tr("Flags"));
+    tabInputs->addTab(inputTable[KeyMapping::INPUTLIST_MOUSE], tr("Mouse"));
     tabInputs->addTab(inputTable[KeyMapping::INPUTLIST_CONTROLLER], tr("Controllers"));
 
     /* Fill hotkey list */

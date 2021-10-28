@@ -131,6 +131,7 @@ class KeyMapping {
             INPUTLIST_KEYBOARD_LATIN,
             INPUTLIST_KEYBOARD_MISC,
             INPUTLIST_FLAG,
+            INPUTLIST_MOUSE,
             INPUTLIST_CONTROLLER,
             INPUTLIST_HIDDEN,
             INPUTLIST_SIZE,

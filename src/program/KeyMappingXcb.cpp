@@ -352,6 +352,19 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
                     ai.flags |= (1 << si.value);
                 }
 
+                if (sc.mouse_support) {
+                    if (si.type == SingleInput::IT_POINTER_B1)
+                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+                    if (si.type == SingleInput::IT_POINTER_B2)
+                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+                    if (si.type == SingleInput::IT_POINTER_B3)
+                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+                    if (si.type == SingleInput::IT_POINTER_B4)
+                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+                    if (si.type == SingleInput::IT_POINTER_B5)
+                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+                }
+
                 if (si.inputTypeIsController()) {
                     /* Key is mapped to a game controller */
 
@@ -414,7 +427,6 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
         }
 
         /* We only care about the five mouse buttons */
-        ai.pointer_mask = 0;
         if (pointer_reply->mask & XCB_BUTTON_MASK_1)
             ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
         if (pointer_reply->mask & XCB_BUTTON_MASK_2)
