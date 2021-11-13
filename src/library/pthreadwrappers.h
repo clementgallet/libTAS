@@ -113,7 +113,7 @@ OVERRIDE void pthread_testcancel (void);
 
    This function is a cancellation point and therefore not marked with
    __THROW.  */
-// OVERRIDE int sem_wait (sem_t *sem);
+OVERRIDE int sem_wait (sem_t *sem);
 
 /* Similar to `sem_wait' but wait only until ABSTIME.
 

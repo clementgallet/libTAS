@@ -535,7 +535,7 @@ void SaveStateManager::suspendThreads()
     ThreadManager::unlockList();
 
     for (int i = 0; i < numThreads; i++) {
-        sem_wait(&semNotifyCkptThread);
+        NATIVECALL(sem_wait(&semNotifyCkptThread));
     }
 
     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "%d threads were suspended", numThreads);
@@ -584,7 +584,7 @@ void SaveStateManager::stopThisThread(int signum)
 
             /* Tell the checkpoint thread that we're all saved away */
             MYASSERT(ThreadManager::updateState(current_thread, ThreadInfo::ST_SUSPENDED, ThreadInfo::ST_SUSPINPROG))
-            sem_post(&semNotifyCkptThread);
+            NATIVECALL(sem_post(&semNotifyCkptThread));
 
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
             debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
@@ -627,17 +627,17 @@ void SaveStateManager::waitForAllRestored(ThreadInfo *thread)
 {
     if (thread->state == ThreadInfo::ST_CKPNTHREAD) {
         for (int i = 0; i < numThreads; i++) {
-            sem_wait(&semNotifyCkptThread);
+            NATIVECALL(sem_wait(&semNotifyCkptThread));
         }
 
         /* If this was last of all, wake everyone up */
         for (int i = 0; i < numThreads; i++) {
-            sem_post(&semWaitForCkptThreadSignal);
+            NATIVECALL(sem_post(&semWaitForCkptThreadSignal));
         }
     }
     else {
-        sem_post(&semNotifyCkptThread);
-        sem_wait(&semWaitForCkptThreadSignal);
+        NATIVECALL(sem_post(&semNotifyCkptThread));
+        NATIVECALL(sem_wait(&semWaitForCkptThreadSignal));
     }
 }
 

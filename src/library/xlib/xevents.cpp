@@ -21,6 +21,8 @@
 #include "xevents.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "../GameHacks.h"
+#include "../frame.h"
 #include "XlibEventQueueList.h"
 #include "xatom.h"
 #include "xdisplay.h" // x11::gameDisplays
@@ -73,6 +75,14 @@ static Bool isEventFiltered (XEvent *event) {
                 XConfigureEvent* xce = reinterpret_cast<XConfigureEvent*>(event);
                 xce->x = 0;
                 xce->y = 0;
+            }
+            /* We need to filter this event on Unity. Without this, moving the
+             * game window makes inputs stop registering. We still need this
+             * on the first frame though.  */
+            if (GameHacks::isUnity()) {
+                if (framecount == 0)
+                    return False;
+                return True;                
             }
             return False;
         case ClientMessage:

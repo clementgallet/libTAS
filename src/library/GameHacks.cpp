@@ -37,6 +37,22 @@ bool GameHacks::isUnity()
     return unity;
 }
 
+static const std::ptrdiff_t unity_loading_threads[] = {
+    -9535, -9456, 801, 777, // version 5.4.3f1
+    -12625, -12493, 1236, -685, // version 2017.4.10f1
+};
+
+bool GameHacks::isUnityLoadingThread(std::ptrdiff_t routine_id)
+{
+    if (!unity) return false;
+    const int n = sizeof(unity_loading_threads) / sizeof(unity_loading_threads[0]);
+    for (int i = 0; i < n; i++)
+        if (routine_id == unity_loading_threads[i])
+            return true;
+
+    return false;
+}
+
 void GameHacks::setCoreclr()
 {
     debuglogstdio(LCF_HOOK | LCF_ERROR, "   detected coreclr");

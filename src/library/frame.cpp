@@ -42,6 +42,7 @@
 #include "BusyLoopDetection.h"
 #include "audio/AudioContext.h"
 #include "hook.h"
+#include "GameHacks.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -212,6 +213,10 @@ void frameBoundary(std::function<void()> draw)
 
     if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
         ThreadSync::detWait();
+    }
+    
+    if (GameHacks::isUnity()) {
+        ThreadSync::detWait();        
     }
 
     /* Update the deterministic timer, sleep if necessary */

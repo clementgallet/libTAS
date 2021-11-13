@@ -220,6 +220,9 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
     thread->initial_owncode = GlobalState::isOwnCode();
     thread->initial_nolog = GlobalState::isNoLog();
 
+    thread->syncCount = 0;
+    thread->syncOldCount = 0;
+    
     if (!isRecycled) {
         thread->pthread_id = 0;
         thread->tid = 0;

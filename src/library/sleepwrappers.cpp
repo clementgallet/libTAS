@@ -93,7 +93,12 @@ DEFINE_ORIG_POINTER(sched_yield)
             }
             free(symbols);
         }
-        detTimer.addDelay(ts);
+        
+        /* Unity games may wait on loading threads with a 2 ms sleep call */
+        if (GameHacks::isUnity() && usec == 2000) {}
+        else
+            detTimer.addDelay(ts);
+     
         NATIVECALL(sched_yield());
         return 0;
     }

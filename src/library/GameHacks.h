@@ -21,6 +21,7 @@
 #define LIBTAS_GAMEHACKS_H_INCLUDED
 
 #include <sys/types.h>
+#include <cstddef>
 
 namespace libtas {
 
@@ -31,6 +32,8 @@ class GameHacks
 
         static bool isUnity();
         
+        static bool isUnityLoadingThread(std::ptrdiff_t routine_id);
+
         /* Regsiter that the game linked `libcoreclr.so` library */
         static void setCoreclr();
     

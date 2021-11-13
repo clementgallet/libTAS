@@ -120,7 +120,7 @@ static void *pthread_start(void *arg)
             ThreadManager::update(thread);
             ThreadSync::decrementUninitializedThreadCount();
 
-            debuglogstdio(LCF_THREAD, "Beginning of thread code %p", thread->routine_id);
+            debuglogstdio(LCF_THREAD, "Beginning of thread code %td", thread->routine_id);
 
             /* We need to handle the case where the thread calls pthread_exit to
              * terminate. Because we recycle thread routines, we must continue
@@ -637,15 +637,28 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     return orig::pthread_testcancel();
 }
 
-// /* Override */ int sem_wait (sem_t *sem)
-// {
-//     LINK_NAMESPACE(sem_wait, "pthread");
-//     if (GlobalState::isNative())
-//         return orig::sem_wait(sem);
-//
-//     debuglogstdio(LCF_THREAD | LCF_WAIT, "sem_wait call with %p", sem);
-//     return orig::sem_wait(sem);
-// }
+/* Override */ int sem_wait (sem_t *sem)
+{
+    LINK_NAMESPACE(sem_wait, "pthread");
+    if (GlobalState::isNative())
+        return orig::sem_wait(sem);
+
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    bool isWaitThread = GameHacks::isUnityLoadingThread(thread->routine_id);
+
+    if (isWaitThread) {
+        ThreadSync::detSignal(true);
+
+        debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
+        int ret = orig::sem_wait(sem);
+
+        ThreadSync::detInit();
+        return ret;
+    }
+
+    debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
+    return orig::sem_wait(sem);
+}
 
 /* Override */ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
