@@ -48,6 +48,8 @@ OVERRIDE int glXSwapIntervalMESA (unsigned int interval);
 
 OVERRIDE int glXGetSwapIntervalMESA(void);
 
+OVERRIDE const char* glXQueryExtensionsString(Display* dpy, int screen);
+
 /* Returns an attribute assoicated with a GLX drawable */
 OVERRIDE void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value);
 

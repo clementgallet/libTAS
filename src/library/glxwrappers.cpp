@@ -25,6 +25,7 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
+#include "GameHacks.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
@@ -63,6 +64,7 @@ DEFINE_ORIG_POINTER(glXSwapIntervalEXT)
 DEFINE_ORIG_POINTER(glXSwapIntervalSGI)
 DEFINE_ORIG_POINTER(glXSwapIntervalMESA)
 DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA)
+DEFINE_ORIG_POINTER(glXQueryExtensionsString)
 DEFINE_ORIG_POINTER(glXQueryDrawable)
 DEFINE_ORIG_POINTER(glXCreateContextAttribsARB)
 DEFINE_ORIG_POINTER(glXDestroyContext)
@@ -269,6 +271,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_RETURN_SYMBOL(glXSwapIntervalMESA)
     STORE_RETURN_SYMBOL(glXGetSwapIntervalMESA)
     STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
+    STORE_RETURN_SYMBOL(glXQueryExtensionsString)
     STORE_RETURN_SYMBOL(glXCreateContextAttribsARB)
     STORE_RETURN_SYMBOL(glXDestroyContext)
 
@@ -467,7 +470,9 @@ int glXSwapIntervalSGI (int interval)
         return orig::glXSwapIntervalSGI(interval);
     }
     else {
-        return orig::glXSwapIntervalSGI(0);
+        int ret = orig::glXSwapIntervalSGI(1);
+        debuglogstdio(LCF_OGL, "   ret %d", ret);
+        return ret;
     }
 }
 
@@ -485,14 +490,27 @@ int glXSwapIntervalMESA (unsigned int interval)
     else {
         return orig::glXSwapIntervalMESA(0);
     }
-    }
+}
 
 int glXGetSwapIntervalMESA(void)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
     return swapInterval;
 }
 
+const char* glXQueryExtensionsString(Display* dpy, int screen)
+{
+    DEBUGLOGCALL(LCF_OGL);
+
+    /* Unity has different behaviors depending on the GLX extensions present,
+     * at least for GLX_SGI_swap_control. Returning an empty string works fine. */
+    if (GameHacks::isUnity())
+        return "\0";
+
+    LINK_NAMESPACE(glXQueryExtensionsString, "GL");
+    return orig::glXQueryExtensionsString(dpy, screen);
+}
+    
 void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value)
 {
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
