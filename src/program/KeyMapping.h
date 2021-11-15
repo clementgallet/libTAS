@@ -37,6 +37,8 @@ QDataStream &operator<<(QDataStream &out, const SingleInput &obj);
 /* Load the content of the struct from the stream */
 QDataStream &operator>>(QDataStream &in, SingleInput &obj);
 
+/* NOTE: Only append more hotkeys at the end, otherwise it breaks the config
+ * hotkey mappings. */
 typedef int HotKeyType; enum
 {
     HOTKEY_PLAYPAUSE, // Switch from play to pause of the game
@@ -75,6 +77,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADBRANCH8,
     HOTKEY_LOADBRANCH9,
     HOTKEY_LOADBRANCH_BACKTRACK,
+    HOTKEY_TOGGLE_FASTFORWARD, // Toggle fastforward
     HOTKEY_LEN
 };
 

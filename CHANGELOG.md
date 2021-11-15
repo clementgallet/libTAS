@@ -5,6 +5,7 @@
 * Add shaders for OpenGL ES (#441)
 * Add history for game command-line arguments
 * Support binding keys to mouse buttons
+* Add a toggle fast-forward hotkey
 
 ### Changed
 ### Fixed

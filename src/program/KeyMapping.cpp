@@ -48,6 +48,7 @@ KeyMapping::KeyMapping(void* c)
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Pause}, HOTKEY_PLAYPAUSE, "Play/Pause"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_v}, HOTKEY_FRAMEADVANCE, "Frame Advance"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_Tab}, HOTKEY_FASTFORWARD, "Fast-forward"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_FASTFORWARD, "Toggle fast-forward"});
     hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_READWRITE, "Toggle Read/Write"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F1 | XK_Shift_Flag}, HOTKEY_SAVESTATE1, "Save State 1"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F2 | XK_Shift_Flag}, HOTKEY_SAVESTATE2, "Save State 2"});

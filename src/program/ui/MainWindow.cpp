@@ -1575,8 +1575,17 @@ void MainWindow::slotPause(bool checked)
     context->config.sc_modified = true;\
 }\
 
-
-BOOLSLOT(slotFastForward, context->config.sc.fastforward)
+void MainWindow::slotFastForward(bool checked)
+{
+    if (context->status == Context::INACTIVE) {
+        /* If the game is inactive, set the value directly */
+        context->config.sc.fastforward = checked;
+    }
+    else {
+        /* Else, let the game thread set the value */
+        context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_FASTFORWARD);
+    }
+}
 
 void MainWindow::slotMovieEnable(bool checked)
 {
