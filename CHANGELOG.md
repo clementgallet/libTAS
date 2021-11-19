@@ -7,6 +7,7 @@
 * Support binding keys to mouse buttons
 * Add a toggle fast-forward hotkey
 * Implements alGetString() (#447)
+* snd_pcm_recover() now supports underrun
 
 ### Changed
 ### Fixed

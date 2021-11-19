@@ -508,7 +508,18 @@ int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
-    return 0;
+
+    if (err == -EPIPE) {
+        int sourceId = reinterpret_cast<intptr_t>(pcm);
+        auto source = audiocontext.getSource(sourceId);
+
+        if (source->state == AudioSource::SOURCE_UNDERRUN)
+            source->state = AudioSource::SOURCE_PREPARED;
+        
+        return 0;
+    }
+    
+    return err;
 }
 
 int snd_pcm_reset(snd_pcm_t *pcm)
