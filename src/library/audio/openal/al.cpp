@@ -28,6 +28,21 @@
 
 namespace libtas {
 
+const ALchar* alGetString(ALenum param)
+{
+    switch(param) {
+        case AL_VENDOR:
+            return "libTAS_AL_vendor";
+        case AL_VERSION:
+            return "libTAS_AL_version";
+        case AL_RENDERER:
+            return "libTAS_AL_renderer";
+        case AL_EXTENSIONS:
+            return "";
+    }
+    return "";
+}
+
 ALenum alError;
 void alSetError(ALenum error)
 {

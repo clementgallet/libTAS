@@ -420,6 +420,23 @@ typedef void ALvoid;
 /*** OpenAL functions ***/
 namespace libtas {
 
+/** Renderer State management. */
+// AL_API void AL_APIENTRY alEnable(ALenum capability);
+// AL_API void AL_APIENTRY alDisable(ALenum capability);
+// AL_API ALboolean AL_APIENTRY alIsEnabled(ALenum capability);
+
+/** State retrieval. */
+OVERRIDE const ALchar* alGetString(ALenum param);
+// AL_API void AL_APIENTRY alGetBooleanv(ALenum param, ALboolean *values);
+// AL_API void AL_APIENTRY alGetIntegerv(ALenum param, ALint *values);
+// AL_API void AL_APIENTRY alGetFloatv(ALenum param, ALfloat *values);
+// AL_API void AL_APIENTRY alGetDoublev(ALenum param, ALdouble *values);
+// AL_API ALboolean AL_APIENTRY alGetBoolean(ALenum param);
+// AL_API ALint AL_APIENTRY alGetInteger(ALenum param);
+// AL_API ALfloat AL_APIENTRY alGetFloat(ALenum param);
+// AL_API ALdouble AL_APIENTRY alGetDouble(ALenum param);
+
+
 OVERRIDE ALenum alGetError(ALvoid);
 void alSetError(ALenum error);
 

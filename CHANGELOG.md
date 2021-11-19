@@ -6,6 +6,7 @@
 * Add history for game command-line arguments
 * Support binding keys to mouse buttons
 * Add a toggle fast-forward hotkey
+* Implements alGetString() (#447)
 
 ### Changed
 ### Fixed
