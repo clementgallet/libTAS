@@ -25,6 +25,7 @@
 #include "wine/wined3d.h"
 #include "wine/user32.h"
 #include "wine/kernel32.h"
+#include "../external/elfhacks.h"
 #endif
 #include <cstring>
 #include <set>
@@ -68,6 +69,58 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
+/* Find the address of dlopen and dlsym symbols */
+static void get_dlfct_symbols()
+{
+#ifdef __unix__
+    /* To access the real dl functions, we use the fact that dlsym
+     * calls internally _dl_sym. */
+    if (_dl_sym) {
+        orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
+        orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
+    }
+    else {
+        /* If _dl_sym is not available (such as with glibc >= 2.34), find the
+         * symbols manually by parsing the loaded library */
+        /* Code taken from MangoHud: <https://github.com/flightlessmango/MangoHud> */
+        const char* libs[] = {
+#if defined(__GLIBC__)
+            "*libdl.so*",
+#endif
+            "*libc.so*",
+            "*libc.*.so*",
+        };
+
+        for (size_t i = 0; i < sizeof(libs) / sizeof(*libs); i++)
+        {
+            eh_obj_t libdl;
+            int ret = eh_find_obj(&libdl, libs[i]);
+            if (ret)
+                continue;
+
+            eh_find_sym(&libdl, "dlopen", (void **) &orig::dlopen);
+            eh_find_sym(&libdl, "dlsym", (void **) &orig::dlsym);
+            eh_destroy_obj(&libdl);
+
+            if (orig::dlopen && orig::dlsym)
+                break;
+            orig::dlopen = nullptr;
+            orig::dlsym = nullptr;
+        }
+    }
+#elif defined(__APPLE__) && defined(__MACH__)
+    /* Using the convenient function to locate a dyld function pointer */
+    dyld_func_lookup_helper("__dyld_dlopen", reinterpret_cast<void**>(&orig::dlopen));
+    dyld_func_lookup_helper("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
+#endif
+
+    if (!orig::dlopen && !orig::dlsym)
+    {
+        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not get dl function symbols");
+        exit(1);
+    }
+}
+
 #if defined(__APPLE__) && defined(__MACH__)
 /* dlopen_from is like dlopen, except it takes an extra argument specifying the "true" caller address.
  * it is marked as weak so that libTAS will still work if it's not present. */
@@ -78,14 +131,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     void *const callerAddr = __builtin_extract_return_addr(__builtin_return_address(0));
 
     if (!orig::dlopen) {
-#ifdef __unix__
-        /* To access the real dlopen function, we use the fact that dlsym
-         * calls internally _dl_sym. */
-        orig::dlopen = reinterpret_cast<decltype(orig::dlopen)>(_dl_sym(RTLD_NEXT, "dlopen", reinterpret_cast<void*>(dlopen)));
-#elif defined(__APPLE__) && defined(__MACH__)
-        /* Using the convenient function to locate a dyld function pointer */
-        dyld_func_lookup_helper("__dyld_dlopen", reinterpret_cast<void**>(&orig::dlopen));
-#endif
+        get_dlfct_symbols();
     }
 
     if (GlobalState::isNative()) {
@@ -233,17 +279,7 @@ void *find_sym(const char *name, bool original) {
 
 void *dlsym(void *handle, const char *name) __THROW {
     if (!orig::dlsym) {
-#ifdef __unix__
-        /* Again, we use the internal `_dl_sym` function to access to the
-         * location of the real `dlsym` function. This may seems weird, and is
-         * also implementation-dependant, but it is simple. `_dl_sym` does not
-         * have error-checking so we only use it here. */
-        orig::dlsym = reinterpret_cast<decltype(orig::dlsym)>(_dl_sym(RTLD_NEXT, "dlsym", reinterpret_cast<void*>(dlsym)));
-#elif defined(__APPLE__) && defined(__MACH__)
-        /* Using the convenient function to locate a dyld function pointer */
-        dyld_func_lookup_helper("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
-#endif
-
+        get_dlfct_symbols();
     }
 
     /* dlsym() does some work besides the actual function, and that may call

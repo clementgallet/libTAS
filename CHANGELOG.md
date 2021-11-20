@@ -9,6 +9,7 @@
 * Implements alGetString() (#447)
 * snd_pcm_recover() now supports underrun
 * Add interface to SteamClient, and add v020
+* Add another method to find dlfct symbols (#435)
 
 ### Changed
 ### Fixed

@@ -169,7 +169,8 @@ libtas_so_SOURCES = \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
-    ../external/lz4.cpp
+    ../external/lz4.cpp \
+    ../external/elfhacks.cpp	
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
 libtas_so_CXXFLAGS += -DSOCKET_LOG
