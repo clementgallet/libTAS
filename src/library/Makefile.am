@@ -120,7 +120,13 @@ libtas_so_SOURCES = \
     steam/CCallback.cpp \
     steam/CCallbackManager.cpp \
     steam/isteamapps.cpp \
-    steam/isteamclient.cpp \
+    steam/isteamclient/isteamclient.cpp \
+    steam/isteamclient/isteamclient006.cpp \
+    steam/isteamclient/isteamclient012.cpp \
+    steam/isteamclient/isteamclient014.cpp \
+    steam/isteamclient/isteamclient016.cpp \
+    steam/isteamclient/isteamclient017.cpp \
+    steam/isteamclient/isteamclient020.cpp \
     steam/isteamcontroller.cpp \
     steam/isteamfriends.cpp \
     steam/isteamgamecoordinator.cpp \

@@ -21,7 +21,7 @@
 #define LIBTAS_STEAMGAMESERVER_H_INCL
 
 #include "../global.h"
-#include "isteamclient.h"
+#include "isteamclient/isteamclient.h"
 #include "isteamuser.h"
 #include "isteamutils.h"
 #include "isteamapps.h"

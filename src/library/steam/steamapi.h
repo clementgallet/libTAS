@@ -21,7 +21,7 @@
 #define LIBTAS_STEAMAPI_H_INCL
 
 #include "../global.h"
-#include "isteamclient.h"
+#include "isteamclient/isteamclient.h"
 #include "isteamcontroller.h"
 #include "isteamuser.h"
 #include "isteamuserstats.h"
@@ -82,7 +82,6 @@ OVERRIDE void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICal
 OVERRIDE void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall );
 
 
-OVERRIDE ISteamClient *SteamClient();
 OVERRIDE ISteamController *SteamController();
 OVERRIDE ISteamUserStats *SteamUserStats();
 OVERRIDE ISteamUser *SteamUser();

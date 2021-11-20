@@ -14,7 +14,7 @@
 #include "isteamutils.h"
 #include "isteamremotestorage/isteamremotestorage.h"
 #include "isteamapps.h"
-#include "isteamclient.h"
+#include "isteamclient/isteamclient.h"
 #include "isteamfriends.h"
 #include "isteamscreenshots.h"
 #include "isteamugc.h"
@@ -24,6 +24,14 @@
 #include "isteamnetworking.h"
 
 namespace libtas {
+
+typedef void ISteamAppList;
+typedef void ISteamMusic;
+typedef void ISteamMusicRemote;
+typedef void ISteamHTMLSurface;
+typedef void ISteamInventory;
+typedef void ISteamVideo;
+typedef void ISteamParentalSettings;
 
 // CSteamAPIContext encapsulates the Steamworks API global accessors into
 // a single object. This is DEPRECATED and only remains for compatibility.
@@ -65,14 +73,6 @@ OVERRIDE HSteamPipe SteamAPI_GetHSteamPipe();
 OVERRIDE CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *pContextInitData );
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 OVERRIDE void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char *version);
-
-typedef void ISteamAppList;
-typedef void ISteamMusic;
-typedef void ISteamMusicRemote;
-typedef void ISteamHTMLSurface;
-typedef void ISteamInventory;
-typedef void ISteamVideo;
-typedef void ISteamParentalSettings;
 
 /* Override method CSteamAPIContext::Init() */
 OVERRIDE bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context);

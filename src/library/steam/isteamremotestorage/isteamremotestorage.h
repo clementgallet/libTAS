@@ -28,9 +28,9 @@ struct ISteamRemoteStorage
 	} vtbl;
 };
 
-struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version);
+ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version);
 void SteamRemoteStorage_set_version(const char *version);
-OVERRIDE struct ISteamRemoteStorage *SteamRemoteStorage(void);
+OVERRIDE ISteamRemoteStorage *SteamRemoteStorage(void);
 
 }
 

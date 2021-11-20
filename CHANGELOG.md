@@ -8,6 +8,7 @@
 * Add a toggle fast-forward hotkey
 * Implements alGetString() (#447)
 * snd_pcm_recover() now supports underrun
+* Add interface to SteamClient, and add v020
 
 ### Changed
 ### Fixed
