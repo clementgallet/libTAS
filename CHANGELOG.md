@@ -22,6 +22,7 @@
 * Remove unused LIBTAS_HAS_XINPUT which broke XInput opcode (fix #430)
 * Don't handle xcb events when 1x1 windows are created (#441)
 * Fix flags when restoring a file mapping (#445)
+* Fix some GL OSD black rectangle (#444)
 
 ## [1.4.2] - 2021-07-06
 ### Added

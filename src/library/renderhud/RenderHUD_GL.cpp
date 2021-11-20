@@ -30,6 +30,7 @@ DECLARE_ORIG_POINTER(glGetIntegerv)
 DECLARE_ORIG_POINTER(glGenTextures)
 DECLARE_ORIG_POINTER(glDeleteTextures)
 DECLARE_ORIG_POINTER(glBindTexture)
+DECLARE_ORIG_POINTER(glBindSampler)
 DECLARE_ORIG_POINTER(glTexParameteri)
 DECLARE_ORIG_POINTER(glTexImage2D)
 DECLARE_ORIG_POINTER(glActiveTexture)
@@ -318,6 +319,7 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     LINK_NAMESPACE(glIsEnabled, "GL");
     LINK_NAMESPACE(glBlendFunc, "GL");
     LINK_NAMESPACE(glBindTexture, "GL");
+    LINK_NAMESPACE(glBindSampler, "GL");
     LINK_NAMESPACE(glTexImage2D, "GL");
     LINK_NAMESPACE(glTexParameteri, "GL");
     LINK_NAMESPACE(glUseProgram, "GL");
@@ -362,6 +364,8 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
     orig::glBindTexture(GL_TEXTURE_2D, texture);
     if ((error = orig::glGetError()) != GL_NO_ERROR)
         debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindTexture failed with error %d", error);
+
+    orig::glBindSampler(0, 0);
 
     orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     orig::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
