@@ -39,7 +39,8 @@ bool GameHacks::isUnity()
 
 static const std::ptrdiff_t unity_loading_threads[] = {
     -9535, -9456, 801, 777, // version 5.4.3f1
-    -12625, -12493, 1236, -685, // version 2017.4.10f1
+    -12625, -12493, 1236, // version 2017.4.10f1
+    -990473, -990740, // version 2018.4.12f1
 };
 
 bool GameHacks::isUnityLoadingThread(std::ptrdiff_t routine_id)
