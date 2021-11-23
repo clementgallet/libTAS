@@ -12,6 +12,9 @@
 * Add another method to find dlfct symbols (#435)
 
 ### Changed
+
+* Raise the minimum audio buffer size
+
 ### Fixed
 
 * Fix variable RNG seed in Papers Please (#422)

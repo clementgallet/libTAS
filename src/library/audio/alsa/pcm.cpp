@@ -30,6 +30,8 @@
 
 #include <stdint.h>
 
+#define BUFFER_SIZE_MIN 2048
+
 namespace libtas {
 
 static int buffer_size = 4096; // in samples
@@ -1182,7 +1184,7 @@ int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd
     }
 
     DEBUGLOGCALL(LCF_SOUND);
-    *val = 1024;
+    *val = BUFFER_SIZE_MIN;
     return 0;
 }
 
@@ -1225,6 +1227,10 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     }
 
     debuglogstdio(LCF_SOUND, "%s call with buffer size %d", __func__, *val);
+    if (*val < BUFFER_SIZE_MIN) {
+        debuglogstdio(LCF_SOUND | LCF_WARNING, "Buffer size is too low, raising to %d", BUFFER_SIZE_MIN);
+        *val = BUFFER_SIZE_MIN;
+    }
     buffer_size = *val;
     return 0;
 }
@@ -1250,6 +1256,12 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
     if (buffer->frequency != 0) {
         buffer_size = static_cast<uint64_t>(*val) * buffer->frequency / 1000000;
+        if (buffer_size < BUFFER_SIZE_MIN) {
+            buffer_size = BUFFER_SIZE_MIN;
+
+            *val = 1000000 * buffer_size / buffer->frequency;
+            debuglogstdio(LCF_SOUND | LCF_WARNING, "Buffer time is too low, raising to %d us", *val);
+        }
     }
     return 0;
 }
