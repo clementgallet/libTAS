@@ -14,6 +14,7 @@
 ### Changed
 
 * Raise the minimum audio buffer size
+* Change default video codec to x264rgb
 
 ### Fixed
 
