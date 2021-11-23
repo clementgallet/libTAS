@@ -639,7 +639,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 /* Override */ int sem_wait (sem_t *sem)
 {
-    LINK_NAMESPACE(sem_wait, "pthread");
+    LINK_NAMESPACE_VERSION(sem_wait, "pthread", "GLIBC_2_1");
     if (GlobalState::isNative())
         return orig::sem_wait(sem);
 
@@ -693,7 +693,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 /* Override */ int sem_trywait (sem_t *sem) __THROW
 {
-    LINK_NAMESPACE(sem_trywait, "pthread");
+    LINK_NAMESPACE_VERSION(sem_trywait, "pthread", "GLIBC_2_1");
     if (GlobalState::isNative())
         return orig::sem_trywait(sem);
 
