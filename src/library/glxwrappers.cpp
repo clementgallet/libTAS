@@ -507,7 +507,15 @@ const char* glXQueryExtensionsString(Display* dpy, int screen)
     /* Unity has different behaviors depending on the GLX extensions present,
      * at least for GLX_SGI_swap_control. Returning an empty string works fine. */
     if (GameHacks::isUnity())
-        return "\0";
+        return "GLX_ARB_create_context GLX_ARB_create_context_profile \
+GLX_ARB_create_context_robustness GLX_ARB_fbconfig_float \
+GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample \
+GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile \
+GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB \
+GLX_EXT_import_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info \
+GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer \
+GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig \
+GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read";
 
     LINK_NAMESPACE(glXQueryExtensionsString, "GL");
     return orig::glXQueryExtensionsString(dpy, screen);
