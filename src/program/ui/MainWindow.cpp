@@ -395,6 +395,39 @@ MainWindow::~MainWindow()
         game_thread.detach();
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if(!context->interactive) {
+        event->accept();
+        return;
+    }
+
+    if(gameLoop->movie.inputs->modifiedSinceLastSave) {
+        QMessageBox::StandardButton result = QMessageBox::question(
+            this, tr("Unsaved Work"), 
+            tr("You have unsaved work. Would you like to save it?"),
+            QMessageBox::Cancel|QMessageBox::Discard|QMessageBox::Save,
+            QMessageBox::Save
+        );
+
+        switch (result) {
+            case QMessageBox::Save:
+                this->gameLoop->movie.saveMovie();
+                event->accept();
+                break;
+            case QMessageBox::Discard:
+                event->accept();
+                break;
+            case QMessageBox::Cancel:
+            default:
+                event->ignore();
+                break;
+        }
+    } else {
+        event->accept();
+    }
+}
+
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {
