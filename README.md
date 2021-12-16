@@ -4,22 +4,22 @@ GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoy
 
 Discord server: https://discord.gg/3MBVAzU
 
-Website: http://clementgallet.github.io/libTAS/ (still in progress)
+Website: https://clementgallet.github.io/libTAS/ (still in progress)
 
-Additional documentation on tasvideos.org: http://tasvideos.org/EmulatorResources/LibTAS.html
+Additional documentation on tasvideos.org: https://tasvideos.org/EmulatorResources/LibTAS.html
 
 ## Supported Games
 
 Initial work was done to support games using the SDL library (which is the case of many indie games), but other engines are supported now.
 
-By default, you should look for a drm-free version of the game. Games installed through Steam may or may not work. Some Steam games are in fact drm-free, they work without Steam running, or they just need some simple operations. For the other games, there is a "Virtual Steam client" setting in libTAS which implements a dummy Steam client, but it doesn't support every game. Of course, all of this only applies to games that don't have any active protection measure. For more details, check the [Game Compatibility](http://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+By default, you should look for a drm-free version of the game. Games installed through Steam may or may not work. Some Steam games are in fact drm-free, they work without Steam running, or they just need some simple operations. For the other games, there is a "Virtual Steam client" setting in libTAS which implements a dummy Steam client, but it doesn't support every game. Of course, all of this only applies to games that don't have any active protection measure. For more details, check the [Game Compatibility](https://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
 
 There is also initial support for Windows games through wine. Details are given below.
 
 ## Non-linux users
 
 If you don't have a Linux system beforehand, there are several options that you can choose:
-- Run libTAS using [WSL 2](http://clementgallet.github.io/libTAS/guides/wsl/) (Windows Subsystem for Linux) (preferred option)
+- Run libTAS using [WSL 2](https://clementgallet.github.io/libTAS/guides/wsl/) (Windows Subsystem for Linux) (preferred option)
 - Install a Linux container with Docker (described below)
 - Install Linux on a virtual machine. Grab a virtualization software (e.g. VirtualBox) and a Linux distribution (e.g. Ubuntu). If you have a 64-bit computer, install a 64-bit Linux distribution, which will allow you to run both 32-bit and 64-bit games. Note for Ubuntu users that you need a recent version (17.10 minimum).
 
@@ -92,9 +92,9 @@ To run this program, you can use the program shortcut in your system menu, or op
 
 You can type `libTAS -h` to have a description of the program options.
 
-The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](http://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
+The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
 
-There are a few things to take care before being able to run a game. You might want to look at the software [usage](http://tasvideos.org/EmulatorResources/libTAS/Usage.html).
+There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://tasvideos.org/EmulatorResources/libTAS/Usage.html).
 
 Here are the default controls when the game has started:
 
@@ -127,7 +127,7 @@ One option if you have a Windows system is to run a Linux distribution inside a 
 - install [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 - download the [Dockerfile](https://github.com/clementgallet/libTAS/blob/master/Dockerfile) somewhere (don't rename the file!).
 - open Docker Quickstart Terminal, and run the command `docker build -t libtas /c/path/to/Dockerfile/directory`. The path points to the directory containing the Dockerfile, not to the Dockerfile itself. Also, this terminal takes paths in Unix syntax: `C:\foo\bar` becomes `/c/foo/bar`. The Docker container build should start.
-- prepare a directory that will contain your games. This directory must be somewhere inside `C:/Users/`, because it is shared by default by Virtualbox. If you want to share another folder, you can follow this [link](http://support.divio.com/en/articles/646695-how-to-use-a-directory-outside-c-users-with-docker-toolbox-docker-for-windows)
+- prepare a directory that will contain your games. This directory must be somewhere inside `C:/Users/`, because it is shared by default by Virtualbox. If you want to share another folder, you can follow this [link](https://web.archive.org/web/20210301191513/https://support.divio.com/en/articles/646695-how-to-use-a-directory-outside-c-users-with-docker-toolbox-docker-for-windows)
 - you need a X11 server to be able to display applications from the Linux container. Install [vcxsrv](https://sourceforge.net/projects/vcxsrv/)
 
 ### Run
@@ -185,4 +185,4 @@ libTAS is distributed under the terms of the GNU General Public License v3.
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>
+    along with this program.  If not, see <https://www.gnu.org/licenses/>
