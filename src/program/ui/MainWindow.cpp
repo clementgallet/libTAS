@@ -493,7 +493,8 @@ void MainWindow::createActions()
     addActionCheckable(localeGroup, tr("English"), SharedConfig::LOCALE_ENGLISH);
     addActionCheckable(localeGroup, tr("Japanese"), SharedConfig::LOCALE_JAPANESE);
     addActionCheckable(localeGroup, tr("Korean"), SharedConfig::LOCALE_KOREAN);
-    addActionCheckable(localeGroup, tr("Chinese"), SharedConfig::LOCALE_CHINESE);
+    addActionCheckable(localeGroup, tr("Chinese, Simplified"), SharedConfig::LOCALE_CHINESE_SIMPLIFIED);
+    addActionCheckable(localeGroup, tr("Chinese, Traditional"), SharedConfig::LOCALE_CHINESE_TRADITIONAL);
     addActionCheckable(localeGroup, tr("Spanish"), SharedConfig::LOCALE_SPANISH);
     addActionCheckable(localeGroup, tr("German"), SharedConfig::LOCALE_GERMAN);
     addActionCheckable(localeGroup, tr("French"), SharedConfig::LOCALE_FRENCH);

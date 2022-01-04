@@ -37,8 +37,10 @@ static const char* config_locale()
         return "ja_JP.UTF-8";
     case SharedConfig::LOCALE_KOREAN:
         return "ko_KR.UTF-8";
-    case SharedConfig::LOCALE_CHINESE:
+    case SharedConfig::LOCALE_CHINESE_SIMPLIFIED:
         return "zh_CN.UTF-8";
+    case SharedConfig::LOCALE_CHINESE_TRADITIONAL:
+        return "zh_TW.UTF-8";
     case SharedConfig::LOCALE_SPANISH:
         return "es_ES.UTF-8";
     case SharedConfig::LOCALE_GERMAN:
