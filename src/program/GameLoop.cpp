@@ -580,7 +580,7 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* Send signal before saving the input */
                 if (past_inputs) {
                     if (keep_inputs) {
-                        emit inputsToBeEdited();
+                        emit inputsToBeEdited(context->framecount);
                     }
                     else {
                         emit inputsToBeChanged();
@@ -602,7 +602,7 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* Send signal after saving the input */
                 if (past_inputs) {
                     if (keep_inputs) {
-                        emit inputsEdited();
+                        emit inputsEdited(context->framecount);
                     }
                     else {
                         emit inputsChanged();

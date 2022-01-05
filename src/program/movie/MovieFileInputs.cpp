@@ -368,6 +368,9 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
 {
+    if (pos < context->framecount)
+        return -1;
+        
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
         input_list.push_back(inputs);
@@ -468,4 +471,26 @@ void MovieFileInputs::wasModified()
     modifiedSinceLastSave = true;
     modifiedSinceLastAutoSave = true;
     modifiedSinceLastStateLoad = true;
+}
+
+uint64_t MovieFileInputs::processEvent()
+{
+    /* Process input events */
+    while (!input_event_queue.empty()) {
+        InputEvent ie;
+        input_event_queue.pop(ie);
+        
+        /* Check for setting inputs before current framecount */
+        if (ie.framecount < context->framecount)
+            continue;
+            
+        AllInputs ai;
+        int ret = getInputs(ai, ie.framecount);
+        if (ret >= 0) {
+            ai.setInput(ie.si, ie.value);
+            setInputs(ai, ie.framecount, true);
+            return ie.framecount;
+        }
+    }
+    return UINT64_MAX;
 }

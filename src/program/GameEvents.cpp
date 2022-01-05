@@ -372,5 +372,12 @@ int GameEvents::handleEvent()
         if (processEvent(eventType, hk))
             flags |= RETURN_FLAG_ADVANCE;
     }
+    else {
+        uint64_t input_framecount = movie->inputs->processEvent();
+        while (input_framecount != UINT64_MAX) {
+            emit inputsEdited(input_framecount);
+            input_framecount = movie->inputs->processEvent();
+        }
+    }
     return flags;
 }

@@ -73,6 +73,8 @@ protected:
         EVENT_TYPE_RELEASE,
         EVENT_TYPE_FOCUS_OUT,
         EVENT_TYPE_EXPOSE,
+        EVENT_TYPE_INPUT_SET,
+        EVENT_TYPE_INPUT_TOGGLE,
     };
 
     virtual EventType nextEvent(struct HotKey &hk) = 0;
@@ -89,6 +91,7 @@ signals:
     /* Signals for notifying the input editor */
     void inputsToBeChanged();
     void inputsChanged();
+    void inputsEdited(unsigned long long framecount);
 
     /* register a savestate */
     void savestatePerformed(int slot, unsigned long long frame);

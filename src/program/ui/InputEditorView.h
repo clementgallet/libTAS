@@ -83,8 +83,10 @@ private:
     QMenu *menu;
     int contextSection;
     int mouseSection;
-    uint64_t mouseRow;
-    uint64_t minToggleRow;
+    int mouseRow;
+    int mouseMinRow;
+    int mouseMaxRow;
+    int minToggleRow;
     int mouseValue;
     KeyPressedDialog* keyDialog;
 

@@ -11,6 +11,7 @@
 * Add interface to SteamClient, and add v020
 * Add another method to find dlfct symbols (#435)
 * Add Unity sync values for Dandara
+* Show pending input changes in the input editor when rewinding.
 
 ### Changed
 
@@ -30,6 +31,9 @@
 * Don't handle xcb events when 1x1 windows are created (#441)
 * Fix flags when restoring a file mapping (#445)
 * Fix some GL OSD black rectangle (#444)
+* Input editor toggling is now synced with main thread, preventing rare cases
+  of concurrent changes in the movie
+* Dragging in the input editor now toggle all inputs in between
 
 ## [1.4.2] - 2021-07-06
 ### Added

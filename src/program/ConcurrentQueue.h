@@ -36,17 +36,37 @@ public:
         return queue_.empty();
     }
 
+    typename std::list<T>::const_iterator begin()
+    {
+        return queue_.cbegin();
+    }
+
+    typename std::list<T>::const_iterator end()
+    {
+        return queue_.cend();
+    }
+    
+    void lock()
+    {
+        mutex_.lock();
+    }
+
+    void unlock()
+    {
+        mutex_.unlock();
+    }
+
     void pop(T& item)
     {
         std::unique_lock<std::mutex> mlock(mutex_);
         item = queue_.front();
-        queue_.pop();
+        queue_.pop_front();
     }
 
     void push(const T& item)
     {
         std::unique_lock<std::mutex> mlock(mutex_);
-        queue_.push(item);
+        queue_.push_back(item);
     }
 
     ConcurrentQueue()=default;
@@ -54,7 +74,7 @@ public:
     ConcurrentQueue& operator=(const ConcurrentQueue&) = delete; // disable assignment
 
 private:
-    std::queue<T> queue_;
+    std::list<T> queue_;
     std::mutex mutex_;
 };
 

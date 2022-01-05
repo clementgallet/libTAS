@@ -80,8 +80,8 @@ signals:
     void inputsChanged();
     void inputsToBeAdded();
     void inputsAdded();
-    void inputsToBeEdited();
-    void inputsEdited();
+    void inputsToBeEdited(unsigned long long framecount);
+    void inputsEdited(unsigned long long framecount);
 
     void getRamWatch(std::string &watch);
 

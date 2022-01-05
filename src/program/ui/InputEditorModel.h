@@ -132,10 +132,10 @@ public slots:
     void endAddInputs();
 
     /* Prepare for edit inputs */
-    void beginEditInputs();
+    void beginEditInputs(unsigned long long framecount);
 
     /* End edit inputs */
-    void endEditInputs();
+    void endEditInputs(unsigned long long framecount);
 
     /* Register a savestate for display */
     void registerSavestate(int slot, unsigned long long frame);

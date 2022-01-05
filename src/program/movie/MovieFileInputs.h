@@ -22,11 +22,20 @@
 
 #include "../../shared/AllInputs.h"
 #include "../Context.h"
+#include "../ConcurrentQueue.h"
 #include <fstream>
 #include <string>
 #include <vector>
 #include <regex>
 #include <stdint.h>
+
+/* Struct to push movie changes from the UI to the main thread. UI thread should
+ * never modify the movie */
+struct InputEvent {
+    uint64_t framecount;
+    SingleInput si;
+    int value;
+};
 
 class MovieFileInputs {
 public:
@@ -51,6 +60,9 @@ public:
 
     /* Initial framerate values */
     unsigned int framerate_num, framerate_den;
+
+    /* Queue of movie input changes that where pushed by the UI, to process by the main thread */
+    ConcurrentQueue<InputEvent> input_event_queue;
 
     /* Prepare a movie file from the context */
     MovieFileInputs(Context* c);
@@ -107,6 +119,11 @@ public:
 
     /* Helper function called when the movie has been modified */
     void wasModified();
+    
+    /* Process an input event pushed by the UI thread, and returns the modified
+     * framecount, so that the UI can be updated accordingly.
+     * If no event left, returns UINT64_MAX */
+    uint64_t processEvent();
 
 private:
     Context* context;
