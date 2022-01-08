@@ -225,12 +225,13 @@ void AudioContext::mixAllSources(struct timespec ticks)
 
     pthread_t mix_thread = ThreadManager::getThreadId();
 
+    mutex.lock();
+
     for (auto& source : sources) {
         /* If an audio source is filled asynchronously, and we will underrun,
          * try to wait until the source is filled.
          */
 
-        audiocontext.mutex.lock();
         if ((source->source == AudioSource::SOURCE_STREAMING_CONTINUOUS) &&
             audio_thread &&
             (mix_thread != audio_thread) &&
@@ -240,9 +241,9 @@ void AudioContext::mixAllSources(struct timespec ticks)
             int i;
             for (i=0; i<1000; i++) {
 
-                audiocontext.mutex.unlock();
+                mutex.unlock();
                 NATIVECALL(usleep(100));
-                audiocontext.mutex.lock();
+                mutex.lock();
 
                 if (!source->willEnd(ticks))
                     break;
@@ -251,11 +252,11 @@ void AudioContext::mixAllSources(struct timespec ticks)
                 debuglogstdio(LCF_SOUND | LCF_WARNING, "    Timeout");
             }
         }
-        audiocontext.mutex.unlock();
 
-        std::lock_guard<std::mutex> lock(mutex);
         source->mixWith(ticks, &outSamples[0], outBytes, outBitDepth, outNbChannels, outFrequency, outVolume);
     }
+    
+    mutex.unlock();
 
     if (!audiocontext.isLoopback && !shared_config.audio_mute) {
         /* Play the music */

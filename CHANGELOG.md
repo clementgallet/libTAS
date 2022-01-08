@@ -34,6 +34,7 @@
 * Input editor toggling is now synced with main thread, preventing rare cases
   of concurrent changes in the movie
 * Dragging in the input editor now toggle all inputs in between
+* Change audio context locking
 
 ## [1.4.2] - 2021-07-06
 ### Added
