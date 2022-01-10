@@ -12,7 +12,7 @@ Additional documentation on tasvideos.org: https://tasvideos.org/EmulatorResourc
 
 Initial work was done to support games using the SDL library (which is the case of many indie games), but other engines are supported now.
 
-By default, you should look for a drm-free version of the game. Games installed through Steam may or may not work. Some Steam games are in fact drm-free, they work without Steam running, or they just need some simple operations. For the other games, there is a "Virtual Steam client" setting in libTAS which implements a dummy Steam client, but it doesn't support every game. Of course, all of this only applies to games that don't have any active protection measure. For more details, check the [Game Compatibility](https://tasvideos.org/EmulatorResources/libTAS/GameCompatibility.html) page.
+By default, you should look for a drm-free version of the game. Games installed through Steam may or may not work. Some Steam games are in fact drm-free, they work without Steam running, or they just need some simple operations. For the other games, there is a "Virtual Steam client" setting in libTAS which implements a dummy Steam client, but it doesn't support every game. Of course, all of this only applies to games that don't have any active protection measure. For more details, check the [Game Compatibility](https://tasvideos.org/EmulatorResources/LibTAS/GameCompatibility) page.
 
 There is also initial support for Windows games through wine. Details are given below.
 
@@ -92,9 +92,9 @@ To run this program, you can use the program shortcut in your system menu, or op
 
 You can type `libTAS -h` to have a description of the program options.
 
-The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://tasvideos.org/EmulatorResources/libTAS/MenuOptions.html)
+The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://tasvideos.org/EmulatorResources/libTAS/MenuOptions)
 
-There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://tasvideos.org/EmulatorResources/libTAS/Usage.html).
+There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://tasvideos.org/EmulatorResources/libTAS/Usage).
 
 Here are the default controls when the game has started:
 
