@@ -25,6 +25,7 @@
 #include "utils.h" // create_dir
 #include "lua/Main.h"
 #include "KeyMapping.h"
+#include "ramsearch/MemScanner.h"
 #ifdef __unix__
 #include "KeyMappingXcb.h"
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -335,6 +336,15 @@ int main(int argc, char **argv)
         std::cerr << "Cannot create dir " << context.config.savestatedir << std::endl;
         return -1;
     }
+
+    if (context.config.ramsearchdir.empty()) {
+        context.config.ramsearchdir = data_dir + "/ramsearch";
+    }
+    if (create_dir(context.config.ramsearchdir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.ramsearchdir << std::endl;
+        return -1;
+    }
+    MemScanner::init(context.config.ramsearchdir);
 
     /* Store current content of LD_PRELOAD/DYLD_INSERT_LIBRARIES */
 

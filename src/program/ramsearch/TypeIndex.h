@@ -20,20 +20,32 @@
 #ifndef LIBTAS_TYPEINDEX_H_INCLUDED
 #define LIBTAS_TYPEINDEX_H_INCLUDED
 
-#include "RamWatch.h"
 #include <stdint.h>
+
+enum RamType {
+    RamUnsignedChar,
+    RamChar,
+    RamUnsignedShort,
+    RamShort,
+    RamUnsignedInt,
+    RamInt,
+    RamUnsignedLong,
+    RamLong,
+    RamFloat,
+    RamDouble,
+};
 
 /* This looks aaawwwful */
 template <typename T> static inline int type_index() {return 0;}
-template <> inline int type_index<unsigned char>() {return RamWatch::RamUnsignedChar;}
-template <> inline int type_index<char>() {return RamWatch::RamChar;}
-template <> inline int type_index<unsigned short>() {return RamWatch::RamUnsignedShort;}
-template <> inline int type_index<short>() {return RamWatch::RamShort;}
-template <> inline int type_index<unsigned int>() {return RamWatch::RamUnsignedInt;}
-template <> inline int type_index<int>() {return RamWatch::RamInt;}
-template <> inline int type_index<uint64_t>() {return RamWatch::RamUnsignedLong;}
-template <> inline int type_index<int64_t>() {return RamWatch::RamLong;}
-template <> inline int type_index<float>() {return RamWatch::RamFloat;}
-template <> inline int type_index<double>() {return RamWatch::RamDouble;}
+template <> inline int type_index<unsigned char>() {return RamUnsignedChar;}
+template <> inline int type_index<char>() {return RamChar;}
+template <> inline int type_index<unsigned short>() {return RamUnsignedShort;}
+template <> inline int type_index<short>() {return RamShort;}
+template <> inline int type_index<unsigned int>() {return RamUnsignedInt;}
+template <> inline int type_index<int>() {return RamInt;}
+template <> inline int type_index<uint64_t>() {return RamUnsignedLong;}
+template <> inline int type_index<int64_t>() {return RamLong;}
+template <> inline int type_index<float>() {return RamFloat;}
+template <> inline int type_index<double>() {return RamDouble;}
 
 #endif

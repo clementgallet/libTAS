@@ -28,10 +28,12 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QLabel>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <memory>
 
 #include "../Context.h"
-#include "../ramsearch/CompareEnums.h"
+#include "../ramsearch/CompareOperations.h"
 
 class RamSearchModel;
 
@@ -77,6 +79,12 @@ private:
 
     QComboBox *typeBox;
     QComboBox *displayBox;
+
+    /* Timer to limit the number of update calls */
+    QElapsedTimer* updateTimer;
+
+    /* Timer to trigger the update call */
+    QTimer* callTimer;
 
     void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value);
 

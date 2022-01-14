@@ -27,7 +27,7 @@
 #include <stdint.h>
 
 #include "RamWatchEditWindow.h"
-#include "../ramsearch/RamWatch.h"
+#include "../ramsearch/TypeIndex.h"
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
 
@@ -204,15 +204,15 @@ void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
     }
 }
 
-void RamWatchEditWindow::fill(const RamWatch &watch)
+void RamWatchEditWindow::fill(uintptr_t addr, int type)
 {
     clear();
 
     /* Fill address */
-    addressInput->setText(QString("%1").arg(watch.address, 0, 16));
+    addressInput->setText(QString("%1").arg(addr, 0, 16));
 
     /* Fill type */
-    typeBox->setCurrentIndex(watch.type);
+    typeBox->setCurrentIndex(type);
 }
 
 void RamWatchEditWindow::slotPointer(bool checked)
@@ -296,34 +296,34 @@ void RamWatchEditWindow::slotSave()
 
     /* Build the ram watch using the right type as template */
     switch (typeBox->currentIndex()) {
-        case RamWatch::RamUnsignedChar:
+        case RamUnsignedChar:
             ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
             break;
-        case RamWatch::RamChar:
+        case RamChar:
             ramwatch.reset(new RamWatchDetailed<char>(addr));
             break;
-        case RamWatch::RamUnsignedShort:
+        case RamUnsignedShort:
             ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
             break;
-        case RamWatch::RamShort:
+        case RamShort:
             ramwatch.reset(new RamWatchDetailed<short>(addr));
             break;
-        case RamWatch::RamUnsignedInt:
+        case RamUnsignedInt:
             ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
             break;
-        case RamWatch::RamInt:
+        case RamInt:
             ramwatch.reset(new RamWatchDetailed<int>(addr));
             break;
-        case RamWatch::RamUnsignedLong:
+        case RamUnsignedLong:
             ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
             break;
-        case RamWatch::RamLong:
+        case RamLong:
             ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
             break;
-        case RamWatch::RamFloat:
+        case RamFloat:
             ramwatch.reset(new RamWatchDetailed<float>(addr));
             break;
-        case RamWatch::RamDouble:
+        case RamDouble:
             ramwatch.reset(new RamWatchDetailed<double>(addr));
             break;
     }

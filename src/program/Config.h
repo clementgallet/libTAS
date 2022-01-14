@@ -83,6 +83,9 @@ public:
     /* Directory holding savestates and savestate movies */
     std::string savestatedir;
 
+    /* Directory holding files storing ram search results */
+    std::string ramsearchdir;
+
     /* Flags when end of movie */
     enum MovieEnd {
         MOVIEEND_READ = 0,

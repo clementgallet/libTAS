@@ -29,9 +29,8 @@
 #include <iostream>
 
 #include "../Context.h"
-#include "../ramsearch/CompareEnums.h"
-#include "../ramsearch/RamWatch.h"
-#include "../ramsearch/MemSection.h"
+#include "../ramsearch/CompareOperations.h"
+#include "../ramsearch/MemScanner.h"
 
 class RamSearchModel : public QAbstractTableModel {
     Q_OBJECT
@@ -41,8 +40,8 @@ public:
 
     void update();
 
-    /* List of watches */
-    std::vector<RamWatch> ramwatches;
+    /* Memory scanner */
+    MemScanner memscanner;
 
     /* Flag if we display values in hex or decimal */
     bool hex;
@@ -54,13 +53,14 @@ public:
     double compare_value;
     double different_value;
 
-    // template <class T>
-    // void new_watches(pid_t pid, int type_filter, CompareType compare_type, CompareOperator compare_operator, double compare_value, Fl_Hor_Fill_Slider *search_progress)
     void newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
     int predictWatchCount(int type_filter);
     int watchCount();
     void searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
+
+    /* Return the address of the given row, used to fill ramwatch */
+    uintptr_t address(int row);
 
 private:
     Context *context;

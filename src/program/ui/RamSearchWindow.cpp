@@ -32,7 +32,7 @@
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
-#include "../ramsearch/CompareEnums.h"
+#include "../ramsearch/CompareOperations.h"
 
 #include <limits>
 
@@ -185,10 +185,30 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     mainLayout->addLayout(optionLayout);
 
     setLayout(mainLayout);
+    
+    /* Start the update timer */
+    updateTimer = new QElapsedTimer();
+    updateTimer->start();
+
+    /* Configure the call timer */
+    callTimer = new QTimer(this);
+    callTimer->setSingleShot(true);
+    connect(callTimer, &QTimer::timeout, this, &RamSearchWindow::update);
 }
 
 void RamSearchWindow::update()
 {
+    /* Only update on new frame and every .5 ms */
+    int64_t elapsed = updateTimer->elapsed();
+    if (elapsed < 500) {
+        /* Call this function on timeout, if not already done */
+        if (!callTimer->isActive()) {
+            callTimer->start(500 - elapsed);
+        }
+        return;
+    }
+    updateTimer->start();
+
     ramSearchModel->update();
 }
 
@@ -256,7 +276,7 @@ void RamSearchWindow::slotNew()
 
     watchCount->hide();
     searchProgress->show();
-    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
+    // searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
 
     /* Call the RamSearch new function using the right type */
     ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
@@ -306,7 +326,8 @@ void RamSearchWindow::slotAdd()
 
     MainWindow *mw = qobject_cast<MainWindow*>(parent());
     if (mw) {
-        mw->ramWatchWindow->editWindow->fill(ramSearchModel->ramwatches.at(row));
+        
+        mw->ramWatchWindow->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
         mw->ramWatchWindow->slotAdd();
     }
 }
