@@ -30,7 +30,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
 * `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xkb1`, `libxcb-cursor0`
-* `liblua5.3-0`
+* `liblua5.4-0`
 * `ffmpeg`
 * `file`
 * `libswresample2` or `libswresample3`, `libasound2`
@@ -48,8 +48,8 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev liblua5.3-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
-* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua53 ffmpeg sdl2`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
+* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua54 ffmpeg sdl2`
 
 To enable HUD on the game screen, you will also need:
 
