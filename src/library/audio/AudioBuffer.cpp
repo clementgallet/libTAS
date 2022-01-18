@@ -115,6 +115,11 @@ bool AudioBuffer::checkSize(void)
 
 int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, bool loopstatic)
 {
+    /* If the buffer is empty (e.g. for ALSA we push an empty buffer to save
+     * params), return immediatly. */
+    if (size == 0)
+        return 0;
+        
     switch (format) {
         case SAMPLE_FMT_NB:
             break;

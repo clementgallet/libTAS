@@ -35,6 +35,7 @@
   of concurrent changes in the movie
 * Dragging in the input editor now toggle all inputs in between
 * Change audio context locking
+* Fix bug when accessing samples of empty buffer
 
 ## [1.4.2] - 2021-07-06
 ### Added
