@@ -43,10 +43,10 @@ namespace CompareOperations {
     void init(int value_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
 
     /* Compute the comparaison between the content of value and the stored contant value */
-    bool check_value(void* value);
+    bool check_value(const void* value);
 
     /* Compute the comparaison between the content of value and the old value */
-    bool check_previous(void* value, void* old_value);
+    bool check_previous(const void* value, const void* old_value);
 }
 
 #endif

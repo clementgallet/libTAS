@@ -20,76 +20,57 @@
 #include "CompareOperations.h"
 #include "TypeIndex.h"
 #include <cstdint>
-// #include <sys/types.h>
-// #include <cerrno>
-// #include <cstring>
-// #include <cstdio>
-// #include <inttypes.h>
 
+typedef union {
+    int8_t v_int8_t;
+    uint8_t v_uint8_t;
+    int16_t v_int16_t;
+    uint16_t v_uint16_t;
+    int32_t v_int32_t;
+    uint32_t v_uint32_t;
+    int64_t v_int64_t;
+    uint64_t v_uint64_t;
+    float v_float;
+    double v_double;
+} value_t;
 
 /* Cast once the compared values to the appropriate type */
-static int8_t compare_value_int8_t;
-static uint8_t compare_value_uint8_t;
-static int16_t compare_value_int16_t;
-static uint16_t compare_value_uint16_t;
-static int32_t compare_value_int32_t;
-static uint32_t compare_value_uint32_t;
-static int64_t compare_value_int64_t;
-static uint64_t compare_value_uint64_t;
-static float compare_value_float;
-static double compare_value_double;
+static value_t compare_value;
+static value_t different_value;
 
-static int8_t different_value_int8_t;
-static uint8_t different_value_uint8_t;
-static int16_t different_value_int16_t;
-static uint16_t different_value_uint16_t;
-static int32_t different_value_int32_t;
-static uint32_t different_value_uint32_t;
-static int64_t different_value_int64_t;
-static uint64_t different_value_uint64_t;
-static float different_value_float;
-static double different_value_double;
-
-typedef bool (*compare_t)(void*);
+typedef bool (*compare_t)(const value_t*);
 static compare_t compare_method;
 
 static int value_type;
 
 #define DEFINE_CHECK_TYPED(T) \
-static bool check_equal_##T(void* value) \
+static bool check_equal_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value == compare_value_##T;\
+    return value->v_##T == compare_value.v_##T;\
 }\
-static bool check_notequal_##T(void* value) \
+static bool check_notequal_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value != compare_value_##T;\
+    return value->v_##T != compare_value.v_##T;\
 }\
-static bool check_less_##T(void* value) \
+static bool check_less_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value < compare_value_##T;\
+    return value->v_##T < compare_value.v_##T;\
 }\
-static bool check_greater_##T(void* value) \
+static bool check_greater_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value > compare_value_##T;\
+    return value->v_##T > compare_value.v_##T;\
 }\
-static bool check_lessequal_##T(void* value) \
+static bool check_lessequal_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value <= compare_value_##T;\
+    return value->v_##T <= compare_value.v_##T;\
 }\
-static bool check_greaterequal_##T(void* value) \
+static bool check_greaterequal_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return typed_value >= compare_value_##T;\
+    return value->v_##T>= compare_value.v_##T;\
 }\
-static bool check_different_##T(void* value) \
+static bool check_different_##T(const value_t* value) \
 {\
-    T typed_value = *reinterpret_cast<T*>(value);\
-    return (typed_value-compare_value_##T) == different_value_##T;\
+    return (value->v_##T - compare_value.v_##T) == different_value.v_##T;\
 }\
 
 DEFINE_CHECK_TYPED(int8_t)
@@ -104,8 +85,8 @@ DEFINE_CHECK_TYPED(float)
 DEFINE_CHECK_TYPED(double)
 
 #define DEFINE_COMPARE_METHOD_TYPED(T) \
-compare_value_##T = static_cast<T>(compare_value_db);\
-different_value_##T = static_cast<T>(different_value_db);\
+compare_value.v_##T = static_cast<T>(compare_value_db);\
+different_value.v_##T = static_cast<T>(different_value_db);\
 switch(compare_operator) {\
     case CompareOperator::Equal:\
         compare_method = &check_equal_##T;\
@@ -169,47 +150,13 @@ void CompareOperations::init(int vt, CompareOperator compare_operator, double co
     }
 }
 
-bool CompareOperations::check_value(void* value)
+bool CompareOperations::check_value(const void* value)
 {
-    return compare_method(value);
+    return compare_method(static_cast<const value_t*>(value));
 }
 
-#define STORE_OLD_VALUE_TYPED(T)\
-compare_value_##T = *reinterpret_cast<T*>(old_value);\
-
-bool CompareOperations::check_previous(void* value, void* old_value)
+bool CompareOperations::check_previous(const void* value, const void* old_value)
 {
-    switch(value_type) {
-        case RamChar:
-            STORE_OLD_VALUE_TYPED(int8_t)
-            break;
-        case RamUnsignedChar:
-            STORE_OLD_VALUE_TYPED(uint8_t)
-            break;
-        case RamShort:
-            STORE_OLD_VALUE_TYPED(int16_t)
-            break;
-        case RamUnsignedShort:
-            STORE_OLD_VALUE_TYPED(uint16_t)
-            break;
-        case RamInt:
-            STORE_OLD_VALUE_TYPED(int32_t)
-            break;
-        case RamUnsignedInt:
-            STORE_OLD_VALUE_TYPED(uint32_t)
-            break;
-        case RamLong:
-            STORE_OLD_VALUE_TYPED(int64_t)
-            break;
-        case RamUnsignedLong:
-            STORE_OLD_VALUE_TYPED(uint64_t)
-            break;
-        case RamFloat:
-            STORE_OLD_VALUE_TYPED(float)
-            break;
-        case RamDouble:
-            STORE_OLD_VALUE_TYPED(double)
-            break;
-    }
-    return compare_method(value);
+    compare_value = *static_cast<const value_t*>(old_value);
+    return compare_method(static_cast<const value_t*>(value));
 }
