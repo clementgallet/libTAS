@@ -140,7 +140,7 @@ void MemScannerThread::first_address_scan()
             if (readValues < 0) {
                 std::cerr << "Cound not read game process at address " << ca << std::endl;
             }
-            for (int v = 0; v < 4096/memscanner.value_type_size; v += memscanner.value_type_size) {
+            for (int v = 0; v < 4096; v += memscanner.value_type_size) {
                 if (CompareOperations::check_value(chunk+v)) {
                     batch_addresses[batch_index] = ca + v;
                     memcpy(batch_values+(batch_index*memscanner.value_type_size), chunk+v, memscanner.value_type_size);
@@ -226,7 +226,7 @@ void MemScannerThread::next_scan_from_region()
                 std::cerr << "Did not read enough memory at address " << cur_beg_addr << std::endl;
             }
             
-            for (int v = 0; v < chunk_size/memscanner.value_type_size; v += memscanner.value_type_size) {
+            for (int v = 0; v < chunk_size; v += memscanner.value_type_size) {
                 if (((memscanner.compare_type == CompareType::Previous) && 
                     CompareOperations::check_previous(&new_memory[v], &old_memory[v])) ||
                     ((memscanner.compare_type == CompareType::Value) && 

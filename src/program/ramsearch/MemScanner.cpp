@@ -134,11 +134,11 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
         if (cur_block_size == block_size) {
             /* Nothing left in this section, skip to the beginning of the next section */
             beg_region = end_region + 1;
-            beg_address = memsections[end_region].addr;
+            beg_address = memsections[beg_region].addr;
         }
         else {
             beg_region = end_region;
-            beg_address = memsections[beg_region].addr +  cur_region_offset;
+            beg_address = end_address;
         }
     }
     
