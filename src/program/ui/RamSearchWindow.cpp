@@ -230,6 +230,8 @@ void RamSearchWindow::slotNew()
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);
+        ramSearchModel->clear();
+        watchCount->setText("");
         return;
     }
 

@@ -122,5 +122,7 @@ uintptr_t RamSearchModel::address(int row)
 
 void RamSearchModel::clear()
 {
+    beginResetModel();
     memscanner.clear();
+    endResetModel();
 }

@@ -310,10 +310,11 @@ void MemScannerThread::next_scan_from_address()
     int batch_index = 0;
 
     /* Read chunks of memory */
-    while (memory_offset < memory_size) {
+    uint64_t remaining_memory_size = memory_size;
+    while (remaining_memory_size > 0) {
         int chunk_size = MEMORY_CHUNK_SIZE;
-        if (memory_size < chunk_size)
-            chunk_size = memory_size;
+        if (remaining_memory_size < chunk_size)
+            chunk_size = remaining_memory_size;
         
         if (memscanner.compare_type == CompareType::Previous) {
             ivfs.read(old_memory.data(), chunk_size);
@@ -347,7 +348,7 @@ void MemScannerThread::next_scan_from_address()
                     break;
             }
             
-            processed_memory_size += (addr_cur_index-addr_beg_index)*sizeof(uintptr_t);
+            processed_memory_size += (addr_cur_index-addr_beg_index)*memscanner.value_type_size;
 
             int readValues;
 
@@ -386,7 +387,7 @@ void MemScannerThread::next_scan_from_address()
             addr_beg_index = addr_cur_index;
         }
         memory_offset += chunk_size;
-        memory_size -= chunk_size;
+        remaining_memory_size -= chunk_size;
     }
     
     /* Flush the remaining values on the batch */
