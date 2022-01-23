@@ -43,6 +43,9 @@ class MemScanner : public QObject {
         /* Generic memory scan method */
         void scan(bool first, CompareType ct, CompareOperator co, double cv, double dv);
 
+        /* Returns the total size of results */
+        uint64_t scan_size() const;
+
         /* Returns the total number of scan results */
         uint64_t scan_count() const;
 

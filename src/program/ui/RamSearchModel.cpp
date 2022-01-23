@@ -70,15 +70,20 @@ QVariant RamSearchModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-int RamSearchModel::predictWatchCount(int mem_flags)
+int RamSearchModel::predictScanCount(int mem_flags)
 {
     std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
     return memlayout->totalSize(MemSection::MemAll, mem_flags);
 }
 
-int RamSearchModel::watchCount()
+uint64_t RamSearchModel::scanCount()
 {
     return memscanner.scan_count();
+}
+
+uint64_t RamSearchModel::scanSize()
+{
+    return memscanner.scan_size();
 }
 
 void RamSearchModel::newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv)

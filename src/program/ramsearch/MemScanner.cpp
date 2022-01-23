@@ -231,6 +231,11 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
     }
 }
 
+uint64_t MemScanner::scan_size() const
+{
+    return total_size;
+}
+
 uint64_t MemScanner::scan_count() const
 {
     return total_size / value_type_size;

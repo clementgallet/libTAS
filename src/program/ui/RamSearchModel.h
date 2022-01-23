@@ -55,13 +55,21 @@ public:
 
     void newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
-    int predictWatchCount(int mem_flags);
-    int watchCount();
+    /* Precompute the size of the next scan (for progress bar) */
+    int predictScanCount(int mem_flags);
+    
+    /* Total number of scan results */
+    uint64_t scanCount();
+
+    /* Total size of scan results (in bytes) */
+    uint64_t scanSize();
+    
     void searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
 
     /* Return the address of the given row, used to fill ramwatch */
     uintptr_t address(int row);
     
+    /* Clear all scan results */
     void clear();
 
 private:

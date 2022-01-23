@@ -226,7 +226,7 @@ void RamSearchWindow::slotNew()
         return;
     
     /* If there are results, then clear the current scan and enable all boxes */
-    if (ramSearchModel->watchCount() != 0) {
+    if (ramSearchModel->scanCount() != 0) {
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);
@@ -257,7 +257,7 @@ void RamSearchWindow::slotNew()
 
     watchCount->hide();
     searchProgress->show();
-    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memflags));
+    searchProgress->setMaximum(ramSearchModel->predictScanCount(memflags));
 
     /* Call the RamSearch new function using the right type */
     ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
@@ -266,13 +266,13 @@ void RamSearchWindow::slotNew()
     watchCount->show();
 
     /* Don't display values if too many results */
-    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->watchCount() != 0))
-        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
     else
-        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
         
     /* Change the button to "Stop" and disable some boxes */
-    if (ramSearchModel->watchCount() != 0) {
+    if (ramSearchModel->scanCount() != 0) {
         newButton->setText(tr("Stop"));
         memGroupBox->setDisabled(true);
         formatGroupBox->setDisabled(true);
@@ -299,7 +299,7 @@ void RamSearchWindow::slotSearch()
     double different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
-    searchProgress->setMaximum(ramSearchModel->watchCount());
+    searchProgress->setMaximum(ramSearchModel->scanSize());
     watchCount->hide();
     searchProgress->show();
 
@@ -308,14 +308,15 @@ void RamSearchWindow::slotSearch()
     /* Update address count */
     searchProgress->hide();
     watchCount->show();
+    
     /* Don't display values if too many results */
-    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->watchCount() != 0))
-        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
     else
-        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
 
     /* Change the button to "New" if no results */
-    if (ramSearchModel->watchCount() == 0) {
+    if (ramSearchModel->scanCount() == 0) {
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);
