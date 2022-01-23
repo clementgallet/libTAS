@@ -319,10 +319,10 @@ void MemScannerThread::next_scan_from_address()
             ivfs.read(old_memory.data(), chunk_size);
             if (!ivfs)
                 std::cerr << "error: only " << ivfs.gcount() << " could be read from " << chunk_size << std::endl;
-            iafs.read((char*)old_addresses.data(), chunk_size*size_ratio);
-            if (!iafs)
-                std::cerr << "error: only " << iafs.gcount() << " could be read from " << chunk_size << std::endl;
         }
+        iafs.read((char*)old_addresses.data(), chunk_size*size_ratio);
+        if (!iafs)
+        std::cerr << "error: only " << iafs.gcount() << " could be read from " << chunk_size << std::endl;
         
         int addr_beg_index = 0;
         int addr_end_index = chunk_size / memscanner.value_type_size;
