@@ -53,9 +53,9 @@ public:
     double compare_value;
     double different_value;
 
-    void newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv, double dv);
+    void newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
-    int predictWatchCount(int type_filter);
+    int predictWatchCount(int mem_flags);
     int watchCount();
     void searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
 

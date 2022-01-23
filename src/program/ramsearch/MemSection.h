@@ -38,7 +38,14 @@ class MemSection {
             MemAnonymousMappingRO = 0x0080,
             MemAnonymousMappingRW = 0x0100,
             MemStack = 0x0200,
-            MemSpecial = 0x0400
+            MemSpecial = 0x0400,
+            MemAll = 0xffff,
+        };
+
+        enum MemFlag {
+            MemNoSpecial = 0x01,
+            MemNoRO = 0x02,
+            MemNoExec = 0x04,
         };
 
         /* All information gather from a single line of /proc/pid/maps */
@@ -65,6 +72,9 @@ class MemSection {
 
         /* Parse a single line from the /proc/pid/maps file. */
         void readMap(std::string& line);
+        
+        /* Returns of the section follow the specified flags */
+        bool followFlags(int flags);
 };
 
 #endif

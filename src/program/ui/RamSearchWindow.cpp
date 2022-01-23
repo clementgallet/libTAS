@@ -68,32 +68,18 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
 
 
     /* Memory regions */
-    memTextBox = new QCheckBox("Text");
-    memDataROBox = new QCheckBox("RO Data");
-    memDataRWBox = new QCheckBox("RW Data");
-    memBSSBox = new QCheckBox("BSS");
-    memHeapBox = new QCheckBox("Heap");
-    memHeapBox->setChecked(true);
-    memFileMappingBox = new QCheckBox("File Mapping");
-    memAnonymousMappingROBox = new QCheckBox("Anon RO Mapping");
-    memAnonymousMappingRWBox = new QCheckBox("Anon RW Mapping");
-    memAnonymousMappingRWBox->setChecked(true);
-    memStackBox = new QCheckBox("Stack");
-    memSpecialBox = new QCheckBox("Special");
+    memSpecialBox = new QCheckBox("Exclude special regions");
+    memSpecialBox->setChecked(true);
+    memROBox = new QCheckBox("Exclude read-only regions");
+    memROBox->setChecked(true);
+    memExecBox = new QCheckBox("Exclude executable regions");
+    memExecBox->setChecked(true);
 
-    QGroupBox *memGroupBox = new QGroupBox(tr("Included Memory Regions"));
-    QGridLayout *memLayout = new QGridLayout;
-    memLayout->addWidget(memTextBox, 0, 0);
-    memLayout->addWidget(memDataROBox, 1, 0);
-    memLayout->addWidget(memDataRWBox, 2, 0);
-    memLayout->addWidget(memBSSBox, 3, 0);
-    memLayout->addWidget(memHeapBox, 4, 0);
-    memLayout->addWidget(memFileMappingBox, 0, 1);
-    memLayout->addWidget(memAnonymousMappingROBox, 1, 1);
-    memLayout->addWidget(memAnonymousMappingRWBox, 2, 1);
-    memLayout->addWidget(memStackBox, 3, 1);
-    memLayout->addWidget(memSpecialBox, 4, 1);
-
+    QGroupBox *memGroupBox = new QGroupBox(tr("Included Memory Flags"));
+    QVBoxLayout *memLayout = new QVBoxLayout;
+    memLayout->addWidget(memSpecialBox);
+    memLayout->addWidget(memROBox);
+    memLayout->addWidget(memExecBox);
     memGroupBox->setLayout(memLayout);
 
     /* Comparisons */
@@ -243,27 +229,13 @@ void RamSearchWindow::slotNew()
         return;
 
     /* Build the memory region flag variable */
-    int memregions = 0;
-    if (memTextBox->isChecked())
-        memregions |= MemSection::MemText;
-    if (memDataROBox->isChecked())
-        memregions |= MemSection::MemDataRO;
-    if (memDataRWBox->isChecked())
-        memregions |= MemSection::MemDataRW;
-    if (memBSSBox->isChecked())
-        memregions |= MemSection::MemBSS;
-    if (memHeapBox->isChecked())
-        memregions |= MemSection::MemHeap;
-    if (memFileMappingBox->isChecked())
-        memregions |= MemSection::MemFileMappingRW;
-    if (memAnonymousMappingROBox->isChecked())
-        memregions |= MemSection::MemAnonymousMappingRO;
-    if (memAnonymousMappingRWBox->isChecked())
-        memregions |= MemSection::MemAnonymousMappingRW;
-    if (memStackBox->isChecked())
-        memregions |= MemSection::MemStack;
+    int memflags = 0;
     if (memSpecialBox->isChecked())
-        memregions |= MemSection::MemSpecial;
+        memflags |= MemSection::MemNoSpecial;
+    if (memROBox->isChecked())
+        memflags |= MemSection::MemNoRO;
+    if (memExecBox->isChecked())
+        memflags |= MemSection::MemNoExec;
 
     /* Get the comparison parameters */
     CompareType compare_type;
@@ -276,10 +248,10 @@ void RamSearchWindow::slotNew()
 
     watchCount->hide();
     searchProgress->show();
-    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
+    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memflags));
 
     /* Call the RamSearch new function using the right type */
-    ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
+    ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
 
     searchProgress->hide();
     watchCount->show();

@@ -53,16 +53,9 @@ private:
     QProgressBar *searchProgress;
     QLabel *watchCount;
 
-    QCheckBox *memTextBox;
-    QCheckBox *memDataROBox;
-    QCheckBox *memDataRWBox;
-    QCheckBox *memBSSBox;
-    QCheckBox *memHeapBox;
-    QCheckBox *memFileMappingBox;
-    QCheckBox *memAnonymousMappingROBox;
-    QCheckBox *memAnonymousMappingRWBox;
-    QCheckBox *memStackBox;
     QCheckBox *memSpecialBox;
+    QCheckBox *memROBox;
+    QCheckBox *memExecBox;
 
     QRadioButton *comparePreviousButton;
     QRadioButton *compareValueButton;

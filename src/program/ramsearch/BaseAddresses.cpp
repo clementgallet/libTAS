@@ -52,7 +52,7 @@ void BaseAddresses::load()
     MemSection section;
     std::string previous_file = ""; // file of previous section
     bool previous_stored = false; // was the last section stored?
-    while (memlayout->nextSection(0xffffffff, section)) {
+    while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
         std::string file = fileFromPath(section.filename);
         
         /* Special case for BSS, which belongs to executable memory */
@@ -91,7 +91,7 @@ uintptr_t BaseAddresses::findNewFile(std::string file)
     
     MemSection section;
     uintptr_t base_addr = 0;
-    while (memlayout->nextSection(0xffffffff, section)) {
+    while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
         std::string section_file = fileFromPath(section.filename);
         
         /* Only add the requested file */
