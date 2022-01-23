@@ -61,6 +61,8 @@ public:
 
     /* Return the address of the given row, used to fill ramwatch */
     uintptr_t address(int row);
+    
+    void clear();
 
 private:
     Context *context;

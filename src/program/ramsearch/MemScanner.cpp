@@ -267,3 +267,11 @@ const char* MemScanner::get_current_value(int index, bool hex) const
 
     return CompareOperations::tostring(value, hex);
 }
+
+void MemScanner::clear()
+{
+    total_size = 0;
+    addresses.clear();
+    old_values.clear();
+    memsections.clear();
+}

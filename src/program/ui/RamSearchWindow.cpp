@@ -18,11 +18,9 @@
  */
 
 #include <QtWidgets/QTableView>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
@@ -66,7 +64,6 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     watchLayout->addWidget(searchProgress);
     watchLayout->addWidget(watchCount);
 
-
     /* Memory regions */
     memSpecialBox = new QCheckBox("Exclude special regions");
     memSpecialBox->setChecked(true);
@@ -75,7 +72,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     memExecBox = new QCheckBox("Exclude executable regions");
     memExecBox->setChecked(true);
 
-    QGroupBox *memGroupBox = new QGroupBox(tr("Included Memory Flags"));
+    memGroupBox = new QGroupBox(tr("Included Memory Flags"));
     QVBoxLayout *memLayout = new QVBoxLayout;
     memLayout->addWidget(memSpecialBox);
     memLayout->addWidget(memROBox);
@@ -135,17 +132,17 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     displayBox->addItem("decimal");
     displayBox->addItem("hexadecimal");
 
-    QGroupBox *formatGroupBox = new QGroupBox(tr("Format"));
+    formatGroupBox = new QGroupBox(tr("Format"));
     QFormLayout *formatLayout = new QFormLayout;
     formatLayout->addRow(new QLabel(tr("Type:")), typeBox);
     formatLayout->addRow(new QLabel(tr("Display:")), displayBox);
     formatGroupBox->setLayout(formatLayout);
 
     /* Buttons */
-    QPushButton *newButton = new QPushButton(tr("New"));
+    newButton = new QPushButton(tr("New"));
     connect(newButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotNew);
 
-    QPushButton *searchButton = new QPushButton(tr("Search"));
+    searchButton = new QPushButton(tr("Search"));
     connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
 
     QPushButton *addButton = new QPushButton(tr("Add Watch"));
@@ -227,6 +224,18 @@ void RamSearchWindow::slotNew()
 {
     if (context->status != Context::ACTIVE)
         return;
+    
+    /* If there are results, then clear the current scan and enable all boxes */
+    if (ramSearchModel->watchCount() != 0) {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+        return;
+    }
+
+    /* Disable buttons during the process */
+    newButton->setDisabled(true);
+    searchButton->setDisabled(true);
 
     /* Build the memory region flag variable */
     int memflags = 0;
@@ -261,10 +270,29 @@ void RamSearchWindow::slotNew()
         watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
     else
         watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+        
+    /* Change the button to "Stop" and disable some boxes */
+    if (ramSearchModel->watchCount() != 0) {
+        newButton->setText(tr("Stop"));
+        memGroupBox->setDisabled(true);
+        formatGroupBox->setDisabled(true);
+    }
+    else {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+    }
+    
+    newButton->setDisabled(false);
+    searchButton->setDisabled(false);
 }
 
 void RamSearchWindow::slotSearch()
 {
+    /* Disable buttons during the process */
+    newButton->setDisabled(true);
+    searchButton->setDisabled(true);
+
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
@@ -285,6 +313,16 @@ void RamSearchWindow::slotSearch()
         watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
     else
         watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+
+    /* Change the button to "New" if no results */
+    if (ramSearchModel->watchCount() == 0) {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+    }
+    
+    newButton->setDisabled(false);
+    searchButton->setDisabled(false);
 }
 
 void RamSearchWindow::slotAdd()

@@ -12,6 +12,7 @@
 * Add another method to find dlfct symbols (#435)
 * Add Unity sync values for Dandara
 * Show pending input changes in the input editor when rewinding.
+* Ram Search window can be cleared
 
 ### Changed
 

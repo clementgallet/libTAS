@@ -59,6 +59,9 @@ class MemScanner : public QObject {
         /* Get the current value of the scan result with index as string */
         const char* get_current_value(int index, bool hex) const;
 
+        /* Clear all results */
+        void clear();
+
         /* Array of all memory sections parsed from /proc/self/maps */
         std::vector<MemSection> memsections;
         

@@ -114,3 +114,8 @@ uintptr_t RamSearchModel::address(int row)
 {
     return memscanner.get_address(row);
 }
+
+void RamSearchModel::clear()
+{
+    memscanner.clear();
+}

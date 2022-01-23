@@ -28,6 +28,8 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QGroupBox>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <memory>
@@ -53,6 +55,7 @@ private:
     QProgressBar *searchProgress;
     QLabel *watchCount;
 
+    QGroupBox *memGroupBox;
     QCheckBox *memSpecialBox;
     QCheckBox *memROBox;
     QCheckBox *memExecBox;
@@ -70,9 +73,13 @@ private:
     QRadioButton *operatorDifferenceButton;
     QDoubleSpinBox *differenceValueBox;
 
+    QGroupBox *formatGroupBox;
     QComboBox *typeBox;
     QComboBox *displayBox;
 
+    QPushButton *newButton;
+    QPushButton *searchButton;
+    
     /* Timer to limit the number of update calls */
     QElapsedTimer* updateTimer;
 
