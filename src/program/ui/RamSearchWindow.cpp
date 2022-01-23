@@ -284,8 +284,11 @@ void RamSearchWindow::slotNew()
     searchProgress->hide();
     watchCount->show();
 
-    /* Update address count */
-    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+    /* Don't display values if too many results */
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->watchCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    else
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
 }
 
 void RamSearchWindow::slotSearch()
@@ -305,8 +308,11 @@ void RamSearchWindow::slotSearch()
     /* Update address count */
     searchProgress->hide();
     watchCount->show();
-    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
-
+    /* Don't display values if too many results */
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->watchCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->watchCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    else
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
 }
 
 void RamSearchWindow::slotAdd()

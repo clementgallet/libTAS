@@ -193,6 +193,9 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
 
     /* Wait for each thread to finish and merge all individual files created
      * by each thread into a single file, and inside vectors to be displayed. */
+    /* TODO: this can take a bit of time, do this in another thread if we don't
+     * need to display values (above threshold).
+     * Prevent a new search until the file merge is completed */
     std::ofstream ovfs(values_path, std::ofstream::binary);
     std::ofstream oafs;
     if (!last_scan_was_region) {
@@ -217,7 +220,7 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
     addresses.clear();
     old_values.clear();
     
-    if (total_size < DISPLAY_THRESHOLD) {
+    if (total_size < (DISPLAY_THRESHOLD*value_type_size)) {
         /* Close the streams before reading the files */
         oafs.close();
         ovfs.close();

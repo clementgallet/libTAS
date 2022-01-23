@@ -63,11 +63,11 @@ class MemScanner : public QObject {
         std::vector<MemSection> memsections;
         
         const int THREAD_COUNT = 4;
-        const int DISPLAY_THRESHOLD = 10000;
+        const int DISPLAY_THRESHOLD = 10000; // don't display results when above threshold
         
-        static std::string memscan_path;
-        static std::string addresses_path;
-        static std::string values_path;
+        static std::string memscan_path; // directory containing all scan files
+        static std::string addresses_path; // output file containing all scan addresses
+        static std::string values_path; // output file containing all scan values
         
         int value_type;
         int value_type_size;
@@ -75,18 +75,19 @@ class MemScanner : public QObject {
         CompareOperator compare_operator;
         double compare_value;
         double different_value;
-
-        uint64_t total_size;
-
-        bool last_scan_was_region = true;
-        
-        std::vector<char> addresses;
-        std::vector<char> old_values;
         
     private:
+        bool last_scan_was_region = true;
+        uint64_t total_size; // total size of the last scan (in bytes)
+
+        std::vector<char> addresses; // scan addresses shown to the user
+        std::vector<char> old_values; // scan previous values shown to the user
+
+        /* Format a value to be shown */
         const char* tostring(const void* value, bool hex) const;
 
     signals:
+        /* Update the scan progress bar */
         void signalProgress(int);
 };
 
