@@ -55,7 +55,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
 
     /* Progress bar */
     searchProgress = new QProgressBar();
-    connect(ramSearchModel, &RamSearchModel::signalProgress, searchProgress, &QProgressBar::setValue);
+    connect(&ramSearchModel->memscanner, &MemScanner::signalProgress, searchProgress, &QProgressBar::setValue);
 
     watchCount = new QLabel();
     // watchCount->setHeight(searchProgress->height());
@@ -276,7 +276,7 @@ void RamSearchWindow::slotNew()
 
     watchCount->hide();
     searchProgress->show();
-    // searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
+    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
 
     /* Call the RamSearch new function using the right type */
     ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);

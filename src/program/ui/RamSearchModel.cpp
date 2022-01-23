@@ -92,10 +92,6 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
 
     memscanner.first_scan(context->game_pid, mem_filter, type, ct, co, cv, dv);
 
-    // if (!(cur_size & 0xfff)) {
-    //     emit signalProgress(cur_size);
-    // }
-
     endResetModel();
 }
 

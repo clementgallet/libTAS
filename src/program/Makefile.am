@@ -3,6 +3,7 @@ bin_PROGRAMS = libTAS
 libTAS_QTSOURCES = \
     GameEvents.h \
     GameLoop.h \
+    ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
     ui/AutoSaveWindow.h \
     ui/ControllerAxisWidget.h \

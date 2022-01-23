@@ -55,9 +55,12 @@ class MemScannerThread {
         uint64_t memory_size; // Size of the memory file portion to process (in bytes)
         
         uint64_t new_memory_size; // New size after the scan (in bytes)
+        volatile uint64_t processed_memory_size; // Current processed size (in bytes), used for progress bar
         
         std::string addresses_path; // Output file of addresses
         std::string values_path; // Output file of values
+        
+        volatile bool finished; // indicate if scan is finished, used for progress bar
 };
 
 #endif

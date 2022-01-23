@@ -163,6 +163,23 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
         }
     }
 
+    /* Update progress bar */
+    /* We would normally just join all threads, but we need to update the scan
+     * state periodically to update the progress bar. So we check if all
+     * scan threads have finished. */
+    bool scan_finished = false;
+    while (!scan_finished) { 
+        uint64_t total_processed_size = 0;
+        scan_finished = true;
+        
+        for (const auto& ms : memscanners) {
+            total_processed_size += ms.processed_memory_size;
+            scan_finished &= ms.finished;
+        }
+        emit signalProgress(total_processed_size);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
     last_scan_was_region = (first && (compare_type == CompareType::Previous));
 
     /* Wait for the thread to finish. TODO: be able to cancel it. */

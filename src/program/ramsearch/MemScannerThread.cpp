@@ -34,6 +34,7 @@
 
 MemScannerThread::MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba, uintptr_t ea, off_t mo, uint64_t mem) : memscanner(ms), beg_region(br), end_region(er), beg_address(ba), end_address(ea), memory_offset(mo), memory_size(mem)
 {
+    finished = false;
 }
 
 MemScannerThread::~MemScannerThread()
@@ -62,6 +63,7 @@ void MemScannerThread::first_region_scan()
     std::ofstream vfs(values_path, std::ofstream::binary);
     
     new_memory_size = 0;
+    processed_memory_size = 0;
     
     /* Start searching from beg_address to end_address, which were split evenly
      * between all threads. Read memory by chunks */
@@ -94,8 +96,10 @@ void MemScannerThread::first_region_scan()
             }
             vfs.write((char*)chunk, 4096);
             new_memory_size += 4096;
+            processed_memory_size += 4096;
         }
     }
+    finished = true;
 }
 
 void MemScannerThread::first_address_scan()
@@ -105,6 +109,7 @@ void MemScannerThread::first_address_scan()
     std::ofstream vfs(values_path, std::ofstream::binary);
     
     new_memory_size = 0;
+    processed_memory_size = 0;
 
     /* Save in files by batches */
     uintptr_t batch_addresses[4096];
@@ -136,10 +141,11 @@ void MemScannerThread::first_address_scan()
         uint8_t chunk[4096];
         
         for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += 4096) {
+            processed_memory_size += 4096;
+
             int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), 4096);
-            if (readValues < 0) {
-                std::cerr << "Cound not read game process at address " << ca << std::endl;
-            }
+            if (readValues < 0)
+                continue;
             for (int v = 0; v < 4096; v += memscanner.value_type_size) {
                 if (CompareOperations::check_value(chunk+v)) {
                     batch_addresses[batch_index] = ca + v;
@@ -160,6 +166,7 @@ void MemScannerThread::first_address_scan()
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
     new_memory_size += batch_index*memscanner.value_type_size;
+    finished = true;
 }
 
 void MemScannerThread::next_scan_from_region()
@@ -169,6 +176,7 @@ void MemScannerThread::next_scan_from_region()
     std::ofstream vfs(values_path, std::ofstream::binary);
     
     new_memory_size = 0;
+    processed_memory_size = 0;
 
     std::vector<uint8_t> new_memory;
     new_memory.resize(MEMORY_CHUNK_SIZE);
@@ -214,6 +222,8 @@ void MemScannerThread::next_scan_from_region()
             if ((cur_end_addr - cur_beg_addr) < chunk_size)
                 chunk_size = cur_end_addr - cur_beg_addr;
             
+            processed_memory_size += chunk_size;
+
             if (memscanner.compare_type == CompareType::Previous) {
                 ivfs.read(old_memory.data(), chunk_size);
             }
@@ -251,6 +261,7 @@ void MemScannerThread::next_scan_from_region()
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
     new_memory_size += batch_index*memscanner.value_type_size;
+    finished = true;
 }
 
 void MemScannerThread::next_scan_from_address()
@@ -260,6 +271,8 @@ void MemScannerThread::next_scan_from_address()
     std::ofstream vfs(values_path, std::ofstream::binary);
     
     new_memory_size = 0;
+    processed_memory_size = 0;
+
     int size_ratio = sizeof(uintptr_t)/memscanner.value_type_size;
 
     std::vector<uint8_t> new_memory;
@@ -334,6 +347,8 @@ void MemScannerThread::next_scan_from_address()
                     break;
             }
             
+            processed_memory_size += (addr_cur_index-addr_beg_index)*sizeof(uintptr_t);
+
             int readValues;
 
             /* If only one address in page, load that address */
@@ -345,9 +360,8 @@ void MemScannerThread::next_scan_from_address()
                 uintptr_t last_addr = old_addresses[addr_cur_index-1];
                 readValues = MemAccess::read(new_memory.data(), reinterpret_cast<void*>(beg_addr), (last_addr-beg_addr)+memscanner.value_type_size);
             }
-            if (readValues < 0) {
-                std::cerr << "Cound not read game process at address " << beg_addr << std::endl;
-            }
+            if (readValues < 0)
+                continue;
             
             for (int i = addr_beg_index; i < addr_cur_index; i++) {
                 uintptr_t addr = old_addresses[i];
@@ -379,4 +393,5 @@ void MemScannerThread::next_scan_from_address()
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
     new_memory_size += batch_index*memscanner.value_type_size;
+    finished = true;
 }

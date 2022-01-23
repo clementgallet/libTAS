@@ -24,14 +24,16 @@
 #include "MemSection.h"
 // #include "MemScanner.h"
 
+#include <QtCore/QObject>
 #include <string>
 #include <vector>
 #include <cstdint>
 
 /* Store a section of the game memory */
-class MemScanner {
+class MemScanner : public QObject {
+    Q_OBJECT
+    
     public:
-
         /* Initialize the memory scanner with the memory scan path */
         static void init(std::string path);
 
@@ -82,9 +84,10 @@ class MemScanner {
         std::vector<char> old_values;
         
     private:
-        
         const char* tostring(const void* value, bool hex) const;
 
+    signals:
+        void signalProgress(int);
 };
 
 #endif
