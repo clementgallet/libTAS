@@ -43,7 +43,7 @@ void TimeTraceModel::addCall(int type, unsigned long long hash, std::string stac
         }
         it->second.count++;
         /* TODO: Get the row index? */
-        emit dataChanged(createIndex(0,1), createIndex(rowCount(),1));
+        emit dataChanged(index(0,1), index(rowCount()-1,1));
     }
     else {
         beginInsertRows(QModelIndex(), time_calls_map.size(), time_calls_map.size());

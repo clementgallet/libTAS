@@ -186,5 +186,5 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
 
 void RamWatchModel::update()
 {
-    emit dataChanged(createIndex(0,0), createIndex(rowCount(),1));
+    emit dataChanged(index(0,0), index(rowCount()-1,1), QVector<int>(Qt::DisplayRole));
 }

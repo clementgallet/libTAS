@@ -106,7 +106,8 @@ void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv
 
 void RamSearchModel::update()
 {
-    emit dataChanged(createIndex(0,1), createIndex(rowCount(),1));
+    if (rowCount() > 0)
+        emit dataChanged(index(0,1), index(rowCount()-1,1), QVector<int>(Qt::DisplayRole));
 }
 
 uintptr_t RamSearchModel::address(int row)

@@ -63,7 +63,7 @@ class MemScanner : public QObject {
         std::vector<MemSection> memsections;
         
         const int THREAD_COUNT = 4;
-        const int DISPLAY_THRESHOLD = 10000; // don't display results when above threshold
+        const uint64_t DISPLAY_THRESHOLD = 10000; // don't display results when above threshold
         
         static std::string memscan_path; // directory containing all scan files
         static std::string addresses_path; // output file containing all scan addresses
