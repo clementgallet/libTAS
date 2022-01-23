@@ -26,8 +26,6 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
-#include <inttypes.h>
-// #include <algorithm>
 
 std::string MemScanner::memscan_path;
 std::string MemScanner::addresses_path;
@@ -256,7 +254,7 @@ const char* MemScanner::get_previous_value(int index, bool hex) const
     if (old_values.empty())
         return "";
         
-    return tostring(&old_values[index*value_type_size], hex);
+    return CompareOperations::tostring(&old_values[index*value_type_size], hex);
 }
 
 const char* MemScanner::get_current_value(int index, bool hex) const
@@ -267,64 +265,5 @@ const char* MemScanner::get_current_value(int index, bool hex) const
     if (readValues != value_type_size)
         return "";
 
-    return tostring(value, hex);
-}
-
-const char* MemScanner::tostring(const void* value, bool hex) const
-{
-    static char str[30];
-
-    switch (value_type) {
-        case RamChar:
-        {
-            snprintf(str, 30, hex?"%x":"%d", *(int8_t*)value);
-            return str;
-        }
-        case RamUnsignedChar:
-        {
-            snprintf(str, 30, hex?"%x":"%u", *(uint8_t*)value);
-            return str;
-        }
-        case RamShort:
-        {
-            snprintf(str, 30, hex?"%x":"%d", *(int16_t*)value);
-            return str;
-        }
-        case RamUnsignedShort:
-        {
-            snprintf(str, 30, hex?"%x":"%u", *(uint16_t*)value);
-            return str;
-        }
-        case RamInt:
-        {
-            snprintf(str, 30, hex?"%x":"%d", *(int32_t*)value);
-            return str;
-        }
-        case RamUnsignedInt:
-        {
-            snprintf(str, 30, hex?"%x":"%u", *(uint32_t*)value);
-            return str;
-        }
-        case RamLong:
-        {
-            snprintf(str, 30, hex?"%" PRIx64:"%" PRId64, *(int64_t*)value);
-            return str;
-        }
-        case RamUnsignedLong:
-        {
-            snprintf(str, 30, hex?"%" PRIx64:"%" PRIu64, *(uint64_t*)value);
-            return str;
-        }
-        case RamFloat:
-        {
-            snprintf(str, 30, hex?"%a":"%g", *(float*)value);
-            return str;
-        }
-        case RamDouble:
-        {
-            snprintf(str, 30, hex?"%la":"%lg", *(double*)value);
-            return str;
-        }
-    }
-    return str;
+    return CompareOperations::tostring(value, hex);
 }

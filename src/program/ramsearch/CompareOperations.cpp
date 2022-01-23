@@ -20,6 +20,8 @@
 #include "CompareOperations.h"
 #include "TypeIndex.h"
 #include <cstdint>
+#include <cstdio>
+#include <inttypes.h>
 
 typedef union {
     int8_t v_int8_t;
@@ -159,4 +161,64 @@ bool CompareOperations::check_previous(const void* value, const void* old_value)
 {
     compare_value = *static_cast<const value_t*>(old_value);
     return compare_method(static_cast<const value_t*>(value));
+}
+
+const char* CompareOperations::tostring(const void* value, bool hex)
+{
+    static char str[30];
+    const value_t* v = static_cast<const value_t*>(value);
+
+    switch (value_type) {
+        case RamChar:
+        {
+            snprintf(str, 30, hex?"%x":"%d", v->v_int8_t);
+            return str;
+        }
+        case RamUnsignedChar:
+        {
+            snprintf(str, 30, hex?"%x":"%u", v->v_uint8_t);
+            return str;
+        }
+        case RamShort:
+        {
+            snprintf(str, 30, hex?"%x":"%d", v->v_int16_t);
+            return str;
+        }
+        case RamUnsignedShort:
+        {
+            snprintf(str, 30, hex?"%x":"%u", v->v_uint16_t);
+            return str;
+        }
+        case RamInt:
+        {
+            snprintf(str, 30, hex?"%x":"%d", v->v_int32_t);
+            return str;
+        }
+        case RamUnsignedInt:
+        {
+            snprintf(str, 30, hex?"%x":"%u", v->v_uint32_t);
+            return str;
+        }
+        case RamLong:
+        {
+            snprintf(str, 30, hex?"%" PRIx64:"%" PRId64, v->v_int64_t);
+            return str;
+        }
+        case RamUnsignedLong:
+        {
+            snprintf(str, 30, hex?"%" PRIx64:"%" PRIu64, v->v_uint64_t);
+            return str;
+        }
+        case RamFloat:
+        {
+            snprintf(str, 30, hex?"%a":"%g", v->v_float);
+            return str;
+        }
+        case RamDouble:
+        {
+            snprintf(str, 30, hex?"%la":"%lg", v->v_double);
+            return str;
+        }
+    }
+    return str;
 }

@@ -83,9 +83,6 @@ class MemScanner : public QObject {
         std::vector<char> addresses; // scan addresses shown to the user
         std::vector<char> old_values; // scan previous values shown to the user
 
-        /* Format a value to be shown */
-        const char* tostring(const void* value, bool hex) const;
-
     signals:
         /* Update the scan progress bar */
         void signalProgress(int);
