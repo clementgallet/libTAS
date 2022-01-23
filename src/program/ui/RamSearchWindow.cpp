@@ -18,11 +18,9 @@
  */
 
 #include <QtWidgets/QTableView>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
@@ -32,7 +30,7 @@
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
-#include "../ramsearch/CompareEnums.h"
+#include "../ramsearch/CompareOperations.h"
 
 #include <limits>
 
@@ -55,7 +53,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
 
     /* Progress bar */
     searchProgress = new QProgressBar();
-    connect(ramSearchModel, &RamSearchModel::signalProgress, searchProgress, &QProgressBar::setValue);
+    connect(&ramSearchModel->memscanner, &MemScanner::signalProgress, searchProgress, &QProgressBar::setValue);
 
     watchCount = new QLabel();
     // watchCount->setHeight(searchProgress->height());
@@ -66,34 +64,19 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     watchLayout->addWidget(searchProgress);
     watchLayout->addWidget(watchCount);
 
-
     /* Memory regions */
-    memTextBox = new QCheckBox("Text");
-    memDataROBox = new QCheckBox("RO Data");
-    memDataRWBox = new QCheckBox("RW Data");
-    memBSSBox = new QCheckBox("BSS");
-    memHeapBox = new QCheckBox("Heap");
-    memHeapBox->setChecked(true);
-    memFileMappingBox = new QCheckBox("File Mapping");
-    memAnonymousMappingROBox = new QCheckBox("Anon RO Mapping");
-    memAnonymousMappingRWBox = new QCheckBox("Anon RW Mapping");
-    memAnonymousMappingRWBox->setChecked(true);
-    memStackBox = new QCheckBox("Stack");
-    memSpecialBox = new QCheckBox("Special");
+    memSpecialBox = new QCheckBox("Exclude special regions");
+    memSpecialBox->setChecked(true);
+    memROBox = new QCheckBox("Exclude read-only regions");
+    memROBox->setChecked(true);
+    memExecBox = new QCheckBox("Exclude executable regions");
+    memExecBox->setChecked(true);
 
-    QGroupBox *memGroupBox = new QGroupBox(tr("Included Memory Regions"));
-    QGridLayout *memLayout = new QGridLayout;
-    memLayout->addWidget(memTextBox, 0, 0);
-    memLayout->addWidget(memDataROBox, 1, 0);
-    memLayout->addWidget(memDataRWBox, 2, 0);
-    memLayout->addWidget(memBSSBox, 3, 0);
-    memLayout->addWidget(memHeapBox, 4, 0);
-    memLayout->addWidget(memFileMappingBox, 0, 1);
-    memLayout->addWidget(memAnonymousMappingROBox, 1, 1);
-    memLayout->addWidget(memAnonymousMappingRWBox, 2, 1);
-    memLayout->addWidget(memStackBox, 3, 1);
-    memLayout->addWidget(memSpecialBox, 4, 1);
-
+    memGroupBox = new QGroupBox(tr("Included Memory Flags"));
+    QVBoxLayout *memLayout = new QVBoxLayout;
+    memLayout->addWidget(memSpecialBox);
+    memLayout->addWidget(memROBox);
+    memLayout->addWidget(memExecBox);
     memGroupBox->setLayout(memLayout);
 
     /* Comparisons */
@@ -149,17 +132,17 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     displayBox->addItem("decimal");
     displayBox->addItem("hexadecimal");
 
-    QGroupBox *formatGroupBox = new QGroupBox(tr("Format"));
+    formatGroupBox = new QGroupBox(tr("Format"));
     QFormLayout *formatLayout = new QFormLayout;
     formatLayout->addRow(new QLabel(tr("Type:")), typeBox);
     formatLayout->addRow(new QLabel(tr("Display:")), displayBox);
     formatGroupBox->setLayout(formatLayout);
 
     /* Buttons */
-    QPushButton *newButton = new QPushButton(tr("New"));
+    newButton = new QPushButton(tr("New"));
     connect(newButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotNew);
 
-    QPushButton *searchButton = new QPushButton(tr("Search"));
+    searchButton = new QPushButton(tr("Search"));
     connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
 
     QPushButton *addButton = new QPushButton(tr("Add Watch"));
@@ -185,10 +168,30 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     mainLayout->addLayout(optionLayout);
 
     setLayout(mainLayout);
+    
+    /* Start the update timer */
+    updateTimer = new QElapsedTimer();
+    updateTimer->start();
+
+    /* Configure the call timer */
+    callTimer = new QTimer(this);
+    callTimer->setSingleShot(true);
+    connect(callTimer, &QTimer::timeout, this, &RamSearchWindow::update);
 }
 
 void RamSearchWindow::update()
 {
+    /* Only update on new frame and every .5 ms */
+    int64_t elapsed = updateTimer->elapsed();
+    if (elapsed < 500) {
+        /* Call this function on timeout, if not already done */
+        if (!callTimer->isActive()) {
+            callTimer->start(500 - elapsed);
+        }
+        return;
+    }
+    updateTimer->start();
+
     ramSearchModel->update();
 }
 
@@ -221,29 +224,29 @@ void RamSearchWindow::slotNew()
 {
     if (context->status != Context::ACTIVE)
         return;
+    
+    /* If there are results, then clear the current scan and enable all boxes */
+    if (ramSearchModel->scanCount() != 0) {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+        ramSearchModel->clear();
+        watchCount->setText("");
+        return;
+    }
+
+    /* Disable buttons during the process */
+    newButton->setDisabled(true);
+    searchButton->setDisabled(true);
 
     /* Build the memory region flag variable */
-    int memregions = 0;
-    if (memTextBox->isChecked())
-        memregions |= MemSection::MemText;
-    if (memDataROBox->isChecked())
-        memregions |= MemSection::MemDataRO;
-    if (memDataRWBox->isChecked())
-        memregions |= MemSection::MemDataRW;
-    if (memBSSBox->isChecked())
-        memregions |= MemSection::MemBSS;
-    if (memHeapBox->isChecked())
-        memregions |= MemSection::MemHeap;
-    if (memFileMappingBox->isChecked())
-        memregions |= MemSection::MemFileMappingRW;
-    if (memAnonymousMappingROBox->isChecked())
-        memregions |= MemSection::MemAnonymousMappingRO;
-    if (memAnonymousMappingRWBox->isChecked())
-        memregions |= MemSection::MemAnonymousMappingRW;
-    if (memStackBox->isChecked())
-        memregions |= MemSection::MemStack;
+    int memflags = 0;
     if (memSpecialBox->isChecked())
-        memregions |= MemSection::MemSpecial;
+        memflags |= MemSection::MemNoSpecial;
+    if (memROBox->isChecked())
+        memflags |= MemSection::MemNoRO;
+    if (memExecBox->isChecked())
+        memflags |= MemSection::MemNoExec;
 
     /* Get the comparison parameters */
     CompareType compare_type;
@@ -256,27 +259,49 @@ void RamSearchWindow::slotNew()
 
     watchCount->hide();
     searchProgress->show();
-    searchProgress->setMaximum(ramSearchModel->predictWatchCount(memregions));
+    searchProgress->setMaximum(ramSearchModel->predictScanCount(memflags));
 
     /* Call the RamSearch new function using the right type */
-    ramSearchModel->newWatches(memregions, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
+    ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
 
     searchProgress->hide();
     watchCount->show();
 
-    /* Update address count */
-    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+    /* Don't display values if too many results */
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    else
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
+        
+    /* Change the button to "Stop" and disable some boxes */
+    if (ramSearchModel->scanCount() != 0) {
+        newButton->setText(tr("Stop"));
+        memGroupBox->setDisabled(true);
+        formatGroupBox->setDisabled(true);
+    }
+    else {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+    }
+    
+    newButton->setDisabled(false);
+    searchButton->setDisabled(false);
 }
 
 void RamSearchWindow::slotSearch()
 {
+    /* Disable buttons during the process */
+    newButton->setDisabled(true);
+    searchButton->setDisabled(true);
+
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
     double different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
-    searchProgress->setMaximum(ramSearchModel->watchCount());
+    searchProgress->setMaximum(ramSearchModel->scanSize());
     watchCount->hide();
     searchProgress->show();
 
@@ -285,8 +310,22 @@ void RamSearchWindow::slotSearch()
     /* Update address count */
     searchProgress->hide();
     watchCount->show();
-    watchCount->setText(QString("%1 addresses").arg(ramSearchModel->watchCount()));
+    
+    /* Don't display values if too many results */
+    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+    else
+        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
 
+    /* Change the button to "New" if no results */
+    if (ramSearchModel->scanCount() == 0) {
+        newButton->setText(tr("New"));
+        memGroupBox->setDisabled(false);
+        formatGroupBox->setDisabled(false);
+    }
+    
+    newButton->setDisabled(false);
+    searchButton->setDisabled(false);
 }
 
 void RamSearchWindow::slotAdd()
@@ -306,7 +345,8 @@ void RamSearchWindow::slotAdd()
 
     MainWindow *mw = qobject_cast<MainWindow*>(parent());
     if (mw) {
-        mw->ramWatchWindow->editWindow->fill(ramSearchModel->ramwatches.at(row));
+        
+        mw->ramWatchWindow->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
         mw->ramWatchWindow->slotAdd();
     }
 }

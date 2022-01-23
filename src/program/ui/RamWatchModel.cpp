@@ -129,34 +129,34 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
 
         /* Build the ram watch using the right type as template */
         switch (type) {
-            case RamWatch::RamUnsignedChar:
+            case RamUnsignedChar:
                 ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
                 break;
-            case RamWatch::RamChar:
+            case RamChar:
                 ramwatch.reset(new RamWatchDetailed<char>(addr));
                 break;
-            case RamWatch::RamUnsignedShort:
+            case RamUnsignedShort:
                 ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
                 break;
-            case RamWatch::RamShort:
+            case RamShort:
                 ramwatch.reset(new RamWatchDetailed<short>(addr));
                 break;
-            case RamWatch::RamUnsignedInt:
+            case RamUnsignedInt:
                 ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
                 break;
-            case RamWatch::RamInt:
+            case RamInt:
                 ramwatch.reset(new RamWatchDetailed<int>(addr));
                 break;
-            case RamWatch::RamUnsignedLong:
+            case RamUnsignedLong:
                 ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
                 break;
-            case RamWatch::RamLong:
+            case RamLong:
                 ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
                 break;
-            case RamWatch::RamFloat:
+            case RamFloat:
                 ramwatch.reset(new RamWatchDetailed<float>(addr));
                 break;
-            case RamWatch::RamDouble:
+            case RamDouble:
                 ramwatch.reset(new RamWatchDetailed<double>(addr));
                 break;
             default:
@@ -186,5 +186,5 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
 
 void RamWatchModel::update()
 {
-    emit dataChanged(createIndex(0,0), createIndex(rowCount(),1));
+    emit dataChanged(index(0,0), index(rowCount()-1,1), QVector<int>(Qt::DisplayRole));
 }

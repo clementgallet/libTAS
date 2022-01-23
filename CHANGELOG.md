@@ -12,11 +12,13 @@
 * Add another method to find dlfct symbols (#435)
 * Add Unity sync values for Dandara
 * Show pending input changes in the input editor when rewinding.
+* Ram Search window can be cleared
 
 ### Changed
 
 * Raise the minimum audio buffer size
 * Change default video codec to x264rgb
+* Rework the ram search entirely (#268)
 
 ### Fixed
 

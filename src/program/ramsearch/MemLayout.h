@@ -31,9 +31,11 @@ class MemLayout {
         MemLayout(pid_t pid);
         ~MemLayout();
         
-        uint64_t totalSize(int type_flag);
+        /* Compute the total size of memory regions, within the selected `types`
+         * and following the selected `flags` */
+        uint64_t totalSize(int types, int flags);
         
-        bool nextSection(int type_flag, MemSection &section);
+        bool nextSection(int types, int flags, MemSection &section);
 
     private:
         void readLayout();

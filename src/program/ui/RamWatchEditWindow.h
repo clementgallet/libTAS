@@ -42,7 +42,7 @@ public:
 
     void clear();
     void fill(std::unique_ptr<IRamWatchDetailed> &watch);
-    void fill(const RamWatch &watch);
+    void fill(uintptr_t addr, int type);
 
     std::unique_ptr<IRamWatchDetailed> ramwatch;
 

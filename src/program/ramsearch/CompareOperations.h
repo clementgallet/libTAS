@@ -17,8 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_COMPAREENUMS_H_INCLUDED
-#define LIBTAS_COMPAREENUMS_H_INCLUDED
+#ifndef LIBTAS_COMPAREOPERATIONS_H_INCLUDED
+#define LIBTAS_COMPAREOPERATIONS_H_INCLUDED
+
+#include <cstdint>
+// #include <sys/types.h>
 
 enum class CompareType {
     Previous,
@@ -34,5 +37,19 @@ enum class CompareOperator {
     GreaterEqual,
     Different,
 };
+
+namespace CompareOperations {
+
+    void init(int value_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
+
+    /* Compute the comparaison between the content of value and the stored contant value */
+    bool check_value(const void* value);
+
+    /* Compute the comparaison between the content of value and the old value */
+    bool check_previous(const void* value, const void* old_value);
+    
+    /* Format a value to be shown */
+    const char* tostring(const void* value, bool hex);
+}
 
 #endif

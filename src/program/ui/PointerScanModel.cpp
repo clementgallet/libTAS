@@ -40,10 +40,10 @@ void PointerScanModel::locatePointers()
     file_mapping_sections.clear();
 
     int type_flag = (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemHeap | MemSection::MemAnonymousMappingRW | MemSection::MemFileMappingRW | MemSection::MemStack);
-    uint64_t total_size = memlayout->totalSize(type_flag);
+    uint64_t total_size = memlayout->totalSize(type_flag, 0);
     
     MemSection section;
-    while (memlayout->nextSection(type_flag, section)) {
+    while (memlayout->nextSection(type_flag, 0, section)) {
         /* Only store sections that could contain pointers */
         memory_sections.push_back(section);
         

@@ -28,10 +28,14 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QGroupBox>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <memory>
 
 #include "../Context.h"
-#include "../ramsearch/CompareEnums.h"
+#include "../ramsearch/CompareOperations.h"
 
 class RamSearchModel;
 
@@ -51,16 +55,10 @@ private:
     QProgressBar *searchProgress;
     QLabel *watchCount;
 
-    QCheckBox *memTextBox;
-    QCheckBox *memDataROBox;
-    QCheckBox *memDataRWBox;
-    QCheckBox *memBSSBox;
-    QCheckBox *memHeapBox;
-    QCheckBox *memFileMappingBox;
-    QCheckBox *memAnonymousMappingROBox;
-    QCheckBox *memAnonymousMappingRWBox;
-    QCheckBox *memStackBox;
+    QGroupBox *memGroupBox;
     QCheckBox *memSpecialBox;
+    QCheckBox *memROBox;
+    QCheckBox *memExecBox;
 
     QRadioButton *comparePreviousButton;
     QRadioButton *compareValueButton;
@@ -75,8 +73,18 @@ private:
     QRadioButton *operatorDifferenceButton;
     QDoubleSpinBox *differenceValueBox;
 
+    QGroupBox *formatGroupBox;
     QComboBox *typeBox;
     QComboBox *displayBox;
+
+    QPushButton *newButton;
+    QPushButton *searchButton;
+    
+    /* Timer to limit the number of update calls */
+    QElapsedTimer* updateTimer;
+
+    /* Timer to trigger the update call */
+    QTimer* callTimer;
 
     void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value);
 

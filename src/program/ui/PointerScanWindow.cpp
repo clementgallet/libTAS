@@ -32,7 +32,7 @@
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
-#include "../ramsearch/CompareEnums.h"
+#include "../ramsearch/CompareOperations.h"
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"
 #include "../ramsearch/BaseAddresses.h"

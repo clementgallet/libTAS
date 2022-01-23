@@ -18,8 +18,9 @@
  */
 
 #include "RamSearchModel.h"
-#include "../ramsearch/MemAccess.h"
 #include "../ramsearch/MemLayout.h"
+#include "../ramsearch/MemSection.h"
+
 #include <QtWidgets/QMessageBox>
 #include <memory>
 
@@ -27,7 +28,7 @@ RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableMode
 
 int RamSearchModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return ramwatches.size();
+   return memscanner.display_scan_count();
 }
 
 int RamSearchModel::columnCount(const QModelIndex & /*parent*/) const
@@ -55,14 +56,13 @@ QVariant RamSearchModel::headerData(int section, Qt::Orientation orientation, in
 QVariant RamSearchModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
-        const RamWatch &watch = ramwatches.at(index.row());
         switch(index.column()) {
             case 0:
-                return QString("%1").arg(watch.address, 0, 16);
+                return QString("%1").arg(memscanner.get_address(index.row()), 0, 16);
             case 1:
-                return QString(watch.tostring(hex, watch.get_value()));
+                return QString(memscanner.get_current_value(index.row(), hex));
             case 2:
-                return QString(watch.tostring(hex, watch.previous_value));
+                return QString(memscanner.get_previous_value(index.row(), hex));
             default:
                 return QString();
         }
@@ -70,18 +70,23 @@ QVariant RamSearchModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-int RamSearchModel::predictWatchCount(int mem_filter)
+int RamSearchModel::predictScanCount(int mem_flags)
 {
     std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
-    return memlayout->totalSize(mem_filter);
+    return memlayout->totalSize(MemSection::MemAll, mem_flags);
 }
 
-int RamSearchModel::watchCount()
+uint64_t RamSearchModel::scanCount()
 {
-    return ramwatches.size();
+    return memscanner.scan_count();
 }
 
-void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, CompareOperator co, double cv, double dv)
+uint64_t RamSearchModel::scanSize()
+{
+    return memscanner.scan_size();
+}
+
+void RamSearchModel::newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv)
 {
     compare_type = ct;
     compare_operator = co;
@@ -90,81 +95,34 @@ void RamSearchModel::newWatches(int mem_filter, int type, CompareType ct, Compar
 
     beginResetModel();
 
-    ramwatches.clear();
-    ramwatches.reserve(0);
-
-    RamWatch::type = type;
-    RamWatch::type_size = RamWatch::type_to_size();
-
-    std::unique_ptr<MemLayout> memlayout (new MemLayout(context->game_pid));
-
-    MemSection section;
-    int cur_size = 0;
-    while (memlayout->nextSection(mem_filter, section)) {
-        /* Read values in chunks of 4096 bytes so we lower the number of calls. */
-        uint8_t chunk[4096];
-
-        for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
-            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(addr), 4096);
-            if (readValues < 0) {
-                continue;
-            }
-
-            for (int i = 0; i < readValues; i += RamWatch::type_size, cur_size += RamWatch::type_size) {
-
-                if (!(cur_size & 0xfff)) {
-                    emit signalProgress(cur_size);
-                }
-
-                try {
-                    ramwatches.emplace_back(addr+i);
-                }
-                catch (const std::bad_alloc &e)
-                {
-                    ramwatches.clear();
-                    ramwatches.reserve(0);
-                    QMessageBox::critical(nullptr, tr("Error"), tr("No more available memory."));
-                    return;
-                }
-                memcpy(&ramwatches.back().previous_value, chunk+i, RamWatch::type_size);
-
-                /* If only insert watches that match the compare */
-                if (compare_type == CompareType::Value) {
-                    if (ramwatches.back().check(ramwatches.back().previous_value, compare_type, compare_operator, compare_value, different_value)) {
-                        ramwatches.pop_back();
-                    }
-                }
-            }
-        }
-    }
+    memscanner.first_scan(context->game_pid, mem_flags, type, ct, co, cv, dv);
 
     endResetModel();
 }
 
 void RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv, double dv)
 {
-    compare_type = ct;
-    compare_operator = co;
-    compare_value = cv;
-    different_value = dv;
-
     beginResetModel();
 
-    int count = 0;
-    ramwatches.erase(
-        std::remove_if(ramwatches.begin(), ramwatches.end(),
-            [this, &count] (RamWatch &watch) {
-                if (!(count++ & 0xfff)) {
-                    emit signalProgress(count);
-                }
-                return watch.check_update(compare_type, compare_operator, compare_value, different_value);
-            }),
-        ramwatches.end());
+    memscanner.scan(false, ct, co, cv, dv);
 
     endResetModel();
 }
 
 void RamSearchModel::update()
 {
-    emit dataChanged(createIndex(0,1), createIndex(rowCount(),1));
+    if (rowCount() > 0)
+        emit dataChanged(index(0,1), index(rowCount()-1,1), QVector<int>(Qt::DisplayRole));
+}
+
+uintptr_t RamSearchModel::address(int row)
+{
+    return memscanner.get_address(row);
+}
+
+void RamSearchModel::clear()
+{
+    beginResetModel();
+    memscanner.clear();
+    endResetModel();
 }

@@ -29,6 +29,20 @@ void MemSection::reset()
     heap_discovered = false;
 }
 
+bool MemSection::followFlags(int flags)
+{
+    if ((flags & MemNoSpecial) && (type == MemSpecial))
+        return false;
+
+    if ((flags & MemNoRO) && (!writeflag))
+        return false;
+
+    if ((flags & MemNoExec) && (execflag))
+        return false;
+        
+    return true;
+}
+
 void MemSection::readMap(std::string& line)
 {
     std::istringstream iss(line);

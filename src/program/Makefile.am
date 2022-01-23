@@ -3,6 +3,7 @@ bin_PROGRAMS = libTAS
 libTAS_QTSOURCES = \
     GameEvents.h \
     GameLoop.h \
+    ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
     ui/AutoSaveWindow.h \
     ui/ControllerAxisWidget.h \
@@ -82,10 +83,12 @@ libTAS_SOURCES = \
     ui/TimeTraceWindow.cpp \
     ui/qtutils.cpp \
     ramsearch/BaseAddresses.cpp \
+    ramsearch/CompareOperations.cpp \
     ramsearch/IRamWatchDetailed.cpp \
-    ramsearch/RamWatch.cpp \
     ramsearch/MemAccess.cpp \
     ramsearch/MemLayout.cpp \
+    ramsearch/MemScanner.cpp \
+    ramsearch/MemScannerThread.cpp \
     ramsearch/MemSection.cpp \
     ../shared/AllInputs.cpp \
     ../shared/SingleInput.cpp \
