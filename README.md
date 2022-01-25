@@ -92,9 +92,9 @@ To run this program, you can use the program shortcut in your system menu, or op
 
 You can type `libTAS -h` to have a description of the program options.
 
-The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://tasvideos.org/EmulatorResources/libTAS/MenuOptions)
+The program prompts a graphical user interface where you can start the game or change several options. Details of the different options are available [here](https://tasvideos.org/EmulatorResources/LibTAS/MenuOptions)
 
-There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://tasvideos.org/EmulatorResources/libTAS/Usage).
+There are a few things to take care before being able to run a game. You might want to look at the software [usage](https://tasvideos.org/EmulatorResources/LibTAS/Usage).
 
 Here are the default controls when the game has started:
 
