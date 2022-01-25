@@ -17,31 +17,40 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SDLTIMER_H_INCL
-#define LIBTAS_SDLTIMER_H_INCL
+#ifndef LIBTAS_SDLTIME_H_INCL
+#define LIBTAS_SDLTIME_H_INCL
 
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "global.h"
 
 namespace libtas {
 
-typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
+/**
+ * \brief Get the number of milliseconds since the SDL library initialization.
+ *
+ * \note This value wraps if the program runs for more than ~49 days.
+ */
+OVERRIDE Uint32 SDL_GetTicks(void);
 
 /**
- * \brief Add a new timer to the pool of timers already running.
+ * Get the number of milliseconds since SDL library initialization.
  *
- * \return A timer ID, or 0 when an error occurs.
+ * \returns an unsigned 64-bit value representing the number of milliseconds
+ *          since the SDL library initialized.
+ *
+ * \since This function is available since SDL 2.0.18.
  */
-OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+OVERRIDE Uint64 SDL_GetTicks64(void);
 
 /**
- * \brief Remove a timer knowing its ID.
- *
- * \return A boolean value indicating success or failure.
- *
- * \warning It is not safe to remove a timer multiple times.
+ * \brief Get the count per second of the high resolution counter
  */
-OVERRIDE SDL_bool SDL_RemoveTimer(SDL_TimerID id);
+OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
+
+/**
+ * \brief Get the current value of the high resolution counter
+ */
+OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
 
 }
 

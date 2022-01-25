@@ -114,6 +114,7 @@ libtas_so_SOURCES = \
     sdl/sdlmutex.cpp \
     sdl/sdlrender.cpp \
     sdl/sdlthreads.cpp \
+    sdl/sdltime.cpp \
     sdl/sdltimer.cpp \
     sdl/sdlversion.cpp \
     sdl/sdlwindows.cpp \

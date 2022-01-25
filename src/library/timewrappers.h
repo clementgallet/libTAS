@@ -22,10 +22,6 @@
 
 #include <time.h>
 #include <unistd.h>
-// #include "../external/SDL.h"
-#include <SDL2/SDL.h>
-#include "hook.h"
-// #include <stdbool.h>
 #include "global.h"
 
 namespace libtas {
@@ -46,23 +42,6 @@ OVERRIDE time_t time(time_t* t) __THROW;
    NOTE: This form of timezone information is obsolete.
    Use the functions and variables declared in <time.h> instead.  */
 OVERRIDE int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW;
-
-/**
- * \brief Get the number of milliseconds since the SDL library initialization.
- *
- * \note This value wraps if the program runs for more than ~49 days.
- */
-OVERRIDE Uint32 SDL_GetTicks(void);
-
-/**
- * \brief Get the count per second of the high resolution counter
- */
-OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);
-
-/**
- * \brief Get the current value of the high resolution counter
- */
-OVERRIDE Uint64 SDL_GetPerformanceCounter(void);
 
 }
 

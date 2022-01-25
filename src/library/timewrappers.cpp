@@ -26,6 +26,7 @@
 #include "../shared/SharedConfig.h"
 #include "GameHacks.h"
 #include <execinfo.h>
+#include "hook.h"
 
 namespace libtas {
 
@@ -121,31 +122,6 @@ DEFINE_ORIG_POINTER(clock_gettime)
     }
 
     return 0;
-}
-
-/* Override */ Uint32 SDL_GetTicks(void)
-{
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
-    Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    debuglogstdio(LCF_SDL | LCF_TIMEGET, "%s call - returning %d", __func__, msec);
-
-    return msec;
-}
-
-/* Override */ Uint64 SDL_GetPerformanceFrequency(void)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET);
-    return 1000000000;
-}
-
-/* Override */ Uint64 SDL_GetPerformanceCounter(void)
-{
-    DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
-    Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
-
-    debuglogstdio(LCF_SDL | LCF_TIMEGET, "  returning %" PRIu64, counter);
-    return counter;
 }
 
 }

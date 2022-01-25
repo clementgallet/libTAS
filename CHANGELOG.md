@@ -13,6 +13,7 @@
 * Add Unity sync values for Dandara
 * Show pending input changes in the input editor when rewinding.
 * Ram Search window can be cleared
+* Add SDL_GetTicks64() (#461)
 
 ### Changed
 

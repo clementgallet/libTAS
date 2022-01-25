@@ -30,6 +30,7 @@
 #include "ThreadSync.h"
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
+#include "../hook.h"
 //#include "../audio/AudioPlayer.h"
 #include "AltStack.h"
 #include "ReservedMemory.h"
