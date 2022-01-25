@@ -34,6 +34,7 @@
 #include <QtWidgets/QToolButton>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
+#include <QtGui/QCloseEvent>
 #include <forward_list>
 #include <string>
 
@@ -67,6 +68,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(Context* c);
     ~MainWindow();
+
+    /* Capture the user closing the game and show a "save your work?" dialog */
+    void closeEvent(QCloseEvent *event);
 
     std::thread game_thread;
     GameLoop *gameLoop;
