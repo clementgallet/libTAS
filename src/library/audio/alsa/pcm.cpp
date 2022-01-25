@@ -58,6 +58,7 @@ DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample)
+DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_min)
 DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_max)
 
@@ -1065,6 +1066,27 @@ int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
     return 0;
 }
 
+int snd_pcm_hw_params_get_rate(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate);
+        return orig::snd_pcm_hw_params_get_rate(params, val, dir);
+    }
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    /* We don't have the pcm parameter here, so using the last opened source */
+    int sourceId = last_source;
+    auto source = audiocontext.getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+    if (buffer->frequency != 0) {
+        *val = buffer->frequency;
+        return 0;
+    }
+
+    return -1;
+}
+
 int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     if (GlobalState::isNative()) {
@@ -1124,8 +1146,23 @@ int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
         LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_period_time_near);
         return orig::snd_pcm_hw_params_set_period_time_near(pcm, params, val, dir);
     }
+    debuglogstdio(LCF_SOUND, "%s call with period time %d us and dir %d", __func__, *val, dir?*dir:-2);
 
-    DEBUGLOGCALL(LCF_SOUND);
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = audiocontext.getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+
+    if (buffer->frequency != 0) {
+        unsigned int period_size = static_cast<uint64_t>(*val) * buffer->frequency / 1000000;
+        periods = buffer_size / period_size;
+        /* Buffer size should be a multiple of period size, so we return a corrected value */
+        /* TODO: support dir! */
+        *val = 1000000 * (buffer_size / periods) / buffer->frequency;
+        debuglogstdio(LCF_SOUND, "   returns period time of %d us", *val);
+    }
+    else {
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "   set period time without specifying sample rate");
+    }    
     return 0;
 }
 
@@ -1135,8 +1172,14 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
         LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_period_size_near);
         return orig::snd_pcm_hw_params_set_period_size_near(pcm, params, val, dir);
     }
-
     debuglogstdio(LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
+    
+    periods = buffer_size / *val;
+    /* Buffer size should be a multiple of period size, so we return a corrected value */
+    /* TODO: support dir! */
+    *val = buffer_size / periods;
+
+    debuglogstdio(LCF_SOUND, "   returning size %d ", *val);
     return 0;
 }
 
@@ -1263,6 +1306,10 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
             debuglogstdio(LCF_SOUND | LCF_WARNING, "Buffer time is too low, raising to %d us", *val);
         }
     }
+    else {
+        debuglogstdio(LCF_SOUND | LCF_ERROR, "   set buffer time without specifying sample rate");
+    }    
+
     return 0;
 }
 

@@ -14,6 +14,7 @@
 * Show pending input changes in the input editor when rewinding.
 * Ram Search window can be cleared
 * Add SDL_GetTicks64() (#461)
+* Implements snd_pcm_hw_params_get_rate()
 
 ### Changed
 
