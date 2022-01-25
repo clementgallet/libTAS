@@ -38,6 +38,9 @@ OVERRIDE void* glXGetProcAddressEXT (const GLubyte *procName);
 /* Map the GLX context to the Display connection */
 OVERRIDE Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx );
 
+/* Attach a GLX context to a GLX drawable */
+OVERRIDE Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx );
+
 /* Swap buffers */
 OVERRIDE void glXSwapBuffers( Display *dpy, GLXDrawable drawable );
 

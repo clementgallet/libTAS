@@ -15,6 +15,7 @@
 * Ram Search window can be cleared
 * Add SDL_GetTicks64() (#461)
 * Implements snd_pcm_hw_params_get_rate()
+* Implements glXMakeContextCurrent()
 
 ### Changed
 

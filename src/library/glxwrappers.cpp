@@ -59,6 +59,7 @@ DEFINE_ORIG_POINTER(glXGetProcAddress)
 DEFINE_ORIG_POINTER(glXGetProcAddressARB)
 DEFINE_ORIG_POINTER(glXGetProcAddressEXT)
 DEFINE_ORIG_POINTER(glXMakeCurrent)
+DEFINE_ORIG_POINTER(glXMakeContextCurrent)
 DEFINE_ORIG_POINTER(glXSwapBuffers)
 DEFINE_ORIG_POINTER(glXSwapIntervalEXT)
 DEFINE_ORIG_POINTER(glXSwapIntervalSGI)
@@ -266,6 +267,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 
     /* Store function pointers and return our function */
     STORE_RETURN_SYMBOL(glXMakeCurrent)
+    STORE_RETURN_SYMBOL(glXMakeContextCurrent)
     STORE_RETURN_SYMBOL(glXSwapBuffers)
     STORE_RETURN_SYMBOL(glXQueryDrawable)
     STORE_RETURN_SYMBOL(glXSwapIntervalEXT)
@@ -419,6 +421,33 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     //LINK_NAMESPACE(glXGetProcAddressARB, "GL");
     //orig::glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)orig::glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
     //orig::glXSwapIntervalEXT(dpy, drawable, 0);
+
+    return ret;
+}
+
+Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx )
+{
+    LINK_NAMESPACE(glXMakeContextCurrent, "GL");
+
+    Bool ret = orig::glXMakeContextCurrent(dpy, draw, read, ctx);
+    if (GlobalState::isNative())
+        return ret;
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
+
+    if (draw && (!x11::gameXWindows.empty())) {
+
+        game_info.video |= GameInfo::OPENGL;
+        game_info.tosend = true;
+
+        /* If we are using SDL, we let the higher function initialize stuff */
+        if (!(game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER | GameInfo::VDPAU))) {
+            /* Now that the context is created, we can init the screen capture */
+            ScreenCapture::init();
+        }
+
+        checkMesa();
+    }
 
     return ret;
 }
