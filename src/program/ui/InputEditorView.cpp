@@ -21,6 +21,7 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMessageBox>
 
 #include <stdint.h>
 
@@ -644,6 +645,18 @@ void InputEditorView::deleteInput()
 
 void InputEditorView::truncateInputs()
 {
+    QMessageBox confirmBox;
+
+    confirmBox.setText("Really truncate the TAS?");
+    confirmBox.setInformativeText("Do you want to truncate all inputs beyond this point?");
+
+    confirmBox.setStandardButtons(QMessageBox::No | QMessageBox::Yes);
+    confirmBox.setDefaultButton(QMessageBox::Yes);
+
+    if (confirmBox.exec() != QMessageBox::Yes) return;
+
+
+
     const QModelIndexList indexes = selectionModel()->selectedRows();
 
     /* If no row was selected, return */
