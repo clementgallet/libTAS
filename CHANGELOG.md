@@ -38,6 +38,7 @@
 * Dragging in the input editor now toggle all inputs in between
 * Change audio context locking
 * Fix bug when accessing samples of empty buffer
+* Fix bug when accessing past the audio buffer (#463)
 
 ## [1.4.2] - 2021-07-06
 ### Added

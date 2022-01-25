@@ -120,6 +120,10 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
     if (size == 0)
         return 0;
         
+    /* If the position is at the end of the buffer, return immediatly */
+    if (position >= sampleSize)
+        return 0;
+        
     switch (format) {
         case SAMPLE_FMT_NB:
             break;
