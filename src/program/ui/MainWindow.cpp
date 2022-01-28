@@ -403,6 +403,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
         return;
     }
 
+    if (context->status == Context::INACTIVE)
+        event->accept();
+
     if(gameLoop->movie.inputs->modifiedSinceLastSave) {
         QMessageBox::StandardButton result = QMessageBox::question(
             this, tr("Unsaved Work"), 
