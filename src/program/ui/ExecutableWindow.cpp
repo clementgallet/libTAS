@@ -39,7 +39,7 @@ ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent) : QDialog(parent
     connect(browseRunPath, &QAbstractButton::clicked, this, &ExecutableWindow::slotBrowseRunPath);
 
     /* Run path layout */
-    QGroupBox *runPathGroupBox = new QGroupBox(tr("Run path"));
+    QGroupBox *runPathGroupBox = new QGroupBox(tr("Working directory"));
     QHBoxLayout *runPathLayout = new QHBoxLayout;
     runPathLayout->addWidget(runPath);
     runPathLayout->addWidget(browseRunPath);
@@ -116,7 +116,7 @@ void ExecutableWindow::slotOk()
 void ExecutableWindow::slotBrowseRunPath()
 {
     QString defaultPath = context->config.rundir.empty()?QString(context->gamepath.c_str()):runPath->text();
-    QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose an run directory"), defaultPath);
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("Choose a working directory"), defaultPath);
     if (!dirname.isNull())
         runPath->setText(dirname);
 }
