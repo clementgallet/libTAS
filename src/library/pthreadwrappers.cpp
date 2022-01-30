@@ -56,6 +56,7 @@ DEFINE_ORIG_POINTER(pthread_testcancel)
 DEFINE_ORIG_POINTER(sem_wait)
 DEFINE_ORIG_POINTER(sem_timedwait)
 DEFINE_ORIG_POINTER(sem_trywait)
+DEFINE_ORIG_POINTER(sem_post)
 DEFINE_ORIG_POINTER(pthread_attr_setstack)
 DEFINE_ORIG_POINTER(pthread_condattr_setclock)
 DEFINE_ORIG_POINTER(pthread_condattr_getclock)
@@ -646,17 +647,16 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     bool isWaitThread = GameHacks::isUnityLoadingThread(thread->routine_id);
 
+    debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
     if (isWaitThread) {
         ThreadSync::detSignal(true);
 
-        debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
         int ret = orig::sem_wait(sem);
 
         ThreadSync::detInit();
         return ret;
     }
 
-    debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
     return orig::sem_wait(sem);
 }
 
@@ -699,6 +699,16 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     DEBUGLOGCALL(LCF_THREAD | LCF_WAIT | LCF_TODO);
     return orig::sem_trywait(sem);
+}
+
+/* Override */ int sem_post (sem_t *sem) __THROW
+{
+    LINK_NAMESPACE_VERSION(sem_post, "pthread", "GLIBC_2.1");
+    if (GlobalState::isNative())
+        return orig::sem_post(sem);
+
+    debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with sem %p", __func__, sem);
+    return orig::sem_post(sem);
 }
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW
