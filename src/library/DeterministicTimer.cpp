@@ -32,9 +32,25 @@
 #include <sched.h> // sched_yield()
 #include <stdint.h>
 
+/* Number of time call to generate a warning */
+#define ALERT_CALL_THRESHOLD 100000
+
 namespace libtas {
 
 bool DeterministicTimer::inited = false;
+
+const char* const DeterministicTimer::gettimes_names[] = 
+{
+    "time()",
+    "gettimeofday()",
+    "clock()",
+    "clock_gettime()",
+    "SDL_GetTicks()",
+    "SDL_GetPerformanceCounter()",
+    "GetTickCount()",
+    "GetTickCount64()",
+    "QueryPerformanceCounter()",
+};
 
 struct timespec DeterministicTimer::getTicks()
 {
@@ -83,7 +99,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     int gettimes_threshold = mainT ? shared_config.main_gettimes_threshold[type]
                           : shared_config.sec_gettimes_threshold[type];
 
-    if (!insideFrameBoundary && /* Don't track is already inside a frame boundary */
+    if (!insideFrameBoundary && /* Don't track if already inside a frame boundary */
         gettimes_threshold >= 0) {
 
         /* We actually track this time call */
@@ -107,6 +123,14 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
                 main_gettimes[i] = 0;
                 sec_gettimes[i] = 0;
             }
+        }
+    }
+    else if (mainT && !insideFrameBoundary) {
+        /* Still register calls to time functions, so that we can inform users
+         * of potential options to tweak. */
+        main_gettimes[type]++;
+        if (main_gettimes[type] == ALERT_CALL_THRESHOLD) {            
+            debuglogstdio(LCF_TIMESET | LCF_WARNING, "WARNING! many calls to function %s, you may need to enable time-tracking", gettimes_names[type]);
         }
     }
 

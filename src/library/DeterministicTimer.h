@@ -126,6 +126,8 @@ private:
     std::mutex frame_mutex;
 
     static bool inited;
+    
+    static const char* const gettimes_names[];
 };
 
 extern DeterministicTimer detTimer;
