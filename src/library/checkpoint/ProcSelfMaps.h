@@ -30,6 +30,7 @@ class ProcSelfMaps
     public:
         /* Read the /proc/self/maps file into reserved memory */
         ProcSelfMaps();
+        ~ProcSelfMaps();
 
         /* Parse the next memory section into the area */
         bool getNextArea(Area *area);
@@ -41,10 +42,11 @@ class ProcSelfMaps
         uintptr_t readDec();
         uintptr_t readHex();
 
-        char *data;
-        size_t dataIdx;
-        size_t numAreas;
-        size_t numBytes;
+        int tmp_fd;
+        off_t off;
+        
+        char line[1024];
+        int line_idx;
 };
 }
 

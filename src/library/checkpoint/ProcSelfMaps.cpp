@@ -30,33 +30,33 @@
 
 namespace libtas {
 
-ProcSelfMaps::ProcSelfMaps()
-    : dataIdx(0),
-    numAreas(0),
-    numBytes(0)
+ProcSelfMaps::ProcSelfMaps() : off(0)
 {
+    /* We need to copy /proc/self/maps, because it can be modified while parsing it */
     int fd;
     NATIVECALL(fd = open("/proc/self/maps", O_RDONLY));
     MYASSERT(fd != -1);
-
-    data = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::PSM_ADDR));
-
-    numBytes = Utils::readAll(fd, data, ReservedMemory::PSM_SIZE);
-    MYASSERT(numBytes > 0)
-    MYASSERT(numBytes < ReservedMemory::PSM_SIZE)
-
-    NATIVECALL(close(fd));
-
-    for (size_t i = 0; i < numBytes; i++) {
-        if (data[i] == '\n') {
-            numAreas++;
-        }
+    NATIVECALL(tmp_fd = open("/tmp", O_RDWR | O_TMPFILE));
+    MYASSERT(tmp_fd != -1);
+    
+    ssize_t sz = 1;
+    
+    while (sz > 0) {
+        char buf[4096];
+        sz = Utils::readAll(fd, buf, 4096);
+        Utils::writeAll(tmp_fd, buf, sz);
     }
+    NATIVECALL(close(fd));
+}
+
+ProcSelfMaps::~ProcSelfMaps()
+{
+    NATIVECALL(close(tmp_fd));
 }
 
 void ProcSelfMaps::reset()
 {
-    dataIdx = 0;
+    off = 0;
 }
 
 uintptr_t ProcSelfMaps::readDec()
@@ -64,14 +64,14 @@ uintptr_t ProcSelfMaps::readDec()
     uintptr_t v = 0;
 
     while (1) {
-        char c = data[dataIdx];
+        char c = line[line_idx];
         if ((c >= '0') && (c <= '9')) {
             c -= '0';
         } else {
             break;
         }
         v = v * 10 + c;
-        dataIdx++;
+        line_idx++;
     }
     return v;
 }
@@ -81,7 +81,7 @@ uintptr_t ProcSelfMaps::readHex()
     uintptr_t v = 0;
 
     while (1) {
-        char c = data[dataIdx];
+        char c = line[line_idx];
         if ((c >= '0') && (c <= '9')) {
             c -= '0';
         } else if ((c >= 'a') && (c <= 'f')) {
@@ -92,74 +92,77 @@ uintptr_t ProcSelfMaps::readHex()
             break;
         }
         v = v * 16 + c;
-        dataIdx++;
+        line_idx++;
     }
     return v;
 }
 
 bool ProcSelfMaps::getNextArea(Area *area)
 {
-    if (dataIdx >= numBytes || data[dataIdx] == 0) {
+    ssize_t ret = pread(tmp_fd, line, 1024, off);
+    if (ret < 1) {
         area->addr = nullptr;
         area->size = 0;
-        return false;
+        return false;        
     }
+    line_idx = 0;
 
     uintptr_t addr = readHex();
     area->addr = reinterpret_cast<void*>(addr);
 
-    MYASSERT(data[dataIdx++] == '-')
+    MYASSERT(line[line_idx++] == '-')
 
     uintptr_t endAddr = readHex();
     MYASSERT(endAddr != 0)
     area->endAddr = reinterpret_cast<void*>(endAddr);
 
-    MYASSERT(data[dataIdx++] == ' ')
+    MYASSERT(line[line_idx++] == ' ')
 
     MYASSERT(endAddr >= addr)
     area->size = static_cast<size_t>(endAddr - addr);
 
-    char rflag = data[dataIdx++];
+    char rflag = line[line_idx++];
     MYASSERT((rflag == 'r') || (rflag == '-'))
 
-    char wflag = data[dataIdx++];
+    char wflag = line[line_idx++];
     MYASSERT((wflag == 'w') || (wflag == '-'))
 
-    char xflag = data[dataIdx++];
+    char xflag = line[line_idx++];
     MYASSERT((xflag == 'x') || (xflag == '-'))
 
-    char sflag = data[dataIdx++];
+    char sflag = line[line_idx++];
     MYASSERT((sflag == 's') || (sflag == 'p'))
 
-    MYASSERT(data[dataIdx++] == ' ')
+    MYASSERT(line[line_idx++] == ' ')
 
     area->offset = readHex();
-    MYASSERT(data[dataIdx++] == ' ')
+    MYASSERT(line[line_idx++] == ' ')
 
     area->devmajor = readHex();
-    MYASSERT(data[dataIdx++] == ':')
+    MYASSERT(line[line_idx++] == ':')
 
     area->devminor = readHex();
-    MYASSERT(data[dataIdx++] == ' ')
+    MYASSERT(line[line_idx++] == ' ')
 
     area->inodenum = readDec();
 
-    while (data[dataIdx] == ' ') {
-        dataIdx++;
+    while (line[line_idx] == ' ') {
+        line_idx++;
     }
 
     area->name[0] = '\0';
-    if (data[dataIdx] == '/' || data[dataIdx] == '[' || data[dataIdx] == '(') {
+    if (line[line_idx] == '/' || line[line_idx] == '[' || line[line_idx] == '(') {
         // absolute pathname, or [stack], [vdso], etc.
         size_t i = 0;
-        while (data[dataIdx] != '\n') {
-            area->name[i++] = data[dataIdx++];
+        while (line[line_idx] != '\n') {
+            area->name[i++] = line[line_idx++];
             MYASSERT(i < sizeof(area->name))
         }
         area->name[i] = '\0';
     }
 
-    MYASSERT(data[dataIdx++] == '\n')
+    MYASSERT(line[line_idx++] == '\n')
+    off += line_idx;
 
     area->prot = 0;
     if (rflag == 'r') {
@@ -204,7 +207,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
      */
     if (area->flags & Area::AREA_HEAP) {
         Area next_area;
-        size_t curDataIdx = dataIdx;
+        off_t cur_off = off;
         bool valid = getNextArea(&next_area); // recursive call
         if (valid && (next_area.flags & Area::AREA_HEAP)) {
             MYASSERT(area->endAddr == next_area.addr)
@@ -214,7 +217,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
             area->size += next_area.size;
         }
         else {
-            dataIdx = curDataIdx;
+            off = cur_off;
         }
     }
 

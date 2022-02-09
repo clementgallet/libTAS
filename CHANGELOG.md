@@ -23,6 +23,7 @@
 * Raise the minimum audio buffer size
 * Change default video codec to x264rgb
 * Rework the ram search entirely (#268)
+* Parsing /proc/self/maps no longer requires loading the entire file in memory
 
 ### Fixed
 
