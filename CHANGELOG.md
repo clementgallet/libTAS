@@ -17,6 +17,7 @@
 * Implements snd_pcm_hw_params_get_rate()
 * Implements glXMakeContextCurrent()
 * Add a warning for possible time-tracking option
+* Don't wait for initial socket connection when game has stopped
 
 ### Changed
 

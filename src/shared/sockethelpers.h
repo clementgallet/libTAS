@@ -22,12 +22,13 @@
 
 #include <cstddef>
 #include <string>
+#include <sys/types.h>
 
 /* Remove the socket file and return error */
 int removeSocket();
 
 /* Initiate a socket connection with the game */
-bool initSocketProgram(void);
+bool initSocketProgram(pid_t fork_pid);
 
 /* Initiate a socket connection with libTAS */
 bool initSocketGame(void);

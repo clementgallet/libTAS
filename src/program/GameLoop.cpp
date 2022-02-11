@@ -268,7 +268,11 @@ void GameLoop::init()
 void GameLoop::initProcessMessages()
 {
     /* Connect to the socket between the program and the game */
-    initSocketProgram();
+    bool inited = initSocketProgram(context->fork_pid);
+    if (!inited) {
+        loopExit();
+        return;
+    }
 
     /* Receive informations from the game */
     int message = receiveMessage();

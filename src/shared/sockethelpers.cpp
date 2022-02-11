@@ -20,6 +20,7 @@
 #include "sockethelpers.h"
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/un.h>
@@ -55,7 +56,7 @@ int removeSocket(void) {
     return 0;
 }
 
-bool initSocketProgram(void)
+bool initSocketProgram(pid_t fork_pid)
 {
 #ifdef __unix__
     const struct sockaddr_un addr = { AF_UNIX, SOCKET_FILENAME };
@@ -79,6 +80,14 @@ bool initSocketProgram(void)
         } else {
             return false;
         }
+        
+        /* Check if game is still running */
+        int ret = waitpid(fork_pid, nullptr, WNOHANG);
+        if (ret == fork_pid) {
+            std::cout << "Game couldn't start properly." << std::endl;
+            return false;
+        }
+        
         tim.tv_nsec *= 1.5;
         if (tim.tv_nsec >= 1000000000) {            
             tim.tv_sec++;
