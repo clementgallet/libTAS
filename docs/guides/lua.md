@@ -54,23 +54,23 @@ Draws an antialiased ellipse whose center is `(center_x,center_y)`, radius along
 All the functions in this section are only valid inside `onInput()` callback.
 Here are the indices of the different controls:
 
-| Index | Mouse button | Controller button | Controller axis |
-| ----- | ------------ | ----------------- | --------------- |
-| 0     | Left         | A                 | Left stick X    |
-| 1     | Middle       | B                 | Left stick Y    |
-| 2     | Right        | X                 | Right stick X   |
-| 3     | X1           | Y                 | Right stick Y   |
-| 4     | X2           | Select / Back     | Left trigger    |
-| 5     |              | Guide             | Right trigger   |
-| 6     |              | Start             |                 |
-| 7     |              | Left stick        |                 |
-| 8     |              | Right stick       |                 |
-| 9     |              | Left shoulder     |                 |
-| 10    |              | Right shoulder    |                 |
-| 11    |              | Dpad up           |                 |
-| 12    |              | Dpad down         |                 |
-| 13    |              | Dpad left         |                 |
-| 14    |              | Dpad right        |                 |
+| Index | Mouse button | Controller button | Controller axis | Flag         |
+| ----- | ------------ | ----------------- | --------------- | ------------ |
+| 0     | Left         | A                 | Left stick X    | Restart      |
+| 1     | Middle       | B                 | Left stick Y    | Joy1 added   |
+| 2     | Right        | X                 | Right stick X   | Joy2 added   |
+| 3     | X1           | Y                 | Right stick Y   | Joy3 added   |
+| 4     | X2           | Select / Back     | Left trigger    | Joy4 added   |
+| 5     |              | Guide             | Right trigger   | Joy1 removed |
+| 6     |              | Start             |                 | Joy2 removed |
+| 7     |              | Left stick        |                 | Joy3 removed |
+| 8     |              | Right stick       |                 | Joy4 removed |
+| 9     |              | Left shoulder     |                 |              |
+| 10    |              | Right shoulder    |                 |              |
+| 11    |              | Dpad up           |                 |              |
+| 12    |              | Dpad down         |                 |              |
+| 13    |              | Dpad left         |                 |              |
+| 14    |              | Dpad right        |                 |              |
 
 #### input.clear
 
@@ -137,6 +137,30 @@ Set the axis `axis` of controller `controller` to specified value (accepted rang
     Number input.getControllerAxis(Number controller, Number button)
     
 Returns the value of specified controller axis.
+
+#### input.setFlag
+
+    none input.setFlag(Number flag, Number state)
+    
+Set the specified flag to the state `cleared` (0) or `set` (anything else).
+
+#### input.getFlag
+
+    Number input.getFlag(Number flag)
+
+Returns the state of the specified flag (0: `cleared`, 1: `set`).
+
+#### input.setFramerate
+
+    none input.setFramerate(Number num, Number den)
+    
+Set the framerate numerator (`num`) and denominator (`den`).
+
+#### input.getFramerate
+
+    (Number num, Number den) input.getFramerate()
+    
+Returns the framerate numerator (`num`) and denominator (`den`).
 
 ### Memory functions
 

@@ -42,6 +42,10 @@ static const luaL_Reg input_functions[] =
     { "getControllerButton", Lua::Input::getControllerButton},
     { "setControllerAxis", Lua::Input::setControllerAxis},
     { "getControllerAxis", Lua::Input::getControllerAxis},
+    { "setFlag", Lua::Input::setFlag},
+    { "getFlag", Lua::Input::getFlag},
+    { "setFramerate", Lua::Input::setFramerate},
+    { "getFramerate", Lua::Input::getFramerate},
     { NULL, NULL }
 };
 
@@ -166,4 +170,44 @@ int Lua::Input::getControllerAxis(lua_State *L)
     SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK | axis, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
+}
+
+int Lua::Input::setFlag(lua_State *L)
+{
+    unsigned int flag = static_cast<unsigned int>(lua_tointeger(L, 1));
+    int state = static_cast<int>(lua_tointeger(L, 2));
+    
+    SingleInput si = {SingleInput::IT_FLAG, flag, ""};
+    ai->setInput(si, state);
+    return 0;
+}
+
+int Lua::Input::getFlag(lua_State *L)
+{
+    unsigned int flag = static_cast<unsigned int>(lua_tointeger(L, 1));
+
+    SingleInput si = {SingleInput::IT_FLAG, flag, ""};
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
+    return 1;
+}
+
+int Lua::Input::setFramerate(lua_State *L)
+{
+    int num = static_cast<int>(lua_tointeger(L, 1));
+    int den = static_cast<int>(lua_tointeger(L, 2));
+    
+    SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
+    ai->setInput(si, num);
+    si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
+    ai->setInput(si, den);
+    return 0;
+}
+
+int Lua::Input::getFramerate(lua_State *L)
+{
+    SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
+    si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
+    return 2;
 }

@@ -70,6 +70,18 @@ namespace Input {
     /* Get controller axis (number controller, number axis) -> number */
     int getControllerAxis(lua_State *L);
 
+    /* Set flag (number flag, number state) */
+    int setFlag(lua_State *L);
+    
+    /* Get flag (number flag) -> number state */
+    int getFlag(lua_State *L);
+
+    /* Set framerate (number num, number den) */
+    int setFramerate(lua_State *L);
+
+    /* Get framerate () -> number num, number den */
+    int getFramerate(lua_State *L);
+
 }
 }
 

@@ -18,6 +18,7 @@
 * Implements glXMakeContextCurrent()
 * Add a warning for possible time-tracking option
 * Don't wait for initial socket connection when game has stopped
+* Complete lua input category
 
 ### Changed
 
