@@ -33,6 +33,15 @@ std::string fileFromPath(const std::string& path)
         return path;
 }
 
+std::string dirFromPath(const std::string& path)
+{
+    size_t sep = path.find_last_of("/");
+    if (sep != std::string::npos)
+        return path.substr(0, sep);
+    else
+        return "";
+}
+
 std::string realpath_nonexist(const std::string& path)
 {
     std::string absstr;
@@ -85,10 +94,10 @@ int create_dir(const std::string& path)
     case ENOENT:
         {
             /* parent didn't exist, try to create it */
-            size_t pos = path.find_last_of('/');
-            if (pos == std::string::npos)
+            std::string dir = dirFromPath(path);
+            if (dir.empty())
                 return -1;
-            if (create_dir(path.substr(0, pos)) == -1)
+            else if (create_dir(dir) == -1)
                 return -1;
 
             return mkdir(path.c_str(), S_IRWXU);

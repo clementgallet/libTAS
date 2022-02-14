@@ -49,14 +49,8 @@ void GameThread::launch(Context *context)
 
     /* Change the working directory to the user-defined one or game directory */
     std::string newdir = context->config.rundir;
-    if (newdir.empty()) {
-        /* Get the game directory from path */
-        size_t sep = context->gamepath.find_last_of("/");
-        if (sep != std::string::npos)
-            newdir = context->gamepath.substr(0, sep);
-        else
-            newdir = ""; // Should not happen
-    }
+    if (newdir.empty())
+        newdir = dirFromPath(context->gamepath);
 
     if (0 != chdir(newdir.c_str())) {
         std::cerr << "Could not change the working directory to " << newdir << std::endl;

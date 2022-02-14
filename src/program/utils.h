@@ -26,6 +26,9 @@
 /* Get the file from path */
 std::string fileFromPath(const std::string& path);
 
+/* Get the directory from path */
+std::string dirFromPath(const std::string& path);
+
 /* Get the absolute path of a file even if it doesn't exist */
 std::string realpath_nonexist(const std::string& path);
 

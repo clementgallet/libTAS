@@ -69,12 +69,8 @@ bool ErrorChecking::checkMovieExists(std::string moviepath, bool interactive)
 bool ErrorChecking::checkMovieWriteable(std::string moviepath, bool interactive)
 {
     /* Extract the movie directory */
-    std::string moviedir;
-    size_t sep = moviepath.find_last_of("/");
-    if (sep != std::string::npos)
-        moviedir = moviepath.substr(0, sep);
-    else {
-
+    std::string moviedir = dirFromPath(moviepath);
+    if (moviedir.empty()) {
         critical(QString("The movie path %1 is not an absolute path").arg(moviedir.c_str()), interactive);
         return false;
     }
