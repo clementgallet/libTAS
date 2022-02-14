@@ -32,6 +32,22 @@
 #include <unistd.h> // chdir()
 #include <fcntl.h> // O_RDWR, O_CREAT
 
+int GameThread::detect_arch(Context *context)
+{
+    /* Change settings based on game arch */
+    int gameArch = extractBinaryType(context->gamepath);    
+    int libtasArch = extractBinaryType(context->libtaspath);
+
+    /* Switch to libtas32.so if required */
+    if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32)) && (libtasArch == BT_ELF64)) {
+        context->libtaspath = context->libtas32path;
+        /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
+        libtasArch = extractBinaryType(context->libtaspath);
+    }
+
+    return gameArch;
+}
+
 void GameThread::set_env_variables(Context *context, int gameArch)
 {
     /* Not interested in macos flag */
@@ -120,22 +136,6 @@ void GameThread::set_env_variables(Context *context, int gameArch)
          * have the correct calling convention. */
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
     }
-}
-
-int GameThread::detect_arch(Context *context)
-{
-    /* Change settings based on game arch */
-    int gameArch = extractBinaryType(context->gamepath);    
-    int libtasArch = extractBinaryType(context->libtaspath);
-
-    /* Switch to libtas32.so if required */
-    if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32)) && (libtasArch == BT_ELF64)) {
-        context->libtaspath = context->libtas32path;
-        /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
-        libtasArch = extractBinaryType(context->libtaspath);
-    }
-
-    return gameArch;
 }
 
 std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch)
@@ -280,6 +280,55 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
     return arg_list;
 }
 
+void GameThread::detect_game_libraries(Context *context)
+{
+    /* Build a command to parse the first missing library from the game executable,
+     * look at game directory and sub-directories for it */
+    std::ostringstream oss_ml;
+    oss_ml << "ldd '" << context->gamepath;
+    oss_ml << "' | awk '/ => not found/ { print $1 }' | head -1";
+    
+    FILE *output = popen(oss_ml.str().c_str(), "r");
+    std::array<char,256> buf;
+    buf[0] = '\0';
+    fgets(buf.data(), buf.size(), output);
+    std::string missing_lib = std::string(buf.data());
+    pclose(output);
+
+    if (missing_lib.empty()) return;
+    
+    missing_lib.pop_back(); // remove trailing newline
+
+    std::cout << "Try to find the location of " << missing_lib << " among game files."<< std::endl;
+
+    std::string gamedir = dirFromPath(context->gamepath);
+    std::ostringstream oss_lp;
+    oss_lp << "find " << gamedir << " -name " << missing_lib << " -type f -print -quit";
+
+    output = popen(oss_lp.str().c_str(), "r");
+    buf[0] = '\0';
+    fgets(buf.data(), buf.size(), output);
+    std::string found_lib = std::string(buf.data());
+    pclose(output);
+    
+    if (!found_lib.empty()) {
+        found_lib.pop_back(); // remove trailing newline
+
+        std::cout << "-> library was found at location " << found_lib << std::endl;
+        
+        std::string found_lib_dir = dirFromPath(found_lib);
+
+        char* oldlibpath = getenv("LD_LIBRARY_PATH");
+        if (oldlibpath) {
+            found_lib_dir.append(":");
+            found_lib_dir.append(oldlibpath);
+        }
+        setenv("LD_LIBRARY_PATH", found_lib_dir.c_str(), 1);
+    }
+    else {
+        std::cerr << "-> could not find the library among the game files" << std::endl;
+    }
+}
 
 void GameThread::launch(Context *context)
 {
@@ -289,6 +338,10 @@ void GameThread::launch(Context *context)
     /* Set all environment variables */
     set_env_variables(context, gameArch);
     
+#ifdef __unix__
+    detect_game_libraries(context);
+#endif
+
     /* Set where stderr of the game is redirected */
     int fd;
     std::string logfile = context->gamepath + ".log";

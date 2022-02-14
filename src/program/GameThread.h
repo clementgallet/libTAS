@@ -29,6 +29,10 @@ namespace GameThread {
      * So, it is called from a child process using fork().
      */
     void launch(Context *context);    
+
+    /* Auto-detect the local directory containing the bundle libraries shipped
+     * with the game, so that in most cases users don't have to specify it. */
+    void detect_game_libraries(Context *context);
     
     /* Set all environment variables before launching the game process */
     void set_env_variables(Context *context, int gameArch);
