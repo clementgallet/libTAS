@@ -32,8 +32,11 @@
 #include <unistd.h> // chdir()
 #include <fcntl.h> // O_RDWR, O_CREAT
 
-void GameThread::launch(Context *context)
+void GameThread::set_env_variables(Context *context, int gameArch)
 {
+    /* Not interested in macos flag */
+    gameArch &= BT_TYPEMASK;
+
 #ifdef __unix__
     /* Update the LD_LIBRARY_PATH environment variable if the user set one */
     if (!context->config.libdir.empty()) {
@@ -61,39 +64,6 @@ void GameThread::launch(Context *context)
      */
     setenv("PWD", newdir.c_str(), 1);
 
-    /* Set where stderr of the game is redirected */
-    int fd;
-    std::string logfile = context->gamepath + ".log";
-    switch(context->config.sc.logging_status) {
-        case SharedConfig::NO_LOGGING:
-            fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);
-            dup2(fd, 2);
-            close(fd);
-            break;
-        case SharedConfig::LOGGING_TO_FILE:
-            fd = open(logfile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-            dup2(fd, 2);
-            close(fd);
-            break;
-        case SharedConfig::LOGGING_TO_CONSOLE:
-        default:
-            break;
-    }
-
-    /* Change settings based on game arch */
-    int gameArch = extractBinaryType(context->gamepath);
-    bool macappflag = gameArch & BT_MACOSAPP;
-    gameArch &= BT_TYPEMASK;
-    
-    int libtasArch = extractBinaryType(context->libtaspath);
-
-    /* Switch to libtas32.so if required */
-    if (((gameArch == BT_ELF32) || (gameArch == BT_PE32)) && (libtasArch == BT_ELF64)) {
-        context->libtaspath = context->libtas32path;
-        /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
-        libtasArch = extractBinaryType(context->libtaspath);
-    }
-
     /* Set additional environment variables regarding Mesa and VDPAU configurations */
     if (context->config.sc.opengl_soft) {
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
@@ -114,21 +84,11 @@ void GameThread::launch(Context *context)
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
 
-    /* Build the argument list to be fed to execv */
-    std::list<std::string> arg_list;
-
-    /* Detect Windows executables and launch wine */
+    /* Set wine-specific env variables */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
 
+        /* Set specific env variables for Proton */
         if (context->config.use_proton && !context->config.proton_path.empty()) {
-            /* Change the executable to proton */
-            std::string winepath = context->config.proton_path;
-            winepath += "/dist/bin/wine";
-            if (gameArch == BT_PE32P)
-                winepath += "64";
-            arg_list.push_back(winepath);
-
-            /* Set the env variables needed by Proton */
             std::string winedllpath = context->config.proton_path;
             winedllpath += "/dist/lib64/wine:";
             winedllpath += context->config.proton_path;
@@ -150,6 +110,51 @@ void GameThread::launch(Context *context)
             wineprefix += "/dist/share/default_pfx/";
             setenv("WINEPREFIX", wineprefix.c_str(), 1);
         }
+
+        /* We need to delay libtas hooking for wine process. */
+        setenv("LIBTAS_DELAY_INIT", "1", 1);
+    }
+    else {
+        /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked.
+         * Does not work for wine games, because our custom SDL functions don't
+         * have the correct calling convention. */
+        setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
+    }
+}
+
+int GameThread::detect_arch(Context *context)
+{
+    /* Change settings based on game arch */
+    int gameArch = extractBinaryType(context->gamepath);    
+    int libtasArch = extractBinaryType(context->libtaspath);
+
+    /* Switch to libtas32.so if required */
+    if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32)) && (libtasArch == BT_ELF64)) {
+        context->libtaspath = context->libtas32path;
+        /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
+        libtasArch = extractBinaryType(context->libtaspath);
+    }
+
+    return gameArch;
+}
+
+std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch)
+{
+    bool macappflag = gameArch & BT_MACOSAPP;
+    gameArch &= BT_TYPEMASK;
+
+    /* Build the argument list to be fed to execv */
+    std::list<std::string> arg_list;
+
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+        if (context->config.use_proton && !context->config.proton_path.empty()) {
+            /* Change the executable to proton */
+            std::string winepath = context->config.proton_path;
+            winepath += "/dist/bin/wine";
+            if (gameArch == BT_PE32P)
+                winepath += "64";
+            arg_list.push_back(winepath);
+        }
         else {
             /* Change the executable to wine */
             std::string winename = "wine";
@@ -170,9 +175,6 @@ void GameThread::launch(Context *context)
                 pclose(output);
             }
         }
-
-        /* We need to delay libtas hooking for wine process. */
-        setenv("LIBTAS_DELAY_INIT", "1", 1);
 
         /* Push the game executable as the first command-line argument */
         /* Wine can fail if not specifying a Windows path */
@@ -266,11 +268,6 @@ void GameThread::launch(Context *context)
             }
         }
 
-        /* Tell SDL >= 2.0.2 to let us override functions even if it is statically linked.
-         * Does not work for wine games, because our custom SDL functions don't
-         * have the correct calling convention. */
-        setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
-
         /* If MacOS app, insert the real executable */
         if (macappflag) {
             arg_list.push_back(extractMacOSExecutable(context->gamepath));
@@ -280,11 +277,45 @@ void GameThread::launch(Context *context)
         }
     }
 
+    return arg_list;
+}
+
+
+void GameThread::launch(Context *context)
+{
+    /* Detect the game executable arch and handle 32-bit game on 64-bit arch case */
+    int gameArch = detect_arch(context);
+
+    /* Set all environment variables */
+    set_env_variables(context, gameArch);
+    
+    /* Set where stderr of the game is redirected */
+    int fd;
+    std::string logfile = context->gamepath + ".log";
+    switch(context->config.sc.logging_status) {
+        case SharedConfig::NO_LOGGING:
+            fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);
+            dup2(fd, 2);
+            close(fd);
+            break;
+        case SharedConfig::LOGGING_TO_FILE:
+            fd = open(logfile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            dup2(fd, 2);
+            close(fd);
+            break;
+        case SharedConfig::LOGGING_TO_CONSOLE:
+        default:
+            break;
+    }
+
+    /* Build the argument list for running the game */
+    std::list<std::string> arg_list = build_arg_list(context, gameArch);
+
     /* Argument string for sh */
     std::ostringstream sharg;
 
     /* Prepend LD_PRELOAD/DYLD_INSERT_LIBRARIES */
-    if (!(context->attach_gdb && (!((gameArch == BT_PE32) || (gameArch == BT_PE32P))))) {
+    if (!(context->attach_gdb && (!(((gameArch&BT_TYPEMASK) == BT_PE32) || ((gameArch&BT_TYPEMASK) == BT_PE32P))))) {
         /* Set the LD_PRELOAD/DYLD_INSERT_LIBRARIES environment variable to
          * inject our lib to the game */
 #ifdef __unix__

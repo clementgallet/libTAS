@@ -28,7 +28,16 @@ namespace GameThread {
      * Because this function eventually calls execl, it does not return.
      * So, it is called from a child process using fork().
      */
-    void launch(Context *context);
+    void launch(Context *context);    
+    
+    /* Set all environment variables before launching the game process */
+    void set_env_variables(Context *context, int gameArch);
+    
+    /* Detect and returns the game executable arch */
+    int detect_arch(Context *context);
+
+    /* Build the list of all arguments to be passed to `sh` for running the game */
+    std::list<std::string> build_arg_list(Context *context, int gameArch);
 }
 
 #endif
