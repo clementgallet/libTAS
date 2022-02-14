@@ -36,7 +36,7 @@ ProcSelfMaps::ProcSelfMaps() : off(0)
     int fd;
     NATIVECALL(fd = open("/proc/self/maps", O_RDONLY));
     MYASSERT(fd != -1);
-    NATIVECALL(tmp_fd = open("/tmp", O_RDWR | O_TMPFILE));
+    NATIVECALL(tmp_fd = open("/tmp", O_RDWR | O_TMPFILE, 0666));
     MYASSERT(tmp_fd != -1);
     
     ssize_t sz = 1;
