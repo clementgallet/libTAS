@@ -20,6 +20,7 @@
 * Don't wait for initial socket connection when game has stopped
 * Complete lua input category
 * Simple autodetect of game libraries
+* eglGetProcAddress() is also used for gl functions
 
 ### Changed
 

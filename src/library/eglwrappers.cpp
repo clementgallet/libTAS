@@ -18,6 +18,7 @@
  */
 
 #include "eglwrappers.h"
+#include "openglwrappers.h"
 #include "hook.h"
 #include "logging.h"
 #include "renderhud/RenderHUD_GL.h"
@@ -26,6 +27,13 @@
 #include "xlib/xwindows.h" // x11::gameXWindows
 
 #include <string.h>
+
+#define STORE_SYMBOL(str) \
+    if (!strcmp(symbol, #str)) { \
+        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+        debuglogstdio(LCF_OGL,"  store real function in %p", real_pointer); \
+        return reinterpret_cast<void*>(orig::str); \
+    }
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
@@ -50,6 +58,52 @@ DEFINE_ORIG_POINTER(eglSwapInterval)
 DEFINE_ORIG_POINTER(eglBindAPI)
 DEFINE_ORIG_POINTER(eglCreateContext)
 
+DECLARE_ORIG_POINTER(glReadPixels)
+DECLARE_ORIG_POINTER(glGenFramebuffers)
+DECLARE_ORIG_POINTER(glBindFramebuffer)
+DECLARE_ORIG_POINTER(glDeleteFramebuffers)
+DECLARE_ORIG_POINTER(glGenRenderbuffers)
+DECLARE_ORIG_POINTER(glBindRenderbuffer)
+DECLARE_ORIG_POINTER(glDeleteRenderbuffers)
+DECLARE_ORIG_POINTER(glRenderbufferStorage)
+DECLARE_ORIG_POINTER(glFramebufferRenderbuffer)
+DECLARE_ORIG_POINTER(glDisable)
+DECLARE_ORIG_POINTER(glIsEnabled)
+DECLARE_ORIG_POINTER(glGetIntegerv)
+DECLARE_ORIG_POINTER(glGetError)
+DECLARE_ORIG_POINTER(glGenTextures)
+DECLARE_ORIG_POINTER(glDeleteTextures)
+DECLARE_ORIG_POINTER(glBindTexture)
+DECLARE_ORIG_POINTER(glBindSampler)
+DECLARE_ORIG_POINTER(glTexImage2D)
+DECLARE_ORIG_POINTER(glActiveTexture)
+DECLARE_ORIG_POINTER(glFramebufferTexture2D)
+DECLARE_ORIG_POINTER(glUseProgram)
+DECLARE_ORIG_POINTER(glPixelStorei)
+DECLARE_ORIG_POINTER(glGenBuffers)
+DECLARE_ORIG_POINTER(glGenVertexArrays)
+DECLARE_ORIG_POINTER(glBindVertexArray)
+DECLARE_ORIG_POINTER(glBindBuffer)
+DECLARE_ORIG_POINTER(glBufferData)
+DECLARE_ORIG_POINTER(glVertexAttribPointer)
+DECLARE_ORIG_POINTER(glEnableVertexAttribArray)
+DECLARE_ORIG_POINTER(glCreateShader)
+DECLARE_ORIG_POINTER(glShaderSource)
+DECLARE_ORIG_POINTER(glCompileShader)
+DECLARE_ORIG_POINTER(glGetShaderiv)
+DECLARE_ORIG_POINTER(glGetShaderInfoLog)
+DECLARE_ORIG_POINTER(glCreateProgram)
+DECLARE_ORIG_POINTER(glAttachShader)
+DECLARE_ORIG_POINTER(glLinkProgram)
+DECLARE_ORIG_POINTER(glGetProgramiv)
+DECLARE_ORIG_POINTER(glGetProgramInfoLog)
+DECLARE_ORIG_POINTER(glDetachShader)
+DECLARE_ORIG_POINTER(glDeleteShader)
+DECLARE_ORIG_POINTER(glBlendFunc)
+DECLARE_ORIG_POINTER(glDeleteBuffers)
+DECLARE_ORIG_POINTER(glDeleteVertexArrays)
+DECLARE_ORIG_POINTER(glDeleteProgram)
+
 /* If the game uses the eglGetProcAddress functions to access to a function
  * that we hook, we must return our function and store the original pointers
  * so that we can call the real function.
@@ -65,6 +119,53 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(eglBindAPI)
     STORE_RETURN_SYMBOL(eglCreateContext)
 
+    /* Store function pointers that are used in other files */
+    STORE_SYMBOL(glReadPixels)
+    STORE_SYMBOL(glGenFramebuffers)
+    STORE_SYMBOL(glBindFramebuffer)
+    STORE_SYMBOL(glDeleteFramebuffers)
+    STORE_SYMBOL(glGenRenderbuffers)
+    STORE_SYMBOL(glBindRenderbuffer)
+    STORE_SYMBOL(glDeleteRenderbuffers)
+    STORE_SYMBOL(glRenderbufferStorage)
+    STORE_SYMBOL(glFramebufferRenderbuffer)
+    STORE_SYMBOL(glDisable)
+    STORE_SYMBOL(glIsEnabled)
+    STORE_SYMBOL(glGetIntegerv)
+    STORE_SYMBOL(glGetError)
+    STORE_SYMBOL(glGenTextures)
+    STORE_SYMBOL(glDeleteTextures)
+    STORE_SYMBOL(glBindTexture)
+    STORE_SYMBOL(glBindSampler)
+    STORE_SYMBOL(glTexImage2D)
+    STORE_SYMBOL(glActiveTexture)
+    STORE_SYMBOL(glFramebufferTexture2D)
+    STORE_SYMBOL(glUseProgram)
+    STORE_SYMBOL(glPixelStorei)
+    STORE_SYMBOL(glGenBuffers)
+    STORE_SYMBOL(glGenVertexArrays)
+    STORE_SYMBOL(glBindVertexArray)
+    STORE_SYMBOL(glBindBuffer)
+    STORE_SYMBOL(glBufferData)
+    STORE_SYMBOL(glVertexAttribPointer)
+    STORE_SYMBOL(glEnableVertexAttribArray)
+    STORE_SYMBOL(glCreateShader)
+    STORE_SYMBOL(glShaderSource)
+    STORE_SYMBOL(glCompileShader)
+    STORE_SYMBOL(glGetShaderiv)
+    STORE_SYMBOL(glGetShaderInfoLog)
+    STORE_SYMBOL(glCreateProgram)
+    STORE_SYMBOL(glAttachShader)
+    STORE_SYMBOL(glLinkProgram)
+    STORE_SYMBOL(glGetProgramiv)
+    STORE_SYMBOL(glGetProgramInfoLog)
+    STORE_SYMBOL(glDetachShader)
+    STORE_SYMBOL(glDeleteShader)
+    STORE_SYMBOL(glBlendFunc)
+    STORE_SYMBOL(glDeleteBuffers)
+    STORE_SYMBOL(glDeleteVertexArrays)
+    STORE_SYMBOL(glDeleteProgram)
+    
     return real_pointer;
 }
 
