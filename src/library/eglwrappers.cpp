@@ -58,6 +58,11 @@ DEFINE_ORIG_POINTER(eglSwapInterval)
 DEFINE_ORIG_POINTER(eglBindAPI)
 DEFINE_ORIG_POINTER(eglCreateContext)
 
+DECLARE_ORIG_POINTER(glGetString)
+DECLARE_ORIG_POINTER(glBlitFramebuffer)
+DECLARE_ORIG_POINTER(glTexParameterf)
+DECLARE_ORIG_POINTER(glTexParameteri)
+DECLARE_ORIG_POINTER(glEnable)
 DECLARE_ORIG_POINTER(glReadPixels)
 DECLARE_ORIG_POINTER(glGenFramebuffers)
 DECLARE_ORIG_POINTER(glBindFramebuffer)
@@ -120,6 +125,11 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(eglCreateContext)
 
     /* Store function pointers that are used in other files */
+    STORE_SYMBOL(glGetString)
+    STORE_SYMBOL(glBlitFramebuffer);
+    STORE_SYMBOL(glTexParameterf);
+    STORE_SYMBOL(glTexParameteri);
+    STORE_SYMBOL(glEnable);
     STORE_SYMBOL(glReadPixels)
     STORE_SYMBOL(glGenFramebuffers)
     STORE_SYMBOL(glBindFramebuffer)

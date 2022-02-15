@@ -217,6 +217,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
         return real_pointer;
 
     /* Store function pointers that are used in other files */
+    STORE_SYMBOL(glGetString)
     STORE_SYMBOL(glReadPixels)
     STORE_SYMBOL(glGenFramebuffers)
     STORE_SYMBOL(glBindFramebuffer)
