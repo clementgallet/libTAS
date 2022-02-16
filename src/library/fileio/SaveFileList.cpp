@@ -84,9 +84,11 @@ bool isSaveFile(const char *file, int oflag)
     /*
      * This is a sort of hack to prevent considering new shared
      * memory files as a savefile, which are opened using O_CLOEXEC
+     *
+     * Remove this because ruffle opens savefiles with O_CLOEXEC.
      */
-    if (oflag & O_CLOEXEC)
-        return false;
+    // if (oflag & O_CLOEXEC)
+    //     return false;
 
     return isSaveFile(file);
 }
@@ -128,6 +130,10 @@ bool isSaveFile(const char *file)
 
     /* Check if the file lies in shared memory */
     if (strstr(file, "/dev/shm"))
+        return false;
+
+    /* We don't need to keep mesa shader cache files */
+    if (strstr(file, "/.cache/mesa_shader_cache/"))
         return false;
 
     return true;
@@ -236,7 +242,7 @@ int renameSaveFile(const char *oldfile, const char *newfile)
     }
 
     /* If the file is not registered, create a savefile */
-    if (shared_config.prevent_savefiles) {
+    if (isSaveFile(newfile)) {
         savefiles.emplace_front(new SaveFile(oldfile));
         savefiles.front()->open("rb");
         savefiles.front()->filename = newfilestr;
