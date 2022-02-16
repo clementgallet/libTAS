@@ -298,7 +298,10 @@ void *dlsym(void *handle, const char *name) __THROW {
         void* ret;
         if (safe) {
 #ifdef __unix__
-            ret = _dl_sym(handle, name, reinterpret_cast<void*>(dlsym));
+            if (_dl_sym)
+                ret = _dl_sym(handle, name, reinterpret_cast<void*>(dlsym));
+            else
+                ret = orig::dlsym(handle, name);
 #elif defined(__APPLE__) && defined(__MACH__)
             /* TODO */
             ret = orig::dlsym(handle, name);
