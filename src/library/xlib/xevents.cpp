@@ -46,6 +46,7 @@ DEFINE_ORIG_POINTER(XCheckTypedWindowEvent)
 DEFINE_ORIG_POINTER(XEventsQueued)
 DEFINE_ORIG_POINTER(XPending)
 DEFINE_ORIG_POINTER(XSendEvent)
+DEFINE_ORIG_POINTER(XFilterEvent)
 DEFINE_ORIG_POINTER(XFlush)
 DEFINE_ORIG_POINTER(XSync)
 DEFINE_ORIG_POINTER(XGetEventData)
@@ -523,6 +524,20 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
     }
 
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);
+}
+
+Bool XFilterEvent(XEvent *event, Window w)
+{
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(XFilterEvent);
+        return orig::XFilterEvent(event, w);
+    }
+    
+    /* This is used when using composition, but we don't support it.
+     * In the meanwhile, we disable it completely. Users that want to input
+     * special characters can map in libTAS a key to that character.
+     */
+    return False;
 }
 
 int XFlush(Display *display)
