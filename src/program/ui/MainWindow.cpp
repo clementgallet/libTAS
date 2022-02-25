@@ -398,15 +398,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if(!context->interactive) {
+    if (!context->interactive) {
         event->accept();
         return;
     }
 
-    if (context->status == Context::INACTIVE)
+    if (context->status == Context::INACTIVE) {
         event->accept();
+        return;
+    }
 
-    if(gameLoop->movie.inputs->modifiedSinceLastSave) {
+    if (gameLoop->movie.inputs->modifiedSinceLastSave) {
         QMessageBox::StandardButton result = QMessageBox::question(
             this, tr("Unsaved Work"), 
             tr("You have unsaved work. Would you like to save it?"),

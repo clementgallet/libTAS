@@ -71,6 +71,8 @@ void Lua::Main::reset(Context* context)
 
 void Lua::Main::callLua(Context* context, const char* func)
 {
+    if (!context->lua_state) return;
+    
     lua_getglobal(context->lua_state, func);
     if (lua_isfunction(context->lua_state, -1)) {
         int ret = lua_pcall(context->lua_state, 0, 0, 0);
