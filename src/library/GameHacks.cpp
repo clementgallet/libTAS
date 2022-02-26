@@ -19,12 +19,22 @@
 
 #include "GameHacks.h"
 #include "logging.h"
+#ifdef __unix__
+#include "checkpoint/ProcSelfMaps.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "checkpoint/MachVmMaps.h"
+#endif
+#include "checkpoint/MemArea.h"
 
 namespace libtas {
 
 bool GameHacks::unity = false;
 bool GameHacks::coreclr = false;
 pid_t GameHacks::finalizer_pid = 0;
+
+uintptr_t GameHacks::executableBase = 0;
+uintptr_t GameHacks::executableEnd = 0;
+uintptr_t GameHacks::unityLoadingThreadAddr = 0;
 
 void GameHacks::setUnity()
 {
@@ -37,21 +47,51 @@ bool GameHacks::isUnity()
     return unity;
 }
 
-static const std::ptrdiff_t unity_loading_threads[] = {
-    -9535, -9456, 801, 777, // version 5.4.3f1
-    -12625, -12493, 1236, // version 2017.4.10f1
-    -990473, -990740, // version 2018.4.12f1
-    -1004308, -1004041, // version 2018.4.25f1
-};
+void GameHacks::getExecutableMemory()
+{
+    if (executableBase != 0)
+        return;
+    
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
+    Area area;
+    while (memMapLayout.getNextArea(&area)) {
+        if (area.addr == (void*)0x400000 || area.addr == (void*)0x8048000)
+            break;
+    }
+    
+    if (!area.addr) {
+        debuglogstdio(LCF_ERROR, "Could not detect the game executable memory mapping!");
+        /* Put non-zero numbers so that this is not triggered again */
+        executableBase = 1;
+        executableEnd = 1;
+        return;
+    }
 
-bool GameHacks::isUnityLoadingThread(std::ptrdiff_t routine_id)
+    executableBase = reinterpret_cast<uintptr_t>(area.addr);
+    executableEnd = reinterpret_cast<uintptr_t>(area.endAddr);
+}
+
+bool GameHacks::isUnityLoadingThread(uintptr_t addr)
 {
     if (!unity) return false;
-    const int n = sizeof(unity_loading_threads) / sizeof(unity_loading_threads[0]);
-    for (int i = 0; i < n; i++)
-        if (routine_id == unity_loading_threads[i])
-            return true;
+    
+    /* The first Unity thread that executes a routine from its executable seems
+     * to always be a loading thread */
+    
+    getExecutableMemory();
+    
+    if (unityLoadingThreadAddr != 0)
+        return (unityLoadingThreadAddr == addr);
 
+    if ((addr >= executableBase) && (addr < executableEnd)) {
+        unityLoadingThreadAddr = addr;
+        return true;
+    }
+    
     return false;
 }
 

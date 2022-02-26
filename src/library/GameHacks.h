@@ -22,6 +22,7 @@
 
 #include <sys/types.h>
 #include <cstddef>
+#include <cstdint>
 
 namespace libtas {
 
@@ -32,7 +33,9 @@ class GameHacks
 
         static bool isUnity();
         
-        static bool isUnityLoadingThread(std::ptrdiff_t routine_id);
+        static void getExecutableMemory();
+
+        static bool isUnityLoadingThread(uintptr_t addr);
 
         /* Regsiter that the game linked `libcoreclr.so` library */
         static void setCoreclr();
@@ -48,6 +51,10 @@ class GameHacks
         
     private:
         static bool unity;
+        static uintptr_t executableBase;
+        static uintptr_t executableEnd;
+        static uintptr_t unityLoadingThreadAddr;
+
         static bool coreclr;
         static pid_t finalizer_pid;
 };
