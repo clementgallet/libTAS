@@ -21,6 +21,7 @@
 * Complete lua input category
 * Simple autodetect of game libraries
 * eglGetProcAddress() is also used for gl functions
+* Prevent a mono sleep from adding variable time to the timer
 
 ### Changed
 

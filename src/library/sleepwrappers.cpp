@@ -116,7 +116,7 @@ DEFINE_ORIG_POINTER(sched_yield)
     }
 
     bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%010d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
     /* If the function was called from the main thread, transfer the wait to
      * the timer and do not actually wait.
@@ -127,6 +127,15 @@ DEFINE_ORIG_POINTER(sched_yield)
             (requested_time->tv_sec == 0) && (requested_time->tv_nsec == 9999000)) {
             /* Don't add to the timer, because it is sleep for loading threads */
         }
+        else if ((requested_time->tv_sec == 0) && (requested_time->tv_nsec == 200000)) {
+            /* 
+             * Mono may sleep for 200 us when creating an object with a finalizer,
+             * while waiting for the finalizer thread to be ready.
+             * See function add_stage_entry() inside mono/sgen/sgen-fin-weak-hash.c
+             *
+             * TODO: Only apply this for mono games, to avoid false positives.
+             */            
+        }        
         else {
             detTimer.addDelay(*requested_time);
         }
@@ -138,7 +147,7 @@ DEFINE_ORIG_POINTER(sched_yield)
     return orig::nanosleep(requested_time, remaining);
 }
 
-/* Override */int clock_nanosleep (clockid_t clock_id, int flags,
+/* Override */ int clock_nanosleep (clockid_t clock_id, int flags,
 			    const struct timespec *req,
 			    struct timespec *rem)
 {
@@ -159,7 +168,7 @@ DEFINE_ORIG_POINTER(sched_yield)
         sleeptime -= curtime;
     }
 
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%010d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
+    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
     /* If the function was called from the main thread
      * and we are not in the native state,
