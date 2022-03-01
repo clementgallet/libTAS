@@ -149,12 +149,49 @@ void EncodeWindow::update_config()
 
 void EncodeWindow::slotUpdate()
 {
-    /* Additional default options for specific codecs */
-    QString video_options;
-    if (videoChoice->currentIndex() == SharedConfig::VCODEC_UT)
-        video_options = "-pred median -pix_fmt gbrp";
+    QString options = QString("-c:v %1").arg(videoChoice->currentData().toString());
+
+    /* Disable video bitrate for lossless codecs, and add specific default settings */
+    switch (videoChoice->currentIndex()) {
+        case SharedConfig::VCODEC_X264:
+        case SharedConfig::VCODEC_X265:
+            videoBitrate->setEnabled(true);
+            options.append(QString(" -b:v %1k").arg(videoBitrate->value()));
+            break;
+        case SharedConfig::VCODEC_FFV1:
+            videoBitrate->setEnabled(false);
+            options.append(" -pix_fmt bgr0 -level 1");
+            break;
+        case SharedConfig::VCODEC_UT:
+            videoBitrate->setEnabled(false);
+            options.append(" -pred median -pix_fmt gbrp");
+            break;
+        case SharedConfig::VCODEC_RAW:
+            videoBitrate->setEnabled(false);
+            break;
+        default:
+            videoBitrate->setEnabled(true);
+            break;
+    }
+
+    options.append(QString(" -c:a %1").arg(audioChoice->currentData().toString()));
     
-    QString options = QString("-c:v %1 %2 -b:v %3k -c:a %4 -b:a %5k").arg(videoChoice->currentData().toString()).arg(video_options).arg(videoBitrate->value()).arg(audioChoice->currentData().toString()).arg(audioBitrate->value());
+    /* Disable audio bitrate for lossless codecs, and add specific default settings */
+    switch (audioChoice->currentIndex()) {
+        case SharedConfig::ACODEC_AAC:
+        case SharedConfig::ACODEC_VORBIS:
+            audioBitrate->setEnabled(true);
+            options.append(QString(" -b:a %1k").arg(audioBitrate->value()));
+            break;
+        case SharedConfig::ACODEC_FLAC:
+        case SharedConfig::ACODEC_PCM:
+            audioBitrate->setEnabled(false);
+            break;
+        default:
+            audioBitrate->setEnabled(true);
+            break;
+    }
+    
     ffmpegOptions->setText(options);
 }
 
