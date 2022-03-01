@@ -48,10 +48,10 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     /* Video/Audio codecs */
 
     videoChoice = new QComboBox();
-    videoChoice->addItem("FFmpeg video codec #1", "ffv1");
     videoChoice->addItem("H.264", "libx264");
-    videoChoice->addItem("H.264 RGB", "libx264rgb");
     videoChoice->addItem("H.265", "libx265");
+    videoChoice->addItem("FFmpeg video codec #1", "ffv1");
+    videoChoice->addItem("Ut video codec", "utvideo");
     videoChoice->addItem("raw video", "rawvideo");
     connect(videoChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotUpdate);
 
@@ -61,9 +61,9 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
 
     audioChoice = new QComboBox();
     audioChoice->addItem("AAC (Advanced Audio Coding)", "aac");
+    audioChoice->addItem("Vorbis", "libvorbis");
     audioChoice->addItem("FLAC", "flac");
     audioChoice->addItem("PCM signed 16-bit little-endian", "pcm_s16le");
-    audioChoice->addItem("Vorbis", "libvorbis");
     connect(audioChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotUpdate);
 
     audioBitrate = new QSpinBox();
@@ -72,7 +72,6 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
 
     videoFramerate = new QSpinBox();
     videoFramerate->setMaximum(1000000000);
-//    connect(videoFramerate, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &EncodeWindow::slotUpdate);
 
     ffmpegOptions = new QLineEdit();
 
@@ -150,7 +149,12 @@ void EncodeWindow::update_config()
 
 void EncodeWindow::slotUpdate()
 {
-    QString options = QString("-c:v %1 -b:v %2k -c:a %3 -b:a %4k").arg(videoChoice->currentData().toString()).arg(videoBitrate->value()).arg(audioChoice->currentData().toString()).arg(audioBitrate->value());
+    /* Additional default options for specific codecs */
+    QString video_options;
+    if (videoChoice->currentIndex() == SharedConfig::VCODEC_UT)
+        video_options = "-pred median -pix_fmt gbrp";
+    
+    QString options = QString("-c:v %1 %2 -b:v %3k -c:a %4 -b:a %5k").arg(videoChoice->currentData().toString()).arg(video_options).arg(videoBitrate->value()).arg(audioChoice->currentData().toString()).arg(audioBitrate->value());
     ffmpegOptions->setText(options);
 }
 

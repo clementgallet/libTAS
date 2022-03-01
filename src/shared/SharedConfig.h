@@ -111,11 +111,28 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Frequency of buffer in Hz */
     int audio_frequency = 44100;
 
+    /* Video codec */
+    enum VCodec {
+        VCODEC_X264,
+        VCODEC_X265,
+        VCODEC_FFV1,
+        VCODEC_UT,
+        VCODEC_RAW,
+    };
+
+    /* Audio codec */
+    enum ACodec {
+        ACODEC_AAC,
+        ACODEC_VORBIS,
+        ACODEC_FLAC,
+        ACODEC_PCM,
+    };
+
     /* Encode config */
-    int video_codec = 2; // x264rgb
+    int video_codec = VCODEC_X264;
     int video_bitrate = 4000;
     int video_framerate = 60; // used when variable framerate
-    int audio_codec = 0;
+    int audio_codec = ACODEC_AAC;
     int audio_bitrate = 128;
 
     /* An enum indicating which time-getting function query the time */
