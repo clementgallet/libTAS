@@ -60,6 +60,7 @@
 #include <csignal> // kill
 #include <unistd.h> // access
 #include <limits>
+#include <features.h> // __GLIBC_PREREQ
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -845,9 +846,19 @@ void MainWindow::createMenus()
     preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, &MainWindow::slotPreventSavefile);
     preventSavefileAction->setCheckable(true);
     preventSavefileAction->setToolTip("Prevent the game from writing files on disk, but write in memory instead. May cause issues in some games");
+
+#if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 35)
+    /* Symbol `__libc_thread_freeres` is no longer available, so recycle threads
+     * may be broken. */
+    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads (unstable)"), this, &MainWindow::slotRecycleThreads);
+#else
     recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
+#endif
+#endif
     recycleThreadsAction->setToolTip("Recycle threads when they finish, to make savestates more useable. Can crash on some games");
     recycleThreadsAction->setCheckable(true);
+
     disabledActionsOnStart.append(recycleThreadsAction);
     steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, &MainWindow::slotSteam);
     steamAction->setToolTip("Implement a dummy Steam client, to be able to launch some Steam games");

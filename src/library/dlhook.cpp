@@ -69,6 +69,12 @@ void add_lib(const char* library)
 DEFINE_ORIG_POINTER(dlopen)
 DEFINE_ORIG_POINTER(dlsym)
 
+#ifdef __unix__
+/* Declare internal implementation-dependent dlsym function.
+ * It is declared as weak, so we have a fallback if not present */
+extern "C" void *_dl_sym(void *, const char *, void *) __attribute__((weak));
+#endif
+
 /* Find the address of dlopen and dlsym symbols */
 static void get_dlfct_symbols()
 {

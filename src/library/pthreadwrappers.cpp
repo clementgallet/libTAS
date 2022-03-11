@@ -91,15 +91,15 @@ extern "C" {
   // Even though this function is internal and undocumented, I don't think
   // it's likely to change; it's part of the ABI between libpthread.so
   // and ld-linux.so.
-  extern void _dl_allocate_tls_init(pthread_t pt);
+  extern void _dl_allocate_tls_init(pthread_t pt) __attribute__((weak));
 
   // Another internal, undocumented libc function, that calls C++
   // destructors on thread-local storage.
-  extern void __call_tls_dtors();
+  extern void __call_tls_dtors() __attribute__((weak));
 
   // Another internal, undocumented libc function, that cleans up
   // any libc internal state in thread-local storage.
-  extern void __libc_thread_freeres();
+  extern void __libc_thread_freeres() __attribute__((weak));
 }
 
 static void *pthread_start(void *arg)
@@ -151,18 +151,18 @@ static void *pthread_start(void *arg)
                  * destructors for values in thread-local storage, using
                  * an internal libc function.
                  */
-                __call_tls_dtors();
+                if (__call_tls_dtors) __call_tls_dtors();
                 /* Next, we clean up any libc state in thread-local storage,
                  * using an internal libc function.
                  */
-                __libc_thread_freeres();
+                if (__libc_thread_freeres) __libc_thread_freeres();
                 /* Finally, we reset all thread-local storage back to its
                  * initial value, using a third internal libc function.
                  * This is architecture-specific; it works on 32-bit and
                  * 64-bit x86, but not on all Linux architectures.  See
                  * above, where this function is declared.
                  */
-                _dl_allocate_tls_init(thread->pthread_id);
+                if (_dl_allocate_tls_init) _dl_allocate_tls_init(thread->pthread_id);
                 /* This has just reset any libTAS thread-local storage
                  * for this thread.  Most libTAS TLS is either transient
                  * anyway, or irrelevant while the thread is waiting
