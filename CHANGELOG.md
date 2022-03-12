@@ -23,6 +23,7 @@
 * eglGetProcAddress() is also used for gl functions
 * Prevent a mono sleep from adding variable time to the timer
 * Reorder codecs and add Ut (#467)
+* Better implementation of pointer grabbing and mask
 
 ### Changed
 

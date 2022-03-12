@@ -61,6 +61,12 @@ class XlibEventQueue
         /* Return the size of the queue */
         int size();
 
+        /* Mimick a pointer grab by redirecting pointer events to the grab window */
+        void grabPointer(Window window, unsigned int event_mask, bool owner_events);
+
+        /* Ungrab pointer  */
+        void ungrabPointer();
+
         Display* display;
 
         /* Was the queue emptied? Used for asynchronous events */
@@ -78,6 +84,10 @@ class XlibEventQueue
 
         /* Does a type belong to an event mask?*/
         bool isTypeOfMask(int type, long event_mask);
+        
+        Window grab_window;
+        unsigned int grab_event_mask;
+        bool grab_owner_events;
 };
 
 }

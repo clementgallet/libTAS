@@ -25,7 +25,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false), grab_window(0) {}
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
@@ -68,15 +68,49 @@ void XlibEventQueue::setMask(Window w, long event_mask)
 
 int XlibEventQueue::insert(XEvent* event)
 {
+    /* Check if pointer event and pointer is grabbed */
+    if ((grab_window != 0) &&
+        ((event->type == MotionNotify) || (event->type == ButtonPress) ||
+         (event->type == ButtonRelease) || (event->type == EnterNotify) ||
+         (event->type == LeaveNotify) || (event->type == KeymapNotify))) {
+             
+        /* Check grab mask */
+        if (isTypeOfMask(event->type, grab_event_mask)) {
+            /* Register event to the grab window */
+            event->xany.window = grab_window;
+            
+            /* Check the size of the queue */
+            if (eventQueue.size() > 1024) {
+                debuglogstdio(LCF_EVENTS, "We reached the limit of the event queue size!");
+                return -1;
+            }
+
+            /* Specify the display */
+            event->xany.display = display;
+
+            /* Push the event at the beginning of the queue */
+            eventQueue.push_front(*event);
+
+            /* If grab was set with owner_events being False, only report to 
+             * the grab window, or discard */
+            if (!grab_owner_events)
+                return 1;
+        }
+        else {
+            if (!grab_owner_events)
+                return 0;
+        }
+    }
+    
     /* Check if the window can produce such event */
     auto mask = eventMasks.find(event->xany.window);
     if (mask != eventMasks.end()) {
-        if (!isTypeOfMask(event->xany.type, mask->second))
-            return 0;
+        if (!isTypeOfMask(event->type, mask->second))
+            return 0;            
     }
     else {
         /* Check unmaskable events */
-        if (!isTypeOfMask(event->xany.type, 0))
+        if (!isTypeOfMask(event->type, 0))
             return 0;
     }
 
@@ -188,6 +222,18 @@ int XlibEventQueue::size()
     if (s == 0)
         emptied = true;
     return s;
+}
+
+void XlibEventQueue::grabPointer(Window window, unsigned int event_mask, bool owner_events)
+{
+    grab_window = window;
+    grab_event_mask = event_mask;
+    grab_owner_events = owner_events;
+}
+
+void XlibEventQueue::ungrabPointer()
+{
+    grab_window = 0;
 }
 
 bool XlibEventQueue::isTypeOfMask(int type, long event_mask)

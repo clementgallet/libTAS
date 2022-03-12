@@ -56,14 +56,14 @@ DEFINE_ORIG_POINTER(XWarpPointer)
     return 1;
 }
 
-/* Override */ int XGrabPointer(Display* display, Window w, Bool, unsigned int event_mask, int, int,
+/* Override */ int XGrabPointer(Display* display, Window w, Bool owner_events, unsigned int event_mask, int, int,
     Window confine_to, Cursor, Time)
 {
     DEBUGLOGCALL(LCF_MOUSE);
 
     pointer_grab_window = w;
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
-    queue->setMask(w, event_mask); // TODO: only set pointer event mask!!!
+    queue->grabPointer(pointer_grab_window, event_mask, owner_events);
 
     if (confine_to != None) {
         XWindowAttributes clip_attr;
@@ -95,10 +95,14 @@ DEFINE_ORIG_POINTER(XWarpPointer)
     return GrabSuccess;
 }
 
-/* Override */ int XUngrabPointer(Display*, Time)
+/* Override */ int XUngrabPointer(Display* display, Time)
 {
     DEBUGLOGCALL(LCF_MOUSE);
     pointer_grab_window = None;
+    
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    queue->ungrabPointer();
+
     pointer_clipping = false;
     return 0; // Not sure what to return
 }
