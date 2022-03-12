@@ -78,7 +78,7 @@ void MovieFileHeader::load()
     context->movie_time_sec = config.value("length_sec").toULongLong();
     context->movie_time_nsec = config.value("length_nsec").toULongLong();
     /* If no movie length field, compute from frame count and framerate */
-    if (!context->movie_time_sec) {
+    if (!context->movie_time_sec && !context->movie_time_nsec) {
         context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
         context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
     }
