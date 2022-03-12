@@ -52,6 +52,9 @@ DEFINE_ORIG_POINTER(XSync)
 DEFINE_ORIG_POINTER(XGetEventData)
 DEFINE_ORIG_POINTER(XFreeEventData)
 
+
+static void debugEvent(XEvent *event);
+
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (XEvent *event) {
     switch (event->type) {
@@ -179,32 +182,6 @@ int XNextEvent(Display *display, XEvent *event_return)
         debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
     }
     return 0;
-
-    // debuglog(LCF_KEYBOARD, "    got event ", event_return->type);
-    //
-    // if (event_return && (event_return->type == KeyPress)) {
-    //     event_return->xkey.time = 0;
-    //     event_return->xkey.x = 0;
-    //     event_return->xkey.y = 0;
-    //     event_return->xkey.x_root = 0;
-    //     event_return->xkey.y_root = 0;
-    //     event_return->xkey.send_event = 0;
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent send_event", event_return->xkey.send_event);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent display", event_return->xkey.display);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent type", event_return->xkey.type);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent state", event_return->xkey.state);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent window", event_return->xkey.window);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent time", event_return->xkey.time);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent same_screen", event_return->xkey.same_screen);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent keycode", event_return->xkey.keycode);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent root", event_return->xkey.root);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent subwindow", event_return->xkey.subwindow);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent x", event_return->xkey.x);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent y", event_return->xkey.y);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent x_root", event_return->xkey.x_root);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent y_root", event_return->xkey.y_root);
-    //     debuglog(LCF_KEYBOARD, "    xkeyevent keycode", event_return->xkey.keycode);
-    // }
 }
 
 int XPeekEvent(Display *display, XEvent *event_return)
@@ -533,6 +510,7 @@ Bool XFilterEvent(XEvent *event, Window w)
         return orig::XFilterEvent(event, w);
     }
     
+    DEBUGLOGCALL(LCF_EVENTS);
     /* This is used when using composition, but we don't support it.
      * In the meanwhile, we disable it completely. Users that want to input
      * special characters can map in libTAS a key to that character.
@@ -649,5 +627,103 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
     }
 }
 
+/* Show informations about an xevent */
+static void debugEvent(XEvent *event)
+{
+    debuglogstdio(LCF_EVENTS, "Debug event %p:", event);
+    if (!event) return;
+
+    debuglogstdio(LCF_EVENTS, "| Generic information");
+    
+    debuglogstdio(LCF_EVENTS, "| | type: %d", event->type);
+    debuglogstdio(LCF_EVENTS, "| | serial: %d", event->xany.serial);
+    debuglogstdio(LCF_EVENTS, "| | send_event: %d", event->xany.send_event);
+    debuglogstdio(LCF_EVENTS, "| | display: %p", event->xany.display);
+    debuglogstdio(LCF_EVENTS, "| |_window: %d", event->xany.window);
+
+    debuglogstdio(LCF_EVENTS, "| Specific information");
+    switch(event->type) {
+        case KeyPress:
+        case KeyRelease:
+            if (event->type == KeyPress)
+                debuglogstdio(LCF_EVENTS, "| | type: KeyPress");
+            else
+                debuglogstdio(LCF_EVENTS, "| | type: KeyRelease");
+            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xkey.root);
+            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xkey.subwindow);
+            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xkey.time);
+            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xkey.x);
+            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xkey.y);
+            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xkey.x_root);
+            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xkey.y_root);
+            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xkey.state);
+            debuglogstdio(LCF_EVENTS, "| | keycode: %u", event->xkey.keycode);
+            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xkey.same_screen);
+            break;
+        case ButtonPress:
+        case ButtonRelease:
+            if (event->type == ButtonPress)
+                debuglogstdio(LCF_EVENTS, "| | type: ButtonPress");
+            else
+                debuglogstdio(LCF_EVENTS, "| | type: ButtonRelease");
+            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xbutton.root);
+            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xbutton.subwindow);
+            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xbutton.time);
+            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xbutton.x);
+            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xbutton.y);
+            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xbutton.x_root);
+            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xbutton.y_root);
+            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xbutton.state);
+            debuglogstdio(LCF_EVENTS, "| | button: %u", event->xbutton.button);
+            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xbutton.same_screen);
+            break;
+        case MotionNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: MotionNotify");
+            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xmotion.root);
+            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xmotion.subwindow);
+            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xmotion.time);
+            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xmotion.x);
+            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xmotion.y);
+            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xmotion.x_root);
+            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xmotion.y_root);
+            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xmotion.state);
+            debuglogstdio(LCF_EVENTS, "| | is_hint: %d", event->xmotion.is_hint);
+            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xmotion.same_screen);
+            break;
+        case GenericEvent:
+            debuglogstdio(LCF_EVENTS, "| | type: GenericEvent");
+            debuglogstdio(LCF_EVENTS, "| | extension: %d", event->xgeneric.extension);
+            debuglogstdio(LCF_EVENTS, "| |_evtype: %d", event->xgeneric.evtype);
+            break;
+        case FocusIn:
+            debuglogstdio(LCF_EVENTS, "| | type: FocusIn");
+            break;
+        case FocusOut:
+            debuglogstdio(LCF_EVENTS, "| | type: FocusOut");
+            break;
+        case Expose:
+            debuglogstdio(LCF_EVENTS, "| | type: Expose");
+            break;
+        case EnterNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: EnterNotify");
+            break;
+        case LeaveNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: LeaveNotify");
+            break;
+        case PropertyNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: PropertyNotify");
+            break;
+        case ReparentNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: ReparentNotify");
+            break;
+        case ConfigureNotify:
+            debuglogstdio(LCF_EVENTS, "| | type: ConfigureNotify");
+            break;
+        case ClientMessage:
+            debuglogstdio(LCF_EVENTS, "| | type: ClientMessage");
+            break;
+    }    
+    debuglogstdio(LCF_EVENTS, "|___");
+}
 
 }
