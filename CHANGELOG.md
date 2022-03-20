@@ -53,6 +53,7 @@
 * Fix bug when accessing past the audio buffer (#463)
 * Disable xevent filtering used for composition (#443)
 * Support internal glibc TLS functions not available anymore
+* Ignore SDL_SetWindowSize() when fullscreen
 
 ## [1.4.2] - 2021-07-06
 ### Added

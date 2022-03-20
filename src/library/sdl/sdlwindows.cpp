@@ -67,6 +67,9 @@ DECLARE_ORIG_POINTER(SDL_UpdateWindowSurfaceRects)
 
 SDL_Window* sdl::gameSDLWindow = nullptr;
 
+static int swapInterval = 0;
+static bool windowFullscreen = false;
+
 /* SDL 1.2 */
 /* Override */ void SDL_GL_SwapBuffers(void)
 {
@@ -154,8 +157,6 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     orig::SDL_GL_DeleteContext(context);
 }
 
-static int swapInterval = 0;
-
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
     debuglogstdio(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
@@ -191,6 +192,7 @@ static int swapInterval = 0;
     WindowTitle::setOriginalTitle(title);
 
     /* Disable fullscreen */
+    windowFullscreen = (flags & SDL_WINDOW_FULLSCREEN);
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     /* Disable hidden windows */
@@ -198,6 +200,9 @@ static int swapInterval = 0;
 
     /* Disable high DPI mode */
     flags &= 0xFFFFFFFF ^ SDL_WINDOW_ALLOW_HIGHDPI;
+
+    /* Disable resizable window */
+    flags &= 0xFFFFFFFF ^ SDL_WINDOW_RESIZABLE;
 
     if (shared_config.screen_width && w > shared_config.screen_width)
         w = shared_config.screen_width;
@@ -297,6 +302,8 @@ static int swapInterval = 0;
     LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
     Uint32 flags = orig::SDL_GetWindowFlags(window);
     flags |= SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
+    if (windowFullscreen)
+        flags |= SDL_WINDOW_FULLSCREEN;
     debuglogstdio(LCF_SDL | LCF_WINDOW, "  flags: %d", flags);
     return flags;
 }
@@ -322,20 +329,27 @@ static int swapInterval = 0;
 {
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
 
+    windowFullscreen = (flags & SDL_WINDOW_FULLSCREEN);
+
     if (flags == 0) // Windowed
         return 0;
 
     /* Resize the window to the screen or fake resolution */
+    int w, h;
     if (shared_config.screen_width) {
-        SDL_SetWindowSize(window, shared_config.screen_width, shared_config.screen_height);
+        w = shared_config.screen_width;
+        h = shared_config.screen_height;
     }
     else {
         /* Change the window size to monitor size */
         SDL_DisplayMode dm;
         NATIVECALL(SDL_GetCurrentDisplayMode(0, &dm));
-        SDL_SetWindowSize(window, dm.w, dm.h);
+        w = dm.w;
+        h = dm.h;
     }
 
+    NATIVECALL(SDL_SetWindowSize(window, w, h));
+    ScreenCapture::resize(w, h);
     return 0; // success
 }
 
@@ -356,6 +370,7 @@ static int swapInterval = 0;
     ThreadManager::setMainThread();
 
     /* Disable fullscreen */
+    windowFullscreen = (window_flags & SDL_WINDOW_FULLSCREEN);
     window_flags &= 0xFFFFFFFF ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     /* Disable hidden windows */
@@ -394,10 +409,19 @@ static int swapInterval = 0;
 
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "    New size: %d x %d", w, h);
     LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
 
+    if (GlobalState::isNative()) {
+        NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
+        return;
+    }
+
+    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
+
+    /* Ignored if game window is fullscreen */
+    if (windowFullscreen)
+        return;
+        
     NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
 
     ScreenCapture::resize(w, h);
@@ -413,6 +437,7 @@ static int swapInterval = 0;
     ThreadManager::setMainThread();
 
     /* Disable fullscreen */
+    windowFullscreen = (flags & /*SDL_FULLSCREEN*/ 0x80000000);
     flags &= (0xFFFFFFFF ^ /*SDL_FULLSCREEN*/ 0x80000000);
 
     /* The game may call SDL_SetVideoMode() multiple times to resize the game
