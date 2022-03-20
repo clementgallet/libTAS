@@ -31,6 +31,7 @@ DECLARE_ORIG_POINTER(SDL_LockTexture)
 DECLARE_ORIG_POINTER(SDL_UnlockTexture)
 DECLARE_ORIG_POINTER(SDL_RenderCopy)
 DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
+DECLARE_ORIG_POINTER(SDL_GetError)
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
@@ -40,6 +41,9 @@ RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 
 void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
 {
+    /* If renderer has changed, the texture becomes invalid */
+    if (renderer && texture)
+        texture = nullptr;
     renderer = r;
 }
 
@@ -51,6 +55,7 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
     LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
     LINK_NAMESPACE_SDL2(SDL_RenderCopy);
     LINK_NAMESPACE_SDL2(SDL_SetTextureBlendMode);
+    LINK_NAMESPACE_SDL2(SDL_GetError);
 
     GlobalNative gn;
 
@@ -60,7 +65,13 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
             orig::SDL_DestroyTexture(texture);
 
         texture = orig::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, surf->w, surf->h);
-        orig::SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        if (!texture)
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed with error: %s", orig::SDL_GetError());
+
+        int ret = orig::SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        if (ret != 0)
+            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_SetTextureBlendMode failed with error: %s", orig::SDL_GetError());
+        
         tex_w = surf->w;
         tex_h = surf->h;        
     }
@@ -70,7 +81,11 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
     uint8_t* tex_pixels;
     int pitch;
 
-    orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    int ret = orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    if (ret != 0) {
+        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_LockTexture failed with error: %s", orig::SDL_GetError());
+        return;
+    }
     for (int row = 0; row < surf->h; row++) {
         memcpy(tex_pixels, &surf->pixels[row*surf->w], 4*surf->w);
         tex_pixels += pitch;
@@ -78,10 +93,18 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
     orig::SDL_UnlockTexture(texture);
     
     SDL_Rect rect = {x, y, surf->w, surf->h};
-    orig::SDL_RenderCopy(renderer, texture, &tex_rect, &rect);
+    ret = orig::SDL_RenderCopy(renderer, texture, &tex_rect, &rect);
+    if (ret != 0) {
+        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed with error: %s", orig::SDL_GetError());
+        return;
+    }
     
     /* Erase the content of the texture */
-    orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    ret = orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
+    if (ret != 0) {
+        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed with error: %s", orig::SDL_GetError());
+        return;
+    }
     for (int row = 0; row < surf->h; row++) {
         memset(tex_pixels, 0, 4*surf->w);
         tex_pixels += pitch;

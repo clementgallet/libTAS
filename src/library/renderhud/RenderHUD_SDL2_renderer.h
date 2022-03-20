@@ -43,7 +43,7 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
         void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
 
     private:
-        SDL_Renderer* renderer;
+        SDL_Renderer* renderer = nullptr;
         SDL_Texture* texture = nullptr;
         int tex_w, tex_h;
 

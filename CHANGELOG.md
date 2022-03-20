@@ -54,6 +54,7 @@
 * Disable xevent filtering used for composition (#443)
 * Support internal glibc TLS functions not available anymore
 * Ignore SDL_SetWindowSize() when fullscreen
+* Invalidate OSD texture if SDL2 renderer changed (#473)
 
 ## [1.4.2] - 2021-07-06
 ### Added
