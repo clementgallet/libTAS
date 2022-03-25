@@ -28,25 +28,26 @@ namespace libtas {
 
 static int readfd = -1;
 static int writefd = -1;
-static char* datestr = nullptr;
 static FILE* stream = nullptr;
+static uint64_t prng_state = 0;
 
 static void urandom_handler(int signum)
 {
-    /* TODO: write a simple PRNG which is seeded by shared_config.initial_time_sec
-     * instead of outputting it directly as a string.
-     */
     debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Filling urandom fd");
-    if (!datestr) {
-        time_t tsec = static_cast<time_t>(shared_config.initial_time_sec);
-        datestr = asctime(gmtime(&tsec));
-    }
-
-    /* Fill the pipe with data from initial time */
-    int err = write(writefd, datestr, strlen(datestr));
-    while (err != -1) {
-        err = write(writefd, datestr, strlen(datestr));
-    }
+    if (!prng_state)
+        prng_state = shared_config.initial_time_sec;
+    
+    int err = 0;
+    do {
+        /* Use xorshift64* algorithm to generate pseudo-random values */
+        uint64_t r = prng_state;	/* The state must be seeded with a nonzero value. */
+    	r ^= r >> 12;
+    	r ^= r << 25;
+    	r ^= r >> 27;
+    	prng_state = r;
+        r *= 0x2545F4914F6CDD1DULL;
+        err = write(writefd, &r, sizeof(uint64_t));
+    } while (err != -1);
 }
 
 int urandom_create_fd()

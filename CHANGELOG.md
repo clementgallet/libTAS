@@ -31,6 +31,7 @@
 * Change default video codec to x264rgb
 * Rework the ram search entirely (#268)
 * Parsing /proc/self/maps no longer requires loading the entire file in memory
+* Write a proper PRNG to fill /dev/urandom (#474)
 
 ### Fixed
 
