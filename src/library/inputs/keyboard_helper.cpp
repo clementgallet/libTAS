@@ -360,7 +360,7 @@ SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& 
     unsigned int mod = KMOD_NONE; // use int because "bitwise or" promotes to int
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
-            for (int j=0; i<10; j++) {
+            for (int j=0; j<10; j++) {
                 if (Xkeyboard[i] == mod_translate[j].xmod) {
                     mod |= mod_translate[j].sdlmod;
                     break;
