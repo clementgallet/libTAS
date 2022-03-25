@@ -492,8 +492,7 @@ bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
 
     beginInsertRows(parent, row, row+count-1);
 
-    AllInputs ai;
-    ai.emptyInputs();
+    AllInputs ai = movie->inputs->input_list[row];
 
     for (int i=0; i<count; i++) {
         movie->inputs->insertInputsBefore(ai, row);
