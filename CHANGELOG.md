@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.3] - 2022-03-27
+### Added
 
 * Implement SteamInternal_FindOrCreateUserInterface()
 * Add shaders for OpenGL ES (#441)
