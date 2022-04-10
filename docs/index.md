@@ -15,7 +15,7 @@ watch/search.
 
 # Download
 
-* [Stable v1.4.1 version, deb package](https://github.com/clementgallet/libTAS/releases/tag/v1.4.1)
+* [Stable v1.4.3 version, deb package](https://github.com/clementgallet/libTAS/releases/tag/v1.4.3)
 * [Latest build, deb package (64-bit only)](https://ci.appveyor.com/project/clementgallet/libtas/build/artifacts)
 
 

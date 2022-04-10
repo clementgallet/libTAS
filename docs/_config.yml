@@ -32,6 +32,7 @@ plugins:
 
 
 header_pages:
+  - news.md
   - help.md
   - faq.md
 
