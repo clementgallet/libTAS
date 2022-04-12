@@ -46,9 +46,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Movie framecount */
     uint64_t movie_framecount = 0;
 
-    /* Frame count at the start of the game. Used when game has restarted */
-    uint64_t initial_framecount = 0;
-
     /* Log status */
     enum LogStatus {
         NO_LOGGING,
@@ -138,11 +135,13 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* An enum indicating which time-getting function query the time */
     enum TimeCallType
     {
-        TIMETYPE_UNTRACKED = -1,
+        TIMETYPE_UNTRACKED_REALTIME = -2,
+        TIMETYPE_UNTRACKED_MONOTONIC = -1,
         TIMETYPE_TIME = 0,
         TIMETYPE_GETTIMEOFDAY,
         TIMETYPE_CLOCK,
-        TIMETYPE_CLOCKGETTIME,
+        TIMETYPE_CLOCKGETTIME_REALTIME,
+        TIMETYPE_CLOCKGETTIME_MONOTONIC,
         TIMETYPE_SDLGETTICKS,
         TIMETYPE_SDLGETPERFORMANCECOUNTER,
         TIMETYPE_GETTICKCOUNT,

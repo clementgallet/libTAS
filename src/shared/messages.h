@@ -35,8 +35,8 @@ enum {
     MSGN_START_FRAMEBOUNDARY,
 
     /*
-     * The game sends the frame number and time
-     * Argument: 3 uint64_t
+     * The game sends the frame number, monotonic and realtime
+     * Argument: 5 uint64_t
      */
     MSGB_FRAMECOUNT_TIME,
 
@@ -64,6 +64,12 @@ enum {
      * Argument: struct SharedConfig
      */
     MSGN_CONFIG,
+
+    /*
+     * Send initial framecount and time. Non-zero when restarting
+     * Argument: 3 uint64_t
+     */
+    MSGN_INITIAL_FRAMECOUNT_TIME,
 
     /*
      * The programs tells the game to end the frame boundary

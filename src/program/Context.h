@@ -71,9 +71,13 @@ struct Context {
     /* frame count */
     uint64_t framecount = 0;
 
-    /* current time */
+    /* current elapsed time since the game startup */
     int64_t current_time_sec;
     int64_t current_time_nsec;
+
+    /* current realtime (clock) */
+    int64_t current_realtime_sec;
+    int64_t current_realtime_nsec;
 
     /* movie time */
     int64_t movie_time_sec;

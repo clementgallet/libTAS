@@ -44,7 +44,8 @@ const char* const DeterministicTimer::gettimes_names[] =
     "time()",
     "gettimeofday()",
     "clock()",
-    "clock_gettime()",
+    "clock_gettime(CLOCK_REALTIME)",
+    "clock_gettime(CLOCK_MONOTONIC)",
     "SDL_GetTicks()",
     "SDL_GetPerformanceCounter()",
     "GetTickCount()",
@@ -54,7 +55,7 @@ const char* const DeterministicTimer::gettimes_names[] =
 
 struct timespec DeterministicTimer::getTicks()
 {
-    return getTicks(SharedConfig::TIMETYPE_UNTRACKED);
+    return getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
 }
 
 struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
@@ -68,7 +69,10 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     /* If we are in the native global state, just return the real time */
     if (GlobalState::isNative()) {
         struct timespec realtime;
-        clock_gettime(CLOCK_REALTIME, &realtime);
+        if (isTimeCallMonotonic(type))
+            clock_gettime(CLOCK_MONOTONIC, &realtime);            
+        else
+            clock_gettime(CLOCK_REALTIME, &realtime);
         return realtime;
     }
 
@@ -76,9 +80,15 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return nonDetTimer.getTicks(); // disable deterministic time
     }
 
-    if ((type == SharedConfig::TIMETYPE_UNTRACKED) || GlobalState::isOwnCode()) {
-        TimeHolder fakeTicks = ticks + fakeExtraTicks;
-        return fakeTicks;
+    if ((type == SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC) || GlobalState::isOwnCode()) {
+        TimeHolder returnTicks = ticks + fakeExtraTicks;
+        return returnTicks;
+    }
+
+    if ((type == SharedConfig::TIMETYPE_UNTRACKED_REALTIME)) {
+        TimeHolder returnTicks = ticks + fakeExtraTicks;
+        returnTicks += realtime_delta;
+        return returnTicks;
     }
 
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
@@ -140,8 +150,10 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         addDelay(delay);
     }
 
-    TimeHolder fakeTicks = ticks + fakeExtraTicks;
-    return fakeTicks;
+    TimeHolder returnTicks = ticks + fakeExtraTicks;
+    if (!isTimeCallMonotonic(type))
+        returnTicks += realtime_delta;
+    return returnTicks;
 }
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
@@ -342,10 +354,12 @@ void DeterministicTimer::fakeAdvanceTimerFrame() {
     }
 }
 
-void DeterministicTimer::initialize(void)
+void DeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
 {
-    ticks.tv_sec = shared_config.initial_time_sec;
-    ticks.tv_nsec = shared_config.initial_time_nsec;
+    ticks = {initial_sec, initial_nsec};
+    
+    realtime_delta = {shared_config.initial_time_sec, shared_config.initial_time_nsec};
+    realtime_delta -= ticks;
 
     if (shared_config.framerate_num > 0) {
         baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
@@ -371,6 +385,36 @@ bool DeterministicTimer::isInsideFrameBoundary()
 {
     return insideFrameBoundary;
 }
+
+void DeterministicTimer::setRealTime(struct timespec new_realtime)
+{
+    TimeHolder th_real = new_realtime;
+    realtime_delta = th_real - ticks;
+}
+
+bool DeterministicTimer::isTimeCallMonotonic(SharedConfig::TimeCallType type)
+{
+    switch (type) {
+        case SharedConfig::TIMETYPE_UNTRACKED_REALTIME:
+        case SharedConfig::TIMETYPE_TIME:
+        case SharedConfig::TIMETYPE_GETTIMEOFDAY:
+        case SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME:
+            return false;
+        case SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC:
+        case SharedConfig::TIMETYPE_CLOCK:
+        case SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC:
+        case SharedConfig::TIMETYPE_SDLGETTICKS:
+        case SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER:
+            return true;
+        case SharedConfig::TIMETYPE_GETTICKCOUNT:
+        case SharedConfig::TIMETYPE_GETTICKCOUNT64:
+        case SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER:
+            return true; // TODO: I don't know!
+        default:
+            return true;
+    }
+}
+
 
 DeterministicTimer detTimer;
 

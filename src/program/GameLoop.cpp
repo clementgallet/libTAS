@@ -163,9 +163,6 @@ void GameLoop::init()
     if (context->status != Context::RESTARTING)
         context->framecount = 0;
 
-    /* Set the initial frame count for the game */
-    context->config.sc.initial_framecount = context->framecount;
-
     /* Reset the rerecord count if not restarting */
     if (context->status != Context::RESTARTING)
         context->rerecord_count = 0;
@@ -250,10 +247,12 @@ void GameLoop::init()
         }
     }
 
-    /* Set the current time to the initial time, except when restarting */
+    /* Set the current realtime to the initial time, except when restarting */
     if (context->status != Context::RESTARTING) {
-        context->current_time_sec = context->config.sc.initial_time_sec;
-        context->current_time_nsec = context->config.sc.initial_time_nsec;
+        context->current_time_sec = 0;
+        context->current_time_nsec = 0;
+        context->current_realtime_sec = context->config.sc.initial_time_sec;
+        context->current_realtime_nsec = context->config.sc.initial_time_nsec;
     }
 
     /* If auto-restart is set, write back savefiles on game exit */
@@ -316,15 +315,21 @@ void GameLoop::initProcessMessages()
 
     /* Send shared config */
 
-    /* This is a bit hackish, change the initial time to the current time before
+    /* This is a bit hackish, change the initial time to the current realtime before
      * sending so that the game gets the correct time after restarting. */
     struct timespec it = {context->config.sc.initial_time_sec, context->config.sc.initial_time_nsec};
-    context->config.sc.initial_time_sec = context->current_time_sec;
-    context->config.sc.initial_time_nsec = context->current_time_nsec;
+    context->config.sc.initial_time_sec = context->current_realtime_sec;
+    context->config.sc.initial_time_nsec = context->current_realtime_nsec;
     sendMessage(MSGN_CONFIG);
     sendData(&context->config.sc, sizeof(SharedConfig));
     context->config.sc.initial_time_sec = it.tv_sec;
     context->config.sc.initial_time_nsec = it.tv_nsec;
+
+    /* Send initial framecount and elapsed time */
+    sendMessage(MSGN_INITIAL_FRAMECOUNT_TIME);
+    sendData(&context->framecount, sizeof(uint64_t));
+    sendData(&context->current_time_sec, sizeof(uint64_t));
+    sendData(&context->current_time_nsec, sizeof(uint64_t));
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {
@@ -400,6 +405,8 @@ bool GameLoop::startFrameMessages()
             receiveData(&context->framecount, sizeof(uint64_t));
             receiveData(&context->current_time_sec, sizeof(uint64_t));
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
+            receiveData(&context->current_realtime_sec, sizeof(uint64_t));
+            receiveData(&context->current_realtime_nsec, sizeof(uint64_t));
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 /* If the input editor is opened, recording does not truncate inputs */
                 bool notTruncInputs = false;
@@ -407,12 +414,8 @@ bool GameLoop::startFrameMessages()
 
                 if (!notTruncInputs || (context->framecount > context->config.sc.movie_framecount)) {
                     context->config.sc.movie_framecount = context->framecount;
-                    context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
-                    context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
-                    if (context->movie_time_nsec < 0) {
-                        context->movie_time_nsec += 1000000000;
-                        context->movie_time_sec--;
-                    }
+                    context->movie_time_sec = context->current_time_sec;
+                    context->movie_time_nsec = context->current_time_nsec;
                 }
             }
             break;
@@ -657,18 +660,14 @@ void GameLoop::processInputs(AllInputs &ai)
                 /* First frame after movie end */
                 if (ret == -2) {
                     /* Check for the moviefile length */
-                    int64_t cur_sec, cur_nsec;
-                    cur_sec = context->current_time_sec - context->config.sc.initial_time_sec;
-                    cur_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
-
                     if ((context->movie_time_sec != -1) &&
-                        ((context->movie_time_sec != cur_sec) ||
-                        (context->movie_time_nsec != cur_nsec))) {
+                        ((context->movie_time_sec != context->current_time_sec) ||
+                        (context->movie_time_nsec != context->current_time_nsec))) {
 
-                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(context->movie_time_sec).arg(context->movie_time_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
+                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(context->movie_time_sec).arg(context->movie_time_nsec, 9, 10, QChar('0')).arg(context->current_time_sec).arg(context->current_time_nsec, 9, 10, QChar('0')));
                     }
-                    context->movie_time_sec = cur_sec;
-                    context->movie_time_nsec = cur_nsec;
+                    context->movie_time_sec = context->current_time_sec;
+                    context->movie_time_nsec = context->current_time_nsec;
                 }
             }
 

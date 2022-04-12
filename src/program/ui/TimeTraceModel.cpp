@@ -112,8 +112,10 @@ QVariant TimeTraceModel::data(const QModelIndex &index, int role) const
                     return tr("gettimeofday()");
                 case SharedConfig::TIMETYPE_CLOCK:
                     return tr("clock()");
-                case SharedConfig::TIMETYPE_CLOCKGETTIME:
-                    return tr("clock_gettime()");
+                case SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME:
+                    return tr("clock_gettime() realtime");
+                case SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC:
+                    return tr("clock_gettime() monotonic");
                 case SharedConfig::TIMETYPE_SDLGETTICKS:
                     return tr("SDL_GetTicks()");
                 case SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER:

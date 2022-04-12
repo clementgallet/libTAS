@@ -48,8 +48,8 @@ class DeterministicTimer
 
 public:
 
-    /* Initialize the class members */
-    void initialize(void);
+    /* Initialize the class members and elapsed time */
+    void initialize(uint64_t initial_sec, uint64_t initial_nsec);
 
     /* Update and return the time of the deterministic timer */
     struct timespec getTicks();
@@ -82,6 +82,12 @@ public:
     /* Are we inside a frame boudary */
     bool isInsideFrameBoundary();
 
+    /* Set a new value for the realtime clock */
+    void setRealTime(struct timespec new_realtime);
+
+    /* Returns if the time call returns a monotonic or realtime */
+    bool isTimeCallMonotonic(SharedConfig::TimeCallType type);
+
 private:
 
     bool insideFrameBoundary = false;
@@ -97,8 +103,13 @@ private:
     /* Current sum of all fractional increments */
     unsigned int fractional_part;
 
-    /* State of the deterministic timer */
+    /* State of the deterministic (monotonic) timer, starts at 0.0 */
     TimeHolder ticks;
+
+    /* Difference between the monotonic timer (which starts at 0.0)and the
+     * realtime timer (which starts at user specified value, and which can
+     * be modified during the run by the user) */
+    TimeHolder realtime_delta;
 
     /*
      * Extra ticks to add to GetTicks().

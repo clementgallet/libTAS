@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Split deterministic timer into monotonic/realtime (#474)
+
 ### Changed
 ### Fixed
 

@@ -113,7 +113,17 @@ DEFINE_ORIG_POINTER(clock_gettime)
         }
     }
 
-    *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME);
+    switch (clock_id) {
+        case CLOCK_REALTIME:
+        case CLOCK_REALTIME_ALARM:
+        case CLOCK_REALTIME_COARSE:
+        case CLOCK_TAI:
+            *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
+            break;
+        default:
+            *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
+            break;
+    }
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
     if (shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {

@@ -185,6 +185,26 @@ static bool skipDraw(float fps)
     return true;
 }
 
+static void sendFrameCountTime()
+{
+    /* Detect an error on the first send, and exit the game if so */
+    int ret = sendMessage(MSGB_FRAMECOUNT_TIME);
+    if (ret == -1)
+        exit(1);
+        
+    sendData(&framecount, sizeof(uint64_t));
+    struct timespec ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
+    uint64_t ticks_val = ticks.tv_sec;
+    sendData(&ticks_val, sizeof(uint64_t));
+    ticks_val = ticks.tv_nsec;
+    sendData(&ticks_val, sizeof(uint64_t));
+    ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_REALTIME);
+    ticks_val = ticks.tv_sec;
+    sendData(&ticks_val, sizeof(uint64_t));
+    ticks_val = ticks.tv_nsec;
+    sendData(&ticks_val, sizeof(uint64_t));
+}
+
 #ifdef LIBTAS_ENABLE_HUD
 void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 #else
@@ -267,19 +287,8 @@ void frameBoundary(std::function<void()> draw)
     /* Other threads may send socket messages, so we lock the socket */
     lockSocket();
 
-    /* Send framecount and internal time */
-    
-    /* Detect an error on the first send, and exit the game if so */
-    int ret = sendMessage(MSGB_FRAMECOUNT_TIME);
-    if (ret == -1)
-        exit(1);
-        
-    sendData(&framecount, sizeof(uint64_t));
-    struct timespec ticks = detTimer.getTicks();
-    uint64_t ticks_val = ticks.tv_sec;
-    sendData(&ticks_val, sizeof(uint64_t));
-    ticks_val = ticks.tv_nsec;
-    sendData(&ticks_val, sizeof(uint64_t));
+    /* Send framecount and internal time */    
+    sendFrameCountTime();
 
     /* Send GameInfo struct if needed */
     if (game_info.tosend) {
@@ -783,13 +792,7 @@ static void receive_messages(std::function<void()> draw)
                     /* We must send again the frame count and time because it
                      * probably has changed.
                      */
-                    sendMessage(MSGB_FRAMECOUNT_TIME);
-                    sendData(&framecount, sizeof(uint64_t));
-                    struct timespec ticks = detTimer.getTicks();
-                    uint64_t ticks_val = ticks.tv_sec;
-                    sendData(&ticks_val, sizeof(uint64_t));
-                    ticks_val = ticks.tv_nsec;
-                    sendData(&ticks_val, sizeof(uint64_t));
+                    sendFrameCountTime();
 
                     /* Screen should have changed after loading */
 #ifdef LIBTAS_ENABLE_HUD
@@ -833,16 +836,7 @@ static void receive_messages(std::function<void()> draw)
                  * frame count and time because the program will pull a
                  * message in either case.
                  */
-                sendMessage(MSGB_FRAMECOUNT_TIME);
-                sendData(&framecount, sizeof(uint64_t));
-                {
-                    struct timespec ticks = detTimer.getTicks();
-                    uint64_t ticks_val = ticks.tv_sec;
-                    sendData(&ticks_val, sizeof(uint64_t));
-                    ticks_val = ticks.tv_nsec;
-                    sendData(&ticks_val, sizeof(uint64_t));
-                }
-
+                sendFrameCountTime();
                 break;
 
             case MSGN_STOP_ENCODE:

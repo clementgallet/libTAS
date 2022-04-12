@@ -171,8 +171,11 @@ public:
     QLabel *currentLength;
     QLabel *movieLength;
 
-    QSpinBox *initialTimeSec;
-    QSpinBox *initialTimeNsec;
+    QSpinBox *elapsedTimeSec;
+    QSpinBox *elapsedTimeNsec;
+    QSpinBox *realTimeSec;
+    QSpinBox *realTimeNsec;
+    QLabel *realTimeFormat;
 
     QPushButton *launchButton;
     QToolButton *launchGdbButton;
@@ -289,6 +292,7 @@ private slots:
     void slotMouseGameWarp(bool checked);
     void slotLuaExecute();
     void slotLuaReset();
+    void slotRealTimeFormat();
 };
 
 #endif

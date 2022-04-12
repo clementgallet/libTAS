@@ -108,6 +108,10 @@ void __attribute__((constructor)) init(void)
     /* End message */
     sendMessage(MSGB_END_INIT);
 
+    /* Initial framecount and elapsed time */
+    uint64_t initial_sec = 0, initial_nsec = 0;
+    framecount = 0;
+
     /* Receive information from the program */
     int message = receiveMessage();
     while (message != MSGN_END_INIT) {
@@ -153,6 +157,12 @@ void __attribute__((constructor)) init(void)
                 steamremotestorage = receiveString();
                 SteamSetRemoteStorageFolder(steamremotestorage);
                 break;
+            case MSGN_INITIAL_FRAMECOUNT_TIME:
+                /* Set the framecount and time to their initial values */
+                receiveData(&framecount, sizeof(uint64_t));
+                receiveData(&initial_sec, sizeof(uint64_t));
+                receiveData(&initial_nsec, sizeof(uint64_t));
+                break;
             default:
                 debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d", message);
                 exit(1);
@@ -163,9 +173,6 @@ void __attribute__((constructor)) init(void)
     if (shared_config.sigint_upon_launch) {
         raise(SIGINT);
     }
-
-    /* Set the frame count to the initial frame count */
-    framecount = shared_config.initial_framecount;
 
     ai.emptyInputs();
     old_ai.emptyInputs();
@@ -178,7 +185,7 @@ void __attribute__((constructor)) init(void)
      * so they must be initialized after receiving it.
      */
     nonDetTimer.initialize();
-    detTimer.initialize();
+    detTimer.initialize(initial_sec, initial_nsec);
 
     /* Initialize sound parameters */
     audiocontext.init();

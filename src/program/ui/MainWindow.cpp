@@ -196,15 +196,25 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     rerecordCount->setReadOnly(true);
     rerecordCount->setMaximum(std::numeric_limits<int>::max());
 
-    /* Initial time */
-    initialTimeSec = new QSpinBox();
-    initialTimeSec->setMaximum(std::numeric_limits<int>::max());
-    initialTimeSec->setMinimumWidth(50);
-    initialTimeNsec = new QSpinBox();
-    initialTimeNsec->setMaximum(std::numeric_limits<int>::max());
-    initialTimeNsec->setMinimumWidth(50);
-    disabledWidgetsOnStart.append(initialTimeSec);
-    disabledWidgetsOnStart.append(initialTimeNsec);
+    /* Elapsed and Real time */
+    elapsedTimeSec = new QSpinBox();
+    elapsedTimeSec->setMaximum(std::numeric_limits<int>::max());
+    elapsedTimeSec->setMinimumWidth(50);
+    elapsedTimeSec->setReadOnly(true);
+    elapsedTimeNsec = new QSpinBox();
+    elapsedTimeNsec->setMaximum(std::numeric_limits<int>::max());
+    elapsedTimeNsec->setMinimumWidth(50);
+    elapsedTimeNsec->setReadOnly(true);
+
+    realTimeSec = new QSpinBox();
+    realTimeSec->setMaximum(std::numeric_limits<int>::max());
+    realTimeSec->setMinimumWidth(50);
+    realTimeNsec = new QSpinBox();
+    realTimeNsec->setMaximum(std::numeric_limits<int>::max());
+    realTimeNsec->setMinimumWidth(50);
+    realTimeFormat = new QLabel();
+    connect(realTimeSec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
+    connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
 
     /* Pause/FF */
     pauseCheck = new QCheckBox("Pause");
@@ -329,15 +339,18 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     generalFpsLayout->addWidget(fpsValues);
     generalFpsLayout->addStretch(1);
 
-    QHBoxLayout *generalTimeLayout = new QHBoxLayout;
-    generalTimeLayout->addWidget(new QLabel(tr("System time:")));
-    generalTimeLayout->addStretch(1);
-    generalTimeLayout->addWidget(initialTimeSec);
-    generalTimeLayout->addWidget(new QLabel(tr("sec")));
-    generalTimeLayout->addStretch(1);
-    generalTimeLayout->addWidget(initialTimeNsec);
-    generalTimeLayout->addWidget(new QLabel(tr("nsec")));
-    generalTimeLayout->addStretch(1);
+    QGridLayout *generalTimeLayout = new QGridLayout;
+    generalTimeLayout->addWidget(new QLabel(tr("Elapsed time:")), 0, 0);
+    generalTimeLayout->addWidget(elapsedTimeSec, 0, 2);
+    generalTimeLayout->addWidget(new QLabel(tr("sec")), 0, 3);
+    generalTimeLayout->addWidget(elapsedTimeNsec, 0, 5);
+    generalTimeLayout->addWidget(new QLabel(tr("nsec")), 0, 6);
+    generalTimeLayout->addWidget(new QLabel(tr("System time:")), 1, 0);
+    generalTimeLayout->addWidget(realTimeSec, 1, 2);
+    generalTimeLayout->addWidget(new QLabel(tr("sec")), 1, 3);
+    generalTimeLayout->addWidget(realTimeNsec, 1, 5);
+    generalTimeLayout->addWidget(new QLabel(tr("nsec")), 1, 6);
+    generalTimeLayout->addWidget(realTimeFormat, 1, 7);
 
     QHBoxLayout *generalControlLayout = new QHBoxLayout;
     generalControlLayout->addWidget(pauseCheck);
@@ -547,7 +560,8 @@ void MainWindow::createActions()
     addActionCheckable(timeMainGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
     addActionCheckable(timeMainGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
     addActionCheckable(timeMainGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
-    addActionCheckable(timeMainGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
+    addActionCheckable(timeMainGroup, tr("clock_gettime() realtime"), SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
+    addActionCheckable(timeMainGroup, tr("clock_gettime() monotonic"), SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
     addActionCheckable(timeMainGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeMainGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     addActionCheckable(timeMainGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
@@ -560,7 +574,8 @@ void MainWindow::createActions()
     addActionCheckable(timeSecGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
     addActionCheckable(timeSecGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
     addActionCheckable(timeSecGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
-    addActionCheckable(timeSecGroup, tr("clock_gettime()"), SharedConfig::TIMETYPE_CLOCKGETTIME);
+    addActionCheckable(timeSecGroup, tr("clock_gettime() realtime"), SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
+    addActionCheckable(timeSecGroup, tr("clock_gettime() monotonic"), SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
     addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
     addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     addActionCheckable(timeSecGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
@@ -979,10 +994,14 @@ void MainWindow::updateStatus()
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
-            fpsNumField->setEnabled(true);
-            fpsDenField->setEnabled(true);
-            initialTimeSec->setValue(context->config.sc.initial_time_sec);
-            initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
+            fpsNumField->setReadOnly(false);
+            fpsDenField->setReadOnly(false);
+            elapsedTimeSec->setValue(0);
+            elapsedTimeNsec->setValue(0);
+            realTimeSec->setValue(context->config.sc.initial_time_sec);
+            realTimeNsec->setValue(context->config.sc.initial_time_nsec);
+            realTimeSec->setReadOnly(false);
+            realTimeNsec->setReadOnly(false);
 
             launchGdbButton->setEnabled(true);
 
@@ -1014,9 +1033,12 @@ void MainWindow::updateStatus()
                 a->setEnabled(false);
 
             if (!context->config.sc.variable_framerate) {
-                fpsNumField->setEnabled(false);
-                fpsDenField->setEnabled(false);
+                fpsNumField->setReadOnly(true);
+                fpsDenField->setReadOnly(true);
             }
+            
+            realTimeSec->setReadOnly(true);
+            realTimeNsec->setReadOnly(true);
 
             launchGdbButton->setEnabled(false);
 
@@ -1121,11 +1143,13 @@ void MainWindow::updateUIFrequent()
     movieFrameCount->setValue(context->config.sc.movie_framecount);
 
     /* Update time */
-    initialTimeSec->setValue(context->current_time_sec);
-    initialTimeNsec->setValue(context->current_time_nsec);
+    elapsedTimeSec->setValue(context->current_time_sec);
+    elapsedTimeNsec->setValue(context->current_time_nsec);
+    realTimeSec->setValue(context->current_realtime_sec);
+    realTimeNsec->setValue(context->current_realtime_nsec);
 
     /* Update movie time */
-    double sec = context->current_time_sec - context->config.sc.initial_time_sec + ((double)(context->current_time_nsec - context->config.sc.initial_time_nsec))/1000000000;
+    double sec = context->current_time_sec + ((double) context->current_time_nsec)/1000000000;
     int imin = (int)(sec/60);
     double dsec = sec - 60*imin;
     currentLength->setText(QString("Current Time: %1m %2s").arg(imin).arg(dsec, 0, 'f', 2));
@@ -1270,8 +1294,8 @@ void MainWindow::updateMovieParams()
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
     fpsNumField->setValue(context->config.sc.framerate_num);
     fpsDenField->setValue(context->config.sc.framerate_den);
-    initialTimeSec->setValue(context->config.sc.initial_time_sec);
-    initialTimeNsec->setValue(context->config.sc.initial_time_nsec);
+    realTimeSec->setValue(context->config.sc.initial_time_sec);
+    realTimeNsec->setValue(context->config.sc.initial_time_nsec);
     autoRestartAction->setChecked(context->config.auto_restart);
     variableFramerateAction->setChecked(context->config.sc.variable_framerate);
     for (auto& action : timeMainGroup->actions()) {
@@ -1416,8 +1440,8 @@ void MainWindow::slotLaunch(bool attach_gdb)
     /* Set a few parameters */
     context->config.sc.framerate_num = fpsNumField->value();
     context->config.sc.framerate_den = fpsDenField->value();
-    context->config.sc.initial_time_sec = initialTimeSec->value();
-    context->config.sc.initial_time_nsec = initialTimeNsec->value();
+    context->config.sc.initial_time_sec = realTimeSec->value();
+    context->config.sc.initial_time_nsec = realTimeNsec->value();
 
     setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
     setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);
@@ -1796,6 +1820,16 @@ void MainWindow::slotLuaExecute()
 void MainWindow::slotLuaReset()
 {
     Lua::Main::reset(context);
+}
+
+void MainWindow::slotRealTimeFormat()
+{
+    char buf[22];
+    struct timespec realtime = {realTimeSec->value(), realTimeNsec->value()};
+    struct tm tm;
+    gmtime_r(&realtime.tv_sec, &tm);
+    strftime(buf, 21, "%FT%TZ", gmtime(&realtime.tv_sec));
+    realTimeFormat->setText(QString(buf));
 }
 
 void MainWindow::alertOffer(QString alert_msg, void* promise)

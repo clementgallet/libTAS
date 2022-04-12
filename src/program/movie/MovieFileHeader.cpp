@@ -69,7 +69,8 @@ void MovieFileHeader::load()
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME] = config.value("clock_gettime").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME] = config.value("clock_gettime_real").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC] = config.value("clock_gettime_monotonic").toInt();
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toInt();
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
         config.endGroup();
@@ -148,7 +149,8 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     config.setValue("time", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME]);
     config.setValue("gettimeofday", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY]);
     config.setValue("clock", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK]);
-    config.setValue("clock_gettime", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME]);
+    config.setValue("clock_gettime_real", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME]);
+    config.setValue("clock_gettime_monotonic", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC]);
     config.setValue("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
     config.setValue("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
     config.endGroup();

@@ -697,7 +697,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_trywait(sem);
 
-    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT | LCF_TODO);
+    DEBUGLOGCALL(LCF_WAIT | LCF_TODO);
     return orig::sem_trywait(sem);
 }
 
@@ -707,7 +707,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_post(sem);
 
-    debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with sem %p", __func__, sem);
+    debuglogstdio(LCF_WAIT, "%s called with sem %p", __func__, sem);
     return orig::sem_post(sem);
 }
 
