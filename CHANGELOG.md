@@ -2,6 +2,7 @@
 ### Added
 
 * Split deterministic timer into monotonic/realtime (#474)
+* Users can change realtime (#474)
 
 ### Changed
 ### Fixed

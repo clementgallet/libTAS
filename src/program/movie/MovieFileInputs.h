@@ -143,6 +143,9 @@ private:
     /* Regex for the framerate input string */
     std::regex ret;
 
+    /* Regex for the realtime input string */
+    std::regex red;
+
     /* Read the keyboard input string */
     void readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
 
@@ -157,6 +160,9 @@ private:
 
     /* Read the framerate input string */
     void readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
+
+    /* Read the realtime input string */
+    void readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
 
 };
 

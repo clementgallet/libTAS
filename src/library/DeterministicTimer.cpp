@@ -386,9 +386,11 @@ bool DeterministicTimer::isInsideFrameBoundary()
     return insideFrameBoundary;
 }
 
-void DeterministicTimer::setRealTime(struct timespec new_realtime)
+void DeterministicTimer::setRealTime(uint32_t new_realtime_sec, uint32_t new_realtime_nsec)
 {
-    TimeHolder th_real = new_realtime;
+    TimeHolder th_real;
+    th_real.tv_sec = new_realtime_sec;
+    th_real.tv_nsec = new_realtime_nsec;
     realtime_delta = th_real - ticks;
 }
 

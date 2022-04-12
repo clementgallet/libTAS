@@ -61,10 +61,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Which flags prevent triggering a debug message */
     LogCategoryFlag excludeFlags = LCF_NONE;
 
-    /* Framerate at which the game is running, as a fraction
-     * Set to 0 to use the nondeterministic timer
-     * In that case, AV dumping is disabled.
-     */
+    /* Framerate at which the game is running, as a fraction */
     unsigned int framerate_num = 60;
     unsigned int framerate_den = 1;
 

@@ -79,6 +79,10 @@ struct Context {
     int64_t current_realtime_sec;
     int64_t current_realtime_nsec;
 
+    /* new realtime (clock) */
+    int64_t new_realtime_sec;
+    int64_t new_realtime_nsec;
+
     /* movie time */
     int64_t movie_time_sec;
     int64_t movie_time_nsec;

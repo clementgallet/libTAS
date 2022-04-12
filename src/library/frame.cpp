@@ -728,6 +728,10 @@ static void receive_messages(std::function<void()> draw)
                     shared_config.framerate_num = ai.framerate_num;
                     shared_config.framerate_den = ai.framerate_den;
                 }
+                /* Set new realtime value */
+                if (ai.realtime_sec)
+                    detTimer.setRealTime(ai.realtime_sec, ai.realtime_nsec);
+                
                 break;
 
             case MSGN_EXPOSE:

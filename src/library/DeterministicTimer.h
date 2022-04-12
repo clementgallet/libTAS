@@ -83,7 +83,7 @@ public:
     bool isInsideFrameBoundary();
 
     /* Set a new value for the realtime clock */
-    void setRealTime(struct timespec new_realtime);
+    void setRealTime(uint32_t new_realtime_sec, uint32_t new_realtime_nsec);
 
     /* Returns if the time call returns a monotonic or realtime */
     bool isTimeCallMonotonic(SharedConfig::TimeCallType type);

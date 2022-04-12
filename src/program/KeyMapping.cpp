@@ -177,6 +177,10 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_FRAMERATE_NUM, 1, "Framerate num"});
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_FRAMERATE_DEN, 1, "Framerate den"});
     
+    /* Realtime mapping */
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_REALTIME_SEC, 1, "Realtime sec"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_REALTIME_NSEC, 1, "Realtime nsec"});
+    
     /* Add controller mapping */
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTX, 1, "Joy1 LeftStickX"});
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTY, 1, "Joy1 LeftStickY"});

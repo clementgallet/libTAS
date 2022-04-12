@@ -279,6 +279,10 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
                 return QString('-');
             if ((si.type == SingleInput::IT_FRAMERATE_DEN) && ((value == 0) || (value == context->config.sc.framerate_den)))
                 return QString('-');
+            if ((si.type == SingleInput::IT_REALTIME_SEC) && (value == 0))
+                return QString('-');
+            if ((si.type == SingleInput::IT_REALTIME_NSEC) && (value == 0))
+                return QString('-');
             return QString().setNum(value);
         }
 

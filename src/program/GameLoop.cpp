@@ -253,6 +253,8 @@ void GameLoop::init()
         context->current_time_nsec = 0;
         context->current_realtime_sec = context->config.sc.initial_time_sec;
         context->current_realtime_nsec = context->config.sc.initial_time_nsec;
+        context->new_realtime_sec = context->current_realtime_sec;
+        context->new_realtime_nsec = context->current_realtime_nsec;
     }
 
     /* If auto-restart is set, write back savefiles on game exit */
@@ -407,6 +409,9 @@ bool GameLoop::startFrameMessages()
             receiveData(&context->current_time_nsec, sizeof(uint64_t));
             receiveData(&context->current_realtime_sec, sizeof(uint64_t));
             receiveData(&context->current_realtime_nsec, sizeof(uint64_t));
+            context->new_realtime_sec = context->current_realtime_sec;
+            context->new_realtime_nsec = context->current_realtime_nsec;    
+
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 /* If the input editor is opened, recording does not truncate inputs */
                 bool notTruncInputs = false;
@@ -572,6 +577,13 @@ void GameLoop::processInputs(AllInputs &ai)
                 ai.framerate_den = context->config.sc.framerate_den;
             }
 
+            /* Add realtime if necessary */
+            if ((context->new_realtime_sec != context->current_realtime_sec) || 
+                (context->new_realtime_nsec != context->current_realtime_nsec)) {
+                ai.realtime_sec = context->new_realtime_sec;
+                ai.realtime_nsec = context->new_realtime_nsec;
+            }
+
             /* Call lua onInput() here so that a script can modify inputs */
             Lua::Input::registerInputs(&ai);
             Lua::Main::callLua(context, "onInput");
@@ -650,6 +662,14 @@ void GameLoop::processInputs(AllInputs &ai)
                     context->config.sc.framerate_num = ai.framerate_num;
                     context->config.sc.framerate_den = ai.framerate_den;
                     emit updateFramerate();
+                }
+                
+                /* Update realtime */
+                if (ai.realtime_sec) {
+                    context->current_realtime_sec = ai.realtime_sec;
+                    context->current_realtime_nsec = ai.realtime_nsec;
+                    context->new_realtime_sec = ai.realtime_sec;
+                    context->new_realtime_nsec = ai.realtime_nsec;
                 }
             }
             else {

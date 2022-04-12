@@ -32,6 +32,7 @@ MovieFileInputs::MovieFileInputs(Context* c) : context(c)
     rec.assign(R"(\|C([1-4](?:[\-0-9]+:){6}.{15})\|)", std::regex::ECMAScript|std::regex::optimize);
     ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
     ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
+    red.assign(R"(\|D([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
     
     clear();
 }
@@ -147,7 +148,7 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED)) input_stream.put('O');
     }
 
-    /* Write mouse inputs */
+    /* Write framerate inputs */
     if (context->config.sc.variable_framerate) {
         /* Zero framerate is default framerate */
         if (inputs.framerate_num) {
@@ -160,6 +161,15 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
             }
         }
     }
+
+    /* Write realtime inputs */
+    if (inputs.realtime_sec) {
+        input_stream.put('|');
+        input_stream.put('D');
+        input_stream << std::dec;
+        input_stream << inputs.realtime_sec << ':' << inputs.realtime_nsec;
+    }
+
     input_stream << '|' << std::endl;
 
     return 1;
@@ -216,10 +226,11 @@ int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
             std::istringstream framerate_string(match.str(1));
             readFramerateFrame(framerate_string, inputs);
         }
-        else {
-            /* Write initial framerate values */
-            // inputs.framerate_num = framerate_num;
-            // inputs.framerate_den = framerate_den;
+
+        /* Read realtime inputs */
+        if (std::regex_search(line, match, red) && match.size() > 1) {
+            std::istringstream realtime_string(match.str(1));
+            readRealtimeFrame(realtime_string, inputs);
         }
 
         return 1;
@@ -334,6 +345,13 @@ void MovieFileInputs::readFramerateFrame(std::istringstream& input_string, AllIn
     char d;
     input_string >> std::dec;
     input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
+}
+
+void MovieFileInputs::readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs)
+{
+    char d;
+    input_string >> std::dec;
+    input_string >> inputs.realtime_sec >> d >> inputs.realtime_nsec >> d;
 }
 
 uint64_t MovieFileInputs::nbFrames() const

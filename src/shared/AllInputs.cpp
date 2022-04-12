@@ -40,6 +40,8 @@ void AllInputs::emptyInputs() {
     flags = 0;
     framerate_den = 0;
     framerate_num = 0;
+    realtime_sec = 0;
+    realtime_nsec = 0;
 }
 
 bool AllInputs::isDefaultController(int j) const
@@ -52,146 +54,168 @@ bool AllInputs::isDefaultController(int j) const
 
 int AllInputs::getInput(const SingleInput &si) const
 {
-    /* Keyboard inputs */
-    if (si.type == SingleInput::IT_KEYBOARD) {
-        for (const uint32_t& ks : keyboard) {
-            if (si.value == ks) {
-                return 1;
+    switch (si.type) {
+        /* Keyboard inputs */
+        case SingleInput::IT_KEYBOARD:
+            for (const uint32_t& ks : keyboard) {
+                if (si.value == ks) {
+                    return 1;
+                }
             }
-        }
-        return 0;
-    }
+            return 0;
 
-    /* Mouse inputs */
-    if (si.type == SingleInput::IT_POINTER_X) {
-        return pointer_x;
-    }
-    if (si.type == SingleInput::IT_POINTER_Y) {
-        return pointer_y;
-    }
-    if (si.type == SingleInput::IT_POINTER_MODE) {
-        return pointer_mode;
-    }
-    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5) {
-        return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
-    }
+        /* Mouse inputs */
+        case SingleInput::IT_POINTER_X:
+            return pointer_x;
+        case SingleInput::IT_POINTER_Y:
+            return pointer_y;
+        case SingleInput::IT_POINTER_MODE:
+            return pointer_mode;
+        case SingleInput::IT_POINTER_B1:
+        case SingleInput::IT_POINTER_B2:
+        case SingleInput::IT_POINTER_B3:
+        case SingleInput::IT_POINTER_B4:
+        case SingleInput::IT_POINTER_B5:
+            return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
 
-    /* Flag inputs */
-    if (si.type == SingleInput::IT_FLAG) {
-        return (flags >> si.value) & 0x1;
-    }
+        /* Flag inputs */
+        case SingleInput::IT_FLAG:
+            return (flags >> si.value) & 0x1;
 
-    /* Framerate inputs */
-    if (si.type == SingleInput::IT_FRAMERATE_NUM) {
-        return framerate_num;
-    }
-    if (si.type == SingleInput::IT_FRAMERATE_DEN) {
-        return framerate_den;
-    }
+        /* Framerate inputs */
+        case SingleInput::IT_FRAMERATE_NUM:
+            return framerate_num;
+        case SingleInput::IT_FRAMERATE_DEN:
+            return framerate_den;
 
-    /* Controller inputs */
-    if (si.inputTypeIsController()) {
-        int controller_i = si.inputTypeToControllerNumber();
-        bool is_controller_axis = si.inputTypeToAxisFlag();
-        int controller_type = si.inputTypeToInputNumber();
+        /* Realtime inputs */
+        case SingleInput::IT_REALTIME_SEC:
+            return realtime_sec;
+        case SingleInput::IT_REALTIME_NSEC:
+            return realtime_nsec;
 
-        /* We don't support analog inputs in input editor */
-        if (is_controller_axis) {
-            return controller_axes[controller_i][controller_type];
-        }
-        else {
-            return (controller_buttons[controller_i] >> controller_type) & 0x1;
-        }
+        default:
+            /* Controller inputs */
+            if (si.inputTypeIsController()) {
+                int controller_i = si.inputTypeToControllerNumber();
+                bool is_controller_axis = si.inputTypeToAxisFlag();
+                int controller_type = si.inputTypeToInputNumber();
+
+                /* We don't support analog inputs in input editor */
+                if (is_controller_axis) {
+                    return controller_axes[controller_i][controller_type];
+                }
+                else {
+                    return (controller_buttons[controller_i] >> controller_type) & 0x1;
+                }
+            }
     }
-
     return 0;
 }
 
 void AllInputs::setInput(const SingleInput &si, int value)
 {
-    if (si.type == SingleInput::IT_KEYBOARD) {
-        bool is_set = false;
-        int index_set = 0;
-        int k;
-        for (k=0; k < AllInputs::MAXKEYS; k++) {
-            if (!keyboard[k]) {
-                if (is_set && !value) {
-                    /* Switch the last set key and the removed key */
-                    keyboard[index_set] = keyboard[k-1];
-                    keyboard[k-1] = 0;
+    switch (si.type) {
+        case SingleInput::IT_KEYBOARD:
+        {
+            bool is_set = false;
+            int index_set = 0;
+            int k;
+            for (k=0; k < AllInputs::MAXKEYS; k++) {
+                if (!keyboard[k]) {
+                    if (is_set && !value) {
+                        /* Switch the last set key and the removed key */
+                        keyboard[index_set] = keyboard[k-1];
+                        keyboard[k-1] = 0;
+                    }
+                    break;
                 }
-                break;
-            }
-            if (si.value == keyboard[k]) {
-                is_set = true;
-                if (!value) {
-                    index_set = k;
-                    keyboard[k] = 0;
+                if (si.value == keyboard[k]) {
+                    is_set = true;
+                    if (!value) {
+                        index_set = k;
+                        keyboard[k] = 0;
+                    }
                 }
             }
-        }
 
-        /* If not set, add it */
-        if (!is_set && value) {
-            if (k < AllInputs::MAXKEYS) {
-                keyboard[k] = si.value;
+            /* If not set, add it */
+            if (!is_set && value) {
+                if (k < AllInputs::MAXKEYS) {
+                    keyboard[k] = si.value;
+                }
             }
         }
-    }
+        break;
 
     /* Mouse inputs */
-    if (si.type == SingleInput::IT_POINTER_X) {
-        pointer_x = value;
-    }
-    if (si.type == SingleInput::IT_POINTER_Y) {
-        pointer_y = value;
-    }
-    if (si.type == SingleInput::IT_POINTER_MODE) {
-        pointer_mode = value;
-    }
-    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5) {
-        if (value)
-            pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
-        else
-            pointer_mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
-    }
-
-    /* Flag input */
-    if (si.type == SingleInput::IT_FLAG) {
-        if (value)
-            flags |= (0x1 << si.value);
-        else
-            flags &= ~(0x1 << si.value);
-    }
-
-    /* Framerate inputs */
-    if (si.type == SingleInput::IT_FRAMERATE_NUM) {
-        framerate_num = value;
-    }
-    if (si.type == SingleInput::IT_FRAMERATE_DEN) {
-        framerate_den = value;
-    }
-
-    /* Controller inputs */
-    if (si.inputTypeIsController()) {
-        int controller_i = si.inputTypeToControllerNumber();
-        bool is_controller_axis = si.inputTypeToAxisFlag();
-        int controller_type = si.inputTypeToInputNumber();
-
-        if (is_controller_axis) {
-            if (value > INT16_MAX)
-                controller_axes[controller_i][controller_type] = INT16_MAX;
-            else if (value < INT16_MIN)
-                controller_axes[controller_i][controller_type] = INT16_MIN;
-            else
-                controller_axes[controller_i][controller_type] = static_cast<short>(value);
-        }
-        else {
+        case SingleInput::IT_POINTER_X:
+            pointer_x = value;
+            break;
+        case SingleInput::IT_POINTER_Y:
+            pointer_y = value;
+            break;
+        case SingleInput::IT_POINTER_MODE:
+            pointer_mode = value;
+            break;
+        case SingleInput::IT_POINTER_B1:
+        case SingleInput::IT_POINTER_B2:
+        case SingleInput::IT_POINTER_B3:
+        case SingleInput::IT_POINTER_B4:
+        case SingleInput::IT_POINTER_B5:
             if (value)
-                controller_buttons[controller_i] |= (0x1 << controller_type);
+                pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
             else
-                controller_buttons[controller_i] &= ~(0x1 << controller_type);
-        }
+                pointer_mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
+            break;
+            
+        /* Flag input */
+        case SingleInput::IT_FLAG:
+            if (value)
+                flags |= (0x1 << si.value);
+            else
+                flags &= ~(0x1 << si.value);
+            break;
+
+        /* Framerate inputs */
+        case SingleInput::IT_FRAMERATE_NUM:
+            framerate_num = value;
+            break;
+        case SingleInput::IT_FRAMERATE_DEN:
+            framerate_den = value;
+            break;
+
+        /* Realtime inputs */
+        case SingleInput::IT_REALTIME_SEC:
+            realtime_sec = value;
+            break;
+        case SingleInput::IT_REALTIME_NSEC:
+            realtime_nsec = value;
+            break;
+
+        default:
+            /* Controller inputs */
+            if (si.inputTypeIsController()) {
+                int controller_i = si.inputTypeToControllerNumber();
+                bool is_controller_axis = si.inputTypeToAxisFlag();
+                int controller_type = si.inputTypeToInputNumber();
+
+                if (is_controller_axis) {
+                    if (value > INT16_MAX)
+                        controller_axes[controller_i][controller_type] = INT16_MAX;
+                    else if (value < INT16_MIN)
+                        controller_axes[controller_i][controller_type] = INT16_MIN;
+                    else
+                        controller_axes[controller_i][controller_type] = static_cast<short>(value);
+                }
+                else {
+                    if (value)
+                        controller_buttons[controller_i] |= (0x1 << controller_type);
+                    else
+                        controller_buttons[controller_i] &= ~(0x1 << controller_type);
+                }
+            }
+            break;
     }
 }
 
@@ -250,6 +274,13 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
     if (framerate_den) {
         si = {SingleInput::IT_FRAMERATE_DEN, 1, ""};
+        input_set.insert(si);
+    }
+
+    if (realtime_sec) {
+        si = {SingleInput::IT_REALTIME_SEC, 1, ""};
+        input_set.insert(si);
+        si = {SingleInput::IT_REALTIME_NSEC, 1, ""};
         input_set.insert(si);
     }
 

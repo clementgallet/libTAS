@@ -78,6 +78,9 @@ class AllInputs {
         /* Framerate values */
         uint32_t framerate_den, framerate_num;
 
+        /* Realtime values */
+        uint32_t realtime_sec, realtime_nsec;
+
         /* Operator needed for comparing movies */
         inline bool operator==(const AllInputs& other) const
         {
@@ -89,7 +92,9 @@ class AllInputs {
                 (controller_buttons == other.controller_buttons) &&
                 (flags == other.flags) &&
                 (framerate_den == other.framerate_den) &&
-                (framerate_num == other.framerate_num));
+                (framerate_num == other.framerate_num) &&
+                (realtime_sec == other.realtime_sec) &&
+                (realtime_nsec == other.realtime_nsec));
         }
 
         /* Empty the state, set axes to neutral position. */

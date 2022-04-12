@@ -34,6 +34,8 @@ bool SingleInput::isAnalog() const
         return true;
     if ((type == IT_FRAMERATE_NUM) || (type == IT_FRAMERATE_DEN))
         return true;
+    if ((type == IT_REALTIME_SEC) || (type == IT_REALTIME_NSEC))
+        return true;
     if (inputTypeIsController()) {
         return inputTypeToAxisFlag();
     }

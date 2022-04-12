@@ -207,6 +207,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     elapsedTimeNsec->setReadOnly(true);
 
     realTimeSec = new QSpinBox();
+    realTimeSec->setMinimum(1);
     realTimeSec->setMaximum(std::numeric_limits<int>::max());
     realTimeSec->setMinimumWidth(50);
     realTimeNsec = new QSpinBox();
@@ -215,6 +216,12 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     realTimeFormat = new QLabel();
     connect(realTimeSec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
     connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
+
+    QPushButton* realTimeChange = new QPushButton("Set");
+    connect(realTimeChange, &QAbstractButton::clicked, [=](){
+        context->new_realtime_sec = realTimeSec->value();
+        context->new_realtime_nsec = realTimeNsec->value();
+    });
 
     /* Pause/FF */
     pauseCheck = new QCheckBox("Pause");
@@ -351,6 +358,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     generalTimeLayout->addWidget(realTimeNsec, 1, 5);
     generalTimeLayout->addWidget(new QLabel(tr("nsec")), 1, 6);
     generalTimeLayout->addWidget(realTimeFormat, 1, 7);
+    generalTimeLayout->addWidget(realTimeChange, 1, 8);
 
     QHBoxLayout *generalControlLayout = new QHBoxLayout;
     generalControlLayout->addWidget(pauseCheck);
@@ -1000,8 +1008,6 @@ void MainWindow::updateStatus()
             elapsedTimeNsec->setValue(0);
             realTimeSec->setValue(context->config.sc.initial_time_sec);
             realTimeNsec->setValue(context->config.sc.initial_time_nsec);
-            realTimeSec->setReadOnly(false);
-            realTimeNsec->setReadOnly(false);
 
             launchGdbButton->setEnabled(true);
 
@@ -1036,9 +1042,6 @@ void MainWindow::updateStatus()
                 fpsNumField->setReadOnly(true);
                 fpsDenField->setReadOnly(true);
             }
-            
-            realTimeSec->setReadOnly(true);
-            realTimeNsec->setReadOnly(true);
 
             launchGdbButton->setEnabled(false);
 
@@ -1145,8 +1148,8 @@ void MainWindow::updateUIFrequent()
     /* Update time */
     elapsedTimeSec->setValue(context->current_time_sec);
     elapsedTimeNsec->setValue(context->current_time_nsec);
-    realTimeSec->setValue(context->current_realtime_sec);
-    realTimeNsec->setValue(context->current_realtime_nsec);
+    realTimeSec->setValue(context->new_realtime_sec);
+    realTimeNsec->setValue(context->new_realtime_nsec);
 
     /* Update movie time */
     double sec = context->current_time_sec + ((double) context->current_time_nsec)/1000000000;
