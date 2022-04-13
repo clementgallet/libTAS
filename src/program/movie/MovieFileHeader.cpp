@@ -66,13 +66,16 @@ void MovieFileHeader::load()
         context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
         
         config.beginGroup("mainthread_timetrack");
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME] = config.value("clock_gettime_real").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC] = config.value("clock_gettime_monotonic").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks").toInt();
-        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter").toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = config.value("gettimeofday", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCK] = config.value("clock", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME] = config.value("clock_gettime_real", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC] = config.value("clock_gettime_monotonic", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS] = config.value("sdl_getticks", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER] = config.value("sdl_getperformancecounter", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTICKCOUNT] = config.value("GetTickCount", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTICKCOUNT64] = config.value("GetTickCount64", -1).toInt();
+        context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER] = config.value("QueryPerformanceCounter", -1).toInt();
         config.endGroup();
     }
 
@@ -153,6 +156,11 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     config.setValue("clock_gettime_monotonic", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC]);
     config.setValue("sdl_getticks", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETTICKS]);
     config.setValue("sdl_getperformancecounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER]);
+    config.setValue("GetTickCount", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTICKCOUNT]);
+    config.setValue("GetTickCount64", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTICKCOUNT64]);
+    config.setValue("QueryPerformanceCounter", context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER]);
+
+
     config.endGroup();
 
     config.sync();

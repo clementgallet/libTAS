@@ -150,8 +150,8 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Limit for each time-getting method before time auto-advances to
      * avoid a freeze. Distinguish between main and secondary threads.
      */
-    int main_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1, -1, -1, -1};
-    int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1, -1, -1, -1};
+    int main_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    int sec_gettimes_threshold[TIMETYPE_NUMTRACKEDTYPES] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
     /* Initial system time at game startup */
     /* We don't use struct timespec because it contains longs so the size
