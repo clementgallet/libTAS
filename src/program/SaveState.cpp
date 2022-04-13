@@ -278,14 +278,15 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
     receiveData(&context->framecount, sizeof(uint64_t));
     receiveData(&context->current_time_sec, sizeof(uint64_t));
     receiveData(&context->current_time_nsec, sizeof(uint64_t));
+    receiveData(&context->current_realtime_sec, sizeof(uint64_t));
+    receiveData(&context->current_realtime_nsec, sizeof(uint64_t));
+    context->new_realtime_sec = context->current_realtime_sec;
+    context->new_realtime_nsec = context->current_realtime_nsec;    
+
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         context->config.sc.movie_framecount = context->framecount;
-        context->movie_time_sec = context->current_time_sec - context->config.sc.initial_time_sec;
-        context->movie_time_nsec = context->current_time_nsec - context->config.sc.initial_time_nsec;
-        if (context->movie_time_nsec < 0) {
-            context->movie_time_nsec += 1000000000;
-            context->movie_time_sec--;
-        }
+        context->movie_time_sec = context->current_time_sec;
+        context->movie_time_nsec = context->current_time_nsec;
     }
 
     if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
