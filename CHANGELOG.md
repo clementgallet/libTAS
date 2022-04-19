@@ -7,6 +7,8 @@
 ### Changed
 ### Fixed
 
+* Noop XcursorLibraryLoadCursor to fix a Ruffle crash
+
 ## [1.4.3] - 2022-03-27
 ### Added
 

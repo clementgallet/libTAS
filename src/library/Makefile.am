@@ -160,6 +160,7 @@ libtas_so_SOURCES = \
     xlib/XlibEventQueue.cpp \
     xlib/XlibEventQueueList.cpp \
     xlib/xatom.cpp \
+    xlib/xcursor.cpp \
     xlib/xdisplay.cpp \
     xlib/xevents.cpp \
     xlib/xf86vidmode.cpp \
