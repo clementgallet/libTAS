@@ -377,7 +377,7 @@ void GameLoop::initProcessMessages()
 
 bool GameLoop::startFrameMessages()
 {
-    bool draw_frame = true;
+    context->draw_frame = true;
     
     /* Wait for frame boundary */
     int message = receiveMessage();
@@ -460,7 +460,7 @@ bool GameLoop::startFrameMessages()
         }
         break;
         case MSGB_NONDRAW_FRAME:
-            draw_frame = false;
+            context->draw_frame = false;
             break;
 
         case MSGB_QUIT:
@@ -484,7 +484,7 @@ bool GameLoop::startFrameMessages()
 
     /* Store in movie and indicate the input editor if the current frame
      * is a draw frame or not */
-    movie.editor->setDraw(draw_frame);
+    movie.editor->setDraw(context->draw_frame);
 
     /* Send ram watches */
     if (context->config.sc.osd & SharedConfig::OSD_RAMWATCHES) {

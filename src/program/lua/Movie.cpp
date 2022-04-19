@@ -36,6 +36,7 @@ static const luaL_Reg movie_functions[] =
     { "status", Lua::Movie::status},
     { "time", Lua::Movie::time},
     { "rerecords", Lua::Movie::rerecords},
+    { "isDraw", Lua::Movie::isDraw},
     { NULL, NULL }
 };
 
@@ -80,5 +81,11 @@ int Lua::Movie::rerecords(lua_State *L)
         lua_pushinteger(L, -1);
     else
         lua_pushinteger(L, static_cast<lua_Integer>(context->rerecord_count));
+    return 1;
+}
+
+int Lua::Movie::isDraw(lua_State *L)
+{
+    lua_pushinteger(L, static_cast<lua_Integer>(context->draw_frame));
     return 1;
 }

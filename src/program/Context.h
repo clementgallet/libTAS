@@ -155,6 +155,9 @@ struct Context {
     
     /* Indicate if at least one savestate was performed, for backtrack savestate */
     bool didASavestate = false;
+
+    /* Indicate if the current frame is a draw frame */
+    bool draw_frame;
 };
 
 #endif

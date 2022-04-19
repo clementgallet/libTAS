@@ -82,6 +82,12 @@ namespace Input {
     /* Get framerate () -> number num, number den */
     int getFramerate(lua_State *L);
 
+    /* Set realtime (number sec, number nsec) */
+    int setRealtime(lua_State *L);
+
+    /* Get realtime () -> number sec, number nsec */
+    int getRealtime(lua_State *L);
+
 }
 }
 

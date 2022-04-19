@@ -41,11 +41,14 @@ namespace Movie {
     /* Get the movie status (nomovie, playback, recording) */
     int status(lua_State *L);
 
-    /* Get the current time */
+    /* Get the elapsed time since the game startup */
     int time(lua_State *L);
 
     /* Get the movie rerecord count */
     int rerecords(lua_State *L);
+
+    /* Returns if the current frame is a draw frame */
+    int isDraw(lua_State *L);
 
 }
 }

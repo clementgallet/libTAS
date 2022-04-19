@@ -46,6 +46,8 @@ static const luaL_Reg input_functions[] =
     { "getFlag", Lua::Input::getFlag},
     { "setFramerate", Lua::Input::setFramerate},
     { "getFramerate", Lua::Input::getFramerate},
+    { "setRealtime", Lua::Input::setRealtime},
+    { "getRealtime", Lua::Input::getRealtime},
     { NULL, NULL }
 };
 
@@ -208,6 +210,27 @@ int Lua::Input::getFramerate(lua_State *L)
     SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
+    return 2;
+}
+
+int Lua::Input::setRealtime(lua_State *L)
+{
+    int sec = static_cast<int>(lua_tointeger(L, 1));
+    int nsec = static_cast<int>(lua_tointeger(L, 2));
+    
+    SingleInput si = {SingleInput::IT_REALTIME_SEC, 0, ""};
+    ai->setInput(si, sec);
+    si = {SingleInput::IT_REALTIME_NSEC, 0, ""};
+    ai->setInput(si, nsec);
+    return 0;
+}
+
+int Lua::Input::getRealtime(lua_State *L)
+{
+    SingleInput si = {SingleInput::IT_REALTIME_SEC, 0, ""};
+    lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
+    si = {SingleInput::IT_REALTIME_NSEC, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 2;
 }

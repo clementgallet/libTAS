@@ -162,6 +162,18 @@ Set the framerate numerator (`num`) and denominator (`den`).
     
 Returns the framerate numerator (`num`) and denominator (`den`).
 
+#### input.setRealtime
+
+    none input.setRealtime(Number sec, Number nsec)
+    
+Set the realtime in seconds (`sec`) and nanoseconds (`nsec`) (since 19700101T000000Z).
+
+#### input.getRealtime
+
+    (Number sec, Number nsec) input.getRealtime()
+    
+Returns the realtime seconds (`sec`) and nanoseconds (`nsec`) (since 19700101T000000Z).
+
 ### Memory functions
 
 #### memory.readu8 / memory.readu16 / memory.readu32 / memory.readu64
@@ -232,7 +244,7 @@ Returns the recording status of the movie:
 
     (Number seconds, Number nseconds) movie.time()
 
-Returns the current system time. `seconds` is in whole seconds (since 19700101T000000Z)
+Returns the elapsed time since the game startup. `seconds` is in whole seconds
 and `nseconds` is the number of nanoseconds.
 
 #### movie.rerecords
@@ -240,6 +252,12 @@ and `nseconds` is the number of nanoseconds.
     Number movie.rerecords()
 
 Returns the current rerecord count of the movie, or -1 if no movie is loaded
+
+#### movie.isDraw
+
+    Number movie.isDraw()
+
+Returns 1 of the current frame is a draw frame, or 0 if not.
 
 ### Callbacks
 
