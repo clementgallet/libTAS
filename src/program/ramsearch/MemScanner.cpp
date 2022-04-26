@@ -203,13 +203,22 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
     for (int t = 0; t < thread_count; t++) {
         const MemScannerThread& mst = memscanners[t];
         
+        /* For some reason, trying to append an empty file messes up the stream */
+        if (memscanners[t].new_memory_size == 0)
+            continue;
+            
         /* Append memscan_thread file to unique file */
         if (!last_scan_was_region) {
             std::ifstream iafs(mst.addresses_path, std::ios_base::binary);
             oafs << iafs.rdbuf();
+            uint64_t recorded_size = memscanners[t].new_memory_size * sizeof(uintptr_t) / value_type_size;
+            if (iafs.tellg() != recorded_size)
+                std::cerr << "Mismatch size between recorded (" << recorded_size << ") and file (" <<  iafs.tellg() << ") sizes" << std::endl;
         }
         std::ifstream ivfs(mst.values_path, std::ios_base::binary);
         ovfs << ivfs.rdbuf();
+        if (ivfs.tellg() != memscanners[t].new_memory_size)
+            std::cerr << "Mismatch size between recorded (" << memscanners[t].new_memory_size << ") and file (" <<  ivfs.tellg() << ") sizes" << std::endl;
     }
     
     /* If the total size is below threshold, load all data (except if region data) */
