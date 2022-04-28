@@ -501,11 +501,25 @@ int glXSwapIntervalSGI (int interval)
     if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
         return orig::glXSwapIntervalSGI(interval);
     }
-    else {
-        int ret = orig::glXSwapIntervalSGI(1);
-        debuglogstdio(LCF_OGL, "   ret %d", ret);
-        return ret;
+
+    /* Cave Story + does use glXSwapIntervalSGI() without checking if the
+     * extension is available. OpenGL software renderer llvmpipe does not
+     * support this extension, and for some reasons it leads to a crash with
+     * the following error:
+     *      X Error of failed request:  GLXBadContextTag
+     *      Major opcode of failed request:  152 (GLX)
+     *      Minor opcode of failed request:  16 (X_GLXVendorPrivate)
+     *
+     * We can noop this call when using software renderer, which fix the issue
+     * and will probably not alter much the behaviour of games. 
+     */
+    if (shared_config.opengl_soft) {
+        return 0;
     }
+
+    int ret = orig::glXSwapIntervalSGI(1);
+    debuglogstdio(LCF_OGL, "   ret %d", ret);
+    return ret;
 }
 
 int glXSwapIntervalMESA (unsigned int interval)
