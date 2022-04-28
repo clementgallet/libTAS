@@ -674,9 +674,11 @@ void GameLoop::processInputs(AllInputs &ai)
             }
             else {
                 /* ai is empty, fill the framerate values */
-                ai.framerate_num = context->config.sc.framerate_num;
-                ai.framerate_den = context->config.sc.framerate_den;
-
+                if (context->config.sc.variable_framerate) {
+                    ai.framerate_num = context->config.sc.framerate_num;
+                    ai.framerate_den = context->config.sc.framerate_den;
+                }
+                
                 /* First frame after movie end */
                 if (ret == -2) {
                     /* Check for the moviefile length */

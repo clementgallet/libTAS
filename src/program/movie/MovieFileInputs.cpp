@@ -433,11 +433,11 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
     inputs = input_list[pos];
 
     /* Special case for zero framerate */
-    if (!inputs.framerate_num) {
+    if (context->config.sc.variable_framerate && (!inputs.framerate_num)) {
         inputs.framerate_num = framerate_num;
         inputs.framerate_den = framerate_den;
     }
-
+    
     if ((pos + 1) == input_list.size()) {
         /* We are reading the last frame of the movie, notify the caller */
         return 1;
