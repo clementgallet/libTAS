@@ -200,11 +200,9 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     elapsedTimeSec = new QSpinBox();
     elapsedTimeSec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeSec->setMinimumWidth(50);
-    elapsedTimeSec->setReadOnly(true);
     elapsedTimeNsec = new QSpinBox();
     elapsedTimeNsec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeNsec->setMinimumWidth(50);
-    elapsedTimeNsec->setReadOnly(true);
 
     realTimeSec = new QSpinBox();
     realTimeSec->setMinimum(1);
@@ -1004,8 +1002,10 @@ void MainWindow::updateStatus()
 
             fpsNumField->setReadOnly(false);
             fpsDenField->setReadOnly(false);
-            elapsedTimeSec->setValue(0);
-            elapsedTimeNsec->setValue(0);
+            elapsedTimeSec->setReadOnly(false);
+            elapsedTimeNsec->setReadOnly(false);
+            elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
+            elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
             realTimeSec->setValue(context->config.sc.initial_time_sec);
             realTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
@@ -1042,6 +1042,8 @@ void MainWindow::updateStatus()
                 fpsNumField->setReadOnly(true);
                 fpsDenField->setReadOnly(true);
             }
+            elapsedTimeSec->setReadOnly(true);
+            elapsedTimeNsec->setReadOnly(true);
 
             launchGdbButton->setEnabled(false);
 
@@ -1152,7 +1154,8 @@ void MainWindow::updateUIFrequent()
     realTimeNsec->setValue(context->new_realtime_nsec);
 
     /* Update movie time */
-    double sec = context->current_time_sec + ((double) context->current_time_nsec)/1000000000;
+    double sec = (context->current_time_sec - context->config.sc.initial_monotonic_time_sec) +
+                ((double) (context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec))/1000000000;
     int imin = (int)(sec/60);
     double dsec = sec - 60*imin;
     currentLength->setText(QString("Current Time: %1m %2s").arg(imin).arg(dsec, 0, 'f', 2));
@@ -1297,6 +1300,8 @@ void MainWindow::updateMovieParams()
     setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
     fpsNumField->setValue(context->config.sc.framerate_num);
     fpsDenField->setValue(context->config.sc.framerate_den);
+    elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
+    elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
     realTimeSec->setValue(context->config.sc.initial_time_sec);
     realTimeNsec->setValue(context->config.sc.initial_time_nsec);
     autoRestartAction->setChecked(context->config.auto_restart);
@@ -1443,6 +1448,8 @@ void MainWindow::slotLaunch(bool attach_gdb)
     /* Set a few parameters */
     context->config.sc.framerate_num = fpsNumField->value();
     context->config.sc.framerate_den = fpsDenField->value();
+    context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
+    context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
     context->config.sc.initial_time_sec = realTimeSec->value();
     context->config.sc.initial_time_nsec = realTimeNsec->value();
 
