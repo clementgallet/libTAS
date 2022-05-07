@@ -62,6 +62,63 @@
 #include <limits>
 #include <features.h> // __GLIBC_PREREQ
 
+/* Check all checkboxes from a list of actions whose associated flag data
+ * is present in the value
+ */
+#define setCheckboxesFromMask(actionGroup, value)\
+do {\
+    for (auto& action : actionGroup->actions()) {\
+        action->setChecked(value & action->data().toInt());\
+    }\
+} while(false)
+
+/* For each checkbox of the action group that is checked, set the
+ * corresponding flag in the value.
+ */
+#define setMaskFromCheckboxes(actionGroup, value)\
+do {\
+    value = 0;\
+    for (const auto& action : actionGroup->actions()) {\
+        if (action->isChecked()) {\
+            value |= action->data().toInt();\
+        }\
+    }\
+} while(false)
+
+/* Check the radio from a list of actions whose associated data is equal
+ * to the value.
+ */
+#define setRadioFromList(actionGroup, value)\
+do {\
+    for (auto& action : actionGroup->actions()) {\
+        if (value == action->data().toInt()) {\
+            action->setChecked(true);\
+            break;\
+        }\
+    }\
+} while(false)
+
+/* Set the value to the data of the checked radio from the action group. */
+#define setListFromRadio(actionGroup, value)\
+do {\
+    for (const auto& action : actionGroup->actions()) {\
+        if (action->isChecked()) {\
+            value = action->data().toInt();\
+            break;\
+        }\
+    }\
+} while(false)
+
+#define LAMBDABOOLSLOT(parameter) [=](bool checked) {\
+    parameter = checked;\
+    context->config.sc_modified = true;\
+}\
+
+#define LAMBDACHECKBOXSLOT(group, parameter) [=](bool checked) {\
+    setMaskFromCheckboxes(group, parameter);\
+    context->config.sc_modified = true;\
+}\
+
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
     qRegisterMetaType<std::string>("std::string");
@@ -491,7 +548,7 @@ QAction *MainWindow::addActionCheckable(QActionGroup*& group, const QString& tex
 void MainWindow::createActions()
 {
     movieEndGroup = new QActionGroup(this);
-    connect(movieEndGroup, &QActionGroup::triggered, this, &MainWindow::slotMovieEnd);
+    connect(movieEndGroup, &QActionGroup::triggered, this, [=](){setListFromRadio(movieEndGroup, context->config.on_movie_end);});
 
     addActionCheckable(movieEndGroup, tr("Keep Reading"), Config::MOVIEEND_READ);
     addActionCheckable(movieEndGroup, tr("Switch to Writing"), Config::MOVIEEND_WRITE);
@@ -516,7 +573,7 @@ void MainWindow::createActions()
 #ifdef LIBTAS_ENABLE_HUD
     osdGroup = new QActionGroup(this);
     osdGroup->setExclusive(false);
-    connect(osdGroup, &QActionGroup::triggered, this, &MainWindow::slotOsd);
+    connect(osdGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(osdGroup, context->config.sc.osd));
 
     addActionCheckable(osdGroup, tr("Frame Count"), SharedConfig::OSD_FRAMECOUNT);
     addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
@@ -607,7 +664,7 @@ void MainWindow::createActions()
 
     savestateGroup = new QActionGroup(this);
     savestateGroup->setExclusive(false);
-    connect(savestateGroup, &QActionGroup::triggered, this, &MainWindow::slotSavestate);
+    connect(savestateGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(savestateGroup, context->config.sc.savestate_settings));
 
     QAction *action = addActionCheckable(savestateGroup, tr("Incremental savestates"), SharedConfig::SS_INCREMENTAL, tr("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing"));
     if (!context->is_soft_dirty) {
@@ -624,7 +681,7 @@ void MainWindow::createActions()
 
     debugStateGroup = new QActionGroup(this);
     debugStateGroup->setExclusive(false);
-    connect(debugStateGroup, &QActionGroup::triggered, this, &MainWindow::slotDebugState);
+    connect(debugStateGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(debugStateGroup, context->config.sc.debug_state));
 
     addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME, "Let the game access to the real system time, only for debugging purpose");
     addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS, "Let the game access to the real system events, only for debugging purpose");
@@ -638,7 +695,7 @@ void MainWindow::createActions()
 
     loggingPrintGroup = new QActionGroup(this);
     loggingPrintGroup->setExclusive(false);
-    connect(loggingPrintGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingPrint);
+    connect(loggingPrintGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(loggingPrintGroup, context->config.sc.includeFlags));
 
     addActionCheckable(loggingPrintGroup, tr("Main Thread"), LCF_MAINTHREAD);
     addActionCheckable(loggingPrintGroup, tr("Frequent"), LCF_FREQUENT);
@@ -678,7 +735,7 @@ void MainWindow::createActions()
 
     loggingExcludeGroup = new QActionGroup(this);
     loggingExcludeGroup->setExclusive(false);
-    connect(loggingExcludeGroup, &QActionGroup::triggered, this, &MainWindow::slotLoggingExclude);
+    connect(loggingExcludeGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(loggingExcludeGroup, context->config.sc.excludeFlags));
 
     // addActionCheckable(loggingExcludeGroup, tr("Main Thread"), LCF_MAINTHREAD);
     addActionCheckable(loggingExcludeGroup, tr("Frequent"), LCF_FREQUENT);
@@ -726,7 +783,7 @@ void MainWindow::createActions()
 
     fastforwardGroup = new QActionGroup(this);
     fastforwardGroup->setExclusive(false);
-    connect(fastforwardGroup, &QActionGroup::triggered, this, &MainWindow::slotFastforwardMode);
+    connect(fastforwardGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(fastforwardGroup, context->config.sc.fastforward_mode));
 
     addActionCheckable(fastforwardGroup, tr("Skipping sleep"), SharedConfig::FF_SLEEP);
     addActionCheckable(fastforwardGroup, tr("Skipping audio mixing"), SharedConfig::FF_MIXING);
@@ -762,7 +819,7 @@ void MainWindow::createMenus()
     saveMovieAction->setEnabled(false);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
-    action = movieMenu->addAction(tr("Don't enforce movie settings"), this, &MainWindow::slotEnforceMovieSettings);
+    action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
     action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
 
@@ -778,7 +835,7 @@ void MainWindow::createMenus()
     movieMenu->addSeparator();
 
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
-    autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, &MainWindow::slotAutoRestart);
+    autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, LAMBDABOOLSLOT(context->config.auto_restart));
     autoRestartAction->setCheckable(true);
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
@@ -801,7 +858,7 @@ void MainWindow::createMenus()
     renderSoftAction->setToolTip("Enforce the use of Mesa's OpenGL software driver, which is necessary for savestates to work correctly");
     disabledActionsOnStart.append(renderSoftAction);
 
-    renderPerfAction = videoMenu->addAction(tr("Toggle performance tweaks"), this, &MainWindow::slotRenderPerf);
+    renderPerfAction = videoMenu->addAction(tr("Toggle performance tweaks"), this, LAMBDABOOLSLOT(context->config.sc.opengl_performance));
     renderPerfAction->setCheckable(true);
     renderPerfAction->setToolTip("Change some OpenGL settings to get some performance boost. Should be set on startup to be effective");
 
@@ -810,7 +867,7 @@ void MainWindow::createMenus()
     osdMenu->addActions(osdGroup->actions());
     osdMenu->addAction(tr("OSD Options..."), osdWindow, &OsdWindow::exec);
     osdMenu->addSeparator();
-    osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, &MainWindow::slotOsdEncode);
+    osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, LAMBDABOOLSLOT(context->config.sc.osd_encode));
     osdEncodeAction->setCheckable(true);
     osdMenu->installEventFilter(this);
 #else
@@ -836,7 +893,7 @@ void MainWindow::createMenus()
 
     muteAction = soundMenu->addAction(tr("Mute"), this, &MainWindow::slotMuteSound);
     muteAction->setCheckable(true);
-    disableAction = soundMenu->addAction(tr("Disable"), this, &MainWindow::slotDisableSound);
+    disableAction = soundMenu->addAction(tr("Disable"), this, LAMBDABOOLSLOT(context->config.sc.audio_disabled));
     disableAction->setCheckable(true);
 
     /* Runtime Menu */
@@ -852,7 +909,7 @@ void MainWindow::createMenus()
     timeMenu->setToolTip("Enable a hack to prevent softlocks when the game waits for time to advance. Only check the necessary one(s)");
     timeMenu->installEventFilter(this);
 
-    busyloopAction = runtimeMenu->addAction(tr("Busy loop detection"), this, &MainWindow::slotBusyLoop);
+    busyloopAction = runtimeMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
     busyloopAction->setCheckable(true);
     disabledActionsOnStart.append(busyloopAction);
 
@@ -864,7 +921,7 @@ void MainWindow::createMenus()
     // savestateMenu->setToolTipsVisible(true);
     savestateMenu->addActions(savestateGroup->actions());
 
-    preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, &MainWindow::slotPreventSavefile);
+    preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, LAMBDABOOLSLOT(context->config.sc.prevent_savefiles));
     preventSavefileAction->setCheckable(true);
     preventSavefileAction->setToolTip("Prevent the game from writing files on disk, but write in memory instead. May cause issues in some games");
 
@@ -872,16 +929,16 @@ void MainWindow::createMenus()
 #if __GLIBC_PREREQ(2, 35)
     /* Symbol `__libc_thread_freeres` is no longer available, so recycle threads
      * may be broken. */
-    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads (unstable)"), this, &MainWindow::slotRecycleThreads);
+    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads (unstable)"), this, LAMBDABOOLSLOT(context->config.sc.recycle_threads));
 #else
-    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, &MainWindow::slotRecycleThreads);
+    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, LAMBDABOOLSLOT(context->config.sc.recycle_threads));
 #endif
 #endif
     recycleThreadsAction->setToolTip("Recycle threads when they finish, to make savestates more useable. Can crash on some games");
     recycleThreadsAction->setCheckable(true);
 
     disabledActionsOnStart.append(recycleThreadsAction);
-    steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, &MainWindow::slotSteam);
+    steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, LAMBDABOOLSLOT(context->config.sc.virtual_steam));
     steamAction->setToolTip("Implement a dummy Steam client, to be able to launch some Steam games");
     steamAction->setCheckable(true);
     disabledActionsOnStart.append(steamAction);
@@ -952,7 +1009,7 @@ void MainWindow::createMenus()
     QMenu *luaMenu = toolsMenu->addMenu(tr("Lua"));
 
     luaMenu->addAction(tr("Execute Lua script..."), this, &MainWindow::slotLuaExecute);
-    luaMenu->addAction(tr("Reset Lua VM"), this, &MainWindow::slotLuaReset);
+    luaMenu->addAction(tr("Reset Lua VM"), this, [=](){Lua::Main::reset(context);});
 
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
@@ -963,11 +1020,11 @@ void MainWindow::createMenus()
     mouseAction = inputMenu->addAction(tr("Mouse support"));
     mouseAction->setCheckable(true);
     disabledActionsOnStart.append(mouseAction);
-    mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, &MainWindow::slotMouseMode);
+    mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, LAMBDABOOLSLOT(context->config.sc.mouse_mode_relative));
     mouseModeAction->setCheckable(true);
-    mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, &MainWindow::slotMouseWarp);
+    mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, LAMBDABOOLSLOT(context->config.mouse_warp));
     mouseWarpAction->setCheckable(true);
-    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games from warping the mouse cursor"), this, &MainWindow::slotMouseGameWarp);
+    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games from warping the mouse cursor"), this, LAMBDABOOLSLOT(context->config.sc.mouse_prevent_warp));
     mouseGameWarpAction->setCheckable(true);
 
     QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
@@ -1193,53 +1250,6 @@ void MainWindow::updateUIFrequent()
     /* Update input editor */
     inputEditorWindow->inputEditorView->update();
 }
-
-/* Check all checkboxes from a list of actions whose associated flag data
- * is present in the value
- */
-#define setCheckboxesFromMask(actionGroup, value)\
-do {\
-    for (auto& action : actionGroup->actions()) {\
-        action->setChecked(value & action->data().toInt());\
-    }\
-} while(false)
-
-/* For each checkbox of the action group that is checked, set the
- * corresponding flag in the value.
- */
-#define setMaskFromCheckboxes(actionGroup, value)\
-do {\
-    value = 0;\
-    for (const auto& action : actionGroup->actions()) {\
-        if (action->isChecked()) {\
-            value |= action->data().toInt();\
-        }\
-    }\
-} while(false)
-
-/* Check the radio from a list of actions whose associated data is equal
- * to the value.
- */
-#define setRadioFromList(actionGroup, value)\
-do {\
-    for (auto& action : actionGroup->actions()) {\
-        if (value == action->data().toInt()) {\
-            action->setChecked(true);\
-            break;\
-        }\
-    }\
-} while(false)
-
-/* Set the value to the data of the checked radio from the action group. */
-#define setListFromRadio(actionGroup, value)\
-do {\
-    for (const auto& action : actionGroup->actions()) {\
-        if (action->isChecked()) {\
-            value = action->data().toInt();\
-            break;\
-        }\
-    }\
-} while(false)
 
 void MainWindow::updateMovieParams()
 {
@@ -1632,11 +1642,6 @@ void MainWindow::slotExportMovie()
     }
 }
 
-void MainWindow::slotEnforceMovieSettings(bool checked)
-{
-    gameLoop->movie.header->skipLoadSettings = checked;
-}
-
 void MainWindow::slotPauseMovie()
 {
     context->pause_frame = QInputDialog::getInt(this, tr("Pause Movie"),
@@ -1655,18 +1660,6 @@ void MainWindow::slotPause(bool checked)
         context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }
 }
-
-#define BOOLSLOT(slot, parameter) void MainWindow::slot(bool checked)\
-{\
-    parameter = checked;\
-    context->config.sc_modified = true;\
-}\
-
-#define CHECKBOXSLOT(slot, group, parameter) void MainWindow::slot()\
-{\
-    setMaskFromCheckboxes(group, parameter);\
-    context->config.sc_modified = true;\
-}\
 
 void MainWindow::slotFastForward(bool checked)
 {
@@ -1758,21 +1751,11 @@ void MainWindow::slotMuteSound(bool checked)
     updateStatusBar();
 }
 
-BOOLSLOT(slotDisableSound, context->config.sc.audio_disabled)
-
 void MainWindow::slotRenderSoft(bool checked)
 {
     context->config.sc.opengl_soft = checked;
     updateStatusBar();
 }
-
-BOOLSLOT(slotRenderPerf, context->config.sc.opengl_performance)
-
-CHECKBOXSLOT(slotSavestate, savestateGroup, context->config.sc.savestate_settings)
-CHECKBOXSLOT(slotDebugState, debugStateGroup, context->config.sc.debug_state)
-CHECKBOXSLOT(slotLoggingPrint, loggingPrintGroup, context->config.sc.includeFlags)
-CHECKBOXSLOT(slotLoggingExclude, loggingExcludeGroup, context->config.sc.excludeFlags)
-CHECKBOXSLOT(slotFastforwardMode, fastforwardGroup, context->config.sc.fastforward_mode)
 
 void MainWindow::slotSlowdown()
 {
@@ -1789,34 +1772,11 @@ void MainWindow::slotScreenRes()
     context->config.sc.screen_height = (value & 0xffff);
 }
 
-#ifdef LIBTAS_ENABLE_HUD
-
-CHECKBOXSLOT(slotOsd, osdGroup, context->config.sc.osd)
-BOOLSLOT(slotOsdEncode, context->config.sc.osd_encode)
-
-#endif
-
-BOOLSLOT(slotBusyLoop, context->config.sc.busyloop_detection)
-BOOLSLOT(slotPreventSavefile, context->config.sc.prevent_savefiles)
-BOOLSLOT(slotRecycleThreads, context->config.sc.recycle_threads)
-BOOLSLOT(slotSteam, context->config.sc.virtual_steam)
-BOOLSLOT(slotAsyncEvents, context->config.sc.async_events)
-
-void MainWindow::slotMovieEnd()
-{
-    setListFromRadio(movieEndGroup, context->config.on_movie_end);
-}
-
 void MainWindow::slotVariableFramerate(bool checked)
 {
     context->config.sc.variable_framerate = checked;
     encodeWindow->update_config();
 }
-
-BOOLSLOT(slotAutoRestart, context->config.auto_restart)
-BOOLSLOT(slotMouseMode, context->config.sc.mouse_mode_relative)
-BOOLSLOT(slotMouseWarp, context->config.mouse_warp)
-BOOLSLOT(slotMouseGameWarp, context->config.sc.mouse_prevent_warp)
 
 void MainWindow::slotLuaExecute()
 {
@@ -1825,11 +1785,6 @@ void MainWindow::slotLuaExecute()
         return;
 
     Lua::Main::run(context, filename.toStdString());
-}
-
-void MainWindow::slotLuaReset()
-{
-    Lua::Main::reset(context);
 }
 
 void MainWindow::slotRealTimeFormat()

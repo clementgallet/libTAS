@@ -257,41 +257,18 @@ private slots:
     void slotMoviePathChanged();
     void slotSaveMovie();
     void slotExportMovie();
-    void slotEnforceMovieSettings(bool checked);
     void slotPause(bool checked);
     void slotFastForward(bool checked);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
     void slotMuteSound(bool checked);
-    void slotDisableSound(bool checked);
     void slotRenderSoft(bool checked);
-    void slotRenderPerf(bool checked);
-    void slotSavestate();
-    void slotDebugState();
-    void slotLoggingPrint();
-    void slotLoggingExclude();
     void slotSlowdown();
-    void slotFastforwardMode();
     void slotScreenRes();
-#ifdef LIBTAS_ENABLE_HUD
-    void slotOsd();
-    void slotOsdEncode(bool checked);
-#endif
-    void slotBusyLoop(bool checked);
-    void slotPreventSavefile(bool checked);
-    void slotMovieEnd();
     void slotPauseMovie();
-    void slotRecycleThreads(bool checked);
-    void slotSteam(bool checked);
-    void slotAsyncEvents(bool checked);
-    void slotAutoRestart(bool checked);
     void slotVariableFramerate(bool checked);
-    void slotMouseMode(bool checked);
-    void slotMouseWarp(bool checked);
-    void slotMouseGameWarp(bool checked);
     void slotLuaExecute();
-    void slotLuaReset();
     void slotRealTimeFormat();
 };
 
