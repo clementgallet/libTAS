@@ -64,6 +64,7 @@ static void print_usage(void)
     std::cout << "  -d, --dump FILE         Start a audio/video encode into the specified FILE" << std::endl;
     std::cout << "  -r, --read MOVIE        Play game inputs from MOVIE file" << std::endl;
     std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
+    std::cout << "  -l, --lua FILE          Start the specified FILE lua script" << std::endl;
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
@@ -90,6 +91,7 @@ int main(int argc, char **argv)
     std::ofstream o;
     std::string moviefile;
     std::string dumpfile;
+    std::string luafile;
     int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
@@ -97,6 +99,7 @@ int main(int argc, char **argv)
         {"read", required_argument, nullptr, 'r'},
         {"write", required_argument, nullptr, 'w'},
         {"dump", required_argument, nullptr, 'd'},
+        {"lua", required_argument, nullptr, 'l'},
         {"non-interactive", no_argument, nullptr, 'n'},
         {"libtas-so-path", required_argument, nullptr, 'p'},
         {"libtas32-so-path", required_argument, nullptr, 'P'},
@@ -106,7 +109,7 @@ int main(int argc, char **argv)
     int option_index = 0;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:nh", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nh", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -122,6 +125,13 @@ int main(int argc, char **argv)
                 abspath = realpath_nonexist(optarg);
                 if (!abspath.empty()) {
                     dumpfile = abspath;
+                }
+                break;
+            case 'l':
+                /* Run lua file */
+                abspath = realpath_nonexist(optarg);
+                if (!abspath.empty()) {
+                    luafile = abspath;
                 }
                 break;
             case 'n':
@@ -372,6 +382,10 @@ int main(int argc, char **argv)
 
     /* Start the lua VM */
     Lua::Main::init(&context);
+
+    /* Start a lua script if specified */
+    if (!luafile.empty())
+        Lua::Main::run(&context, luafile);
 
     /* Starts the user interface */
     QApplication app(argc, argv);
