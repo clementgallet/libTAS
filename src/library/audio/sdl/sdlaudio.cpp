@@ -390,6 +390,10 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     ab->update();
     sourcesSDL[dev-1]->buffer_queue.push_back(ab);
 
+    /* If an underrun occurred, resume the playback */
+    sourcesSDL[dev-1]->state = AudioSource::SOURCE_UNDERRUN;
+        sourcesSDL[dev-1]->state = AudioSource::SOURCE_PLAYING;
+
     return 0;
 }
 
