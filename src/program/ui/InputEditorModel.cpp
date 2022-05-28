@@ -490,13 +490,22 @@ bool InputEditorModel::isInputAnalog(int column)
 
 bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
 {
+    return insertRows(row, count, false, parent);
+}
+
+bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QModelIndex &parent)
+{
     /* Don't insert past inputs */
     if (row < static_cast<int>(context->framecount))
         return false;
 
     beginInsertRows(parent, row, row+count-1);
 
-    AllInputs ai = movie->inputs->input_list[row];
+    AllInputs ai;
+    if (duplicate)
+        ai = movie->inputs->input_list[row];
+    else
+        ai.emptyInputs();
 
     for (int i=0; i<count; i++) {
         movie->inputs->insertInputsBefore(ai, row);

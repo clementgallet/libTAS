@@ -78,6 +78,9 @@ public:
     /* Remove a single input from the entire movie */
     void removeUniqueInput(int column);
 
+    /* Insert rows, and specify if we want to duplicate the selected input row */
+    bool insertRows(int row, int count, bool duplicate, const QModelIndex &parent = QModelIndex());
+
     /* Get lock status of a single input */
     bool isLockedUniqueInput(int column);
 

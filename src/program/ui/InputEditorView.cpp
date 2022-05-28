@@ -117,6 +117,12 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
+    duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    duplicateAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(duplicateAct);
+
     deleteAct = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     deleteAct->setShortcutVisibleInContextMenu(true);
@@ -253,6 +259,7 @@ void InputEditorView::updateMenu()
     }
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
+        duplicateAct->setEnabled(false);
         insertAct->setEnabled(false);
         insertsAct->setEnabled(false);
         deleteAct->setEnabled(false);
@@ -263,6 +270,7 @@ void InputEditorView::updateMenu()
         pasteInsertAct->setEnabled(false);
     }
     else {
+        duplicateAct->setEnabled(true);
         insertAct->setEnabled(true);
         insertsAct->setEnabled(true);
         deleteAct->setEnabled(true);
@@ -531,6 +539,17 @@ void InputEditorView::mainMenu(QPoint pos)
     menu->popup(viewport()->mapToGlobal(pos));
 }
 
+void InputEditorView::duplicateInput()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    inputEditorModel->insertRows(indexes[0].row(), 1, true);
+}
+
 void InputEditorView::insertInput()
 {
     const QModelIndexList indexes = selectionModel()->selectedRows();
@@ -539,7 +558,7 @@ void InputEditorView::insertInput()
     if (indexes.count() == 0)
         return;
 
-    inputEditorModel->insertRows(indexes[0].row(), 1);
+    inputEditorModel->insertRows(indexes[0].row(), 1, false);
 }
 
 void InputEditorView::insertInputs()
@@ -554,7 +573,7 @@ void InputEditorView::insertInputs()
     int nbFrames = QInputDialog::getInt(this, tr("Insert frames"), tr("Number of frames to insert: "), 1, 0, 100000, 1, &ok);
 
     if (ok) {
-        inputEditorModel->insertRows(indexes[0].row(), nbFrames);
+        inputEditorModel->insertRows(indexes[0].row(), nbFrames, false);
     }
 }
 

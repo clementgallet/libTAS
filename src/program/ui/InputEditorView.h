@@ -50,6 +50,7 @@ public slots:
     void lockInputColumn(bool checked);
 
     void mainMenu(QPoint pos);
+    void duplicateInput();
     void insertInput();
     void insertInputs();
     void deleteInput();
@@ -90,6 +91,7 @@ private:
     int mouseValue;
     KeyPressedDialog* keyDialog;
 
+    QAction *duplicateAct;
     QAction *insertAct;
     QAction *insertsAct;
     QAction *deleteAct;

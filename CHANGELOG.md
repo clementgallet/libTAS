@@ -5,6 +5,7 @@
 * Users can change realtime (#474)
 * Users can set the initial monotonic time (#480)
 * New commandline option to run a lua script
+* Split insert into insert blank frame and duplicate
 
 ### Changed
 ### Fixed
