@@ -72,10 +72,50 @@ OVERRIDE char *SDL_GameControllerMapping( SDL_GameController * gamecontroller );
  */
 OVERRIDE const char *SDL_GameControllerNameForIndex(int joystick_index);
 
+typedef enum
+{
+    SDL_CONTROLLER_TYPE_UNKNOWN = 0,
+    SDL_CONTROLLER_TYPE_XBOX360,
+    SDL_CONTROLLER_TYPE_XBOXONE,
+    SDL_CONTROLLER_TYPE_PS3,
+    SDL_CONTROLLER_TYPE_PS4,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO,
+    SDL_CONTROLLER_TYPE_VIRTUAL,
+    SDL_CONTROLLER_TYPE_PS5,
+    SDL_CONTROLLER_TYPE_AMAZON_LUNA,
+    SDL_CONTROLLER_TYPE_GOOGLE_STADIA
+} SDL_GameControllerType;
+
+/**
+ * Get the type of a game controller.
+ *
+ * This can be called before any controllers are opened.
+ *
+ * \param joystick_index the device_index of a device, from zero to
+ *                       SDL_NumJoysticks()-1
+ * \returns the controller type.
+ *
+ * \since This function is available since SDL 2.0.12.
+ */
+OVERRIDE SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index);
+
 /**
  *  Return the name for this currently opened controller
  */
 OVERRIDE const char *SDL_GameControllerName(SDL_GameController *gamecontroller);
+
+/**
+ * Get the type of this currently opened controller
+ *
+ * This is the same name as returned by SDL_GameControllerTypeForIndex(), but
+ * it takes a controller identifier instead of the (unstable) device index.
+ *
+ * \param gamecontroller the game controller object to query.
+ * \returns the controller type.
+ *
+ * \since This function is available since SDL 2.0.12.
+ */
+OVERRIDE SDL_GameControllerType SDL_GameControllerGetType(SDL_GameController *gamecontroller);
 
 /**
  *  Returns SDL_TRUE if the controller has been opened and currently connected,

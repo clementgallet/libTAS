@@ -63,6 +63,12 @@ static const char joy_name[] = "XInput Controller";
     return joy_name;
 }
 
+/* Override */ SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    return SDL_CONTROLLER_TYPE_XBOX360;
+}
+
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
@@ -70,9 +76,17 @@ static const char joy_name[] = "XInput Controller";
     if (!gamecontroller)
         return NULL;
 
-    int* gcid = reinterpret_cast<int*>(gamecontroller);
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "  Id %d", *gcid);
     return joy_name;
+}
+
+/* Override */ SDL_GameControllerType SDL_GameControllerGetType(SDL_GameController *gamecontroller)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+
+    if (!gamecontroller)
+        return SDL_CONTROLLER_TYPE_UNKNOWN;
+
+    return SDL_CONTROLLER_TYPE_XBOX360;    
 }
 
 /* Override */ SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecontroller)

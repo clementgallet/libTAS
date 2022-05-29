@@ -6,6 +6,7 @@
 * Users can set the initial monotonic time (#480)
 * New commandline option to run a lua script
 * Split insert into insert blank frame and duplicate
+* Add SDL_GameControllerType functions
 
 ### Changed
 ### Fixed
