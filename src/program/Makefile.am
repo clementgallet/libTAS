@@ -9,6 +9,7 @@ libTAS_QTSOURCES = \
     ui/ControllerAxisWidget.h \
     ui/ControllerTabWindow.h \
     ui/ControllerWidget.h \
+    ui/CustomResolutionDialog.h \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
@@ -60,6 +61,7 @@ libTAS_SOURCES = \
     ui/ControllerAxisWidget.cpp \
     ui/ControllerTabWindow.cpp \
     ui/ControllerWidget.cpp \
+    ui/CustomResolutionDialog.cpp \
     ui/EncodeWindow.cpp \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \

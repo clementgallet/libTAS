@@ -7,6 +7,7 @@
 * New commandline option to run a lua script
 * Split insert into insert blank frame and duplicate
 * Add SDL_GameControllerType functions
+* Add the possibility to specify custom monitor resolutions
 
 ### Changed
 ### Fixed

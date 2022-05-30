@@ -47,6 +47,7 @@
 #include "AutoSaveWindow.h"
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
+#include "CustomResolutionDialog.h"
 #include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
@@ -90,6 +91,8 @@ do {\
  */
 #define setRadioFromList(actionGroup, value)\
 do {\
+    /* Check the last item by default */ \
+    actionGroup->actions().last()->setChecked(true); \
     for (auto& action : actionGroup->actions()) {\
         if (value == action->data().toInt()) {\
             action->setChecked(true);\
@@ -164,6 +167,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     annotationsWindow = new AnnotationsWindow(c, this);
     autoSaveWindow = new AutoSaveWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
+    customResolutionDialog = new CustomResolutionDialog(this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop->gameEvents, &GameEvents::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -568,6 +572,7 @@ void MainWindow::createActions()
     addActionCheckable(screenResGroup, tr("1920x1200 (16:10)"), (1920 << 16) | 1200);
     addActionCheckable(screenResGroup, tr("2560x1440 (16:9)"), (2560 << 16) | 1440);
     addActionCheckable(screenResGroup, tr("3840x2160 (16:9)"), (3840 << 16) | 2160);
+    addActionCheckable(screenResGroup, tr("Custom..."), -1);
     connect(screenResGroup, &QActionGroup::triggered, this, &MainWindow::slotScreenRes);
 
 #ifdef LIBTAS_ENABLE_HUD
@@ -1767,6 +1772,16 @@ void MainWindow::slotScreenRes()
 {
     int value = 0;
     setListFromRadio(screenResGroup, value);
+
+    if (value == -1) {
+        customResolutionDialog->update(context->config.sc.screen_width, context->config.sc.screen_height);
+        value = customResolutionDialog->exec();
+        if (value == QDialog::Rejected) {
+            /* Recover the previous value */
+            setRadioFromList(screenResGroup, ((context->config.sc.screen_width << 16) | context->config.sc.screen_height));
+            return;
+        }
+    }
 
     context->config.sc.screen_width = (value >> 16);
     context->config.sc.screen_height = (value & 0xffff);
