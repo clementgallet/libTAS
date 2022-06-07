@@ -14,6 +14,7 @@
 
 * Noop XcursorLibraryLoadCursor to fix a Ruffle crash
 * Support SDL Audio Queue underrun (#484)
+* Avoid using uninitialized `value_type_size` in ram search (#488)
 
 ## [1.4.3] - 2022-03-27
 ### Added

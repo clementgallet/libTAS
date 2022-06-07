@@ -226,7 +226,7 @@ void RamSearchWindow::slotNew()
         return;
     
     /* If there are results, then clear the current scan and enable all boxes */
-    if (ramSearchModel->scanCount() != 0) {
+    if (ramSearchModel->scanSize() > 0) {
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);
