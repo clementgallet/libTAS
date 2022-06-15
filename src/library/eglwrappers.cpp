@@ -110,6 +110,60 @@ DECLARE_ORIG_POINTER(glDeleteBuffers)
 DECLARE_ORIG_POINTER(glDeleteVertexArrays)
 DECLARE_ORIG_POINTER(glDeleteProgram)
 
+DECLARE_ORIG_POINTER(glClear)
+DECLARE_ORIG_POINTER(glBegin)
+DECLARE_ORIG_POINTER(glEnd)
+DECLARE_ORIG_POINTER(glVertex2d)
+DECLARE_ORIG_POINTER(glVertex2f)
+DECLARE_ORIG_POINTER(glVertex2i)
+DECLARE_ORIG_POINTER(glVertex2s)
+DECLARE_ORIG_POINTER(glVertex3d)
+DECLARE_ORIG_POINTER(glVertex3f)
+DECLARE_ORIG_POINTER(glVertex3i)
+DECLARE_ORIG_POINTER(glVertex3s)
+DECLARE_ORIG_POINTER(glVertex4d)
+DECLARE_ORIG_POINTER(glVertex4f)
+DECLARE_ORIG_POINTER(glVertex4i)
+DECLARE_ORIG_POINTER(glVertex4s)
+DECLARE_ORIG_POINTER(glVertex2dv)
+DECLARE_ORIG_POINTER(glVertex2fv)
+DECLARE_ORIG_POINTER(glVertex2iv)
+DECLARE_ORIG_POINTER(glVertex2sv)
+DECLARE_ORIG_POINTER(glVertex3dv)
+DECLARE_ORIG_POINTER(glVertex3fv)
+DECLARE_ORIG_POINTER(glVertex3iv)
+DECLARE_ORIG_POINTER(glVertex3sv)
+DECLARE_ORIG_POINTER(glVertex4dv)
+DECLARE_ORIG_POINTER(glVertex4fv)
+DECLARE_ORIG_POINTER(glVertex4iv)
+DECLARE_ORIG_POINTER(glVertex4sv)
+
+DECLARE_ORIG_POINTER(glDrawArrays)
+DECLARE_ORIG_POINTER(glMultiDrawArrays)
+DECLARE_ORIG_POINTER(glMultiDrawElements)
+DECLARE_ORIG_POINTER(glDrawRangeElements)
+DECLARE_ORIG_POINTER(glDrawElementsBaseVertex)
+DECLARE_ORIG_POINTER(glDrawRangeElementsBaseVertex)
+DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseVertex)
+DECLARE_ORIG_POINTER(glMultiDrawElementsBaseVertex)
+DECLARE_ORIG_POINTER(glDrawArraysInstancedBaseInstance)
+DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseInstance)
+DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseVertexBaseInstance)
+
+DECLARE_ORIG_POINTER(glDrawTransformFeedback)
+DECLARE_ORIG_POINTER(glDrawTransformFeedbackStream)
+DECLARE_ORIG_POINTER(glDrawTransformFeedbackInstanced)
+DECLARE_ORIG_POINTER(glDrawTransformFeedbackStreamInstanced)
+
+DECLARE_ORIG_POINTER(glDrawArraysInstancedARB)
+DECLARE_ORIG_POINTER(glDrawElementsInstancedARB)
+DECLARE_ORIG_POINTER(glDrawArraysInstancedEXT)
+DECLARE_ORIG_POINTER(glDrawElementsInstancedEXT)
+DECLARE_ORIG_POINTER(glDrawRangeElementsEXT)
+DECLARE_ORIG_POINTER(glMultiDrawArraysEXT)
+DECLARE_ORIG_POINTER(glMultiDrawElementsEXT)
+DECLARE_ORIG_POINTER(glDrawArraysEXT)
+
 /* If the game uses the eglGetProcAddress functions to access to a function
  * that we hook, we must return our function and store the original pointers
  * so that we can call the real function.
@@ -127,10 +181,10 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
 
     /* Store function pointers that are used in other files */
     STORE_SYMBOL(glGetString)
-    STORE_SYMBOL(glBlitFramebuffer);
-    STORE_SYMBOL(glTexParameterf);
-    STORE_SYMBOL(glTexParameteri);
-    STORE_SYMBOL(glEnable);
+    STORE_RETURN_SYMBOL_CUSTOM(glBlitFramebuffer);
+    STORE_RETURN_SYMBOL_CUSTOM(glTexParameterf);
+    STORE_RETURN_SYMBOL_CUSTOM(glTexParameteri);
+    STORE_RETURN_SYMBOL_CUSTOM(glEnable);
     STORE_SYMBOL(glReadPixels)
     STORE_SYMBOL(glGenFramebuffers)
     STORE_SYMBOL(glBindFramebuffer)
@@ -172,12 +226,74 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(glGetProgramInfoLog)
     STORE_SYMBOL(glDetachShader)
     STORE_SYMBOL(glDeleteShader)
-    STORE_SYMBOL(glDrawElements)
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElements)
     STORE_SYMBOL(glBlendFunc)
     STORE_SYMBOL(glDeleteBuffers)
     STORE_SYMBOL(glDeleteVertexArrays)
     STORE_SYMBOL(glDeleteProgram)
     
+    STORE_RETURN_SYMBOL_CUSTOM(glClear)
+
+    STORE_RETURN_SYMBOL_CUSTOM(glBegin);
+    STORE_RETURN_SYMBOL_CUSTOM(glEnd);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4d);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4f);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4i);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4s);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex2sv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex3sv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4dv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4fv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4iv);
+    STORE_RETURN_SYMBOL_CUSTOM(glVertex4sv);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays)
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArrays)
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElements)
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElements);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsBaseVertex);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced);
+
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT);
+    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT);
+
     return real_pointer;
 }
 

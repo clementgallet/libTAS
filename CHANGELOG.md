@@ -8,6 +8,8 @@
 * Split insert into insert blank frame and duplicate
 * Add SDL_GameControllerType functions
 * Add the possibility to specify custom monitor resolutions
+* Add a debug native fileio option
+* Skip GL draw function for EGL
 
 ### Changed
 ### Fixed
