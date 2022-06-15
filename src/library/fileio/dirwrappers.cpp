@@ -56,6 +56,9 @@ DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
 
     debuglogstdio(LCF_FILEIO, "%s call with dir %s", __func__, name);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return d;
+
     if (!shared_config.prevent_savefiles)
         return d;
 
@@ -86,6 +89,9 @@ DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
         return d;
 
     debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return d;
 
     if (!shared_config.prevent_savefiles)
         return d;
@@ -130,6 +136,9 @@ int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return ret;
+
     if (!shared_config.prevent_savefiles)
         return ret;
 
@@ -159,6 +168,9 @@ struct dirent *__DARWIN_INODE64_STR(readdir) (DIR *dirp)
         return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 
     if (!shared_config.prevent_savefiles)
         return orig::__DARWIN_INODE64_STR(readdir)(dirp);
@@ -213,6 +225,9 @@ struct dirent64 *readdir64 (DIR *dirp)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::readdir64(dirp);
+
     if (!shared_config.prevent_savefiles)
         return orig::readdir64(dirp); 
 
@@ -263,6 +278,9 @@ int __DARWIN_INODE64_STR(readdir_r) (DIR *dirp, struct dirent *entry, struct dir
         return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 
     if (!shared_config.prevent_savefiles)
         return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
@@ -316,6 +334,9 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
         return orig::readdir64_r(dirp, entry, result);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::readdir64_r(dirp, entry, result); 
 
     if (!shared_config.prevent_savefiles)
         return orig::readdir64_r(dirp, entry, result); 

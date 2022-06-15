@@ -691,6 +691,7 @@ void MainWindow::createActions()
     addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME, "Let the game access to the real system time, only for debugging purpose");
     addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS, "Let the game access to the real system events, only for debugging purpose");
     addActionCheckable(debugStateGroup, tr("Keep main first thread"), SharedConfig::DEBUG_MAIN_FIRST_THREAD, "Keep main thread as first thread, when rendering is done in another thread. Breaks determinism");
+    addActionCheckable(debugStateGroup, tr("Native file IO"), SharedConfig::DEBUG_NATIVE_FILEIO, "Let the game access to the real filesystem, only for debugging purpose");
 
     loggingOutputGroup = new QActionGroup(this);
 
@@ -1358,7 +1359,7 @@ void MainWindow::updateUIFromConfig()
     muteAction->setChecked(context->config.sc.audio_mute);
     disableAction->setChecked(context->config.sc.audio_disabled);
 
-    setRadioFromList(debugStateGroup, context->config.sc.debug_state);
+    setCheckboxesFromMask(debugStateGroup, context->config.sc.debug_state);
     setRadioFromList(loggingOutputGroup, context->config.sc.logging_status);
 
     setCheckboxesFromMask(loggingPrintGroup, context->config.sc.includeFlags);

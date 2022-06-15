@@ -43,14 +43,13 @@ FILE *fopen (const char *filename, const char *modes)
     if (GlobalState::isNative())
         return orig::fopen(filename, modes);
 
-    /* iostream functions are banned inside this function, I'm not sure why.
-     * This is the case for every open function.
-     * Generating debug message using stdio.
-     */
     if (filename)
         debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::fopen(filename, modes);
 
     FILE* f = nullptr;
 
@@ -116,6 +115,9 @@ FILE *fopen64 (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::fopen64(filename, modes);
+
     FILE* f = nullptr;
 
 #ifdef __linux__
@@ -176,6 +178,9 @@ int fclose (FILE *stream)
         return orig::fclose(stream);
 
     DEBUGLOGCALL(LCF_FILEIO);
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::fclose(stream);
 
 #ifdef __linux__
     /* Check for urandom */

@@ -20,6 +20,7 @@
 #include "udevwrappers.h"
 
 #include "../logging.h"
+#include "../hook.h"
 #include "../DeterministicTimer.h"
 #include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
@@ -1114,33 +1115,202 @@ struct udev_queue : InactiveQueue { using InactiveQueue::InactiveQueue; };
 struct udev_hwdb { unsigned refs; udev_hwdb() : refs(1) {} };
 
 namespace libtas {
+    
+DEFINE_ORIG_POINTER(udev_ref)
+DEFINE_ORIG_POINTER(udev_unref)
+DEFINE_ORIG_POINTER(udev_new)
+DEFINE_ORIG_POINTER(udev_get_userdata)
+DEFINE_ORIG_POINTER(udev_set_userdata)
+
+/*
+ * udev_list
+ *
+ * access to libudev generated lists
+ */
+DEFINE_ORIG_POINTER(udev_list_entry_get_next)
+DEFINE_ORIG_POINTER(udev_list_entry_get_by_name)
+DEFINE_ORIG_POINTER(udev_list_entry_get_name)
+DEFINE_ORIG_POINTER(udev_list_entry_get_value)
+
+/*
+ * udev_device
+ *
+ * access to sysfs/kernel devices
+ */
+DEFINE_ORIG_POINTER(udev_device_ref)
+DEFINE_ORIG_POINTER(udev_device_unref)
+DEFINE_ORIG_POINTER(udev_device_get_udev)
+DEFINE_ORIG_POINTER(udev_device_new_from_syspath)
+DEFINE_ORIG_POINTER(udev_device_new_from_devnum)
+DEFINE_ORIG_POINTER(udev_device_new_from_subsystem_sysname)
+DEFINE_ORIG_POINTER(udev_device_new_from_device_id)
+DEFINE_ORIG_POINTER(udev_device_new_from_environment)
+/* udev_device_get_parent_*() does not take a reference on the returned device, it is automatically unref'd with the parent */
+DEFINE_ORIG_POINTER(udev_device_get_parent)
+DEFINE_ORIG_POINTER(udev_device_get_parent_with_subsystem_devtype)
+/* retrieve device properties */
+DEFINE_ORIG_POINTER(udev_device_get_devpath)
+DEFINE_ORIG_POINTER(udev_device_get_subsystem)
+DEFINE_ORIG_POINTER(udev_device_get_devtype)
+DEFINE_ORIG_POINTER(udev_device_get_syspath)
+DEFINE_ORIG_POINTER(udev_device_get_sysname)
+DEFINE_ORIG_POINTER(udev_device_get_sysnum)
+DEFINE_ORIG_POINTER(udev_device_get_devnode)
+DEFINE_ORIG_POINTER(udev_device_get_is_initialized)
+DEFINE_ORIG_POINTER(udev_device_get_devlinks_list_entry)
+DEFINE_ORIG_POINTER(udev_device_get_properties_list_entry)
+DEFINE_ORIG_POINTER(udev_device_get_tags_list_entry)
+DEFINE_ORIG_POINTER(udev_device_get_sysattr_list_entry)
+DEFINE_ORIG_POINTER(udev_device_get_property_value)
+DEFINE_ORIG_POINTER(udev_device_get_driver)
+DEFINE_ORIG_POINTER(udev_device_get_devnum)
+DEFINE_ORIG_POINTER(udev_device_get_action)
+DEFINE_ORIG_POINTER(udev_device_get_seqnum)
+DEFINE_ORIG_POINTER(udev_device_get_usec_since_initialized)
+DEFINE_ORIG_POINTER(udev_device_get_sysattr_value)
+DEFINE_ORIG_POINTER(udev_device_set_sysattr_value)
+DEFINE_ORIG_POINTER(udev_device_has_tag)
+
+/*
+ * udev_monitor
+ *
+ * access to kernel uevents and udev events
+ */
+DEFINE_ORIG_POINTER(udev_monitor_ref)
+DEFINE_ORIG_POINTER(udev_monitor_unref)
+DEFINE_ORIG_POINTER(udev_monitor_get_udev)
+/* kernel and udev generated events over netlink */
+DEFINE_ORIG_POINTER(udev_monitor_new_from_netlink)
+/* bind socket */
+DEFINE_ORIG_POINTER(udev_monitor_enable_receiving)
+DEFINE_ORIG_POINTER(udev_monitor_set_receive_buffer_size)
+DEFINE_ORIG_POINTER(udev_monitor_get_fd)
+DEFINE_ORIG_POINTER(udev_monitor_receive_device)
+/* in-kernel socket filters to select messages that get delivered to a listener */
+DEFINE_ORIG_POINTER(udev_monitor_filter_add_match_subsystem_devtype)
+DEFINE_ORIG_POINTER(udev_monitor_filter_add_match_tag)
+DEFINE_ORIG_POINTER(udev_monitor_filter_update)
+DEFINE_ORIG_POINTER(udev_monitor_filter_remove)
+
+/*
+ * udev_enumerate
+ *
+ * search sysfs for specific devices and provide a sorted list
+ */
+DEFINE_ORIG_POINTER(udev_enumerate_ref)
+DEFINE_ORIG_POINTER(udev_enumerate_unref)
+DEFINE_ORIG_POINTER(udev_enumerate_get_udev)
+DEFINE_ORIG_POINTER(udev_enumerate_new)
+/* device properties filter */
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_subsystem)
+DEFINE_ORIG_POINTER(udev_enumerate_add_nomatch_subsystem)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_sysattr)
+DEFINE_ORIG_POINTER(udev_enumerate_add_nomatch_sysattr)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_property)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_sysname)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_tag)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_parent)
+DEFINE_ORIG_POINTER(udev_enumerate_add_match_is_initialized)
+DEFINE_ORIG_POINTER(udev_enumerate_add_syspath)
+/* run enumeration with active filters */
+DEFINE_ORIG_POINTER(udev_enumerate_scan_devices)
+DEFINE_ORIG_POINTER(udev_enumerate_scan_subsystems)
+/* return device list */
+DEFINE_ORIG_POINTER(udev_enumerate_get_list_entry)
+
+/*
+ * udev_queue
+ *
+ * access to the currently running udev events
+ */
+DEFINE_ORIG_POINTER(udev_queue_ref)
+DEFINE_ORIG_POINTER(udev_queue_unref)
+DEFINE_ORIG_POINTER(udev_queue_get_udev)
+DEFINE_ORIG_POINTER(udev_queue_new)
+DEFINE_ORIG_POINTER(udev_queue_get_udev_is_active)
+DEFINE_ORIG_POINTER(udev_queue_get_queue_is_empty)
+DEFINE_ORIG_POINTER(udev_queue_get_fd)
+DEFINE_ORIG_POINTER(udev_queue_flush)
+
+/*
+ *  udev_hwdb
+ *
+ *  access to the static hardware properties database
+ */
+DEFINE_ORIG_POINTER(udev_hwdb_new)
+DEFINE_ORIG_POINTER(udev_hwdb_ref)
+DEFINE_ORIG_POINTER(udev_hwdb_unref)
+DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
+
 
 /* Override */ struct udev *udev_ref(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_ref, "udev");
+        return orig::udev_ref(udev);
+    }
+
     return ref(udev);
 }
 /* Override */ struct udev *udev_unref(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_unref, "udev");
+        return orig::udev_unref(udev);
+    }
+
     return unref(udev);
 }
 /* Override */ struct udev *udev_new(void) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_new, "udev");
+        return orig::udev_new();
+    }
+
     return new struct udev;
 }
 /* Override */ void *udev_get_userdata(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_get_userdata, "udev");
+        return orig::udev_get_userdata(udev);
+    }
+
     if (!udev)
         return errno = EINVAL, nullptr;
     return udev->userdata;
 }
 /* Override */ void udev_set_userdata(struct udev *udev, void *userdata) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_set_userdata, "udev");
+        return orig::udev_set_userdata(udev, userdata);
+    }
+
     if (!udev)
         return void(errno = EINVAL);
     udev->userdata = userdata;
 }
 
 /* Override */ struct udev_list_entry *udev_list_entry_get_next(struct udev_list_entry *list_entry) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_list_entry_get_next, "udev");
+        return orig::udev_list_entry_get_next(list_entry);
+    }
+
     if (!list_entry)
         return errno = EINVAL, nullptr;
     return *++list_entry ? list_entry : nullptr;
 }
 /* Override */ struct udev_list_entry *udev_list_entry_get_by_name(struct udev_list_entry *list_entry, const char *name) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_list_entry_get_by_name, "udev");
+        return orig::udev_list_entry_get_by_name(list_entry, name);
+    }
+
     if (!list_entry || !name)
         return errno = EINVAL, nullptr;
     const String key(name);
@@ -1151,26 +1321,62 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ const char *udev_list_entry_get_name(struct udev_list_entry *list_entry) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_list_entry_get_name, "udev");
+        return orig::udev_list_entry_get_name(list_entry);
+    }
+
     if (!list_entry)
         return errno = EINVAL, nullptr;
     return list_entry->name.c_str();
 }
 /* Override */ const char *udev_list_entry_get_value(struct udev_list_entry *list_entry) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_list_entry_get_value, "udev");
+        return orig::udev_list_entry_get_value(list_entry);
+    }
+
     if (!list_entry)
         return errno = EINVAL, nullptr;
     return list_entry->value.c_str();
 }
 
 /* Override */ struct udev_device *udev_device_ref(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_ref, "udev");
+        return orig::udev_device_ref(udev_device);
+    }
+
     return ref(udev_device);
 }
 /* Override */ struct udev_device *udev_device_unref(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_unref, "udev");
+        return orig::udev_device_unref(udev_device);
+    }
+
     return unref(udev_device);
 }
 /* Override */ struct udev *udev_device_get_udev(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_udev, "udev");
+        return orig::udev_device_get_udev(udev_device);
+    }
+
     return get_udev(udev_device);
 }
 /* Override */ struct udev_device *udev_device_new_from_syspath(struct udev *udev, const char *syspath) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_new_from_syspath, "udev");
+        return orig::udev_device_new_from_syspath(udev, syspath);
+    }
+
     if (!udev || !syspath)
         return errno = EINVAL, nullptr;
     if (const Device *device = Device::fromSyspath(syspath))
@@ -1178,6 +1384,12 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_devnum(struct udev *udev, char type, dev_t devnum) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_new_from_devnum, "udev");
+        return orig::udev_device_new_from_devnum(udev, type, devnum);
+    }
+
     if (!udev)
         return errno = EINVAL, nullptr;
     if (const Device *device = Device::fromDevnum(type, devnum))
@@ -1185,6 +1397,12 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_subsystem_sysname(struct udev *udev, const char *subsystem, const char *sysname) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_new_from_subsystem_sysname, "udev");
+        return orig::udev_device_new_from_subsystem_sysname(udev, subsystem, sysname);
+    }
+
     if (!udev || !subsystem || !sysname)
         return errno = EINVAL, nullptr;
     if (const Device *device = Device::fromSubsystemSysname(subsystem, sysname))
@@ -1192,6 +1410,12 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_device_id(struct udev *udev, const char *id) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_new_from_device_id, "udev");
+        return orig::udev_device_new_from_device_id(udev, id);
+    }
+
     if (!udev || !id)
         return errno = EINVAL, nullptr;
     if (const Device *device = Device::fromDeviceId(id))
@@ -1199,17 +1423,35 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_environment(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_new_from_environment, "udev");
+        return orig::udev_device_new_from_environment(udev);
+    }
+
     if (!udev)
         return errno = EINVAL, nullptr;
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_get_parent(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_parent, "udev");
+        return orig::udev_device_get_parent(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->parent;
 }
 /* Override */ struct udev_device *udev_device_get_parent_with_subsystem_devtype(struct udev_device *udev_device,
                                                                                  const char *subsystem, const char *devtype) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_parent_with_subsystem_devtype, "udev");
+        return orig::udev_device_get_parent_with_subsystem_devtype(udev_device, subsystem, devtype);
+    }
+
     if (!udev_device || !subsystem)
         return errno = EINVAL, nullptr;
     if (const Device *device = udev_device->device.parentWithSubsystemDevtype(subsystem, devtype)) {
@@ -1220,46 +1462,100 @@ namespace libtas {
     return errno = ENOENT, nullptr;
 }
 /* Override */ const char *udev_device_get_devpath(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_devpath, "udev");
+        return orig::udev_device_get_devpath(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.devpath().c_str();
 }
 /* Override */ const char *udev_device_get_subsystem(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_subsystem, "udev");
+        return orig::udev_device_get_subsystem(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.subsystem().c_str();
 }
 /* Override */ const char *udev_device_get_devtype(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_devtype, "udev");
+        return orig::udev_device_get_devtype(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.devtype().c_str();
 }
 /* Override */ const char *udev_device_get_syspath(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_syspath, "udev");
+        return orig::udev_device_get_syspath(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.syspath().c_str();
 }
 /* Override */ const char *udev_device_get_sysname(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_sysname, "udev");
+        return orig::udev_device_get_sysname(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.sysname().c_str();
 }
 /* Override */ const char *udev_device_get_sysnum(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_sysnum, "udev");
+        return orig::udev_device_get_sysnum(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.sysnum().c_str();
 }
 /* Override */ const char *udev_device_get_devnode(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_devnode, "udev");
+        return orig::udev_device_get_devnode(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.devnode().c_str();
 }
 /* Override */ int udev_device_get_is_initialized(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_is_initialized, "udev");
+        return orig::udev_device_get_is_initialized(udev_device);
+    }
+
     if (!udev_device)
         return -EINVAL;
     return udev_device->device.isInitialized();
 }
 /* Override */ struct udev_list_entry *udev_device_get_devlinks_list_entry(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_devlinks_list_entry, "udev");
+        return orig::udev_device_get_devlinks_list_entry(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     if (auto devlinks = udev_device->device.devlinks())
@@ -1267,6 +1563,12 @@ namespace libtas {
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_properties_list_entry(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_properties_list_entry, "udev");
+        return orig::udev_device_get_properties_list_entry(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     if (auto properties = udev_device->device.properties())
@@ -1274,6 +1576,12 @@ namespace libtas {
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_tags_list_entry(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_tags_list_entry, "udev");
+        return orig::udev_device_get_tags_list_entry(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     if (auto tags = udev_device->device.tags())
@@ -1281,6 +1589,12 @@ namespace libtas {
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_sysattr_list_entry(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_sysattr_list_entry, "udev");
+        return orig::udev_device_get_sysattr_list_entry(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     if (auto sysattr = udev_device->device.sysattr())
@@ -1288,190 +1602,418 @@ namespace libtas {
     return errno = ENODATA, nullptr;
 }
 /* Override */ const char *udev_device_get_property_value(struct udev_device *udev_device, const char *key) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_property_value, "udev");
+        return orig::udev_device_get_property_value(udev_device, key);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.propertyValue(key).c_str();
 }
 /* Override */ const char *udev_device_get_driver(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_driver, "udev");
+        return orig::udev_device_get_driver(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.driver().c_str();
 }
 /* Override */ dev_t udev_device_get_devnum(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_devnum, "udev");
+        return orig::udev_device_get_devnum(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, makedev(0, 0);
     return udev_device->device.devnum();
 }
 /* Override */ const char *udev_device_get_action(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_action, "udev");
+        return orig::udev_device_get_action(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.action().c_str();
 }
 /* Override */ unsigned long long int udev_device_get_seqnum(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_seqnum, "udev");
+        return orig::udev_device_get_seqnum(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, 0;
     return udev_device->device.seqnum();
 }
 /* Override */ unsigned long long int udev_device_get_usec_since_initialized(struct udev_device *udev_device) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_usec_since_initialized, "udev");
+        return orig::udev_device_get_usec_since_initialized(udev_device);
+    }
+
     if (!udev_device)
         return errno = EINVAL, 0;
     return udev_device->device.usecSinceInitialized();
 }
 /* Override */ const char *udev_device_get_sysattr_value(struct udev_device *udev_device, const char *sysattr) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_get_sysattr_value, "udev");
+        return orig::udev_device_get_sysattr_value(udev_device, sysattr);
+    }
+
     if (!udev_device)
         return errno = EINVAL, nullptr;
     return udev_device->device.sysattrPathValue(sysattr).c_str();
 }
 /* Override */ int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, const char *value) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_set_sysattr_value, "udev");
+        return orig::udev_device_set_sysattr_value(udev_device, sysattr, value);
+    }
+
     if (!udev_device || !sysattr)
         return -EINVAL;
     return udev_device->device.hasSysattr(sysattr) ? -EPERM : -ENOENT;
 }
 /* Override */ int udev_device_has_tag(struct udev_device *udev_device, const char *tag) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_device_has_tag, "udev");
+        return orig::udev_device_has_tag(udev_device, tag);
+    }
+
     if (!udev_device)
         return -EINVAL;
     return udev_device->device.hasTag(tag);
 }
 
 /* Override */ struct udev_monitor *udev_monitor_ref(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_ref, "udev");
+        return orig::udev_monitor_ref(udev_monitor);
+    }
+
     return ref(udev_monitor);
 }
 /* Override */ struct udev_monitor *udev_monitor_unref(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_unref, "udev");
+        return orig::udev_monitor_unref(udev_monitor);
+    }
+
     return unref(udev_monitor);
 }
 /* Override */ struct udev *udev_monitor_get_udev(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_get_udev, "udev");
+        return orig::udev_monitor_get_udev(udev_monitor);
+    }
+
     return get_udev(udev_monitor);
 }
 /* Override */ struct udev_monitor *udev_monitor_new_from_netlink(struct udev *udev, const char *name) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_new_from_netlink, "udev");
+        return orig::udev_monitor_new_from_netlink(udev, name);
+    }
+
     return new_from_udev<struct udev_monitor>(udev);
 }
 /* Override */ int udev_monitor_enable_receiving(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_enable_receiving, "udev");
+        return orig::udev_monitor_enable_receiving(udev_monitor);
+    }
+
     if (!udev_monitor)
         return -EINVAL;
     return 0;
 }
 /* Override */ int udev_monitor_set_receive_buffer_size(struct udev_monitor *udev_monitor, int size) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_set_receive_buffer_size, "udev");
+        return orig::udev_monitor_set_receive_buffer_size(udev_monitor, size);
+    }
+
     if (!udev_monitor)
         return -EINVAL;
     return 0;
 }
 /* Override */ int udev_monitor_get_fd(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_get_fd, "udev");
+        return orig::udev_monitor_get_fd(udev_monitor);
+    }
+
     if (!udev_monitor)
         return -EINVAL;
     return udev_monitor->fd;
 }
 /* Override */ struct udev_device *udev_monitor_receive_device(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_receive_device, "udev");
+        return orig::udev_monitor_receive_device(udev_monitor);
+    }
+
     if (!udev_monitor)
         return errno = EINVAL, nullptr;
     return errno = EAGAIN, nullptr;
 }
 /* Override */ int udev_monitor_filter_add_match_subsystem_devtype(struct udev_monitor *udev_monitor,
                                                                    const char *subsystem, const char *devtype) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_filter_add_match_subsystem_devtype, "udev");
+        return orig::udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, subsystem, devtype);
+    }
+
     if (!udev_monitor || !subsystem)
         return -EINVAL;
     return 0;
 }
 /* Override */ int udev_monitor_filter_add_match_tag(struct udev_monitor *udev_monitor, const char *tag) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_filter_add_match_tag, "udev");
+        return orig::udev_monitor_filter_add_match_tag(udev_monitor, tag);
+    }
+
     if (!udev_monitor || !tag)
         return -EINVAL;
     return 0;
 }
 /* Override */ int udev_monitor_filter_update(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_filter_update, "udev");
+        return orig::udev_monitor_filter_update(udev_monitor);
+    }
+
     if (!udev_monitor)
         return -EINVAL;
     return 0;
 }
 /* Override */ int udev_monitor_filter_remove(struct udev_monitor *udev_monitor) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_monitor_filter_remove, "udev");
+        return orig::udev_monitor_filter_remove(udev_monitor);
+    }
+
     if (!udev_monitor)
         return -EINVAL;
     return 0;
 }
 
 /* Override */ struct udev_enumerate *udev_enumerate_ref(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_ref, "udev");
+        return orig::udev_enumerate_ref(udev_enumerate);
+    }
+
     return ref(udev_enumerate);
 }
 /* Override */ struct udev_enumerate *udev_enumerate_unref(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_unref, "udev");
+        return orig::udev_enumerate_unref(udev_enumerate);
+    }
+
     return unref(udev_enumerate);
 }
 /* Override */ struct udev *udev_enumerate_get_udev(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_get_udev, "udev");
+        return orig::udev_enumerate_get_udev(udev_enumerate);
+    }
+
     return get_udev(udev_enumerate);
 }
 /* Override */ struct udev_enumerate *udev_enumerate_new(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_new, "udev");
+        return orig::udev_enumerate_new(udev);
+    }
+
     return new_from_udev<struct udev_enumerate>(udev);
 }
 /* Override */ int udev_enumerate_add_match_subsystem(struct udev_enumerate *udev_enumerate, const char *subsystem) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_subsystem, "udev");
+        return orig::udev_enumerate_add_match_subsystem(udev_enumerate, subsystem);
+    }
+
     if (!udev_enumerate || !subsystem)
         return -EINVAL;
     udev_enumerate->matchSubsystems.emplace_back(String::concat(subsystem));
     return 0;
 }
 /* Override */ int udev_enumerate_add_nomatch_subsystem(struct udev_enumerate *udev_enumerate, const char *subsystem) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_nomatch_subsystem, "udev");
+        return orig::udev_enumerate_add_nomatch_subsystem(udev_enumerate, subsystem);
+    }
+
     if (!udev_enumerate || !subsystem)
         return -EINVAL;
     udev_enumerate->noMatchSubsystems.emplace_back(String::concat(subsystem));
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_sysattr(struct udev_enumerate *udev_enumerate, const char *sysattr, const char *value) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_sysattr, "udev");
+        return orig::udev_enumerate_add_match_sysattr(udev_enumerate, sysattr, value);
+    }
+
     if (!udev_enumerate || !sysattr)
         return -EINVAL;
     udev_enumerate->matchSysattrs.emplace_back(String::concat(sysattr), String::concat(value));
     return 0;
 }
 /* Override */ int udev_enumerate_add_nomatch_sysattr(struct udev_enumerate *udev_enumerate, const char *sysattr, const char *value) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_nomatch_sysattr, "udev");
+        return orig::udev_enumerate_add_nomatch_sysattr(udev_enumerate, sysattr, value);
+    }
+
     if (!udev_enumerate || !sysattr)
         return -EINVAL;
     udev_enumerate->noMatchSysattrs.emplace_back(String::concat(sysattr), String::concat(value));
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_property(struct udev_enumerate *udev_enumerate, const char *property, const char *value) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_property, "udev");
+        return orig::udev_enumerate_add_match_property(udev_enumerate, property, value);
+    }
+
     if (!udev_enumerate || !property)
         return -EINVAL;
     udev_enumerate->matchProperties.emplace_back(String::concat(property), String::concat(value));
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_sysname(struct udev_enumerate *udev_enumerate, const char *sysname) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_sysname, "udev");
+        return orig::udev_enumerate_add_match_sysname(udev_enumerate, sysname);
+    }
+
     if (!udev_enumerate || !sysname)
         return -EINVAL;
     udev_enumerate->matchSysnames.emplace_back(String::concat(sysname));
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_tag(struct udev_enumerate *udev_enumerate, const char *tag) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_tag, "udev");
+        return orig::udev_enumerate_add_match_tag(udev_enumerate, tag);
+    }
+
     if (!udev_enumerate || !tag)
         return -EINVAL;
     udev_enumerate->matchTags.emplace_back(String::concat(tag));
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_parent(struct udev_enumerate *udev_enumerate, struct udev_device *parent) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_parent, "udev");
+        return orig::udev_enumerate_add_match_parent(udev_enumerate, parent);
+    }
+
     if (!udev_enumerate || !parent)
         return -EINVAL;
     udev_enumerate->matchParent = &parent->device;
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_is_initialized(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_match_is_initialized, "udev");
+        return orig::udev_enumerate_add_match_is_initialized(udev_enumerate);
+    }
+
     if (!udev_enumerate)
         return -EINVAL;
     udev_enumerate->matchInitialized = true;
     return 0;
 }
 /* Override */ int udev_enumerate_add_syspath(struct udev_enumerate *udev_enumerate, const char *syspath) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_add_syspath, "udev");
+        return orig::udev_enumerate_add_syspath(udev_enumerate, syspath);
+    }
+
     if (!udev_enumerate || !syspath)
         return -EINVAL;
     udev_enumerate->addSyspath(syspath);
     return 0;
 }
 /* Override */ int udev_enumerate_scan_devices(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_scan_devices, "udev");
+        return orig::udev_enumerate_scan_devices(udev_enumerate);
+    }
+
     if (!udev_enumerate)
         return -EINVAL;
     udev_enumerate->scanDevices();
     return 0;
 }
 /* Override */ int udev_enumerate_scan_subsystems(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_scan_subsystems, "udev");
+        return orig::udev_enumerate_scan_subsystems(udev_enumerate);
+    }
+
     if (!udev_enumerate)
         return -EINVAL;
     udev_enumerate->scanSubsystems();
     return 0;
 }
 /* Override */ struct udev_list_entry *udev_enumerate_get_list_entry(struct udev_enumerate *udev_enumerate) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_enumerate_get_list_entry, "udev");
+        return orig::udev_enumerate_get_list_entry(udev_enumerate);
+    }
+
     if (!udev_enumerate)
         return errno = EINVAL, nullptr;
     if (auto results = udev_enumerate->results())
@@ -1480,48 +2022,120 @@ namespace libtas {
 }
 
 /* Override */ struct udev_queue *udev_queue_ref(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_ref, "udev");
+        return orig::udev_queue_ref(udev_queue);
+    }
+
     return ref(udev_queue);
 }
 /* Override */ struct udev_queue *udev_queue_unref(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_unref, "udev");
+        return orig::udev_queue_unref(udev_queue);
+    }
+
     return unref(udev_queue);
 }
 /* Override */ struct udev *udev_queue_get_udev(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_get_udev, "udev");
+        return orig::udev_queue_get_udev(udev_queue);
+    }
+
     return get_udev(udev_queue);
 }
 /* Override */ struct udev_queue *udev_queue_new(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_new, "udev");
+        return orig::udev_queue_new(udev);
+    }
+
     return new_from_udev<struct udev_queue>(udev);
 }
 /* Override */ int udev_queue_get_udev_is_active(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_get_udev_is_active, "udev");
+        return orig::udev_queue_get_udev_is_active(udev_queue);
+    }
+
     if (!udev_queue)
         return -EINVAL;
     return true;
 }
 /* Override */ int udev_queue_get_queue_is_empty(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_get_queue_is_empty, "udev");
+        return orig::udev_queue_get_queue_is_empty(udev_queue);
+    }
+
     if (!udev_queue)
         return -EINVAL;
     return false;
 }
 /* Override */ int udev_queue_get_fd(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_get_fd, "udev");
+        return orig::udev_queue_get_fd(udev_queue);
+    }
+
     if (!udev_queue)
         return -EINVAL;
     return udev_queue->fd;
 }
 /* Override */ int udev_queue_flush(struct udev_queue *udev_queue) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_queue_flush, "udev");
+        return orig::udev_queue_flush(udev_queue);
+    }
+
     if (!udev_queue)
         return -EINVAL;
     return 0;
 }
 
 /* Override */ struct udev_hwdb *udev_hwdb_new(struct udev *udev) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_hwdb_new, "udev");
+        return orig::udev_hwdb_new(udev);
+    }
+
     return new struct udev_hwdb;
 }
 /* Override */ struct udev_hwdb *udev_hwdb_ref(struct udev_hwdb *hwdb) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_hwdb_ref, "udev");
+        return orig::udev_hwdb_ref(hwdb);
+    }
+
     return ref(hwdb);
 }
 /* Override */ struct udev_hwdb *udev_hwdb_unref(struct udev_hwdb *hwdb) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_hwdb_unref, "udev");
+        return orig::udev_hwdb_unref(hwdb);
+    }
+
     return unref(hwdb);
 }
 /* Override */ struct udev_list_entry *udev_hwdb_get_properties_list_entry(struct udev_hwdb *hwdb, const char *modalias, unsigned int flags) {
+    DEBUGLOGCALL(LCF_FILEIO);
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        LINK_NAMESPACE(udev_hwdb_get_properties_list_entry, "udev");
+        return orig::udev_hwdb_get_properties_list_entry(hwdb, modalias, flags);
+    }
+
     if (!hwdb || !modalias)
         return errno = EINVAL, nullptr;
     return errno = ENODATA, nullptr;

@@ -39,6 +39,9 @@ int rename (const char *oldf, const char *newf) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::rename(oldf, newf);
+
     /* Check if file is a savefile */
     int ret = SaveFileList::renameSaveFile(oldf, newf);
     if (ret != 1) {
@@ -58,6 +61,9 @@ int remove (const char *filename) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, filename?filename:"<NULL>");
 
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::remove(filename);
+
     /* Check if file is a savefile */
     int ret = SaveFileList::removeSaveFile(filename);
     if (ret != 1) {
@@ -76,6 +82,9 @@ int unlink (const char *name) __THROW
         return orig::unlink(name);
 
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, name?name:"<NULL>");
+
+    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        return orig::unlink(name);
 
     /* Check if file is a savefile */
     int ret = SaveFileList::removeSaveFile(name);
