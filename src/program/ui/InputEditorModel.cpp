@@ -970,7 +970,9 @@ bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
         /* Freeze scroll until pause_frame is reached */
         freeze_scroll = true;
 
-        context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
+        if (context->config.editor_rewind_fastforward)
+            context->hotkey_pressed_queue.push(HOTKEY_FASTFORWARD);
+
         if (!context->config.sc.running)
             context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }

@@ -127,6 +127,9 @@ public:
     /* true if rewind seeks to previous frame, false if seeks to modified frame */
     bool editor_rewind_seek = false;
 
+    /* Use fastforward to rewind or seek to a specific frame in the input editor */
+    bool editor_rewind_fastforward = true;
+
     /* Proton absolute path */
     std::string proton_path;
 

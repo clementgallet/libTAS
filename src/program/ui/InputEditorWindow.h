@@ -44,11 +44,13 @@ public slots:
     void isWindowVisible(bool &visible);
     void scrollingSlot(bool checked);
     void rewindSlot(bool checked);
+    void fastforwardSlot(bool checked);
     
 private:
     Context *context;
     QAction* scrollingAct;
     QAction* rewindAct;
+    QAction* fastforwardAct;
 };
 
 #endif

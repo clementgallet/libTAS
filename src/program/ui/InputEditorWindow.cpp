@@ -44,6 +44,9 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     rewindAct = optionMenu->addAction(tr("Rewind seeks to current frame"), this, &InputEditorWindow::rewindSlot);
     rewindAct->setCheckable(true);
 
+    fastforwardAct = optionMenu->addAction(tr("Disable fastforward during rewind"), this, &InputEditorWindow::fastforwardSlot);
+    fastforwardAct->setCheckable(true);
+
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(inputEditorView);
@@ -85,4 +88,9 @@ void InputEditorWindow::scrollingSlot(bool checked)
 void InputEditorWindow::rewindSlot(bool checked)
 {
     context->config.editor_rewind_seek = checked;
+}
+
+void InputEditorWindow::fastforwardSlot(bool checked)
+{
+    context->config.editor_rewind_fastforward = !checked;
 }
