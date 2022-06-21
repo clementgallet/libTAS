@@ -31,9 +31,16 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     enum FastForwardMode {
         FF_SLEEP = 0x01, // Skips sleep calls
         FF_MIXING = 0x02, // Skips audio mixing
-        FF_RENDERING = 0x04, // Skips all rendering
     };
     int fastforward_mode = FF_SLEEP | FF_MIXING;
+
+    /* Fastforward render mode */
+    enum FastForwardRender {
+        FF_RENDER_ALL, // Don't skip any rendering
+        FF_RENDER_SOME, // Only render some frames
+        FF_RENDER_NO, // No rendering
+    };
+    int fastforward_render = FF_RENDER_SOME;
 
     /* Recording status */
     enum RecStatus {

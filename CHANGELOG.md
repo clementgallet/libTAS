@@ -11,6 +11,7 @@
 * Add a debug native fileio option
 * Skip GL draw function for EGL
 * Add an option to disable fastforward during input editor rewind (#491)
+* Add an option to keep rendering during fastforward (491)
 
 ### Changed
 ### Fixed

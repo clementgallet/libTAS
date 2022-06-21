@@ -140,6 +140,7 @@ public:
 
     QActionGroup *slowdownGroup;
     QActionGroup *fastforwardGroup;
+    QActionGroup *fastforwardRenderGroup;
 
     QAction *mouseAction;
     QAction *mouseModeAction;
@@ -266,7 +267,6 @@ private slots:
     void slotToggleEncode();
     void slotMuteSound(bool checked);
     void slotRenderSoft(bool checked);
-    void slotSlowdown();
     void slotScreenRes();
     void slotPauseMovie();
     void slotVariableFramerate(bool checked);

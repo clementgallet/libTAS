@@ -153,9 +153,15 @@ static bool skipDraw(float fps)
     if (shared_config.av_dumping)
         return false;
 
-    /* Always skip if rendering skip mode */
-    if (shared_config.fastforward_mode & SharedConfig::FF_RENDERING)
-        return true;
+    /* Apply the fast-forward render setting */
+    switch(shared_config.fastforward_render) {
+        case SharedConfig::FF_RENDER_NO:
+            return true;
+        case SharedConfig::FF_RENDER_ALL:
+            return false;
+        default:
+            break;            
+    }
 
     unsigned int skip_freq = 1;
 

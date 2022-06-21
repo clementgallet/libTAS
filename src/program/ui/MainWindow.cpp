@@ -117,8 +117,13 @@ do {\
     context->config.sc_modified = true;\
 }\
 
-#define LAMBDACHECKBOXSLOT(group, parameter) [=](bool checked) {\
+#define LAMBDACHECKBOXSLOT(group, parameter) [=](bool) {\
     setMaskFromCheckboxes(group, parameter);\
+    context->config.sc_modified = true;\
+}\
+
+#define LAMBDARADIOSLOT(group, parameter) [=]() {\
+    setListFromRadio(group, parameter);\
     context->config.sc_modified = true;\
 }\
 
@@ -780,7 +785,7 @@ void MainWindow::createActions()
     addActionCheckable(loggingExcludeGroup, tr("Wine"), LCF_WINE);
 
     slowdownGroup = new QActionGroup(this);
-    connect(slowdownGroup, &QActionGroup::triggered, this, &MainWindow::slotSlowdown);
+    connect(slowdownGroup, &QActionGroup::triggered, this, LAMBDARADIOSLOT(slowdownGroup, context->config.sc.speed_divisor));
 
     addActionCheckable(slowdownGroup, tr("100% (normal speed)"), 1);
     addActionCheckable(slowdownGroup, tr("50%"), 2);
@@ -793,7 +798,13 @@ void MainWindow::createActions()
 
     addActionCheckable(fastforwardGroup, tr("Skipping sleep"), SharedConfig::FF_SLEEP);
     addActionCheckable(fastforwardGroup, tr("Skipping audio mixing"), SharedConfig::FF_MIXING);
-    addActionCheckable(fastforwardGroup, tr("Skipping all rendering"), SharedConfig::FF_RENDERING);
+
+    fastforwardRenderGroup = new QActionGroup(this);
+    connect(fastforwardRenderGroup, &QActionGroup::triggered, this, LAMBDARADIOSLOT(fastforwardRenderGroup, context->config.sc.fastforward_render));
+
+    addActionCheckable(fastforwardRenderGroup, tr("Skipping no rendering"), SharedConfig::FF_RENDER_ALL);
+    addActionCheckable(fastforwardRenderGroup, tr("Skipping most rendering"), SharedConfig::FF_RENDER_SOME);
+    addActionCheckable(fastforwardRenderGroup, tr("Skipping all rendering"), SharedConfig::FF_RENDER_NO);
 
     joystickGroup = new QActionGroup(this);
     addActionCheckable(joystickGroup, tr("None"), 0);
@@ -1000,6 +1011,8 @@ void MainWindow::createMenus()
 
     QMenu *fastforwardMenu = toolsMenu->addMenu(tr("Fast-forward mode"));
     fastforwardMenu->addActions(fastforwardGroup->actions());
+    fastforwardMenu->addSeparator();
+    fastforwardMenu->addActions(fastforwardRenderGroup->actions());
 
     toolsMenu->addSeparator();
 
@@ -1395,6 +1408,7 @@ void MainWindow::updateUIFromConfig()
     setCheckboxesFromMask(savestateGroup, context->config.sc.savestate_settings);
 
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
+    setRadioFromList(fastforwardRenderGroup, context->config.sc.fastforward_render);
 
     setRadioFromList(movieEndGroup, context->config.on_movie_end);
 
@@ -1761,12 +1775,6 @@ void MainWindow::slotRenderSoft(bool checked)
 {
     context->config.sc.opengl_soft = checked;
     updateStatusBar();
-}
-
-void MainWindow::slotSlowdown()
-{
-    setListFromRadio(slowdownGroup, context->config.sc.speed_divisor);
-    context->config.sc_modified = true;
 }
 
 void MainWindow::slotScreenRes()
