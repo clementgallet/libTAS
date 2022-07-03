@@ -209,12 +209,6 @@ int ScreenCapture::init()
     }
 #endif
 
-    /* Dimensions must be a multiple of 2 */
-    if ((width % 1) || (height % 1)) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Screen dimensions must be a multiple of 2");
-        return -1;
-    }
-
 #ifdef __unix__
     /* Get window color depth */
     if (game_info.video & GameInfo::VDPAU) {
