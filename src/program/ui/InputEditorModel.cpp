@@ -746,14 +746,14 @@ void InputEditorModel::clearUniqueInput(int column)
     movie->inputs->wasModified();
 }
 
-void InputEditorModel::removeUniqueInput(int column)
+bool InputEditorModel::removeUniqueInput(int column)
 {
     SingleInput si = movie->editor->input_set[column-2];
 
     /* Check if the input is set in past frames */
     for (unsigned int f = 0; f < context->framecount; f++) {
         if (movie->inputs->input_list[f].getInput(si))
-            return;
+            return false;
     }
 
     /* Clear remaining frames */
@@ -771,6 +771,8 @@ void InputEditorModel::removeUniqueInput(int column)
     beginRemoveColumns(QModelIndex(), column, column);
     movie->editor->input_set.erase(movie->editor->input_set.begin() + (column-2));
     endRemoveColumns();
+    
+    return true;
 }
 
 bool InputEditorModel::isLockedUniqueInput(int column)

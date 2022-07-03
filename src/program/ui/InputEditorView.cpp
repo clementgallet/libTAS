@@ -519,7 +519,11 @@ void InputEditorView::removeInputColumn()
     if (contextSection < 2)
         return;
 
-    inputEditorModel->removeUniqueInput(contextSection);    
+    bool removed = inputEditorModel->removeUniqueInput(contextSection);
+    
+    /* Show alert window if failed */
+    if (!removed)
+        QMessageBox::information(this, "Column not removed", tr("Column could not be removed, because the input is present in past frames."));
 }
 
 void InputEditorView::lockInputColumn(bool checked)

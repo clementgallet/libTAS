@@ -75,8 +75,8 @@ public:
     /* Clear a single input from the entire movie */
     void clearUniqueInput(int column);
 
-    /* Remove a single input from the entire movie */
-    void removeUniqueInput(int column);
+    /* Remove a single input from the entire movie. Returns if the column was removed */
+    bool removeUniqueInput(int column);
 
     /* Insert rows, and specify if we want to duplicate the selected input row */
     bool insertRows(int row, int count, bool duplicate, const QModelIndex &parent = QModelIndex());
