@@ -1104,8 +1104,20 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
         if ((res = orig::vkMapMemory(vk::device, vkScreenImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data)) != VK_SUCCESS) {
             debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
         }
-		data += subResourceLayout.offset;
-        memcpy(winpixels.data(), data, size);
+        
+        /* Copy image pixels respecting the image layout. */
+        data += subResourceLayout.offset;
+        VkDeviceSize s = 0;
+        int h = 0;
+        while ((s < subResourceLayout.size) && (h < height)) {
+            memcpy(&winpixels[h*width*pixelSize], data, width*pixelSize);
+            data += subResourceLayout.rowPitch;
+            s += subResourceLayout.rowPitch;
+            h++;
+        }
+
+        if (h != height)
+            debuglogstdio(LCF_VULKAN | LCF_ERROR, "Mismatch between Vulkan internal image height (%d) and registered height (%d)", h, height);
         
         orig::vkUnmapMemory(vk::device, vkScreenImageMemory);
     }
