@@ -21,6 +21,7 @@
 * Support SDL Audio Queue underrun (#484)
 * Avoid using uninitialized `value_type_size` in ram search (#488)
 * Fix Vulkan encoding for odd window resolutions
+* Protect for spaces when searching game libraries (#496)
 
 ## [1.4.3] - 2022-03-27
 ### Added

@@ -303,7 +303,7 @@ void GameThread::detect_game_libraries(Context *context)
 
     std::string gamedir = dirFromPath(context->gamepath);
     std::ostringstream oss_lp;
-    oss_lp << "find " << gamedir << " -name " << missing_lib << " -type f -print -quit";
+    oss_lp << "find '" << gamedir << "' -name " << missing_lib << " -type f -print -quit";
 
     output = popen(oss_lp.str().c_str(), "r");
     buf[0] = '\0';
