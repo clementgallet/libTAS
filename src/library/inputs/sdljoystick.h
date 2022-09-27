@@ -261,6 +261,96 @@ OVERRIDE Uint8 SDL_JoystickGetButton(SDL_Joystick * joystick, int button);
 OVERRIDE int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
 
 /**
+ * Start a rumble effect in the joystick's triggers
+ *
+ * Each call to this function cancels any previous trigger rumble effect, and
+ * calling it with 0 intensity stops any rumbling.
+ *
+ * Note that this is rumbling of the _triggers_ and not the game controller as
+ * a whole. This is currently only supported on Xbox One controllers. If you
+ * want the (more common) whole-controller rumble, use SDL_JoystickRumble()
+ * instead.
+ *
+ * \param joystick The joystick to vibrate
+ * \param left_rumble The intensity of the left trigger rumble motor, from 0
+ *                    to 0xFFFF
+ * \param right_rumble The intensity of the right trigger rumble motor, from 0
+ *                     to 0xFFFF
+ * \param duration_ms The duration of the rumble effect, in milliseconds
+ * \returns 0, or -1 if trigger rumble isn't supported on this joystick
+ *
+ * \since This function is available since SDL 2.0.14.
+ *
+ * \sa SDL_JoystickHasRumbleTriggers
+ */
+OVERRIDE int SDL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
+
+/**
+ * Query whether a joystick has an LED.
+ *
+ * An example of a joystick LED is the light on the back of a PlayStation 4's
+ * DualShock 4 controller.
+ *
+ * \param joystick The joystick to query
+ * \return SDL_TRUE if the joystick has a modifiable LED, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.14.
+ */
+OVERRIDE SDL_bool SDL_JoystickHasLED(SDL_Joystick *joystick);
+
+/**
+ * Query whether a joystick has rumble support.
+ *
+ * \param joystick The joystick to query
+ * \return SDL_TRUE if the joystick has rumble, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.18.
+ *
+ * \sa SDL_JoystickRumble
+ */
+OVERRIDE SDL_bool SDL_JoystickHasRumble(SDL_Joystick *joystick);
+
+/**
+ * Query whether a joystick has rumble support on triggers.
+ *
+ * \param joystick The joystick to query
+ * \return SDL_TRUE if the joystick has trigger rumble, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.18.
+ *
+ * \sa SDL_JoystickRumbleTriggers
+ */
+OVERRIDE SDL_bool SDL_JoystickHasRumbleTriggers(SDL_Joystick *joystick);
+
+/**
+ * Update a joystick's LED color.
+ *
+ * An example of a joystick LED is the light on the back of a PlayStation 4's
+ * DualShock 4 controller.
+ *
+ * \param joystick The joystick to update
+ * \param red The intensity of the red LED
+ * \param green The intensity of the green LED
+ * \param blue The intensity of the blue LED
+ * \returns 0 on success, -1 if this joystick does not have a modifiable LED
+ *
+ * \since This function is available since SDL 2.0.14.
+ */
+OVERRIDE int SDL_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue);
+
+/**
+ * Send a joystick specific effect packet
+ *
+ * \param joystick The joystick to affect
+ * \param data The data to send to the joystick
+ * \param size The size of the data to send to the joystick
+ * \returns 0, or -1 if this joystick or driver doesn't support effect packets
+ *
+ * \since This function is available since SDL 2.0.16.
+ */
+OVERRIDE int SDL_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size);
+
+/**
  *  Close a joystick previously opened with SDL_JoystickOpen().
  */
 OVERRIDE void SDL_JoystickClose(SDL_Joystick * joystick);

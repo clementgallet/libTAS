@@ -13,6 +13,7 @@
 * Add an option to disable fastforward during input editor rewind (#491)
 * Add an option to keep rendering during fastforward (491)
 * Alert when an input column cannot be removed
+* Add more SDL joystick function hooks for recent FNA builds
 
 ### Changed
 ### Fixed

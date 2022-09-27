@@ -415,6 +415,42 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
     return -1;
 }
 
+/* Override */ int SDL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return -1;
+}
+
+/* Override */ SDL_bool SDL_JoystickHasLED(SDL_Joystick *joystick)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return SDL_FALSE;
+}
+
+/* Override */ SDL_bool SDL_JoystickHasRumble(SDL_Joystick *joystick)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return SDL_FALSE;
+}
+
+/* Override */ SDL_bool SDL_JoystickHasRumbleTriggers(SDL_Joystick *joystick)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return SDL_FALSE;
+}
+
+/* Override */ int SDL_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return -1;
+}
+
+/* Override */ int SDL_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
+    return -1;
+}
+
 /* Override */ void SDL_JoystickClose(SDL_Joystick * joystick)
 {
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
