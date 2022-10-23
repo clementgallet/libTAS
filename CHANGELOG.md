@@ -25,6 +25,7 @@
 * Protect for spaces when searching game libraries (#496)
 * Store thread state in savestates, and check for state match when loading (#503)
 * Fix hitting "New" in RAM search not doing anything the first time
+* Prevent using "Search" before "New" in RAM search (#504)
 
 ## [1.4.3] - 2022-03-27
 ### Added

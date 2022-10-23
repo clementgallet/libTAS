@@ -144,6 +144,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
 
     searchButton = new QPushButton(tr("Search"));
     connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
+    searchButton->setDisabled(true);
 
     QPushButton *addButton = new QPushButton(tr("Add Watch"));
     connect(addButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotAdd);
@@ -232,6 +233,7 @@ void RamSearchWindow::slotNew()
         formatGroupBox->setDisabled(false);
         ramSearchModel->clear();
         watchCount->setText("");
+        searchButton->setDisabled(true);
         return;
     }
 
@@ -322,6 +324,7 @@ void RamSearchWindow::slotSearch()
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);
+        searchButton->setDisabled(true);
     }
     
     newButton->setDisabled(false);
