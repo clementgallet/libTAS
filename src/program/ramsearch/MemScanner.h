@@ -84,7 +84,7 @@ class MemScanner : public QObject {
         
     private:
         bool last_scan_was_region = true;
-        uint64_t total_size; // total size of the last scan (in bytes)
+        uint64_t total_size = 0; // total size of the last scan (in bytes)
 
         std::vector<char> addresses; // scan addresses shown to the user
         std::vector<char> old_values; // scan previous values shown to the user
