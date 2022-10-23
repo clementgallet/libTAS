@@ -23,6 +23,7 @@
 * Avoid using uninitialized `value_type_size` in ram search (#488)
 * Fix Vulkan encoding for odd window resolutions
 * Protect for spaces when searching game libraries (#496)
+* Store thread state in savestates, and check for state match when loading (#503)
 
 ## [1.4.3] - 2022-03-27
 ### Added

@@ -31,6 +31,7 @@ struct StateHeader {
     int thread_count;
     pthread_t pthread_ids[STATEMAXTHREADS];
     pid_t tids[STATEMAXTHREADS];
+    int states[STATEMAXTHREADS];
 };
 }
 

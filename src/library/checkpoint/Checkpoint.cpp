@@ -254,7 +254,9 @@ int Checkpoint::checkRestore()
 
         int t;
         for (t=0; t<sh.thread_count; t++) {
-            if (sh.pthread_ids[t] == thread->pthread_id && (sh.tids[t] == thread->tid)) {
+            if ((sh.pthread_ids[t] == thread->pthread_id) &&
+                (sh.tids[t] == thread->tid) &&
+                (sh.states[t] == thread->state)) {
                 n++;
                 break;
             }
@@ -926,7 +928,8 @@ static void writeAllAreas(bool base)
                 break;
             }
             sh.pthread_ids[n] = thread->pthread_id;
-            sh.tids[n++] = thread->tid;
+            sh.tids[n] = thread->tid;
+            sh.states[n++] = thread->orig_state;
         }
     }
     sh.thread_count = n;
