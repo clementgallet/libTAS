@@ -160,6 +160,14 @@ OVERRIDE Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
 OVERRIDE Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button);
 
+typedef enum
+{
+    SDL_SENSOR_INVALID = -1,    /**< Returned for an invalid sensor */
+    SDL_SENSOR_UNKNOWN,         /**< Unknown sensor type */
+    SDL_SENSOR_ACCEL,           /**< Accelerometer */
+    SDL_SENSOR_GYRO             /**< Gyroscope */
+} SDL_SensorType;
+
 /**
  * Return whether a game controller has a particular sensor.
  *
