@@ -3,11 +3,11 @@ Upstream-Name: libtas
 Source: https://github.com/clementgallet/libTAS
 
 Files: *
-Copyright: 2015-2018 Clement Gallet <clement.gallet@ens-lyon.org>
+Copyright: 2015-2022 Clement Gallet <clement.gallet@ens-lyon.org>
 License: GPL-3.0+
 
 Files: debian/*
-Copyright: 2018 Clement Gallet <clement.gallet@ens-lyon.org>
+Copyright: 2018-2022 Clement Gallet <clement.gallet@ens-lyon.org>
 License: GPL-3.0+
 
 License: GPL-3.0+

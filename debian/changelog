@@ -1,3 +1,29 @@
+libtas (1.4.4) unstable; urgency=medium
+
+  * Split deterministic timer into monotonic/realtime (#474)
+  * Users can change realtime (#474)
+  * Users can set the initial monotonic time (#480)
+  * New commandline option to run a lua script
+  * Split insert into insert blank frame and duplicate
+  * Add SDL_GameControllerType functions
+  * Add the possibility to specify custom monitor resolutions
+  * Add a debug native fileio option
+  * Skip GL draw function for EGL
+  * Add an option to disable fastforward during input editor rewind (#491)
+  * Add an option to keep rendering during fastforward (491)
+  * Alert when an input column cannot be removed
+  * Add more SDL joystick function hooks for recent FNA builds
+  * Noop XcursorLibraryLoadCursor to fix a Ruffle crash
+  * Support SDL Audio Queue underrun (#484)
+  * Avoid using uninitialized `value_type_size` in ram search (#488)
+  * Fix Vulkan encoding for odd window resolutions
+  * Protect for spaces when searching game libraries (#496)
+  * Store thread state in savestates, and check for state match when loading (#503)
+  * Fix hitting "New" in RAM search not doing anything the first time
+  * Prevent using "Search" before "New" in RAM search (#504)
+
+ -- clement <clement@debian.home>  Tue, 25 Oct 2022 12:25:45 +0200
+
 libtas (1.4.3) unstable; urgency=medium
 
   * Implement SteamInternal_FindOrCreateUserInterface()

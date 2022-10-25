@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.4] - 2022-10-25
+### Added
 
 * Split deterministic timer into monotonic/realtime (#474)
 * Users can change realtime (#474)
