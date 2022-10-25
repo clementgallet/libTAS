@@ -59,7 +59,7 @@
 #include <future>
 #include <sys/stat.h>
 #include <csignal> // kill
-#include <unistd.h> // access
+#include <unistd.h> // access, isatty
 #include <limits>
 #include <features.h> // __GLIBC_PREREQ
 
@@ -303,6 +303,10 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     launchGdbAction = new QAction(tr("Launch with GDB"), this);
     launchLldbAction = new QAction(tr("Launch with LLDB"), this);
+    if (!isatty(STDIN_FILENO)) {
+        launchGdbAction->setEnabled(false);
+        launchLldbAction->setEnabled(false);
+    }
 
     connect(launchGdbAction, &QAction::triggered, this, &MainWindow::slotLaunchGdb);
     connect(launchLldbAction, &QAction::triggered, this, &MainWindow::slotLaunchLldb);
