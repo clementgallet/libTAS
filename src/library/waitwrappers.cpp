@@ -36,7 +36,29 @@ DEFINE_ORIG_POINTER(pselect)
 #ifdef __linux__
 DEFINE_ORIG_POINTER(epoll_wait)
 #endif
-    
+
+/* Advance time when sleep call, depending on config and main thread.
+ * Returns if the call was transfered.
+ */
+static bool transfer_sleep(const struct timespec &ts)
+{
+    if (ts.tv_sec == 0 && ts.tv_nsec == 0)
+        return false;
+
+    switch (shared_config.sleep_handling) {
+        case SharedConfig::SLEEP_NEVER:
+            return false;
+        case SharedConfig::SLEEP_MAIN:
+            if (!ThreadManager::isMainThread())
+                return false;
+        case SharedConfig::SLEEP_ALWAYS:
+            detTimer.addDelay(ts);
+            NATIVECALL(sched_yield());
+            return true;        
+    }
+    return true;
+}
+
 /* Override */ int poll (struct pollfd *fds, nfds_t nfds, int timeout)
 {
     LINK_NAMESPACE_GLOBAL(poll);
@@ -74,13 +96,12 @@ DEFINE_ORIG_POINTER(epoll_wait)
     int ret = orig::poll(fds, nfds, timeout);
 
     /* If timeout on main thread, add the timeout amount to the timer */
-    if (ret == 0 && timeout > 0 && ThreadManager::isMainThread()) {
+    if (ret == 0 && timeout > 0) {
         struct timespec ts;
         ts.tv_sec = timeout / 1000;
         ts.tv_nsec = timeout * 1000000;
-        detTimer.addDelay(ts);
 
-        NATIVECALL(sched_yield());
+        transfer_sleep(ts);        
     }
 
     return ret;
@@ -103,23 +124,16 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::select(nfds, readfds, writefds, exceptfds, timeout);
     }
 
-    bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_usec);
+    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_usec);
 
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (mainT && (timeout->tv_sec || timeout->tv_usec)) {
-        struct timespec ts;
-        ts.tv_sec = timeout->tv_sec;
-        ts.tv_nsec = timeout->tv_usec * 1000;
-        detTimer.addDelay(ts);
+    struct timespec ts;
+    ts.tv_sec = timeout->tv_sec;
+    ts.tv_nsec = timeout->tv_usec * 1000;
+    
+    if (!transfer_sleep(ts))
+        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
 
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::select(nfds, readfds, writefds, exceptfds, timeout);
+    return 0;
 }
 
 /* Override */ int pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
@@ -140,20 +154,12 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
     }
 
-    bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
+    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
 
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (mainT && (timeout->tv_sec || timeout->tv_nsec)) {
-        detTimer.addDelay(*timeout);
+    if (!transfer_sleep(*timeout))
+        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
 
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+    return 0;
 }
 
 #ifdef __linux__
@@ -171,11 +177,11 @@ DEFINE_ORIG_POINTER(epoll_wait)
 
     /* If the function was called from the main thread and the function timed out,
      * advance the timer. */
-    if ((timeout != -1) && (ret == 0) && ThreadManager::isMainThread()) {
+    if ((timeout != -1) && (ret == 0)) {
         struct timespec ts;
         ts.tv_sec = timeout / 1000;
         ts.tv_nsec = 1000000 * (timeout % 1000);
-        detTimer.addDelay(ts);
+        transfer_sleep(ts);
     }
 
     return ret;

@@ -667,6 +667,11 @@ void MainWindow::createActions()
     addActionCheckable(waitGroup, tr("Full waits"), SharedConfig::WAIT_FULL, "Advance time and try to wait.");
     addActionCheckable(waitGroup, tr("No waits"), SharedConfig::NO_WAIT, "Wait with zero timeout.");
 
+    sleepGroup = new QActionGroup(this);
+    addActionCheckable(sleepGroup, tr("Never advance time"), SharedConfig::SLEEP_NEVER, "Never advance time when a sleep function is called. It can prevent desyncs, but can cause softlocks in some games");
+    addActionCheckable(sleepGroup, tr("Advance time on main thread"), SharedConfig::SLEEP_MAIN, "Only advance time when a sleep function is called on main thread. This is the default behaviour");
+    addActionCheckable(sleepGroup, tr("Always advance time"), SharedConfig::SLEEP_ALWAYS, "Always advance time when a sleep function is called. This will likely cause desyncs, but can prevent softlocks in some games");
+
     asyncGroup = new QActionGroup(this);
     asyncGroup->setExclusive(false);
     addActionCheckable(asyncGroup, tr("jsdev"), SharedConfig::ASYNC_JSDEV);
@@ -937,6 +942,10 @@ void MainWindow::createMenus()
     QMenu *waitMenu = runtimeMenu->addMenu(tr("Wait timeout"));
     disabledWidgetsOnStart.append(waitMenu);
     waitMenu->addActions(waitGroup->actions());
+
+    QMenu *sleepMenu = runtimeMenu->addMenu(tr("Sleep handling"));
+    disabledWidgetsOnStart.append(sleepMenu);
+    sleepMenu->addActions(sleepGroup->actions());
 
     QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
     // savestateMenu->setToolTipsVisible(true);
@@ -1401,6 +1410,7 @@ void MainWindow::updateUIFromConfig()
     busyloopAction->setChecked(context->config.sc.busyloop_detection);
 
     setRadioFromList(waitGroup, context->config.sc.wait_timeout);
+    setRadioFromList(sleepGroup, context->config.sc.sleep_handling);
 
     renderSoftAction->setChecked(context->config.sc.opengl_soft);
     renderPerfAction->setChecked(context->config.sc.opengl_performance);
@@ -1520,6 +1530,7 @@ void MainWindow::slotLaunch(bool attach_gdb)
     }
 
     setListFromRadio(waitGroup, context->config.sc.wait_timeout);
+    setListFromRadio(sleepGroup, context->config.sc.sleep_handling);
     setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
     setMaskFromCheckboxes(savestateGroup, context->config.sc.savestate_settings);
 

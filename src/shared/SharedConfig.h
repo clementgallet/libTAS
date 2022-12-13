@@ -231,6 +231,17 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* How are we handling waits */
     int wait_timeout = WAIT_NATIVE;
 
+    /* An enum indicating how do we handle sleeps */
+    enum SleepType
+    {
+        SLEEP_NEVER,
+        SLEEP_MAIN,
+        SLEEP_ALWAYS,
+    };
+    
+    /* How are we handling sleeps */
+    int sleep_handling = SLEEP_MAIN;
+
     /* An enum indicating enabled game-specific timing settings */
     enum GameSpecificTiming
     {

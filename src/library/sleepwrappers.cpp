@@ -35,6 +35,28 @@ DEFINE_ORIG_POINTER(nanosleep)
 DEFINE_ORIG_POINTER(clock_nanosleep)
 DEFINE_ORIG_POINTER(sched_yield)
 
+/* Advance time when sleep call, depending on config and main thread.
+ * Returns if the call was transfered.
+ */
+static bool transfer_sleep(const struct timespec &ts)
+{
+    if (ts.tv_sec == 0 && ts.tv_nsec == 0)
+        return false;
+
+    switch (shared_config.sleep_handling) {
+        case SharedConfig::SLEEP_NEVER:
+            return false;
+        case SharedConfig::SLEEP_MAIN:
+            if (!ThreadManager::isMainThread())
+                return false;
+        case SharedConfig::SLEEP_ALWAYS:
+            detTimer.addDelay(ts);
+            NATIVECALL(sched_yield());
+            return true;        
+    }
+    return true;
+}
+
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
     LINK_NAMESPACE_GLOBAL(nanosleep);
@@ -48,19 +70,10 @@ DEFINE_ORIG_POINTER(sched_yield)
         return;
     }
 
-    bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SDL | LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d ms", __func__, sleep);
+    debuglogstdio(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (sleep && mainT) {
-        detTimer.addDelay(ts);
-        NATIVECALL(sched_yield());
-        return;
-    }
-
-    orig::nanosleep(&ts, NULL);
+    if (! transfer_sleep(ts))
+        orig::nanosleep(&ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
@@ -77,12 +90,9 @@ DEFINE_ORIG_POINTER(sched_yield)
     bool mainT = ThreadManager::isMainThread();
     debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d us", __func__, usec);
 
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (usec && mainT) {
+     /* A bit hackish: Disable sleeps from nvidia driver */
+    if (usec && ThreadManager::isMainThread()) {
 
-        /* A bit hackish: Disable sleeps from nvidia driver */
         void* return_address =  __builtin_return_address(0);
         char** symbols = backtrace_symbols(&return_address, 1);
         if (symbols != nullptr) {
@@ -93,17 +103,11 @@ DEFINE_ORIG_POINTER(sched_yield)
             }
             free(symbols);
         }
-        
-        /* Unity games may wait on loading threads with a 2 ms sleep call */
-        if (GameHacks::isUnity() && usec == 2000) {}
-        else
-            detTimer.addDelay(ts);
-     
-        NATIVECALL(sched_yield());
-        return 0;
     }
+    
+    if (! transfer_sleep(ts))
+        orig::nanosleep(&ts, NULL);
 
-    orig::nanosleep(&ts, NULL);
     return 0;
 }
 
@@ -115,36 +119,12 @@ DEFINE_ORIG_POINTER(sched_yield)
         return orig::nanosleep(requested_time, remaining);
     }
 
-    bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
+    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
-    /* If the function was called from the main thread, transfer the wait to
-     * the timer and do not actually wait.
-     */
-    if (mainT && (requested_time->tv_sec || requested_time->tv_nsec)) {
+    if (! transfer_sleep(*requested_time))
+        return orig::nanosleep(requested_time, remaining);
 
-        if (GameHacks::isUnity() &&
-            (requested_time->tv_sec == 0) && (requested_time->tv_nsec == 9999000)) {
-            /* Don't add to the timer, because it is sleep for loading threads */
-        }
-        else if ((requested_time->tv_sec == 0) && (requested_time->tv_nsec == 200000)) {
-            /* 
-             * Mono may sleep for 200 us when creating an object with a finalizer,
-             * while waiting for the finalizer thread to be ready.
-             * See function add_stage_entry() inside mono/sgen/sgen-fin-weak-hash.c
-             *
-             * TODO: Only apply this for mono games, to avoid false positives.
-             */            
-        }        
-        else {
-            detTimer.addDelay(*requested_time);
-        }
-
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::nanosleep(requested_time, remaining);
+    return 0;
 }
 
 /* Override */ int clock_nanosleep (clockid_t clock_id, int flags,
@@ -156,7 +136,6 @@ DEFINE_ORIG_POINTER(sched_yield)
         return orig::clock_nanosleep(clock_id, flags, req, rem);
     }
 
-    bool mainT = ThreadManager::isMainThread();
     TimeHolder sleeptime;
     sleeptime = *req;
     if (flags == 0) {
@@ -167,22 +146,13 @@ DEFINE_ORIG_POINTER(sched_yield)
         struct timespec curtime = detTimer.getTicks();
         sleeptime -= curtime;
     }
+    
+    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
+    if (! transfer_sleep(sleeptime))
+        return orig::clock_nanosleep(clock_id, flags, req, rem);
 
-    /* If the function was called from the main thread
-     * and we are not in the native state,
-     * transfer the wait to the timer and
-     * do not actually wait
-     */
-    if (mainT) {
-
-        detTimer.addDelay(sleeptime);
-        NATIVECALL(sched_yield());
-        return 0;
-    }
-
-    return orig::clock_nanosleep(clock_id, flags, req, rem);
+    return 0;
 }
 
 /* Override */ int sched_yield(void) __THROW

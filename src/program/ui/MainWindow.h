@@ -127,6 +127,7 @@ public:
     QActionGroup *savestateGroup;
     QAction *steamAction;
     QActionGroup *waitGroup;
+    QActionGroup *sleepGroup;
     QActionGroup *asyncGroup;
 
     QActionGroup *debugStateGroup;

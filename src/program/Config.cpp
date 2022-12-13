@@ -166,6 +166,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("opengl_performance", sc.opengl_performance);
     settings.setValue("async_events", sc.async_events);
     settings.setValue("wait_timeout", sc.wait_timeout);
+    settings.setValue("sleep_handling", sc.sleep_handling);
     settings.setValue("game_specific_timing", sc.game_specific_timing);
     settings.setValue("game_specific_sync", sc.game_specific_sync);
     settings.setValue("variable_framerate", sc.variable_framerate);
@@ -305,6 +306,7 @@ void Config::load(const std::string& gamepath) {
     sc.virtual_steam = settings.value("virtual_steam", sc.virtual_steam).toBool();
     sc.async_events = settings.value("async_events", sc.async_events).toInt();
     sc.wait_timeout = settings.value("wait_timeout", sc.wait_timeout).toInt();
+    sc.sleep_handling = settings.value("sleep_handling", sc.sleep_handling).toInt();
     sc.game_specific_timing = settings.value("game_specific_timing", sc.game_specific_timing).toInt();
     sc.game_specific_sync = settings.value("game_specific_sync", sc.game_specific_sync).toInt();
     sc.variable_framerate = settings.value("variable_framerate", sc.variable_framerate).toBool();
