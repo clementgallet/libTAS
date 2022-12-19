@@ -113,7 +113,11 @@ int AudioSource::getPosition()
 void AudioSource::setPosition(int pos)
 {
     if (looping) {
-        pos %= queueSize();
+        int s = queueSize();
+        if (s == 0)
+            pos = 0;
+        else
+            pos %= s;
     }
 
     int bi = 0;
