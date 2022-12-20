@@ -107,7 +107,13 @@ SteamAPICall_t	ISteamRemoteStorage_EnumeratePublishedFilesByUserAction( void* if
 SteamAPICall_t	ISteamRemoteStorage_EnumeratePublishedWorkshopFiles( void* iface, EWorkshopEnumerationType eEnumerationType, unsigned int unStartIndex, unsigned int unCount, unsigned int unDays, SteamParamStringArray_t *pTags, SteamParamStringArray_t *pUserTags );
 
 SteamAPICall_t ISteamRemoteStorage_UGCDownloadToLocation( void* iface, UGCHandle_t hContent, const char *pchLocation, unsigned int unPriority );
-
+// Cloud dynamic state change notification
+int32_t ISteamRemoteStorage_GetLocalFileChangeCount();
+const char *ISteamRemoteStorage_GetLocalFileChange( int iFile, ERemoteStorageLocalFileChange *pEChangeType, ERemoteStorageFilePathType *pEFilePathType );
+// Indicate to Steam the beginning / end of a set of local file
+// operations - for example, writing a game save that requires updating two files.
+bool ISteamRemoteStorage_BeginFileWriteBatch();
+bool ISteamRemoteStorage_EndFileWriteBatch();
 }
 
 #endif

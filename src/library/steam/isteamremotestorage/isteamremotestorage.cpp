@@ -23,6 +23,7 @@
 #include "isteamremotestorage012.h"
 #include "isteamremotestorage013.h"
 #include "isteamremotestorage014.h"
+#include "isteamremotestorage016.h"
 #include "../../logging.h"
 #include "../../hook.h"
 #include "../../Utils.h"
@@ -55,6 +56,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version)
 		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_012, SteamRemoteStorage012 },
 		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_013, SteamRemoteStorage013 },
 		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_014, SteamRemoteStorage014 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_016, SteamRemoteStorage016 },
 		{ NULL, NULL }
 	};
 	int i;
@@ -100,7 +102,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
 
 	if (!steamremotestorage_version)
 	{
-		steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_014;
+		steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_016;
         debuglogstdio(LCF_STEAM | LCF_WARNING, "ISteamRemoteStorage: No version specified, defaulting to %s", steamremotestorage_version);
 	}
 
@@ -584,6 +586,30 @@ SteamAPICall_t ISteamRemoteStorage_UGCDownloadToLocation( void* iface, UGCHandle
 {
     DEBUGLOGCALL(LCF_STEAM);
 	return 1;
+}
+
+int32_t ISteamRemoteStorage_GetLocalFileChangeCount()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return 0;
+}
+
+const char *ISteamRemoteStorage_GetLocalFileChange( int iFile, ERemoteStorageLocalFileChange *pEChangeType, ERemoteStorageFilePathType *pEFilePathType )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return nullptr;
+}
+
+bool ISteamRemoteStorage_BeginFileWriteBatch()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return false;
+}
+
+bool ISteamRemoteStorage_EndFileWriteBatch()
+{
+    DEBUGLOGCALL(LCF_STEAM);
+	return false;
 }
 
 }

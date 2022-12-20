@@ -133,13 +133,18 @@ libtas_so_SOURCES = \
     steam/isteamgamecoordinator.cpp \
     steam/isteamgameserver.cpp \
     steam/isteamhttp.cpp \
+    steam/isteaminput.cpp \
     steam/isteammatchmaking.cpp \
     steam/isteamnetworking.cpp \
+    steam/isteamnetworkingutils.cpp \
+    steam/isteamnetworkingsockets.cpp \
+    steam/isteamnetworkingmessages.cpp \
     steam/isteamremotestorage/isteamremotestorage.cpp \
     steam/isteamremotestorage/isteamremotestorage001.cpp \
     steam/isteamremotestorage/isteamremotestorage012.cpp \
     steam/isteamremotestorage/isteamremotestorage013.cpp \
     steam/isteamremotestorage/isteamremotestorage014.cpp \
+    steam/isteamremotestorage/isteamremotestorage016.cpp \
     steam/isteamscreenshots.cpp \
     steam/isteamugc.cpp \
     steam/isteamuser.cpp \

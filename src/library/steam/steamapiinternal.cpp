@@ -31,6 +31,7 @@ DEFINE_ORIG_POINTER(SteamAPI_GetHSteamPipe)
 DEFINE_ORIG_POINTER(SteamInternal_ContextInit)
 DEFINE_ORIG_POINTER(SteamInternal_CreateInterface)
 DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateUserInterface)
+DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateGameServerInterface)
 DEFINE_ORIG_POINTER(_ZN16CSteamAPIContext4InitEv)
 
 HSteamUser SteamAPI_GetHSteamUser()
@@ -109,6 +110,31 @@ void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char
     if (!shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_FindOrCreateUserInterface, "steam_api");
         return orig::SteamInternal_FindOrCreateUserInterface(steam_user, version);
+    }
+
+    /* The expected return from this function is a pointer to a C++ class with
+     * specific virtual functions.  The format of our argument is the name
+     * of the corresponding C function that has already been hooked to return
+     * the correct value, followed by some numbers that are probably used for
+     * version checking.  As a quick hack, just lookup the symbol and call it.
+     */
+    std::string symbol = version;
+    /* Strip numbers at the end */
+    auto end = symbol.find_last_not_of("0123456789");
+    if (end != std::string::npos)
+        symbol.resize(end + 1);
+    void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
+    if (func)
+        return func();
+    return nullptr;
+}
+
+void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, const char *version)
+{
+    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
+    if (!shared_config.virtual_steam) {
+        LINK_NAMESPACE(SteamInternal_FindOrCreateGameServerInterface, "steam_api");
+        return orig::SteamInternal_FindOrCreateGameServerInterface(steam_user, version);
     }
 
     /* The expected return from this function is a pointer to a C++ class with

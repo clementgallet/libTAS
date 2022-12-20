@@ -214,6 +214,7 @@ ISteamNetworking *ISteamClient_GetISteamNetworking( void *iface, HSteamUser hSte
 ISteamRemoteStorage *ISteamClient_GetISteamRemoteStorage( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     DEBUGLOGCALL(LCF_STEAM);
+    SteamRemoteStorage_set_version(pchVersion);
     return SteamRemoteStorage();
 }
 
@@ -335,7 +336,7 @@ ISteamParentalSettings *ISteamClient_GetISteamParentalSettings( void *iface, HSt
 ISteamInput *ISteamClient_GetISteamInput(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)
 {
     DEBUGLOGCALL(LCF_STEAM);
-    return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
+    return SteamInput();
 }
 
 ISteamParties *ISteamClient_GetISteamParties(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)

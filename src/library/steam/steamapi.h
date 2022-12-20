@@ -33,7 +33,11 @@
 #include "isteamugc.h"
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
+#include "isteaminput.h"
 #include "isteamnetworking.h"
+#include "isteamnetworkingutils.h"
+#include "isteamnetworkingsockets.h"
+#include "isteamnetworkingmessages.h"
 #include "CCallback.h"
 #include "CCallbackManager.h"
 
@@ -81,6 +85,24 @@ OVERRIDE void SteamAPI_UnregisterCallback( CCallbackBase *pCallback );
 OVERRIDE void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall );
 OVERRIDE void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall );
 
+/// Inform the API that you wish to use manual event dispatch.  This must be called after SteamAPI_Init, but before
+/// you use any of the other manual dispatch functions below.
+OVERRIDE void SteamAPI_ManualDispatch_Init();
+
+/// Perform certain periodic actions that need to be performed.
+OVERRIDE void SteamAPI_ManualDispatch_RunFrame( HSteamPipe hSteamPipe );
+
+/// Fetch the next pending callback on the given pipe, if any.  If a callback is available, true is returned
+/// and the structure is populated.  In this case, you MUST call SteamAPI_ManualDispatch_FreeLastCallback
+/// (after dispatching the callback) before calling SteamAPI_ManualDispatch_GetNextCallback again.
+OVERRIDE bool SteamAPI_ManualDispatch_GetNextCallback( HSteamPipe hSteamPipe, CallbackMsg_t *pCallbackMsg );
+
+/// You must call this after dispatching the callback, if SteamAPI_ManualDispatch_GetNextCallback returns true.
+OVERRIDE void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe );
+
+/// Return the call result for the specified call on the specified pipe.  You really should
+/// only call this in a handler for SteamAPICallCompleted_t callback.
+OVERRIDE bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed );
 
 OVERRIDE ISteamController *SteamController();
 OVERRIDE ISteamUserStats *SteamUserStats();
@@ -103,6 +125,7 @@ OVERRIDE ISteamMatchmaking *SteamMatchmaking();
 OVERRIDE ISteamNetworking *SteamNetworking();
 OVERRIDE ISteamMatchmakingServers *SteamMatchmakingServers();
 OVERRIDE ISteamHTTP *SteamHTTP();
+OVERRIDE ISteamInput *SteamInput();
 OVERRIDE ISteamAppList *SteamAppList();
 OVERRIDE ISteamMusic *SteamMusic();
 OVERRIDE ISteamMusicRemote *SteamMusicRemote();
@@ -110,6 +133,9 @@ OVERRIDE ISteamHTMLSurface *SteamHTMLSurface();
 OVERRIDE ISteamInventory *SteamInventory();
 OVERRIDE ISteamVideo *SteamVideo();
 OVERRIDE ISteamParentalSettings *SteamParentalSettings();
+OVERRIDE ISteamNetworkingUtils *SteamNetworkingUtils();
+OVERRIDE ISteamNetworkingSockets *SteamNetworkingSockets();
+OVERRIDE ISteamNetworkingMessages *SteamNetworkingMessages();
 
 }
 

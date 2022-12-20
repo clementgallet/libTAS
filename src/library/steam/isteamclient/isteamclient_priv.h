@@ -24,6 +24,7 @@
 #include "../isteamcontroller.h"
 #include "../isteammatchmaking.h"
 #include "../isteamhttp.h"
+#include "../isteaminput.h"
 #include "../isteamgameserver.h"
 #include "../isteamnetworking.h"
 
@@ -38,7 +39,6 @@ typedef void ISteamVideo;
 typedef void ISteamParentalSettings;
 typedef void ISteamGameServerStats;
 typedef void ISteamGameSearch;
-typedef void ISteamInput;
 typedef void ISteamParties;
 typedef void ISteamRemotePlay;
 

@@ -22,6 +22,7 @@ typedef uint64_t CGameID;
 typedef unsigned int AppId_t;
 typedef uint64_t SteamAPICall_t;
 typedef uint32_t DepotId_t;
+typedef void CallbackMsg_t;
 
 typedef uint64_t PublishedFileId_t; // not sure
 typedef uint64_t SteamParamStringArray_t; // not sure
@@ -106,6 +107,54 @@ typedef uint64_t UGCHandle_t;
 typedef uint64_t PublishedFileUpdateHandle_t;
 typedef uint64_t PublishedFileId_t;
 
+typedef void SteamRelayNetworkStatus_t;
+typedef void SteamNetworkingMessage_t;
+typedef int SteamNetworkPingLocation_t;
+typedef void* FSteamNetworkingSocketsDebugOutput;
+typedef int SteamNetworkingIPAddr;
+typedef int SteamNetworkingIdentity;
+typedef int SteamNetworkingConfigValue_t;
+
+
+typedef int ESteamNetworkingAvailability;
+typedef int SteamNetworkingPOPID;
+typedef double SteamNetworkingMicroseconds;
+typedef int ESteamNetworkingSocketsDebugOutputType;
+typedef int ESteamNetworkingFakeIPType;
+typedef int ESteamNetworkingConfigValue;
+typedef int ESteamNetworkingConfigScope;
+typedef int ESteamNetworkingConfigDataType;
+typedef int ESteamNetworkingGetConfigValueResult;
+typedef int ERemoteStorageLocalFileChange;
+typedef int ERemoteStorageFilePathType;
+
+typedef int HSteamListenSocket;
+typedef int HSteamNetConnection;
+typedef int SteamNetConnectionInfo_t;
+typedef int SteamNetConnectionRealTimeLaneStatus_t;
+typedef int SteamDatagramRelayAuthTicket;
+typedef int HSteamNetPollGroup;
+typedef int SteamNetAuthenticationStatus_t;
+typedef int SteamDatagramHostedAddress;
+
+typedef int SteamNetConnectionRealTimeStatus_t;
+typedef int SteamDatagramGameCoordinatorServerLogin;
+typedef int ISteamNetworkingConnectionSignaling;
+typedef int ISteamNetworkingSignalingRecvContext;
+typedef int SteamNetworkingErrMsg;
+typedef int SteamNetworkingFakeIPResult_t;
+typedef int ISteamNetworkingFakeUDPPort;
+typedef int ESteamNetworkingConnectionState;
+
+typedef uint64_t InputHandle_t;
+typedef uint64_t InputActionSetHandle_t;
+typedef uint64_t InputDigitalActionHandle_t;
+typedef uint64_t InputAnalogActionHandle_t;
+typedef void* SteamInputActionEventCallbackPointer;
+typedef void ScePadTriggerEffectParam;
+typedef int InputMotionData_t;
+typedef int InputDigitalActionData_t;
+typedef int InputAnalogActionData_t;
 
 }
 
