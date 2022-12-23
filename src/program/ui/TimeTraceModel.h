@@ -23,13 +23,12 @@
 #include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <map>
-// #include <pair>
 #include <memory>
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "../Context.h"
-// #include "../ramsearch/MemSection.h"
+/* Forward declaration */
+struct Context;
 
 struct TimeCall {
     int type;

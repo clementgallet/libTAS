@@ -29,6 +29,7 @@
 #include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"
 #include "PointerScanWindow.h"
+#include "../Context.h"
 
 RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

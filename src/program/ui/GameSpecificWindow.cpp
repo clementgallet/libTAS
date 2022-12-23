@@ -26,6 +26,7 @@
 #include <QtWidgets/QGridLayout>
 
 #include "GameSpecificWindow.h"
+#include "../Context.h"
 
 #include <iostream>
 

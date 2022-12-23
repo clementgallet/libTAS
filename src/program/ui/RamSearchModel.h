@@ -28,9 +28,11 @@
 #include <fstream>
 #include <iostream>
 
-#include "../Context.h"
 #include "../ramsearch/CompareOperations.h"
 #include "../ramsearch/MemScanner.h"
+
+/* Forward declaration */
+struct Context;
 
 class RamSearchModel : public QAbstractTableModel {
     Q_OBJECT

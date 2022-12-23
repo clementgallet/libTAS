@@ -25,7 +25,8 @@
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QSpinBox>
 
-#include "../Context.h"
+/* Forward declaration */
+struct Context;
 
 class AutoSaveWindow : public QDialog {
     Q_OBJECT

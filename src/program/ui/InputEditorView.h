@@ -23,10 +23,10 @@
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QMenu>
 
-#include "../Context.h"
-#include "KeyPressedDialog.h"
-
+/* Forward declaration */
+struct Context;
 class InputEditorModel;
+class KeyPressedDialog;
 
 class InputEditorView : public QTableView {
     Q_OBJECT

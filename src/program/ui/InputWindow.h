@@ -24,9 +24,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTableWidget>
 
-#include "../Context.h"
 #include "../KeyMapping.h"
 
+/* Forward declaration */
+struct Context;
 class KeyPressedDialog;
 
 class InputWindow : public QDialog {

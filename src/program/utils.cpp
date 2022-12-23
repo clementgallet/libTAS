@@ -17,7 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Context.h"
 #include "utils.h"
+
 #include <sys/stat.h>
 #include <cerrno> // errno
 #include <cstring> // strerror

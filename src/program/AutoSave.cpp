@@ -19,6 +19,9 @@
 
 #include "AutoSave.h"
 #include "utils.h"
+#include "movie/MovieFile.h"
+#include "Context.h"
+
 #include <iostream>
 #include <dirent.h> // scandir
 #include <unistd.h> // unlink

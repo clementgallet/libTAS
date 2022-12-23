@@ -24,8 +24,12 @@
 #include <vector>
 #include <stdint.h>
 
-#include "../Context.h"
-#include "../movie/MovieFile.h"
+#include "../../shared/SingleInput.h"
+#include "../../shared/AllInputs.h"
+
+/* Forward declaration */
+struct Context;
+class MovieFile;
 
 class InputEditorModel : public QAbstractTableModel {
     Q_OBJECT

@@ -21,7 +21,9 @@
 #define LIBTAS_UTILS_H_INCLUDED
 
 #include <string>
-#include "Context.h"
+
+/* Forward declaration */
+struct Context;
 
 /* Get the file from path */
 std::string fileFromPath(const std::string& path);

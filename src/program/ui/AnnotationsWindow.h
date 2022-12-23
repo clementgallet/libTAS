@@ -23,8 +23,9 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QPlainTextEdit>
 
-#include "../Context.h"
-#include "../movie/MovieFile.h"
+/* Forward declaration */
+class MovieFile;
+struct Context;
 
 class AnnotationsWindow : public QDialog {
     Q_OBJECT

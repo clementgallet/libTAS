@@ -20,7 +20,11 @@
 #ifndef LIBTAS_GAMETHREAD_H_INCLUDED
 #define LIBTAS_GAMETHREAD_H_INCLUDED
 
-#include "Context.h"
+#include <list>
+#include <string>
+
+/* Forward declaration */
+struct Context;
 
 namespace GameThread {
     /* Set the different environment variables, then start the game executable with

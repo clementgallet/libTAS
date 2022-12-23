@@ -25,6 +25,7 @@
 #include "GameThread.h"
 #include "utils.h"
 #include "../shared/SharedConfig.h"
+#include "Context.h"
 
 #include <string>
 #include <sstream>

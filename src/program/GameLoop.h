@@ -22,11 +22,11 @@
 
 #include <QtCore/QObject>
 
-#include "Context.h"
 #include "movie/MovieFile.h"
 
 /* Forward declaration */
 class GameEvents;
+struct Context;
 
 class GameLoop : public QObject {
     Q_OBJECT

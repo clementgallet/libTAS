@@ -26,7 +26,8 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
 
-#include "../Context.h"
+/* Forward declaration */
+struct Context;
 
 class GameSpecificWindow : public QDialog {
     Q_OBJECT

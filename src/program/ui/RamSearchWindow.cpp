@@ -31,6 +31,7 @@
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
 #include "../ramsearch/CompareOperations.h"
+#include "../Context.h"
 
 #include <limits>
 

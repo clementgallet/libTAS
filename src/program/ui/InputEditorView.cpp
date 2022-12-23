@@ -25,10 +25,12 @@
 
 #include <stdint.h>
 
+#include "KeyPressedDialog.h"
 #include "InputEditorView.h"
 #include "InputEditorModel.h"
 #include "MainWindow.h"
 #include "qtutils.h"
+#include "../Context.h"
 
 InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {

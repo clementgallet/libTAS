@@ -27,8 +27,8 @@
 #include <QtCore/QItemSelection>
 #include <memory>
 
-#include "../Context.h"
-
+/* Forward declaration */
+struct Context;
 class TimeTraceModel;
 
 class TimeTraceWindow : public QDialog {

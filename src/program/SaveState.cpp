@@ -20,6 +20,7 @@
 #include <iostream>
 #include <unistd.h> // access()
 
+#include "Context.h"
 #include "SaveState.h"
 #include "utils.h"
 #include "../shared/sockethelpers.h"

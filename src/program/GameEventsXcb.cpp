@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Context.h"
 #include "GameEventsXcb.h"
 #include "GameEvents.h"
 #include "movie/MovieFile.h"

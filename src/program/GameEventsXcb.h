@@ -23,7 +23,6 @@
 #include <memory>
 #include <stdint.h>
 
-#include "Context.h"
 #include "GameEvents.h"
 #include "KeyMapping.h"
 #include <xcb/xcb.h>
@@ -31,6 +30,7 @@
 
 /* Forward declaration */
 class MovieFile;
+struct Context;
 
 class GameEventsXcb : public GameEvents {
 public:

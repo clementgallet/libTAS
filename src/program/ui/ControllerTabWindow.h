@@ -25,9 +25,10 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
 
-#include "../Context.h"
 #include "../../shared/AllInputs.h"
 
+/* Forward declaration */
+struct Context;
 class ControllerWidget;
 
 class ControllerTabWindow : public QDialog {

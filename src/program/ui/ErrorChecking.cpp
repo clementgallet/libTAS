@@ -19,8 +19,10 @@
 
 #include <QtWidgets/QMessageBox>
 
+#include "../Context.h"
 #include "ErrorChecking.h"
 #include "../utils.h"
+
 #include <unistd.h>
 #include <sys/stat.h>
 #include <iostream>

@@ -20,11 +20,14 @@
 #ifndef LIBTAS_SAVESTATE_H_INCLUDED
 #define LIBTAS_SAVESTATE_H_INCLUDED
 
-#include "Context.h"
-#include "movie/MovieFile.h"
 #include <string>
 #include <memory>
 #include <stdint.h>
+
+#include "movie/MovieFile.h"
+
+/* Forward declaration */
+struct Context;
 
 class SaveState {
 public:

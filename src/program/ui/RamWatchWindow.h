@@ -23,8 +23,8 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTableView>
 
-#include "../Context.h"
-
+/* Forward declaration */
+struct Context;
 class RamWatchEditWindow;
 class PointerScanWindow;
 class RamWatchModel;

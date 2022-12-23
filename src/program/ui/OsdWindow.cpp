@@ -24,6 +24,7 @@
 #include <QtWidgets/QVBoxLayout>
 
 #include "OsdWindow.h"
+#include "../Context.h"
 
 OsdWindow::OsdWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

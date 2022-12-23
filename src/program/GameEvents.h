@@ -24,11 +24,11 @@
 // #include <memory>
 #include <stdint.h>
 
-#include "Context.h"
 #include "KeyMapping.h"
 
 /* Forward declaration */
 class MovieFile;
+struct Context;
 
 class GameEvents : public QObject {
     Q_OBJECT

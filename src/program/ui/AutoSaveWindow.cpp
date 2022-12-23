@@ -25,6 +25,7 @@
 #include <QtWidgets/QDoubleSpinBox>
 
 #include "AutoSaveWindow.h"
+#include "../Context.h"
 
 AutoSaveWindow::AutoSaveWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

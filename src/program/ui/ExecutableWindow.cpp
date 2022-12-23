@@ -23,6 +23,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 
+#include "../Context.h"
 #include "ExecutableWindow.h"
 
 ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)

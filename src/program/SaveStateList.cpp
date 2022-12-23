@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include "Context.h"
+#include "SaveState.h"
 #include "SaveStateList.h"
 #include "SaveState.h"
 #include "../shared/messages.h"

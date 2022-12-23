@@ -23,8 +23,8 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QMainWindow>
 
-#include "../Context.h"
-
+/* Forward declaration */
+struct Context;
 class InputEditorView;
 
 class InputEditorWindow : public QMainWindow {

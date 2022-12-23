@@ -23,7 +23,8 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QComboBox>
 
-#include "../Context.h"
+/* Forward declaration */
+struct Context;
 
 class OsdWindow : public QDialog {
     Q_OBJECT

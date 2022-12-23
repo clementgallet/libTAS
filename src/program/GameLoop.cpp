@@ -30,6 +30,7 @@
 #include "GameEventsQuartz.h"
 #endif
 
+#include "Context.h"
 #include "utils.h"
 #include "AutoSave.h"
 // #include "SaveState.h"

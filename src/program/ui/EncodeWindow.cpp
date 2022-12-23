@@ -25,6 +25,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
 
+#include "../Context.h"
 #include "EncodeWindow.h"
 
 #include <iostream>

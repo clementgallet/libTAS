@@ -23,6 +23,7 @@
 
 #include "KeyPressedDialog.h"
 #include "qtutils.h"
+#include "../Context.h"
 
 KeyPressedDialog::KeyPressedDialog(Context* c, QWidget *parent) : QDialog(parent), context(c) {
 

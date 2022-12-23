@@ -28,8 +28,10 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "../Context.h"
 #include "../ramsearch/MemSection.h"
+
+/* Forward declaration */
+struct Context;
 
 class PointerScanModel : public QAbstractTableModel {
     Q_OBJECT

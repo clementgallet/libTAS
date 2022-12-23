@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Context.h"
 #include "GameEvents.h"
 #include "SaveState.h"
 #include "SaveStateList.h"

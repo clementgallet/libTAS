@@ -20,8 +20,10 @@
 #ifndef LIBTAS_ERRORCHECKING_H_INCLUDED
 #define LIBTAS_ERRORCHECKING_H_INCLUDED
 
-#include "../Context.h"
 #include <string>
+
+/* Forward declaration */
+struct Context;
 
 namespace ErrorChecking {
 

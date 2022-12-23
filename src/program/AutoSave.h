@@ -20,11 +20,12 @@
 #ifndef LIBTAS_AUTOSAVE_H_INCLUDED
 #define LIBTAS_AUTOSAVE_H_INCLUDED
 
-#include "movie/MovieFile.h"
-#include "Context.h"
-
 #include <string>
 #include <ctime>
+
+/* Forward declaration */
+class MovieFile;
+struct Context;
 
 namespace AutoSave {
     void update(Context* context, MovieFile& movie);

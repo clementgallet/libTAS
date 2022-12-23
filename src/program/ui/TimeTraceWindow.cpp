@@ -28,6 +28,7 @@
 
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
+#include "../Context.h"
 
 TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

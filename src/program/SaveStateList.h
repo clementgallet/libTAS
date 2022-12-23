@@ -20,10 +20,13 @@
 #ifndef LIBTAS_SAVESTATELIST_H_INCLUDED
 #define LIBTAS_SAVESTATELIST_H_INCLUDED
 
-#include "Context.h"
-#include "SaveState.h"
 #include <string>
 #include <stdint.h>
+
+/* Forward declaration */
+class MovieFile;
+class SaveState;
+struct Context;
 
 namespace SaveStateList {
     

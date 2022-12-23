@@ -27,7 +27,10 @@
 #include <set>
 
 #include "InputEditorModel.h"
+#include "../Context.h"
+#include "../movie/MovieFile.h"
 #include "../SaveStateList.h"
+#include "../SaveState.h"
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 

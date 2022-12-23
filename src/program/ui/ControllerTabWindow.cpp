@@ -23,6 +23,7 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 
+#include "../Context.h"
 #include "ControllerTabWindow.h"
 #include "ControllerAxisWidget.h"
 #include "ControllerWidget.h"

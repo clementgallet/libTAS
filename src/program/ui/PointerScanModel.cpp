@@ -22,6 +22,8 @@
 #include "../ramsearch/MemAccess.h"
 #include "../ramsearch/MemLayout.h"
 #include "../ramsearch/BaseAddresses.h"
+#include "../Context.h"
+
 #include <sstream>
 #include <fstream>
 #include <iostream>

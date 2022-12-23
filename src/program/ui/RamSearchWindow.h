@@ -34,9 +34,10 @@
 #include <QtCore/QTimer>
 #include <memory>
 
-#include "../Context.h"
 #include "../ramsearch/CompareOperations.h"
 
+/* Forward declaration */
+struct Context;
 class RamSearchModel;
 
 class RamSearchWindow : public QDialog {

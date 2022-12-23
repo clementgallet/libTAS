@@ -25,7 +25,8 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
 
-#include "../Context.h"
+/* Forward declaration */
+struct Context;
 
 class ExecutableWindow : public QDialog {
     Q_OBJECT

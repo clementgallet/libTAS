@@ -32,6 +32,7 @@
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
+#include "../Context.h"
 #include "../ramsearch/CompareOperations.h"
 #include "../ramsearch/IRamWatchDetailed.h"
 #include "../ramsearch/RamWatchDetailed.h"

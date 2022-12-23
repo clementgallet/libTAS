@@ -31,8 +31,8 @@
 #include <QtCore/QSortFilterProxyModel>
 #include <memory>
 
-#include "../Context.h"
-
+/* Forward declaration */
+struct Context;
 class PointerScanModel;
 
 class PointerScanWindow : public QDialog {

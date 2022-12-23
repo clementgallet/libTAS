@@ -22,6 +22,8 @@
 
 #include "AnnotationsWindow.h"
 #include "MainWindow.h"
+#include "../Context.h"
+#include "../movie/MovieFile.h"
 
 AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

@@ -24,6 +24,7 @@
 #include "InputEditorWindow.h"
 #include "InputEditorView.h"
 #include "MainWindow.h"
+#include "../Context.h"
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
