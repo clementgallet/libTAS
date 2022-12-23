@@ -183,6 +183,18 @@ void Config::save(const std::string& gamepath) {
     settings.endGroup();
 }
 
+void Config::saveDefaultFfmpeg(const std::string& gamepath) {
+    /* Save only if game file exists */
+    if (access(gamepath.c_str(), F_OK) != 0)
+        return;
+
+    /* Open the general preferences */
+    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    general_settings.setFallbacksEnabled(false);
+
+    general_settings.setValue("ffmpegoptions", ffmpegoptions.c_str());
+}
+
 void Config::load(const std::string& gamepath) {
 
     /* Open the general preferences */
@@ -204,6 +216,8 @@ void Config::load(const std::string& gamepath) {
 #elif defined(__APPLE__) && defined(__MACH__)
     debugger = DEBUGGER_LLDB;
 #endif
+
+    ffmpegoptions = general_settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
 
     if (gamepath.empty())
         return;

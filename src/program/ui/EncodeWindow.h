@@ -54,6 +54,7 @@ private slots:
     void slotBrowseEncodePath();
     void slotUpdate();
     void slotOk();
+    void slotDefault();
 };
 
 #endif

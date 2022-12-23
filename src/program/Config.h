@@ -139,6 +139,9 @@ public:
     /* Load a game-specific config from the config file */
     void load(const std::string& gamepath);
 
+    /* Save current ffmpeg options as default */
+    void saveDefaultFfmpeg(const std::string& gamepath);
+
     enum Debugger {
         DEBUGGER_GDB = 0,
         DEBUGGER_LLDB = 1,

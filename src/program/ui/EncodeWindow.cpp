@@ -100,7 +100,11 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
+    QPushButton* saveDefaultButton = new QPushButton(tr("Save as default"));
+    buttonBox->addButton(saveDefaultButton, QDialogButtonBox::ApplyRole);
+
     connect(buttonBox, &QDialogButtonBox::accepted, this, &EncodeWindow::slotOk);
+    connect(saveDefaultButton, &QAbstractButton::clicked, this, &EncodeWindow::slotDefault);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &EncodeWindow::reject);
 
     /* Create the main layout */
@@ -217,6 +221,12 @@ void EncodeWindow::slotOk()
 
     /* Close window */
     accept();
+}
+
+void EncodeWindow::slotDefault()
+{
+    context->config.ffmpegoptions = ffmpegOptions->text().toStdString();
+    context->config.saveDefaultFfmpeg(context->gamepath);
 }
 
 void EncodeWindow::slotBrowseEncodePath()

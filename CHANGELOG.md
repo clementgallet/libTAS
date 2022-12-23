@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Add a "Save as default" button for the Encode window (#507)
+
 ### Changed
 ### Fixed
 
@@ -19,6 +22,7 @@
 * Add an option to keep rendering during fastforward (491)
 * Alert when an input column cannot be removed
 * Add more SDL joystick function hooks for recent FNA builds
+* Add a setting to skip all sleep calls
 
 ### Changed
 ### Fixed
