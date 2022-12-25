@@ -31,23 +31,20 @@
 #include <QtCore/QTimer>
 
 #include "MainWindow.h"
+#include "settings/SettingsWindow.h"
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
 #include "ControllerTabWindow.h"
 #include "GameInfoWindow.h"
-#include "GameSpecificWindow.h"
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
 #include "InputEditorWindow.h"
 #include "InputEditorView.h"
 #include "InputEditorModel.h"
-#include "OsdWindow.h"
 #include "AnnotationsWindow.h"
-#include "AutoSaveWindow.h"
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
-#include "CustomResolutionDialog.h"
 #include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
@@ -159,20 +156,17 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate);
 
     /* Create other windows */
+    settingsWindow = new SettingsWindow(c, this);
     encodeWindow = new EncodeWindow(c, this);
     inputWindow = new InputWindow(c, this);
     executableWindow = new ExecutableWindow(c, this);
     controllerTabWindow = new ControllerTabWindow(c, this);
     gameInfoWindow = new GameInfoWindow(this);
-    gameSpecificWindow = new GameSpecificWindow(c, this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
     inputEditorWindow = new InputEditorWindow(c, this);
-    osdWindow = new OsdWindow(c, this);
     annotationsWindow = new AnnotationsWindow(c, this);
-    autoSaveWindow = new AutoSaveWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
-    customResolutionDialog = new CustomResolutionDialog(this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop->gameEvents, &GameEvents::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -560,239 +554,6 @@ QAction *MainWindow::addActionCheckable(QActionGroup*& group, const QString& tex
 
 void MainWindow::createActions()
 {
-    movieEndGroup = new QActionGroup(this);
-    connect(movieEndGroup, &QActionGroup::triggered, this, [=](){setListFromRadio(movieEndGroup, context->config.on_movie_end);});
-
-    addActionCheckable(movieEndGroup, tr("Keep Reading"), Config::MOVIEEND_READ);
-    addActionCheckable(movieEndGroup, tr("Switch to Writing"), Config::MOVIEEND_WRITE);
-
-    screenResGroup = new QActionGroup(this);
-    addActionCheckable(screenResGroup, tr("Native"), 0);
-    addActionCheckable(screenResGroup, tr("640x480 (4:3)"), (640 << 16) | 480);
-    addActionCheckable(screenResGroup, tr("800x600 (4:3)"), (800 << 16) | 600);
-    addActionCheckable(screenResGroup, tr("1024x768 (4:3)"), (1024 << 16) | 768);
-    addActionCheckable(screenResGroup, tr("1280x720 (16:9)"), (1280 << 16) | 720);
-    addActionCheckable(screenResGroup, tr("1280x800 (16:10)"), (1280 << 16) | 800);
-    addActionCheckable(screenResGroup, tr("1400x1050 (4:3)"), (1400 << 16) | 1050);
-    addActionCheckable(screenResGroup, tr("1440x900 (16:10)"), (1440 << 16) | 900);
-    addActionCheckable(screenResGroup, tr("1600x900 (16:9)"), (1600 << 16) | 900);
-    addActionCheckable(screenResGroup, tr("1680x1050 (16:10)"), (1680 << 16) | 1050);
-    addActionCheckable(screenResGroup, tr("1920x1080 (16:9)"), (1920 << 16) | 1080);
-    addActionCheckable(screenResGroup, tr("1920x1200 (16:10)"), (1920 << 16) | 1200);
-    addActionCheckable(screenResGroup, tr("2560x1440 (16:9)"), (2560 << 16) | 1440);
-    addActionCheckable(screenResGroup, tr("3840x2160 (16:9)"), (3840 << 16) | 2160);
-    addActionCheckable(screenResGroup, tr("Custom..."), -1);
-    connect(screenResGroup, &QActionGroup::triggered, this, &MainWindow::slotScreenRes);
-
-#ifdef LIBTAS_ENABLE_HUD
-    osdGroup = new QActionGroup(this);
-    osdGroup->setExclusive(false);
-    connect(osdGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(osdGroup, context->config.sc.osd));
-
-    addActionCheckable(osdGroup, tr("Frame Count"), SharedConfig::OSD_FRAMECOUNT);
-    addActionCheckable(osdGroup, tr("Inputs"), SharedConfig::OSD_INPUTS);
-    addActionCheckable(osdGroup, tr("Messages"), SharedConfig::OSD_MESSAGES);
-    addActionCheckable(osdGroup, tr("Ram Watches"), SharedConfig::OSD_RAMWATCHES);
-    addActionCheckable(osdGroup, tr("Lua"), SharedConfig::OSD_LUA);
-#endif
-
-    frequencyGroup = new QActionGroup(this);
-
-    addActionCheckable(frequencyGroup, tr("8000 Hz"), 8000);
-    addActionCheckable(frequencyGroup, tr("11025 Hz"), 11025);
-    addActionCheckable(frequencyGroup, tr("12000 Hz"), 12000);
-    addActionCheckable(frequencyGroup, tr("16000 Hz"), 16000);
-    addActionCheckable(frequencyGroup, tr("22050 Hz"), 22050);
-    addActionCheckable(frequencyGroup, tr("24000 Hz"), 24000);
-    addActionCheckable(frequencyGroup, tr("32000 Hz"), 32000);
-    addActionCheckable(frequencyGroup, tr("44100 Hz"), 44100);
-    addActionCheckable(frequencyGroup, tr("48000 Hz"), 48000);
-
-    bitDepthGroup = new QActionGroup(this);
-
-    addActionCheckable(bitDepthGroup, tr("8 bit"), 8);
-    addActionCheckable(bitDepthGroup, tr("16 bit"), 16);
-
-    channelGroup = new QActionGroup(this);
-
-    addActionCheckable(channelGroup, tr("Mono"), 1);
-    addActionCheckable(channelGroup, tr("Stereo"), 2);
-
-    localeGroup = new QActionGroup(this);
-
-    addActionCheckable(localeGroup, tr("English"), SharedConfig::LOCALE_ENGLISH);
-    addActionCheckable(localeGroup, tr("Japanese"), SharedConfig::LOCALE_JAPANESE);
-    addActionCheckable(localeGroup, tr("Korean"), SharedConfig::LOCALE_KOREAN);
-    addActionCheckable(localeGroup, tr("Chinese, Simplified"), SharedConfig::LOCALE_CHINESE_SIMPLIFIED);
-    addActionCheckable(localeGroup, tr("Chinese, Traditional"), SharedConfig::LOCALE_CHINESE_TRADITIONAL);
-    addActionCheckable(localeGroup, tr("Spanish"), SharedConfig::LOCALE_SPANISH);
-    addActionCheckable(localeGroup, tr("German"), SharedConfig::LOCALE_GERMAN);
-    addActionCheckable(localeGroup, tr("French"), SharedConfig::LOCALE_FRENCH);
-    addActionCheckable(localeGroup, tr("Italian"), SharedConfig::LOCALE_ITALIAN);
-    addActionCheckable(localeGroup, tr("Native"), SharedConfig::LOCALE_NATIVE);
-
-    timeMainGroup = new QActionGroup(this);
-    timeMainGroup->setExclusive(false);
-
-    addActionCheckable(timeMainGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
-    addActionCheckable(timeMainGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
-    addActionCheckable(timeMainGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
-    addActionCheckable(timeMainGroup, tr("clock_gettime() realtime"), SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
-    addActionCheckable(timeMainGroup, tr("clock_gettime() monotonic"), SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
-    addActionCheckable(timeMainGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
-    addActionCheckable(timeMainGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
-    addActionCheckable(timeMainGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
-    addActionCheckable(timeMainGroup, tr("GetTickCount64()"), SharedConfig::TIMETYPE_GETTICKCOUNT64);
-    addActionCheckable(timeMainGroup, tr("QueryPerformanceCounter()"), SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
-
-    timeSecGroup = new QActionGroup(this);
-    timeSecGroup->setExclusive(false);
-
-    addActionCheckable(timeSecGroup, tr("time()"), SharedConfig::TIMETYPE_TIME);
-    addActionCheckable(timeSecGroup, tr("gettimeofday()"), SharedConfig::TIMETYPE_GETTIMEOFDAY);
-    addActionCheckable(timeSecGroup, tr("clock()"), SharedConfig::TIMETYPE_CLOCK);
-    addActionCheckable(timeSecGroup, tr("clock_gettime() realtime"), SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
-    addActionCheckable(timeSecGroup, tr("clock_gettime() monotonic"), SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
-    addActionCheckable(timeSecGroup, tr("SDL_GetTicks()"), SharedConfig::TIMETYPE_SDLGETTICKS);
-    addActionCheckable(timeSecGroup, tr("SDL_GetPerformanceCounter()"), SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
-    addActionCheckable(timeSecGroup, tr("GetTickCount()"), SharedConfig::TIMETYPE_GETTICKCOUNT);
-    addActionCheckable(timeSecGroup, tr("GetTickCount64()"), SharedConfig::TIMETYPE_GETTICKCOUNT64);
-    addActionCheckable(timeSecGroup, tr("QueryPerformanceCounter()"), SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
-
-    waitGroup = new QActionGroup(this);
-    addActionCheckable(waitGroup, tr("Native waits"), SharedConfig::WAIT_NATIVE, "Don't modify wait calls");
-    addActionCheckable(waitGroup, tr("Infinite waits"), SharedConfig::WAIT_INFINITE, "Waits have infinite timeout. Sync-proof, but may softlock");
-    addActionCheckable(waitGroup, tr("Full infinite waits"), SharedConfig::WAIT_FULL_INFINITE, "Advance time for the full timeout and wait infinitely. Sync-proof, but may still softlock and may advance time too much resulting in incorrect frame boundaries");
-    addActionCheckable(waitGroup, tr("Finite waits"), SharedConfig::WAIT_FINITE, "Try to wait, and advance time if we get a timeout. Prevent softlocks but not perfectly sync-proof");
-    addActionCheckable(waitGroup, tr("Full waits"), SharedConfig::WAIT_FULL, "Advance time and try to wait.");
-    addActionCheckable(waitGroup, tr("No waits"), SharedConfig::NO_WAIT, "Wait with zero timeout.");
-
-    sleepGroup = new QActionGroup(this);
-    addActionCheckable(sleepGroup, tr("Never advance time"), SharedConfig::SLEEP_NEVER, "Never advance time when a sleep function is called. It can prevent desyncs, but can cause softlocks in some games");
-    addActionCheckable(sleepGroup, tr("Advance time on main thread"), SharedConfig::SLEEP_MAIN, "Only advance time when a sleep function is called on main thread. This is the default behaviour");
-    addActionCheckable(sleepGroup, tr("Always advance time"), SharedConfig::SLEEP_ALWAYS, "Always advance time when a sleep function is called. This will likely cause desyncs, but can prevent softlocks in some games");
-
-    asyncGroup = new QActionGroup(this);
-    asyncGroup->setExclusive(false);
-    addActionCheckable(asyncGroup, tr("jsdev"), SharedConfig::ASYNC_JSDEV);
-    addActionCheckable(asyncGroup, tr("evdev"), SharedConfig::ASYNC_EVDEV);
-    addActionCheckable(asyncGroup, tr("XEvents at frame beginning"), SharedConfig::ASYNC_XEVENTS_BEG);
-    addActionCheckable(asyncGroup, tr("XEvents at frame end"), SharedConfig::ASYNC_XEVENTS_END);
-    addActionCheckable(asyncGroup, tr("SDL events at frame beginning"), SharedConfig::ASYNC_SDLEVENTS_BEG);
-    addActionCheckable(asyncGroup, tr("SDL events at frame end"), SharedConfig::ASYNC_SDLEVENTS_END);
-
-    savestateGroup = new QActionGroup(this);
-    savestateGroup->setExclusive(false);
-    connect(savestateGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(savestateGroup, context->config.sc.savestate_settings));
-
-    QAction *action = addActionCheckable(savestateGroup, tr("Incremental savestates"), SharedConfig::SS_INCREMENTAL, tr("Optimize savestate size by only storing the memory pages that have been modified, at the cost of slightly more processing"));
-    if (!context->is_soft_dirty) {
-        action->setEnabled(false);
-        context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
-    }
-
-    action = addActionCheckable(savestateGroup, tr("Store savestates in RAM"), SharedConfig::SS_RAM, tr("Storing savestates in RAM can provide a speed-up, but beware of your available memory"));
-    disabledActionsOnStart.append(action);
-    addActionCheckable(savestateGroup, tr("Backtrack savestate"), SharedConfig::SS_BACKTRACK, tr("Save a state whenether a thread is created/destroyed, so that you can rewind to the earliest time possible"));
-    addActionCheckable(savestateGroup, tr("Compressed savestates"), SharedConfig::SS_COMPRESSED);
-    addActionCheckable(savestateGroup, tr("Skip unmapped pages"), SharedConfig::SS_PRESENT, tr("Shorter savestates, but causes crashes in some games"));
-    addActionCheckable(savestateGroup, tr("Fork to save states"), SharedConfig::SS_FORK, tr("Game can resume immediately without waiting for the state to be saved"));
-
-    debugStateGroup = new QActionGroup(this);
-    debugStateGroup->setExclusive(false);
-    connect(debugStateGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(debugStateGroup, context->config.sc.debug_state));
-
-    addActionCheckable(debugStateGroup, tr("Uncontrolled time"), SharedConfig::DEBUG_UNCONTROLLED_TIME, "Let the game access to the real system time, only for debugging purpose");
-    addActionCheckable(debugStateGroup, tr("Native events"), SharedConfig::DEBUG_NATIVE_EVENTS, "Let the game access to the real system events, only for debugging purpose");
-    addActionCheckable(debugStateGroup, tr("Keep main first thread"), SharedConfig::DEBUG_MAIN_FIRST_THREAD, "Keep main thread as first thread, when rendering is done in another thread. Breaks determinism");
-    addActionCheckable(debugStateGroup, tr("Native file IO"), SharedConfig::DEBUG_NATIVE_FILEIO, "Let the game access to the real filesystem, only for debugging purpose");
-
-    loggingOutputGroup = new QActionGroup(this);
-
-    addActionCheckable(loggingOutputGroup, tr("Disabled logging"), SharedConfig::NO_LOGGING);
-    addActionCheckable(loggingOutputGroup, tr("Log to console"), SharedConfig::LOGGING_TO_CONSOLE);
-    addActionCheckable(loggingOutputGroup, tr("Log to file"), SharedConfig::LOGGING_TO_FILE);
-
-    loggingPrintGroup = new QActionGroup(this);
-    loggingPrintGroup->setExclusive(false);
-    connect(loggingPrintGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(loggingPrintGroup, context->config.sc.includeFlags));
-
-    addActionCheckable(loggingPrintGroup, tr("Main Thread"), LCF_MAINTHREAD);
-    addActionCheckable(loggingPrintGroup, tr("Frequent"), LCF_FREQUENT);
-    addActionCheckable(loggingPrintGroup, tr("Error"), LCF_ERROR);
-    addActionCheckable(loggingPrintGroup, tr("Warning"), LCF_WARNING);
-    addActionCheckable(loggingPrintGroup, tr("Info"), LCF_INFO);
-    addActionCheckable(loggingPrintGroup, tr("TODO"), LCF_TODO);
-
-    QAction *loggingPrintGroupSeparator = new QAction(loggingPrintGroup);
-    loggingPrintGroupSeparator->setSeparator(true);
-
-    addActionCheckable(loggingPrintGroup, tr("AV Dumping"), LCF_DUMP);
-    addActionCheckable(loggingPrintGroup, tr("Checkpoint"), LCF_CHECKPOINT);
-    addActionCheckable(loggingPrintGroup, tr("Events"), LCF_EVENTS);
-    addActionCheckable(loggingPrintGroup, tr("File IO"), LCF_FILEIO);
-    addActionCheckable(loggingPrintGroup, tr("Hook"), LCF_HOOK);
-    addActionCheckable(loggingPrintGroup, tr("Joystick"), LCF_JOYSTICK);
-    addActionCheckable(loggingPrintGroup, tr("Keyboard"), LCF_KEYBOARD);
-    addActionCheckable(loggingPrintGroup, tr("Locale"), LCF_LOCALE);
-    addActionCheckable(loggingPrintGroup, tr("Mouse"), LCF_MOUSE);
-    addActionCheckable(loggingPrintGroup, tr("OpenGL/Vulkan"), LCF_OGL);
-    addActionCheckable(loggingPrintGroup, tr("Random"), LCF_RANDOM);
-    addActionCheckable(loggingPrintGroup, tr("SDL"), LCF_SDL);
-    addActionCheckable(loggingPrintGroup, tr("Signals"), LCF_SIGNAL);
-    addActionCheckable(loggingPrintGroup, tr("Sleep"), LCF_SLEEP);
-    addActionCheckable(loggingPrintGroup, tr("Socket"), LCF_SOCKET);
-    addActionCheckable(loggingPrintGroup, tr("Sound"), LCF_SOUND);
-    addActionCheckable(loggingPrintGroup, tr("Steam"), LCF_STEAM);
-    addActionCheckable(loggingPrintGroup, tr("System"), LCF_SYSTEM);
-    addActionCheckable(loggingPrintGroup, tr("Time Get"), LCF_TIMEGET);
-    addActionCheckable(loggingPrintGroup, tr("Time Set"), LCF_TIMESET);
-    addActionCheckable(loggingPrintGroup, tr("Timers"), LCF_TIMERS);
-    addActionCheckable(loggingPrintGroup, tr("Threads"), LCF_THREAD);
-    addActionCheckable(loggingPrintGroup, tr("Wait"), LCF_WAIT);
-    addActionCheckable(loggingPrintGroup, tr("Windows"), LCF_WINDOW);
-    addActionCheckable(loggingPrintGroup, tr("Wine"), LCF_WINE);
-
-    loggingExcludeGroup = new QActionGroup(this);
-    loggingExcludeGroup->setExclusive(false);
-    connect(loggingExcludeGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(loggingExcludeGroup, context->config.sc.excludeFlags));
-
-    // addActionCheckable(loggingExcludeGroup, tr("Main Thread"), LCF_MAINTHREAD);
-    addActionCheckable(loggingExcludeGroup, tr("Frequent"), LCF_FREQUENT);
-    addActionCheckable(loggingExcludeGroup, tr("Error"), LCF_ERROR);
-    addActionCheckable(loggingExcludeGroup, tr("Warning"), LCF_WARNING);
-    addActionCheckable(loggingExcludeGroup, tr("Info"), LCF_INFO);
-    addActionCheckable(loggingExcludeGroup, tr("TODO"), LCF_TODO);
-
-    QAction *loggingExcludeGroupSeparator = new QAction(loggingExcludeGroup);
-    loggingExcludeGroupSeparator->setSeparator(true);
-
-    addActionCheckable(loggingExcludeGroup, tr("AV Dumping"), LCF_DUMP);
-    addActionCheckable(loggingExcludeGroup, tr("Checkpoint"), LCF_CHECKPOINT);
-    addActionCheckable(loggingExcludeGroup, tr("Events"), LCF_EVENTS);
-    addActionCheckable(loggingExcludeGroup, tr("File IO"), LCF_FILEIO);
-    addActionCheckable(loggingExcludeGroup, tr("Hook"), LCF_HOOK);
-    addActionCheckable(loggingExcludeGroup, tr("Joystick"), LCF_JOYSTICK);
-    addActionCheckable(loggingExcludeGroup, tr("Keyboard"), LCF_KEYBOARD);
-    addActionCheckable(loggingExcludeGroup, tr("Locale"), LCF_LOCALE);
-    addActionCheckable(loggingExcludeGroup, tr("Mouse"), LCF_MOUSE);
-    addActionCheckable(loggingExcludeGroup, tr("OpenGL/Vulkan"), LCF_OGL);
-    addActionCheckable(loggingExcludeGroup, tr("Random"), LCF_RANDOM);
-    addActionCheckable(loggingExcludeGroup, tr("SDL"), LCF_SDL);
-    addActionCheckable(loggingExcludeGroup, tr("Signals"), LCF_SIGNAL);
-    addActionCheckable(loggingExcludeGroup, tr("Sleep"), LCF_SLEEP);
-    addActionCheckable(loggingExcludeGroup, tr("Socket"), LCF_SOCKET);
-    addActionCheckable(loggingExcludeGroup, tr("Sound"), LCF_SOUND);
-    addActionCheckable(loggingExcludeGroup, tr("Steam"), LCF_STEAM);
-    addActionCheckable(loggingExcludeGroup, tr("System"), LCF_SYSTEM);
-    addActionCheckable(loggingExcludeGroup, tr("Time Get"), LCF_TIMEGET);
-    addActionCheckable(loggingExcludeGroup, tr("Time Set"), LCF_TIMESET);
-    addActionCheckable(loggingExcludeGroup, tr("Timers"), LCF_TIMERS);
-    addActionCheckable(loggingExcludeGroup, tr("Threads"), LCF_THREAD);
-    addActionCheckable(loggingExcludeGroup, tr("Wait"), LCF_WAIT);
-    addActionCheckable(loggingExcludeGroup, tr("Windows"), LCF_WINDOW);
-    addActionCheckable(loggingExcludeGroup, tr("Wine"), LCF_WINE);
-
     slowdownGroup = new QActionGroup(this);
     connect(slowdownGroup, &QActionGroup::triggered, this, LAMBDARADIOSLOT(slowdownGroup, context->config.sc.speed_divisor));
 
@@ -814,13 +575,6 @@ void MainWindow::createActions()
     addActionCheckable(fastforwardRenderGroup, tr("Skipping no rendering"), SharedConfig::FF_RENDER_ALL);
     addActionCheckable(fastforwardRenderGroup, tr("Skipping most rendering"), SharedConfig::FF_RENDER_SOME);
     addActionCheckable(fastforwardRenderGroup, tr("Skipping all rendering"), SharedConfig::FF_RENDER_NO);
-
-    joystickGroup = new QActionGroup(this);
-    addActionCheckable(joystickGroup, tr("None"), 0);
-    addActionCheckable(joystickGroup, tr("1"), 1);
-    addActionCheckable(joystickGroup, tr("2"), 2);
-    addActionCheckable(joystickGroup, tr("3"), 3);
-    addActionCheckable(joystickGroup, tr("4"), 4);
 }
 
 void MainWindow::createMenus()
@@ -834,6 +588,7 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(action);
     action = fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
     disabledActionsOnStart.append(action);
+    fileMenu->addAction(tr("Settings..."), settingsWindow, &SettingsWindow::exec);
 
     /* Movie Menu */
     QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));
@@ -848,15 +603,15 @@ void MainWindow::createMenus()
     action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
     action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
+    variableFramerateAction = movieMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
+    variableFramerateAction->setCheckable(true);
+    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
+    disabledActionsOnStart.append(variableFramerateAction);
 
     movieMenu->addSeparator();
 
     annotateMovieAction = movieMenu->addAction(tr("Annotations..."), annotationsWindow, &AnnotationsWindow::show);
     annotateMovieAction->setEnabled(false);
-
-    movieMenu->addSeparator();
-
-    movieMenu->addAction(tr("Autosave..."), autoSaveWindow, &AutoSaveWindow::show);
 
     movieMenu->addSeparator();
 
@@ -866,149 +621,7 @@ void MainWindow::createMenus()
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
-    QMenu *movieEndMenu = movieMenu->addMenu(tr("On Movie End"));
-    movieEndMenu->addActions(movieEndGroup->actions());
     movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
-
-
-    /* Video Menu */
-    QMenu *videoMenu = menuBar()->addMenu(tr("Video"));
-    videoMenu->setToolTipsVisible(true);
-
-    QMenu *screenResMenu = videoMenu->addMenu(tr("Virtual screen resolution"));
-    screenResMenu->addActions(screenResGroup->actions());
-    disabledWidgetsOnStart.append(screenResMenu);
-
-    renderSoftAction = videoMenu->addAction(tr("Force software rendering"), this, &MainWindow::slotRenderSoft);
-    renderSoftAction->setCheckable(true);
-    renderSoftAction->setToolTip("Enforce the use of Mesa's OpenGL software driver, which is necessary for savestates to work correctly");
-    disabledActionsOnStart.append(renderSoftAction);
-
-    renderPerfAction = videoMenu->addAction(tr("Toggle performance tweaks"), this, LAMBDABOOLSLOT(context->config.sc.opengl_performance));
-    renderPerfAction->setCheckable(true);
-    renderPerfAction->setToolTip("Change some OpenGL settings to get some performance boost. Should be set on startup to be effective");
-
-#ifdef LIBTAS_ENABLE_HUD
-    QMenu *osdMenu = videoMenu->addMenu(tr("OSD"));
-    osdMenu->addActions(osdGroup->actions());
-    osdMenu->addAction(tr("OSD Options..."), osdWindow, &OsdWindow::exec);
-    osdMenu->addSeparator();
-    osdEncodeAction = osdMenu->addAction(tr("OSD on video encode"), this, LAMBDABOOLSLOT(context->config.sc.osd_encode));
-    osdEncodeAction->setCheckable(true);
-    osdMenu->installEventFilter(this);
-#else
-    QMenu *osdMenu = videoMenu->addMenu(tr("OSD (disabled)"));
-    osdMenu->setEnabled(false);
-#endif
-
-    variableFramerateAction = videoMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
-    variableFramerateAction->setCheckable(true);
-    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
-    disabledActionsOnStart.append(variableFramerateAction);
-
-    /* Sound Menu */
-    QMenu *soundMenu = menuBar()->addMenu(tr("Sound"));
-
-    QMenu *formatMenu = soundMenu->addMenu(tr("Format"));
-    formatMenu->addActions(frequencyGroup->actions());
-    formatMenu->addSeparator();
-    formatMenu->addActions(bitDepthGroup->actions());
-    formatMenu->addSeparator();
-    formatMenu->addActions(channelGroup->actions());
-    disabledWidgetsOnStart.append(formatMenu);
-
-    muteAction = soundMenu->addAction(tr("Mute"), this, &MainWindow::slotMuteSound);
-    muteAction->setCheckable(true);
-    disableAction = soundMenu->addAction(tr("Disable"), this, LAMBDABOOLSLOT(context->config.sc.audio_disabled));
-    disableAction->setCheckable(true);
-
-    /* Runtime Menu */
-    QMenu *runtimeMenu = menuBar()->addMenu(tr("Runtime"));
-    runtimeMenu->setToolTipsVisible(true);
-
-    QMenu *localeMenu = runtimeMenu->addMenu(tr("Force locale"));
-    localeMenu->addActions(localeGroup->actions());
-
-    QMenu *timeMenu = runtimeMenu->addMenu(tr("Time tracking"));
-    disabledWidgetsOnStart.append(timeMenu);
-    timeMenu->addActions(timeMainGroup->actions());
-    timeMenu->setToolTip("Enable a hack to prevent softlocks when the game waits for time to advance. Only check the necessary one(s)");
-    timeMenu->installEventFilter(this);
-
-    busyloopAction = runtimeMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
-    busyloopAction->setCheckable(true);
-    disabledActionsOnStart.append(busyloopAction);
-
-    QMenu *waitMenu = runtimeMenu->addMenu(tr("Wait timeout"));
-    disabledWidgetsOnStart.append(waitMenu);
-    waitMenu->addActions(waitGroup->actions());
-
-    QMenu *sleepMenu = runtimeMenu->addMenu(tr("Sleep handling"));
-    disabledWidgetsOnStart.append(sleepMenu);
-    sleepMenu->addActions(sleepGroup->actions());
-
-    QMenu *savestateMenu = runtimeMenu->addMenu(tr("Savestates"));
-    // savestateMenu->setToolTipsVisible(true);
-    savestateMenu->addActions(savestateGroup->actions());
-
-    preventSavefileAction = runtimeMenu->addAction(tr("Prevent writing to disk"), this, LAMBDABOOLSLOT(context->config.sc.prevent_savefiles));
-    preventSavefileAction->setCheckable(true);
-    preventSavefileAction->setToolTip("Prevent the game from writing files on disk, but write in memory instead. May cause issues in some games");
-
-#if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
-#if __GLIBC_PREREQ(2, 35)
-    /* Symbol `__libc_thread_freeres` is no longer available, so recycle threads
-     * may be broken. */
-    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads (unstable)"), this, LAMBDABOOLSLOT(context->config.sc.recycle_threads));
-#else
-    recycleThreadsAction = runtimeMenu->addAction(tr("Recycle threads"), this, LAMBDABOOLSLOT(context->config.sc.recycle_threads));
-#endif
-#endif
-    recycleThreadsAction->setToolTip("Recycle threads when they finish, to make savestates more useable. Can crash on some games");
-    recycleThreadsAction->setCheckable(true);
-
-    disabledActionsOnStart.append(recycleThreadsAction);
-    steamAction = runtimeMenu->addAction(tr("Virtual Steam client"), this, LAMBDABOOLSLOT(context->config.sc.virtual_steam));
-    steamAction->setToolTip("Implement a dummy Steam client, to be able to launch some Steam games");
-    steamAction->setCheckable(true);
-    disabledActionsOnStart.append(steamAction);
-
-    QMenu *asyncMenu = runtimeMenu->addMenu(tr("Asynchronous events"));
-    asyncMenu->setToolTip("Only useful if the game pulls events asynchronously. We wait until all events are processed at the beginning of each frame");
-    disabledWidgetsOnStart.append(asyncMenu);
-    asyncMenu->addActions(asyncGroup->actions());
-
-    runtimeMenu->addAction(tr("Game-specific settings..."), gameSpecificWindow, &GameSpecificWindow::exec);
-
-    QMenu *debugMenu = runtimeMenu->addMenu(tr("Debug"));
-
-    debugMenu->addActions(debugStateGroup->actions());
-
-    QMenu *timeSecMenu = debugMenu->addMenu(tr("Time tracking all threads"));
-    timeSecMenu->addActions(timeSecGroup->actions());
-    timeSecMenu->installEventFilter(this);
-
-    debugMenu->addSeparator();
-
-    sigintAction = debugMenu->addAction(tr("Raise SIGINT upon game launch (if debugging)"));
-    sigintAction->setCheckable(true);
-
-    debugMenu->addSeparator();
-
-    debugMenu->addActions(loggingOutputGroup->actions());
-    disabledActionsOnStart.append(loggingOutputGroup->actions());
-
-    debugMenu->addSeparator();
-
-    QMenu *debugPrintMenu = debugMenu->addMenu(tr("Print Categories"));
-    debugPrintMenu->addActions(loggingPrintGroup->actions());
-    debugPrintMenu->installEventFilter(this);
-
-    QMenu *debugExcludeMenu = debugMenu->addMenu(tr("Exclude Categories"));
-    debugExcludeMenu->addActions(loggingExcludeGroup->actions());
-    debugExcludeMenu->installEventFilter(this);
-
-    debugMenu->addAction(tr("Time Trace..."), timeTraceWindow, &TimeTraceWindow::show);
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
@@ -1043,25 +656,23 @@ void MainWindow::createMenus()
     luaMenu->addAction(tr("Execute Lua script..."), this, &MainWindow::slotLuaExecute);
     luaMenu->addAction(tr("Reset Lua VM"), this, [=](){Lua::Main::reset(context);});
 
+    toolsMenu->addSeparator();
+
+    busyloopAction = toolsMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
+    busyloopAction->setCheckable(true);
+    disabledActionsOnStart.append(busyloopAction);
+
+    toolsMenu->addAction(tr("Time Trace..."), timeTraceWindow, &TimeTraceWindow::show);
+
+
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
     inputMenu->setToolTipsVisible(true);
 
     inputMenu->addAction(tr("Configure mapping..."), inputWindow, &InputWindow::exec);
 
-    mouseAction = inputMenu->addAction(tr("Mouse support"));
-    mouseAction->setCheckable(true);
-    disabledActionsOnStart.append(mouseAction);
     mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, LAMBDABOOLSLOT(context->config.sc.mouse_mode_relative));
     mouseModeAction->setCheckable(true);
-    mouseWarpAction = inputMenu->addAction(tr("Warp mouse to center each frame"), this, LAMBDABOOLSLOT(context->config.mouse_warp));
-    mouseWarpAction->setCheckable(true);
-    mouseGameWarpAction = inputMenu->addAction(tr("Prevent games from warping the mouse cursor"), this, LAMBDABOOLSLOT(context->config.sc.mouse_prevent_warp));
-    mouseGameWarpAction->setCheckable(true);
-
-    QMenu *joystickMenu = inputMenu->addMenu(tr("Joystick support"));
-    joystickMenu->addActions(joystickGroup->actions());
-    disabledWidgetsOnStart.append(joystickMenu);
 
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
 }
@@ -1338,8 +949,6 @@ void MainWindow::updateMovieParams()
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
     authorField->setText(context->authors.c_str());
-    mouseAction->setChecked(context->config.sc.mouse_support);
-    setRadioFromList(joystickGroup, context->config.sc.nb_controllers);
     fpsNumField->setValue(context->config.sc.framerate_num);
     fpsDenField->setValue(context->config.sc.framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
@@ -1348,12 +957,6 @@ void MainWindow::updateMovieParams()
     realTimeNsec->setValue(context->config.sc.initial_time_nsec);
     autoRestartAction->setChecked(context->config.auto_restart);
     variableFramerateAction->setChecked(context->config.sc.variable_framerate);
-    for (auto& action : timeMainGroup->actions()) {
-        action->setChecked(context->config.sc.main_gettimes_threshold[action->data().toInt()] != -1);
-    }
-    for (auto& action : timeSecGroup->actions()) {
-        action->setChecked(context->config.sc.sec_gettimes_threshold[action->data().toInt()] != -1);
-    }
 }
 
 void MainWindow::updateUIFromConfig()
@@ -1378,53 +981,14 @@ void MainWindow::updateUIFromConfig()
     pauseCheck->setChecked(!context->config.sc.running);
     fastForwardCheck->setChecked(context->config.sc.fastforward);
 
-    setRadioFromList(frequencyGroup, context->config.sc.audio_frequency);
-    setRadioFromList(bitDepthGroup, context->config.sc.audio_bitdepth);
-    setRadioFromList(channelGroup, context->config.sc.audio_channels);
-
-    muteAction->setChecked(context->config.sc.audio_mute);
-    disableAction->setChecked(context->config.sc.audio_disabled);
-
-    setCheckboxesFromMask(debugStateGroup, context->config.sc.debug_state);
-    setRadioFromList(loggingOutputGroup, context->config.sc.logging_status);
-
-    setCheckboxesFromMask(loggingPrintGroup, context->config.sc.includeFlags);
-    setCheckboxesFromMask(loggingExcludeGroup, context->config.sc.excludeFlags);
-
     setRadioFromList(slowdownGroup, context->config.sc.speed_divisor);
 
     mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
-    mouseWarpAction->setChecked(context->config.mouse_warp);
-    mouseGameWarpAction->setChecked(context->config.sc.mouse_prevent_warp);
-
-    int screenResValue = (context->config.sc.screen_width << 16) | context->config.sc.screen_height;
-    setRadioFromList(screenResGroup, screenResValue);
-
-#ifdef LIBTAS_ENABLE_HUD
-    setCheckboxesFromMask(osdGroup, context->config.sc.osd);
-    osdEncodeAction->setChecked(context->config.sc.osd_encode);
-#endif
-
-    setRadioFromList(localeGroup, context->config.sc.locale);
 
     busyloopAction->setChecked(context->config.sc.busyloop_detection);
 
-    setRadioFromList(waitGroup, context->config.sc.wait_timeout);
-    setRadioFromList(sleepGroup, context->config.sc.sleep_handling);
-
-    renderSoftAction->setChecked(context->config.sc.opengl_soft);
-    renderPerfAction->setChecked(context->config.sc.opengl_performance);
-    preventSavefileAction->setChecked(context->config.sc.prevent_savefiles);
-    recycleThreadsAction->setChecked(context->config.sc.recycle_threads);
-    steamAction->setChecked(context->config.sc.virtual_steam);
-    setCheckboxesFromMask(asyncGroup, context->config.sc.async_events);
-
-    setCheckboxesFromMask(savestateGroup, context->config.sc.savestate_settings);
-
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
     setRadioFromList(fastforwardRenderGroup, context->config.sc.fastforward_render);
-
-    setRadioFromList(movieEndGroup, context->config.on_movie_end);
 
     switch (context->config.debugger) {
     case Config::DEBUGGER_GDB:
@@ -1497,42 +1061,7 @@ void MainWindow::slotLaunch(bool attach_gdb)
     context->config.sc.initial_time_sec = realTimeSec->value();
     context->config.sc.initial_time_nsec = realTimeNsec->value();
 
-    setListFromRadio(frequencyGroup, context->config.sc.audio_frequency);
-    setListFromRadio(bitDepthGroup, context->config.sc.audio_bitdepth);
-    setListFromRadio(channelGroup, context->config.sc.audio_channels);
-
-    setListFromRadio(loggingOutputGroup, context->config.sc.logging_status);
-
-    context->config.sc.sigint_upon_launch = context->attach_gdb && sigintAction->isChecked();
-
-    context->config.sc.mouse_support = mouseAction->isChecked();
-    setListFromRadio(joystickGroup, context->config.sc.nb_controllers);
-
-    setListFromRadio(localeGroup, context->config.sc.locale);
-
-    for (const auto& action : timeMainGroup->actions()) {
-        int index = action->data().toInt();
-        if (action->isChecked()) {
-            context->config.sc.main_gettimes_threshold[index] = 100;
-        }
-        else {
-            context->config.sc.main_gettimes_threshold[index] = -1;
-        }
-    }
-    for (const auto& action : timeSecGroup->actions()) {
-        int index = action->data().toInt();
-        if (action->isChecked()) {
-            context->config.sc.sec_gettimes_threshold[index] = 100;
-        }
-        else {
-            context->config.sc.sec_gettimes_threshold[index] = -1;
-        }
-    }
-
-    setListFromRadio(waitGroup, context->config.sc.wait_timeout);
-    setListFromRadio(sleepGroup, context->config.sc.sleep_handling);
-    setMaskFromCheckboxes(asyncGroup, context->config.sc.async_events);
-    setMaskFromCheckboxes(savestateGroup, context->config.sc.savestate_settings);
+    context->config.sc.sigint_upon_launch &= context->attach_gdb;
 
     context->config.gameargs = cmdOptions->currentText().toStdString();
 
@@ -1629,10 +1158,7 @@ void MainWindow::slotGamePathChanged()
     updateUIFromConfig();
     encodeWindow->update_config();
     executableWindow->update_config();
-    gameSpecificWindow->update_config();
     inputWindow->update();
-    osdWindow->update_config();
-    autoSaveWindow->update_config();
     inputEditorWindow->update_config();
 }
 
@@ -1777,38 +1303,6 @@ void MainWindow::slotToggleEncode()
         /* TODO: Using directly the hotkey does not check for existing file */
         context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_ENCODE);
     }
-}
-
-void MainWindow::slotMuteSound(bool checked)
-{
-    context->config.sc.audio_mute = checked;
-    context->config.sc_modified = true;
-    updateStatusBar();
-}
-
-void MainWindow::slotRenderSoft(bool checked)
-{
-    context->config.sc.opengl_soft = checked;
-    updateStatusBar();
-}
-
-void MainWindow::slotScreenRes()
-{
-    int value = 0;
-    setListFromRadio(screenResGroup, value);
-
-    if (value == -1) {
-        customResolutionDialog->update(context->config.sc.screen_width, context->config.sc.screen_height);
-        value = customResolutionDialog->exec();
-        if (value == QDialog::Rejected) {
-            /* Recover the previous value */
-            setRadioFromList(screenResGroup, ((context->config.sc.screen_width << 16) | context->config.sc.screen_height));
-            return;
-        }
-    }
-
-    context->config.sc.screen_width = (value >> 16);
-    context->config.sc.screen_height = (value & 0xffff);
 }
 
 void MainWindow::slotVariableFramerate(bool checked)

@@ -5,22 +5,18 @@ libTAS_QTSOURCES = \
     GameLoop.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
-    ui/AutoSaveWindow.h \
     ui/ControllerAxisWidget.h \
     ui/ControllerTabWindow.h \
     ui/ControllerWidget.h \
-    ui/CustomResolutionDialog.h \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
-    ui/GameSpecificWindow.h \
     ui/InputEditorModel.h \
     ui/InputEditorView.h \
     ui/InputEditorWindow.h \
     ui/InputWindow.h \
     ui/KeyPressedDialog.h \
     ui/MainWindow.h \
-    ui/OsdWindow.h \
     ui/PointerScanModel.h \
     ui/PointerScanWindow.h \
     ui/RamSearchModel.h \
@@ -29,7 +25,16 @@ libTAS_QTSOURCES = \
     ui/RamWatchModel.h \
     ui/RamWatchWindow.h \
     ui/TimeTraceModel.h \
-    ui/TimeTraceWindow.h
+    ui/TimeTraceWindow.h \
+    ui/settings/RuntimePane.h \
+    ui/settings/AudioPane.h \
+    ui/settings/InputPane.h \
+    ui/settings/MoviePane.h \
+    ui/settings/VideoPane.h \
+    ui/settings/DebugPane.h \
+    ui/settings/GameSpecificPane.h \
+    ui/settings/SettingsWindow.h \
+    ui/settings/tooltip/BalloonTip.h
 
 libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 
@@ -57,23 +62,19 @@ libTAS_SOURCES = \
     movie/MovieFileHeader.cpp \
     movie/MovieFileInputs.cpp \
     ui/AnnotationsWindow.cpp \
-    ui/AutoSaveWindow.cpp \
     ui/ControllerAxisWidget.cpp \
     ui/ControllerTabWindow.cpp \
     ui/ControllerWidget.cpp \
-    ui/CustomResolutionDialog.cpp \
     ui/EncodeWindow.cpp \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \
     ui/GameInfoWindow.cpp \
-    ui/GameSpecificWindow.cpp \
     ui/InputEditorModel.cpp \
     ui/InputEditorView.cpp \
     ui/InputEditorWindow.cpp \
     ui/InputWindow.cpp \
     ui/KeyPressedDialog.cpp \
     ui/MainWindow.cpp \
-    ui/OsdWindow.cpp \
     ui/PointerScanModel.cpp \
     ui/PointerScanWindow.cpp \
     ui/RamSearchModel.cpp \
@@ -84,6 +85,22 @@ libTAS_SOURCES = \
     ui/TimeTraceModel.cpp \
     ui/TimeTraceWindow.cpp \
     ui/qtutils.cpp \
+    ui/settings/RuntimePane.cpp \
+    ui/settings/AudioPane.cpp \
+    ui/settings/InputPane.cpp \
+    ui/settings/MoviePane.cpp \
+    ui/settings/VideoPane.cpp \
+    ui/settings/DebugPane.cpp \
+    ui/settings/GameSpecificPane.cpp \
+    ui/settings/SettingsWindow.cpp \
+    ui/settings/WrapInScrollArea.cpp \
+    ui/settings/tooltip/BalloonTip.cpp \
+    ui/settings/tooltip/ToolTipCheckBox.cpp \
+    ui/settings/tooltip/ToolTipComboBox.cpp \
+    ui/settings/tooltip/ToolTipGroupBox.cpp \
+    ui/settings/tooltip/ToolTipRadioButton.cpp \
+    ui/settings/tooltip/ToolTipSlider.cpp \
+    ui/settings/tooltip/ToolTipSpinBox.cpp \
     ramsearch/BaseAddresses.cpp \
     ramsearch/CompareOperations.cpp \
     ramsearch/IRamWatchDetailed.cpp \

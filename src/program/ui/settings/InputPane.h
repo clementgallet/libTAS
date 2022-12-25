@@ -17,36 +17,39 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_AUTOSAVEWINDOW_H_INCLUDED
-#define LIBTAS_AUTOSAVEWINDOW_H_INCLUDED
+#ifndef LIBTAS_INPUTPANE_H_INCLUDED
+#define LIBTAS_INPUTPANE_H_INCLUDED
 
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QDoubleSpinBox>
-#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QWidget>
 
-/* Forward declaration */
-struct Context;
+class Context;
+class QComboBox;
+class QCheckBox;
+class ToolTipCheckBox;
 
-class AutoSaveWindow : public QDialog {
+class InputPane : public QWidget {
     Q_OBJECT
-
 public:
-    AutoSaveWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    InputPane(Context *c);
 
-    /* Update UI elements when the config has changed */
-    void update_config();
-
-private:
     Context *context;
 
-    QGroupBox *autosaveBox;
-    QDoubleSpinBox *autosaveDelay;
-    QSpinBox *autosaveFrames;
-    QSpinBox *autosaveCount;
+private:
+    void initLayout();
+    void initSignals();
+    void initToolTips();
 
-private slots:
-    void slotOk();
+    void showEvent(QShowEvent *event) override;
+    
+    ToolTipCheckBox* mouseSupportBox;
+    ToolTipCheckBox* mouseWarpBox;
+    ToolTipCheckBox* mouseGameWarpBox;
+
+    QComboBox* joyChoice;
+
+public slots:
+    void loadConfig();
+    void saveConfig();
 };
 
 #endif

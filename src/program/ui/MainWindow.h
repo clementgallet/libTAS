@@ -47,6 +47,7 @@
 
 #include <thread>
 
+class SettingsWindow;
 class EncodeWindow;
 class InputWindow;
 class ExecutableWindow;
@@ -77,6 +78,7 @@ public:
     GameLoop *gameLoop;
     Context *context;
 
+    SettingsWindow* settingsWindow;
     EncodeWindow* encodeWindow;
     InputWindow* inputWindow;
     ExecutableWindow* executableWindow;
@@ -90,7 +92,6 @@ public:
     AnnotationsWindow* annotationsWindow;
     AutoSaveWindow* autoSaveWindow;
     TimeTraceWindow* timeTraceWindow;
-    CustomResolutionDialog* customResolutionDialog;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
@@ -101,40 +102,11 @@ public:
 
     QAction *autoRestartAction;
     QAction *variableFramerateAction;
-    QActionGroup *movieEndGroup;
-    QActionGroup *screenResGroup;
 
     QAction *renderSoftAction;
     QAction *renderPerfAction;
-    QActionGroup *osdGroup;
-    QAction *osdEncodeAction;
-
-    QActionGroup *frequencyGroup;
-    QActionGroup *bitDepthGroup;
-    QActionGroup *channelGroup;
-    QAction *muteAction;
-    QAction *disableAction;
-
-    QActionGroup *localeGroup;
-
-    QActionGroup *timeMainGroup;
-    QActionGroup *timeSecGroup;
 
     QAction *busyloopAction;
-    QAction *preventSavefileAction;
-    QAction *recycleThreadsAction;
-
-    QActionGroup *savestateGroup;
-    QAction *steamAction;
-    QActionGroup *waitGroup;
-    QActionGroup *sleepGroup;
-    QActionGroup *asyncGroup;
-
-    QActionGroup *debugStateGroup;
-    QAction *sigintAction;
-    QActionGroup *loggingOutputGroup;
-    QActionGroup *loggingPrintGroup;
-    QActionGroup *loggingExcludeGroup;
 
     QAction *configEncodeAction;
     QAction *toggleEncodeAction;
@@ -143,12 +115,7 @@ public:
     QActionGroup *fastforwardGroup;
     QActionGroup *fastforwardRenderGroup;
 
-    QAction *mouseAction;
     QAction *mouseModeAction;
-    QAction *mouseWarpAction;
-    QAction *mouseGameWarpAction;
-    QActionGroup *joystickGroup;
-
 
     QComboBox *gamePath;
     QPushButton *browseGamePath;
@@ -266,9 +233,6 @@ private slots:
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
-    void slotMuteSound(bool checked);
-    void slotRenderSoft(bool checked);
-    void slotScreenRes();
     void slotPauseMovie();
     void slotVariableFramerate(bool checked);
     void slotLuaExecute();

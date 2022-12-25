@@ -2,6 +2,7 @@
 ### Added
 
 * Add a "Save as default" button for the Encode window (#507)
+* Revamp settings
 
 ### Changed
 ### Fixed

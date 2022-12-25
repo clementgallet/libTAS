@@ -18,6 +18,8 @@
  */
 
 #include <QtGui/QKeyEvent>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QPalette>
 #include "../KeyMapping.h"
 #include "qtutils.h"
 
@@ -38,4 +40,12 @@ unsigned int convertQtModifiers(Qt::KeyboardModifiers flags)
     }
 
     return modifiers;
+}
+
+bool isLightTheme()
+{
+    const auto theme_window_color = QGuiApplication::palette().color(QPalette::Base);
+    const auto theme_window_hsv = theme_window_color.toHsv();
+    const auto brightness = theme_window_hsv.value();
+    return brightness > 128;
 }

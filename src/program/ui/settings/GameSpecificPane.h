@@ -17,37 +17,35 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_OSDWINDOW_H_INCLUDED
-#define LIBTAS_OSDWINDOW_H_INCLUDED
+#ifndef LIBTAS_GAMESPECIFICPANE_H_INCLUDED
+#define LIBTAS_GAMESPECIFICPANE_H_INCLUDED
 
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QComboBox>
+#include <QtWidgets/QWidget>
 
-/* Forward declaration */
-struct Context;
+class Context;
+class ToolTipCheckBox;
 
-class OsdWindow : public QDialog {
+class GameSpecificPane : public QWidget {
     Q_OBJECT
 public:
-    OsdWindow(Context *c, QWidget *parent = Q_NULLPTR);
-
-    /* Update UI elements when the config has changed */
-    void update_config();
+    GameSpecificPane(Context *c);
 
     Context *context;
 
 private:
-    QComboBox *frameHorChoice;
-    QComboBox *frameVertChoice;
-    QComboBox *inputsHorChoice;
-    QComboBox *inputsVertChoice;
-    QComboBox *messagesHorChoice;
-    QComboBox *messagesVertChoice;
-    QComboBox *watchesHorChoice;
-    QComboBox *watchesVertChoice;
+    void initLayout();
+    void initSignals();
+    void initToolTips();
 
-private slots:
-    void slotOk();
+    void showEvent(QShowEvent *event) override;
+    
+    ToolTipCheckBox *timingCeleste;
+    ToolTipCheckBox *syncCeleste;
+    ToolTipCheckBox *syncWitness;
+
+public slots:
+    void loadConfig();
+    void saveConfig();
 };
 
 #endif

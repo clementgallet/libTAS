@@ -17,38 +17,25 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
-#define LIBTAS_GAMESPECIFICWINDOW_H_INCLUDED
+#ifndef LIBTAS_SETTINGSWINDOW_H_INCLUDED
+#define LIBTAS_SETTINGSWINDOW_H_INCLUDED
 
 #include <QtWidgets/QDialog>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QLineEdit>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QCheckBox>
 
-/* Forward declaration */
-struct Context;
+class Context;
 
-class GameSpecificWindow : public QDialog {
+class SettingsWindow : public QDialog {
     Q_OBJECT
-
 public:
-    GameSpecificWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    SettingsWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     /* Update UI elements when the config has changed */
-    void update_config();
+    // void update_config();
 
-private:
     Context *context;
-
-    QCheckBox *timingCeleste;
-    QCheckBox *syncCeleste;
-    QCheckBox *syncWitness;
-
+    
 private slots:
-    // void slotBrowseEncodePath();
-    // void slotUpdate();
-    void slotOk();
+    void save();
 };
 
 #endif

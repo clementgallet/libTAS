@@ -17,14 +17,40 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_QTUTILS_H_INCLUDED
-#define LIBTAS_QTUTILS_H_INCLUDED
+#ifndef LIBTAS_AUDIOPANE_H_INCLUDED
+#define LIBTAS_AUDIOPANE_H_INCLUDED
 
-#include <QtGui/QKeyEvent>
-//#include "../Context.h"
+#include <QtWidgets/QWidget>
 
-unsigned int convertQtModifiers(Qt::KeyboardModifiers flags);
+class Context;
+class QComboBox;
+class QCheckBox;
+class ToolTipCheckBox;
 
-bool isLightTheme();
+class AudioPane : public QWidget {
+    Q_OBJECT
+public:
+    AudioPane(Context *c);
+
+    Context *context;
+
+private:
+    void initLayout();
+    void initSignals();
+    void initToolTips();
+
+    void showEvent(QShowEvent *event) override;
+    
+    QComboBox* freqChoice;
+    QComboBox* depthChoice;
+    QComboBox* channelChoice;
+
+    ToolTipCheckBox* muteBox;
+    ToolTipCheckBox* disableBox;
+
+public slots:
+    void loadConfig();
+    void saveConfig();
+};
 
 #endif

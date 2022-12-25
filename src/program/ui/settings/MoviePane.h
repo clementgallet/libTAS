@@ -17,27 +17,41 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_CUSTOMRESDIALOG_H_INCLUDED
-#define LIBTAS_CUSTOMRESDIALOG_H_INCLUDED
+#ifndef LIBTAS_MOVIEPANE_H_INCLUDED
+#define LIBTAS_MOVIEPANE_H_INCLUDED
 
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QWidget>
 
-/* Very small QDialog class to let users specify a monitor resolution */
-class CustomResolutionDialog : public QDialog {
+class Context;
+class QGroupBox;
+class ToolTipComboBox;
+class QSpinBox;
+class QDoubleSpinBox;
+
+class MoviePane : public QWidget {
     Q_OBJECT
 public:
-    CustomResolutionDialog(QWidget *parent = Q_NULLPTR);
+    MoviePane(Context *c);
 
-    void update(int width, int height);
-    
-private slots:
-    void slotOk();
+    Context *context;
 
 private:
-    QSpinBox *widthField;
-    QSpinBox *heightField;
+    void initLayout();
+    void initSignals();
+    void initToolTips();
 
+    void showEvent(QShowEvent *event) override;
+    
+    QGroupBox *autosaveBox;
+    QDoubleSpinBox *autosaveDelay;
+    QSpinBox *autosaveFrames;
+    QSpinBox *autosaveCount;
+
+    ToolTipComboBox* endChoice;
+
+public slots:
+    void loadConfig();
+    void saveConfig();
 };
 
 #endif
