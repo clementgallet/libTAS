@@ -645,7 +645,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         return orig::sem_wait(sem);
 
     ThreadInfo* thread = ThreadManager::getCurrentThread();
-    bool isWaitThread = GameHacks::isUnityLoadingThread(reinterpret_cast<uintptr_t>(thread->start));
+    bool isWaitThread = GameHacks::isUnityLoadingThread(reinterpret_cast<uintptr_t>(thread->start), thread->routine_id);
 
     debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
     if (isWaitThread) {

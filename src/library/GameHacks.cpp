@@ -35,6 +35,7 @@ pid_t GameHacks::finalizer_pid = 0;
 uintptr_t GameHacks::executableBase = 0;
 uintptr_t GameHacks::executableEnd = 0;
 uintptr_t GameHacks::unityLoadingThreadAddr = 0;
+std::ptrdiff_t GameHacks::unityLoadingThreadId = 0;
 
 void GameHacks::setUnity()
 {
@@ -75,7 +76,7 @@ void GameHacks::getExecutableMemory()
     executableEnd = reinterpret_cast<uintptr_t>(area.endAddr);
 }
 
-bool GameHacks::isUnityLoadingThread(uintptr_t addr)
+bool GameHacks::isUnityLoadingThread(uintptr_t addr, std::ptrdiff_t routine_id)
 {
     if (!unity) return false;
     
@@ -85,10 +86,11 @@ bool GameHacks::isUnityLoadingThread(uintptr_t addr)
     getExecutableMemory();
     
     if (unityLoadingThreadAddr != 0)
-        return (unityLoadingThreadAddr == addr);
+        return (unityLoadingThreadAddr == addr) && (unityLoadingThreadId == routine_id);
 
     if ((addr >= executableBase) && (addr < executableEnd)) {
         unityLoadingThreadAddr = addr;
+        unityLoadingThreadId = routine_id;
         return true;
     }
     

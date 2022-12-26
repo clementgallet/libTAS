@@ -5,6 +5,9 @@
 * Revamp settings
 
 ### Changed
+
+* Make the conditions to be a Unity thread more strict (#515)
+
 ### Fixed
 
 ## [1.4.4] - 2022-10-25
