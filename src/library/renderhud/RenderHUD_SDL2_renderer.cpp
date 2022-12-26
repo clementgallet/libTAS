@@ -42,7 +42,7 @@ RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
 {
     /* If renderer has changed, the texture becomes invalid */
-    if (renderer && texture)
+    if (renderer && (renderer != r) && texture)
         texture = nullptr;
     renderer = r;
 }
@@ -64,16 +64,16 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
         if (texture != nullptr)
             orig::SDL_DestroyTexture(texture);
 
-        texture = orig::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, surf->w, surf->h);
+        tex_w = std::max(tex_w, surf->w);
+        tex_h = std::max(tex_h, surf->h);
+            
+        texture = orig::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tex_w, tex_h);
         if (!texture)
             debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed with error: %s", orig::SDL_GetError());
 
         int ret = orig::SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
         if (ret != 0)
             debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_SetTextureBlendMode failed with error: %s", orig::SDL_GetError());
-        
-        tex_w = surf->w;
-        tex_h = surf->h;        
     }
 
     /* Copy pixels into the texture */
@@ -98,18 +98,6 @@ void RenderHUD_SDL2_renderer::renderSurface(std::unique_ptr<SurfaceARGB> surf, i
         debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed with error: %s", orig::SDL_GetError());
         return;
     }
-    
-    /* Erase the content of the texture */
-    ret = orig::SDL_LockTexture(texture, &tex_rect, reinterpret_cast<void**>(&tex_pixels), &pitch);
-    if (ret != 0) {
-        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy failed with error: %s", orig::SDL_GetError());
-        return;
-    }
-    for (int row = 0; row < surf->h; row++) {
-        memset(tex_pixels, 0, 4*surf->w);
-        tex_pixels += pitch;
-    }
-    orig::SDL_UnlockTexture(texture);
 }
 
 }

@@ -10,6 +10,8 @@
 
 ### Fixed
 
+* Fix OSD SDL2 renderer memory leak
+
 ## [1.4.4] - 2022-10-25
 ### Added
 
