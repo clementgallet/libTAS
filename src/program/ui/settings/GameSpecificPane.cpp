@@ -38,7 +38,7 @@ void GameSpecificPane::initLayout()
     /* Timing settings */
     timingCeleste = new ToolTipCheckBox("Celeste");
 
-    QGroupBox *timingGroupBox = new QGroupBox(tr("Timing settings"));
+    timingGroupBox = new QGroupBox(tr("Timing settings"));
     QVBoxLayout *timingLayout = new QVBoxLayout;
     timingLayout->addWidget(timingCeleste);
     timingGroupBox->setLayout(timingLayout);
@@ -47,7 +47,7 @@ void GameSpecificPane::initLayout()
     syncCeleste = new ToolTipCheckBox("Celeste");
     syncWitness = new ToolTipCheckBox("The Witness");
 
-    QGroupBox *syncGroupBox = new QGroupBox(tr("Sync settings"));
+    syncGroupBox = new QGroupBox(tr("Sync settings"));
     QVBoxLayout *syncLayout = new QVBoxLayout;
     syncLayout->addWidget(syncCeleste);
     syncLayout->addWidget(syncWitness);
@@ -108,4 +108,18 @@ void GameSpecificPane::saveConfig()
     context->config.sc.game_specific_sync |= syncWitness->isChecked()? SharedConfig::GC_SYNC_WITNESS : 0;
 
     context->config.sc_modified = true;
+}
+
+void GameSpecificPane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        timingGroupBox->setEnabled(true);
+        syncGroupBox->setEnabled(true);
+        break;
+    case Context::STARTING:
+        timingGroupBox->setEnabled(false);
+        syncGroupBox->setEnabled(false);
+        break;
+    }
 }

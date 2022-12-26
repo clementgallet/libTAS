@@ -114,3 +114,17 @@ void InputPane::saveConfig()
     context->config.sc.nb_controllers = joyChoice->itemData(joyChoice->currentIndex()).toInt();
     context->config.sc_modified = true;
 }
+
+void InputPane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        mouseSupportBox->setEnabled(true);
+        joyChoice->setEnabled(true);
+        break;
+    case Context::STARTING:
+        mouseSupportBox->setEnabled(false);
+        joyChoice->setEnabled(false);
+        break;
+    }
+}

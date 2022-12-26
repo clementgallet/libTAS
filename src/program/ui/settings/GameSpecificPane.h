@@ -24,11 +24,14 @@
 
 class Context;
 class ToolTipCheckBox;
+class QGroupBox;
 
 class GameSpecificPane : public QWidget {
     Q_OBJECT
 public:
     GameSpecificPane(Context *c);
+
+    void update(int status);
 
     Context *context;
 
@@ -38,6 +41,9 @@ private:
     void initToolTips();
 
     void showEvent(QShowEvent *event) override;
+    
+    QGroupBox *timingGroupBox;
+    QGroupBox *syncGroupBox;
     
     ToolTipCheckBox *timingCeleste;
     ToolTipCheckBox *syncCeleste;

@@ -28,11 +28,14 @@ class QCheckBox;
 class QRadioButton;
 class QSpinBox;
 class ToolTipCheckBox;
+class QGroupBox;
 
 class VideoPane : public QWidget {
     Q_OBJECT
 public:
     VideoPane(Context *c);
+
+    void update(int status);
 
     Context *context;
 
@@ -42,6 +45,9 @@ private:
     void initToolTips();
 
     void showEvent(QShowEvent *event) override;
+    
+    QGroupBox* screenBox;
+    QGroupBox* renderingBox;
     
     QRadioButton* screenNativeRadio;
     QRadioButton* screenCommonRadio;

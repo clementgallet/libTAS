@@ -44,13 +44,21 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QDialog(parent), c
     QTabWidget* tabWidget = new QTabWidget();
     layout->addWidget(tabWidget);
 
-    tabWidget->addTab(GetWrappedWidget(new RuntimePane(c), this, 125, 100), tr("Runtime"));
-    tabWidget->addTab(GetWrappedWidget(new MoviePane(c), this, 125, 100), tr("Movie"));
-    tabWidget->addTab(GetWrappedWidget(new InputPane(c), this, 125, 100), tr("Input"));
-    tabWidget->addTab(GetWrappedWidget(new AudioPane(c), this, 125, 100), tr("Audio"));
-    tabWidget->addTab(GetWrappedWidget(new VideoPane(c), this, 125, 100), tr("Video"));
-    tabWidget->addTab(GetWrappedWidget(new DebugPane(c), this, 125, 100), tr("Debug"));
-    tabWidget->addTab(GetWrappedWidget(new GameSpecificPane(c), this, 125, 100), tr("Game-specific"));
+    rp = new RuntimePane(c);
+    mp = new MoviePane(c);
+    ip = new InputPane(c);
+    ap = new AudioPane(c);
+    vp = new VideoPane(c);
+    gp = new DebugPane(c);
+    gsp = new GameSpecificPane(c);
+
+    tabWidget->addTab(GetWrappedWidget(rp, this, 125, 100), tr("Runtime"));
+    tabWidget->addTab(GetWrappedWidget(mp, this, 125, 100), tr("Movie"));
+    tabWidget->addTab(GetWrappedWidget(ip, this, 125, 100), tr("Input"));
+    tabWidget->addTab(GetWrappedWidget(ap, this, 125, 100), tr("Audio"));
+    tabWidget->addTab(GetWrappedWidget(vp, this, 125, 100), tr("Video"));
+    tabWidget->addTab(GetWrappedWidget(gp, this, 125, 100), tr("Debug"));
+    tabWidget->addTab(GetWrappedWidget(gsp, this, 125, 100), tr("Game-specific"));
 
     // Dialog box buttons
     QDialogButtonBox* closeBox = new QDialogButtonBox(QDialogButtonBox::Close);
@@ -66,4 +74,15 @@ void SettingsWindow::save()
 {
     context->config.save(context->gamepath);
     reject();
+}
+
+void SettingsWindow::update(int status)
+{
+    rp->update(status);
+    mp->update(status);
+    ip->update(status);
+    ap->update(status);
+    vp->update(status);
+    gp->update(status);
+    gsp->update(status);
 }

@@ -42,7 +42,7 @@ RuntimePane::RuntimePane(Context* c) : context(c)
 
 void RuntimePane::initLayout()
 {
-    QGroupBox* generalBox = new QGroupBox(tr("General"));
+    generalBox = new QGroupBox(tr("General"));
     QVBoxLayout* generalLayout = new QVBoxLayout;
     generalBox->setLayout(generalLayout);
 
@@ -81,7 +81,7 @@ void RuntimePane::initLayout()
     generalLayout->addWidget(recycleBox);
     generalLayout->addWidget(steamBox);
 
-    QGroupBox* savestateBox = new QGroupBox(tr("Savestates"));
+    savestateBox = new QGroupBox(tr("Savestates"));
     QGridLayout* savestateLayout = new QGridLayout;
     savestateBox->setLayout(savestateLayout);
 
@@ -103,7 +103,7 @@ void RuntimePane::initLayout()
     savestateLayout->addWidget(stateUnmappedBox, 2, 0);
     savestateLayout->addWidget(stateForkBox, 2, 1);
 
-    QGroupBox* timingBox = new QGroupBox(tr("Timing"));
+    timingBox = new QGroupBox(tr("Timing"));
     QVBoxLayout* timingMainLayout = new QVBoxLayout;
     QFormLayout* timingLayout = new QFormLayout;
     timingBox->setLayout(timingMainLayout);
@@ -440,4 +440,20 @@ void RuntimePane::saveConfig()
     context->config.sc.async_events |= asyncSDLEndBox->isChecked() ? SharedConfig::ASYNC_SDLEVENTS_END : 0;
 
     context->config.sc_modified = true;
+}
+
+void RuntimePane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        generalBox->setEnabled(true);
+        savestateBox->setEnabled(true);
+        timingBox->setEnabled(true);
+        break;
+    case Context::STARTING:
+        generalBox->setEnabled(false);
+        savestateBox->setEnabled(false);
+        timingBox->setEnabled(false);
+        break;
+    }
 }

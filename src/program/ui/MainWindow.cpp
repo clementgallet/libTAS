@@ -182,6 +182,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
     connect(gameLoop, &GameLoop::invalidateSavestates, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::invalidateSavestates);
     connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
+    connect(gameLoop, &GameLoop::statusChanged, settingsWindow, &SettingsWindow::update);
 
     /* Menu */
     createActions();
@@ -677,11 +678,11 @@ void MainWindow::createMenus()
     inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
 }
 
-void MainWindow::updateStatus()
+void MainWindow::updateStatus(int status)
 {
     /* Update game status (active/inactive) */
 
-    switch (context->status) {
+    switch (status) {
 
         case Context::INACTIVE:
             for (QWidget* w : disabledWidgetsOnStart) {
@@ -1081,7 +1082,8 @@ void MainWindow::slotLaunch(bool attach_gdb)
 
     /* Start game */
     context->status = Context::STARTING;
-    updateStatus();
+    updateStatus(Context::STARTING);
+    settingsWindow->update(Context::STARTING);
     game_thread = std::thread{&GameLoop::start, gameLoop};
 }
 
@@ -1107,7 +1109,8 @@ void MainWindow::slotStop()
 
     if (context->status == Context::ACTIVE) {
         context->status = Context::QUITTING;
-        updateStatus();
+        updateStatus(Context::QUITTING);
+        settingsWindow->update(Context::QUITTING);
         game_thread.detach();
     }
 }

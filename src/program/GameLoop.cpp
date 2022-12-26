@@ -145,6 +145,7 @@ void GameLoop::start()
 
         if (shouldQuit) {
             context->status = Context::QUITTING;
+            emit statusChanged(Context::QUITTING);
         }
     }
 }
@@ -264,7 +265,7 @@ void GameLoop::init()
         (context->config.auto_restart);
 
     context->status = Context::ACTIVE;
-    emit statusChanged();
+    emit statusChanged(context->status);
 }
 
 void GameLoop::initProcessMessages()
@@ -786,7 +787,7 @@ void GameLoop::loopExit()
         wait(nullptr);
 
         context->status = Context::RESTARTING;
-        emit statusChanged();
+        emit statusChanged(context->status);
 
         return;
     }
@@ -826,5 +827,5 @@ void GameLoop::loopExit()
     wait(nullptr);
 
     context->status = Context::INACTIVE;
-    emit statusChanged();
+    emit statusChanged(Context::INACTIVE);
 }

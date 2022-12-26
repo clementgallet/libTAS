@@ -142,3 +142,21 @@ void AudioPane::saveConfig()
     context->config.sc.audio_disabled = disableBox->isChecked();
     context->config.sc_modified = true;
 }
+
+void AudioPane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        freqChoice->setEnabled(true);
+        depthChoice->setEnabled(true);
+        channelChoice->setEnabled(true);
+        disableBox->setEnabled(true);
+        break;
+    case Context::STARTING:
+        freqChoice->setEnabled(false);
+        depthChoice->setEnabled(false);
+        channelChoice->setEnabled(false);
+        disableBox->setEnabled(false);
+        break;
+    }
+}

@@ -28,11 +28,14 @@ class QCheckBox;
 class QRadioButton;
 class QSpinBox;
 class ToolTipCheckBox;
+class QGroupBox;
 
 class DebugPane : public QWidget {
     Q_OBJECT
 public:
     DebugPane(Context *c);
+
+    void update(int status);
 
     Context *context;
 
@@ -42,6 +45,8 @@ private:
     void initToolTips();
     
     void showEvent(QShowEvent *event) override;
+    
+    QGroupBox* generalBox;
     
     ToolTipCheckBox* debugUncontrolledBox;
     ToolTipCheckBox* debugEventsBox;

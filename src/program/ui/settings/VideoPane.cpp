@@ -41,7 +41,7 @@ VideoPane::VideoPane(Context* c) : context(c)
 
 void VideoPane::initLayout()
 {
-    QGroupBox* screenBox = new QGroupBox(tr("Screen resolution"));
+    screenBox = new QGroupBox(tr("Screen resolution"));
     QGridLayout* screenLayout = new QGridLayout;
     screenBox->setLayout(screenLayout);
 
@@ -155,7 +155,7 @@ void VideoPane::initLayout()
     osdLayout->addWidget(osdLuaBox, 4, 0);
     osdLayout->addWidget(osdEncodeBox, 5, 0, 1, 3);
     
-    QGroupBox* renderingBox = new QGroupBox(tr("Rendering"));
+    renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
     renderingBox->setLayout(renderingLayout);
 
@@ -330,4 +330,18 @@ void VideoPane::saveConfig()
     context->config.sc.opengl_performance = rendPerfBox->isChecked();
 
     context->config.sc_modified = true;
+}
+
+void VideoPane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        screenBox->setEnabled(true);
+        renderingBox->setEnabled(true);
+        break;
+    case Context::STARTING:
+        screenBox->setEnabled(false);
+        renderingBox->setEnabled(false);
+        break;
+    }
 }

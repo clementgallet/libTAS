@@ -63,7 +63,7 @@ private:
 
 signals:
     void uiChanged();
-    void statusChanged();
+    void statusChanged(int status);
     void configChanged();
     void alertToShow(QString str);
     void sharedConfigChanged();

@@ -28,11 +28,14 @@ class QCheckBox;
 class ToolTipComboBox;
 class ToolTipCheckBox;
 class ToolTipGroupBox;
+class QGroupBox;
 
 class RuntimePane : public QWidget {
     Q_OBJECT
 public:
     RuntimePane(Context *c);
+
+    void update(int status);
 
     Context *context;
 
@@ -42,6 +45,10 @@ private:
     void initToolTips();
 
     void showEvent(QShowEvent *event) override;
+    
+    QGroupBox* generalBox;
+    QGroupBox* savestateBox;
+    QGroupBox* timingBox;
     
     ToolTipComboBox* localeChoice;
 

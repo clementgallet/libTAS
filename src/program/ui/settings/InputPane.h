@@ -32,6 +32,8 @@ class InputPane : public QWidget {
 public:
     InputPane(Context *c);
 
+    void update(int status);
+
     Context *context;
 
 private:

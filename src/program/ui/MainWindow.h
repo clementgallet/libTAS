@@ -196,7 +196,7 @@ private slots:
      * the game status (running/stopped), to prevent modifying values that
      * are not supposed to be modified when the game is running.
      */
-    void updateStatus();
+    void updateStatus(int status);
 
     /* Update UI elements that are often modified, triggered by a timer */
     void updateUIFrequent();

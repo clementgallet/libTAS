@@ -41,7 +41,7 @@ DebugPane::DebugPane(Context* c) : context(c)
 
 void DebugPane::initLayout()
 {
-    QGroupBox* generalBox = new QGroupBox(tr("General"));
+    generalBox = new QGroupBox(tr("General"));
     QVBoxLayout* generalLayout = new QVBoxLayout;
     generalBox->setLayout(generalLayout);
 
@@ -471,4 +471,16 @@ void DebugPane::saveConfig()
     context->config.sc.excludeFlags |= logExcludeWineBox->isChecked() ? LCF_WINE : 0;
 
     context->config.sc_modified = true;
+}
+
+void DebugPane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        generalBox->setEnabled(true);
+        break;
+    case Context::STARTING:
+        generalBox->setEnabled(false);
+        break;
+    }
 }

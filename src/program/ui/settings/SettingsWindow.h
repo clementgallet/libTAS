@@ -23,6 +23,13 @@
 #include <QtWidgets/QDialog>
 
 class Context;
+class RuntimePane;
+class MoviePane;
+class InputPane;
+class AudioPane;
+class VideoPane;
+class DebugPane;
+class GameSpecificPane;
 
 class SettingsWindow : public QDialog {
     Q_OBJECT
@@ -34,8 +41,20 @@ public:
 
     Context *context;
     
+private:
+    RuntimePane* rp;
+    MoviePane* mp;
+    InputPane* ip;
+    AudioPane* ap;
+    VideoPane* vp;
+    DebugPane* gp;
+    GameSpecificPane* gsp;
+
 private slots:
     void save();
+    
+public slots:
+    void update(int status);
 };
 
 #endif

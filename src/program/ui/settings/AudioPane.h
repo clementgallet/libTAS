@@ -32,6 +32,8 @@ class AudioPane : public QWidget {
 public:
     AudioPane(Context *c);
 
+    void update(int status);
+
     Context *context;
 
 private:

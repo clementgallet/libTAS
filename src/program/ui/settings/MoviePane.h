@@ -33,6 +33,8 @@ class MoviePane : public QWidget {
 public:
     MoviePane(Context *c);
 
+    void update(int status);
+
     Context *context;
 
 private:

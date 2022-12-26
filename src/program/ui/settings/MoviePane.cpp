@@ -133,3 +133,13 @@ void MoviePane::saveConfig()
     context->config.on_movie_end = endChoice->itemData(endChoice->currentIndex()).toInt();
     context->config.sc_modified = true;
 }
+
+void MoviePane::update(int status)
+{
+    switch (status) {
+    case Context::INACTIVE:
+        break;
+    case Context::STARTING:
+        break;
+    }
+}
