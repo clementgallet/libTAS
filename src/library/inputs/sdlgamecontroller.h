@@ -72,6 +72,20 @@ OVERRIDE char *SDL_GameControllerMapping( SDL_GameController * gamecontroller );
  */
 OVERRIDE const char *SDL_GameControllerNameForIndex(int joystick_index);
 
+/**
+ * Get the mapping of a game controller.
+ *
+ * This can be called before any controllers are opened.
+ *
+ * \param joystick_index the device_index of a device, from zero to
+ *                       SDL_NumJoysticks()-1
+ * \returns the mapping string. Must be freed with SDL_free(). Returns NULL if
+ *          no mapping is available.
+ *
+ * \since This function is available since SDL 2.0.9.
+ */
+OVERRIDE char *SDL_GameControllerMappingForDeviceIndex(int joystick_index);
+
 typedef enum
 {
     SDL_CONTROLLER_TYPE_UNKNOWN = 0,
@@ -143,6 +157,37 @@ OVERRIDE int SDL_GameControllerEventState(int state);
 OVERRIDE void SDL_GameControllerUpdate(void);
 
 /**
+ * Get the SDL joystick layer binding for a controller axis mapping.
+ *
+ * \param gamecontroller a game controller
+ * \param axis an axis enum value (one of the SDL_GameControllerAxis values)
+ * \returns a SDL_GameControllerButtonBind describing the bind. On failure
+ *          (like the given Controller axis doesn't exist on the device), its
+ *          `.bindType` will be `SDL_CONTROLLER_BINDTYPE_NONE`.
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_GameControllerGetBindForButton
+ */
+OVERRIDE SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(SDL_GameController *gamecontroller,
+                                 SDL_GameControllerAxis axis);
+
+/**
+ * Query whether a game controller has a given axis.
+ *
+ * This merely reports whether the controller's mapping defined this axis, as
+ * that is all the information SDL has about the physical device.
+ *
+ * \param gamecontroller a game controller
+ * \param axis an axis enum value (an SDL_GameControllerAxis value)
+ * \returns SDL_TRUE if the controller has this axis, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.14.
+ */
+OVERRIDE SDL_bool SDL_GameControllerHasAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis);
+
+
+/**
  *  Get the current state of an axis control on a game controller.
  *
  *  The state is a value ranging from -32768 to 32767.
@@ -151,6 +196,38 @@ OVERRIDE void SDL_GameControllerUpdate(void);
  */
 OVERRIDE Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                                 SDL_GameControllerAxis axis);
+
+/**
+ * Get the SDL joystick layer binding for a controller button mapping.
+ *
+ * \param gamecontroller a game controller
+ * \param button an button enum value (an SDL_GameControllerButton value)
+ * \returns a SDL_GameControllerButtonBind describing the bind. On failure
+ *          (like the given Controller button doesn't exist on the device),
+ *          its `.bindType` will be `SDL_CONTROLLER_BINDTYPE_NONE`.
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_GameControllerGetBindForAxis
+ */
+OVERRIDE SDL_GameControllerButtonBind 
+SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
+                                   SDL_GameControllerButton button);
+
+/**
+ * Query whether a game controller has a given button.
+ *
+ * This merely reports whether the controller's mapping defined this button,
+ * as that is all the information SDL has about the physical device.
+ *
+ * \param gamecontroller a game controller
+ * \param button a button enum value (an SDL_GameControllerButton value)
+ * \returns SDL_TRUE if the controller has this button, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.14.
+ */
+OVERRIDE SDL_bool SDL_GameControllerHasButton(SDL_GameController *gamecontroller,
+                                                             SDL_GameControllerButton button);
 
 /**
  *  Get the current state of a button on a game controller.

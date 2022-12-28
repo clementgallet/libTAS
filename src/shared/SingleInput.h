@@ -66,7 +66,8 @@ public:
         AXIS_RIGHTX,
         AXIS_RIGHTY,
         AXIS_TRIGGERLEFT,
-        AXIS_TRIGGERRIGHT
+        AXIS_TRIGGERRIGHT,
+        AXIS_LAST
     };
 
     /* Flags */
