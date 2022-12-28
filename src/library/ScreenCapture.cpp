@@ -227,6 +227,8 @@ int ScreenCapture::init()
     } else
 #endif
     if ((game_info.video & GameInfo::SDL2_RENDERER) || (game_info.video & GameInfo::SDL2_SURFACE)) {
+        LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+        orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
         LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
         Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
         pixelSize = sdlpixfmt & 0xFF;
@@ -691,8 +693,11 @@ int ScreenCapture::copyScreenToSurface()
          * So copying the screen pixels into the texture. */
         void* tex_pixels;
         int tex_pitch;
-        orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
-        int ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, tex_pixels, pitch);
+        int ret = orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+        if (ret < 0) {
+            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_LockTexture failed: %s", orig::SDL_GetError());
+        }
+        ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, tex_pixels, tex_pitch);
         if (ret < 0) {
             debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: %s", orig::SDL_GetError());
         }

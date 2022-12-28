@@ -13,6 +13,7 @@
 
 * Fix OSD SDL2 renderer memory leak
 * Fix SDL_GameController functions as they raised the maximum number of buttons
+* Get game window size from SDL2 when possible (#513)
 
 ## [1.4.4] - 2022-10-25
 ### Added
