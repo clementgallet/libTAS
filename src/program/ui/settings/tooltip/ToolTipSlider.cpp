@@ -12,14 +12,14 @@ ToolTipSlider::ToolTipSlider(Qt::Orientation orientation) : ToolTipWidget(orient
 
 QPoint ToolTipSlider::getToolTipPosition() const
 {
-  QRect handle_rect(0, 0, 15, 15);
-  if (style())
-  {
-    QStyleOptionSlider opt;
-    initStyleOption(&opt);
-    handle_rect = style()->subControlRect(QStyle::ComplexControl::CC_Slider, &opt,
+    QRect handle_rect(0, 0, 15, 15);
+    if (style())
+    {
+        QStyleOptionSlider opt;
+        initStyleOption(&opt);
+        handle_rect = style()->subControlRect(QStyle::ComplexControl::CC_Slider, &opt,
                                           QStyle::SubControl::SC_SliderHandle, this);
-  }
+    }
 
-  return pos() + handle_rect.center();
+    return pos() + handle_rect.center();
 }

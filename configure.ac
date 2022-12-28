@@ -36,6 +36,15 @@ case $host in
     ;;
 esac
 
+dnl **** Check for c++11 ****
+
+AC_LANG_PUSH([C++])
+CXX="$CXX -Werror -std=c++11"
+AC_MSG_CHECKING([whether CXX supports -std=c++11])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], [AC_MSG_RESULT([yes]); CXXFLAGS="$CXXFLAGS -std=c++11"], [AC_MSG_RESULT([no])])
+CXX="$save_CXX"
+AC_LANG_POP([C++])
+
 AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" = "xyes" || test "x$enable_i386_lib" = "xyes"])
 AM_CONDITIONAL([BUILD32LIBONLY], [test "x$enable_i386_lib" = "xyes"])
 

@@ -11,7 +11,7 @@
 class ToolTipComboBox : public ToolTipWidget<QComboBox>
 {
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif

@@ -11,10 +11,10 @@
 class ToolTipRadioButton : public ToolTipWidget<QRadioButton>
 {
 public:
-  explicit ToolTipRadioButton(const QString& label);
+    explicit ToolTipRadioButton(const QString& label);
 
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif

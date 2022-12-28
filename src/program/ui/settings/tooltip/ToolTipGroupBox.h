@@ -9,10 +9,10 @@
 class ToolTipGroupBox : public ToolTipWidget<QGroupBox>
 {
 public:
-  explicit ToolTipGroupBox(const QString& label);
+    explicit ToolTipGroupBox(const QString& label);
 
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif

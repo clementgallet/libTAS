@@ -6,7 +6,7 @@
 
 ToolTipGroupBox::ToolTipGroupBox(const QString& label) : ToolTipWidget(label)
 {
-  setTitle(label);
+    setTitle(label);
 }
 
 QPoint ToolTipGroupBox::getToolTipPosition() const

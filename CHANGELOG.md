@@ -7,6 +7,7 @@
 ### Changed
 
 * Make the conditions to be a Unity thread more strict (#515)
+* Remove code needing c++17, and add the c++11 compile flag (#516) 
 
 ### Fixed
 

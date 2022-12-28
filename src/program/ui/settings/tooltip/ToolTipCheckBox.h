@@ -11,10 +11,10 @@
 class ToolTipCheckBox : public ToolTipWidget<QCheckBox>
 {
 public:
-  explicit ToolTipCheckBox(const QString& label);
+    explicit ToolTipCheckBox(const QString& label);
 
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif

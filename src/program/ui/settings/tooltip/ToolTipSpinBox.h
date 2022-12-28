@@ -11,7 +11,7 @@
 class ToolTipSpinBox : public ToolTipWidget<QSpinBox>
 {
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif

@@ -5,5 +5,5 @@
 
 QPoint ToolTipSpinBox::getToolTipPosition() const
 {
-  return pos() + QPoint(width() / 2, height() / 2);
+    return pos() + QPoint(width() / 2, height() / 2);
 }

@@ -11,10 +11,10 @@
 class ToolTipSlider : public ToolTipWidget<QSlider>
 {
 public:
-  explicit ToolTipSlider(Qt::Orientation orientation);
+    explicit ToolTipSlider(Qt::Orientation orientation);
 
 private:
-  QPoint getToolTipPosition() const override;
+    QPoint getToolTipPosition() const override;
 };
 
 #endif
