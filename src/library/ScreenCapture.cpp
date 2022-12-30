@@ -85,6 +85,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowSize)
 
 DECLARE_ORIG_POINTER(glReadPixels)
 DECLARE_ORIG_POINTER(glGenFramebuffers)
+DECLARE_ORIG_POINTER(glBindBuffer)
 DECLARE_ORIG_POINTER(glBindFramebuffer)
 DECLARE_ORIG_POINTER(glDeleteFramebuffers)
 DECLARE_ORIG_POINTER(glGenRenderbuffers)
@@ -98,6 +99,7 @@ DECLARE_ORIG_POINTER(glDisable)
 DECLARE_ORIG_POINTER(glIsEnabled)
 DECLARE_ORIG_POINTER(glGetIntegerv)
 DECLARE_ORIG_POINTER(glGetError)
+DECLARE_ORIG_POINTER(glPixelStorei)
 #ifdef __unix__
 DECLARE_ORIG_POINTER(VdpOutputSurfaceGetParameters)
 DECLARE_ORIG_POINTER(VdpOutputSurfaceCreate)
@@ -1016,12 +1018,14 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
 
     else if (game_info.video & GameInfo::OPENGL) {
         LINK_NAMESPACE(glReadPixels, "GL");
+        LINK_NAMESPACE(glBindBuffer, "GL");
         LINK_NAMESPACE(glBindFramebuffer, "GL");
         LINK_NAMESPACE(glBlitFramebuffer, "GL");
         LINK_NAMESPACE(glEnable, "GL");
         LINK_NAMESPACE(glDisable, "GL");
         LINK_NAMESPACE(glIsEnabled, "GL");
         LINK_NAMESPACE(glGetIntegerv, "GL");
+        LINK_NAMESPACE(glPixelStorei, "GL");
 
         GLenum error;
 
@@ -1034,15 +1038,35 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
         GLint read_buffer;
         orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
 
+        /* Copy the original pixel buffer */
+        GLint pixel_buffer;
+        orig::glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pixel_buffer);
+
+        /* Copy the original pack row length */
+        GLint pack_row;
+        orig::glGetIntegerv(GL_PACK_ROW_LENGTH, &pack_row);
+
         orig::glGetError();
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
 
+        if (pixel_buffer != 0)
+            orig::glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+        if (pack_row != 0)
+            orig::glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+
         orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, winpixels.data());
         if ((error = orig::glGetError()) != GL_NO_ERROR)
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
+
+        if (pack_row != 0)
+            orig::glPixelStorei(GL_PACK_ROW_LENGTH, pack_row);
+
+        if (pixel_buffer != 0)
+            orig::glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_buffer);
 
         orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
         if ((error = orig::glGetError()) != GL_NO_ERROR)

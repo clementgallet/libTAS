@@ -23,6 +23,7 @@
 #include <QtCore/QObject>
 
 #include "movie/MovieFile.h"
+#include "../shared/GameInfo.h"
 
 /* Forward declaration */
 class GameEvents;
