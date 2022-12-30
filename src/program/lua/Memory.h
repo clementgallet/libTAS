@@ -20,7 +20,6 @@
 #ifndef LIBTAS_LUAMEMORY_H_INCLUDED
 #define LIBTAS_LUAMEMORY_H_INCLUDED
 
-#include "../Context.h"
 #include <stdint.h>
 extern "C" {
 #include <lua.h>
@@ -31,7 +30,7 @@ namespace Lua {
 namespace Memory {
 
     /* Register all functions */
-    void registerFunctions(Context* context);
+    void registerFunctions(lua_State *L);
 
     /* Helper function for reading an integer */
     bool read(uintptr_t addr, void* return_value, int size);

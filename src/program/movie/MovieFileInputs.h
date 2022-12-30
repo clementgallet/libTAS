@@ -86,9 +86,6 @@ public:
     /* Get the number of frames of the current movie */
     uint64_t nbFrames() const;
 
-    /* Update movie length from movie framecount */
-    void updateLength() const;
-
     /* Set inputs for a certain frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs);
 

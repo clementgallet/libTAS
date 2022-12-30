@@ -31,10 +31,6 @@
 #include <stdint.h>
 #include "ConcurrentQueue.h"
 #include "KeyMapping.h"
-#include "../shared/GameInfo.h"
-extern "C" {
-#include <lua.h>
-}
 
 struct Context {
     /* Execution status */
@@ -83,10 +79,6 @@ struct Context {
     int64_t new_realtime_sec;
     int64_t new_realtime_nsec;
 
-    /* movie time */
-    int64_t movie_time_sec;
-    int64_t movie_time_nsec;
-
     /* config */
     Config config;
 
@@ -101,9 +93,6 @@ struct Context {
 
     /* Name of the game executable */
     std::string gamename;
-
-    /* PID of the forked `sh` process which executes the game */
-    pid_t fork_pid;
 
     /* PID of the game */
     pid_t game_pid;
@@ -120,12 +109,6 @@ struct Context {
     /* Queue of released hotkeys that where pushed by the UI, to process by the main thread */
     ConcurrentQueue<HotKeyType> hotkey_released_queue;
 
-    /* Store some game information sent by the game, that is shown in the UI */
-    GameInfo game_info;
-
-    /* Authors of the movie */
-    std::string authors;
-
     /* A frame number when the game pauses */
     uint64_t pause_frame = 0;
 
@@ -134,12 +117,6 @@ struct Context {
 
     /* MD5 hash of the game executable */
     std::string md5_game;
-
-    /* MD5 hash of the game executable that is stored in the movie */
-    std::string md5_movie;
-
-    /* Current encoding segment. Sent when game is restarted */
-    int encoding_segment = 0;
 
     /* Content of LD_PRELOAD when libTAS is executed */
     std::string old_ld_preload;
@@ -150,12 +127,6 @@ struct Context {
     /* Interactive mode */
     bool interactive = true;
     
-    /* Lua state */
-    lua_State *lua_state = nullptr;
-    
-    /* Indicate if at least one savestate was performed, for backtrack savestate */
-    bool didASavestate = false;
-
     /* Indicate if the current frame is a draw frame */
     bool draw_frame;
 };

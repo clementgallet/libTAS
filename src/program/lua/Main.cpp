@@ -29,34 +29,37 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+/* Lua state */
+static lua_State *lua_state = nullptr;
+
 void Lua::Main::init(Context* context)
 {
-    if (context->lua_state)
-        lua_close(context->lua_state);
+    if (lua_state)
+        lua_close(lua_state);
     
-    context->lua_state = luaL_newstate();
-    luaL_openlibs(context->lua_state);
+    lua_state = luaL_newstate();
+    luaL_openlibs(lua_state);
     
     /* Register our functions */
-    Lua::Gui::registerFunctions(context);
-    Lua::Input::registerFunctions(context);
-    Lua::Memory::registerFunctions(context);
-    Lua::Movie::registerFunctions(context);
+    Lua::Gui::registerFunctions(lua_state);
+    Lua::Input::registerFunctions(lua_state);
+    Lua::Memory::registerFunctions(lua_state);
+    Lua::Movie::registerFunctions(lua_state, context);
 }
 
-void Lua::Main::exit(Context* context)
+void Lua::Main::exit()
 {
-    if (context->lua_state)
-        lua_close(context->lua_state);
-    context->lua_state = nullptr;
+    if (lua_state)
+        lua_close(lua_state);
+    lua_state = nullptr;
 }
 
-void Lua::Main::run(Context* context, std::string filename)
+void Lua::Main::run(std::string filename)
 {
-    int status = luaL_dofile(context->lua_state, filename.c_str());
+    int status = luaL_dofile(lua_state, filename.c_str());
     if (status != 0) {
         std::cerr << "Error " << status << " loading lua script " << filename << std::endl;
-        std::cerr << lua_tostring(context->lua_state, -1) << std::endl;
+        std::cerr << lua_tostring(lua_state, -1) << std::endl;
     }
     else {
         std::cout << "Loaded script " << filename << std::endl;        
@@ -65,24 +68,24 @@ void Lua::Main::run(Context* context, std::string filename)
 
 void Lua::Main::reset(Context* context)
 {
-    exit(context);
+    exit();
     init(context);
 }
 
-void Lua::Main::callLua(Context* context, const char* func)
+void Lua::Main::callLua(const char* func)
 {
-    if (!context->lua_state) return;
+    if (!lua_state) return;
     
-    lua_getglobal(context->lua_state, func);
-    if (lua_isfunction(context->lua_state, -1)) {
-        int ret = lua_pcall(context->lua_state, 0, 0, 0);
+    lua_getglobal(lua_state, func);
+    if (lua_isfunction(lua_state, -1)) {
+        int ret = lua_pcall(lua_state, 0, 0, 0);
         if (ret != 0) {
-            std::cerr << "error running function "<< func << "(): " << lua_tostring(context->lua_state, -1) << std::endl;
-            lua_pop(context->lua_state, 1);  // pop error message from the stack
+            std::cerr << "error running function "<< func << "(): " << lua_tostring(lua_state, -1) << std::endl;
+            lua_pop(lua_state, 1);  // pop error message from the stack
         }
     }
     else {
         /* No function, we need to clear the stack */
-        lua_pop(context->lua_state, 1);
+        lua_pop(lua_state, 1);
     }
 }

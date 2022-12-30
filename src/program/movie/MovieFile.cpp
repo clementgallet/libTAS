@@ -221,3 +221,23 @@ void MovieFile::close()
     inputs->close();
     editor->close();
 }
+
+void MovieFile::updateLength()
+{
+    if (context->config.sc.movie_framecount != inputs->nbFrames()) {
+        context->config.sc.movie_framecount = inputs->nbFrames();
+
+        /* Unvalidate movie length when variable framerate */
+        if (context->config.sc.variable_framerate) {
+            header->length_sec = -1;
+            header->length_nsec = -1;
+        }
+        else {
+            /* Compute movie length from framecount */
+            header->length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
+            header->length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
+        }
+
+        context->config.sc_modified = true;
+    }
+}

@@ -20,7 +20,6 @@
 #ifndef LIBTAS_LUAGUI_H_INCLUDED
 #define LIBTAS_LUAGUI_H_INCLUDED
 
-#include "../Context.h"
 #include <stdint.h>
 extern "C" {
 #include <lua.h>
@@ -31,7 +30,7 @@ namespace Lua {
 namespace Gui {
 
     /* Register all functions */
-    void registerFunctions(Context* context);
+    void registerFunctions(lua_State *L);
 
     /* Get the window resolution */
     int resolution(lua_State *L);

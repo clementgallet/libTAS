@@ -54,6 +54,12 @@ public:
     /* Skip loading some settings so that users can change settings */
     bool skipLoadSettings = false;
 
+    /* Authors of the movie */
+    std::string authors;
+
+    /* MD5 hash of the game executable that is stored in the movie */
+    std::string md5_movie;
+
 private:
     Context* context;
 

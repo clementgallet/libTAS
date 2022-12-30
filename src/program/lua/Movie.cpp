@@ -18,6 +18,7 @@
  */
 
 #include "Movie.h"
+#include "../Context.h"
 
 #include <iostream>
 extern "C" {
@@ -25,7 +26,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-// static AllInputs* ai;
 static Context* context;
 
 /* List of functions to register */
@@ -40,11 +40,11 @@ static const luaL_Reg movie_functions[] =
     { NULL, NULL }
 };
 
-void Lua::Movie::registerFunctions(Context* c)
+void Lua::Movie::registerFunctions(lua_State *L, Context* c)
 {
     context = c;
-    luaL_newlib(context->lua_state, movie_functions);
-    lua_setglobal(context->lua_state, "movie");
+    luaL_newlib(L, movie_functions);
+    lua_setglobal(L, "movie");
 }
 
 int Lua::Movie::currentFrame(lua_State *L)

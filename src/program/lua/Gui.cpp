@@ -28,8 +28,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-static Context* context;
-
 /* List of functions to register */
 static const luaL_Reg gui_functions[] =
 {
@@ -42,11 +40,10 @@ static const luaL_Reg gui_functions[] =
     { NULL, NULL }
 };
 
-void Lua::Gui::registerFunctions(Context* c)
+void Lua::Gui::registerFunctions(lua_State *L)
 {
-    context = c;
-    luaL_newlib(context->lua_state, gui_functions);
-    lua_setglobal(context->lua_state, "gui");
+    luaL_newlib(L, gui_functions);
+    lua_setglobal(L, "gui");
 }
 
 /* Get the window resolution */

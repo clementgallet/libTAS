@@ -129,7 +129,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
 
             /* Checking that saving succeeded */
             if (message == MSGB_SAVING_SUCCEEDED) {
-                context->didASavestate = true;
+                didASavestate = true;
                 emit savestatePerformed(statei, context->framecount);
             }
 
@@ -218,8 +218,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
                 /* Fast-forward to savestate frame */
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
                 context->config.sc.movie_framecount = movie->inputs->nbFrames();
-                context->movie_time_sec = movie->header->length_sec;
-                context->movie_time_nsec = movie->header->length_nsec;
                 context->pause_frame = movie->header->savestate_framecount;
                 context->config.sc.running = true;
                 context->config.sc_modified = true;

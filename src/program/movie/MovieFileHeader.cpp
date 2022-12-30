@@ -81,17 +81,17 @@ void MovieFileHeader::load()
         config.endGroup();
     }
 
-    context->movie_time_sec = config.value("length_sec").toULongLong();
-    context->movie_time_nsec = config.value("length_nsec").toULongLong();
+    length_sec = config.value("length_sec").toULongLong();
+    length_nsec = config.value("length_nsec").toULongLong();
     /* If no movie length field, compute from frame count and framerate */
-    if (!context->movie_time_sec && !context->movie_time_nsec) {
-        context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
-        context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
+    if (!length_sec && !length_nsec) {
+        length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
+        length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
     }
 
     context->rerecord_count = config.value("rerecord_count").toUInt();
-    context->authors = config.value("authors").toString().toStdString();
-    context->md5_movie = config.value("md5").toString().toStdString();
+    authors = config.value("authors").toString().toStdString();
+    md5_movie = config.value("md5").toString().toStdString();
     savestate_framecount = config.value("savestate_frame_count").toULongLong();
 }
 
@@ -136,12 +136,12 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     config.setValue("initial_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_time_nsec));
     config.setValue("initial_monotonic_time_sec", static_cast<unsigned long long>(context->config.sc.initial_monotonic_time_sec));
     config.setValue("initial_monotonic_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_monotonic_time_nsec));
-    config.setValue("length_sec", static_cast<unsigned long long>(context->movie_time_sec));
-    config.setValue("length_nsec", static_cast<unsigned long long>(context->movie_time_nsec));
+    config.setValue("length_sec", static_cast<unsigned long long>(length_sec));
+    config.setValue("length_nsec", static_cast<unsigned long long>(length_nsec));
     config.setValue("framerate_num", framerate_num);
     config.setValue("framerate_den", framerate_den);
     config.setValue("rerecord_count", context->rerecord_count);
-    config.setValue("authors", context->authors.c_str());
+    config.setValue("authors", authors.c_str());
     config.setValue("libtas_major_version", MAJORVERSION);
     config.setValue("libtas_minor_version", MINORVERSION);
     config.setValue("libtas_patch_version", PATCHVERSION);

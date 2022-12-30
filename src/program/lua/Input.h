@@ -21,7 +21,6 @@
 #define LIBTAS_LUAINPUT_H_INCLUDED
 
 #include "../../shared/AllInputs.h"
-#include "../Context.h"
 
 extern "C" {
 #include <lua.h>
@@ -32,7 +31,7 @@ namespace Lua {
 namespace Input {
 
     /* Register all functions */
-    void registerFunctions(Context* context);
+    void registerFunctions(lua_State *L);
 
     /* Pass the current AllInputs object to be used by lua functions */
     void registerInputs(AllInputs* ai);

@@ -33,6 +33,9 @@ class GameLoop : public QObject {
 public:
     GameLoop(Context *c);
     void start();
+
+    void killForkProcess();
+
     MovieFile movie;
 
     /* Handle hotkeys */
@@ -47,6 +50,12 @@ private:
     /* Inputs from the previous frame */
     AllInputs prev_ai;
 
+    /* Current encoding segment. Sent when game is restarted */
+    int encoding_segment = 0;
+
+    /* PID of the forked `sh` process which executes the game */
+    pid_t fork_pid;
+
     void init();
 
     void initProcessMessages();
@@ -60,7 +69,7 @@ private:
     void endFrameMessages(AllInputs &ai);
 
     void loopExit();
-
+    
 signals:
     void uiChanged();
     void statusChanged(int status);

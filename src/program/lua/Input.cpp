@@ -51,10 +51,10 @@ static const luaL_Reg input_functions[] =
     { NULL, NULL }
 };
 
-void Lua::Input::registerFunctions(Context* context)
+void Lua::Input::registerFunctions(lua_State *L)
 {
-    luaL_newlib(context->lua_state, input_functions);
-    lua_setglobal(context->lua_state, "input");
+    luaL_newlib(L, input_functions);
+    lua_setglobal(L, "input");
 }
 
 void Lua::Input::registerInputs(AllInputs* frame_ai)

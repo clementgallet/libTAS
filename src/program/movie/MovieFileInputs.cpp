@@ -359,26 +359,6 @@ uint64_t MovieFileInputs::nbFrames() const
     return input_list.size();
 }
 
-void MovieFileInputs::updateLength() const
-{
-    if (context->config.sc.movie_framecount != nbFrames()) {
-        context->config.sc.movie_framecount = nbFrames();
-
-        /* Unvalidate movie length when variable framerate */
-        if (context->config.sc.variable_framerate) {
-            context->movie_time_sec = -1;
-            context->movie_time_nsec = -1;
-        }
-        else {
-            /* Compute movie length from framecount */
-            context->movie_time_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
-            context->movie_time_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
-        }
-
-        context->config.sc_modified = true;
-    }
-}
-
 int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 {
     return setInputs(inputs, context->framecount, keep_inputs);

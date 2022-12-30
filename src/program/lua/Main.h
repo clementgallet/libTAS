@@ -33,17 +33,16 @@ namespace Main {
     void init(Context* context);
 
     /* Exit */
-    void exit(Context* context);
+    void exit();
 
     /* Run a lua script */
-    void run(Context* context, std::string filename);
+    void run(std::string filename);
 
     /* Reset the lua VM */
     void reset(Context* context);
 
     /* Call the lua function */
-    void callLua(Context* context, const char* func);
-
+    void callLua(const char* func);
 }
 }
 

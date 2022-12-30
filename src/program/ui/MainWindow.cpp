@@ -863,8 +863,8 @@ void MainWindow::updateUIFrequent()
 
     /* Format movie length */
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        if (context->movie_time_sec != -1) {
-            double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000.0;
+        if (gameLoop->movie.header->length_sec != -1) {
+            double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
             int immin = (int)(msec/60);
             double dmsec = msec - 60*immin;
             movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
@@ -902,8 +902,8 @@ void MainWindow::updateMovieParams()
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        if (context->movie_time_sec != -1) {
-            double msec = context->movie_time_sec + ((double)context->movie_time_nsec)/1000000000.0;
+        if (gameLoop->movie.header->length_sec != -1) {
+            double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
             int immin = (int)(msec/60);
             double dmsec = msec - 60*immin;
             movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
@@ -933,7 +933,7 @@ void MainWindow::updateMovieParams()
     else {
         context->config.sc.movie_framecount = 0;
         context->rerecord_count = 0;
-        context->authors = "";
+        gameLoop->movie.header->authors = "";
         authorField->setReadOnly(false);
         movieLength->setText("Movie length: -");
         movieRecording->setChecked(true);
@@ -949,7 +949,7 @@ void MainWindow::updateMovieParams()
     inputEditorWindow->resetInputs();
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
-    authorField->setText(context->authors.c_str());
+    authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.framerate_num);
     fpsDenField->setValue(context->config.sc.framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
@@ -1052,7 +1052,7 @@ void MainWindow::slotLaunch(bool attach_gdb)
     if (!ErrorChecking::allChecks(context))
         return;
 
-    context->authors = authorField->text().toStdString();
+    gameLoop->movie.header->authors = authorField->text().toStdString();
 
     /* Set a few parameters */
     context->config.sc.framerate_num = fpsNumField->value();
@@ -1102,7 +1102,7 @@ void MainWindow::slotStop()
              * different pids (which can happen with gdb, for example) and the
              * game process has quit, but the forked process has not.
              */
-            kill(context->fork_pid, SIGKILL);
+            gameLoop->killForkProcess();
         }
         return;
     }
@@ -1320,7 +1320,7 @@ void MainWindow::slotLuaExecute()
     if (filename.isNull())
         return;
 
-    Lua::Main::run(context, filename.toStdString());
+    Lua::Main::run(filename.toStdString());
 }
 
 void MainWindow::slotRealTimeFormat()

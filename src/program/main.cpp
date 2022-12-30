@@ -385,7 +385,7 @@ int main(int argc, char **argv)
 
     /* Start a lua script if specified */
     if (!luafile.empty())
-        Lua::Main::run(&context, luafile);
+        Lua::Main::run(luafile);
 
     /* Starts the user interface */
     QApplication app(argc, argv);
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
     context.config.save(context.gamepath);
 
     /* Stop the lua VM */
-    Lua::Main::exit(&context);
+    Lua::Main::exit();
 
     /* Check if the game is still running and try to close it softly */
     if (context.status != Context::INACTIVE) {

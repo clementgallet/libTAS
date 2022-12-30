@@ -20,17 +20,18 @@
 #ifndef LIBTAS_LUAMOVIE_H_INCLUDED
 #define LIBTAS_LUAMOVIE_H_INCLUDED
 
-#include "../Context.h"
 extern "C" {
 #include <lua.h>
 }
+
+struct Context;
 
 namespace Lua {
 
 namespace Movie {
 
     /* Register all functions */
-    void registerFunctions(Context* context);
+    void registerFunctions(lua_State *L, Context* c);
 
     /* Get the current framecount */
     int currentFrame(lua_State *L);

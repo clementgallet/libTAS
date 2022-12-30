@@ -286,8 +286,8 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
 
     if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
         context->config.sc.movie_framecount = context->framecount;
-        context->movie_time_sec = context->current_time_sec;
-        context->movie_time_nsec = context->current_time_nsec;
+        m.header->length_sec = context->current_time_sec;
+        m.header->length_nsec = context->current_time_nsec;
     }
 
     if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {

@@ -26,8 +26,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-static Context* context;
-
 /* List of functions to register */
 static const luaL_Reg memory_functions[] =
 {
@@ -50,11 +48,10 @@ static const luaL_Reg memory_functions[] =
     { NULL, NULL }
 };
 
-void Lua::Memory::registerFunctions(Context* c)
+void Lua::Memory::registerFunctions(lua_State *L)
 {
-    context = c;
-    luaL_newlib(context->lua_state, memory_functions);
-    lua_setglobal(context->lua_state, "memory");
+    luaL_newlib(L, memory_functions);
+    lua_setglobal(L, "memory");
 }
 
 bool Lua::Memory::read(uintptr_t addr, void* return_value, int size)
